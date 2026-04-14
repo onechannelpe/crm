@@ -9,7 +9,8 @@ export interface SunatDniData {
 }
 
 export interface SunatEconomicActivity {
-  kind: "principal" | "secondary";
+  role: "principal" | "secondary";
+  order: number | null;
   label: string;
   code: string;
   description: string;

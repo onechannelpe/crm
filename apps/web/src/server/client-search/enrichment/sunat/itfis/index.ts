@@ -1,11 +1,7 @@
 import { isPlainRecord } from "~/lib/type-guards";
 
-import type {
-  SunatDniData,
-  SunatEconomicActivity,
-  SunatRucData,
-} from "./contracts";
-import { sanitizeField } from "./utils";
+import type { SunatDniData } from "../contracts";
+import { sanitizeField } from "../text";
 
 function firstListaEntry(
   payload: Record<string, unknown>,
@@ -43,17 +39,7 @@ function splitNamesFromItfisdenreg(full: string): {
   };
 }
 
-function normalizeLabel(label: string): string {
-  return label
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/:/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-export function mapDniData(dni: string, payload: unknown): SunatDniData | null {
+export function readDni(dni: string, payload: unknown): SunatDniData | null {
   if (!isPlainRecord(payload)) {
     if (typeof payload === "string" && payload.trim().length > 0) {
       return {
@@ -105,10 +91,17 @@ export function mapDniData(dni: string, payload: unknown): SunatDniData | null {
   };
 }
 
-export function mapItfisRucData(
+export function readRuc(
   ruc: string,
   payload: unknown,
-): SunatRucData | null {
+): {
+  ruc: string;
+  razonSocial: string;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  payload: unknown;
+} | null {
   if (!isPlainRecord(payload)) return null;
   const lista = firstListaEntry(payload);
   if (!lista) return null;
@@ -122,64 +115,6 @@ export function mapItfisRucData(
     address: sanitizeField(lista.direstablecimiento),
     district: sanitizeField(lista.desdistrito),
     department: sanitizeField(lista.desdepartamento),
-    contributorStatus: null,
-    contributorCondition: null,
-    economicActivities: [],
     payload,
   };
-}
-
-export function mapConsultaRucData(parsed: Record<string, string> | null): {
-  contributorStatus: string | null;
-  contributorCondition: string | null;
-  economicActivities: SunatEconomicActivity[];
-} | null {
-  if (!parsed) return null;
-
-  const findValue = (candidateLabel: string): string | null => {
-    const normalizedCandidate = normalizeLabel(candidateLabel);
-    for (const [label, value] of Object.entries(parsed)) {
-      if (normalizeLabel(label) === normalizedCandidate) {
-        return sanitizeField(value) ?? null;
-      }
-    }
-    return null;
-  };
-
-  const activityText =
-    findValue("actividad(es) economica(s)") ?? findValue("actividad economica");
-
-  return {
-    contributorStatus: findValue("estado del contribuyente"),
-    contributorCondition: findValue("condicion del contribuyente"),
-    economicActivities: parseEconomicActivities(activityText),
-  };
-}
-
-function parseEconomicActivities(
-  value: string | null,
-): SunatEconomicActivity[] {
-  if (!value) return [];
-
-  const matches = [
-    ...value.matchAll(
-      /(Principal|Secundaria\s+\d+)\s*-\s*([0-9]+)\s*-\s*([\s\S]*?)(?=\s*(?:Principal|Secundaria\s+\d+)\s*-\s*[0-9]+\s*-|$)/gi,
-    ),
-  ];
-
-  return matches
-    .map((match) => {
-      const label = sanitizeField(match[1]);
-      const code = sanitizeField(match[2]);
-      const description = sanitizeField(match[3]);
-      if (!label || !code || !description) return null;
-
-      return {
-        kind: label.toLowerCase() === "principal" ? "principal" : "secondary",
-        label,
-        code,
-        description,
-      } satisfies SunatEconomicActivity;
-    })
-    .filter((activity): activity is SunatEconomicActivity => activity !== null);
 }

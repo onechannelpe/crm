@@ -633,6 +633,7 @@ export interface SearchEnrichmentOverlaysTable {
   department: string | null;
   contributor_status: string | null;
   contributor_condition: string | null;
+  economic_activities_json: string | null;
   source: "sunat";
   fetched_at: number;
   expires_at: number;

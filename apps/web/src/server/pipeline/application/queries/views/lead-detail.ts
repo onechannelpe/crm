@@ -6,7 +6,10 @@ import type {
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
-import type { SunatSourceStatus } from "../../ports/source-status-repository";
+import type {
+  LeadSunatEconomicActivity,
+  SunatSourceStatus,
+} from "../../ports/source-status-repository";
 
 export type LeadTimelineItem = {
   id: string;
@@ -83,12 +86,7 @@ export type LeadDetailSourceStatusView = {
     department: string | null;
     contributorStatus: string | null;
     contributorCondition: string | null;
-    economicActivities: {
-      kind: "principal" | "secondary";
-      label: string;
-      code: string;
-      description: string;
-    }[];
+    economicActivities: LeadSunatEconomicActivity[];
     payloadAvailable: boolean;
   };
 };

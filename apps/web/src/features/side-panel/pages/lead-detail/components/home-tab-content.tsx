@@ -1,10 +1,11 @@
 import { For, Show } from "solid-js";
+import type { JSX } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
-import { WithTooltip } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import { CommercialInputSection } from "~/features/pipeline/detail/commercial-input-section";
 import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
 import { blockingFieldLabel } from "~/features/pipeline/detail/lead-workflow-ui";
+import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
@@ -12,47 +13,36 @@ import { FIELD_ROWS } from "./constants";
 
 import styles from "../page.module.css";
 
-function fieldValue(props: {
-  data: LeadDetailView;
-  key: (typeof FIELD_ROWS)[number]["key"];
-}) {
-  if (props.key === "ruc") return props.data.lead.ruc;
-  if (props.key === "razonSocial") return props.data.lead.razonSocial ?? "";
-  if (props.key === "economicActivities") return "";
-  if (props.key === "status") return props.data.lead.status ?? "";
-  if (props.key === "prioridad") return props.data.lead.prioridad ?? "";
-  if (props.key === "stage") return props.data.lead.stage;
-  if (props.key === "nextStep") return props.data.lead.nextStep;
-  return formatDateTime(props.data.lead.updatedAt);
+type FieldKey = (typeof FIELD_ROWS)[number]["key"];
+
+function renderTextField(data: LeadDetailView, key: FieldKey): string {
+  if (key === "ruc") return data.lead.ruc;
+  if (key === "razonSocial") return data.lead.razonSocial ?? "";
+  if (key === "status") return data.lead.status ?? "";
+  if (key === "prioridad") return data.lead.prioridad ?? "";
+  if (key === "stage") return data.lead.stage;
+  if (key === "nextStep") return data.lead.nextStep;
+  if (key === "updatedAt") return formatDateTime(data.lead.updatedAt);
+  return "";
 }
 
-function EconomicActivitiesField(props: {
-  activities: LeadDetailView["sourceStatus"]["sunat"]["economicActivities"];
-}) {
-  if (props.activities.length < 1) {
-    return <span class={styles.fieldTextValue}>—</span>;
+function renderFieldValue(data: LeadDetailView, key: FieldKey): JSX.Element {
+  if (key === "economicActivities") {
+    return (
+      <FieldChipList
+        emptyLabel="—"
+        items={data.sourceStatus.sunat.economicActivities.map((activity) => ({
+          id: `${activity.role}-${activity.order ?? 0}-${activity.code}`,
+          label: activity.code,
+          tone: activity.role === "principal" ? "positive" : "neutral",
+          tooltip: `${activity.label} - ${activity.description}`,
+        }))}
+      />
+    );
   }
 
   return (
-    <div class={styles.economicActivitiesValue}>
-      <div class={styles.economicActivityChipList}>
-        <For each={props.activities}>
-          {(activity) => (
-            <WithTooltip tooltip={`${activity.label} - ${activity.description}`}>
-              <span
-                class={`${styles.economicActivityChip} ${
-                  activity.kind === "principal"
-                    ? styles.economicActivityChipPrincipal
-                    : styles.economicActivityChipSecondary
-                }`}
-              >
-                {activity.code}
-              </span>
-            </WithTooltip>
-          )}
-        </For>
-      </div>
-    </div>
+    <span class={styles.fieldTextValue}>{renderTextField(data, key)}</span>
   );
 }
 
@@ -79,20 +69,7 @@ export function HomeTabContent(props: { data: LeadDetailView }) {
                   <span>{field.label}</span>
                 </div>
                 <div class={styles.fieldValue}>
-                  <Show
-                    when={field.key === "economicActivities"}
-                    fallback={
-                      <span class={styles.fieldTextValue}>
-                        {fieldValue({ data: props.data, key: field.key })}
-                      </span>
-                    }
-                  >
-                    <EconomicActivitiesField
-                      activities={
-                        props.data.sourceStatus.sunat.economicActivities
-                      }
-                    />
-                  </Show>
+                  {renderFieldValue(props.data, field.key)}
                 </div>
               </div>
             )}

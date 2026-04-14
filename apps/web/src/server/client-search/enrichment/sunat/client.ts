@@ -1,4 +1,5 @@
 import type { EnrichmentError } from "../../model";
+import { readSnapshot } from "./consulta-ruc";
 import type {
   DniApiResult,
   RucApiResult,
@@ -11,8 +12,7 @@ import {
   fetchRucFromItfisdenreg,
   isHttpStatusError,
 } from "./endpoints";
-import { mapConsultaRucData, mapDniData, mapItfisRucData } from "./mappers";
-import { parseRucHtml } from "./parsers";
+import { readDni, readRuc } from "./itfis";
 
 function classifyProviderError(error: unknown): EnrichmentError {
   if (error instanceof DOMException && error.name === "AbortError") {
@@ -49,7 +49,7 @@ async function fetchDni(
 ): Promise<DniApiResult> {
   const primary = await safeRequest(() => fetchDniFromItfisdenreg(dni, signal));
   if (primary.ok) {
-    const mapped = mapDniData(dni, primary.value);
+    const mapped = readDni(dni, primary.value);
     if (mapped) {
       return { ok: true, data: mapped };
     }
@@ -57,7 +57,7 @@ async function fetchDni(
 
   const fallback = await safeRequest(() => fetchDniFromAtencion(dni, signal));
   if (fallback.ok) {
-    const mapped = mapDniData(dni, fallback.value);
+    const mapped = readDni(dni, fallback.value);
     if (mapped) {
       return { ok: true, data: mapped };
     }
@@ -91,32 +91,31 @@ async function fetchRuc(
     return { ok: false, error: itfisResult.error };
   }
 
-  const itfisData = mapItfisRucData(ruc, itfisResult.value);
+  const itfisData = readRuc(ruc, itfisResult.value);
   if (!itfisData) {
     return { ok: false, error: { kind: "not_found" } };
   }
 
   const consultaRaw = consultaResult.ok ? consultaResult.value : null;
-  const consultaParsed =
+  const consultaSnapshot =
     typeof consultaRaw === "string" && consultaRaw.includes("<html")
-      ? parseRucHtml(consultaRaw)
+      ? readSnapshot(consultaRaw)
       : null;
-  const consultaData = mapConsultaRucData(consultaParsed);
 
   return {
     ok: true,
     data: {
       ...itfisData,
-      contributorStatus: consultaData?.contributorStatus ?? null,
-      contributorCondition: consultaData?.contributorCondition ?? null,
-      economicActivities: consultaData?.economicActivities ?? [],
+      contributorStatus: consultaSnapshot?.contributorStatus ?? null,
+      contributorCondition: consultaSnapshot?.contributorCondition ?? null,
+      economicActivities: consultaSnapshot?.economicActivities ?? [],
       payload: {
         itfis: itfisData.payload,
-        consultaRuc: consultaParsed,
+        consultaRuc: consultaSnapshot?.fields ?? null,
         extracted: {
-          contributorStatus: consultaData?.contributorStatus ?? null,
-          contributorCondition: consultaData?.contributorCondition ?? null,
-          economicActivities: consultaData?.economicActivities ?? [],
+          contributorStatus: consultaSnapshot?.contributorStatus ?? null,
+          contributorCondition: consultaSnapshot?.contributorCondition ?? null,
+          economicActivities: consultaSnapshot?.economicActivities ?? [],
         },
       },
     },

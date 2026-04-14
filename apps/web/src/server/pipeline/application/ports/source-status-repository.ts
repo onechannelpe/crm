@@ -1,3 +1,5 @@
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
+
 export type SunatSourceStatus =
   | "idle"
   | "queued"
@@ -6,12 +8,7 @@ export type SunatSourceStatus =
   | "failed"
   | "stale";
 
-export type LeadSunatEconomicActivity = {
-  kind: "principal" | "secondary";
-  label: string;
-  code: string;
-  description: string;
-};
+export type LeadSunatEconomicActivity = SunatEconomicActivity;
 
 export type LeadSourceStatus = {
   sunat: {

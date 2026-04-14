@@ -206,44 +206,6 @@
   white-space: nowrap;
 }
 
-.economicActivitiesValue {
-  display: flex;
-  justify-content: flex-start;
-  min-width: 0;
-  width: 100%;
-}
-
-.economicActivityChipList {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.economicActivityChip {
-  align-items: center;
-  border-radius: 999px;
-  cursor: default;
-  display: inline-flex;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  padding: 3px 8px;
-  white-space: nowrap;
-}
-
-.economicActivityChipPrincipal {
-  background: color-mix(in srgb, var(--success) 22%, white);
-  border: 1px solid color-mix(in srgb, var(--success) 50%, white);
-  color: color-mix(in srgb, var(--success) 72%, black);
-}
-
-.economicActivityChipSecondary {
-  background: color-mix(in srgb, var(--secondary) 70%, white);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-}
-
 .relationList {
   display: flex;
   flex-direction: column;
