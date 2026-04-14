@@ -74,6 +74,7 @@
   /* translucent fills */
   --bg-translucent-subtle: color(display-p3 0 0 0 / 0.02);
   --bg-translucent: color(display-p3 0 0 0 / 0.039);
+  --bg-translucent-medium: color(display-p3 0 0 0 / 0.078);
 
   /* avatar */
   --avatar-bg: color(display-p3 0.913 0.854 0.971);
@@ -190,6 +191,7 @@
   --shadow-elevation-4: var(--shadow-elevation-3);
   --bg-translucent-subtle: color(display-p3 1 1 1 / 0.031);
   --bg-translucent: color(display-p3 1 1 1 / 0.059);
+  --bg-translucent-medium: color(display-p3 1 1 1 / 0.102);
   --avatar-bg: color(display-p3 0.298 0.298 0.298);
   --avatar-fg: color(display-p3 0.922 0.922 0.922);
 }

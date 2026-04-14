@@ -10,12 +10,14 @@ import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import { queryLeadBootstrapPreview } from "~/actions/pipeline/queries/leads";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { createLeadMutation } from "~/features/pipeline/data/mutations";
 import {
   addOptimisticLead,
   createOptimisticLeadRow,
 } from "~/features/pipeline/data/optimistic-leads";
 import { toAppError } from "~/lib/app-errors";
+import { shortName } from "~/lib/users/display-name";
 
 import { PanelList } from "../../components/list";
 import { useSidePanel } from "../../state/use-side-panel";
@@ -61,6 +63,7 @@ const TAB_COMPONENTS: Record<
 const hiddenTabsCount = 4;
 
 export function LeadCreatePage() {
+  const { currentUser } = useAuthenticatedSession();
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
   const [error, setError] = createSignal<string | null>(null);
@@ -149,6 +152,8 @@ export function LeadCreatePage() {
         ruc: value,
         razonSocial: latestBootstrapPreview()?.razonSocial ?? null,
         address: latestBootstrapPreview()?.address ?? null,
+        executiveId: currentUser().id,
+        executiveName: shortName(currentUser()),
       }),
     );
 

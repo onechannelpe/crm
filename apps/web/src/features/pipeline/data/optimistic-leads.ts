@@ -15,7 +15,8 @@ export function createOptimisticLeadRow(input: {
   ruc: string;
   razonSocial: string | null;
   address: string | null;
-  executiveId?: number;
+  executiveId: number;
+  executiveName: string;
   now?: number;
 }): OptimisticLeadRow {
   const now = input.now ?? Date.now();
@@ -25,7 +26,8 @@ export function createOptimisticLeadRow(input: {
     ruc: input.ruc,
     razonSocial: input.razonSocial,
     address: input.address,
-    executiveId: input.executiveId ?? -1,
+    executiveId: input.executiveId,
+    executiveName: input.executiveName,
     stage: "PENDING_EXTERNAL_REVIEW",
     status: null,
     prioridad: null,

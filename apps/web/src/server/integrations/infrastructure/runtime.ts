@@ -1,4 +1,4 @@
-import { createLeadExportQuery } from "~/server/pipeline/infrastructure/lead-export-query";
+import { createLeadQueries } from "~/server/pipeline/infrastructure/lead-queries";
 import { createLeadRepo } from "~/server/pipeline/infrastructure/lead-repo";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
@@ -13,7 +13,7 @@ export function createIntegrationRuntime(
     executor,
     jobs: createIntegrationJobRepo(executor),
     leads: createLeadRepo(executor),
-    leadExportQuery: createLeadExportQuery(executor),
+    leadExportQuery: createLeadQueries(executor),
     users: createUsersRepo(executor),
   };
 }

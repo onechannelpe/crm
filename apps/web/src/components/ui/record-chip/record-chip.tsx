@@ -4,7 +4,6 @@ import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-toolt
 
 import styles from "./record-chip.module.css";
 
-/** Deterministic hue from a string */
 function nameToHue(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
@@ -26,24 +25,41 @@ export type ChipShape = "round" | "square";
 interface RecordChipProps {
   name: string;
   shape?: ChipShape;
+  avatarUrl?: string | null;
 }
 
 export function RecordChip(props: RecordChipProps) {
   const hue = createMemo(() => nameToHue(props.name));
   const shape = () => props.shape ?? "square";
+  const [imgError, setImgError] = createSignal(false);
+
+  const showImage = () => Boolean(props.avatarUrl) && !imgError();
 
   return (
     <span class={styles.chip}>
-      <span
-        class={`${styles.avatar} ${shape() === "round" ? styles.avatarRound : styles.avatarSquare}`}
-        style={{
-          "background-color": `hsl(${hue()} 60% 88%)`,
-          color: `hsl(${hue()} 50% 32%)`,
-        }}
-        aria-hidden="true"
+      <Show
+        when={showImage()}
+        fallback={
+          <span
+            class={`${styles.avatar} ${shape() === "round" ? styles.avatarRound : styles.avatarSquare}`}
+            style={{
+              "background-color": `hsl(${hue()} 60% 88%)`,
+              color: `hsl(${hue()} 50% 32%)`,
+            }}
+            aria-hidden="true"
+          >
+            {initials(props.name)}
+          </span>
+        }
       >
-        {initials(props.name)}
-      </span>
+        <img
+          src={props.avatarUrl ?? undefined}
+          alt=""
+          class={`${styles.avatar} ${styles.avatarRound} ${styles.avatarImage}`}
+          onError={() => setImgError(true)}
+          aria-hidden="true"
+        />
+      </Show>
       <OverflowingText class={styles.label} text={props.name} />
     </span>
   );

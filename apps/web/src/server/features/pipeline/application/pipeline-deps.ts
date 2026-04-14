@@ -20,6 +20,7 @@ import { createAssignmentRepo } from "~/server/pipeline/infrastructure/assignmen
 import { createCommercialInputRepo } from "~/server/pipeline/infrastructure/commercial-input-repo";
 import { createEngineGateway } from "~/server/pipeline/infrastructure/engine-gateway";
 import { createHistoryRepo } from "~/server/pipeline/infrastructure/history-repo";
+import { createLeadQueries } from "~/server/pipeline/infrastructure/lead-queries";
 import { createLeadRepo } from "~/server/pipeline/infrastructure/lead-repo";
 import { createQuotationRepo } from "~/server/pipeline/infrastructure/quotation-repo";
 import { createSaleRepo } from "~/server/pipeline/infrastructure/sale-repo";
@@ -48,6 +49,7 @@ export function createPipelineFeatureDeps(
   executor: DatabaseExecutor,
 ): PipelineDeps {
   const leads = createLeadRepo(executor);
+  const leadQueries = createLeadQueries(executor);
   const leadAssignments = createAssignmentRepo(executor);
   const leadCommercialInputs = createCommercialInputRepo(executor);
   const leadHistory = createHistoryRepo(executor);
@@ -71,7 +73,7 @@ export function createPipelineFeatureDeps(
     createQuotation: { leads, leadHistory, leadQuotations },
     approveForSale: { leads, leadHistory },
     createSale: { leads, leadHistory, leadSales },
-    leadList: { leads },
+    leadList: { leads: leadQueries },
     leadDetail: {
       leads,
       leadCommercialInputs,
