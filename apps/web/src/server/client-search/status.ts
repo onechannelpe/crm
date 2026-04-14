@@ -104,12 +104,12 @@ function parseEconomicActivities(
     return parsed
       .map((entry) => {
         if (typeof entry !== "object" || entry === null) return null;
-        const record = entry as Record<string, unknown>;
-        const role = record.role;
-        const order = record.order;
-        const label = record.label;
-        const code = record.code;
-        const description = record.description;
+
+        const role = Reflect.get(entry, "role");
+        const order = Reflect.get(entry, "order");
+        const label = Reflect.get(entry, "label");
+        const code = Reflect.get(entry, "code");
+        const description = Reflect.get(entry, "description");
         if (
           (role !== "principal" && role !== "secondary") ||
           (order !== null && typeof order !== "number") ||
@@ -126,7 +126,7 @@ function parseEconomicActivities(
           label,
           code,
           description,
-        } satisfies SunatEconomicActivity;
+        };
       })
       .filter((entry): entry is SunatEconomicActivity => entry !== null);
   } catch {
