@@ -2,6 +2,6 @@
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
   "extends": ["../../.oxlintrc.json"],
   "rules": {
-    "typescript/no-non-null-assertion": "warn"
+    "typescript/no-non-null-assertion": "error"
   }
 }
