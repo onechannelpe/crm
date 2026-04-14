@@ -1,4 +1,4 @@
-import { parseJsonOrTextPayload } from "./utils";
+import { parseJsonOrTextPayload } from "./text";
 
 const REQUEST_TIMEOUT_MS = 6000;
 
