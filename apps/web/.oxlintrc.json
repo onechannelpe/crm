@@ -1,6 +1,11 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
   "extends": ["../../.oxlintrc.json"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error",
+  },
   "rules": {
     "typescript/no-non-null-assertion": "error"
   }
