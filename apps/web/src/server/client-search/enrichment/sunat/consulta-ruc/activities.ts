@@ -6,14 +6,15 @@ export function readEconomicActivities(
 ): SunatEconomicActivity[] {
   if (!value) return [];
 
-  const matches = [
-    ...value.matchAll(
-      /(Principal|Secundaria\s+\d+)\s*-\s*([0-9]+)\s*-\s*([\s\S]*?)(?=\s*(?:Principal|Secundaria\s+\d+)\s*-\s*[0-9]+\s*-|$)/gi,
-    ),
-  ];
+  const lines = value.split(/\r?\n/);
 
-  return matches
-    .map((match) => {
+  return lines
+    .map((line) => {
+      const match = line.match(
+        /^(Principal|Secundaria\s+\d+)\s*-\s*([0-9]+)\s*-\s*(.*)$/i,
+      );
+      if (!match) return null;
+
       const label = sanitizeField(match[1]);
       const code = sanitizeField(match[2]);
       const description = sanitizeField(match[3]);
