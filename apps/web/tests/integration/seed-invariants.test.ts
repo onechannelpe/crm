@@ -44,12 +44,14 @@ describe("seed invariants", () => {
       expect(valeria?.onboarding_completed_at).toBeNull();
       expect(valeria && requiresStrongAuthRole(valeria.role)).toBe(true);
 
-      const valeriaStatus = await getStrongAuthStatus(valeria!.id, repos);
+      if (valeria == null) throw new Error("valeria not found in seed");
+      const valeriaStatus = await getStrongAuthStatus(valeria.id, repos);
       expect(valeriaStatus.hasVerifiedStrongAuth).toBe(false);
       expect(valeriaStatus.hasTotp).toBe(false);
       expect(valeriaStatus.hasPasskey).toBe(false);
 
-      const managerStatus = await getStrongAuthStatus(manager!.id, repos);
+      if (manager == null) throw new Error("manager not found in seed");
+      const managerStatus = await getStrongAuthStatus(manager.id, repos);
       expect(managerStatus.hasVerifiedStrongAuth).toBe(true);
       expect(managerStatus.hasTotp).toBe(true);
     } finally {

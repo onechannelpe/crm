@@ -14,8 +14,8 @@ import { takeFromPool } from "../_shared/pool";
 import { CREATE_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
 
 describe("team invite create benchmark", () => {
-  let ctx: TestDbContext | null = null;
-  let inviteCreate: InviteService["createInvite"] | null = null;
+  let ctx!: TestDbContext;
+  let inviteCreate!: InviteService["createInvite"];
   let createEmails: string[] = [];
   const createCursor = { value: 0 };
 
@@ -31,10 +31,7 @@ describe("team invite create benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
-    inviteCreate = null;
   });
 
   bench(
@@ -46,7 +43,7 @@ describe("team invite create benchmark", () => {
         "team-invite-create pool exhausted before iterations completed",
       );
 
-      const result = await inviteCreate!({
+      const result = await inviteCreate({
         actorUserId: 5,
         actorRole: "superuser",
         branchId: 2,

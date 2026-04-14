@@ -14,7 +14,7 @@ import {
 } from "./fixtures";
 
 describe("session list repository benchmark", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx!: TestDbContext;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
@@ -28,9 +28,7 @@ describe("session list repository benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
   });
 
   bench(
@@ -42,7 +40,7 @@ describe("session list repository benchmark", () => {
         "session-delete repository pool exhausted before iterations completed",
       );
 
-      const rows = await ctx!.repos.sessions.listForUser(userId);
+      const rows = await ctx.repos.sessions.listForUser(userId);
       if (rows.length !== expectedSessionsPerUser()) {
         throw new Error(
           `expected ${expectedSessionsPerUser()} sessions, got ${rows.length}`,

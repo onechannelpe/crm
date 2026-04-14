@@ -12,7 +12,7 @@ import { takeFromPool } from "../_shared/pool";
 import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
 describe("search capacity grant repository benchmark", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx!: TestDbContext;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
@@ -31,9 +31,7 @@ describe("search capacity grant repository benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
   });
 
   bench(
@@ -46,7 +44,7 @@ describe("search capacity grant repository benchmark", () => {
       );
 
       const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
-      const grants = await ctx!.repos.searchCapacityGrants.findByUserAndPeriod(
+      const grants = await ctx.repos.searchCapacityGrants.findByUserAndPeriod(
         userId,
         periodStart,
         periodEnd,

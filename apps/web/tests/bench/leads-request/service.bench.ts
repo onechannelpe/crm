@@ -15,8 +15,8 @@ import { takeFromPool } from "../_shared/pool";
 import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
 
 describe("lead refill service benchmark", () => {
-  let ctx: TestDbContext | null = null;
-  let engine: EngineClient | null = null;
+  let ctx!: TestDbContext;
+  let engine!: EngineClient;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
@@ -28,10 +28,7 @@ describe("lead refill service benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
-    engine = null;
   });
 
   bench(
@@ -50,14 +47,14 @@ describe("lead refill service benchmark", () => {
         },
         {
           repos: {
-            ...ctx!.repos,
-            users: createCapacityUsersRepo(ctx!.db),
+            ...ctx.repos,
+            users: createCapacityUsersRepo(ctx.db),
           },
           runInTransaction: (operation) =>
-            ctx!.db
+            ctx.db
               .transaction()
               .execute((txDb) => operation(createTestRepositories(txDb))),
-          engine: engine!,
+          engine,
         },
       );
 

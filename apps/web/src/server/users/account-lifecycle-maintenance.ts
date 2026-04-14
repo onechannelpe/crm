@@ -54,10 +54,14 @@ async function runExpiryNotificationTick(
         continue;
       }
 
+      if (user.expires_at == null) {
+        continue;
+      }
+
       const { html, text } = renderAccountExpiringEmail({
         fullName: shortName(user),
         username: user.username,
-        expiresAt: new Date(user.expires_at!).toLocaleDateString("es-MX", {
+        expiresAt: new Date(user.expires_at).toLocaleDateString("es-MX", {
           year: "numeric",
           month: "long",
           day: "numeric",

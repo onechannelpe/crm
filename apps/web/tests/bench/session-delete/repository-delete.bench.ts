@@ -10,7 +10,7 @@ import { takeFromPool } from "../_shared/pool";
 import { seedSessionDeleteFixtures, USER_POOL_SIZE } from "./fixtures";
 
 describe("session delete repository benchmark", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx!: TestDbContext;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
@@ -24,9 +24,7 @@ describe("session delete repository benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
   });
 
   bench(
@@ -38,7 +36,7 @@ describe("session delete repository benchmark", () => {
         "session-delete delete repository pool exhausted before iterations completed",
       );
 
-      await ctx!.repos.sessions.deleteAllForUser(userId);
+      await ctx.repos.sessions.deleteAllForUser(userId);
     },
     fixedIterations(USER_POOL_SIZE),
   );
