@@ -82,7 +82,7 @@ describe("integration import pipeline concurrency", () => {
     const leadExportQuery = runtime.integrations.leadExportQuery;
     const concurrentExportReads = (async () => {
       for (let i = 0; i < 40; i++) {
-        await leadExportQuery.list({});
+        await leadExportQuery.export({});
       }
     })();
 

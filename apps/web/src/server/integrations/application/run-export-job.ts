@@ -27,7 +27,7 @@ export function createExportBatchRunner(deps: {
         throw new Error(`Invalid job type ${job.type} for export runner`);
       }
 
-      const leads = await runtime.leadExportQuery.list({});
+      const leads = await runtime.leadExportQuery.export({});
 
       if (signal.aborted) throw new Error("Job aborted");
 
@@ -36,7 +36,7 @@ export function createExportBatchRunner(deps: {
           ruc: lead.ruc,
           razon_social: lead.razonSocial ?? "",
           executive_id: lead.executiveId,
-          executive_name: lead.executiveName ?? "",
+          executive_name: lead.executiveName,
           created_at: new Date(lead.createdAt).toISOString().slice(0, 10),
           stage: lead.stage,
           address: lead.address ?? "",

@@ -60,7 +60,7 @@ export interface IntegrationRuntime {
   executor: DatabaseExecutor;
   jobs: IntegrationJobsPort;
   leadExportQuery: {
-    list(filters: { executiveId?: number }): Promise<
+    export(filters: { executiveId?: number }): Promise<
       Array<{
         id: number;
         ruc: string;
@@ -71,7 +71,7 @@ export interface IntegrationRuntime {
         prioridad: string | null;
         createdAt: number;
         executiveId: number;
-        executiveName: string | null;
+        executiveName: string;
       }>
     >;
   };
