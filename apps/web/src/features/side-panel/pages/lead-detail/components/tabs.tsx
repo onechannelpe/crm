@@ -49,7 +49,7 @@ export function Tabs(props: TabsProps) {
             class={`${styles.tab} ${props.activeTab === tab.id ? styles.tabActive : ""}`}
             onClick={() => props.onTabSelect(tab.id)}
           >
-            <tab.icon size={14} />
+            <tab.icon size={16} />
             <span>{tab.label}</span>
           </button>
         )}
@@ -60,7 +60,7 @@ export function Tabs(props: TabsProps) {
           class={styles.moreTab}
           onClick={() => setIsOverflowOpen((value) => !value)}
         >
-          <ChevronDown size={14} />
+          <ChevronDown size={16} />
           <span>+{props.hiddenTabsCount} más</span>
         </button>
         <Show when={isOverflowOpen()}>
