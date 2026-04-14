@@ -12,12 +12,8 @@ function nameToHue(name: string): number {
   return hash % 360;
 }
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase();
-  return (
-    (parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")
-  ).toUpperCase();
+function initial(name: string): string {
+  return (name.trim().charAt(0) || "-").toUpperCase();
 }
 
 export type ChipShape = "round" | "square";
@@ -48,7 +44,7 @@ export function RecordChip(props: RecordChipProps) {
             }}
             aria-hidden="true"
           >
-            {initials(props.name)}
+            {initial(props.name)}
           </span>
         }
       >

@@ -41,9 +41,8 @@
 }
 
 .label {
-  color: var(--foreground-secondary);
+  color: var(--foreground);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
   min-width: 0;
 }
 
