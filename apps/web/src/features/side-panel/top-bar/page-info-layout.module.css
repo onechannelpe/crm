@@ -42,3 +42,20 @@
   font-size: var(--font-size-sm);
   white-space: nowrap;
 }
+
+.inlineInput {
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  height: 24px;
+  outline: none;
+  padding: 0;
+  width: 100%;
+}
+
+.inlineInput::placeholder {
+  color: var(--foreground-light);
+  font-weight: var(--font-weight-medium);
+}

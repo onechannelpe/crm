@@ -3,19 +3,15 @@ import { For, Show } from "solid-js";
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronRight from "~/components/icons/chevron-right";
 import Plus from "~/components/icons/plus";
-import { Input } from "~/components/ui/input/input";
 
 import { FIELD_ROWS, RELATION_WIDGETS } from "./constants";
 
 import styles from "../page.module.css";
 
 type HomeTabContentProps = {
-  ruc?: string;
-  rucError?: string | null;
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
-  onRucInput?: (value: string) => void;
   onSubmit?: () => void;
 };
 
@@ -42,35 +38,13 @@ export function HomeTabContent(props: HomeTabContentProps) {
                   <span>{field.label}</span>
                 </div>
                 <div class={styles.fieldValue}>
-                  {field.key === "ruc" ? (
-                    <Input
-                      value={props.ruc ?? ""}
-                      onInput={(event) =>
-                        props.onRucInput?.(event.currentTarget.value)
-                      }
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          props.onSubmit?.();
-                        }
-                      }}
-                      placeholder="Ingresa el RUC"
-                      class={styles.fieldInputControl}
-                      aria-label="RUC"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={11}
-                      autocomplete="off"
-                      error={props.rucError ?? undefined}
-                    />
-                  ) : (
-                    <span class={styles.fieldTextValue}>
-                      {field.key === "razonSocial"
-                        ? (props.razonSocial ?? "")
-                        : field.key === "address"
-                          ? (props.address ?? "")
-                          : (field.value ?? "")}
-                    </span>
-                  )}
+                  <span class={styles.fieldTextValue}>
+                    {field.key === "razonSocial"
+                      ? (props.razonSocial ?? "")
+                      : field.key === "address"
+                        ? (props.address ?? "")
+                        : (field.value ?? "")}
+                  </span>
                 </div>
               </div>
             )}

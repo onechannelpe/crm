@@ -58,7 +58,6 @@ export const HIDDEN_TAB_ITEMS: ReadonlyArray<{
 ] as const;
 
 export const FIELD_ROWS: ReadonlyArray<DisplayField> = [
-  { label: "RUC", icon: MapIcon, key: "ruc" },
   { label: "Razón social", icon: Building2, key: "razonSocial" },
   { label: "Dirección", icon: MapIcon, key: "address" },
   { label: "Ejecutivo asignado", icon: User, value: "Actual" },

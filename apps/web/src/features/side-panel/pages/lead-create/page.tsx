@@ -1,8 +1,10 @@
 import { useAction } from "@solidjs/router";
 import {
+  createEffect,
   createMemo,
   createResource,
   createSignal,
+  on,
   onCleanup,
   onMount,
 } from "solid-js";
@@ -34,12 +36,10 @@ import styles from "./page.module.css";
 
 type TabContentProps = {
   ruc?: string;
-  rucError?: string | null;
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
   canCreate: boolean;
-  onRucInput?: (value: string) => void;
   onSubmit?: () => void;
 };
 
@@ -67,8 +67,15 @@ export function LeadCreatePage() {
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
   const [error, setError] = createSignal<string | null>(null);
-  const [rucError, setRucError] = createSignal<string | null>(null);
-  const { pageState, setActiveTab, setRuc } = useLeadCreatePageState();
+  const { pageState, setActiveTab } = useLeadCreatePageState();
+
+  createEffect(
+    on(
+      () => pageState().draft.ruc,
+      () => setError(null),
+      { defer: true },
+    ),
+  );
   const validRuc = createMemo(() => {
     const value = pageState().draft.ruc.trim();
     return /^\d{11}$/.test(value) ? value : null;
@@ -103,17 +110,10 @@ export function LeadCreatePage() {
 
     return {
       ruc: pageState().draft.ruc,
-      rucError: rucError(),
       razonSocial: preview?.razonSocial ?? null,
       address: preview?.address ?? null,
       engineStatus: engineStatus(),
       canCreate: validRuc() !== null,
-      onRucInput: (value) => {
-        setRuc(value);
-        if (rucError()) {
-          setRucError(null);
-        }
-      },
       onSubmit: () => void handleSubmit(),
     };
   });
@@ -138,13 +138,12 @@ export function LeadCreatePage() {
     const value = validRuc();
 
     if (!value) {
-      setRucError("El RUC debe tener 11 dígitos.");
+      setError("El RUC debe tener 11 dígitos.");
       setActiveTab("home");
       return;
     }
 
     setError(null);
-    setRucError(null);
 
     const rollbackOptimistic = addOptimisticLead(
       ["mine", "review", "all"],
@@ -177,7 +176,7 @@ export function LeadCreatePage() {
         appError.code === "validation" &&
         appError.publicMessage.includes("RUC")
       ) {
-        setRucError(appError.publicMessage);
+        setError(appError.publicMessage);
         setActiveTab("home");
         return;
       }
