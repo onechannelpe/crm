@@ -21,8 +21,9 @@ import {
   setIdentityPassword,
 } from "../support/test-identities";
 
+const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
+
 describe("privileged password login", () => {
-  const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.88";
   const userAgent = "vitest-agent";

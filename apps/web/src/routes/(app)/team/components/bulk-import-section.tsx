@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
+import { readFileText } from "~/lib/file/read-file-text";
 import { bulkImportSetupQuery } from "~/lib/queries/team";
 
 import styles from "../team-page.module.css";
@@ -44,22 +45,6 @@ export function BulkImportSection() {
       }
     }),
   );
-
-  function readFileText(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      const handleLoad = () => {
-        resolve(typeof reader.result === "string" ? reader.result : "");
-      };
-      const handleError = () => {
-        reject(new Error("Error al leer el archivo"));
-      };
-
-      reader.addEventListener("load", handleLoad, { once: true });
-      reader.addEventListener("error", handleError, { once: true });
-      reader.readAsText(file, "utf-8");
-    });
-  }
 
   async function handlePreview(): Promise<void> {
     const file = csvFile();

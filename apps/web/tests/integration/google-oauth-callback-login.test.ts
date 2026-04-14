@@ -22,9 +22,10 @@ vi.mock("../../src/lib/auth/google/google-oauth", () => ({
     mocks.authenticateGoogleAuthorizationCode,
 }));
 
+const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
+
 describe("google oauth callback login", () => {
   let ctx: TestDbContext;
-  const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   const request = {
     code: "google-code-1",
     state: "expected-state",

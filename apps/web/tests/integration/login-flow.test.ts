@@ -20,8 +20,9 @@ import {
   setIdentityPassword,
 } from "../support/test-identities";
 
+const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
+
 describe("login flow service", () => {
-  const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const execIdentity = getSeededIdentity("execOne");
   const superuserIdentity = getSeededIdentity("superuser");

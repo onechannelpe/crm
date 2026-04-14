@@ -39,6 +39,16 @@ function splitNamesFromItfisdenreg(full: string): {
   };
 }
 
+function normalizeLabel(label: string): string {
+  return label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/:/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 export function mapDniData(dni: string, payload: unknown): SunatDniData | null {
   if (!isPlainRecord(payload)) {
     if (typeof payload === "string" && payload.trim().length > 0) {
@@ -119,15 +129,6 @@ export function mapConsultaRucData(parsed: Record<string, string> | null): {
   contributorCondition: string | null;
 } | null {
   if (!parsed) return null;
-
-  const normalizeLabel = (label: string): string =>
-    label
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/:/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
 
   const findValue = (candidateLabel: string): string | null => {
     const normalizedCandidate = normalizeLabel(candidateLabel);

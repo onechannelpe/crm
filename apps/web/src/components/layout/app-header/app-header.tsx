@@ -8,6 +8,8 @@ import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
 import { PageHeader } from "~/features/settings-shell/page/page-header";
+import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
+import { focusExtensionWindow } from "~/lib/extension/runtime";
 import { getHeaderRoute } from "~/lib/nav/policy";
 
 import { useAppHeaderSidePanel } from "./use-app-header-side-panel";
@@ -23,9 +25,7 @@ export function AppHeader() {
     isSidePanelOpen,
     extensionState,
     extensionError,
-    focusExtensionWindow,
     toggleSidePanel,
-    commandButtonClickOutsideId,
   } = useAppHeaderSidePanel();
 
   return (
@@ -62,7 +62,7 @@ export function AppHeader() {
         isOpen={isSidePanelOpen()}
         modKey={modKey()}
         onClick={toggleSidePanel}
-        dataClickOutsideId={commandButtonClickOutsideId}
+        dataClickOutsideId={PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID}
       />
     </PageHeader>
   );

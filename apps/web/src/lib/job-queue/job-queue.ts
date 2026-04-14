@@ -3,6 +3,10 @@ import { createLogger } from "~/lib/observability/logger";
 import { nextAvailableAt } from "./backoff";
 import type { JobQueueConfig, QueueJobBase, QueueRunner } from "./types";
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
 export function createJobQueue<TJob extends QueueJobBase, TResult>(
   config: JobQueueConfig<TJob, TResult>,
 ): QueueRunner {
@@ -14,10 +18,6 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
 
   let runningCount = 0;
   const logger = createLogger(`queue:${name}`);
-
-  function errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : "Unknown error";
-  }
 
   async function renewLease(jobId: number, controller: AbortController) {
     try {

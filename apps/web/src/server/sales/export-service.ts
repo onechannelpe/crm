@@ -101,6 +101,27 @@ function sanitizeStoragePart(raw: string): string {
   return raw.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
+function parseExportScope(filtersJson: string): {
+  scope: "branch" | "global";
+  branchId: number | null;
+} {
+  try {
+    const parsed = JSON.parse(filtersJson) as unknown;
+    if (typeof parsed !== "object" || parsed === null) {
+      return { scope: "branch", branchId: null };
+    }
+    const scope =
+      "scope" in parsed && parsed.scope === "global" ? "global" : "branch";
+    const branchId =
+      "branchId" in parsed && typeof parsed.branchId === "number"
+        ? parsed.branchId
+        : null;
+    return { scope, branchId };
+  } catch {
+    return { scope: "branch", branchId: null };
+  }
+}
+
 export function createSalesExportService(
   repos: {
     reportExportJobs: ReportExportJobsPort;
@@ -108,31 +129,11 @@ export function createSalesExportService(
   },
   blobStore: SalesExportBlobStore,
 ): SalesExportService {
-  const parseScope = (
-    filtersJson: string,
-  ): { scope: "branch" | "global"; branchId: number | null } => {
-    try {
-      const parsed = JSON.parse(filtersJson) as unknown;
-      if (typeof parsed !== "object" || parsed === null) {
-        return { scope: "branch", branchId: null };
-      }
-      const scope =
-        "scope" in parsed && parsed.scope === "global" ? "global" : "branch";
-      const branchId =
-        "branchId" in parsed && typeof parsed.branchId === "number"
-          ? parsed.branchId
-          : null;
-      return { scope, branchId };
-    } catch {
-      return { scope: "branch", branchId: null };
-    }
-  };
-
   const processJob = async (
     job: ReportExportLeasedJob,
     signal?: AbortSignal,
   ): Promise<SalesExportProcessResult> => {
-    const scope = parseScope(job.filters_json);
+    const scope = parseExportScope(job.filters_json);
     const rows = await repos.salesRecords.listConfirmedWithClient(
       scope.scope === "global"
         ? undefined
