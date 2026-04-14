@@ -1,9 +1,4 @@
-import type {
-  Insertable,
-  SelectQueryBuilder,
-  Selectable,
-  Updateable,
-} from "kysely";
+import type { Insertable, Selectable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type {
@@ -12,8 +7,6 @@ import type {
   LeadRecord,
 } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
-import type { LeadListFilters } from "../application/ports/lead-repository";
 
 export type LeadRow = Selectable<Database["pipeline_leads"]>;
 export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
@@ -64,28 +57,6 @@ function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
     prioridad: values.prioridad,
     updated_at: values.updatedAt,
   };
-}
-
-function applyLeadFilters<TRow>(
-  query: SelectQueryBuilder<Database, "pipeline_leads", TRow>,
-  filters: LeadListFilters,
-) {
-  let nextQuery = query;
-
-  if (filters.executiveId !== undefined) {
-    nextQuery = nextQuery.where("executive_id", "=", filters.executiveId);
-  }
-  if (filters.stage !== undefined) {
-    nextQuery = nextQuery.where("stage", "=", filters.stage);
-  }
-  if (filters.status !== undefined) {
-    nextQuery = nextQuery.where("status", "=", filters.status);
-  }
-  if (filters.prioridad !== undefined) {
-    nextQuery = nextQuery.where("prioridad", "=", filters.prioridad);
-  }
-
-  return nextQuery;
 }
 
 export function createLeadRepo(db: DatabaseExecutor) {
@@ -144,29 +115,6 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .set(toLeadPatchRow(values))
         .where("ruc", "=", ruc)
         .execute();
-    },
-
-    async list(filters: LeadListFilters) {
-      const rows = await applyLeadFilters(
-        db.selectFrom("pipeline_leads").selectAll(),
-        filters,
-      )
-        .orderBy("created_at", "desc")
-        .limit(filters.limit)
-        .offset(filters.offset)
-        .execute();
-      return rows.map(toLead);
-    },
-
-    async count(filters: LeadListFilters) {
-      const row = await applyLeadFilters(
-        db
-          .selectFrom("pipeline_leads")
-          .select((eb) => eb.fn.countAll<number>().as("count")),
-        filters,
-      ).executeTakeFirstOrThrow();
-
-      return row.count;
     },
   };
 }

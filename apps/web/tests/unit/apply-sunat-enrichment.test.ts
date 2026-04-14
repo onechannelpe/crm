@@ -13,8 +13,6 @@ function createLeadRepositoryDouble() {
     findByRucMany: async () => [],
     updateById: async () => [],
     updateByRuc,
-    list: async () => [],
-    count: async () => 0,
   } satisfies LeadRepository;
 
   return repo;

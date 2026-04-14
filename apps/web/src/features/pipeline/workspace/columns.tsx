@@ -7,6 +7,7 @@ import Target from "~/components/icons/target";
 import TimelineEvent from "~/components/icons/timeline-event";
 import User from "~/components/icons/user";
 import { Badge } from "~/components/ui/display/badge";
+import { RecordChip } from "~/components/ui/record-chip/record-chip";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import type { Role } from "~/lib/auth/access/rbac";
 import { formatDate } from "~/lib/utils";
@@ -101,7 +102,7 @@ const BACK_OFFICE_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     icon: User,
     width: 150,
     renderCell: (lead) => (
-      <span class={styles.mutedCellText}>Ejecutivo #{lead.executiveId}</span>
+      <RecordChip name={lead.executiveName} shape="round" />
     ),
   },
 ];

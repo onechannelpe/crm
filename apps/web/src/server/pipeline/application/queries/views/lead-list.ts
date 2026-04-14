@@ -10,6 +10,7 @@ export type LeadListRowView = {
   razonSocial: string | null;
   address: string | null;
   executiveId: number;
+  executiveName: string;
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
