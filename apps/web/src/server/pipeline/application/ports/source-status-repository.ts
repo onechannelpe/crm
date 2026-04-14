@@ -1,3 +1,5 @@
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
+
 export type SunatSourceStatus =
   | "idle"
   | "queued"
@@ -14,6 +16,7 @@ export type LeadSourceStatus = {
     department: string | null;
     contributorStatus: string | null;
     contributorCondition: string | null;
+    economicActivities: SunatEconomicActivity[];
     payloadAvailable: boolean;
   };
 };

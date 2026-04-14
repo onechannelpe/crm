@@ -1,3 +1,4 @@
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import type {
@@ -38,6 +39,7 @@ function toPipelineOverlay(
     department: string | null;
     contributorStatus: string | null;
     contributorCondition: string | null;
+    economicActivities: SunatEconomicActivity[];
     payloadJson: string;
   } | null,
 ) {
@@ -48,6 +50,7 @@ function toPipelineOverlay(
       department: null,
       contributorStatus: null,
       contributorCondition: null,
+      economicActivities: [],
       payloadAvailable: false,
     };
   }
@@ -58,6 +61,7 @@ function toPipelineOverlay(
     department: overlay.department,
     contributorStatus: overlay.contributorStatus,
     contributorCondition: overlay.contributorCondition,
+    economicActivities: overlay.economicActivities,
     payloadAvailable: overlay.payloadJson.trim().length > 0,
   };
 }

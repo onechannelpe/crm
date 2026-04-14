@@ -1,7 +1,7 @@
 import { isPlainRecord } from "~/lib/type-guards";
 
 import type { SunatScraperClient } from "./enrichment/sunat/contracts";
-import { sanitizeField } from "./enrichment/sunat/utils";
+import { sanitizeField } from "./enrichment/sunat/text";
 import type { Overlay, ProcessResult } from "./model";
 import type { JobRow, OverlayRow } from "./ports";
 
@@ -45,6 +45,7 @@ export async function processEnrichmentJob(
       department: null,
       contributorStatus: null,
       contributorCondition: null,
+      economicActivities: [],
       source: "sunat",
       fetchedAt: now,
       expiresAt: now + OVERLAY_TTL_MS,
@@ -75,6 +76,7 @@ export async function processEnrichmentJob(
     department: result.data.department,
     contributorStatus: result.data.contributorStatus,
     contributorCondition: result.data.contributorCondition,
+    economicActivities: result.data.economicActivities,
     source: "sunat",
     fetchedAt: now,
     expiresAt: now + OVERLAY_TTL_MS,
@@ -94,6 +96,7 @@ export function overlayToRow(overlay: Overlay): OverlayRow {
     department: overlay.department,
     contributor_status: overlay.contributorStatus,
     contributor_condition: overlay.contributorCondition,
+    economic_activities_json: JSON.stringify(overlay.economicActivities),
     source: overlay.source,
     fetched_at: overlay.fetchedAt,
     expires_at: overlay.expiresAt,

@@ -3,6 +3,7 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
@@ -83,6 +84,7 @@ export type LeadDetailSourceStatusView = {
     department: string | null;
     contributorStatus: string | null;
     contributorCondition: string | null;
+    economicActivities: SunatEconomicActivity[];
     payloadAvailable: boolean;
   };
 };

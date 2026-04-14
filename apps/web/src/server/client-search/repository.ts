@@ -150,6 +150,7 @@ export function createSearchEnrichmentRepo(
               department: overlay.department,
               contributor_status: overlay.contributor_status,
               contributor_condition: overlay.contributor_condition,
+              economic_activities_json: overlay.economic_activities_json,
               source: overlay.source,
               fetched_at: overlay.fetched_at,
               expires_at: overlay.expires_at,

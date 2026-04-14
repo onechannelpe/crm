@@ -1,3 +1,5 @@
+import type { SunatEconomicActivity } from "./enrichment/sunat/contracts";
+
 export type DocumentType = "dni" | "ruc";
 
 type Lifecycle = "idle" | "queued" | "running" | "succeeded" | "failed";
@@ -14,6 +16,7 @@ export interface Overlay {
   department: string | null;
   contributorStatus: string | null;
   contributorCondition: string | null;
+  economicActivities: SunatEconomicActivity[];
   source: "sunat";
   fetchedAt: number;
   expiresAt: number;

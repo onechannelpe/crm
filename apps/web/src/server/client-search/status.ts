@@ -1,3 +1,4 @@
+import type { SunatEconomicActivity } from "./enrichment/sunat/contracts";
 import type { EnrichmentStatus, Overlay } from "./model";
 import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort, JobRow, OverlayRow } from "./ports";
@@ -83,9 +84,52 @@ function rowToOverlay(row: OverlayRow): Overlay {
     department: row.department,
     contributorStatus: row.contributor_status,
     contributorCondition: row.contributor_condition,
+    economicActivities: parseEconomicActivities(row.economic_activities_json),
     source: row.source,
     fetchedAt: row.fetched_at,
     expiresAt: row.expires_at,
     payloadJson: row.payload_json,
   };
+}
+
+function parseEconomicActivities(
+  value: string | null,
+): SunatEconomicActivity[] {
+  if (!value) return [];
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((entry) => {
+        if (typeof entry !== "object" || entry === null) return null;
+
+        const role = Reflect.get(entry, "role");
+        const order = Reflect.get(entry, "order");
+        const label = Reflect.get(entry, "label");
+        const code = Reflect.get(entry, "code");
+        const description = Reflect.get(entry, "description");
+        if (
+          (role !== "principal" && role !== "secondary") ||
+          (order !== null && typeof order !== "number") ||
+          typeof label !== "string" ||
+          typeof code !== "string" ||
+          typeof description !== "string"
+        ) {
+          return null;
+        }
+
+        return {
+          role,
+          order,
+          label,
+          code,
+          description,
+        };
+      })
+      .filter((entry): entry is SunatEconomicActivity => entry !== null);
+  } catch {
+    return [];
+  }
 }

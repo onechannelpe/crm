@@ -77,6 +77,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("department", "varchar(128)")
     .addColumn("contributor_status", "varchar(64)")
     .addColumn("contributor_condition", "varchar(64)")
+    .addColumn("economic_activities_json", "text")
     .addColumn("source", "varchar(32)", (col) =>
       col.notNull().defaultTo("sunat"),
     )
