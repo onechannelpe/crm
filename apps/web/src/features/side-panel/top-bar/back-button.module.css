@@ -17,7 +17,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--foreground-secondary);
+  color: var(--foreground-tertiary);
   cursor: pointer;
   display: inline-flex;
   height: 24px;

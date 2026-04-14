@@ -1,11 +1,10 @@
 import { onMount } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
+import { TextInput } from "~/components/ui/input/text-input";
 
 import { PageInfoLayout } from "../../top-bar/page-info-layout";
 import { useLeadCreatePageState } from "./state";
-
-import pageInfoLayoutStyles from "../../top-bar/page-info-layout.module.css";
 
 export function LeadCreatePageInfo() {
   const { pageState, setRuc, label } = useLeadCreatePageState();
@@ -19,13 +18,14 @@ export function LeadCreatePageInfo() {
     <PageInfoLayout
       icon={<Building2 size={14} />}
       title={
-        <input
+        <TextInput
           ref={(el) => {
             inputRef = el;
           }}
-          class={pageInfoLayoutStyles.inlineInput}
+          sizeVariant="sm"
+          inheritFontStyles
           value={pageState().draft.ruc}
-          onInput={(e) => setRuc(e.currentTarget.value)}
+          onChange={setRuc}
           placeholder="RUC"
           inputmode="numeric"
           pattern="[0-9]*"

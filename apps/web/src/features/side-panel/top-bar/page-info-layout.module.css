@@ -1,7 +1,7 @@
 .container {
   align-items: center;
   display: flex;
-  gap: var(--spacing-0.5);
+  gap: 2px;
   min-width: 0;
 }
 
@@ -21,7 +21,7 @@
   align-items: center;
   display: flex;
   flex: 1;
-  gap: var(--spacing-0.5);
+  gap: 2px;
   min-width: 0;
 }
 
@@ -30,8 +30,9 @@
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
   max-width: 150px;
+  min-width: 0;
   overflow: hidden;
-  padding-inline: 4px;
+  padding-inline: var(--spacing-1);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -41,21 +42,4 @@
   flex-shrink: 0;
   font-size: var(--font-size-sm);
   white-space: nowrap;
-}
-
-.inlineInput {
-  background: transparent;
-  border: none;
-  color: var(--foreground);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
-  height: 24px;
-  outline: none;
-  padding: 0;
-  width: 100%;
-}
-
-.inlineInput::placeholder {
-  color: var(--foreground-light);
-  font-weight: var(--font-weight-medium);
 }
