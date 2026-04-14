@@ -83,6 +83,12 @@ export type LeadDetailSourceStatusView = {
     department: string | null;
     contributorStatus: string | null;
     contributorCondition: string | null;
+    economicActivities: {
+      kind: "principal" | "secondary";
+      label: string;
+      code: string;
+      description: string;
+    }[];
     payloadAvailable: boolean;
   };
 };

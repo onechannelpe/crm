@@ -109,6 +109,16 @@ async function fetchRuc(
       ...itfisData,
       contributorStatus: consultaData?.contributorStatus ?? null,
       contributorCondition: consultaData?.contributorCondition ?? null,
+      economicActivities: consultaData?.economicActivities ?? [],
+      payload: {
+        itfis: itfisData.payload,
+        consultaRuc: consultaParsed,
+        extracted: {
+          contributorStatus: consultaData?.contributorStatus ?? null,
+          contributorCondition: consultaData?.contributorCondition ?? null,
+          economicActivities: consultaData?.economicActivities ?? [],
+        },
+      },
     },
   };
 }

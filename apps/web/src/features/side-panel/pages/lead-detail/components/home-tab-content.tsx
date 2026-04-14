@@ -1,6 +1,7 @@
 import { For, Show } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
+import { WithTooltip } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import { CommercialInputSection } from "~/features/pipeline/detail/commercial-input-section";
 import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
 import { blockingFieldLabel } from "~/features/pipeline/detail/lead-workflow-ui";
@@ -17,11 +18,42 @@ function fieldValue(props: {
 }) {
   if (props.key === "ruc") return props.data.lead.ruc;
   if (props.key === "razonSocial") return props.data.lead.razonSocial ?? "";
+  if (props.key === "economicActivities") return "";
   if (props.key === "status") return props.data.lead.status ?? "";
   if (props.key === "prioridad") return props.data.lead.prioridad ?? "";
   if (props.key === "stage") return props.data.lead.stage;
   if (props.key === "nextStep") return props.data.lead.nextStep;
   return formatDateTime(props.data.lead.updatedAt);
+}
+
+function EconomicActivitiesField(props: {
+  activities: LeadDetailView["sourceStatus"]["sunat"]["economicActivities"];
+}) {
+  if (props.activities.length < 1) {
+    return <span class={styles.fieldTextValue}>—</span>;
+  }
+
+  return (
+    <div class={styles.economicActivitiesValue}>
+      <div class={styles.economicActivityChipList}>
+        <For each={props.activities}>
+          {(activity) => (
+            <WithTooltip tooltip={`${activity.label} - ${activity.description}`}>
+              <span
+                class={`${styles.economicActivityChip} ${
+                  activity.kind === "principal"
+                    ? styles.economicActivityChipPrincipal
+                    : styles.economicActivityChipSecondary
+                }`}
+              >
+                {activity.code}
+              </span>
+            </WithTooltip>
+          )}
+        </For>
+      </div>
+    </div>
+  );
 }
 
 export function HomeTabContent(props: { data: LeadDetailView }) {
@@ -47,9 +79,20 @@ export function HomeTabContent(props: { data: LeadDetailView }) {
                   <span>{field.label}</span>
                 </div>
                 <div class={styles.fieldValue}>
-                  <span class={styles.fieldTextValue}>
-                    {fieldValue({ data: props.data, key: field.key })}
-                  </span>
+                  <Show
+                    when={field.key === "economicActivities"}
+                    fallback={
+                      <span class={styles.fieldTextValue}>
+                        {fieldValue({ data: props.data, key: field.key })}
+                      </span>
+                    }
+                  >
+                    <EconomicActivitiesField
+                      activities={
+                        props.data.sourceStatus.sunat.economicActivities
+                      }
+                    />
+                  </Show>
                 </div>
               </div>
             )}

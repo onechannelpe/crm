@@ -1,6 +1,10 @@
 import { isPlainRecord } from "~/lib/type-guards";
 
-import type { SunatDniData, SunatRucData } from "./contracts";
+import type {
+  SunatDniData,
+  SunatEconomicActivity,
+  SunatRucData,
+} from "./contracts";
 import { sanitizeField } from "./utils";
 
 function firstListaEntry(
@@ -120,6 +124,7 @@ export function mapItfisRucData(
     department: sanitizeField(lista.desdepartamento),
     contributorStatus: null,
     contributorCondition: null,
+    economicActivities: [],
     payload,
   };
 }
@@ -127,6 +132,7 @@ export function mapItfisRucData(
 export function mapConsultaRucData(parsed: Record<string, string> | null): {
   contributorStatus: string | null;
   contributorCondition: string | null;
+  economicActivities: SunatEconomicActivity[];
 } | null {
   if (!parsed) return null;
 
@@ -140,8 +146,40 @@ export function mapConsultaRucData(parsed: Record<string, string> | null): {
     return null;
   };
 
+  const activityText =
+    findValue("actividad(es) economica(s)") ?? findValue("actividad economica");
+
   return {
     contributorStatus: findValue("estado del contribuyente"),
     contributorCondition: findValue("condicion del contribuyente"),
+    economicActivities: parseEconomicActivities(activityText),
   };
+}
+
+function parseEconomicActivities(
+  value: string | null,
+): SunatEconomicActivity[] {
+  if (!value) return [];
+
+  const matches = [
+    ...value.matchAll(
+      /(Principal|Secundaria\s+\d+)\s*-\s*([0-9]+)\s*-\s*([\s\S]*?)(?=\s*(?:Principal|Secundaria\s+\d+)\s*-\s*[0-9]+\s*-|$)/gi,
+    ),
+  ];
+
+  return matches
+    .map((match) => {
+      const label = sanitizeField(match[1]);
+      const code = sanitizeField(match[2]);
+      const description = sanitizeField(match[3]);
+      if (!label || !code || !description) return null;
+
+      return {
+        kind: label.toLowerCase() === "principal" ? "principal" : "secondary",
+        label,
+        code,
+        description,
+      } satisfies SunatEconomicActivity;
+    })
+    .filter((activity): activity is SunatEconomicActivity => activity !== null);
 }

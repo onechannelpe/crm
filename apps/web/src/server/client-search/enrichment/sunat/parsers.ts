@@ -33,6 +33,11 @@ export function parseRucHtml(html: string): Record<string, string> {
     ].map((match) =>
       normalizeWhitespace(decodeHtmlEntities(match[1].replace(/<[^>]+>/g, ""))),
     );
+    const tableCells = [
+      ...row.matchAll(/<tr[^>]*>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<\/tr>/gi),
+    ].map((match) =>
+      normalizeWhitespace(decodeHtmlEntities(match[1].replace(/<[^>]+>/g, ""))),
+    );
 
     if (headings.length === 2 && texts.length === 0) {
       const [label, value] = headings;
@@ -44,6 +49,11 @@ export function parseRucHtml(html: string): Record<string, string> {
 
     if (headings.length === 1 && texts.length === 1) {
       data[headings[0]] = texts[0];
+      continue;
+    }
+
+    if (headings.length === 1 && tableCells.length > 0) {
+      data[headings[0]] = tableCells.join("\n");
     }
   }
 

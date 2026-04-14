@@ -41,6 +41,7 @@ function toLeadSourceStatus(
       department: sourceStatus.sunat.department,
       contributorStatus: sourceStatus.sunat.contributorStatus,
       contributorCondition: sourceStatus.sunat.contributorCondition,
+      economicActivities: sourceStatus.sunat.economicActivities,
       payloadAvailable: sourceStatus.sunat.payloadAvailable,
     },
   };

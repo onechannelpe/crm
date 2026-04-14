@@ -8,6 +8,13 @@ export interface SunatDniData {
   payload: unknown;
 }
 
+export interface SunatEconomicActivity {
+  kind: "principal" | "secondary";
+  label: string;
+  code: string;
+  description: string;
+}
+
 export interface SunatRucData {
   ruc: string;
   razonSocial: string | null;
@@ -16,6 +23,7 @@ export interface SunatRucData {
   department: string | null;
   contributorStatus: string | null;
   contributorCondition: string | null;
+  economicActivities: SunatEconomicActivity[];
   payload: unknown;
 }
 

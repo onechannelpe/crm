@@ -1,6 +1,8 @@
+import { isPlainRecord } from "~/lib/type-guards";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import type {
+  LeadSunatEconomicActivity,
   SourceStatusRepository,
   SunatSourceStatus,
 } from "~/server/pipeline/application/ports/source-status-repository";
@@ -48,6 +50,7 @@ function toPipelineOverlay(
       department: null,
       contributorStatus: null,
       contributorCondition: null,
+      economicActivities: [],
       payloadAvailable: false,
     };
   }
@@ -58,8 +61,56 @@ function toPipelineOverlay(
     department: overlay.department,
     contributorStatus: overlay.contributorStatus,
     contributorCondition: overlay.contributorCondition,
+    economicActivities: parseEconomicActivitiesFromPayload(overlay.payloadJson),
     payloadAvailable: overlay.payloadJson.trim().length > 0,
   };
+}
+
+function parseEconomicActivitiesFromPayload(
+  payloadJson: string,
+): LeadSunatEconomicActivity[] {
+  if (payloadJson.trim().length < 1) return [];
+
+  try {
+    const parsed = JSON.parse(payloadJson) as unknown;
+    if (!isPlainRecord(parsed)) return [];
+
+    const extracted = parsed.extracted;
+    if (!isPlainRecord(extracted)) return [];
+
+    const activities = extracted.economicActivities;
+    if (!Array.isArray(activities)) return [];
+
+    return activities
+      .map((item) => {
+        if (!isPlainRecord(item)) return null;
+
+        const kind = item.kind;
+        const label = item.label;
+        const code = item.code;
+        const description = item.description;
+        if (
+          (kind !== "principal" && kind !== "secondary") ||
+          typeof label !== "string" ||
+          typeof code !== "string" ||
+          typeof description !== "string"
+        ) {
+          return null;
+        }
+
+        return {
+          kind,
+          label,
+          code,
+          description,
+        } satisfies LeadSunatEconomicActivity;
+      })
+      .filter(
+        (activity): activity is LeadSunatEconomicActivity => activity !== null,
+      );
+  } catch {
+    return [];
+  }
 }
 
 export function createSourceStatusRepo(
