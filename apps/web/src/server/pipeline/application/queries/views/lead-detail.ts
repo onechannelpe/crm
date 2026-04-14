@@ -3,13 +3,11 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
-import type {
-  LeadSunatEconomicActivity,
-  SunatSourceStatus,
-} from "../../ports/source-status-repository";
+import type { SunatSourceStatus } from "../../ports/source-status-repository";
 
 export type LeadTimelineItem = {
   id: string;
@@ -86,7 +84,7 @@ export type LeadDetailSourceStatusView = {
     department: string | null;
     contributorStatus: string | null;
     contributorCondition: string | null;
-    economicActivities: LeadSunatEconomicActivity[];
+    economicActivities: SunatEconomicActivity[];
     payloadAvailable: boolean;
   };
 };

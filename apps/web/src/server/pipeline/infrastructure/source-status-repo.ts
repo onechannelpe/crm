@@ -1,7 +1,7 @@
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import type {
-  LeadSunatEconomicActivity,
   SourceStatusRepository,
   SunatSourceStatus,
 } from "~/server/pipeline/application/ports/source-status-repository";
@@ -39,7 +39,7 @@ function toPipelineOverlay(
     department: string | null;
     contributorStatus: string | null;
     contributorCondition: string | null;
-    economicActivities: LeadSunatEconomicActivity[];
+    economicActivities: SunatEconomicActivity[];
     payloadJson: string;
   } | null,
 ) {
