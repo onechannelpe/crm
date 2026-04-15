@@ -1,0 +1,45 @@
+.group {
+  display: flex;
+  flex-flow: column;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  width: 100%;
+}
+
+.monthSeparator {
+  align-items: center;
+  align-self: stretch;
+  color: var(--foreground-light);
+  display: flex;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  gap: var(--spacing-4);
+  text-transform: capitalize;
+}
+
+.monthSeparatorLine {
+  background: var(--border-light);
+  border-radius: 50px;
+  flex: 1 0 0;
+  height: 1px;
+}
+
+.groupContainer {
+  margin-bottom: var(--spacing-3);
+  margin-top: var(--spacing-3);
+  position: relative;
+}
+
+.groupBar {
+  align-items: center;
+  background: var(--secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  width: 24px;
+}
