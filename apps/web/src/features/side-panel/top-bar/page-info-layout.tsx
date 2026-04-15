@@ -19,7 +19,7 @@ export function PageInfoLayout(props: PageInfoLayoutProps) {
         </div>
       </Show>
       <div class={styles.textContainer}>
-        <span class={styles.titleWrapper}>{props.title}</span>
+        <div class={styles.titleWrapper}>{props.title}</div>
         <Show when={props.label}>
           <span class={styles.label}>{props.label}</span>
         </Show>

@@ -1,0 +1,67 @@
+.footer {
+  align-items: center;
+  background: var(--secondary);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: flex-end;
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.footerButtonSecondary,
+.footerButtonPrimary {
+  align-items: center;
+  border-radius: var(--radius-sm);
+  border-style: solid;
+  border-width: 1px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  gap: var(--spacing-1);
+  height: 24px;
+  justify-content: flex-start;
+  padding: 0 var(--spacing-2);
+  transition: background 0.1s ease;
+  white-space: nowrap;
+}
+
+.footerButtonSecondary {
+  background: var(--secondary);
+  border-color: var(--background-transparent-medium);
+  color: var(--foreground-secondary);
+}
+
+.footerButtonSecondary:hover {
+  background: var(--background-transparent-light);
+}
+
+.footerButtonPrimary {
+  background: var(--color-blue);
+  border-color: var(--background-transparent-light);
+  color: white;
+}
+
+.footerButtonPrimary:hover {
+  background: color-mix(in oklab, var(--color-blue) 90%, black 10%);
+}
+
+.footerIcon {
+  align-items: center;
+  display: inline-flex;
+}
+
+.footerLabel {
+  font-weight: 500;
+}
+
+.footerDots {
+  color: var(--foreground-tertiary);
+  margin-left: auto;
+}
+
+.footerShortcut {
+  color: color-mix(in oklab, currentColor 60%, transparent);
+  font-size: 11px;
+  margin-left: auto;
+}

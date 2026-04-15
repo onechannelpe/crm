@@ -5,9 +5,10 @@
   box-sizing: border-box;
   display: flex;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 16px;
   height: var(--side-panel-top-bar-height);
   justify-content: space-between;
+  overflow: hidden;
   padding: 0 8px;
   width: 100%;
 }
@@ -47,7 +48,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--foreground-secondary);
+  color: var(--foreground-tertiary);
   cursor: pointer;
   display: inline-flex;
   height: 24px;
@@ -63,7 +64,7 @@
 }
 
 .closeButton:hover {
-  background: color-mix(in srgb, var(--accent) 82%, var(--background));
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 

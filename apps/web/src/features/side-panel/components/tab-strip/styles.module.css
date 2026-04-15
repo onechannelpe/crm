@@ -1,0 +1,112 @@
+.tabs {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  height: 40px;
+  overflow: hidden;
+  padding-left: var(--spacing-2);
+  position: relative;
+  user-select: none;
+  width: 100%;
+}
+
+.tabs::after {
+  background-color: var(--border-light);
+  bottom: 0;
+  content: "";
+  height: 1px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.moreTabWrap {
+  position: relative;
+}
+
+.tab {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 500;
+  gap: 4px;
+  padding: 4px 8px;
+  position: relative;
+}
+
+.tab:hover,
+.moreTab:hover {
+  background: var(--tertiary);
+  color: var(--foreground);
+}
+
+.tabActive {
+  color: var(--foreground);
+}
+
+.tabActive::after {
+  background: var(--foreground);
+  bottom: 0;
+  content: "";
+  height: 1px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 1;
+}
+
+.moreTab {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 500;
+  gap: 4px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.moreTab:focus-visible,
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.moreMenu {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-elevation-2);
+  min-width: 160px;
+  padding: 4px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 2;
+}
+
+.moreMenuItem {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  justify-content: flex-start;
+  padding: 6px 8px;
+  width: 100%;
+}
+
+.moreMenuItem:hover {
+  background: var(--secondary);
+}

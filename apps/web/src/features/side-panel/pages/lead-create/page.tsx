@@ -1,8 +1,10 @@
 import { useAction } from "@solidjs/router";
 import {
+  createEffect,
   createMemo,
   createResource,
   createSignal,
+  on,
   onCleanup,
   onMount,
 } from "solid-js";
@@ -20,26 +22,29 @@ import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
 
 import { PanelList } from "../../components/list";
+import { TabStrip } from "../../components/tab-strip";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
-import type { ExtendedTabId } from "./components/constants";
-import { Footer } from "./components/footer";
-import { HomeTabContent } from "./components/home-tab-content";
-import { Tabs } from "./components/tabs";
-import { TasksTabContent } from "./components/tasks-tab-content";
-import { TimelineTabContent } from "./components/timeline-tab-content";
+import {
+  HIDDEN_TAB_ITEMS,
+  TAB_ITEMS,
+  type ExtendedTabId,
+  type TabId,
+} from "./constants";
+import { Footer } from "./footer";
+import { HomeTabContent } from "./home-tab-content";
 import { useLeadCreatePageState } from "./state";
+import { TasksTabContent } from "./tasks-tab-content";
+import { TimelineTabContent } from "./timeline-tab-content";
 
 import styles from "./page.module.css";
 
 type TabContentProps = {
   ruc?: string;
-  rucError?: string | null;
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
   canCreate: boolean;
-  onRucInput?: (value: string) => void;
   onSubmit?: () => void;
 };
 
@@ -60,15 +65,20 @@ const TAB_COMPONENTS: Record<
   calendar: () => <HiddenTabContent title="Calendar" />,
 };
 
-const hiddenTabsCount = 4;
-
 export function LeadCreatePage() {
   const { currentUser } = useAuthenticatedSession();
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
   const [error, setError] = createSignal<string | null>(null);
-  const [rucError, setRucError] = createSignal<string | null>(null);
-  const { pageState, setActiveTab, setRuc } = useLeadCreatePageState();
+  const { pageState, setActiveTab } = useLeadCreatePageState();
+
+  createEffect(
+    on(
+      () => pageState().draft.ruc,
+      () => setError(null),
+      { defer: true },
+    ),
+  );
   const validRuc = createMemo(() => {
     const value = pageState().draft.ruc.trim();
     return /^\d{11}$/.test(value) ? value : null;
@@ -103,17 +113,10 @@ export function LeadCreatePage() {
 
     return {
       ruc: pageState().draft.ruc,
-      rucError: rucError(),
       razonSocial: preview?.razonSocial ?? null,
       address: preview?.address ?? null,
       engineStatus: engineStatus(),
       canCreate: validRuc() !== null,
-      onRucInput: (value) => {
-        setRuc(value);
-        if (rucError()) {
-          setRucError(null);
-        }
-      },
       onSubmit: () => void handleSubmit(),
     };
   });
@@ -138,13 +141,12 @@ export function LeadCreatePage() {
     const value = validRuc();
 
     if (!value) {
-      setRucError("El RUC debe tener 11 dígitos.");
+      setError("El RUC debe tener 11 dígitos.");
       setActiveTab("home");
       return;
     }
 
     setError(null);
-    setRucError(null);
 
     const rollbackOptimistic = addOptimisticLead(
       ["mine", "review", "all"],
@@ -177,7 +179,7 @@ export function LeadCreatePage() {
         appError.code === "validation" &&
         appError.publicMessage.includes("RUC")
       ) {
-        setRucError(appError.publicMessage);
+        setError(appError.publicMessage);
         setActiveTab("home");
         return;
       }
@@ -190,9 +192,10 @@ export function LeadCreatePage() {
     <div class={styles.pageShell}>
       <PanelList>
         <div class={styles.page}>
-          <Tabs
+          <TabStrip<ExtendedTabId, TabId>
+            tabs={TAB_ITEMS}
+            hiddenTabs={HIDDEN_TAB_ITEMS}
             activeTab={pageState().draft.activeTab}
-            hiddenTabsCount={hiddenTabsCount}
             onTabSelect={setActiveTab}
             onHiddenTabSelect={setActiveTab}
           />
