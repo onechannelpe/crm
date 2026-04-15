@@ -56,7 +56,7 @@ function valueFor(
 }
 
 export default function RateSimulatorPage() {
-  const [form, setForm] = createSignal<RatesInput>(DEFAULT_INPUT);
+  const [form, setForm] = createSignal(DEFAULT_INPUT);
   const [summary, setSummary] = createSignal<SummaryTable | null>(null);
   const [error, setError] = createSignal<string | null>(null);
 

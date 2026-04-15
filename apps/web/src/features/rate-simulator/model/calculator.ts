@@ -95,40 +95,45 @@ function parsePercent(raw: string, field: string): ParseResult<bigint> {
   };
 }
 
-function parsePayload(input: RatesInput): ParseResult<RatesPayload> {
-  const mix: Partial<Record<Medio, bigint>> = {};
-  const currentRates: Partial<Record<Medio, bigint>> = {};
-  const proposalRates: Partial<Record<Medio, bigint>> = {};
+function parseSection(
+  section: Record<Medio, string>,
+  sectionName: "mix" | "currentRates" | "proposalRates",
+): ParseResult<Record<Medio, bigint>> {
+  const values: Record<Medio, bigint> = {
+    debito: 0n,
+    credito: 0n,
+    foranea: 0n,
+  };
 
   for (const medio of MEDIOS) {
-    const mixValue = parsePercent(input.mix[medio], `mix.${medio}`);
-    if (!mixValue.ok) {
-      return mixValue;
+    const parsedValue = parsePercent(section[medio], `${sectionName}.${medio}`);
+    if (!parsedValue.ok) {
+      return parsedValue;
     }
 
-    const currentValue = parsePercent(
-      input.currentRates[medio],
-      `currentRates.${medio}`,
-    );
-    if (!currentValue.ok) {
-      return currentValue;
-    }
-
-    const proposalValue = parsePercent(
-      input.proposalRates[medio],
-      `proposalRates.${medio}`,
-    );
-    if (!proposalValue.ok) {
-      return proposalValue;
-    }
-
-    mix[medio] = mixValue.value;
-    currentRates[medio] = currentValue.value;
-    proposalRates[medio] = proposalValue.value;
+    values[medio] = parsedValue.value;
   }
 
-  const mixTotal =
-    (mix.debito ?? 0n) + (mix.credito ?? 0n) + (mix.foranea ?? 0n);
+  return { ok: true, value: values };
+}
+
+function parsePayload(input: RatesInput): ParseResult<RatesPayload> {
+  const mix = parseSection(input.mix, "mix");
+  if (!mix.ok) {
+    return mix;
+  }
+
+  const currentRates = parseSection(input.currentRates, "currentRates");
+  if (!currentRates.ok) {
+    return currentRates;
+  }
+
+  const proposalRates = parseSection(input.proposalRates, "proposalRates");
+  if (!proposalRates.ok) {
+    return proposalRates;
+  }
+
+  const mixTotal = mix.value.debito + mix.value.credito + mix.value.foranea;
 
   if (mixTotal !== SCALE) {
     const currentTotalPct = formatPercent(mixTotal);
@@ -141,9 +146,9 @@ function parsePayload(input: RatesInput): ParseResult<RatesPayload> {
   return {
     ok: true,
     value: {
-      mix: mix as Record<Medio, bigint>,
-      currentRates: currentRates as Record<Medio, bigint>,
-      proposalRates: proposalRates as Record<Medio, bigint>,
+      mix: mix.value,
+      currentRates: currentRates.value,
+      proposalRates: proposalRates.value,
     },
   };
 }
@@ -152,13 +157,13 @@ function weightedRate(
   rates: Record<Medio, bigint>,
   mix: Record<Medio, bigint>,
 ) {
-  let total = 0n;
+  let numerator = 0n;
 
   for (const medio of MEDIOS) {
-    total += divideRoundHalfUp(rates[medio] * mix[medio], SCALE);
+    numerator += rates[medio] * mix[medio];
   }
 
-  return total;
+  return divideRoundHalfUp(numerator, SCALE);
 }
 
 export function calculateRates(input: RatesInput): ParseResult<RatesResult> {
