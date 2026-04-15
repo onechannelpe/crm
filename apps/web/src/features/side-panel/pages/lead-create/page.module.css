@@ -12,11 +12,7 @@
   padding: 0;
 }
 
-.homeContent {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
+
 
 .error {
   color: var(--destructive, #b91c1c);

@@ -7,11 +7,11 @@ import type { LeadDetailView } from "~/server/pipeline/application/queries/views
 import { FieldsWidget } from "../widgets/fields";
 import { WorkflowWidget } from "../widgets/workflow";
 
-import pageStyles from "../page.module.css";
+import styles from "./home.module.css";
 
 export function HomeTab(props: { data: LeadDetailView }) {
   return (
-    <div class={pageStyles.homeContent}>
+    <div class={styles.homeContent}>
       <FieldsWidget data={props.data} />
 
       <Show when={props.data.lead.stage === "NEEDS_EXECUTIVE_INPUT"}>

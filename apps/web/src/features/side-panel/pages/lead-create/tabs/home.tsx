@@ -2,7 +2,7 @@ import { BootstrapWidget } from "../widgets/bootstrap";
 import { FieldsWidget } from "../widgets/fields";
 import { SunatWidget } from "../widgets/sunat";
 
-import pageStyles from "../page.module.css";
+import styles from "./home.module.css";
 
 type HomeTabProps = {
   razonSocial?: string | null;
@@ -13,7 +13,7 @@ type HomeTabProps = {
 
 export function HomeTab(props: HomeTabProps) {
   return (
-    <div class={pageStyles.homeContent}>
+    <div class={styles.homeContent}>
       <FieldsWidget razonSocial={props.razonSocial} address={props.address} />
       <BootstrapWidget
         engineStatus={props.engineStatus}
