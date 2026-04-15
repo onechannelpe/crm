@@ -15,6 +15,7 @@ export type AppPath =
   | "/team/import"
   | "/inventory"
   | "/leads"
+  | "/rate-simulator"
   | "/quotations"
   | "/sales/crm"
   | "/integrations"
@@ -52,6 +53,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/leads": {},
+  "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
   "/quotations": { permission: "quotation:manage", landingPriority: 3 },
   "/sales/crm": { permission: "lead:sale:create" },
   "/integrations": { permission: "integration:manage" },
