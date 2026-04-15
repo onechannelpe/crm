@@ -32,11 +32,11 @@ import {
   type ExtendedTabId,
   type TabId,
 } from "./constants";
-import { FilesTab } from "./tabs/files";
 import { Footer } from "./footer";
+import { useLeadCreatePageState } from "./state";
+import { FilesTab } from "./tabs/files";
 import { HomeTab } from "./tabs/home";
 import { NotesTab } from "./tabs/notes";
-import { useLeadCreatePageState } from "./state";
 import { TasksTab } from "./tabs/tasks";
 import { TimelineTab } from "./tabs/timeline";
 

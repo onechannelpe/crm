@@ -40,10 +40,7 @@ function deriveDraftTimeline(props: {
   ];
 }
 
-export function TimelineTab(props: {
-  ruc?: string;
-  engineStatus?: string;
-}) {
+export function TimelineTab(props: { ruc?: string; engineStatus?: string }) {
   const items = createMemo(() => deriveDraftTimeline(props));
 
   const now = new Date();

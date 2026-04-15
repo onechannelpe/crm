@@ -12,8 +12,6 @@
   padding: 0;
 }
 
-
-
 .error {
   color: var(--destructive, #b91c1c);
   font-size: 12px;
