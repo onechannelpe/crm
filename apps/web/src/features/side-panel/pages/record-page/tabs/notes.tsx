@@ -15,9 +15,20 @@ import type { LeadDetailView } from "~/server/pipeline/application/queries/views
 
 import styles from "./notes.module.css";
 
-export function NotesTab(props: { data: LeadDetailView }) {
+type NotesTabProps =
+  | {
+      mode: "create";
+    }
+  | {
+      mode: "view";
+      data: LeadDetailView;
+    };
+
+export function NotesTab(props: NotesTabProps) {
   const notes = () =>
-    props.data.timeline.filter((item) => item.kind === "note");
+    props.mode === "view"
+      ? props.data.timeline.filter((item) => item.kind === "note")
+      : [];
 
   return (
     <ActivityTabContainer>

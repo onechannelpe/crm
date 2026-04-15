@@ -29,7 +29,45 @@ type TaskItem = {
   status: TaskStatus;
 };
 
-function deriveTasks(
+function deriveCreateTasks(props: {
+  ruc?: string;
+  engineStatus?: string;
+  canCreate: boolean;
+}): TaskItem[] {
+  const rucIsValid = Boolean(props.ruc && /^\d{11}$/.test(props.ruc.trim()));
+  const engineReady = props.engineStatus === "Datos encontrados";
+
+  return [
+    {
+      id: "validate-ruc",
+      title: "Validate RUC",
+      meta: rucIsValid ? "Ready to register" : "Enter an 11-digit RUC",
+      status: rucIsValid ? "DONE" : "TODO",
+    },
+    {
+      id: "engine-bootstrap",
+      title: "Bootstrap from Engine",
+      meta: props.engineStatus ?? "Pending",
+      status: engineReady ? "DONE" : "TODO",
+    },
+    {
+      id: "create-lead",
+      title: "Create lead",
+      meta: props.canCreate
+        ? "Will create lead in PENDING_EXTERNAL_REVIEW"
+        : "Blocked until RUC is valid",
+      status: props.canCreate ? "DONE" : "TODO",
+    },
+    {
+      id: "sunat-queue",
+      title: "Queue SUNAT verification",
+      meta: props.canCreate ? "Queued after creation" : "Pending",
+      status: props.canCreate ? "DONE" : "TODO",
+    },
+  ];
+}
+
+function deriveDetailTasks(
   data: LeadDetailView,
   isAssignedExecutive: boolean,
 ): TaskItem[] {
@@ -103,13 +141,34 @@ function TaskGroup(props: { title: string; items: readonly TaskItem[] }) {
   );
 }
 
-export function TasksTab(props: { data: LeadDetailView }) {
+type TasksTabProps =
+  | {
+      mode: "create";
+      ruc?: string;
+      engineStatus?: string;
+      canCreate: boolean;
+    }
+  | {
+      mode: "view";
+      data: LeadDetailView;
+    };
+
+export function TasksTab(props: TasksTabProps) {
   const { currentUser } = useAuthenticatedSession();
 
   const tasks = createMemo(() => {
+    if (props.mode === "create") {
+      return deriveCreateTasks({
+        ruc: props.ruc,
+        engineStatus: props.engineStatus,
+        canCreate: props.canCreate,
+      });
+    }
+
     const isAssigned = currentUser().id === props.data.lead.executiveId;
-    return deriveTasks(props.data, isAssigned);
+    return deriveDetailTasks(props.data, isAssigned);
   });
+
   const todoTasks = createMemo(() =>
     tasks().filter((t) => t.status === "TODO"),
   );
