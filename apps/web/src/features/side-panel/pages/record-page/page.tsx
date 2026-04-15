@@ -25,7 +25,6 @@ import {
 } from "~/features/pipeline/data/queries";
 import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { HiddenTabContent } from "../../components/hidden-tab";
 import { PanelList } from "../../components/list";
@@ -40,6 +39,10 @@ import {
 } from "./constants";
 import { Footer } from "./footer";
 import { useLeadRecordPageState } from "./state";
+import type {
+  CreateTabContentProps,
+  TabContentProps,
+} from "./tabs/content-props";
 import { FilesTab } from "./tabs/files";
 import { HomeTab } from "./tabs/home";
 import { NotesTab } from "./tabs/notes";
@@ -51,55 +54,14 @@ import styles from "./page.module.css";
 const POLL_INTERVAL_MS = 3_500;
 const POLL_TIMEOUT_MS = 60_000;
 
-type CreateTabContentProps = {
-  mode: "create";
-  ruc?: string;
-  razonSocial?: string | null;
-  address?: string | null;
-  engineStatus?: string;
-  canCreate: boolean;
-  onSubmit?: () => void;
-};
-
-type ViewTabContentProps = {
-  mode: "view";
-  data: LeadDetailView;
-};
-
-type TabContentProps = CreateTabContentProps | ViewTabContentProps;
-
 const TAB_COMPONENTS: Record<
   ExtendedTabId,
   (props: TabContentProps) => JSX.Element
 > = {
   home: HomeTab,
-  timeline: (props) =>
-    props.mode === "create" ? (
-      <TimelineTab
-        mode="create"
-        ruc={props.ruc}
-        engineStatus={props.engineStatus}
-      />
-    ) : (
-      <TimelineTab mode="view" data={props.data} />
-    ),
-  tasks: (props) =>
-    props.mode === "create" ? (
-      <TasksTab
-        mode="create"
-        ruc={props.ruc}
-        engineStatus={props.engineStatus}
-        canCreate={props.canCreate}
-      />
-    ) : (
-      <TasksTab mode="view" data={props.data} />
-    ),
-  notes: (props) =>
-    props.mode === "create" ? (
-      <NotesTab mode="create" />
-    ) : (
-      <NotesTab mode="view" data={props.data} />
-    ),
+  timeline: TimelineTab,
+  tasks: TasksTab,
+  notes: NotesTab,
   files: () => <FilesTab />,
   emails: () => <HiddenTabContent title="Emails" />,
   calendar: () => <HiddenTabContent title="Calendar" />,

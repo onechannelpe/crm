@@ -11,20 +11,12 @@ import {
   ActivityTile,
 } from "~/features/side-panel/components/activity-tabs/primitives";
 import { formatDateTime } from "~/lib/utils";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
+
+import type { TabContentProps } from "./content-props";
 
 import styles from "./notes.module.css";
 
-type NotesTabProps =
-  | {
-      mode: "create";
-    }
-  | {
-      mode: "view";
-      data: LeadDetailView;
-    };
-
-export function NotesTab(props: NotesTabProps) {
+export function NotesTab(props: TabContentProps) {
   const notes = () =>
     props.mode === "view"
       ? props.data.timeline.filter((item) => item.kind === "note")

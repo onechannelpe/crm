@@ -8,25 +8,11 @@ import { BootstrapWidget } from "../widgets/bootstrap";
 import { CreateFieldsWidget, DetailFieldsWidget } from "../widgets/fields";
 import { SunatWidget } from "../widgets/sunat";
 import { WorkflowWidget } from "../widgets/workflow";
+import type { TabContentProps } from "./content-props";
 
 import styles from "./home.module.css";
 
-type CreateHomeTabProps = {
-  mode: "create";
-  razonSocial?: string | null;
-  address?: string | null;
-  engineStatus?: string;
-  onSubmit?: () => void;
-};
-
-type ViewHomeTabProps = {
-  mode: "view";
-  data: LeadDetailView;
-};
-
-export type HomeTabProps = CreateHomeTabProps | ViewHomeTabProps;
-
-export function HomeTab(props: HomeTabProps) {
+export function HomeTab(props: TabContentProps) {
   if (props.mode === "create") {
     return (
       <div class={styles.homeContent}>

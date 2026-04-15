@@ -20,6 +20,8 @@ import {
 } from "~/features/side-panel/components/activity-tabs/primitives";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
+import type { TabContentProps } from "./content-props";
+
 type TaskStatus = "TODO" | "DONE";
 
 type TaskItem = {
@@ -141,19 +143,7 @@ function TaskGroup(props: { title: string; items: readonly TaskItem[] }) {
   );
 }
 
-type TasksTabProps =
-  | {
-      mode: "create";
-      ruc?: string;
-      engineStatus?: string;
-      canCreate: boolean;
-    }
-  | {
-      mode: "view";
-      data: LeadDetailView;
-    };
-
-export function TasksTab(props: TasksTabProps) {
+export function TasksTab(props: TabContentProps) {
   const { currentUser } = useAuthenticatedSession();
 
   const tasks = createMemo(() => {

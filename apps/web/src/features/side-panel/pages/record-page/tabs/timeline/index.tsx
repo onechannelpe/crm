@@ -1,8 +1,8 @@
 import { Show, createMemo } from "solid-js";
 
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
+import type { TabContentProps } from "../content-props";
 import { EventList } from "./components/event-list";
 import { buildCreateGroups } from "./model/create";
 import { normalizeLeadEvent } from "./model/event";
@@ -10,18 +10,7 @@ import { groupEventsByMonth } from "./model/group";
 
 import styles from "./styles.module.css";
 
-type TimelineTabProps =
-  | {
-      mode: "create";
-      ruc?: string;
-      engineStatus?: string;
-    }
-  | {
-      mode: "view";
-      data: LeadDetailView;
-    };
-
-export function TimelineTab(props: TimelineTabProps) {
+export function TimelineTab(props: TabContentProps) {
   const groups = createMemo(() => {
     if (props.mode === "create") {
       return buildCreateGroups({
