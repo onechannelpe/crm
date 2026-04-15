@@ -7,6 +7,7 @@ import {
 } from "../../src/lib/auth/access/rbac";
 
 const ALL_PERMISSIONS: Permission[] = [
+  "lead:rate:simulate",
   "lead:work",
   "lead:pipeline",
   "sales:create",
@@ -75,6 +76,7 @@ describe("rbac boundaries", () => {
 
     expect(supervisorPerms.has("sales:approve")).toBe(true);
     expect(executivePerms.has("sales:approve")).toBe(false);
+    expect(executivePerms.has("lead:rate:simulate")).toBe(true);
     expect(supervisorPerms.has("team:manage")).toBe(true);
     expect(executivePerms.has("team:manage")).toBe(false);
     expect(executivePerms.has("lead:pipeline")).toBe(true);

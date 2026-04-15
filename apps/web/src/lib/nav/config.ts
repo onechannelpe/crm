@@ -5,6 +5,7 @@ export type RouteIcon =
   | "inventory"
   | "sales"
   | "leads"
+  | "rate-simulator"
   | "dashboard"
   | "new-sale"
   | "confirmed"
@@ -76,6 +77,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
   { match: "/leads", header: { label: "Prospectos", icon: "leads" } },
+  {
+    match: "/rate-simulator",
+    header: { label: "Simulador de tasas", icon: "rate-simulator" },
+  },
   { match: "/quotations", header: { label: "Cotizaciones", icon: "sales" } },
   { match: "/sales/crm", header: { label: "Ventas CRM", icon: "sales" } },
   {
@@ -153,6 +158,17 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     group: "Comercial",
   },
   {
+    id: "rate-simulator",
+    href: "/rate-simulator",
+    activePrefixes: ["/rate-simulator"],
+    label: "Simulador de tasas",
+    navLabel: "Simulador de tasas",
+    icon: "rate-simulator",
+    section: "secondary",
+    order: 2,
+    group: "Comercial",
+  },
+  {
     id: "my-capacity",
     href: "/me/capacity",
     activePrefixes: ["/me/capacity"],
@@ -160,7 +176,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Mi capacidad",
     icon: "capacity",
     section: "secondary",
-    order: 2,
+    order: 3,
     group: "Comercial",
   },
 

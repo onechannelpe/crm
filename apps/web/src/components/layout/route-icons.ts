@@ -8,6 +8,7 @@ import House from "~/components/icons/house";
 import Inbox from "~/components/icons/inbox";
 import Info from "~/components/icons/info";
 import Mail from "~/components/icons/mail";
+import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
@@ -26,6 +27,7 @@ export const ICON_BY_ROUTE: Record<
   inventory: Package,
   sales: Inbox,
   leads: User,
+  "rate-simulator": Moneybag,
   dashboard: House,
   "new-sale": Mail,
   confirmed: CircleCheckBig,
