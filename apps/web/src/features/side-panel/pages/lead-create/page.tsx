@@ -21,6 +21,7 @@ import {
 import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
 
+import { HiddenTabContent } from "../../components/hidden-tab";
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";
 import { useSidePanel } from "../../state/use-side-panel";
@@ -49,10 +50,6 @@ type TabContentProps = {
   canCreate: boolean;
   onSubmit?: () => void;
 };
-
-function HiddenTabContent(props: { title: string }) {
-  return <div class={styles.hiddenTabContent}>{props.title}</div>;
-}
 
 const TAB_COMPONENTS: Record<
   ExtendedTabId,

@@ -1,19 +1,17 @@
-import { For } from "solid-js";
+import { createMemo, For } from "solid-js";
 
 import Checkbox from "~/components/icons/checkbox";
-import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import {
   ActivityListCard,
   ActivityListRow,
   ActivityRowBody,
+  ActivityRowEnd,
   ActivityRowIcon,
   ActivityRowMeta,
   ActivityRowTitle,
   ActivitySection,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-
-import contentStyles from "../../components/activity-tabs/content.module.css";
 
 type DraftTaskItem = {
   id: string;
@@ -65,25 +63,13 @@ export function TasksTabContent(props: {
   engineStatus?: string;
   canCreate: boolean;
 }) {
-  const tasks = deriveDraftTasks(props);
-
-  if (tasks.length === 0) {
-    return (
-      <ActivityTabContainer>
-        <ActivityTabEmptyState
-          type="noTask"
-          title="Mission accomplished!"
-          subtitle="All tasks addressed. Maintain the momentum."
-        />
-      </ActivityTabContainer>
-    );
-  }
+  const tasks = createMemo(() => deriveDraftTasks(props));
 
   return (
     <ActivityTabContainer>
-      <ActivitySection title="All" count={tasks.length}>
+      <ActivitySection title="All" count={tasks().length}>
         <ActivityListCard>
-          <For each={tasks}>
+          <For each={tasks()}>
             {(task) => (
               <ActivityListRow>
                 <ActivityRowIcon>
@@ -93,7 +79,7 @@ export function TasksTabContent(props: {
                   <ActivityRowTitle>{task.title}</ActivityRowTitle>
                   <ActivityRowMeta>{task.meta}</ActivityRowMeta>
                 </ActivityRowBody>
-                <div class={contentStyles.taskRightMeta}>{task.status}</div>
+                <ActivityRowEnd>{task.status}</ActivityRowEnd>
               </ActivityListRow>
             )}
           </For>

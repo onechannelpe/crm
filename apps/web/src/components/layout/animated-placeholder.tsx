@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { SpringParallax } from "~/components/ui/animation/spring-parallax";
 import { cn } from "~/lib/utils";
@@ -70,7 +70,7 @@ export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
       attributeFilter: ["data-theme"],
     });
 
-    return () => observer.disconnect();
+    onCleanup(() => observer.disconnect());
   });
 
   const bg = () => (isDark() ? BG_DARK : BG_LIGHT)[props.type];

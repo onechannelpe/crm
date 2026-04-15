@@ -4,21 +4,24 @@ import CalendarDays from "~/components/icons/calendar-days";
 import Package from "~/components/icons/package";
 import Phone from "~/components/icons/phone";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
-import { ActivityTabContainer } from "~/features/side-panel/components/activity-tabs/primitives";
+import {
+  ActivityTabContainer,
+  ActivityTimeline,
+  ActivityTimelineGroup,
+  ActivityTimelineRow,
+} from "~/features/side-panel/components/activity-tabs/primitives";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
-import contentStyles from "../../components/activity-tabs/content.module.css";
+type TimelineKind = LeadDetailView["timeline"][number]["kind"];
 
-function timelineIconComponent(
-  kind: LeadDetailView["timeline"][number]["kind"],
-) {
+function timelineIcon(kind: TimelineKind) {
   if (kind === "call") return <Phone size={14} />;
   if (kind === "stage-change") return <Package size={14} />;
   return <CalendarDays size={14} />;
 }
 
-function timelineActionLabel(kind: LeadDetailView["timeline"][number]["kind"]) {
+function timelineActionLabel(kind: TimelineKind) {
   switch (kind) {
     case "call":
       return "logged a call";
@@ -84,74 +87,40 @@ export function TimelineTabContent(props: { data: LeadDetailView }) {
           />
         }
       >
-        <div class={contentStyles.timelineMainContainer}>
+        <ActivityTimeline>
           <For each={grouped()}>
             {(group, index) => {
-              const prev = () => grouped()[index() - 1];
-              const showYear = () => !prev() || prev()!.year !== group.year;
+              const showYear = () =>
+                index() === 0 || grouped()[index() - 1].year !== group.year;
 
               return (
-                <section class={contentStyles.timelineGroup}>
-                  <header class={contentStyles.timelineGroupHeader}>
-                    <span>{group.monthLabel}</span>
-                    <Show when={showYear()}>
-                      <span class={contentStyles.timelineGroupYear}>
-                        {group.year}
-                      </span>
-                    </Show>
-                    <div class={contentStyles.timelineGroupHeaderLine} />
-                  </header>
-                  <div class={contentStyles.timelineFeed}>
-                    <For each={group.items}>
-                      {(item, itemIndex) => (
-                        <div class={contentStyles.timelineRow}>
-                          <div class={contentStyles.timelineRowLeft}>
-                            <div class={contentStyles.timelineRowIcon}>
-                              {timelineIconComponent(item.kind)}
-                            </div>
-                            <Show when={itemIndex() !== group.items.length - 1}>
-                              <div class={contentStyles.timelineRowLineWrap}>
-                                <div class={contentStyles.timelineRowLine} />
-                              </div>
-                            </Show>
-                          </div>
-                          <div class={contentStyles.timelineRowBody}>
-                            <div class={contentStyles.timelineRowTop}>
-                              <div class={contentStyles.timelineRowTopLeft}>
-                                <span class={contentStyles.timelineRowAuthor}>
-                                  {item.actorDisplayName}
-                                </span>
-                                <span class={contentStyles.timelineRowAction}>
-                                  {timelineActionLabel(item.kind)}
-                                </span>
-                                <span class={contentStyles.timelineRowTitle}>
-                                  {item.title}
-                                </span>
-                              </div>
-                              <span class={contentStyles.timelineRowDate}>
-                                {formatDateTime(item.occurredAt)}
-                              </span>
-                            </div>
-                            <Show
-                              when={
-                                item.description.trim().length > 0 &&
-                                item.description !== item.title
-                              }
-                            >
-                              <div class={contentStyles.timelineRowDescription}>
-                                {item.description}
-                              </div>
-                            </Show>
-                          </div>
-                        </div>
-                      )}
-                    </For>
-                  </div>
-                </section>
+                <ActivityTimelineGroup
+                  month={group.monthLabel}
+                  year={showYear() ? group.year : undefined}
+                >
+                  <For each={group.items}>
+                    {(item, i) => (
+                      <ActivityTimelineRow
+                        icon={timelineIcon(item.kind)}
+                        author={item.actorDisplayName}
+                        action={timelineActionLabel(item.kind)}
+                        title={item.title}
+                        date={formatDateTime(item.occurredAt)}
+                        description={
+                          item.description.trim().length > 0 &&
+                          item.description !== item.title
+                            ? item.description
+                            : undefined
+                        }
+                        isLast={i() === group.items.length - 1}
+                      />
+                    )}
+                  </For>
+                </ActivityTimelineGroup>
               );
             }}
           </For>
-        </div>
+        </ActivityTimeline>
       </Show>
     </ActivityTabContainer>
   );

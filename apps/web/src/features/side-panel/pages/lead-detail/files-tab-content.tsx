@@ -1,8 +1,7 @@
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { ActivityTabContainer } from "~/features/side-panel/components/activity-tabs/primitives";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
-export function FilesTabContent(_props: { data: LeadDetailView }) {
+export function FilesTabContent() {
   return (
     <ActivityTabContainer>
       <ActivityTabEmptyState

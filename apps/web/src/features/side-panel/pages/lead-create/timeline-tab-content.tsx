@@ -1,11 +1,13 @@
-import { For, Show } from "solid-js";
+import { createMemo, For } from "solid-js";
 
 import Plus from "~/components/icons/plus";
-import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
-import { ActivityTabContainer } from "~/features/side-panel/components/activity-tabs/primitives";
+import {
+  ActivityTabContainer,
+  ActivityTimeline,
+  ActivityTimelineGroup,
+  ActivityTimelineRow,
+} from "~/features/side-panel/components/activity-tabs/primitives";
 import { formatDateTime } from "~/lib/utils";
-
-import contentStyles from "../../components/activity-tabs/content.module.css";
 
 type DraftTimelineItem = {
   id: string;
@@ -38,72 +40,32 @@ export function TimelineTabContent(props: {
   ruc?: string;
   engineStatus?: string;
 }) {
-  const items = deriveDraftTimeline(props);
+  const items = createMemo(() => deriveDraftTimeline(props));
 
-  if (items.length === 0) {
-    return (
-      <ActivityTabContainer>
-        <ActivityTabEmptyState
-          type="emptyTimeline"
-          title="No activity yet"
-          subtitle="There is no activity associated with this record."
-        />
-      </ActivityTabContainer>
-    );
-  }
+  const now = new Date();
+  const month = now.toLocaleString("en-US", { month: "long" });
+  const year = now.getFullYear();
+  const dateLabel = formatDateTime(Date.now());
 
   return (
     <ActivityTabContainer>
-      <div class={contentStyles.timelineMainContainer}>
-        <section class={contentStyles.timelineGroup}>
-          <header class={contentStyles.timelineGroupHeader}>
-            <span>{new Date().toLocaleString("en-US", { month: "long" })}</span>
-            <span class={contentStyles.timelineGroupYear}>
-              {new Date().getFullYear()}
-            </span>
-            <div class={contentStyles.timelineGroupHeaderLine} />
-          </header>
-          <div class={contentStyles.timelineFeed}>
-            <For each={items}>
-              {(item, itemIndex) => (
-                <div class={contentStyles.timelineRow}>
-                  <div class={contentStyles.timelineRowLeft}>
-                    <div class={contentStyles.timelineRowIcon}>
-                      <Plus size={14} />
-                    </div>
-                    <Show when={itemIndex() !== items.length - 1}>
-                      <div class={contentStyles.timelineRowLineWrap}>
-                        <div class={contentStyles.timelineRowLine} />
-                      </div>
-                    </Show>
-                  </div>
-                  <div class={contentStyles.timelineRowBody}>
-                    <div class={contentStyles.timelineRowTop}>
-                      <div class={contentStyles.timelineRowTopLeft}>
-                        <span class={contentStyles.timelineRowAuthor}>
-                          System
-                        </span>
-                        <span class={contentStyles.timelineRowAction}>
-                          {item.action}
-                        </span>
-                        <span class={contentStyles.timelineRowTitle}>
-                          {item.subject}
-                        </span>
-                      </div>
-                      <span class={contentStyles.timelineRowDate}>
-                        {formatDateTime(Date.now())}
-                      </span>
-                    </div>
-                    <div class={contentStyles.timelineRowDescription}>
-                      {item.meta}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </For>
-          </div>
-        </section>
-      </div>
+      <ActivityTimeline>
+        <ActivityTimelineGroup month={month} year={year}>
+          <For each={items()}>
+            {(item, i) => (
+              <ActivityTimelineRow
+                icon={<Plus size={14} />}
+                author="System"
+                action={item.action}
+                title={item.subject}
+                date={dateLabel}
+                description={item.meta}
+                isLast={i() === items().length - 1}
+              />
+            )}
+          </For>
+        </ActivityTimelineGroup>
+      </ActivityTimeline>
     </ActivityTabContainer>
   );
 }

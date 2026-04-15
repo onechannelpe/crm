@@ -11,7 +11,7 @@ import {
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
-import contentStyles from "../../components/activity-tabs/content.module.css";
+import styles from "./notes-tab-content.module.css";
 
 export function NotesTabContent(props: { data: LeadDetailView }) {
   const notes = () =>
@@ -35,17 +35,17 @@ export function NotesTabContent(props: { data: LeadDetailView }) {
               {(note) => (
                 <ActivityTile
                   footer={
-                    <span class={contentStyles.noteFooter}>
+                    <span class={styles.noteFooter}>
                       <span>{note.actorDisplayName}</span>
-                      <span class={contentStyles.noteFooterDot}></span>
+                      <span class={styles.noteFooterDot}></span>
                       <span>{formatDateTime(note.occurredAt)}</span>
                     </span>
                   }
                 >
-                  <div class={contentStyles.noteTitle}>
+                  <div class={styles.noteTitle}>
                     <OverflowingText text={note.title} />
                   </div>
-                  <div class={contentStyles.noteBody}>{note.description}</div>
+                  <div class={styles.noteBody}>{note.description}</div>
                 </ActivityTile>
               )}
             </For>

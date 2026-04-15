@@ -1,0 +1,27 @@
+.noteTitle {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.noteBody {
+  color: var(--foreground-secondary);
+  line-break: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre-line;
+  width: 100%;
+}
+
+.noteFooter {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  font-size: var(--font-size-sm);
+  gap: var(--spacing-1);
+  line-height: 1.3;
+}
+
+.noteFooterDot::before {
+  content: "·";
+}

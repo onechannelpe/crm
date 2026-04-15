@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { createMemo, For, Show } from "solid-js";
 
 import Checkbox from "~/components/icons/checkbox";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
@@ -11,6 +11,7 @@ import {
   ActivityListCard,
   ActivityListRow,
   ActivityRowBody,
+  ActivityRowEnd,
   ActivityRowIcon,
   ActivityRowMeta,
   ActivityRowTitle,
@@ -18,8 +19,6 @@ import {
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
-
-import contentStyles from "../../components/activity-tabs/content.module.css";
 
 type TaskStatus = "TODO" | "DONE";
 
@@ -95,7 +94,7 @@ function TaskGroup(props: { title: string; items: readonly TaskItem[] }) {
                 <ActivityRowTitle>{task.title}</ActivityRowTitle>
                 <ActivityRowMeta>{task.meta}</ActivityRowMeta>
               </ActivityRowBody>
-              <div class={contentStyles.taskRightMeta}>{task.status}</div>
+              <ActivityRowEnd>{task.status}</ActivityRowEnd>
             </ActivityListRow>
           )}
         </For>
@@ -107,16 +106,21 @@ function TaskGroup(props: { title: string; items: readonly TaskItem[] }) {
 export function TasksTabContent(props: { data: LeadDetailView }) {
   const { currentUser } = useAuthenticatedSession();
 
-  const isAssignedExecutive = currentUser().id === props.data.lead.executiveId;
-
-  const tasks = deriveTasks(props.data, isAssignedExecutive);
-  const todoTasks = tasks.filter((task) => task.status === "TODO");
-  const doneTasks = tasks.filter((task) => task.status === "DONE");
+  const tasks = createMemo(() => {
+    const isAssigned = currentUser().id === props.data.lead.executiveId;
+    return deriveTasks(props.data, isAssigned);
+  });
+  const todoTasks = createMemo(() =>
+    tasks().filter((t) => t.status === "TODO"),
+  );
+  const doneTasks = createMemo(() =>
+    tasks().filter((t) => t.status === "DONE"),
+  );
 
   return (
     <ActivityTabContainer>
       <Show
-        when={tasks.length > 0}
+        when={tasks().length > 0}
         fallback={
           <ActivityTabEmptyState
             type="noTask"
@@ -125,11 +129,11 @@ export function TasksTabContent(props: { data: LeadDetailView }) {
           />
         }
       >
-        <Show when={todoTasks.length > 0}>
-          <TaskGroup title="TODO" items={todoTasks} />
+        <Show when={todoTasks().length > 0}>
+          <TaskGroup title="TODO" items={todoTasks()} />
         </Show>
-        <Show when={doneTasks.length > 0}>
-          <TaskGroup title="DONE" items={doneTasks} />
+        <Show when={doneTasks().length > 0}>
+          <TaskGroup title="DONE" items={doneTasks()} />
         </Show>
       </Show>
     </ActivityTabContainer>

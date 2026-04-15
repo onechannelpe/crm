@@ -9,6 +9,7 @@ import {
 } from "~/features/pipeline/data/queries";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
+import { HiddenTabContent } from "../../components/hidden-tab";
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";
 import { useSidePanelPageState } from "../../router/page-state";
@@ -29,10 +30,6 @@ import styles from "./page.module.css";
 const POLL_INTERVAL_MS = 3_500;
 const POLL_TIMEOUT_MS = 60_000;
 
-function HiddenTabContent(props: { title: string }) {
-  return <div class={styles.hiddenTabContent}>{props.title}</div>;
-}
-
 const TAB_COMPONENTS: Record<
   ExtendedTabId,
   (props: { data: LeadDetailView }) => JSX.Element
@@ -41,7 +38,7 @@ const TAB_COMPONENTS: Record<
   timeline: (props) => <TimelineTabContent data={props.data} />,
   tasks: (props) => <TasksTabContent data={props.data} />,
   notes: (props) => <NotesTabContent data={props.data} />,
-  files: (props) => <FilesTabContent data={props.data} />,
+  files: () => <FilesTabContent />,
   emails: () => <HiddenTabContent title="Emails" />,
   calendar: () => <HiddenTabContent title="Calendar" />,
 };
