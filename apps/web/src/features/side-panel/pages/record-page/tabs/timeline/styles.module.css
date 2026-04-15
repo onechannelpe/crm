@@ -1,0 +1,15 @@
+.mainContainer {
+  align-items: flex-start;
+  align-self: stretch;
+  border-top: none;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  padding-left: var(--spacing-6);
+  padding-right: var(--spacing-6);
+  padding-top: var(--spacing-6);
+}

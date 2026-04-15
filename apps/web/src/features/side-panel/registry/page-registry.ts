@@ -4,10 +4,8 @@ import { DataGridDetailPage } from "../pages/data-grid-detail/page";
 import { DataGridDetailPageInfo } from "../pages/data-grid-detail/page-info";
 import { InventoryDetailPage } from "../pages/inventory-detail/page";
 import { InventoryDetailPageInfo } from "../pages/inventory-detail/page-info";
-import { LeadCreatePage } from "../pages/lead-create/page";
-import { LeadCreatePageInfo } from "../pages/lead-create/page-info";
-import { LeadDetailPage } from "../pages/lead-detail/page";
-import { LeadDetailPageInfo } from "../pages/lead-detail/page-info";
+import { RecordPage } from "../pages/record-page/page";
+import { RecordPageInfo } from "../pages/record-page/page-info";
 import { RootPage } from "../pages/root/page";
 import { SearchCompanyPage } from "../pages/search-company/page";
 import { SearchCompanyPageInfo } from "../pages/search-company/page-info";
@@ -41,16 +39,10 @@ export const SIDE_PANEL_PAGES_CONFIG = {
     pageInfoComponent: SearchCompanyPageInfo,
     topBarActionsComponent: undefined,
   },
-  "lead-create": {
+  "view-record": {
     showsSearch: false,
-    component: LeadCreatePage,
-    pageInfoComponent: LeadCreatePageInfo,
-    topBarActionsComponent: undefined,
-  },
-  "lead-detail": {
-    showsSearch: false,
-    component: LeadDetailPage,
-    pageInfoComponent: LeadDetailPageInfo,
+    component: RecordPage,
+    pageInfoComponent: RecordPageInfo,
     topBarActionsComponent: undefined,
   },
   "inventory-detail": {

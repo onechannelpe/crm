@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { SpringParallax } from "~/components/ui/animation/spring-parallax";
 import { cn } from "~/lib/utils";
@@ -6,21 +6,37 @@ import { cn } from "~/lib/utils";
 import styles from "./animated-placeholder.module.css";
 
 const BG_LIGHT: Record<string, string> = {
+  noFile: "/images/placeholders/background/no_file_bg.png",
+  noNote: "/images/placeholders/background/no_note_bg.png",
+  noTask: "/images/placeholders/background/no_task_bg.png",
+  emptyTimeline: "/images/placeholders/background/empty_timeline_bg.png",
   error404: "/images/placeholders/background/404_bg.png",
   error500: "/images/placeholders/background/500_bg.png",
 };
 
 const BG_DARK: Record<string, string> = {
+  noFile: "/images/placeholders/dark-background/no_file_bg.png",
+  noNote: "/images/placeholders/dark-background/no_note_bg.png",
+  noTask: "/images/placeholders/dark-background/no_task_bg.png",
+  emptyTimeline: "/images/placeholders/dark-background/empty_timeline_bg.png",
   error404: "/images/placeholders/dark-background/404_bg.png",
   error500: "/images/placeholders/dark-background/500_bg.png",
 };
 
 const FG_LIGHT: Record<string, string> = {
+  noFile: "/images/placeholders/moving-image/no_file.png",
+  noNote: "/images/placeholders/moving-image/no_note.png",
+  noTask: "/images/placeholders/moving-image/no_task.png",
+  emptyTimeline: "/images/placeholders/moving-image/empty_timeline.png",
   error404: "/images/placeholders/moving-image/404.png",
   error500: "/images/placeholders/moving-image/500.png",
 };
 
 const FG_DARK: Record<string, string> = {
+  noFile: "/images/placeholders/dark-moving-image/no_file.png",
+  noNote: "/images/placeholders/dark-moving-image/no_note.png",
+  noTask: "/images/placeholders/dark-moving-image/no_task.png",
+  emptyTimeline: "/images/placeholders/dark-moving-image/empty_timeline.png",
   error404: "/images/placeholders/dark-moving-image/404.png",
   error500: "/images/placeholders/dark-moving-image/500.png",
 };
@@ -54,7 +70,7 @@ export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
       attributeFilter: ["data-theme"],
     });
 
-    return () => observer.disconnect();
+    onCleanup(() => observer.disconnect());
   });
 
   const bg = () => (isDark() ? BG_DARK : BG_LIGHT)[props.type];
