@@ -76,7 +76,7 @@ function groupByMonth(
   return groups;
 }
 
-export function TimelineTabContent(props: { data: LeadDetailView }) {
+export function TimelineTab(props: { data: LeadDetailView }) {
   const grouped = () => groupByMonth(props.data.timeline);
 
   return (

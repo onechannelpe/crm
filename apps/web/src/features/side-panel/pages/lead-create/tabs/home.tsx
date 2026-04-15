@@ -1,17 +1,17 @@
-import { BootstrapWidget } from "./widgets/bootstrap";
-import { FieldsWidget } from "./widgets/fields";
-import { SunatWidget } from "./widgets/sunat";
+import { BootstrapWidget } from "../widgets/bootstrap";
+import { FieldsWidget } from "../widgets/fields";
+import { SunatWidget } from "../widgets/sunat";
 
-import pageStyles from "./page.module.css";
+import pageStyles from "../page.module.css";
 
-type HomeTabContentProps = {
+type HomeTabProps = {
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
   onSubmit?: () => void;
 };
 
-export function HomeTabContent(props: HomeTabContentProps) {
+export function HomeTab(props: HomeTabProps) {
   return (
     <div class={pageStyles.homeContent}>
       <FieldsWidget razonSocial={props.razonSocial} address={props.address} />

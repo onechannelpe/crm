@@ -103,7 +103,7 @@ function TaskGroup(props: { title: string; items: readonly TaskItem[] }) {
   );
 }
 
-export function TasksTabContent(props: { data: LeadDetailView }) {
+export function TasksTab(props: { data: LeadDetailView }) {
   const { currentUser } = useAuthenticatedSession();
 
   const tasks = createMemo(() => {

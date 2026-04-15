@@ -58,7 +58,7 @@ function deriveDraftTasks(props: {
   ];
 }
 
-export function TasksTabContent(props: {
+export function TasksTab(props: {
   ruc?: string;
   engineStatus?: string;
   canCreate: boolean;

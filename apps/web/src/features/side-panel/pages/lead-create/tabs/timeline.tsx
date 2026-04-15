@@ -40,7 +40,7 @@ function deriveDraftTimeline(props: {
   ];
 }
 
-export function TimelineTabContent(props: {
+export function TimelineTab(props: {
   ruc?: string;
   engineStatus?: string;
 }) {

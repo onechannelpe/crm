@@ -4,12 +4,12 @@ import { CommercialInputSection } from "~/features/pipeline/detail/commercial-in
 import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
-import { FieldsWidget } from "./widgets/fields";
-import { WorkflowWidget } from "./widgets/workflow";
+import { FieldsWidget } from "../widgets/fields";
+import { WorkflowWidget } from "../widgets/workflow";
 
-import pageStyles from "./page.module.css";
+import pageStyles from "../page.module.css";
 
-export function HomeTabContent(props: { data: LeadDetailView }) {
+export function HomeTab(props: { data: LeadDetailView }) {
   return (
     <div class={pageStyles.homeContent}>
       <FieldsWidget data={props.data} />

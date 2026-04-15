@@ -13,9 +13,9 @@ import {
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
-import styles from "./notes-tab-content.module.css";
+import styles from "./notes.module.css";
 
-export function NotesTabContent(props: { data: LeadDetailView }) {
+export function NotesTab(props: { data: LeadDetailView }) {
   const notes = () =>
     props.data.timeline.filter((item) => item.kind === "note");
 

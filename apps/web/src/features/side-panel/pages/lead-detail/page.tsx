@@ -19,11 +19,11 @@ import {
   type ExtendedTabId,
   type TabId,
 } from "./constants";
-import { FilesTabContent } from "./files-tab-content";
-import { HomeTabContent } from "./home-tab-content";
-import { NotesTabContent } from "./notes-tab-content";
-import { TasksTabContent } from "./tasks-tab-content";
-import { TimelineTabContent } from "./timeline-tab-content";
+import { FilesTab } from "./tabs/files";
+import { HomeTab } from "./tabs/home";
+import { NotesTab } from "./tabs/notes";
+import { TasksTab } from "./tabs/tasks";
+import { TimelineTab } from "./tabs/timeline";
 
 import styles from "./page.module.css";
 
@@ -34,11 +34,11 @@ const TAB_COMPONENTS: Record<
   ExtendedTabId,
   (props: { data: LeadDetailView }) => JSX.Element
 > = {
-  home: HomeTabContent,
-  timeline: (props) => <TimelineTabContent data={props.data} />,
-  tasks: (props) => <TasksTabContent data={props.data} />,
-  notes: (props) => <NotesTabContent data={props.data} />,
-  files: () => <FilesTabContent />,
+  home: HomeTab,
+  timeline: (props) => <TimelineTab data={props.data} />,
+  tasks: (props) => <TasksTab data={props.data} />,
+  notes: (props) => <NotesTab data={props.data} />,
+  files: () => <FilesTab />,
   emails: () => <HiddenTabContent title="Emails" />,
   calendar: () => <HiddenTabContent title="Calendar" />,
 };

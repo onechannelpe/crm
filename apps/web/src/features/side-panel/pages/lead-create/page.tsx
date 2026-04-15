@@ -32,13 +32,13 @@ import {
   type ExtendedTabId,
   type TabId,
 } from "./constants";
-import { FilesTabContent } from "./files-tab-content";
+import { FilesTab } from "./tabs/files";
 import { Footer } from "./footer";
-import { HomeTabContent } from "./home-tab-content";
-import { NotesTabContent } from "./notes-tab-content";
+import { HomeTab } from "./tabs/home";
+import { NotesTab } from "./tabs/notes";
 import { useLeadCreatePageState } from "./state";
-import { TasksTabContent } from "./tasks-tab-content";
-import { TimelineTabContent } from "./timeline-tab-content";
+import { TasksTab } from "./tabs/tasks";
+import { TimelineTab } from "./tabs/timeline";
 
 import styles from "./page.module.css";
 
@@ -55,11 +55,11 @@ const TAB_COMPONENTS: Record<
   ExtendedTabId,
   (props: TabContentProps) => JSX.Element
 > = {
-  home: HomeTabContent,
-  timeline: TimelineTabContent,
-  tasks: TasksTabContent,
-  notes: () => <NotesTabContent />,
-  files: () => <FilesTabContent />,
+  home: HomeTab,
+  timeline: TimelineTab,
+  tasks: TasksTab,
+  notes: () => <NotesTab />,
+  files: () => <FilesTab />,
   emails: () => <HiddenTabContent title="Emails" />,
   calendar: () => <HiddenTabContent title="Calendar" />,
 };

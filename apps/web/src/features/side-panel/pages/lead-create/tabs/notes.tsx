@@ -1,7 +1,7 @@
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { ActivityTabContainer } from "~/features/side-panel/components/activity-tabs/primitives";
 
-export function NotesTabContent() {
+export function NotesTab() {
   return (
     <ActivityTabContainer>
       <ActivityTabEmptyState
