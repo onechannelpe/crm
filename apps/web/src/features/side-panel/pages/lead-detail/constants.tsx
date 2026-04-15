@@ -15,7 +15,7 @@ import {
   type LeadDetailPrimaryTabId,
   type LeadDetailSecondaryTabId,
   type LeadDetailTabId,
-} from "../model";
+} from "./model";
 
 export type TabId = LeadDetailPrimaryTabId;
 export type HiddenTabId = LeadDetailSecondaryTabId;

@@ -1,6 +1,6 @@
 import { type ParentProps, Show, children } from "solid-js";
 
-import styles from "./group.module.css";
+import styles from "./styles.module.css";
 
 type PanelGroupProps = ParentProps<{ label: string }>;
 

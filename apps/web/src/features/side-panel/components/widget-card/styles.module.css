@@ -1,0 +1,73 @@
+.widget {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.widget:last-child {
+  border-bottom: none;
+}
+
+.widgetHeader {
+  align-items: center;
+  display: flex;
+  height: 24px;
+  justify-content: space-between;
+  padding: 0 var(--spacing-2) 0 var(--spacing-3);
+}
+
+.widgetTitle {
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.widgetActions {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.widget:hover .widgetActions {
+  opacity: 1;
+}
+
+.seeAllButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  gap: 4px;
+  padding: 0;
+}
+
+.widgetOptionsButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+}
+
+.sectionHeader {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 500;
+  height: 24px;
+  justify-content: space-between;
+  padding: 0 var(--spacing-2) 0 var(--spacing-3);
+  width: 100%;
+}

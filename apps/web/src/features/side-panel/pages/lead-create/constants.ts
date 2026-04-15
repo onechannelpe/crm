@@ -15,7 +15,7 @@ import {
   type LeadCreatePrimaryTabId,
   type LeadCreateSecondaryTabId,
   type LeadCreateTabId,
-} from "../model";
+} from "./model";
 
 export type TabId = LeadCreatePrimaryTabId;
 export type HiddenTabId = LeadCreateSecondaryTabId;
@@ -67,12 +67,4 @@ export const FIELD_ROWS: ReadonlyArray<DisplayField> = [
     value: "PENDING_EXTERNAL_REVIEW",
   },
   { label: "Última actualización", icon: Clock, value: "" },
-] as const;
-
-export const RELATION_WIDGETS: ReadonlyArray<{
-  title: string;
-  showSeeAll: boolean;
-}> = [
-  { title: "Bootstrap desde Engine", showSeeAll: false },
-  { title: "Verificación SUNAT", showSeeAll: false },
 ] as const;

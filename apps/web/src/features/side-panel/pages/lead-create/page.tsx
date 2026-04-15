@@ -22,15 +22,20 @@ import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
 
 import { PanelList } from "../../components/list";
+import { TabStrip } from "../../components/tab-strip";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
-import type { ExtendedTabId } from "./components/constants";
-import { Footer } from "./components/footer";
-import { HomeTabContent } from "./components/home-tab-content";
-import { Tabs } from "./components/tabs";
-import { TasksTabContent } from "./components/tasks-tab-content";
-import { TimelineTabContent } from "./components/timeline-tab-content";
+import {
+  HIDDEN_TAB_ITEMS,
+  TAB_ITEMS,
+  type ExtendedTabId,
+  type TabId,
+} from "./constants";
+import { Footer } from "./footer";
+import { HomeTabContent } from "./home-tab-content";
 import { useLeadCreatePageState } from "./state";
+import { TasksTabContent } from "./tasks-tab-content";
+import { TimelineTabContent } from "./timeline-tab-content";
 
 import styles from "./page.module.css";
 
@@ -59,8 +64,6 @@ const TAB_COMPONENTS: Record<
   emails: () => <HiddenTabContent title="Emails" />,
   calendar: () => <HiddenTabContent title="Calendar" />,
 };
-
-const hiddenTabsCount = 4;
 
 export function LeadCreatePage() {
   const { currentUser } = useAuthenticatedSession();
@@ -189,9 +192,10 @@ export function LeadCreatePage() {
     <div class={styles.pageShell}>
       <PanelList>
         <div class={styles.page}>
-          <Tabs
+          <TabStrip<ExtendedTabId, TabId>
+            tabs={TAB_ITEMS}
+            hiddenTabs={HIDDEN_TAB_ITEMS}
             activeTab={pageState().draft.activeTab}
-            hiddenTabsCount={hiddenTabsCount}
             onTabSelect={setActiveTab}
             onHiddenTabSelect={setActiveTab}
           />

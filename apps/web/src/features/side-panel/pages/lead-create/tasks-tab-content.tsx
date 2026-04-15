@@ -1,6 +1,13 @@
 import Checkbox from "~/components/icons/checkbox";
-
-import styles from "../page.module.css";
+import {
+  TimelineBody,
+  TimelineEntry,
+  TimelineIcon,
+  TimelineMeta,
+  TimelineMonth,
+  TimelineSection,
+  TimelineTitle,
+} from "~/features/side-panel/components/timeline";
 
 export function TasksTabContent(props: {
   ruc?: string;
@@ -32,19 +39,19 @@ export function TasksTabContent(props: {
   ];
 
   return (
-    <div class={styles.timelineSection}>
-      <div class={styles.timelineMonth}>Tasks</div>
+    <TimelineSection>
+      <TimelineMonth>Tasks</TimelineMonth>
       {tasks.map((task) => (
-        <div class={styles.timelineEntry}>
-          <div class={styles.timelineIcon}>
+        <TimelineEntry>
+          <TimelineIcon>
             <Checkbox size={12} />
-          </div>
-          <div class={styles.timelineBody}>
-            <div class={styles.timelineTitle}>{task.title}</div>
-            <div class={styles.timelineMeta}>{task.meta}</div>
-          </div>
-        </div>
+          </TimelineIcon>
+          <TimelineBody>
+            <TimelineTitle>{task.title}</TimelineTitle>
+            <TimelineMeta>{task.meta}</TimelineMeta>
+          </TimelineBody>
+        </TimelineEntry>
       ))}
-    </div>
+    </TimelineSection>
   );
 }
