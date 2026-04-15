@@ -1,14 +1,18 @@
 .tabs {
   box-sizing: border-box;
   display: flex;
-  flex-wrap: nowrap;
-  gap: 4px;
   height: 40px;
-  overflow: hidden;
-  padding-left: var(--spacing-2);
   position: relative;
   user-select: none;
   width: 100%;
+}
+
+.tabContainer {
+  display: flex;
+  gap: var(--spacing-1);
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 .tabs::after {
@@ -22,27 +26,44 @@
 }
 
 .moreTabWrap {
+  align-items: center;
+  display: flex;
+  height: 40px;
+  margin-left: var(--spacing-1);
   position: relative;
 }
 
-.tab {
+.tab,
+.moreTab {
+  all: unset;
   align-items: center;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
   color: var(--foreground-secondary);
   cursor: pointer;
-  display: inline-flex;
-  font-weight: 500;
-  gap: 4px;
-  padding: 4px 8px;
+  display: flex;
+  gap: var(--spacing-1);
+  justify-content: center;
   position: relative;
+  text-decoration: none;
 }
 
-.tab:hover,
-.moreTab:hover {
+.tabContent,
+.moreTabContent {
+  border-radius: var(--radius-sm);
+  display: flex;
+  font-weight: var(--font-weight-medium);
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  white-space: nowrap;
+}
+
+.tabContent:hover,
+.moreTabContent:hover {
   background: var(--tertiary);
-  color: var(--foreground);
+}
+
+.tabContent:active,
+.moreTabContent:active {
+  background: var(--background-transparent-medium);
 }
 
 .tabActive {
@@ -50,33 +71,27 @@
 }
 
 .tabActive::after {
-  background: var(--foreground);
   bottom: 0;
   content: "";
   height: 1px;
   left: 0;
   position: absolute;
   right: 0;
+  background: var(--border-inverted, var(--foreground));
   z-index: 1;
 }
 
-.moreTab {
+.moreTabContent {
   align-items: center;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--foreground-secondary);
-  cursor: pointer;
-  display: inline-flex;
-  font-weight: 500;
-  gap: 4px;
-  padding: 4px 8px;
-  white-space: nowrap;
 }
 
 .moreTab:focus-visible,
 .tab:focus-visible {
   outline: none;
+}
+
+.moreTab:focus-visible .moreTabContent,
+.tab:focus-visible .tabContent {
   box-shadow: var(--focus-ring-shadow);
 }
 
@@ -107,6 +122,7 @@
   width: 100%;
 }
 
+.moreMenuItemActive,
 .moreMenuItem:hover {
   background: var(--secondary);
 }
