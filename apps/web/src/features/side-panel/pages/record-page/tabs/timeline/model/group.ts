@@ -29,5 +29,5 @@ export function groupEventsByMonth(events: Event[]): Group[] {
     });
   }
 
-  return groups.sort((a, b) => b.year - a.year || b.month - a.month);
+  return groups.toSorted((a, b) => b.year - a.year || b.month - a.month);
 }

@@ -31,8 +31,7 @@ export function TimelineTab(props: TimelineTabProps) {
     }
 
     const normalized = props.data.timeline
-      .slice()
-      .sort((a, b) => b.occurredAt - a.occurredAt)
+      .toSorted((a, b) => b.occurredAt - a.occurredAt)
       .map(normalizeLeadEvent);
 
     return groupEventsByMonth(normalized);
