@@ -18,7 +18,9 @@ import {
   type ExtendedTabId,
   type TabId,
 } from "./constants";
+import { FilesTabContent } from "./files-tab-content";
 import { HomeTabContent } from "./home-tab-content";
+import { NotesTabContent } from "./notes-tab-content";
 import { TasksTabContent } from "./tasks-tab-content";
 import { TimelineTabContent } from "./timeline-tab-content";
 
@@ -38,8 +40,8 @@ const TAB_COMPONENTS: Record<
   home: HomeTabContent,
   timeline: (props) => <TimelineTabContent data={props.data} />,
   tasks: (props) => <TasksTabContent data={props.data} />,
-  notes: () => <HiddenTabContent title="Notes" />,
-  files: () => <HiddenTabContent title="Files" />,
+  notes: (props) => <NotesTabContent data={props.data} />,
+  files: (props) => <FilesTabContent data={props.data} />,
   emails: () => <HiddenTabContent title="Emails" />,
   calendar: () => <HiddenTabContent title="Calendar" />,
 };

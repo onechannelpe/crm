@@ -31,8 +31,10 @@ import {
   type ExtendedTabId,
   type TabId,
 } from "./constants";
+import { FilesTabContent } from "./files-tab-content";
 import { Footer } from "./footer";
 import { HomeTabContent } from "./home-tab-content";
+import { NotesTabContent } from "./notes-tab-content";
 import { useLeadCreatePageState } from "./state";
 import { TasksTabContent } from "./tasks-tab-content";
 import { TimelineTabContent } from "./timeline-tab-content";
@@ -59,8 +61,8 @@ const TAB_COMPONENTS: Record<
   home: HomeTabContent,
   timeline: TimelineTabContent,
   tasks: TasksTabContent,
-  notes: () => <HiddenTabContent title="Notes" />,
-  files: () => <HiddenTabContent title="Files" />,
+  notes: () => <NotesTabContent />,
+  files: () => <FilesTabContent />,
   emails: () => <HiddenTabContent title="Emails" />,
   calendar: () => <HiddenTabContent title="Calendar" />,
 };
