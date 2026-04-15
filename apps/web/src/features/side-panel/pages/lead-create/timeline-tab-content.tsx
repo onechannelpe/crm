@@ -1,11 +1,15 @@
-import { createMemo, For } from "solid-js";
+import { createMemo, For, Show } from "solid-js";
 
 import Plus from "~/components/icons/plus";
 import {
+  ActivityRowDescription,
+  ActivityRowTitle,
   ActivityTabContainer,
   ActivityTimeline,
   ActivityTimelineGroup,
   ActivityTimelineRow,
+  ActivityTimelineRowBody,
+  ActivityTimelineRowLeft,
 } from "~/features/side-panel/components/activity-tabs/primitives";
 import { formatDateTime } from "~/lib/utils";
 
@@ -53,15 +57,24 @@ export function TimelineTabContent(props: {
         <ActivityTimelineGroup month={month} year={year}>
           <For each={items()}>
             {(item, i) => (
-              <ActivityTimelineRow
-                icon={<Plus size={14} />}
-                author="System"
-                action={item.action}
-                title={item.subject}
-                date={dateLabel}
-                description={item.meta}
-                isLast={i() === items().length - 1}
-              />
+              <ActivityTimelineRow>
+                <ActivityTimelineRowLeft
+                  icon={<Plus size={14} />}
+                  isLast={i() === items().length - 1}
+                />
+                <ActivityTimelineRowBody
+                  author="System"
+                  action={item.action}
+                  date={dateLabel}
+                >
+                  <ActivityRowTitle>{item.subject}</ActivityRowTitle>
+                  <Show when={item.meta}>
+                    {(meta) => (
+                      <ActivityRowDescription>{meta()}</ActivityRowDescription>
+                    )}
+                  </Show>
+                </ActivityTimelineRowBody>
+              </ActivityTimelineRow>
             )}
           </For>
         </ActivityTimelineGroup>

@@ -4,6 +4,8 @@ import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-toolt
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import {
   ActivityGrid,
+  ActivityRowDescription,
+  ActivityRowTitle,
   ActivitySection,
   ActivityTabContainer,
   ActivityTile,
@@ -42,10 +44,12 @@ export function NotesTabContent(props: { data: LeadDetailView }) {
                     </span>
                   }
                 >
-                  <div class={styles.noteTitle}>
+                  <ActivityRowTitle>
                     <OverflowingText text={note.title} />
-                  </div>
-                  <div class={styles.noteBody}>{note.description}</div>
+                  </ActivityRowTitle>
+                  <ActivityRowDescription>
+                    {note.description}
+                  </ActivityRowDescription>
                 </ActivityTile>
               )}
             </For>

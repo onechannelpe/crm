@@ -144,37 +144,42 @@ export function ActivityTimelineGroup(
   );
 }
 
-export function ActivityTimelineRow(props: {
+export function ActivityTimelineRow(props: ParentProps) {
+  return <div class={styles.timelineRow}>{props.children}</div>;
+}
+
+export function ActivityTimelineRowLeft(props: {
   icon: JSX.Element;
-  author: string;
-  action: string;
-  title: string;
-  date: string;
-  description?: string;
   isLast?: boolean;
 }) {
   return (
-    <div class={styles.timelineRow}>
-      <div class={styles.timelineRowLeft}>
-        <div class={styles.timelineRowIcon}>{props.icon}</div>
-        {!props.isLast ? (
-          <div class={styles.timelineRowLineWrap}>
-            <div class={styles.timelineRowLine} />
-          </div>
-        ) : null}
-      </div>
-      <div class={styles.timelineRowBody}>
-        <div class={styles.timelineRowTop}>
-          <div class={styles.timelineRowTopLeft}>
-            <span class={styles.timelineRowAuthor}>{props.author}</span>
-            <span class={styles.timelineRowAction}>{props.action}</span>
-            <span class={styles.timelineRowTitle}>{props.title}</span>
-          </div>
-          <span class={styles.timelineRowDate}>{props.date}</span>
+    <div class={styles.timelineRowLeft}>
+      <div class={styles.timelineRowIcon}>{props.icon}</div>
+      <Show when={!props.isLast}>
+        <div class={styles.timelineRowLineWrap}>
+          <div class={styles.timelineRowLine} />
         </div>
-        {props.description ? (
-          <div class={styles.timelineRowDescription}>{props.description}</div>
-        ) : null}
+      </Show>
+    </div>
+  );
+}
+
+export function ActivityTimelineRowBody(
+  props: ParentProps<{
+    author: string;
+    action: string;
+    date: string;
+  }>,
+) {
+  return (
+    <div class={styles.timelineRowBody}>
+      <div class={styles.timelineRowTop}>
+        <div class={styles.timelineRowTopLeft}>
+          <span class={styles.timelineRowAuthor}>{props.author}</span>
+          <span class={styles.timelineRowAction}>{props.action}</span>
+          {props.children}
+        </div>
+        <span class={styles.timelineRowDate}>{props.date}</span>
       </div>
     </div>
   );

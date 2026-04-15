@@ -5,10 +5,14 @@ import Package from "~/components/icons/package";
 import Phone from "~/components/icons/phone";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import {
+  ActivityRowDescription,
+  ActivityRowTitle,
   ActivityTabContainer,
   ActivityTimeline,
   ActivityTimelineGroup,
   ActivityTimelineRow,
+  ActivityTimelineRowBody,
+  ActivityTimelineRowLeft,
 } from "~/features/side-panel/components/activity-tabs/primitives";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
@@ -100,20 +104,33 @@ export function TimelineTabContent(props: { data: LeadDetailView }) {
                 >
                   <For each={group.items}>
                     {(item, i) => (
-                      <ActivityTimelineRow
-                        icon={timelineIcon(item.kind)}
-                        author={item.actorDisplayName}
-                        action={timelineActionLabel(item.kind)}
-                        title={item.title}
-                        date={formatDateTime(item.occurredAt)}
-                        description={
-                          item.description.trim().length > 0 &&
-                          item.description !== item.title
-                            ? item.description
-                            : undefined
-                        }
-                        isLast={i() === group.items.length - 1}
-                      />
+                      <ActivityTimelineRow>
+                        <ActivityTimelineRowLeft
+                          icon={timelineIcon(item.kind)}
+                          isLast={i() === group.items.length - 1}
+                        />
+                        <ActivityTimelineRowBody
+                          author={item.actorDisplayName}
+                          action={timelineActionLabel(item.kind)}
+                          date={formatDateTime(item.occurredAt)}
+                        >
+                          <ActivityRowTitle>{item.title}</ActivityRowTitle>
+                          <Show
+                            when={
+                              item.description.trim().length > 0 &&
+                              item.description !== item.title
+                                ? item.description
+                                : undefined
+                            }
+                          >
+                            {(description) => (
+                              <ActivityRowDescription>
+                                {description()}
+                              </ActivityRowDescription>
+                            )}
+                          </Show>
+                        </ActivityTimelineRowBody>
+                      </ActivityTimelineRow>
                     )}
                   </For>
                 </ActivityTimelineGroup>
