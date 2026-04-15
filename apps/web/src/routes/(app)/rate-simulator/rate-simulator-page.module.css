@@ -1,5 +1,6 @@
 .page {
   gap: 14px;
+  padding-top: 2rem;
 }
 
 .form {
@@ -15,8 +16,8 @@
 }
 
 .card {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
+  /* border: var(--panel-border); */
+  /* border-radius: var(--panel-radius); */
   background: var(--panel-bg);
   padding: 12px;
   display: flex;
