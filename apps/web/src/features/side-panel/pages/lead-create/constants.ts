@@ -15,7 +15,7 @@ import {
   type LeadCreatePrimaryTabId,
   type LeadCreateSecondaryTabId,
   type LeadCreateTabId,
-} from "../model";
+} from "./model";
 
 export type TabId = LeadCreatePrimaryTabId;
 export type HiddenTabId = LeadCreateSecondaryTabId;
@@ -58,7 +58,6 @@ export const HIDDEN_TAB_ITEMS: ReadonlyArray<{
 ] as const;
 
 export const FIELD_ROWS: ReadonlyArray<DisplayField> = [
-  { label: "RUC", icon: MapIcon, key: "ruc" },
   { label: "Razón social", icon: Building2, key: "razonSocial" },
   { label: "Dirección", icon: MapIcon, key: "address" },
   { label: "Ejecutivo asignado", icon: User, value: "Actual" },
@@ -68,12 +67,4 @@ export const FIELD_ROWS: ReadonlyArray<DisplayField> = [
     value: "PENDING_EXTERNAL_REVIEW",
   },
   { label: "Última actualización", icon: Clock, value: "" },
-] as const;
-
-export const RELATION_WIDGETS: ReadonlyArray<{
-  title: string;
-  showSeeAll: boolean;
-}> = [
-  { title: "Bootstrap desde Engine", showSeeAll: false },
-  { title: "Verificación SUNAT", showSeeAll: false },
 ] as const;

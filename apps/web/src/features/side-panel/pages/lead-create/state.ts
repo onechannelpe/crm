@@ -52,17 +52,12 @@ export function useLeadCreatePageState() {
     }));
   }
 
-  const title = createMemo(() => {
-    return "";
-  });
-
   const label = createMemo(() => {
     return LABEL_BY_TAB[pageState().draft.activeTab];
   });
 
   return {
     pageState,
-    title,
     label,
     setRuc,
     setActiveTab,

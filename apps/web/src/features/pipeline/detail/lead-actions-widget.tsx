@@ -1,4 +1,4 @@
-import { A, useAction } from "@solidjs/router";
+import { useAction } from "@solidjs/router";
 import {
   createMemo,
   createSignal,
@@ -9,6 +9,19 @@ import {
 } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
+import {
+  ActionRowButton,
+  ActionRowLink,
+  RelationList,
+  RelationMeta,
+  RelationRow,
+} from "~/features/side-panel/components/relation-list";
+import {
+  WidgetBody,
+  Widget,
+  WidgetHeader,
+  WidgetTitle,
+} from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadAvailableAction } from "~/server/pipeline/application/contracts/lead-available-action";
 
@@ -17,7 +30,6 @@ import { mapLeadActionsToUi } from "./lead-workflow-ui";
 import { ReassignLeadModal } from "./reassign-lead-modal";
 import { ReviewLeadModal } from "./review-lead-modal";
 
-import styles from "../../side-panel/pages/lead-detail/page.module.css";
 import widgetStyles from "./lead-actions-widget.module.css";
 
 type OpenModal = "review-lead" | "reassign-lead" | null;
@@ -72,51 +84,51 @@ export function LeadActionsWidget(props: {
 
   return (
     <>
-      <section class={styles.widget}>
-        <div class={styles.widgetHeader}>
-          <h3 class={styles.widgetTitle}>Acciones</h3>
-        </div>
-        <div class={styles.relationList}>
-          <For each={actions()}>
-            {(action) => (
-              <Show
-                when={action.kind === "link" && action}
-                fallback={
-                  <button
-                    type="button"
-                    class={styles.actionRowButton}
-                    disabled={approving()}
-                    onClick={() => handleButtonAction(action.id)}
-                  >
-                    <span>
-                      {approving() && action.id === "approve-for-sale"
-                        ? "Aprobando..."
-                        : action.label}
-                    </span>
-                    <ChevronRight size={14} />
-                  </button>
-                }
-              >
-                {(linkAction) => (
-                  <A class={styles.actionRowLink} href={linkAction().href}>
-                    <span>{linkAction().label}</span>
-                    <ChevronRight size={14} />
-                  </A>
-                )}
-              </Show>
-            )}
-          </For>
-          <Show when={actions().length === 0}>
-            <div class={styles.relationRow}>
-              <span>Sin acciones disponibles</span>
-              <span class={styles.relationMeta}>Flujo al dia</span>
-            </div>
+      <Widget>
+        <WidgetHeader>
+          <WidgetTitle text="Acciones" />
+        </WidgetHeader>
+        <WidgetBody>
+          <RelationList>
+            <For each={actions()}>
+              {(action) => (
+                <Show
+                  when={action.kind === "link" && action}
+                  fallback={
+                    <ActionRowButton
+                      disabled={approving()}
+                      onClick={() => handleButtonAction(action.id)}
+                    >
+                      <span>
+                        {approving() && action.id === "approve-for-sale"
+                          ? "Aprobando..."
+                          : action.label}
+                      </span>
+                      <ChevronRight size={14} />
+                    </ActionRowButton>
+                  }
+                >
+                  {(linkAction) => (
+                    <ActionRowLink href={linkAction().href}>
+                      <span>{linkAction().label}</span>
+                      <ChevronRight size={14} />
+                    </ActionRowLink>
+                  )}
+                </Show>
+              )}
+            </For>
+            <Show when={actions().length === 0}>
+              <RelationRow>
+                <span>Sin acciones disponibles</span>
+                <RelationMeta>Flujo al dia</RelationMeta>
+              </RelationRow>
+            </Show>
+          </RelationList>
+          <Show when={error()}>
+            {(message) => <p class={widgetStyles.errorText}>{message()}</p>}
           </Show>
-        </div>
-        <Show when={error()}>
-          {(message) => <p class={widgetStyles.errorText}>{message()}</p>}
-        </Show>
-      </section>
+        </WidgetBody>
+      </Widget>
 
       <Show when={openModal() === "review-lead"}>
         <ReviewLeadModal

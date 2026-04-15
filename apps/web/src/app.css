@@ -71,10 +71,24 @@
   --side-panel-top-bar-height: 40px;
   --side-panel-top-bar-height-mobile: 52px;
 
+  /* spacing scale (1 unit = 4px) */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+
   /* translucent fills */
   --bg-translucent-subtle: color(display-p3 0 0 0 / 0.02);
   --bg-translucent: color(display-p3 0 0 0 / 0.039);
   --bg-translucent-medium: color(display-p3 0 0 0 / 0.078);
+
+  /* semantic aliases for translucent fills */
+  --background-transparent-lighter: var(--bg-translucent-subtle);
+  --background-transparent-light: var(--bg-translucent);
+  --background-transparent-medium: var(--bg-translucent-medium);
+
+  /* accent blue (focus rings, active borders) */
+  --color-blue: color(display-p3 0.306 0.506 0.957);
 
   /* avatar */
   --avatar-bg: color(display-p3 0.913 0.854 0.971);
@@ -94,6 +108,7 @@
   --tertiary: color(display-p3 0.945 0.945 0.945);
   --foreground-secondary: color(display-p3 0.4 0.4 0.4);
   --foreground-tertiary: color(display-p3 0.6 0.6 0.6);
+  --foreground-light: color(display-p3 0.75 0.75 0.75);
   --overlay: rgba(255, 255, 255, 0.98);
   --scrim: rgba(9, 11, 17, 0.45);
 
@@ -119,6 +134,7 @@
   --info-foreground: color(display-p3 1 1 1);
 
   --border: color(display-p3 0.945 0.945 0.945);
+  --border-light: color(display-p3 0.965 0.965 0.965);
   --input: color(display-p3 0.945 0.945 0.945);
   --ring: color(display-p3 0.2 0.2 0.2);
 
@@ -151,6 +167,7 @@
   --tertiary: color(display-p3 0.114 0.114 0.114);
   --foreground-secondary: color(display-p3 0.702 0.702 0.702);
   --foreground-tertiary: color(display-p3 0.506 0.506 0.506);
+  --foreground-light: color(display-p3 0.35 0.35 0.35);
   --overlay: rgba(18, 18, 18, 0.98);
   --scrim: rgba(4, 6, 10, 0.72);
 
@@ -176,6 +193,7 @@
   --info-foreground: color(display-p3 0.76 0.86 0.96);
 
   --border: color(display-p3 0.114 0.114 0.114);
+  --border-light: color(display-p3 0.098 0.098 0.098);
   --input: color(display-p3 0.114 0.114 0.114);
   --ring: color(display-p3 0.922 0.922 0.922);
 

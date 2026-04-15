@@ -2,7 +2,7 @@ import { type ParentProps, createSignal, onCleanup, onMount } from "solid-js";
 
 import { getVerticalNavigationAction } from "~/lib/keyboard/list-navigation";
 
-import styles from "./list.module.css";
+import styles from "./styles.module.css";
 
 export function PanelList(props: ParentProps) {
   let listRef: HTMLDivElement | undefined;
@@ -61,9 +61,7 @@ export function PanelList(props: ParentProps) {
       }}
       class={styles.list}
     >
-      <div class={styles.scrollArea}>
-        <div class={styles.content}>{props.children}</div>
-      </div>
+      <div class={styles.scrollArea}>{props.children}</div>
     </div>
   );
 }

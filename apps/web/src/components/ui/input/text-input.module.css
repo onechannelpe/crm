@@ -1,0 +1,66 @@
+.input {
+  background-color: var(--background-transparent-lighter);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  color: var(--foreground);
+  display: flex;
+  flex-grow: 1;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  outline: none;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.input::placeholder {
+  color: var(--foreground-light);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+}
+
+.input:focus {
+  border-color: var(--color-blue);
+}
+
+.input:disabled {
+  color: var(--foreground-tertiary);
+}
+
+/* size variants */
+.sizeXs {
+  height: 20px;
+  padding-inline: var(--spacing-1);
+}
+
+.sizeSm {
+  height: 24px;
+  padding-inline: var(--spacing-1);
+}
+
+.sizeMd {
+  height: 28px;
+  padding-inline: var(--spacing-2);
+}
+
+.sizeLg {
+  height: 32px;
+  padding-inline: var(--spacing-2);
+}
+
+/* inherit font from parent (e.g. topbar title slot) */
+.inheritFont {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* error state */
+.inputError {
+  border-color: var(--destructive);
+}
+
+.inputError:focus {
+  border-color: var(--destructive);
+}
