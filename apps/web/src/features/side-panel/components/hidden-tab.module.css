@@ -1,5 +1,5 @@
 .container {
   color: var(--foreground-secondary);
-  font-size: 13px;
-  padding: 8px 8px 4px;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-2) var(--spacing-2) var(--spacing-1);
 }
