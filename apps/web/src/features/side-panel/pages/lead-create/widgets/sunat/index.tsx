@@ -1,5 +1,6 @@
 import { RelationRow } from "~/features/side-panel/components/relation-list";
 import {
+  WidgetBody,
   Widget,
   WidgetActions,
   WidgetHeader,
@@ -11,14 +12,16 @@ export function SunatWidget() {
   return (
     <Widget>
       <WidgetHeader>
-        <WidgetTitle>Verificación SUNAT</WidgetTitle>
+        <WidgetTitle text="Verificación SUNAT" />
         <WidgetActions>
           <WidgetOptionsButton>...</WidgetOptionsButton>
         </WidgetActions>
       </WidgetHeader>
-      <RelationRow>
-        <span>Se encola al registrar el lead</span>
-      </RelationRow>
+      <WidgetBody>
+        <RelationRow>
+          <span>Se encola al registrar el lead</span>
+        </RelationRow>
+      </WidgetBody>
     </Widget>
   );
 }

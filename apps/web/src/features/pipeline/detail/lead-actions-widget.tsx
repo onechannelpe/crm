@@ -17,6 +17,7 @@ import {
   RelationRow,
 } from "~/features/side-panel/components/relation-list";
 import {
+  WidgetBody,
   Widget,
   WidgetHeader,
   WidgetTitle,
@@ -85,46 +86,48 @@ export function LeadActionsWidget(props: {
     <>
       <Widget>
         <WidgetHeader>
-          <WidgetTitle>Acciones</WidgetTitle>
+          <WidgetTitle text="Acciones" />
         </WidgetHeader>
-        <RelationList>
-          <For each={actions()}>
-            {(action) => (
-              <Show
-                when={action.kind === "link" && action}
-                fallback={
-                  <ActionRowButton
-                    disabled={approving()}
-                    onClick={() => handleButtonAction(action.id)}
-                  >
-                    <span>
-                      {approving() && action.id === "approve-for-sale"
-                        ? "Aprobando..."
-                        : action.label}
-                    </span>
-                    <ChevronRight size={14} />
-                  </ActionRowButton>
-                }
-              >
-                {(linkAction) => (
-                  <ActionRowLink href={linkAction().href}>
-                    <span>{linkAction().label}</span>
-                    <ChevronRight size={14} />
-                  </ActionRowLink>
-                )}
-              </Show>
-            )}
-          </For>
-          <Show when={actions().length === 0}>
-            <RelationRow>
-              <span>Sin acciones disponibles</span>
-              <RelationMeta>Flujo al dia</RelationMeta>
-            </RelationRow>
+        <WidgetBody>
+          <RelationList>
+            <For each={actions()}>
+              {(action) => (
+                <Show
+                  when={action.kind === "link" && action}
+                  fallback={
+                    <ActionRowButton
+                      disabled={approving()}
+                      onClick={() => handleButtonAction(action.id)}
+                    >
+                      <span>
+                        {approving() && action.id === "approve-for-sale"
+                          ? "Aprobando..."
+                          : action.label}
+                      </span>
+                      <ChevronRight size={14} />
+                    </ActionRowButton>
+                  }
+                >
+                  {(linkAction) => (
+                    <ActionRowLink href={linkAction().href}>
+                      <span>{linkAction().label}</span>
+                      <ChevronRight size={14} />
+                    </ActionRowLink>
+                  )}
+                </Show>
+              )}
+            </For>
+            <Show when={actions().length === 0}>
+              <RelationRow>
+                <span>Sin acciones disponibles</span>
+                <RelationMeta>Flujo al dia</RelationMeta>
+              </RelationRow>
+            </Show>
+          </RelationList>
+          <Show when={error()}>
+            {(message) => <p class={widgetStyles.errorText}>{message()}</p>}
           </Show>
-        </RelationList>
-        <Show when={error()}>
-          {(message) => <p class={widgetStyles.errorText}>{message()}</p>}
-        </Show>
+        </WidgetBody>
       </Widget>
 
       <Show when={openModal() === "review-lead"}>

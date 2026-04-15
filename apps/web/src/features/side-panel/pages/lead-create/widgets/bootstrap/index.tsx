@@ -4,6 +4,7 @@ import {
   RelationRow,
 } from "~/features/side-panel/components/relation-list";
 import {
+  WidgetBody,
   Widget,
   WidgetActions,
   WidgetHeader,
@@ -20,17 +21,19 @@ export function BootstrapWidget(props: BootstrapWidgetProps) {
   return (
     <Widget>
       <WidgetHeader>
-        <WidgetTitle>Bootstrap desde Engine</WidgetTitle>
+        <WidgetTitle text="Bootstrap desde Engine" />
         <WidgetActions>
           <WidgetOptionsButton>...</WidgetOptionsButton>
         </WidgetActions>
       </WidgetHeader>
-      <RelationRow>
-        <span>{props.engineStatus ?? ""}</span>
-        <PlusButton onClick={props.onSubmit}>
-          <Plus size={14} />
-        </PlusButton>
-      </RelationRow>
+      <WidgetBody>
+        <RelationRow>
+          <span>{props.engineStatus ?? ""}</span>
+          <PlusButton onClick={props.onSubmit}>
+            <Plus size={14} />
+          </PlusButton>
+        </RelationRow>
+      </WidgetBody>
     </Widget>
   );
 }

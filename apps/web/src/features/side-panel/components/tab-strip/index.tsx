@@ -56,6 +56,7 @@ export function TabStrip<TAll extends string, TPrimary extends TAll>(
         {(tab) => (
           <button
             type="button"
+            data-testid={`tab-${tab.id}`}
             class={`${styles.tab} ${props.activeTab === tab.id ? styles.tabActive : ""}`}
             onClick={() => props.onTabSelect(tab.id)}
           >
@@ -69,11 +70,12 @@ export function TabStrip<TAll extends string, TPrimary extends TAll>(
         <div class={styles.moreTabWrap} ref={(el) => (overflowWrapRef = el)}>
           <button
             type="button"
+            data-testid="tab-tab-more-button"
             class={styles.moreTab}
             onClick={() => setIsOverflowOpen((v) => !v)}
           >
+            <span>+{props.hiddenTabs.length} More</span>
             <ChevronDown size={16} />
-            <span>+{props.hiddenTabs.length} más</span>
           </button>
           <Show when={isOverflowOpen()}>
             <div class={styles.moreMenu}>

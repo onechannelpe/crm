@@ -1,19 +1,24 @@
-import { For } from "solid-js";
+import { createSignal, For } from "solid-js";
 import type { JSX } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
+import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
+import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import {
   FieldIcon,
   FieldLabel,
+  FieldLabelText,
   FieldRow,
   FieldTable,
   FieldTextValue,
   FieldValue,
 } from "~/features/side-panel/components/field-table";
 import {
+  WidgetBody,
   Widget,
   WidgetHeader,
+  WidgetSectionChevron,
   WidgetSectionHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
@@ -54,30 +59,57 @@ function renderFieldValue(data: LeadDetailView, key: FieldKey): JSX.Element {
 }
 
 export function FieldsWidget(props: { data: LeadDetailView }) {
+  const [isExpanded, setIsExpanded] = createSignal(true);
+  const [hoveredFieldKey, setHoveredFieldKey] = createSignal<FieldKey | null>(
+    null,
+  );
+
   return (
     <Widget>
       <WidgetHeader>
-        <WidgetTitle>Campos</WidgetTitle>
+        <WidgetTitle text="Campos" />
       </WidgetHeader>
-      <WidgetSectionHeader>
-        <span>General</span>
-        <ChevronDown size={14} />
-      </WidgetSectionHeader>
-      <FieldTable>
-        <For each={FIELD_ROWS}>
-          {(field) => (
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <field.icon size={16} />
-                </FieldIcon>
-                <span>{field.label}</span>
-              </FieldLabel>
-              <FieldValue>{renderFieldValue(props.data, field.key)}</FieldValue>
-            </FieldRow>
-          )}
-        </For>
-      </FieldTable>
+      <WidgetBody>
+        <WidgetSectionHeader
+          onClick={() => setIsExpanded((current) => !current)}
+        >
+          <span>General</span>
+          <WidgetSectionChevron isExpanded={isExpanded()}>
+            <ChevronDown size={14} />
+          </WidgetSectionChevron>
+        </WidgetSectionHeader>
+        <AnimatedExpandableContainer isExpanded={isExpanded()}>
+          <FieldTable>
+            <For each={FIELD_ROWS}>
+              {(field) => (
+                <FieldRow
+                  readonly
+                  hovered={hoveredFieldKey() === field.key}
+                  onMouseEnter={() => setHoveredFieldKey(field.key)}
+                  onMouseLeave={() => setHoveredFieldKey(null)}
+                  onFocusIn={() => setHoveredFieldKey(field.key)}
+                  onFocusOut={() => setHoveredFieldKey(null)}
+                >
+                  <FieldLabel>
+                    <FieldIcon>
+                      <field.icon size={16} />
+                    </FieldIcon>
+                    <FieldLabelText>
+                      <OverflowingText
+                        text={field.label}
+                        style={{ width: "100%" }}
+                      />
+                    </FieldLabelText>
+                  </FieldLabel>
+                  <FieldValue>
+                    {renderFieldValue(props.data, field.key)}
+                  </FieldValue>
+                </FieldRow>
+              )}
+            </For>
+          </FieldTable>
+        </AnimatedExpandableContainer>
+      </WidgetBody>
     </Widget>
   );
 }
