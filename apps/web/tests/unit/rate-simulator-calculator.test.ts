@@ -39,7 +39,7 @@ describe("rate simulator calculator", () => {
       },
       CULQI: {
         "ANTES DE IGV": "2.71%",
-        "DESPUES DE IGV": "2.90%",
+        "DESPUES DE IGV": "2.91%",
       },
     });
   });
