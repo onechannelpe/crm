@@ -3,14 +3,9 @@ import type { Kysely } from "kysely";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { Result } from "~/server/shared/result";
 
-import { deriveLeadPatchFromIntent } from "../../domain/lead/lead-transitions";
-import { createPipelineAuditLogRepo, createPipelineAuditService } from "../audit-log";
-import { createAssignmentRepo } from "../assignment-repo";
-import { createHistoryRepo } from "../history-repo";
-import { createLeadRepo } from "../lead-repo";
 import type {
   LeadMutationUow,
   LeadMutationOutcome,
@@ -20,6 +15,14 @@ import {
   executeCheckedLeadMutation,
   executeLeadMutation,
 } from "../../application/services/lead-mutation-orchestrator";
+import { deriveLeadPatchFromIntent } from "../../domain/lead/lead-transitions";
+import { createAssignmentRepo } from "../assignment-repo";
+import {
+  createPipelineAuditLogRepo,
+  createPipelineAuditService,
+} from "../audit-log";
+import { createHistoryRepo } from "../history-repo";
+import { createLeadRepo } from "../lead-repo";
 import { createLeadAssignmentRepositoryPort } from "./lead-assignment-repo";
 import { createLeadAuditRepository } from "./lead-audit-repo";
 import { createLeadEventRepository } from "./lead-event-repo";
@@ -28,7 +31,9 @@ import {
   createLeadWriteRepository,
 } from "./lead-write-repo";
 
-function isRootExecutor(executor: DatabaseExecutor): executor is Kysely<Database> {
+function isRootExecutor(
+  executor: DatabaseExecutor,
+): executor is Kysely<Database> {
   return "transaction" in executor;
 }
 
@@ -60,15 +65,15 @@ function createMutationDeps(executor: DatabaseExecutor) {
   };
 }
 
-export function createLeadMutationUow(executor: DatabaseExecutor): LeadMutationUow {
+export function createLeadMutationUow(
+  executor: DatabaseExecutor,
+): LeadMutationUow {
   return {
     derivePatch(input) {
       return deriveLeadPatchFromIntent(input);
     },
 
-    async commit(
-      input,
-    ): Promise<Result<LeadMutationOutcome, DomainError>> {
+    async commit(input): Promise<Result<LeadMutationOutcome, DomainError>> {
       return inAtomicScope(executor, async (tx) => {
         const deps = createMutationDeps(tx);
 

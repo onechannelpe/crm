@@ -39,26 +39,39 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute() as Promise<UserNameRow[]>;
     },
 
-    findAssignableExecutivesByBranch(
-      branchId: number,
-    ): Promise<AssignableExecutiveRow[]> {
-      return db
+    findAssignableExecutives(input: {
+      branchId?: number;
+      search?: string;
+      limit: number;
+    }): Promise<AssignableExecutiveRow[]> {
+      let query = db
         .selectFrom("users")
         .select(["id", "names", "first_surname", "second_surname"])
-        .where("branch_id", "=", branchId)
         .where("role", "=", "executive")
         .where("is_active", "=", 1)
-        .where("onboarding_completed_at", "is not", null)
-        .execute();
-    },
+        .where("onboarding_completed_at", "is not", null);
 
-    findAssignableExecutivesAllBranches(): Promise<AssignableExecutiveRow[]> {
-      return db
-        .selectFrom("users")
-        .select(["id", "names", "first_surname", "second_surname"])
-        .where("role", "=", "executive")
-        .where("is_active", "=", 1)
-        .where("onboarding_completed_at", "is not", null)
+      if (input.branchId != null) {
+        query = query.where("branch_id", "=", input.branchId);
+      }
+
+      const term = input.search?.trim().toLowerCase();
+      if (term) {
+        const pattern = `%${term}%`;
+        query = query.where((eb) =>
+          eb.or([
+            eb(eb.fn("lower", ["names"]), "like", pattern),
+            eb(eb.fn("lower", ["first_surname"]), "like", pattern),
+            eb(eb.fn("lower", ["second_surname"]), "like", pattern),
+          ]),
+        );
+      }
+
+      return query
+        .orderBy("names", "asc")
+        .orderBy("first_surname", "asc")
+        .orderBy("second_surname", "asc")
+        .limit(input.limit)
         .execute();
     },
 

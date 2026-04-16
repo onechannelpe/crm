@@ -2,13 +2,13 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { invalidLeadInput } from "../../domain/lead/lead-errors";
-import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { LeadUserScopeRepository } from "../../ports/lead-user-scope-repository";
+import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { ReassignLeadInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import { resolveAssignableExecutivesScope } from "../policies/access";
+import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadClock } from "../services/lead-clock";
 
 type ReassignLeadCommandDeps = {
@@ -28,7 +28,6 @@ export async function reassignLeadCommand(
     actor: input.actor,
     leadId: input.leadId,
     operation: "reassign",
-    requireActorBranch: true,
   });
   if (!prepared.ok) {
     return prepared;

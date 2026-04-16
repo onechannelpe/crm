@@ -1,15 +1,15 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
+import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { ReviewLeadInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import {
   notifyExecutiveInputRequired,
   notifyReadyForQuotation,
 } from "../notifications";
+import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
 import type { LeadClock } from "../services/lead-clock";
 
@@ -30,7 +30,6 @@ export async function reviewLeadCommand(
     actor: input.actor,
     leadId: input.leadId,
     operation: "review",
-    requireActorBranch: true,
   });
   if (!prepared.ok) {
     return prepared;

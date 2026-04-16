@@ -146,6 +146,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createIndex("idx_pipeline_lead_assignments_active_unique")
+    .on("pipeline_lead_assignments")
+    .columns(["lead_id", "is_active"])
+    .unique()
+    .where("is_active", "=", 1)
+    .execute();
+
+  await db.schema
     .createTable("pipeline_history_events")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("lead_id", "integer", (col) =>

@@ -1,7 +1,6 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { LeadUserScopeRepository } from "../../ports/lead-user-scope-repository";
 import type {
@@ -15,6 +14,7 @@ import type {
   LeadCommandResult,
   LeadInteractionResult,
 } from "../contracts/command-results";
+import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
 import type { LeadClock } from "../services/lead-clock";
 import { addLeadNoteCommand } from "./add-note";

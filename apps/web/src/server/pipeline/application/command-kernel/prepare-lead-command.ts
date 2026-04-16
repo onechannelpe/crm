@@ -1,13 +1,13 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { LeadOperation } from "../../domain/lead/lead-types";
-import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
-import { authorizeLeadOperation } from "../../domain/lead/lead-policies";
 import type { LeadRecord } from "../../domain/lead-record";
+import { leadNotFound } from "../../domain/lead/lead-errors";
+import { authorizeLeadOperation } from "../../domain/lead/lead-policies";
+import type { LeadOperation } from "../../domain/lead/lead-types";
+import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { ActorContext } from "../contracts/actor-context";
 import type { LeadClock } from "../services/lead-clock";
-import type { LeadReadRepository } from "../../ports/lead-read-repository";
 
 export type PreparedLeadCommand = {
   lead: LeadRecord;
@@ -20,12 +20,7 @@ export async function prepareLeadCommand(input: {
   actor: ActorContext;
   leadId: number;
   operation: LeadOperation;
-  requireActorBranch?: boolean;
 }): Promise<Result<PreparedLeadCommand, DomainError>> {
-  if (input.requireActorBranch && input.actor.branchId == null) {
-    return invalidLeadInput("missing_branch", "Branch is required");
-  }
-
   const lead = await input.leadReader.findById(input.leadId);
   if (!lead) {
     return leadNotFound();
