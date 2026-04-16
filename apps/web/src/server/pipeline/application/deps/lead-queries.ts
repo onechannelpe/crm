@@ -6,6 +6,7 @@ import type { LeadRepository } from "../ports/lead-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
 import type { LeadSaleRepository } from "../ports/sale-repository";
 import type { SourceStatusRepository } from "../ports/source-status-repository";
+import type { PipelineUserRepository } from "../ports/user-repository";
 
 export type LeadListDeps = {
   leads: LeadQueries;
@@ -18,6 +19,7 @@ export type LeadDetailDeps = {
   leadQuotations: LeadQuotationRepository;
   leadSales: LeadSaleRepository;
   sourceStatuses: SourceStatusRepository;
+  users: PipelineUserRepository;
 };
 
 export type LeadBootstrapPreviewDeps = {

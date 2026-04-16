@@ -81,6 +81,7 @@ export function createPipelineFeatureDeps(
       leadQuotations,
       leadSales,
       sourceStatuses,
+      users,
     },
     leadBootstrapPreview: { leads, engineGateway },
     saleQueries: { leadSales },
