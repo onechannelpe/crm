@@ -9,6 +9,7 @@ import {
   parseRequiredLeadStatus,
 } from "~/server/pipeline/domain/lead-schema-parser";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
+import { createLeadMutationUow } from "~/server/pipeline/infrastructure/repos/lead-mutation-uow";
 import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -28,9 +29,16 @@ export async function requestLeadCreation(input: {
     input,
     execute: (ctx) =>
       runPipelineCommand(
-        ({ deps, auditService, engineGateway, leadEnrichmentQueue }) =>
+        ({
+          deps,
+          auditService,
+          engineGateway,
+          leadEnrichmentQueue,
+          executor,
+        }) =>
           registerLead({
             deps: deps.registerLead,
+            mutationUow: createLeadMutationUow(executor),
             auditService,
             engineGateway,
             leadEnrichmentQueue,

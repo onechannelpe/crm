@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerLead } from "../../src/server/pipeline/application/commands/register-lead";
+import { createLeadMutationUow } from "../../src/server/pipeline/infrastructure/repos/lead-mutation-uow";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -26,6 +27,7 @@ describe("register lead", () => {
       actorUserId: 1,
       actorRole: "admin",
       deps: runtime.pipeline.deps.registerLead,
+      mutationUow: createLeadMutationUow(runtime.ctx.db),
       engineGateway: {
         enrichByRuc: async () => ({
           razonSocial: "Acme SAC",
@@ -71,6 +73,7 @@ describe("register lead", () => {
       actorUserId: 1,
       actorRole: "admin",
       deps: runtime.pipeline.deps.registerLead,
+      mutationUow: createLeadMutationUow(runtime.ctx.db),
       engineGateway: {
         enrichByRuc: async () => null,
       },

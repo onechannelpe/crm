@@ -1,37 +1,39 @@
-import { createAsync, useAction } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
-import { reassignLeadMutation } from "~/features/pipeline/data/mutations";
-import { assignableExecutivesQuery } from "~/features/pipeline/data/queries";
-import { toAppError } from "~/lib/app-errors";
 
 import styles from "./styles.module.css";
 
+export type UserPickerOption = {
+  id: number;
+  fullName: string;
+};
+
 export interface UserPickerProps {
-  leadId: number;
   currentUserId: number;
-  onSelect: () => void;
+  fetchUsers: (search: string) => Promise<UserPickerOption[]>;
+  onSelect: (id: number) => Promise<void>;
   onClose: () => void;
 }
 
 export function UserPicker(props: UserPickerProps) {
   const [search, setSearch] = createSignal("");
-  const executives = createAsync(() =>
-    assignableExecutivesQuery({
-      leadId: props.leadId,
-      search: search(),
-      limit: 50,
-    }),
-  );
-  const reassign = useAction(reassignLeadMutation);
+  const [debouncedSearch, setDebouncedSearch] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
   let containerRef: HTMLDivElement | undefined;
 
-  const setRef = (el: HTMLDivElement) => {
-    containerRef = el;
-  };
+  const users = createAsync(() => props.fetchUsers(debouncedSearch()));
+
+  function handleSearchInput(value: string) {
+    setSearch(value);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => setDebouncedSearch(value), 150);
+  }
+
+  onCleanup(() => clearTimeout(debounceTimer));
 
   onMount(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -50,34 +52,35 @@ export function UserPicker(props: UserPickerProps) {
     );
   });
 
-  async function handleSelect(executiveId: number) {
-    if (executiveId === props.currentUserId) {
+  async function handleSelect(userId: number) {
+    if (userId === props.currentUserId) {
       props.onClose();
       return;
     }
     setError(null);
     setSubmitting(true);
     try {
-      await reassign({ leadId: props.leadId, newExecutiveId: executiveId });
-      props.onSelect();
+      await props.onSelect(userId);
       props.onClose();
     } catch (err) {
-      setError(toAppError(err, "Error al reasignar").publicMessage);
+      setError(
+        err instanceof Error ? err.message : "Error al seleccionar usuario",
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div ref={setRef} class={styles.container}>
+    <div ref={(el) => (containerRef = el)} class={styles.container}>
       <div class={styles.searchWrapper}>
         <Search size={14} />
         <input
           type="text"
           class={styles.searchInput}
-          placeholder="Buscar ejecutivo..."
+          placeholder="Buscar..."
           value={search()}
-          onInput={(e) => setSearch(e.currentTarget.value)}
+          onInput={(e) => handleSearchInput(e.currentTarget.value)}
           disabled={submitting()}
         />
       </div>
@@ -85,21 +88,21 @@ export function UserPicker(props: UserPickerProps) {
         <p class={styles.error}>{error()}</p>
       </Show>
       <ul class={styles.list}>
-        <For each={executives() ?? []}>
-          {(exec) => (
+        <For each={users() ?? []}>
+          {(user) => (
             <li>
               <button
                 type="button"
                 class={styles.item}
-                onClick={() => void handleSelect(exec.id)}
+                onClick={() => void handleSelect(user.id)}
                 disabled={submitting()}
               >
                 <span
-                  class={exec.id === props.currentUserId ? styles.current : ""}
+                  class={user.id === props.currentUserId ? styles.current : ""}
                 >
-                  {exec.fullName}
+                  {user.fullName}
                 </span>
-                <Show when={exec.id === props.currentUserId}>
+                <Show when={user.id === props.currentUserId}>
                   <span class={styles.currentBadge}>Actual</span>
                 </Show>
               </button>

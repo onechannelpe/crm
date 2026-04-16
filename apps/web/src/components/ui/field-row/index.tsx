@@ -1,8 +1,9 @@
 import { createSignal, Show, type JSX } from "solid-js";
 
 import Pencil from "~/components/icons/pencil";
+import { EditButtonWrapper } from "~/components/ui/input/edit-button-wrapper";
+import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
-import { UserPicker } from "~/components/ui/pickers/user-picker";
 import {
   FieldIcon,
   FieldLabel,
@@ -17,9 +18,8 @@ export interface RelationFieldRowProps {
   label: string;
   icon: (props: { size?: number }) => JSX.Element;
   value: string;
-  leadId: number;
-  currentUserId: number;
   isEditable?: boolean;
+  renderPicker?: (onClose: () => void) => JSX.Element;
   onUpdate?: () => void;
 }
 
@@ -27,7 +27,7 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
   const [isHovered, setIsHovered] = createSignal(false);
   const [showPicker, setShowPicker] = createSignal(false);
 
-  function handleSelect() {
+  function handlePickerClose() {
     setShowPicker(false);
     props.onUpdate?.();
   }
@@ -50,26 +50,18 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
         <span>{props.value || "—"}</span>
         <Show when={props.isEditable}>
           <div class={styles.editWrapper}>
-            <Show when={isHovered()} fallback={<div class={styles.spacer} />}>
-              <button
-                type="button"
-                class={styles.editButton}
+            <EditButtonWrapper visible={isHovered()}>
+              <LightIconButton
+                Icon={Pencil}
+                aria-label={`Editar ${props.label}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowPicker(true);
                 }}
-                aria-label={`Editar ${props.label}`}
-              >
-                <Pencil size={14} />
-              </button>
-            </Show>
-            <Show when={showPicker()}>
-              <UserPicker
-                leadId={props.leadId}
-                currentUserId={props.currentUserId}
-                onSelect={handleSelect}
-                onClose={() => setShowPicker(false)}
               />
+            </EditButtonWrapper>
+            <Show when={showPicker()}>
+              {props.renderPicker?.(handlePickerClose)}
             </Show>
           </div>
         </Show>

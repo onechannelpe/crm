@@ -73,6 +73,8 @@ export function mapLeadActionsToUi(
         break;
       // complete-commercial-input is rendered as an inline form section, not an action button.
       case "complete-commercial-input":
+      // reassign-lead is handled inline via the RelationFieldRow edit button in the fields widget.
+      case "reassign-lead":
       // Actions below have no implemented handler yet.
       // They are intentionally omitted rather than shown as disabled.
       case "log-call":

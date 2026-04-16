@@ -1,6 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/server/shared/result";
 
 import { createLeadDraft } from "../../domain/lead-record";
 import { normalizeLeadRuc } from "../../domain/lead-schema-parser";
@@ -12,7 +12,7 @@ import {
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineEngineGateway } from "../ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
-import { writeLeadReassignmentEffects } from "./reassign-lead-effects";
+import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {
   ensureActiveExecutive,
@@ -25,6 +25,7 @@ export async function registerLead(input: {
   executiveId: number;
   ruc: string;
   deps: RegisterLeadDeps;
+  mutationUow: LeadMutationUow;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
@@ -61,15 +62,25 @@ export async function registerLead(input: {
 
   const now = Date.now();
   if (resolution.value.kind === "reassign") {
-    return writeLeadReassignmentEffects({
-      deps: input.deps,
-      auditService: input.auditService,
+    const { lead } = resolution.value;
+    const outcome = await input.mutationUow.commit({
+      lead,
       actorUserId: input.actorUserId,
-      executiveId: input.executiveId,
-      lead: resolution.value.lead,
       now,
-      reason: "inactive_previous_executive",
+      intent: {
+        kind: "reassign",
+        toExecutiveId: input.executiveId,
+        reason: "inactive_previous_executive",
+      },
+      assignment: {
+        leadId: lead.id,
+        toExecutiveId: input.executiveId,
+        assignedBy: input.actorUserId,
+        assignedAt: now,
+      },
     });
+    if (!outcome.ok) return outcome;
+    return Ok({ leadId: lead.id });
   }
 
   const enrichment = await input.engineGateway.enrichByRuc(ruc.value);
