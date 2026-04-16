@@ -36,15 +36,3 @@
   height: var(--spacing-8);
   width: var(--spacing-8);
 }
-
-.tertiary {
-  color: var(--foreground-tertiary);
-}
-
-.tertiary:hover {
-  background: var(--background-transparent-light);
-}
-
-.tertiary:active {
-  background: var(--background-transparent-medium);
-}

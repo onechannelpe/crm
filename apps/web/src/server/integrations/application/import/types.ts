@@ -26,7 +26,7 @@ export type LoadedLead = {
   id: number;
   ruc: string;
   executive_id: number;
-  created_by: number | null;
+  created_by: number;
   updated_by: number | null;
   updated_at: number;
   status: LeadStatus | null;

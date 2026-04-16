@@ -88,27 +88,34 @@ export function UserPicker(props: UserPickerProps) {
         <p class={styles.error}>{error()}</p>
       </Show>
       <ul class={styles.list}>
-        <For each={users() ?? []}>
-          {(user) => (
-            <li>
-              <button
-                type="button"
-                class={styles.item}
-                onClick={() => void handleSelect(user.id)}
-                disabled={submitting()}
-              >
-                <span
-                  class={user.id === props.currentUserId ? styles.current : ""}
+        <Show
+          when={users() !== undefined}
+          fallback={<li class={styles.loadingHint}>Buscando...</li>}
+        >
+          <For each={users() ?? []}>
+            {(user) => (
+              <li>
+                <button
+                  type="button"
+                  class={styles.item}
+                  onClick={() => void handleSelect(user.id)}
+                  disabled={submitting()}
                 >
-                  {user.fullName}
-                </span>
-                <Show when={user.id === props.currentUserId}>
-                  <span class={styles.currentBadge}>Actual</span>
-                </Show>
-              </button>
-            </li>
-          )}
-        </For>
+                  <span
+                    class={
+                      user.id === props.currentUserId ? styles.current : ""
+                    }
+                  >
+                    {user.fullName}
+                  </span>
+                  <Show when={user.id === props.currentUserId}>
+                    <span class={styles.currentBadge}>Actual</span>
+                  </Show>
+                </button>
+              </li>
+            )}
+          </For>
+        </Show>
       </ul>
     </div>
   );

@@ -82,3 +82,10 @@
   font-size: var(--font-size-xs);
   padding: 0 var(--spacing-1);
 }
+
+.loadingHint {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  list-style: none;
+  padding: var(--spacing-2);
+}
