@@ -41,3 +41,9 @@ export type ApplyImportedReviewInput = {
   prioridad?: LeadPriority;
   expectedUpdatedAt: number;
 };
+
+export type RegisterLeadInput = {
+  actor: ActorContext;
+  ruc: string;
+  executiveId: number;
+};

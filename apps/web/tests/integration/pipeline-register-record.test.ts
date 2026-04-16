@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { registerLead } from "../../src/server/pipeline/application/commands/register-lead";
-import { createLeadMutationUow } from "../../src/server/pipeline/infrastructure/repos/lead-mutation-uow";
+import { createPipelineCommandApiRuntime } from "../../src/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -21,25 +20,27 @@ describe("register lead", () => {
   it("fills legal name and address from engine enrichment and writes history events", async () => {
     const auditLog = vi.fn<() => Promise<void>>(async () => undefined);
 
-    const result = await registerLead({
-      ruc: "20100000001",
-      executiveId: 1,
-      actorUserId: 1,
-      actorRole: "admin",
-      deps: runtime.pipeline.deps.registerLead,
-      mutationUow: createLeadMutationUow(runtime.ctx.db),
+    const commandApi = createPipelineCommandApiRuntime({
+      deps: runtime.pipeline.deps,
+      executor: runtime.ctx.db,
+      notificationCenter: {
+        notifyUsers: async () => {},
+        notifyBranchRoles: async () => {},
+      },
       engineGateway: {
         enrichByRuc: async () => ({
           razonSocial: "Acme SAC",
           address: "Av. Lima 123",
         }),
       },
-      leadEnrichmentQueue: {
-        enqueueRucVerification: async () => undefined,
-      },
-      auditService: {
-        log: auditLog,
-      },
+      leadEnrichmentQueue: { enqueueRucVerification: async () => undefined },
+      auditService: { log: auditLog },
+    });
+
+    const result = await commandApi.registerLead({
+      actor: { userId: 1, role: "admin", branchId: 1 },
+      ruc: "20100000001",
+      executiveId: 1,
     });
 
     expect(result.ok).toBe(true);
@@ -67,22 +68,22 @@ describe("register lead", () => {
   });
 
   it("keeps registration working when enrichment is unavailable", async () => {
-    const result = await registerLead({
+    const commandApi = createPipelineCommandApiRuntime({
+      deps: runtime.pipeline.deps,
+      executor: runtime.ctx.db,
+      notificationCenter: {
+        notifyUsers: async () => {},
+        notifyBranchRoles: async () => {},
+      },
+      auditService: { log: async () => {} },
+      engineGateway: { enrichByRuc: async () => null },
+      leadEnrichmentQueue: { enqueueRucVerification: async () => undefined },
+    });
+
+    const result = await commandApi.registerLead({
+      actor: { userId: 1, role: "admin", branchId: 1 },
       ruc: "20100000002",
       executiveId: 1,
-      actorUserId: 1,
-      actorRole: "admin",
-      deps: runtime.pipeline.deps.registerLead,
-      mutationUow: createLeadMutationUow(runtime.ctx.db),
-      engineGateway: {
-        enrichByRuc: async () => null,
-      },
-      leadEnrichmentQueue: {
-        enqueueRucVerification: async () => undefined,
-      },
-      auditService: {
-        log: async () => undefined,
-      },
     });
 
     expect(result.ok).toBe(true);

@@ -2,14 +2,12 @@
 
 import { validationError } from "~/lib/app-errors";
 import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
-import { registerLead } from "~/server/pipeline/application/commands/register-lead";
 import { requestSunatRefresh } from "~/server/pipeline/application/commands/request-sunat-refresh";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
 } from "~/server/pipeline/domain/lead-schema-parser";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
-import { createLeadMutationUow } from "~/server/pipeline/infrastructure/repos/lead-mutation-uow";
 import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -28,25 +26,16 @@ export async function requestLeadCreation(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(
-        ({
-          deps,
-          auditService,
-          engineGateway,
-          leadEnrichmentQueue,
-          executor,
-        }) =>
-          registerLead({
-            deps: deps.registerLead,
-            mutationUow: createLeadMutationUow(executor),
-            auditService,
-            engineGateway,
-            leadEnrichmentQueue,
-            actorUserId: ctx.actor.userId,
-            actorRole: ctx.actor.role,
-            executiveId: input.executiveId ?? ctx.actor.userId,
-            ruc: normalizedRuc,
-          }),
+      runPipelineCommand((runtime) =>
+        createPipelineCommandApiRuntime(runtime).registerLead({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
+          ruc: normalizedRuc,
+          executiveId: input.executiveId ?? ctx.actor.userId,
+        }),
       ),
   });
 }
@@ -75,12 +64,8 @@ export async function requestLeadReview(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineCommand(({ deps, executor, notificationCenter }) =>
-        createPipelineCommandApiRuntime({
-          deps,
-          executor,
-          notificationCenter,
-        }).reviewLead({
+      runPipelineCommand((runtime) =>
+        createPipelineCommandApiRuntime(runtime).reviewLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -136,12 +121,8 @@ export async function requestLeadReassignment(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, executor, notificationCenter }) =>
-        createPipelineCommandApiRuntime({
-          deps,
-          executor,
-          notificationCenter,
-        }).reassignLead({
+      runPipelineCommand((runtime) =>
+        createPipelineCommandApiRuntime(runtime).reassignLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

@@ -45,6 +45,9 @@ describe("pipeline lead mutation metadata", () => {
         notifyUsers: async () => {},
         notifyBranchRoles: async () => {},
       },
+      auditService: { log: async () => {} },
+      engineGateway: { enrichByRuc: async () => null },
+      leadEnrichmentQueue: { enqueueRucVerification: async () => {} },
     });
 
     const result = await commandApi.addLeadNote({
@@ -134,6 +137,9 @@ describe("pipeline lead mutation metadata", () => {
         notifyUsers: async () => {},
         notifyBranchRoles: async () => {},
       },
+      auditService: { log: async () => {} },
+      engineGateway: { enrichByRuc: async () => null },
+      leadEnrichmentQueue: { enqueueRucVerification: async () => {} },
     });
 
     const reassignResult = await commandApi.reassignLead({
