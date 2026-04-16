@@ -1,9 +1,11 @@
 import { query } from "@solidjs/router";
 
 import {
+  queryAssignableExecutives,
   queryLeadDetail,
   queryLeadList,
 } from "~/actions/pipeline/queries/leads";
+import type { AssignableExecutiveView } from "~/server/pipeline/application/queries/views/assignable-executive";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list";
 
@@ -34,4 +36,13 @@ export function leadListKeyFor(filters: LeadListFilters): string {
 export const leadDetailQuery = query(
   (leadId: number): Promise<LeadDetailView> => queryLeadDetail(leadId),
   "pipeline.leadDetail",
+);
+
+export const assignableExecutivesQuery = query(
+  (input: {
+    leadId: number;
+    search?: string;
+    limit?: number;
+  }): Promise<AssignableExecutiveView[]> => queryAssignableExecutives(input),
+  "pipeline.assignableExecutives",
 );

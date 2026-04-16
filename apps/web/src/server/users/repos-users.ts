@@ -3,6 +3,20 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type UserRole = UsersTable["role"];
 
+type UserNameRow = {
+  id: number;
+  names: string;
+  first_surname: string;
+  second_surname: string;
+};
+
+type AssignableExecutiveRow = {
+  id: number;
+  names: string;
+  first_surname: string;
+  second_surname: string;
+};
+
 export function createUsersRepo(db: DatabaseExecutor) {
   return {
     findById(id: number) {
@@ -13,15 +27,51 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
-    findByIds(ids: number[]) {
+    findByIds(ids: number[]): Promise<UserNameRow[]> {
       if (ids.length === 0) {
-        return Promise.resolve([] as UsersTable[]);
+        return Promise.resolve([]);
       }
 
       return db
         .selectFrom("users")
-        .selectAll()
+        .select(["id", "names", "first_surname", "second_surname"])
         .where("id", "in", ids)
+        .execute() as Promise<UserNameRow[]>;
+    },
+
+    findAssignableExecutives(input: {
+      branchId?: number;
+      search?: string;
+      limit: number;
+    }): Promise<AssignableExecutiveRow[]> {
+      let query = db
+        .selectFrom("users")
+        .select(["id", "names", "first_surname", "second_surname"])
+        .where("role", "=", "executive")
+        .where("is_active", "=", 1)
+        .where("onboarding_completed_at", "is not", null);
+
+      if (input.branchId != null) {
+        query = query.where("branch_id", "=", input.branchId);
+      }
+
+      const term = input.search?.trim().toLowerCase();
+      if (term) {
+        const pattern = `%${term}%`;
+        query = query.where((eb) =>
+          eb.or([
+            eb(eb.fn("lower", ["names"]), "like", pattern),
+            eb(eb.fn("lower", ["first_surname"]), "like", pattern),
+            eb(eb.fn("lower", ["second_surname"]), "like", pattern),
+          ]),
+        );
+      }
+
+      return query
+        .orderBy("names", "asc")
+        .orderBy("first_surname", "asc")
+        .orderBy("second_surname", "asc")
+        .limit(input.limit)
         .execute();
     },
 

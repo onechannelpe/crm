@@ -15,6 +15,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("stage", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(30)")
     .addColumn("prioridad", "varchar(20)")
+    .addColumn("created_by", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("updated_by", "integer", (col) => col.references("users.id"))
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();
@@ -139,6 +143,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_pipeline_lead_assignments_lead")
     .on("pipeline_lead_assignments")
     .columns(["lead_id", "is_active"])
+    .execute();
+
+  await db.schema
+    .createIndex("idx_pipeline_lead_assignments_active_unique")
+    .on("pipeline_lead_assignments")
+    .columns(["lead_id", "is_active"])
+    .unique()
+    .where("is_active", "=", 1)
     .execute();
 
   await db.schema

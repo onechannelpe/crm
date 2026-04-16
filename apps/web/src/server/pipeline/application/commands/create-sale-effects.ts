@@ -2,6 +2,7 @@ import { createHistoryEvent } from "../../domain/history";
 import type { ReadyForSaleLeadSubject } from "../../domain/lead-subjects";
 import type { CreateSaleDeps } from "../deps/sales";
 import type { PipelineAuditService } from "../ports/audit-service";
+import { applyLeadMutation } from "../services/lead-mutation-service";
 
 export async function writeSaleCreationEffects(input: {
   deps: CreateSaleDeps;
@@ -34,9 +35,12 @@ export async function writeSaleCreationEffects(input: {
     createdAt: input.now,
   });
 
-  await input.deps.leads.updateById(input.lead.id, {
-    stage: "CONVERTED",
-    updatedAt: input.now,
+  await applyLeadMutation({
+    leads: input.deps.leads,
+    leadId: input.lead.id,
+    actorUserId: input.actorUserId,
+    now: input.now,
+    patch: { stage: "CONVERTED" },
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({

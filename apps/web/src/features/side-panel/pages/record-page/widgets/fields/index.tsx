@@ -9,7 +9,9 @@ import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
+import { RelationFieldRow } from "~/components/ui/field-row";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+import { ExecutivePicker } from "~/features/pipeline/detail/executive-picker";
 import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import {
   FieldIcon,
@@ -192,6 +194,9 @@ export function DetailFieldsWidget(props: { data: LeadDetailView }) {
   const [hoveredFieldKey, setHoveredFieldKey] =
     createSignal<LeadDetailFieldKey | null>(null);
 
+  const canEditExecutive = () =>
+    props.data.availableActions.includes("reassign-lead");
+
   return (
     <WidgetFrame>
       <FieldTable>
@@ -220,6 +225,25 @@ export function DetailFieldsWidget(props: { data: LeadDetailView }) {
             </FieldRow>
           )}
         </For>
+        <RelationFieldRow
+          label="Administrado por"
+          icon={User}
+          value={props.data.lead.executiveName}
+          isEditable={canEditExecutive()}
+          renderPicker={(onClose) => (
+            <ExecutivePicker
+              leadId={props.data.lead.id}
+              currentUserId={props.data.lead.executiveId}
+              onSelect={onClose}
+              onClose={onClose}
+            />
+          )}
+        />
+        <RelationFieldRow
+          label="Actualizado por"
+          icon={User}
+          value={props.data.lead.updatedByName ?? "—"}
+        />
       </FieldTable>
     </WidgetFrame>
   );

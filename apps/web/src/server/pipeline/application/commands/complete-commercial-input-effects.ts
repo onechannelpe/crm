@@ -4,6 +4,7 @@ import type { CompleteCommercialInputDeps } from "../deps/sales";
 import { notifyReadyForQuotation } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
+import { applyLeadMutation } from "../services/lead-mutation-service";
 
 export async function persistCommercialInputCompletion(input: {
   deps: CompleteCommercialInputDeps;
@@ -31,9 +32,12 @@ export async function persistCommercialInputCompletion(input: {
     updatedAt: input.now,
     updatedBy: input.actorUserId,
   });
-  await input.deps.leads.updateById(input.lead.id, {
-    stage: "READY_FOR_QUOTATION",
-    updatedAt: input.now,
+  await applyLeadMutation({
+    leads: input.deps.leads,
+    leadId: input.lead.id,
+    actorUserId: input.actorUserId,
+    now: input.now,
+    patch: { stage: "READY_FOR_QUOTATION" },
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({

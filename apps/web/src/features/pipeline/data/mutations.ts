@@ -71,7 +71,9 @@ export const reassignLeadMutation = action(
     await requestLeadReassignment(input);
     return json(
       {},
-      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+      {
+        revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key],
+      },
     );
   },
   "pipeline.reassignLead",

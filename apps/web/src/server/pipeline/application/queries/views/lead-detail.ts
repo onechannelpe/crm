@@ -26,6 +26,11 @@ export type LeadDetailLeadView = {
   district: string | null;
   department: string | null;
   executiveId: number;
+  executiveName: string;
+  createdBy: number;
+  createdByName: string;
+  updatedBy: number | null;
+  updatedByName: string | null;
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;

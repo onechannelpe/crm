@@ -1,0 +1,7 @@
+.editWrapper {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-1);
+  margin-inline-start: auto;
+  position: relative;
+}

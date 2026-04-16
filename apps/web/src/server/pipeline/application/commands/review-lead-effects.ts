@@ -9,6 +9,7 @@ import type { PendingReviewLeadSubject } from "../../domain/lead-subjects";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { LeadHistoryRepository } from "../ports/history-repository";
 import type { LeadRepository } from "../ports/lead-repository";
+import { applyLeadMutation } from "../services/lead-mutation-service";
 
 type ReviewLeadEffectsDeps = {
   leads: LeadRepository;
@@ -26,11 +27,16 @@ export async function persistLeadReviewTransition(input: {
   nextStage: LeadStage;
   now: number;
 }) {
-  await input.deps.leads.updateById(input.lead.id, {
-    status: input.status,
-    prioridad: input.prioridad,
-    stage: input.nextStage,
-    updatedAt: input.now,
+  await applyLeadMutation({
+    leads: input.deps.leads,
+    leadId: input.lead.id,
+    actorUserId: input.actorUserId,
+    now: input.now,
+    patch: {
+      status: input.status,
+      prioridad: input.prioridad,
+      stage: input.nextStage,
+    },
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({

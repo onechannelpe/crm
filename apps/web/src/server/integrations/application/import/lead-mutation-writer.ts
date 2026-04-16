@@ -26,6 +26,8 @@ function nextStageFor(
       district: null,
       department: null,
       executiveId: current.executive_id,
+      createdBy: current.created_by,
+      updatedBy: current.updated_by ?? null,
       stage: "PENDING_EXTERNAL_REVIEW",
       status: current.status,
       prioridad: current.prioridad,
@@ -81,6 +83,7 @@ async function markImportRowApplied(input: {
 export async function applyLeadMutation(input: {
   executor: DatabaseExecutor;
   jobId: number;
+  actorId: number;
   row: ImportRowInput;
 }): Promise<LeadMutationResult> {
   const lead = (await input.executor
@@ -89,6 +92,8 @@ export async function applyLeadMutation(input: {
       "id",
       "ruc",
       "executive_id",
+      "created_by",
+      "updated_by",
       "updated_at",
       "status",
       "prioridad",
@@ -145,6 +150,7 @@ export async function applyLeadMutation(input: {
       status: nextStatus,
       prioridad: nextPrioridad,
       stage: nextStage,
+      updated_by: input.actorId,
       updated_at: changedAt,
     })
     .where("id", "=", lead.id)

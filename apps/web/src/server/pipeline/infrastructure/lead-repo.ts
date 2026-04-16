@@ -21,6 +21,8 @@ function toLead(row: LeadRow): LeadRecord {
     district: row.district,
     department: row.department,
     executiveId: row.executive_id,
+    createdBy: row.created_by,
+    updatedBy: row.updated_by ?? null,
     stage: row.stage,
     status: row.status,
     prioridad: row.prioridad,
@@ -37,6 +39,8 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
     district: values.district,
     department: values.department,
     executive_id: values.executiveId,
+    created_by: values.createdBy,
+    updated_by: values.updatedBy ?? undefined,
     stage: values.stage,
     status: values.status,
     prioridad: values.prioridad,
@@ -45,13 +49,14 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
   };
 }
 
-function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
+export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
   return {
     razon_social: values.razonSocial,
     address: values.address,
     district: values.district,
     department: values.department,
     executive_id: values.executiveId,
+    updated_by: values.updatedBy,
     stage: values.stage,
     status: values.status,
     prioridad: values.prioridad,

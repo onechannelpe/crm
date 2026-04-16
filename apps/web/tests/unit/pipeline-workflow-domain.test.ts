@@ -11,6 +11,8 @@ const pendingReviewLead: PendingReviewLeadSubject = {
   district: null,
   department: null,
   executiveId: 7,
+  createdBy: 7,
+  updatedBy: null,
   stage: "PENDING_EXTERNAL_REVIEW",
   status: null,
   prioridad: null,
