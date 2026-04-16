@@ -91,6 +91,8 @@ export async function applyLeadMutation(input: {
       "id",
       "ruc",
       "executive_id",
+      "created_by",
+      "updated_by",
       "updated_at",
       "status",
       "prioridad",

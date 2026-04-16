@@ -2,7 +2,10 @@ import { shortName } from "~/lib/users/display-name";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
-import type { PipelineUserRepository } from "../application/ports/user-repository";
+import type {
+  PipelineUserRepository,
+  PipelineUserWithName,
+} from "../application/ports/user-repository";
 
 export function createPipelineUsersRepo(
   executor: DatabaseExecutor,
@@ -21,7 +24,7 @@ export function createPipelineUsersRepo(
         isActive: user.is_active === 1,
       };
     },
-    async findByIds(ids) {
+    async findByIds(ids): Promise<PipelineUserWithName[]> {
       const rows = await users.findByIds(ids);
       return rows.map((user) => ({
         id: user.id,

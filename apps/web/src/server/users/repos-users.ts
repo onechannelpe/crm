@@ -20,7 +20,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
 
       return db
         .selectFrom("users")
-        .selectAll()
+        .select(["id", "names", "first_surname", "second_surname"])
         .where("id", "in", ids)
         .execute();
     },
