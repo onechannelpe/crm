@@ -21,6 +21,9 @@ import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
   lead: LeadRecord;
+  executiveName: string;
+  createdByName: string;
+  updatedByName: string | null;
   commercialInput: LeadCommercialInput | undefined;
   quotations: LeadQuotation[];
   sale: LeadSale | undefined;
@@ -49,6 +52,9 @@ function toLeadSourceStatus(
 
 function toLeadDetailLead(
   lead: LeadRecord,
+  executiveName: string,
+  createdByName: string,
+  updatedByName: string | null,
   sale: LeadSale | undefined,
 ): LeadDetailLeadView {
   return {
@@ -59,6 +65,11 @@ function toLeadDetailLead(
     district: lead.district,
     department: lead.department,
     executiveId: lead.executiveId,
+    executiveName,
+    createdBy: lead.createdBy,
+    createdByName,
+    updatedBy: lead.updatedBy,
+    updatedByName,
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
@@ -122,7 +133,13 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
 
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
-    lead: toLeadDetailLead(source.lead, source.sale),
+    lead: toLeadDetailLead(
+      source.lead,
+      source.executiveName,
+      source.createdByName,
+      source.updatedByName,
+      source.sale,
+    ),
     commercialInput: source.commercialInput
       ? toLeadDetailCommercialInput(source.commercialInput)
       : undefined,

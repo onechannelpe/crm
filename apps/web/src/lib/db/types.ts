@@ -811,6 +811,8 @@ export interface PipelineLeadsTable {
     | "CONVERTED";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
+  created_by: number;
+  updated_by: number | null;
   created_at: number;
   updated_at: number;
 }

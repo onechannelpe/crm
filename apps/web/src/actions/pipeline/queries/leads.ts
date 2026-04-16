@@ -1,11 +1,12 @@
 "use server";
 
 import { getLeadBootstrapPreview } from "~/server/pipeline/application/queries/get-lead-bootstrap-preview";
-import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
+import type { AssignableExecutiveView } from "~/server/pipeline/application/queries/views/assignable-executive";
 import type { LeadBootstrapPreviewView } from "~/server/pipeline/application/queries/views/lead-bootstrap-preview";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list";
+import { createPipelineQueryApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-query-api-factory";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -35,12 +36,19 @@ export async function queryLeadDetail(leadId: number): Promise<LeadDetailView> {
     actionName: "pipeline.get_lead_detail",
     access: { kind: "auth" },
     input: { leadId },
-    execute: (ctx) =>
-      getLeadDetail(serverRuntime.pipeline.deps.leadDetail, {
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
+    execute: (ctx) => {
+      const queryApi = createPipelineQueryApiRuntime(
+        serverRuntime.pipeline.deps,
+      );
+      return queryApi.getLeadDetail({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
         leadId,
-      }),
+      });
+    },
   });
 }
 
@@ -58,5 +66,32 @@ export async function queryLeadBootstrapPreview(
           ruc,
         },
       ),
+  });
+}
+
+export async function queryAssignableExecutives(input: {
+  leadId: number;
+  search?: string;
+  limit?: number;
+}): Promise<AssignableExecutiveView[]> {
+  return runAction({
+    actionName: "pipeline.list_assignable_executives",
+    access: { kind: "auth" },
+    input,
+    execute: (ctx) => {
+      const queryApi = createPipelineQueryApiRuntime(
+        serverRuntime.pipeline.deps,
+      );
+      return queryApi.listAssignableExecutives({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+        search: input.search,
+        limit: input.limit,
+      });
+    },
   });
 }

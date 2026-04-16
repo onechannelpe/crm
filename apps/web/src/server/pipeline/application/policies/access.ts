@@ -6,6 +6,8 @@ import {
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import type { AssignableExecutivesScope } from "../../ports/lead-user-scope-repository";
+
 const LEAD_READ_PERMISSIONS: Permission[] = [
   "lead:pipeline",
   "lead:register",
@@ -73,6 +75,27 @@ export function canApproveForSale(role: Role) {
 
 export function canReassignLead(role: Role) {
   return hasPermission(role, "lead:reassign");
+}
+
+export function resolveAssignableExecutivesScope(input: {
+  actorRole: Role;
+  actorBranchId: number;
+}): Result<AssignableExecutivesScope, DomainError> {
+  if (input.actorRole === "superuser") {
+    return Ok({ actorRole: "superuser", actorBranchId: input.actorBranchId });
+  }
+  if (
+    input.actorRole === "admin" ||
+    input.actorRole === "sales_manager" ||
+    input.actorRole === "supervisor"
+  ) {
+    return Ok({
+      actorRole: input.actorRole,
+      actorBranchId: input.actorBranchId,
+    });
+  }
+
+  return forbidden();
 }
 
 export function requirePipelineActionAccess(

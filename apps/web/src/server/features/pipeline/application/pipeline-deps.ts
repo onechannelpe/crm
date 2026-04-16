@@ -1,6 +1,6 @@
-import type { LeadInteractionDeps } from "~/server/pipeline/application/deps/lead-interactions";
 import type {
   LeadBootstrapPreviewDeps,
+  AssignableExecutivesDeps,
   LeadDetailDeps,
   LeadListDeps,
   SaleQueryDeps,
@@ -10,7 +10,6 @@ import type {
   CreateQuotationDeps,
 } from "~/server/pipeline/application/deps/quotations";
 import type { RegisterLeadDeps } from "~/server/pipeline/application/deps/register-lead";
-import type { ReviewLeadDeps } from "~/server/pipeline/application/deps/review-lead";
 import type {
   CompleteCommercialInputDeps,
   CreateSaleDeps,
@@ -31,9 +30,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type PipelineDeps = {
   registerLead: RegisterLeadDeps;
-  reassignLead: RegisterLeadDeps;
-  leadInteractions: LeadInteractionDeps;
-  reviewLead: ReviewLeadDeps;
+  leadMutations: RegisterLeadDeps;
   completeCommercialInput: CompleteCommercialInputDeps;
   createQuotation: CreateQuotationDeps;
   approveForSale: ApproveForSaleDeps;
@@ -42,6 +39,7 @@ export type PipelineDeps = {
   leadDetail: LeadDetailDeps;
   leadBootstrapPreview: LeadBootstrapPreviewDeps;
   saleQueries: SaleQueryDeps;
+  assignableExecutives: AssignableExecutivesDeps;
   sourcingPolicy: SourcingPolicyDeps;
 };
 
@@ -62,9 +60,7 @@ export function createPipelineFeatureDeps(
 
   return {
     registerLead: { leads, leadAssignments, leadHistory, users },
-    reassignLead: { leads, leadAssignments, leadHistory, users },
-    leadInteractions: { leads, leadHistory },
-    reviewLead: { leads, leadHistory },
+    leadMutations: { leads, leadAssignments, leadHistory, users },
     completeCommercialInput: {
       leads,
       leadCommercialInputs,
@@ -81,9 +77,11 @@ export function createPipelineFeatureDeps(
       leadQuotations,
       leadSales,
       sourceStatuses,
+      users,
     },
     leadBootstrapPreview: { leads, engineGateway },
     saleQueries: { leadSales },
+    assignableExecutives: { leads, users },
     sourcingPolicy: { sourcingPolicies },
   };
 }

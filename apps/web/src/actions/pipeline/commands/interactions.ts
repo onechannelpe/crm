@@ -1,8 +1,7 @@
 "use server";
 import type { LeadCallOutcome } from "~/pipeline/contracts/lead-schema";
-import { addNote } from "~/server/pipeline/application/commands/add-note";
-import { logCall } from "~/server/pipeline/application/commands/log-call";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
+import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function recordLeadCall(input: {
@@ -15,12 +14,13 @@ export async function recordLeadCall(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService }) =>
-        logCall({
-          deps: deps.leadInteractions,
-          auditService,
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
+      runPipelineCommand((runtime) =>
+        createPipelineCommandApiRuntime(runtime).logLeadCall({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
           leadId: input.leadId,
           outcome: input.outcome,
           notes: input.notes ?? null,
@@ -35,12 +35,13 @@ export async function addLeadNote(input: { leadId: number; body: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService }) =>
-        addNote({
-          deps: deps.leadInteractions,
-          auditService,
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
+      runPipelineCommand((runtime) =>
+        createPipelineCommandApiRuntime(runtime).addLeadNote({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
           leadId: input.leadId,
           body: input.body,
         }),

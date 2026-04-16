@@ -30,18 +30,36 @@ export async function getLeadDetail(
     return canAccessLead;
   }
 
-  const [commercialInput, quotations, sale, historyResult, sourceStatus] =
-    await Promise.all([
-      deps.leadCommercialInputs.findByLeadId(input.leadId),
-      deps.leadQuotations.listByLeadId(input.leadId),
-      deps.leadSales.findByLeadId(input.leadId),
-      deps.leadHistory.listByLeadId(input.leadId),
-      deps.sourceStatuses.findByRuc(lead.ruc),
-    ]);
+  const [
+    commercialInput,
+    quotations,
+    sale,
+    historyResult,
+    sourceStatus,
+    userRows,
+  ] = await Promise.all([
+    deps.leadCommercialInputs.findByLeadId(input.leadId),
+    deps.leadQuotations.listByLeadId(input.leadId),
+    deps.leadSales.findByLeadId(input.leadId),
+    deps.leadHistory.listByLeadId(input.leadId),
+    deps.sourceStatuses.findByRuc(lead.ruc),
+    deps.users.findByIds([
+      lead.executiveId,
+      lead.createdBy,
+      ...(lead.updatedBy ? [lead.updatedBy] : []),
+    ]),
+  ]);
 
   if (!historyResult.ok) {
     return historyResult;
   }
+
+  const userMap = new Map(userRows.map((u) => [u.id, u.fullName]));
+  const executiveName = userMap.get(lead.executiveId) ?? "Desconocido";
+  const createdByName = userMap.get(lead.createdBy) ?? "Desconocido";
+  const updatedByName = lead.updatedBy
+    ? (userMap.get(lead.updatedBy) ?? null)
+    : null;
 
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions({
@@ -54,6 +72,9 @@ export async function getLeadDetail(
   return Ok(
     presentLeadDetail({
       lead,
+      executiveName,
+      createdByName,
+      updatedByName,
       commercialInput,
       quotations,
       sale,

@@ -30,6 +30,7 @@ describe("pipeline read access", () => {
         ruc: "20100000011",
         razon_social: "Org Test",
         address: null,
+        created_by: 1,
         created_at: 10,
         updated_at: 10,
       })
@@ -60,6 +61,7 @@ describe("pipeline read access", () => {
         ruc: "20100000012",
         razon_social: "Org Test",
         address: null,
+        created_by: 1,
         created_at: 10,
         updated_at: 10,
       })
@@ -89,6 +91,7 @@ describe("pipeline read access", () => {
         ruc: "20100000021",
         razon_social: "Sale Org A",
         address: null,
+        created_by: 1,
         created_at: 10,
         updated_at: 10,
       })
@@ -137,6 +140,7 @@ describe("pipeline read access", () => {
         ruc: "20100000022",
         razon_social: "Sale Org B",
         address: null,
+        created_by: 1,
         created_at: 10,
         updated_at: 10,
       })
