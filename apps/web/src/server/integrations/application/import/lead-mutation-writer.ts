@@ -26,6 +26,8 @@ function nextStageFor(
       district: null,
       department: null,
       executiveId: current.executive_id,
+      createdBy: current.created_by ?? 0,
+      updatedBy: current.updated_by ?? null,
       stage: "PENDING_EXTERNAL_REVIEW",
       status: current.status,
       prioridad: current.prioridad,
