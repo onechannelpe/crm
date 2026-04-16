@@ -1,0 +1,84 @@
+.container {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  min-width: 200px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--spacing-1));
+  z-index: 50;
+}
+
+.searchWrapper {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground-tertiary);
+  display: flex;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2);
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  flex: 1;
+  font-size: var(--font-size-sm);
+  outline: none;
+  padding: 0;
+}
+
+.searchInput::placeholder {
+  color: var(--foreground-tertiary);
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-1) var(--spacing-2);
+}
+
+.list {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: var(--spacing-1);
+}
+
+.item {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-size-sm);
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-1) var(--spacing-2);
+  text-align: left;
+  width: 100%;
+}
+
+.item:hover:not(:disabled) {
+  background: var(--background-secondary);
+}
+
+.item:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.current {
+  color: var(--foreground-tertiary);
+}
+
+.currentBadge {
+  background: var(--background-secondary);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-xs);
+  padding: 0 var(--spacing-1);
+}
