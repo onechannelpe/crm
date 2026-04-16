@@ -39,7 +39,10 @@ export const leadDetailQuery = query(
 );
 
 export const assignableExecutivesQuery = query(
-  (leadId: number): Promise<AssignableExecutiveView[]> =>
-    queryAssignableExecutives(leadId),
+  (input: {
+    leadId: number;
+    search?: string;
+    limit?: number;
+  }): Promise<AssignableExecutiveView[]> => queryAssignableExecutives(input),
   "pipeline.assignableExecutives",
 );

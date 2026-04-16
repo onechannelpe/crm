@@ -16,9 +16,15 @@ export interface UserPickerProps {
 }
 
 export function UserPicker(props: UserPickerProps) {
-  const executives = createAsync(() => assignableExecutivesQuery(props.leadId));
-  const reassign = useAction(reassignLeadMutation);
   const [search, setSearch] = createSignal("");
+  const executives = createAsync(() =>
+    assignableExecutivesQuery({
+      leadId: props.leadId,
+      search: search(),
+      limit: 50,
+    }),
+  );
+  const reassign = useAction(reassignLeadMutation);
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   let containerRef: HTMLDivElement | undefined;
@@ -62,13 +68,6 @@ export function UserPicker(props: UserPickerProps) {
     }
   }
 
-  const filteredExecutives = () => {
-    const execs = executives() ?? [];
-    const searchTerm = search().toLowerCase();
-    if (!searchTerm) return execs;
-    return execs.filter((e) => e.fullName.toLowerCase().includes(searchTerm));
-  };
-
   return (
     <div ref={setRef} class={styles.container}>
       <div class={styles.searchWrapper}>
@@ -86,7 +85,7 @@ export function UserPicker(props: UserPickerProps) {
         <p class={styles.error}>{error()}</p>
       </Show>
       <ul class={styles.list}>
-        <For each={filteredExecutives()}>
+        <For each={executives() ?? []}>
           {(exec) => (
             <li>
               <button

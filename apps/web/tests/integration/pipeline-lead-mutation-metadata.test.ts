@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
-import { addNote } from "../../src/server/pipeline/application/commands/add-note";
-import { reassignLead } from "../../src/server/pipeline/application/commands/reassign-lead";
 import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
+import { createPipelineCommandApiRuntime } from "../../src/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -39,11 +38,21 @@ describe("pipeline lead mutation metadata", () => {
       })
       .execute();
 
-    const result = await addNote({
-      deps: runtime.pipeline.deps.leadInteractions,
+    const commandApi = createPipelineCommandApiRuntime({
+      deps: runtime.pipeline.deps,
       auditService: { log: async () => {} },
-      actorUserId: 1,
-      actorRole: "executive",
+      notificationCenter: {
+        notifyUsers: async () => {},
+        notifyBranchRoles: async () => {},
+      },
+    });
+
+    const result = await commandApi.addLeadNote({
+      actor: {
+        userId: 1,
+        role: "executive",
+        branchId: 1,
+      },
       leadId: 501,
       body: "Test note",
     });
@@ -118,13 +127,23 @@ describe("pipeline lead mutation metadata", () => {
       })
       .execute();
 
-    const reassignResult = await reassignLead({
-      deps: runtime.pipeline.deps.reassignLead,
+    const commandApi = createPipelineCommandApiRuntime({
+      deps: runtime.pipeline.deps,
       auditService: { log: async () => {} },
-      actorUserId: 11,
-      actorRole: "supervisor",
+      notificationCenter: {
+        notifyUsers: async () => {},
+        notifyBranchRoles: async () => {},
+      },
+    });
+
+    const reassignResult = await commandApi.reassignLead({
+      actor: {
+        userId: 11,
+        role: "supervisor",
+        branchId: 1,
+      },
       leadId: 502,
-      newExecutiveId: 12,
+      toExecutiveId: 12,
     });
 
     expect(reassignResult.ok).toBe(true);

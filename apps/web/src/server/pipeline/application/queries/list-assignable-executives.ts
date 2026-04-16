@@ -18,6 +18,8 @@ export async function listAssignableExecutives(
     actorRole: Role;
     actorBranchId: number;
     leadId: number;
+    search?: string;
+    limit?: number;
   },
 ): Promise<Result<AssignableExecutiveView[], DomainError>> {
   const canReassign = requirePipelineActionAccess(
@@ -50,7 +52,10 @@ export async function listAssignableExecutives(
     return scope;
   }
 
-  const users = await deps.users.listAssignableExecutives(scope.value);
+  const users = await deps.users.listAssignableExecutives(scope.value, {
+    search: input.search,
+    limit: input.limit,
+  });
 
   return Ok(users);
 }

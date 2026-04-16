@@ -79,7 +79,7 @@ export const reassignLeadMutation = action(
         revalidate: [
           leadDetailQuery.keyFor(input.leadId),
           leadListQuery.key,
-          assignableExecutivesQuery.keyFor(input.leadId),
+          assignableExecutivesQuery.keyFor({ leadId: input.leadId }),
         ],
       },
     );
