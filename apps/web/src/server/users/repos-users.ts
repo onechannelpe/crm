@@ -3,6 +3,13 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type UserRole = UsersTable["role"];
 
+type UserNameRow = {
+  id: number;
+  names: string;
+  first_surname: string;
+  second_surname: string;
+};
+
 export function createUsersRepo(db: DatabaseExecutor) {
   return {
     findById(id: number) {
@@ -13,16 +20,16 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
-    findByIds(ids: number[]) {
+    findByIds(ids: number[]): Promise<UserNameRow[]> {
       if (ids.length === 0) {
-        return Promise.resolve([] as UsersTable[]);
+        return Promise.resolve([]);
       }
 
       return db
         .selectFrom("users")
         .select(["id", "names", "first_surname", "second_surname"])
         .where("id", "in", ids)
-        .execute();
+        .execute() as Promise<UserNameRow[]>;
     },
 
     findByEmail(email: string) {

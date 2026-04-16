@@ -1,4 +1,4 @@
-import { type JSX, Show } from "solid-js";
+import { type JSX } from "solid-js";
 
 import { cn } from "~/lib/utils";
 

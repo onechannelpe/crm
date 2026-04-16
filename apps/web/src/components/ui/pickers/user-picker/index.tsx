@@ -1,13 +1,10 @@
 import { createAsync, useAction } from "@solidjs/router";
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
-import { Portal } from "solid-js/web";
 
 import Search from "~/components/icons/search";
-import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { reassignLeadMutation } from "~/features/pipeline/data/mutations";
 import { toAppError } from "~/lib/app-errors";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
-import { shortName } from "~/lib/users/display-name";
 
 import styles from "./styles.module.css";
 
@@ -28,7 +25,8 @@ export function UserPicker(props: UserPickerProps) {
 
   onMount(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef && !containerRef.contains(e.target as Node)) {
+      const target = e.target;
+      if (containerRef && target instanceof Node && !containerRef.contains(target)) {
         props.onClose();
       }
     }

@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 
 export type EditableField = "executive";
 
@@ -22,5 +23,3 @@ export function useCanEditField(field: EditableField) {
   const { currentUser } = useAuthenticatedSession();
   return () => canEditField(currentUser().role, field);
 }
-
-import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
