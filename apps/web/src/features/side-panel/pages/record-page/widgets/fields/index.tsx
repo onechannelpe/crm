@@ -9,6 +9,7 @@ import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
+import { RelationFieldRow } from "~/components/ui/field-row";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import {
@@ -29,6 +30,8 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { formatDateTime } from "~/lib/utils";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { canEditField } from "~/lib/auth/hooks/use-can-edit-field";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;
@@ -189,8 +192,11 @@ export function CreateFieldsWidget(props: {
 }
 
 export function DetailFieldsWidget(props: { data: LeadDetailView }) {
+  const { currentUser } = useAuthenticatedSession();
   const [hoveredFieldKey, setHoveredFieldKey] =
     createSignal<LeadDetailFieldKey | null>(null);
+
+  const canEditExecutive = () => canEditField(currentUser().role, "executive");
 
   return (
     <WidgetFrame>
@@ -220,6 +226,19 @@ export function DetailFieldsWidget(props: { data: LeadDetailView }) {
             </FieldRow>
           )}
         </For>
+        <RelationFieldRow
+          label="Administrado por"
+          icon={User}
+          value={props.data.lead.executiveName}
+          isEditable={canEditExecutive()}
+          currentUserId={props.data.lead.executiveId}
+          leadId={props.data.lead.id}
+        />
+        <RelationFieldRow
+          label="Actualizado por"
+          icon={User}
+          value={props.data.lead.updatedByName ?? "—"}
+        />
       </FieldTable>
     </WidgetFrame>
   );

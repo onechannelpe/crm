@@ -25,6 +25,7 @@ export async function writeLeadReassignmentEffects(input: {
   });
   await input.deps.leads.updateById(input.lead.id, {
     executiveId: input.executiveId,
+    updatedBy: input.actorUserId,
     updatedAt: input.now,
   });
   await input.deps.leadHistory.insert(
