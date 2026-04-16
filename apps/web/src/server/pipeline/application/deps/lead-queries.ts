@@ -30,3 +30,8 @@ export type LeadBootstrapPreviewDeps = {
 export type SaleQueryDeps = {
   leadSales: LeadSaleRepository;
 };
+
+export type AssignableExecutivesDeps = {
+  leads: LeadRepository;
+  users: PipelineUserRepository;
+};

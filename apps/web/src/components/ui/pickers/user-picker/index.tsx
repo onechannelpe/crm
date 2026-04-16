@@ -3,20 +3,20 @@ import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { reassignLeadMutation } from "~/features/pipeline/data/mutations";
+import { assignableExecutivesQuery } from "~/features/pipeline/data/queries";
 import { toAppError } from "~/lib/app-errors";
-import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
 import styles from "./styles.module.css";
 
 export interface UserPickerProps {
-  leadId: number | undefined;
+  leadId: number;
   currentUserId: number;
   onSelect: () => void;
   onClose: () => void;
 }
 
 export function UserPicker(props: UserPickerProps) {
-  const executives = createAsync(() => managedExecutivesQuery());
+  const executives = createAsync(() => assignableExecutivesQuery(props.leadId));
   const reassign = useAction(reassignLeadMutation);
   const [search, setSearch] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
@@ -49,14 +49,10 @@ export function UserPicker(props: UserPickerProps) {
       props.onClose();
       return;
     }
-    const leadId = props.leadId;
-    if (!leadId) {
-      return;
-    }
     setError(null);
     setSubmitting(true);
     try {
-      await reassign({ leadId, newExecutiveId: executiveId });
+      await reassign({ leadId: props.leadId, newExecutiveId: executiveId });
       props.onSelect();
       props.onClose();
     } catch (err) {

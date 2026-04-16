@@ -5,6 +5,7 @@ import { createHistoryEvent } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
+import { applyLeadMutation } from "../services/lead-mutation-service";
 
 export async function writeLeadReassignmentEffects(input: {
   deps: RegisterLeadDeps;
@@ -23,10 +24,12 @@ export async function writeLeadReassignmentEffects(input: {
     isActive: true,
     assignedAt: input.now,
   });
-  await input.deps.leads.updateById(input.lead.id, {
-    executiveId: input.executiveId,
-    updatedBy: input.actorUserId,
-    updatedAt: input.now,
+  await applyLeadMutation({
+    leads: input.deps.leads,
+    leadId: input.lead.id,
+    actorUserId: input.actorUserId,
+    now: input.now,
+    patch: { executiveId: input.executiveId },
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({

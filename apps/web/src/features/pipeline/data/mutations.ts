@@ -8,7 +8,11 @@ import {
 } from "~/actions/pipeline/commands/leads";
 import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
 
-import { leadDetailQuery, leadListQuery } from "./queries";
+import {
+  assignableExecutivesQuery,
+  leadDetailQuery,
+  leadListQuery,
+} from "./queries";
 
 type CreateLeadInput = {
   ruc: string;
@@ -71,7 +75,13 @@ export const reassignLeadMutation = action(
     await requestLeadReassignment(input);
     return json(
       {},
-      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+      {
+        revalidate: [
+          leadDetailQuery.keyFor(input.leadId),
+          leadListQuery.key,
+          assignableExecutivesQuery.keyFor(input.leadId),
+        ],
+      },
     );
   },
   "pipeline.reassignLead",

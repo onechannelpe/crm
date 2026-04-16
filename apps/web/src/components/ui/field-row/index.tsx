@@ -17,9 +17,9 @@ export interface RelationFieldRowProps {
   label: string;
   icon: (props: { size?: number }) => JSX.Element;
   value: string;
+  leadId: number;
+  currentUserId: number;
   isEditable?: boolean;
-  currentUserId?: number;
-  leadId?: number;
   onUpdate?: () => void;
 }
 
@@ -48,7 +48,7 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
       </FieldLabel>
       <FieldValue>
         <span>{props.value || "—"}</span>
-        <Show when={props.isEditable && props.leadId}>
+        <Show when={props.isEditable}>
           <div class={styles.editWrapper}>
             <Show when={isHovered()} fallback={<div class={styles.spacer} />}>
               <button
@@ -66,7 +66,7 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
             <Show when={showPicker()}>
               <UserPicker
                 leadId={props.leadId}
-                currentUserId={props.currentUserId ?? 0}
+                currentUserId={props.currentUserId}
                 onSelect={handleSelect}
                 onClose={() => setShowPicker(false)}
               />

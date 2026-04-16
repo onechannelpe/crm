@@ -2,7 +2,9 @@
 
 import { getLeadBootstrapPreview } from "~/server/pipeline/application/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
+import { listAssignableExecutives } from "~/server/pipeline/application/queries/list-assignable-executives";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
+import type { AssignableExecutiveView } from "~/server/pipeline/application/queries/views/assignable-executive";
 import type { LeadBootstrapPreviewView } from "~/server/pipeline/application/queries/views/lead-bootstrap-preview";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list";
@@ -56,6 +58,26 @@ export async function queryLeadBootstrapPreview(
         serverRuntime.pipeline.deps.leadBootstrapPreview,
         {
           ruc,
+        },
+      ),
+  });
+}
+
+export async function queryAssignableExecutives(
+  leadId: number,
+): Promise<AssignableExecutiveView[]> {
+  return runAction({
+    actionName: "pipeline.list_assignable_executives",
+    access: { kind: "auth" },
+    input: { leadId },
+    execute: (ctx) =>
+      listAssignableExecutives(
+        serverRuntime.pipeline.deps.assignableExecutives,
+        {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          actorBranchId: ctx.actor.branchId,
+          leadId,
         },
       ),
   });

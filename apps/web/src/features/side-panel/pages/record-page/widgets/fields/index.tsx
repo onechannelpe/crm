@@ -8,7 +8,6 @@ import ChevronDown from "~/components/icons/chevron-down";
 import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
-import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 import { RelationFieldRow } from "~/components/ui/field-row";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
@@ -30,7 +29,6 @@ import {
   WidgetSectionHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import { canEditField } from "~/lib/auth/hooks/use-can-edit-field";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
@@ -192,11 +190,11 @@ export function CreateFieldsWidget(props: {
 }
 
 export function DetailFieldsWidget(props: { data: LeadDetailView }) {
-  const { currentUser } = useAuthenticatedSession();
   const [hoveredFieldKey, setHoveredFieldKey] =
     createSignal<LeadDetailFieldKey | null>(null);
 
-  const canEditExecutive = () => canEditField(currentUser().role, "executive");
+  const canEditExecutive = () =>
+    props.data.availableActions.includes("reassign-lead");
 
   return (
     <WidgetFrame>
@@ -230,14 +228,16 @@ export function DetailFieldsWidget(props: { data: LeadDetailView }) {
           label="Administrado por"
           icon={User}
           value={props.data.lead.executiveName}
-          isEditable={canEditExecutive()}
-          currentUserId={props.data.lead.executiveId}
           leadId={props.data.lead.id}
+          currentUserId={props.data.lead.executiveId}
+          isEditable={canEditExecutive()}
         />
         <RelationFieldRow
           label="Actualizado por"
           icon={User}
           value={props.data.lead.updatedByName ?? "—"}
+          leadId={props.data.lead.id}
+          currentUserId={props.data.lead.executiveId}
         />
       </FieldTable>
     </WidgetFrame>

@@ -10,6 +10,13 @@ type UserNameRow = {
   second_surname: string;
 };
 
+type AssignableExecutiveRow = {
+  id: number;
+  names: string;
+  first_surname: string;
+  second_surname: string;
+};
+
 export function createUsersRepo(db: DatabaseExecutor) {
   return {
     findById(id: number) {
@@ -30,6 +37,29 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .select(["id", "names", "first_surname", "second_surname"])
         .where("id", "in", ids)
         .execute() as Promise<UserNameRow[]>;
+    },
+
+    findAssignableExecutivesByBranch(
+      branchId: number,
+    ): Promise<AssignableExecutiveRow[]> {
+      return db
+        .selectFrom("users")
+        .select(["id", "names", "first_surname", "second_surname"])
+        .where("branch_id", "=", branchId)
+        .where("role", "=", "executive")
+        .where("is_active", "=", 1)
+        .where("onboarding_completed_at", "is not", null)
+        .execute();
+    },
+
+    findAssignableExecutivesAllBranches(): Promise<AssignableExecutiveRow[]> {
+      return db
+        .selectFrom("users")
+        .select(["id", "names", "first_surname", "second_surname"])
+        .where("role", "=", "executive")
+        .where("is_active", "=", 1)
+        .where("onboarding_completed_at", "is not", null)
+        .execute();
     },
 
     findByEmail(email: string) {

@@ -3,6 +3,7 @@ import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
+  AssignableExecutivesScope,
   PipelineUserRepository,
   PipelineUserWithName,
 } from "../application/ports/user-repository";
@@ -30,6 +31,21 @@ export function createPipelineUsersRepo(
         id: user.id,
         fullName: shortName(user),
       }));
+    },
+    async listAssignableExecutives(
+      input: AssignableExecutivesScope,
+    ): Promise<PipelineUserWithName[]> {
+      const rows =
+        input.actorRole === "superuser"
+          ? await users.findAssignableExecutivesAllBranches()
+          : await users.findAssignableExecutivesByBranch(input.actorBranchId);
+
+      return rows
+        .map((user) => ({
+          id: user.id,
+          fullName: shortName(user),
+        }))
+        .toSorted((a, b) => a.fullName.localeCompare(b.fullName));
     },
   };
 }

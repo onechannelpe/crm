@@ -6,6 +6,7 @@ import { ensureCanReassignLead } from "../../domain/assignment";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import {
   canReassignLead,
+  requireLeadAccess,
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
@@ -31,6 +32,15 @@ export async function reassignLead(input: {
   const lead = await input.deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+  }
+
+  const canAccessLead = requireLeadAccess({
+    actorUserId: input.actorUserId,
+    actorRole: input.actorRole,
+    executiveId: lead.executiveId,
+  });
+  if (!canAccessLead.ok) {
+    return canAccessLead;
   }
 
   const allowed = ensureCanReassignLead({

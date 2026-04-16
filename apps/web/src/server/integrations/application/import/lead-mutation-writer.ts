@@ -83,6 +83,7 @@ async function markImportRowApplied(input: {
 export async function applyLeadMutation(input: {
   executor: DatabaseExecutor;
   jobId: number;
+  actorId: number;
   row: ImportRowInput;
 }): Promise<LeadMutationResult> {
   const lead = (await input.executor
@@ -149,6 +150,7 @@ export async function applyLeadMutation(input: {
       status: nextStatus,
       prioridad: nextPrioridad,
       stage: nextStage,
+      updated_by: input.actorId,
       updated_at: changedAt,
     })
     .where("id", "=", lead.id)

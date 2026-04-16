@@ -27,12 +27,11 @@ import type { LeadAvailableAction } from "~/server/pipeline/application/contract
 
 import { approveForSaleMutation } from "../data/mutations";
 import { mapLeadActionsToUi } from "./lead-workflow-ui";
-import { ReassignLeadModal } from "./reassign-lead-modal";
 import { ReviewLeadModal } from "./review-lead-modal";
 
 import widgetStyles from "./lead-actions-widget.module.css";
 
-type OpenModal = "review-lead" | "reassign-lead" | null;
+type OpenModal = "review-lead" | null;
 
 export function LeadActionsWidget(props: {
   leadId: number;
@@ -77,7 +76,7 @@ export function LeadActionsWidget(props: {
       void handleApprove();
       return;
     }
-    if (actionId === "review-lead" || actionId === "reassign-lead") {
+    if (actionId === "review-lead") {
       setOpenModal(actionId);
     }
   }
@@ -132,12 +131,6 @@ export function LeadActionsWidget(props: {
 
       <Show when={openModal() === "review-lead"}>
         <ReviewLeadModal
-          leadId={props.leadId}
-          onClose={() => setOpenModal(null)}
-        />
-      </Show>
-      <Show when={openModal() === "reassign-lead"}>
-        <ReassignLeadModal
           leadId={props.leadId}
           onClose={() => setOpenModal(null)}
         />

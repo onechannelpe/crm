@@ -71,13 +71,6 @@ export function mapLeadActionsToUi(
           kind: "button",
         });
         break;
-      case "reassign-lead":
-        items.push({
-          id: action,
-          label: "Reasignar prospecto",
-          kind: "button",
-        });
-        break;
       // complete-commercial-input is rendered as an inline form section, not an action button.
       case "complete-commercial-input":
       // Actions below have no implemented handler yet.

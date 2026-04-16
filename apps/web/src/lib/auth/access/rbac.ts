@@ -83,6 +83,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:read",
     "team:manage",
     "audit:read",
+    "lead:reassign",
   ],
   back_office: [
     "lead:rate:simulate",
@@ -113,6 +114,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "audit:read",
     "admin:read",
     "admin:manage",
+    "lead:reassign",
   ],
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],

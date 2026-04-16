@@ -4,6 +4,7 @@ import type { ApproveForSaleDeps } from "../deps/quotations";
 import { notifyReadyForSale } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
+import { applyLeadMutation } from "../services/lead-mutation-service";
 
 export async function persistLeadSaleApproval(input: {
   deps: ApproveForSaleDeps;
@@ -13,9 +14,12 @@ export async function persistLeadSaleApproval(input: {
   actorUserId: number;
   now: number;
 }) {
-  await input.deps.leads.updateById(input.lead.id, {
-    stage: "READY_FOR_SALE",
-    updatedAt: input.now,
+  await applyLeadMutation({
+    leads: input.deps.leads,
+    leadId: input.lead.id,
+    actorUserId: input.actorUserId,
+    now: input.now,
+    patch: { stage: "READY_FOR_SALE" },
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({

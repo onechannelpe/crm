@@ -2,6 +2,7 @@ import { createHistoryEvent } from "../../domain/history";
 import type { ReadyForQuotationLeadSubject } from "../../domain/lead-subjects";
 import type { CreateQuotationDeps } from "../deps/quotations";
 import type { PipelineAuditService } from "../ports/audit-service";
+import { applyLeadMutation } from "../services/lead-mutation-service";
 
 export async function persistLeadQuotationTransition(input: {
   deps: CreateQuotationDeps;
@@ -30,9 +31,12 @@ export async function persistLeadQuotationTransition(input: {
     createdBy: input.actorUserId,
   });
 
-  await input.deps.leads.updateById(input.lead.id, {
-    stage: "QUOTED",
-    updatedAt: input.now,
+  await applyLeadMutation({
+    leads: input.deps.leads,
+    leadId: input.lead.id,
+    actorUserId: input.actorUserId,
+    now: input.now,
+    patch: { stage: "QUOTED" },
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({

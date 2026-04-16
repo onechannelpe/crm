@@ -67,6 +67,7 @@ describe("security invariant manifest", () => {
 
     expect(hasPermission("supervisor", "sales:approve")).toBe(true);
     expect(hasPermission("supervisor", "lead:register")).toBe(false);
+    expect(hasPermission("supervisor", "lead:reassign")).toBe(true);
 
     expect(hasPermission("admin", "lead:reassign")).toBe(true);
     expect(hasPermission("admin", "quotation:manage")).toBe(true);

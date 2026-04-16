@@ -1,6 +1,7 @@
 import type { LeadInteractionDeps } from "~/server/pipeline/application/deps/lead-interactions";
 import type {
   LeadBootstrapPreviewDeps,
+  AssignableExecutivesDeps,
   LeadDetailDeps,
   LeadListDeps,
   SaleQueryDeps,
@@ -42,6 +43,7 @@ export type PipelineDeps = {
   leadDetail: LeadDetailDeps;
   leadBootstrapPreview: LeadBootstrapPreviewDeps;
   saleQueries: SaleQueryDeps;
+  assignableExecutives: AssignableExecutivesDeps;
   sourcingPolicy: SourcingPolicyDeps;
 };
 
@@ -85,6 +87,7 @@ export function createPipelineFeatureDeps(
     },
     leadBootstrapPreview: { leads, engineGateway },
     saleQueries: { leadSales },
+    assignableExecutives: { leads, users },
     sourcingPolicy: { sourcingPolicies },
   };
 }

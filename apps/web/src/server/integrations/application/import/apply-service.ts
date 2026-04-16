@@ -49,6 +49,7 @@ export async function applyImportRows(
       const mutationResult = await applyLeadMutation({
         executor: trx,
         jobId: input.jobId,
+        actorId: input.actorId,
         row,
       });
       results.push(mutationResult.rowResult);

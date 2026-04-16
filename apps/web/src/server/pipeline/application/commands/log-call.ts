@@ -11,6 +11,7 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
+import { applyLeadMutation } from "../services/lead-mutation-service";
 
 export async function logCall(
   input: {
@@ -47,6 +48,12 @@ export async function logCall(
   }
 
   const now = Date.now();
+  await applyLeadMutation({
+    leads: input.deps.leads,
+    leadId: input.leadId,
+    actorUserId: input.actorUserId,
+    now,
+  });
   const historyId = await input.deps.leadHistory.insert(
     createHistoryEvent({
       leadId: input.leadId,
