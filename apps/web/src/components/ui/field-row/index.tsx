@@ -1,7 +1,6 @@
 import { createSignal, Show, type JSX } from "solid-js";
 
 import Pencil from "~/components/icons/pencil";
-import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import { UserPicker } from "~/components/ui/pickers/user-picker";
 import {
@@ -9,8 +8,6 @@ import {
   FieldLabel,
   FieldLabelText,
   FieldRow,
-  FieldTable,
-  FieldTextValue,
   FieldValue,
 } from "~/features/side-panel/components/field-table";
 
@@ -30,7 +27,7 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
   const [isHovered, setIsHovered] = createSignal(false);
   const [showPicker, setShowPicker] = createSignal(false);
 
-  function handleSelect(userId: number) {
+  function handleSelect() {
     setShowPicker(false);
     props.onUpdate?.();
   }
@@ -50,7 +47,7 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
         </FieldLabelText>
       </FieldLabel>
       <FieldValue>
-        <FieldTextValue>{props.value || "—"}</FieldTextValue>
+        <span>{props.value || "—"}</span>
         <Show when={props.isEditable && props.leadId}>
           <div class={styles.editWrapper}>
             <Show when={isHovered()} fallback={<div class={styles.spacer} />}>
@@ -68,7 +65,7 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
             </Show>
             <Show when={showPicker()}>
               <UserPicker
-                leadId={props.leadId!}
+                leadId={props.leadId}
                 currentUserId={props.currentUserId ?? 0}
                 onSelect={handleSelect}
                 onClose={() => setShowPicker(false)}

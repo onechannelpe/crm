@@ -9,9 +9,9 @@ import { managedExecutivesQuery } from "~/lib/queries/capacity";
 import styles from "./styles.module.css";
 
 export interface UserPickerProps {
-  leadId: number;
+  leadId: number | undefined;
   currentUserId: number;
-  onSelect: (userId: number) => void;
+  onSelect: () => void;
   onClose: () => void;
 }
 
@@ -23,10 +23,18 @@ export function UserPicker(props: UserPickerProps) {
   const [error, setError] = createSignal<string | null>(null);
   let containerRef: HTMLDivElement | undefined;
 
+  const setRef = (el: HTMLDivElement) => {
+    containerRef = el;
+  };
+
   onMount(() => {
     function handleClickOutside(e: MouseEvent) {
       const target = e.target;
-      if (containerRef && target instanceof Node && !containerRef.contains(target)) {
+      if (
+        containerRef &&
+        target instanceof Node &&
+        !containerRef.contains(target)
+      ) {
         props.onClose();
       }
     }
@@ -36,16 +44,20 @@ export function UserPicker(props: UserPickerProps) {
     );
   });
 
-  async function handleSelect(userId: number) {
-    if (userId === props.currentUserId) {
+  async function handleSelect(executiveId: number) {
+    if (executiveId === props.currentUserId) {
       props.onClose();
+      return;
+    }
+    const leadId = props.leadId;
+    if (!leadId) {
       return;
     }
     setError(null);
     setSubmitting(true);
     try {
-      await reassign({ leadId: props.leadId, newExecutiveId: userId });
-      props.onSelect(userId);
+      await reassign({ leadId, newExecutiveId: executiveId });
+      props.onSelect();
       props.onClose();
     } catch (err) {
       setError(toAppError(err, "Error al reasignar").publicMessage);
@@ -62,7 +74,7 @@ export function UserPicker(props: UserPickerProps) {
   };
 
   return (
-    <div ref={containerRef} class={styles.container}>
+    <div ref={setRef} class={styles.container}>
       <div class={styles.searchWrapper}>
         <Search size={14} />
         <input

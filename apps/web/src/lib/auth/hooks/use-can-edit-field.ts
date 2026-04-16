@@ -1,5 +1,5 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import type { Role } from "~/lib/auth/access/rbac";
 
 export type EditableField = "executive";
 
