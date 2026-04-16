@@ -40,7 +40,7 @@ describe("pipeline lead mutation metadata", () => {
 
     const commandApi = createPipelineCommandApiRuntime({
       deps: runtime.pipeline.deps,
-      auditService: { log: async () => {} },
+      executor: runtime.ctx.db,
       notificationCenter: {
         notifyUsers: async () => {},
         notifyBranchRoles: async () => {},
@@ -129,7 +129,7 @@ describe("pipeline lead mutation metadata", () => {
 
     const commandApi = createPipelineCommandApiRuntime({
       deps: runtime.pipeline.deps,
-      auditService: { log: async () => {} },
+      executor: runtime.ctx.db,
       notificationCenter: {
         notifyUsers: async () => {},
         notifyBranchRoles: async () => {},

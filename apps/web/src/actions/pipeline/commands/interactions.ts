@@ -14,10 +14,10 @@ export async function recordLeadCall(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+      runPipelineCommand(({ deps, executor, notificationCenter }) =>
         createPipelineCommandApiRuntime({
           deps,
-          auditService,
+          executor,
           notificationCenter,
         }).logLeadCall({
           actor: {
@@ -39,10 +39,10 @@ export async function addLeadNote(input: { leadId: number; body: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+      runPipelineCommand(({ deps, executor, notificationCenter }) =>
         createPipelineCommandApiRuntime({
           deps,
-          auditService,
+          executor,
           notificationCenter,
         }).addLeadNote({
           actor: {

@@ -60,25 +60,18 @@ export function createPipelineUsersRepo(
       input: AssignableExecutivesScope,
       options?: { search?: string; limit?: number },
     ): Promise<PipelineUserWithName[]> {
-      const rows =
-        input.actorRole === "superuser"
-          ? await users.findAssignableExecutivesAllBranches()
-          : await users.findAssignableExecutivesByBranch(input.actorBranchId);
-
-      const mapped = rows
-        .map((user) => ({
-          id: user.id,
-          fullName: shortName(user),
-        }))
-        .toSorted((a, b) => a.fullName.localeCompare(b.fullName));
-
-      const term = options?.search?.trim().toLowerCase();
-      const filtered = term
-        ? mapped.filter((user) => user.fullName.toLowerCase().includes(term))
-        : mapped;
       const limit = options?.limit && options.limit > 0 ? options.limit : 50;
+      const rows = await users.findAssignableExecutives({
+        branchId:
+          input.actorRole === "superuser" ? undefined : input.actorBranchId,
+        search: options?.search,
+        limit,
+      });
 
-      return filtered.slice(0, limit);
+      return rows.map((user) => ({
+        id: user.id,
+        fullName: shortName(user),
+      }));
     },
   };
 }

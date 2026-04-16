@@ -67,10 +67,10 @@ export async function requestLeadReview(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+      runPipelineCommand(({ deps, executor, notificationCenter }) =>
         createPipelineCommandApiRuntime({
           deps,
-          auditService,
+          executor,
           notificationCenter,
         }).reviewLead({
           actor: {
@@ -128,10 +128,10 @@ export async function requestLeadReassignment(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+      runPipelineCommand(({ deps, executor, notificationCenter }) =>
         createPipelineCommandApiRuntime({
           deps,
-          auditService,
+          executor,
           notificationCenter,
         }).reassignLead({
           actor: {

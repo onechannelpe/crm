@@ -1,6 +1,7 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { LeadRepository } from "../../application/ports/lead-repository";
+import { toLeadPatchRow } from "../lead-repo";
 import type {
   LeadWriteRepository,
   CheckedLeadWriteRepository,
@@ -25,16 +26,15 @@ export function createCheckedLeadWriteRepository(
 ): CheckedLeadWriteRepository {
   return {
     async updateLeadChecked(input) {
+      const patchRow = toLeadPatchRow({
+        ...input.patch,
+        updatedBy: input.actorUserId,
+        updatedAt: input.now,
+      });
+
       const result = await executor
         .updateTable("pipeline_leads")
-        .set({
-          executive_id: input.patch.executiveId,
-          stage: input.patch.stage,
-          status: input.patch.status,
-          prioridad: input.patch.prioridad,
-          updated_by: input.actorUserId,
-          updated_at: input.now,
-        })
+        .set(patchRow)
         .where("id", "=", input.leadId)
         .where("updated_at", "=", input.expectedUpdatedAt)
         .executeTakeFirst();

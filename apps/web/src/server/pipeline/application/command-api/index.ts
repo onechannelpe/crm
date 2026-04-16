@@ -1,16 +1,9 @@
 import type { DomainError } from "~/server/shared/domain-error";
-import { domainError } from "~/server/shared/domain-error";
-import { Err, type Result } from "~/server/shared/result";
+import type { Result } from "~/server/shared/result";
 
-import type { LeadAssignmentRepositoryPort } from "../../ports/lead-assignment-repository";
-import type { LeadAuditRepository } from "../../ports/lead-audit-repository";
-import type { LeadEventRepository } from "../../ports/lead-event-repository";
+import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { LeadUserScopeRepository } from "../../ports/lead-user-scope-repository";
-import type {
-  CheckedLeadWriteRepository,
-  LeadWriteRepository,
-} from "../../ports/lead-write-repository";
 import type {
   AddLeadNoteInput,
   ApplyImportedReviewInput,
@@ -32,11 +25,7 @@ import { reviewLeadCommand } from "./review-lead";
 
 export type PipelineCommandApiDeps = {
   leadReader: LeadReadRepository;
-  leadWriter: LeadWriteRepository;
-  checkedLeadWriter?: CheckedLeadWriteRepository;
-  eventRepository: LeadEventRepository;
-  auditRepository: LeadAuditRepository;
-  leadAssignments: LeadAssignmentRepositoryPort;
+  mutationUow: LeadMutationUow;
   users: LeadUserScopeRepository;
   notificationCenter: PipelineNotificationCenter;
   clock: LeadClock;
@@ -68,29 +57,14 @@ export function createPipelineCommandApi(
     reviewLead: (input) => reviewLeadCommand(deps, input),
     addLeadNote: (input) => addLeadNoteCommand(deps, input),
     logLeadCall: (input) => logLeadCallCommand(deps, input),
-    applyImportedReview: (input) => {
-      if (!deps.checkedLeadWriter) {
-        return Promise.resolve(
-          Err(
-            domainError(
-              "unexpected",
-              "missing_checked_writer",
-              "Checked lead writer is required for imported reviews",
-            ),
-          ),
-        );
-      }
-      return applyImportedReviewCommand(
+    applyImportedReview: (input) =>
+      applyImportedReviewCommand(
         {
           leadReader: deps.leadReader,
-          leadWriter: deps.leadWriter,
-          checkedLeadWriter: deps.checkedLeadWriter,
-          eventRepository: deps.eventRepository,
-          auditRepository: deps.auditRepository,
+          mutationUow: deps.mutationUow,
           clock: deps.clock,
         },
         input,
-      );
-    },
+      ),
   };
 }

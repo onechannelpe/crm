@@ -49,7 +49,7 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
   };
 }
 
-function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
+export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
   return {
     razon_social: values.razonSocial,
     address: values.address,

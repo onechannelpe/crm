@@ -20,6 +20,7 @@ import { createEngineGateway } from "./engine-gateway";
 import { createPipelineNotificationCenter } from "./notifications";
 
 export type PipelineCommandRuntime = {
+  executor: DatabaseExecutor;
   deps: PipelineDeps;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
@@ -40,6 +41,7 @@ function createPipelineCommandRuntime(
   const enrichmentCommand = createEnrichmentCommand(enrichmentRepo);
 
   return {
+    executor,
     deps: createPipelineFeatureDeps(executor),
     auditService: createPipelineAuditServiceRuntime(executor),
     engineGateway: createEngineGateway(),

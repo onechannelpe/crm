@@ -1,22 +1,18 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { leadNotFound, invalidLeadInput } from "../../domain/lead/lead-errors";
-import { authorizeLeadOperation } from "../../domain/lead/lead-policies";
-import type { LeadAuditRepository } from "../../ports/lead-audit-repository";
-import type { LeadEventRepository } from "../../ports/lead-event-repository";
+import { invalidLeadInput } from "../../domain/lead/lead-errors";
+import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
+import { requireFirstHistoryId } from "../command-kernel/require-history-id";
+import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
-import type { LeadWriteRepository } from "../../ports/lead-write-repository";
 import type { AddLeadNoteInput } from "../contracts/command-inputs";
 import type { LeadInteractionResult } from "../contracts/command-results";
 import type { LeadClock } from "../services/lead-clock";
-import { executeLeadMutation } from "../services/lead-mutation-orchestrator";
 
 type AddLeadNoteCommandDeps = {
   leadReader: LeadReadRepository;
-  leadWriter: LeadWriteRepository;
-  eventRepository: LeadEventRepository;
-  auditRepository: LeadAuditRepository;
+  mutationUow: LeadMutationUow;
   clock: LeadClock;
 };
 
@@ -29,27 +25,21 @@ export async function addLeadNoteCommand(
     return invalidLeadInput("note_required", "Note body is required");
   }
 
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) {
-    return leadNotFound();
-  }
-
-  const canOperate = authorizeLeadOperation({
-    actorUserId: input.actor.userId,
-    actorRole: input.actor.role,
-    leadExecutiveId: lead.executiveId,
+  const prepared = await prepareLeadCommand({
+    leadReader: deps.leadReader,
+    clock: deps.clock,
+    actor: input.actor,
+    leadId: input.leadId,
     operation: "interact",
   });
-  if (!canOperate.ok) {
-    return canOperate;
+  if (!prepared.ok) {
+    return prepared;
   }
 
-  const now = deps.clock.now();
-  const outcome = await executeLeadMutation({
-    deps,
-    lead,
+  const outcome = await deps.mutationUow.commit({
+    lead: prepared.value.lead,
     actorUserId: input.actor.userId,
-    now,
+    now: prepared.value.now,
     intent: {
       kind: "add_note",
       body,
@@ -59,6 +49,13 @@ export async function addLeadNoteCommand(
     return outcome;
   }
 
-  const interactionId = outcome.value.historyIds[0] ?? now;
-  return Ok({ interactionId });
+  const interactionId = requireFirstHistoryId(
+    outcome.value.historyIds,
+    "missing_interaction_history_id",
+  );
+  if (!interactionId.ok) {
+    return interactionId;
+  }
+
+  return Ok({ interactionId: interactionId.value });
 }
