@@ -1,5 +1,5 @@
-import { createUsersRepo } from "~/server/users/repos-users";
 import { shortName } from "~/lib/users/display-name";
+import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type { PipelineUserRepository } from "../application/ports/user-repository";

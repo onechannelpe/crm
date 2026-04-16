@@ -1,13 +1,9 @@
-import {
-  createSignal,
-  Show,
-  type JSX,
-} from "solid-js";
+import { createSignal, Show, type JSX } from "solid-js";
 
 import Pencil from "~/components/icons/pencil";
 import { LightIconButton } from "~/components/ui/input/light-icon-button";
-import { UserPicker } from "~/components/ui/pickers/user-picker";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+import { UserPicker } from "~/components/ui/pickers/user-picker";
 import {
   FieldIcon,
   FieldLabel,
@@ -54,17 +50,10 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
         </FieldLabelText>
       </FieldLabel>
       <FieldValue>
-        <FieldTextValue>
-          {props.value || "—"}
-        </FieldTextValue>
+        <FieldTextValue>{props.value || "—"}</FieldTextValue>
         <Show when={props.isEditable && props.leadId}>
           <div class={styles.editWrapper}>
-            <Show
-              when={isHovered()}
-              fallback={
-                <div class={styles.spacer} />
-              }
-            >
+            <Show when={isHovered()} fallback={<div class={styles.spacer} />}>
               <button
                 type="button"
                 class={styles.editButton}

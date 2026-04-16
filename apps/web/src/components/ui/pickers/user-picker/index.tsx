@@ -1,19 +1,12 @@
 import { createAsync, useAction } from "@solidjs/router";
-import {
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-  Show,
-} from "solid-js";
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 
 import Search from "~/components/icons/search";
 import { LightIconButton } from "~/components/ui/input/light-icon-button";
-import { managedExecutivesQuery } from "~/lib/queries/capacity";
-import { toAppError } from "~/lib/app-errors";
-
 import { reassignLeadMutation } from "~/features/pipeline/data/mutations";
+import { toAppError } from "~/lib/app-errors";
+import { managedExecutivesQuery } from "~/lib/queries/capacity";
 import { shortName } from "~/lib/users/display-name";
 
 import styles from "./styles.module.css";
@@ -40,7 +33,9 @@ export function UserPicker(props: UserPickerProps) {
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    onCleanup(() => document.removeEventListener("mousedown", handleClickOutside));
+    onCleanup(() =>
+      document.removeEventListener("mousedown", handleClickOutside),
+    );
   });
 
   async function handleSelect(userId: number) {
@@ -65,9 +60,7 @@ export function UserPicker(props: UserPickerProps) {
     const execs = executives() ?? [];
     const searchTerm = search().toLowerCase();
     if (!searchTerm) return execs;
-    return execs.filter((e) =>
-      e.fullName.toLowerCase().includes(searchTerm),
-    );
+    return execs.filter((e) => e.fullName.toLowerCase().includes(searchTerm));
   };
 
   return (
@@ -96,7 +89,9 @@ export function UserPicker(props: UserPickerProps) {
                 onClick={() => void handleSelect(exec.id)}
                 disabled={submitting()}
               >
-                <span class={exec.id === props.currentUserId ? styles.current : ""}>
+                <span
+                  class={exec.id === props.currentUserId ? styles.current : ""}
+                >
                   {exec.fullName}
                 </span>
                 <Show when={exec.id === props.currentUserId}>

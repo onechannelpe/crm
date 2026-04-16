@@ -8,6 +8,7 @@ import ChevronDown from "~/components/icons/chevron-down";
 import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 import { RelationFieldRow } from "~/components/ui/field-row";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
@@ -29,9 +30,8 @@ import {
   WidgetSectionHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import { formatDateTime } from "~/lib/utils";
-import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { canEditField } from "~/lib/auth/hooks/use-can-edit-field";
+import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;

@@ -18,9 +18,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("created_by", "integer", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("updated_by", "integer", (col) =>
-      col.references("users.id"),
-    )
+    .addColumn("updated_by", "integer", (col) => col.references("users.id"))
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();
