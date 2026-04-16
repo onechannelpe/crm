@@ -11,7 +11,7 @@ type LeadMutationInput = {
 
 export async function applyLeadMutation(input: LeadMutationInput) {
   await input.leads.updateById(input.leadId, {
-    ...(input.patch ?? {}),
+    ...input.patch,
     updatedBy: input.actorUserId,
     updatedAt: input.now,
   });

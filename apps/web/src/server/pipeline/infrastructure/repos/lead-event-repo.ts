@@ -7,11 +7,7 @@ export function createLeadEventRepository(
 ): LeadEventRepository {
   return {
     async append(events: LeadHistoryEventDraft[]) {
-      const ids: number[] = [];
-      for (const event of events) {
-        ids.push(await history.insert(event));
-      }
-      return ids;
+      return Promise.all(events.map((event) => history.insert(event)));
     },
   };
 }
