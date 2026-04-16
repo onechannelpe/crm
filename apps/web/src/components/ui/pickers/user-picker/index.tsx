@@ -79,6 +79,7 @@ export function UserPicker(props: UserPickerProps) {
           type="text"
           class={styles.searchInput}
           placeholder="Buscar..."
+          aria-label="Buscar usuario"
           value={search()}
           onInput={(e) => handleSearchInput(e.currentTarget.value)}
           disabled={submitting()}
