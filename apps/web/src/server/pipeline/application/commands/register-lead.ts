@@ -78,6 +78,7 @@ export async function registerLead(input: {
     razonSocial: enrichment?.razonSocial ?? null,
     address: enrichment?.address ?? null,
     executiveId: input.executiveId,
+    createdBy: input.actorUserId,
     now,
   });
   if (!draft.ok) {

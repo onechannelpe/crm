@@ -17,6 +17,8 @@ export type LeadRecord = {
   district: string | null;
   department: string | null;
   executiveId: number;
+  createdBy: number;
+  updatedBy: number | null;
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
@@ -34,6 +36,7 @@ export type LeadPatch = Partial<
     | "district"
     | "department"
     | "executiveId"
+    | "updatedBy"
     | "stage"
     | "status"
     | "prioridad"
@@ -46,6 +49,7 @@ export function createLeadDraft(input: {
   razonSocial: string | null;
   address: string | null;
   executiveId: number;
+  createdBy: number;
   now: number;
 }): Result<LeadDraft, DomainError> {
   const ruc = normalizeLeadRuc(input.ruc);
@@ -60,6 +64,8 @@ export function createLeadDraft(input: {
     district: null,
     department: null,
     executiveId: input.executiveId,
+    createdBy: input.createdBy,
+    updatedBy: null,
     stage: "PENDING_EXTERNAL_REVIEW",
     status: null,
     prioridad: null,
