@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -29,7 +30,7 @@ export async function registerLead(input: {
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
-}): Promise<Result<{ leadId: string }, DomainError>> {
+}): Promise<Result<{ leadId: LeadId }, DomainError>> {
   const canRegister = requirePipelineActionAccess(
     input.actorRole,
     canRegisterLead,

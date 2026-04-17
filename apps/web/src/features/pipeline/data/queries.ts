@@ -8,6 +8,7 @@ import {
 import type { AssignableExecutiveView } from "~/server/pipeline/application/queries/views/assignable-executive";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 import type { LeadListFilters } from "./types";
 
@@ -34,13 +35,13 @@ export function leadListKeyFor(filters: LeadListFilters): string {
 }
 
 export const leadDetailQuery = query(
-  (leadId: string): Promise<LeadDetailView> => queryLeadDetail(leadId),
+  (leadId: LeadId): Promise<LeadDetailView> => queryLeadDetail(leadId),
   "pipeline.leadDetail",
 );
 
 export const assignableExecutivesQuery = query(
   (input: {
-    leadId: string;
+    leadId: LeadId;
     search?: string;
     limit?: number;
   }): Promise<AssignableExecutiveView[]> => queryAssignableExecutives(input),

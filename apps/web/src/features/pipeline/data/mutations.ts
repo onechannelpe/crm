@@ -7,6 +7,7 @@ import {
   requestLeadReview,
 } from "~/actions/pipeline/commands/leads";
 import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 
@@ -21,7 +22,7 @@ export const createLeadMutation = action(async (input: CreateLeadInput) => {
 }, "pipeline.createLead");
 
 export const approveForSaleMutation = action(
-  async (input: { leadId: string }) => {
+  async (input: { leadId: LeadId }) => {
     await requestSaleApproval(input.leadId);
     return json(
       {},
@@ -33,7 +34,7 @@ export const approveForSaleMutation = action(
 
 export const reviewLeadMutation = action(
   async (input: {
-    leadId: string;
+    leadId: LeadId;
     status: string;
     prioridad: string;
     reason: string;
@@ -49,7 +50,7 @@ export const reviewLeadMutation = action(
 
 export const completeCommercialInputMutation = action(
   async (input: {
-    leadId: string;
+    leadId: LeadId;
     proveedorActual: string;
     tasaActual: number;
     gpv: number;
@@ -67,7 +68,7 @@ export const completeCommercialInputMutation = action(
 );
 
 export const reassignLeadMutation = action(
-  async (input: { leadId: string; newExecutiveId: number }) => {
+  async (input: { leadId: LeadId; newExecutiveId: number }) => {
     await requestLeadReassignment(input);
     return json(
       {},

@@ -1,3 +1,4 @@
+import { brand, type Brand } from "~/lib/types/brand";
 import type {
   LeadPriority,
   LeadStage,
@@ -9,10 +10,13 @@ import { Ok } from "~/server/shared/result";
 
 import { normalizeLeadRuc } from "./lead-schema-parser";
 
-export type LeadId = string;
+export type LeadId = Brand<string, "LeadId">;
+
+// Trusted boundary: only call from DB read paths and createLeadId.
+export const asLeadId = (id: string): LeadId => brand<string, "LeadId">(id);
 
 export function createLeadId(): LeadId {
-  return crypto.randomUUID();
+  return asLeadId(crypto.randomUUID());
 }
 
 export function isLeadId(value: string): value is LeadId {

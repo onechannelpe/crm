@@ -1,3 +1,4 @@
+import { brand, type Brand } from "~/lib/types/brand";
 import {
   LEAD_PRIORITIES,
   LEAD_STAGES,
@@ -9,11 +10,13 @@ import {
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+export type Ruc = Brand<string, "Ruc">;
+
 function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));
 }
 
-export function normalizeLeadRuc(ruc: string): Result<string, DomainError> {
+export function normalizeLeadRuc(ruc: string): Result<Ruc, DomainError> {
   const normalizedRuc = ruc.trim();
   if (!/^\d{11}$/.test(normalizedRuc)) {
     return fail(
@@ -22,7 +25,7 @@ export function normalizeLeadRuc(ruc: string): Result<string, DomainError> {
     );
   }
 
-  return Ok(normalizedRuc);
+  return Ok(brand<string, "Ruc">(normalizedRuc));
 }
 
 function parseOptionalLeadValue<TValue extends string>(

@@ -2,6 +2,7 @@
 
 import { validationError } from "~/lib/app-errors";
 import { requestSunatRefresh } from "~/server/pipeline/application/commands/request-sunat-refresh";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
@@ -40,7 +41,7 @@ export async function requestLeadCreation(input: {
 }
 
 export async function requestLeadReview(input: {
-  leadId: string;
+  leadId: LeadId;
   status: string;
   prioridad: string;
   reason: string;
@@ -80,7 +81,7 @@ export async function requestLeadReview(input: {
 }
 
 export async function requestLeadCommercialInputCompletion(input: {
-  leadId: string;
+  leadId: LeadId;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;
@@ -111,7 +112,7 @@ export async function requestLeadCommercialInputCompletion(input: {
 }
 
 export async function requestLeadReassignment(input: {
-  leadId: string;
+  leadId: LeadId;
   newExecutiveId: number;
 }) {
   return runAction({
@@ -133,7 +134,7 @@ export async function requestLeadReassignment(input: {
   });
 }
 
-export async function requestLeadSunatRefresh(input: { leadId: string }) {
+export async function requestLeadSunatRefresh(input: { leadId: LeadId }) {
   return runAction({
     actionName: "pipeline.request_sunat_refresh",
     access: { kind: "auth" },

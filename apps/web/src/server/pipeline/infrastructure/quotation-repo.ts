@@ -2,7 +2,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadQuotation } from "~/server/pipeline/application/ports/quotation-repository";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type QuotationRow = Selectable<Database["pipeline_quotations"]>;
@@ -11,7 +11,7 @@ export type NewQuotationRow = Insertable<Database["pipeline_quotations"]>;
 function toLeadQuotation(row: QuotationRow): LeadQuotation {
   return {
     id: row.id,
-    leadId: row.lead_id,
+    leadId: asLeadId(row.lead_id),
     paybackPricing: row.payback_pricing,
     tarifaDebito: row.tarifa_debito,
     tarifaCredito: row.tarifa_credito,

@@ -5,7 +5,7 @@ import type {
   LeadAssignment,
   LeadAssignmentDraft,
 } from "~/server/pipeline/application/ports/assignment-repository";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type AssignmentRow = Selectable<Database["pipeline_lead_assignments"]>;
@@ -14,7 +14,7 @@ type NewAssignmentRow = Insertable<Database["pipeline_lead_assignments"]>;
 function toLeadAssignment(row: AssignmentRow): LeadAssignment {
   return {
     id: row.id,
-    leadId: row.lead_id,
+    leadId: asLeadId(row.lead_id),
     executiveId: row.executive_id,
     assignedBy: row.assigned_by,
     isActive: row.is_active === 1,

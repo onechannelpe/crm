@@ -1,3 +1,4 @@
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -16,7 +17,7 @@ type ApplyImportedReviewCommandDeps = {
 export async function applyImportedReviewCommand(
   deps: ApplyImportedReviewCommandDeps,
   input: ApplyImportedReviewInput,
-): Promise<Result<{ applied: boolean; leadId: string }, DomainError>> {
+): Promise<Result<{ applied: boolean; leadId: LeadId }, DomainError>> {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) {
     return leadNotFound();

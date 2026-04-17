@@ -1,7 +1,7 @@
 import type { Insertable, Selectable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { createLeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, createLeadId } from "~/server/pipeline/domain/lead-record";
 import type {
   LeadId,
   LeadDraft,
@@ -16,7 +16,7 @@ export type LeadRowPatch = Updateable<Database["pipeline_leads"]>;
 
 function toLead(row: LeadRow): LeadRecord {
   return {
-    id: row.id,
+    id: asLeadId(row.id),
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
@@ -75,7 +75,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .insertInto("pipeline_leads")
         .values(row)
         .executeTakeFirstOrThrow();
-      return row.id;
+      return asLeadId(row.id);
     },
 
     async findById(id: LeadId) {

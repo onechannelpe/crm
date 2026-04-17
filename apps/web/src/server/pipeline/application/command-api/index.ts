@@ -1,3 +1,4 @@
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
@@ -75,7 +76,7 @@ export type PipelineCommandApi = {
   ): Promise<Result<LeadInteractionResult, DomainError>>;
   applyImportedReview(
     input: ApplyImportedReviewInput,
-  ): Promise<Result<{ applied: boolean; leadId: string }, DomainError>>;
+  ): Promise<Result<{ applied: boolean; leadId: LeadId }, DomainError>>;
   approveForSale(
     input: ApproveForSaleInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;

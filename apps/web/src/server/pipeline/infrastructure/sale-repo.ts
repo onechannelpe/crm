@@ -2,7 +2,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadSale } from "~/server/pipeline/application/ports/sale-repository";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type SaleRow = Selectable<Database["pipeline_sales"]>;
@@ -11,7 +11,7 @@ export type NewSaleRow = Insertable<Database["pipeline_sales"]>;
 function toLeadSale(row: SaleRow): LeadSale {
   return {
     id: row.id,
-    leadId: row.lead_id,
+    leadId: asLeadId(row.lead_id),
     executiveId: row.executive_id,
     proveedorActual: row.proveedor_actual,
     tasaActual: row.tasa_actual,

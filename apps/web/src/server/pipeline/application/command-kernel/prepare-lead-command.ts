@@ -1,3 +1,4 @@
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -18,7 +19,7 @@ export async function prepareLeadCommand(input: {
   leadReader: LeadReadRepository;
   clock: LeadClock;
   actor: ActorContext;
-  leadId: string;
+  leadId: LeadId;
   operation: LeadOperation;
 }): Promise<Result<PreparedLeadCommand, DomainError>> {
   const lead = await input.leadReader.findById(input.leadId);

@@ -1,3 +1,4 @@
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
@@ -20,7 +21,7 @@ export type CheckedLeadMutationOutcome = {
 };
 
 export type LeadAssignmentMutationInput = {
-  leadId: string;
+  leadId: LeadId;
   toExecutiveId: number;
   assignedBy: number;
   assignedAt: number;

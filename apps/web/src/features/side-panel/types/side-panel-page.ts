@@ -14,6 +14,7 @@ import {
   type LeadRecordDraftState,
   type LeadRecordTabId,
 } from "~/features/side-panel/pages/record-page/model";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 export type SidePanelIcon = Component<{
   class?: string;
@@ -64,7 +65,7 @@ export type CreateLeadSidePanelPageState = {
 export type ViewRecordSidePanelPageState = {
   page: "view-record";
   recordType: "lead";
-  leadId: string;
+  leadId: LeadId;
   title: string;
   subtitle: string;
   activeTab: LeadRecordTabId;
@@ -183,7 +184,7 @@ export function createSearchCompanyDetailSidePanelPage(
 }
 
 type CreateLeadRecordDetailSidePanelPageInput = {
-  leadId: string;
+  leadId: LeadId;
   title: string;
   subtitle?: string;
 };

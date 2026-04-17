@@ -21,6 +21,7 @@ import {
 } from "~/features/pipeline/data/optimistic-leads";
 import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
+import { asLeadId } from "~/server/pipeline/domain/lead-record";
 
 import { HiddenTabContent } from "../../components/hidden-tab";
 import { PanelList } from "../../components/list";
@@ -158,7 +159,7 @@ export function CreateLeadPage() {
 
       navigateTo(
         createLeadRecordDetailSidePanelPage({
-          leadId: result.leadId,
+          leadId: asLeadId(result.leadId),
           title: latestBootstrapPreview()?.razonSocial ?? "",
           subtitle: `RUC ${value}`,
         }),

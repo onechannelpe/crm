@@ -2,7 +2,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadCommercialInput } from "~/server/pipeline/application/ports/commercial-input-repository";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type CommercialInputRow = Selectable<
@@ -14,7 +14,7 @@ export type NewCommercialInputRow = Insertable<
 
 function toLeadCommercialInput(row: CommercialInputRow): LeadCommercialInput {
   return {
-    leadId: row.lead_id,
+    leadId: asLeadId(row.lead_id),
     proveedorActual: row.proveedor_actual,
     tasaActual: row.tasa_actual,
     gpv: row.gpv,

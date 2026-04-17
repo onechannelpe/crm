@@ -6,6 +6,7 @@ import type { AssignableExecutiveView } from "~/server/pipeline/application/quer
 import type { LeadBootstrapPreviewView } from "~/server/pipeline/application/queries/views/lead-bootstrap-preview";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import { createPipelineQueryApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-query-api-factory";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -31,7 +32,7 @@ export async function queryLeadList(filters: {
   });
 }
 
-export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
+export async function queryLeadDetail(leadId: LeadId): Promise<LeadDetailView> {
   return runAction({
     actionName: "pipeline.get_lead_detail",
     access: { kind: "auth" },
@@ -70,7 +71,7 @@ export async function queryLeadBootstrapPreview(
 }
 
 export async function queryAssignableExecutives(input: {
-  leadId: string;
+  leadId: LeadId;
   search?: string;
   limit?: number;
 }): Promise<AssignableExecutiveView[]> {

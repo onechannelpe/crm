@@ -1,3 +1,4 @@
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -13,7 +14,7 @@ export async function writeLeadRegistrationEffects(input: {
   executiveId: number;
   draft: LeadDraft;
   now: number;
-}): Promise<Result<{ leadId: string }, DomainError>> {
+}): Promise<Result<{ leadId: LeadId }, DomainError>> {
   const leadId = await input.deps.leads.insert(input.draft);
   await input.deps.leadAssignments.insert({
     leadId,

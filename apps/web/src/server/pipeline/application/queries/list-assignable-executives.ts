@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -17,7 +18,7 @@ export async function listAssignableExecutives(
     actorUserId: number;
     actorRole: Role;
     actorBranchId: number;
-    leadId: string;
+    leadId: LeadId;
     search?: string;
     limit?: number;
   },
