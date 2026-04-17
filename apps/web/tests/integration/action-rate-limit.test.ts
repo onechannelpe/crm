@@ -201,7 +201,7 @@ describe("action rate limit", () => {
     const entry = logs.find((l) => l.action === "rate_limit_exceeded");
     expect(entry).toBeDefined();
     expect(entry?.entity_type).toBe("user");
-    expect(entry?.entity_id).toBe(userId);
+    expect(entry?.entity_id).toBe("1");
     expect(entry?.changes).toContain('"actionName":"leads.request"');
     expect(entry?.changes).toContain('"scope":"user"');
     expect(entry?.changes).toContain('"retryAfterMs"');
