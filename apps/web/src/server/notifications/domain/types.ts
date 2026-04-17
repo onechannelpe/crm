@@ -31,4 +31,7 @@ export interface NotificationServiceDeps {
     >;
   };
   messaging: MessagingGateway;
+  logger: {
+    error(message: string, meta?: unknown): void;
+  };
 }

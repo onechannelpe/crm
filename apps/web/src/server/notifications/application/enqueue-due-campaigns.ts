@@ -138,7 +138,14 @@ export async function enqueueDueCampaigns(
         );
 
         await deps.repos.notificationCampaign.markCompleted(campaign.id, now);
-      } catch {
+      } catch (error) {
+        deps.logger.error("notification_campaign_enqueue_failed", {
+          campaignId: campaign.id,
+          eventType: campaign.event_type,
+          audienceType: campaign.audience_type,
+          audienceRef: campaign.audience_ref,
+          error,
+        });
         await deps.repos.notificationCampaign.markFailed(
           campaign.id,
           Date.now(),

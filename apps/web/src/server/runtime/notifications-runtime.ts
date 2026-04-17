@@ -59,6 +59,7 @@ export function createNotificationsRuntime(infra: ServerInfra) {
     service: createAppNotificationService({
       repos,
       messaging,
+      logger: infra.logger,
     }),
     appNotifications: createAppNotificationRepo(infra.db),
   };
