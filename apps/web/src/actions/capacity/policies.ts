@@ -16,7 +16,7 @@ import {
   parseSearchPolicyLimit,
   parseSearchPolicyOverrideInput,
 } from "./input";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
 import type { ScopeRef } from "~/server/capacity/domain/types";
 
 export async function updateSearchPolicyOverride(input: {
@@ -69,8 +69,8 @@ export async function updateSearchPolicyDefault(input: {
   if (!scopeInput.ok) throw scopeInput.error;
   const scope: ScopeRef =
     scopeInput.value.scopeType === "branch"
-      ? { kind: "branch", scopeId: scopeInput.value.scopeId as BranchId }
-      : { kind: "team", scopeId: scopeInput.value.scopeId as TeamId };
+      ? { kind: "branch", scopeId: scopeInput.value.scopeId }
+      : { kind: "team", scopeId: scopeInput.value.scopeId };
   const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
   if (!limitResult.ok) throw limitResult.error;
   return runAction({
@@ -102,8 +102,8 @@ export async function updateLeadPolicyDefault(input: {
   if (!scopeInput.ok) throw scopeInput.error;
   const scope: ScopeRef =
     scopeInput.value.scopeType === "branch"
-      ? { kind: "branch", scopeId: scopeInput.value.scopeId as BranchId }
-      : { kind: "team", scopeId: scopeInput.value.scopeId as TeamId };
+      ? { kind: "branch", scopeId: scopeInput.value.scopeId }
+      : { kind: "team", scopeId: scopeInput.value.scopeId };
   const policyResult = parseLeadPolicyValues({
     activeBufferTarget: input.activeBufferTarget,
     dailyRefillLimit: input.dailyRefillLimit,
