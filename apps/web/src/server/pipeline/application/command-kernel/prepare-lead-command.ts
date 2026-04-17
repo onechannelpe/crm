@@ -18,7 +18,7 @@ export async function prepareLeadCommand(input: {
   leadReader: LeadReadRepository;
   clock: LeadClock;
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   operation: LeadOperation;
 }): Promise<Result<PreparedLeadCommand, DomainError>> {
   const lead = await input.leadReader.findById(input.leadId);

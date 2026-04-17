@@ -5,6 +5,7 @@ import type {
   LeadAssignment,
   LeadAssignmentDraft,
 } from "~/server/pipeline/application/ports/assignment-repository";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type AssignmentRow = Selectable<Database["pipeline_lead_assignments"]>;
@@ -38,7 +39,7 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
       return Number(result.insertId);
     },
 
-    deactivateActiveForLead(leadId: number) {
+    deactivateActiveForLead(leadId: LeadId) {
       return db
         .updateTable("pipeline_lead_assignments")
         .set({ is_active: 0 })
@@ -47,7 +48,7 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async findActiveByLead(leadId: number) {
+    async findActiveByLead(leadId: LeadId) {
       const row = await db
         .selectFrom("pipeline_lead_assignments")
         .selectAll()

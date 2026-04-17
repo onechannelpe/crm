@@ -1,5 +1,7 @@
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
+
 export type LeadCommandResult = {
-  leadId: number;
+  leadId: LeadId;
 };
 
 export type LeadInteractionResult = {

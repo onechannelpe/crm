@@ -2,6 +2,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadSale } from "~/server/pipeline/application/ports/sale-repository";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type SaleRow = Selectable<Database["pipeline_sales"]>;
@@ -59,7 +60,7 @@ export function createSaleRepo(db: DatabaseExecutor) {
       return row ? toLeadSale(row) : undefined;
     },
 
-    async findByLeadId(leadId: number): Promise<LeadSale | undefined> {
+    async findByLeadId(leadId: LeadId): Promise<LeadSale | undefined> {
       const row = await db
         .selectFrom("pipeline_sales")
         .selectAll()

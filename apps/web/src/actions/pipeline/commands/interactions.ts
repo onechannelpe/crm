@@ -5,7 +5,7 @@ import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructur
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function recordLeadCall(input: {
-  leadId: number;
+  leadId: string;
   outcome: LeadCallOutcome;
   notes?: string | null;
 }) {
@@ -29,7 +29,7 @@ export async function recordLeadCall(input: {
   });
 }
 
-export async function addLeadNote(input: { leadId: number; body: string }) {
+export async function addLeadNote(input: { leadId: string; body: string }) {
   return runAction({
     actionName: "pipeline.add_note",
     access: { kind: "auth" },

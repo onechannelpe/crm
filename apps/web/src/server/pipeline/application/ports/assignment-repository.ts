@@ -1,5 +1,7 @@
+import type { LeadId } from "../../domain/lead-record";
+
 export type LeadAssignmentDraft = {
-  leadId: number;
+  leadId: LeadId;
   executiveId: number;
   assignedBy: number;
   isActive: boolean;
@@ -12,6 +14,6 @@ export type LeadAssignment = LeadAssignmentDraft & {
 
 export type LeadAssignmentRepository = {
   insert(values: LeadAssignmentDraft): Promise<number>;
-  deactivateActiveForLead(leadId: number): Promise<unknown>;
-  findActiveByLead(leadId: number): Promise<LeadAssignment | undefined>;
+  deactivateActiveForLead(leadId: LeadId): Promise<unknown>;
+  findActiveByLead(leadId: LeadId): Promise<LeadAssignment | undefined>;
 };

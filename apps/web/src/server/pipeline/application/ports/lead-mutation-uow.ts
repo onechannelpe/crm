@@ -20,7 +20,7 @@ export type CheckedLeadMutationOutcome = {
 };
 
 export type LeadAssignmentMutationInput = {
-  leadId: number;
+  leadId: string;
   toExecutiveId: number;
   assignedBy: number;
   assignedAt: number;

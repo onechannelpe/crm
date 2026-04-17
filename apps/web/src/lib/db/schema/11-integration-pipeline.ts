@@ -16,7 +16,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("status_value", "varchar(40)")
     .addColumn("prioridad_value", "varchar(40)")
     .addColumn("state", "varchar(20)", (col) => col.notNull())
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.references("pipeline_leads.id"),
     )
     .addColumn("failure_reason", "text")
@@ -40,7 +40,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("pipeline_integration_outbox_needs_executive_input")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("ruc", "varchar(20)", (col) => col.notNull())
@@ -67,7 +67,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("pipeline_integration_outbox_ready_for_quotation")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("ruc", "varchar(20)", (col) => col.notNull())

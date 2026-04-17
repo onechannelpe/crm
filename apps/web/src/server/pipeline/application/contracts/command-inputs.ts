@@ -3,18 +3,19 @@ import type {
   LeadPriority,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 import type { ActorContext } from "./actor-context";
 
 export type ReassignLeadInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   toExecutiveId: number;
 };
 
 export type ReviewLeadInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   status: LeadStatus;
   prioridad: LeadPriority;
   reason: string;
@@ -22,20 +23,20 @@ export type ReviewLeadInput = {
 
 export type AddLeadNoteInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   body: string;
 };
 
 export type LogLeadCallInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   outcome: LeadCallOutcome;
   notes?: string | null;
 };
 
 export type ApplyImportedReviewInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   type: "import_status" | "import_prioridad";
   status?: LeadStatus;
   prioridad?: LeadPriority;
@@ -50,12 +51,12 @@ export type RegisterLeadInput = {
 
 export type ApproveForSaleInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
 };
 
 export type CreateQuotationInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
@@ -66,7 +67,7 @@ export type CreateQuotationInput = {
 
 export type CompleteCommercialInputInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;
@@ -77,7 +78,7 @@ export type CompleteCommercialInputInput = {
 
 export type CreateSaleInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: LeadId;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;

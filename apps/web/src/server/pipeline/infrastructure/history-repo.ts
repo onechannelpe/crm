@@ -5,6 +5,7 @@ import {
   type LeadHistoryEntry,
   type LeadHistoryEventDraft,
 } from "~/server/pipeline/domain/history";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -32,7 +33,7 @@ export function createHistoryRepo(db: DatabaseExecutor) {
     },
 
     async listByLeadId(
-      leadId: number,
+      leadId: LeadId,
     ): Promise<Result<LeadHistoryEntry[], DomainError>> {
       const rows = await db
         .selectFrom("pipeline_history_events as event")

@@ -12,7 +12,7 @@ import { toAppError } from "~/lib/app-errors";
 export default function LeadQuotationPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => leadDetailQuery(Number(params.leadId)));
+  const data = createAsync(() => leadDetailQuery(params.leadId));
   const [error, setError] = createSignal<string | null>(null);
 
   const inputStyle = {
@@ -29,7 +29,7 @@ export default function LeadQuotationPage() {
     const fd = new FormData(e.currentTarget);
     try {
       await requestQuotationCreation({
-        leadId: Number(params.leadId),
+        leadId: params.leadId,
         paybackPricing: Number(fd.get("paybackPricing")),
         tarifaDebito: Number(fd.get("tarifaDebito")),
         tarifaCredito: Number(fd.get("tarifaCredito")),
@@ -46,7 +46,7 @@ export default function LeadQuotationPage() {
   async function handleApprove() {
     setError(null);
     try {
-      await requestSaleApproval(Number(params.leadId));
+      await requestSaleApproval(params.leadId);
       navigate("/leads");
     } catch (err) {
       setError(toAppError(err, "Error").publicMessage);

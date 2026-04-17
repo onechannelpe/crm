@@ -2,6 +2,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadCommercialInput } from "~/server/pipeline/application/ports/commercial-input-repository";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type CommercialInputRow = Selectable<
@@ -28,7 +29,7 @@ function toLeadCommercialInput(row: CommercialInputRow): LeadCommercialInput {
 export function createCommercialInputRepo(db: DatabaseExecutor) {
   return {
     async findByLeadId(
-      leadId: number,
+      leadId: LeadId,
     ): Promise<LeadCommercialInput | undefined> {
       const row = await db
         .selectFrom("pipeline_lead_commercial_inputs")

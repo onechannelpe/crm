@@ -1,7 +1,9 @@
 import type { Insertable, Selectable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { createLeadId } from "~/server/pipeline/domain/lead-record";
 import type {
+  LeadId,
   LeadDraft,
   LeadPatch,
   LeadRecord,
@@ -33,6 +35,7 @@ function toLead(row: LeadRow): LeadRecord {
 
 function toNewLeadRow(values: LeadDraft): NewLeadRow {
   return {
+    id: createLeadId(),
     ruc: values.ruc,
     razon_social: values.razonSocial,
     address: values.address,
@@ -66,16 +69,13 @@ export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
 
 export function createLeadRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: LeadDraft): Promise<number> {
-      const result = await db
-        .insertInto("pipeline_leads")
-        .values(toNewLeadRow(values))
-        .executeTakeFirstOrThrow();
-
-      return Number(result.insertId);
+    async insert(values: LeadDraft): Promise<LeadId> {
+      const row = toNewLeadRow(values);
+      await db.insertInto("pipeline_leads").values(row).executeTakeFirstOrThrow();
+      return row.id;
     },
 
-    async findById(id: number) {
+    async findById(id: LeadId) {
       const row = await db
         .selectFrom("pipeline_leads")
         .selectAll()
@@ -106,7 +106,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return rows.map(toLead);
     },
 
-    updateById(id: number, values: LeadPatch) {
+    updateById(id: LeadId, values: LeadPatch) {
       return db
         .updateTable("pipeline_leads")
         .set(toLeadPatchRow(values))

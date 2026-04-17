@@ -3,7 +3,7 @@ import type { Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("pipeline_leads")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
     .addColumn("ruc", "varchar(11)", (col) => col.notNull().unique())
     .addColumn("razon_social", "varchar(255)")
     .addColumn("address", "text")
@@ -51,7 +51,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("pipeline_lead_commercial_inputs")
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.primaryKey().references("pipeline_leads.id").onDelete("cascade"),
     )
     .addColumn("proveedor_actual", "varchar(255)")
@@ -69,7 +69,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("pipeline_quotations")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id").onDelete("cascade"),
     )
     .addColumn("payback_pricing", "real", (col) => col.notNull())
@@ -94,7 +94,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("pipeline_sales")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("executive_id", "integer", (col) =>
@@ -126,7 +126,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("pipeline_lead_assignments")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("executive_id", "integer", (col) =>
@@ -156,7 +156,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("pipeline_history_events")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
+    .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id").onDelete("cascade"),
     )
     .addColumn("event_type", "varchar(40)", (col) => col.notNull())

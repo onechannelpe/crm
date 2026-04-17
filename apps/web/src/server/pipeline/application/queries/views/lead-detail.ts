@@ -4,6 +4,7 @@ import type {
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
@@ -19,7 +20,7 @@ export type LeadTimelineItem = {
 };
 
 export type LeadDetailLeadView = {
-  id: number;
+  id: LeadId;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
@@ -40,7 +41,7 @@ export type LeadDetailLeadView = {
 };
 
 export type LeadDetailCommercialInputView = {
-  leadId: number;
+  leadId: LeadId;
   proveedorActual: string | null;
   tasaActual: number | null;
   gpv: number | null;
@@ -53,7 +54,7 @@ export type LeadDetailCommercialInputView = {
 
 export type LeadDetailQuotationView = {
   id: number;
-  leadId: number;
+  leadId: LeadId;
   version: number;
   moneda: "PEN" | "USD";
   fee: number;
@@ -67,7 +68,7 @@ export type LeadDetailQuotationView = {
 
 export type LeadDetailSaleView = {
   id: number;
-  leadId: number;
+  leadId: LeadId;
   executiveId: number;
   proveedorActual: string;
   tasaActual: number;

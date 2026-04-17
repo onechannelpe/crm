@@ -6,7 +6,7 @@ import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructur
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestSaleCreation(input: {
-  leadId: number;
+  leadId: string;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;

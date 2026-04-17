@@ -1,14 +1,15 @@
 import type {
   LeadDraft,
+  LeadId,
   LeadPatch,
   LeadRecord,
 } from "../../domain/lead-record";
 
 export type LeadRepository = {
-  insert(values: LeadDraft): Promise<number>;
-  findById(id: number): Promise<LeadRecord | undefined>;
+  insert(values: LeadDraft): Promise<LeadId>;
+  findById(id: LeadId): Promise<LeadRecord | undefined>;
   findByRuc(ruc: string): Promise<LeadRecord | undefined>;
   findByRucMany(rucs: string[]): Promise<LeadRecord[]>;
-  updateById(id: number, values: LeadPatch): Promise<unknown>;
+  updateById(id: LeadId, values: LeadPatch): Promise<unknown>;
   updateByRuc(ruc: string, values: LeadPatch): Promise<unknown>;
 };

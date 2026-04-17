@@ -11,7 +11,7 @@ import type { LeadRepository } from "../ports/lead-repository";
 export async function requestSunatRefresh(input: {
   actorUserId: number;
   actorRole: Role;
-  leadId: number;
+  leadId: string;
   leadRepo: LeadRepository;
   enrichmentQueue: LeadEnrichmentQueue;
   auditService: PipelineAuditService;

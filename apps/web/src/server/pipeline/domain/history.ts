@@ -4,6 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+import type { LeadId } from "./lead-record";
 
 export type LeadHistoryEventType =
   | "lead_registered"
@@ -83,7 +84,7 @@ export type LeadHistoryPayloadByEvent = {
 
 export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
   {
-    leadId: number;
+    leadId: LeadId;
     eventType: TEventType;
     actorUserId: number | null;
     subjectUserId: number | null;
@@ -105,7 +106,7 @@ export type LeadHistoryEntryFor<
   TEventType extends keyof LeadHistoryPayloadByEvent,
 > = {
   id: number;
-  leadId: number;
+  leadId: LeadId;
   eventType: TEventType;
   actorUserId: number | null;
   subjectUserId: number | null;
@@ -122,7 +123,7 @@ export type LeadHistoryEntry = {
 export function createHistoryEvent<
   TEventType extends LeadHistoryEventType,
 >(input: {
-  leadId: number;
+  leadId: LeadId;
   eventType: TEventType;
   actorUserId?: number | null;
   subjectUserId?: number | null;

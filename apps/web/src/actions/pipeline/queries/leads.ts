@@ -31,7 +31,7 @@ export async function queryLeadList(filters: {
   });
 }
 
-export async function queryLeadDetail(leadId: number): Promise<LeadDetailView> {
+export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
   return runAction({
     actionName: "pipeline.get_lead_detail",
     access: { kind: "auth" },
@@ -70,7 +70,7 @@ export async function queryLeadBootstrapPreview(
 }
 
 export async function queryAssignableExecutives(input: {
-  leadId: number;
+  leadId: string;
   search?: string;
   limit?: number;
 }): Promise<AssignableExecutiveView[]> {

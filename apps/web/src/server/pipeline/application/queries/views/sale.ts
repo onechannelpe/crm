@@ -1,6 +1,8 @@
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
+
 export type SaleView = {
   id: number;
-  leadId: number;
+  leadId: LeadId;
   executiveId: number;
   proveedorActual: string;
   tasaActual: number;

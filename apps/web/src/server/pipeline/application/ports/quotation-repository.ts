@@ -1,6 +1,8 @@
+import type { LeadId } from "../../domain/lead-record";
+
 export type LeadQuotation = {
   id: number;
-  leadId: number;
+  leadId: LeadId;
   paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
@@ -14,6 +16,6 @@ export type LeadQuotation = {
 
 export type LeadQuotationRepository = {
   insert(values: Omit<LeadQuotation, "id">): Promise<number>;
-  listByLeadId(leadId: number): Promise<LeadQuotation[]>;
-  nextVersion(leadId: number): Promise<number>;
+  listByLeadId(leadId: LeadId): Promise<LeadQuotation[]>;
+  nextVersion(leadId: LeadId): Promise<number>;
 };

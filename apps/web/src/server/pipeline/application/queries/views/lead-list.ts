@@ -3,9 +3,10 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 export type LeadListRowView = {
-  id: number;
+  id: LeadId;
   ruc: string;
   razonSocial: string | null;
   address: string | null;

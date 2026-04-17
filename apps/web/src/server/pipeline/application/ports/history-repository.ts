@@ -1,6 +1,7 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
+import type { LeadId } from "../../domain/lead-record";
 import type {
   LeadHistoryEntry,
   LeadHistoryEventDraft,
@@ -9,6 +10,6 @@ import type {
 export type LeadHistoryRepository = {
   insert(values: LeadHistoryEventDraft): Promise<number>;
   listByLeadId(
-    leadId: number,
+    leadId: LeadId,
   ): Promise<Result<LeadHistoryEntry[], DomainError>>;
 };

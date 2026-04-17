@@ -34,13 +34,13 @@ export function leadListKeyFor(filters: LeadListFilters): string {
 }
 
 export const leadDetailQuery = query(
-  (leadId: number): Promise<LeadDetailView> => queryLeadDetail(leadId),
+  (leadId: string): Promise<LeadDetailView> => queryLeadDetail(leadId),
   "pipeline.leadDetail",
 );
 
 export const assignableExecutivesQuery = query(
   (input: {
-    leadId: number;
+    leadId: string;
     search?: string;
     limit?: number;
   }): Promise<AssignableExecutiveView[]> => queryAssignableExecutives(input),

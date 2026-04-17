@@ -11,7 +11,7 @@ import { completeCommercialInputMutation } from "../data/mutations";
 import styles from "./lead-actions-widget.module.css";
 
 export function CommercialInputSection(props: {
-  leadId: number;
+  leadId: string;
   initialValues?: LeadDetailCommercialInputView;
 }) {
   const complete = useAction(completeCommercialInputMutation);

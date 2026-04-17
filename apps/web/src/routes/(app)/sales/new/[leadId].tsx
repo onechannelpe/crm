@@ -9,7 +9,7 @@ import { toAppError } from "~/lib/app-errors";
 export default function NewLeadSalePage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => leadDetailQuery(Number(params.leadId)));
+  const data = createAsync(() => leadDetailQuery(params.leadId));
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [proveedorActual, setProveedorActual] = createSignal("");
@@ -38,7 +38,7 @@ export default function NewLeadSalePage() {
     const fd = new FormData(e.currentTarget);
     try {
       const { id } = await requestSaleCreation({
-        leadId: Number(params.leadId),
+        leadId: params.leadId,
         proveedorActual: proveedorActual(),
         tasaActual: Number(fd.get("tasaActual")),
         gpv: Number(fd.get("gpv")),

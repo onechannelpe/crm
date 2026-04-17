@@ -1,8 +1,8 @@
-import type { LeadPatch } from "../domain/lead-record";
+import type { LeadId, LeadPatch } from "../domain/lead-record";
 
 export type LeadWriteRepository = {
   updateLead(input: {
-    leadId: number;
+    leadId: LeadId;
     actorUserId: number;
     now: number;
     patch: Omit<LeadPatch, "updatedBy" | "updatedAt">;
@@ -11,7 +11,7 @@ export type LeadWriteRepository = {
 
 export type CheckedLeadWriteRepository = {
   updateLeadChecked(input: {
-    leadId: number;
+    leadId: LeadId;
     actorUserId: number;
     now: number;
     expectedUpdatedAt: number;

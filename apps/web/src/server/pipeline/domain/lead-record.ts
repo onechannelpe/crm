@@ -9,8 +9,20 @@ import { Ok } from "~/server/shared/result";
 
 import { normalizeLeadRuc } from "./lead-schema-parser";
 
+export type LeadId = string;
+
+export function createLeadId(): LeadId {
+  return crypto.randomUUID();
+}
+
+export function isLeadId(value: string): value is LeadId {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
 export type LeadRecord = {
-  id: number;
+  id: LeadId;
   ruc: string;
   razonSocial: string | null;
   address: string | null;

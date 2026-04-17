@@ -1,5 +1,7 @@
+import type { LeadId } from "../../domain/lead-record";
+
 export type LeadCommercialInput = {
-  leadId: number;
+  leadId: LeadId;
   proveedorActual: string | null;
   tasaActual: number | null;
   gpv: number | null;
@@ -11,6 +13,6 @@ export type LeadCommercialInput = {
 };
 
 export type LeadCommercialInputRepository = {
-  findByLeadId(leadId: number): Promise<LeadCommercialInput | undefined>;
+  findByLeadId(leadId: LeadId): Promise<LeadCommercialInput | undefined>;
   upsert(values: LeadCommercialInput): Promise<unknown>;
 };

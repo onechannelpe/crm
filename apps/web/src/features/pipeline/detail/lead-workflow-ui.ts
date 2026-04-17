@@ -38,7 +38,7 @@ export function blockingTaskLabel(field: LeadBlockingField): string {
 }
 
 export function mapLeadActionsToUi(
-  leadId: number,
+  leadId: string,
   actions: LeadAvailableAction[],
 ): LeadActionUiItem[] {
   const items: LeadActionUiItem[] = [];

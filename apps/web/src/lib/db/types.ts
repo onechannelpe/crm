@@ -796,7 +796,7 @@ export function isExecutiveCategoryValue(
 }
 
 export interface PipelineLeadsTable {
-  id: Generated<number>;
+  id: string;
   ruc: string;
   razon_social: string | null;
   address: string | null;
@@ -820,7 +820,7 @@ export interface PipelineLeadsTable {
 }
 
 export interface PipelineLeadCommercialInputsTable {
-  lead_id: number;
+  lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
   gpv: number | null;
@@ -833,7 +833,7 @@ export interface PipelineLeadCommercialInputsTable {
 
 export interface PipelineQuotationsTable {
   id: Generated<number>;
-  lead_id: number;
+  lead_id: string;
   payback_pricing: number;
   tarifa_debito: number;
   tarifa_credito: number;
@@ -847,7 +847,7 @@ export interface PipelineQuotationsTable {
 
 export interface PipelineSalesTable {
   id: Generated<number>;
-  lead_id: number;
+  lead_id: string;
   executive_id: number;
   proveedor_actual: string;
   tasa_actual: number;
@@ -863,7 +863,7 @@ export interface PipelineSalesTable {
 
 export interface PipelineLeadAssignmentsTable {
   id: Generated<number>;
-  lead_id: number;
+  lead_id: string;
   executive_id: number;
   assigned_by: number;
   is_active: number;
@@ -872,7 +872,7 @@ export interface PipelineLeadAssignmentsTable {
 
 export interface PipelineHistoryEventsTable {
   id: Generated<number>;
-  lead_id: number;
+  lead_id: string;
   event_type:
     | "lead_registered"
     | "lead_status_updated"
@@ -929,7 +929,7 @@ export interface PipelineIntegrationImportRowsTable {
   status_value: string | null;
   prioridad_value: string | null;
   state: "staged" | "applied" | "failed";
-  lead_id: number | null;
+  lead_id: string | null;
   failure_reason: string | null;
   created_at: number;
   applied_at: number | null;
@@ -937,7 +937,7 @@ export interface PipelineIntegrationImportRowsTable {
 
 export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
   id: Generated<number>;
-  lead_id: number;
+  lead_id: string;
   ruc: string;
   executive_id: number;
   status: "pending" | "processing" | "completed" | "failed";
@@ -953,7 +953,7 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
 
 export interface PipelineIntegrationOutboxReadyForQuotationTable {
   id: Generated<number>;
-  lead_id: number;
+  lead_id: string;
   ruc: string;
   branch_id: number;
   status: "pending" | "processing" | "completed" | "failed";

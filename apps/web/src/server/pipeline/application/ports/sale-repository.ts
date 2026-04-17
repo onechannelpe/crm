@@ -1,6 +1,8 @@
+import type { LeadId } from "../../domain/lead-record";
+
 export type LeadSale = {
   id: number;
-  leadId: number;
+  leadId: LeadId;
   executiveId: number;
   proveedorActual: string;
   tasaActual: number;
@@ -17,7 +19,7 @@ export type LeadSale = {
 export type LeadSaleRepository = {
   insert(values: Omit<LeadSale, "id">): Promise<number>;
   findById(id: number): Promise<LeadSale | undefined>;
-  findByLeadId(leadId: number): Promise<LeadSale | undefined>;
+  findByLeadId(leadId: LeadId): Promise<LeadSale | undefined>;
   list(limit: number, offset: number): Promise<LeadSale[]>;
   listByExecutive(
     executiveId: number,

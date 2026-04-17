@@ -34,7 +34,7 @@ import widgetStyles from "./lead-actions-widget.module.css";
 type OpenModal = "review-lead" | null;
 
 export function LeadActionsWidget(props: {
-  leadId: number;
+  leadId: string;
   availableActions: LeadAvailableAction[];
 }) {
   const approve = useAction(approveForSaleMutation);

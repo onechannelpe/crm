@@ -16,7 +16,7 @@ type ApplyImportedReviewCommandDeps = {
 export async function applyImportedReviewCommand(
   deps: ApplyImportedReviewCommandDeps,
   input: ApplyImportedReviewInput,
-): Promise<Result<{ applied: boolean; leadId: number }, DomainError>> {
+): Promise<Result<{ applied: boolean; leadId: string }, DomainError>> {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) {
     return leadNotFound();

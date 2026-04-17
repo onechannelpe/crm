@@ -3,6 +3,7 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 export type LeadListFilters = {
   executiveId?: number;
@@ -22,7 +23,7 @@ export type LeadExportFilters = {
  * (e.g. nextStep) are applied.
  */
 export type LeadListRow = {
-  id: number;
+  id: LeadId;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
@@ -36,7 +37,7 @@ export type LeadListRow = {
 };
 
 export type LeadExportRow = {
-  id: number;
+  id: LeadId;
   ruc: string;
   razonSocial: string | null;
   address: string | null;

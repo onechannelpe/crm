@@ -1,9 +1,10 @@
 import type { LeadHistoryPerson } from "~/server/pipeline/domain/history";
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 export type HistoryEventRow = {
   id: number;
-  lead_id: number;
+  lead_id: LeadId;
   event_type: LeadHistoryEntry["eventType"];
   actor_user_id: number | null;
   subject_user_id: number | null;
@@ -19,7 +20,7 @@ export type HistoryEventRow = {
 
 export type HistoryEntryBase = {
   id: number;
-  leadId: number;
+  leadId: LeadId;
   actorUserId: number | null;
   subjectUserId: number | null;
   occurredAt: number;

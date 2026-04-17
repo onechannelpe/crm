@@ -64,7 +64,7 @@ export type CreateLeadSidePanelPageState = {
 export type ViewRecordSidePanelPageState = {
   page: "view-record";
   recordType: "lead";
-  leadId: number;
+  leadId: string;
   title: string;
   subtitle: string;
   activeTab: LeadRecordTabId;
@@ -183,7 +183,7 @@ export function createSearchCompanyDetailSidePanelPage(
 }
 
 type CreateLeadRecordDetailSidePanelPageInput = {
-  leadId: number;
+  leadId: string;
   title: string;
   subtitle?: string;
 };
