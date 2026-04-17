@@ -52,7 +52,7 @@ function toLeadPatchFromSunatOverlay(
 
 export async function applySunatEnrichment(input: {
   overlay: SunatLeadOverlay;
-  leads: LeadRepository;
+  leads: Pick<LeadRepository, "updateByRuc">;
   now?: number;
 }): Promise<void> {
   if (input.overlay.documentType !== "ruc") {

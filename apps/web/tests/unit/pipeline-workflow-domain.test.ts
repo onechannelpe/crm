@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { createLeadId } from "../../src/server/pipeline/domain/lead-record";
 import type { PendingReviewLeadSubject } from "../../src/server/pipeline/domain/lead-subjects";
 import { resolveReviewTransition } from "../../src/server/pipeline/domain/workflow";
 
 const pendingReviewLead: PendingReviewLeadSubject = {
-  id: "00000000-0000-0000-0000-000000000001",
+  id: createLeadId(),
   ruc: "20123456789",
   razonSocial: "Acme SAC",
   address: "Lima",

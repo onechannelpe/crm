@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
 import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
 import { createPipelineCommandApiRuntime } from "../../src/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
+import { insertTestLead } from "../support/pipeline/fixtures";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -10,9 +11,6 @@ import {
 
 describe("pipeline lead mutation metadata", () => {
   let runtime: TestRuntime;
-  const LEAD_NOTE_ID = "00000000-0000-0000-0000-000000000501";
-  const LEAD_REASSIGN_ID = "00000000-0000-0000-0000-000000000502";
-  const LEAD_IMPORT_ID = "00000000-0000-0000-0000-000000000503";
 
   beforeEach(async () => {
     runtime = await createTestRuntime("pipeline-lead-mutation-metadata");
@@ -23,23 +21,11 @@ describe("pipeline lead mutation metadata", () => {
   });
 
   it("updates lead.updatedBy when a note is added", async () => {
-    await runtime.ctx.db
-      .insertInto("pipeline_leads")
-      .values({
-        id: LEAD_NOTE_ID,
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20900000501",
-        razon_social: "Org Note",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_by: null,
-        updated_at: 10,
-      })
-      .execute();
+    const leadId = await insertTestLead({
+      db: runtime.ctx.db,
+      ruc: "20900000501",
+      razonSocial: "Org Note",
+    });
 
     const commandApi = createPipelineCommandApiRuntime({
       deps: runtime.pipeline.deps,
@@ -54,12 +40,8 @@ describe("pipeline lead mutation metadata", () => {
     });
 
     const result = await commandApi.addLeadNote({
-      actor: {
-        userId: 1,
-        role: "executive",
-        branchId: 1,
-      },
-      leadId: LEAD_NOTE_ID,
+      actor: { userId: 1, role: "executive", branchId: 1 },
+      leadId,
       body: "Test note",
     });
 
@@ -68,7 +50,7 @@ describe("pipeline lead mutation metadata", () => {
     const lead = await runtime.ctx.db
       .selectFrom("pipeline_leads")
       .select(["updated_by", "updated_at"])
-      .where("id", "=", LEAD_NOTE_ID)
+      .where("id", "=", leadId)
       .executeTakeFirstOrThrow();
 
     expect(lead.updated_by).toBe(1);
@@ -115,23 +97,11 @@ describe("pipeline lead mutation metadata", () => {
       ])
       .execute();
 
-    await runtime.ctx.db
-      .insertInto("pipeline_leads")
-      .values({
-        id: LEAD_REASSIGN_ID,
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20900000502",
-        razon_social: "Org Reassign",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_by: null,
-        updated_at: 10,
-      })
-      .execute();
+    const leadId = await insertTestLead({
+      db: runtime.ctx.db,
+      ruc: "20900000502",
+      razonSocial: "Org Reassign",
+    });
 
     const commandApi = createPipelineCommandApiRuntime({
       deps: runtime.pipeline.deps,
@@ -146,12 +116,8 @@ describe("pipeline lead mutation metadata", () => {
     });
 
     const reassignResult = await commandApi.reassignLead({
-      actor: {
-        userId: 11,
-        role: "supervisor",
-        branchId: 1,
-      },
-      leadId: LEAD_REASSIGN_ID,
+      actor: { userId: 11, role: "supervisor", branchId: 1 },
+      leadId,
       toExecutiveId: 12,
     });
 
@@ -160,51 +126,32 @@ describe("pipeline lead mutation metadata", () => {
     const lead = await runtime.ctx.db
       .selectFrom("pipeline_leads")
       .select(["executive_id", "updated_by"])
-      .where("id", "=", LEAD_REASSIGN_ID)
+      .where("id", "=", leadId)
       .executeTakeFirstOrThrow();
     expect(lead.executive_id).toBe(12);
     expect(lead.updated_by).toBe(11);
 
     const previousExecutiveAccess = await getLeadDetail(
       runtime.pipeline.deps.leadDetail,
-      {
-        actorUserId: 1,
-        actorRole: "executive",
-        leadId: LEAD_REASSIGN_ID,
-      },
+      { actorUserId: 1, actorRole: "executive", leadId },
     );
     expect(previousExecutiveAccess.ok).toBe(false);
 
     const newExecutiveAccess = await getLeadDetail(
       runtime.pipeline.deps.leadDetail,
-      {
-        actorUserId: 12,
-        actorRole: "executive",
-        leadId: LEAD_REASSIGN_ID,
-      },
+      { actorUserId: 12, actorRole: "executive", leadId },
     );
     expect(newExecutiveAccess.ok).toBe(true);
   });
 
   it("updates lead.updatedBy for import mutations", async () => {
     const now = Date.now();
-    await runtime.ctx.db
-      .insertInto("pipeline_leads")
-      .values({
-        id: LEAD_IMPORT_ID,
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20900000503",
-        razon_social: "Org Import",
-        address: null,
-        created_by: 1,
-        created_at: now,
-        updated_by: null,
-        updated_at: now,
-      })
-      .execute();
+    const leadId = await insertTestLead({
+      db: runtime.ctx.db,
+      ruc: "20900000503",
+      razonSocial: "Org Import",
+      createdAt: now,
+    });
 
     await runtime.ctx.db
       .insertInto("pipeline_integration_jobs")
@@ -252,7 +199,7 @@ describe("pipeline lead mutation metadata", () => {
     const lead = await runtime.ctx.db
       .selectFrom("pipeline_leads")
       .select(["updated_by", "status"])
-      .where("id", "=", LEAD_IMPORT_ID)
+      .where("id", "=", leadId)
       .executeTakeFirstOrThrow();
     expect(lead.updated_by).toBe(2);
     expect(lead.status).toBe("DISPONIBLE");

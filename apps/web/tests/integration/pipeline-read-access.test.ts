@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
 import { getSaleDetail } from "../../src/server/pipeline/application/queries/get-sale-detail";
+import { insertTestLead } from "../support/pipeline/fixtures";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -9,8 +10,6 @@ import {
 
 describe("pipeline read access", () => {
   let runtime: TestRuntime;
-  const LEAD_A_ID = "00000000-0000-0000-0000-000000000011";
-  const LEAD_B_ID = "00000000-0000-0000-0000-000000000012";
 
   beforeEach(async () => {
     runtime = await createTestRuntime("pipeline-read-access");
@@ -21,25 +20,14 @@ describe("pipeline read access", () => {
   });
 
   it("lets review users read record detail even when they are not the assigned executive", async () => {
-    await runtime.ctx.db
-      .insertInto("pipeline_leads")
-      .values({
-        id: LEAD_A_ID,
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20100000011",
-        razon_social: "Org Test",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_at: 10,
-      })
-      .execute();
+    const leadId = await insertTestLead({
+      db: runtime.ctx.db,
+      ruc: "20100000011",
+      razonSocial: "Org Test",
+    });
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
-      leadId: LEAD_A_ID,
+      leadId,
       actorUserId: 2,
       actorRole: "back_office",
     });
@@ -47,30 +35,19 @@ describe("pipeline read access", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.lead.id).toBe(LEAD_A_ID);
+    expect(result.value.lead.id).toBe(leadId);
     expect(result.value.timeline).toEqual([]);
   });
 
   it("blocks executives from reading another executive's record detail", async () => {
-    await runtime.ctx.db
-      .insertInto("pipeline_leads")
-      .values({
-        id: LEAD_B_ID,
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20100000012",
-        razon_social: "Org Test",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_at: 10,
-      })
-      .execute();
+    const leadId = await insertTestLead({
+      db: runtime.ctx.db,
+      ruc: "20100000012",
+      razonSocial: "Org Test",
+    });
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
-      leadId: LEAD_B_ID,
+      leadId,
       actorUserId: 3,
       actorRole: "executive",
     });
@@ -82,28 +59,18 @@ describe("pipeline read access", () => {
   });
 
   it("lets an executive read only their own sale detail", async () => {
-    await runtime.ctx.db
-      .insertInto("pipeline_leads")
-      .values({
-        id: LEAD_A_ID,
-        executive_id: 1,
-        stage: "READY_FOR_SALE",
-        status: null,
-        prioridad: null,
-        ruc: "20100000021",
-        razon_social: "Sale Org A",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_at: 10,
-      })
-      .execute();
+    const leadId = await insertTestLead({
+      db: runtime.ctx.db,
+      stage: "READY_FOR_SALE",
+      ruc: "20100000021",
+      razonSocial: "Sale Org A",
+    });
 
     await runtime.ctx.db
       .insertInto("pipeline_sales")
       .values({
         id: 21,
-        lead_id: LEAD_A_ID,
+        lead_id: leadId,
         executive_id: 1,
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,
@@ -131,28 +98,18 @@ describe("pipeline read access", () => {
   });
 
   it("blocks an executive from reading another executive's sale detail", async () => {
-    await runtime.ctx.db
-      .insertInto("pipeline_leads")
-      .values({
-        id: LEAD_B_ID,
-        executive_id: 1,
-        stage: "READY_FOR_SALE",
-        status: null,
-        prioridad: null,
-        ruc: "20100000022",
-        razon_social: "Sale Org B",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_at: 10,
-      })
-      .execute();
+    const leadId = await insertTestLead({
+      db: runtime.ctx.db,
+      stage: "READY_FOR_SALE",
+      ruc: "20100000022",
+      razonSocial: "Sale Org B",
+    });
 
     await runtime.ctx.db
       .insertInto("pipeline_sales")
       .values({
         id: 22,
-        lead_id: LEAD_B_ID,
+        lead_id: leadId,
         executive_id: 1,
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,
