@@ -3,11 +3,11 @@ import type { Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("users")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
-    .addColumn("team_id", "integer", (col) => col.references("teams.id"))
+    .addColumn("team_id", "varchar(36)", (col) => col.references("teams.id"))
     .addColumn("username", "varchar(255)", (col) => col.notNull().unique())
     .addColumn("email", "varchar(255)", (col) => col.notNull().unique())
     .addColumn("password_hash", "varchar(255)", (col) => col.notNull())
@@ -44,10 +44,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("user_sessions")
     .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("role", "text", (col) => col.notNull())
@@ -122,7 +122,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("auth_events")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.references("users.id").onDelete("set null"),
     )
     .addColumn("method", "varchar(20)", (col) => col.notNull())
@@ -156,7 +156,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("passkeys")
     .addColumn("id", "varchar(512)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("public_key", "text", (col) => col.notNull())
@@ -169,7 +169,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("webauthn_challenges")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("user_id", "varchar(36)", (col) => col.references("users.id"))
     .addColumn("type", "varchar(32)", (col) => col.notNull())
     .addColumn("challenge", "varchar(512)", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
@@ -180,7 +180,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("user_totp_factors")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("secret_encrypted", "text", (col) => col.notNull())
@@ -200,7 +200,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("user_totp_recovery_codes")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("code_hash", "varchar(255)", (col) => col.notNull())
@@ -218,7 +218,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("user_oauth_accounts")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("provider", "varchar(32)", (col) => col.notNull())
@@ -240,7 +240,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("identifier", "varchar(255)", (col) => col.notNull())
     .addColumn("primary_auth_method", "varchar(32)", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.references("users.id").onDelete("cascade"),
     )
     .addColumn("challenge_id", "integer", (col) =>
@@ -262,7 +262,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("password_reset_tokens")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("token_hash", "varchar(64)", (col) => col.notNull().unique())

@@ -9,16 +9,16 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("address", "text")
     .addColumn("district", "varchar(100)")
     .addColumn("department", "varchar(100)")
-    .addColumn("executive_id", "integer", (col) =>
+    .addColumn("executive_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("stage", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(30)")
     .addColumn("prioridad", "varchar(20)")
-    .addColumn("created_by", "integer", (col) =>
+    .addColumn("created_by", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("updated_by", "integer", (col) => col.references("users.id"))
+    .addColumn("updated_by", "varchar(36)", (col) => col.references("users.id"))
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();
@@ -61,7 +61,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("abono", "real")
     .addColumn("cantidad_pos", "integer")
     .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("updated_by", "integer", (col) =>
+    .addColumn("updated_by", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .execute();
@@ -80,7 +80,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("moneda", "varchar(3)", (col) => col.notNull())
     .addColumn("version", "integer", (col) => col.notNull())
     .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("created_by", "integer", (col) =>
+    .addColumn("created_by", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .execute();
@@ -97,7 +97,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id"),
     )
-    .addColumn("executive_id", "integer", (col) =>
+    .addColumn("executive_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("proveedor_actual", "varchar(255)", (col) => col.notNull())
@@ -129,10 +129,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "varchar(36)", (col) =>
       col.notNull().references("pipeline_leads.id"),
     )
-    .addColumn("executive_id", "integer", (col) =>
+    .addColumn("executive_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("assigned_by", "integer", (col) =>
+    .addColumn("assigned_by", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
@@ -160,8 +160,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("pipeline_leads.id").onDelete("cascade"),
     )
     .addColumn("event_type", "varchar(40)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
-    .addColumn("subject_user_id", "integer", (col) =>
+    .addColumn("actor_user_id", "varchar(36)", (col) =>
+      col.references("users.id"),
+    )
+    .addColumn("subject_user_id", "varchar(36)", (col) =>
       col.references("users.id"),
     )
     .addColumn("payload_json", "text")
@@ -176,14 +178,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_sourcing_policies")
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.primaryKey().references("branches.id").onDelete("cascade"),
     )
     .addColumn("engine_assignment_enabled", "integer", (col) =>
       col.notNull().defaultTo(0),
     )
     .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("updated_by_user_id", "integer", (col) =>
+    .addColumn("updated_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .execute();
@@ -193,7 +195,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("type", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("requested_by_user_id", "integer", (col) =>
+    .addColumn("requested_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("file_path", "text")

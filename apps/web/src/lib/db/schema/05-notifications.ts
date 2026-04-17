@@ -4,7 +4,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("notification_contacts")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("channel", "varchar(20)", (col) => col.notNull())
@@ -32,7 +32,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("notification_preferences")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("event_type", "varchar(64)", (col) => col.notNull())
@@ -58,7 +58,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("audience_ref", "varchar(64)")
     .addColumn("title", "varchar(255)")
     .addColumn("body_text", "text", (col) => col.notNull())
-    .addColumn("created_by_user_id", "integer", (col) =>
+    .addColumn("created_by_user_id", "varchar(36)", (col) =>
       col.references("users.id").onDelete("set null"),
     )
     .addColumn("status", "varchar(20)", (col) => col.notNull())
@@ -79,7 +79,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("campaign_id", "integer", (col) =>
       col.notNull().references("notification_campaigns.id").onDelete("cascade"),
     )
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.references("users.id").onDelete("set null"),
     )
     .addColumn("channel", "varchar(20)", (col) => col.notNull())
@@ -163,7 +163,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("app_notifications")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("event_type", "varchar(64)", (col) => col.notNull())

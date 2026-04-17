@@ -4,7 +4,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("audit_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("action", "varchar(255)", (col) => col.notNull())
@@ -44,7 +44,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("risk_level", "varchar(10)", (col) => col.notNull())
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
     .addColumn("is_protected", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("updated_by_user_id", "integer", (col) =>
+    .addColumn("updated_by_user_id", "varchar(36)", (col) =>
       col.references("users.id"),
     )
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -65,7 +65,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("route_path", "varchar(255)")
     .addColumn("http_method", "varchar(10)")
     .addColumn("action_name", "varchar(120)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("actor_user_id", "varchar(36)", (col) =>
+      col.references("users.id"),
+    )
     .addColumn("actor_role", "varchar(50)")
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("duration_ms", "integer", (col) => col.notNull())
@@ -143,10 +145,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("report_export_jobs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("requested_by_user_id", "integer", (col) =>
+    .addColumn("requested_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("format", "varchar(10)", (col) => col.notNull())
@@ -196,7 +198,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("export_job_id", "integer", (col) =>
       col.notNull().references("report_export_jobs.id").onDelete("cascade"),
     )
-    .addColumn("downloaded_by_user_id", "integer", (col) =>
+    .addColumn("downloaded_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("downloaded_at", "integer", (col) => col.notNull())

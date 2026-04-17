@@ -3,8 +3,8 @@ import type { Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("contacts")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("organization_id", "integer", (col) =>
+    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
+    .addColumn("organization_id", "varchar(36)", (col) =>
       col.notNull().references("organizations.id"),
     )
     .addColumn("dni", "varchar(20)", (col) => col.notNull())
@@ -12,7 +12,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("phone_primary", "varchar(20)")
     .addColumn("phone_secondary", "varchar(20)")
     .addColumn("last_contacted_at", "integer")
-    .addColumn("last_contacted_by_user_id", "integer", (col) =>
+    .addColumn("last_contacted_by_user_id", "varchar(36)", (col) =>
       col.references("users.id"),
     )
     .addColumn("cooldown_until", "integer")
@@ -27,11 +27,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_assignments")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("contact_id", "integer", (col) =>
+    .addColumn("contact_id", "varchar(36)", (col) =>
       col.notNull().references("contacts.id"),
     )
     .addColumn("assigned_at", "integer", (col) => col.notNull())
@@ -48,10 +48,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("interaction_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("contact_id", "integer", (col) =>
+    .addColumn("contact_id", "varchar(36)", (col) =>
       col.notNull().references("contacts.id"),
     )
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("outcome", "varchar(255)", (col) => col.notNull())
@@ -63,7 +63,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("agent_status_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("status", "varchar(20)", (col) => col.notNull())

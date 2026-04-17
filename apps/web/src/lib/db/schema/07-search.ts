@@ -5,7 +5,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("client_search_views")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("name", "varchar(120)", (col) => col.notNull())
@@ -36,7 +36,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("document_type", "varchar(8)", (col) => col.notNull())
     .addColumn("document_value", "varchar(32)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("requested_by_user_id", "integer", (col) =>
+    .addColumn("requested_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("requested_at", "integer", (col) => col.notNull())

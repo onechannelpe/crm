@@ -4,10 +4,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("user_invites")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("email", "varchar(255)", (col) => col.notNull())
@@ -15,7 +15,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("token_hash", "varchar(64)", (col) => col.notNull().unique())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("created_by_user_id", "integer", (col) =>
+    .addColumn("created_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("accepted_at", "integer")

@@ -6,7 +6,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("search_policy_defaults")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("scope_type", "varchar(20)", (col) => col.notNull())
-    .addColumn("scope_id", "integer", (col) => col.notNull())
+    .addColumn("scope_id", "varchar(36)", (col) => col.notNull())
     .addColumn("period_type", "varchar(20)", (col) => col.notNull())
     .addColumn("search_limit", "integer", (col) => col.notNull())
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -22,13 +22,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("search_policy_overrides")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("search_limit", "integer", (col) => col.notNull())
     .addColumn("effective_from", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer")
-    .addColumn("set_by_user_id", "integer", (col) =>
+    .addColumn("set_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -45,7 +45,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("lead_policy_defaults")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("scope_type", "varchar(20)", (col) => col.notNull())
-    .addColumn("scope_id", "integer", (col) => col.notNull())
+    .addColumn("scope_id", "varchar(36)", (col) => col.notNull())
     .addColumn("active_buffer_target", "integer", (col) => col.notNull())
     .addColumn("daily_refill_limit", "integer", (col) => col.notNull())
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -61,14 +61,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("lead_policy_overrides")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("active_buffer_target", "integer", (col) => col.notNull())
     .addColumn("daily_refill_limit", "integer", (col) => col.notNull())
     .addColumn("effective_from", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer")
-    .addColumn("set_by_user_id", "integer", (col) =>
+    .addColumn("set_by_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -84,12 +84,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("search_capacity_grants")
     .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("amount", "integer", (col) => col.notNull())
     .addColumn("reason", "varchar(100)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) =>
+    .addColumn("actor_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -104,7 +104,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("search_usage_reservations")
     .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("amount", "integer", (col) => col.notNull())
@@ -134,12 +134,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("lead_capacity_grants")
     .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("amount", "integer", (col) => col.notNull())
     .addColumn("reason", "varchar(100)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) =>
+    .addColumn("actor_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -154,7 +154,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("lead_usage_reservations")
     .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("amount", "integer", (col) => col.notNull())
@@ -184,7 +184,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("capacity_requests")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("kind", "varchar(40)", (col) => col.notNull())
@@ -192,7 +192,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("requested_amount", "integer", (col) => col.notNull())
     .addColumn("reason", "text", (col) => col.notNull())
     .addColumn("decision_note", "text")
-    .addColumn("reviewer_user_id", "integer", (col) =>
+    .addColumn("reviewer_user_id", "varchar(36)", (col) =>
       col.references("users.id"),
     )
     .addColumn("created_at", "integer", (col) => col.notNull())

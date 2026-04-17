@@ -27,13 +27,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("source", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(40)", (col) => col.notNull())
-    .addColumn("executive_user_id", "integer", (col) =>
+    .addColumn("executive_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("lead_assignment_id", "integer", (col) =>
+    .addColumn("lead_assignment_id", "varchar(36)", (col) =>
       col.references("lead_assignments.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("submitted_at", "integer")
@@ -126,7 +126,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("sales_record_id", "integer", (col) =>
       col.notNull().references("sales_records.id").onDelete("cascade"),
     )
-    .addColumn("reviewer_user_id", "integer", (col) =>
+    .addColumn("reviewer_user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("outcome", "varchar(40)", (col) => col.notNull())

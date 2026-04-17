@@ -44,7 +44,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("ruc", "varchar(20)", (col) => col.notNull())
-    .addColumn("executive_id", "integer", (col) =>
+    .addColumn("executive_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("status", "varchar(20)", (col) => col.notNull())
@@ -71,7 +71,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("ruc", "varchar(20)", (col) => col.notNull())
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("status", "varchar(20)", (col) => col.notNull())

@@ -4,14 +4,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("extension_handoffs")
     .addColumn("jti", "varchar(96)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("auth_session_id", "varchar(255)", (col) => col.notNull())
-    .addColumn("assignment_id", "integer", (col) =>
+    .addColumn("assignment_id", "varchar(36)", (col) =>
       col.notNull().references("lead_assignments.id"),
     )
     .addColumn("origin", "varchar(255)", (col) => col.notNull())
@@ -31,10 +31,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("extension_installation_sessions")
     .addColumn("jti", "varchar(96)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("auth_session_id", "varchar(255)", (col) => col.notNull())
@@ -59,16 +59,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("extension_runtime_events")
     .addColumn("id", "varchar(96)", (col) => col.primaryKey())
     .addColumn("sequence", "integer", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
-    .addColumn("assignment_id", "integer", (col) =>
+    .addColumn("assignment_id", "varchar(36)", (col) =>
       col.references("lead_assignments.id"),
     )
-    .addColumn("contact_id", "integer", (col) => col.references("contacts.id"))
+    .addColumn("contact_id", "varchar(36)", (col) =>
+      col.references("contacts.id"),
+    )
     .addColumn("call_session_id", "varchar(255)")
     .addColumn("type", "varchar(32)", (col) => col.notNull())
     .addColumn("payload_json", "text", (col) => col.notNull())
@@ -90,16 +92,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("extension_executive_statuses")
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "varchar(36)", (col) =>
       col.primaryKey().references("users.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "varchar(36)", (col) =>
       col.notNull().references("branches.id"),
     )
-    .addColumn("assignment_id", "integer", (col) =>
+    .addColumn("assignment_id", "varchar(36)", (col) =>
       col.references("lead_assignments.id"),
     )
-    .addColumn("contact_id", "integer", (col) => col.references("contacts.id"))
+    .addColumn("contact_id", "varchar(36)", (col) =>
+      col.references("contacts.id"),
+    )
     .addColumn("call_session_id", "varchar(255)")
     .addColumn("presence_status", "varchar(20)")
     .addColumn("presence_updated_at", "integer")
