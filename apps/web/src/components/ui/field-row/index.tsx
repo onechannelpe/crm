@@ -1,4 +1,4 @@
-import { createSignal, Show, type JSX } from "solid-js";
+import { createSignal, Show, type JSX, type ParentProps } from "solid-js";
 
 import Pencil from "~/components/icons/pencil";
 import { EditButtonWrapper } from "~/components/ui/input/edit-button-wrapper";
@@ -13,6 +13,35 @@ import {
 } from "~/features/side-panel/components/field-table";
 
 import styles from "./styles.module.css";
+
+type IconComponent = (props: { size?: number; class?: string }) => JSX.Element;
+
+export function RecordInlineCell(
+  props: ParentProps<{ label: string; icon: IconComponent }>,
+) {
+  const [hovered, setHovered] = createSignal(false);
+
+  return (
+    <FieldRow
+      readonly
+      hovered={hovered()}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusIn={() => setHovered(true)}
+      onFocusOut={() => setHovered(false)}
+    >
+      <FieldLabel>
+        <FieldIcon>
+          <props.icon size={16} />
+        </FieldIcon>
+        <FieldLabelText>
+          <OverflowingText text={props.label} style={{ width: "100%" }} />
+        </FieldLabelText>
+      </FieldLabel>
+      <FieldValue>{props.children}</FieldValue>
+    </FieldRow>
+  );
+}
 
 export interface RelationFieldRowProps {
   label: string;

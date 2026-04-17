@@ -25,6 +25,7 @@ export type SidePanelPageKey =
   | "root"
   | "search-person-detail"
   | "search-company-detail"
+  | "create-lead"
   | "view-record"
   | "inventory-detail"
   | "data-grid-detail";
@@ -52,28 +53,22 @@ export type SearchCompanyDetailSidePanelPageState = {
   query: string;
 };
 
-export type LeadCreateRecordSidePanelPageState = {
-  page: "view-record";
-  mode: "create";
+export type CreateLeadSidePanelPageState = {
+  page: "create-lead";
   recordType: "lead";
   title: string;
   subtitle: string;
   draft: LeadRecordDraftState;
 };
 
-export type LeadDetailRecordSidePanelPageState = {
+export type ViewRecordSidePanelPageState = {
   page: "view-record";
-  mode: "view";
   recordType: "lead";
   leadId: number;
   title: string;
   subtitle: string;
   activeTab: LeadRecordTabId;
 };
-
-export type ViewRecordSidePanelPageState =
-  | LeadCreateRecordSidePanelPageState
-  | LeadDetailRecordSidePanelPageState;
 
 export type InventoryDetailSidePanelPageState = {
   page: "inventory-detail";
@@ -101,6 +96,7 @@ export type SidePanelPageState =
   | RootSidePanelPageState
   | SearchPersonDetailSidePanelPageState
   | SearchCompanyDetailSidePanelPageState
+  | CreateLeadSidePanelPageState
   | ViewRecordSidePanelPageState
   | InventoryDetailSidePanelPageState
   | DataGridDetailSidePanelPageState;
@@ -197,14 +193,13 @@ export function createLeadRecordCreateSidePanelPage(): SidePanelPageDefinition {
 
   return {
     entry: {
-      page: "view-record",
+      page: "create-lead",
       pageId,
       pageTitle: "Nuevo prospecto",
       pageIcon: Building2,
     },
     state: {
-      page: "view-record",
-      mode: "create",
+      page: "create-lead",
       recordType: "lead",
       title: "Nuevo prospecto",
       subtitle: "Borrador",
@@ -227,7 +222,6 @@ export function createLeadRecordDetailSidePanelPage(
     },
     state: {
       page: "view-record",
-      mode: "view",
       recordType: "lead",
       leadId: input.leadId,
       title: input.title,

@@ -3,7 +3,6 @@ import type { JSX } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import Clock from "~/components/icons/calendar-clock";
-import Checkbox from "~/components/icons/checkbox";
 import ChevronDown from "~/components/icons/chevron-down";
 import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
@@ -12,7 +11,7 @@ import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-
 import { RelationFieldRow } from "~/components/ui/field-row";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import { ExecutivePicker } from "~/features/pipeline/detail/executive-picker";
-import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
+import { FieldsWidget } from "~/features/pipeline/fields/fields-widget";
 import {
   FieldIcon,
   FieldLabel,
@@ -30,7 +29,6 @@ import {
   WidgetSectionHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;
@@ -53,68 +51,6 @@ const LEAD_CREATE_FIELD_ROWS: ReadonlyArray<LeadCreateFieldRow> = [
   },
   { label: "Última actualización", icon: Clock, value: "" },
 ] as const;
-
-type LeadDetailFieldRow = {
-  label: string;
-  icon: IconComponent;
-  key:
-    | "ruc"
-    | "razonSocial"
-    | "economicActivities"
-    | "status"
-    | "prioridad"
-    | "stage"
-    | "nextStep"
-    | "updatedAt";
-};
-
-const LEAD_DETAIL_FIELD_ROWS: ReadonlyArray<LeadDetailFieldRow> = [
-  { label: "RUC", icon: MapIcon, key: "ruc" },
-  { label: "Razón social", icon: Building2, key: "razonSocial" },
-  { label: "Actividades", icon: Building2, key: "economicActivities" },
-  { label: "Estado", icon: Package, key: "status" },
-  { label: "Prioridad", icon: Checkbox, key: "prioridad" },
-  { label: "Etapa", icon: Package, key: "stage" },
-  { label: "Siguiente paso", icon: User, key: "nextStep" },
-  { label: "Actualizado", icon: Clock, key: "updatedAt" },
-] as const;
-
-type LeadDetailFieldKey = (typeof LEAD_DETAIL_FIELD_ROWS)[number]["key"];
-
-function renderTextField(
-  data: LeadDetailView,
-  key: LeadDetailFieldKey,
-): string {
-  if (key === "ruc") return data.lead.ruc;
-  if (key === "razonSocial") return data.lead.razonSocial ?? "";
-  if (key === "status") return data.lead.status ?? "";
-  if (key === "prioridad") return data.lead.prioridad ?? "";
-  if (key === "stage") return data.lead.stage;
-  if (key === "nextStep") return data.lead.nextStep;
-  if (key === "updatedAt") return formatDateTime(data.lead.updatedAt);
-  return "";
-}
-
-function renderFieldValue(
-  data: LeadDetailView,
-  key: LeadDetailFieldKey,
-): JSX.Element {
-  if (key === "economicActivities") {
-    return (
-      <FieldChipList
-        emptyLabel="—"
-        items={data.sourceStatus.sunat.economicActivities.map((activity) => ({
-          id: `${activity.role}-${activity.order ?? 0}-${activity.code}`,
-          label: activity.code,
-          tone: activity.role === "principal" ? "positive" : "neutral",
-          tooltip: `${activity.label} - ${activity.description}`,
-        }))}
-      />
-    );
-  }
-
-  return <FieldTextValue>{renderTextField(data, key)}</FieldTextValue>;
-}
 
 function WidgetFrame(props: { children: JSX.Element }) {
   const [isExpanded, setIsExpanded] = createSignal(true);
@@ -191,40 +127,13 @@ export function CreateFieldsWidget(props: {
 }
 
 export function DetailFieldsWidget(props: { data: LeadDetailView }) {
-  const [hoveredFieldKey, setHoveredFieldKey] =
-    createSignal<LeadDetailFieldKey | null>(null);
-
   const canEditExecutive = () =>
     props.data.availableActions.includes("reassign-lead");
 
   return (
     <WidgetFrame>
+      <FieldsWidget data={props.data} />
       <FieldTable>
-        <For each={LEAD_DETAIL_FIELD_ROWS}>
-          {(field) => (
-            <FieldRow
-              readonly
-              hovered={hoveredFieldKey() === field.key}
-              onMouseEnter={() => setHoveredFieldKey(field.key)}
-              onMouseLeave={() => setHoveredFieldKey(null)}
-              onFocusIn={() => setHoveredFieldKey(field.key)}
-              onFocusOut={() => setHoveredFieldKey(null)}
-            >
-              <FieldLabel>
-                <FieldIcon>
-                  <field.icon size={16} />
-                </FieldIcon>
-                <FieldLabelText>
-                  <OverflowingText
-                    text={field.label}
-                    style={{ width: "100%" }}
-                  />
-                </FieldLabelText>
-              </FieldLabel>
-              <FieldValue>{renderFieldValue(props.data, field.key)}</FieldValue>
-            </FieldRow>
-          )}
-        </For>
         <RelationFieldRow
           label="Administrado por"
           icon={User}

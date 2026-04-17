@@ -1,5 +1,7 @@
 import type { Component } from "solid-js";
 
+import { CreateLeadPage } from "../pages/create-lead/page";
+import { CreateLeadPageInfo } from "../pages/create-lead/page-info";
 import { DataGridDetailPage } from "../pages/data-grid-detail/page";
 import { DataGridDetailPageInfo } from "../pages/data-grid-detail/page-info";
 import { InventoryDetailPage } from "../pages/inventory-detail/page";
@@ -21,6 +23,12 @@ type SidePanelPageConfig = {
 };
 
 export const SIDE_PANEL_PAGES_CONFIG = {
+  "create-lead": {
+    showsSearch: false,
+    component: CreateLeadPage,
+    pageInfoComponent: CreateLeadPageInfo,
+    topBarActionsComponent: undefined,
+  },
   root: {
     showsSearch: true,
     component: RootPage,

@@ -5,104 +5,29 @@ import { useSidePanelPageState } from "../../router/page-state";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { LeadRecordTabId } from "./model";
 
-const LABEL_BY_TAB: Record<LeadRecordTabId, string> = {
-  home: "Borrador",
-  timeline: "Línea de tiempo",
-  tasks: "Tareas",
-  notes: "Notas",
-  files: "Archivos",
-  emails: "Emails",
-  calendar: "Calendario",
-};
-
 export function useLeadRecordPageState() {
   const pageId = usePageInstanceId();
   const { updatePageState } = useSidePanel();
   const pageState = useSidePanelPageState("view-record");
 
-  function setRuc(ruc: string) {
-    updatePageState(pageId(), (state) => {
-      if (state.page !== "view-record" || state.mode !== "create") {
-        return state;
-      }
-
-      return {
-        ...state,
-        draft: {
-          ...state.draft,
-          ruc,
-        },
-      };
-    });
-  }
-
   function setActiveTab(activeTab: LeadRecordTabId) {
     updatePageState(pageId(), (state) => {
-      if (state.page !== "view-record") {
-        return state;
-      }
-
-      if (state.mode === "create") {
-        return {
-          ...state,
-          draft: {
-            ...state.draft,
-            activeTab,
-          },
-        };
-      }
-
-      return {
-        ...state,
-        activeTab,
-      };
+      if (state.page !== "view-record") return state;
+      return { ...state, activeTab };
     });
   }
 
-  const mode = createMemo(() => pageState().mode);
+  const leadId = createMemo(() => pageState().leadId);
 
-  const leadId = createMemo(() => {
-    const state = pageState();
-    if (state.mode !== "view") {
-      return null;
-    }
-    return state.leadId;
-  });
+  const activeTab = createMemo<LeadRecordTabId>(() => pageState().activeTab);
 
-  const draftRuc = createMemo(() => {
-    const state = pageState();
-    if (state.mode !== "create") {
-      return "";
-    }
-    return state.draft.ruc;
-  });
-
-  const activeTab = createMemo<LeadRecordTabId>(() => {
-    const state = pageState();
-    if (state.mode === "create") {
-      return state.draft.activeTab;
-    }
-
-    return state.activeTab;
-  });
-
-  const label = createMemo(() => {
-    const state = pageState();
-    if (state.mode === "create") {
-      return LABEL_BY_TAB[state.draft.activeTab];
-    }
-
-    return state.subtitle;
-  });
+  const label = createMemo(() => pageState().subtitle);
 
   return {
     pageState,
-    mode,
     leadId,
-    draftRuc,
     activeTab,
     label,
-    setRuc,
     setActiveTab,
   };
 }
