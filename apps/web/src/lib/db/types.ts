@@ -26,23 +26,23 @@ type AuthFunnelOutcomeValue =
   | "totp_required"
   | "passkey_required";
 export interface BranchesTable {
-  id: Generated<number>;
+  id: string;
   name: string;
   created_at: number;
 }
 
 export interface TeamsTable {
-  id: Generated<number>;
-  branch_id: number;
+  id: string;
+  branch_id: string;
   name: string;
-  supervisor_id: number | null;
+  supervisor_id: string | null;
   created_at: number;
 }
 
 export interface UsersTable {
-  id: Generated<number>;
-  branch_id: number;
-  team_id: number | null;
+  id: string;
+  branch_id: string;
+  team_id: string | null;
   username: string;
   email: string;
   password_hash: string;
@@ -75,7 +75,7 @@ export interface LoginFlowsTable {
   id: Generated<number>;
   identifier: string;
   primary_auth_method: "password" | "google" | "passkey";
-  user_id: number | null;
+  user_id: string | null;
   challenge_id: number | null;
   state: "totp" | "passkey";
   expires_at: number;
@@ -85,7 +85,7 @@ export interface LoginFlowsTable {
 
 export interface NotificationContactsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   channel: "email" | "whatsapp";
   address: string;
   is_primary: number;
@@ -97,7 +97,7 @@ export interface NotificationContactsTable {
 
 export interface NotificationPreferencesTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   event_type: string;
   channel: "email" | "whatsapp";
   is_enabled: number;
@@ -113,7 +113,7 @@ export interface NotificationCampaignsTable {
   audience_ref: string | null;
   title: string | null;
   body_text: string;
-  created_by_user_id: number | null;
+  created_by_user_id: string | null;
   status: "queued" | "processing" | "completed" | "failed";
   scheduled_at: number | null;
   created_at: number;
@@ -123,7 +123,7 @@ export interface NotificationCampaignsTable {
 export interface NotificationRecipientsTable {
   id: Generated<number>;
   campaign_id: number;
-  user_id: number | null;
+  user_id: string | null;
   channel: "email" | "whatsapp";
   address: string;
   status: "pending" | "sent" | "failed" | "skipped";
@@ -161,7 +161,7 @@ export interface NotificationDeliveriesTable {
 
 export interface AppNotificationsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   event_type: string;
   priority: "high" | "normal" | "low";
   title: string;
@@ -175,7 +175,7 @@ export interface AppNotificationsTable {
 
 export interface ClientSearchViewsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   name: string;
   search_type:
     | "dni"
@@ -194,7 +194,7 @@ export interface ClientSearchViewsTable {
 export interface SearchPolicyDefaultsTable {
   id: Generated<number>;
   scope_type: "branch" | "team";
-  scope_id: number;
+  scope_id: string;
   period_type: "month";
   search_limit: number;
   created_at: number;
@@ -203,41 +203,41 @@ export interface SearchPolicyDefaultsTable {
 
 export interface SearchPolicyOverridesTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   search_limit: number;
   effective_from: number;
   expires_at: number | null;
-  set_by_user_id: number;
+  set_by_user_id: string;
   created_at: number;
 }
 
 export interface OrganizationsTable {
-  id: Generated<number>;
+  id: string;
   ruc: string;
   name: string;
-  locked_branch_id: number | null;
+  locked_branch_id: string | null;
   locked_at: number | null;
-  locked_by_user_id: number | null;
+  locked_by_user_id: string | null;
   created_at: number;
 }
 
 export interface ContactsTable {
-  id: Generated<number>;
-  organization_id: number;
+  id: string;
+  organization_id: string;
   dni: string;
   name: string;
   phone_primary: string | null;
   phone_secondary: string | null;
   last_contacted_at: number | null;
-  last_contacted_by_user_id: number | null;
+  last_contacted_by_user_id: string | null;
   cooldown_until: number | null;
   created_at: number;
 }
 
 export interface LeadAssignmentsTable {
-  id: Generated<number>;
-  user_id: number;
-  contact_id: number;
+  id: string;
+  user_id: string;
+  contact_id: string;
   assigned_at: number;
   expires_at: number;
   status: "active" | "completed" | "expired";
@@ -252,9 +252,9 @@ export interface SalesRecordsTable {
     | "confirmed"
     | "rejected"
     | "cancelled";
-  executive_user_id: number;
-  lead_assignment_id: number | null;
-  branch_id: number;
+  executive_user_id: string;
+  lead_assignment_id: string | null;
+  branch_id: string;
   submitted_at: number | null;
   confirmed_at: number | null;
   rejected_at: number | null;
@@ -307,7 +307,7 @@ export interface SalesRecordProductsTable {
 export interface SalesRecordAttemptsTable {
   id: Generated<number>;
   sales_record_id: number;
-  reviewer_user_id: number;
+  reviewer_user_id: string;
   outcome:
     | "no_answer"
     | "callback_scheduled"
@@ -322,7 +322,7 @@ export interface SalesRecordAttemptsTable {
 export interface LeadPolicyDefaultsTable {
   id: Generated<number>;
   scope_type: "branch" | "team";
-  scope_id: number;
+  scope_id: string;
   active_buffer_target: number;
   daily_refill_limit: number;
   created_at: number;
@@ -331,27 +331,27 @@ export interface LeadPolicyDefaultsTable {
 
 export interface LeadPolicyOverridesTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   active_buffer_target: number;
   daily_refill_limit: number;
   effective_from: number;
   expires_at: number | null;
-  set_by_user_id: number;
+  set_by_user_id: string;
   created_at: number;
 }
 
 export interface SearchCapacityGrantsTable {
   id: string;
-  user_id: number;
+  user_id: string;
   amount: number;
   reason: string;
-  actor_user_id: number;
+  actor_user_id: string;
   created_at: number;
 }
 
 export interface SearchUsageReservationsTable {
   id: string;
-  user_id: number;
+  user_id: string;
   amount: number;
   status: "pending" | "committed" | "cancelled" | "expired";
   reason: string;
@@ -368,16 +368,16 @@ export interface SearchUsageCommitsTable {
 
 export interface LeadCapacityGrantsTable {
   id: string;
-  user_id: number;
+  user_id: string;
   amount: number;
   reason: string;
-  actor_user_id: number;
+  actor_user_id: string;
   created_at: number;
 }
 
 export interface LeadUsageReservationsTable {
   id: string;
-  user_id: number;
+  user_id: string;
   amount: number;
   status: "pending" | "committed" | "cancelled" | "expired";
   reason: string;
@@ -394,13 +394,13 @@ export interface LeadUsageCommitsTable {
 
 export interface CapacityRequestsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   kind: "search_extra" | "lead_refill_extra";
   status: "pending" | "approved" | "rejected" | "canceled";
   requested_amount: number;
   reason: string;
   decision_note: string | null;
-  reviewer_user_id: number | null;
+  reviewer_user_id: string | null;
   created_at: number;
   updated_at: number;
   decided_at: number | null;
@@ -417,8 +417,8 @@ export interface ProductsTable {
 
 export interface InteractionLogsTable {
   id: Generated<number>;
-  contact_id: number;
-  user_id: number;
+  contact_id: string;
+  user_id: string;
   outcome: string;
   notes: string | null;
   duration_seconds: number | null;
@@ -435,10 +435,10 @@ export interface InventoryItemsTable {
 
 export interface ExtensionHandoffsTable {
   jti: string;
-  user_id: number;
-  branch_id: number;
+  user_id: string;
+  branch_id: string;
   auth_session_id: string;
-  assignment_id: number;
+  assignment_id: string;
   origin: string;
   installation_id: string | null;
   installation_session_jti: string | null;
@@ -449,8 +449,8 @@ export interface ExtensionHandoffsTable {
 
 export interface ExtensionInstallationSessionsTable {
   jti: string;
-  user_id: number;
-  branch_id: number;
+  user_id: string;
+  branch_id: string;
   auth_session_id: string;
   installation_id: string;
   refresh_token_hash: string;
@@ -464,10 +464,10 @@ export interface ExtensionInstallationSessionsTable {
 export interface ExtensionRuntimeEventsTable {
   id: string;
   sequence: number;
-  user_id: number;
-  branch_id: number;
-  assignment_id: number | null;
-  contact_id: number | null;
+  user_id: string;
+  branch_id: string;
+  assignment_id: string | null;
+  contact_id: string | null;
   call_session_id: string | null;
   type:
     | "executive.presence"
@@ -482,10 +482,10 @@ export interface ExtensionRuntimeEventsTable {
 }
 
 export interface ExtensionExecutiveStatusesTable {
-  user_id: number;
-  branch_id: number;
-  assignment_id: number | null;
-  contact_id: number | null;
+  user_id: string;
+  branch_id: string;
+  assignment_id: string | null;
+  contact_id: string | null;
   call_session_id: string | null;
   presence_status:
     | "idle"
@@ -504,7 +504,7 @@ export interface ExtensionExecutiveStatusesTable {
 
 export interface AgentStatusLogsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   status:
     | "available"
     | "feedback"
@@ -521,7 +521,7 @@ export interface AgentStatusLogsTable {
 
 export interface AuditLogsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   action: string;
   entity_type: string;
   entity_id: string;
@@ -534,7 +534,7 @@ export interface AuditActionPoliciesTable {
   risk_level: "high" | "medium" | "low";
   is_active: number;
   is_protected: number;
-  updated_by_user_id: number | null;
+  updated_by_user_id: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -546,7 +546,7 @@ export interface ActionObservationsTable {
   route_path: string | null;
   http_method: string | null;
   action_name: string;
-  actor_user_id: number | null;
+  actor_user_id: string | null;
   actor_role: UsersTable["role"] | null;
   status: "ok" | "error";
   duration_ms: number;
@@ -581,8 +581,8 @@ export interface AuthFunnelEventsTable {
 
 export interface ReportExportJobsTable {
   id: Generated<number>;
-  requested_by_user_id: number;
-  branch_id: number;
+  requested_by_user_id: string;
+  branch_id: string;
   format: "csv" | "xlsx";
   filters_json: string;
   status: "queued" | "running" | "completed" | "failed" | "expired";
@@ -603,7 +603,7 @@ export interface ReportExportJobsTable {
 export interface ReportExportDownloadsTable {
   id: Generated<number>;
   export_job_id: number;
-  downloaded_by_user_id: number;
+  downloaded_by_user_id: string;
   downloaded_at: number;
   ip_hash: string | null;
   user_agent_hash: string | null;
@@ -614,7 +614,7 @@ export interface SearchEnrichmentJobsTable {
   document_type: "dni" | "ruc";
   document_value: string;
   status: "queued" | "running" | "succeeded" | "failed";
-  requested_by_user_id: number;
+  requested_by_user_id: string;
   requested_at: number;
   completed_at: number | null;
   lease_owner: string | null;
@@ -664,7 +664,7 @@ export interface SearchEnrichmentCompletionOutboxTable {
 
 export interface PasskeysTable {
   id: string;
-  user_id: number;
+  user_id: string;
   public_key: string;
   counter: number;
   transports: string | null;
@@ -674,7 +674,7 @@ export interface PasskeysTable {
 
 export interface WebauthnChallengesTable {
   id: Generated<number>;
-  user_id: number | null;
+  user_id: string | null;
   type: string;
   challenge: string;
   expires_at: number;
@@ -683,7 +683,7 @@ export interface WebauthnChallengesTable {
 
 export interface UserOAuthAccountsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   provider: string;
   provider_user_id: string;
   email: string;
@@ -692,7 +692,7 @@ export interface UserOAuthAccountsTable {
 
 export interface PasswordResetTokensTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   token_hash: string;
   expires_at: number;
   used_at: number | null;
@@ -701,8 +701,8 @@ export interface PasswordResetTokensTable {
 
 export interface UserSessionsTable {
   id: string;
-  user_id: number;
-  branch_id: number;
+  user_id: string;
+  branch_id: string;
   role: UsersTable["role"];
   session_class: "pre_auth" | "app";
   primary_auth_method: "password" | "google" | "passkey";
@@ -743,7 +743,7 @@ export interface AuthThrottleCountersTable {
 
 export interface AuthEventsTable {
   id: Generated<number>;
-  user_id: number | null;
+  user_id: string | null;
   method: "password" | "passkey" | "totp";
   stage: "login" | "challenge" | "verify" | "recovery";
   outcome: "success" | "failure" | "throttled";
@@ -755,7 +755,7 @@ export interface AuthEventsTable {
 
 export interface UserTotpFactorsTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   secret_encrypted: string;
   is_enabled: number;
   created_at: number;
@@ -765,7 +765,7 @@ export interface UserTotpFactorsTable {
 
 export interface UserTotpRecoveryCodesTable {
   id: Generated<number>;
-  user_id: number;
+  user_id: string;
   code_hash: string;
   used_at: number | null;
   created_at: number;
@@ -773,14 +773,14 @@ export interface UserTotpRecoveryCodesTable {
 
 export interface UserInvitesTable {
   id: Generated<number>;
-  user_id: number;
-  branch_id: number;
+  user_id: string;
+  branch_id: string;
   email: string;
   role: UsersTable["role"];
   token_hash: string;
   status: "pending" | "accepted" | "revoked" | "expired";
   expires_at: number;
-  created_by_user_id: number;
+  created_by_user_id: string;
   accepted_at: number | null;
   revoked_at: number | null;
   created_at: number;
@@ -802,7 +802,7 @@ export interface PipelineLeadsTable {
   address: string | null;
   district: string | null;
   department: string | null;
-  executive_id: number;
+  executive_id: string;
   stage:
     | "PENDING_EXTERNAL_REVIEW"
     | "REJECTED_BY_STATUS"
@@ -813,8 +813,8 @@ export interface PipelineLeadsTable {
     | "CONVERTED";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
-  created_by: number;
-  updated_by: number | null;
+  created_by: string;
+  updated_by: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -828,7 +828,7 @@ export interface PipelineLeadCommercialInputsTable {
   abono: number | null;
   cantidad_pos: number | null;
   updated_at: number;
-  updated_by: number;
+  updated_by: string;
 }
 
 export interface PipelineQuotationsTable {
@@ -842,13 +842,13 @@ export interface PipelineQuotationsTable {
   moneda: "PEN" | "USD";
   version: number;
   created_at: number;
-  created_by: number;
+  created_by: string;
 }
 
 export interface PipelineSalesTable {
   id: Generated<number>;
   lead_id: string;
-  executive_id: number;
+  executive_id: string;
   proveedor_actual: string;
   tasa_actual: number;
   gpv: number;
@@ -864,8 +864,8 @@ export interface PipelineSalesTable {
 export interface PipelineLeadAssignmentsTable {
   id: Generated<number>;
   lead_id: string;
-  executive_id: number;
-  assigned_by: number;
+  executive_id: string;
+  assigned_by: string;
   is_active: number;
   assigned_at: number;
 }
@@ -887,24 +887,24 @@ export interface PipelineHistoryEventsTable {
     | "sale_created"
     | "call_logged"
     | "note_added";
-  actor_user_id: number | null;
-  subject_user_id: number | null;
+  actor_user_id: string | null;
+  subject_user_id: string | null;
   payload_json: string | null;
   occurred_at: number;
 }
 
 export interface LeadSourcingPoliciesTable {
-  branch_id: number;
+  branch_id: string;
   engine_assignment_enabled: number;
   updated_at: number;
-  updated_by_user_id: number;
+  updated_by_user_id: string;
 }
 
 export interface PipelineIntegrationJobsTable {
   id: Generated<number>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  requested_by_user_id: number;
+  requested_by_user_id: string;
   file_path: string | null;
   error_message: string | null;
   rows_total: number | null;
@@ -939,7 +939,7 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
   id: Generated<number>;
   lead_id: string;
   ruc: string;
-  executive_id: number;
+  executive_id: string;
   status: "pending" | "processing" | "completed" | "failed";
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: ColumnType<number, number | undefined, number>;
@@ -955,7 +955,7 @@ export interface PipelineIntegrationOutboxReadyForQuotationTable {
   id: Generated<number>;
   lead_id: string;
   ruc: string;
-  branch_id: number;
+  branch_id: string;
   status: "pending" | "processing" | "completed" | "failed";
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: ColumnType<number, number | undefined, number>;
