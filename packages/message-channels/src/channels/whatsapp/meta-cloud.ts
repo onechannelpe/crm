@@ -12,7 +12,7 @@ interface SendWhatsAppTextInput {
 }
 
 function normalizeRecipient(raw: string): string {
-  return raw.replaceAll(/[^+\d]/g, "");
+  return raw.replaceAll(/\D/g, "");
 }
 
 export async function sendWithWhatsAppCloudText(
