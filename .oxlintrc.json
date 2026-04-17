@@ -37,6 +37,5 @@
     ".output/**",
     "coverage/**",
     "app.config.timestamp_*.js",
-    "packages/notifications/src/templates/compiled/**"
   ]
 }

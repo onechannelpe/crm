@@ -17,7 +17,6 @@
     "apps/web/src/server/shared/engine/contract.ts",
     "apps/web/test-results/**",
     "apps/web/playwright-report/**",
-    "packages/notifications/src/templates/**/*.mjml",
-    "packages/notifications/src/templates/compiled/**"
+    "packages/email-composer/src/templates/**/*.mjml"
   ]
 }
