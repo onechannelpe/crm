@@ -1,11 +1,12 @@
 "use server";
 import type { LeadCallOutcome } from "~/pipeline/contracts/lead-schema";
+import { type LeadId } from "~/server/pipeline/domain/lead-record";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function recordLeadCall(input: {
-  leadId: string;
+  leadId: LeadId;
   outcome: LeadCallOutcome;
   notes?: string | null;
 }) {
@@ -29,7 +30,7 @@ export async function recordLeadCall(input: {
   });
 }
 
-export async function addLeadNote(input: { leadId: string; body: string }) {
+export async function addLeadNote(input: { leadId: LeadId; body: string }) {
   return runAction({
     actionName: "pipeline.add_note",
     access: { kind: "auth" },

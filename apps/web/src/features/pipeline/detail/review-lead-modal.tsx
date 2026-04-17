@@ -10,13 +10,14 @@ import {
   LEAD_PRIORITIES,
   LEAD_STATUSES,
 } from "~/pipeline/contracts/lead-schema";
+import { type LeadId } from "~/server/pipeline/domain/lead-record";
 
 import { reviewLeadMutation } from "../data/mutations";
 
 import styles from "./lead-actions-widget.module.css";
 
 export function ReviewLeadModal(props: {
-  leadId: string;
+  leadId: LeadId;
   onClose: () => void;
 }) {
   const review = useAction(reviewLeadMutation);

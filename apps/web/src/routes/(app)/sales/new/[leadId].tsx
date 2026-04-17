@@ -5,11 +5,13 @@ import { requestSaleCreation } from "~/actions/pipeline/commands/sales";
 import { AppPage } from "~/components/layout/page";
 import { leadDetailQuery } from "~/features/pipeline/data/queries";
 import { toAppError } from "~/lib/app-errors";
+import { asLeadId } from "~/server/pipeline/domain/lead-record";
 
 export default function NewLeadSalePage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => leadDetailQuery(params.leadId));
+  const leadId = asLeadId(params.leadId);
+  const data = createAsync(() => leadDetailQuery(leadId));
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [proveedorActual, setProveedorActual] = createSignal("");
@@ -38,7 +40,7 @@ export default function NewLeadSalePage() {
     const fd = new FormData(e.currentTarget);
     try {
       const { id } = await requestSaleCreation({
-        leadId: params.leadId,
+        leadId,
         proveedorActual: proveedorActual(),
         tasaActual: Number(fd.get("tasaActual")),
         gpv: Number(fd.get("gpv")),

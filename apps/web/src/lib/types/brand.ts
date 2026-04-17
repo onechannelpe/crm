@@ -21,5 +21,6 @@ export type Brand<T, Name extends string> = T & {
  * validated domain entry-point). Never call inside business logic.
  */
 export function brand<T, Name extends string>(value: T): Brand<T, Name> {
+  // oxlint-disable-next-line typescript-eslint(no-unsafe-type-assertion)
   return value as Brand<T, Name>;
 }

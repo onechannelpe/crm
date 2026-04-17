@@ -5,13 +5,14 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailCommercialInputView } from "~/server/pipeline/application/queries/views/lead-detail";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 import { completeCommercialInputMutation } from "../data/mutations";
 
 import styles from "./lead-actions-widget.module.css";
 
 export function CommercialInputSection(props: {
-  leadId: string;
+  leadId: LeadId;
   initialValues?: LeadDetailCommercialInputView;
 }) {
   const complete = useAction(completeCommercialInputMutation);

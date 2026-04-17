@@ -24,6 +24,7 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadAvailableAction } from "~/server/pipeline/application/contracts/lead-available-action";
+import type { LeadId } from "~/server/pipeline/domain/lead-record";
 
 import { approveForSaleMutation } from "../data/mutations";
 import { mapLeadActionsToUi } from "./lead-workflow-ui";
@@ -34,7 +35,7 @@ import widgetStyles from "./lead-actions-widget.module.css";
 type OpenModal = "review-lead" | null;
 
 export function LeadActionsWidget(props: {
-  leadId: string;
+  leadId: LeadId;
   availableActions: LeadAvailableAction[];
 }) {
   const approve = useAction(approveForSaleMutation);

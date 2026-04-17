@@ -2,6 +2,7 @@ import type { Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
+import { asLeadId } from "~/server/pipeline/domain/lead-record";
 
 export type OptimisticLeadRow = LeadListRowView & {
   optimisticClientKey: string;
@@ -21,7 +22,7 @@ export function createOptimisticLeadRow(input: {
   const optimisticClientKey = `new:${input.ruc}:${now}`;
 
   return {
-    id: `optimistic:${optimisticClientKey}`,
+    id: asLeadId(`optimistic:${optimisticClientKey}`),
     ruc: input.ruc,
     razonSocial: input.razonSocial,
     address: input.address,

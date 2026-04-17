@@ -5,7 +5,7 @@ import {
   type LeadHistoryEntry,
   type LeadHistoryEventDraft,
 } from "~/server/pipeline/domain/history";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -60,7 +60,10 @@ export function createHistoryRepo(db: DatabaseExecutor) {
 
       const entries: LeadHistoryEntry[] = [];
       for (const row of rows) {
-        const entry = toHistoryEntry(row);
+        const entry = toHistoryEntry({
+          ...row,
+          lead_id: asLeadId(row.lead_id),
+        });
         if (!entry.ok) {
           return Err(entry.error);
         }

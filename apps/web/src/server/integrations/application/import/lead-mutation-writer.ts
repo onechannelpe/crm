@@ -3,7 +3,7 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import { resolveReviewTransition } from "~/server/pipeline/domain/workflow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
@@ -87,7 +87,7 @@ export async function applyLeadMutation(input: {
   actorId: number;
   row: ImportRowInput;
 }): Promise<LeadMutationResult> {
-  const lead = (await input.executor
+  const row = await input.executor
     .selectFrom("pipeline_leads")
     .select([
       "id",
@@ -101,8 +101,9 @@ export async function applyLeadMutation(input: {
       "stage",
     ])
     .where("ruc", "=", input.row.ruc)
-    .executeTakeFirst()) as LoadedLead | undefined;
-  if (!lead) {
+    .executeTakeFirst();
+
+  if (!row) {
     const changedAt = Date.now();
     await markImportRowFailed({
       executor: input.executor,
@@ -117,6 +118,11 @@ export async function applyLeadMutation(input: {
       rowResult: { row: input.row.row, ok: false, reason: "RUC not found" },
     };
   }
+
+  const lead: LoadedLead = {
+    ...row,
+    id: asLeadId(row.id),
+  };
 
   if (lead.stage !== "PENDING_EXTERNAL_REVIEW") {
     const changedAt = Date.now();

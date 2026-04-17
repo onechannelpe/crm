@@ -5,6 +5,7 @@ import {
   recordLeadCall,
 } from "~/actions/pipeline/commands/interactions";
 import type { LeadAvailableAction } from "~/server/pipeline/application/contracts/lead-available-action";
+import { type LeadId } from "~/server/pipeline/domain/lead-record";
 
 import {
   deriveInteractionAvailability,
@@ -16,7 +17,7 @@ import { createInteractionState } from "./state";
 import styles from "../lead-detail-overview.module.css";
 
 export function InteractionsPanel(props: {
-  leadId: string;
+  leadId: LeadId;
   availableActions: LeadAvailableAction[];
   onChanged?: () => void;
 }) {

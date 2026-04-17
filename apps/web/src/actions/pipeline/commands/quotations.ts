@@ -1,11 +1,12 @@
 "use server";
 
+import { type LeadId } from "~/server/pipeline/domain/lead-record";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestQuotationCreation(input: {
-  leadId: string;
+  leadId: LeadId;
   paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
@@ -31,7 +32,7 @@ export async function requestQuotationCreation(input: {
   });
 }
 
-export async function requestSaleApproval(leadId: string) {
+export async function requestSaleApproval(leadId: LeadId) {
   return runAction({
     actionName: "pipeline.approve_for_sale",
     access: { kind: "auth" },

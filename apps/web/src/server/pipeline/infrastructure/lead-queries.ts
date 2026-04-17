@@ -2,6 +2,7 @@ import { sql } from "kysely";
 import type { Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { asLeadId } from "~/server/pipeline/domain/lead-record";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
@@ -43,7 +44,7 @@ type LeadExportSource = Pick<
 
 function toListRow(row: LeadListSource): LeadListRow {
   return {
-    id: row.id,
+    id: asLeadId(row.id),
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
@@ -59,7 +60,7 @@ function toListRow(row: LeadListSource): LeadListRow {
 
 function toExportRow(row: LeadExportSource): LeadExportRow {
   return {
-    id: row.id,
+    id: asLeadId(row.id),
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
