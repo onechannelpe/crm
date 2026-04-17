@@ -36,7 +36,7 @@
 
         <mj-text padding-bottom="8px">Hola {{ fullName }},</mj-text>
         <mj-text padding-bottom="24px">
-          Tu cuenta en One Channel vencerá el <strong>{{ expiresAt }}</strong>. Pasada esa fecha perderás el acceso. Si crees que esto es un error,
+          Tu cuenta en {{ platformName }} vencerá el <strong>{{ expiresAt }}</strong>. Pasada esa fecha perderás el acceso. Si crees que esto es un error,
           comunícate con tu administrador.
         </mj-text>
 

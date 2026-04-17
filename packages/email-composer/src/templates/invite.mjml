@@ -31,7 +31,7 @@
           color="#333333"
           padding-bottom="24px"
         >
-          Tu acceso a One Channel está listo
+          Tu acceso a {{ platformName }} está listo
         </mj-text>
 
         <mj-text padding-bottom="8px">Hola {{ fullName }},</mj-text>
@@ -64,7 +64,7 @@
     <mj-section padding="32px 0" background-color="#f7f7f7">
       <mj-column>
         <mj-text align="center" color="#999999" font-size="12px">
-          Si no esperabas este correo, alguien ingresó tu dirección en el CRM.
+          Si no esperabas este correo, alguien ingresó tu dirección en {{ platformName }}.
           Puedes ignorarlo sin problema.
         </mj-text>
       </mj-column>
