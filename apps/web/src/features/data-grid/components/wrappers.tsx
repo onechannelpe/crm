@@ -6,13 +6,14 @@ import { DataGridTableProvider } from "../context/table-context";
 import { DataGridBodyEffects } from "../effects/body";
 import type { DataGridInteractionModel } from "../hooks/use-instance";
 import { createDataGridInteractionReady } from "../hooks/use-interaction-ready";
+import type { DataGridRowId } from "../model/types";
 
 export function DataGridWrappers(props: {
   children: JSX.Element;
   getContainer: () => HTMLElement | undefined;
   getScrollWrapper: () => HTMLElement | undefined;
   interaction: DataGridInteractionModel;
-  rows: Array<{ id: number }>;
+  rows: Array<{ id: DataGridRowId }>;
   suspendEscapeSelectionClear: boolean;
 }) {
   const isInteractive = createDataGridInteractionReady();

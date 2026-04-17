@@ -1,4 +1,5 @@
 import type { DataGridPoint, DataGridSelectionBox } from "./types";
+import type { DataGridRowId } from "../model/types";
 
 const AUTO_SCROLL_EDGE_THRESHOLD = 48;
 const AUTO_SCROLL_STEP = 18;
@@ -80,15 +81,15 @@ export function createSelectionBox(
 export function getSelectableRowIdsInBox(
   container: HTMLElement,
   selectionBox: DataGridSelectionBox,
-): number[] {
+): DataGridRowId[] {
   const containerRect = container.getBoundingClientRect();
-  const selectedRowIds: number[] = [];
+  const selectedRowIds: DataGridRowId[] = [];
 
   for (const rowElement of container.querySelectorAll<HTMLElement>(
     "[data-selectable-id]",
   )) {
-    const rowId = Number(rowElement.dataset.selectableId);
-    if (Number.isNaN(rowId)) {
+    const rowId = parseSelectableId(rowElement);
+    if (rowId === undefined) {
       continue;
     }
 
@@ -106,6 +107,20 @@ export function getSelectableRowIdsInBox(
   }
 
   return selectedRowIds;
+}
+
+function parseSelectableId(element: HTMLElement): DataGridRowId | undefined {
+  const raw = element.dataset.selectableId;
+  if (!raw) {
+    return undefined;
+  }
+
+  if (element.dataset.selectableIdType === "number") {
+    const parsed = Number(raw);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
+
+  return raw;
 }
 
 function boxesIntersect(

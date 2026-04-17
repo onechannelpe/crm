@@ -7,14 +7,18 @@ import {
 import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
 import type { DataGridSource } from "../model/source";
-import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
+import type {
+  DataGridActionRowConfig,
+  DataGridColumn,
+  DataGridRowId,
+} from "../model/types";
 import { DataGridBody } from "./body";
 import { DataGridHeader } from "./header";
 import { DataGridLoadingState } from "./loading-state";
 
 import styles from "../styles/data-grid.module.css";
 
-export function DataGridContent<T extends { id: number }>(props: {
+export function DataGridContent<T extends { id: DataGridRowId }>(props: {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: DataGridColumn<T>[];

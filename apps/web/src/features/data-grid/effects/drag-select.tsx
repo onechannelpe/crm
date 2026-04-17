@@ -10,6 +10,7 @@ import {
   getSelectableRowIdsInBox,
 } from "../dnd/geometry";
 import type { DataGridPoint, DataGridSelectionBox } from "../dnd/types";
+import type { DataGridRowId } from "../model/types";
 
 import styles from "../styles/data-grid.module.css";
 
@@ -47,8 +48,8 @@ export function DataGridDragSelectEffect() {
       for (const rowElement of scrollWrapper.querySelectorAll<HTMLElement>(
         "[data-selectable-id]",
       )) {
-        const rowId = Number(rowElement.dataset.selectableId);
-        if (Number.isNaN(rowId)) {
+        const rowId = parseSelectableId(rowElement);
+        if (rowId === undefined) {
           continue;
         }
 
@@ -168,4 +169,18 @@ export function DataGridDragSelectEffect() {
       )}
     </Show>
   );
+}
+
+function parseSelectableId(element: HTMLElement): DataGridRowId | undefined {
+  const raw = element.dataset.selectableId;
+  if (!raw) {
+    return undefined;
+  }
+
+  if (element.dataset.selectableIdType === "number") {
+    const parsed = Number(raw);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
+
+  return raw;
 }

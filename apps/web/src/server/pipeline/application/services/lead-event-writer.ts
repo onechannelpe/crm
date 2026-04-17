@@ -1,4 +1,5 @@
 import type { LeadHistoryEventDraft } from "../../domain/history";
+import type { LeadId } from "../../domain/lead-record";
 import type { LeadAuditRepository } from "../../ports/lead-audit-repository";
 import type { LeadEventRepository } from "../../ports/lead-event-repository";
 
@@ -8,7 +9,7 @@ export async function writeLeadEvents(input: {
   auditRepository: LeadAuditRepository;
   actorUserId: number;
   auditAction: string;
-  entityId: number;
+  entityId: LeadId;
   auditChanges?: Record<string, unknown>;
 }) {
   const historyIds = await input.eventRepository.append(input.events);

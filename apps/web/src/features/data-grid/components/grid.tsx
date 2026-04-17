@@ -12,11 +12,12 @@ import type {
   DataGridActionRowConfig,
   DataGridColumn,
   DataGridFeatures,
+  DataGridRowId,
 } from "../model/types";
 import { DataGridContent } from "./content";
 import { DataGridWrappers } from "./wrappers";
 
-export function DataGrid<T extends { id: number }>(props: {
+export function DataGrid<T extends { id: DataGridRowId }>(props: {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: DataGridColumn<T>[];

@@ -15,7 +15,7 @@ type NeedsExecutiveOutboxJob = {
   id: number;
   attempt_count: number;
   max_attempts: number;
-  lead_id: number;
+  lead_id: string;
   ruc: string;
   executive_id: number;
 };

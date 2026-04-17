@@ -15,7 +15,7 @@ type ReadyForQuotationOutboxJob = {
   id: number;
   attempt_count: number;
   max_attempts: number;
-  lead_id: number;
+  lead_id: string;
   ruc: string;
   branch_id: number;
 };

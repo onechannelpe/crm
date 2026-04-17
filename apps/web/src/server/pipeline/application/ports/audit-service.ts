@@ -1,8 +1,10 @@
+import type { LeadId } from "../../domain/lead-record";
+
 export type AuditLogDraft = {
   userId: number;
   action: string;
   entityType: string;
-  entityId: number;
+  entityId: LeadId;
   changes: string | null;
   createdAt: number;
 };
@@ -16,7 +18,7 @@ export type PipelineAuditService = {
     actorUserId: number,
     action: string,
     entity: string,
-    entityId: number,
+    entityId: LeadId,
     changes?: Record<string, unknown>,
   ): Promise<unknown>;
 };

@@ -62,7 +62,7 @@ export interface IntegrationRuntime {
   leadExportQuery: {
     export(filters: { executiveId?: number }): Promise<
       Array<{
-        id: number;
+        id: string;
         ruc: string;
         razonSocial: string | null;
         address: string | null;
@@ -78,7 +78,7 @@ export interface IntegrationRuntime {
   leads: {
     findByRucMany(
       rucs: string[],
-    ): Promise<Array<{ id: number; ruc: string; executiveId: number }>>;
+    ): Promise<Array<{ id: string; ruc: string; executiveId: number }>>;
   };
   users: {
     findById(id: number): Promise<{ branch_id: number } | undefined>;

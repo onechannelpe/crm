@@ -7,12 +7,12 @@ import { Checkbox } from "~/components/ui/input/checkbox";
 import { useDataGridInstance } from "../context/instance-context";
 import { useDataGridInteractionReady } from "../context/interaction-context";
 import type { DataGridRowOpen, DataGridRowOpenMode } from "../model/row-open";
-import type { DataGridColumn } from "../model/types";
+import type { DataGridColumn, DataGridRowId } from "../model/types";
 import { DataGridCell } from "./cell";
 
 import styles from "../styles/data-grid.module.css";
 
-export function DataGridRow<T extends { id: number }>(props: {
+export function DataGridRow<T extends { id: DataGridRowId }>(props: {
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
   reorderable: boolean;
@@ -35,6 +35,7 @@ export function DataGridRow<T extends { id: number }>(props: {
       data-grid-row-id={props.row.id}
       data-grid-row-index={props.rowOrderIndex}
       data-selectable-id={props.row.id}
+      data-selectable-id-type={typeof props.row.id}
       aria-rowindex={props.rowIndex}
       aria-selected={
         props.selectable === false

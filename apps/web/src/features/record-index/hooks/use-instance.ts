@@ -1,6 +1,7 @@
 import { createMemo } from "solid-js";
 
 import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
+import type { DataGridRowId } from "~/features/data-grid/model/types";
 
 import { useRecordIndexViewState } from "../context/instance-context";
 import { useRecordIndexSetup } from "../context/setup-context";
@@ -21,7 +22,7 @@ import type {
 } from "../model/types";
 
 export function useRecordIndexModel<
-  T extends { id: number },
+  T extends { id: DataGridRowId },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(

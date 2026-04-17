@@ -1,4 +1,5 @@
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import type { DataGridRowId } from "~/features/data-grid/model/types";
 
 import type { RecordIndexFilterDefinition } from "./filter";
 import type { RecordIndexSortDefinition } from "./sort";
@@ -167,7 +168,7 @@ export function reconcileRecordIndexOpenMenu(
 }
 
 export function createRecordIndexContextModel<
-  T extends { id: number },
+  T extends { id: DataGridRowId },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(model: RecordIndexScreenModel<T, TFilterValue, TSortValue>) {

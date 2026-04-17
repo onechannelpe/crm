@@ -7,6 +7,7 @@ type DataGridIconProps = {
 };
 
 export type DataGridIcon = Component<DataGridIconProps>;
+export type DataGridRowId = string | number;
 
 export type DataGridColumn<T> = {
   key: string;

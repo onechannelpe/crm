@@ -3,12 +3,13 @@ import { Show } from "solid-js";
 import Plus from "~/components/icons/plus";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridActionRowConfig } from "~/features/data-grid/model/types";
+import type { DataGridRowId } from "~/features/data-grid/model/types";
 
 import type { RecordIndexScreenModel } from "../model/types";
 import { RecordIndexEmpty } from "./empty";
 
 export function RecordIndexTableContainer<
-  T extends { id: number },
+  T extends { id: DataGridRowId },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {

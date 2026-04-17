@@ -1,7 +1,8 @@
+import type { DataGridRowId } from "~/features/data-grid/model/types";
 import type { RecordIndexAdapter, RecordIndexSetup } from "./types";
 
 export function createRecordIndexSetup<
-  T extends { id: number },
+  T extends { id: DataGridRowId },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>): RecordIndexSetup {

@@ -3,11 +3,12 @@ import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridRowId } from "~/features/data-grid/model/types";
 
 import type { RecordIndexScreenModel } from "../model/types";
 
 export function RecordIndexEmpty<
-  T extends { id: number },
+  T extends { id: DataGridRowId },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {

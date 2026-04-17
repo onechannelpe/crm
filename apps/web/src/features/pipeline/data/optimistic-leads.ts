@@ -9,8 +9,6 @@ export type OptimisticLeadRow = LeadListRowView & {
 
 const [state, setState] = createStore<Record<string, OptimisticLeadRow[]>>({});
 
-let nextOptimisticLeadId = -1;
-
 export function createOptimisticLeadRow(input: {
   ruc: string;
   razonSocial: string | null;
@@ -20,9 +18,10 @@ export function createOptimisticLeadRow(input: {
   now?: number;
 }): OptimisticLeadRow {
   const now = input.now ?? Date.now();
+  const optimisticClientKey = `new:${input.ruc}:${now}`;
 
   return {
-    id: nextOptimisticLeadId--,
+    id: `optimistic:${optimisticClientKey}`,
     ruc: input.ruc,
     razonSocial: input.razonSocial,
     address: input.address,
@@ -34,7 +33,7 @@ export function createOptimisticLeadRow(input: {
     nextStep: "Review lead",
     createdAt: now,
     updatedAt: now,
-    optimisticClientKey: `new:${input.ruc}:${now}`,
+    optimisticClientKey,
   };
 }
 

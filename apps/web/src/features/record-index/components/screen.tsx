@@ -6,12 +6,13 @@ import { useRecordIndexModel } from "../hooks/use-instance";
 import { createRecordIndexContextModel } from "../model/derive";
 import { createRecordIndexSetup } from "../model/setup";
 import type { RecordIndexAdapter } from "../model/types";
+import type { DataGridRowId } from "~/features/data-grid/model/types";
 import { RecordIndexHeader } from "./header";
 import { RecordIndexLayout } from "./layout";
 import { RecordIndexTableContainer } from "./table-container";
 
 export function RecordIndexScreen<
-  T extends { id: number },
+  T extends { id: DataGridRowId },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { adapter: RecordIndexAdapter<T, TFilterValue, TSortValue> }) {
@@ -27,7 +28,7 @@ export function RecordIndexScreen<
 }
 
 function RecordIndexScreenContent<
-  T extends { id: number },
+  T extends { id: DataGridRowId },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { adapter: RecordIndexAdapter<T, TFilterValue, TSortValue> }) {

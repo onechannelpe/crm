@@ -2,12 +2,12 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent, type LeadHistoryEventDraft } from "../history";
-import type { LeadRecord } from "../lead-record";
+import type { LeadId, LeadRecord } from "../lead-record";
 import type { LeadMutationIntent, LeadMutationPatch } from "./lead-types";
 
 type LeadAuditDraft = {
   action: string;
-  entityId: number;
+  entityId: LeadId;
   changes?: Record<string, unknown>;
 };
 

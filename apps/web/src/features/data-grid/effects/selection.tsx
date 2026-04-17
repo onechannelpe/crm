@@ -4,9 +4,10 @@ import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
 import { useDataGridInstance } from "../context/instance-context";
 import { useDataGridTable } from "../context/table-context";
+import type { DataGridRowId } from "../model/types";
 
 export function DataGridSelectionEffects(props: {
-  rows: Array<{ id: number }>;
+  rows: Array<{ id: DataGridRowId }>;
 }) {
   const interaction = useDataGridInstance();
   const table = useDataGridTable();
