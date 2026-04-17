@@ -61,7 +61,7 @@ if (mjmlFiles.length === 0) {
   process.exit(1);
 }
 
-for (const file of mjmlFiles) {
+async function compileTemplate(file: string) {
   const name = basename(file, ".mjml");
   const mjmlSource = readFileSync(join(templatesDir, file), "utf-8");
   const txtSource = readFileSync(join(templatesDir, `${name}.txt`), "utf-8");
@@ -88,5 +88,7 @@ for (const file of mjmlFiles) {
 
   writeFileSync(join(outDir, `${name}.ts`), output, "utf-8");
 }
+
+await Promise.all(mjmlFiles.map(compileTemplate));
 
 console.log(`email templates OK: ${mjmlFiles.length} compiled`);
