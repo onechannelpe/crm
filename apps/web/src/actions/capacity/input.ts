@@ -5,6 +5,14 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  isBranchId,
+  isTeamId,
+  isUserId,
+  type BranchId,
+  type TeamId,
+  type UserId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseCapacityAmount(
@@ -55,12 +63,16 @@ export function parseCapacityDecisionInput(input: {
 }
 
 export function parseCapacityGrantInput(input: {
-  userId: number;
+  userId: UserId;
   amount: number;
   reason: string;
-}): Result<{ userId: number; amount: number; reason: string }, DomainError> {
+}): Result<{ userId: UserId; amount: number; reason: string }, DomainError> {
   try {
-    const userId = assertPositiveInt(input.userId, "userId");
+    if (!isUserId(input.userId)) {
+      return Err(
+        domainError("validation", "capacity.user_id.invalid", "Invalid userId"),
+      );
+    }
     const amountResult = parseCapacityAmount(input.amount);
     if (!amountResult.ok) {
       return amountResult;
@@ -70,7 +82,7 @@ export function parseCapacityGrantInput(input: {
       return reasonResult;
     }
     return Ok({
-      userId,
+      userId: input.userId,
       amount: amountResult.value,
       reason: reasonResult.value,
     });
@@ -131,21 +143,25 @@ export function parseSearchPolicyLimit(
 }
 
 export function parseSearchPolicyOverrideInput(input: {
-  userId: number;
+  userId: UserId;
   monthlySearchLimit: number;
   expiresAt: number | null;
 }): Result<
-  { userId: number; monthlyLimit: number; expiresAt: number | null },
+  { userId: UserId; monthlyLimit: number; expiresAt: number | null },
   DomainError
 > {
   try {
-    const userId = assertPositiveInt(input.userId, "userId");
+    if (!isUserId(input.userId)) {
+      return Err(
+        domainError("validation", "capacity.user_id.invalid", "Invalid userId"),
+      );
+    }
     const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
     if (!limitResult.ok) {
       return limitResult;
     }
     return Ok({
-      userId,
+      userId: input.userId,
       monthlyLimit: limitResult.value,
       expiresAt: input.expiresAt,
     });
@@ -209,13 +225,13 @@ export function parseLeadPolicyValues(input: {
 }
 
 export function parseLeadPolicyOverrideInput(input: {
-  userId: number;
+  userId: UserId;
   activeBufferTarget: number;
   dailyRefillLimit: number;
   expiresAt: number | null;
 }): Result<
   {
-    userId: number;
+    userId: UserId;
     bufferTarget: number;
     dailyLimit: number;
     expiresAt: number | null;
@@ -223,7 +239,11 @@ export function parseLeadPolicyOverrideInput(input: {
   DomainError
 > {
   try {
-    const userId = assertPositiveInt(input.userId, "userId");
+    if (!isUserId(input.userId)) {
+      return Err(
+        domainError("validation", "capacity.user_id.invalid", "Invalid userId"),
+      );
+    }
     const valuesResult = parseLeadPolicyValues({
       activeBufferTarget: input.activeBufferTarget,
       dailyRefillLimit: input.dailyRefillLimit,
@@ -232,7 +252,7 @@ export function parseLeadPolicyOverrideInput(input: {
       return valuesResult;
     }
     return Ok({
-      userId,
+      userId: input.userId,
       bufferTarget: valuesResult.value.activeBufferTarget,
       dailyLimit: valuesResult.value.dailyRefillLimit,
       expiresAt: input.expiresAt,
@@ -250,13 +270,43 @@ export function parseLeadPolicyOverrideInput(input: {
 
 export function parseScopeDefaultInput(input: {
   scopeType: "branch" | "team";
-  scopeId: number;
-}): Result<{ scopeType: "branch" | "team"; scopeId: number }, DomainError> {
+  scopeId: BranchId | TeamId;
+}): Result<
+  | { scopeType: "branch"; scopeId: BranchId }
+  | { scopeType: "team"; scopeId: TeamId },
+  DomainError
+> {
   try {
-    return Ok({
-      scopeType: input.scopeType,
-      scopeId: assertPositiveInt(input.scopeId, "scopeId"),
-    });
+    if (input.scopeType === "branch" && !isBranchId(input.scopeId)) {
+      return Err(
+        domainError("validation", "capacity.policy.scope.invalid", "Invalid branch scopeId"),
+      );
+    }
+    if (input.scopeType === "team" && !isTeamId(input.scopeId)) {
+      return Err(
+        domainError("validation", "capacity.policy.scope.invalid", "Invalid team scopeId"),
+      );
+    }
+    if (input.scopeType === "branch") {
+      return Ok({
+        scopeType: "branch",
+        scopeId: input.scopeId,
+      });
+    }
+    if (input.scopeType === "team") {
+      return Ok({
+        scopeType: "team",
+        scopeId: input.scopeId,
+      });
+    }
+    input.scopeType satisfies never;
+    return Err(
+      domainError(
+        "validation",
+        "capacity.policy.scope.invalid",
+        "Invalid scope type",
+      ),
+    );
   } catch (error) {
     return Err(
       domainError(

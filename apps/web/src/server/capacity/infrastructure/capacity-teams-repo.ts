@@ -1,24 +1,33 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
+  asBranchId,
+  asTeamId,
+  asUserId,
+  type BranchId,
+  type TeamId,
+  type UserId,
+} from "~/server/shared/ids";
 
 import type { CapacityTeam } from "../application/actor-scope";
 
 function toCapacityTeam(team: {
-  id: number;
+  id: string;
   name: string;
-  branch_id: number;
-  supervisor_id: number | null;
+  branch_id: string;
+  supervisor_id: string | null;
 }): CapacityTeam {
   return {
-    id: team.id,
+    id: asTeamId(team.id),
     name: team.name,
-    branchId: team.branch_id,
-    supervisorId: team.supervisor_id,
+    branchId: asBranchId(team.branch_id),
+    supervisorId:
+      team.supervisor_id === null ? null : asUserId(team.supervisor_id),
   };
 }
 
 export function createCapacityTeamsRepo(db: DatabaseExecutor) {
   return {
-    findByBranch(branchId: number) {
+    findByBranch(branchId: BranchId) {
       return db
         .selectFrom("teams")
         .selectAll()
@@ -28,7 +37,7 @@ export function createCapacityTeamsRepo(db: DatabaseExecutor) {
         .then((teams) => teams.map(toCapacityTeam));
     },
 
-    findByIdWithSupervisor(id: number) {
+    findByIdWithSupervisor(id: TeamId) {
       return db
         .selectFrom("teams")
         .select([
@@ -42,7 +51,7 @@ export function createCapacityTeamsRepo(db: DatabaseExecutor) {
         .then((team) => (team ? toCapacityTeam(team) : undefined));
     },
 
-    findBySupervisorId(supervisorId: number) {
+    findBySupervisorId(supervisorId: UserId) {
       return db
         .selectFrom("teams")
         .selectAll()

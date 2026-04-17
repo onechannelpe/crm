@@ -2,6 +2,7 @@ import { isPlainRecord } from "~/lib/type-guards";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { isBranchId, isTeamId, isUserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityReadContext } from "../infrastructure/read-context";
@@ -45,11 +46,6 @@ function parseAuditChanges(raw: unknown): AuditChangeValue {
   }
 }
 
-function parseEntityIdAsNumber(entityId: string): number | null {
-  const parsed = Number(entityId);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 export async function getAuditEvents(
   ctx: AppContext,
   deps: CapacityReadContext,
@@ -85,17 +81,16 @@ export async function getAuditEvents(
           event.action.startsWith("capacity_"),
       )
       .filter((event) => {
-        const entityIdNumber = parseEntityIdAsNumber(event.entity_id);
         if (ctx.actor.role === "superuser") return true;
         if (ctx.actor.role !== "admin") return false;
         if (event.entity_type === "branch") {
-          return entityIdNumber === ctx.actor.branchId;
+          return isBranchId(event.entity_id) && event.entity_id === ctx.actor.branchId;
         }
         if (event.entity_type === "team") {
-          return entityIdNumber !== null && branchTeamIds.has(entityIdNumber);
+          return isTeamId(event.entity_id) && branchTeamIds.has(event.entity_id);
         }
         if (event.entity_type === "user") {
-          return entityIdNumber !== null && branchUserIds.has(entityIdNumber);
+          return isUserId(event.entity_id) && branchUserIds.has(event.entity_id);
         }
         return false;
       })

@@ -25,6 +25,7 @@ import {
 import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
 import { activeContactAssignmentsQuery } from "~/lib/queries/contact-assignments";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 export const requestMoreSearchesMutation = action(
   async (amount: number, reason: string) => {
@@ -84,7 +85,7 @@ export const rejectCapacityRequestMutation = action(
 );
 
 export const grantMoreSearchesMutation = action(
-  async (userId: number, amount: number, reason: string) => {
+  async (userId: UserId, amount: number, reason: string) => {
     const result = await grantMoreSearches(userId, amount, reason);
     return json(result, {
       revalidate: [
@@ -98,7 +99,7 @@ export const grantMoreSearchesMutation = action(
 );
 
 export const grantMoreLeadRefillMutation = action(
-  async (userId: number, amount: number, reason: string) => {
+  async (userId: UserId, amount: number, reason: string) => {
     const result = await grantMoreLeadRefill(userId, amount, reason);
     return json(result, {
       revalidate: [
@@ -113,7 +114,7 @@ export const grantMoreLeadRefillMutation = action(
 
 export const updateSearchPolicyOverrideMutation = action(
   async (input: {
-    userId: number;
+    userId: UserId;
     monthlySearchLimit: number;
     expiresAt: number | null;
   }) => {
@@ -130,7 +131,7 @@ export const updateSearchPolicyOverrideMutation = action(
 
 export const updateLeadPolicyOverrideMutation = action(
   async (input: {
-    userId: number;
+    userId: UserId;
     activeBufferTarget: number;
     dailyRefillLimit: number;
     expiresAt: number | null;
@@ -149,7 +150,7 @@ export const updateLeadPolicyOverrideMutation = action(
 export const updateSearchScopeDefaultMutation = action(
   async (input: {
     scopeType: "branch" | "team";
-    scopeId: number;
+    scopeId: BranchId | TeamId;
     monthlySearchLimit: number;
   }) => {
     const result = await updateSearchPolicyDefault(input);
@@ -163,7 +164,7 @@ export const updateSearchScopeDefaultMutation = action(
 export const updateLeadScopeDefaultMutation = action(
   async (input: {
     scopeType: "branch" | "team";
-    scopeId: number;
+    scopeId: BranchId | TeamId;
     activeBufferTarget: number;
     dailyRefillLimit: number;
   }) => {

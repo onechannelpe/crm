@@ -1,6 +1,17 @@
 import { sql, type Kysely, type SelectQueryBuilder } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import {
+  asAssignmentId,
+  asBranchId,
+  asContactId,
+  asTeamId,
+  asUserId,
+  type AssignmentId,
+  type BranchId,
+  type ContactId,
+  type UserId,
+} from "~/server/shared/ids";
 
 function withExecutiveStatusJoinsAndSelect(
   qb: SelectQueryBuilder<Database, "extension_executive_statuses", object>,
@@ -28,16 +39,17 @@ function withExecutiveStatusJoinsAndSelect(
 import type {
   ExtensionExecutivePresenceStatus,
   ExtensionSyncHealth,
+  TeamExecutiveStatusView,
 } from "~/server/extension/contracts";
 
 export function createExtensionRuntimeRepo(db: Kysely<Database>) {
   return {
     createHandoff(values: {
       jti: string;
-      user_id: number;
-      branch_id: number;
+      user_id: UserId;
+      branch_id: BranchId;
       auth_session_id: string;
-      assignment_id: number;
+      assignment_id: AssignmentId;
       origin: string;
       issued_at: number;
       expires_at: number;
@@ -76,8 +88,8 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
 
     createInstallationSession(values: {
       jti: string;
-      user_id: number;
-      branch_id: number;
+      user_id: UserId;
+      branch_id: BranchId;
       auth_session_id: string;
       installation_id: string;
       refresh_token_hash: string;
@@ -180,7 +192,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    revokeInstallationSessionsByUser(user_id: number, revoked_at: number) {
+    revokeInstallationSessionsByUser(user_id: UserId, revoked_at: number) {
       return db
         .updateTable("extension_installation_sessions")
         .set({ revoked_at })
@@ -190,7 +202,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     revokeOtherInstallationSessionsByUser(
-      user_id: number,
+      user_id: UserId,
       keep_jti: string,
       revoked_at: number,
     ) {
@@ -206,10 +218,10 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     async insertRuntimeEventIfAbsent(values: {
       id: string;
       sequence: number;
-      user_id: number;
-      branch_id: number;
-      assignment_id: number | null;
-      contact_id: number | null;
+      user_id: UserId;
+      branch_id: BranchId;
+      assignment_id: AssignmentId | null;
+      contact_id: ContactId | null;
       call_session_id: string | null;
       type: Database["extension_runtime_events"]["type"];
       payload_json: string;
@@ -225,10 +237,10 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     upsertExecutivePresence(values: {
-      user_id: number;
-      branch_id: number;
-      assignment_id: number | null;
-      contact_id: number | null;
+      user_id: UserId;
+      branch_id: BranchId;
+      assignment_id: AssignmentId | null;
+      contact_id: ContactId | null;
       call_session_id: string | null;
       presence_status: ExtensionExecutivePresenceStatus;
       presence_updated_at: number;
@@ -282,8 +294,8 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     upsertExecutiveSyncHealth(values: {
-      user_id: number;
-      branch_id: number;
+      user_id: UserId;
+      branch_id: BranchId;
       sync_health: ExtensionSyncHealth;
       sync_updated_at: number;
     }) {
@@ -312,7 +324,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     updateExecutiveSyncHealthByUser(values: {
-      user_id: number;
+      user_id: UserId;
       sync_health: ExtensionSyncHealth;
       sync_updated_at: number;
     }) {
@@ -326,7 +338,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findCurrentStatusByUser(userId: number) {
+    findCurrentStatusByUser(userId: UserId) {
       return db
         .selectFrom("extension_executive_statuses")
         .selectAll()
@@ -334,22 +346,40 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listTeamStatusesBySupervisor(supervisorUserId: number) {
-      return db
+    async listTeamStatusesBySupervisor(
+      supervisorUserId: UserId,
+    ): Promise<TeamExecutiveStatusView[]> {
+      const rows = await db
         .selectFrom("extension_executive_statuses")
         .$call(withExecutiveStatusJoinsAndSelect)
         .where("teams.supervisor_id", "=", supervisorUserId)
         .orderBy("users.names", "asc")
         .execute();
+      return rows.map((row) => ({
+        ...row,
+        userId: asUserId(row.userId),
+        teamId: row.teamId === null ? null : asTeamId(row.teamId),
+        assignmentId:
+          row.assignmentId === null ? null : asAssignmentId(row.assignmentId),
+        contactId: row.contactId === null ? null : asContactId(row.contactId),
+      }));
     },
 
-    listBranchStatuses(branchId: number) {
-      return db
+    async listBranchStatuses(branchId: BranchId): Promise<TeamExecutiveStatusView[]> {
+      const rows = await db
         .selectFrom("extension_executive_statuses")
         .$call(withExecutiveStatusJoinsAndSelect)
         .where("extension_executive_statuses.branch_id", "=", branchId)
         .orderBy("users.names", "asc")
         .execute();
+      return rows.map((row) => ({
+        ...row,
+        userId: asUserId(row.userId),
+        teamId: row.teamId === null ? null : asTeamId(row.teamId),
+        assignmentId:
+          row.assignmentId === null ? null : asAssignmentId(row.assignmentId),
+        contactId: row.contactId === null ? null : asContactId(row.contactId),
+      }));
     },
   };
 }

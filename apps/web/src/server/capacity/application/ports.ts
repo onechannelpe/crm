@@ -1,4 +1,4 @@
-import type { UserId } from "~/server/shared/ids";
+import type { TeamId, UserId } from "~/server/shared/ids";
 
 import type { CapacityTeam, ManageableCapacityUser } from "./actor-scope";
 
@@ -29,9 +29,9 @@ export interface CapacityApprovalTxPort {
     userId: UserId,
   ): Promise<ManageableCapacityUser | undefined>;
   findSupervisedTeamBySupervisorId(
-    supervisorId: number,
-  ): Promise<{ id: number } | undefined>;
-  findManagedTeamById(teamId: number): Promise<CapacityTeam | undefined>;
+    supervisorId: UserId,
+  ): Promise<{ id: TeamId } | undefined>;
+  findManagedTeamById(teamId: TeamId): Promise<CapacityTeam | undefined>;
   grantSearchCapacity(input: {
     userId: UserId;
     amount: number;

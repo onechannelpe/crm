@@ -2,6 +2,13 @@ import type { Selectable } from "kysely";
 
 import type { UsersTable } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
+  asBranchId,
+  asTeamId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 import type { CapacityUser } from "../application/actor-scope";
 
@@ -9,10 +16,10 @@ type UserRow = Selectable<UsersTable>;
 
 function toCapacityUser(user: UserRow): CapacityUser {
   return {
-    id: user.id,
+    id: asUserId(user.id),
     role: user.role,
-    branchId: user.branch_id,
-    teamId: user.team_id,
+    branchId: asBranchId(user.branch_id),
+    teamId: user.team_id === null ? null : asTeamId(user.team_id),
     email: user.email,
     names: user.names,
     firstSurname: user.first_surname,
@@ -23,7 +30,7 @@ function toCapacityUser(user: UserRow): CapacityUser {
 
 export function createCapacityUsersRepo(db: DatabaseExecutor) {
   return {
-    findById(id: number) {
+    findById(id: UserId) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -32,7 +39,7 @@ export function createCapacityUsersRepo(db: DatabaseExecutor) {
         .then((user) => (user ? toCapacityUser(user) : undefined));
     },
 
-    findByBranchIncludingInactive(branchId: number) {
+    findByBranchIncludingInactive(branchId: BranchId) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -41,7 +48,7 @@ export function createCapacityUsersRepo(db: DatabaseExecutor) {
         .then((users) => users.map(toCapacityUser));
     },
 
-    findByBranch(branchId: number) {
+    findByBranch(branchId: BranchId) {
       return db
         .selectFrom("users")
         .selectAll()

@@ -1,5 +1,6 @@
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
@@ -12,18 +13,18 @@ interface ScopeRepos<
   T extends ManageableCapacityUser = ManageableCapacityUser,
 > {
   users: {
-    findById(id: number): Promise<T | undefined>;
+    findById(id: UserId): Promise<T | undefined>;
   };
   teams: {
-    findBySupervisorId(id: number): Promise<{ id: number } | undefined>;
-    findByIdWithSupervisor(id: number): Promise<CapacityTeam | undefined>;
+    findBySupervisorId(id: UserId): Promise<{ id: TeamId } | undefined>;
+    findByIdWithSupervisor(id: TeamId): Promise<CapacityTeam | undefined>;
   };
 }
 
 function canManageExecutiveRecord(
   actor: AuthSession,
   target: ManageableCapacityUser,
-  supervisedTeamId: number | null,
+  supervisedTeamId: TeamId | null,
 ): boolean {
   if (target.role !== "executive") return false;
   if (actor.role === "superuser") return true;
@@ -35,7 +36,7 @@ function canManageExecutiveRecord(
 
 export async function canManageExecutive<T extends ManageableCapacityUser>(
   actor: AuthSession,
-  targetUserId: number,
+  targetUserId: UserId,
   repos: ScopeRepos<T>,
 ): Promise<{ ok: boolean; target: T | null }> {
   const target = await repos.users.findById(targetUserId);

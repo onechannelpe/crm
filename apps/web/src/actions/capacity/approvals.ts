@@ -9,6 +9,7 @@ import {
 } from "~/server/capacity/application/commands";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import type { UserId } from "~/server/shared/ids";
 
 import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
 
@@ -46,7 +47,7 @@ export async function rejectCapacity(requestId: number, note: string) {
 }
 
 export async function grantMoreSearches(
-  userId: number,
+  userId: UserId,
   amount: number,
   reason: string,
 ) {
@@ -66,7 +67,7 @@ export async function grantMoreSearches(
 }
 
 export async function grantMoreLeadRefill(
-  userId: number,
+  userId: UserId,
   amount: number,
   reason: string,
 ) {

@@ -1,5 +1,14 @@
 import { isPlainRecord } from "~/lib/type-guards";
-import type { AssignmentId, ContactId, TeamId, UserId } from "~/server/shared/ids";
+import {
+  isAssignmentId,
+  isBranchId,
+  isContactId,
+  type AssignmentId,
+  type BranchId,
+  type ContactId,
+  type TeamId,
+  type UserId,
+} from "~/server/shared/ids";
 
 export const EXTENSION_HANDOFF_TOKEN_ISSUER = "web" as const;
 export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
@@ -41,11 +50,11 @@ export type ExtensionRuntimeEventType =
 export interface ExtensionHandoffClaims {
   iss: typeof EXTENSION_HANDOFF_TOKEN_ISSUER;
   aud: typeof EXTENSION_HANDOFF_TOKEN_AUDIENCE;
-  sub: `user:${number}`;
+  sub: `user:${UserId}`;
   authSessionId: string;
-  branchId: number;
-  assignmentId: number;
-  contactId: number;
+  branchId: BranchId;
+  assignmentId: AssignmentId;
+  contactId: ContactId;
   phone: string;
   clientName: string | null;
   organizationLabel: string | null;
@@ -59,9 +68,9 @@ export interface ExtensionHandoffClaims {
 export interface ExtensionInstallationSessionClaims {
   iss: typeof EXTENSION_HANDOFF_TOKEN_ISSUER;
   aud: typeof EXTENSION_SESSION_TOKEN_AUDIENCE;
-  sub: `user:${number}`;
+  sub: `user:${UserId}`;
   authSessionId: string;
-  branchId: number;
+  branchId: BranchId;
   installationId: string;
   jti: string;
   iat: number;
@@ -69,7 +78,7 @@ export interface ExtensionInstallationSessionClaims {
 }
 
 export interface CreateExtensionHandoffTokenRequest {
-  assignmentId: number;
+  assignmentId: AssignmentId;
 }
 
 export interface CreateExtensionHandoffTokenResponse {
@@ -101,8 +110,8 @@ export interface RefreshExtensionSessionResponse {
 
 export interface ExecutivePresenceEventPayload {
   presenceStatus: Exclude<ExtensionExecutivePresenceStatus, "offline">;
-  assignmentId: number | null;
-  contactId: number | null;
+  assignmentId: AssignmentId | null;
+  contactId: ContactId | null;
   callSessionId: string | null;
   updatedAt: number;
 }
@@ -114,8 +123,8 @@ export interface ExecutiveHeartbeatPayload {
 export interface CallLifecycleStartedPayload {
   event: "started";
   sessionId: string;
-  assignmentId: number;
-  contactId: number;
+  assignmentId: AssignmentId;
+  contactId: ContactId;
   phone: string;
   at: number;
 }
@@ -214,7 +223,7 @@ export function isExtensionSyncHealth(
 export function isCreateExtensionHandoffTokenRequest(
   value: unknown,
 ): value is CreateExtensionHandoffTokenRequest {
-  return isPlainRecord(value) && typeof value.assignmentId === "number";
+  return isPlainRecord(value) && isAssignmentId(value.assignmentId);
 }
 
 export function isClaimExtensionSessionRequest(
@@ -244,8 +253,8 @@ function isExecutivePresencePayload(
     isPlainRecord(value) &&
     isExtensionExecutivePresenceStatus(value.presenceStatus) &&
     value.presenceStatus !== "offline" &&
-    (value.assignmentId === null || typeof value.assignmentId === "number") &&
-    (value.contactId === null || typeof value.contactId === "number") &&
+    (value.assignmentId === null || isAssignmentId(value.assignmentId)) &&
+    (value.contactId === null || isContactId(value.contactId)) &&
     (value.callSessionId === null || typeof value.callSessionId === "string") &&
     typeof value.updatedAt === "number"
   );
@@ -260,8 +269,8 @@ function isCallLifecyclePayload(value: unknown): value is CallLifecyclePayload {
     case "started":
       return (
         typeof value.sessionId === "string" &&
-        typeof value.assignmentId === "number" &&
-        typeof value.contactId === "number" &&
+        isAssignmentId(value.assignmentId) &&
+        isContactId(value.contactId) &&
         typeof value.phone === "string" &&
         typeof value.at === "number"
       );

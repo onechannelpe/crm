@@ -2,7 +2,7 @@ import type { Selectable } from "kysely";
 
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import type { Database, UsersTable } from "~/lib/db/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import { asBranchId, asUserId, type BranchId, type UserId } from "~/server/shared/ids";
 
 type UserRow = Selectable<UsersTable>;
 type UserSessionRow = Selectable<Database["user_sessions"]>;
@@ -34,8 +34,8 @@ export function mapUserToSessionIdentity(
   user: SessionIdentitySource,
 ): SessionIdentity {
   return {
-    userId: user.id,
-    branchId: user.branch_id,
+    userId: asUserId(user.id),
+    branchId: asBranchId(user.branch_id),
     role: user.role,
     onboardingCompleted: user.onboarding_completed_at !== null,
   };
@@ -47,8 +47,8 @@ export function mapUserSessionRowToAuthSession(
 ): AuthSession {
   return {
     id: sessionId,
-    userId: session.user_id,
-    branchId: session.branch_id,
+    userId: asUserId(session.user_id),
+    branchId: asBranchId(session.branch_id),
     role: session.role,
     onboardingCompleted: session.session_class === "app",
     sessionClass: session.session_class,

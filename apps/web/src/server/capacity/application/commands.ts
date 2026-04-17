@@ -3,6 +3,7 @@ import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { TeamId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive, canManageScope } from "../domain/access-policy";
@@ -32,15 +33,15 @@ function rollback(err: DomainError): never {
 function toManagedScopeRepos(tx: CapacityApprovalTxPort) {
   return {
     users: {
-      findById: async (userId: number) => {
+      findById: async (userId: UserId) => {
         const user = await tx.findManagedUserById(userId);
         return user ?? undefined;
       },
     },
     teams: {
-      findBySupervisorId: (supervisorId: number) =>
+      findBySupervisorId: (supervisorId: UserId) =>
         tx.findSupervisedTeamBySupervisorId(supervisorId),
-      findByIdWithSupervisor: async (teamId: number) => {
+      findByIdWithSupervisor: async (teamId: TeamId) => {
         const team = await tx.findManagedTeamById(teamId);
         return team ?? undefined;
       },
@@ -283,7 +284,7 @@ export async function rejectCapacityRequest(
 export async function grantSearchCapacityDirect(
   ctx: AppContext,
   repos: CapacityCommandRepos,
-  input: { targetUserId: number; amount: number; reason: string },
+  input: { targetUserId: UserId; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   const check = await canManageExecutive(ctx.actor, input.targetUserId, repos);
   if (!check.target) {
@@ -312,7 +313,7 @@ export async function grantSearchCapacityDirect(
 export async function grantLeadCapacityDirect(
   ctx: AppContext,
   repos: CapacityCommandRepos,
-  input: { targetUserId: number; amount: number; reason: string },
+  input: { targetUserId: UserId; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   const check = await canManageExecutive(ctx.actor, input.targetUserId, repos);
   if (!check.target) {
@@ -380,7 +381,7 @@ export async function updateLeadPolicyDefault(
 export async function updateSearchPolicyOverride(
   ctx: AppContext,
   repos: CapacityCommandRepos,
-  input: { userId: number; monthlyLimit: number; expiresAt: number | null },
+  input: { userId: UserId; monthlyLimit: number; expiresAt: number | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   const check = await canManageExecutive(ctx.actor, input.userId, repos);
   if (!check.target) {
@@ -414,7 +415,7 @@ export async function updateLeadPolicyOverride(
   ctx: AppContext,
   repos: CapacityCommandRepos,
   input: {
-    userId: number;
+    userId: UserId;
     bufferTarget: number;
     dailyLimit: number;
     expiresAt: number | null;

@@ -1,14 +1,15 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
       return db
         .insertInto("search_capacity_grants")
@@ -18,7 +19,7 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
     },
 
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       periodStart: string,
       periodEnd: string,
     ) {
@@ -39,7 +40,7 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
 
 export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string }) {
+    insert(values: { user_id: UserId; amount: number; reason: string }) {
       const id = crypto.randomUUID();
       const now = Date.now();
       return db
@@ -76,7 +77,7 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
     },
 
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       periodStart: string,
       periodEnd: string,
     ) {
@@ -114,7 +115,7 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
     },
 
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       periodStart: string,
       periodEnd: string,
     ) {
@@ -137,10 +138,10 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
 export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
   return {
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
       return db
         .insertInto("lead_capacity_grants")
@@ -149,7 +150,7 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndDate(userId: number, date: string) {
+    findByUserAndDate(userId: UserId, date: string) {
       return db
         .selectFrom("lead_capacity_grants")
         .selectAll()
@@ -163,7 +164,7 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
 
 export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string }) {
+    insert(values: { user_id: UserId; amount: number; reason: string }) {
       const id = crypto.randomUUID();
       const now = Date.now();
       return db
@@ -212,7 +213,7 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndDate(userId: number, date: string) {
+    findByUserAndDate(userId: UserId, date: string) {
       return db
         .selectFrom("lead_usage_reservations")
         .selectAll()
@@ -242,7 +243,7 @@ export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findByUserAndDate(userId: number, date: string) {
+    findByUserAndDate(userId: UserId, date: string) {
       return db
         .selectFrom("lead_usage_commits as c")
         .innerJoin("lead_usage_reservations as r", "r.id", "c.reservation_id")

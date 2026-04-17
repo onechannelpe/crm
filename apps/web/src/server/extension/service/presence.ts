@@ -5,6 +5,7 @@ import type {
   TeamExecutiveStatusView,
 } from "../contracts";
 import type { createExtensionRuntimeRepo } from "../repos";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 export const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
 export const EXECUTIVE_SYNC_STALE_AFTER_MS = 2 * 60_000;
@@ -52,8 +53,8 @@ export function withDerivedProjectionStatuses(
 export async function upsertSyncHealth(
   extensionRuntime: ExtensionRuntimeRepo,
   values: {
-    userId: number;
-    branchId: number;
+    userId: UserId;
+    branchId: BranchId;
     syncHealth: ExtensionSyncHealth;
     updatedAt: number;
   },

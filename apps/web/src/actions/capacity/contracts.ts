@@ -1,4 +1,5 @@
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 export type PolicySource = "system" | "branch" | "team" | "user";
 
@@ -49,7 +50,7 @@ export type AuditChangeValue =
 export type CapacityAuditEvent = {
   id: number;
   createdAt: number;
-  userId: number;
+  userId: UserId;
   action: string;
   entityType: string;
   entityId: string | null;
@@ -58,25 +59,25 @@ export type CapacityAuditEvent = {
 
 export type PendingCapacityRequestView = {
   id: number;
-  userId: number;
+  userId: UserId;
   kind: "search_extra" | "lead_refill";
   status: CapacityRequestStatus;
   requestedAmount: number;
   reason: string;
   decisionNote: string | null;
-  reviewerUserId: number | null;
+  reviewerUserId: UserId | null;
   createdAt: number;
   updatedAt: number;
   decidedAt: number | null;
   names: string;
   firstSurname: string;
   secondSurname: string;
-  teamId: number | null;
-  branchId: number;
+  teamId: TeamId | null;
+  branchId: BranchId;
 };
 
 export type CapacityPolicyTeamDefaultsView = {
-  teamId: number;
+  teamId: TeamId;
   teamName: string;
   searchLimit: number | null;
   activeBufferTarget: number | null;
@@ -84,7 +85,7 @@ export type CapacityPolicyTeamDefaultsView = {
 };
 
 export type CapacityPolicyDefaultsView = {
-  branchId: number;
+  branchId: BranchId;
   branchSearchLimit: number | null;
   branchActiveBufferTarget: number | null;
   branchDailyRefillLimit: number | null;
@@ -92,10 +93,10 @@ export type CapacityPolicyDefaultsView = {
 };
 
 export type ManagedExecutiveView = {
-  id: number;
+  id: UserId;
   fullName: string;
   email: string;
-  teamId: number | null;
+  teamId: TeamId | null;
   executiveCategory: ExecutiveCategoryValue | null;
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
@@ -103,23 +104,23 @@ export type ManagedExecutiveView = {
 
 export type ExecutiveCapacityDetailView = {
   executive: {
-    id: number;
+    id: UserId;
     fullName: string;
     email: string;
-    teamId: number | null;
+    teamId: TeamId | null;
     executiveCategory: ExecutiveCategoryValue | null;
   };
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
   requests: {
     id: number;
-    userId: number;
+    userId: UserId;
     kind: "search_extra" | "lead_refill";
     status: CapacityRequestStatus;
     requestedAmount: number;
     reason: string;
     decisionNote: string | null;
-    reviewerUserId: number | null;
+    reviewerUserId: UserId | null;
     createdAt: number;
     updatedAt: number;
     decidedAt: number | null;

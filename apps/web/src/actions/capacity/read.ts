@@ -15,6 +15,7 @@ import { listManagedExecutives as listManagedExecutivesService } from "~/server/
 import { listPendingRequests as listPendingRequestsService } from "~/server/capacity/application/list-pending-requests";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import type { UserId } from "~/server/shared/ids";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
@@ -28,16 +29,15 @@ export async function getManagedExecutivesList(): Promise<
 }
 
 export async function getExecutiveDetail(
-  userId: number,
+  userId: UserId,
 ): Promise<ExecutiveCapacityDetailView> {
-  const safeUserId = assertPositiveInt(userId, "userId");
   return runAction({
     actionName: "capacity.executive_detail.read",
     access: { kind: "permission", permission: "capacity:read:team" },
-    input: { userId: safeUserId },
+    input: { userId },
     execute: (ctx) =>
       getExecutiveDetailService(ctx, serverRuntime.capacity.read, {
-        userId: safeUserId,
+        userId,
       }),
   });
 }

@@ -2,9 +2,14 @@
 
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/actions/contact-assignments/contracts";
 import type { CompleteContactAssignmentCallResult } from "~/actions/contact-assignments/contracts";
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import { serverRuntime } from "~/server/runtime";
+import {
+  asAssignmentId,
+  asContactId,
+  isAssignmentId,
+  isContactId,
+} from "~/server/shared/ids";
 import { runAction } from "~/server/shared/action-runtime";
 
 type CallOutcome = (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
@@ -19,24 +24,30 @@ function parseCallOutcome(value: string): CallOutcome {
 }
 
 function parseCompleteContactAssignmentCallInput(input: {
-  assignmentId: number;
-  contactId: number;
+  assignmentId: string;
+  contactId: string;
   outcome: string;
 }): {
-  assignmentId: number;
-  contactId: number;
+  assignmentId: ReturnType<typeof asAssignmentId>;
+  contactId: ReturnType<typeof asContactId>;
   outcome: CallOutcome;
 } {
+  if (!isAssignmentId(input.assignmentId)) {
+    throw new Error("Invalid assignmentId");
+  }
+  if (!isContactId(input.contactId)) {
+    throw new Error("Invalid contactId");
+  }
   return {
-    assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
-    contactId: assertPositiveInt(input.contactId, "contactId"),
+    assignmentId: asAssignmentId(input.assignmentId),
+    contactId: asContactId(input.contactId),
     outcome: parseCallOutcome(input.outcome),
   };
 }
 
 export async function completeContactAssignmentCall(
-  assignmentId: number,
-  contactId: number,
+  assignmentId: string,
+  contactId: string,
   outcome: string,
   notes?: string,
 ): Promise<CompleteContactAssignmentCallResult> {

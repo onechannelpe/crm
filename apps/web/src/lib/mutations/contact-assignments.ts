@@ -5,8 +5,8 @@ import { activeContactAssignmentsQuery } from "~/lib/queries/contact-assignments
 
 export const completeContactAssignmentCallMutation = action(
   async (
-    assignmentId: number,
-    contactId: number,
+    assignmentId: string,
+    contactId: string,
     outcome: string,
     notes?: string,
   ) => {

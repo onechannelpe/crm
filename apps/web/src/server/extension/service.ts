@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { AssignmentId, BranchId, UserId } from "~/server/shared/ids";
 
 import type { ExtensionRuntimeEventEnvelope } from "./contracts";
 import {
@@ -28,10 +29,10 @@ export function createExtensionService(
 
   return {
     createHandoffToken: (input: {
-      userId: number;
+      userId: UserId;
       authSessionId: string;
-      branchId: number;
-      assignmentId: number;
+      branchId: BranchId;
+      assignmentId: AssignmentId;
       origin: string;
     }) =>
       createHandoffToken(
@@ -83,8 +84,8 @@ export function createExtensionService(
 
     listTeamExecutiveStatuses: (input: {
       role: Role;
-      userId: number;
-      branchId: number;
+      userId: UserId;
+      branchId: BranchId;
     }) =>
       listTeamExecutiveStatuses(
         {

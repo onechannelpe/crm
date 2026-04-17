@@ -1,5 +1,11 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import {
+  isAssignmentId,
+  isContactId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 import {
   type ExtensionRuntimeEventEnvelope,
@@ -57,12 +63,12 @@ export async function ingestRuntimeEvent(
     const payloadText = JSON.stringify(input.event.payload);
     const eventAssignmentId =
       "assignmentId" in input.event.payload &&
-      typeof input.event.payload.assignmentId === "number"
+      isAssignmentId(input.event.payload.assignmentId)
         ? input.event.payload.assignmentId
         : null;
     const eventContactId =
       "contactId" in input.event.payload &&
-      typeof input.event.payload.contactId === "number"
+      isContactId(input.event.payload.contactId)
         ? input.event.payload.contactId
         : null;
     const eventSessionId =
@@ -208,8 +214,8 @@ export async function listTeamExecutiveStatuses(
   context: EventsMethodContext,
   input: {
     role: Role;
-    userId: number;
-    branchId: number;
+    userId: UserId;
+    branchId: BranchId;
   },
 ): Promise<Result<TeamExecutiveStatusView[], ExtensionServiceError>> {
   const { repos, now } = context;

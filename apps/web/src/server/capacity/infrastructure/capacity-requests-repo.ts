@@ -1,11 +1,12 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 export function createCapacityRequestsRepo(db: Kysely<Database>) {
   return {
     create(values: {
-      user_id: number;
+      user_id: UserId;
       kind: "search_extra" | "lead_refill_extra";
       status: "pending";
       requested_amount: number;
@@ -33,7 +34,7 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listByUser(userId: number) {
+    listByUser(userId: UserId) {
       return db
         .selectFrom("capacity_requests")
         .selectAll()
@@ -42,7 +43,7 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    listPendingByBranch(branchId: number) {
+    listPendingByBranch(branchId: BranchId) {
       return db
         .selectFrom("capacity_requests")
         .innerJoin("users", "users.id", "capacity_requests.user_id")
@@ -72,7 +73,7 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
 
     markApproved(
       id: number,
-      reviewerUserId: number,
+      reviewerUserId: UserId,
       decisionNote: string | null,
     ) {
       const now = Date.now();
@@ -92,7 +93,7 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
 
     markRejected(
       id: number,
-      reviewerUserId: number,
+      reviewerUserId: UserId,
       decisionNote: string | null,
     ) {
       const now = Date.now();

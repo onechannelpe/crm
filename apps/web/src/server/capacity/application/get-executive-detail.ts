@@ -3,6 +3,7 @@ import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../domain/access-policy";
@@ -13,7 +14,7 @@ import type { ExecutiveCapacityDetailView } from "./contracts";
 export async function getExecutiveDetail(
   ctx: AppContext,
   deps: CapacityReadContext,
-  input: { userId: number },
+  input: { userId: UserId },
 ): Promise<Result<ExecutiveCapacityDetailView, DomainError>> {
   try {
     const managed = await canManageExecutive(

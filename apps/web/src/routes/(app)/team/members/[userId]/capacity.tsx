@@ -11,10 +11,11 @@ import {
   updateSearchPolicyOverrideMutation,
 } from "~/lib/mutations/capacity";
 import { executiveCapacityDetailQuery } from "~/lib/queries/capacity";
+import { asUserId } from "~/server/shared/ids";
 
 export default function TeamMemberCapacityPage() {
   const params = useParams();
-  const userId = () => Number(params.userId);
+  const userId = () => asUserId(params.userId);
   const detail = createAsync(() => executiveCapacityDetailQuery(userId()), {
     initialValue: null,
   });

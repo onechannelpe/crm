@@ -1,6 +1,6 @@
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import { env } from "~/lib/env";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { AssignmentId, BranchId, UserId } from "~/server/shared/ids";
 
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
@@ -43,17 +43,16 @@ interface HandoffMethodContext {
 export async function createHandoffToken(
   context: HandoffMethodContext,
   input: {
-    userId: number;
+    userId: UserId;
     authSessionId: string;
-    branchId: number;
-    assignmentId: number;
+    branchId: BranchId;
+    assignmentId: AssignmentId;
     origin: string;
   },
 ): Promise<Result<CreateExtensionHandoffTokenResponse, ExtensionServiceError>> {
   const { repos, now } = context;
 
   try {
-    const assignmentId = assertPositiveInt(input.assignmentId, "assignmentId");
     if (!input.origin) {
       return Err({
         reason: "invalid_origin",
@@ -68,7 +67,7 @@ export async function createHandoffToken(
     }
 
     const assignment = await repos.contactAssignments.findActiveByIdForUser(
-      assignmentId,
+      input.assignmentId,
       input.userId,
     );
     if (!assignment) {
@@ -105,7 +104,7 @@ export async function createHandoffToken(
       sub: `user:${input.userId}`,
       authSessionId: input.authSessionId,
       branchId: input.branchId,
-      assignmentId,
+      assignmentId: input.assignmentId,
       contactId: contact.id,
       phone: contact.phone_primary,
       clientName: contact.name,
@@ -122,7 +121,7 @@ export async function createHandoffToken(
       user_id: input.userId,
       branch_id: input.branchId,
       auth_session_id: input.authSessionId,
-      assignment_id: assignmentId,
+      assignment_id: input.assignmentId,
       issued_at: issuedAt,
       expires_at: handoffExpiresAt,
       origin: input.origin,
