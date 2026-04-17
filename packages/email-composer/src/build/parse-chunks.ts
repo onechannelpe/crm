@@ -8,7 +8,7 @@ export type TextChunk =
   | { type: "param"; name: string }
   | { type: "ifblock"; param: string; inner: TextChunk[] };
 
-const PARAM_RE = /\{\{([a-zA-Z][a-zA-Z0-9_]*)\}\}/g;
+const PARAM_RE = /\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}/g;
 
 function splitByParams(html: string): HtmlChunk[] {
   const chunks: HtmlChunk[] = [];

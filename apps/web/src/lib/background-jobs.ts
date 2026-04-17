@@ -58,7 +58,7 @@ export function startBackgroundJobs() {
   // Start account lifecycle maintenance tasks
   startAccountLifecycleMaintenance({
     executor: serverRuntime.infra.db,
-    notificationSender: serverRuntime.notifications.notificationSender,
+    messaging: serverRuntime.notifications.messaging,
     invalidateUserSessions: (userId) =>
       serverRuntime.auth.sessionService.invalidateUserSessions(userId),
   });

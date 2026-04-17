@@ -1,6 +1,5 @@
-import type { NotificationsConfig } from "@crm/notifications";
-
 import { createLogger } from "~/lib/observability/logger";
+import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
 import type { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import type { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import type { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
@@ -22,7 +21,7 @@ const logger = createLogger("login-alerts");
 
 export function createPrivilegedLoginAlertSender(
   repos: AlertRepos,
-  config: NotificationsConfig,
+  messaging: MessagingGateway,
 ): SendPrivilegedLoginAlert {
   const notifications = createAppNotificationService({
     repos: {
@@ -30,7 +29,7 @@ export function createPrivilegedLoginAlertSender(
       notificationContacts: repos.notificationContacts,
       notificationPreferences: repos.notificationPreferences,
     },
-    config,
+    messaging,
   });
 
   return async function sendPrivilegedLoginAlert(

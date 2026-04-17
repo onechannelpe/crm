@@ -18,6 +18,17 @@ describe("parseHtmlChunks", () => {
     ]);
   });
 
+  it("extracts params when placeholders include spaces", () => {
+    const chunks = parseHtmlChunks("<p>{{ greeting }}, {{ name }}</p>");
+    expect(chunks).toEqual([
+      { type: "literal", value: "<p>" },
+      { type: "param", name: "greeting" },
+      { type: "literal", value: ", " },
+      { type: "param", name: "name" },
+      { type: "literal", value: "</p>" },
+    ]);
+  });
+
   it("parses if/endif blocks into ifblock nodes", () => {
     const html =
       "before<!-- __CRM_IF_title__ --><h1>{{title}}</h1><!-- __CRM_ENDIF__ -->after";

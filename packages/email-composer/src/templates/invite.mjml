@@ -31,18 +31,18 @@
           color="#333333"
           padding-bottom="24px"
         >
-          Restablecer contraseña
+          Tu acceso a One Channel está listo
         </mj-text>
 
-        <mj-text padding-bottom="8px">Hola {{fullName}},</mj-text>
+        <mj-text padding-bottom="8px">Hola {{ fullName }},</mj-text>
         <mj-text padding-bottom="24px">
-          Recibimos una solicitud para restablecer la contraseña de tu cuenta.
-          Usa el botón de abajo para crear una nueva contraseña.
-          Este enlace vence en 1 hora.
+          Se creó tu cuenta con el rol de <strong>{{ role }}</strong
+          >. Usa el botón de abajo para activar tu acceso antes de que venza el
+          enlace.
         </mj-text>
 
         <mj-button
-          href="{{resetUrl}}"
+          href="{{inviteUrl}}"
           background-color="#333333"
           color="#ffffff"
           font-size="14px"
@@ -52,12 +52,12 @@
           padding-bottom="24px"
           align="left"
         >
-          Restablecer contraseña
+          Activar mi cuenta
         </mj-button>
 
         <mj-text color="#666666" font-size="13px" padding-bottom="0">
-          Si no solicitaste este cambio, puedes ignorar este correo.
-          Tu contraseña no cambiará.
+          Este enlace de activación vence el {{ expiresAt }}. Pasada esa fecha,
+          pide a un administrador que reenvíe la invitación.
         </mj-text>
       </mj-column>
     </mj-section>
@@ -65,7 +65,8 @@
     <mj-section padding="32px 0" background-color="#f7f7f7">
       <mj-column>
         <mj-text align="center" color="#999999" font-size="12px">
-          Si no esperabas este correo, contacta a tu administrador.
+          Si no esperabas este correo, alguien ingresó tu dirección en el CRM.
+          Puedes ignorarlo sin problema.
         </mj-text>
       </mj-column>
     </mj-section>

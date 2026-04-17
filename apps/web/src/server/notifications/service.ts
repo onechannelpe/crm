@@ -1,11 +1,8 @@
-import type { NotificationsConfig } from "@crm/notifications";
-import {
-  createNotificationService,
-  renderCampaignEmail,
-} from "@crm/notifications";
+import { type DeliveryError, type Result } from "@crm/message-channels";
 
 import type { UsersTable } from "~/lib/db/types";
 
+import type { MessagingGateway } from "./messaging-gateway";
 import type { createNotificationCampaignsRepo } from "./repos-campaigns";
 import type { createNotificationContactsRepo } from "./repos-contacts";
 import type { createNotificationPreferencesRepo } from "./repos-preferences";
@@ -19,16 +16,6 @@ function nextBackoffMs(attemptCount: number): number {
   const base = Math.min(2 ** attemptCount * 1000, 60_000);
   const jitter = Math.floor(Math.random() * 500);
   return base + jitter;
-}
-
-function isTransientError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message.toLowerCase() : "";
-  return (
-    message.includes("429") ||
-    message.includes("rate") ||
-    message.includes("timeout") ||
-    message.includes("temporar")
-  );
 }
 
 export interface PublishCampaignInput {
@@ -50,12 +37,10 @@ export interface NotificationServiceDeps {
       typeof createNotificationPreferencesRepo
     >;
   };
-  config: NotificationsConfig;
+  messaging: MessagingGateway;
 }
 
 export function createAppNotificationService(deps: NotificationServiceDeps) {
-  const sender = createNotificationService(deps.config);
-
   return {
     async publishCampaign(input: PublishCampaignInput): Promise<number> {
       return deps.repos.notificationCampaigns.createCampaign({
@@ -150,42 +135,44 @@ export function createAppNotificationService(deps: NotificationServiceDeps) {
 
           const startedAt = Date.now();
 
-          try {
-            const emailHtml =
-              job.channel === "email"
-                ? renderCampaignEmail({
-                    title: job.title ?? undefined,
-                    bodyText: job.bodyText,
-                  }).html
-                : undefined;
+          let result: Result<void, DeliveryError>;
 
-            await sender.send({
-              channel: job.channel,
+          if (job.channel === "email") {
+            result = await deps.messaging.sendCampaignEmail({
               to: job.address,
-              subject: job.title ?? undefined,
-              text: job.bodyText,
-              html: emailHtml,
+              params: {
+                title: job.title ?? undefined,
+                bodyText: job.bodyText,
+              },
             });
-
-            const sentAt = Date.now();
-            await deps.repos.notificationCampaigns.markJobSent(job.jobId);
-            await deps.repos.notificationCampaigns.markRecipientSent(
-              job.recipientId,
-              sentAt,
-            );
-            await deps.repos.notificationCampaigns.createDelivery({
-              recipient_id: job.recipientId,
-              provider: job.channel === "email" ? "resend" : "whatsapp_cloud",
-              provider_message_id: null,
-              status: "sent",
-              error_code: null,
-              error_message: null,
-              latency_ms: sentAt - startedAt,
-              created_at: sentAt,
+          } else {
+            result = await deps.messaging.sendWhatsAppText({
+              to: job.address,
+              body: job.bodyText,
             });
-          } catch (error) {
-            await handleJobError(deps.repos, job, error, startedAt);
           }
+
+          if (!result.ok) {
+            await handleJobError(deps.repos, job, result.error, startedAt);
+            return;
+          }
+
+          const sentAt = Date.now();
+          await deps.repos.notificationCampaigns.markJobSent(job.jobId);
+          await deps.repos.notificationCampaigns.markRecipientSent(
+            job.recipientId,
+            sentAt,
+          );
+          await deps.repos.notificationCampaigns.createDelivery({
+            recipient_id: job.recipientId,
+            provider: job.channel === "email" ? "resend" : "whatsapp_cloud",
+            provider_message_id: null,
+            status: "sent",
+            error_code: null,
+            error_message: null,
+            latency_ms: sentAt - startedAt,
+            created_at: sentAt,
+          });
         }),
       );
     },
@@ -287,13 +274,13 @@ async function handleJobError(
     attemptCount: number;
     channel: "email" | "whatsapp";
   },
-  error: unknown,
+  error: DeliveryError,
   startedAt: number,
 ): Promise<void> {
-  const message = error instanceof Error ? error.message : "unknown error";
+  const message = error.message;
   const attemptCount = job.attemptCount + 1;
 
-  if (attemptCount >= MAX_ATTEMPTS || !isTransientError(error)) {
+  if (attemptCount >= MAX_ATTEMPTS || !error.retryable) {
     const failedAt = Date.now();
     await repos.notificationCampaigns.markJobFailed(
       job.jobId,

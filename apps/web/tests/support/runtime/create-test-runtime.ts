@@ -1,5 +1,7 @@
+import { createSessionService } from "~/server/auth/application/session-service";
+import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
+import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
-import { createAuthRuntime } from "~/server/runtime/auth-runtime";
 import { createPipelineRuntime } from "~/server/runtime/pipeline-runtime";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
@@ -23,7 +25,9 @@ export interface TestRuntime {
     get(): number;
     set(value: number): void;
   };
-  auth: ReturnType<typeof createAuthRuntime>;
+  auth: {
+    sessionService: ReturnType<typeof createSessionService>;
+  };
   pipeline: ReturnType<typeof createPipelineRuntime>;
   sales: {
     salesExportBlobStore: ReturnType<typeof createSalesExportBlobStore>;
@@ -48,11 +52,14 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     info() {},
     error() {},
   };
-
-  const auth = createAuthRuntime(
-    { db: ctx.db, now: now.get, logger },
-    { send: async () => {} },
-  );
+  const auth = {
+    sessionService: createSessionService({
+      sessions: createAuthSessionRepo(ctx.db),
+      users: createAuthUsersRepo(ctx.db),
+      now: now.get,
+      logger,
+    }),
+  };
   const pipeline = createPipelineRuntime({
     db: ctx.db,
     now: now.get,

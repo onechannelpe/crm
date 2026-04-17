@@ -1,5 +1,4 @@
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import { env } from "~/lib/env";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -8,6 +7,7 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
@@ -32,7 +32,10 @@ export type AuthLoginRepos = {
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
 };
 
-export function createAuthLoginContext(executor: DatabaseExecutor) {
+export function createAuthLoginContext(
+  executor: DatabaseExecutor,
+  messaging: MessagingGateway,
+) {
   return {
     repos: {
       oauthAccounts: createOAuthAccountsRepo(executor),
@@ -53,13 +56,7 @@ export function createAuthLoginContext(executor: DatabaseExecutor) {
         notificationContacts: createNotificationContactsRepo(executor),
         notificationPreferences: createNotificationPreferencesRepo(executor),
       },
-      {
-        resendApiKey: env.resendApiKey || undefined,
-        fromEmail: env.emailFrom || undefined,
-        whatsappAccessToken: env.whatsappAccessToken || undefined,
-        whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-        whatsappApiVersion: env.whatsappApiVersion || undefined,
-      },
+      messaging,
     ),
   };
 }

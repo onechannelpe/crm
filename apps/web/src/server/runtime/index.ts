@@ -25,7 +25,7 @@ export function createServerRuntime() {
   return {
     infra,
     admin: createAdminRuntime(infra),
-    auth: createAuthRuntime(infra, notifications.notificationSender),
+    auth: createAuthRuntime(infra, notifications.messaging),
     capacity: createCapacityRuntime(infra),
     clientSearch: createClientSearchRuntime(infra),
     contactAssignments: createContactAssignmentsRuntime(infra),

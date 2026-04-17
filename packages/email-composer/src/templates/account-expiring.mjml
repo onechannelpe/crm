@@ -34,15 +34,16 @@
           Tu cuenta vence pronto
         </mj-text>
 
-        <mj-text padding-bottom="8px">Hola {{fullName}},</mj-text>
+        <mj-text padding-bottom="8px">Hola {{ fullName }},</mj-text>
         <mj-text padding-bottom="24px">
-          Tu cuenta en One Channel vencerá el <strong>{{expiresAt}}</strong>.
-          Pasada esa fecha perderás el acceso. Si crees que esto es un error,
+          Tu cuenta en One Channel vencerá el <strong>{{ expiresAt }}</strong
+          >. Pasada esa fecha perderás el acceso. Si crees que esto es un error,
           comunícate con tu administrador.
         </mj-text>
 
         <mj-text color="#666666" font-size="13px" padding-bottom="0">
-          Tu usuario es <strong>{{username}}</strong>.
+          Tu usuario es <strong>{{ username }}</strong
+          >.
         </mj-text>
       </mj-column>
     </mj-section>

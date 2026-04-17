@@ -23,7 +23,7 @@
     "pipeline:normalize-sample": "bun run pipeline:engine validate --profile quick",
     "test:engine": "cargo test -p engine",
     "generate": "bun run --parallel generate:contracts generate:templates",
-    "generate:templates": "bun run --cwd packages/notifications build:emails",
+    "generate:templates": "bun run --cwd packages/email-composer build:emails",
     "generate:contracts": "bun run tools/codegen/bin/generate.ts",
     "check": "bun run generate:templates && bun run check:rust && bun run --parallel check:contracts check:search-contract check:web check:format:ts",
     "check:rust": "cargo xtask-check && cargo xtask-fmt && cargo xtask-clippy",
