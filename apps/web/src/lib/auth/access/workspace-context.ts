@@ -4,42 +4,43 @@ import {
   requiresStrictTeamHierarchy,
   type WorkspaceScopeType,
 } from "./workspace-scope";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 interface TeamRecord {
-  id: number;
+  id: TeamId;
   name: string;
-  branch_id: number;
-  supervisor_id: number | null;
+  branch_id: BranchId;
+  supervisor_id: UserId | null;
   supervisor_names: string | null;
   supervisor_first_surname: string | null;
   supervisor_role: Role | null;
-  supervisor_branch_id: number | null;
+  supervisor_branch_id: BranchId | null;
 }
 
 interface ManagedTeamRecord {
-  id: number;
+  id: TeamId;
   name: string;
-  branch_id: number;
+  branch_id: BranchId;
 }
 
 export interface WorkspaceIdentity {
   scopeType: WorkspaceScopeType;
-  team: { id: number; name: string } | null;
-  supervisor: { id: number; names: string } | null;
-  branch: { id: number; name: string } | null;
+  team: { id: TeamId; name: string } | null;
+  supervisor: { id: UserId; names: string } | null;
+  branch: { id: BranchId; name: string } | null;
 }
 
 interface ResolveWorkspaceContextInput {
   role: Role;
-  userId: number;
-  branchId: number;
+  userId: UserId;
+  branchId: BranchId;
   branchName: string | null;
-  userTeamId: number | null;
+  userTeamId: TeamId | null;
   assignedTeam: TeamRecord | null;
   managedTeam: ManagedTeamRecord | null;
 }
 
-function createTeam(team: { id: number; name: string } | null) {
+function createTeam(team: { id: TeamId; name: string } | null) {
   if (!team) return null;
   return { id: team.id, name: team.name };
 }

@@ -1,4 +1,5 @@
 import { isPlainRecord } from "~/lib/type-guards";
+import type { AssignmentId, ContactId, TeamId, UserId } from "~/server/shared/ids";
 
 export const EXTENSION_HANDOFF_TOKEN_ISSUER = "web" as const;
 export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
@@ -178,15 +179,15 @@ export type ExtensionRuntimeEventEnvelope = {
 }[ExtensionRuntimeEventType];
 
 export interface TeamExecutiveStatusView {
-  userId: number;
+  userId: UserId;
   names: string;
   firstSurname: string;
-  teamId: number | null;
+  teamId: TeamId | null;
   teamName: string | null;
   presenceStatus: ExtensionExecutivePresenceStatus | null;
   syncHealth: ExtensionSyncHealth;
-  assignmentId: number | null;
-  contactId: number | null;
+  assignmentId: AssignmentId | null;
+  contactId: ContactId | null;
   callSessionId: string | null;
   presenceUpdatedAt: number | null;
   syncUpdatedAt: number | null;

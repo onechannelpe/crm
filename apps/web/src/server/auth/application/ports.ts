@@ -1,18 +1,20 @@
+import type { UserId } from "~/server/shared/ids";
+
 export interface AdminSessionRevocationPort {
   invalidateSession(sessionId: string): Promise<void>;
-  invalidateUserSessions(userId: number): Promise<void>;
+  invalidateUserSessions(userId: UserId): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
     now: number,
   ): Promise<void>;
-  revokeInstallationSessionsByUser(userId: number, now: number): Promise<void>;
+  revokeInstallationSessionsByUser(userId: UserId, now: number): Promise<void>;
   updateExecutiveSyncHealth(input: {
-    userId: number;
+    userId: UserId;
     syncHealth: "ok" | "stale" | "reauth_required";
     syncUpdatedAt: number;
   }): Promise<void>;
   createAuditLog(input: {
-    userId: number;
+    userId: UserId;
     action: string;
     entityType: string;
     entityId: string;
@@ -28,13 +30,13 @@ export interface AuthSessionLogoutPort {
     now: number,
   ): Promise<void>;
   updateExecutiveSyncHealth(input: {
-    userId: number;
+    userId: UserId;
     syncHealth: "ok" | "stale" | "reauth_required";
     syncUpdatedAt: number;
   }): Promise<void>;
   clearSessionCookie(): void;
   createAuditLog(input: {
-    userId: number;
+    userId: UserId;
     action: string;
     entityType: string;
     entityId: string;

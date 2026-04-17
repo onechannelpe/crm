@@ -1,8 +1,8 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
-export type UserId = number;
-export type BranchId = number;
+export type { BranchId, UserId };
 
 type AssignmentStatus = "active" | "completed" | "expired";
 

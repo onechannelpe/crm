@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { WorkspaceScopeType } from "~/lib/auth/access/workspace-scope";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type {
   PrimaryAuthMethod,
   SessionClass,
@@ -8,7 +9,7 @@ import type {
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 
 export interface CurrentUserView {
-  id: number;
+  id: UserId;
   email: string;
   names: string;
   firstSurname: string;
@@ -26,11 +27,11 @@ export interface CurrentUserView {
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  branchId: number;
+  branchId: BranchId;
   scopeType: WorkspaceScopeType;
-  team: { id: number; name: string } | null;
-  supervisor: { id: number; names: string } | null;
-  branch: { id: number; name: string } | null;
+  team: { id: TeamId; name: string } | null;
+  supervisor: { id: UserId; names: string } | null;
+  branch: { id: BranchId; name: string } | null;
 }
 
 export type PasswordLoginSubmissionResult =
@@ -67,7 +68,7 @@ export type ResetPasswordResult =
 
 export interface SessionInfo {
   id: string;
-  userId: number;
+  userId: UserId;
   userEmail: string;
   userName: string;
   role: Role;

@@ -1,5 +1,5 @@
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 import type { CapacityRequestStatus } from "../domain/types";
 import type { LeadCapacitySnapshot } from "./get-lead-capacity-snapshot";
@@ -38,12 +38,12 @@ export type PendingCapacityRequestView = {
   names: string;
   firstSurname: string;
   secondSurname: string;
-  teamId: number | null;
-  branchId: number;
+  teamId: TeamId | null;
+  branchId: BranchId;
 };
 
 export type CapacityPolicyTeamDefaultsView = {
-  teamId: number;
+  teamId: TeamId;
   teamName: string;
   searchLimit: number | null;
   activeBufferTarget: number | null;
@@ -51,7 +51,7 @@ export type CapacityPolicyTeamDefaultsView = {
 };
 
 export type CapacityPolicyDefaultsView = {
-  branchId: number;
+  branchId: BranchId;
   branchSearchLimit: number | null;
   branchActiveBufferTarget: number | null;
   branchDailyRefillLimit: number | null;
@@ -59,10 +59,10 @@ export type CapacityPolicyDefaultsView = {
 };
 
 export type ManagedExecutiveView = {
-  id: number;
+  id: UserId;
   fullName: string;
   email: string;
-  teamId: number | null;
+  teamId: TeamId | null;
   executiveCategory: ExecutiveCategoryValue | null;
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
@@ -70,10 +70,10 @@ export type ManagedExecutiveView = {
 
 export type ExecutiveCapacityDetailView = {
   executive: {
-    id: number;
+    id: UserId;
     fullName: string;
     email: string;
-    teamId: number | null;
+    teamId: TeamId | null;
     executiveCategory: ExecutiveCategoryValue | null;
   };
   searchStatus: SearchCapacitySnapshot;

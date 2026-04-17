@@ -1,29 +1,22 @@
-import { brand, type Brand } from "~/lib/types/brand";
 import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
 import type { DomainError } from "~/server/shared/domain-error";
+import {
+  asLeadId,
+  createLeadId,
+  isLeadId,
+  type LeadId,
+} from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import { Ok } from "~/server/shared/result";
 
 import { normalizeLeadRuc } from "./lead-schema-parser";
 
-export type LeadId = Brand<string, "LeadId">;
-
-// Trusted boundary: only call from DB read paths and createLeadId.
-export const asLeadId = (id: string): LeadId => brand<string, "LeadId">(id);
-
-export function createLeadId(): LeadId {
-  return asLeadId(crypto.randomUUID());
-}
-
-export function isLeadId(value: string): value is LeadId {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
-}
+export type { LeadId };
+export { asLeadId, createLeadId, isLeadId };
 
 export type LeadRecord = {
   id: LeadId;
