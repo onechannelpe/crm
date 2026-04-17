@@ -1,8 +1,6 @@
-import { sql, type Insertable, type Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
-import type { Database, NotificationJobsTable } from "~/lib/db/types";
-
-type NewNotificationJobRow = Insertable<NotificationJobsTable>;
+import type { Database } from "~/lib/db/types";
 
 export interface NotificationDeliveryJob {
   id: number;
@@ -17,8 +15,60 @@ export interface NotificationDeliveryJob {
 
 export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
   return {
-    createJob(values: NewNotificationJobRow) {
-      return db.insertInto("notification_jobs").values(values).execute();
+    createPendingJobsForCampaignUsers(params: {
+      campaignId: number;
+      userIds: number[];
+      createdAt: number;
+      maxAttempts: number;
+    }) {
+      if (params.userIds.length === 0) {
+        return Promise.resolve();
+      }
+
+      return db
+        .insertInto("notification_jobs")
+        .columns([
+          "recipient_id",
+          "status",
+          "attempt_count",
+          "max_attempts",
+          "available_at",
+          "lease_owner",
+          "lease_until",
+          "last_error",
+          "created_at",
+          "updated_at",
+        ])
+        .expression((eb) =>
+          eb
+            .selectFrom("notification_recipients")
+            .leftJoin(
+              "notification_jobs",
+              "notification_jobs.recipient_id",
+              "notification_recipients.id",
+            )
+            .select((selectEb) => [
+              "notification_recipients.id as recipient_id",
+              selectEb.val("pending").as("status"),
+              selectEb.val(0).as("attempt_count"),
+              selectEb.val(params.maxAttempts).as("max_attempts"),
+              selectEb.val(params.createdAt).as("available_at"),
+              selectEb.val(null).as("lease_owner"),
+              selectEb.val(null).as("lease_until"),
+              selectEb.val(null).as("last_error"),
+              selectEb.val(params.createdAt).as("created_at"),
+              selectEb.val(params.createdAt).as("updated_at"),
+            ])
+            .where(
+              "notification_recipients.campaign_id",
+              "=",
+              params.campaignId,
+            )
+            .where("notification_recipients.created_at", "=", params.createdAt)
+            .where("notification_recipients.user_id", "in", params.userIds)
+            .where("notification_jobs.id", "is", null),
+        )
+        .execute();
     },
 
     async claimPendingJobsByChannel(params: {

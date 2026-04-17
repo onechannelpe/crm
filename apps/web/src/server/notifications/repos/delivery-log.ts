@@ -1,27 +1,11 @@
 import type { Insertable, Kysely } from "kysely";
 
-import type {
-  Database,
-  NotificationDeliveriesTable,
-  NotificationRecipientsTable,
-} from "~/lib/db/types";
+import type { Database, NotificationDeliveriesTable } from "~/lib/db/types";
 
-type NewNotificationRecipientRow = Insertable<NotificationRecipientsTable>;
 type NewNotificationDeliveryRow = Insertable<NotificationDeliveriesTable>;
 
 export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
   return {
-    async createRecipient(
-      values: NewNotificationRecipientRow,
-    ): Promise<number> {
-      const result = await db
-        .insertInto("notification_recipients")
-        .values(values)
-        .executeTakeFirstOrThrow();
-
-      return Number(result.insertId);
-    },
-
     markRecipientSent(recipientId: number, sentAt: number) {
       return db
         .updateTable("notification_recipients")
@@ -40,6 +24,134 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
 
     createDelivery(values: NewNotificationDeliveryRow) {
       return db.insertInto("notification_deliveries").values(values).execute();
+    },
+
+    createRecipientsForEmailUsers(params: {
+      campaignId: number;
+      eventType: string;
+      userIds: number[];
+      createdAt: number;
+    }) {
+      if (params.userIds.length === 0) {
+        return Promise.resolve();
+      }
+
+      return db
+        .insertInto("notification_recipients")
+        .columns([
+          "campaign_id",
+          "user_id",
+          "channel",
+          "address",
+          "status",
+          "status_reason",
+          "created_at",
+          "sent_at",
+          "failed_at",
+        ])
+        .expression((eb) =>
+          eb
+            .selectFrom("users")
+            .leftJoin("notification_preferences as prefs", (join) =>
+              join
+                .onRef("prefs.user_id", "=", "users.id")
+                .on("prefs.event_type", "=", params.eventType)
+                .on("prefs.channel", "=", "email"),
+            )
+            .leftJoin("notification_contacts as contacts", (join) =>
+              join
+                .onRef("contacts.user_id", "=", "users.id")
+                .on("contacts.channel", "=", "email")
+                .on("contacts.is_primary", "=", 1)
+                .on("contacts.is_verified", "=", 1),
+            )
+            .select((selectEb) => [
+              selectEb.val(params.campaignId).as("campaign_id"),
+              "users.id as user_id",
+              selectEb.val("email").as("channel"),
+              selectEb.fn
+                .coalesce("contacts.address", "users.email")
+                .as("address"),
+              selectEb.val("pending").as("status"),
+              selectEb.val(null).as("status_reason"),
+              selectEb.val(params.createdAt).as("created_at"),
+              selectEb.val(null).as("sent_at"),
+              selectEb.val(null).as("failed_at"),
+            ])
+            .where("users.id", "in", params.userIds)
+            .where("users.is_active", "=", 1)
+            .where("users.onboarding_completed_at", "is not", null)
+            .where((whereEb) =>
+              whereEb.or([
+                whereEb("prefs.id", "is", null),
+                whereEb("prefs.is_enabled", "=", 1),
+              ]),
+            ),
+        )
+        .execute();
+    },
+
+    createRecipientsForWhatsAppUsers(params: {
+      campaignId: number;
+      eventType: string;
+      userIds: number[];
+      createdAt: number;
+    }) {
+      if (params.userIds.length === 0) {
+        return Promise.resolve();
+      }
+
+      return db
+        .insertInto("notification_recipients")
+        .columns([
+          "campaign_id",
+          "user_id",
+          "channel",
+          "address",
+          "status",
+          "status_reason",
+          "created_at",
+          "sent_at",
+          "failed_at",
+        ])
+        .expression((eb) =>
+          eb
+            .selectFrom("users")
+            .leftJoin("notification_preferences as prefs", (join) =>
+              join
+                .onRef("prefs.user_id", "=", "users.id")
+                .on("prefs.event_type", "=", params.eventType)
+                .on("prefs.channel", "=", "whatsapp"),
+            )
+            .innerJoin("notification_contacts as contacts", (join) =>
+              join
+                .onRef("contacts.user_id", "=", "users.id")
+                .on("contacts.channel", "=", "whatsapp")
+                .on("contacts.is_primary", "=", 1)
+                .on("contacts.is_verified", "=", 1),
+            )
+            .select((selectEb) => [
+              selectEb.val(params.campaignId).as("campaign_id"),
+              "users.id as user_id",
+              selectEb.val("whatsapp").as("channel"),
+              "contacts.address as address",
+              selectEb.val("pending").as("status"),
+              selectEb.val(null).as("status_reason"),
+              selectEb.val(params.createdAt).as("created_at"),
+              selectEb.val(null).as("sent_at"),
+              selectEb.val(null).as("failed_at"),
+            ])
+            .where("users.id", "in", params.userIds)
+            .where("users.is_active", "=", 1)
+            .where("users.onboarding_completed_at", "is not", null)
+            .where((whereEb) =>
+              whereEb.or([
+                whereEb("prefs.id", "is", null),
+                whereEb("prefs.is_enabled", "=", 1),
+              ]),
+            ),
+        )
+        .execute();
     },
   };
 }

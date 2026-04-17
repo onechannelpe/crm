@@ -4,24 +4,8 @@ import type { Database, NotificationContactsTable } from "~/lib/db/types";
 
 type NewNotificationContactRow = Insertable<NotificationContactsTable>;
 
-type NotificationChannel = NotificationContactsTable["channel"];
-
 export function createNotificationContactRepo(db: Kysely<Database>) {
   return {
-    findPrimaryVerifiedByUserAndChannel(
-      userId: number,
-      channel: NotificationChannel,
-    ) {
-      return db
-        .selectFrom("notification_contacts")
-        .selectAll()
-        .where("user_id", "=", userId)
-        .where("channel", "=", channel)
-        .where("is_primary", "=", 1)
-        .where("is_verified", "=", 1)
-        .executeTakeFirst();
-    },
-
     listByUser(userId: number) {
       return db
         .selectFrom("notification_contacts")

@@ -1,98 +1,61 @@
-import type { UsersTable } from "~/lib/db/types";
-
 import type { NotificationServiceDeps } from "../domain/types";
 
 const DEFAULT_JOB_MAX_ATTEMPTS = 5;
+const AUDIENCE_PAGE_SIZE = 250;
 
-async function enqueueUserChannels(
-  repos: NotificationServiceDeps["repos"],
-  user: { id: number; email: string; role: UsersTable["role"] },
-  campaignId: number,
-  eventType: string,
+async function enqueueCampaignAudience(
+  deps: NotificationServiceDeps,
+  campaign: Awaited<
+    ReturnType<
+      NotificationServiceDeps["repos"]["notificationCampaign"]["findQueuedCampaigns"]
+    >
+  >[number],
   now: number,
 ): Promise<void> {
-  const emailEnabled = await repos.notificationPreference.isEnabled({
-    userId: user.id,
-    eventType,
-    channel: "email",
-  });
+  let lastUserId = 0;
 
-  if (emailEnabled) {
-    const emailContact =
-      await repos.notificationContact.findPrimaryVerifiedByUserAndChannel(
-        user.id,
-        "email",
-      );
-    const recipientId = await repos.notificationDeliveryLog.createRecipient({
-      campaign_id: campaignId,
-      user_id: user.id,
-      channel: "email",
-      address: emailContact?.address ?? user.email,
-      status: "pending",
-      status_reason: null,
-      created_at: now,
-      sent_at: null,
-      failed_at: null,
-    });
-
-    await repos.notificationDeliveryJob.createJob({
-      recipient_id: recipientId,
-      status: "pending",
-      attempt_count: 0,
-      max_attempts: DEFAULT_JOB_MAX_ATTEMPTS,
-      available_at: now,
-      lease_owner: null,
-      lease_until: null,
-      last_error: null,
-      created_at: now,
-      updated_at: now,
-    });
-  }
-
-  const whatsappEnabled = await repos.notificationPreference.isEnabled({
-    userId: user.id,
-    eventType,
-    channel: "whatsapp",
-  });
-
-  if (!whatsappEnabled) {
-    return;
-  }
-
-  const whatsappContact =
-    await repos.notificationContact.findPrimaryVerifiedByUserAndChannel(
-      user.id,
-      "whatsapp",
+  while (true) {
+    const users = await deps.repos.notificationAudience.findAudienceMembersPage(
+      campaign.audience_type,
+      campaign.audience_ref,
+      lastUserId,
+      AUDIENCE_PAGE_SIZE,
     );
 
-  if (!whatsappContact) {
-    return;
+    if (users.length === 0) {
+      return;
+    }
+
+    const userIds = users.map((user) => user.id);
+
+    await deps.repos.notificationDeliveryLog.createRecipientsForEmailUsers({
+      campaignId: campaign.id,
+      eventType: campaign.event_type,
+      userIds,
+      createdAt: now,
+    });
+
+    await deps.repos.notificationDeliveryLog.createRecipientsForWhatsAppUsers({
+      campaignId: campaign.id,
+      eventType: campaign.event_type,
+      userIds,
+      createdAt: now,
+    });
+
+    await deps.repos.notificationDeliveryJob.createPendingJobsForCampaignUsers({
+      campaignId: campaign.id,
+      userIds,
+      createdAt: now,
+      maxAttempts: DEFAULT_JOB_MAX_ATTEMPTS,
+    });
+
+    const lastUser = users[users.length - 1];
+    if (!lastUser) {
+      return;
+    }
+
+    lastUserId = lastUser.id;
   }
-
-  const recipientId = await repos.notificationDeliveryLog.createRecipient({
-    campaign_id: campaignId,
-    user_id: user.id,
-    channel: "whatsapp",
-    address: whatsappContact.address,
-    status: "pending",
-    status_reason: null,
-    created_at: now,
-    sent_at: null,
-    failed_at: null,
-  });
-
-  await repos.notificationDeliveryJob.createJob({
-    recipient_id: recipientId,
-    status: "pending",
-    attempt_count: 0,
-    max_attempts: DEFAULT_JOB_MAX_ATTEMPTS,
-    available_at: now,
-    lease_owner: null,
-    lease_until: null,
-    last_error: null,
-    created_at: now,
-    updated_at: now,
-  });
 }
 
 export async function enqueueDueCampaigns(
@@ -116,27 +79,7 @@ export async function enqueueDueCampaigns(
       }
 
       try {
-        const users = await deps.repos.notificationAudience.findAudienceMembers(
-          campaign.audience_type,
-          campaign.audience_ref,
-        );
-
-        await Promise.all(
-          users.map((user) =>
-            enqueueUserChannels(
-              deps.repos,
-              {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-              },
-              campaign.id,
-              campaign.event_type,
-              now,
-            ),
-          ),
-        );
-
+        await enqueueCampaignAudience(deps, campaign, now);
         await deps.repos.notificationCampaign.markCompleted(campaign.id, now);
       } catch (error) {
         deps.logger.error("notification_campaign_enqueue_failed", {
