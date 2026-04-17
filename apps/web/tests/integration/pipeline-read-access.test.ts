@@ -9,6 +9,8 @@ import {
 
 describe("pipeline read access", () => {
   let runtime: TestRuntime;
+  const LEAD_A_ID = "00000000-0000-0000-0000-000000000011";
+  const LEAD_B_ID = "00000000-0000-0000-0000-000000000012";
 
   beforeEach(async () => {
     runtime = await createTestRuntime("pipeline-read-access");
@@ -22,7 +24,7 @@ describe("pipeline read access", () => {
     await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
-        id: 11,
+        id: LEAD_A_ID,
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -37,7 +39,7 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
-      leadId: 11,
+      leadId: LEAD_A_ID,
       actorUserId: 2,
       actorRole: "back_office",
     });
@@ -45,7 +47,7 @@ describe("pipeline read access", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.lead.id).toBe(11);
+    expect(result.value.lead.id).toBe(LEAD_A_ID);
     expect(result.value.timeline).toEqual([]);
   });
 
@@ -53,7 +55,7 @@ describe("pipeline read access", () => {
     await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
-        id: 12,
+        id: LEAD_B_ID,
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -68,7 +70,7 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
-      leadId: 12,
+      leadId: LEAD_B_ID,
       actorUserId: 3,
       actorRole: "executive",
     });
@@ -83,7 +85,7 @@ describe("pipeline read access", () => {
     await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
-        id: 11,
+        id: LEAD_A_ID,
         executive_id: 1,
         stage: "READY_FOR_SALE",
         status: null,
@@ -101,7 +103,7 @@ describe("pipeline read access", () => {
       .insertInto("pipeline_sales")
       .values({
         id: 21,
-        lead_id: 11,
+        lead_id: LEAD_A_ID,
         executive_id: 1,
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,
@@ -132,7 +134,7 @@ describe("pipeline read access", () => {
     await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
-        id: 12,
+        id: LEAD_B_ID,
         executive_id: 1,
         stage: "READY_FOR_SALE",
         status: null,
@@ -150,7 +152,7 @@ describe("pipeline read access", () => {
       .insertInto("pipeline_sales")
       .values({
         id: 22,
-        lead_id: 12,
+        lead_id: LEAD_B_ID,
         executive_id: 1,
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,

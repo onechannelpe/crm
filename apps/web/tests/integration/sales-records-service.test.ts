@@ -164,7 +164,7 @@ describe("sales records workflow service", () => {
 
     const logs = await ctx.repos.auditLogs.findByEntity(
       "sales_record",
-      created.value,
+      `${created.value}`,
     );
     expect(logs.some((log) => log.action === "sales_record_submitted")).toBe(
       true,

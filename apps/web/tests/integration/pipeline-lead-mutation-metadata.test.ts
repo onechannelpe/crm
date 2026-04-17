@@ -59,7 +59,6 @@ describe("pipeline lead mutation metadata", () => {
         role: "executive",
         branchId: 1,
       },
-      leadId: 501,
       leadId: LEAD_NOTE_ID,
       body: "Test note",
     });
@@ -152,7 +151,6 @@ describe("pipeline lead mutation metadata", () => {
         role: "supervisor",
         branchId: 1,
       },
-      leadId: 502,
       leadId: LEAD_REASSIGN_ID,
       toExecutiveId: 12,
     });
