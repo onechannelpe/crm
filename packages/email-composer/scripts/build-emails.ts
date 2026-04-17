@@ -65,12 +65,14 @@ for (const file of mjmlFiles) {
   const txtSource = readFileSync(join(templatesDir, `${name}.txt`), "utf-8");
 
   const multilineParams = extractMultilineParams(mjmlSource);
-  const { html, errors } = mjml2html(prepareMjml(mjmlSource), {
-    validationLevel: "strict",
-  });
-
-  if (errors.length > 0) {
-    for (const err of errors) console.error(`[${file}]`, err.formattedMessage);
+  let html: string;
+  try {
+    const result = await mjml2html(prepareMjml(mjmlSource), {
+      validationLevel: "strict",
+    });
+    html = result.html;
+  } catch (err: any) {
+    console.error(`[${file}]`, err.message || err);
     process.exit(1);
   }
 
