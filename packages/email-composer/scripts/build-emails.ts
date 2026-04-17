@@ -52,7 +52,9 @@ function prepareMjml(source: string): string {
     .replace(/<!--\s*crm:multiline:[a-zA-Z][a-zA-Z0-9_]*\s*-->/g, "");
 }
 
-const mjmlFiles = readdirSync(templatesDir).filter((f) => f.endsWith(".mjml"));
+const mjmlFiles = readdirSync(templatesDir).filter((f: string) =>
+  f.endsWith(".mjml"),
+);
 
 if (mjmlFiles.length === 0) {
   console.error("No .mjml files found in", templatesDir);
