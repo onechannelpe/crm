@@ -15,7 +15,7 @@ export interface AdminSessionRevocationPort {
     userId: number;
     action: string;
     entityType: string;
-    entityId: number;
+    entityId: string;
     changes: string | null;
     createdAt: number;
   }): Promise<void>;
@@ -37,7 +37,7 @@ export interface AuthSessionLogoutPort {
     userId: number;
     action: string;
     entityType: string;
-    entityId: number;
+    entityId: string;
     changes: string | null;
     createdAt: number;
   }): Promise<void>;

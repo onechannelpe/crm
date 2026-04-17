@@ -48,7 +48,7 @@ export async function rejectRecord(
       ctx.actor.userId,
       "sales_record_rejected",
       "sales_record",
-      input.recordId,
+      `${input.recordId}`,
       { from: record.status, to: "rejected", reason: input.reason },
     );
     return okCommandResult();

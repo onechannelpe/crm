@@ -20,7 +20,7 @@ describe("audit logs reader repository", () => {
       user_id: 5,
       action: "sales_record_confirmed",
       entity_type: "sales_record",
-      entity_id: 101,
+      entity_id: "101",
       changes: '{"from":"pending_confirmation","to":"confirmed"}',
       created_at: baseTime,
     });
@@ -28,7 +28,7 @@ describe("audit logs reader repository", () => {
       user_id: 1,
       action: "leads_requested",
       entity_type: "lead_assignment",
-      entity_id: 1,
+      entity_id: "1",
       changes: '{"requested":4,"assigned":4}',
       created_at: baseTime + 1,
     });
@@ -36,7 +36,7 @@ describe("audit logs reader repository", () => {
       user_id: 5,
       action: "all_sessions_revoked",
       entity_type: "user_session",
-      entity_id: 5,
+      entity_id: "5",
       changes: '{"reason":"security"}',
       created_at: baseTime + 2,
     });

@@ -62,7 +62,7 @@ export async function revokeInvite(
         input.actorUserId,
         "user_invite_revoked",
         "user",
-        invite.user_id,
+        `${invite.user_id}`,
         {
           inviteId: invite.id,
         },

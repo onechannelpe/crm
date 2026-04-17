@@ -101,7 +101,7 @@ export async function createDraft(
       ctx.actor.userId,
       "sales_record_created",
       "sales_record",
-      recordId,
+      `${recordId}`,
       { source: input.source },
     );
     return Ok({ id: recordId });

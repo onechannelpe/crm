@@ -45,7 +45,7 @@ export async function confirmRecord(
       ctx.actor.userId,
       "sales_record_confirmed",
       "sales_record",
-      input.recordId,
+      `${input.recordId}`,
       { from: record.status, to: "confirmed" },
     );
     return okCommandResult();

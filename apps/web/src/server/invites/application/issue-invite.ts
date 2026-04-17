@@ -39,7 +39,7 @@ export async function issueInvite(
     input.actorUserId,
     "user_invite_issued",
     "user",
-    input.userId,
+    `${input.userId}`,
     {
       inviteId,
       email: input.email,

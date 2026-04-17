@@ -30,7 +30,7 @@ export interface AuditReaderEvent {
   userId: number;
   action: string;
   entityType: string;
-  entityId: number;
+  entityId: string;
   changes: string | null;
 }
 

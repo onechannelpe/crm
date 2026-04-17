@@ -25,7 +25,7 @@ export async function revokeAllUserSessions(
     userId: ctx.actor.userId,
     action: "all_sessions_revoked",
     entityType: "user",
-    entityId: input.targetUserId,
+    entityId: `${input.targetUserId}`,
     changes: serializeAuditChanges(allSessionsRevokedChanges(ctx.actor.userId)),
     createdAt: now,
   });

@@ -82,7 +82,7 @@ export async function submitRecord(
       ctx.actor.userId,
       "sales_record_submitted",
       "sales_record",
-      input.recordId,
+      `${input.recordId}`,
       { from: record.status, to: "submitted_for_confirmation" },
     );
     return okCommandResult();

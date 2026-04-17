@@ -76,7 +76,7 @@ export async function updateDraft(
       ctx.actor.userId,
       "sales_record_draft_updated",
       "sales_record",
-      input.recordId,
+      `${input.recordId}`,
       {
         status: record.status,
         correctionNotes: input.correctionNotes,

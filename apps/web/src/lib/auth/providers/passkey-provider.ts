@@ -160,7 +160,7 @@ export function createPasskeyProvider(
         user_id: userId,
         action: "passkey_registration_started",
         entity_type: "passkey",
-        entity_id: userId,
+        entity_id: `${userId}`,
         changes: null,
         created_at: Date.now(),
       });

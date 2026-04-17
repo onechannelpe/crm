@@ -5,7 +5,7 @@ interface AuditLogWriter {
     user_id: number;
     action: string;
     entity_type: string;
-    entity_id: number;
+    entity_id: string;
     changes: string | null;
     created_at: number;
   }): Promise<unknown>;
@@ -21,7 +21,7 @@ export function createAuditService(deps: AuditDeps) {
       userId: number,
       action: string,
       entityType: string,
-      entityId: number,
+      entityId: string,
       changes?: unknown,
     ) {
       return deps.auditLogs.create({

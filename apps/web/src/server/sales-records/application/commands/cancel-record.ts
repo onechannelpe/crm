@@ -39,7 +39,7 @@ export async function cancelRecord(
       ctx.actor.userId,
       "sales_record_cancelled",
       "sales_record",
-      input.recordId,
+      `${input.recordId}`,
       { from: record.status, to: "cancelled" },
     );
     return okCommandResult();

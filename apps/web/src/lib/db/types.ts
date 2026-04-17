@@ -524,7 +524,7 @@ export interface AuditLogsTable {
   user_id: number;
   action: string;
   entity_type: string;
-  entity_id: number;
+  entity_id: string;
   changes: string | null;
   created_at: number;
 }

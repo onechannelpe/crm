@@ -45,7 +45,7 @@ export async function finishTotpEnrollment(
     user_id: user.id,
     action: "totp_enabled",
     entity_type: "user",
-    entity_id: user.id,
+    entity_id: `${user.id}`,
     changes: null,
     created_at: ctx.now(),
   });

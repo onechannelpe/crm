@@ -45,6 +45,11 @@ function parseAuditChanges(raw: unknown): AuditChangeValue {
   }
 }
 
+function parseEntityIdAsNumber(entityId: string): number | null {
+  const parsed = Number(entityId);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export async function getAuditEvents(
   ctx: AppContext,
   deps: CapacityReadContext,
@@ -80,16 +85,17 @@ export async function getAuditEvents(
           event.action.startsWith("capacity_"),
       )
       .filter((event) => {
+        const entityIdNumber = parseEntityIdAsNumber(event.entity_id);
         if (ctx.actor.role === "superuser") return true;
         if (ctx.actor.role !== "admin") return false;
         if (event.entity_type === "branch") {
-          return event.entity_id === ctx.actor.branchId;
+          return entityIdNumber === ctx.actor.branchId;
         }
         if (event.entity_type === "team") {
-          return event.entity_id != null && branchTeamIds.has(event.entity_id);
+          return entityIdNumber !== null && branchTeamIds.has(entityIdNumber);
         }
         if (event.entity_type === "user") {
-          return event.entity_id != null && branchUserIds.has(event.entity_id);
+          return entityIdNumber !== null && branchUserIds.has(entityIdNumber);
         }
         return false;
       })

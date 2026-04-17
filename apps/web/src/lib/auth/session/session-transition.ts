@@ -88,7 +88,7 @@ async function transitionSession(
       user_id: user.id,
       action: params.auditAction,
       entity_type: "user",
-      entity_id: user.id,
+      entity_id: `${user.id}`,
       changes: null,
       created_at: Date.now(),
     });

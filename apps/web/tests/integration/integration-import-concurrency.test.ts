@@ -10,6 +10,8 @@ import {
 
 describe("integration import pipeline concurrency", () => {
   let runtime: TestRuntime;
+  const LEAD_ONE_ID = "00000000-0000-0000-0000-000000000901";
+  const LEAD_TWO_ID = "00000000-0000-0000-0000-000000000902";
 
   beforeEach(async () => {
     runtime = await createTestRuntime("integration-import-concurrency");
@@ -26,7 +28,7 @@ describe("integration import pipeline concurrency", () => {
       .insertInto("pipeline_leads")
       .values([
         {
-          id: 901,
+          id: LEAD_ONE_ID,
           ruc: "20900000001",
           razon_social: "Org One",
           address: "Addr 1",
@@ -41,7 +43,7 @@ describe("integration import pipeline concurrency", () => {
           updated_at: now,
         },
         {
-          id: 902,
+          id: LEAD_TWO_ID,
           ruc: "20900000002",
           razon_social: "Org Two",
           address: "Addr 2",
@@ -153,12 +155,12 @@ describe("integration import pipeline concurrency", () => {
       {
         user_id: 1,
         event_type: "lead.needs_executive_input",
-        dedupe_key: "lead_nei_901",
+        dedupe_key: `lead_nei_${LEAD_ONE_ID}`,
       },
       {
         user_id: 4,
         event_type: "lead.ready_for_quotation",
-        dedupe_key: "lead_rfq_902",
+        dedupe_key: `lead_rfq_${LEAD_TWO_ID}`,
       },
     ]);
 

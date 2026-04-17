@@ -198,7 +198,7 @@ export function createPasskeyEnrollmentService(
           user_id: input.userId,
           action: "passkey_registered",
           entity_type: "passkey",
-          entity_id: input.userId,
+          entity_id: `${input.userId}`,
           changes: null,
           created_at: Date.now(),
         });

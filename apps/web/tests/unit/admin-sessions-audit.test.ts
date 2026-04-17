@@ -9,7 +9,7 @@ type AuditPayload = {
   userId: number;
   action: string;
   entityType: string;
-  entityId: number;
+  entityId: string;
   changes: string;
   createdAt: number;
 };
@@ -107,7 +107,7 @@ describe("admin session revocation", () => {
       userId: 9001,
       action: "session_revoked_by_admin",
       entityType: "user_session",
-      entityId: 42,
+      entityId: "42",
       createdAt: 1_700_000_100_000,
     });
     expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
@@ -140,7 +140,7 @@ describe("admin session revocation", () => {
       userId: 9001,
       action: "all_sessions_revoked",
       entityType: "user",
-      entityId: 77,
+      entityId: "77",
       createdAt: 1_700_000_100_000,
     });
     expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({

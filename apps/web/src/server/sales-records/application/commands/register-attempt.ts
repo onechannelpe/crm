@@ -53,7 +53,7 @@ export async function registerAttempt(
       ctx.actor.userId,
       "sales_record_attempt_logged",
       "sales_record",
-      input.recordId,
+      `${input.recordId}`,
       {
         outcome: input.outcome,
         hasNotes: input.notes !== null,

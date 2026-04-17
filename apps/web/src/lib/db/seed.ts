@@ -734,7 +734,7 @@ export async function seedIfEmpty(db: Kysely<Database>) {
         user_id: 12,
         action: "product_updated",
         entity_type: "product",
-        entity_id: 1,
+        entity_id: "1",
         changes: JSON.stringify({
           previous: { price: 69.9, is_active: 1 },
           next: { price: 72.9, is_active: 1 },

@@ -52,7 +52,7 @@ export type CapacityAuditEvent = {
   userId: number;
   action: string;
   entityType: string;
-  entityId: number | null;
+  entityId: string | null;
   changes: AuditChangeValue;
 };
 

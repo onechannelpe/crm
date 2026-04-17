@@ -23,7 +23,7 @@ export async function logoutUser(
     userId,
     action: "logout",
     entityType: "user",
-    entityId: userId,
+    entityId: String(userId),
     changes: null,
     createdAt: now,
   });

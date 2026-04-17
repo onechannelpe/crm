@@ -66,7 +66,7 @@ export async function changePassword(
     user_id: session.userId,
     action: "password_changed",
     entity_type: "user",
-    entity_id: session.userId,
+    entity_id: `${session.userId}`,
     changes: null,
     created_at: Date.now(),
   });
@@ -92,7 +92,7 @@ export async function removeAllPasskeys(): Promise<ActionSuccess> {
     user_id: session.userId,
     action: "passkeys_removed",
     entity_type: "user",
-    entity_id: session.userId,
+    entity_id: `${session.userId}`,
     changes: null,
     created_at: Date.now(),
   });
@@ -120,7 +120,7 @@ export async function disableTotp(): Promise<ActionSuccess> {
     user_id: session.userId,
     action: "totp_disabled",
     entity_type: "user",
-    entity_id: session.userId,
+    entity_id: `${session.userId}`,
     changes: null,
     created_at: Date.now(),
   });

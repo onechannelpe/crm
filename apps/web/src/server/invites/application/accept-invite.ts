@@ -63,7 +63,7 @@ export async function acceptInvite(
         invite.user_id,
         "user_invite_accepted",
         "user",
-        invite.user_id,
+        `${invite.user_id}`,
         {
           inviteId: invite.invite_id,
         },

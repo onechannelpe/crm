@@ -87,7 +87,7 @@ async function createDraftRecordFromAssignment(
     input.actorUserId,
     "sales_record_created",
     "sales_record",
-    recordId,
+    `${recordId}`,
     { source: "lead_assignment" },
   );
   return Ok(recordId);

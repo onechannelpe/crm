@@ -25,7 +25,7 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    findByEntity(entityType: string, entityId: number) {
+    findByEntity(entityType: string, entityId: string) {
       return db
         .selectFrom("audit_logs")
         .selectAll()

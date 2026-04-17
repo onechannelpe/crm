@@ -25,7 +25,7 @@ export async function revokeUserSession(
     userId: ctx.actor.userId,
     action: "session_revoked_by_admin",
     entityType: "user_session",
-    entityId: input.targetUserId,
+    entityId: String(input.targetUserId),
     changes: serializeAuditChanges(
       sessionRevokedByAdminChanges(input.sessionId, ctx.actor.userId),
     ),

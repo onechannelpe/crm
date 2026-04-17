@@ -9,7 +9,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("action", "varchar(255)", (col) => col.notNull())
     .addColumn("entity_type", "varchar(100)", (col) => col.notNull())
-    .addColumn("entity_id", "integer", (col) => col.notNull())
+    .addColumn("entity_id", "varchar(64)", (col) => col.notNull())
     .addColumn("changes", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();

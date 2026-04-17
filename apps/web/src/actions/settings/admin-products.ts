@@ -89,7 +89,7 @@ export async function updateProductPricing(
     user_id: session.userId,
     action: "product_updated",
     entity_type: "product",
-    entity_id: parsedInput.productId,
+    entity_id: `${parsedInput.productId}`,
     changes: serializeAuditChanges(changes),
     created_at: Date.now(),
   });

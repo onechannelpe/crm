@@ -87,7 +87,7 @@ async function blockWithAudit(params: {
     user_id: userId,
     action: "rate_limit_exceeded",
     entity_type: "user",
-    entity_id: userId,
+    entity_id: `${userId}`,
     changes: JSON.stringify({
       actionName,
       scope,
