@@ -47,3 +47,44 @@ export type RegisterLeadInput = {
   ruc: string;
   executiveId: number;
 };
+
+export type ApproveForSaleInput = {
+  actor: ActorContext;
+  leadId: number;
+};
+
+export type CreateQuotationInput = {
+  actor: ActorContext;
+  leadId: number;
+  paybackPricing: number;
+  tarifaDebito: number;
+  tarifaCredito: number;
+  tarifaForaneo: number;
+  fee: number;
+  moneda: "PEN" | "USD";
+};
+
+export type CompleteCommercialInputInput = {
+  actor: ActorContext;
+  leadId: number;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  abono: number;
+  cantidadPos: number;
+};
+
+export type CreateSaleInput = {
+  actor: ActorContext;
+  leadId: number;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  abono: number;
+  cantidadPos: number;
+  banco: string;
+  nroCuenta: string;
+  cci: string | null;
+};

@@ -50,7 +50,24 @@ export type LeadMutationIntent =
       status: LeadStatus | null;
       prioridad: LeadPriority | null;
       reason: string;
-    };
+    }
+  | { kind: "approve_for_sale" }
+  | {
+      kind: "create_quotation";
+      quotationId: number;
+      version: number;
+      moneda: "PEN" | "USD";
+    }
+  | {
+      kind: "complete_commercial_input";
+      proveedorActual: string;
+      tasaActual: number;
+      gpv: number;
+      ticket: number;
+      abono: number;
+      cantidadPos: number;
+    }
+  | { kind: "create_sale"; saleId: number };
 
 export type LeadMutationPatch = {
   executiveId?: number;
