@@ -56,8 +56,10 @@ async function processCampaign(
         )
         .then((users) => users.map((u) => u.id));
 
-    const provisionBatch: BatchProvisioner = (userIds) =>
-      Promise.all([
+    const provisionBatch: BatchProvisioner = async (userIds) => {
+      // Recipients must be committed before job creation: createPendingJobsForCampaignUsers
+      // does an INSERT...SELECT from notification_recipients to resolve recipient IDs.
+      await Promise.all([
         deps.repos.notificationDeliveryLog.createRecipientsForEmailUsers({
           campaignId: campaign.id,
           eventType: campaign.event_type,
@@ -70,13 +72,17 @@ async function processCampaign(
           userIds,
           createdAt: now,
         }),
-        deps.repos.notificationDeliveryJob.createPendingJobsForCampaignUsers({
+      ]);
+
+      await deps.repos.notificationDeliveryJob.createPendingJobsForCampaignUsers(
+        {
           campaignId: campaign.id,
           userIds,
           createdAt: now,
           maxAttempts: DEFAULT_JOB_MAX_ATTEMPTS,
-        }),
-      ]).then(() => undefined);
+        },
+      );
+    };
 
     await enqueueCampaignAudience(loadPage, provisionBatch);
 
