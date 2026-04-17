@@ -4,6 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+
 import type { LeadId } from "./lead-record";
 
 export type LeadHistoryEventType =

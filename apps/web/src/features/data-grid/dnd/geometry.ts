@@ -1,5 +1,5 @@
-import type { DataGridPoint, DataGridSelectionBox } from "./types";
 import type { DataGridRowId } from "../model/types";
+import type { DataGridPoint, DataGridSelectionBox } from "./types";
 
 const AUTO_SCROLL_EDGE_THRESHOLD = 48;
 const AUTO_SCROLL_STEP = 18;

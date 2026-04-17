@@ -61,14 +61,18 @@ export type DataGridInteractionModel = {
   };
 };
 
-export function createDataGridInteraction<T extends { id: DataGridRowId }>(options: {
+export function createDataGridInteraction<
+  T extends { id: DataGridRowId },
+>(options: {
   rows: Accessor<T[]>;
   rowOpenMode: Accessor<DataGridRowOpenMode>;
   columnCount: Accessor<number>;
   reorder?: DataGridReorderConfig<T>;
   selection?: DataGridSelectionModel;
 }) {
-  const [activeRowId, setActiveRowId] = createSignal<DataGridRowId | undefined>();
+  const [activeRowId, setActiveRowId] = createSignal<
+    DataGridRowId | undefined
+  >();
   const [pendingRowOpenSuppression, setPendingRowOpenSuppression] =
     createSignal(false);
   const [focusedCell, setFocusedCell] = createSignal(

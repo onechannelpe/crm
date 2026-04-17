@@ -1,3 +1,5 @@
+import type { DataGridRowId } from "~/features/data-grid/model/types";
+
 import { RecordIndexInstanceProvider } from "../context/instance-context";
 import { RecordIndexModelProvider } from "../context/model-context";
 import { RecordIndexSetupProvider } from "../context/setup-context";
@@ -6,7 +8,6 @@ import { useRecordIndexModel } from "../hooks/use-instance";
 import { createRecordIndexContextModel } from "../model/derive";
 import { createRecordIndexSetup } from "../model/setup";
 import type { RecordIndexAdapter } from "../model/types";
-import type { DataGridRowId } from "~/features/data-grid/model/types";
 import { RecordIndexHeader } from "./header";
 import { RecordIndexLayout } from "./layout";
 import { RecordIndexTableContainer } from "./table-container";

@@ -71,7 +71,10 @@ export function createLeadRepo(db: DatabaseExecutor) {
   return {
     async insert(values: LeadDraft): Promise<LeadId> {
       const row = toNewLeadRow(values);
-      await db.insertInto("pipeline_leads").values(row).executeTakeFirstOrThrow();
+      await db
+        .insertInto("pipeline_leads")
+        .values(row)
+        .executeTakeFirstOrThrow();
       return row.id;
     },
 

@@ -1,4 +1,5 @@
 import type { DataGridRowId } from "~/features/data-grid/model/types";
+
 import type { RecordIndexAdapter, RecordIndexSetup } from "./types";
 
 export function createRecordIndexSetup<

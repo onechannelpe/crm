@@ -3,8 +3,8 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
-import { resolveReviewTransition } from "~/server/pipeline/domain/workflow";
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { resolveReviewTransition } from "~/server/pipeline/domain/workflow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { ImportRowInput, LeadMutationResult, LoadedLead } from "./types";
