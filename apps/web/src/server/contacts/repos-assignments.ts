@@ -21,7 +21,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
       await db.insertInto("lead_assignments").values(assignments).execute();
     },
 
-    findActiveByUser(userId: number) {
+    findActiveByUser(userId: string) {
       return db
         .selectFrom("lead_assignments")
         .selectAll()
@@ -32,7 +32,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
     },
 
     findActiveByUserWithContacts(
-      userId: number,
+      userId: string,
     ): Promise<ActiveContactAssignmentView[]> {
       return db
         .selectFrom("lead_assignments")
@@ -55,14 +55,14 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async countActiveByUser(userId: number) {
+    async countActiveByUser(userId: string) {
       const rows = await this.findActiveByUser(userId);
       return rows.length;
     },
 
-    async countActiveByUsers(userIds: number[]) {
+    async countActiveByUsers(userIds: string[]) {
       if (userIds.length === 0) {
-        return [] as Array<{ userId: number; activeCount: number }>;
+        return [] as Array<{ userId: string; activeCount: number }>;
       }
 
       const rows = await db
@@ -80,7 +80,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
       }));
     },
 
-    findActiveForContact(userId: number, contactId: number) {
+    findActiveForContact(userId: string, contactId: string) {
       return db
         .selectFrom("lead_assignments")
         .selectAll()
@@ -91,12 +91,12 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    async hasActiveForContact(userId: number, contactId: number) {
+    async hasActiveForContact(userId: string, contactId: string) {
       const row = await this.findActiveForContact(userId, contactId);
       return !!row;
     },
 
-    findActiveByIdForUser(id: number, userId: number) {
+    findActiveByIdForUser(id: string, userId: string) {
       return db
         .selectFrom("lead_assignments")
         .selectAll()
@@ -107,7 +107,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    markCompleted(id: number, userId: number) {
+    markCompleted(id: string, userId: string) {
       return db
         .updateTable("lead_assignments")
         .set({ status: "completed" })

@@ -1,10 +1,11 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { createOrganizationId } from "~/server/shared/ids";
 
 export function createOrganizationsRepo(db: Kysely<Database>) {
   return {
-    findById(id: number) {
+    findById(id: string) {
       return db
         .selectFrom("organizations")
         .selectAll()
@@ -24,19 +25,20 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
       const existing = await this.findByRuc(ruc);
       if (existing) return existing;
 
-      const result = await db
+      const id = createOrganizationId();
+      await db
         .insertInto("organizations")
-        .values({ ruc, name, created_at: Date.now() })
+        .values({ id, ruc, name, created_at: Date.now() })
         .executeTakeFirstOrThrow();
 
-      const created = await this.findById(Number(result.insertId));
+      const created = await this.findById(id);
       if (!created) {
         throw new Error("Failed to load organization after creation");
       }
       return created;
     },
 
-    lockToBranch(orgId: number, branchId: number, userId: number) {
+    lockToBranch(orgId: string, branchId: string, userId: string) {
       return db
         .updateTable("organizations")
         .set({
@@ -57,7 +59,7 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findUnlockedOrLockedToBranch(branchId: number, limit: number) {
+    findUnlockedOrLockedToBranch(branchId: string, limit: number) {
       return db
         .selectFrom("organizations")
         .selectAll()

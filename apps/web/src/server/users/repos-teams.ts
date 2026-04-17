@@ -4,7 +4,7 @@ import type { Database } from "~/lib/db/types";
 
 export function createTeamsRepo(db: Kysely<Database>) {
   return {
-    findByBranch(branchId: number) {
+    findByBranch(branchId: string) {
       return db
         .selectFrom("teams")
         .selectAll()
@@ -13,7 +13,7 @@ export function createTeamsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findByIdWithSupervisor(id: number) {
+    findByIdWithSupervisor(id: string) {
       return db
         .selectFrom("teams")
         .leftJoin(
@@ -35,7 +35,7 @@ export function createTeamsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findBySupervisorId(supervisorId: number) {
+    findBySupervisorId(supervisorId: string) {
       return db
         .selectFrom("teams")
         .selectAll()

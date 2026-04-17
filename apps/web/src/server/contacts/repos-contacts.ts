@@ -1,10 +1,11 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { createContactId } from "~/server/shared/ids";
 
 export function createContactsRepo(db: Kysely<Database>) {
   return {
-    findById(id: number) {
+    findById(id: string) {
       return db
         .selectFrom("contacts")
         .selectAll()
@@ -21,7 +22,7 @@ export function createContactsRepo(db: Kysely<Database>) {
     },
 
     async findOrCreate(
-      orgId: number,
+      orgId: string,
       dni: string,
       name: string,
       phonePrimary: string | null,
@@ -29,9 +30,11 @@ export function createContactsRepo(db: Kysely<Database>) {
       const existing = await this.findByDni(dni);
       if (existing) return existing;
 
-      const result = await db
+      const id = createContactId();
+      await db
         .insertInto("contacts")
         .values({
+          id,
           organization_id: orgId,
           dni,
           name,
@@ -40,14 +43,14 @@ export function createContactsRepo(db: Kysely<Database>) {
         })
         .executeTakeFirstOrThrow();
 
-      const created = await this.findById(Number(result.insertId));
+      const created = await this.findById(id);
       if (!created) {
         throw new Error("Failed to load contact after creation");
       }
       return created;
     },
 
-    updateCooldown(id: number, userId: number, cooldownUntil: number) {
+    updateCooldown(id: string, userId: string, cooldownUntil: number) {
       return db
         .updateTable("contacts")
         .set({

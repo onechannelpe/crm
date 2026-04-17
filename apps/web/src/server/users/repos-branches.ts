@@ -4,7 +4,7 @@ import type { Database } from "~/lib/db/types";
 
 export function createBranchesRepo(db: Kysely<Database>) {
   return {
-    findById(id: number) {
+    findById(id: string) {
       return db
         .selectFrom("branches")
         .selectAll()

@@ -12,13 +12,13 @@ export interface PendingInviteWithUser {
   invite_status: InviteStatus;
   invite_expires_at: number;
   invite_created_at: number;
-  invite_created_by_user_id: number;
+  invite_created_by_user_id: string;
   invite_sent_at: number | null;
-  user_id: number;
+  user_id: string;
   user_email: string;
   user_role: UserRole;
-  user_branch_id: number;
-  user_team_id: number | null;
+  user_branch_id: string;
+  user_team_id: string | null;
   user_names: string;
   user_first_surname: string;
   user_second_surname: string;
@@ -36,7 +36,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
     },
 
     async findLatestPendingByBranch(
-      branchId: number,
+      branchId: string,
       now: number,
     ): Promise<PendingInviteWithUser[]> {
       return db
@@ -102,7 +102,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    revokePendingByUser(userId: number, revokedAt: number) {
+    revokePendingByUser(userId: string, revokedAt: number) {
       return db
         .updateTable("user_invites")
         .set({

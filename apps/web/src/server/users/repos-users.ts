@@ -4,14 +4,14 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 type UserRole = UsersTable["role"];
 
 type UserNameRow = {
-  id: number;
+  id: string;
   names: string;
   first_surname: string;
   second_surname: string;
 };
 
 type AssignableExecutiveRow = {
-  id: number;
+  id: string;
   names: string;
   first_surname: string;
   second_surname: string;
@@ -19,7 +19,7 @@ type AssignableExecutiveRow = {
 
 export function createUsersRepo(db: DatabaseExecutor) {
   return {
-    findById(id: number) {
+    findById(id: string) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -27,7 +27,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
-    findByIds(ids: number[]): Promise<UserNameRow[]> {
+    findByIds(ids: string[]): Promise<UserNameRow[]> {
       if (ids.length === 0) {
         return Promise.resolve([]);
       }
@@ -40,7 +40,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     findAssignableExecutives(input: {
-      branchId?: number;
+      branchId?: string;
       search?: string;
       limit: number;
     }): Promise<AssignableExecutiveRow[]> {
@@ -91,7 +91,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
-    findByBranchIncludingInactive(branchId: number) {
+    findByBranchIncludingInactive(branchId: string) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -99,7 +99,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    findByTeam(teamId: number) {
+    findByTeam(teamId: string) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -107,7 +107,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    findByBranch(branchId: number) {
+    findByBranch(branchId: string) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -116,9 +116,9 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    findActiveIdsByBranchAndRoles(branchId: number, roles: UserRole[]) {
+    findActiveIdsByBranchAndRoles(branchId: string, roles: UserRole[]) {
       if (roles.length === 0)
-        return Promise.resolve([] as Array<{ id: number }>);
+        return Promise.resolve([] as Array<{ id: string }>);
       return db
         .selectFrom("users")
         .select("id")
@@ -138,8 +138,9 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     async create(values: {
-      branch_id: number;
-      team_id?: number | null;
+      id: string;
+      branch_id: string;
+      team_id?: string | null;
       username: string;
       email: string;
       password_hash: string;
@@ -152,7 +153,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       executive_category?: ExecutiveCategoryValue | null;
       is_active: number;
     }) {
-      const result = await db
+      await db
         .insertInto("users")
         .values({
           ...values,
@@ -165,10 +166,10 @@ export function createUsersRepo(db: DatabaseExecutor) {
           created_at: Date.now(),
         })
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return values.id;
     },
 
-    updatePassword(id: number, passwordHash: string) {
+    updatePassword(id: string, passwordHash: string) {
       return db
         .updateTable("users")
         .set({ password_hash: passwordHash })
@@ -177,9 +178,9 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     updateInviteProvisioning(
-      id: number,
+      id: string,
       values: {
-        team_id: number | null;
+        team_id: string | null;
         names: string;
         first_surname: string;
         second_surname: string;
@@ -204,7 +205,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     completeOnboarding(
-      id: number,
+      id: string,
       values: { phone_e164: string; completedAt: number },
     ) {
       return db
@@ -217,7 +218,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    updatePhone(id: number, phone: string) {
+    updatePhone(id: string, phone: string) {
       return db
         .updateTable("users")
         .set({ phone_e164: phone })
@@ -225,7 +226,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    findAvatarMetaById(id: number) {
+    findAvatarMetaById(id: string) {
       return db
         .selectFrom("users")
         .select([
@@ -240,7 +241,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     updateAvatar(
-      id: number,
+      id: string,
       values: {
         storage_key: string;
         mime_type: string;
@@ -261,7 +262,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     clearAvatar(
-      id: number,
+      id: string,
       values: {
         updated_at: number;
         version: number;
@@ -279,7 +280,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async expireActiveUsersBefore(now: number): Promise<number[]> {
+    async expireActiveUsersBefore(now: number): Promise<string[]> {
       const rows = await db
         .updateTable("users")
         .set({ is_active: 0 })
@@ -290,7 +291,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       return rows.map((r) => r.id);
     },
 
-    async deactivateIfExpired(userId: number, now: number): Promise<boolean> {
+    async deactivateIfExpired(userId: string, now: number): Promise<boolean> {
       const result = await db
         .updateTable("users")
         .set({ is_active: 0 })
@@ -315,7 +316,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     async claimExpiryReminder(
-      userId: number,
+      userId: string,
       threshold: number,
       claimedAt: number,
     ): Promise<boolean> {
@@ -332,7 +333,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    releaseExpiryReminderClaim(userId: number, claimedAt: number) {
+    releaseExpiryReminderClaim(userId: string, claimedAt: number) {
       return db
         .updateTable("users")
         .set({ expiry_notified_at: null })
@@ -341,7 +342,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    markExpiryNotified(userId: number, notifiedAt: number) {
+    markExpiryNotified(userId: string, notifiedAt: number) {
       return db
         .updateTable("users")
         .set({ expiry_notified_at: notifiedAt })
