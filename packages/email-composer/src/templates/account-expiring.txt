@@ -1,6 +1,6 @@
 Hola {{fullName}},
 
-Tu cuenta en One Channel vencerá el {{expiresAt}}.
+Tu cuenta en {{ platformName }} vencerá el {{ expiresAt }}.
 Pasada esa fecha perderás el acceso.
 
 Tu usuario es {{username}}.
