@@ -10,8 +10,10 @@ on:
       - "apps/web/tests/bench/**"
       - "apps/web/vitest.bench.config.ts"
       - "apps/web/package.json"
-      - "packages/notifications/src/**"
-      - "packages/notifications/package.json"
+      - "packages/email-composer/src/**"
+      - "packages/email-composer/package.json"
+      - "packages/message-channels/src/**"
+      - "packages/message-channels/package.json"
       - "bun.lock"
       - ".github/workflows/codspeed.yml"
   pull_request:
@@ -23,8 +25,10 @@ on:
       - "apps/web/tests/bench/**"
       - "apps/web/vitest.bench.config.ts"
       - "apps/web/package.json"
-      - "packages/notifications/src/**"
-      - "packages/notifications/package.json"
+      - "packages/email-composer/src/**"
+      - "packages/email-composer/package.json"
+      - "packages/message-channels/src/**"
+      - "packages/message-channels/package.json"
       - "bun.lock"
       - ".github/workflows/codspeed.yml"
   workflow_dispatch:
@@ -55,7 +59,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: build email templates
-        run: bun run --cwd packages/notifications build:emails
+        run: bun run --cwd packages/email-composer build:emails
 
       - name: run benchmarks
         uses: CodSpeedHQ/action@v4

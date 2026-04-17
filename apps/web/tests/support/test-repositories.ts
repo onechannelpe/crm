@@ -33,10 +33,10 @@ import { createExtensionRuntimeRepo } from "../../src/server/extension/repos";
 import { createIntegrationJobRepo } from "../../src/server/integrations/infrastructure/integration-job-repo";
 import { createInventoryRepo } from "../../src/server/inventory/repos";
 import { createProductsRepo } from "../../src/server/inventory/repos-products";
-import { createAppNotificationsRepo } from "../../src/server/notifications/repos-app-notifications";
-import { createNotificationCampaignsRepo } from "../../src/server/notifications/repos-campaigns";
-import { createNotificationContactsRepo } from "../../src/server/notifications/repos-contacts";
-import { createNotificationPreferencesRepo } from "../../src/server/notifications/repos-preferences";
+import { createAppNotificationRepo } from "../../src/server/notifications/repos/app-notification";
+import { createNotificationCampaignRepo } from "../../src/server/notifications/repos/campaign";
+import { createNotificationContactRepo } from "../../src/server/notifications/repos/contact";
+import { createNotificationPreferenceRepo } from "../../src/server/notifications/repos/preference";
 import { createActionObservationsRepo } from "../../src/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "../../src/server/observability/repos-auth-funnel-events";
 import { createReportExportRepo } from "../../src/server/sales/repos-report-exports";
@@ -86,10 +86,10 @@ export function createTestRepositories(db: Kysely<Database>) {
     salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
     products: createProductsRepo(db),
-    notificationCampaigns: createNotificationCampaignsRepo(db),
-    notificationContacts: createNotificationContactsRepo(db),
-    notificationPreferences: createNotificationPreferencesRepo(db),
-    appNotifications: createAppNotificationsRepo(db),
+    notificationCampaigns: createNotificationCampaignRepo(db),
+    notificationContacts: createNotificationContactRepo(db),
+    notificationPreferences: createNotificationPreferenceRepo(db),
+    appNotifications: createAppNotificationRepo(db),
     actionObservations: createActionObservationsRepo(db),
     authFunnelEvents: createAuthFunnelEventsRepo(db),
     inventory: createInventoryRepo(db),

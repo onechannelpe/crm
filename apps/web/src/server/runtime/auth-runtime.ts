@@ -1,5 +1,3 @@
-import type { NotificationService } from "@crm/notifications";
-
 import { createSessionService } from "~/server/auth/application/session-service";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
@@ -16,12 +14,18 @@ import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-c
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
+import type { NotificationCampaignService } from "~/server/notifications/service";
 
 import type { ServerInfra } from "./infra";
 
 export function createAuthRuntime(
   infra: ServerInfra,
-  notificationSender: NotificationService,
+  notifications: {
+    messaging: MessagingGateway;
+    service: NotificationCampaignService;
+    dispatchPendingJobs(): Promise<void>;
+  },
 ) {
   const sessionService = createSessionService({
     sessions: createAuthSessionRepo(infra.db),
@@ -40,7 +44,10 @@ export function createAuthRuntime(
   return {
     authThrottleService,
     sessionService,
-    login: createAuthLoginContext(infra.db),
+    login: createAuthLoginContext(infra.db, {
+      service: notifications.service,
+      dispatchPendingJobs: () => notifications.dispatchPendingJobs(),
+    }),
     onboarding,
     inviteAcceptance: {
       inviteService,
@@ -53,7 +60,7 @@ export function createAuthRuntime(
     totp: createTotpEnrollmentContext(infra.db),
     passwordReset: createPasswordResetContext({
       executor: infra.db,
-      notificationSender,
+      messaging: notifications.messaging,
     }),
     sessionRead: createAuthSessionReadContext({
       executor: infra.db,

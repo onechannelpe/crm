@@ -1,12 +1,11 @@
-import type { NotificationService } from "@crm/notifications";
-
 import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
+import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 interface PasswordResetContextDeps {
   executor: DatabaseExecutor;
-  notificationSender: NotificationService;
+  messaging: MessagingGateway;
 }
 
 export function createPasswordResetContext(deps: PasswordResetContextDeps) {
@@ -15,7 +14,7 @@ export function createPasswordResetContext(deps: PasswordResetContextDeps) {
       users: createUsersRepo(deps.executor),
       passwordResetTokens: createPasswordResetTokensRepo(deps.executor),
     },
-    notificationSender: deps.notificationSender,
+    messaging: deps.messaging,
   };
 }
 
@@ -24,5 +23,5 @@ type PasswordResetContext = ReturnType<typeof createPasswordResetContext>;
 export type PasswordResetRepos = PasswordResetContext["repos"];
 export type PasswordResetRequestContext = Pick<
   PasswordResetContext,
-  "repos" | "notificationSender"
+  "repos" | "messaging"
 >;

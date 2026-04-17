@@ -66,7 +66,11 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
             if (config.onResult) {
               const decision = await config.onResult(job, result);
               if (decision.kind === "retry") {
-                await config.onRetry(job.id, decision.availableAt);
+                await config.onRetry(
+                  job.id,
+                  decision.availableAt,
+                  decision.reason,
+                );
               } else if (decision.kind === "fail") {
                 await config.onFail(job.id, decision.reason);
               } else {
@@ -82,9 +86,11 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
             if (controller.signal.aborted) {
               logger.error("job_timeout_or_stolen", { jobId: job.id });
               if (job.attempt_count < job.max_attempts) {
+                const timeoutReason = "Timeout or lease stolen";
                 await config.onRetry(
                   job.id,
                   nextAvailableAt(job.attempt_count),
+                  timeoutReason,
                 );
               } else {
                 await config.onFail(job.id, "Timeout or lease stolen");
@@ -95,6 +101,7 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
                 await config.onRetry(
                   job.id,
                   nextAvailableAt(job.attempt_count),
+                  reason,
                 );
               } else {
                 await config.onFail(job.id, reason);

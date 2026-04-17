@@ -1,5 +1,4 @@
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import { env } from "~/lib/env";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -8,9 +7,7 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
-import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
-import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import type { NotificationCampaignService } from "~/server/notifications/service";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
@@ -32,7 +29,13 @@ export type AuthLoginRepos = {
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
 };
 
-export function createAuthLoginContext(executor: DatabaseExecutor) {
+export function createAuthLoginContext(
+  executor: DatabaseExecutor,
+  notifications: {
+    service: NotificationCampaignService;
+    dispatchPendingJobs(): Promise<void>;
+  },
+) {
   return {
     repos: {
       oauthAccounts: createOAuthAccountsRepo(executor),
@@ -47,20 +50,7 @@ export function createAuthLoginContext(executor: DatabaseExecutor) {
       passkeys: createPasskeysRepo(executor),
       webauthnChallenges: createWebauthnChallengesRepo(executor),
     } satisfies AuthLoginRepos,
-    privilegedLoginAlertSender: createPrivilegedLoginAlertSender(
-      {
-        notificationCampaigns: createNotificationCampaignsRepo(executor),
-        notificationContacts: createNotificationContactsRepo(executor),
-        notificationPreferences: createNotificationPreferencesRepo(executor),
-      },
-      {
-        resendApiKey: env.resendApiKey || undefined,
-        fromEmail: env.emailFrom || undefined,
-        whatsappAccessToken: env.whatsappAccessToken || undefined,
-        whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-        whatsappApiVersion: env.whatsappApiVersion || undefined,
-      },
-    ),
+    privilegedLoginAlertSender: createPrivilegedLoginAlertSender(notifications),
   };
 }
 

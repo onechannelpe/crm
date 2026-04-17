@@ -3,8 +3,8 @@ import {
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
-import type { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import type { createNotificationContactRepo } from "~/server/notifications/repos/contact";
+import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -16,8 +16,8 @@ type OnboardingRepos = {
   users: ReturnType<typeof createUsersRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  notificationContacts: ReturnType<typeof createNotificationContactsRepo>;
-  notificationPreferences: ReturnType<typeof createNotificationPreferencesRepo>;
+  notificationContacts: ReturnType<typeof createNotificationContactRepo>;
+  notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
 export type CompleteOnboardingError =
