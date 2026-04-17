@@ -37,6 +37,14 @@ export async function startJobSubscriber(triggers: {
         key: "ENRICHMENT_WRITEBACK",
         channel: JOB_CHANNELS.ENRICHMENT_WRITEBACK,
       },
+      {
+        key: "NOTIFICATIONS_EMAIL",
+        channel: JOB_CHANNELS.NOTIFICATIONS_EMAIL,
+      },
+      {
+        key: "NOTIFICATIONS_WHATSAPP",
+        channel: JOB_CHANNELS.NOTIFICATIONS_WHATSAPP,
+      },
     ] as const;
     const keyByChannel = new Map<string, keyof typeof JOB_CHANNELS>(
       channelEntries.map(({ key, channel }) => [channel, key]),

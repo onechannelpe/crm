@@ -17,12 +17,12 @@ export interface JobQueueConfig<TJob extends QueueJobBase, TResult> {
     result: TResult,
   ) => Promise<
     | { kind: "complete" }
-    | { kind: "retry"; availableAt: number }
+    | { kind: "retry"; availableAt: number; reason?: string }
     | { kind: "fail"; reason: string }
   >;
   extendLease(jobId: number): Promise<boolean>;
   onComplete(jobId: number, result: TResult): Promise<void>;
-  onRetry(jobId: number, availableAt: number): Promise<void>;
+  onRetry(jobId: number, availableAt: number, reason?: string): Promise<void>;
   onFail(jobId: number, reason: string): Promise<void>;
 }
 

@@ -40,6 +40,10 @@ export function startBackgroundJobs() {
     serverRuntime.clientSearch.createEnrichmentQueue(WORKER_ID);
   const sunatEnrichmentWritebackQueue =
     serverRuntime.pipeline.createSunatEnrichmentWritebackQueue(WORKER_ID);
+  const notificationsEmailQueue =
+    serverRuntime.notifications.createEmailQueue(WORKER_ID);
+  const notificationsWhatsAppQueue =
+    serverRuntime.notifications.createWhatsAppQueue(WORKER_ID);
   const queues: QueueRunner[] = [
     crmExportQueue,
     crmImportQueue,
@@ -48,6 +52,8 @@ export function startBackgroundJobs() {
     salesExportQueue,
     enrichmentQueue,
     sunatEnrichmentWritebackQueue,
+    notificationsEmailQueue,
+    notificationsWhatsAppQueue,
   ];
   const runAllQueues = () => {
     for (const queue of queues) {
@@ -93,6 +99,12 @@ export function startBackgroundJobs() {
     },
     ENRICHMENT_WRITEBACK: () => {
       void sunatEnrichmentWritebackQueue.runOnce();
+    },
+    NOTIFICATIONS_EMAIL: () => {
+      void notificationsEmailQueue.runOnce();
+    },
+    NOTIFICATIONS_WHATSAPP: () => {
+      void notificationsWhatsAppQueue.runOnce();
     },
   });
 

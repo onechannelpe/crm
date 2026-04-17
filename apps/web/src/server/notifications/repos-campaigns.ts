@@ -1,4 +1,4 @@
-import type { Insertable, Kysely } from "kysely";
+import { sql, type Insertable, type Kysely } from "kysely";
 
 import { isRole } from "~/lib/auth/access/rbac";
 import type {
@@ -21,9 +21,54 @@ export interface AudienceUser {
   role: UsersTable["role"];
 }
 
+export interface NotificationDeliveryJob {
+  id: number;
+  recipientId: number;
+  channel: "email" | "whatsapp";
+  address: string;
+  title: string | null;
+  bodyText: string;
+  attempt_count: number;
+  max_attempts: number;
+}
+
 export type AudienceType = NotificationCampaignsTable["audience_type"];
 
 export function createNotificationCampaignsRepo(db: Kysely<Database>) {
+  async function selectLeasedJobById(
+    jobId: number,
+    workerId: string,
+  ): Promise<NotificationDeliveryJob | null> {
+    const row = await db
+      .selectFrom("notification_jobs")
+      .innerJoin(
+        "notification_recipients",
+        "notification_recipients.id",
+        "notification_jobs.recipient_id",
+      )
+      .innerJoin(
+        "notification_campaigns",
+        "notification_campaigns.id",
+        "notification_recipients.campaign_id",
+      )
+      .select([
+        "notification_jobs.id as id",
+        "notification_jobs.recipient_id as recipientId",
+        "notification_jobs.attempt_count as attempt_count",
+        "notification_jobs.max_attempts as max_attempts",
+        "notification_recipients.channel as channel",
+        "notification_recipients.address as address",
+        "notification_campaigns.title as title",
+        "notification_campaigns.body_text as bodyText",
+      ])
+      .where("notification_jobs.id", "=", jobId)
+      .where("notification_jobs.status", "=", "leased")
+      .where("notification_jobs.lease_owner", "=", workerId)
+      .executeTakeFirst();
+
+    return row ?? null;
+  }
+
   return {
     async createCampaign(values: NewNotificationCampaignRow): Promise<number> {
       const result = await db
@@ -75,7 +120,10 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findAudienceUsers(audienceType: AudienceType, audienceRef: string | null) {
+    async findAudienceUsers(
+      audienceType: AudienceType,
+      audienceRef: string | null,
+    ): Promise<AudienceUser[]> {
       const base = db
         .selectFrom("users")
         .select(["id", "email", "role"])
@@ -87,24 +135,20 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
       }
 
       if (audienceType === "role") {
-        if (!audienceRef) {
-          return Promise.resolve([] as AudienceUser[]);
-        }
-
-        if (!isRole(audienceRef)) {
-          return Promise.resolve([] as AudienceUser[]);
+        if (!audienceRef || !isRole(audienceRef)) {
+          return [];
         }
 
         return base.where("role", "=", audienceRef).execute();
       }
 
       if (!audienceRef) {
-        return Promise.resolve([] as AudienceUser[]);
+        return [];
       }
 
       const userId = Number(audienceRef);
       if (!Number.isInteger(userId) || userId <= 0) {
-        return Promise.resolve([] as AudienceUser[]);
+        return [];
       }
 
       return base.where("id", "=", userId).execute();
@@ -125,32 +169,24 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
       return db.insertInto("notification_jobs").values(values).execute();
     },
 
-    findPendingJobs(now: number, limit: number) {
-      return db
+    async claimPendingJobsByChannel(params: {
+      channel: "email" | "whatsapp";
+      workerId: string;
+      limit: number;
+      leaseMs: number;
+    }): Promise<NotificationDeliveryJob[]> {
+      const now = Date.now();
+      const leaseUntil = now + params.leaseMs;
+      const candidates = await db
         .selectFrom("notification_jobs")
         .innerJoin(
           "notification_recipients",
           "notification_recipients.id",
           "notification_jobs.recipient_id",
         )
-        .innerJoin(
-          "notification_campaigns",
-          "notification_campaigns.id",
-          "notification_recipients.campaign_id",
-        )
-        .select([
-          "notification_jobs.id as jobId",
-          "notification_jobs.recipient_id as recipientId",
-          "notification_jobs.attempt_count as attemptCount",
-          "notification_recipients.channel as channel",
-          "notification_recipients.address as address",
-          "notification_recipients.user_id as userId",
-          "notification_recipients.campaign_id as campaignId",
-          "notification_campaigns.event_type as eventType",
-          "notification_campaigns.title as title",
-          "notification_campaigns.body_text as bodyText",
-        ])
+        .select(["notification_jobs.id as id"])
         .where("notification_jobs.status", "=", "pending")
+        .where("notification_recipients.channel", "=", params.channel)
         .where("notification_jobs.available_at", "<=", now)
         .where((eb) =>
           eb.or([
@@ -159,62 +195,113 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
           ]),
         )
         .orderBy("notification_jobs.available_at", "asc")
-        .limit(limit)
+        .limit(params.limit)
         .execute();
+
+      const leased = await Promise.all(
+        candidates.map(async ({ id }) => {
+          const updated = await db
+            .updateTable("notification_jobs")
+            .set({
+              status: "leased",
+              lease_owner: params.workerId,
+              lease_until: leaseUntil,
+              last_error: null,
+              attempt_count: sql<number>`attempt_count + 1`,
+              updated_at: now,
+            })
+            .where("id", "=", id)
+            .where("status", "=", "pending")
+            .where((eb) =>
+              eb.or([
+                eb("lease_until", "is", null),
+                eb("lease_until", "<", now),
+              ]),
+            )
+            .executeTakeFirst();
+
+          if (Number(updated.numUpdatedRows ?? 0) === 0) {
+            return null;
+          }
+
+          return selectLeasedJobById(id, params.workerId);
+        }),
+      );
+
+      return leased.filter(
+        (job): job is NotificationDeliveryJob => job !== null,
+      );
     },
 
-    leaseJob(jobId: number, leaseUntil: number) {
-      return db
+    async extendJobLease(
+      jobId: number,
+      workerId: string,
+      leaseMs: number,
+    ): Promise<boolean> {
+      const result = await db
         .updateTable("notification_jobs")
         .set({
-          status: "leased",
-          lease_until: leaseUntil,
+          lease_until: Date.now() + leaseMs,
           updated_at: Date.now(),
         })
         .where("id", "=", jobId)
-        .where("status", "=", "pending")
+        .where("status", "=", "leased")
+        .where("lease_owner", "=", workerId)
         .executeTakeFirst();
+
+      return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    markJobSent(jobId: number) {
+    markJobSent(jobId: number, workerId: string) {
       return db
         .updateTable("notification_jobs")
-        .set({ status: "sent", lease_until: null, updated_at: Date.now() })
+        .set({
+          status: "sent",
+          lease_owner: null,
+          lease_until: null,
+          updated_at: Date.now(),
+        })
         .where("id", "=", jobId)
+        .where("status", "=", "leased")
+        .where("lease_owner", "=", workerId)
         .execute();
     },
 
     scheduleJobRetry(params: {
       jobId: number;
+      workerId: string;
       availableAt: number;
-      attemptCount: number;
       error: string;
     }) {
       return db
         .updateTable("notification_jobs")
         .set({
           status: "pending",
-          attempt_count: params.attemptCount,
           available_at: params.availableAt,
+          lease_owner: null,
           lease_until: null,
           last_error: params.error,
           updated_at: Date.now(),
         })
         .where("id", "=", params.jobId)
+        .where("status", "=", "leased")
+        .where("lease_owner", "=", params.workerId)
         .execute();
     },
 
-    markJobFailed(jobId: number, error: string, attemptCount: number) {
+    markJobFailed(jobId: number, workerId: string, error: string) {
       return db
         .updateTable("notification_jobs")
         .set({
           status: "failed",
-          attempt_count: attemptCount,
+          lease_owner: null,
           lease_until: null,
           last_error: error,
           updated_at: Date.now(),
         })
         .where("id", "=", jobId)
+        .where("status", "=", "leased")
+        .where("lease_owner", "=", workerId)
         .execute();
     },
 

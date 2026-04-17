@@ -6,6 +6,7 @@ import type {
   CampaignEmailParams,
 } from "@crm/email-composer";
 import type {
+  DeliveryReceipt,
   DeliveryError,
   MessageChannels,
   Result,
@@ -15,23 +16,23 @@ export interface MessagingGateway {
   sendInviteEmail(input: {
     to: string;
     params: InviteEmailParams;
-  }): Promise<Result<void, DeliveryError>>;
+  }): Promise<Result<DeliveryReceipt, DeliveryError>>;
   sendPasswordResetEmail(input: {
     to: string;
     params: PasswordResetEmailParams;
-  }): Promise<Result<void, DeliveryError>>;
+  }): Promise<Result<DeliveryReceipt, DeliveryError>>;
   sendAccountExpiringEmail(input: {
     to: string;
     params: AccountExpiringEmailParams;
-  }): Promise<Result<void, DeliveryError>>;
+  }): Promise<Result<DeliveryReceipt, DeliveryError>>;
   sendCampaignEmail(input: {
     to: string;
     params: CampaignEmailParams;
-  }): Promise<Result<void, DeliveryError>>;
+  }): Promise<Result<DeliveryReceipt, DeliveryError>>;
   sendWhatsAppText(input: {
     to: string;
     body: string;
-  }): Promise<Result<void, DeliveryError>>;
+  }): Promise<Result<DeliveryReceipt, DeliveryError>>;
 }
 
 export function createMessagingGateway(deps: {
@@ -40,7 +41,7 @@ export function createMessagingGateway(deps: {
 }): MessagingGateway {
   return {
     sendInviteEmail(input) {
-      const email = deps.composer.compose("invite", input.params);
+      const email = deps.composer.invite(input.params);
       return deps.channels.sendEmail({
         to: input.to,
         subject: email.subject,
@@ -50,7 +51,7 @@ export function createMessagingGateway(deps: {
     },
 
     sendPasswordResetEmail(input) {
-      const email = deps.composer.compose("passwordReset", input.params);
+      const email = deps.composer.passwordReset(input.params);
       return deps.channels.sendEmail({
         to: input.to,
         subject: email.subject,
@@ -60,7 +61,7 @@ export function createMessagingGateway(deps: {
     },
 
     sendAccountExpiringEmail(input) {
-      const email = deps.composer.compose("accountExpiring", input.params);
+      const email = deps.composer.accountExpiring(input.params);
       return deps.channels.sendEmail({
         to: input.to,
         subject: email.subject,
@@ -70,7 +71,7 @@ export function createMessagingGateway(deps: {
     },
 
     sendCampaignEmail(input) {
-      const email = deps.composer.compose("campaign", input.params);
+      const email = deps.composer.campaign(input.params);
       return deps.channels.sendEmail({
         to: input.to,
         subject: email.subject,

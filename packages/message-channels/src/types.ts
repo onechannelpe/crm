@@ -34,16 +34,24 @@ export interface OutboundWhatsAppText {
   body: string;
 }
 
+export interface DeliveryReceipt {
+  channel: "email" | "whatsapp";
+  provider: "resend" | "whatsapp_cloud";
+  providerMessageId: string | null;
+}
+
 export type DeliveryError =
   | {
       kind: "not_configured";
       channel: "email" | "whatsapp";
+      code: "missing_channel_config";
       message: string;
       retryable: false;
     }
   | {
       kind: "invalid_input";
       channel: "email" | "whatsapp";
+      code: "invalid_input";
       message: string;
       retryable: false;
     }
@@ -51,13 +59,17 @@ export type DeliveryError =
       kind: "provider_error";
       channel: "email" | "whatsapp";
       provider: "resend" | "whatsapp_cloud";
+      code: string;
+      statusCode: number | null;
       message: string;
       retryable: boolean;
     };
 
 export interface MessageChannels {
-  sendEmail(input: OutboundEmail): Promise<Result<void, DeliveryError>>;
+  sendEmail(
+    input: OutboundEmail,
+  ): Promise<Result<DeliveryReceipt, DeliveryError>>;
   sendWhatsAppText(
     input: OutboundWhatsAppText,
-  ): Promise<Result<void, DeliveryError>>;
+  ): Promise<Result<DeliveryReceipt, DeliveryError>>;
 }

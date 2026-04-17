@@ -25,22 +25,24 @@ describe("parseResendError", () => {
         statusCode: 422,
         message: 'The "from" field is invalid',
       }),
-    ).toBe('The "from" field is invalid');
+    ).toEqual({
+      code: "validation_error",
+      message: 'The "from" field is invalid',
+    });
   });
 
   it("accepts a message-only error payload", () => {
-    expect(parseResendError({ message: "rate limit exceeded" })).toBe(
-      "rate limit exceeded",
-    );
+    expect(parseResendError({ message: "rate limit exceeded" })).toEqual({
+      code: "resend_error",
+      message: "rate limit exceeded",
+    });
   });
 
-  it("returns undefined for bodies without a string message", () => {
-    expect(
-      parseResendError({ name: "error", statusCode: 500 }),
-    ).toBeUndefined();
-    expect(parseResendError({ message: 123 })).toBeUndefined();
-    expect(parseResendError({ message: null })).toBeUndefined();
-    expect(parseResendError({ message: { nested: true } })).toBeUndefined();
+  it("returns null for bodies without a string message", () => {
+    expect(parseResendError({ name: "error", statusCode: 500 })).toBeNull();
+    expect(parseResendError({ message: 123 })).toBeNull();
+    expect(parseResendError({ message: null })).toBeNull();
+    expect(parseResendError({ message: { nested: true } })).toBeNull();
   });
 });
 
@@ -50,9 +52,9 @@ describe("sendWithResend", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(null, { status: 202 }));
 
-    await expect(
-      sendWithResend("test-key", TEST_INPUT),
-    ).resolves.toBeUndefined();
+    await expect(sendWithResend("test-key", TEST_INPUT)).resolves.toEqual({
+      providerMessageId: null,
+    });
 
     expect(fetchSpy).toHaveBeenCalledWith("https://api.resend.com/emails", {
       method: "POST",
@@ -76,9 +78,13 @@ describe("sendWithResend", () => {
       ),
     );
 
-    await expect(sendWithResend("test-key", TEST_INPUT)).rejects.toThrow(
-      'Resend send failed: Invalid "from" field',
-    );
+    await expect(sendWithResend("test-key", TEST_INPUT)).rejects.toMatchObject({
+      provider: "resend",
+      code: "validation_error",
+      statusCode: 422,
+      message: 'Resend send failed: Invalid "from" field',
+      retryable: false,
+    });
   });
 
   it("falls back to the HTTP status when the error body is not JSON", async () => {
@@ -91,9 +97,13 @@ describe("sendWithResend", () => {
       }),
     );
 
-    await expect(sendWithResend("test-key", TEST_INPUT)).rejects.toThrow(
-      "Resend send failed: HTTP 500",
-    );
+    await expect(sendWithResend("test-key", TEST_INPUT)).rejects.toMatchObject({
+      provider: "resend",
+      code: "http_error",
+      statusCode: 500,
+      message: "Resend send failed: HTTP 500",
+      retryable: true,
+    });
 
     expect(consoleError).toHaveBeenCalledWith(
       "Failed to parse Resend error response",
@@ -106,8 +116,12 @@ describe("sendWithResend", () => {
       new Response(JSON.stringify({ error: "some_error" }), { status: 400 }),
     );
 
-    await expect(sendWithResend("test-key", TEST_INPUT)).rejects.toThrow(
-      "Resend send failed: HTTP 400",
-    );
+    await expect(sendWithResend("test-key", TEST_INPUT)).rejects.toMatchObject({
+      provider: "resend",
+      code: "http_error",
+      statusCode: 400,
+      message: "Resend send failed: HTTP 400",
+      retryable: false,
+    });
   });
 });

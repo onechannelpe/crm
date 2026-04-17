@@ -7,10 +7,7 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
-import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
-import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
-import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import type { NotificationService } from "~/server/notifications/service";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
@@ -34,7 +31,13 @@ export type AuthLoginRepos = {
 
 export function createAuthLoginContext(
   executor: DatabaseExecutor,
-  messaging: MessagingGateway,
+  notifications: {
+    service: Pick<
+      NotificationService,
+      "publishCampaign" | "enqueueDueCampaigns"
+    >;
+    dispatchPendingJobs(): Promise<void>;
+  },
 ) {
   return {
     repos: {
@@ -50,14 +53,7 @@ export function createAuthLoginContext(
       passkeys: createPasskeysRepo(executor),
       webauthnChallenges: createWebauthnChallengesRepo(executor),
     } satisfies AuthLoginRepos,
-    privilegedLoginAlertSender: createPrivilegedLoginAlertSender(
-      {
-        notificationCampaigns: createNotificationCampaignsRepo(executor),
-        notificationContacts: createNotificationContactsRepo(executor),
-        notificationPreferences: createNotificationPreferencesRepo(executor),
-      },
-      messaging,
-    ),
+    privilegedLoginAlertSender: createPrivilegedLoginAlertSender(notifications),
   };
 }
 
