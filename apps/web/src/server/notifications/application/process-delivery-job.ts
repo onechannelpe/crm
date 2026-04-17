@@ -4,6 +4,8 @@ import type {
   Result,
 } from "@crm/message-channels";
 
+import { config } from "~/lib/config";
+
 import type { NotificationServiceDeps } from "../domain/types";
 import type { NotificationDeliveryJob } from "../repos/delivery-job";
 
@@ -17,6 +19,7 @@ export async function processDeliveryJob(
       params: {
         title: job.title ?? undefined,
         bodyText: job.bodyText,
+        platformName: config.branding.platformName,
       },
     });
   }

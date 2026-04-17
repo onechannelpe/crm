@@ -9,6 +9,7 @@ describe("renderInviteEmail", () => {
     role: "vendedor",
     inviteUrl: "https://crm.example.com/auth/invite/abc123",
     expiresAt: "28 de febrero de 2026",
+    platformName: "Culqi360",
   };
 
   it("escapes HTML-significant characters in params", () => {
@@ -38,6 +39,7 @@ describe("renderInviteEmail", () => {
     const { text } = renderInviteEmail({
       ...baseParams,
       fullName: "O'Brien & Associates",
+      platformName: "Culqi360",
     });
 
     // Text part should be raw, it's not HTML
@@ -49,11 +51,12 @@ describe("renderCampaignEmail", () => {
   it("omits title section when title is undefined", () => {
     const { html, text } = renderCampaignEmail({
       bodyText: "Mensaje sin título.",
+      platformName: "Culqi360",
     });
 
     expect(html).toContain("Mensaje sin título.");
     expect(text).toContain("Mensaje sin título.");
-    // The title block should be empty-string — no crash, no "undefined"
+    // The title block should be empty-string, no "undefined"
     expect(html).not.toContain("undefined");
     expect(text).not.toContain("undefined");
   });
@@ -61,6 +64,7 @@ describe("renderCampaignEmail", () => {
   it("converts newlines to <br/> in bodyText for HTML", () => {
     const { html, text } = renderCampaignEmail({
       bodyText: "Línea uno\nLínea dos\nLínea tres",
+      platformName: "Culqi360",
     });
 
     expect(html).toContain("Línea uno<br/>Línea dos<br/>Línea tres");
@@ -71,6 +75,7 @@ describe("renderCampaignEmail", () => {
   it("escapes HTML in bodyText even with multiline conversion", () => {
     const { html } = renderCampaignEmail({
       bodyText: '<script>alert("xss")</script>\nNormal line',
+      platformName: "Culqi360",
     });
 
     expect(html).not.toContain("<script>");

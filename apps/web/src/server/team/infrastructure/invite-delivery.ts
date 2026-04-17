@@ -3,6 +3,7 @@
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
+import { config } from "~/lib/config";
 import { serverRuntime } from "~/server/runtime";
 
 export function buildInviteUrl(token: string): string {
@@ -33,6 +34,7 @@ export async function sendInviteEmail(params: {
         month: "long",
         day: "numeric",
       }),
+      platformName: config.branding.platformName,
     },
   });
   if (!sent.ok) {

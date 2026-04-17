@@ -5,6 +5,9 @@ export const config = {
     defaultDailyRefillLimit: 25,
     maxBufferTarget: 50,
   },
+  branding: {
+    platformName: "Culqi360",
+  },
   searchAccess: {
     defaultMonthlyLimit: 250,
     maxMonthlyLimit: 5_000,
