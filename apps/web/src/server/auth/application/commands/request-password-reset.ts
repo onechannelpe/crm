@@ -1,5 +1,3 @@
-import { renderPasswordResetEmail } from "@crm/notifications";
-
 import {
   generatePasswordResetToken,
   hashPasswordResetToken,
@@ -44,18 +42,16 @@ export async function requestPasswordReset(input: {
     created_at: now,
   });
 
-  const { html, text } = renderPasswordResetEmail({
-    fullName: [user.names, user.first_surname].filter(Boolean).join(" "),
-    resetUrl: `${input.origin}/reset-password?token=${token}`,
-  });
-
-  await input.deps.notificationSender.send({
-    channel: "email",
+  const sent = await input.deps.messaging.sendPasswordResetEmail({
     to: user.email,
-    subject: "Restablecer contraseña",
-    html,
-    text,
+    params: {
+      fullName: [user.names, user.first_surname].filter(Boolean).join(" "),
+      resetUrl: `${input.origin}/reset-password?token=${token}`,
+    },
   });
+  if (!sent.ok) {
+    throw new Error(sent.error.message);
+  }
 
   return { ok: true };
 }

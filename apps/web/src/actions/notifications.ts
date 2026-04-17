@@ -70,5 +70,5 @@ export async function sendBroadcastNotification(params: {
   });
 
   await serverRuntime.notifications.service.enqueueDueCampaigns(10);
-  await serverRuntime.notifications.service.processPendingJobs(100);
+  await serverRuntime.notifications.dispatchPendingJobs();
 }

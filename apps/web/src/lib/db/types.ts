@@ -138,7 +138,9 @@ export interface NotificationJobsTable {
   recipient_id: number;
   status: "pending" | "leased" | "sent" | "failed";
   attempt_count: number;
+  max_attempts: number;
   available_at: number;
+  lease_owner: string | null;
   lease_until: number | null;
   last_error: string | null;
   created_at: number;

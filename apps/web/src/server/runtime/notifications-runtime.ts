@@ -1,41 +1,66 @@
-import { createNotificationService } from "@crm/notifications";
+import { createEmailComposer } from "@crm/email-composer";
+import { createMessageChannels } from "@crm/message-channels";
 
 import { env } from "~/lib/env";
-import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
-import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
-import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
-import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import { publishJob } from "~/lib/redis/publisher";
+import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
+import { createNotificationEmailQueue } from "~/server/notifications/queue/email-queue";
+import { createNotificationWhatsAppQueue } from "~/server/notifications/queue/whatsapp-queue";
+import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
+import { createNotificationAudienceRepo } from "~/server/notifications/repos/audience";
+import { createNotificationCampaignRepo } from "~/server/notifications/repos/campaign";
+import { createNotificationContactRepo } from "~/server/notifications/repos/contact";
+import { createNotificationDeliveryJobRepo } from "~/server/notifications/repos/delivery-job";
+import { createNotificationDeliveryLogRepo } from "~/server/notifications/repos/delivery-log";
+import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createAppNotificationService } from "~/server/notifications/service";
 
 import type { ServerInfra } from "./infra";
 
 export function createNotificationsRuntime(infra: ServerInfra) {
-  const notificationSender = createNotificationService({
+  const channels = createMessageChannels({
     resendApiKey: env.resendApiKey || undefined,
     fromEmail: env.emailFrom || undefined,
     whatsappAccessToken: env.whatsappAccessToken || undefined,
     whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
     whatsappApiVersion: env.whatsappApiVersion || undefined,
   });
+  const composer = createEmailComposer();
+  const messaging = createMessagingGateway({ channels, composer });
 
-  const campaignRepos = {
-    notificationCampaigns: createNotificationCampaignsRepo(infra.db),
-    notificationContacts: createNotificationContactsRepo(infra.db),
-    notificationPreferences: createNotificationPreferencesRepo(infra.db),
+  const repos = {
+    notificationCampaign: createNotificationCampaignRepo(infra.db),
+    notificationAudience: createNotificationAudienceRepo(infra.db),
+    notificationContact: createNotificationContactRepo(infra.db),
+    notificationPreference: createNotificationPreferenceRepo(infra.db),
+    notificationDeliveryJob: createNotificationDeliveryJobRepo(infra.db),
+    notificationDeliveryLog: createNotificationDeliveryLogRepo(infra.db),
   };
 
   return {
-    notificationSender,
+    messaging,
+    createEmailQueue: (workerId: string) =>
+      createNotificationEmailQueue(workerId, {
+        repos,
+        messaging,
+      }),
+    createWhatsAppQueue: (workerId: string) =>
+      createNotificationWhatsAppQueue(workerId, {
+        repos,
+        messaging,
+      }),
+    async dispatchPendingJobs(): Promise<void> {
+      await Promise.all([
+        publishJob(JOB_CHANNELS.NOTIFICATIONS_EMAIL, Date.now()),
+        publishJob(JOB_CHANNELS.NOTIFICATIONS_WHATSAPP, Date.now()),
+      ]);
+    },
     service: createAppNotificationService({
-      repos: campaignRepos,
-      config: {
-        resendApiKey: env.resendApiKey || undefined,
-        fromEmail: env.emailFrom || undefined,
-        whatsappAccessToken: env.whatsappAccessToken || undefined,
-        whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-        whatsappApiVersion: env.whatsappApiVersion || undefined,
-      },
+      repos,
+      messaging,
+      logger: infra.logger,
     }),
-    appNotifications: createAppNotificationsRepo(infra.db),
+    appNotifications: createAppNotificationRepo(infra.db),
   };
 }

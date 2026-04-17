@@ -1,6 +1,5 @@
 "use server";
 
-import { renderInviteEmail } from "@crm/notifications";
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
@@ -23,21 +22,20 @@ export async function sendInviteEmail(params: {
   inviteUrl: string;
   expiresAt: number;
 }): Promise<void> {
-  const { html, text } = renderInviteEmail({
-    fullName: params.fullName,
-    role: params.role,
-    inviteUrl: params.inviteUrl,
-    expiresAt: new Date(params.expiresAt).toLocaleDateString("es-MX", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-  });
-  await serverRuntime.notifications.notificationSender.send({
-    channel: "email",
+  const sent = await serverRuntime.notifications.messaging.sendInviteEmail({
     to: params.email,
-    subject: "Activa tu acceso al CRM",
-    html,
-    text,
+    params: {
+      fullName: params.fullName,
+      role: params.role,
+      inviteUrl: params.inviteUrl,
+      expiresAt: new Date(params.expiresAt).toLocaleDateString("es-MX", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    },
   });
+  if (!sent.ok) {
+    throw new Error(sent.error.message);
+  }
 }

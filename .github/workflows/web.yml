@@ -13,7 +13,8 @@ on:
       - "apps/web/*.ts"
       - "apps/web/*.json"
       - "apps/web/*.css"
-      - "packages/notifications/**"
+      - "packages/email-composer/**"
+      - "packages/message-channels/**"
       - "scripts/*.ts"
       - ".oxlintrc.json"
       - ".oxfmtrc.json"
@@ -29,7 +30,8 @@ on:
       - "apps/web/*.ts"
       - "apps/web/*.json"
       - "apps/web/*.css"
-      - "packages/notifications/**"
+      - "packages/email-composer/**"
+      - "packages/message-channels/**"
       - "scripts/*.ts"
       - ".oxlintrc.json"
       - ".oxfmtrc.json"
@@ -73,7 +75,7 @@ jobs:
             apps/web/src/server/shared/engine/contract.ts
             apps/web/src/server/shared/engine/projection-contract.ts
             apps/web/src/server/shared/engine/result-contract.ts
-            packages/notifications/src/templates/compiled/**
+            packages/email-composer/src/templates/compiled/**
 
   format:
     name: Format check

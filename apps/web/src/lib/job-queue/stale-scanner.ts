@@ -5,10 +5,31 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 const logger = createLogger("stale-scanner");
 
 const JOB_TABLES = [
-  "pipeline_integration_jobs",
-  "report_export_jobs",
-  "search_enrichment_jobs",
-  "search_enrichment_completion_outbox",
+  {
+    name: "pipeline_integration_jobs",
+    staleStatuses: ["PROCESSING"],
+    resetStatus: "PENDING",
+  },
+  {
+    name: "report_export_jobs",
+    staleStatuses: ["running"],
+    resetStatus: "queued",
+  },
+  {
+    name: "search_enrichment_jobs",
+    staleStatuses: ["running"],
+    resetStatus: "queued",
+  },
+  {
+    name: "search_enrichment_completion_outbox",
+    staleStatuses: ["running"],
+    resetStatus: "queued",
+  },
+  {
+    name: "notification_jobs",
+    staleStatuses: ["leased"],
+    resetStatus: "pending",
+  },
 ] as const;
 
 export async function resetStalledJobs(
@@ -16,33 +37,28 @@ export async function resetStalledJobs(
 ) {
   const now = Date.now();
   await Promise.all(
-    JOB_TABLES.map(async (table) => {
+    JOB_TABLES.map(async (jobTable) => {
       try {
         const result = await executor
-          .updateTable(table)
+          .updateTable(jobTable.name)
           .set({
-            status:
-              table === "search_enrichment_jobs" ||
-              table === "report_export_jobs" ||
-              table === "search_enrichment_completion_outbox"
-                ? "queued"
-                : "PENDING",
+            status: jobTable.resetStatus,
             lease_owner: null,
             lease_until: null,
           })
-          .where("status", "in", ["PROCESSING", "running"])
+          .where("status", "in", jobTable.staleStatuses)
           .where("lease_until", "<", now)
           .executeTakeFirst();
 
         if (Number(result.numUpdatedRows ?? 0) > 0) {
           logger.info("stalled_jobs_reset", {
-            table,
+            table: jobTable.name,
             count: Number(result.numUpdatedRows),
           });
         }
       } catch (error: unknown) {
         logger.error("stale_scan_failed", {
-          table,
+          table: jobTable.name,
           error: error instanceof Error ? error.message : "Unknown error",
         });
       }

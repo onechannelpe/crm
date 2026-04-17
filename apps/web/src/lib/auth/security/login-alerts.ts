@@ -1,10 +1,5 @@
-import type { NotificationsConfig } from "@crm/notifications";
-
 import { createLogger } from "~/lib/observability/logger";
-import type { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
-import type { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
-import type { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
-import { createAppNotificationService } from "~/server/notifications/service";
+import type { NotificationCampaignService } from "~/server/notifications/service";
 
 import type {
   PrivilegedLoginAlertPayload,
@@ -12,27 +7,16 @@ import type {
 } from "./privileged-login-alert";
 import { requiresStrongAuthRole } from "./strong-auth-status";
 
-type AlertRepos = {
-  notificationCampaigns: ReturnType<typeof createNotificationCampaignsRepo>;
-  notificationContacts: ReturnType<typeof createNotificationContactsRepo>;
-  notificationPreferences: ReturnType<typeof createNotificationPreferencesRepo>;
-};
+interface AlertNotifications {
+  service: NotificationCampaignService;
+  dispatchPendingJobs(): Promise<void>;
+}
 
 const logger = createLogger("login-alerts");
 
 export function createPrivilegedLoginAlertSender(
-  repos: AlertRepos,
-  config: NotificationsConfig,
+  notifications: AlertNotifications,
 ): SendPrivilegedLoginAlert {
-  const notifications = createAppNotificationService({
-    repos: {
-      notificationCampaigns: repos.notificationCampaigns,
-      notificationContacts: repos.notificationContacts,
-      notificationPreferences: repos.notificationPreferences,
-    },
-    config,
-  });
-
   return async function sendPrivilegedLoginAlert(
     params: PrivilegedLoginAlertPayload,
   ): Promise<void> {
@@ -41,7 +25,7 @@ export function createPrivilegedLoginAlertSender(
     }
 
     try {
-      await notifications.publishCampaign({
+      await notifications.service.publishCampaign({
         type: "security_event",
         eventType: "security.privileged_login",
         audienceType: "user",
@@ -57,8 +41,8 @@ export function createPrivilegedLoginAlertSender(
         ].join("\n"),
         createdByUserId: null,
       });
-      await notifications.enqueueDueCampaigns(5);
-      await notifications.processPendingJobs(20);
+      await notifications.service.enqueueDueCampaigns(5);
+      await notifications.dispatchPendingJobs();
     } catch (error) {
       logger.error("privileged_login_alert_failed", { error });
     }

@@ -1,0 +1,74 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text color="#333333" font-size="14px" line-height="1.6" padding="0" />
+    </mj-attributes>
+    <mj-style>
+      a {
+        color: #333333;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f7f7f7">
+    <!-- spacer -->
+    <mj-section padding="32px 0 0 0" background-color="#f7f7f7">
+      <mj-column><mj-text> </mj-text></mj-column>
+    </mj-section>
+
+    <!-- card -->
+    <mj-section
+      background-color="#ffffff"
+      border="1px solid #e8e8e8"
+      border-radius="8px"
+      padding="40px 48px"
+    >
+      <mj-column>
+        <!-- Heading -->
+        <mj-text
+          font-size="20px"
+          font-weight="600"
+          color="#333333"
+          padding-bottom="24px"
+        >
+          Tu acceso a One Channel está listo
+        </mj-text>
+
+        <mj-text padding-bottom="8px">Hola {{ fullName }},</mj-text>
+        <mj-text padding-bottom="24px">
+          Se creó tu cuenta con el rol de <strong>{{ role }}</strong
+          >. Usa el botón de abajo para activar tu acceso antes de que venza el
+          enlace.
+        </mj-text>
+
+        <mj-button
+          href="{{inviteUrl}}"
+          background-color="#333333"
+          color="#ffffff"
+          font-size="14px"
+          font-weight="500"
+          border-radius="6px"
+          inner-padding="12px 24px"
+          padding-bottom="24px"
+          align="left"
+        >
+          Activar mi cuenta
+        </mj-button>
+
+        <mj-text color="#666666" font-size="13px" padding-bottom="0">
+          Este enlace de activación vence el {{ expiresAt }}. Pasada esa fecha,
+          pide a un administrador que reenvíe la invitación.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="32px 0" background-color="#f7f7f7">
+      <mj-column>
+        <mj-text align="center" color="#999999" font-size="12px">
+          Si no esperabas este correo, alguien ingresó tu dirección en el CRM.
+          Puedes ignorarlo sin problema.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
