@@ -7,26 +7,18 @@ import { PageInfoLayout } from "../../top-bar/page-info-layout";
 import { useLeadRecordPageState } from "./state";
 
 export function RecordPageInfo() {
-  const { pageState, label, setRuc } = useLeadRecordPageState();
+  const { mode, label, draftRuc, setRuc, pageState } = useLeadRecordPageState();
   let inputRef: HTMLInputElement | undefined;
 
   onMount(() => {
-    const currentState = pageState();
-    if (currentState.mode === "create") {
+    if (mode() === "create") {
       inputRef?.focus();
     }
   });
 
-  const isCreateMode = () => pageState().mode === "create";
+  const isCreateMode = () => mode() === "create";
   const title = () => pageState().title;
-  const rucValue = () => {
-    const currentState = pageState();
-    if (currentState.mode !== "create") {
-      return "";
-    }
-
-    return currentState.draft.ruc;
-  };
+  const rucValue = () => draftRuc();
 
   return (
     <PageInfoLayout

@@ -59,6 +59,24 @@ export function useLeadRecordPageState() {
     });
   }
 
+  const mode = createMemo(() => pageState().mode);
+
+  const leadId = createMemo(() => {
+    const state = pageState();
+    if (state.mode !== "view") {
+      return null;
+    }
+    return state.leadId;
+  });
+
+  const draftRuc = createMemo(() => {
+    const state = pageState();
+    if (state.mode !== "create") {
+      return "";
+    }
+    return state.draft.ruc;
+  });
+
   const activeTab = createMemo<LeadRecordTabId>(() => {
     const state = pageState();
     if (state.mode === "create") {
@@ -79,6 +97,9 @@ export function useLeadRecordPageState() {
 
   return {
     pageState,
+    mode,
+    leadId,
+    draftRuc,
     activeTab,
     label,
     setRuc,

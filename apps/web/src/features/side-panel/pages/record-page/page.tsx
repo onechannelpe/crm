@@ -67,45 +67,18 @@ const TAB_COMPONENTS: Record<
   calendar: () => <HiddenTabContent title="Calendar" />,
 };
 
-export function RecordPage() {
+function RecordCreateView() {
   const { currentUser } = useAuthenticatedSession();
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
   const [error, setError] = createSignal<string | null>(null);
-  const { pageState, activeTab, setActiveTab } = useLeadRecordPageState();
 
-  const draftRuc = createMemo(() => {
-    const state = pageState();
-    if (state.mode !== "create") {
-      return "";
-    }
-
-    return state.draft.ruc;
-  });
-
-  const leadId = createMemo(() => {
-    const state = pageState();
-    return state.mode === "view" ? state.leadId : null;
-  });
-
-  const detailData = createAsync(async () => {
-    const id = leadId();
-    if (!id) {
-      return null;
-    }
-
-    return leadDetailQuery(id);
-  });
+  const { draftRuc, activeTab, setActiveTab } = useLeadRecordPageState();
 
   createEffect(on(draftRuc, () => setError(null), { defer: true }));
 
   const validRuc = createMemo(() => {
-    const state = pageState();
-    if (state.mode !== "create") {
-      return null;
-    }
-
-    const value = state.draft.ruc.trim();
+    const value = draftRuc().trim();
     return /^\d{11}$/.test(value) ? value : null;
   });
 
@@ -147,8 +120,6 @@ export function RecordPage() {
     onSubmit: () => void handleSubmit(),
   }));
 
-  const isCreateMode = createMemo(() => pageState().mode === "create");
-
   onMount(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const isCtrlOrMeta = event.ctrlKey || event.metaKey;
@@ -166,10 +137,6 @@ export function RecordPage() {
   });
 
   async function handleSubmit() {
-    if (pageState().mode !== "create") {
-      return;
-    }
-
     const value = validRuc();
 
     if (!value) {
@@ -220,16 +187,48 @@ export function RecordPage() {
     }
   }
 
-  let prevSunatStatus: string | undefined;
-  let pollStartedAt: number | undefined;
-  createEffect(() => {
-    const state = pageState();
-    if (state.mode !== "view") {
-      prevSunatStatus = undefined;
-      pollStartedAt = undefined;
-      return;
+  return (
+    <>
+      <div class={styles.page}>
+        <TabStrip<ExtendedTabId, TabId>
+          tabs={TAB_ITEMS}
+          hiddenTabs={HIDDEN_TAB_ITEMS}
+          activeTab={activeTab()}
+          onTabSelect={setActiveTab}
+          onHiddenTabSelect={setActiveTab}
+        />
+
+        <Dynamic
+          component={TAB_COMPONENTS[activeTab()]}
+          {...createTabProps()}
+        />
+
+        <Show when={error()}>
+          {(message) => <p class={styles.error}>{message()}</p>}
+        </Show>
+      </div>
+
+      <Footer onOpen={() => void handleSubmit()} />
+    </>
+  );
+}
+
+function RecordDetailView() {
+  const { leadId, activeTab, setActiveTab } = useLeadRecordPageState();
+
+  const detailData = createAsync(async () => {
+    const id = leadId();
+    if (!id) {
+      return null;
     }
 
+    return leadDetailQuery(id);
+  });
+
+  let prevSunatStatus: string | undefined;
+  let pollStartedAt: number | undefined;
+
+  createEffect(() => {
     const detail = detailData();
     if (!detail) return;
 
@@ -255,60 +254,54 @@ export function RecordPage() {
       return;
     }
 
-    const leadId = state.leadId;
-    const id = setInterval(() => {
-      void revalidate(leadDetailQuery.keyFor(leadId));
+    const idValue = leadId();
+    if (!idValue) return;
+
+    const intervalId = setInterval(() => {
+      void revalidate(leadDetailQuery.keyFor(idValue));
     }, POLL_INTERVAL_MS);
 
-    onCleanup(() => clearInterval(id));
+    onCleanup(() => clearInterval(intervalId));
   });
+
+  return (
+    <div class={styles.page}>
+      <TabStrip<ExtendedTabId, TabId>
+        tabs={TAB_ITEMS}
+        hiddenTabs={HIDDEN_TAB_ITEMS}
+        activeTab={activeTab()}
+        onTabSelect={setActiveTab}
+        onHiddenTabSelect={setActiveTab}
+      />
+
+      <Show
+        when={detailData()}
+        fallback={
+          <div class={styles.hiddenTabContent}>Cargando detalle...</div>
+        }
+      >
+        {(detail) => (
+          <Dynamic
+            component={TAB_COMPONENTS[activeTab()]}
+            mode="view"
+            data={detail()}
+          />
+        )}
+      </Show>
+    </div>
+  );
+}
+
+export function RecordPage() {
+  const { mode } = useLeadRecordPageState();
 
   return (
     <div class={styles.pageShell}>
       <PanelList>
-        <div class={styles.page}>
-          <TabStrip<ExtendedTabId, TabId>
-            tabs={TAB_ITEMS}
-            hiddenTabs={HIDDEN_TAB_ITEMS}
-            activeTab={activeTab()}
-            onTabSelect={setActiveTab}
-            onHiddenTabSelect={setActiveTab}
-          />
-
-          <Show
-            when={!isCreateMode()}
-            fallback={
-              <Dynamic
-                component={TAB_COMPONENTS[activeTab()]}
-                {...createTabProps()}
-              />
-            }
-          >
-            <Show
-              when={detailData()}
-              fallback={
-                <div class={styles.hiddenTabContent}>Cargando detalle...</div>
-              }
-            >
-              {(detail) => (
-                <Dynamic
-                  component={TAB_COMPONENTS[activeTab()]}
-                  mode="view"
-                  data={detail()}
-                />
-              )}
-            </Show>
-          </Show>
-
-          <Show when={error()}>
-            {(message) => <p class={styles.error}>{message()}</p>}
-          </Show>
-        </div>
+        <Show when={mode() === "view"} fallback={<RecordCreateView />}>
+          <RecordDetailView />
+        </Show>
       </PanelList>
-
-      <Show when={isCreateMode()}>
-        <Footer onOpen={() => void handleSubmit()} />
-      </Show>
     </div>
   );
 }
