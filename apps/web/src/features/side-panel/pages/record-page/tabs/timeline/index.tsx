@@ -27,7 +27,7 @@ export function TimelineTab(props: TabContentProps) {
   });
 
   const eventListId = () =>
-    props.mode === "create" ? "draft" : String(props.data.lead.id);
+    props.mode === "create" ? "draft" : props.data.lead.id;
 
   return (
     <div class={styles.mainContainer}>
