@@ -7,7 +7,7 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import type { NotificationService } from "~/server/notifications/service";
+import type { NotificationCampaignService } from "~/server/notifications/service";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
@@ -32,10 +32,7 @@ export type AuthLoginRepos = {
 export function createAuthLoginContext(
   executor: DatabaseExecutor,
   notifications: {
-    service: Pick<
-      NotificationService,
-      "publishCampaign" | "enqueueDueCampaigns"
-    >;
+    service: NotificationCampaignService;
     dispatchPendingJobs(): Promise<void>;
   },
 ) {

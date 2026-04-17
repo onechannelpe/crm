@@ -6,7 +6,7 @@ type NewNotificationPreferenceRow = Insertable<NotificationPreferencesTable>;
 
 type NotificationChannel = NotificationPreferencesTable["channel"];
 
-export function createNotificationPreferencesRepo(db: Kysely<Database>) {
+export function createNotificationPreferenceRepo(db: Kysely<Database>) {
   return {
     async isEnabled(params: {
       userId: number;
@@ -43,6 +43,6 @@ export function createNotificationPreferencesRepo(db: Kysely<Database>) {
   };
 }
 
-export type NotificationPreferencesRepo = ReturnType<
-  typeof createNotificationPreferencesRepo
+export type NotificationPreferenceRepo = ReturnType<
+  typeof createNotificationPreferenceRepo
 >;

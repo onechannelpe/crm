@@ -9,7 +9,7 @@ import { createJobQueue } from "~/lib/job-queue/job-queue";
 import { processDeliveryJob } from "../application/process-delivery-job";
 import { nextNotificationBackoffMs } from "../domain/retry-policy";
 import type { NotificationServiceDeps } from "../domain/types";
-import type { NotificationDeliveryJob } from "../repos-campaigns";
+import type { NotificationDeliveryJob } from "../repos/delivery-job";
 
 interface DeliveryQueueDeps {
   repos: NotificationServiceDeps["repos"];
@@ -42,7 +42,7 @@ export function createNotificationDeliveryQueue(
     batchSize: deps.batchSize,
     maxConcurrency: deps.maxConcurrency,
     poll: (limit: number) =>
-      deps.repos.notificationCampaigns.claimPendingJobsByChannel({
+      deps.repos.notificationDeliveryJob.claimPendingJobsByChannel({
         channel,
         workerId,
         limit,
@@ -76,12 +76,12 @@ export function createNotificationDeliveryQueue(
       }
 
       const failedAt = Date.now();
-      await deps.repos.notificationCampaigns.markRecipientFailed(
+      await deps.repos.notificationDeliveryLog.markRecipientFailed(
         handled.recipientId,
         failedAt,
         message,
       );
-      await deps.repos.notificationCampaigns.createDelivery({
+      await deps.repos.notificationDeliveryLog.createDelivery({
         recipient_id: handled.recipientId,
         provider: providerForChannel(channel),
         provider_message_id: null,
@@ -98,7 +98,7 @@ export function createNotificationDeliveryQueue(
       };
     },
     extendLease: (jobId: number) =>
-      deps.repos.notificationCampaigns.extendJobLease(
+      deps.repos.notificationDeliveryJob.extendJobLease(
         jobId,
         workerId,
         deps.leaseMs,
@@ -111,12 +111,12 @@ export function createNotificationDeliveryQueue(
         );
       }
 
-      await deps.repos.notificationCampaigns.markJobSent(jobId, workerId);
-      await deps.repos.notificationCampaigns.markRecipientSent(
+      await deps.repos.notificationDeliveryJob.markJobSent(jobId, workerId);
+      await deps.repos.notificationDeliveryLog.markRecipientSent(
         handled.recipientId,
         sentAt,
       );
-      await deps.repos.notificationCampaigns.createDelivery({
+      await deps.repos.notificationDeliveryLog.createDelivery({
         recipient_id: handled.recipientId,
         provider: handled.delivery.value.provider,
         provider_message_id: handled.delivery.value.providerMessageId,
@@ -128,7 +128,7 @@ export function createNotificationDeliveryQueue(
       });
     },
     onRetry: async (jobId: number, availableAt: number, reason?: string) => {
-      await deps.repos.notificationCampaigns.scheduleJobRetry({
+      await deps.repos.notificationDeliveryJob.scheduleJobRetry({
         jobId,
         workerId,
         availableAt,
@@ -136,7 +136,7 @@ export function createNotificationDeliveryQueue(
       });
     },
     onFail: async (jobId: number, reason: string) => {
-      await deps.repos.notificationCampaigns.markJobFailed(
+      await deps.repos.notificationDeliveryJob.markJobFailed(
         jobId,
         workerId,
         reason,

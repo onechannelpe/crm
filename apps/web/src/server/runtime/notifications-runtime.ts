@@ -7,10 +7,13 @@ import { publishJob } from "~/lib/redis/publisher";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
 import { createNotificationEmailQueue } from "~/server/notifications/queue/email-queue";
 import { createNotificationWhatsAppQueue } from "~/server/notifications/queue/whatsapp-queue";
-import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
-import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
-import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
-import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
+import { createNotificationAudienceRepo } from "~/server/notifications/repos/audience";
+import { createNotificationCampaignRepo } from "~/server/notifications/repos/campaign";
+import { createNotificationContactRepo } from "~/server/notifications/repos/contact";
+import { createNotificationDeliveryJobRepo } from "~/server/notifications/repos/delivery-job";
+import { createNotificationDeliveryLogRepo } from "~/server/notifications/repos/delivery-log";
+import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createAppNotificationService } from "~/server/notifications/service";
 
 import type { ServerInfra } from "./infra";
@@ -26,22 +29,25 @@ export function createNotificationsRuntime(infra: ServerInfra) {
   const composer = createEmailComposer();
   const messaging = createMessagingGateway({ channels, composer });
 
-  const campaignRepos = {
-    notificationCampaigns: createNotificationCampaignsRepo(infra.db),
-    notificationContacts: createNotificationContactsRepo(infra.db),
-    notificationPreferences: createNotificationPreferencesRepo(infra.db),
+  const repos = {
+    notificationCampaign: createNotificationCampaignRepo(infra.db),
+    notificationAudience: createNotificationAudienceRepo(infra.db),
+    notificationContact: createNotificationContactRepo(infra.db),
+    notificationPreference: createNotificationPreferenceRepo(infra.db),
+    notificationDeliveryJob: createNotificationDeliveryJobRepo(infra.db),
+    notificationDeliveryLog: createNotificationDeliveryLogRepo(infra.db),
   };
 
   return {
     messaging,
     createEmailQueue: (workerId: string) =>
       createNotificationEmailQueue(workerId, {
-        repos: campaignRepos,
+        repos,
         messaging,
       }),
     createWhatsAppQueue: (workerId: string) =>
       createNotificationWhatsAppQueue(workerId, {
-        repos: campaignRepos,
+        repos,
         messaging,
       }),
     async dispatchPendingJobs(): Promise<void> {
@@ -51,9 +57,9 @@ export function createNotificationsRuntime(infra: ServerInfra) {
       ]);
     },
     service: createAppNotificationService({
-      repos: campaignRepos,
+      repos,
       messaging,
     }),
-    appNotifications: createAppNotificationsRepo(infra.db),
+    appNotifications: createAppNotificationRepo(infra.db),
   };
 }

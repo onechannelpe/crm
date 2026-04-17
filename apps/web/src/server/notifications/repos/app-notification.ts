@@ -5,7 +5,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type NewAppNotificationRow = Insertable<AppNotificationsTable>;
 
-export function createAppNotificationsRepo(db: DatabaseExecutor) {
+export function createAppNotificationRepo(db: DatabaseExecutor) {
   return {
     listByUser(userId: number, limit: number) {
       return db
@@ -57,6 +57,4 @@ export function createAppNotificationsRepo(db: DatabaseExecutor) {
   };
 }
 
-export type AppNotificationsRepo = ReturnType<
-  typeof createAppNotificationsRepo
->;
+export type AppNotificationRepo = ReturnType<typeof createAppNotificationRepo>;

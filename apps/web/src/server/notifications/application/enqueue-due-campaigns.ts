@@ -11,7 +11,7 @@ async function enqueueUserChannels(
   eventType: string,
   now: number,
 ): Promise<void> {
-  const emailEnabled = await repos.notificationPreferences.isEnabled({
+  const emailEnabled = await repos.notificationPreference.isEnabled({
     userId: user.id,
     eventType,
     channel: "email",
@@ -19,11 +19,11 @@ async function enqueueUserChannels(
 
   if (emailEnabled) {
     const emailContact =
-      await repos.notificationContacts.findPrimaryVerifiedByUserAndChannel(
+      await repos.notificationContact.findPrimaryVerifiedByUserAndChannel(
         user.id,
         "email",
       );
-    const recipientId = await repos.notificationCampaigns.createRecipient({
+    const recipientId = await repos.notificationDeliveryLog.createRecipient({
       campaign_id: campaignId,
       user_id: user.id,
       channel: "email",
@@ -35,7 +35,7 @@ async function enqueueUserChannels(
       failed_at: null,
     });
 
-    await repos.notificationCampaigns.createJob({
+    await repos.notificationDeliveryJob.createJob({
       recipient_id: recipientId,
       status: "pending",
       attempt_count: 0,
@@ -49,7 +49,7 @@ async function enqueueUserChannels(
     });
   }
 
-  const whatsappEnabled = await repos.notificationPreferences.isEnabled({
+  const whatsappEnabled = await repos.notificationPreference.isEnabled({
     userId: user.id,
     eventType,
     channel: "whatsapp",
@@ -60,7 +60,7 @@ async function enqueueUserChannels(
   }
 
   const whatsappContact =
-    await repos.notificationContacts.findPrimaryVerifiedByUserAndChannel(
+    await repos.notificationContact.findPrimaryVerifiedByUserAndChannel(
       user.id,
       "whatsapp",
     );
@@ -69,7 +69,7 @@ async function enqueueUserChannels(
     return;
   }
 
-  const recipientId = await repos.notificationCampaigns.createRecipient({
+  const recipientId = await repos.notificationDeliveryLog.createRecipient({
     campaign_id: campaignId,
     user_id: user.id,
     channel: "whatsapp",
@@ -81,7 +81,7 @@ async function enqueueUserChannels(
     failed_at: null,
   });
 
-  await repos.notificationCampaigns.createJob({
+  await repos.notificationDeliveryJob.createJob({
     recipient_id: recipientId,
     status: "pending",
     attempt_count: 0,
@@ -100,14 +100,14 @@ export async function enqueueDueCampaigns(
   limit = 5,
 ): Promise<void> {
   const now = Date.now();
-  const campaigns = await deps.repos.notificationCampaigns.findQueuedCampaigns(
+  const campaigns = await deps.repos.notificationCampaign.findQueuedCampaigns(
     now,
     limit,
   );
 
   await Promise.all(
     campaigns.map(async (campaign) => {
-      const claim = await deps.repos.notificationCampaigns.markProcessing(
+      const claim = await deps.repos.notificationCampaign.markProcessing(
         campaign.id,
       );
 
@@ -116,7 +116,7 @@ export async function enqueueDueCampaigns(
       }
 
       try {
-        const users = await deps.repos.notificationCampaigns.findAudienceUsers(
+        const users = await deps.repos.notificationAudience.findAudienceMembers(
           campaign.audience_type,
           campaign.audience_ref,
         );
@@ -137,9 +137,9 @@ export async function enqueueDueCampaigns(
           ),
         );
 
-        await deps.repos.notificationCampaigns.markCompleted(campaign.id, now);
+        await deps.repos.notificationCampaign.markCompleted(campaign.id, now);
       } catch {
-        await deps.repos.notificationCampaigns.markFailed(
+        await deps.repos.notificationCampaign.markFailed(
           campaign.id,
           Date.now(),
         );

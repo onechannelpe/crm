@@ -5,16 +5,19 @@ import type {
   PublishCampaignInput,
 } from "./domain/types";
 
-export type NotificationService = ReturnType<
-  typeof createAppNotificationService
->;
+export interface NotificationCampaignService {
+  publishCampaign(input: PublishCampaignInput): Promise<number>;
+  enqueueDueCampaigns(limit?: number): Promise<void>;
+}
 
-export function createAppNotificationService(deps: NotificationServiceDeps) {
+export function createAppNotificationService(
+  deps: NotificationServiceDeps,
+): NotificationCampaignService {
   return {
-    publishCampaign(input: PublishCampaignInput): Promise<number> {
+    publishCampaign(input: PublishCampaignInput) {
       return publishCampaign(deps, input);
     },
-    enqueueDueCampaigns(limit = 5): Promise<void> {
+    enqueueDueCampaigns(limit = 5) {
       return enqueueDueCampaigns(deps, limit);
     },
   };

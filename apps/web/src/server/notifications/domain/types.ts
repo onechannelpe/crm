@@ -1,9 +1,10 @@
-import type { UsersTable } from "~/lib/db/types";
-
 import type { MessagingGateway } from "../messaging-gateway";
-import type { createNotificationCampaignsRepo } from "../repos-campaigns";
-import type { createNotificationContactsRepo } from "../repos-contacts";
-import type { createNotificationPreferencesRepo } from "../repos-preferences";
+import type { createNotificationAudienceRepo } from "../repos/audience";
+import type { createNotificationCampaignRepo } from "../repos/campaign";
+import type { createNotificationContactRepo } from "../repos/contact";
+import type { createNotificationDeliveryJobRepo } from "../repos/delivery-job";
+import type { createNotificationDeliveryLogRepo } from "../repos/delivery-log";
+import type { createNotificationPreferenceRepo } from "../repos/preference";
 
 export interface PublishCampaignInput {
   type: "security_event" | "broadcast";
@@ -18,17 +19,16 @@ export interface PublishCampaignInput {
 
 export interface NotificationServiceDeps {
   repos: {
-    notificationCampaigns: ReturnType<typeof createNotificationCampaignsRepo>;
-    notificationContacts: ReturnType<typeof createNotificationContactsRepo>;
-    notificationPreferences: ReturnType<
-      typeof createNotificationPreferencesRepo
+    notificationCampaign: ReturnType<typeof createNotificationCampaignRepo>;
+    notificationAudience: ReturnType<typeof createNotificationAudienceRepo>;
+    notificationContact: ReturnType<typeof createNotificationContactRepo>;
+    notificationPreference: ReturnType<typeof createNotificationPreferenceRepo>;
+    notificationDeliveryJob: ReturnType<
+      typeof createNotificationDeliveryJobRepo
+    >;
+    notificationDeliveryLog: ReturnType<
+      typeof createNotificationDeliveryLogRepo
     >;
   };
   messaging: MessagingGateway;
-}
-
-export interface NotificationAudienceUser {
-  id: number;
-  email: string;
-  role: UsersTable["role"];
 }

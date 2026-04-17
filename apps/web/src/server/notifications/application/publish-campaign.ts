@@ -7,7 +7,7 @@ export async function publishCampaign(
   deps: NotificationServiceDeps,
   input: PublishCampaignInput,
 ): Promise<number> {
-  return deps.repos.notificationCampaigns.createCampaign({
+  return deps.repos.notificationCampaign.createCampaign({
     type: input.type,
     event_type: input.eventType,
     audience_type: input.audienceType,

@@ -5,7 +5,7 @@ import type {
 } from "@crm/message-channels";
 
 import type { NotificationServiceDeps } from "../domain/types";
-import type { NotificationDeliveryJob } from "../repos-campaigns";
+import type { NotificationDeliveryJob } from "../repos/delivery-job";
 
 export async function processDeliveryJob(
   deps: Pick<NotificationServiceDeps, "messaging">,

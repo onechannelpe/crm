@@ -6,7 +6,7 @@ type NewNotificationContactRow = Insertable<NotificationContactsTable>;
 
 type NotificationChannel = NotificationContactsTable["channel"];
 
-export function createNotificationContactsRepo(db: Kysely<Database>) {
+export function createNotificationContactRepo(db: Kysely<Database>) {
   return {
     findPrimaryVerifiedByUserAndChannel(
       userId: number,
@@ -51,6 +51,6 @@ export function createNotificationContactsRepo(db: Kysely<Database>) {
   };
 }
 
-export type NotificationContactsRepo = ReturnType<
-  typeof createNotificationContactsRepo
+export type NotificationContactRepo = ReturnType<
+  typeof createNotificationContactRepo
 >;

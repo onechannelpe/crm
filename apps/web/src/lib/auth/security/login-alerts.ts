@@ -1,5 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
-import type { NotificationService } from "~/server/notifications/service";
+import type { NotificationCampaignService } from "~/server/notifications/service";
 
 import type {
   PrivilegedLoginAlertPayload,
@@ -8,7 +8,7 @@ import type {
 import { requiresStrongAuthRole } from "./strong-auth-status";
 
 interface AlertNotifications {
-  service: Pick<NotificationService, "publishCampaign" | "enqueueDueCampaigns">;
+  service: NotificationCampaignService;
   dispatchPendingJobs(): Promise<void>;
 }
 
