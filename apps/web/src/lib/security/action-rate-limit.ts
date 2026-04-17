@@ -7,6 +7,7 @@ import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { Database } from "~/lib/db/types";
 type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import type { UserId } from "~/server/shared/ids";
 
 interface ActionRateLimitPolicy {
   /** Max requests per authenticated user per window. */
@@ -45,7 +46,7 @@ function resolveRequestIp(): string {
   return getClientIp(event.request.headers);
 }
 
-function buildUserKey(actionName: string, userId: number): string {
+function buildUserKey(actionName: string, userId: UserId): string {
   return hashAuthKey(`action:${actionName}:user:${userId}`);
 }
 
@@ -55,7 +56,7 @@ function buildIpKey(actionName: string, ip: string): string {
 
 async function blockWithAudit(params: {
   actionName: RateLimitedAction;
-  userId: number;
+  userId: UserId;
   scope: "user" | "ip";
   limit: number;
   windowMs: number;
@@ -106,7 +107,7 @@ async function blockWithAudit(params: {
 
 export async function checkActionRateLimit(
   actionName: RateLimitedAction,
-  userId: number,
+  userId: UserId,
   deps: RateLimitDeps,
   ip: string = resolveRequestIp(),
 ): Promise<void> {

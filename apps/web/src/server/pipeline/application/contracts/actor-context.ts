@@ -1,7 +1,8 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { UserId } from "~/server/shared/ids";
 
 export type ActorContext = {
-  userId: number;
+  userId: UserId;
   role: Role;
   branchId: number;
 };

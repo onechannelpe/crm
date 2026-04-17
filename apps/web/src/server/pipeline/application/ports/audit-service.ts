@@ -1,7 +1,9 @@
+import type { UserId } from "~/server/shared/ids";
+
 import type { LeadId } from "../../domain/lead-record";
 
 export type AuditLogDraft = {
-  userId: number;
+  userId: UserId;
   action: string;
   entityType: string;
   entityId: LeadId;
@@ -15,7 +17,7 @@ export type AuditLogRepository = {
 
 export type PipelineAuditService = {
   log(
-    actorUserId: number,
+    actorUserId: UserId,
     action: string,
     entity: string,
     entityId: LeadId,

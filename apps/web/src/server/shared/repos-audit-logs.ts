@@ -3,6 +3,7 @@ import type { Insertable } from "kysely";
 import type { Database } from "~/lib/db/types";
 import type { AuditReaderQueryFilter } from "~/server/audit-reader/contracts";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
 
 type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 
@@ -15,7 +16,7 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
         .executeTakeFirstOrThrow();
     },
 
-    findByUser(userId: number, limit: number = 50) {
+    findByUser(userId: UserId, limit: number = 50) {
       return db
         .selectFrom("audit_logs")
         .selectAll()

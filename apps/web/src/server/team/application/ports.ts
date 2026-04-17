@@ -1,10 +1,11 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 
 export interface InviteManagementPendingInvite {
   inviteId: number;
-  userId: number;
+  userId: UserId;
   email: string;
   names: string;
   firstSurname: string;
@@ -13,7 +14,7 @@ export interface InviteManagementPendingInvite {
   teamId: number | null;
   expiresAt: number;
   createdAt: number;
-  createdByUserId: number;
+  createdByUserId: UserId;
   sentAt: number | null;
 }
 

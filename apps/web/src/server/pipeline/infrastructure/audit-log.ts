@@ -1,4 +1,5 @@
 import { serializeAuditChanges } from "~/lib/contracts/audit";
+import type { UserId } from "~/server/shared/ids";
 
 import type {
   AuditLogDraft,
@@ -8,7 +9,7 @@ import type {
 
 export function createPipelineAuditLogRepo(auditLogs: {
   create(values: {
-    user_id: number;
+    user_id: UserId;
     action: string;
     entity_type: string;
     entity_id: string;

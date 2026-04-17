@@ -1,8 +1,9 @@
 import { serializeAuditChanges } from "~/lib/contracts/audit";
+import type { UserId } from "~/server/shared/ids";
 
 interface AuditLogWriter {
   create(values: {
-    user_id: number;
+    user_id: UserId;
     action: string;
     entity_type: string;
     entity_id: string;
@@ -18,7 +19,7 @@ interface AuditDeps {
 export function createAuditService(deps: AuditDeps) {
   return {
     log(
-      userId: number,
+      userId: UserId,
       action: string,
       entityType: string,
       entityId: string,

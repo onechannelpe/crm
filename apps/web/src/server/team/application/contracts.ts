@@ -1,6 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { RoleOption } from "~/lib/auth/access/role-display";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 export interface BulkImportSetup {
   assignableRoles: RoleOption[];
@@ -8,7 +9,7 @@ export interface BulkImportSetup {
 
 export interface TeamInvite {
   inviteId: number;
-  userId: number;
+  userId: UserId;
   names: string;
   firstSurname: string;
   secondSurname: string;

@@ -1,4 +1,5 @@
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 import type { CapacityRequestStatus } from "../domain/types";
 import type { LeadCapacitySnapshot } from "./get-lead-capacity-snapshot";
@@ -15,7 +16,7 @@ export type AuditChangeValue =
 export type CapacityAuditEvent = {
   id: number;
   createdAt: number;
-  userId: number;
+  userId: UserId;
   action: string;
   entityType: string;
   entityId: string | null;
@@ -24,13 +25,13 @@ export type CapacityAuditEvent = {
 
 export type PendingCapacityRequestView = {
   id: number;
-  userId: number;
+  userId: UserId;
   kind: "search_extra" | "lead_refill";
   status: CapacityRequestStatus;
   requestedAmount: number;
   reason: string;
   decisionNote: string | null;
-  reviewerUserId: number | null;
+  reviewerUserId: UserId | null;
   createdAt: number;
   updatedAt: number;
   decidedAt: number | null;
@@ -79,13 +80,13 @@ export type ExecutiveCapacityDetailView = {
   leadStatus: LeadCapacitySnapshot;
   requests: {
     id: number;
-    userId: number;
+    userId: UserId;
     kind: "search_extra" | "lead_refill";
     status: CapacityRequestStatus;
     requestedAmount: number;
     reason: string;
     decisionNote: string | null;
-    reviewerUserId: number | null;
+    reviewerUserId: UserId | null;
     createdAt: number;
     updatedAt: number;
     decidedAt: number | null;

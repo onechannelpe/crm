@@ -1,4 +1,5 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import type { UserId } from "~/server/shared/ids";
 
 import type {
   CapacityApprovalPort,
@@ -10,7 +11,7 @@ export function createCapacityApprovalContext(
   context: CapacityCommandsContext,
 ): CapacityApprovalPort {
   return {
-    async enforceApprovalRateLimit(userId: number) {
+    async enforceApprovalRateLimit(userId: UserId) {
       await checkActionRateLimit(
         "capacity.approve",
         userId,
