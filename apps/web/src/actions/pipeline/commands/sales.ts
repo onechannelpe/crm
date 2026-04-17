@@ -1,8 +1,8 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { createSale } from "~/server/pipeline/application/commands/create-sale";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
+import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestSaleCreation(input: {
@@ -32,12 +32,13 @@ export async function requestSaleCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService }) =>
-        createSale({
-          deps: deps.createSale,
-          auditService,
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
+      runPipelineCommand((runtime) =>
+        createPipelineCommandApiRuntime(runtime).createSale({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
           ...input,
         }),
       ),

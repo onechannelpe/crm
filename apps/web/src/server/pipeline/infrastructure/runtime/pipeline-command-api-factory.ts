@@ -10,9 +10,12 @@ import type { PipelineEngineGateway } from "../../application/ports/engine-gatew
 import type { LeadEnrichmentQueue } from "../../application/ports/enrichment-queue";
 import type { PipelineNotificationCenter } from "../../application/ports/notification-center";
 import { systemLeadClock } from "../../application/services/lead-clock";
+import { createCommercialInputRepo } from "../commercial-input-repo";
+import { createQuotationRepo } from "../quotation-repo";
 import { createLeadMutationUow } from "../repos/lead-mutation-uow";
 import { createLeadReadRepository } from "../repos/lead-read-repo";
 import { createLeadUserScopeRepository } from "../repos/lead-user-scope-repo";
+import { createSaleRepo } from "../sale-repo";
 
 export type PipelineCommandApiRuntimeInput = {
   executor: DatabaseExecutor;
@@ -36,5 +39,8 @@ export function createPipelineCommandApiRuntime(
     auditService: input.auditService,
     engineGateway: input.engineGateway,
     leadEnrichmentQueue: input.leadEnrichmentQueue,
+    leadQuotations: createQuotationRepo(input.executor),
+    leadCommercialInputs: createCommercialInputRepo(input.executor),
+    leadSales: createSaleRepo(input.executor),
   });
 }

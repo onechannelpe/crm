@@ -1,19 +1,11 @@
 import type {
-  LeadBootstrapPreviewDeps,
   AssignableExecutivesDeps,
+  LeadBootstrapPreviewDeps,
   LeadDetailDeps,
   LeadListDeps,
   SaleQueryDeps,
 } from "~/server/pipeline/application/deps/lead-queries";
-import type {
-  ApproveForSaleDeps,
-  CreateQuotationDeps,
-} from "~/server/pipeline/application/deps/quotations";
 import type { RegisterLeadDeps } from "~/server/pipeline/application/deps/register-lead";
-import type {
-  CompleteCommercialInputDeps,
-  CreateSaleDeps,
-} from "~/server/pipeline/application/deps/sales";
 import type { SourcingPolicyDeps } from "~/server/pipeline/application/deps/sourcing-policy";
 import { createAssignmentRepo } from "~/server/pipeline/infrastructure/assignment-repo";
 import { createCommercialInputRepo } from "~/server/pipeline/infrastructure/commercial-input-repo";
@@ -31,10 +23,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 export type PipelineDeps = {
   registerLead: RegisterLeadDeps;
   leadMutations: RegisterLeadDeps;
-  completeCommercialInput: CompleteCommercialInputDeps;
-  createQuotation: CreateQuotationDeps;
-  approveForSale: ApproveForSaleDeps;
-  createSale: CreateSaleDeps;
   leadList: LeadListDeps;
   leadDetail: LeadDetailDeps;
   leadBootstrapPreview: LeadBootstrapPreviewDeps;
@@ -61,14 +49,6 @@ export function createPipelineFeatureDeps(
   return {
     registerLead: { leads, leadAssignments, leadHistory, users },
     leadMutations: { leads, leadAssignments, leadHistory, users },
-    completeCommercialInput: {
-      leads,
-      leadCommercialInputs,
-      leadHistory,
-    },
-    createQuotation: { leads, leadHistory, leadQuotations },
-    approveForSale: { leads, leadHistory },
-    createSale: { leads, leadHistory, leadSales },
     leadList: { leads: leadQueries },
     leadDetail: {
       leads,

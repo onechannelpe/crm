@@ -1,7 +1,6 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
 import { requestSunatRefresh } from "~/server/pipeline/application/commands/request-sunat-refresh";
 import {
   parseRequiredLeadPriority,
@@ -98,14 +97,13 @@ export async function requestLeadCommercialInputCompletion(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
-        completeCommercialInput({
-          deps: deps.completeCommercialInput,
-          auditService,
-          notificationCenter,
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+      runPipelineCommand((runtime) =>
+        createPipelineCommandApiRuntime(runtime).completeCommercialInput({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
           ...input,
         }),
       ),

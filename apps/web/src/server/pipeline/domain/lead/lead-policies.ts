@@ -66,6 +66,24 @@ export function validateLeadIntent(
   if (intent.kind === "reassign" && intent.toExecutiveId <= 0) {
     return invalidLeadInput("invalid_executive", "Invalid executive id");
   }
+  if (intent.kind === "approve_for_sale" && currentStage !== "QUOTED") {
+    return invalidLeadStage();
+  }
+  if (
+    intent.kind === "create_quotation" &&
+    currentStage !== "READY_FOR_QUOTATION"
+  ) {
+    return invalidLeadStage();
+  }
+  if (
+    intent.kind === "complete_commercial_input" &&
+    currentStage !== "NEEDS_EXECUTIVE_INPUT"
+  ) {
+    return invalidLeadStage();
+  }
+  if (intent.kind === "create_sale" && currentStage !== "READY_FOR_SALE") {
+    return invalidLeadStage();
+  }
 
   return Ok(undefined);
 }
