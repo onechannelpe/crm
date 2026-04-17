@@ -188,6 +188,125 @@ export function deriveLeadMutationEvents(input: {
     });
   }
 
+  if (intent.kind === "approve_for_sale") {
+    return Ok({
+      history: [
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "sale_approved",
+          actorUserId,
+          payload: null,
+          occurredAt: now,
+        }),
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "workflow_stage_changed",
+          actorUserId,
+          payload: { from: lead.stage, to: "READY_FOR_SALE" },
+          occurredAt: now,
+        }),
+      ],
+      audit: {
+        action: "sale_approved",
+        entityId: lead.id,
+        changes: { from: lead.stage, to: "READY_FOR_SALE" },
+      },
+    });
+  }
+
+  if (intent.kind === "create_quotation") {
+    return Ok({
+      history: [
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "quotation_created",
+          actorUserId,
+          payload: {
+            quotationId: intent.quotationId,
+            version: intent.version,
+            moneda: intent.moneda,
+          },
+          occurredAt: now,
+        }),
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "workflow_stage_changed",
+          actorUserId,
+          payload: { from: lead.stage, to: "QUOTED" },
+          occurredAt: now,
+        }),
+      ],
+      audit: {
+        action: "quotation_created",
+        entityId: lead.id,
+        changes: {
+          quotationId: intent.quotationId,
+          version: intent.version,
+          to: "QUOTED",
+        },
+      },
+    });
+  }
+
+  if (intent.kind === "complete_commercial_input") {
+    return Ok({
+      history: [
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "commercial_input_completed",
+          actorUserId,
+          payload: {
+            proveedorActual: intent.proveedorActual,
+            tasaActual: intent.tasaActual,
+            gpv: intent.gpv,
+            ticket: intent.ticket,
+            abono: intent.abono,
+            cantidadPos: intent.cantidadPos,
+          },
+          occurredAt: now,
+        }),
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "workflow_stage_changed",
+          actorUserId,
+          payload: { from: lead.stage, to: "READY_FOR_QUOTATION" },
+          occurredAt: now,
+        }),
+      ],
+      audit: {
+        action: "commercial_input_completed",
+        entityId: lead.id,
+        changes: { from: lead.stage, to: "READY_FOR_QUOTATION" },
+      },
+    });
+  }
+
+  if (intent.kind === "create_sale") {
+    return Ok({
+      history: [
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "sale_created",
+          actorUserId,
+          payload: { saleId: intent.saleId },
+          occurredAt: now,
+        }),
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "workflow_stage_changed",
+          actorUserId,
+          payload: { from: lead.stage, to: "CONVERTED" },
+          occurredAt: now,
+        }),
+      ],
+      audit: {
+        action: "sale_created",
+        entityId: lead.id,
+        changes: { saleId: intent.saleId, to: "CONVERTED" },
+      },
+    });
+  }
+
   return Ok({
     history: [],
     audit: {

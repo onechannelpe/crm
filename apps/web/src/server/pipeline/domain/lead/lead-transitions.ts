@@ -60,5 +60,12 @@ export function deriveLeadPatchFromIntent(input: {
     });
   }
 
+  if (intent.kind === "approve_for_sale")
+    return Ok({ stage: "READY_FOR_SALE" });
+  if (intent.kind === "create_quotation") return Ok({ stage: "QUOTED" });
+  if (intent.kind === "complete_commercial_input")
+    return Ok({ stage: "READY_FOR_QUOTATION" });
+  if (intent.kind === "create_sale") return Ok({ stage: "CONVERTED" });
+
   return Ok({});
 }
