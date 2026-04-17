@@ -1,3 +1,4 @@
+import { config } from "~/lib/config";
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
@@ -60,6 +61,7 @@ async function runExpiryNotificationTick(
               month: "long",
               day: "numeric",
             }),
+            platformName: config.branding.platformName,
           },
         });
         if (!sent.ok) {
