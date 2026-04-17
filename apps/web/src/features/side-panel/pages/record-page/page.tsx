@@ -83,13 +83,18 @@ export function RecordPage() {
     return state.draft.ruc;
   });
 
-  const detailData = createAsync(async () => {
+  const leadId = createMemo(() => {
     const state = pageState();
-    if (state.mode !== "view") {
+    return state.mode === "view" ? state.leadId : null;
+  });
+
+  const detailData = createAsync(async () => {
+    const id = leadId();
+    if (!id) {
       return null;
     }
 
-    return leadDetailQuery(state.leadId);
+    return leadDetailQuery(id);
   });
 
   createEffect(on(draftRuc, () => setError(null), { defer: true }));
