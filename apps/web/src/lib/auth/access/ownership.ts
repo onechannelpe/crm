@@ -1,4 +1,5 @@
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
+import type { UserId } from "~/server/shared/ids";
 
 import type { Role } from "./rbac";
 import type { AuthSession } from "./session-types";
@@ -17,7 +18,7 @@ import type { AuthSession } from "./session-types";
  */
 export function assertOwnedRecord<T>(
   record: T | null | undefined,
-  getOwnerId: (r: T) => number | null | undefined,
+  getOwnerId: (r: T) => UserId | null | undefined,
   session: Pick<AuthSession, "userId" | "role">,
   options?: {
     resourceName?: string;

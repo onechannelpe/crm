@@ -12,21 +12,30 @@ import {
 type UserRow = Selectable<UsersTable>;
 type UserSessionRow = Selectable<Database["user_sessions"]>;
 
-type SessionIdentitySource = Pick<
-  UserRow,
-  "id" | "branch_id" | "role" | "onboarding_completed_at"
->;
+type SessionIdentitySource = Omit<
+  Pick<UserRow, "id" | "branch_id" | "role" | "onboarding_completed_at">,
+  "id" | "branch_id"
+> & {
+  id: UserId;
+  branch_id: BranchId;
+};
 
-type PersistedSessionSource = Pick<
-  UserSessionRow,
-  | "user_id"
-  | "branch_id"
-  | "role"
-  | "session_class"
-  | "primary_auth_method"
-  | "strong_auth_method"
-  | "strong_auth_at"
->;
+type PersistedSessionSource = Omit<
+  Pick<
+    UserSessionRow,
+    | "user_id"
+    | "branch_id"
+    | "role"
+    | "session_class"
+    | "primary_auth_method"
+    | "strong_auth_method"
+    | "strong_auth_at"
+  >,
+  "user_id" | "branch_id"
+> & {
+  user_id: UserId;
+  branch_id: BranchId;
+};
 
 export interface SessionIdentity {
   userId: UserId;
@@ -39,8 +48,8 @@ export function mapUserToSessionIdentity(
   user: SessionIdentitySource,
 ): SessionIdentity {
   return {
-    userId: asUserId(user.id),
-    branchId: asBranchId(user.branch_id),
+    userId: user.id,
+    branchId: user.branch_id,
     role: user.role,
     onboardingCompleted: user.onboarding_completed_at !== null,
   };
@@ -52,8 +61,8 @@ export function mapUserSessionRowToAuthSession(
 ): AuthSession {
   return {
     id: sessionId,
-    userId: asUserId(session.user_id),
-    branchId: asBranchId(session.branch_id),
+    userId: session.user_id,
+    branchId: session.branch_id,
     role: session.role,
     onboardingCompleted: session.session_class === "app",
     sessionClass: session.session_class,

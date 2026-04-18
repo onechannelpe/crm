@@ -6,10 +6,16 @@ import { isPlainRecord } from "~/lib/type-guards";
 import { shortName } from "~/lib/users/display-name";
 import type { SalesExportFormat } from "~/server/sales/types";
 import type { AppContext } from "~/server/shared/action-runtime";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 export interface SalesExportJob {
   id: number;
-  requestedByUserId: number;
+  requestedByUserId: UserId;
   requestedByName: string;
   format: SalesExportFormat;
   status: "queued" | "running" | "completed" | "failed" | "expired";
@@ -23,27 +29,27 @@ export interface SalesExportJob {
 export interface SalesExportDownload {
   id: number;
   exportJobId: number;
-  downloadedByUserId: number;
+  downloadedByUserId: UserId;
   downloadedByName: string;
   downloadedAt: number;
 }
 
 export interface SalesExportActor {
-  userId: number;
+  userId: UserId;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
 }
 
 export interface SalesExportServiceDeps {
   reportExportJobs: {
     listJobs(
       limit: number,
-      scope?: { branchId: number },
+      scope?: { branchId: BranchId },
     ): Promise<ReportExportListRow[]>;
     findJobById(jobId: number): Promise<
       | {
           id: number;
-          requested_by_user_id: number;
+          requested_by_user_id: UserId;
           format: SalesExportFormat;
           status: SalesExportJob["status"];
           rows_count: number | null;
@@ -51,15 +57,15 @@ export interface SalesExportServiceDeps {
           completed_at: number | null;
           expires_at: number | null;
           filters_json: string;
-          branch_id: number;
+          branch_id: BranchId;
         }
       | null
       | undefined
     >;
     listDownloadsByJob(jobId: number): Promise<ReportExportDownloadRow[]>;
     createJob(input: {
-      requested_by_user_id: number;
-      branch_id: number;
+      requested_by_user_id: UserId;
+      branch_id: BranchId;
       format: SalesExportFormat;
       filters_json: string;
       status: "queued";
@@ -77,9 +83,9 @@ export interface SalesExportServiceDeps {
     }): Promise<number>;
   };
   users: {
-    findById(userId: number): Promise<
+    findById(userId: UserId): Promise<
       | {
-          id: number;
+          id: UserId;
           names: string;
           first_surname: string;
           second_surname: string;
@@ -92,7 +98,7 @@ export interface SalesExportServiceDeps {
 
 type ReportExportListRow = {
   id: number;
-  requested_by_user_id: number;
+  requested_by_user_id: UserId;
   requested_by_name: string;
   format: SalesExportFormat;
   status: SalesExportJob["status"];
@@ -106,7 +112,7 @@ type ReportExportListRow = {
 type ReportExportDownloadRow = {
   id: number;
   export_job_id: number;
-  downloaded_by_user_id: number;
+  downloaded_by_user_id: UserId;
   downloaded_by_name: string;
   downloaded_at: number;
 };
@@ -145,7 +151,7 @@ function mapDownload(row: ReportExportDownloadRow): SalesExportDownload {
   };
 }
 
-function canReadJob(actor: SalesExportActor, branchId: number): boolean {
+function canReadJob(actor: SalesExportActor, branchId: BranchId): boolean {
   return actor.role === "superuser" || actor.branchId === branchId;
 }
 

@@ -1,9 +1,9 @@
-import type { LeadId, LeadPatch } from "../domain/lead-record";
+import type { LeadId, LeadPatch, UserId } from "../domain/lead-record";
 
 export type LeadWriteRepository = {
   updateLead(input: {
     leadId: LeadId;
-    actorUserId: number;
+    actorUserId: UserId;
     now: number;
     patch: Omit<LeadPatch, "updatedBy" | "updatedAt">;
   }): Promise<void>;
@@ -12,7 +12,7 @@ export type LeadWriteRepository = {
 export type CheckedLeadWriteRepository = {
   updateLeadChecked(input: {
     leadId: LeadId;
-    actorUserId: number;
+    actorUserId: UserId;
     now: number;
     expectedUpdatedAt: number;
     patch: Omit<LeadPatch, "updatedBy" | "updatedAt">;

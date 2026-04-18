@@ -1,6 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createLeadDraft } from "../../domain/lead-record";
@@ -21,9 +22,9 @@ import {
 } from "./register-lead-resolution";
 
 export async function registerLead(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  executiveId: number;
+  executiveId: UserId;
   ruc: string;
   deps: RegisterLeadDeps;
   mutationUow: LeadMutationUow;

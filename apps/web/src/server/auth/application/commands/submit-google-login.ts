@@ -2,6 +2,7 @@ import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
 import type { AuthProof } from "~/server/auth/policy/types";
+import type { UserId } from "~/server/shared/ids";
 import { Err, type Result } from "~/server/shared/result";
 
 import type {
@@ -12,7 +13,7 @@ import { completePrimaryAuthProof } from "../services/primary-login";
 
 export async function submitGoogleLogin(
   input: {
-    userId: number;
+    userId: UserId;
     ipAddress: string;
     userAgent: string | null;
     trustedFederatedMfa?: boolean;

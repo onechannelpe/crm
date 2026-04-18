@@ -4,6 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
+import type { UserId } from "~/server/shared/ids";
 
 import type { LeadRecord } from "../lead-record";
 
@@ -26,7 +27,7 @@ export type LeadCapabilitySet = {
 export type LeadMutationIntent =
   | {
       kind: "reassign";
-      toExecutiveId: number;
+      toExecutiveId: UserId;
       reason?: "inactive_previous_executive";
     }
   | {
@@ -70,7 +71,7 @@ export type LeadMutationIntent =
   | { kind: "create_sale"; saleId: number };
 
 export type LeadMutationPatch = {
-  executiveId?: number;
+  executiveId?: UserId;
   stage?: LeadStage;
   status?: LeadStatus | null;
   prioridad?: LeadPriority | null;
@@ -78,7 +79,7 @@ export type LeadMutationPatch = {
 
 export type LeadMutationContext = {
   lead: LeadRecord;
-  actorUserId: number;
+  actorUserId: UserId;
   now: number;
   intent: LeadMutationIntent;
 };

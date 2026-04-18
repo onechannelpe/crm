@@ -1,11 +1,12 @@
-import type { Kysely } from "kysely";
+import type { Kysely, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Database, WebauthnChallengesTable } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 export function createWebauthnChallengesRepo(db: Kysely<Database>) {
   return {
     async create(values: {
-      user_id: number | null;
+      user_id: UserId | null;
       type: string;
       challenge: string;
       expires_at: number;
@@ -24,7 +25,12 @@ export function createWebauthnChallengesRepo(db: Kysely<Database>) {
         .selectFrom("webauthn_challenges")
         .selectAll()
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst() as Promise<
+        | (Omit<Selectable<WebauthnChallengesTable>, "user_id"> & {
+            user_id: UserId | null;
+          })
+        | undefined
+      >;
     },
 
     async delete(id: number): Promise<void> {

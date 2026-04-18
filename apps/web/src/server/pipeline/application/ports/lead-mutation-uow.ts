@@ -1,5 +1,6 @@
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 
 import type { LeadRecord } from "../../domain/lead-record";
@@ -22,22 +23,22 @@ export type CheckedLeadMutationOutcome = {
 
 export type LeadAssignmentMutationInput = {
   leadId: LeadId;
-  toExecutiveId: number;
-  assignedBy: number;
+  toExecutiveId: UserId;
+  assignedBy: UserId;
   assignedAt: number;
 };
 
 export type LeadMutationUow = {
   commit(input: {
     lead: LeadRecord;
-    actorUserId: number;
+    actorUserId: UserId;
     now: number;
     intent: LeadMutationIntent;
     assignment?: LeadAssignmentMutationInput;
   }): Promise<Result<LeadMutationOutcome, DomainError>>;
   commitChecked(input: {
     lead: LeadRecord;
-    actorUserId: number;
+    actorUserId: UserId;
     now: number;
     expectedUpdatedAt: number;
     intent: LeadMutationIntent;

@@ -11,6 +11,7 @@ import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context"
 import { createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
 import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { AuthProof } from "~/server/auth/policy/types";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
@@ -21,7 +22,7 @@ import type {
 
 async function createTotpLoginFlow(
   identifier: string,
-  userId: number,
+  userId: UserId,
   primaryAuthMethod: "password" | "google" | "passkey",
   deps: { loginFlows: AuthLoginRepos["loginFlows"] },
 ): Promise<TotpLoginFlowState> {

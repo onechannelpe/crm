@@ -1,9 +1,11 @@
+import type { UserId } from "~/server/shared/ids";
+
 import type { LeadId } from "../../domain/lead-record";
 
 export type LeadAssignmentDraft = {
   leadId: LeadId;
-  executiveId: number;
-  assignedBy: number;
+  executiveId: UserId;
+  assignedBy: UserId;
   isActive: boolean;
   assignedAt: number;
 };

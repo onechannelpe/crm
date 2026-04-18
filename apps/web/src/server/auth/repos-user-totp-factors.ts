@@ -1,11 +1,20 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type {
+  Database,
+  UserTotpFactorsTable,
+  UserTotpRecoveryCodesTable,
+} from "~/lib/db/types";
 import type { UserId } from "~/server/shared/ids";
 
-type UserTotpFactorRow = Selectable<Database["user_totp_factors"]>;
+type UserTotpFactorRow = Omit<Selectable<UserTotpFactorsTable>, "user_id"> & {
+  user_id: UserId;
+};
 type NewUserTotpFactorRow = Insertable<Database["user_totp_factors"]>;
-type UserTotpRecoveryCodeRow = Selectable<Database["user_totp_recovery_codes"]>;
+type UserTotpRecoveryCodeRow = Omit<
+  Selectable<UserTotpRecoveryCodesTable>,
+  "user_id"
+> & { user_id: UserId };
 type NewUserTotpRecoveryCodeRow = Insertable<
   Database["user_totp_recovery_codes"]
 >;
@@ -17,7 +26,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .selectFrom("user_totp_factors")
         .selectAll()
         .where("user_id", "=", userId)
-        .executeTakeFirst();
+        .executeTakeFirst() as Promise<UserTotpFactorRow | undefined>;
     },
 
     async createOrRotate(
@@ -49,7 +58,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .selectFrom("user_totp_factors")
         .selectAll()
         .where("user_id", "=", userId)
-        .executeTakeFirstOrThrow();
+        .executeTakeFirstOrThrow() as Promise<UserTotpFactorRow>;
     },
 
     async markEnabled(userId: UserId): Promise<void> {
@@ -109,7 +118,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .selectFrom("user_totp_recovery_codes")
         .selectAll()
         .where("user_id", "=", userId)
-        .execute();
+        .execute() as Promise<UserTotpRecoveryCodeRow[]>;
     },
 
     listUnusedByUser(userId: UserId): Promise<UserTotpRecoveryCodeRow[]> {
@@ -118,7 +127,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .selectAll()
         .where("user_id", "=", userId)
         .where("used_at", "is", null)
-        .execute();
+        .execute() as Promise<UserTotpRecoveryCodeRow[]>;
     },
 
     markUsed(id: number): Promise<void> {

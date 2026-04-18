@@ -2,7 +2,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent, type LeadHistoryEventDraft } from "../history";
-import type { LeadId, LeadRecord } from "../lead-record";
+import type { LeadId, LeadRecord, UserId } from "../lead-record";
 import type { LeadMutationIntent, LeadMutationPatch } from "./lead-types";
 
 type LeadAuditDraft = {
@@ -20,7 +20,7 @@ export function deriveLeadMutationEvents(input: {
   lead: LeadRecord;
   intent: LeadMutationIntent;
   patch: LeadMutationPatch;
-  actorUserId: number;
+  actorUserId: UserId;
   now: number;
 }): Result<LeadMutationEvents, DomainError> {
   const { lead, intent, patch, actorUserId, now } = input;

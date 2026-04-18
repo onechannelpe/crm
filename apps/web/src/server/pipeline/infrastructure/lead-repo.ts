@@ -1,7 +1,6 @@
 import type { Insertable, Selectable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { asLeadId, createLeadId } from "~/server/pipeline/domain/lead-record";
 import type {
   LeadId,
   LeadDraft,
@@ -9,6 +8,12 @@ import type {
   LeadRecord,
 } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
+  asUserId,
+  type UserId,
+  asLeadId,
+  createLeadId,
+} from "~/server/shared/ids";
 
 export type LeadRow = Selectable<Database["pipeline_leads"]>;
 export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
@@ -22,9 +27,9 @@ function toLead(row: LeadRow): LeadRecord {
     address: row.address,
     district: row.district,
     department: row.department,
-    executiveId: row.executive_id,
-    createdBy: row.created_by,
-    updatedBy: row.updated_by ?? null,
+    executiveId: asUserId(row.executive_id),
+    createdBy: asUserId(row.created_by),
+    updatedBy: row.updated_by ? asUserId(row.updated_by) : null,
     stage: row.stage,
     status: row.status,
     prioridad: row.prioridad,

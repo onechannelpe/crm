@@ -1,23 +1,25 @@
+import type { BranchId, UserId } from "~/server/shared/ids";
+
 export type LeadUser = {
-  id: number;
+  id: UserId;
   isActive: boolean;
 };
 
 export type LeadUserWithName = {
-  id: number;
+  id: UserId;
   fullName: string;
 };
 
 export type AssignableExecutivesScope = {
   actorRole: "superuser" | "admin" | "sales_manager" | "supervisor";
-  actorBranchId: number;
+  actorBranchId: BranchId;
 };
 
 export type LeadUserScopeRepository = {
-  findUserById(id: number): Promise<LeadUser | undefined>;
+  findUserById(id: UserId): Promise<LeadUser | undefined>;
   isExecutiveAssignable(
     scope: AssignableExecutivesScope,
-    executiveId: number,
+    executiveId: UserId,
   ): Promise<boolean>;
   listAssignableExecutives(
     scope: AssignableExecutivesScope,

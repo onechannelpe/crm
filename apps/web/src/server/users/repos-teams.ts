@@ -1,19 +1,36 @@
-import type { Kysely } from "kysely";
+import type { Kysely, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Role } from "~/lib/auth/access/rbac";
+import type { Database, TeamsTable } from "~/lib/db/types";
+import {
+  asBranchId,
+  asTeamId,
+  asUserId,
+  type BranchId,
+  type TeamId,
+  type UserId,
+} from "~/server/shared/ids";
 
 export function createTeamsRepo(db: Kysely<Database>) {
   return {
-    findByBranch(branchId: string) {
+    findByBranch(branchId: BranchId) {
       return db
         .selectFrom("teams")
         .selectAll()
         .where("branch_id", "=", branchId)
         .orderBy("name", "asc")
-        .execute();
+        .execute() as Promise<
+        Array<
+          Omit<Selectable<TeamsTable>, "id" | "branch_id" | "supervisor_id"> & {
+            id: TeamId;
+            branch_id: BranchId;
+            supervisor_id: UserId | null;
+          }
+        >
+      >;
     },
 
-    findByIdWithSupervisor(id: string) {
+    findByIdWithSupervisor(id: TeamId) {
       return db
         .selectFrom("teams")
         .leftJoin(
@@ -32,16 +49,38 @@ export function createTeamsRepo(db: Kysely<Database>) {
           "supervisors.branch_id as supervisor_branch_id",
         ])
         .where("teams.id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst() as Promise<
+        | {
+            id: TeamId;
+            name: string;
+            branch_id: BranchId;
+            supervisor_id: UserId | null;
+            supervisor_names: string | null;
+            supervisor_first_surname: string | null;
+            supervisor_role: Role | null;
+            supervisor_branch_id: BranchId | null;
+          }
+        | undefined
+      >;
     },
 
-    findBySupervisorId(supervisorId: string) {
+    findBySupervisorId(supervisorId: UserId) {
       return db
         .selectFrom("teams")
         .selectAll()
         .where("supervisor_id", "=", supervisorId)
         .orderBy("id", "asc")
-        .executeTakeFirst();
+        .executeTakeFirst() as Promise<
+        | (Omit<
+            Selectable<TeamsTable>,
+            "id" | "branch_id" | "supervisor_id"
+          > & {
+            id: TeamId;
+            branch_id: BranchId;
+            supervisor_id: UserId | null;
+          })
+        | undefined
+      >;
     },
   };
 }

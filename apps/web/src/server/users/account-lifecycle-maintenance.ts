@@ -3,6 +3,7 @@ import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
 
 import { expireUsersAndInvalidateSessions } from "./expire-users";
 import { createUsersRepo } from "./repos-users";
@@ -13,7 +14,7 @@ const EXPIRY_NOTIFICATION_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
 interface AccountLifecycleDeps {
   executor: DatabaseExecutor;
   messaging: MessagingGateway;
-  invalidateUserSessions: (userId: number) => Promise<void>;
+  invalidateUserSessions: (userId: UserId) => Promise<void>;
 }
 
 async function runAccountExpiryTick(deps: AccountLifecycleDeps) {

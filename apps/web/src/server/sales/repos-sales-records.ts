@@ -1,6 +1,7 @@
 import { sql, type Insertable, type Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 type NewSalesRecordRow = Insertable<Database["sales_records"]>;
 type NewSalesRecordClientRow = Insertable<Database["sales_record_client"]>;
@@ -26,7 +27,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listByExecutive(executiveUserId: number, limit: number) {
+    listByExecutive(executiveUserId: UserId, limit: number) {
       return db
         .selectFrom("sales_records")
         .selectAll()
@@ -37,7 +38,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
     },
 
     async countByExecutiveAndStatus(
-      executiveUserId: number,
+      executiveUserId: UserId,
       status: NewSalesRecordRow["status"],
     ): Promise<number> {
       const row = await db
@@ -49,7 +50,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
       return row?.count ?? 0;
     },
 
-    listByBranch(branchId: number, limit: number) {
+    listByBranch(branchId: BranchId, limit: number) {
       return db
         .selectFrom("sales_records")
         .selectAll()
@@ -59,7 +60,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    listPendingWithClient(scope?: { branchId?: number }) {
+    listPendingWithClient(scope?: { branchId?: BranchId }) {
       let qb = db
         .selectFrom("sales_records")
         .innerJoin(
@@ -89,8 +90,8 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
     },
 
     listConfirmedWithClient(scope?: {
-      branchId?: number;
-      executiveUserId?: number;
+      branchId?: BranchId;
+      executiveUserId?: UserId;
     }) {
       let qb = db
         .selectFrom("sales_records")

@@ -17,22 +17,22 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       return Number(result.insertId);
     },
 
-    findById(id: number) {
+    findById(id: number): Promise<IntegrationJobRow | undefined> {
       return db
         .selectFrom("pipeline_integration_jobs")
         .selectAll()
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst() as Promise<IntegrationJobRow | undefined>;
     },
 
-    list(limit: number, offset: number) {
+    list(limit: number, offset: number): Promise<IntegrationJobRow[]> {
       return db
         .selectFrom("pipeline_integration_jobs")
         .selectAll()
         .orderBy("created_at", "desc")
         .limit(limit)
         .offset(offset)
-        .execute();
+        .execute() as Promise<IntegrationJobRow[]>;
     },
 
     async claimPending(
@@ -97,13 +97,12 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       await updateQuery.execute();
 
       return db
-
         .selectFrom("pipeline_integration_jobs")
         .selectAll()
         .where("id", "in", ids)
         .where("status", "=", "PROCESSING")
         .where("lease_owner", "=", workerId)
-        .execute();
+        .execute() as Promise<IntegrationJobRow[]>;
     },
 
     markCompleted(

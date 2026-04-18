@@ -9,13 +9,14 @@ import {
   createLeadId,
   isLeadId,
   type LeadId,
+  type UserId,
 } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import { Ok } from "~/server/shared/result";
 
 import { normalizeLeadRuc } from "./lead-schema-parser";
 
-export type { LeadId };
+export type { LeadId, UserId };
 export { asLeadId, createLeadId, isLeadId };
 
 export type LeadRecord = {
@@ -25,9 +26,9 @@ export type LeadRecord = {
   address: string | null;
   district: string | null;
   department: string | null;
-  executiveId: number;
-  createdBy: number;
-  updatedBy: number | null;
+  executiveId: UserId;
+  createdBy: UserId;
+  updatedBy: UserId | null;
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
@@ -57,8 +58,8 @@ export function createLeadDraft(input: {
   ruc: string;
   razonSocial: string | null;
   address: string | null;
-  executiveId: number;
-  createdBy: number;
+  executiveId: UserId;
+  createdBy: UserId;
   now: number;
 }): Result<LeadDraft, DomainError> {
   const ruc = normalizeLeadRuc(input.ruc);

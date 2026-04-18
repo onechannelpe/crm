@@ -2,6 +2,7 @@ import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { createLogger } from "~/lib/observability/logger";
 import { publishJob } from "~/lib/redis/publisher";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { type Result, Ok } from "~/server/shared/result";
 
 import type { IntegrationJobsPort } from "../types";
@@ -9,7 +10,7 @@ import type { IntegrationJobsPort } from "../types";
 const logger = createLogger("integration-export-queue");
 
 export async function queueExportJobUseCase(input: {
-  actorId: number;
+  actorId: UserId;
   jobs: IntegrationJobsPort;
 }): Promise<Result<{ jobId: number }, DomainError>> {
   logger.info("integration_export_queue_requested", {

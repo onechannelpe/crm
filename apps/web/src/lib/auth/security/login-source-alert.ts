@@ -4,6 +4,7 @@ import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { UsersTable } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { UserId } from "~/server/shared/ids";
 
 import type { SendPrivilegedLoginAlert } from "./privileged-login-alert";
 
@@ -13,13 +14,17 @@ type Deps = {
 
 const LOOKBACK_MS = 90 * 24 * 60 * 60 * 1000;
 
-type UserRow = Selectable<UsersTable>;
+// UserRow removed, using UserId in params directly
 
 export async function sendAlertOnNewLoginSource(params: {
-  user: Pick<
-    UserRow,
-    "id" | "email" | "names" | "first_surname" | "second_surname" | "role"
-  >;
+  user: {
+    id: UserId;
+    email: string;
+    names: string;
+    first_surname: string;
+    second_surname: string;
+    role: UsersTable["role"];
+  };
   ipAddress: string;
   method: string;
   deps: Deps;

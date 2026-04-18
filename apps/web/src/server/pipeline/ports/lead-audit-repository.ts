@@ -1,8 +1,8 @@
-import type { LeadId } from "../domain/lead-record";
+import type { LeadId, UserId } from "../domain/lead-record";
 
 export type LeadAuditRepository = {
   append(input: {
-    actorUserId: number;
+    actorUserId: UserId;
     action: string;
     entityId: LeadId;
     changes?: Record<string, unknown>;

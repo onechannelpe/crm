@@ -1,8 +1,10 @@
+import type { UserId } from "~/server/shared/ids";
+
 export type SalesExportFormat = "csv" | "xlsx";
 
 export type SalesExportJob = {
   id: number;
-  requestedByUserId: number;
+  requestedByUserId: UserId;
   requestedByName: string;
   format: SalesExportFormat;
   status: "queued" | "running" | "completed" | "failed" | "expired";
@@ -16,7 +18,7 @@ export type SalesExportJob = {
 export type SalesExportDownload = {
   id: number;
   exportJobId: number;
-  downloadedByUserId: number;
+  downloadedByUserId: UserId;
   downloadedByName: string;
   downloadedAt: number;
 };

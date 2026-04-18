@@ -1,7 +1,7 @@
 import type { Selectable } from "kysely";
 
 import type { UsersTable } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 import {
   getStrongAuthStatus,
@@ -11,19 +11,25 @@ import type { AuthContextDeps } from "../types";
 
 type UserRow = Selectable<UsersTable>;
 
-export type AuthContextUser = Pick<
-  UserRow,
-  | "id"
-  | "email"
-  | "names"
-  | "first_surname"
-  | "second_surname"
-  | "branch_id"
-  | "role"
-  | "username"
-  | "onboarding_completed_at"
-  | "is_active"
->;
+export type AuthContextUser = Omit<
+  Pick<
+    UserRow,
+    | "id"
+    | "email"
+    | "names"
+    | "first_surname"
+    | "second_surname"
+    | "branch_id"
+    | "role"
+    | "username"
+    | "onboarding_completed_at"
+    | "is_active"
+  >,
+  "id" | "branch_id"
+> & {
+  id: UserId;
+  branch_id: BranchId;
+};
 
 export interface AuthContext {
   user: AuthContextUser;

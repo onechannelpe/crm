@@ -1,10 +1,11 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
 
 import { createUsersRepo } from "./repos-users";
 
 interface ExpireUsersDeps {
   executor: DatabaseExecutor;
-  invalidateUserSessions: (userId: number) => Promise<void>;
+  invalidateUserSessions: (userId: UserId) => Promise<void>;
 }
 
 export async function expireUsersAndInvalidateSessions(

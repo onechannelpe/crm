@@ -11,11 +11,13 @@ import type {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { UserWithBrandedIds } from "~/server/users/repos-users";
 
 import { recordAuthEvent } from "../security/auth-events";
 
-type UserRow = Selectable<UsersTable>;
+// UserRow removed, using UserWithBrandedIds
 
 type Deps = {
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
@@ -29,7 +31,7 @@ export type TotpStepUpError =
   | { kind: "invalid_totp" };
 
 export async function verifyTotpStepUp(params: {
-  user: UserRow;
+  user: UserWithBrandedIds;
   ipAddress: string;
   totpCode?: string;
   deps: Deps;

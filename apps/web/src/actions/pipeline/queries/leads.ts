@@ -10,12 +10,13 @@ import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import { createPipelineQueryApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-query-api-factory";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import type { UserId } from "~/server/shared/ids";
 
 export async function queryLeadList(filters: {
   stage?: string;
   status?: string;
   prioridad?: string;
-  executiveId?: number;
+  executiveId?: UserId;
   limit?: number;
   offset?: number;
 }): Promise<LeadListView> {

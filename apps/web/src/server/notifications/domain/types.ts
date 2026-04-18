@@ -1,3 +1,5 @@
+import type { UserId } from "~/server/shared/ids";
+
 import type { MessagingGateway } from "../messaging-gateway";
 import type { createNotificationAudienceRepo } from "../repos/audience";
 import type { createNotificationCampaignRepo } from "../repos/campaign";
@@ -13,7 +15,7 @@ export interface PublishCampaignInput {
   audienceRef: string | null;
   title: string | null;
   bodyText: string;
-  createdByUserId: number | null;
+  createdByUserId: UserId | null;
   scheduledAt?: number | null;
 }
 

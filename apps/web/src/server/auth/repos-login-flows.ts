@@ -1,13 +1,14 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 export function createLoginFlowsRepo(db: Kysely<Database>) {
   return {
     async create(values: {
       identifier: string;
       primary_auth_method: "password" | "google" | "passkey";
-      user_id?: number | null;
+      user_id?: UserId | null;
       challenge_id?: number | null;
       state: "totp" | "passkey";
       expires_at: number;

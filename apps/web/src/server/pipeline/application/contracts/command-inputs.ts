@@ -4,13 +4,19 @@ import type {
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 import type { ActorContext } from "./actor-context";
 
 export type ReassignLeadInput = {
   actor: ActorContext;
   leadId: LeadId;
-  toExecutiveId: number;
+  toExecutiveId: UserId;
 };
 
 export type ReviewLeadInput = {
@@ -46,7 +52,7 @@ export type ApplyImportedReviewInput = {
 export type RegisterLeadInput = {
   actor: ActorContext;
   ruc: string;
-  executiveId: number;
+  executiveId: UserId;
 };
 
 export type ApproveForSaleInput = {

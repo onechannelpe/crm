@@ -2,7 +2,7 @@ import { sql } from "kysely";
 import type { Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { asLeadId } from "~/server/pipeline/domain/lead-record";
+import { asLeadId, asUserId, type UserId } from "~/server/shared/ids";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
@@ -48,7 +48,7 @@ function toListRow(row: LeadListSource): LeadListRow {
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
-    executiveId: row.executive_id,
+    executiveId: asUserId(row.executive_id),
     executiveName: row.executive_name,
     stage: row.stage,
     status: row.status,
@@ -64,7 +64,7 @@ function toExportRow(row: LeadExportSource): LeadExportRow {
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
-    executiveId: row.executive_id,
+    executiveId: asUserId(row.executive_id),
     executiveName: row.executive_name,
     stage: row.stage,
     status: row.status,

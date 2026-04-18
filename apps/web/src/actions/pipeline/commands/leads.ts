@@ -10,10 +10,11 @@ import {
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
+import type { UserId } from "~/server/shared/ids";
 
 export async function requestLeadCreation(input: {
   ruc: string;
-  executiveId?: number;
+  executiveId?: UserId;
 }) {
   const normalizedRuc = input.ruc.trim();
 
@@ -113,7 +114,7 @@ export async function requestLeadCommercialInputCompletion(input: {
 
 export async function requestLeadReassignment(input: {
   leadId: LeadId;
-  newExecutiveId: number;
+  newExecutiveId: UserId;
 }) {
   return runAction({
     actionName: "pipeline.reassign_lead",

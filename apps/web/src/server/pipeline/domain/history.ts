@@ -5,7 +5,7 @@ import type {
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
 
-import type { LeadId } from "./lead-record";
+import type { LeadId, UserId } from "./lead-record";
 
 export type LeadHistoryEventType =
   | "lead_registered"
@@ -49,12 +49,12 @@ export type LeadHistoryPayloadByEvent = {
     to: LeadStage;
   };
   lead_assigned: {
-    executiveId: number;
+    executiveId: UserId;
     reason?: string;
   };
   lead_reassigned: {
-    fromExecutiveId: number;
-    toExecutiveId: number;
+    fromExecutiveId: UserId;
+    toExecutiveId: UserId;
     reason?: string;
   };
   commercial_input_completed: {
@@ -87,8 +87,8 @@ export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
   {
     leadId: LeadId;
     eventType: TEventType;
-    actorUserId: number | null;
-    subjectUserId: number | null;
+    actorUserId: UserId | null;
+    subjectUserId: UserId | null;
     payload: LeadHistoryPayloadByEvent[TEventType];
     occurredAt: number;
   };
@@ -109,8 +109,8 @@ export type LeadHistoryEntryFor<
   id: number;
   leadId: LeadId;
   eventType: TEventType;
-  actorUserId: number | null;
-  subjectUserId: number | null;
+  actorUserId: UserId | null;
+  subjectUserId: UserId | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
   occurredAt: number;
   actor: LeadHistoryPerson | null;
@@ -126,8 +126,8 @@ export function createHistoryEvent<
 >(input: {
   leadId: LeadId;
   eventType: TEventType;
-  actorUserId?: number | null;
-  subjectUserId?: number | null;
+  actorUserId?: UserId | null;
+  subjectUserId?: UserId | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
   occurredAt: number;
 }): LeadHistoryEventDraftFor<TEventType> {

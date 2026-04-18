@@ -1,6 +1,16 @@
-import { sql, type Insertable, type Kysely } from "kysely";
+import { sql, type Insertable, type Kysely, type Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type {
+  Database,
+  ReportExportJobsTable,
+  ReportExportDownloadsTable,
+} from "~/lib/db/types";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 type NewReportExportJobRow = Insertable<Database["report_export_jobs"]>;
 type NewReportExportDownloadRow = Insertable<
@@ -8,6 +18,26 @@ type NewReportExportDownloadRow = Insertable<
 >;
 
 type ExportJobStatus = NewReportExportJobRow["status"];
+
+type ReportExportJobRow = Omit<
+  Selectable<ReportExportJobsTable>,
+  "requested_by_user_id" | "branch_id"
+> & {
+  requested_by_user_id: UserId;
+  branch_id: BranchId;
+};
+
+type ReportExportListRow = ReportExportJobRow & {
+  requested_by_name: string;
+};
+
+type ReportExportDownloadRow = Omit<
+  Selectable<ReportExportDownloadsTable>,
+  "downloaded_by_user_id"
+> & {
+  downloaded_by_user_id: UserId;
+  downloaded_by_name: string;
+};
 
 export function createReportExportRepo(db: Kysely<Database>) {
   return {
@@ -19,15 +49,18 @@ export function createReportExportRepo(db: Kysely<Database>) {
       return Number(result.insertId);
     },
 
-    findJobById(id: number) {
+    findJobById(id: number): Promise<ReportExportJobRow | undefined> {
       return db
         .selectFrom("report_export_jobs")
         .selectAll()
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst() as Promise<ReportExportJobRow | undefined>;
     },
 
-    listJobs(limit: number, scope?: { branchId?: number }) {
+    listJobs(
+      limit: number,
+      scope?: { branchId?: BranchId },
+    ): Promise<ReportExportListRow[]> {
       let qb = db
         .selectFrom("report_export_jobs")
         .innerJoin(
@@ -57,7 +90,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
       if (scope?.branchId !== undefined) {
         qb = qb.where("report_export_jobs.branch_id", "=", scope.branchId);
       }
-      return qb.execute();
+      return qb.execute() as Promise<ReportExportListRow[]>;
     },
 
     async leaseQueuedJobs(limit: number, leaseMs: number, leaseOwner: string) {
@@ -119,7 +152,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
 
       return leased.filter(
         (job): job is NonNullable<(typeof leased)[number]> => job !== null,
-      );
+      ) as unknown as Promise<ReportExportJobRow[]>;
     },
 
     updateJobStatus(
@@ -247,7 +280,9 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    listDownloadsByJob(exportJobId: number) {
+    listDownloadsByJob(
+      exportJobId: number,
+    ): Promise<ReportExportDownloadRow[]> {
       return db
         .selectFrom("report_export_downloads")
         .innerJoin(
@@ -268,7 +303,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
         ])
         .where("report_export_downloads.export_job_id", "=", exportJobId)
         .orderBy("report_export_downloads.downloaded_at", "desc")
-        .execute();
+        .execute() as Promise<ReportExportDownloadRow[]>;
     },
   };
 }

@@ -1,5 +1,6 @@
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
@@ -10,8 +11,8 @@ import type { PipelineAuditService } from "../ports/audit-service";
 export async function writeLeadRegistrationEffects(input: {
   deps: RegisterLeadDeps;
   auditService: PipelineAuditService;
-  actorUserId: number;
-  executiveId: number;
+  actorUserId: UserId;
+  executiveId: UserId;
   draft: LeadDraft;
   now: number;
 }): Promise<Result<{ leadId: LeadId }, DomainError>> {

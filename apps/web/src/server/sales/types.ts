@@ -1,4 +1,5 @@
 import type { QueueJobBase } from "~/lib/job-queue/types";
+import type { UserId, BranchId } from "~/server/shared/ids";
 
 export type SalesExportFormat = "csv" | "xlsx";
 
@@ -11,7 +12,7 @@ export interface SalesExportProcessResult {
 }
 
 export interface ReportExportLeasedJob extends QueueJobBase {
-  branch_id: number;
+  branch_id: BranchId;
   format: SalesExportFormat;
   filters_json: string;
 }
@@ -48,8 +49,8 @@ export interface ReportExportJobsPort {
 
 export interface SalesRecordsPort {
   listConfirmedWithClient(scope?: {
-    branchId?: number;
-    executiveUserId?: number;
+    branchId?: BranchId;
+    executiveUserId?: UserId;
   }): Promise<
     Array<{
       id: number;

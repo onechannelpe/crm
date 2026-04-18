@@ -1,4 +1,5 @@
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { LeadRecord } from "../../domain/lead-record";
@@ -27,7 +28,7 @@ export type LeadMutationOrchestratorDeps = {
 export async function executeLeadMutation(input: {
   deps: LeadMutationOrchestratorDeps;
   lead: LeadRecord;
-  actorUserId: number;
+  actorUserId: UserId;
   now: number;
   intent: LeadMutationIntent;
 }): Promise<
@@ -80,7 +81,7 @@ export async function executeLeadMutation(input: {
 export async function executeCheckedLeadMutation(input: {
   deps: LeadMutationOrchestratorDeps;
   lead: LeadRecord;
-  actorUserId: number;
+  actorUserId: UserId;
   now: number;
   expectedUpdatedAt: number;
   intent: LeadMutationIntent;

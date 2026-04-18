@@ -5,6 +5,7 @@ import type {
 } from "~/pipeline/contracts/lead-schema";
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import type { UserId } from "~/server/shared/ids";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
@@ -26,11 +27,11 @@ export type LeadDetailLeadView = {
   address: string | null;
   district: string | null;
   department: string | null;
-  executiveId: number;
+  executiveId: UserId;
   executiveName: string;
-  createdBy: number;
+  createdBy: UserId;
   createdByName: string;
-  updatedBy: number | null;
+  updatedBy: UserId | null;
   updatedByName: string | null;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -49,7 +50,7 @@ export type LeadDetailCommercialInputView = {
   abono: number | null;
   cantidadPos: number | null;
   updatedAt: number;
-  updatedBy: number;
+  updatedBy: UserId;
 };
 
 export type LeadDetailQuotationView = {
@@ -63,13 +64,13 @@ export type LeadDetailQuotationView = {
   tarifaCredito: number;
   tarifaForaneo: number;
   createdAt: number;
-  createdBy: number;
+  createdBy: UserId;
 };
 
 export type LeadDetailSaleView = {
   id: number;
   leadId: LeadId;
-  executiveId: number;
+  executiveId: UserId;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;

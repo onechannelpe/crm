@@ -4,6 +4,7 @@ import {
   type Role,
 } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { AssignableExecutivesScope } from "../../ports/lead-user-scope-repository";
@@ -79,7 +80,7 @@ export function canReassignLead(role: Role) {
 
 export function resolveAssignableExecutivesScope(input: {
   actorRole: Role;
-  actorBranchId: number;
+  actorBranchId: BranchId;
 }): Result<AssignableExecutivesScope, DomainError> {
   if (input.actorRole === "superuser") {
     return Ok({ actorRole: "superuser", actorBranchId: input.actorBranchId });
@@ -118,9 +119,9 @@ export function requireLeadReadAccess(role: Role): Result<void, DomainError> {
 }
 
 export function requireLeadAccess(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  executiveId: number;
+  executiveId: UserId;
 }): Result<void, DomainError> {
   const canRead = requireLeadReadAccess(input.actorRole);
   if (!canRead.ok) {
@@ -138,9 +139,9 @@ export function requireLeadAccess(input: {
 }
 
 export function resolveLeadListExecutiveScope(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  requestedExecutiveId?: number;
+  requestedExecutiveId?: UserId;
 }) {
   return canViewAllLeads(input.actorRole)
     ? input.requestedExecutiveId

@@ -9,12 +9,15 @@ import {
   type UserId,
 } from "~/server/shared/ids";
 
-type UserSessionRow = Selectable<Database["user_sessions"]>;
-type NewUserSessionRow = Insertable<Database["user_sessions"]>;
-type HydratedUserSessionRow = Omit<UserSessionRow, "user_id" | "branch_id"> & {
+type UserSessionRow = Omit<
+  Selectable<Database["user_sessions"]>,
+  "user_id" | "branch_id"
+> & {
   user_id: UserId;
   branch_id: BranchId;
 };
+type NewUserSessionRow = Insertable<Database["user_sessions"]>;
+type HydratedUserSessionRow = UserSessionRow;
 
 export function createSessionRepository(db: Kysely<Database>) {
   return {
@@ -83,7 +86,7 @@ export function createSessionRepository(db: Kysely<Database>) {
         .selectAll()
         .where("user_id", "=", userId)
         .orderBy("last_activity", "desc")
-        .execute();
+        .execute() as Promise<UserSessionRow[]>;
     },
 
     async countActive(): Promise<number> {

@@ -25,7 +25,13 @@ export type HydratedUserSessionRow = Omit<
 };
 
 export interface AuthContextUsersPort {
-  findById(userId: UserId): Promise<Selectable<UsersTable> | undefined>;
+  findById(userId: UserId): Promise<
+    | (Omit<Selectable<UsersTable>, "id" | "branch_id"> & {
+        id: UserId;
+        branch_id: BranchId;
+      })
+    | undefined
+  >;
   deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
 }
 

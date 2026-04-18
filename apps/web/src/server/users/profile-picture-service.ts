@@ -1,4 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
+import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
@@ -34,7 +35,7 @@ export interface AvatarRecord {
 }
 
 export interface AvatarMetaRow {
-  id: number;
+  id: UserId;
   avatar_storage_key: string | null;
   avatar_mime_type: string | null;
   avatar_updated_at: number | null;
@@ -43,21 +44,21 @@ export interface AvatarMetaRow {
 
 export interface ProfilePictureService {
   upload(
-    userId: number,
+    userId: UserId,
     file: File,
   ): Promise<Result<{ avatarVersion: number }, AvatarDomainError>>;
   remove(
-    userId: number,
+    userId: UserId,
   ): Promise<Result<{ avatarVersion: number }, AvatarDomainError>>;
-  get(userId: number): Promise<Result<AvatarRecord, AvatarDomainError>>;
+  get(userId: UserId): Promise<Result<AvatarRecord, AvatarDomainError>>;
 }
 
 export interface AvatarUsersRepository {
   findAvatarMetaById: (
-    userId: number,
+    userId: UserId,
   ) => Promise<AvatarMetaRow | null | undefined>;
   updateAvatar: (
-    userId: number,
+    userId: UserId,
     values: {
       storage_key: string;
       mime_type: string;
@@ -66,7 +67,7 @@ export interface AvatarUsersRepository {
     },
   ) => Promise<unknown>;
   clearAvatar: (
-    userId: number,
+    userId: UserId,
     values: {
       updated_at: number;
       version: number;
@@ -92,7 +93,7 @@ export function createProfilePictureService(
   blobStore: ProfilePictureBlobStore,
 ): ProfilePictureService {
   return {
-    async upload(userId: number, file: File) {
+    async upload(userId: UserId, file: File) {
       const validation = validateFile(file);
       if (!validation.ok) {
         return validation;
@@ -157,7 +158,7 @@ export function createProfilePictureService(
       return Ok({ avatarVersion: nextVersion });
     },
 
-    async remove(userId: number) {
+    async remove(userId: UserId) {
       let currentAvatar: AvatarMetaRow | null | undefined;
       try {
         currentAvatar = await repos.users.findAvatarMetaById(userId);
@@ -196,7 +197,7 @@ export function createProfilePictureService(
       return Ok({ avatarVersion: nextVersion });
     },
 
-    async get(userId: number) {
+    async get(userId: UserId) {
       let avatar: AvatarMetaRow | null | undefined;
       try {
         avatar = await repos.users.findAvatarMetaById(userId);

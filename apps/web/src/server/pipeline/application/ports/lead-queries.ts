@@ -4,9 +4,10 @@ import type {
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import type { UserId } from "~/server/shared/ids";
 
 export type LeadListFilters = {
-  executiveId?: number;
+  executiveId?: UserId;
   stage?: LeadStage;
   status?: LeadStatus;
   prioridad?: LeadPriority;
@@ -15,7 +16,7 @@ export type LeadListFilters = {
 };
 
 export type LeadExportFilters = {
-  executiveId?: number;
+  executiveId?: UserId;
 };
 
 /**
@@ -27,7 +28,7 @@ export type LeadListRow = {
   ruc: string;
   razonSocial: string | null;
   address: string | null;
-  executiveId: number;
+  executiveId: UserId;
   executiveName: string;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -45,7 +46,7 @@ export type LeadExportRow = {
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
   createdAt: number;
-  executiveId: number;
+  executiveId: UserId;
   executiveName: string;
 };
 

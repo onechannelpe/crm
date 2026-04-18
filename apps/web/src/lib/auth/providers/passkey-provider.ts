@@ -12,6 +12,7 @@ import {
 
 import { env } from "~/lib/env";
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
+import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
@@ -107,7 +108,7 @@ export function createPasskeyProvider(
 
   async function buildAuthenticationOptions(
     input: {
-      userId?: number;
+      userId?: UserId;
       userVerification: "preferred" | "required";
     },
     challenge?: string,
@@ -139,7 +140,7 @@ export function createPasskeyProvider(
   }
 
   return {
-    async getRegistrationOptions(userId: number) {
+    async getRegistrationOptions(userId: UserId) {
       const existingPasskeys = await repos.passkeys.findByUser(userId);
 
       const options = await generateRegistrationOptions({
@@ -160,7 +161,7 @@ export function createPasskeyProvider(
         user_id: userId,
         action: "passkey_registration_started",
         entity_type: "passkey",
-        entity_id: `${userId}`,
+        entity_id: userId,
         changes: null,
         created_at: Date.now(),
       });
@@ -169,7 +170,7 @@ export function createPasskeyProvider(
     },
 
     async verifyRegistration(
-      userId: number,
+      userId: UserId,
       response: RegistrationResponseJSON,
       challenge: string,
     ) {
@@ -204,14 +205,14 @@ export function createPasskeyProvider(
     },
 
     async getAuthenticationOptions(input: {
-      userId?: number;
+      userId?: UserId;
       userVerification: "preferred" | "required";
     }) {
       return buildAuthenticationOptions(input);
     },
 
     async getAuthenticationOptionsForChallenge(input: {
-      userId: number;
+      userId: UserId;
       challenge: string;
       userVerification: "preferred" | "required";
     }) {

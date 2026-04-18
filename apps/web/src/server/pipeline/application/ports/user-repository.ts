@@ -1,3 +1,5 @@
+import type { UserId } from "~/server/shared/ids";
+
 import type {
   AssignableExecutivesScope,
   LeadUser,
@@ -8,12 +10,12 @@ export type PipelineUser = LeadUser;
 export type PipelineUserWithName = LeadUserWithName;
 
 export type PipelineUserRepository = {
-  findById(id: number): Promise<PipelineUser | undefined>;
+  findById(id: UserId): Promise<PipelineUser | undefined>;
   isExecutiveAssignable(
     scope: AssignableExecutivesScope,
-    executiveId: number,
+    executiveId: UserId,
   ): Promise<boolean>;
-  findByIds(ids: number[]): Promise<PipelineUserWithName[]>;
+  findByIds(ids: UserId[]): Promise<PipelineUserWithName[]>;
   listAssignableExecutives(
     input: AssignableExecutivesScope,
     options?: { search?: string; limit?: number },

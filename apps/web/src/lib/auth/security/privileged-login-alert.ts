@@ -1,7 +1,8 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { UserId } from "~/server/shared/ids";
 
 export interface PrivilegedLoginAlertPayload {
-  userId: number;
+  userId: UserId;
   email: string;
   fullName: string;
   role: Role;

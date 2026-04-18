@@ -1,6 +1,7 @@
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { config } from "~/lib/config";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
@@ -19,7 +20,7 @@ const DISCOVERABLE_PASSKEY_IDENTIFIER = "discoverable";
 interface PasskeyLoginStartServiceDeps {
   webauthnProvider: {
     getAuthenticationOptions(input: {
-      userId?: number;
+      userId?: UserId;
       userVerification: "preferred" | "required";
     }): Promise<PasskeyLoginFlowState["requestOptions"]>;
   };
@@ -47,8 +48,8 @@ export function createPasskeyLoginStartService(
   });
 
   async function createAuthenticationFlow(input: {
-    challengeUserId: number | null;
-    flowUserId: number | null;
+    challengeUserId: UserId | null;
+    flowUserId: UserId | null;
     identifier: string;
     mode: PasskeyLoginMode;
     primaryAuthMethod: "password" | "google" | "passkey";

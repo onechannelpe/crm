@@ -1,4 +1,5 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -17,7 +18,7 @@ export type LeadRegistrationResolution =
 
 export async function ensureActiveExecutive(input: {
   deps: ActiveExecutiveDeps;
-  executiveId: number;
+  executiveId: UserId;
 }): Promise<Result<void, DomainError>> {
   const targetExecutive = await input.deps.users.findById(input.executiveId);
   if (!targetExecutive || !targetExecutive.isActive) {
@@ -36,7 +37,7 @@ export async function ensureActiveExecutive(input: {
 export async function resolveLeadRegistration(input: {
   deps: LeadRegistrationLookupDeps;
   ruc: string;
-  executiveId: number;
+  executiveId: UserId;
 }): Promise<Result<LeadRegistrationResolution, DomainError>> {
   const existingLead = await input.deps.leads.findByRuc(input.ruc);
   if (!existingLead) {

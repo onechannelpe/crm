@@ -1,6 +1,7 @@
 import type { PipelineIntegrationJobsTable } from "~/lib/db/types";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 export type IntegrationJobType = PipelineIntegrationJobsTable["type"];
 export type IntegrationJobStatus = PipelineIntegrationJobsTable["status"];
@@ -20,13 +21,13 @@ export interface IntegrationJobRow extends QueueJobBase {
   lease_owner: string | null;
   lease_until: number | null;
   file_path: string | null;
-  requested_by_user_id: number;
+  requested_by_user_id: UserId;
 }
 
 export interface NewIntegrationJob {
   type: IntegrationJobType;
   status: IntegrationJobStatus;
-  requested_by_user_id: number;
+  requested_by_user_id: UserId;
   file_path: string | null;
   max_attempts: number;
   created_at: number;
@@ -60,7 +61,7 @@ export interface IntegrationRuntime {
   executor: DatabaseExecutor;
   jobs: IntegrationJobsPort;
   leadExportQuery: {
-    export(filters: { executiveId?: number }): Promise<
+    export(filters: { executiveId?: UserId }): Promise<
       Array<{
         id: string;
         ruc: string;
@@ -70,7 +71,7 @@ export interface IntegrationRuntime {
         status: string | null;
         prioridad: string | null;
         createdAt: number;
-        executiveId: number;
+        executiveId: UserId;
         executiveName: string;
       }>
     >;
@@ -78,10 +79,10 @@ export interface IntegrationRuntime {
   leads: {
     findByRucMany(
       rucs: string[],
-    ): Promise<Array<{ id: string; ruc: string; executiveId: number }>>;
+    ): Promise<Array<{ id: string; ruc: string; executiveId: UserId }>>;
   };
   users: {
-    findById(id: number): Promise<{ branch_id: number } | undefined>;
+    findById(id: UserId): Promise<{ branch_id: BranchId } | undefined>;
   };
 }
 

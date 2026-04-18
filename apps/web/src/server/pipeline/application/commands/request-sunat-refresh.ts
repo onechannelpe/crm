@@ -1,6 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
@@ -10,7 +11,7 @@ import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadRepository } from "../ports/lead-repository";
 
 export async function requestSunatRefresh(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
   leadId: LeadId;
   leadRepo: LeadRepository;

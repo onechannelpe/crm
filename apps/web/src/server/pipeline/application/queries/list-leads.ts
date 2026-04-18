@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -19,13 +20,13 @@ import type { LeadListView } from "./views/lead-list";
 export async function listLeads(
   deps: LeadListDeps,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     actorRole: Role;
     filters: {
       stage?: string;
       status?: string;
       prioridad?: string;
-      executiveId?: number;
+      executiveId?: UserId;
       limit?: number;
       offset?: number;
     };

@@ -12,7 +12,7 @@ import type { UsersTable } from "~/lib/db/types";
 import { createSessionService } from "~/server/auth/application/session-service";
 import type { LoginDecision } from "~/server/auth/policy/types";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
-import type { UserId } from "~/server/shared/ids";
+import { asBranchId, type BranchId, type UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createUsersRepo } from "~/server/users/repos-users";
 
@@ -26,10 +26,13 @@ type SessionAuditDeps = {
 
 type UserRow = Selectable<UsersTable>;
 
-type SessionUser = Pick<
-  UserRow,
-  "id" | "branch_id" | "role" | "onboarding_completed_at"
->;
+type SessionUser = Omit<
+  Pick<UserRow, "id" | "branch_id" | "role" | "onboarding_completed_at">,
+  "id" | "branch_id"
+> & {
+  id: UserId;
+  branch_id: BranchId;
+};
 
 export interface SessionRequestMetadata {
   ipAddress: string;

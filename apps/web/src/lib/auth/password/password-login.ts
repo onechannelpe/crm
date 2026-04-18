@@ -6,6 +6,7 @@ import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { createUsersRepo } from "~/server/users/repos-users";
+import type { UserWithBrandedIds } from "~/server/users/repos-users";
 
 import type { InvalidCredentialsError } from "../errors";
 import { recordAuthEvent } from "../security/auth-events";
@@ -19,7 +20,7 @@ type Deps = {
   authEvents: ReturnType<typeof createAuthEventsRepo>;
 };
 
-type UserRow = Selectable<UsersTable>;
+// UserRow removed, using UserWithBrandedIds
 
 export interface PasswordCredentialInput {
   username: string;
@@ -30,7 +31,7 @@ export interface PasswordCredentialInput {
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
   deps: { repos: Deps },
-): Promise<Result<UserRow, InvalidCredentialsError>> {
+): Promise<Result<UserWithBrandedIds, InvalidCredentialsError>> {
   const safeUsername = input.username.trim();
   const safePassword = input.password;
   if (safeUsername.length === 0 || safePassword.length === 0) {
