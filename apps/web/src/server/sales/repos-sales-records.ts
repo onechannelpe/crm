@@ -2,14 +2,15 @@ import { sql, type Insertable, type Kysely, type Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import { type BranchId, type UserId } from "~/server/shared/ids";
-import type { 
-  SalesRecordRecord, 
+
+import type {
+  SalesRecordRecord,
   SalesRecordClientRecord,
   SalesRecordAddressSnapshot,
   SalesRecordProductSnapshot,
   PendingSalesRecordQueueRecord,
   ConfirmedSalesRecordQueueRecord,
-  SalesRecordAttemptDetailRecord
+  SalesRecordAttemptDetailRecord,
 } from "../sales-records/application/ports/sales-record-repository";
 
 type NewSalesRecordRow = Insertable<Database["sales_records"]>;
@@ -36,7 +37,10 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    async listByExecutive(executiveUserId: UserId, limit: number): Promise<SalesRecordRecord[]> {
+    async listByExecutive(
+      executiveUserId: UserId,
+      limit: number,
+    ): Promise<SalesRecordRecord[]> {
       return await db
         .selectFrom("sales_records")
         .selectAll()
@@ -59,7 +63,10 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
       return row?.count ?? 0;
     },
 
-    async listByBranch(branchId: BranchId, limit: number): Promise<SalesRecordRecord[]> {
+    async listByBranch(
+      branchId: BranchId,
+      limit: number,
+    ): Promise<SalesRecordRecord[]> {
       return await db
         .selectFrom("sales_records")
         .selectAll()
@@ -68,8 +75,6 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .limit(limit)
         .execute();
     },
-
-
 
     listPendingWithClient(scope?: { branchId?: BranchId }) {
       let qb = db
@@ -250,7 +255,9 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    async listAttemptsByRecord(salesRecordId: number): Promise<SalesRecordAttemptDetailRecord[]> {
+    async listAttemptsByRecord(
+      salesRecordId: number,
+    ): Promise<SalesRecordAttemptDetailRecord[]> {
       return await db
         .selectFrom("sales_record_attempts")
         .innerJoin(
@@ -274,7 +281,5 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .orderBy("sales_record_attempts.created_at", "desc")
         .execute();
     },
-
-
   };
 }

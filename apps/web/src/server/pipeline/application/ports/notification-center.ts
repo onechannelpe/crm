@@ -13,4 +13,3 @@ export type PipelineNotificationCenter = {
     notification: AppNotificationEvent,
   ): Promise<unknown>;
 };
-

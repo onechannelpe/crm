@@ -98,7 +98,6 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
       userIds: UserId[];
       createdAt: number;
     }) {
-
       if (params.userIds.length === 0) {
         return Promise.resolve();
       }

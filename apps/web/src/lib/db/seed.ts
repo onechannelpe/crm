@@ -1,14 +1,10 @@
 import type { Kysely } from "kysely";
 
+import { asBranchId, asUserId, asTeamId } from "../../server/shared/ids";
 import { hashPassword } from "../auth/password/password";
 import { createLogger } from "../observability/logger";
 import { db as globalDb } from "./db";
 import type { Database } from "./types";
-import {
-  asBranchId,
-  asUserId,
-  asTeamId,
-} from "../../server/shared/ids";
 
 const BRANCH_1 = asBranchId("b0000000-0000-4000-a000-000000000001");
 const BRANCH_2 = asBranchId("b0000000-0000-4000-a000-000000000002");
@@ -34,7 +30,6 @@ const USER_17 = asUserId("u0000000-0000-4000-a000-000000000017");
 const USER_18 = asUserId("u0000000-0000-4000-a000-000000000018");
 const USER_19 = asUserId("u0000000-0000-4000-a000-000000000019");
 const USER_20 = asUserId("u0000000-0000-4000-a000-000000000020");
-
 
 const TEAM_1 = asTeamId("t0000000-0000-4000-a000-000000000001");
 const TEAM_2 = asTeamId("t0000000-0000-4000-a000-000000000002");
@@ -66,7 +61,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-
 
   const passwordHash = await hashPassword("placeholder");
 
@@ -137,11 +131,16 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-
   await db
     .insertInto("teams")
     .values([
-      { id: TEAM_1, branch_id: BRANCH_1, name: "Team Alpha", supervisor_id: USER_2, created_at: now },
+      {
+        id: TEAM_1,
+        branch_id: BRANCH_1,
+        name: "Team Alpha",
+        supervisor_id: USER_2,
+        created_at: now,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
@@ -151,7 +150,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .set({ team_id: TEAM_1 })
     .where("id", "=", USER_3)
     .execute();
-
 
   await db
     .insertInto("products")
@@ -233,7 +231,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-
   await db
     .insertInto("lead_policy_defaults")
     .values([
@@ -264,7 +261,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-
 
   await db
     .insertInto("audit_action_policies")
@@ -588,12 +584,23 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-
   await db
     .insertInto("teams")
     .values([
-      { id: TEAM_2, branch_id: BRANCH_1, name: "Team Bravo", supervisor_id: USER_2, created_at: now },
-      { id: TEAM_3, branch_id: BRANCH_2, name: "Team Norte", supervisor_id: USER_8, created_at: now },
+      {
+        id: TEAM_2,
+        branch_id: BRANCH_1,
+        name: "Team Bravo",
+        supervisor_id: USER_2,
+        created_at: now,
+      },
+      {
+        id: TEAM_3,
+        branch_id: BRANCH_2,
+        name: "Team Norte",
+        supervisor_id: USER_8,
+        created_at: now,
+      },
       {
         id: TEAM_4,
         branch_id: BRANCH_2,
@@ -619,7 +626,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .set({ team_id: TEAM_4 })
     .where("id", "in", [USER_17, USER_18])
     .execute();
-
 
   const oneDay = 86400000;
   // Inventory items
@@ -793,7 +799,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-
   await db
     .insertInto("audit_logs")
     .values([
@@ -811,7 +816,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-
 
   await db
     .insertInto("auth_events")
@@ -860,7 +864,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-
   await db
     .insertInto("user_totp_factors")
     .values([
@@ -883,7 +886,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-
 
   await db
     .insertInto("user_totp_recovery_codes")
@@ -949,8 +951,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-
-
   await db
     .insertInto("notification_preferences")
     .values([
@@ -994,8 +994,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-
-
   await db
     .insertInto("notification_campaigns")
     .values([
@@ -1030,7 +1028,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-
 
   await db
     .insertInto("notification_recipients")
@@ -1086,8 +1083,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-
-
 
   await db
     .insertInto("notification_jobs")

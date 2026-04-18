@@ -85,7 +85,6 @@ export interface SalesRecordBootstrapView {
   client: SalesRecordClientInput;
 }
 
-
 interface ContextClient {
   ruc: string | null;
   companyName: string | null;

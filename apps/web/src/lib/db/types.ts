@@ -10,7 +10,6 @@ import type {
   UserId,
 } from "~/server/shared/ids";
 
-
 type AuthFunnelSourceValue = "client" | "server";
 type AuthFunnelEventNameValue =
   | "screen_viewed"
@@ -49,7 +48,6 @@ export interface TeamsTable {
   supervisor_id: UserId | null;
   created_at: number;
 }
-
 
 export interface UsersTable {
   id: UserId;
@@ -95,7 +93,6 @@ export interface LoginFlowsTable {
   created_at: number;
   updated_at: number;
 }
-
 
 export interface NotificationContactsTable {
   id: Generated<number>;
@@ -146,7 +143,6 @@ export interface NotificationRecipientsTable {
   sent_at: number | null;
   failed_at: number | null;
 }
-
 
 export interface NotificationJobsTable {
   id: Generated<number>;
@@ -236,7 +232,6 @@ export interface OrganizationsTable {
   created_at: number;
 }
 
-
 export interface ContactsTable {
   id: ContactId;
   organization_id: OrganizationId;
@@ -250,7 +245,6 @@ export interface ContactsTable {
   created_at: number;
 }
 
-
 export interface LeadAssignmentsTable {
   id: AssignmentId;
   user_id: UserId;
@@ -259,7 +253,6 @@ export interface LeadAssignmentsTable {
   expires_at: number;
   status: "active" | "completed" | "expired";
 }
-
 
 export interface SalesRecordsTable {
   id: Generated<number>;
@@ -280,7 +273,6 @@ export interface SalesRecordsTable {
   created_at: number;
   updated_at: number;
 }
-
 
 export interface SalesRecordClientTable {
   sales_record_id: number;
@@ -338,7 +330,6 @@ export interface SalesRecordAttemptsTable {
   created_at: number;
 }
 
-
 export interface LeadPolicyDefaultsTable {
   id: Generated<number>;
   scope_type: "branch" | "team";
@@ -360,7 +351,6 @@ export interface LeadPolicyOverridesTable {
   created_at: number;
 }
 
-
 export interface SearchCapacityGrantsTable {
   id: string;
   user_id: UserId;
@@ -369,7 +359,6 @@ export interface SearchCapacityGrantsTable {
   actor_user_id: UserId;
   created_at: number;
 }
-
 
 export interface SearchUsageReservationsTable {
   id: string;
@@ -380,7 +369,6 @@ export interface SearchUsageReservationsTable {
   created_at: number;
   updated_at: number;
 }
-
 
 export interface SearchUsageCommitsTable {
   id: string;
@@ -415,7 +403,6 @@ export interface LeadUsageCommitsTable {
   created_at: number;
 }
 
-
 export interface CapacityRequestsTable {
   id: Generated<number>;
   user_id: UserId;
@@ -429,7 +416,6 @@ export interface CapacityRequestsTable {
   updated_at: number;
   decided_at: number | null;
 }
-
 
 export interface ProductsTable {
   id: Generated<number>;
@@ -449,7 +435,6 @@ export interface InteractionLogsTable {
   duration_seconds: number | null;
   created_at: number;
 }
-
 
 export interface InventoryItemsTable {
   id: Generated<number>;
@@ -545,7 +530,6 @@ export interface AgentStatusLogsTable {
   ended_at: number | null;
 }
 
-
 export interface AuditLogsTable {
   id: Generated<number>;
   user_id: UserId;
@@ -555,7 +539,6 @@ export interface AuditLogsTable {
   changes: string | null;
   created_at: number;
 }
-
 
 export interface AuditActionPoliciesTable {
   action: string;
@@ -628,7 +611,6 @@ export interface ReportExportJobsTable {
   available_at: number | null;
 }
 
-
 export interface ReportExportDownloadsTable {
   id: Generated<number>;
   export_job_id: number;
@@ -637,7 +619,6 @@ export interface ReportExportDownloadsTable {
   ip_hash: string | null;
   user_agent_hash: string | null;
 }
-
 
 export interface SearchEnrichmentJobsTable {
   id: Generated<number>;
@@ -654,7 +635,6 @@ export interface SearchEnrichmentJobsTable {
   next_attempt_at: number;
   last_error: string | null;
 }
-
 
 export interface SearchEnrichmentOverlaysTable {
   document_type: "dni" | "ruc";
@@ -703,7 +683,6 @@ export interface PasskeysTable {
   last_used_at: number | null;
 }
 
-
 export interface WebauthnChallengesTable {
   id: Generated<number>;
   user_id: string | null;
@@ -722,7 +701,6 @@ export interface UserOAuthAccountsTable {
   created_at: number;
 }
 
-
 export interface PasswordResetTokensTable {
   id: Generated<number>;
   user_id: UserId;
@@ -731,7 +709,6 @@ export interface PasswordResetTokensTable {
   used_at: number | null;
   created_at: number;
 }
-
 
 export interface UserSessionsTable {
   id: string;
@@ -748,7 +725,6 @@ export interface UserSessionsTable {
   last_activity: number;
   expires_at: number;
 }
-
 
 export interface RequestSessionsTable {
   id: string;
@@ -778,7 +754,7 @@ export interface AuthThrottleCountersTable {
 
 export interface AuthEventsTable {
   id: Generated<number>;
-  user_id: string | null;
+  user_id: UserId | null;
   method: "password" | "passkey" | "totp";
   stage: "login" | "challenge" | "verify" | "recovery";
   outcome: "success" | "failure" | "throttled";
@@ -790,7 +766,7 @@ export interface AuthEventsTable {
 
 export interface UserTotpFactorsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   secret_encrypted: string;
   is_enabled: number;
   created_at: number;
@@ -800,7 +776,7 @@ export interface UserTotpFactorsTable {
 
 export interface UserTotpRecoveryCodesTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   code_hash: string;
   used_at: number | null;
   created_at: number;
@@ -808,14 +784,14 @@ export interface UserTotpRecoveryCodesTable {
 
 export interface UserInvitesTable {
   id: Generated<number>;
-  user_id: string;
-  branch_id: string;
+  user_id: UserId;
+  branch_id: BranchId;
   email: string;
   role: UsersTable["role"];
   token_hash: string;
   status: "pending" | "accepted" | "revoked" | "expired";
   expires_at: number;
-  created_by_user_id: string;
+  created_by_user_id: UserId;
   accepted_at: number | null;
   revoked_at: number | null;
   created_at: number;
@@ -831,13 +807,13 @@ export function isExecutiveCategoryValue(
 }
 
 export interface PipelineLeadsTable {
-  id: string;
+  id: LeadId;
   ruc: string;
   razon_social: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
-  executive_id: string;
+  executive_id: UserId;
   stage:
     | "PENDING_EXTERNAL_REVIEW"
     | "REJECTED_BY_STATUS"
@@ -848,14 +824,14 @@ export interface PipelineLeadsTable {
     | "CONVERTED";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
-  created_by: string;
-  updated_by: string | null;
+  created_by: UserId;
+  updated_by: UserId | null;
   created_at: number;
   updated_at: number;
 }
 
 export interface PipelineLeadCommercialInputsTable {
-  lead_id: string;
+  lead_id: LeadId;
   proveedor_actual: string | null;
   tasa_actual: number | null;
   gpv: number | null;
@@ -863,12 +839,12 @@ export interface PipelineLeadCommercialInputsTable {
   abono: number | null;
   cantidad_pos: number | null;
   updated_at: number;
-  updated_by: string;
+  updated_by: UserId;
 }
 
 export interface PipelineQuotationsTable {
   id: Generated<number>;
-  lead_id: string;
+  lead_id: LeadId;
   payback_pricing: number;
   tarifa_debito: number;
   tarifa_credito: number;
@@ -877,13 +853,13 @@ export interface PipelineQuotationsTable {
   moneda: "PEN" | "USD";
   version: number;
   created_at: number;
-  created_by: string;
+  created_by: UserId;
 }
 
 export interface PipelineSalesTable {
   id: Generated<number>;
-  lead_id: string;
-  executive_id: string;
+  lead_id: LeadId;
+  executive_id: UserId;
   proveedor_actual: string;
   tasa_actual: number;
   gpv: number;
@@ -898,16 +874,16 @@ export interface PipelineSalesTable {
 
 export interface PipelineLeadAssignmentsTable {
   id: Generated<number>;
-  lead_id: string;
-  executive_id: string;
-  assigned_by: string;
+  lead_id: LeadId;
+  executive_id: UserId;
+  assigned_by: UserId;
   is_active: number;
   assigned_at: number;
 }
 
 export interface PipelineHistoryEventsTable {
   id: Generated<number>;
-  lead_id: string;
+  lead_id: LeadId;
   event_type:
     | "lead_registered"
     | "lead_status_updated"
@@ -922,31 +898,31 @@ export interface PipelineHistoryEventsTable {
     | "sale_created"
     | "call_logged"
     | "note_added";
-  actor_user_id: string | null;
-  subject_user_id: string | null;
+  actor_user_id: UserId | null;
+  subject_user_id: UserId | null;
   payload_json: string | null;
   occurred_at: number;
 }
 
 export interface LeadSourcingPoliciesTable {
-  branch_id: string;
+  branch_id: BranchId;
   engine_assignment_enabled: number;
   updated_at: number;
-  updated_by_user_id: string;
+  updated_by_user_id: UserId;
 }
 
 export interface PipelineIntegrationJobsTable {
   id: Generated<number>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  requested_by_user_id: string;
+  requested_by_user_id: UserId;
   file_path: string | null;
   error_message: string | null;
   rows_total: number | null;
   rows_applied: number | null;
   rows_failed: number | null;
   results_json: string | null;
-  lease_owner: string | null;
+  lease_owner: UserId | null;
   lease_until: number | null;
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: number;
@@ -964,7 +940,7 @@ export interface PipelineIntegrationImportRowsTable {
   status_value: string | null;
   prioridad_value: string | null;
   state: "staged" | "applied" | "failed";
-  lead_id: string | null;
+  lead_id: LeadId | null;
   failure_reason: string | null;
   created_at: number;
   applied_at: number | null;
@@ -972,14 +948,14 @@ export interface PipelineIntegrationImportRowsTable {
 
 export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
   id: Generated<number>;
-  lead_id: string;
+  lead_id: LeadId;
   ruc: string;
-  executive_id: string;
+  executive_id: UserId;
   status: "pending" | "processing" | "completed" | "failed";
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: ColumnType<number, number | undefined, number>;
   available_at: number;
-  lease_owner: string | null;
+  lease_owner: UserId | null;
   lease_until: number | null;
   error_message: string | null;
   created_at: number;
@@ -988,14 +964,14 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
 
 export interface PipelineIntegrationOutboxReadyForQuotationTable {
   id: Generated<number>;
-  lead_id: string;
+  lead_id: LeadId;
   ruc: string;
-  branch_id: string;
+  branch_id: BranchId;
   status: "pending" | "processing" | "completed" | "failed";
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: ColumnType<number, number | undefined, number>;
   available_at: number;
-  lease_owner: string | null;
+  lease_owner: UserId | null;
   lease_until: number | null;
   error_message: string | null;
   created_at: number;

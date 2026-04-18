@@ -9,8 +9,6 @@ type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 
 type AuditLogRow = Selectable<Database["audit_logs"]>;
 
-
-
 export function createAuditLogsRepo(db: DatabaseExecutor) {
   return {
     create(values: NewAuditLogRow) {
@@ -30,7 +28,6 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-
     findByEntity(entityType: string, entityId: string) {
       return db
         .selectFrom("audit_logs")
@@ -40,7 +37,6 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
         .orderBy("created_at", "desc")
         .execute();
     },
-
 
     async listRecent(filter: AuditReaderQueryFilter) {
       if (filter.onlyHighRisk) {

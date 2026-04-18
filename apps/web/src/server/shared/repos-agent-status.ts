@@ -14,7 +14,6 @@ export function createAgentStatusRepo(db: Kysely<Database>) {
       longitude: number;
       comment?: string;
     }) {
-
       return db
         .insertInto("agent_status_logs")
         .values({

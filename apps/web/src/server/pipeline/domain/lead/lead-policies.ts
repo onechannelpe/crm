@@ -18,7 +18,6 @@ export function authorizeLeadOperation(input: {
   leadExecutiveId: UserId;
   operation: LeadOperation;
 }): Result<void, DomainError> {
-
   const capabilities = resolveLeadCapabilities(input.actorRole);
 
   if (!capabilities.canViewDetail) {

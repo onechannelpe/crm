@@ -1,6 +1,11 @@
 import * as XLSX from "xlsx";
 
-import { type UserId, type LeadId, type BranchId, asBranchId } from "~/server/shared/ids";
+import {
+  type UserId,
+  type LeadId,
+  type BranchId,
+  asBranchId,
+} from "~/server/shared/ids";
 
 import type { SalesExportBlobStore } from "./export-blob-store";
 import type {

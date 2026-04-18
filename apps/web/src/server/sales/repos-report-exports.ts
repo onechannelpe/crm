@@ -27,7 +27,6 @@ type ReportExportDownloadRow = Selectable<ReportExportDownloadsTable> & {
   downloaded_by_name: string;
 };
 
-
 export function createReportExportRepo(db: Kysely<Database>) {
   return {
     async createJob(values: NewReportExportJobRow): Promise<number> {
@@ -45,7 +44,6 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .where("id", "=", id)
         .executeTakeFirst();
     },
-
 
     listJobs(
       limit: number,
@@ -89,7 +87,6 @@ export function createReportExportRepo(db: Kysely<Database>) {
       }
       return qb.execute();
     },
-
 
     async leaseQueuedJobs(limit: number, leaseMs: number, leaseOwner: UserId) {
       const now = Date.now();
@@ -153,7 +150,6 @@ export function createReportExportRepo(db: Kysely<Database>) {
       );
     },
 
-
     updateJobStatus(
       id: number,
       status: ExportJobStatus,
@@ -183,7 +179,6 @@ export function createReportExportRepo(db: Kysely<Database>) {
 
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
-
 
     scheduleRetry(id: number, availableAt: number) {
       return db
@@ -246,7 +241,6 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .execute();
     },
 
-
     listJobsToExpire(limit: number, now: number) {
       return db
         .selectFrom("report_export_jobs")
@@ -306,6 +300,5 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .orderBy("report_export_downloads.downloaded_at", "desc")
         .execute();
     },
-
   };
 }
