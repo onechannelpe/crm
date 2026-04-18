@@ -1,5 +1,7 @@
 import * as XLSX from "xlsx";
 
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
+
 import type { SalesExportBlobStore } from "./export-blob-store";
 import type {
   ReportExportJobsPort,
@@ -103,7 +105,7 @@ function sanitizeStoragePart(raw: string): string {
 
 function parseExportScope(filtersJson: string): {
   scope: "branch" | "global";
-  branchId: number | null;
+  branchId: BranchId | null;
 } {
   try {
     const parsed = JSON.parse(filtersJson) as unknown;

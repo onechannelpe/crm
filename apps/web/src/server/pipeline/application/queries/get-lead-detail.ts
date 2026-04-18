@@ -1,5 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import type { LeadId, UserId } from "~/server/pipeline/domain/lead-record";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -12,7 +12,7 @@ import type { LeadDetailView } from "./views/lead-detail";
 export async function getLeadDetail(
   deps: LeadDetailDeps,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     actorRole: Role;
     leadId: LeadId;
   },

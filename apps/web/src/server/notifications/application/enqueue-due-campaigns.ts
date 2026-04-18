@@ -1,10 +1,12 @@
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
+
 import type { NotificationServiceDeps } from "../domain/types";
 
 const DEFAULT_JOB_MAX_ATTEMPTS = 5;
 const AUDIENCE_PAGE_SIZE = 250;
 
 export type AudiencePageLoader = (
-  afterUserId: number,
+  afterUserId: UserId,
   limit: number,
 ) => Promise<number[]>;
 

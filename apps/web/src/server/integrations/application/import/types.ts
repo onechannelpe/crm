@@ -26,9 +26,9 @@ export type ImportRowInput =
 export type LoadedLead = {
   id: LeadId;
   ruc: string;
-  executive_id: number;
-  created_by: number;
-  updated_by: number | null;
+  executive_id: UserId;
+  created_by: UserId;
+  updated_by: UserId | null;
   updated_at: number;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
@@ -39,7 +39,7 @@ export type LeadMutationOutcome = {
   row: ImportRowInput;
   leadId: LeadId;
   ruc: string;
-  executiveId: number;
+  executiveId: UserId;
   previousStatus: LeadStatus | null;
   previousPrioridad: LeadPriority | null;
   previousStage: LeadStage;
@@ -64,14 +64,14 @@ export type LeadMutationResult =
 export type NeedsExecutiveOutboxEvent = {
   leadId: LeadId;
   ruc: string;
-  executiveId: number;
+  executiveId: UserId;
 };
 
 export type ReadyForQuotationOutboxEvent = {
   leadId: LeadId;
   ruc: string;
-  executiveId: number;
-  branchId: number;
+  executiveId: UserId;
+  branchId: BranchId;
 };
 
 export type PlannedOutboxEvents = {

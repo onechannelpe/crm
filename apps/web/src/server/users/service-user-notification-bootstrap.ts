@@ -1,5 +1,6 @@
 import type { createNotificationContactRepo } from "~/server/notifications/repos/contact";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 type NotificationBootstrapRepos = {
   notificationContacts: ReturnType<typeof createNotificationContactRepo>;
@@ -7,7 +8,7 @@ type NotificationBootstrapRepos = {
 };
 
 async function provisionNotificationContacts(params: {
-  userId: number;
+  userId: UserId;
   email: string;
   phoneE164: string;
   now: number;
@@ -40,7 +41,7 @@ async function provisionNotificationContacts(params: {
 }
 
 function enableDefaultNotificationPreferences(
-  userId: number,
+  userId: UserId,
   now: number,
   repos: Pick<NotificationBootstrapRepos, "notificationPreferences">,
 ) {
@@ -82,7 +83,7 @@ function enableDefaultNotificationPreferences(
 
 export async function bootstrapUserNotifications(
   params: {
-    userId: number;
+    userId: UserId;
     email: string;
     phoneE164: string;
     now: number;

@@ -17,7 +17,7 @@ export interface ExecutivePickerProps {
 export function ExecutivePicker(props: ExecutivePickerProps) {
   const reassign = useAction(reassignLeadMutation);
 
-  async function handleSelect(executiveId: number) {
+  async function handleSelect(executiveId: UserId) {
     try {
       await reassign({ leadId: props.leadId, newExecutiveId: executiveId });
       props.onSelect();

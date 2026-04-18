@@ -4,6 +4,7 @@ import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
@@ -16,7 +17,7 @@ export async function completeOnboarding(
   deps: AuthOnboardingContext,
   input: {
     session: {
-      userId: number;
+      userId: UserId;
       role: Role;
       primaryAuthMethod: "password" | "google" | "passkey";
       strongAuthMethod: "totp" | "passkey" | "federated" | null;

@@ -1,4 +1,5 @@
 import type { LeadStage } from "~/pipeline/contracts/lead-schema";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 import type { PendingReviewLeadSubject } from "../../domain/lead-subjects";
 import {
@@ -9,7 +10,7 @@ import type { PipelineNotificationCenter } from "../ports/notification-center";
 
 export async function notifyLeadReviewOutcome(input: {
   notificationCenter: PipelineNotificationCenter;
-  branchId: number;
+  branchId: BranchId;
   lead: PendingReviewLeadSubject;
   nextStage: LeadStage;
 }) {

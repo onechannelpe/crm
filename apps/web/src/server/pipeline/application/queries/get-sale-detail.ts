@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { SaleQueryDeps } from "../deps/lead-queries";
@@ -10,7 +11,7 @@ export async function getSaleDetail(
   deps: SaleQueryDeps,
   input: {
     actorRole: Role;
-    actorUserId: number;
+    actorUserId: UserId;
     saleId: number;
   },
 ): Promise<Result<SaleView, DomainError>> {

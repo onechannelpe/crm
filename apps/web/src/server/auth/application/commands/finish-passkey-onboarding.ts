@@ -7,6 +7,7 @@ import {
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
 import type { PasskeyWebauthnProviderFactory } from "~/server/auth/passkey/service";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { AuthOnboardingRepos } from "../../infrastructure/onboarding-context";
@@ -26,7 +27,7 @@ export async function finishPasskeyOnboarding(
   repos: AuthOnboardingRepos,
   input: {
     session: {
-      userId: number;
+      userId: UserId;
       sessionClass: "pre_auth" | "app";
       primaryAuthMethod: "password" | "google" | "passkey";
     };

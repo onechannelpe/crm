@@ -1,6 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { LeadId } from "~/server/pipeline/domain/lead-record";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { AssignableExecutivesDeps } from "../deps/lead-queries";
@@ -15,9 +16,9 @@ import type { AssignableExecutiveView } from "./views/assignable-executive";
 export async function listAssignableExecutives(
   deps: AssignableExecutivesDeps,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     actorRole: Role;
-    actorBranchId: number;
+    actorBranchId: BranchId;
     leadId: LeadId;
     search?: string;
     limit?: number;

@@ -1,4 +1,5 @@
-"use server";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
+("use server");
 
 import { getSourcingPolicy } from "~/server/pipeline/application/queries/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/pipeline/application/settings/update-sourcing-policy";
@@ -6,7 +7,7 @@ import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-run
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function querySourcingPolicy(branchId: number) {
+export async function querySourcingPolicy(branchId: BranchId) {
   return runAction({
     actionName: "pipeline.get_sourcing_policy",
     access: { kind: "auth" },
@@ -20,7 +21,7 @@ export async function querySourcingPolicy(branchId: number) {
 }
 
 export async function saveSourcingPolicy(input: {
-  branchId: number;
+  branchId: BranchId;
   engineAssignmentEnabled: boolean;
 }) {
   return runAction({

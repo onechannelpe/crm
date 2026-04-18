@@ -1,9 +1,11 @@
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
+
 import type { LeadId } from "../../domain/lead-record";
 
 export type LeadSale = {
   id: number;
   leadId: LeadId;
-  executiveId: number;
+  executiveId: UserId;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;
@@ -22,7 +24,7 @@ export type LeadSaleRepository = {
   findByLeadId(leadId: LeadId): Promise<LeadSale | undefined>;
   list(limit: number, offset: number): Promise<LeadSale[]>;
   listByExecutive(
-    executiveId: number,
+    executiveId: UserId,
     limit: number,
     offset: number,
   ): Promise<LeadSale[]>;

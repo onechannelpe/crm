@@ -4,6 +4,7 @@ import type { Database } from "~/lib/db/types";
 import type { LeadCommercialInput } from "~/server/pipeline/application/ports/commercial-input-repository";
 import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { asUserId } from "~/server/shared/ids";
 
 export type CommercialInputRow = Selectable<
   Database["pipeline_lead_commercial_inputs"]
@@ -22,7 +23,7 @@ function toLeadCommercialInput(row: CommercialInputRow): LeadCommercialInput {
     abono: row.abono,
     cantidadPos: row.cantidad_pos,
     updatedAt: row.updated_at,
-    updatedBy: row.updated_by,
+    updatedBy: asUserId(row.updated_by),
   };
 }
 

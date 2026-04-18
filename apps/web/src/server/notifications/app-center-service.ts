@@ -1,6 +1,7 @@
 import type { Insertable } from "kysely";
 
 import type { AppNotificationsTable, UsersTable } from "~/lib/db/types";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 import type { AppNotificationEvent } from "./app-events";
 
@@ -13,7 +14,7 @@ interface Deps {
     };
     users: {
       findActiveIdsByBranchAndRoles(
-        branchId: number,
+        branchId: BranchId,
         roles: UsersTable["role"][],
       ): Promise<Array<{ id: number }>>;
     };
@@ -53,7 +54,7 @@ export function createAppNotificationCenter({ repos }: Deps) {
     notifyUsers,
 
     async notifyBranchRoles(
-      branchId: number,
+      branchId: BranchId,
       roles: UsersTable["role"][],
       event: AppNotificationEvent,
       now = Date.now(),

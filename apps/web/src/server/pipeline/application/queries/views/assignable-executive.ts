@@ -1,4 +1,6 @@
+import type { UserId } from "~/server/shared/ids";
+
 export type AssignableExecutiveView = {
-  id: number;
+  id: UserId;
   fullName: string;
 };

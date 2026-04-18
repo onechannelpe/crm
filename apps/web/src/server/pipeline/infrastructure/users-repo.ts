@@ -1,4 +1,5 @@
 import { shortName } from "~/lib/users/display-name";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
@@ -34,7 +35,7 @@ export function createPipelineUsersRepo(
     },
     async isExecutiveAssignable(
       scope: AssignableExecutivesScope,
-      executiveId: number,
+      executiveId: UserId,
     ): Promise<boolean> {
       const user = await users.findById(executiveId);
       if (!user) {

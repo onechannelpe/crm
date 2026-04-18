@@ -1,12 +1,13 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { Database, NotificationContactsTable } from "~/lib/db/types";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 type NewNotificationContactRow = Insertable<NotificationContactsTable>;
 
 export function createNotificationContactRepo(db: Kysely<Database>) {
   return {
-    listByUser(userId: number) {
+    listByUser(userId: UserId) {
       return db
         .selectFrom("notification_contacts")
         .selectAll()

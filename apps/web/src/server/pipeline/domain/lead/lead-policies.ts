@@ -1,6 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { LeadStage } from "~/pipeline/contracts/lead-schema";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { canViewAllLeads, resolveLeadCapabilities } from "./lead-capabilities";
@@ -12,7 +13,7 @@ import {
 import type { LeadMutationIntent, LeadOperation } from "./lead-types";
 
 export function authorizeLeadOperation(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
   leadExecutiveId: number;
   operation: LeadOperation;

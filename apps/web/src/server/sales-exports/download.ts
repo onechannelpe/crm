@@ -1,12 +1,13 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export interface SalesExportDownloadSession {
-  userId: number;
+  userId: UserId;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
 }
 
 interface DownloadSalesExportDeps {

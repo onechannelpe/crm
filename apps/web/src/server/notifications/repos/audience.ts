@@ -2,6 +2,7 @@ import type { Kysely } from "kysely";
 
 import { isRole } from "~/lib/auth/access/rbac";
 import type { Database } from "~/lib/db/types";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 import type { NotificationAudienceType } from "./campaign";
 
@@ -48,7 +49,7 @@ export function createNotificationAudienceRepo(db: Kysely<Database>) {
     async findAudienceMembersPage(
       audienceType: NotificationAudienceType,
       audienceRef: string | null,
-      afterUserId: number,
+      afterUserId: UserId,
       limit: number,
     ): Promise<NotificationAudienceMember[]> {
       const scopedQuery = applyAudienceScope(audienceType, audienceRef);

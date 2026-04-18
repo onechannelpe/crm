@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { SaleQueryDeps } from "../deps/lead-queries";
@@ -11,7 +12,7 @@ export async function listSales(
   deps: SaleQueryDeps,
   input: {
     actorRole: Role;
-    actorUserId: number;
+    actorUserId: UserId;
     limit?: number;
     offset?: number;
   },

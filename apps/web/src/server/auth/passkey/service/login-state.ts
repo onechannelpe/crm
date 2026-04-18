@@ -1,5 +1,6 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
@@ -20,7 +21,7 @@ type PasskeyFlowRecord = Awaited<
 interface PasskeyLoginStateServiceDeps {
   webauthnService: {
     getAuthenticationOptionsForChallenge(input: {
-      userId: number;
+      userId: UserId;
       challenge: string;
       userVerification: "preferred" | "required";
     }): Promise<PasskeyLoginFlowState["requestOptions"]>;

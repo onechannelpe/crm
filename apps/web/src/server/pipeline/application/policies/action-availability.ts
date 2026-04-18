@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { LeadStage } from "~/pipeline/contracts/lead-schema";
+import type { UserId } from "~/server/shared/ids";
 
 import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import {
@@ -13,9 +14,9 @@ import {
 } from "./access";
 
 export function resolveAvailableActions(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  executiveId: number;
+  executiveId: UserId;
   stage: LeadStage;
 }): LeadAvailableAction[] {
   const actions: LeadAvailableAction[] = [];

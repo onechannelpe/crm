@@ -13,6 +13,7 @@ import {
   requireLeadStatus,
   requireNumber,
   requireString,
+  requireUserId,
 } from "./history-payload-fields";
 
 export function toRegisteredEntry(
@@ -130,7 +131,7 @@ export function toAssignmentEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const executiveId = requireNumber(payload, "executiveId", row);
+  const executiveId = requireUserId(payload, "executiveId", row);
   if (!executiveId.ok) return executiveId;
 
   const reason = optionalString(payload, "reason", row);
@@ -147,10 +148,10 @@ export function toReassignmentEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const fromExecutiveId = requireNumber(payload, "fromExecutiveId", row);
+  const fromExecutiveId = requireUserId(payload, "fromExecutiveId", row);
   if (!fromExecutiveId.ok) return fromExecutiveId;
 
-  const toExecutiveId = requireNumber(payload, "toExecutiveId", row);
+  const toExecutiveId = requireUserId(payload, "toExecutiveId", row);
   if (!toExecutiveId.ok) return toExecutiveId;
 
   const reason = optionalString(payload, "reason", row);

@@ -1,5 +1,6 @@
 import { createHistoryEvent } from "~/server/pipeline/domain/history";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
 
 import type { LeadMutationOutcome } from "./types";
 
@@ -12,7 +13,7 @@ function serializePayload(payload: unknown): string | null {
 
 export async function writeHistoryAndAudit(input: {
   executor: DatabaseExecutor;
-  actorId: number;
+  actorId: UserId;
   mutation: LeadMutationOutcome;
 }) {
   const mutation = input.mutation;

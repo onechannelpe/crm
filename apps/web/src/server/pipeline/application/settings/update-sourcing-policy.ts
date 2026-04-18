@@ -1,6 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { SourcingPolicyDeps } from "../deps/sourcing-policy";
@@ -8,15 +9,15 @@ import type { SourcingPolicyDeps } from "../deps/sourcing-policy";
 export async function updateSourcingPolicy(
   deps: SourcingPolicyDeps,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     actorRole: Role;
-    branchId: number;
+    branchId: BranchId;
     engineAssignmentEnabled: boolean;
   },
 ): Promise<
   Result<
     {
-      branchId: number;
+      branchId: BranchId;
       engineAssignmentEnabled: boolean;
     },
     DomainError

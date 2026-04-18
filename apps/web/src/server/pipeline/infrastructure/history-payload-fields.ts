@@ -11,6 +11,12 @@ import {
   parseRequiredLeadStatus,
 } from "~/server/pipeline/domain/lead-schema-parser";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  asLeadId,
+  asUserId,
+  type LeadId,
+  type UserId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { HistoryEventRow } from "./history-event-row";
@@ -98,6 +104,36 @@ export function requireNumber(
   }
 
   return Err(invalidPayload(row, key));
+}
+
+export function requireUserId(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<UserId, DomainError> {
+  const value = requireString(payload, key, row);
+  if (!value.ok) return value;
+  return Ok(asUserId(value.value));
+}
+
+export function optionalUserId(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<UserId | null, DomainError> {
+  const value = optionalString(payload, key, row);
+  if (!value.ok) return value;
+  return Ok(value.value ? asUserId(value.value) : null);
+}
+
+export function requireLeadId(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<LeadId, DomainError> {
+  const value = requireString(payload, key, row);
+  if (!value.ok) return value;
+  return Ok(asLeadId(value.value));
 }
 
 export function requireLeadStage(

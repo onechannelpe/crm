@@ -3,6 +3,7 @@ import type { Insertable, Selectable } from "kysely";
 import type { Database } from "~/lib/db/types";
 import type { LeadSourcingPolicy } from "~/server/pipeline/application/ports/sourcing-policy-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { asBranchId, asUserId, type BranchId } from "~/server/shared/ids";
 
 export type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
 export type NewSourcingPolicyRow = Insertable<
@@ -11,17 +12,17 @@ export type NewSourcingPolicyRow = Insertable<
 
 function toLeadSourcingPolicy(row: SourcingPolicyRow): LeadSourcingPolicy {
   return {
-    branchId: row.branch_id,
+    branchId: asBranchId(row.branch_id),
     engineAssignmentEnabled: row.engine_assignment_enabled === 1,
     updatedAt: row.updated_at,
-    updatedByUserId: row.updated_by_user_id,
+    updatedByUserId: asUserId(row.updated_by_user_id),
   };
 }
 
 export function createSourcingPolicyRepo(db: DatabaseExecutor) {
   return {
     async findByBranchId(
-      branchId: number,
+      branchId: BranchId,
     ): Promise<LeadSourcingPolicy | undefined> {
       const row = await db
         .selectFrom("lead_sourcing_policies")

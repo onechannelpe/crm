@@ -1,5 +1,6 @@
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
 import type { PasskeyWebauthnProviderFactory } from "~/server/auth/passkey/service";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 import type { AuthOnboardingRepos } from "../../infrastructure/onboarding-context";
 
@@ -17,7 +18,7 @@ function createEnrollmentService(
 export function beginPasskeyOnboarding(
   repos: AuthOnboardingRepos,
   input: {
-    userId: number;
+    userId: UserId;
     ipAddress: string;
     createWebauthnProvider: PasskeyWebauthnProviderFactory;
   },

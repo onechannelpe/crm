@@ -1,13 +1,15 @@
-import type { LeadHistoryPerson } from "~/server/pipeline/domain/history";
-import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import type {
+  LeadHistoryEntry,
+  LeadHistoryPerson,
+} from "~/server/pipeline/domain/history";
+import { asUserId, type LeadId, type UserId } from "~/server/shared/ids";
 
 export type HistoryEventRow = {
   id: number;
   lead_id: LeadId;
   event_type: LeadHistoryEntry["eventType"];
-  actor_user_id: number | null;
-  subject_user_id: number | null;
+  actor_user_id: string | null;
+  subject_user_id: string | null;
   payload_json: string | null;
   occurred_at: number;
   actor_names: string | null;
@@ -21,8 +23,8 @@ export type HistoryEventRow = {
 export type HistoryEntryBase = {
   id: number;
   leadId: LeadId;
-  actorUserId: number | null;
-  subjectUserId: number | null;
+  actorUserId: UserId | null;
+  subjectUserId: UserId | null;
   occurredAt: number;
   actor: LeadHistoryPerson | null;
   subject: LeadHistoryPerson | null;
@@ -52,8 +54,8 @@ export function toHistoryEntryBase(row: HistoryEventRow): HistoryEntryBase {
   return {
     id: row.id,
     leadId: row.lead_id,
-    actorUserId: row.actor_user_id,
-    subjectUserId: row.subject_user_id,
+    actorUserId: row.actor_user_id ? asUserId(row.actor_user_id) : null,
+    subjectUserId: row.subject_user_id ? asUserId(row.subject_user_id) : null,
     occurredAt: row.occurred_at,
     actor: toHistoryPerson({
       names: row.actor_names,

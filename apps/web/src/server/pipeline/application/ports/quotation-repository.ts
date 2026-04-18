@@ -1,3 +1,5 @@
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
+
 import type { LeadId } from "../../domain/lead-record";
 
 export type LeadQuotation = {
@@ -11,7 +13,7 @@ export type LeadQuotation = {
   moneda: "PEN" | "USD";
   version: number;
   createdAt: number;
-  createdBy: number;
+  createdBy: UserId;
 };
 
 export type LeadQuotationRepository = {

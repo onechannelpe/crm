@@ -6,6 +6,7 @@ import { assertPositiveInt } from "~/lib/contracts/guards";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { domainError } from "~/server/shared/domain-error";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
@@ -18,10 +19,10 @@ import type { PasskeyEnrollmentChallenge } from "./types";
 interface PasskeyEnrollmentServiceDeps {
   webauthnService: {
     getRegistrationOptions(
-      userId: number,
+      userId: UserId,
     ): Promise<PasskeyEnrollmentChallenge["options"]>;
     verifyRegistration(
-      userId: number,
+      userId: UserId,
       response: RegistrationResponseJSON,
       challenge: string,
     ): Promise<{ verified: boolean }>;
@@ -29,7 +30,7 @@ interface PasskeyEnrollmentServiceDeps {
 }
 
 interface BeginPasskeyEnrollmentInput {
-  userId: number;
+  userId: UserId;
   ipAddress: string;
 }
 

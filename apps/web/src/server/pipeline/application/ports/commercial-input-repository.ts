@@ -1,4 +1,4 @@
-import type { LeadId } from "../../domain/lead-record";
+import type { LeadId, UserId } from "../../domain/lead-record";
 
 export type LeadCommercialInput = {
   leadId: LeadId;
@@ -9,7 +9,7 @@ export type LeadCommercialInput = {
   abono: number | null;
   cantidadPos: number | null;
   updatedAt: number;
-  updatedBy: number;
+  updatedBy: UserId;
 };
 
 export type LeadCommercialInputRepository = {

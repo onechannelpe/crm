@@ -1,11 +1,13 @@
+import type { BranchId, UserId } from "~/server/shared/ids";
+
 export type LeadSourcingPolicy = {
-  branchId: number;
+  branchId: BranchId;
   engineAssignmentEnabled: boolean;
   updatedAt: number;
-  updatedByUserId: number;
+  updatedByUserId: UserId;
 };
 
 export type LeadSourcingPolicyRepository = {
-  findByBranchId(branchId: number): Promise<LeadSourcingPolicy | undefined>;
+  findByBranchId(branchId: BranchId): Promise<LeadSourcingPolicy | undefined>;
   upsert(values: LeadSourcingPolicy): Promise<unknown>;
 };

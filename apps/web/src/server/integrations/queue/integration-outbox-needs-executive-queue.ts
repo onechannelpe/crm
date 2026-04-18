@@ -1,5 +1,6 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 import {
   createNeedsExecutiveOutboxRepo,
@@ -17,7 +18,7 @@ type NeedsExecutiveOutboxJob = {
   max_attempts: number;
   lead_id: string;
   ruc: string;
-  executive_id: number;
+  executive_id: UserId;
 };
 
 export function createNeedsExecutiveOutboxQueue(

@@ -3,7 +3,7 @@ import type { LeadId } from "~/server/pipeline/domain/lead-record";
 export type SaleView = {
   id: number;
   leadId: LeadId;
-  executiveId: number;
+  executiveId: UserId;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;

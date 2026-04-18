@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database, AgentStatusLogsTable } from "~/lib/db/types";
+import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 
 type AgentStatus = AgentStatusLogsTable["status"];
 
@@ -23,7 +24,7 @@ export function createAgentStatusRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    findCurrentByUser(userId: number) {
+    findCurrentByUser(userId: UserId) {
       return db
         .selectFrom("agent_status_logs")
         .selectAll()

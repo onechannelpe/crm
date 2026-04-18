@@ -84,7 +84,7 @@ export function createSaleRepo(db: DatabaseExecutor) {
     },
 
     async listByExecutive(
-      executiveId: number,
+      executiveId: UserId,
       limit: number,
       offset: number,
     ): Promise<LeadSale[]> {
