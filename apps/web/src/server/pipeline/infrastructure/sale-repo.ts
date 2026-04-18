@@ -4,6 +4,7 @@ import type { Database } from "~/lib/db/types";
 import type { LeadSale } from "~/server/pipeline/application/ports/sale-repository";
 import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { type UserId } from "~/server/shared/ids";
 
 export type SaleRow = Selectable<Database["pipeline_sales"]>;
 export type NewSaleRow = Insertable<Database["pipeline_sales"]>;

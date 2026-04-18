@@ -1,6 +1,7 @@
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
 import type { DomainError } from "~/server/shared/domain-error";
+import { type UserId } from "~/server/shared/ids";
 import { type Result, Ok } from "~/server/shared/result";
 
 import type { JobBlobStore } from "../job-blob-store";
@@ -8,7 +9,8 @@ import type { IntegrationJobsPort } from "../types";
 
 export async function queueImportJobUseCase(input: {
   type: "import_status" | "import_prioridad";
-  actorId: number;
+  actorId: UserId;
+
   fileName: string;
   bytes: Uint8Array;
   jobs: IntegrationJobsPort;

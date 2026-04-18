@@ -151,7 +151,7 @@ export interface NotificationJobsTable {
   attempt_count: number;
   max_attempts: number;
   available_at: number;
-  lease_owner: string | null;
+  lease_owner: UserId | null;
   lease_until: number | null;
   last_error: string | null;
   created_at: number;
@@ -172,7 +172,7 @@ export interface NotificationDeliveriesTable {
 
 export interface AppNotificationsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   event_type: string;
   priority: "high" | "normal" | "low";
   title: string;
@@ -186,7 +186,7 @@ export interface AppNotificationsTable {
 
 export interface ClientSearchViewsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   name: string;
   search_type:
     | "dni"
@@ -214,11 +214,11 @@ export interface SearchPolicyDefaultsTable {
 
 export interface SearchPolicyOverridesTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   search_limit: number;
   effective_from: number;
   expires_at: number | null;
-  set_by_user_id: string;
+  set_by_user_id: UserId;
   created_at: number;
 }
 

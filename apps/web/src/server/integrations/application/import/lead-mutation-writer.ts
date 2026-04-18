@@ -6,6 +6,7 @@ import type {
 import { asLeadId, type LeadId } from "~/server/pipeline/domain/lead-record";
 import { resolveReviewTransition } from "~/server/pipeline/domain/workflow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { type UserId } from "~/server/shared/ids";
 
 import type { ImportRowInput, LeadMutationResult, LoadedLead } from "./types";
 
@@ -84,7 +85,7 @@ async function markImportRowApplied(input: {
 export async function applyLeadMutation(input: {
   executor: DatabaseExecutor;
   jobId: number;
-  actorId: number;
+  actorId: UserId;
   row: ImportRowInput;
 }): Promise<LeadMutationResult> {
   const row = await input.executor

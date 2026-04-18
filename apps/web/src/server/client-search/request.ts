@@ -1,5 +1,6 @@
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
+import { type UserId } from "~/server/shared/ids";
 
 import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
@@ -13,7 +14,7 @@ export interface EnrichmentCommand {
   enqueueRequest(
     documentType: string,
     documentValue: string,
-    requestedByUserId: number,
+    requestedByUserId: UserId,
     now?: number,
   ): Promise<number>;
 }

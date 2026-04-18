@@ -1,4 +1,4 @@
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import type { LeadId, UserId } from "~/server/shared/ids";
 
 export type SaleView = {
   id: number;

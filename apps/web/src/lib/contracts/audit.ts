@@ -1,10 +1,12 @@
+import { type UserId } from "~/server/shared/ids";
+
 export interface SessionRevokedByAdminChanges {
   sessionId: string;
-  revokedBy: number;
+  revokedBy: UserId;
 }
 
 export interface AllSessionsRevokedChanges {
-  revokedBy: number;
+  revokedBy: UserId;
 }
 
 export interface ProductUpdatedChanges {
@@ -19,13 +21,13 @@ export function serializeAuditChanges(changes?: unknown): string | null {
 
 export function sessionRevokedByAdminChanges(
   sessionId: string,
-  revokedBy: number,
+  revokedBy: UserId,
 ): SessionRevokedByAdminChanges {
   return { sessionId, revokedBy };
 }
 
 export function allSessionsRevokedChanges(
-  revokedBy: number,
+  revokedBy: UserId,
 ): AllSessionsRevokedChanges {
   return { revokedBy };
 }

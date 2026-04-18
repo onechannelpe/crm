@@ -8,15 +8,16 @@ const AUDIENCE_PAGE_SIZE = 250;
 export type AudiencePageLoader = (
   afterUserId: UserId,
   limit: number,
-) => Promise<number[]>;
+) => Promise<UserId[]>;
 
-export type BatchProvisioner = (userIds: number[]) => Promise<void>;
+export type BatchProvisioner = (userIds: UserId[]) => Promise<void>;
 
 export async function enqueueCampaignAudience(
   loadPage: AudiencePageLoader,
   provisionBatch: BatchProvisioner,
 ): Promise<void> {
-  let lastUserId = 0;
+  let lastUserId = "" as UserId;
+
   while (true) {
     // eslint-disable-next-line no-await-in-loop
     const userIds = await loadPage(lastUserId, AUDIENCE_PAGE_SIZE);

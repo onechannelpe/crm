@@ -1,6 +1,7 @@
-import type { Selectable } from "kysely";
+import { Selectable } from "kysely";
 
 import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
+import { type UserId } from "~/server/shared/ids";
 
 import type { DocumentType } from "./model";
 
@@ -27,34 +28,37 @@ export interface EnrichmentRepositoryPort {
   upsertJob(values: {
     document_type: DocumentType;
     document_value: string;
-    requested_by_user_id: number;
+    requested_by_user_id: UserId;
     now: number;
     max_attempts: number;
   }): Promise<number>;
+
   leaseJobs(
     limit: number,
     leaseMs: number,
-    leaseOwner: string,
+    leaseOwner: UserId,
   ): Promise<JobRow[]>;
   completeJob(
     id: number,
-    leaseOwner: string,
+    leaseOwner: UserId,
     overlay: OverlayRow,
     now: number,
   ): Promise<void>;
   failJob(
     id: number,
-    leaseOwner: string,
+    leaseOwner: UserId,
     errorMessage: string,
     now: number,
   ): Promise<void>;
+
   retryJob(
     id: number,
-    leaseOwner: string,
+    leaseOwner: UserId,
     errorMessage: string,
     nextAttemptAt: number,
   ): Promise<void>;
-  extendLease(id: number, workerId: string, leaseMs: number): Promise<boolean>;
+  extendLease(id: number, workerId: UserId, leaseMs: number): Promise<boolean>;
+
   getOverlay(
     documentType: DocumentType,
     documentValue: string,

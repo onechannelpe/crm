@@ -5,6 +5,7 @@ import type {
 } from "@crm/message-channels";
 
 import { createJobQueue } from "~/lib/job-queue/job-queue";
+import { type UserId } from "~/server/shared/ids";
 
 import { processDeliveryJob } from "../application/process-delivery-job";
 import { nextNotificationBackoffMs } from "../domain/retry-policy";
@@ -33,7 +34,7 @@ function providerForChannel(
 
 export function createNotificationDeliveryQueue(
   channel: "email" | "whatsapp",
-  workerId: string,
+  workerId: UserId,
   deps: DeliveryQueueDeps,
 ) {
   return createJobQueue<NotificationDeliveryJob, DeliveryHandleResult>({

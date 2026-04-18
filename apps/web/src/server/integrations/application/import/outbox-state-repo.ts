@@ -1,4 +1,5 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { type UserId } from "~/server/shared/ids";
 
 type OutboxTableName =
   | "pipeline_integration_outbox_needs_executive_input"
@@ -9,7 +10,7 @@ export function createOutboxStateRepo(
   tableName: OutboxTableName,
 ) {
   return {
-    async extendLease(id: number, workerId: string, leaseMs: number) {
+    async extendLease(id: number, workerId: UserId, leaseMs: number) {
       const now = Date.now();
       const result = await executor
         .updateTable(tableName)

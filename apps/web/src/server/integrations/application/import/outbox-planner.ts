@@ -21,10 +21,7 @@ export async function planOutboxForMutation(input: {
     return;
   }
 
-  if (
-    mutation.nextStage === "NEEDS_EXECUTIVE_INPUT" &&
-    mutation.executiveId > 0
-  ) {
+  if (mutation.nextStage === "NEEDS_EXECUTIVE_INPUT" && mutation.executiveId) {
     input.outboxPlan.needsExecutiveInput.push({
       leadId: mutation.leadId,
       ruc: mutation.ruc,
@@ -42,7 +39,7 @@ export async function planOutboxForMutation(input: {
     .select("branch_id")
     .where("id", "=", mutation.executiveId)
     .executeTakeFirst();
-  if (!user || user.branch_id <= 0) {
+  if (!user || !user.branch_id) {
     return;
   }
 

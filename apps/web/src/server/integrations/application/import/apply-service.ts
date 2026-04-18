@@ -1,4 +1,5 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { type UserId } from "~/server/shared/ids";
 
 import { writeHistoryAndAudit } from "./history-audit-writer";
 import { applyLeadMutation } from "./lead-mutation-writer";
@@ -17,7 +18,8 @@ function resultSort(a: RowResult, b: RowResult): number {
 export async function applyImportRows(
   input: {
     jobId: number;
-    actorId: number;
+    actorId: UserId;
+
     validRows: ImportRowInput[];
     invalidRows: Array<{
       row: number;

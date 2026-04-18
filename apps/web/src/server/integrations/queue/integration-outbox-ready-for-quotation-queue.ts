@@ -1,5 +1,6 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { type UserId, type LeadId, type BranchId } from "~/server/shared/ids";
 
 import {
   createReadyForQuotationOutboxRepo,
@@ -15,13 +16,13 @@ type ReadyForQuotationOutboxJob = {
   id: number;
   attempt_count: number;
   max_attempts: number;
-  lead_id: string;
+  lead_id: LeadId;
   ruc: string;
-  branch_id: number;
+  branch_id: BranchId;
 };
 
 export function createReadyForQuotationOutboxQueue(
-  workerId: string,
+  workerId: UserId,
   deps: ReadyForQuotationOutboxQueueDeps,
 ) {
   const leaseMs = 30_000;
@@ -66,6 +67,7 @@ export function createReadyForQuotationOutboxQueue(
         .execute();
     },
     extendLease: (id: number) => repo.extendLease(id, workerId, leaseMs),
+
     onComplete: (id: number) => repo.markCompleted(id),
     onRetry: (id: number, availableAt: number) =>
       repo.scheduleRetry(id, availableAt),

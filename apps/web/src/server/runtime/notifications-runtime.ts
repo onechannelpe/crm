@@ -15,6 +15,7 @@ import { createNotificationDeliveryJobRepo } from "~/server/notifications/repos/
 import { createNotificationDeliveryLogRepo } from "~/server/notifications/repos/delivery-log";
 import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createAppNotificationService } from "~/server/notifications/service";
+import { type UserId } from "~/server/shared/ids";
 
 import type { ServerInfra } from "./infra";
 
@@ -40,12 +41,12 @@ export function createNotificationsRuntime(infra: ServerInfra) {
 
   return {
     messaging,
-    createEmailQueue: (workerId: string) =>
+    createEmailQueue: (workerId: UserId) =>
       createNotificationEmailQueue(workerId, {
         repos,
         messaging,
       }),
-    createWhatsAppQueue: (workerId: string) =>
+    createWhatsAppQueue: (workerId: UserId) =>
       createNotificationWhatsAppQueue(workerId, {
         repos,
         messaging,

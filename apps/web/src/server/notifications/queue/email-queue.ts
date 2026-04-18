@@ -1,3 +1,5 @@
+import { type UserId } from "~/server/shared/ids";
+
 import type { NotificationServiceDeps } from "../domain/types";
 import { createNotificationDeliveryQueue } from "./create-delivery-queue";
 
@@ -10,7 +12,7 @@ interface NotificationEmailQueueDeps {
 }
 
 export function createNotificationEmailQueue(
-  workerId: string,
+  workerId: UserId,
   deps: NotificationEmailQueueDeps,
 ) {
   return createNotificationDeliveryQueue("email", workerId, {

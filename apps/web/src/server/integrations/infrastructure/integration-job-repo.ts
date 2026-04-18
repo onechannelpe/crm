@@ -6,6 +6,7 @@ import type {
   NewIntegrationJob,
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { type UserId } from "~/server/shared/ids";
 
 export function createIntegrationJobRepo(db: DatabaseExecutor) {
   return {
@@ -37,7 +38,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
 
     async claimPending(
       leaseMs: number,
-      workerId: string,
+      workerId: UserId,
       batchSize: number,
       types?: IntegrationJobType[],
     ): Promise<IntegrationJobRow[]> {
@@ -132,7 +133,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
 
     async extendLease(
       id: number,
-      workerId: string,
+      workerId: UserId,
       leaseMs: number,
     ): Promise<boolean> {
       const now = Date.now();

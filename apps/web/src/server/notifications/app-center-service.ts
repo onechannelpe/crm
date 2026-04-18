@@ -16,7 +16,7 @@ interface Deps {
       findActiveIdsByBranchAndRoles(
         branchId: BranchId,
         roles: UsersTable["role"][],
-      ): Promise<Array<{ id: number }>>;
+      ): Promise<Array<{ id: UserId }>>;
     };
   };
 }
@@ -28,11 +28,11 @@ function serializeMetadata(metadata?: Record<string, unknown>): string | null {
 
 export function createAppNotificationCenter({ repos }: Deps) {
   async function notifyUsers(
-    userIds: number[],
+    userIds: UserId[],
     event: AppNotificationEvent,
     now = Date.now(),
   ): Promise<void> {
-    const unique = Array.from(new Set(userIds.filter((id) => id > 0)));
+    const unique = Array.from(new Set(userIds));
     if (unique.length === 0) return;
 
     const rows: NewAppNotificationRow[] = unique.map((userId) => ({

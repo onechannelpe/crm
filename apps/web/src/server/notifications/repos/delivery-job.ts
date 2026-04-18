@@ -1,6 +1,7 @@
 import { sql, type Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { type UserId } from "~/server/shared/ids";
 
 export interface NotificationDeliveryJob {
   id: number;
@@ -17,7 +18,7 @@ export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
   return {
     createPendingJobsForCampaignUsers(params: {
       campaignId: number;
-      userIds: number[];
+      userIds: UserId[];
       createdAt: number;
       maxAttempts: number;
     }) {
@@ -73,7 +74,7 @@ export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
 
     async claimPendingJobsByChannel(params: {
       channel: "email" | "whatsapp";
-      workerId: string;
+      workerId: UserId;
       limit: number;
       leaseMs: number;
     }): Promise<NotificationDeliveryJob[]> {
@@ -156,7 +157,7 @@ export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
 
     async extendJobLease(
       jobId: number,
-      workerId: string,
+      workerId: UserId,
       leaseMs: number,
     ): Promise<boolean> {
       const now = Date.now();
@@ -174,7 +175,7 @@ export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    markJobSent(jobId: number, workerId: string) {
+    markJobSent(jobId: number, workerId: UserId) {
       return db
         .updateTable("notification_jobs")
         .set({
@@ -191,7 +192,7 @@ export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
 
     scheduleJobRetry(params: {
       jobId: number;
-      workerId: string;
+      workerId: UserId;
       availableAt: number;
       error: string;
     }) {
@@ -211,7 +212,7 @@ export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    markJobFailed(jobId: number, workerId: string, error: string) {
+    markJobFailed(jobId: number, workerId: UserId, error: string) {
       return db
         .updateTable("notification_jobs")
         .set({

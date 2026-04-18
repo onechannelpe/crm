@@ -1,6 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { Database, UserInvitesTable, UsersTable } from "~/lib/db/types";
+import { type BranchId, type UserId } from "~/server/shared/ids";
 
 type NewUserInviteRow = Insertable<UserInvitesTable>;
 
@@ -12,12 +13,12 @@ export interface PendingInviteWithUser {
   invite_status: InviteStatus;
   invite_expires_at: number;
   invite_created_at: number;
-  invite_created_by_user_id: string;
+  invite_created_by_user_id: UserId;
   invite_sent_at: number | null;
-  user_id: string;
+  user_id: UserId;
   user_email: string;
   user_role: UserRole;
-  user_branch_id: string;
+  user_branch_id: BranchId;
   user_team_id: string | null;
   user_names: string;
   user_first_surname: string;
@@ -36,7 +37,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
     },
 
     async findLatestPendingByBranch(
-      branchId: string,
+      branchId: BranchId,
       now: number,
     ): Promise<PendingInviteWithUser[]> {
       return db
@@ -102,7 +103,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    revokePendingByUser(userId: string, revokedAt: number) {
+    revokePendingByUser(userId: UserId, revokedAt: number) {
       return db
         .updateTable("user_invites")
         .set({

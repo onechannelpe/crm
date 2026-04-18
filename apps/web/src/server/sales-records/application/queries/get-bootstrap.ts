@@ -1,6 +1,7 @@
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { type ContactId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { SalesRecordReadContext } from "../../infrastructure/read-context";
@@ -9,7 +10,7 @@ import type { SalesRecordBootstrapView } from "../contracts";
 export async function getBootstrap(
   ctx: AppContext,
   deps: SalesRecordReadContext,
-  input: { contactId: number | null },
+  input: { contactId: ContactId | null },
 ): Promise<Result<SalesRecordBootstrapView, DomainError>> {
   if (input.contactId === null) {
     return Ok({

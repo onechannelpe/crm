@@ -1,6 +1,7 @@
 import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { type UserId } from "~/server/shared/ids";
 
 import { createOutboxStateRepo } from "./outbox-state-repo";
 import type { NeedsExecutiveOutboxEvent } from "./types";
@@ -39,7 +40,7 @@ export function createNeedsExecutiveOutboxRepo(executor: DatabaseExecutor) {
     "pipeline_integration_outbox_needs_executive_input",
   );
   return {
-    async claimPending(workerId: string, limit: number, leaseMs: number) {
+    async claimPending(workerId: UserId, limit: number, leaseMs: number) {
       const now = Date.now();
       const leaseUntil = now + leaseMs;
 
@@ -80,7 +81,7 @@ export function createNeedsExecutiveOutboxRepo(executor: DatabaseExecutor) {
         .where("lease_owner", "=", workerId)
         .execute();
     },
-    extendLease: (id: number, workerId: string, leaseMs: number) =>
+    extendLease: (id: number, workerId: UserId, leaseMs: number) =>
       stateRepo.extendLease(id, workerId, leaseMs),
     markCompleted: (id: number) => stateRepo.markCompleted(id),
     scheduleRetry: (id: number, availableAt: number) =>

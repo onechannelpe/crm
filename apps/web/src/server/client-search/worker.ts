@@ -8,6 +8,7 @@ import {
   processEnrichmentJob,
   overlayToRow,
 } from "~/server/client-search/process";
+import { type UserId } from "~/server/shared/ids";
 
 type EnrichmentWorkerDeps = {
   enrichmentRepo: EnrichmentRepositoryPort;
@@ -15,7 +16,7 @@ type EnrichmentWorkerDeps = {
 };
 
 export function createEnrichmentQueue(
-  workerId: string,
+  workerId: UserId,
   deps: EnrichmentWorkerDeps,
 ) {
   const leaseMs = 30_000;

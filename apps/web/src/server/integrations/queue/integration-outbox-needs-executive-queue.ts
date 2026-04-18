@@ -16,13 +16,13 @@ type NeedsExecutiveOutboxJob = {
   id: number;
   attempt_count: number;
   max_attempts: number;
-  lead_id: string;
+  lead_id: LeadId;
   ruc: string;
   executive_id: UserId;
 };
 
 export function createNeedsExecutiveOutboxQueue(
-  workerId: string,
+  workerId: UserId,
   deps: NeedsExecutiveOutboxQueueDeps,
 ) {
   const leaseMs = 30_000;

@@ -7,7 +7,7 @@ import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
 import type { NotificationAudienceType } from "./campaign";
 
 export interface NotificationAudienceMember {
-  id: number;
+  id: UserId;
 }
 
 export function createNotificationAudienceRepo(db: Kysely<Database>) {
@@ -37,12 +37,7 @@ export function createNotificationAudienceRepo(db: Kysely<Database>) {
       return null;
     }
 
-    const userId = Number(audienceRef);
-    if (!Number.isInteger(userId) || userId <= 0) {
-      return null;
-    }
-
-    return base.where("id", "=", userId);
+    return base.where("id", "=", audienceRef as UserId);
   }
 
   return {

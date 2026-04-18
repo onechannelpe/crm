@@ -3,6 +3,7 @@ import type {
   SalesRecordSource,
   SalesRecordStatus,
 } from "~/server/sales-records/domain/types";
+import { type AssignmentId, type ContactId } from "~/server/shared/ids";
 
 export interface SalesRecordClientInput {
   ruc: string | null;
@@ -33,7 +34,7 @@ export interface SalesRecordProductInput {
 
 export interface CreateSalesRecordDraftInput {
   source: SalesRecordSource;
-  leadAssignmentId: number | null;
+  leadAssignmentId: AssignmentId | null;
   client: SalesRecordClientInput;
   addresses: SalesRecordAddressInput[];
   products: SalesRecordProductInput[];

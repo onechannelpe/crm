@@ -1,3 +1,5 @@
+import { type UserId } from "~/server/shared/ids";
+
 import type { NotificationServiceDeps } from "../domain/types";
 import { createNotificationDeliveryQueue } from "./create-delivery-queue";
 
@@ -10,7 +12,7 @@ interface NotificationWhatsAppQueueDeps {
 }
 
 export function createNotificationWhatsAppQueue(
-  workerId: string,
+  workerId: UserId,
   deps: NotificationWhatsAppQueueDeps,
 ) {
   return createNotificationDeliveryQueue("whatsapp", workerId, {

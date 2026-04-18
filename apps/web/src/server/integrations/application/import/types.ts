@@ -3,7 +3,7 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/pipeline/contracts/lead-schema";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import { type UserId, type LeadId, type BranchId } from "~/server/shared/ids";
 
 export type RowResult =
   | { row: number; ok: false; reason: string }
