@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 
-import type { UserId, LeadId, BranchId } from "~/server/shared/ids";
+import { type UserId, type LeadId, type BranchId, asBranchId } from "~/server/shared/ids";
 
 import type { SalesExportBlobStore } from "./export-blob-store";
 import type {
@@ -115,8 +115,8 @@ function parseExportScope(filtersJson: string): {
     const scope =
       "scope" in parsed && parsed.scope === "global" ? "global" : "branch";
     const branchId =
-      "branchId" in parsed && typeof parsed.branchId === "number"
-        ? parsed.branchId
+      "branchId" in parsed && typeof parsed.branchId === "string"
+        ? asBranchId(parsed.branchId)
         : null;
     return { scope, branchId };
   } catch {

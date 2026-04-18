@@ -81,9 +81,10 @@ export interface SalesRecordProductOptionView {
 
 export interface SalesRecordBootstrapView {
   source: SalesRecordSource;
-  leadAssignmentId: number | null;
+  leadAssignmentId: AssignmentId | null;
   client: SalesRecordClientInput;
 }
+
 
 interface ContextClient {
   ruc: string | null;

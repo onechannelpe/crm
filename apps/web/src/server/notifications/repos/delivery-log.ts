@@ -1,6 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { Database, NotificationDeliveriesTable } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 type NewNotificationDeliveryRow = Insertable<NotificationDeliveriesTable>;
 
@@ -29,7 +30,7 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
     createRecipientsForEmailUsers(params: {
       campaignId: number;
       eventType: string;
-      userIds: number[];
+      userIds: UserId[];
       createdAt: number;
     }) {
       if (params.userIds.length === 0) {
@@ -94,9 +95,10 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
     createRecipientsForWhatsAppUsers(params: {
       campaignId: number;
       eventType: string;
-      userIds: number[];
+      userIds: UserId[];
       createdAt: number;
     }) {
+
       if (params.userIds.length === 0) {
         return Promise.resolve();
       }

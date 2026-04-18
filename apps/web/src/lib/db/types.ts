@@ -1,5 +1,16 @@
 import type { ColumnType, Generated } from "kysely";
 
+import type {
+  AssignmentId,
+  BranchId,
+  ContactId,
+  LeadId,
+  OrganizationId,
+  TeamId,
+  UserId,
+} from "~/server/shared/ids";
+
+
 type AuthFunnelSourceValue = "client" | "server";
 type AuthFunnelEventNameValue =
   | "screen_viewed"
@@ -26,23 +37,25 @@ type AuthFunnelOutcomeValue =
   | "totp_required"
   | "passkey_required";
 export interface BranchesTable {
-  id: string;
+  id: BranchId;
   name: string;
   created_at: number;
 }
 
 export interface TeamsTable {
-  id: string;
-  branch_id: string;
+  id: TeamId;
+  branch_id: BranchId;
   name: string;
-  supervisor_id: string | null;
+  supervisor_id: UserId | null;
   created_at: number;
 }
 
+
 export interface UsersTable {
-  id: string;
-  branch_id: string;
-  team_id: string | null;
+  id: UserId;
+  branch_id: BranchId;
+  team_id: TeamId | null;
+
   username: string;
   email: string;
   password_hash: string;
@@ -75,7 +88,7 @@ export interface LoginFlowsTable {
   id: Generated<number>;
   identifier: string;
   primary_auth_method: "password" | "google" | "passkey";
-  user_id: string | null;
+  user_id: UserId | null;
   challenge_id: number | null;
   state: "totp" | "passkey";
   expires_at: number;
@@ -83,9 +96,10 @@ export interface LoginFlowsTable {
   updated_at: number;
 }
 
+
 export interface NotificationContactsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   channel: "email" | "whatsapp";
   address: string;
   is_primary: number;
@@ -97,7 +111,7 @@ export interface NotificationContactsTable {
 
 export interface NotificationPreferencesTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   event_type: string;
   channel: "email" | "whatsapp";
   is_enabled: number;
@@ -113,7 +127,7 @@ export interface NotificationCampaignsTable {
   audience_ref: string | null;
   title: string | null;
   body_text: string;
-  created_by_user_id: string | null;
+  created_by_user_id: UserId | null;
   status: "queued" | "processing" | "completed" | "failed";
   scheduled_at: number | null;
   created_at: number;
@@ -123,7 +137,7 @@ export interface NotificationCampaignsTable {
 export interface NotificationRecipientsTable {
   id: Generated<number>;
   campaign_id: number;
-  user_id: string | null;
+  user_id: UserId | null;
   channel: "email" | "whatsapp";
   address: string;
   status: "pending" | "sent" | "failed" | "skipped";
@@ -132,6 +146,7 @@ export interface NotificationRecipientsTable {
   sent_at: number | null;
   failed_at: number | null;
 }
+
 
 export interface NotificationJobsTable {
   id: Generated<number>;
@@ -212,36 +227,39 @@ export interface SearchPolicyOverridesTable {
 }
 
 export interface OrganizationsTable {
-  id: string;
+  id: OrganizationId;
   ruc: string;
   name: string;
-  locked_branch_id: string | null;
+  locked_branch_id: BranchId | null;
   locked_at: number | null;
-  locked_by_user_id: string | null;
+  locked_by_user_id: UserId | null;
   created_at: number;
 }
 
+
 export interface ContactsTable {
-  id: string;
-  organization_id: string;
+  id: ContactId;
+  organization_id: OrganizationId;
   dni: string;
   name: string;
   phone_primary: string | null;
   phone_secondary: string | null;
   last_contacted_at: number | null;
-  last_contacted_by_user_id: string | null;
+  last_contacted_by_user_id: UserId | null;
   cooldown_until: number | null;
   created_at: number;
 }
 
+
 export interface LeadAssignmentsTable {
-  id: string;
-  user_id: string;
-  contact_id: string;
+  id: AssignmentId;
+  user_id: UserId;
+  contact_id: ContactId;
   assigned_at: number;
   expires_at: number;
   status: "active" | "completed" | "expired";
 }
+
 
 export interface SalesRecordsTable {
   id: Generated<number>;
@@ -252,9 +270,9 @@ export interface SalesRecordsTable {
     | "confirmed"
     | "rejected"
     | "cancelled";
-  executive_user_id: string;
-  lead_assignment_id: string | null;
-  branch_id: string;
+  executive_user_id: UserId;
+  lead_assignment_id: AssignmentId | null;
+  branch_id: BranchId;
   submitted_at: number | null;
   confirmed_at: number | null;
   rejected_at: number | null;
@@ -262,6 +280,7 @@ export interface SalesRecordsTable {
   created_at: number;
   updated_at: number;
 }
+
 
 export interface SalesRecordClientTable {
   sales_record_id: number;
@@ -307,7 +326,7 @@ export interface SalesRecordProductsTable {
 export interface SalesRecordAttemptsTable {
   id: Generated<number>;
   sales_record_id: number;
-  reviewer_user_id: string;
+  reviewer_user_id: UserId;
   outcome:
     | "no_answer"
     | "callback_scheduled"
@@ -318,6 +337,7 @@ export interface SalesRecordAttemptsTable {
   next_attempt_at: number | null;
   created_at: number;
 }
+
 
 export interface LeadPolicyDefaultsTable {
   id: Generated<number>;
@@ -331,33 +351,36 @@ export interface LeadPolicyDefaultsTable {
 
 export interface LeadPolicyOverridesTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   active_buffer_target: number;
   daily_refill_limit: number;
   effective_from: number;
   expires_at: number | null;
-  set_by_user_id: string;
+  set_by_user_id: UserId;
   created_at: number;
 }
+
 
 export interface SearchCapacityGrantsTable {
   id: string;
-  user_id: string;
+  user_id: UserId;
   amount: number;
   reason: string;
-  actor_user_id: string;
+  actor_user_id: UserId;
   created_at: number;
 }
 
+
 export interface SearchUsageReservationsTable {
   id: string;
-  user_id: string;
+  user_id: UserId;
   amount: number;
   status: "pending" | "committed" | "cancelled" | "expired";
   reason: string;
   created_at: number;
   updated_at: number;
 }
+
 
 export interface SearchUsageCommitsTable {
   id: string;
@@ -392,19 +415,21 @@ export interface LeadUsageCommitsTable {
   created_at: number;
 }
 
+
 export interface CapacityRequestsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   kind: "search_extra" | "lead_refill_extra";
   status: "pending" | "approved" | "rejected" | "canceled";
   requested_amount: number;
   reason: string;
   decision_note: string | null;
-  reviewer_user_id: string | null;
+  reviewer_user_id: UserId | null;
   created_at: number;
   updated_at: number;
   decided_at: number | null;
 }
+
 
 export interface ProductsTable {
   id: Generated<number>;
@@ -417,13 +442,14 @@ export interface ProductsTable {
 
 export interface InteractionLogsTable {
   id: Generated<number>;
-  contact_id: string;
-  user_id: string;
+  contact_id: ContactId;
+  user_id: UserId;
   outcome: string;
   notes: string | null;
   duration_seconds: number | null;
   created_at: number;
 }
+
 
 export interface InventoryItemsTable {
   id: Generated<number>;
@@ -504,7 +530,7 @@ export interface ExtensionExecutiveStatusesTable {
 
 export interface AgentStatusLogsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   status:
     | "available"
     | "feedback"
@@ -519,15 +545,17 @@ export interface AgentStatusLogsTable {
   ended_at: number | null;
 }
 
+
 export interface AuditLogsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   action: string;
   entity_type: string;
   entity_id: string;
   changes: string | null;
   created_at: number;
 }
+
 
 export interface AuditActionPoliciesTable {
   action: string;
@@ -581,8 +609,8 @@ export interface AuthFunnelEventsTable {
 
 export interface ReportExportJobsTable {
   id: Generated<number>;
-  requested_by_user_id: string;
-  branch_id: string;
+  requested_by_user_id: UserId;
+  branch_id: BranchId;
   format: "csv" | "xlsx";
   filters_json: string;
   status: "queued" | "running" | "completed" | "failed" | "expired";
@@ -593,37 +621,40 @@ export interface ReportExportJobsTable {
   requested_at: number;
   completed_at: number | null;
   expires_at: number | null;
-  lease_owner: string | null;
+  lease_owner: UserId | null;
   lease_until: number | null;
   attempt_count: number;
   max_attempts: number;
   available_at: number | null;
 }
 
+
 export interface ReportExportDownloadsTable {
   id: Generated<number>;
   export_job_id: number;
-  downloaded_by_user_id: string;
+  downloaded_by_user_id: UserId;
   downloaded_at: number;
   ip_hash: string | null;
   user_agent_hash: string | null;
 }
+
 
 export interface SearchEnrichmentJobsTable {
   id: Generated<number>;
   document_type: "dni" | "ruc";
   document_value: string;
   status: "queued" | "running" | "succeeded" | "failed";
-  requested_by_user_id: string;
+  requested_by_user_id: UserId;
   requested_at: number;
   completed_at: number | null;
-  lease_owner: string | null;
+  lease_owner: UserId | null;
   lease_until: number | null;
   attempt_count: number;
   max_attempts: number;
   next_attempt_at: number;
   last_error: string | null;
 }
+
 
 export interface SearchEnrichmentOverlaysTable {
   document_type: "dni" | "ruc";
@@ -664,13 +695,14 @@ export interface SearchEnrichmentCompletionOutboxTable {
 
 export interface PasskeysTable {
   id: string;
-  user_id: string;
+  user_id: UserId;
   public_key: string;
   counter: number;
   transports: string | null;
   created_at: number;
   last_used_at: number | null;
 }
+
 
 export interface WebauthnChallengesTable {
   id: Generated<number>;
@@ -683,26 +715,28 @@ export interface WebauthnChallengesTable {
 
 export interface UserOAuthAccountsTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   provider: string;
   provider_user_id: string;
   email: string;
   created_at: number;
 }
 
+
 export interface PasswordResetTokensTable {
   id: Generated<number>;
-  user_id: string;
+  user_id: UserId;
   token_hash: string;
   expires_at: number;
   used_at: number | null;
   created_at: number;
 }
 
+
 export interface UserSessionsTable {
   id: string;
-  user_id: string;
-  branch_id: string;
+  user_id: UserId;
+  branch_id: BranchId;
   role: UsersTable["role"];
   session_class: "pre_auth" | "app";
   primary_auth_method: "password" | "google" | "passkey";
@@ -714,6 +748,7 @@ export interface UserSessionsTable {
   last_activity: number;
   expires_at: number;
 }
+
 
 export interface RequestSessionsTable {
   id: string;

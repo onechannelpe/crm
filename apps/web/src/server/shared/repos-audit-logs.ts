@@ -1,20 +1,15 @@
-import type { Insertable } from "kysely";
+import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { AuditReaderQueryFilter } from "~/server/audit-reader/contracts";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { asUserId, type UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
 
 type NewAuditLogRow = Insertable<Database["audit_logs"]>;
-type AuditLogRow = Database["audit_logs"];
-type HydratedAuditLogRow = Omit<AuditLogRow, "user_id"> & { user_id: UserId };
 
-function mapAuditLogRow(row: AuditLogRow): HydratedAuditLogRow {
-  return {
-    ...row,
-    user_id: asUserId(row.user_id),
-  };
-}
+type AuditLogRow = Selectable<Database["audit_logs"]>;
+
+
 
 export function createAuditLogsRepo(db: DatabaseExecutor) {
   return {
@@ -32,9 +27,9 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
         .where("user_id", "=", userId)
         .orderBy("created_at", "desc")
         .limit(limit)
-        .execute()
-        .then((rows) => rows.map(mapAuditLogRow));
+        .execute();
     },
+
 
     findByEntity(entityType: string, entityId: string) {
       return db
@@ -43,9 +38,9 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
         .where("entity_type", "=", entityType)
         .where("entity_id", "=", entityId)
         .orderBy("created_at", "desc")
-        .execute()
-        .then((rows) => rows.map(mapAuditLogRow));
+        .execute();
     },
+
 
     async listRecent(filter: AuditReaderQueryFilter) {
       if (filter.onlyHighRisk) {
@@ -81,7 +76,7 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
           query = query.where("audit_logs.user_id", "=", filter.actorUserId);
         }
 
-        return query.execute().then((rows) => rows.map(mapAuditLogRow));
+        return query.execute();
       }
 
       let query = db
@@ -102,7 +97,7 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
         query = query.where("user_id", "=", filter.actorUserId);
       }
 
-      return query.execute().then((rows) => rows.map(mapAuditLogRow));
+      return query.execute();
     },
   };
 }

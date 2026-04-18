@@ -19,25 +19,14 @@ type NewReportExportDownloadRow = Insertable<
 
 type ExportJobStatus = NewReportExportJobRow["status"];
 
-type ReportExportJobRow = Omit<
-  Selectable<ReportExportJobsTable>,
-  "requested_by_user_id" | "branch_id"
-> & {
-  requested_by_user_id: UserId;
-  branch_id: BranchId;
-};
-
+type ReportExportJobRow = Selectable<ReportExportJobsTable>;
 type ReportExportListRow = ReportExportJobRow & {
   requested_by_name: string;
 };
-
-type ReportExportDownloadRow = Omit<
-  Selectable<ReportExportDownloadsTable>,
-  "downloaded_by_user_id"
-> & {
-  downloaded_by_user_id: UserId;
+type ReportExportDownloadRow = Selectable<ReportExportDownloadsTable> & {
   downloaded_by_name: string;
 };
+
 
 export function createReportExportRepo(db: Kysely<Database>) {
   return {
@@ -54,8 +43,9 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .selectFrom("report_export_jobs")
         .selectAll()
         .where("id", "=", id)
-        .executeTakeFirst() as Promise<ReportExportJobRow | undefined>;
+        .executeTakeFirst();
     },
+
 
     listJobs(
       limit: number,
@@ -71,6 +61,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .select([
           "report_export_jobs.id",
           "report_export_jobs.requested_by_user_id",
+          "report_export_jobs.branch_id",
           "report_export_jobs.format",
           "report_export_jobs.filters_json",
           "report_export_jobs.status",
@@ -81,19 +72,26 @@ export function createReportExportRepo(db: Kysely<Database>) {
           "report_export_jobs.requested_at",
           "report_export_jobs.completed_at",
           "report_export_jobs.expires_at",
+          "report_export_jobs.lease_owner",
+          "report_export_jobs.lease_until",
+          "report_export_jobs.attempt_count",
+          "report_export_jobs.max_attempts",
+          "report_export_jobs.available_at",
           sql<string>`users.names || ' ' || users.first_surname`.as(
             "requested_by_name",
           ),
         ])
+
         .orderBy("report_export_jobs.requested_at", "desc")
         .limit(limit);
       if (scope?.branchId !== undefined) {
         qb = qb.where("report_export_jobs.branch_id", "=", scope.branchId);
       }
-      return qb.execute() as Promise<ReportExportListRow[]>;
+      return qb.execute();
     },
 
-    async leaseQueuedJobs(limit: number, leaseMs: number, leaseOwner: string) {
+
+    async leaseQueuedJobs(limit: number, leaseMs: number, leaseOwner: UserId) {
       const now = Date.now();
       const leaseUntil = now + leaseMs;
       const candidates = await db
@@ -152,8 +150,9 @@ export function createReportExportRepo(db: Kysely<Database>) {
 
       return leased.filter(
         (job): job is NonNullable<(typeof leased)[number]> => job !== null,
-      ) as unknown as Promise<ReportExportJobRow[]>;
+      );
     },
+
 
     updateJobStatus(
       id: number,
@@ -170,7 +169,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
 
     async extendLease(
       id: number,
-      workerId: string,
+      workerId: UserId,
       leaseMs: number,
     ): Promise<boolean> {
       const now = Date.now();
@@ -184,6 +183,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
 
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
+
 
     scheduleRetry(id: number, availableAt: number) {
       return db
@@ -200,7 +200,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
 
     markJobCompleted(
       id: number,
-      leaseOwner: string,
+      leaseOwner: UserId,
       rowsCount: number,
       fileStorageKey: string,
       fileSha256: string,
@@ -228,7 +228,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
 
     markJobFailed(
       id: number,
-      leaseOwner: string,
+      leaseOwner: UserId,
       errorMessage: string,
       completedAt: number,
     ) {
@@ -245,6 +245,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .where("lease_owner", "=", leaseOwner)
         .execute();
     },
+
 
     listJobsToExpire(limit: number, now: number) {
       return db
@@ -303,7 +304,8 @@ export function createReportExportRepo(db: Kysely<Database>) {
         ])
         .where("report_export_downloads.export_job_id", "=", exportJobId)
         .orderBy("report_export_downloads.downloaded_at", "desc")
-        .execute() as Promise<ReportExportDownloadRow[]>;
+        .execute();
     },
+
   };
 }

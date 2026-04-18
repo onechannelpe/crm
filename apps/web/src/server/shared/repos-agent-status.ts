@@ -8,12 +8,13 @@ type AgentStatus = AgentStatusLogsTable["status"];
 export function createAgentStatusRepo(db: Kysely<Database>) {
   return {
     create(values: {
-      user_id: number;
+      user_id: UserId;
       status: AgentStatus;
       latitude: number;
       longitude: number;
       comment?: string;
     }) {
+
       return db
         .insertInto("agent_status_logs")
         .values({

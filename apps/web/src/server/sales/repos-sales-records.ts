@@ -1,7 +1,16 @@
-import { sql, type Insertable, type Kysely } from "kysely";
+import { sql, type Insertable, type Kysely, type Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import { type BranchId, type UserId } from "~/server/shared/ids";
+import type { 
+  SalesRecordRecord, 
+  SalesRecordClientRecord,
+  SalesRecordAddressSnapshot,
+  SalesRecordProductSnapshot,
+  PendingSalesRecordQueueRecord,
+  ConfirmedSalesRecordQueueRecord,
+  SalesRecordAttemptDetailRecord
+} from "../sales-records/application/ports/sales-record-repository";
 
 type NewSalesRecordRow = Insertable<Database["sales_records"]>;
 type NewSalesRecordClientRow = Insertable<Database["sales_record_client"]>;
@@ -19,16 +28,16 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
       return Number(result.insertId);
     },
 
-    findById(id: number) {
-      return db
+    async findById(id: number): Promise<SalesRecordRecord | undefined> {
+      return await db
         .selectFrom("sales_records")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
     },
 
-    listByExecutive(executiveUserId: UserId, limit: number) {
-      return db
+    async listByExecutive(executiveUserId: UserId, limit: number): Promise<SalesRecordRecord[]> {
+      return await db
         .selectFrom("sales_records")
         .selectAll()
         .where("executive_user_id", "=", executiveUserId)
@@ -50,8 +59,8 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
       return row?.count ?? 0;
     },
 
-    listByBranch(branchId: BranchId, limit: number) {
-      return db
+    async listByBranch(branchId: BranchId, limit: number): Promise<SalesRecordRecord[]> {
+      return await db
         .selectFrom("sales_records")
         .selectAll()
         .where("branch_id", "=", branchId)
@@ -59,6 +68,8 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .limit(limit)
         .execute();
     },
+
+
 
     listPendingWithClient(scope?: { branchId?: BranchId }) {
       let qb = db
@@ -239,8 +250,8 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    listAttemptsByRecord(salesRecordId: number) {
-      return db
+    async listAttemptsByRecord(salesRecordId: number): Promise<SalesRecordAttemptDetailRecord[]> {
+      return await db
         .selectFrom("sales_record_attempts")
         .innerJoin(
           "users",
@@ -263,5 +274,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .orderBy("sales_record_attempts.created_at", "desc")
         .execute();
     },
+
+
   };
 }

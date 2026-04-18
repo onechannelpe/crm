@@ -1,6 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { type ContactId } from "~/server/shared/ids";
 
 type NewInteractionLogRow = Insertable<Database["interaction_logs"]>;
 
@@ -13,7 +14,7 @@ export function createInteractionLogsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    findByContact(contactId: number) {
+    findByContact(contactId: ContactId) {
       return db
         .selectFrom("interaction_logs")
         .selectAll()

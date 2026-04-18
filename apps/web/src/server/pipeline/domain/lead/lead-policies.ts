@@ -15,9 +15,10 @@ import type { LeadMutationIntent, LeadOperation } from "./lead-types";
 export function authorizeLeadOperation(input: {
   actorUserId: UserId;
   actorRole: Role;
-  leadExecutiveId: number;
+  leadExecutiveId: UserId;
   operation: LeadOperation;
 }): Result<void, DomainError> {
+
   const capabilities = resolveLeadCapabilities(input.actorRole);
 
   if (!capabilities.canViewDetail) {
@@ -64,9 +65,10 @@ export function validateLeadIntent(
   ) {
     return invalidLeadStage();
   }
-  if (intent.kind === "reassign" && intent.toExecutiveId <= 0) {
+  if (intent.kind === "reassign" && !intent.toExecutiveId) {
     return invalidLeadInput("invalid_executive", "Invalid executive id");
   }
+
   if (intent.kind === "approve_for_sale" && currentStage !== "QUOTED") {
     return invalidLeadStage();
   }
