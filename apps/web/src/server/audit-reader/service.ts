@@ -1,4 +1,5 @@
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { asUserId, isUserId, type UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import {
@@ -18,6 +19,13 @@ function trimOrUndefined(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   if (!trimmed) return undefined;
   return trimmed;
+}
+
+function parseAuditUserId(value: string): UserId {
+  if (!isUserId(value)) {
+    throw new Error("audit event row has invalid user_id");
+  }
+  return asUserId(value);
 }
 
 export function createAuditReaderService(deps: AuditReaderDeps) {
@@ -41,9 +49,12 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
         throw new Error("limit must be <= 200");
       }
 
-      let actorUserId: number | undefined;
+      let actorUserId: UserId | undefined;
       if (params?.actorUserId !== undefined) {
-        actorUserId = assertPositiveInt(params.actorUserId, "actorUserId");
+        if (!isUserId(params.actorUserId)) {
+          throw new Error("actorUserId is invalid");
+        }
+        actorUserId = asUserId(params.actorUserId);
       }
 
       const now = Date.now();
@@ -64,9 +75,9 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
       return {
         windowMinutes,
         events: events.map((row) => ({
-          id: row.id,
+          id: Number(row.id),
           createdAt: row.created_at,
-          userId: row.user_id,
+          userId: parseAuditUserId(row.user_id),
           action: row.action,
           entityType: row.entity_type,
           entityId: row.entity_id,

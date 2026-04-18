@@ -1,5 +1,6 @@
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { asTeamId } from "~/server/shared/ids";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
@@ -21,7 +22,7 @@ export function createInviteManagementContext(
   return {
     async listTeamsByBranch(branchId) {
       const teams = await repos.teams.findByBranch(branchId);
-      return teams.map((team) => ({ id: team.id, name: team.name }));
+      return teams.map((team) => ({ id: asTeamId(team.id), name: team.name }));
     },
     listPendingInvites(branchId) {
       return inviteService.listPendingInvites(branchId);

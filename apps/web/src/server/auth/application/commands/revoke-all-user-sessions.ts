@@ -4,6 +4,7 @@ import {
 } from "~/lib/contracts/audit";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { AdminSessionRevocationPort } from "../ports";
@@ -11,7 +12,7 @@ import type { AdminSessionRevocationPort } from "../ports";
 export async function revokeAllUserSessions(
   ctx: AppContext,
   port: AdminSessionRevocationPort,
-  input: { targetUserId: number },
+  input: { targetUserId: UserId },
 ): Promise<Result<{ success: true }, DomainError>> {
   const now = ctx.now();
   await port.invalidateUserSessions(input.targetUserId);

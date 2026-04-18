@@ -1,3 +1,5 @@
+import type { UserId } from "~/server/shared/ids";
+
 export const AUDIT_READER_MAX_LIMIT = 200;
 export const AUDIT_READER_DEFAULT_LIMIT = 80;
 export const AUDIT_READER_MAX_WINDOW_MINUTES = 60 * 24 * 30;
@@ -10,7 +12,7 @@ export interface AuditReaderFilterInput {
   limit?: number;
   action?: string;
   entityType?: string;
-  actorUserId?: number;
+  actorUserId?: UserId;
   onlyHighRisk?: boolean;
 }
 
@@ -20,14 +22,14 @@ export interface AuditReaderQueryFilter {
   limit: number;
   action?: string;
   entityType?: string;
-  actorUserId?: number;
+  actorUserId?: UserId;
   onlyHighRisk?: boolean;
 }
 
 export interface AuditReaderEvent {
   id: number;
   createdAt: number;
-  userId: number;
+  userId: UserId;
   action: string;
   entityType: string;
   entityId: string;
@@ -44,7 +46,7 @@ export interface AuditActionPolicyItem {
   riskLevel: AuditPolicyRiskLevel;
   isActive: boolean;
   isProtected: boolean;
-  updatedByUserId: number | null;
+  updatedByUserId: UserId | null;
   updatedAt: number;
   createdAt: number;
 }

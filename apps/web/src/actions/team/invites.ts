@@ -31,7 +31,7 @@ export async function createTeamInvite(input: {
   email: string;
   role: string;
   executiveCategory?: string | null;
-  teamId?: number | null;
+  teamId?: string | null;
   expiresAt?: number | null;
 }): Promise<{ inviteId: number }> {
   const safeInput = parseCreateTeamInviteInput(input);

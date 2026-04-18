@@ -16,6 +16,13 @@ import type {
 
 export type NewUserSessionRow = Insertable<Database["user_sessions"]>;
 export type UserSessionRow = Selectable<Database["user_sessions"]>;
+export type HydratedUserSessionRow = Omit<
+  UserSessionRow,
+  "user_id" | "branch_id"
+> & {
+  user_id: UserId;
+  branch_id: BranchId;
+};
 
 export interface AuthContextUsersPort {
   findById(userId: UserId): Promise<Selectable<UsersTable> | undefined>;
@@ -30,7 +37,7 @@ export interface AuthContextDeps {
 
 export interface SessionRepositoryPort {
   create(session: NewUserSessionRow): Promise<void>;
-  findById(id: string): Promise<UserSessionRow | null | undefined>;
+  findById(id: string): Promise<HydratedUserSessionRow | null | undefined>;
   updateActivity(id: string, lastActivity: number): Promise<void>;
   extendExpiry(id: string, expiresAt: number): Promise<void>;
   delete(id: string): Promise<void>;
@@ -41,7 +48,7 @@ export interface SessionUsersPort {
   findById(
     userId: UserId,
   ): Promise<
-    { id: number; is_active: number; expires_at: number | null } | undefined
+    { id: UserId; is_active: number; expires_at: number | null } | undefined
   >;
   deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
 }

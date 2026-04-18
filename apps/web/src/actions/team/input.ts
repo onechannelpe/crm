@@ -24,7 +24,7 @@ export function parseCreateTeamInviteInput(input: {
   email: string;
   role: string;
   executiveCategory?: string | null;
-  teamId?: number | null;
+  teamId?: string | null;
   expiresAt?: number | null;
 }): {
   names: string;

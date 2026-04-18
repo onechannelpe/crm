@@ -1,6 +1,8 @@
+import type { UserId } from "~/server/shared/ids";
+
 export interface SalesRecordAuditLogPort {
   create(values: {
-    user_id: number;
+    user_id: UserId;
     action: string;
     entity_type: string;
     entity_id: string;

@@ -2,13 +2,14 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { AuditPolicyRiskLevel } from "~/server/audit-reader/contracts";
+import type { UserId } from "~/server/shared/ids";
 
 export interface UpsertAuditActionPolicyInput {
   action: string;
   risk_level: AuditPolicyRiskLevel;
   is_active: number;
   is_protected: number;
-  updated_by_user_id: number | null;
+  updated_by_user_id: UserId | null;
   now: number;
 }
 

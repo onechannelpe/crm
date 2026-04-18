@@ -2,7 +2,12 @@ import type { Selectable } from "kysely";
 
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import type { Database, UsersTable } from "~/lib/db/types";
-import { asBranchId, asUserId, type BranchId, type UserId } from "~/server/shared/ids";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 type UserRow = Selectable<UsersTable>;
 type UserSessionRow = Selectable<Database["user_sessions"]>;

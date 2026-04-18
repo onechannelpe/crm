@@ -1,16 +1,46 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { createContactId } from "~/server/shared/ids";
+import {
+  asContactId,
+  asOrganizationId,
+  asUserId,
+  createContactId,
+  type ContactId,
+  type OrganizationId,
+  type UserId,
+} from "~/server/shared/ids";
+
+type HydratedContactRow = Omit<
+  Database["contacts"],
+  "id" | "organization_id" | "last_contacted_by_user_id"
+> & {
+  id: ContactId;
+  organization_id: OrganizationId;
+  last_contacted_by_user_id: UserId | null;
+};
+
+function mapContactRow(row: Database["contacts"]): HydratedContactRow {
+  return {
+    ...row,
+    id: asContactId(row.id),
+    organization_id: asOrganizationId(row.organization_id),
+    last_contacted_by_user_id:
+      row.last_contacted_by_user_id === null
+        ? null
+        : asUserId(row.last_contacted_by_user_id),
+  };
+}
 
 export function createContactsRepo(db: Kysely<Database>) {
   return {
-    findById(id: string) {
+    findById(id: ContactId) {
       return db
         .selectFrom("contacts")
         .selectAll()
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapContactRow(row) : undefined));
     },
 
     findByDni(dni: string) {
@@ -18,11 +48,12 @@ export function createContactsRepo(db: Kysely<Database>) {
         .selectFrom("contacts")
         .selectAll()
         .where("dni", "=", dni)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapContactRow(row) : undefined));
     },
 
     async findOrCreate(
-      orgId: string,
+      orgId: OrganizationId,
       dni: string,
       name: string,
       phonePrimary: string | null,
@@ -50,7 +81,7 @@ export function createContactsRepo(db: Kysely<Database>) {
       return created;
     },
 
-    updateCooldown(id: string, userId: string, cooldownUntil: number) {
+    updateCooldown(id: ContactId, userId: UserId, cooldownUntil: number) {
       return db
         .updateTable("contacts")
         .set({

@@ -1,3 +1,5 @@
+import type { BranchId, UserId } from "~/server/shared/ids";
+
 import type {
   ExtensionExecutivePresenceStatus,
   ExtensionRuntimeEventEnvelope,
@@ -5,7 +7,6 @@ import type {
   TeamExecutiveStatusView,
 } from "../contracts";
 import type { createExtensionRuntimeRepo } from "../repos";
-import type { BranchId, UserId } from "~/server/shared/ids";
 
 export const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
 export const EXECUTIVE_SYNC_STALE_AFTER_MS = 2 * 60_000;

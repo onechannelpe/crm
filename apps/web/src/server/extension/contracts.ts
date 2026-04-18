@@ -223,7 +223,11 @@ export function isExtensionSyncHealth(
 export function isCreateExtensionHandoffTokenRequest(
   value: unknown,
 ): value is CreateExtensionHandoffTokenRequest {
-  return isPlainRecord(value) && isAssignmentId(value.assignmentId);
+  return (
+    isPlainRecord(value) &&
+    typeof value.assignmentId === "string" &&
+    isAssignmentId(value.assignmentId)
+  );
 }
 
 export function isClaimExtensionSessionRequest(
@@ -253,8 +257,11 @@ function isExecutivePresencePayload(
     isPlainRecord(value) &&
     isExtensionExecutivePresenceStatus(value.presenceStatus) &&
     value.presenceStatus !== "offline" &&
-    (value.assignmentId === null || isAssignmentId(value.assignmentId)) &&
-    (value.contactId === null || isContactId(value.contactId)) &&
+    (value.assignmentId === null ||
+      (typeof value.assignmentId === "string" &&
+        isAssignmentId(value.assignmentId))) &&
+    (value.contactId === null ||
+      (typeof value.contactId === "string" && isContactId(value.contactId))) &&
     (value.callSessionId === null || typeof value.callSessionId === "string") &&
     typeof value.updatedAt === "number"
   );
@@ -269,7 +276,9 @@ function isCallLifecyclePayload(value: unknown): value is CallLifecyclePayload {
     case "started":
       return (
         typeof value.sessionId === "string" &&
+        typeof value.assignmentId === "string" &&
         isAssignmentId(value.assignmentId) &&
+        typeof value.contactId === "string" &&
         isContactId(value.contactId) &&
         typeof value.phone === "string" &&
         typeof value.at === "number"

@@ -5,14 +5,14 @@ import type {
   SessionClass,
   StrongAuthMethod,
 } from "~/lib/auth/core/session-contract";
-import type { UserSessionRow } from "~/lib/auth/types";
+import type { HydratedUserSessionRow } from "~/lib/auth/types";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
 export interface SessionRepositoryPort {
   create(session: {
     id: string;
-    user_id: number;
-    branch_id: number;
+    user_id: UserId;
+    branch_id: BranchId;
     role: Role;
     session_class: SessionClass;
     primary_auth_method: PrimaryAuthMethod;
@@ -24,7 +24,7 @@ export interface SessionRepositoryPort {
     last_activity: number;
     expires_at: number;
   }): Promise<void>;
-  findById(id: string): Promise<UserSessionRow | null | undefined>;
+  findById(id: string): Promise<HydratedUserSessionRow | null | undefined>;
   updateActivity(id: string, lastActivity: number): Promise<void>;
   extendExpiry(id: string, expiresAt: number): Promise<void>;
   delete(id: string): Promise<void>;
@@ -35,7 +35,7 @@ export interface SessionUsersPort {
   findById(
     userId: UserId,
   ): Promise<
-    { id: number; is_active: number; expires_at: number | null } | undefined
+    { id: UserId; is_active: number; expires_at: number | null } | undefined
   >;
   deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
 }

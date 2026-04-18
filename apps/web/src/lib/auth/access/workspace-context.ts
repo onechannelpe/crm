@@ -1,10 +1,11 @@
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+
 import type { Role } from "./rbac";
 import {
   getWorkspaceScopeForRole,
   requiresStrictTeamHierarchy,
   type WorkspaceScopeType,
 } from "./workspace-scope";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 interface TeamRecord {
   id: TeamId;

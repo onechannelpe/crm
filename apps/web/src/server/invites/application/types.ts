@@ -1,12 +1,12 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 
 export interface InviteAuditPort {
   create(values: {
-    user_id: number;
+    user_id: UserId;
     action: string;
     entity_type: string;
     entity_id: string;
@@ -16,10 +16,10 @@ export interface InviteAuditPort {
 }
 
 export interface InviteUsersPort {
-  findById(id: number): Promise<
+  findById(id: UserId): Promise<
     | {
-        id: number;
-        branch_id: number;
+        id: UserId;
+        branch_id: BranchId;
         role: Role;
         email: string;
         names: string;
@@ -31,18 +31,19 @@ export interface InviteUsersPort {
   >;
   findByEmail(email: string): Promise<
     | {
-        id: number;
-        branch_id: number;
+        id: UserId;
+        branch_id: BranchId;
         role: Role;
         email: string;
         is_active: number;
       }
     | undefined
   >;
-  findByUsername(username: string): Promise<{ id: number } | undefined>;
+  findByUsername(username: string): Promise<{ id: UserId } | undefined>;
   create(values: {
-    branch_id: number;
-    team_id?: number | null;
+    id: UserId;
+    branch_id: BranchId;
+    team_id?: TeamId | null;
     username: string;
     email: string;
     password_hash: string;
@@ -54,11 +55,11 @@ export interface InviteUsersPort {
     role: Role;
     executive_category?: ExecutiveCategoryValue | null;
     is_active: number;
-  }): Promise<number>;
+  }): Promise<UserId>;
   updateInviteProvisioning(
-    id: number,
+    id: UserId,
     values: {
-      team_id: number | null;
+      team_id: TeamId | null;
       names: string;
       first_surname: string;
       second_surname: string;
@@ -67,14 +68,14 @@ export interface InviteUsersPort {
       is_active: number;
     },
   ): Promise<unknown>;
-  updatePassword(id: number, passwordHash: string): Promise<unknown>;
+  updatePassword(id: UserId, passwordHash: string): Promise<unknown>;
 }
 
 export interface InviteTeamsPort {
-  findByIdWithSupervisor(id: number): Promise<
+  findByIdWithSupervisor(id: TeamId): Promise<
     | {
-        id: number;
-        branch_id: number;
+        id: TeamId;
+        branch_id: BranchId;
       }
     | undefined
   >;
@@ -85,13 +86,13 @@ export interface InviteWithUserRecord {
   invite_status: "pending" | "accepted" | "revoked" | "expired";
   invite_expires_at: number;
   invite_created_at: number;
-  invite_created_by_user_id: number;
+  invite_created_by_user_id: UserId;
   invite_sent_at: number | null;
-  user_id: number;
+  user_id: UserId;
   user_email: string;
   user_role: Role;
-  user_branch_id: number;
-  user_team_id: number | null;
+  user_branch_id: BranchId;
+  user_team_id: TeamId | null;
   user_names: string;
   user_first_surname: string;
   user_second_surname: string;
@@ -101,28 +102,28 @@ export interface InviteWithUserRecord {
 
 export interface InviteUserInvitesPort {
   create(values: {
-    user_id: number;
-    branch_id: number;
+    user_id: UserId;
+    branch_id: BranchId;
     email: string;
     role: Role;
     token_hash: string;
     status: "pending";
     expires_at: number;
-    created_by_user_id: number;
+    created_by_user_id: UserId;
     accepted_at: null;
     revoked_at: null;
     created_at: number;
     sent_at: null;
   }): Promise<number>;
   findLatestPendingByBranch(
-    branchId: number,
+    branchId: BranchId,
     now: number,
   ): Promise<InviteWithUserRecord[]>;
   findById(inviteId: number): Promise<
     | {
         id: number;
-        user_id: number;
-        branch_id: number;
+        user_id: UserId;
+        branch_id: BranchId;
         status: "pending" | "accepted" | "revoked" | "expired";
         expires_at: number;
       }
@@ -132,7 +133,7 @@ export interface InviteUserInvitesPort {
     tokenHash: string,
     now: number,
   ): Promise<InviteWithUserRecord | undefined>;
-  revokePendingByUser(userId: number, revokedAt: number): Promise<unknown>;
+  revokePendingByUser(userId: UserId, revokedAt: number): Promise<unknown>;
   expirePendingBefore(now: number): Promise<unknown>;
   markAccepted(inviteId: number, acceptedAt: number): Promise<unknown>;
   markSent(inviteId: number, sentAt: number): Promise<unknown>;
@@ -165,16 +166,16 @@ export interface InviteRuntime {
 
 export interface PendingBranchInvite {
   inviteId: number;
-  userId: number;
+  userId: UserId;
   email: string;
   names: string;
   firstSurname: string;
   secondSurname: string;
   role: Role;
-  teamId: number | null;
+  teamId: TeamId | null;
   expiresAt: number;
   createdAt: number;
-  createdByUserId: number;
+  createdByUserId: UserId;
   sentAt: number | null;
 }
 
@@ -188,7 +189,7 @@ export interface CreateInviteInput {
   email: string;
   role: Role;
   executiveCategory?: ExecutiveCategoryValue | null;
-  teamId: number | null;
+  teamId: TeamId | null;
   expiresAt?: number | null;
 }
 
@@ -212,9 +213,9 @@ export interface AcceptInviteInput {
 }
 
 export interface IssueInviteInput {
-  actorUserId: number;
-  branchId: number;
-  userId: number;
+  actorUserId: UserId;
+  branchId: BranchId;
+  userId: UserId;
   email: string;
   role: Role;
   expiresAt?: number | null;
@@ -250,13 +251,15 @@ export interface InviteService {
 }
 
 export interface TeamInviteReadTeamsPort {
-  findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
+  findByBranch(
+    branchId: BranchId,
+  ): Promise<Array<{ id: TeamId; name: string }>>;
 }
 
 export interface TeamInviteReadUsersPort {
-  findById(id: number): Promise<
+  findById(id: UserId): Promise<
     | {
-        id: number;
+        id: UserId;
         email: string;
         role: Role;
         names: string;
@@ -268,7 +271,7 @@ export interface TeamInviteReadUsersPort {
 }
 
 export interface TeamInviteReadUserInvitesPort {
-  findById(inviteId: number): Promise<{ user_id: number } | undefined>;
+  findById(inviteId: number): Promise<{ user_id: UserId } | undefined>;
   findPendingByTokenHash(
     tokenHash: string,
     now: number,

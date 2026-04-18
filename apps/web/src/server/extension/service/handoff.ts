@@ -1,6 +1,6 @@
 import { env } from "~/lib/env";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import type { AssignmentId, BranchId, UserId } from "~/server/shared/ids";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,

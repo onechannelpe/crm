@@ -1,6 +1,7 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 type UserTotpFactorRow = Selectable<Database["user_totp_factors"]>;
 type NewUserTotpFactorRow = Insertable<Database["user_totp_factors"]>;
@@ -11,7 +12,7 @@ type NewUserTotpRecoveryCodeRow = Insertable<
 
 export function createUserTotpFactorsRepo(db: Kysely<Database>) {
   return {
-    findByUserId(userId: number): Promise<UserTotpFactorRow | undefined> {
+    findByUserId(userId: UserId): Promise<UserTotpFactorRow | undefined> {
       return db
         .selectFrom("user_totp_factors")
         .selectAll()
@@ -20,7 +21,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
     },
 
     async createOrRotate(
-      userId: number,
+      userId: UserId,
       secretEncrypted: string,
     ): Promise<UserTotpFactorRow> {
       const now = Date.now();
@@ -51,7 +52,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    async markEnabled(userId: number): Promise<void> {
+    async markEnabled(userId: UserId): Promise<void> {
       const now = Date.now();
       await db
         .updateTable("user_totp_factors")
@@ -64,7 +65,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async disable(userId: number): Promise<void> {
+    async disable(userId: UserId): Promise<void> {
       const now = Date.now();
       await db
         .updateTable("user_totp_factors")
@@ -82,7 +83,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
 export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
   return {
     async replaceForUser(
-      userId: number,
+      userId: UserId,
       codeHashes: string[],
     ): Promise<UserTotpRecoveryCodeRow[]> {
       await db
@@ -111,7 +112,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    listUnusedByUser(userId: number): Promise<UserTotpRecoveryCodeRow[]> {
+    listUnusedByUser(userId: UserId): Promise<UserTotpRecoveryCodeRow[]> {
       return db
         .selectFrom("user_totp_recovery_codes")
         .selectAll()
@@ -130,7 +131,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    deleteAllByUser(userId: number): Promise<void> {
+    deleteAllByUser(userId: UserId): Promise<void> {
       return db
         .deleteFrom("user_totp_recovery_codes")
         .where("user_id", "=", userId)

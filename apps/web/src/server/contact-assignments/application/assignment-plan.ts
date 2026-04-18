@@ -24,7 +24,7 @@ export type AssignmentPlanRepos = {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: number): Promise<number> };
+  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
 };
 
 export type ContactAssignmentPlan = {

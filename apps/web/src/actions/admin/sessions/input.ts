@@ -1,15 +1,16 @@
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
+import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { asUserId, isUserId, type UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseUserSessionsInput(
-  userId: number,
-): Result<{ userId: number }, DomainError> {
+  userId: string,
+): Result<{ userId: UserId }, DomainError> {
   try {
-    return Ok({ userId: assertPositiveInt(userId, "userId") });
+    if (!isUserId(userId)) {
+      throw new Error("Invalid userId");
+    }
+    return Ok({ userId: asUserId(userId) });
   } catch (error) {
     return Err(
       domainError(
@@ -23,12 +24,15 @@ export function parseUserSessionsInput(
 
 export function parseRevokeUserSessionInput(input: {
   sessionId: string;
-  targetUserId: number;
-}): Result<{ sessionId: string; targetUserId: number }, DomainError> {
+  targetUserId: string;
+}): Result<{ sessionId: string; targetUserId: UserId }, DomainError> {
   try {
+    if (!isUserId(input.targetUserId)) {
+      throw new Error("Invalid targetUserId");
+    }
     return Ok({
       sessionId: assertNonEmptyString(input.sessionId, "sessionId"),
-      targetUserId: assertPositiveInt(input.targetUserId, "targetUserId"),
+      targetUserId: asUserId(input.targetUserId),
     });
   } catch (error) {
     return Err(
@@ -42,11 +46,14 @@ export function parseRevokeUserSessionInput(input: {
 }
 
 export function parseRevokeAllUserSessionsInput(
-  targetUserId: number,
-): Result<{ targetUserId: number }, DomainError> {
+  targetUserId: string,
+): Result<{ targetUserId: UserId }, DomainError> {
   try {
+    if (!isUserId(targetUserId)) {
+      throw new Error("Invalid targetUserId");
+    }
     return Ok({
-      targetUserId: assertPositiveInt(targetUserId, "targetUserId"),
+      targetUserId: asUserId(targetUserId),
     });
   } catch (error) {
     return Err(

@@ -1,4 +1,9 @@
-import type { BranchId, CapacityRequestId, TeamId, UserId } from "~/server/shared/ids";
+import type {
+  BranchId,
+  CapacityRequestId,
+  TeamId,
+  UserId,
+} from "~/server/shared/ids";
 
 export type CapacityRequestKind = "search_extra" | "lead_refill";
 export type CapacityRequestStatus =

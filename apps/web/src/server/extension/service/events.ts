@@ -1,11 +1,11 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   isAssignmentId,
   isContactId,
   type BranchId,
   type UserId,
 } from "~/server/shared/ids";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
   type ExtensionRuntimeEventEnvelope,
@@ -63,11 +63,13 @@ export async function ingestRuntimeEvent(
     const payloadText = JSON.stringify(input.event.payload);
     const eventAssignmentId =
       "assignmentId" in input.event.payload &&
+      typeof input.event.payload.assignmentId === "string" &&
       isAssignmentId(input.event.payload.assignmentId)
         ? input.event.payload.assignmentId
         : null;
     const eventContactId =
       "contactId" in input.event.payload &&
+      typeof input.event.payload.contactId === "string" &&
       isContactId(input.event.payload.contactId)
         ? input.event.payload.contactId
         : null;

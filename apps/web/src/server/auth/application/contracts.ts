@@ -1,13 +1,13 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import type { WorkspaceScopeType } from "~/lib/auth/access/workspace-scope";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type {
   PrimaryAuthMethod,
   SessionClass,
   StrongAuthMethod,
 } from "~/lib/auth/core/session-contract";
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 export interface CurrentUserView {
   id: UserId;

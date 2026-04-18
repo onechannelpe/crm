@@ -6,6 +6,8 @@ import {
 } from "~/lib/contracts/guards";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
+  asBranchId,
+  asTeamId,
   isBranchId,
   isTeamId,
   isUserId,
@@ -270,33 +272,41 @@ export function parseLeadPolicyOverrideInput(input: {
 
 export function parseScopeDefaultInput(input: {
   scopeType: "branch" | "team";
-  scopeId: BranchId | TeamId;
+  scopeId: unknown;
 }): Result<
   | { scopeType: "branch"; scopeId: BranchId }
   | { scopeType: "team"; scopeId: TeamId },
   DomainError
 > {
   try {
-    if (input.scopeType === "branch" && !isBranchId(input.scopeId)) {
-      return Err(
-        domainError("validation", "capacity.policy.scope.invalid", "Invalid branch scopeId"),
-      );
-    }
-    if (input.scopeType === "team" && !isTeamId(input.scopeId)) {
-      return Err(
-        domainError("validation", "capacity.policy.scope.invalid", "Invalid team scopeId"),
-      );
-    }
     if (input.scopeType === "branch") {
+      if (typeof input.scopeId !== "string" || !isBranchId(input.scopeId)) {
+        return Err(
+          domainError(
+            "validation",
+            "capacity.policy.scope.invalid",
+            "Invalid branch scopeId",
+          ),
+        );
+      }
       return Ok({
         scopeType: "branch",
-        scopeId: input.scopeId,
+        scopeId: asBranchId(input.scopeId),
       });
     }
     if (input.scopeType === "team") {
+      if (typeof input.scopeId !== "string" || !isTeamId(input.scopeId)) {
+        return Err(
+          domainError(
+            "validation",
+            "capacity.policy.scope.invalid",
+            "Invalid team scopeId",
+          ),
+        );
+      }
       return Ok({
         scopeType: "team",
-        scopeId: input.scopeId,
+        scopeId: asTeamId(input.scopeId),
       });
     }
     input.scopeType satisfies never;

@@ -11,7 +11,7 @@ import { isErr, Ok } from "~/server/shared/result";
 
 import { parseUserSessionsInput } from "./input";
 
-export async function listUserSessions(userId: number) {
+export async function listUserSessions(userId: string) {
   const parsedInput = parseUserSessionsInput(userId);
   if (isErr(parsedInput)) {
     throw validationError(parsedInput.error.message);

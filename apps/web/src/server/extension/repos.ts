@@ -42,6 +42,44 @@ import type {
   TeamExecutiveStatusView,
 } from "~/server/extension/contracts";
 
+type HydratedHandoffRow = Omit<
+  Database["extension_handoffs"],
+  "user_id" | "branch_id" | "assignment_id"
+> & {
+  user_id: UserId;
+  branch_id: BranchId;
+  assignment_id: AssignmentId;
+};
+
+type HydratedInstallationSessionRow = Omit<
+  Database["extension_installation_sessions"],
+  "user_id" | "branch_id"
+> & {
+  user_id: UserId;
+  branch_id: BranchId;
+};
+
+function mapHandoffRow(
+  row: Database["extension_handoffs"],
+): HydratedHandoffRow {
+  return {
+    ...row,
+    user_id: asUserId(row.user_id),
+    branch_id: asBranchId(row.branch_id),
+    assignment_id: asAssignmentId(row.assignment_id),
+  };
+}
+
+function mapInstallationSessionRow(
+  row: Database["extension_installation_sessions"],
+): HydratedInstallationSessionRow {
+  return {
+    ...row,
+    user_id: asUserId(row.user_id),
+    branch_id: asBranchId(row.branch_id),
+  };
+}
+
 export function createExtensionRuntimeRepo(db: Kysely<Database>) {
   return {
     createHandoff(values: {
@@ -65,7 +103,8 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .selectFrom("extension_handoffs")
         .selectAll()
         .where("jti", "=", jti)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapHandoffRow(row) : undefined));
     },
 
     consumeHandoff(values: {
@@ -119,7 +158,8 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .where("installation_id", "=", installation_id)
         .where("revoked_at", "is", null)
         .where("expires_at", ">", now)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapInstallationSessionRow(row) : undefined));
     },
 
     findValidInstallationSession(jti: string, now: number) {
@@ -129,7 +169,8 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .where("jti", "=", jti)
         .where("revoked_at", "is", null)
         .where("expires_at", ">", now)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapInstallationSessionRow(row) : undefined));
     },
 
     findRefreshableInstallationSession(
@@ -144,7 +185,8 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .where("installation_id", "=", installation_id)
         .where("revoked_at", "is", null)
         .where("expires_at", ">", now)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapInstallationSessionRow(row) : undefined));
     },
 
     touchInstallationSession(jti: string, last_seen_at: number) {
@@ -343,7 +385,22 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .selectFrom("extension_executive_statuses")
         .selectAll()
         .where("user_id", "=", userId)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) =>
+          row
+            ? {
+                ...row,
+                user_id: asUserId(row.user_id),
+                branch_id: asBranchId(row.branch_id),
+                assignment_id:
+                  row.assignment_id === null
+                    ? null
+                    : asAssignmentId(row.assignment_id),
+                contact_id:
+                  row.contact_id === null ? null : asContactId(row.contact_id),
+              }
+            : undefined,
+        );
     },
 
     async listTeamStatusesBySupervisor(
@@ -365,7 +422,9 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       }));
     },
 
-    async listBranchStatuses(branchId: BranchId): Promise<TeamExecutiveStatusView[]> {
+    async listBranchStatuses(
+      branchId: BranchId,
+    ): Promise<TeamExecutiveStatusView[]> {
       const rows = await db
         .selectFrom("extension_executive_statuses")
         .$call(withExecutiveStatusJoinsAndSelect)

@@ -1,14 +1,14 @@
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 import type { LeadCandidate } from "~/server/shared/engine/lead-contract";
-import type { UserId } from "~/server/shared/ids";
+import type { ContactId, OrganizationId, UserId } from "~/server/shared/ids";
 
 export type OrganizationRecord = {
-  id: number;
+  id: OrganizationId;
 };
 
 export type ContactRecord = {
-  id: number;
+  id: ContactId;
   cooldown_until: number | null;
 };
 
@@ -18,7 +18,7 @@ export interface AssignContactsTransactionRepos {
   };
   contacts: {
     findOrCreate(
-      organizationId: number,
+      organizationId: OrganizationId,
       dni: string,
       name: string,
       phone: string,
@@ -48,7 +48,7 @@ function groupCandidatesByRuc(
 }
 
 function resolveContactKey(input: {
-  organizationId: number;
+  organizationId: OrganizationId;
   candidate: LeadCandidate;
 }): string {
   return `${input.organizationId}:${input.candidate.dni}:${input.candidate.phone_primary}`;
@@ -57,7 +57,7 @@ function resolveContactKey(input: {
 async function findOrCreateOrganizationsByRuc(
   candidates: LeadCandidate[],
   repos: Pick<AssignContactsTransactionRepos, "organizations">,
-): Promise<Map<string, number>> {
+): Promise<Map<string, OrganizationId>> {
   const orgEntries = await Promise.all(
     [...groupCandidatesByRuc(candidates).entries()].map(
       async ([ruc, candidate]) => {
@@ -65,7 +65,7 @@ async function findOrCreateOrganizationsByRuc(
           ruc,
           candidate.organization_name,
         );
-        const entry: [string, number] = [ruc, organization.id];
+        const entry: [string, OrganizationId] = [ruc, organization.id];
         return entry;
       },
     ),
@@ -76,11 +76,11 @@ async function findOrCreateOrganizationsByRuc(
 
 function collectContactInputsByKey(
   candidates: LeadCandidate[],
-  organizationIdsByRuc: Map<string, number>,
-): Map<string, { organizationId: number; candidate: LeadCandidate }> {
+  organizationIdsByRuc: Map<string, OrganizationId>,
+): Map<string, { organizationId: OrganizationId; candidate: LeadCandidate }> {
   const contactInputByKey = new Map<
     string,
-    { organizationId: number; candidate: LeadCandidate }
+    { organizationId: OrganizationId; candidate: LeadCandidate }
   >();
   for (const candidate of candidates) {
     const organizationId = organizationIdsByRuc.get(candidate.ruc);
@@ -99,7 +99,7 @@ function collectContactInputsByKey(
 async function findOrCreateContactsByKey(
   contactInputByKey: Map<
     string,
-    { organizationId: number; candidate: LeadCandidate }
+    { organizationId: OrganizationId; candidate: LeadCandidate }
   >,
   repos: Pick<AssignContactsTransactionRepos, "contacts">,
 ): Promise<Map<string, ContactRecord>> {
@@ -124,7 +124,7 @@ async function findOrCreateContactsByKey(
 function buildAvailableAssignments(input: {
   actorUserId: UserId;
   candidates: LeadCandidate[];
-  organizationIdsByRuc: Map<string, number>;
+  organizationIdsByRuc: Map<string, OrganizationId>;
   contactsByKey: Map<string, ContactRecord>;
 }) {
   const assignments = [];

@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hashPassword } from "~/lib/auth/password/password";
+import { asBranchId, asUserId } from "~/server/shared/ids";
 
 import type {
   InviteAcceptedResult,
@@ -26,13 +27,13 @@ export function createInviteRuntime(
 }
 
 export function mapAcceptedInviteResult(invite: {
-  user_id: number;
-  user_branch_id: number;
+  user_id: string;
+  user_branch_id: string;
   user_role: Role;
 }): InviteAcceptedResult {
   return {
-    userId: invite.user_id,
-    branchId: invite.user_branch_id,
+    userId: asUserId(invite.user_id),
+    branchId: asBranchId(invite.user_branch_id),
     role: invite.user_role,
   };
 }

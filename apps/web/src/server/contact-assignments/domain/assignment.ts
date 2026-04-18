@@ -1,4 +1,10 @@
 import { config } from "~/lib/config";
+import {
+  createAssignmentId,
+  type AssignmentId,
+  type ContactId,
+  type UserId,
+} from "~/server/shared/ids";
 
 export type ContactAssignmentStatus = "active" | "completed" | "expired";
 
@@ -13,20 +19,22 @@ export type ContactAssignmentCallOutcome =
   (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
 
 export type ContactAssignmentDraft = {
-  user_id: number;
-  contact_id: number;
+  id: AssignmentId;
+  user_id: UserId;
+  contact_id: ContactId;
   assigned_at: number;
   expires_at: number;
   status: ContactAssignmentStatus;
 };
 
 export function createAssignment(
-  userId: number,
-  contactId: number,
+  userId: UserId,
+  contactId: ContactId,
   ttlHours: number = config.leadAssignment.ttlHours,
 ): ContactAssignmentDraft {
   const now = Date.now();
   return {
+    id: createAssignmentId(),
     user_id: userId,
     contact_id: contactId,
     assigned_at: now,

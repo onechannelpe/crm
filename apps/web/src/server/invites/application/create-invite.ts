@@ -1,6 +1,7 @@
 import { canAssignRole } from "~/lib/auth/access/rbac";
 import { generateUsername } from "~/lib/users/generate-username";
 import type { DomainError } from "~/server/shared/domain-error";
+import { createUserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { inviteError } from "../domain/errors";
@@ -84,6 +85,7 @@ export async function createInvite(
 
           const createdUserId = await transactionRepos.users.create(
             buildPendingIdentity({
+              userId: createUserId(),
               branchId: input.branchId,
               teamId: input.teamId,
               username,

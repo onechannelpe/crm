@@ -1,6 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { ActionObservationsTable, Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 type NewActionObservationRow = Insertable<Database["action_observations"]>;
 
@@ -11,7 +12,7 @@ export interface ActionObservationFilter {
   toInclusive: number;
   actionName?: string;
   status?: ObservationStatus;
-  actorUserId?: number;
+  actorUserId?: UserId;
   limit: number;
 }
 
@@ -20,7 +21,7 @@ export interface ActionObservationSummaryFilter {
   toInclusive: number;
   actionName?: string;
   status?: ObservationStatus;
-  actorUserId?: number;
+  actorUserId?: UserId;
 }
 
 export function createActionObservationsRepo(db: Kysely<Database>) {

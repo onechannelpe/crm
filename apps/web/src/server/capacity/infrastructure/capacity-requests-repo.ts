@@ -1,7 +1,13 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import {
+  asBranchId,
+  asTeamId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 export function createCapacityRequestsRepo(db: Kysely<Database>) {
   return {
@@ -31,7 +37,19 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
         .selectFrom("capacity_requests")
         .selectAll()
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) =>
+          row
+            ? {
+                ...row,
+                user_id: asUserId(row.user_id),
+                reviewer_user_id:
+                  row.reviewer_user_id === null
+                    ? null
+                    : asUserId(row.reviewer_user_id),
+              }
+            : undefined,
+        );
     },
 
     listByUser(userId: UserId) {
@@ -40,7 +58,17 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
         .selectAll()
         .where("user_id", "=", userId)
         .orderBy("created_at", "desc")
-        .execute();
+        .execute()
+        .then((rows) =>
+          rows.map((row) => ({
+            ...row,
+            user_id: asUserId(row.user_id),
+            reviewer_user_id:
+              row.reviewer_user_id === null
+                ? null
+                : asUserId(row.reviewer_user_id),
+          })),
+        );
     },
 
     listPendingByBranch(branchId: BranchId) {
@@ -68,7 +96,19 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
         .where("users.branch_id", "=", branchId)
         .where("capacity_requests.status", "=", "pending")
         .orderBy("capacity_requests.created_at", "desc")
-        .execute();
+        .execute()
+        .then((rows) =>
+          rows.map((row) => ({
+            ...row,
+            user_id: asUserId(row.user_id),
+            reviewer_user_id:
+              row.reviewer_user_id === null
+                ? null
+                : asUserId(row.reviewer_user_id),
+            team_id: row.team_id === null ? null : asTeamId(row.team_id),
+            branch_id: asBranchId(row.branch_id),
+          })),
+        );
     },
 
     markApproved(

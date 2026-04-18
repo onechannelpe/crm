@@ -6,8 +6,10 @@ import {
   updateSearchPolicyDefault as updateSearchPolicyDefaultService,
   updateSearchPolicyOverride as updateSearchPolicyOverrideService,
 } from "~/server/capacity/application/commands";
+import type { ScopeRef } from "~/server/capacity/domain/types";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 import {
   parseLeadPolicyOverrideInput,
@@ -16,8 +18,6 @@ import {
   parseSearchPolicyLimit,
   parseSearchPolicyOverrideInput,
 } from "./input";
-import type { UserId } from "~/server/shared/ids";
-import type { ScopeRef } from "~/server/capacity/domain/types";
 
 export async function updateSearchPolicyOverride(input: {
   userId: UserId;

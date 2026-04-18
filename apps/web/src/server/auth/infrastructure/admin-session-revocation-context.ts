@@ -1,5 +1,6 @@
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import type { AdminSessionRevocationPort } from "../application/ports";
@@ -7,7 +8,7 @@ import type { AdminSessionRevocationPort } from "../application/ports";
 interface AdminSessionRevocationRuntimeDeps {
   executor: DatabaseExecutor;
   invalidateSession(sessionId: string): Promise<void>;
-  invalidateUserSessions(userId: number): Promise<void>;
+  invalidateUserSessions(userId: UserId): Promise<void>;
 }
 
 export function createAdminSessionRevocationContext(

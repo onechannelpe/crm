@@ -1,9 +1,10 @@
+import type { BranchId, UserId } from "~/server/shared/ids";
+
 import {
   EXTENSION_HANDOFF_TOKEN_ISSUER,
   EXTENSION_SESSION_TOKEN_AUDIENCE,
 } from "../contracts";
 import { hashExtensionSecretToken, signExtensionToken } from "../crypto";
-import type { BranchId, UserId } from "~/server/shared/ids";
 
 export const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
 export const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;

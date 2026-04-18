@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
+import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
 
 import type { AppContext } from "../../src/server/shared/action-runtime";
 import { Err, Ok } from "../../src/server/shared/result";
@@ -11,9 +12,9 @@ function makeContext(role: Role = "hr"): AppContext {
   return {
     actor: {
       id: "session-1",
-      userId: 7,
+      userId: asUserId("00000000-0000-0000-0000-000000000007"),
       role,
-      branchId: 3,
+      branchId: asBranchId("00000000-0000-0000-0000-000000000003"),
       onboardingCompleted: true,
       sessionClass: "app",
       primaryAuthMethod: "password",
@@ -31,20 +32,25 @@ function makeContext(role: Role = "hr"): AppContext {
 
 describe("getInviteManagement", () => {
   it("returns teams, pending invites, and assignable roles for the actor branch", async () => {
-    const teamBranchCalls: number[] = [];
-    const inviteBranchCalls: number[] = [];
+    const teamBranchCalls: string[] = [];
+    const inviteBranchCalls: string[] = [];
 
     const port = {
-      listTeamsByBranch: async (branchId: number) => {
+      listTeamsByBranch: async (branchId) => {
         teamBranchCalls.push(branchId);
-        return [{ id: 11, name: "Operaciones" }];
+        return [
+          {
+            id: asTeamId("00000000-0000-0000-0000-000000000011"),
+            name: "Operaciones",
+          },
+        ];
       },
-      listPendingInvites: async (branchId: number) => {
+      listPendingInvites: async (branchId) => {
         inviteBranchCalls.push(branchId);
         return Ok([
           {
             inviteId: 1001,
-            userId: 91,
+            userId: asUserId("00000000-0000-0000-0000-000000000091"),
             email: "pending@crm.local",
             names: "Pending",
             firstSurname: "User",
@@ -53,7 +59,7 @@ describe("getInviteManagement", () => {
             teamId: null,
             expiresAt: 1_700_000_060_000,
             createdAt: 1_700_000_000_000,
-            createdByUserId: 7,
+            createdByUserId: asUserId("00000000-0000-0000-0000-000000000007"),
             sentAt: 1_700_000_000_100,
           },
         ]);
@@ -67,9 +73,11 @@ describe("getInviteManagement", () => {
       throw new Error("expected invite management result");
     }
 
-    expect(teamBranchCalls).toEqual([3]);
-    expect(inviteBranchCalls).toEqual([3]);
-    expect(result.value.teams).toEqual([{ id: 11, name: "Operaciones" }]);
+    expect(teamBranchCalls).toEqual(["00000000-0000-0000-0000-000000000003"]);
+    expect(inviteBranchCalls).toEqual(["00000000-0000-0000-0000-000000000003"]);
+    expect(result.value.teams).toEqual([
+      { id: "00000000-0000-0000-0000-000000000011", name: "Operaciones" },
+    ]);
     expect(result.value.pendingInvites).toEqual([
       expect.objectContaining({
         inviteId: 1001,
@@ -88,7 +96,12 @@ describe("getInviteManagement", () => {
 
   it("propagates provisioning errors without masking them", async () => {
     const port = {
-      listTeamsByBranch: async () => [{ id: 11, name: "Operaciones" }],
+      listTeamsByBranch: async () => [
+        {
+          id: asTeamId("00000000-0000-0000-0000-000000000011"),
+          name: "Operaciones",
+        },
+      ],
       listPendingInvites: async () =>
         Err({
           kind: "unexpected",

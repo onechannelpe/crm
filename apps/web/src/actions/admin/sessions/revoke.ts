@@ -15,7 +15,7 @@ import {
 
 export async function revokeUserSession(
   sessionId: string,
-  targetUserId: number,
+  targetUserId: string,
 ): Promise<ActionSuccess> {
   const parsedInput = parseRevokeUserSessionInput({ sessionId, targetUserId });
   if (isErr(parsedInput)) {
@@ -36,7 +36,7 @@ export async function revokeUserSession(
 }
 
 export async function revokeAllUserSessions(
-  targetUserId: number,
+  targetUserId: string,
 ): Promise<ActionSuccess> {
   const parsedInput = parseRevokeAllUserSessionsInput(targetUserId);
   if (isErr(parsedInput)) {

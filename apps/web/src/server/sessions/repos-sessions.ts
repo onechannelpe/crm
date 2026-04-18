@@ -2,9 +2,19 @@ import { sql, type Insertable, type Kysely, type Selectable } from "kysely";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import type { Database } from "~/lib/db/types";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 type UserSessionRow = Selectable<Database["user_sessions"]>;
 type NewUserSessionRow = Insertable<Database["user_sessions"]>;
+type HydratedUserSessionRow = Omit<UserSessionRow, "user_id" | "branch_id"> & {
+  user_id: UserId;
+  branch_id: BranchId;
+};
 
 export function createSessionRepository(db: Kysely<Database>) {
   return {
@@ -14,14 +24,21 @@ export function createSessionRepository(db: Kysely<Database>) {
       await db.insertInto("user_sessions").values(session).execute();
     },
 
-    async findById(id: string): Promise<UserSessionRow | null> {
+    async findById(id: string): Promise<HydratedUserSessionRow | null> {
       const session = await db
         .selectFrom("user_sessions")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
 
-      return session ?? null;
+      if (!session) {
+        return null;
+      }
+      return {
+        ...session,
+        user_id: asUserId(session.user_id),
+        branch_id: asBranchId(session.branch_id),
+      };
     },
 
     async updateActivity(id: string, lastActivity: number): Promise<void> {
@@ -44,7 +61,7 @@ export function createSessionRepository(db: Kysely<Database>) {
       await db.deleteFrom("user_sessions").where("id", "=", id).execute();
     },
 
-    async deleteAllForUser(userId: number): Promise<void> {
+    async deleteAllForUser(userId: UserId): Promise<void> {
       await db
         .deleteFrom("user_sessions")
         .where("user_id", "=", userId)
@@ -60,7 +77,7 @@ export function createSessionRepository(db: Kysely<Database>) {
       return Number(result.numDeletedRows ?? 0);
     },
 
-    async listForUser(userId: number): Promise<UserSessionRow[]> {
+    async listForUser(userId: UserId): Promise<UserSessionRow[]> {
       return db
         .selectFrom("user_sessions")
         .selectAll()
@@ -82,7 +99,7 @@ export function createSessionRepository(db: Kysely<Database>) {
     async listAllActive(): Promise<
       Array<{
         id: string;
-        userId: number;
+        userId: UserId;
         userEmail: string;
         userName: string;
         role: Role;
@@ -117,7 +134,7 @@ export function createSessionRepository(db: Kysely<Database>) {
 
       return sessions.map((session) => ({
         id: session.id,
-        userId: session.user_id,
+        userId: asUserId(session.user_id),
         userEmail: session.userEmail,
         userName: session.userName,
         role: session.role,

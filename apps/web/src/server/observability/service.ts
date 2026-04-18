@@ -8,6 +8,7 @@ import type {
   AuthFunnelScreen,
   AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
+import type { UserId } from "~/server/shared/ids";
 
 import type { createActionObservationsRepo } from "./repos-action-observations";
 import type { createAuthFunnelEventsRepo } from "./repos-auth-funnel-events";
@@ -23,7 +24,7 @@ export interface RecordActionObservationInput {
   routePath: string | null;
   httpMethod: string | null;
   actionName: string;
-  actorUserId: number | null;
+  actorUserId: UserId | null;
   actorRole: Role | null;
   status: "ok" | "error";
   durationMs: number;
@@ -186,7 +187,7 @@ export function createObservabilityService(repos: ObservabilityRepos) {
       toInclusive: number;
       actionName?: string;
       status?: "ok" | "error";
-      actorUserId?: number;
+      actorUserId?: UserId;
       limit: number;
     }) {
       return repos.actionObservations.findRecent(params);
@@ -197,7 +198,7 @@ export function createObservabilityService(repos: ObservabilityRepos) {
       toInclusive: number;
       actionName?: string;
       status?: "ok" | "error";
-      actorUserId?: number;
+      actorUserId?: UserId;
     }) {
       return repos.actionObservations.summarizeByAction(params);
     },

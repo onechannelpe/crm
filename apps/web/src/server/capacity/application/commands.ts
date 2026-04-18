@@ -346,14 +346,19 @@ export async function updateSearchPolicyDefault(
 ): Promise<Result<{ success: true }, DomainError>> {
   const check = await canManageScope(ctx.actor, input.scope, repos);
   if (isErr(check)) return check;
-  const result = await setSearchScopeDefault(
-    {
-      scopeType: input.scope.kind,
-      scopeId: input.scope.scopeId,
-      monthlyLimit: input.monthlyLimit,
-    },
-    repos,
-  );
+  const command =
+    input.scope.kind === "branch"
+      ? {
+          scopeType: "branch" as const,
+          scopeId: input.scope.scopeId,
+          monthlyLimit: input.monthlyLimit,
+        }
+      : {
+          scopeType: "team" as const,
+          scopeId: input.scope.scopeId,
+          monthlyLimit: input.monthlyLimit,
+        };
+  const result = await setSearchScopeDefault(command, repos);
   if (isErr(result)) return result;
   return Ok({ success: true });
 }
@@ -365,15 +370,21 @@ export async function updateLeadPolicyDefault(
 ): Promise<Result<{ success: true }, DomainError>> {
   const check = await canManageScope(ctx.actor, input.scope, repos);
   if (isErr(check)) return check;
-  const result = await setLeadScopeDefault(
-    {
-      scopeType: input.scope.kind,
-      scopeId: input.scope.scopeId,
-      bufferTarget: input.bufferTarget,
-      dailyLimit: input.dailyLimit,
-    },
-    repos,
-  );
+  const command =
+    input.scope.kind === "branch"
+      ? {
+          scopeType: "branch" as const,
+          scopeId: input.scope.scopeId,
+          bufferTarget: input.bufferTarget,
+          dailyLimit: input.dailyLimit,
+        }
+      : {
+          scopeType: "team" as const,
+          scopeId: input.scope.scopeId,
+          bufferTarget: input.bufferTarget,
+          dailyLimit: input.dailyLimit,
+        };
+  const result = await setLeadScopeDefault(command, repos);
   if (isErr(result)) return result;
   return Ok({ success: true });
 }

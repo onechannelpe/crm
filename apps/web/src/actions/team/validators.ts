@@ -8,7 +8,7 @@ import {
   isExecutiveCategoryValue,
   type ExecutiveCategoryValue,
 } from "~/lib/db/types";
-import type { TeamId } from "~/server/shared/ids";
+import { asTeamId, isTeamId, type TeamId } from "~/server/shared/ids";
 
 export function assertEmail(value: string): string {
   const safe = assertNonEmptyString(value, "email").toLowerCase();
@@ -39,12 +39,15 @@ export function assertExecutiveCategory(
 }
 
 export function assertOptionalTeamId(
-  value: number | null | undefined,
+  value: string | null | undefined,
 ): TeamId | null {
   if (value === null || value === undefined) {
     return null;
   }
-  return assertPositiveInt(value, "teamId");
+  if (!isTeamId(value)) {
+    throw validationError("teamId is invalid");
+  }
+  return asTeamId(value);
 }
 
 const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;

@@ -1,6 +1,7 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 type AuthEventRow = Selectable<Database["auth_events"]>;
 type NewAuthEventRow = Insertable<Database["auth_events"]>;
@@ -11,7 +12,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
       return db.insertInto("auth_events").values(values).executeTakeFirst();
     },
 
-    findRecentByUser(userId: number, limit: number) {
+    findRecentByUser(userId: UserId, limit: number) {
       return db
         .selectFrom("auth_events")
         .selectAll()
@@ -21,7 +22,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findRecentLoginRetriesByUser(userId: number, limit: number) {
+    findRecentLoginRetriesByUser(userId: UserId, limit: number) {
       return db
         .selectFrom("auth_events")
         .selectAll()
@@ -33,7 +34,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    countLoginRetriesSince(userId: number, since: number) {
+    countLoginRetriesSince(userId: UserId, since: number) {
       return db
         .selectFrom("auth_events")
         .select((eb) => eb.fn.count<number>("id").as("total"))
@@ -46,7 +47,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
     },
 
     async hasRecentSuccessFromIp(
-      userId: number,
+      userId: UserId,
       ipHash: string,
       since: number,
     ): Promise<boolean> {

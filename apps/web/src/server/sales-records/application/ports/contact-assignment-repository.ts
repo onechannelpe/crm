@@ -1,14 +1,16 @@
+import type { AssignmentId, ContactId, UserId } from "~/server/shared/ids";
+
 export interface ContactAssignmentRecord {
-  id: number;
-  user_id: number;
-  contact_id: number;
+  id: AssignmentId;
+  user_id: UserId;
+  contact_id: ContactId;
   status: string;
   expires_at: number;
 }
 
 export interface ContactAssignmentRepository {
   findActiveByIdForUser(
-    id: number,
-    userId: number,
+    id: AssignmentId,
+    userId: UserId,
   ): Promise<ContactAssignmentRecord | undefined>;
 }

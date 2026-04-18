@@ -84,18 +84,25 @@ export async function getAuditEvents(
         if (ctx.actor.role === "superuser") return true;
         if (ctx.actor.role !== "admin") return false;
         if (event.entity_type === "branch") {
-          return isBranchId(event.entity_id) && event.entity_id === ctx.actor.branchId;
+          return (
+            isBranchId(event.entity_id) &&
+            event.entity_id === ctx.actor.branchId
+          );
         }
         if (event.entity_type === "team") {
-          return isTeamId(event.entity_id) && branchTeamIds.has(event.entity_id);
+          return (
+            isTeamId(event.entity_id) && branchTeamIds.has(event.entity_id)
+          );
         }
         if (event.entity_type === "user") {
-          return isUserId(event.entity_id) && branchUserIds.has(event.entity_id);
+          return (
+            isUserId(event.entity_id) && branchUserIds.has(event.entity_id)
+          );
         }
         return false;
       })
       .map((event) => ({
-        id: event.id,
+        id: Number(event.id),
         createdAt: event.created_at,
         userId: event.user_id,
         action: event.action,

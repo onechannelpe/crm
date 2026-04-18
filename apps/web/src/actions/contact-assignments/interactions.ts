@@ -4,13 +4,13 @@ import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/actions/contact-assignments/
 import type { CompleteContactAssignmentCallResult } from "~/actions/contact-assignments/contracts";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import { serverRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import {
   asAssignmentId,
   asContactId,
   isAssignmentId,
   isContactId,
 } from "~/server/shared/ids";
-import { runAction } from "~/server/shared/action-runtime";
 
 type CallOutcome = (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
 

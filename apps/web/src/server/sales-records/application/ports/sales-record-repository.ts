@@ -1,3 +1,5 @@
+import type { AssignmentId, BranchId, UserId } from "~/server/shared/ids";
+
 import type {
   SalesRecordAttemptOutcome,
   SalesRecordSource,
@@ -8,9 +10,9 @@ export interface SalesRecordRecord {
   id: number;
   source: SalesRecordSource;
   status: SalesRecordStatus;
-  executive_user_id: number;
-  lead_assignment_id: number | null;
-  branch_id: number;
+  executive_user_id: UserId;
+  lead_assignment_id: AssignmentId | null;
+  branch_id: BranchId;
   submitted_at: number | null;
   confirmed_at: number | null;
   rejected_at: number | null;
@@ -60,7 +62,7 @@ export interface SalesRecordProductLineRecord {
 
 export interface SalesRecordAttemptRecord {
   sales_record_id: number;
-  reviewer_user_id: number;
+  reviewer_user_id: UserId;
   outcome: SalesRecordAttemptOutcome;
   notes: string | null;
   next_attempt_at: number | null;
@@ -121,7 +123,7 @@ export interface ConfirmedSalesRecordQueueRecord {
 export interface SalesRecordAttemptDetailRecord {
   id: number;
   sales_record_id: number;
-  reviewer_user_id: number;
+  reviewer_user_id: UserId;
   outcome: SalesRecordAttemptOutcome;
   notes: string | null;
   next_attempt_at: number | null;
@@ -133,11 +135,11 @@ export interface SalesRecordRepository {
   create(values: Omit<SalesRecordRecord, "id">): Promise<number>;
   findById(id: number): Promise<SalesRecordRecord | undefined>;
   listPendingWithClient(scope?: {
-    branchId?: number;
+    branchId?: BranchId;
   }): Promise<PendingSalesRecordQueueRecord[]>;
   listConfirmedWithClient(scope?: {
-    branchId?: number;
-    executiveUserId?: number;
+    branchId?: BranchId;
+    executiveUserId?: UserId;
   }): Promise<ConfirmedSalesRecordQueueRecord[]>;
   updateStatus(
     id: number,

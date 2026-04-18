@@ -1,4 +1,12 @@
 import {
+  isAssignmentId,
+  isBranchId,
+  isContactId,
+  isUserId,
+  type UserId,
+} from "~/server/shared/ids";
+
+import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
   EXTENSION_HANDOFF_TOKEN_ISSUER,
   EXTENSION_SESSION_TOKEN_AUDIENCE,
@@ -6,13 +14,6 @@ import {
   type ExtensionInstallationSessionClaims,
 } from "../contracts";
 import { ExtensionTokenVerificationError } from "../crypto";
-import {
-  isAssignmentId,
-  isBranchId,
-  isContactId,
-  isUserId,
-  type UserId,
-} from "~/server/shared/ids";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -49,10 +50,13 @@ export function isExtensionHandoffClaims(
     "authSessionId" in value &&
     typeof value.authSessionId === "string" &&
     "branchId" in value &&
+    typeof value.branchId === "string" &&
     isBranchId(value.branchId) &&
     "assignmentId" in value &&
+    typeof value.assignmentId === "string" &&
     isAssignmentId(value.assignmentId) &&
     "contactId" in value &&
+    typeof value.contactId === "string" &&
     isContactId(value.contactId) &&
     "phone" in value &&
     typeof value.phone === "string" &&
@@ -89,6 +93,7 @@ export function isExtensionInstallationSessionClaims(
     "authSessionId" in value &&
     typeof value.authSessionId === "string" &&
     "branchId" in value &&
+    typeof value.branchId === "string" &&
     isBranchId(value.branchId) &&
     "installationId" in value &&
     typeof value.installationId === "string" &&

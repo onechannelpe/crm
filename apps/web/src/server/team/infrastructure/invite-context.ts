@@ -6,7 +6,7 @@ import type {
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId } from "~/server/shared/ids";
+import { asTeamId, asUserId, type UserId } from "~/server/shared/ids";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
@@ -35,9 +35,40 @@ export function createTeamInviteContext(
 
   return {
     repos: {
-      teams: repos.teams,
-      userInvites: repos.userInvites,
-      users: repos.users,
+      teams: {
+        async findByBranch(branchId) {
+          const teams = await repos.teams.findByBranch(branchId);
+          return teams.map((team) => ({
+            id: asTeamId(team.id),
+            name: team.name,
+          }));
+        },
+      },
+      userInvites: {
+        async findById(inviteId) {
+          const invite = await repos.userInvites.findById(inviteId);
+          return invite ? { user_id: asUserId(invite.user_id) } : undefined;
+        },
+        async findPendingByTokenHash(tokenHash, now) {
+          return repos.userInvites.findPendingByTokenHash(tokenHash, now);
+        },
+      },
+      users: {
+        async findById(id) {
+          const user = await repos.users.findById(id);
+          if (!user) {
+            return undefined;
+          }
+          return {
+            id: asUserId(user.id),
+            email: user.email,
+            role: user.role,
+            names: user.names,
+            first_surname: user.first_surname,
+            second_surname: user.second_surname,
+          };
+        },
+      },
     },
     inviteService,
     async enforceInviteCreateRateLimit(userId: UserId) {

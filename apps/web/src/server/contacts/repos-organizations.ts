@@ -1,16 +1,47 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { createOrganizationId } from "~/server/shared/ids";
+import {
+  asBranchId,
+  asOrganizationId,
+  asUserId,
+  createOrganizationId,
+  type BranchId,
+  type OrganizationId,
+  type UserId,
+} from "~/server/shared/ids";
+
+type HydratedOrganizationRow = Omit<
+  Database["organizations"],
+  "id" | "locked_branch_id" | "locked_by_user_id"
+> & {
+  id: OrganizationId;
+  locked_branch_id: BranchId | null;
+  locked_by_user_id: UserId | null;
+};
+
+function mapOrganizationRow(
+  row: Database["organizations"],
+): HydratedOrganizationRow {
+  return {
+    ...row,
+    id: asOrganizationId(row.id),
+    locked_branch_id:
+      row.locked_branch_id === null ? null : asBranchId(row.locked_branch_id),
+    locked_by_user_id:
+      row.locked_by_user_id === null ? null : asUserId(row.locked_by_user_id),
+  };
+}
 
 export function createOrganizationsRepo(db: Kysely<Database>) {
   return {
-    findById(id: string) {
+    findById(id: OrganizationId) {
       return db
         .selectFrom("organizations")
         .selectAll()
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapOrganizationRow(row) : undefined));
     },
 
     findByRuc(ruc: string) {
@@ -18,7 +49,8 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
         .selectFrom("organizations")
         .selectAll()
         .where("ruc", "=", ruc)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then((row) => (row ? mapOrganizationRow(row) : undefined));
     },
 
     async findOrCreate(ruc: string, name: string) {
@@ -38,7 +70,7 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
       return created;
     },
 
-    lockToBranch(orgId: string, branchId: string, userId: string) {
+    lockToBranch(orgId: OrganizationId, branchId: BranchId, userId: UserId) {
       return db
         .updateTable("organizations")
         .set({
@@ -56,10 +88,11 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
         .selectAll()
         .where("locked_branch_id", "is", null)
         .limit(limit)
-        .execute();
+        .execute()
+        .then((rows) => rows.map(mapOrganizationRow));
     },
 
-    findUnlockedOrLockedToBranch(branchId: string, limit: number) {
+    findUnlockedOrLockedToBranch(branchId: BranchId, limit: number) {
       return db
         .selectFrom("organizations")
         .selectAll()
@@ -70,7 +103,8 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
           ]),
         )
         .limit(limit)
-        .execute();
+        .execute()
+        .then((rows) => rows.map(mapOrganizationRow));
     },
   };
 }

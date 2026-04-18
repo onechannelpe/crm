@@ -3,6 +3,7 @@
 import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { serverRuntime } from "~/server/runtime";
+import { asUserId, isUserId, type UserId } from "~/server/shared/ids";
 
 import { resolveBoundedPositiveInt, trimOrUndefined } from "./analytics-input";
 
@@ -22,7 +23,7 @@ export interface ObservabilityActionEvent {
   actionName: string;
   status: ObservationStatus;
   durationMs: number;
-  actorUserId: number | null;
+  actorUserId: UserId | null;
   actorRole: string | null;
   routePath: string | null;
   errorCode: string | null;
@@ -43,6 +44,16 @@ function assertStatus(
   if (!value) return undefined;
   if (value === "ok" || value === "error") return value;
   throw validationError("status is invalid");
+}
+
+function parseActorUserId(value: string | null): UserId | null {
+  if (value === null) {
+    return null;
+  }
+  if (!isUserId(value)) {
+    throw validationError("actorUserId is invalid");
+  }
+  return asUserId(value);
 }
 
 export async function getObservabilitySnapshot(params?: {
@@ -105,7 +116,7 @@ export async function getObservabilitySnapshot(params?: {
       actionName: row.action_name,
       status: row.status,
       durationMs: row.duration_ms,
-      actorUserId: row.actor_user_id,
+      actorUserId: parseActorUserId(row.actor_user_id),
       actorRole: row.actor_role,
       routePath: row.route_path,
       errorCode: row.error_code,

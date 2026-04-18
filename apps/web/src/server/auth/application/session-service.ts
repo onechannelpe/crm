@@ -11,6 +11,7 @@ import {
   hashSessionToken,
   isValidTokenFormat,
 } from "~/lib/auth/session/tokens";
+import type { UserId } from "~/server/shared/ids";
 
 import type {
   CreateSessionInput,
@@ -162,7 +163,7 @@ export function createSessionService(deps: SessionServiceDeps) {
       sessionCache.delete(sessionId);
     },
 
-    async invalidateUserSessions(userId: number): Promise<void> {
+    async invalidateUserSessions(userId: UserId): Promise<void> {
       await deps.sessions.deleteAllForUser(userId);
       sessionCache.deleteByUserId(userId);
     },
