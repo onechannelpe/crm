@@ -38,6 +38,7 @@ import {
   revokeTeamInviteMutation,
 } from "~/lib/mutations/team";
 import { inviteManagementQuery } from "~/lib/queries/team";
+import { asTeamId } from "~/server/shared/ids";
 
 import {
   getInviteExpiryFieldError,
@@ -139,7 +140,7 @@ export function TeamInviteManagementSection() {
           email: email(),
           role: role(),
           executiveCategory: executiveCategory() || null,
-          teamId: teamId() ? Number(teamId()) : null,
+          teamId: teamId() ? asTeamId(teamId()) : null,
           expiresAt: parsedExpiresAt.value,
         });
         setNames("");

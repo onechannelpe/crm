@@ -8,6 +8,7 @@ import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/int
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
 import { serverRuntime } from "~/server/runtime";
 import { createSalesExportQueue } from "~/server/sales/queue/sales-export-queue";
+import { asUserId } from "~/server/shared/ids";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 
 const WORKER_ID = `bg-${process.pid}`;
@@ -26,24 +27,31 @@ export function startBackgroundJobs() {
     runtime: integration,
     blobStore,
   });
-  const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID, {
-    executor: integration.executor,
-  });
-  const readyForQuotationOutboxQueue = createReadyForQuotationOutboxQueue(
-    WORKER_ID,
+  const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(
+    asUserId(WORKER_ID),
     {
       executor: integration.executor,
     },
   );
-  const salesExportQueue = createSalesExportQueue(WORKER_ID);
-  const enrichmentQueue =
-    serverRuntime.clientSearch.createEnrichmentQueue(WORKER_ID);
+  const readyForQuotationOutboxQueue = createReadyForQuotationOutboxQueue(
+    asUserId(WORKER_ID),
+    {
+      executor: integration.executor,
+    },
+  );
+  const salesExportQueue = createSalesExportQueue(asUserId(WORKER_ID));
+  const enrichmentQueue = serverRuntime.clientSearch.createEnrichmentQueue(
+    asUserId(WORKER_ID),
+  );
   const sunatEnrichmentWritebackQueue =
-    serverRuntime.pipeline.createSunatEnrichmentWritebackQueue(WORKER_ID);
-  const notificationsEmailQueue =
-    serverRuntime.notifications.createEmailQueue(WORKER_ID);
+    serverRuntime.pipeline.createSunatEnrichmentWritebackQueue(
+      asUserId(WORKER_ID),
+    );
+  const notificationsEmailQueue = serverRuntime.notifications.createEmailQueue(
+    asUserId(WORKER_ID),
+  );
   const notificationsWhatsAppQueue =
-    serverRuntime.notifications.createWhatsAppQueue(WORKER_ID);
+    serverRuntime.notifications.createWhatsAppQueue(asUserId(WORKER_ID));
   const queues: QueueRunner[] = [
     crmExportQueue,
     crmImportQueue,

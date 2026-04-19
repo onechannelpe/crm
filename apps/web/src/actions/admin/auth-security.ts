@@ -8,12 +8,13 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { Database } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import { serverRuntime } from "~/server/runtime";
+import type { UserId } from "~/server/shared/ids";
 
 type AuthEventRow = Selectable<Database["auth_events"]>;
 
 export interface UserLoginRetryReport {
   user: {
-    id: number;
+    id: UserId;
     email: string;
     fullName: string;
     role: string;

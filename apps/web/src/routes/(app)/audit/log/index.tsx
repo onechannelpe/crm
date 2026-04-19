@@ -21,6 +21,7 @@ import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/s
 import { auditReaderSnapshotQuery } from "~/lib/queries/audit";
 import { formatDateTime } from "~/lib/utils";
 import type { AuditReaderSnapshot } from "~/server/audit-reader/contracts";
+import { type UserId, asUserId } from "~/server/shared/ids";
 
 type AuditLogEvent = AuditReaderSnapshot["events"][number];
 type AuditLogGridRow = AuditLogEvent & { id: number };
@@ -67,12 +68,10 @@ const AUDIT_LOG_COLUMNS = [
   },
 ] satisfies ReadonlyArray<DataGridColumn<AuditLogGridRow>>;
 
-function parseActorUserId(value: string): number | undefined {
+function parseActorUserId(value: string): UserId | undefined {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
-  const parsed = Number(trimmed);
-  if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
-  return parsed;
+  return asUserId(trimmed);
 }
 
 export default function AuditLogPage() {

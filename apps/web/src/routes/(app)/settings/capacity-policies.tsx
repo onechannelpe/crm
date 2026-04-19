@@ -10,6 +10,7 @@ import {
   updateSearchScopeDefaultMutation,
 } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
+import type { BranchId, TeamId } from "~/server/shared/ids";
 
 interface TeamPolicyRowProps {
   team: CapacityPolicyTeamDefaultsView;
@@ -18,12 +19,12 @@ interface TeamPolicyRowProps {
   branchDailyRefillLimit: number | null;
   onUpdateSearchDefault: (input: {
     scopeType: "team";
-    scopeId: number;
+    scopeId: TeamId;
     monthlySearchLimit: number;
   }) => Promise<unknown>;
   onUpdateLeadDefault: (input: {
     scopeType: "team";
-    scopeId: number;
+    scopeId: TeamId;
     activeBufferTarget: number;
     dailyRefillLimit: number;
   }) => Promise<unknown>;

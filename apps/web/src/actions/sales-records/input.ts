@@ -15,6 +15,11 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import {
+  type ContactId,
+  asContactId,
+  isAssignmentId,
+} from "~/server/shared/ids";
 
 function isSalesRecordSource(value: string): value is SalesRecordSource {
   return SALES_RECORD_SOURCES.some((source) => source === value);
@@ -49,8 +54,9 @@ export function parseSalesRecordId(recordId: number): number {
   return assertPositiveInt(recordId, "recordId");
 }
 
-export function parseSalesContactId(contactId: number): number {
-  return assertPositiveInt(contactId, "contactId");
+export function parseSalesContactId(contactId: string): ContactId {
+  assertNonEmptyString(contactId, "contactId");
+  return asContactId(contactId);
 }
 
 export function parseCreateSalesRecordDraftInput(
@@ -60,7 +66,9 @@ export function parseCreateSalesRecordDraftInput(
     throw validationError("source is invalid");
   }
   if (input.source === "lead_assignment") {
-    assertPositiveInt(input.leadAssignmentId ?? 0, "leadAssignmentId");
+    if (!input.leadAssignmentId || !isAssignmentId(input.leadAssignmentId)) {
+      throw validationError("leadAssignmentId is invalid or missing");
+    }
   }
   if (input.source === "manual" && input.leadAssignmentId !== null) {
     throw validationError("leadAssignmentId must be null for manual sales");

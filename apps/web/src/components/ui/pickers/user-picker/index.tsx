@@ -2,18 +2,19 @@ import { createAsync } from "@solidjs/router";
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
+import type { UserId } from "~/server/shared/ids";
 
 import styles from "./styles.module.css";
 
 export type UserPickerOption = {
-  id: number;
+  id: UserId;
   fullName: string;
 };
 
 export interface UserPickerProps {
-  currentUserId: number;
+  currentUserId: UserId;
   fetchUsers: (search: string) => Promise<UserPickerOption[]>;
-  onSelect: (id: number) => Promise<void>;
+  onSelect: (id: UserId) => Promise<void>;
   onClose: () => void;
 }
 
@@ -52,7 +53,7 @@ export function UserPicker(props: UserPickerProps) {
     );
   });
 
-  async function handleSelect(userId: number) {
+  async function handleSelect(userId: UserId) {
     if (userId === props.currentUserId) {
       props.onClose();
       return;

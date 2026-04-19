@@ -16,6 +16,7 @@ import { useAsyncAction } from "~/hooks/use-async-action";
 import { getErrorMessage } from "~/lib/errors";
 import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
 import { useSalesRecordForm } from "~/lib/sales/use-sales-record-form";
+import type { AssignmentId } from "~/server/shared/ids";
 
 import styles from "./new-sale-page.module.css";
 
@@ -27,9 +28,8 @@ export default function NewSalePage() {
   const [source, setSource] = createSignal<"lead_assignment" | "manual">(
     "manual",
   );
-  const [leadAssignmentId, setLeadAssignmentId] = createSignal<number | null>(
-    null,
-  );
+  const [leadAssignmentId, setLeadAssignmentId] =
+    createSignal<AssignmentId | null>(null);
 
   const form = useSalesRecordForm();
   const currentProducts = createAsync(() => salesRecordProductsQuery(), {
@@ -38,8 +38,10 @@ export default function NewSalePage() {
 
   onMount(() => {
     const contactIdRaw = searchParams.contactId;
-    const contactId = contactIdRaw ? Number(contactIdRaw) : null;
-    if (!contactId || Number.isNaN(contactId)) return;
+    const contactId = Array.isArray(contactIdRaw)
+      ? contactIdRaw[0]
+      : (contactIdRaw ?? null);
+    if (!contactId) return;
 
     void (async () => {
       try {

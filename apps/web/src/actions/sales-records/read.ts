@@ -29,7 +29,7 @@ export async function listSalesRecordProducts(): Promise<
 }
 
 export async function getSalesRecordBootstrap(
-  contactId: number | null,
+  contactId: string | null,
 ): Promise<SalesRecordBootstrapView> {
   const safeContactId =
     contactId === null ? null : parseSalesContactId(contactId);

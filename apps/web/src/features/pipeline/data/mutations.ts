@@ -7,13 +7,13 @@ import {
   requestLeadReview,
 } from "~/actions/pipeline/commands/leads";
 import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
-import type { LeadId } from "~/server/pipeline/domain/lead-record";
+import type { LeadId, UserId } from "~/server/shared/ids";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 
 type CreateLeadInput = {
   ruc: string;
-  executiveId?: number;
+  executiveId?: UserId;
 };
 
 export const createLeadMutation = action(async (input: CreateLeadInput) => {
@@ -68,7 +68,7 @@ export const completeCommercialInputMutation = action(
 );
 
 export const reassignLeadMutation = action(
-  async (input: { leadId: LeadId; newExecutiveId: number }) => {
+  async (input: { leadId: LeadId; newExecutiveId: UserId }) => {
     await requestLeadReassignment(input);
     return json(
       {},

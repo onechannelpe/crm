@@ -14,6 +14,8 @@ export const SALES_RECORD_ATTEMPT_OUTCOMES = [
   "rejected",
 ] as const;
 
+import type { AssignmentId } from "~/server/shared/ids";
+
 export type SalesRecordSource = (typeof SALES_RECORD_SOURCES)[number];
 export type SalesRecordStatus = (typeof SALES_RECORD_STATUSES)[number];
 export type SalesRecordAttemptOutcome =
@@ -48,7 +50,7 @@ export interface SalesRecordProductInput {
 
 export interface CreateSalesRecordDraftInput {
   source: SalesRecordSource;
-  leadAssignmentId: number | null;
+  leadAssignmentId: AssignmentId | null;
   client: SalesRecordClientInput;
   addresses: SalesRecordAddressInput[];
   products: SalesRecordProductInput[];
@@ -96,7 +98,7 @@ export interface SalesRecordProductOptionView {
 
 export interface SalesRecordBootstrapView {
   source: SalesRecordSource;
-  leadAssignmentId: number | null;
+  leadAssignmentId: AssignmentId | null;
   client: SalesRecordClientInput;
 }
 

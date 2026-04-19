@@ -3,6 +3,7 @@ import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import { createEnrichmentQueue } from "~/server/client-search/worker";
+import type { UserId } from "~/server/shared/ids";
 
 import type { ServerInfra } from "./infra";
 
@@ -15,7 +16,7 @@ export function createClientSearchRuntime(infra: ServerInfra) {
   return {
     enrichmentCommand,
     enrichmentQuery,
-    createEnrichmentQueue: (workerId: string) =>
+    createEnrichmentQueue: (workerId: UserId) =>
       createEnrichmentQueue(workerId, {
         enrichmentRepo,
         scraper,
