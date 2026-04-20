@@ -325,7 +325,17 @@ export async function uploadArtifactFile(
   });
 
   const updated = await repo.findArtifactById(artifactId);
-  return Ok(updated!);
+
+  if (!updated)
+    return Err(
+      domainError(
+        "not_found",
+        "artifact_vanished",
+        "Artifact not found after update",
+      ),
+    );
+
+  return Ok(updated);
 }
 
 export async function requestDownloadToken(

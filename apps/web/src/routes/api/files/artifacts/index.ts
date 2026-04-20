@@ -2,7 +2,7 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { listArtifacts, requestArtifact } from "~/server/files/service";
-import type { ArtifactType, ArtifactExecutionMode } from "~/server/files/types";
+import { isArtifactType, isExecutionMode } from "~/server/files/types";
 import { serverRuntime } from "~/server/runtime";
 import { createAppContext } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
@@ -23,31 +23,25 @@ export async function POST(
     const ctx = createAppContext(session);
     const { repo, storage, syncExecutor } = serverRuntime.files;
 
+    // oxlint-disable-next-line no-unsafe-type-assertion
     const body = (await event.request.json()) as {
       artifactType?: string;
       executionMode?: string;
       workflowContext?: Record<string, unknown>;
     };
 
-    const VALID_TYPES: readonly string[] = [
-      "leads_export",
-      "integration_import",
-      "sales_export",
-    ];
-    const VALID_MODES: readonly string[] = ["sync", "async"];
-
-    if (!body.artifactType || !VALID_TYPES.includes(body.artifactType)) {
+    if (!isArtifactType(body.artifactType)) {
       return new Response("Invalid or missing artifactType", { status: 400 });
     }
-    if (!body.executionMode || !VALID_MODES.includes(body.executionMode)) {
+    if (!isExecutionMode(body.executionMode)) {
       return new Response("Invalid or missing executionMode", { status: 400 });
     }
 
     const result = await requestArtifact(
       ctx,
       {
-        artifactType: body.artifactType as ArtifactType,
-        executionMode: body.executionMode as ArtifactExecutionMode,
+        artifactType: body.artifactType,
+        executionMode: body.executionMode,
         workflowContext: body.workflowContext ?? {},
       },
       { repo, storage, syncExecutor },
@@ -75,14 +69,15 @@ export async function GET(event: Pick<APIEvent, "request">): Promise<Response> {
     const { repo, storage, syncExecutor } = serverRuntime.files;
 
     const url = new URL(event.request.url);
-    const artifactType = url.searchParams.get("artifactType") ?? undefined;
+    const rawType = url.searchParams.get("artifactType") ?? undefined;
+    const artifactType = isArtifactType(rawType) ? rawType : undefined;
     const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
     const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
 
     const result = await listArtifacts(
       ctx,
       {
-        artifactType: artifactType as ArtifactType | undefined,
+        artifactType,
         limit: isNaN(limit) ? 50 : limit,
         offset: isNaN(offset) ? 0 : offset,
       },

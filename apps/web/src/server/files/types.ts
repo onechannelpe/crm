@@ -1,11 +1,24 @@
-export type ArtifactType =
-  | "leads_export"
-  | "integration_import"
-  | "sales_export";
+export const ARTIFACT_TYPES = [
+  "leads_export",
+  "integration_import",
+  "sales_export",
+] as const;
+export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
+
+export const EXECUTION_MODES = ["sync", "async"] as const;
+export type ArtifactExecutionMode = (typeof EXECUTION_MODES)[number];
 
 export type ArtifactDirection = "upload" | "download" | "bidirectional";
 
-export type ArtifactExecutionMode = "sync" | "async";
+export function isArtifactType(v: string | undefined): v is ArtifactType {
+  return v !== undefined && (ARTIFACT_TYPES as readonly string[]).includes(v);
+}
+
+export function isExecutionMode(
+  v: string | undefined,
+): v is ArtifactExecutionMode {
+  return v !== undefined && (EXECUTION_MODES as readonly string[]).includes(v);
+}
 
 export type ArtifactStatus =
   | "requested"

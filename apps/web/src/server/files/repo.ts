@@ -1,12 +1,16 @@
-import type { Kysely } from "kysely";
-
-import type { Database } from "~/lib/db/types";
+import type { Kysely, Selectable } from "kysely";
 
 import type {
-  ArtifactStatus,
-  ArtifactType,
+  Database,
+  FileAssetsTable,
+  WorkflowArtifactsTable,
+} from "~/lib/db/types";
+
+import type {
   ArtifactDirection,
   ArtifactExecutionMode,
+  ArtifactStatus,
+  ArtifactType,
   BindingRole,
   FileAsset,
   ScanStatus,
@@ -15,29 +19,15 @@ import type {
 
 type DB = Kysely<Database>;
 
-function rowToArtifact(row: {
-  id: number;
-  artifact_type: string;
-  direction: string;
-  execution_mode: string;
-  status: string;
-  requested_by_user_id: number;
-  scope_branch_id: number | null;
-  scope_team_id: number | null;
-  policy_snapshot_json: string;
-  workflow_context_json: string;
-  error_code: string | null;
-  error_message: string | null;
-  expires_at: number | null;
-  created_at: number;
-  updated_at: number;
-}): WorkflowArtifact {
+function rowToArtifact(
+  row: Selectable<WorkflowArtifactsTable>,
+): WorkflowArtifact {
   return {
     id: row.id,
-    artifactType: row.artifact_type as ArtifactType,
-    direction: row.direction as ArtifactDirection,
-    executionMode: row.execution_mode as ArtifactExecutionMode,
-    status: row.status as ArtifactStatus,
+    artifactType: row.artifact_type,
+    direction: row.direction,
+    executionMode: row.execution_mode,
+    status: row.status,
     requestedByUserId: row.requested_by_user_id,
     scopeBranchId: row.scope_branch_id,
     scopeTeamId: row.scope_team_id,
@@ -51,21 +41,7 @@ function rowToArtifact(row: {
   };
 }
 
-function rowToFileAsset(row: {
-  id: number;
-  storage_key: string;
-  original_filename: string;
-  safe_display_filename: string;
-  detected_mime: string;
-  extension: string;
-  size_bytes: number;
-  sha256_hex: string;
-  signature_kind: string | null;
-  scan_status: string;
-  scan_engine: string | null;
-  scan_reference: string | null;
-  created_at: number;
-}): FileAsset {
+function rowToFileAsset(row: Selectable<FileAssetsTable>): FileAsset {
   return {
     id: row.id,
     storageKey: row.storage_key,
@@ -76,7 +52,7 @@ function rowToFileAsset(row: {
     sizeBytes: row.size_bytes,
     sha256Hex: row.sha256_hex,
     signatureKind: row.signature_kind,
-    scanStatus: row.scan_status as ScanStatus,
+    scanStatus: row.scan_status,
     scanEngine: row.scan_engine,
     scanReference: row.scan_reference,
     createdAt: row.created_at,
@@ -363,6 +339,7 @@ export function createArtifactRepo(db: DB): ArtifactRepo {
         eventType: row.event_type,
         actorUserId: row.actor_user_id,
         actorRole: row.actor_role,
+        // oxlint-disable-next-line no-unsafe-type-assertion
         details: JSON.parse(row.details_json) as Record<string, unknown>,
         createdAt: row.created_at,
       }));
