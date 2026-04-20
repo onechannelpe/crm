@@ -1,5 +1,6 @@
 .layoutRoot {
-  background: var(--background);
+  background-image: var(--background-noisy);
+  background-blend-mode: overlay;
   display: flex;
   flex-direction: column;
   height: 100dvh;

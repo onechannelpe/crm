@@ -1,6 +1,8 @@
 @layer reset, base;
 
 :root {
+  --background-noisy: url(/images/light-noise.png);
+
   /* font families */
   --font-sans:
     Inter, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -166,6 +168,8 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
+  --background-noisy: url(/images/dark-noise.jpg);
+
   --background: color(display-p3 0.09 0.09 0.09);
   --foreground: color(display-p3 0.922 0.922 0.922);
   --card: color(display-p3 0.09 0.09 0.09);
@@ -303,7 +307,7 @@
     font-family: var(--font-sans);
     font-size: var(--font-size-body);
     line-height: var(--line-height-md);
-    background-color: var(--background);
+    background-color: var(--tertiary);
     color: var(--foreground);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
