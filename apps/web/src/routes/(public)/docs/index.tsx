@@ -10,7 +10,7 @@ export default function DocsPage() {
     <div class={styles.page}>
       <div class={styles.pageTitle}>
         <span class={styles.titleMuted}>Centro de</span>
-        <span class={styles.titleBold}>Documentación</span>
+        <span class={styles.titleBold}>ayuda</span>
       </div>
       <div class={styles.docList}>
         <For each={docs}>

@@ -179,7 +179,7 @@ export function MainNavigationDrawer() {
               onClick={openSettings}
             />
             <NavigationDrawerItem
-              label="Documentacion"
+              label="Centro de ayuda"
               to="/docs"
               Icon={CircleQuestionMark}
               closeOnNavigate={closeOnNavigate}

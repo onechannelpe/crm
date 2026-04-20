@@ -100,7 +100,7 @@ export function createSettingsNavigationSections(
       items: [
         {
           id: "documentation",
-          label: "Documentacion",
+          label: "Centro de ayuda",
           href: "/docs",
           icon: CircleQuestionMark,
           section: "other",
