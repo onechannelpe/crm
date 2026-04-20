@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
+import { asUserId } from "../../src/server/shared/ids";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 describe("audit logs reader repository", () => {
@@ -17,7 +18,7 @@ describe("audit logs reader repository", () => {
     const baseTime = 1_700_000_000_000;
 
     await ctx.repos.auditLogs.create({
-      user_id: 5,
+      user_id: asUserId("5"),
       action: "sales_record_confirmed",
       entity_type: "sales_record",
       entity_id: "101",
@@ -25,7 +26,7 @@ describe("audit logs reader repository", () => {
       created_at: baseTime,
     });
     await ctx.repos.auditLogs.create({
-      user_id: 1,
+      user_id: asUserId("1"),
       action: "leads_requested",
       entity_type: "lead_assignment",
       entity_id: "1",
@@ -33,7 +34,7 @@ describe("audit logs reader repository", () => {
       created_at: baseTime + 1,
     });
     await ctx.repos.auditLogs.create({
-      user_id: 5,
+      user_id: asUserId("5"),
       action: "all_sessions_revoked",
       entity_type: "user_session",
       entity_id: "5",
@@ -57,7 +58,7 @@ describe("audit logs reader repository", () => {
       risk_level: "low",
       is_active: 1,
       is_protected: 0,
-      updated_by_user_id: 1,
+      updated_by_user_id: asUserId("1"),
       now: baseTime + 3,
     });
 
@@ -84,7 +85,7 @@ describe("audit logs reader repository", () => {
       fromInclusive: baseTime - 1000,
       toInclusive: baseTime + 1000,
       limit: 10,
-      actorUserId: 5,
+      actorUserId: asUserId("5"),
     });
     expect(byActor).toHaveLength(2);
   });

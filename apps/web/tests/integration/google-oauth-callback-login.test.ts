@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { completeGoogleOAuthCallback } from "../../src/lib/auth/google/google-callback-login";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
+import { type UserId } from "../../src/server/shared/ids";
 import { Err, Ok, isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
@@ -47,7 +48,7 @@ describe("google oauth callback login", () => {
     await cleanupTestDb(ctx);
   });
 
-  async function linkGoogleAccount(userId: number, sub: string) {
+  async function linkGoogleAccount(userId: UserId, sub: string) {
     await ctx.repos.oauthAccounts.create({
       user_id: userId,
       provider: "google",

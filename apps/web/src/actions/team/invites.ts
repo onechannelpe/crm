@@ -3,6 +3,7 @@
 import type { InviteInfo } from "~/actions/team/contracts";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import { type InviteId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 import {
   createTeamInvite as createTeamInviteService,
@@ -33,7 +34,7 @@ export async function createTeamInvite(input: {
   executiveCategory?: string | null;
   teamId?: string | null;
   expiresAt?: number | null;
-}): Promise<{ inviteId: number }> {
+}): Promise<{ inviteId: InviteId }> {
   const safeInput = parseCreateTeamInviteInput(input);
 
   return runAction({

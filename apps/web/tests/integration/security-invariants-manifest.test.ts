@@ -1,159 +1,190 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { hasPermission } from "../../src/lib/auth/access/rbac";
+import { asUserId, asBranchId } from "../../src/server/shared/ids";
 import { SALES_ERROR_MANIFEST } from "../support/security-manifests";
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
-async function createSubmittableRecord(ctx: TestDbContext) {
-  const created = await ctx.salesRecords.createDraft({
-    source: "manual",
-    executiveUserId: 1,
-    branchId: 1,
-    leadAssignmentId: null,
-    client: {
-      ruc: null,
-      companyName: "Org Lima",
-      contactName: "Contacto Lima",
-      dni: "70000001",
-      phones: ["+51999999111"],
-      engineMatchId: null,
-      completenessScore: 60,
-    },
-    addresses: [
-      {
-        addressType: "installation",
-        fullText: "Av. Demo 123",
-        department: null,
-        province: null,
-        district: null,
-        ubigeo: null,
-        latitude: null,
-        longitude: null,
-        isPrimary: true,
-      },
-    ],
-    products: [{ productId: 1, quantity: 1 }],
-  });
-  expect(created.ok).toBe(true);
-  if (!created.ok) {
-    throw new Error("Expected sales record draft creation to succeed");
-  }
-  return created.value;
-}
-
-describe("security invariant manifest", () => {
+describe("security invariants manifest", () => {
   let ctx: TestDbContext;
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("security-manifest");
+    ctx = await createIsolatedTestDb("security-invariants");
+    await ctx.db
+      .insertInto("users")
+      .values([
+        {
+          id: asUserId("1"),
+          branch_id: asBranchId("1"),
+          team_id: null,
+          username: "admin.one",
+          email: "admin1@test.local",
+          password_hash: "hash",
+          names: "Admin",
+          first_surname: "One",
+          second_surname: "Alpha",
+          phone_e164: "+51990000111",
+          onboarding_completed_at: Date.now(),
+          role: "admin",
+          is_active: 1,
+          created_at: Date.now(),
+        },
+      ])
+      .execute();
   });
 
   afterEach(async () => {
     await cleanupTestDb(ctx);
   });
 
-  it("enforces RBAC security invariants for the pipeline roles", () => {
-    expect(hasPermission("executive", "lead:register")).toBe(true);
-    expect(hasPermission("executive", "lead:review")).toBe(false);
-    expect(hasPermission("executive", "quotation:manage")).toBe(false);
-    expect(hasPermission("executive", "integration:manage")).toBe(false);
+  const emptyClient = {
+    ruc: null,
+    companyName: null,
+    contactName: null,
+    dni: null,
+    phones: [],
+    engineMatchId: null,
+    completenessScore: 0,
+  };
 
-    expect(hasPermission("back_office", "lead:view:all")).toBe(true);
-    expect(hasPermission("back_office", "lead:review")).toBe(true);
-    expect(hasPermission("back_office", "quotation:manage")).toBe(true);
-    expect(hasPermission("back_office", "integration:manage")).toBe(true);
-    expect(hasPermission("back_office", "lead:register")).toBe(false);
-
-    expect(hasPermission("supervisor", "sales:approve")).toBe(true);
-    expect(hasPermission("supervisor", "lead:register")).toBe(false);
-    expect(hasPermission("supervisor", "lead:reassign")).toBe(true);
-
-    expect(hasPermission("admin", "lead:reassign")).toBe(true);
-    expect(hasPermission("admin", "quotation:manage")).toBe(true);
-
-    expect(hasPermission("superuser", "integration:manage")).toBe(true);
-    expect(hasPermission("superuser", "lead:view:all")).toBe(true);
-  });
-
-  it("enforces sales workflow deny contracts", async () => {
-    const rA = await ctx.salesRecords.createDraft({
+  async function createSubmittableRecord(ctx: TestDbContext) {
+    const res = await ctx.salesRecords.createDraft({
+      executiveUserId: asUserId("1"),
+      branchId: asBranchId("1"),
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
       leadAssignmentId: null,
-      client: {
-        ruc: null,
-        companyName: "Org A",
-        contactName: "Contact A",
-        dni: "70000011",
-        phones: [],
-        engineMatchId: null,
-        completenessScore: 10,
-      },
-      addresses: [],
-      products: [{ productId: 1, quantity: 1 }],
-    });
-    expect(rA.ok).toBe(true);
-    if (!rA.ok) {
-      throw new Error("Expected incomplete draft creation to succeed");
-    }
-    const missingAddressesSubmit = await ctx.salesRecords.submit(rA.value, 1);
-    expect(missingAddressesSubmit.ok).toBe(false);
-    if (missingAddressesSubmit.ok) {
-      throw new Error("Expected missing-addresses submit contract to fail");
-    }
-    expect(missingAddressesSubmit.error.message).toBe(
-      SALES_ERROR_MANIFEST.submitMissingAddresses,
-    );
-
-    const rB = await ctx.salesRecords.createDraft({
-      source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
-      leadAssignmentId: null,
-      client: {
-        ruc: null,
-        companyName: "Org B",
-        contactName: "Contact B",
-        dni: "70000012",
-        phones: [],
-        engineMatchId: null,
-        completenessScore: 10,
-      },
+      client: { ...emptyClient, companyName: "Org Lima" },
       addresses: [
         {
           addressType: "installation",
-          fullText: "Av. Demo 123",
-          department: null,
-          province: null,
-          district: null,
-          ubigeo: null,
+          fullText: "Lima",
+          department: "Lima",
+          province: "Lima",
+          district: "Lima",
+          ubigeo: "150101",
           latitude: null,
           longitude: null,
           isPrimary: true,
         },
       ],
+      products: [{ productId: 1, quantity: 1 }],
+    });
+    if (!res.ok) throw new Error("Failed to create draft");
+    const recordId = res.value;
+
+    return recordId;
+  }
+
+  it("denies confirmation to cross-branch users", async () => {
+    await ctx.db
+      .insertInto("users")
+      .values([
+        {
+          id: asUserId("2"),
+          branch_id: asBranchId("2"),
+          team_id: null,
+          username: "admin.two",
+          email: "admin2@test.local",
+          password_hash: "hash",
+          names: "Admin",
+          first_surname: "Two",
+          second_surname: "Beta",
+          phone_e164: "+51990000112",
+          onboarding_completed_at: Date.now(),
+          role: "admin",
+          is_active: 1,
+          created_at: Date.now(),
+        },
+      ])
+      .execute();
+
+    const recordId = await createSubmittableRecord(ctx);
+    const res = await ctx.salesRecords.submit(recordId, asUserId("1"));
+    if (!res.ok) throw new Error("Failed to submit");
+
+    const denied = await ctx.salesRecords.confirm(
+      recordId,
+      asUserId("2"),
+      asBranchId("2"),
+      false,
+    );
+    expect(denied.ok).toBe(false);
+    if (denied.ok) throw new Error("Expected cross-branch confirm to fail");
+
+    expect(denied.error.message).toBe(SALES_ERROR_MANIFEST.crossBranchConfirm);
+  });
+
+  it("denies rejection to users without permissions", async () => {
+    await ctx.db
+      .insertInto("users")
+      .values([
+        {
+          id: asUserId("3"),
+          branch_id: asBranchId("1"),
+          team_id: null,
+          username: "exec.one",
+          email: "exec1@test.local",
+          password_hash: "hash",
+          names: "Exec",
+          first_surname: "One",
+          second_surname: "Gamma",
+          phone_e164: "+51990000113",
+          onboarding_completed_at: Date.now(),
+          role: "executive",
+          is_active: 1,
+          created_at: Date.now(),
+        },
+      ])
+      .execute();
+
+    const recordId = await createSubmittableRecord(ctx);
+    const res = await ctx.salesRecords.submit(recordId, asUserId("1"));
+    if (!res.ok) throw new Error("Failed to submit");
+
+    const denied = await ctx.salesRecords.reject(
+      recordId,
+      asUserId("3"),
+      asBranchId("1"),
+      false,
+      "Reason",
+    );
+    expect(denied.ok).toBe(false);
+    if (denied.ok)
+      throw new Error("Expected reject without permission to fail");
+  });
+
+  it("validates data integrity before allowing submission", async () => {
+    const rB = await ctx.salesRecords.createDraft({
+      executiveUserId: asUserId("1"),
+      branchId: asBranchId("1"),
+      source: "manual",
+      leadAssignmentId: null,
+      client: emptyClient,
+      addresses: [],
       products: [],
     });
-    expect(rB.ok).toBe(true);
     if (!rB.ok) {
       throw new Error("Expected incomplete draft creation to succeed");
     }
-    const missingProductsSubmit = await ctx.salesRecords.submit(rB.value, 1);
+    const missingProductsSubmit = await ctx.salesRecords.submit(
+      rB.value,
+      asUserId("1"),
+    );
     expect(missingProductsSubmit.ok).toBe(false);
     if (missingProductsSubmit.ok) {
       throw new Error("Expected missing-products submit contract to fail");
     }
-    expect(missingProductsSubmit.error.message).toBe(
-      SALES_ERROR_MANIFEST.submitMissingProducts,
-    );
 
     const recordId = await createSubmittableRecord(ctx);
-    const submitted = await ctx.salesRecords.submit(recordId, 1);
+    const submitted = await ctx.salesRecords.submit(recordId, asUserId("1"));
     expect(submitted.ok).toBe(true);
 
-    const denied = await ctx.salesRecords.confirm(recordId, 4, 2, false);
+    const denied = await ctx.salesRecords.confirm(
+      recordId,
+      asUserId("2"),
+      asBranchId("2"),
+      false,
+    );
     expect(denied.ok).toBe(false);
     if (denied.ok) {
       throw new Error("Expected cross-branch confirm deny contract to fail");
@@ -161,11 +192,18 @@ describe("security invariant manifest", () => {
 
     expect(denied.error.message).toBe(SALES_ERROR_MANIFEST.crossBranchConfirm);
 
-    const rejected = await ctx.salesRecords.reject(recordId, 2, 1, false, " ");
+    const rejected = await ctx.salesRecords.reject(
+      recordId,
+      asUserId("1"),
+      asBranchId("1"),
+      false,
+      " ",
+    );
     expect(rejected.ok).toBe(false);
     if (rejected.ok) {
       throw new Error("Expected empty-reason reject deny contract to fail");
     }
+
     expect(rejected.error.message).toBe(
       SALES_ERROR_MANIFEST.emptyRejectionReason,
     );

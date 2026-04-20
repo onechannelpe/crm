@@ -8,6 +8,8 @@ import { createSalesExportService } from "~/server/sales/export-service";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 
+import { createOrganizationTestKit } from "../organization-test-kit";
+import { createSalesTestKit } from "../sales-test-kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -34,6 +36,8 @@ export interface TestRuntime {
     salesExportService: ReturnType<typeof createSalesExportService>;
   };
   integrations: ReturnType<typeof createIntegrationRuntime>;
+  organizationKit: ReturnType<typeof createOrganizationTestKit>;
+  salesKit: ReturnType<typeof createSalesTestKit>;
   dispose(): Promise<void>;
 }
 
@@ -85,6 +89,8 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
       salesExportService,
     },
     integrations,
+    organizationKit: createOrganizationTestKit(ctx),
+    salesKit: createSalesTestKit(ctx),
     async dispose() {
       await cleanupTestDb(ctx);
     },

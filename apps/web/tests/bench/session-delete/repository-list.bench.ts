@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import type { UserId } from "../../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -15,7 +16,7 @@ import {
 
 describe("session list repository benchmark", () => {
   let ctx!: TestDbContext;
-  let userIds: number[] = [];
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {

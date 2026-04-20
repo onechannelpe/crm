@@ -5,6 +5,7 @@ import {
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
 
+import { asUserId, type UserId } from "../../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -16,7 +17,7 @@ import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
 describe("search capacity consume service benchmark", () => {
   let ctx!: TestDbContext;
-  let userIds: number[] = [];
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
@@ -26,7 +27,7 @@ describe("search capacity consume service benchmark", () => {
     for (const userId of userIds) {
       await ctx.repos.searchCapacityGrants.insert({
         user_id: userId,
-        actor_user_id: 2,
+        actor_user_id: asUserId("00000000-0000-0000-0000-000000000002"),
         amount: 2,
         reason: "bench_seed",
       });

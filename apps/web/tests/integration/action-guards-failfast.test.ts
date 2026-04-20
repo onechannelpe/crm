@@ -24,9 +24,7 @@ describe("action guards fail fast", () => {
     await expect(updateProductPricing(0, 10, true)).rejects.toThrow(
       "productId must be a positive integer",
     );
-    await expect(listUserSessions(0)).rejects.toThrow(
-      "userId must be a positive integer",
-    );
+    await expect(listUserSessions("0")).rejects.toThrow("Invalid userId");
   });
 
   it("rejects malformed textual payloads before auth", async () => {
@@ -36,7 +34,7 @@ describe("action guards fail fast", () => {
     await expect(rejectSalesRecord(1, "   ")).rejects.toThrow(
       "reason is required",
     );
-    await expect(revokeUserSession("   ", 1)).rejects.toThrow(
+    await expect(revokeUserSession("   ", "1")).rejects.toThrow(
       "sessionId is required",
     );
     await expect(getUserLoginRetryReport("   ")).rejects.toThrow(

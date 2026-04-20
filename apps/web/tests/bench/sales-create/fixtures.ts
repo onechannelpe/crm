@@ -1,10 +1,15 @@
 import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/contracts";
 
+import {
+  asBranchId,
+  asUserId,
+  type UserId,
+} from "../../../src/server/shared/ids";
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 96;
-const USER_ID_START = 100_000;
+const USER_ID_PREFIX = "00000000-0000-0000-0000-00000005";
 
 export const SALES_CREATE_BASE_DRAFT_INPUT: CreateSalesRecordDraftInput = {
   source: "manual",
@@ -36,15 +41,15 @@ export const SALES_CREATE_BASE_DRAFT_INPUT: CreateSalesRecordDraftInput = {
 
 export async function seedSalesCreateUsers(
   ctx: TestDbContext,
-): Promise<number[]> {
+): Promise<UserId[]> {
   const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: USER_ID_START + index,
-    branch_id: 1,
+    id: asUserId(USER_ID_PREFIX + String(index).padStart(4, "0")),
+    branch_id: asBranchId("00000000-0000-0000-0000-000000000011"),
     team_id: null,
-    username: `bench.sls${USER_ID_START + index}`,
-    email: `bench-sales-create-${USER_ID_START + index}@test.local`,
+    username: `bench.sls${index}`,
+    email: `bench-sales-create-${index}@test.local`,
     password_hash: "hash",
-    names: `Bench Sales Create ${USER_ID_START + index}`,
+    names: `Bench Sales Create ${index}`,
     first_surname: "User",
     second_surname: "Bench",
     phone_e164: `+5199044${String(index).padStart(4, "0")}`,

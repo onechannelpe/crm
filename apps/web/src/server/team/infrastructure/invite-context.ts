@@ -6,7 +6,12 @@ import type {
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { asTeamId, asUserId, type UserId } from "~/server/shared/ids";
+import {
+  asTeamId,
+  asUserId,
+  type InviteId,
+  type UserId,
+} from "~/server/shared/ids";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
@@ -45,7 +50,7 @@ export function createTeamInviteContext(
         },
       },
       userInvites: {
-        async findById(inviteId) {
+        async findById(inviteId: InviteId) {
           const invite = await repos.userInvites.findById(inviteId);
           return invite ? { user_id: asUserId(invite.user_id) } : undefined;
         },

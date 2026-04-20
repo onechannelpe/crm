@@ -1,12 +1,17 @@
+import {
+  asBranchId,
+  asUserId,
+  type UserId,
+} from "../../../src/server/shared/ids";
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 60;
-const USER_ID_START = 40_000;
+const USER_ID_PREFIX = "00000000-0000-0000-0000-00000006";
 const SESSIONS_PER_USER = 800;
 
 export interface SessionDeleteFixtures {
-  userIds: number[];
+  userIds: UserId[];
 }
 
 export async function seedSessionDeleteFixtures(
@@ -14,13 +19,13 @@ export async function seedSessionDeleteFixtures(
   sessionIdPrefix: string,
 ): Promise<SessionDeleteFixtures> {
   const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: USER_ID_START + index,
-    branch_id: 1,
+    id: asUserId(USER_ID_PREFIX + String(index).padStart(4, "0")),
+    branch_id: asBranchId("00000000-0000-0000-0000-000000000011"),
     team_id: null,
-    username: `bench.ses${USER_ID_START + index}`,
-    email: `bench-session-${USER_ID_START + index}@test.local`,
+    username: `bench.ses${index}`,
+    email: `bench-session-${index}@test.local`,
     password_hash: "hash",
-    names: `Bench Session ${USER_ID_START + index}`,
+    names: `Bench Session ${index}`,
     first_surname: "User",
     second_surname: "Bench",
     phone_e164: `+5199022${String(index).padStart(4, "0")}`,
@@ -38,7 +43,7 @@ export async function seedSessionDeleteFixtures(
     const sessions = Array.from({ length: SESSIONS_PER_USER }, (_, index) => ({
       id: `${sessionIdPrefix}-${userId}-${index}`,
       user_id: userId,
-      branch_id: 1,
+      branch_id: asBranchId("00000000-0000-0000-0000-000000000011"),
       role: "executive" as const,
       session_class: "app" as const,
       primary_auth_method: "password" as const,

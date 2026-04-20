@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createSalesExportQueue } from "../../src/server/sales/queue/sales-export-queue";
+import { asUserId, asBranchId } from "../../src/server/shared/ids";
+import {
+  ISOLATED_DB_IDENTITIES,
+  TEST_IDS,
+} from "../support/identities/seeded-identities";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -18,62 +23,19 @@ describe("sales export service", () => {
   });
 
   it("processes queued jobs and stores a real xlsx artifact", async () => {
-    const now = Date.now();
-    await runtime.ctx.db
-      .insertInto("sales_records")
-      .values({
-        id: 501,
-        source: "manual",
-        status: "confirmed",
-        executive_user_id: 1,
-        lead_assignment_id: null,
-        branch_id: 1,
-        submitted_at: now - 100,
-        confirmed_at: now - 50,
-        rejected_at: null,
-        cancelled_at: null,
-        created_at: now,
-        updated_at: now,
-      })
-      .execute();
+    const branch1 = TEST_IDS.BRANCH_LIMA;
 
-    await runtime.ctx.db
-      .insertInto("sales_record_client")
-      .values({
-        sales_record_id: 501,
-        ruc: "20100000001",
-        company_name: "Org Lima",
-        contact_name: "Contacto Lima",
-        dni: "70000001",
-        phones_json: "[]",
-        engine_match_id: null,
-        completeness_score: 90,
-        created_at: now,
-        updated_at: now,
-      })
-      .execute();
+    await runtime.salesKit.setupConfirmedSale({
+      id: 501,
+      executiveUserId: ISOLATED_DB_IDENTITIES.execOne.userId,
+      branchId: branch1,
+      companyName: "Org Lima",
+    });
 
-    const jobId = await runtime.ctx.repos.reportExportJobs.createJob({
-      requested_by_user_id: 2,
-      branch_id: 1,
-      format: "xlsx",
-      filters_json: JSON.stringify({
-        status: "confirmed",
-        scope: "branch",
-        branchId: 1,
-      }),
+    const jobId = await runtime.salesKit.createExportJob({
+      requestedByUserId: ISOLATED_DB_IDENTITIES.backOne.userId,
+      branchId: branch1,
       status: "queued",
-      rows_count: null,
-      file_storage_key: null,
-      file_sha256: null,
-      error_message: null,
-      requested_at: now,
-      completed_at: null,
-      expires_at: null,
-      lease_owner: null,
-      lease_until: null,
-      attempt_count: 0,
-      max_attempts: 5,
     });
 
     const queue = createSalesExportQueue("test-worker", {
@@ -102,13 +64,13 @@ describe("sales export service", () => {
   it("does not lease the same job while lease is active", async () => {
     const now = Date.now();
     await runtime.ctx.repos.reportExportJobs.createJob({
-      requested_by_user_id: 2,
-      branch_id: 1,
+      requested_by_user_id: asUserId("2"),
+      branch_id: asBranchId("1"),
       format: "csv",
       filters_json: JSON.stringify({
         status: "confirmed",
         scope: "branch",
-        branchId: 1,
+        branchId: asBranchId("1"),
       }),
       status: "queued",
       rows_count: null,
@@ -127,13 +89,13 @@ describe("sales export service", () => {
     const firstLease = await runtime.ctx.repos.reportExportJobs.leaseQueuedJobs(
       10,
       30_000,
-      "worker-a",
+      asUserId("worker-a"),
     );
     const secondLease =
       await runtime.ctx.repos.reportExportJobs.leaseQueuedJobs(
         10,
         30_000,
-        "worker-b",
+        asUserId("worker-b"),
       );
 
     expect(firstLease).toHaveLength(1);
@@ -148,28 +110,24 @@ describe("sales export service", () => {
     const storageKey = "sales-export-expire-test.csv";
     await blobStore.put(storageKey, new TextEncoder().encode("a,b\n1,2\n"));
 
-    const jobId = await runtime.ctx.repos.reportExportJobs.createJob({
-      requested_by_user_id: 2,
-      branch_id: 1,
-      format: "csv",
-      filters_json: JSON.stringify({
-        status: "confirmed",
-        scope: "branch",
-        branchId: 1,
-      }),
+    const jobId = await runtime.salesKit.createExportJob({
+      requestedByUserId: ISOLATED_DB_IDENTITIES.backOne.userId,
+      branchId: TEST_IDS.BRANCH_LIMA,
       status: "completed",
-      rows_count: 1,
-      file_storage_key: storageKey,
-      file_sha256: "abc123",
-      error_message: null,
-      requested_at: now - 1_000,
-      completed_at: now - 900,
-      expires_at: now - 1,
-      lease_owner: null,
-      lease_until: null,
-      attempt_count: 0,
-      max_attempts: 5,
     });
+
+    await runtime.ctx.db
+      .updateTable("report_export_jobs")
+      .set({
+        rows_count: 1,
+        file_storage_key: storageKey,
+        file_sha256: "abc123",
+        requested_at: now - 1_000,
+        completed_at: now - 900,
+        expires_at: now - 1,
+      })
+      .where("id", "=", jobId)
+      .execute();
 
     const expired = await service.expireCompleted(10);
     expect(expired).toBe(1);

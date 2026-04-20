@@ -1,10 +1,11 @@
 import type { Role } from "../../../src/lib/auth/access/rbac";
+import type { BranchId, UserId } from "../../../src/server/shared/ids";
 
 export interface BrowserIdentity {
-  userId: number;
+  userId: UserId;
   username: string;
   email: string;
-  branchId: number;
+  branchId: BranchId;
   role: Role;
   password: string;
 }
@@ -12,7 +13,7 @@ export interface BrowserIdentity {
 export interface BrowserUserOptions {
   role: Role;
   username?: string;
-  branchId?: number;
+  branchId?: BranchId;
   onboardingCompleted?: boolean;
   active?: boolean;
 }

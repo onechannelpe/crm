@@ -10,14 +10,24 @@ import { type LeadCandidate } from "~/server/shared/engine/lead-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
+  asBranchId,
+  asContactId,
+  asOrganizationId,
+  asUserId,
+  type BranchId,
+  type ContactId,
+  type OrganizationId,
+  type UserId,
+} from "../../src/server/shared/ids";
+import {
   makeLeadCapacityGrantsRepo,
   makeLeadUsageCommitsRepo,
   makeLeadUsageReservationsRepo,
   makeNullLeadPolicyRepos,
 } from "../support/capacity-fakes";
 
-const USER_ID = 1;
-const BRANCH_ID = 1;
+const USER_ID = asUserId("00000000-0000-0000-0000-000000000001");
+const BRANCH_ID = asBranchId("00000000-0000-0000-0000-000000000001");
 
 function makeCandidate(n: number): LeadCandidate {
   return {
@@ -43,16 +53,18 @@ function makeRepos(activeAssignments = 0) {
       createMany: async () => undefined,
     },
     organizations: {
-      findOrCreate: async (_ruc: string, _name: string) => ({ id: 1 }),
+      findOrCreate: async (_ruc: string, _name: string) => ({
+        id: asOrganizationId("00000000-0000-0000-0000-000000000001"),
+      }),
     },
     contacts: {
       findOrCreate: async (
-        _orgId: number,
+        _orgId: OrganizationId,
         _dni: string,
         _name: string,
         _phone: string,
-      ): Promise<{ id: number; cooldown_until: number | null }> => ({
-        id: Math.floor(Math.random() * 10000),
+      ): Promise<{ id: ContactId; cooldown_until: number | null }> => ({
+        id: asContactId("00000000-0000-0000-0000-000000007777"),
         cooldown_until: null,
       }),
     },
@@ -99,13 +111,18 @@ describe("assignContacts", () => {
     // Gateway returns 2 candidates but contacts will all have cooldowns after first
     let contactCallCount = 0;
     repos.contacts.findOrCreate = async (): Promise<{
-      id: number;
+      id: ContactId;
       cooldown_until: number | null;
     }> => {
       contactCallCount++;
       // First contact is contactable, rest are on cooldown
       const cooldown_until = contactCallCount === 1 ? null : Date.now() + 99999;
-      return { id: contactCallCount, cooldown_until };
+      return {
+        id: asContactId(
+          `00000000-0000-0000-0000-00000000${String(contactCallCount).padStart(4, "0")}`,
+        ),
+        cooldown_until,
+      };
     };
 
     const candidates: LeadCandidate[] = [
@@ -115,8 +132,8 @@ describe("assignContacts", () => {
     ];
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
     };
@@ -150,8 +167,8 @@ describe("assignContacts", () => {
     const candidates: LeadCandidate[] = [makeCandidate(1)];
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
     };
@@ -174,8 +191,8 @@ describe("assignContacts", () => {
     const repos = makeRepos(0);
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<LeadCandidate[], DomainError>> =>
         Err(

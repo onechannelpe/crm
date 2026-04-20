@@ -5,14 +5,15 @@ import {
   createLeadId,
   type LeadId,
 } from "../../../src/server/pipeline/domain/lead-record";
+import { asUserId, type UserId } from "../../../src/server/shared/ids";
 
 type InsertTestLeadInput = {
   db: Kysely<Database>;
-  executiveId?: number;
+  executiveId?: UserId;
   ruc?: string;
   razonSocial?: string | null;
   stage?: Database["pipeline_leads"]["stage"];
-  createdBy?: number;
+  createdBy?: UserId;
   createdAt?: number;
 };
 
@@ -24,11 +25,11 @@ type InsertTestLeadInput = {
  */
 export async function insertTestLead({
   db,
-  executiveId = 1,
+  executiveId = asUserId("00000000-0000-0000-0000-000000000001"),
   ruc = "20100000001",
   razonSocial = null,
   stage = "PENDING_EXTERNAL_REVIEW",
-  createdBy = 1,
+  createdBy = asUserId("00000000-0000-0000-0000-000000000001"),
   createdAt = 10,
 }: InsertTestLeadInput): Promise<LeadId> {
   const id = createLeadId();

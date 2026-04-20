@@ -7,21 +7,30 @@ import {
   listSalesExportJobsForActor,
   type SalesExportServiceDeps,
 } from "../../src/server/sales-exports/service";
+import {
+  asUserId,
+  asBranchId,
+  type UserId,
+  type BranchId,
+} from "../../src/server/shared/ids";
 
 interface SessionLike {
-  userId: number;
+  userId: UserId;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
 }
 
 function buildJob(overrides: Record<string, unknown> = {}) {
   return {
     id: 11,
-    requested_by_user_id: 2,
+    requested_by_user_id: asUserId("2"),
     requested_by_name: "Back 1",
-    branch_id: 1,
+    branch_id: asBranchId("1"),
     format: "csv" as const,
-    filters_json: JSON.stringify({ scope: "branch", branchId: 1 }),
+    filters_json: JSON.stringify({
+      scope: "branch",
+      branchId: asBranchId("1"),
+    }),
     status: "completed" as const,
     rows_count: 7,
     file_storage_key: "k.csv",
@@ -44,13 +53,13 @@ function createDeps(
       Array<{
         id: number;
         export_job_id: number;
-        downloaded_by_user_id: number;
+        downloaded_by_user_id: UserId;
         downloaded_by_name: string;
         downloaded_at: number;
       }>
     >;
-    findUserById?: (userId: number) => Promise<{
-      id: number;
+    findUserById?: (userId: UserId) => Promise<{
+      id: UserId;
       names: string;
       first_surname: string;
       second_surname: string;
@@ -59,21 +68,22 @@ function createDeps(
 ): SalesExportServiceDeps {
   return {
     reportExportJobs: {
-      listJobs: async (limit: number, scope?: { branchId: number }) => {
+      listJobs: async (limit: number, scope?: { branchId: BranchId }) => {
         if (overrides.listJobs) {
           return overrides.listJobs(limit, scope);
         }
-        return [buildJob()];
+        return [buildJob() as any];
       },
-      findJobById: overrides.findJobById ?? (async () => buildJob()),
-      listDownloadsByJob: overrides.listDownloadsByJob ?? (async () => []),
+      findJobById: (overrides.findJobById as any) ?? (async () => buildJob()),
+      listDownloadsByJob:
+        (overrides.listDownloadsByJob as any) ?? (async () => []),
       createJob: async () => 11,
     },
     users: {
       findById:
         overrides.findUserById ??
         (async () => ({
-          id: 2,
+          id: asUserId("2"),
           names: "Back",
           first_surname: "One",
           second_surname: "",
@@ -84,33 +94,42 @@ function createDeps(
 
 describe("sales export service branch scope", () => {
   it("lists jobs by branch for non-superusers", async () => {
-    let received: { limit: number; scope?: { branchId: number } } | null = null;
-    const actor: SessionLike = { userId: 2, role: "back_office", branchId: 1 };
+    let received: { limit: number; scope?: { branchId: BranchId } } | null =
+      null;
+    const actor: SessionLike = {
+      userId: asUserId("2"),
+      role: "back_office",
+      branchId: asBranchId("1"),
+    };
     const jobs = await listSalesExportJobsForActor(
       actor,
       20,
       createDeps({
-        listJobs: async (limit: number, scope?: { branchId: number }) => {
+        listJobs: async (limit: number, scope?: { branchId: BranchId }) => {
           received = { limit, scope };
-          return [buildJob()];
+          return [buildJob() as any];
         },
       }),
     );
 
-    expect(received).toEqual({ limit: 20, scope: { branchId: 1 } });
+    expect(received).toEqual({
+      limit: 20,
+      scope: { branchId: asBranchId("1") },
+    });
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.id).toBe(11);
   });
 
   it("lists global jobs for superuser", async () => {
-    let received: { limit: number; scope?: { branchId: number } } | null = null;
+    let received: { limit: number; scope?: { branchId: BranchId } } | null =
+      null;
     await listSalesExportJobsForActor(
-      { userId: 5, role: "superuser", branchId: 2 },
+      { userId: asUserId("5"), role: "superuser", branchId: asBranchId("2") },
       20,
       createDeps({
-        listJobs: async (limit: number, scope?: { branchId: number }) => {
+        listJobs: async (limit: number, scope?: { branchId: BranchId }) => {
           received = { limit, scope };
-          return [buildJob()];
+          return [buildJob() as any];
         },
       }),
     );
@@ -120,10 +139,11 @@ describe("sales export service branch scope", () => {
 
   it("hides detail for cross-branch non-superuser", async () => {
     const result = await getSalesExportJobForActor(
-      { userId: 4, role: "back_office", branchId: 2 },
+      { userId: asUserId("4"), role: "back_office", branchId: asBranchId("2") },
       11,
       createDeps({
-        findJobById: async () => buildJob({ branch_id: 1 }),
+        findJobById: async () =>
+          buildJob({ branch_id: asBranchId("1") }) as any,
       }),
     );
 
@@ -132,24 +152,26 @@ describe("sales export service branch scope", () => {
 
   it("returns download log only for same branch or superuser", async () => {
     const blocked = await listSalesExportDownloadsForActor(
-      { userId: 4, role: "back_office", branchId: 2 },
+      { userId: asUserId("4"), role: "back_office", branchId: asBranchId("2") },
       11,
       createDeps({
-        findJobById: async () => buildJob({ branch_id: 1 }),
+        findJobById: async () =>
+          buildJob({ branch_id: asBranchId("1") }) as any,
       }),
     );
     expect(blocked).toEqual([]);
 
     const allowed = await listSalesExportDownloadsForActor(
-      { userId: 5, role: "superuser", branchId: 2 },
+      { userId: asUserId("5"), role: "superuser", branchId: asBranchId("2") },
       11,
       createDeps({
-        findJobById: async () => buildJob({ branch_id: 1 }),
+        findJobById: async () =>
+          buildJob({ branch_id: asBranchId("1") }) as any,
         listDownloadsByJob: async () => [
           {
             id: 3,
             export_job_id: 11,
-            downloaded_by_user_id: 5,
+            downloaded_by_user_id: asUserId("5"),
             downloaded_by_name: "Super User",
             downloaded_at: 100,
           },
@@ -163,7 +185,7 @@ describe("sales export service branch scope", () => {
   it("getSalesExportJob returns null and skips user lookup when job is not found", async () => {
     let lookedUpUser = false;
     const result = await getSalesExportJobForActor(
-      { userId: 2, role: "back_office", branchId: 1 },
+      { userId: asUserId("2"), role: "back_office", branchId: asBranchId("1") },
       99,
       createDeps({
         findJobById: async () => null,
@@ -181,7 +203,7 @@ describe("sales export service branch scope", () => {
   it("listSalesExportDownloads returns empty and skips query when job is not found", async () => {
     let listedDownloads = false;
     const result = await listSalesExportDownloadsForActor(
-      { userId: 2, role: "back_office", branchId: 1 },
+      { userId: asUserId("2"), role: "back_office", branchId: asBranchId("1") },
       99,
       createDeps({
         findJobById: async () => null,

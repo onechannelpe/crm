@@ -1,13 +1,19 @@
 import { hashPassword } from "~/lib/auth/password/password";
 
+import {
+  asBranchId,
+  asUserId,
+  type UserId,
+} from "../../../src/server/shared/ids";
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const LOGIN_POOL_SIZE = 256;
-const LOGIN_USER_ID_START = 10_000;
+const LOGIN_USER_ID_PREFIX = "00000000-0000-0000-0000-00000001";
 export const LOGIN_PASSWORD = "Secret123!";
 
 export interface LoginFixture {
+  userId: UserId;
   username: string;
   ipAddress: string;
 }
@@ -18,12 +24,13 @@ export async function seedAuthLoginFixtures(
   const passwordHash = await hashPassword(LOGIN_PASSWORD);
 
   const users = Array.from({ length: LOGIN_POOL_SIZE }, (_, index) => {
-    const id = LOGIN_USER_ID_START + index;
+    const userIdString = LOGIN_USER_ID_PREFIX + String(index).padStart(4, "0");
+    const id = asUserId(userIdString);
     return {
       id,
-      branch_id: 1,
+      branch_id: asBranchId("00000000-0000-0000-0000-000000000011"),
       team_id: null,
-      username: `bench.auth${id}`,
+      username: `bench.auth${index}`,
       email: `bench-auth-${id}@test.local`,
       password_hash: passwordHash,
       names: `Bench Auth ${id}`,
@@ -41,6 +48,7 @@ export async function seedAuthLoginFixtures(
   await ctx.db.insertInto("users").values(users).execute();
 
   return users.map((user, index) => ({
+    userId: user.id,
     username: user.username,
     ipAddress: `198.51.100.${(index % 200) + 1}`,
   }));

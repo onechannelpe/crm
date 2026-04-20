@@ -11,33 +11,41 @@ import type {
   CapacityApprovalTxPort,
 } from "../../src/server/capacity/application/ports";
 import type { AppContext } from "../../src/server/shared/action-runtime";
+import {
+  asBranchId,
+  asTeamId,
+  asUserId,
+  type BranchId,
+  type TeamId,
+  type UserId,
+} from "../../src/server/shared/ids";
 
-const ACTOR_USER_ID = 99;
-const TARGET_USER_ID = 1;
+const ACTOR_USER_ID = asUserId("00000000-0000-0000-0000-000000000099");
+const TARGET_USER_ID = asUserId("00000000-0000-0000-0000-000000000001");
 const REQUEST_ID = 42;
 
 type RequestRow = {
   id: number;
-  userId: number;
+  userId: UserId;
   kind: "search_extra" | "lead_refill_extra";
   status: "pending" | "approved" | "rejected" | "canceled";
   requestedAmount: number;
   reason: string;
-  decidedByUserId?: number | null;
+  decidedByUserId?: UserId | null;
   decisionNote?: string | null;
 };
 
 type GrantRow = {
-  userId: number;
+  userId: UserId;
   amount: number;
   reason: string;
-  actorUserId: number;
+  actorUserId: UserId;
 };
 
 type ManagedUser = {
   role: Role;
-  branchId: number;
-  teamId: number | null;
+  branchId: BranchId;
+  teamId: TeamId | null;
 };
 
 function makeContext(role: Role = "admin"): AppContext {
@@ -46,7 +54,7 @@ function makeContext(role: Role = "admin"): AppContext {
       id: "test-session",
       userId: ACTOR_USER_ID,
       role,
-      branchId: 1,
+      branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
       onboardingCompleted: true,
       sessionClass: "app",
       primaryAuthMethod: "password",
@@ -65,7 +73,7 @@ function makeContext(role: Role = "admin"): AppContext {
 function makeHarness(input: {
   request: RequestRow | undefined;
   targetUser?: ManagedUser | undefined;
-  supervisedTeamId?: number | undefined;
+  supervisedTeamId?: string | undefined;
   failMarkApproved?: boolean;
 }) {
   let request = input.request ? { ...input.request } : undefined;
@@ -84,7 +92,7 @@ function makeHarness(input: {
           draftRequest?.id === id ? draftRequest : undefined,
         markRequestApproved: async (
           id: number,
-          actorUserId: number,
+          actorUserId: UserId,
           note: string | null,
         ) => {
           if (input.failMarkApproved) {
@@ -100,7 +108,7 @@ function makeHarness(input: {
         },
         markRequestRejected: async (
           id: number,
-          actorUserId: number,
+          actorUserId: UserId,
           note: string,
         ) => {
           if (!draftRequest || draftRequest.id !== id) {
@@ -111,11 +119,11 @@ function makeHarness(input: {
           draftRequest.decisionNote = note;
           return true;
         },
-        findManagedUserById: async (userId: number) =>
+        findManagedUserById: async (userId: UserId) =>
           userId === input.request?.userId ? input.targetUser : undefined,
-        findSupervisedTeamBySupervisorId: async (userId: number) =>
+        findSupervisedTeamBySupervisorId: async (userId: UserId) =>
           userId === ACTOR_USER_ID && input.supervisedTeamId
-            ? { id: input.supervisedTeamId }
+            ? { id: asTeamId(input.supervisedTeamId) }
             : undefined,
         findManagedTeamById: async () => undefined,
         grantSearchCapacity: async (values: GrantRow) => {
@@ -172,7 +180,11 @@ describe("capacity approval commands", () => {
         requestedAmount: 10,
         reason: "need more",
       },
-      targetUser: { role: "executive", branchId: 1, teamId: null },
+      targetUser: {
+        role: "executive",
+        branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
+        teamId: null,
+      },
     });
 
     const result = await approveCapacityRequest(makeContext(), harness.port, {
@@ -207,7 +219,11 @@ describe("capacity approval commands", () => {
         requestedAmount: 4,
         reason: "old reason",
       },
-      targetUser: { role: "executive", branchId: 1, teamId: null },
+      targetUser: {
+        role: "executive",
+        branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
+        teamId: null,
+      },
     });
 
     const result = await approveCapacityRequest(makeContext(), harness.port, {
@@ -241,7 +257,11 @@ describe("capacity approval commands", () => {
         requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branchId: 2, teamId: null },
+      targetUser: {
+        role: "executive",
+        branchId: asBranchId("00000000-0000-0000-0000-000000000002"),
+        teamId: null,
+      },
     });
 
     const result = await approveCapacityRequest(
@@ -273,7 +293,11 @@ describe("capacity approval commands", () => {
         requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branchId: 1, teamId: null },
+      targetUser: {
+        role: "executive",
+        branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
+        teamId: null,
+      },
       failMarkApproved: true,
     });
 
@@ -302,7 +326,11 @@ describe("capacity approval commands", () => {
         requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branchId: 1, teamId: null },
+      targetUser: {
+        role: "executive",
+        branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
+        teamId: null,
+      },
     });
 
     const result = await rejectCapacityRequest(makeContext(), harness.port, {
@@ -328,7 +356,11 @@ describe("capacity approval commands", () => {
         requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branchId: 1, teamId: null },
+      targetUser: {
+        role: "executive",
+        branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
+        teamId: null,
+      },
     });
 
     const result = await rejectCapacityRequest(makeContext(), harness.port, {

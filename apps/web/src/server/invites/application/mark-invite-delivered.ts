@@ -1,13 +1,14 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import { type InviteId } from "../../shared/ids";
 import { inviteError } from "../domain/errors";
 import type { InviteDeps, InviteRuntime } from "./types";
 
 export async function markInviteDelivered(
   repos: InviteDeps,
   runtime: InviteRuntime,
-  inviteId: number,
+  inviteId: InviteId,
 ): Promise<Result<void, DomainError>> {
   try {
     await runtime.runInTransaction(async (transactionRepos) => {

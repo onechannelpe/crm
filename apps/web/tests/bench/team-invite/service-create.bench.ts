@@ -2,6 +2,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
 
+import { asUserId, asBranchId } from "../../../src/server/shared/ids";
 import { createInviteTestKit } from "../../support/invite-test-kit";
 import {
   cleanupTestDb,
@@ -44,9 +45,9 @@ describe("team invite create benchmark", () => {
       );
 
       const result = await inviteCreate({
-        actorUserId: 5,
+        actorUserId: asUserId("00000000-0000-0000-0000-000000000005"),
         actorRole: "superuser",
-        branchId: 2,
+        branchId: asBranchId("00000000-0000-0000-0000-000000000012"),
         names: `Bench Create ${createCursor.value}`,
         firstSurname: "User",
         secondSurname: "Bench",

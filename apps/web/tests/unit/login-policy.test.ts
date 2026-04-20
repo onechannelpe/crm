@@ -4,6 +4,7 @@ import {
   evaluateLoginPolicy,
   type LoginPolicyInput,
 } from "../../src/server/auth/policy/engine";
+import { asUserId } from "../../src/server/shared/ids";
 
 function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];
@@ -13,7 +14,7 @@ function createInput(overrides?: {
   return {
     proof: overrides?.proof ?? {
       kind: "google",
-      userId: 1,
+      userId: asUserId("00000000-0000-0000-0000-000000000001"),
       trustedFederatedMfa: false,
     },
     context: {
@@ -94,7 +95,7 @@ describe("login policy", () => {
       createInput({
         proof: {
           kind: "google",
-          userId: 1,
+          userId: asUserId("00000000-0000-0000-0000-000000000001"),
           trustedFederatedMfa: true,
         },
       }),
@@ -113,7 +114,7 @@ describe("login policy", () => {
       createInput({
         proof: {
           kind: "password",
-          userId: 1,
+          userId: asUserId("00000000-0000-0000-0000-000000000001"),
         },
         user: {
           role: "admin",

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
 import { createNeedsExecutiveOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+import { asLeadId, asUserId, type UserId } from "../../src/server/shared/ids";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -10,8 +11,13 @@ import {
 
 describe("integration import pipeline concurrency", () => {
   let runtime: TestRuntime;
-  const LEAD_ONE_ID = "00000000-0000-0000-0000-000000000901";
-  const LEAD_TWO_ID = "00000000-0000-0000-0000-000000000902";
+  const LEAD_ONE_ID = asLeadId("00000000-0000-0000-0000-000000000901");
+  const LEAD_TWO_ID = asLeadId("00000000-0000-0000-0000-000000000902");
+  const WORKER_ID = asUserId("00000000-0000-0000-0000-000000000100");
+  const ADMIN_ID = asUserId("00000000-0000-0000-0000-000000000005");
+  const EXEC_1_ID = asUserId("00000000-0000-0000-0000-000000000001");
+  const EXEC_3_ID = asUserId("00000000-0000-0000-0000-000000000003");
+  const EXEC_4_ID = asUserId("00000000-0000-0000-0000-000000000004");
 
   beforeEach(async () => {
     runtime = await createTestRuntime("integration-import-concurrency");
@@ -34,11 +40,11 @@ describe("integration import pipeline concurrency", () => {
           address: "Addr 1",
           district: null,
           department: null,
-          executive_id: 1,
+          executive_id: EXEC_1_ID,
           stage: "PENDING_EXTERNAL_REVIEW",
           status: "DISPONIBLE",
           prioridad: "P1",
-          created_by: 1,
+          created_by: ADMIN_ID,
           created_at: now,
           updated_at: now,
         },
@@ -49,11 +55,11 @@ describe("integration import pipeline concurrency", () => {
           address: "Addr 2",
           district: null,
           department: null,
-          executive_id: 3,
+          executive_id: EXEC_3_ID,
           stage: "PENDING_EXTERNAL_REVIEW",
           status: "SIN RESULTADO",
           prioridad: "P1",
-          created_by: 1,
+          created_by: ADMIN_ID,
           created_at: now,
           updated_at: now,
         },
@@ -66,14 +72,14 @@ describe("integration import pipeline concurrency", () => {
         id: 5001,
         type: "import_status",
         status: "PROCESSING",
-        requested_by_user_id: 5,
+        requested_by_user_id: ADMIN_ID,
         file_path: "inline",
         error_message: null,
         rows_total: null,
         rows_applied: null,
         rows_failed: null,
         results_json: null,
-        lease_owner: "test-worker",
+        lease_owner: WORKER_ID,
         lease_until: now + 30_000,
         attempt_count: 1,
         max_attempts: 3,
@@ -93,7 +99,7 @@ describe("integration import pipeline concurrency", () => {
     const applyPromise = applyImportRows(
       {
         jobId: 5001,
-        actorId: 5,
+        actorId: ADMIN_ID,
         validRows: [
           {
             row: 1,
@@ -132,11 +138,11 @@ describe("integration import pipeline concurrency", () => {
     expect(pendingNeedsExec.count).toBe(1);
     expect(pendingReadyForQuote.count).toBe(1);
 
-    const needsExecutiveQueue = createNeedsExecutiveOutboxQueue("test-worker", {
+    const needsExecutiveQueue = createNeedsExecutiveOutboxQueue(WORKER_ID, {
       executor: runtime.integrations.executor,
     });
     const readyForQuotationQueue = createReadyForQuotationOutboxQueue(
-      "test-worker",
+      WORKER_ID,
       { executor: runtime.integrations.executor },
     );
 
@@ -153,12 +159,12 @@ describe("integration import pipeline concurrency", () => {
 
     expect(notifications).toEqual([
       {
-        user_id: 1,
+        user_id: EXEC_1_ID,
         event_type: "lead.needs_executive_input",
         dedupe_key: `lead_nei_${LEAD_ONE_ID}`,
       },
       {
-        user_id: 4,
+        user_id: EXEC_4_ID,
         event_type: "lead.ready_for_quotation",
         dedupe_key: `lead_rfq_${LEAD_TWO_ID}`,
       },

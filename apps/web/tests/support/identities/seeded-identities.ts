@@ -1,5 +1,23 @@
 import type { Role } from "../../../src/lib/auth/access/rbac";
-import type { BranchId, UserId } from "../../../src/server/shared/ids";
+import {
+  asBranchId,
+  asContactId,
+  asOrganizationId,
+  asUserId,
+  type BranchId,
+  type ContactId,
+  type OrganizationId,
+  type UserId,
+} from "../../../src/server/shared/ids";
+
+export const TEST_IDS = {
+  BRANCH_LIMA: asBranchId("00000000-0000-0000-0000-000000000011"),
+  BRANCH_NORTE: asBranchId("00000000-0000-0000-0000-000000000012"),
+  ORG_LIMA: asOrganizationId("00000000-0000-0000-0000-000000000101"),
+  ORG_NORTE: asOrganizationId("00000000-0000-0000-0000-000000000102"),
+  CONTACT_LIMA: asContactId("00000000-0000-0000-0000-000000000201"),
+  CONTACT_NORTE: asContactId("00000000-0000-0000-0000-000000000202"),
+} as const;
 
 export interface TestIdentity {
   userId: UserId;
@@ -14,55 +32,55 @@ export interface BrowserSeededIdentity extends TestIdentity {
 
 export const ISOLATED_DB_IDENTITIES = {
   execOne: {
-    userId: 1,
+    userId: asUserId("00000000-0000-0000-0000-000000000001"),
     username: "exec.one",
-    branchId: 1,
+    branchId: TEST_IDS.BRANCH_LIMA,
     role: "executive",
   },
   backOne: {
-    userId: 2,
+    userId: asUserId("00000000-0000-0000-0000-000000000002"),
     username: "back.one",
-    branchId: 1,
+    branchId: TEST_IDS.BRANCH_LIMA,
     role: "back_office",
   },
   execTwo: {
-    userId: 3,
+    userId: asUserId("00000000-0000-0000-0000-000000000003"),
     username: "exec.two",
-    branchId: 2,
+    branchId: TEST_IDS.BRANCH_NORTE,
     role: "executive",
   },
   backTwo: {
-    userId: 4,
+    userId: asUserId("00000000-0000-0000-0000-000000000004"),
     username: "back.two",
-    branchId: 2,
+    branchId: TEST_IDS.BRANCH_NORTE,
     role: "back_office",
   },
   superuser: {
-    userId: 5,
+    userId: asUserId("00000000-0000-0000-0000-000000000005"),
     username: "super.user",
-    branchId: 2,
+    branchId: TEST_IDS.BRANCH_NORTE,
     role: "superuser",
   },
-} as const satisfies Record<string, TestIdentity>;
+} satisfies Record<string, TestIdentity>;
 
 export const BROWSER_TEST_PASSWORD = "placeholder";
 
 export const BROWSER_DB_IDENTITIES = {
   passkeyUser: {
-    userId: 1,
+    userId: asUserId("00000000-0000-0000-0000-000000010001"),
     username: "valeria.paredes",
-    branchId: 1,
+    branchId: TEST_IDS.BRANCH_LIMA,
     role: "admin",
     password: BROWSER_TEST_PASSWORD,
   },
   strongAuthUser: {
-    userId: 12,
+    userId: asUserId("00000000-0000-0000-0000-000000010012"),
     username: "mario.aguirre",
-    branchId: 1,
+    branchId: TEST_IDS.BRANCH_LIMA,
     role: "sales_manager",
     password: BROWSER_TEST_PASSWORD,
   },
-} as const satisfies Record<string, BrowserSeededIdentity>;
+} satisfies Record<string, BrowserSeededIdentity>;
 
 export type SeededIdentityName = keyof typeof ISOLATED_DB_IDENTITIES;
 export type SeededBrowserIdentityName = keyof typeof BROWSER_DB_IDENTITIES;

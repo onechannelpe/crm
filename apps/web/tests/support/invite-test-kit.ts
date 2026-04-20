@@ -1,5 +1,11 @@
 import { createInviteService } from "../../src/server/invites/application/invite-service";
 import type { InviteService } from "../../src/server/invites/application/types";
+import {
+  asInviteId,
+  type BranchId,
+  type InviteId,
+  type UserId,
+} from "../../src/server/shared/ids";
 import type { TestDbContext } from "./test-db";
 
 export function createInviteTestKit(
@@ -17,8 +23,8 @@ export function createInviteTestKit(
     revoke: InviteService["revokeInvite"];
   };
   expect: {
-    inviteStatus(inviteId: number): Promise<string | undefined>;
-    userActive(userId: number): Promise<number | undefined>;
+    inviteStatus(inviteId: InviteId): Promise<string | undefined>;
+    userActive(userId: UserId): Promise<number | undefined>;
   };
 } {
   const service = createInviteService(ctx.repos, {
@@ -35,11 +41,11 @@ export function createInviteTestKit(
       revoke: (input) => service.revokeInvite(input),
     },
     expect: {
-      async inviteStatus(inviteId: number) {
+      async inviteStatus(inviteId: InviteId) {
         const invite = await ctx.repos.userInvites.findById(inviteId);
         return invite?.status;
       },
-      async userActive(userId: number) {
+      async userActive(userId: UserId) {
         const user = await ctx.repos.users.findById(userId);
         return user?.is_active;
       },

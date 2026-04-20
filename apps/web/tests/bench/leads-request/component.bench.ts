@@ -3,6 +3,7 @@ import { bench, describe } from "vitest";
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 
+import { asUserId, asContactId } from "../../../src/server/shared/ids";
 import { BENCH_NOW, COMPONENT_ITERATIONS } from "../_shared/constants";
 import { fixedIterations } from "../_shared/options";
 
@@ -10,8 +11,11 @@ describe("lead assignment component benchmark", () => {
   bench(
     "component path: build lead assignment payload",
     () => {
-      const assignment = createAssignment(1, 1, 24);
-      if (assignment.user_id !== 1 || assignment.contact_id !== 1) {
+      const assignment = createAssignment(asUserId("1"), asContactId("1"), 24);
+      if (
+        assignment.user_id !== asUserId("1") ||
+        assignment.contact_id !== asContactId("1")
+      ) {
         throw new Error("unexpected assignment payload");
       }
     },

@@ -2,6 +2,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
+import { type InviteId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import {
   applyImport,
@@ -67,7 +68,17 @@ export async function applyBulkImport(
     },
     input.role,
     deps.inviteService,
-    async ({ row, inviteId, token, expiresAt }) => {
+    async ({
+      row,
+      inviteId,
+      token,
+      expiresAt,
+    }: {
+      row: any;
+      inviteId: InviteId;
+      token: string;
+      expiresAt: number;
+    }) => {
       await sendInviteEmail({
         email: row.email,
         fullName: shortName({

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
 import { getSaleDetail } from "../../src/server/pipeline/application/queries/get-sale-detail";
+import { asUserId } from "../../src/server/shared/ids";
 import { insertTestLead } from "../support/pipeline/fixtures";
 import {
   createTestRuntime,
@@ -28,7 +29,7 @@ describe("pipeline read access", () => {
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
       leadId,
-      actorUserId: 2,
+      actorUserId: asUserId("2"),
       actorRole: "back_office",
     });
 
@@ -48,7 +49,7 @@ describe("pipeline read access", () => {
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
       leadId,
-      actorUserId: 3,
+      actorUserId: asUserId("3"),
       actorRole: "executive",
     });
 
@@ -69,9 +70,9 @@ describe("pipeline read access", () => {
     await runtime.ctx.db
       .insertInto("pipeline_sales")
       .values({
-        id: 21,
+        id: 21 as any,
         lead_id: leadId,
-        executive_id: 1,
+        executive_id: asUserId("user-1"),
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,
         gpv: 1000,
@@ -86,8 +87,8 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
-      saleId: 21,
-      actorUserId: 1,
+      saleId: 21 as any,
+      actorUserId: asUserId("user-1"),
       actorRole: "executive",
     });
 
@@ -108,9 +109,9 @@ describe("pipeline read access", () => {
     await runtime.ctx.db
       .insertInto("pipeline_sales")
       .values({
-        id: 22,
+        id: 22 as any,
         lead_id: leadId,
-        executive_id: 1,
+        executive_id: asUserId("user-1"),
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,
         gpv: 1000,
@@ -125,8 +126,8 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
-      saleId: 22,
-      actorUserId: 3,
+      saleId: 22 as any,
+      actorUserId: asUserId("3"),
       actorRole: "executive",
     });
 

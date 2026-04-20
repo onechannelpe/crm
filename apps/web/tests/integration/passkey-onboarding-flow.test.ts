@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createPasskeyEnrollmentAuthService } from "../../src/server/auth/passkey/service";
+import { asUserId } from "../../src/server/shared/ids";
 import { Err, isErr } from "../../src/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
 import {
@@ -22,7 +23,7 @@ describe("passkey onboarding flow", () => {
         phone_e164: null,
         role: "admin",
       })
-      .where("id", "=", 5)
+      .where("id", "=", asUserId("5"))
       .execute();
   });
 
@@ -32,7 +33,7 @@ describe("passkey onboarding flow", () => {
 
   it("registers the passkey and completes onboarding in one flow", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 5,
+      user_id: asUserId("5"),
       type: "registration",
       challenge: "challenge-1",
       expires_at: Date.now() + 60_000,
@@ -69,7 +70,7 @@ describe("passkey onboarding flow", () => {
           }),
         },
       ).finishEnrollment({
-        userId: 5,
+        userId: asUserId("5"),
         challengeId,
         response: {
           id: "passkey-1",
@@ -88,7 +89,7 @@ describe("passkey onboarding flow", () => {
       }
 
       return completeAccountOnboardingWithRepos(transactionRepos, {
-        userId: 5,
+        userId: asUserId("5"),
         phoneE164: "+51999888777",
       });
     });
@@ -98,11 +99,11 @@ describe("passkey onboarding flow", () => {
       throw new Error("expected successful passkey onboarding");
     }
 
-    const user = await ctx.repos.users.findById(5);
+    const user = await ctx.repos.users.findById(asUserId("5"));
     expect(user?.onboarding_completed_at).not.toBeNull();
     expect(user?.phone_e164).toBe("+51999888777");
 
-    const passkeys = await ctx.repos.passkeys.findByUser(5);
+    const passkeys = await ctx.repos.passkeys.findByUser(asUserId("5"));
     expect(passkeys).toHaveLength(1);
 
     const challenge = await ctx.repos.webauthnChallenges.findById(challengeId);

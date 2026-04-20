@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { createDb } from "../../src/lib/db/client";
 import { migrateToLatest } from "../../src/lib/db/migrate";
+import { asBranchId } from "../../src/server/shared/ids";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 
@@ -15,7 +16,7 @@ async function createMigrationTestDb(prefix: string) {
   await mkdir(ARTIFACT_DIR, { recursive: true });
   const dbPath = join(
     ARTIFACT_DIR,
-    `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}.db`,
+    `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}.db`,
   );
   createdDbPaths.push(dbPath);
   return createDb(dbPath);
@@ -77,7 +78,11 @@ describe("schema baseline", () => {
 
       await db
         .insertInto("branches")
-        .values({ name: "Lima", created_at: Date.now() })
+        .values({
+          id: asBranchId("1"),
+          name: "Lima",
+          created_at: Date.now(),
+        })
         .execute();
 
       // Should not throw and should be no-op because hash matches

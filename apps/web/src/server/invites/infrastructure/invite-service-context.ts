@@ -1,46 +1,28 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import {
   asBranchId,
+  asInviteId,
   asTeamId,
   asUserId,
   type BranchId,
+  type InviteId,
   type TeamId,
   type UserId,
 } from "~/server/shared/ids";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
-import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
+import {
+  createUserInvitesRepo,
+  type PendingInviteWithUser,
+} from "~/server/users/repos-user-invites";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 import { createInviteService } from "../application/invite-service";
 import type { InviteDeps, InviteWithUserRecord } from "../application/types";
 
-function mapPendingInviteWithUser(row: {
-  invite_id: number;
-  invite_status: "pending" | "accepted" | "revoked" | "expired";
-  invite_expires_at: number;
-  invite_created_at: number;
-  invite_created_by_user_id: string;
-  invite_sent_at: number | null;
-  user_id: string;
-  user_email: string;
-  user_role:
-    | "executive"
-    | "supervisor"
-    | "back_office"
-    | "sales_manager"
-    | "logistics"
-    | "hr"
-    | "admin"
-    | "superuser";
-  user_branch_id: string;
-  user_team_id: string | null;
-  user_names: string;
-  user_first_surname: string;
-  user_second_surname: string;
-  user_username?: string;
-  user_is_active: number;
-}): InviteWithUserRecord {
+function mapPendingInviteWithUser(
+  row: PendingInviteWithUser,
+): InviteWithUserRecord {
   return {
     ...row,
     invite_created_by_user_id: asUserId(row.invite_created_by_user_id),
@@ -85,13 +67,13 @@ function createInviteRepos(executor: DatabaseExecutor): InviteDeps {
         );
         return invites.map(mapPendingInviteWithUser);
       },
-      async findById(inviteId: number) {
+      async findById(inviteId: InviteId) {
         const invite = await userInvites.findById(inviteId);
         if (!invite) {
           return undefined;
         }
         return {
-          id: invite.id,
+          id: asInviteId(invite.id),
           user_id: asUserId(invite.user_id),
           branch_id: asBranchId(invite.branch_id),
           status: invite.status,
@@ -108,10 +90,10 @@ function createInviteRepos(executor: DatabaseExecutor): InviteDeps {
       expirePendingBefore(now: number) {
         return userInvites.expirePendingBefore(now);
       },
-      markAccepted(inviteId: number, acceptedAt: number) {
+      markAccepted(inviteId: InviteId, acceptedAt: number) {
         return userInvites.markAccepted(inviteId, acceptedAt);
       },
-      markSent(inviteId: number, sentAt: number) {
+      markSent(inviteId: InviteId, sentAt: number) {
         return userInvites.markSent(inviteId, sentAt);
       },
     },

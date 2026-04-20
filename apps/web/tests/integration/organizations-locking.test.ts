@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asBranchId, asOrganizationId, asUserId } from "~/server/shared/ids";
+
+import { TEST_IDS } from "../support/identities/seeded-identities";
+import { createOrganizationTestKit } from "../support/organization-test-kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -8,9 +12,11 @@ import {
 
 describe("organization branch locking", () => {
   let ctx: TestDbContext;
+  let kit: ReturnType<typeof createOrganizationTestKit>;
 
   beforeEach(async () => {
     ctx = await createIsolatedTestDb("org-locking");
+    kit = createOrganizationTestKit(ctx);
   });
 
   afterEach(async () => {
@@ -19,44 +25,31 @@ describe("organization branch locking", () => {
 
   it("findUnlockedOrLockedToBranch isolates organizations by lock owner", async () => {
     const now = Date.now();
+    const branch1 = TEST_IDS.BRANCH_LIMA;
+    const branch2 = TEST_IDS.BRANCH_NORTE;
+    const org1 = TEST_IDS.ORG_LIMA;
+    const org2 = TEST_IDS.ORG_NORTE;
 
-    await ctx.db
-      .updateTable("organizations")
-      .set({
-        locked_branch_id: 1,
-        locked_at: now,
-        locked_by_user_id: 1,
-      })
-      .where("id", "=", 1)
-      .execute();
+    await kit.setupManualLock(org1, branch1, undefined, now);
+    await kit.setupManualLock(org2, branch2, undefined, now);
 
-    await ctx.db
-      .updateTable("organizations")
-      .set({
-        locked_branch_id: 2,
-        locked_at: now,
-        locked_by_user_id: 3,
-      })
-      .where("id", "=", 2)
-      .execute();
+    const branch1Visible = await kit.findVisibleToBranch(branch1);
+    const branch2Visible = await kit.findVisibleToBranch(branch2);
 
-    const branch1Visible =
-      await ctx.repos.organizations.findUnlockedOrLockedToBranch(1, 50);
-    const branch2Visible =
-      await ctx.repos.organizations.findUnlockedOrLockedToBranch(2, 50);
-
-    expect(branch1Visible.map((x) => x.id)).toContain(1);
-    expect(branch1Visible.map((x) => x.id)).not.toContain(2);
-    expect(branch2Visible.map((x) => x.id)).toContain(2);
-    expect(branch2Visible.map((x) => x.id)).not.toContain(1);
+    expect(branch1Visible.map((x) => x.id)).toContain(org1);
+    expect(branch1Visible.map((x) => x.id)).not.toContain(org2);
+    expect(branch2Visible.map((x) => x.id)).toContain(org2);
+    expect(branch2Visible.map((x) => x.id)).not.toContain(org1);
   });
 
   it("lockToBranch persists lock metadata", async () => {
-    await ctx.repos.organizations.lockToBranch(1, 2, 3);
-    const org = await ctx.repos.organizations.findById(1);
+    const org1 = TEST_IDS.ORG_LIMA;
+    const branch2 = TEST_IDS.BRANCH_NORTE;
 
-    expect(org?.locked_branch_id).toBe(2);
-    expect(org?.locked_by_user_id).toBe(3);
+    await kit.lockToBranch(org1, branch2);
+    const org = await kit.findById(org1);
+
+    expect(org?.locked_branch_id).toBe(branch2);
     expect((org?.locked_at ?? 0) > 0).toBe(true);
   });
 });

@@ -4,9 +4,10 @@ import { revokeAllUserSessions } from "../../src/server/auth/application/command
 import { revokeUserSession } from "../../src/server/auth/application/commands/revoke-user-session";
 import type { AdminSessionRevocationPort } from "../../src/server/auth/application/ports";
 import type { AppContext } from "../../src/server/shared/action-runtime";
+import { asBranchId, asUserId, type UserId } from "../../src/server/shared/ids";
 
 type AuditPayload = {
-  userId: number;
+  userId: UserId;
   action: string;
   entityType: string;
   entityId: string;
@@ -18,8 +19,8 @@ function makeContext(): AppContext {
   return {
     actor: {
       id: "sid-admin",
-      userId: 9001,
-      branchId: 1,
+      userId: asUserId("00000000-0000-0000-0000-000000009001"),
+      branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
       role: "admin",
       onboardingCompleted: true,
       sessionClass: "app",
@@ -39,11 +40,11 @@ function makeContext(): AppContext {
 function makeDeps() {
   const auditLogs: AuditPayload[] = [];
   const invalidatedSessions: string[] = [];
-  const invalidatedUsers: number[] = [];
+  const invalidatedUsers: UserId[] = [];
   const authSessionRevocations: Array<{ sessionId: string; now: number }> = [];
-  const userRevocations: Array<{ userId: number; now: number }> = [];
+  const userRevocations: Array<{ userId: UserId; now: number }> = [];
   const syncUpdates: Array<{
-    userId: number;
+    userId: UserId;
     syncHealth: string;
     syncUpdatedAt: number;
   }> = [];
@@ -53,7 +54,7 @@ function makeDeps() {
       invalidateSession: async (sessionId: string) => {
         invalidatedSessions.push(sessionId);
       },
-      invalidateUserSessions: async (userId: number) => {
+      invalidateUserSessions: async (userId: UserId) => {
         invalidatedUsers.push(userId);
       },
       revokeInstallationSessionsByAuthSession: async (
@@ -62,7 +63,7 @@ function makeDeps() {
       ) => {
         authSessionRevocations.push({ sessionId, now });
       },
-      revokeInstallationSessionsByUser: async (userId: number, now: number) => {
+      revokeInstallationSessionsByUser: async (userId: UserId, now: number) => {
         userRevocations.push({ userId, now });
       },
       updateExecutiveSyncHealth: async (payload) => {
@@ -87,7 +88,7 @@ describe("admin session revocation", () => {
 
     const result = await revokeUserSession(makeContext(), harness.port, {
       sessionId: "session-abc",
-      targetUserId: 42,
+      targetUserId: asUserId("00000000-0000-0000-0000-000000000042"),
     });
 
     expect(result.ok).toBe(true);
@@ -97,22 +98,22 @@ describe("admin session revocation", () => {
     ]);
     expect(harness.syncUpdates).toEqual([
       {
-        userId: 42,
+        userId: asUserId("00000000-0000-0000-0000-000000000042"),
         syncHealth: "reauth_required",
         syncUpdatedAt: 1_700_000_100_000,
       },
     ]);
     expect(harness.auditLogs).toHaveLength(1);
     expect(harness.auditLogs[0]).toMatchObject({
-      userId: 9001,
+      userId: asUserId("00000000-0000-0000-0000-000000009001"),
       action: "session_revoked_by_admin",
       entityType: "user_session",
-      entityId: "42",
+      entityId: "00000000-0000-0000-0000-000000000042",
       createdAt: 1_700_000_100_000,
     });
     expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
       sessionId: "session-abc",
-      revokedBy: 9001,
+      revokedBy: "00000000-0000-0000-0000-000000009001",
     });
   });
 
@@ -120,31 +121,36 @@ describe("admin session revocation", () => {
     const harness = makeDeps();
 
     const result = await revokeAllUserSessions(makeContext(), harness.port, {
-      targetUserId: 77,
+      targetUserId: asUserId("00000000-0000-0000-0000-000000000077"),
     });
 
     expect(result.ok).toBe(true);
-    expect(harness.invalidatedUsers).toEqual([77]);
+    expect(harness.invalidatedUsers).toEqual([
+      asUserId("00000000-0000-0000-0000-000000000077"),
+    ]);
     expect(harness.userRevocations).toEqual([
-      { userId: 77, now: 1_700_000_100_000 },
+      {
+        userId: asUserId("00000000-0000-0000-0000-000000000077"),
+        now: 1_700_000_100_000,
+      },
     ]);
     expect(harness.syncUpdates).toEqual([
       {
-        userId: 77,
+        userId: asUserId("00000000-0000-0000-0000-000000000077"),
         syncHealth: "reauth_required",
         syncUpdatedAt: 1_700_000_100_000,
       },
     ]);
     expect(harness.auditLogs).toHaveLength(1);
     expect(harness.auditLogs[0]).toMatchObject({
-      userId: 9001,
+      userId: asUserId("00000000-0000-0000-0000-000000009001"),
       action: "all_sessions_revoked",
       entityType: "user",
-      entityId: "77",
+      entityId: "00000000-0000-0000-0000-000000000077",
       createdAt: 1_700_000_100_000,
     });
     expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
-      revokedBy: 9001,
+      revokedBy: "00000000-0000-0000-0000-000000009001",
     });
   });
 });

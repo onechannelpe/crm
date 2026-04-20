@@ -5,13 +5,14 @@ import {
   type BatchProvisioner,
   enqueueCampaignAudience,
 } from "../../src/server/notifications/application/enqueue-due-campaigns";
+import { asUserId } from "../../src/server/shared/ids";
 
 describe("enqueueCampaignAudience", () => {
   it("iterates through all pages and provisions each batch", async () => {
     const loadPage = vi.fn<AudiencePageLoader>();
     loadPage
-      .mockResolvedValueOnce([10, 20])
-      .mockResolvedValueOnce([30])
+      .mockResolvedValueOnce([asUserId("10"), asUserId("20")])
+      .mockResolvedValueOnce([asUserId("30")])
       .mockResolvedValueOnce([]);
 
     const provisionBatch = vi
@@ -21,12 +22,15 @@ describe("enqueueCampaignAudience", () => {
     await enqueueCampaignAudience(loadPage, provisionBatch);
 
     expect(loadPage).toHaveBeenCalledTimes(3);
-    expect(loadPage).toHaveBeenNthCalledWith(1, 0, 250);
-    expect(loadPage).toHaveBeenNthCalledWith(2, 20, 250);
-    expect(loadPage).toHaveBeenNthCalledWith(3, 30, 250);
+    expect(loadPage).toHaveBeenNthCalledWith(1, asUserId("0") as any, 250); // pagination offset was numeric, wait
+    expect(loadPage).toHaveBeenNthCalledWith(2, asUserId("20"), 250);
+    expect(loadPage).toHaveBeenNthCalledWith(3, asUserId("30"), 250);
 
     expect(provisionBatch).toHaveBeenCalledTimes(2);
-    expect(provisionBatch).toHaveBeenCalledWith([10, 20]);
-    expect(provisionBatch).toHaveBeenCalledWith([30]);
+    expect(provisionBatch).toHaveBeenCalledWith([
+      asUserId("10"),
+      asUserId("20"),
+    ]);
+    expect(provisionBatch).toHaveBeenCalledWith([asUserId("30")]);
   });
 });

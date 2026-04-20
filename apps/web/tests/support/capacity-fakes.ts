@@ -5,17 +5,19 @@
 
 import type { ReservationStatus } from "~/server/shared/scope";
 
+import type { UserId } from "../../src/server/shared/ids";
+
 type GrantRow = {
   id: string;
-  user_id: number;
+  user_id: UserId;
   amount: number;
   reason: string;
-  actor_user_id: number;
+  actor_user_id: UserId;
   created_at: number;
 };
 type ReservationRow = {
   id: string;
-  user_id: number;
+  user_id: UserId;
   amount: number;
   reason: string;
   status: ReservationStatus;
@@ -34,16 +36,16 @@ export function makeSearchCapacityGrantsRepo() {
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
       rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
       return Promise.resolve();
     },
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       _periodStart?: string,
       _periodEnd?: string,
     ): Promise<GrantRow[]> {
@@ -57,7 +59,7 @@ export function makeSearchUsageReservationsRepo() {
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
     }): Promise<{ id: string }> {
@@ -83,7 +85,7 @@ export function makeSearchUsageReservationsRepo() {
       if (row) row.status = status;
       return Promise.resolve();
     },
-    findByUserAndPeriod(userId: number): Promise<ReservationRow[]> {
+    findByUserAndPeriod(userId: UserId): Promise<ReservationRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };
@@ -113,15 +115,15 @@ export function makeLeadCapacityGrantsRepo() {
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
       rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
       return Promise.resolve();
     },
-    findByUserAndDate(userId: number, _date?: string): Promise<GrantRow[]> {
+    findByUserAndDate(userId: UserId, _date?: string): Promise<GrantRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };
@@ -132,7 +134,7 @@ export function makeLeadUsageReservationsRepo() {
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
     }): Promise<{ id: string }> {
@@ -170,7 +172,7 @@ export function makeLeadUsageReservationsRepo() {
       }
       return Promise.resolve();
     },
-    findByUserAndDate(userId: number): Promise<ReservationRow[]> {
+    findByUserAndDate(userId: UserId): Promise<ReservationRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createAuditPolicyService } from "../../src/server/audit-reader/policy-service";
+import { asUserId } from "../../src/server/shared/ids";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 describe("audit policy service", () => {
@@ -24,7 +25,7 @@ describe("audit policy service", () => {
         action: "all_sessions_revoked",
         riskLevel: "medium",
         isActive: true,
-        actorUserId: 5,
+        actorUserId: asUserId("5"),
       }),
     ).rejects.toThrow("protected policies cannot be downgraded");
   });
@@ -39,7 +40,7 @@ describe("audit policy service", () => {
       action: "leads_requested",
       riskLevel: "medium",
       isActive: true,
-      actorUserId: 5,
+      actorUserId: asUserId("5"),
     });
 
     const snapshot = await service.getSnapshot();

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asBranchId, asUserId } from "../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -8,6 +9,11 @@ import {
 
 describe("sales records workflow service", () => {
   let ctx: TestDbContext;
+  const USER_1 = asUserId("00000000-0000-0000-0000-000000000001");
+  const USER_2 = asUserId("00000000-0000-0000-0000-000000000002");
+  const USER_4 = asUserId("00000000-0000-0000-0000-000000000004");
+  const BRANCH_1 = asBranchId("00000000-0000-0000-0000-000000000011");
+  const BRANCH_2 = asBranchId("00000000-0000-0000-0000-000000000012");
 
   beforeEach(async () => {
     ctx = await createIsolatedTestDb("sales-records-service");
@@ -20,8 +26,8 @@ describe("sales records workflow service", () => {
   it("creates draft with client snapshot, addresses and products", async () => {
     const result = await ctx.salesRecords.createDraft({
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
+      executiveUserId: USER_1,
+      branchId: BRANCH_1,
       leadAssignmentId: null,
       client: {
         ruc: "20100000999",
@@ -69,8 +75,8 @@ describe("sales records workflow service", () => {
   it("allows incomplete drafts but blocks submission until completed", async () => {
     const result = await ctx.salesRecords.createDraft({
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
+      executiveUserId: USER_1,
+      branchId: BRANCH_1,
       leadAssignmentId: null,
       client: {
         ruc: "20100000001",
@@ -99,7 +105,7 @@ describe("sales records workflow service", () => {
     expect(addresses).toHaveLength(0);
     expect(products).toHaveLength(0);
 
-    const submitted = await ctx.salesRecords.submit(result.value, 1);
+    const submitted = await ctx.salesRecords.submit(result.value, USER_1);
     expect(submitted.ok).toBe(false);
     if (submitted.ok) throw new Error("Expected submit validation failure");
     expect(submitted.error.code).toBe("invalid_data");
@@ -111,8 +117,8 @@ describe("sales records workflow service", () => {
   it("submits and confirms transitions with branch scope", async () => {
     const created = await ctx.salesRecords.createDraft({
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
+      executiveUserId: USER_1,
+      branchId: BRANCH_1,
       leadAssignmentId: null,
       client: {
         ruc: null,
@@ -140,10 +146,15 @@ describe("sales records workflow service", () => {
     });
     if (!created.ok) throw new Error("Expected draft creation success");
 
-    const submitted = await ctx.salesRecords.submit(created.value, 1);
+    const submitted = await ctx.salesRecords.submit(created.value, USER_1);
     expect(submitted.ok).toBe(true);
 
-    const blocked = await ctx.salesRecords.confirm(created.value, 4, 2, false);
+    const blocked = await ctx.salesRecords.confirm(
+      created.value,
+      USER_4,
+      BRANCH_2,
+      false,
+    );
     expect(blocked.ok).toBe(false);
     if (blocked.ok) throw new Error("Expected branch scope block");
     expect(blocked.error.code).toBe("forbidden");
@@ -153,8 +164,8 @@ describe("sales records workflow service", () => {
 
     const confirmed = await ctx.salesRecords.confirm(
       created.value,
-      2,
-      1,
+      USER_2,
+      BRANCH_1,
       false,
     );
     expect(confirmed.ok).toBe(true);
@@ -164,7 +175,7 @@ describe("sales records workflow service", () => {
 
     const logs = await ctx.repos.auditLogs.findByEntity(
       "sales_record",
-      `${created.value}`,
+      created.value.toString(),
     );
     expect(logs.some((log) => log.action === "sales_record_submitted")).toBe(
       true,
@@ -177,8 +188,8 @@ describe("sales records workflow service", () => {
   it("requires rejection reason", async () => {
     const created = await ctx.salesRecords.createDraft({
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
+      executiveUserId: USER_1,
+      branchId: BRANCH_1,
       leadAssignmentId: null,
       client: {
         ruc: null,
@@ -206,13 +217,13 @@ describe("sales records workflow service", () => {
     });
     if (!created.ok) throw new Error("Expected draft creation success");
 
-    const submitted = await ctx.salesRecords.submit(created.value, 1);
+    const submitted = await ctx.salesRecords.submit(created.value, USER_1);
     expect(submitted.ok).toBe(true);
 
     const rejected = await ctx.salesRecords.reject(
       created.value,
-      2,
-      1,
+      USER_2,
+      BRANCH_1,
       false,
       " ",
     );
@@ -223,12 +234,12 @@ describe("sales records workflow service", () => {
   });
 
   it("does not persist a draft when product lookup fails", async () => {
-    const before = await ctx.repos.salesRecords.listByExecutive(1, 100);
+    const before = await ctx.repos.salesRecords.listByExecutive(USER_1, 100);
 
     const created = await ctx.salesRecords.createDraft({
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
+      executiveUserId: USER_1,
+      branchId: BRANCH_1,
       leadAssignmentId: null,
       client: {
         ruc: null,
@@ -259,15 +270,15 @@ describe("sales records workflow service", () => {
     if (created.ok) throw new Error("Expected product validation failure");
     expect(created.error.code).toBe("not_found");
 
-    const after = await ctx.repos.salesRecords.listByExecutive(1, 100);
+    const after = await ctx.repos.salesRecords.listByExecutive(USER_1, 100);
     expect(after).toHaveLength(before.length);
   });
 
   it("updates rejected drafts and allows resubmission", async () => {
     const created = await ctx.salesRecords.createDraft({
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
+      executiveUserId: USER_1,
+      branchId: BRANCH_1,
       leadAssignmentId: null,
       client: {
         ruc: null,
@@ -295,19 +306,19 @@ describe("sales records workflow service", () => {
     });
     if (!created.ok) throw new Error("Expected draft creation success");
 
-    const submitted = await ctx.salesRecords.submit(created.value, 1);
+    const submitted = await ctx.salesRecords.submit(created.value, USER_1);
     expect(submitted.ok).toBe(true);
 
     const rejected = await ctx.salesRecords.reject(
       created.value,
-      2,
-      1,
+      USER_2,
+      BRANCH_1,
       false,
       "Fix data",
     );
     expect(rejected.ok).toBe(true);
 
-    const updated = await ctx.salesRecords.updateDraft(created.value, 1, {
+    const updated = await ctx.salesRecords.updateDraft(created.value, USER_1, {
       client: {
         ruc: "20100000999",
         companyName: "Org Lima Updated",
@@ -348,7 +359,7 @@ describe("sales records workflow service", () => {
     expect(products[0]?.product_id).toBe(1);
     expect(products[0]?.quantity).toBe(3);
 
-    const resubmitted = await ctx.salesRecords.submit(created.value, 1);
+    const resubmitted = await ctx.salesRecords.submit(created.value, USER_1);
     expect(resubmitted.ok).toBe(true);
     const row = await ctx.repos.salesRecords.findById(created.value);
     expect(row?.status).toBe("submitted_for_confirmation");
@@ -357,8 +368,8 @@ describe("sales records workflow service", () => {
   it("registers attempts only while pending confirmation", async () => {
     const created = await ctx.salesRecords.createDraft({
       source: "manual",
-      executiveUserId: 1,
-      branchId: 1,
+      executiveUserId: USER_1,
+      branchId: BRANCH_1,
       leadAssignmentId: null,
       client: {
         ruc: null,
@@ -388,8 +399,8 @@ describe("sales records workflow service", () => {
 
     const blockedInDraft = await ctx.salesRecords.registerAttempt(
       created.value,
-      2,
-      1,
+      USER_2,
+      BRANCH_1,
       false,
       "no_answer",
       "Call pending",
@@ -401,13 +412,13 @@ describe("sales records workflow service", () => {
     }
     expect(blockedInDraft.error.code).toBe("invalid_state");
 
-    const submitted = await ctx.salesRecords.submit(created.value, 1);
+    const submitted = await ctx.salesRecords.submit(created.value, USER_1);
     expect(submitted.ok).toBe(true);
 
     const recorded = await ctx.salesRecords.registerAttempt(
       created.value,
-      2,
-      1,
+      USER_2,
+      BRANCH_1,
       false,
       "callback_scheduled",
       "Try after lunch",

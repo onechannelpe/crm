@@ -5,6 +5,7 @@ import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "../../src/lib/security/action-rate-limit";
+import { asUserId, type UserId } from "../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -13,6 +14,11 @@ import {
 
 describe("action rate limit", () => {
   let ctx: TestDbContext;
+  const USER_ID_1 = asUserId("00000000-0000-0000-0000-000000000001");
+  const USER_ID_2 = asUserId("00000000-0000-0000-0000-000000000002");
+  const USER_IDS = Array.from({ length: 5 }, (_, i) =>
+    asUserId(`00000000-0000-0000-0000-00000000000${i + 1}`),
+  );
 
   beforeEach(async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -29,7 +35,12 @@ describe("action rate limit", () => {
     const limit = ACTION_RATE_LIMIT_POLICY["leads.request"].limit;
     for (let i = 0; i < limit; i++) {
       await expect(
-        checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
+        checkActionRateLimit(
+          "leads.request",
+          USER_ID_1,
+          ctx.repos,
+          "198.51.100.1",
+        ),
       ).resolves.toBeUndefined();
     }
   });
@@ -37,12 +48,17 @@ describe("action rate limit", () => {
   it("blocks the next request after the limit is reached", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     const result = checkActionRateLimit(
       "leads.request",
-      1,
+      USER_ID_1,
       ctx.repos,
       "198.51.100.1",
     );
@@ -52,12 +68,22 @@ describe("action rate limit", () => {
   it("returns 429 with Retry-After header on block", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     let blocked: AppError | undefined;
     try {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     } catch (err) {
       if (err instanceof AppError) blocked = err;
     }
@@ -73,14 +99,19 @@ describe("action rate limit", () => {
   it("retry-after decreases as window elapses", async () => {
     const { limit, windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     const getRetryAfter = async () => {
       try {
         await checkActionRateLimit(
           "leads.request",
-          1,
+          USER_ID_1,
           ctx.repos,
           "198.51.100.1",
         );
@@ -103,37 +134,67 @@ describe("action rate limit", () => {
   it("resets the counter after the window expires", async () => {
     const { limit, windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     vi.setSystemTime(Date.now() + windowMs + 1);
 
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      ),
     ).resolves.toBeUndefined();
   });
 
   it("isolates counters by user", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     // user 2 has a separate counter
     await expect(
-      checkActionRateLimit("leads.request", 2, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        USER_ID_2,
+        ctx.repos,
+        "198.51.100.1",
+      ),
     ).resolves.toBeUndefined();
   });
 
   it("user counter is ip-agnostic: same user from a different IP is still blocked", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     // Switching IP does not reset the per-user counter.
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.2"),
+      checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.2",
+      ),
     ).rejects.toBeInstanceOf(AppError);
   });
 
@@ -142,10 +203,10 @@ describe("action rate limit", () => {
     // Spread requests across many iterations of the same users so no single
     // user counter is exhausted, but the shared IP counter is.
     for (let i = 0; i < ipLimit; i++) {
-      // Cycle through seed users 1-5 so no individual user counter fills up.
+      // Cycle through seed users so no individual user counter fills up.
       await checkActionRateLimit(
         "leads.request",
-        (i % 5) + 1,
+        USER_IDS[i % 5],
         ctx.repos,
         "198.51.100.99",
       );
@@ -153,21 +214,31 @@ describe("action rate limit", () => {
 
     // One more request from the same IP (any existing user) should hit the IP cap.
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.99"),
+      checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.99",
+      ),
     ).rejects.toBeInstanceOf(AppError);
   });
 
   it("isolates counters by action name", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     // Different action, uses a separate counter.
     await expect(
       checkActionRateLimit(
         "sales_records.create_draft",
-        1,
+        USER_ID_1,
         ctx.repos,
         "198.51.100.1",
       ),
@@ -175,7 +246,7 @@ describe("action rate limit", () => {
   });
 
   it("logs a rate_limit_exceeded audit entry on violation", async () => {
-    const userId = 1;
+    const userId = USER_ID_1;
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
       await checkActionRateLimit(
@@ -201,7 +272,7 @@ describe("action rate limit", () => {
     const entry = logs.find((l) => l.action === "rate_limit_exceeded");
     expect(entry).toBeDefined();
     expect(entry?.entity_type).toBe("user");
-    expect(entry?.entity_id).toBe("1");
+    expect(entry?.entity_id).toBe(userId);
     expect(entry?.changes).toContain('"actionName":"leads.request"');
     expect(entry?.changes).toContain('"scope":"user"');
     expect(entry?.changes).toContain('"retryAfterMs"');
@@ -214,7 +285,7 @@ describe("action rate limit", () => {
     for (let i = 0; i < limit; i++) {
       await checkActionRateLimit(
         "team.invite.create",
-        1,
+        USER_ID_1,
         ctx.repos,
         "198.51.100.1",
       );
@@ -223,12 +294,22 @@ describe("action rate limit", () => {
     // still blocked after 30 minutes
     vi.setSystemTime(Date.now() + 30 * 60_000);
     await expect(
-      checkActionRateLimit("team.invite.create", 1, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "team.invite.create",
+        USER_ID_1,
+        ctx.repos,
+        "198.51.100.1",
+      ),
     ).rejects.toBeInstanceOf(AppError);
   });
 
   it("cleans up stale counters", async () => {
-    await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+    await checkActionRateLimit(
+      "leads.request",
+      USER_ID_1,
+      ctx.repos,
+      "198.51.100.1",
+    );
     const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(
       Date.now() + 1,
     );

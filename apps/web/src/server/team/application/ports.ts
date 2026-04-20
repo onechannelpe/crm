@@ -1,10 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type { BranchId, InviteId, TeamId, UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 
 export interface InviteManagementPendingInvite {
-  inviteId: number;
+  inviteId: InviteId;
   userId: UserId;
   email: string;
   names: string;

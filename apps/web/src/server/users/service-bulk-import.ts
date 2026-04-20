@@ -4,7 +4,7 @@ import {
   type ExecutiveCategoryValue,
 } from "~/lib/db/types";
 import type { InviteService } from "~/server/invites/application/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import { type BranchId, type InviteId, type UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 type ProvisioningInterface = Pick<
@@ -51,7 +51,7 @@ export async function applyImport(
   provisioning: ProvisioningInterface,
   onInviteCreated: (params: {
     row: BulkImportRow;
-    inviteId: number;
+    inviteId: InviteId;
     token: string;
     expiresAt: number;
   }) => Promise<void>,

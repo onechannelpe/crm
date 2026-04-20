@@ -5,6 +5,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { SearchResult } from "~/server/shared/engine/types";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import { asBranchId, asUserId, type UserId } from "../../src/server/shared/ids";
 import {
   makeNullSearchPolicyRepos,
   makeSearchCapacityGrantsRepo,
@@ -12,7 +13,7 @@ import {
   makeSearchUsageReservationsRepo,
 } from "../support/capacity-fakes";
 
-const USER_ID = 1;
+const USER_ID = asUserId("00000000-0000-0000-0000-000000000001");
 
 function makeRepos() {
   const searchCapacityGrants = makeSearchCapacityGrantsRepo();
@@ -20,7 +21,10 @@ function makeRepos() {
   const searchUsageCommits = makeSearchUsageCommitsRepo();
   return {
     users: {
-      findById: async () => ({ teamId: null, branchId: 1 }),
+      findById: async () => ({
+        teamId: null,
+        branchId: asBranchId("00000000-0000-0000-0000-000000000001"),
+      }),
     },
     ...makeNullSearchPolicyRepos(),
     searchCapacityGrants,

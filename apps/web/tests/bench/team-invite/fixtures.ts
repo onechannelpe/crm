@@ -1,13 +1,14 @@
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 
+import { asBranchId, asUserId } from "../../../src/server/shared/ids";
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const CREATE_POOL_SIZE = 80;
 export const ACCEPT_POOL_SIZE = 80;
 export const QUERY_POOL_SIZE = 80;
-const ACCEPT_USER_ID_START = 110_000;
-const QUERY_USER_ID_START = 120_000;
+const ACCEPT_USER_ID_PREFIX = "00000000-0000-0000-0000-00000007";
+const QUERY_USER_ID_PREFIX = "00000000-0000-0000-0000-00000008";
 
 export interface AcceptFixture {
   token: string;
@@ -31,10 +32,10 @@ export async function seedTeamInviteFixtures(
   const pendingInviteTokenHashes: string[] = [];
 
   const acceptUsers = Array.from({ length: ACCEPT_POOL_SIZE }, (_, index) => ({
-    id: ACCEPT_USER_ID_START + index,
-    branch_id: 2,
+    id: asUserId(ACCEPT_USER_ID_PREFIX + String(index).padStart(4, "0")),
+    branch_id: asBranchId("00000000-0000-0000-0000-000000000012"),
     team_id: null,
-    username: `bench.accept${ACCEPT_USER_ID_START + index}`,
+    username: `bench.accept${index}`,
     email: `bench-team-accept-${index}@test.local`,
     password_hash: "bench-pending-hash",
     names: `Bench Accept ${index}`,
@@ -48,10 +49,10 @@ export async function seedTeamInviteFixtures(
     created_at: BENCH_NOW,
   }));
   const queryUsers = Array.from({ length: QUERY_POOL_SIZE }, (_, index) => ({
-    id: QUERY_USER_ID_START + index,
-    branch_id: 2,
+    id: asUserId(QUERY_USER_ID_PREFIX + String(index).padStart(4, "0")),
+    branch_id: asBranchId("00000000-0000-0000-0000-000000000012"),
     team_id: null,
-    username: `bench.query${QUERY_USER_ID_START + index}`,
+    username: `bench.query${index}`,
     email: `bench-team-query-${index}@test.local`,
     password_hash: "bench-pending-hash",
     names: `Bench Query ${index}`,
@@ -75,13 +76,13 @@ export async function seedTeamInviteFixtures(
     acceptFixtures.push({ token });
     return {
       user_id: user.id,
-      branch_id: 2,
+      branch_id: asBranchId("00000000-0000-0000-0000-000000000012"),
       email: user.email,
       role: "executive" as const,
       token_hash: hashInviteToken(token),
       status: "pending" as const,
       expires_at: BENCH_NOW + 7 * 24 * 60 * 60 * 1000,
-      created_by_user_id: 5,
+      created_by_user_id: asUserId("00000000-0000-0000-0000-000000000005"),
       accepted_at: null,
       revoked_at: null,
       created_at: BENCH_NOW,
@@ -94,13 +95,13 @@ export async function seedTeamInviteFixtures(
     pendingInviteTokenHashes.push(hashInviteToken(token));
     return {
       user_id: user.id,
-      branch_id: 2,
+      branch_id: asBranchId("00000000-0000-0000-0000-000000000012"),
       email: user.email,
       role: "executive" as const,
       token_hash: hashInviteToken(token),
       status: "pending" as const,
       expires_at: BENCH_NOW + 7 * 24 * 60 * 60 * 1000,
-      created_by_user_id: 5,
+      created_by_user_id: asUserId("00000000-0000-0000-0000-000000000005"),
       accepted_at: null,
       revoked_at: null,
       created_at: BENCH_NOW,

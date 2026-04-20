@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createObservabilityService } from "../../src/server/observability/service";
+import { asUserId } from "../../src/server/shared/ids";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 describe("action observability repository", () => {
@@ -27,7 +28,7 @@ describe("action observability repository", () => {
       routePath: "/sales/records/new",
       httpMethod: "POST",
       actionName: "sales.create",
-      actorUserId: 1,
+      actorUserId: asUserId("1"),
       actorRole: "executive",
       status: "ok",
       durationMs: 120,
@@ -43,7 +44,7 @@ describe("action observability repository", () => {
       routePath: "/sales/records/new",
       httpMethod: "POST",
       actionName: "sales.create",
-      actorUserId: 1,
+      actorUserId: asUserId("1"),
       actorRole: "executive",
       status: "error",
       durationMs: 95,
@@ -85,7 +86,7 @@ describe("action observability repository", () => {
       routePath: "/team/invite",
       httpMethod: "POST",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: asUserId("5"),
       actorRole: "superuser",
       status: "error",
       durationMs: 10,
@@ -101,7 +102,7 @@ describe("action observability repository", () => {
       routePath: "/team/invite",
       httpMethod: "POST",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: asUserId("5"),
       actorRole: "superuser",
       status: "error",
       durationMs: 11,
@@ -147,7 +148,7 @@ describe("action observability repository", () => {
       routePath: "/team/invite",
       httpMethod: "POST",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: asUserId("5"),
       actorRole: "superuser",
       status: "error",
       durationMs: 10,
@@ -162,7 +163,7 @@ describe("action observability repository", () => {
       routePath: "/team/invite",
       httpMethod: "POST",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: asUserId("5"),
       actorRole: "superuser",
       status: "ok",
       durationMs: 11,
@@ -177,7 +178,7 @@ describe("action observability repository", () => {
       routePath: "/sales/records/new",
       httpMethod: "POST",
       actionName: "sales.create",
-      actorUserId: 1,
+      actorUserId: asUserId("1"),
       actorRole: "executive",
       status: "error",
       durationMs: 12,

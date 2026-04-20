@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
+import {
+  asBranchId,
+  asInviteId,
+  asTeamId,
+  asUserId,
+} from "~/server/shared/ids";
 
 import type { AppContext } from "../../src/server/shared/action-runtime";
 import { Err, Ok } from "../../src/server/shared/result";
@@ -49,7 +54,7 @@ describe("getInviteManagement", () => {
         inviteBranchCalls.push(branchId);
         return Ok([
           {
-            inviteId: 1001,
+            inviteId: asInviteId(1001),
             userId: asUserId("00000000-0000-0000-0000-000000000091"),
             email: "pending@crm.local",
             names: "Pending",
@@ -80,7 +85,7 @@ describe("getInviteManagement", () => {
     ]);
     expect(result.value.pendingInvites).toEqual([
       expect.objectContaining({
-        inviteId: 1001,
+        inviteId: asInviteId(1001),
         email: "pending@crm.local",
       }),
     ]);

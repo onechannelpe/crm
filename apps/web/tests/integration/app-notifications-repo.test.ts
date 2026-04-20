@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asUserId } from "../../src/server/shared/ids";
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
@@ -18,7 +19,7 @@ describe("app notifications repo", () => {
     const now = Date.now();
     await ctx.repos.appNotifications.createMany([
       {
-        user_id: 1,
+        user_id: asUserId("1"),
         event_type: "quota.assigned",
         priority: "normal",
         title: "Test",
@@ -30,7 +31,7 @@ describe("app notifications repo", () => {
         read_at: null,
       },
       {
-        user_id: 1,
+        user_id: asUserId("1"),
         event_type: "quota.assigned",
         priority: "normal",
         title: "Test Duplicate",
@@ -43,7 +44,7 @@ describe("app notifications repo", () => {
       },
     ]);
 
-    const list = await ctx.repos.appNotifications.listByUser(1, 10);
+    const list = await ctx.repos.appNotifications.listByUser(asUserId("1"), 10);
     expect(list.length).toBe(1);
   });
 });

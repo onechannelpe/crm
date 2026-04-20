@@ -22,6 +22,15 @@ import type {
 import { createActionRateLimitsRepo } from "../../src/server/security/repos-action-rate-limits";
 import type { AppContext } from "../../src/server/shared/action-runtime";
 import type { DomainError } from "../../src/server/shared/domain-error";
+import {
+  asBranchId,
+  asContactId,
+  asOrganizationId,
+  asUserId,
+  type BranchId,
+  type ContactId,
+  type UserId,
+} from "../../src/server/shared/ids";
 import type { Result } from "../../src/server/shared/result";
 import {
   createTestRepositories,
@@ -34,8 +43,8 @@ const TEMPLATE_DB_NAME = "__template-seeded.db";
 let templateDbPathPromise: Promise<string> | null = null;
 
 type TestSalesRecordCreateDraftInput = CreateSalesRecordDraftInput & {
-  executiveUserId: number;
-  branchId: number;
+  executiveUserId: UserId;
+  branchId: BranchId;
 };
 
 type TestSalesRecordCommands = {
@@ -44,31 +53,31 @@ type TestSalesRecordCommands = {
   ): Promise<Result<number, DomainError>>;
   submit(
     recordId: number,
-    executiveUserId: number,
+    executiveUserId: UserId,
   ): Promise<Result<void, DomainError>>;
   confirm(
     recordId: number,
-    reviewerUserId: number,
-    reviewerBranchId: number,
+    reviewerUserId: UserId,
+    reviewerBranchId: BranchId,
     bypassBranchScope: boolean,
   ): Promise<Result<void, DomainError>>;
   reject(
     recordId: number,
-    reviewerUserId: number,
-    reviewerBranchId: number,
+    reviewerUserId: UserId,
+    reviewerBranchId: BranchId,
     bypassBranchScope: boolean,
     reason: string,
   ): Promise<Result<void, DomainError>>;
   updateDraft(
     recordId: number,
-    executiveUserId: number,
+    executiveUserId: UserId,
     input: UpdateSalesRecordDraftInput,
     correctionNotes?: string | null,
   ): Promise<Result<void, DomainError>>;
   registerAttempt(
     recordId: number,
-    reviewerUserId: number,
-    reviewerBranchId: number,
+    reviewerUserId: UserId,
+    reviewerBranchId: BranchId,
     bypassBranchScope: boolean,
     outcome: RegisterSalesRecordAttemptInput["outcome"],
     notes: string | null,
@@ -77,9 +86,9 @@ type TestSalesRecordCommands = {
 };
 
 function createTestAppContext(input: {
-  userId: number;
+  userId: UserId;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
 }): AppContext {
   return {
     actor: {
@@ -127,7 +136,7 @@ function createTestSalesRecordCommands(
         createTestAppContext({
           userId: executiveUserId,
           role: "executive",
-          branchId: 1,
+          branchId: asBranchId("00000000-0000-0000-0000-000000000011"),
         }),
         deps,
         { recordId },
@@ -191,7 +200,7 @@ function createTestSalesRecordCommands(
         createTestAppContext({
           userId: executiveUserId,
           role: "executive",
-          branchId: 1,
+          branchId: asBranchId("00000000-0000-0000-0000-000000000011"),
         }),
         deps,
         { recordId, draft: input, correctionNotes },
@@ -231,11 +240,26 @@ function createTestSalesRecordCommands(
 async function seedTemplate(db: Kysely<Database>) {
   const now = Date.now();
 
+  const branchLima = asBranchId("00000000-0000-0000-0000-000000000011");
+  const branchNorte = asBranchId("00000000-0000-0000-0000-000000000012");
+
+  const userExecOne = asUserId("00000000-0000-0000-0000-000000000001");
+  const userBackOne = asUserId("00000000-0000-0000-0000-000000000002");
+  const userExecTwo = asUserId("00000000-0000-0000-0000-000000000003");
+  const userBackTwo = asUserId("00000000-0000-0000-0000-000000000004");
+  const userSuper = asUserId("00000000-0000-0000-0000-000000000005");
+
+  const orgLima = asOrganizationId("00000000-0000-0000-0000-000000000101");
+  const orgNorte = asOrganizationId("00000000-0000-0000-0000-000000000102");
+
+  const contactLima = asContactId("00000000-0000-0000-0000-000000000201");
+  const contactNorte = asContactId("00000000-0000-0000-0000-000000000202");
+
   await db
     .insertInto("branches")
     .values([
-      { id: 1, name: "Lima", created_at: now },
-      { id: 2, name: "Norte", created_at: now },
+      { id: branchLima, name: "Lima", created_at: now },
+      { id: branchNorte, name: "Norte", created_at: now },
     ])
     .execute();
 
@@ -243,8 +267,8 @@ async function seedTemplate(db: Kysely<Database>) {
     .insertInto("users")
     .values([
       {
-        id: 1,
-        branch_id: 1,
+        id: userExecOne,
+        branch_id: branchLima,
         team_id: null,
         username: "exec.one",
         email: "exec1@test.local",
@@ -259,8 +283,8 @@ async function seedTemplate(db: Kysely<Database>) {
         created_at: now,
       },
       {
-        id: 2,
-        branch_id: 1,
+        id: userBackOne,
+        branch_id: branchLima,
         team_id: null,
         username: "back.one",
         email: "back1@test.local",
@@ -275,8 +299,8 @@ async function seedTemplate(db: Kysely<Database>) {
         created_at: now,
       },
       {
-        id: 3,
-        branch_id: 2,
+        id: userExecTwo,
+        branch_id: branchNorte,
         team_id: null,
         username: "exec.two",
         email: "exec2@test.local",
@@ -291,8 +315,8 @@ async function seedTemplate(db: Kysely<Database>) {
         created_at: now,
       },
       {
-        id: 4,
-        branch_id: 2,
+        id: userBackTwo,
+        branch_id: branchNorte,
         team_id: null,
         username: "back.two",
         email: "back2@test.local",
@@ -307,8 +331,8 @@ async function seedTemplate(db: Kysely<Database>) {
         created_at: now,
       },
       {
-        id: 5,
-        branch_id: 2,
+        id: userSuper,
+        branch_id: branchNorte,
         team_id: null,
         username: "super.user",
         email: "super@test.local",
@@ -329,7 +353,7 @@ async function seedTemplate(db: Kysely<Database>) {
     .insertInto("organizations")
     .values([
       {
-        id: 1,
+        id: orgLima,
         ruc: "20100000001",
         name: "Org Lima",
         created_at: now,
@@ -338,7 +362,7 @@ async function seedTemplate(db: Kysely<Database>) {
         locked_by_user_id: null,
       },
       {
-        id: 2,
+        id: orgNorte,
         ruc: "20100000002",
         name: "Org Norte",
         created_at: now,
@@ -353,8 +377,8 @@ async function seedTemplate(db: Kysely<Database>) {
     .insertInto("contacts")
     .values([
       {
-        id: 1,
-        organization_id: 1,
+        id: contactLima,
+        organization_id: orgLima,
         dni: "70000001",
         name: "Contacto Lima",
         phone_primary: "+51999999111",
@@ -365,8 +389,8 @@ async function seedTemplate(db: Kysely<Database>) {
         created_at: now,
       },
       {
-        id: 2,
-        organization_id: 2,
+        id: contactNorte,
+        organization_id: orgNorte,
         dni: "70000002",
         name: "Contacto Norte",
         phone_primary: "+51999999222",

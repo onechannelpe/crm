@@ -6,7 +6,8 @@ import {
 } from "~/lib/contracts/guards";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { TeamId } from "~/server/shared/ids";
+import { type InviteId, type TeamId } from "~/server/shared/ids";
+import { asInviteId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -51,9 +52,11 @@ export function parseCreateTeamInviteInput(input: {
 
 export function parseInviteIdInput(
   inviteId: number,
-): Result<{ inviteId: number }, DomainError> {
+): Result<{ inviteId: InviteId }, DomainError> {
   try {
-    return Ok({ inviteId: assertPositiveInt(inviteId, "inviteId") });
+    return Ok({
+      inviteId: asInviteId(assertPositiveInt(inviteId, "inviteId")),
+    });
   } catch (error) {
     return Err(
       domainError(

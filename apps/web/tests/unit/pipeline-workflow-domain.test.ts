@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createLeadId } from "../../src/server/pipeline/domain/lead-record";
 import type { PendingReviewLeadSubject } from "../../src/server/pipeline/domain/lead-subjects";
 import { resolveReviewTransition } from "../../src/server/pipeline/domain/workflow";
+import { asUserId } from "../../src/server/shared/ids";
 
 const pendingReviewLead: PendingReviewLeadSubject = {
   id: createLeadId(),
@@ -11,8 +12,8 @@ const pendingReviewLead: PendingReviewLeadSubject = {
   address: "Lima",
   district: null,
   department: null,
-  executiveId: 7,
-  createdBy: 7,
+  executiveId: asUserId("user-7"),
+  createdBy: asUserId("user-7"),
   updatedBy: null,
   stage: "PENDING_EXTERNAL_REVIEW",
   status: null,

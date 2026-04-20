@@ -1,7 +1,12 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import {
+  type BranchId,
+  type InviteId,
+  type TeamId,
+  type UserId,
+} from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 
 export interface InviteAuditPort {
@@ -82,7 +87,7 @@ export interface InviteTeamsPort {
 }
 
 export interface InviteWithUserRecord {
-  invite_id: number;
+  invite_id: InviteId;
   invite_status: "pending" | "accepted" | "revoked" | "expired";
   invite_expires_at: number;
   invite_created_at: number;
@@ -114,14 +119,14 @@ export interface InviteUserInvitesPort {
     revoked_at: null;
     created_at: number;
     sent_at: null;
-  }): Promise<number>;
+  }): Promise<InviteId>;
   findLatestPendingByBranch(
     branchId: BranchId,
     now: number,
   ): Promise<InviteWithUserRecord[]>;
-  findById(inviteId: number): Promise<
+  findById(inviteId: InviteId): Promise<
     | {
-        id: number;
+        id: InviteId;
         user_id: UserId;
         branch_id: BranchId;
         status: "pending" | "accepted" | "revoked" | "expired";
@@ -135,8 +140,8 @@ export interface InviteUserInvitesPort {
   ): Promise<InviteWithUserRecord | undefined>;
   revokePendingByUser(userId: UserId, revokedAt: number): Promise<unknown>;
   expirePendingBefore(now: number): Promise<unknown>;
-  markAccepted(inviteId: number, acceptedAt: number): Promise<unknown>;
-  markSent(inviteId: number, sentAt: number): Promise<unknown>;
+  markAccepted(inviteId: InviteId, acceptedAt: number): Promise<unknown>;
+  markSent(inviteId: InviteId, sentAt: number): Promise<unknown>;
 }
 
 export interface InviteDeps {
@@ -165,7 +170,7 @@ export interface InviteRuntime {
 }
 
 export interface PendingBranchInvite {
-  inviteId: number;
+  inviteId: InviteId;
   userId: UserId;
   email: string;
   names: string;
@@ -197,14 +202,14 @@ export interface ResendInviteInput {
   actorUserId: UserId;
   actorRole: Role;
   branchId: BranchId;
-  inviteId: number;
+  inviteId: InviteId;
 }
 
 export interface RevokeInviteInput {
   actorUserId: UserId;
   actorRole: Role;
   branchId: BranchId;
-  inviteId: number;
+  inviteId: InviteId;
 }
 
 export interface AcceptInviteInput {
@@ -222,7 +227,7 @@ export interface IssueInviteInput {
 }
 
 export interface InviteIssueResult {
-  inviteId: number;
+  inviteId: InviteId;
   token: string;
   expiresAt: number;
 }
@@ -244,7 +249,7 @@ export interface InviteService {
     input: ResendInviteInput,
   ): Promise<Result<InviteIssueResult, DomainError>>;
   revokeInvite(input: RevokeInviteInput): Promise<Result<void, DomainError>>;
-  markInviteDelivered(inviteId: number): Promise<Result<void, DomainError>>;
+  markInviteDelivered(inviteId: InviteId): Promise<Result<void, DomainError>>;
   acceptInvite(
     input: AcceptInviteInput,
   ): Promise<Result<InviteAcceptedResult, DomainError>>;
@@ -271,7 +276,7 @@ export interface TeamInviteReadUsersPort {
 }
 
 export interface TeamInviteReadUserInvitesPort {
-  findById(inviteId: number): Promise<{ user_id: UserId } | undefined>;
+  findById(inviteId: InviteId): Promise<{ user_id: UserId } | undefined>;
   findPendingByTokenHash(
     tokenHash: string,
     now: number,

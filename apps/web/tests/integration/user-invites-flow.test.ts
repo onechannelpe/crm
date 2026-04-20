@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
+import type { UserId } from "../../src/server/shared/ids";
+import {
+  ISOLATED_DB_IDENTITIES,
+  TEST_IDS,
+} from "../support/identities/seeded-identities";
 import { createInviteTestKit } from "../support/invite-test-kit";
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
@@ -21,9 +26,9 @@ describe("user invite lifecycle", () => {
     });
 
     const created = await kit.commands.create({
-      actorUserId: 5,
+      actorUserId: ISOLATED_DB_IDENTITIES.superuser.userId,
       actorRole: "superuser",
-      branchId: 2,
+      branchId: TEST_IDS.BRANCH_LIMA,
       names: "Nueva",
       firstSurname: "Ejecutiva",
       secondSurname: "Garcia",
@@ -55,9 +60,9 @@ describe("user invite lifecycle", () => {
     });
 
     const created = await kit.commands.create({
-      actorUserId: 5,
+      actorUserId: ISOLATED_DB_IDENTITIES.superuser.userId,
       actorRole: "superuser",
-      branchId: 2,
+      branchId: TEST_IDS.BRANCH_LIMA,
       names: "Nuevo",
       firstSurname: "Analista",
       secondSurname: "Lopez",
@@ -69,9 +74,9 @@ describe("user invite lifecycle", () => {
     if (!created.ok) return;
 
     const revoked = await kit.commands.revoke({
-      actorUserId: 5,
+      actorUserId: ISOLATED_DB_IDENTITIES.superuser.userId,
       actorRole: "superuser",
-      branchId: 2,
+      branchId: TEST_IDS.BRANCH_LIMA,
       inviteId: created.value.inviteId,
     });
     expect(revoked.ok).toBe(true);
@@ -91,7 +96,7 @@ describe("user invite lifecycle", () => {
       ...ctx.repos,
       users: {
         ...baseUsersRepo,
-        async create(values: CreateUserInput): Promise<number> {
+        async create(values: CreateUserInput): Promise<UserId> {
           if (!shouldSimulateRace) {
             return baseUsersRepo.create(values);
           }
@@ -123,9 +128,9 @@ describe("user invite lifecycle", () => {
     ).service;
 
     const created = await service.createInvite({
-      actorUserId: 5,
+      actorUserId: ISOLATED_DB_IDENTITIES.superuser.userId,
       actorRole: "superuser",
-      branchId: 2,
+      branchId: TEST_IDS.BRANCH_LIMA,
       names: "Race",
       firstSurname: "User",
       secondSurname: "Test",

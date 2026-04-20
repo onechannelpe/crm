@@ -1,24 +1,25 @@
 import { describe, expect, it } from "vitest";
 
 import { resolveWorkspaceContext } from "../../src/lib/auth/access/workspace-context";
+import { asBranchId, asTeamId, asUserId } from "../../src/server/shared/ids";
 
 describe("workspace context resolver", () => {
   it("builds executive context from team and supervisor", () => {
     const context = resolveWorkspaceContext({
       role: "executive",
-      userId: 10,
-      branchId: 1,
+      userId: asUserId("user-10"),
+      branchId: asBranchId("branch-1"),
       branchName: "Lima",
-      userTeamId: 3,
+      userTeamId: asTeamId("team-3"),
       assignedTeam: {
-        id: 3,
+        id: asTeamId("team-3"),
         name: "Alpha",
-        branch_id: 1,
-        supervisor_id: 4,
+        branch_id: asBranchId("branch-1"),
+        supervisor_id: asUserId("user-4"),
         supervisor_names: "Diego",
         supervisor_first_surname: "Ramirez",
         supervisor_role: "supervisor",
-        supervisor_branch_id: 1,
+        supervisor_branch_id: asBranchId("branch-1"),
       },
       managedTeam: null,
     });
@@ -32,8 +33,8 @@ describe("workspace context resolver", () => {
     expect(() =>
       resolveWorkspaceContext({
         role: "executive",
-        userId: 10,
-        branchId: 1,
+        userId: asUserId("user-10"),
+        branchId: asBranchId("branch-1"),
         branchName: "Lima",
         userTeamId: null,
         assignedTeam: null,
@@ -45,12 +46,16 @@ describe("workspace context resolver", () => {
   it("returns managed team context for supervisor", () => {
     const context = resolveWorkspaceContext({
       role: "supervisor",
-      userId: 4,
-      branchId: 1,
+      userId: asUserId("user-4"),
+      branchId: asBranchId("branch-1"),
       branchName: "Lima",
       userTeamId: null,
       assignedTeam: null,
-      managedTeam: { id: 3, name: "Alpha", branch_id: 1 },
+      managedTeam: {
+        id: asTeamId("team-3"),
+        name: "Alpha",
+        branch_id: asBranchId("branch-1"),
+      },
     });
 
     expect(context.scopeType).toBe("team");
@@ -61,8 +66,8 @@ describe("workspace context resolver", () => {
   it("returns branch context for admin roles", () => {
     const context = resolveWorkspaceContext({
       role: "admin",
-      userId: 1,
-      branchId: 2,
+      userId: asUserId("user-1"),
+      branchId: asBranchId("branch-2"),
       branchName: "Norte",
       userTeamId: null,
       assignedTeam: null,
@@ -77,8 +82,8 @@ describe("workspace context resolver", () => {
   it("returns global context for superuser", () => {
     const context = resolveWorkspaceContext({
       role: "superuser",
-      userId: 99,
-      branchId: 1,
+      userId: asUserId("user-99"),
+      branchId: asBranchId("branch-1"),
       branchName: "Lima",
       userTeamId: null,
       assignedTeam: null,

@@ -1,7 +1,13 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { Database, UserInvitesTable, UsersTable } from "~/lib/db/types";
-import { type BranchId, type UserId } from "~/server/shared/ids";
+import {
+  asInviteId,
+  type BranchId,
+  type InviteId,
+  type TeamId,
+  type UserId,
+} from "~/server/shared/ids";
 
 type NewUserInviteRow = Insertable<UserInvitesTable>;
 
@@ -9,7 +15,7 @@ type InviteStatus = UserInvitesTable["status"];
 type UserRole = UsersTable["role"];
 
 export interface PendingInviteWithUser {
-  invite_id: number;
+  invite_id: InviteId;
   invite_status: InviteStatus;
   invite_expires_at: number;
   invite_created_at: number;
@@ -19,21 +25,22 @@ export interface PendingInviteWithUser {
   user_email: string;
   user_role: UserRole;
   user_branch_id: BranchId;
-  user_team_id: string | null;
+  user_team_id: TeamId | null;
   user_names: string;
   user_first_surname: string;
   user_second_surname: string;
+  user_username: string;
   user_is_active: number;
 }
 
 export function createUserInvitesRepo(db: Kysely<Database>) {
   return {
-    async create(values: NewUserInviteRow): Promise<number> {
+    async create(values: NewUserInviteRow): Promise<InviteId> {
       const result = await db
         .insertInto("user_invites")
         .values(values)
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return asInviteId(Number(result.insertId));
     },
 
     async findLatestPendingByBranch(
@@ -58,21 +65,31 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
           "users.names as user_names",
           "users.first_surname as user_first_surname",
           "users.second_surname as user_second_surname",
+          "users.username as user_username",
           "users.is_active as user_is_active",
         ])
         .where("user_invites.branch_id", "=", branchId)
         .where("user_invites.status", "=", "pending")
         .where("user_invites.expires_at", ">", now)
         .orderBy("user_invites.created_at", "desc")
-        .execute();
+        .execute() as Promise<PendingInviteWithUser[]>;
     },
 
-    findById(inviteId: number) {
-      return db
+    async findById(inviteId: InviteId) {
+      const row = await db
         .selectFrom("user_invites")
         .selectAll()
         .where("id", "=", inviteId)
         .executeTakeFirst();
+
+      if (!row) return undefined;
+
+      return {
+        ...row,
+        id: asInviteId(row.id),
+        user_id: row.user_id as UserId,
+        branch_id: row.branch_id as BranchId,
+      };
     },
 
     findPendingByTokenHash(tokenHash: string, now: number) {
@@ -100,7 +117,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .where("user_invites.token_hash", "=", tokenHash)
         .where("user_invites.status", "=", "pending")
         .where("user_invites.expires_at", ">", now)
-        .executeTakeFirst();
+        .executeTakeFirst() as Promise<PendingInviteWithUser | undefined>;
     },
 
     revokePendingByUser(userId: UserId, revokedAt: number) {
@@ -124,7 +141,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    markAccepted(inviteId: number, acceptedAt: number) {
+    markAccepted(inviteId: InviteId, acceptedAt: number) {
       return db
         .updateTable("user_invites")
         .set({
@@ -136,7 +153,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    markSent(inviteId: number, sentAt: number) {
+    markSent(inviteId: InviteId, sentAt: number) {
       return db
         .updateTable("user_invites")
         .set({ sent_at: sentAt })

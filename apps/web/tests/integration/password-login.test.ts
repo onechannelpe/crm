@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { submitPasswordLogin } from "../../src/server/auth/application/commands/submit-password-login";
+import { asUserId } from "../../src/server/shared/ids";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
@@ -78,7 +79,7 @@ describe("password login service", () => {
     expect(result.error.kind).toBe("invalid_credentials");
 
     const retries = await ctx.repos.authEvents.findRecentLoginRetriesByUser(
-      1,
+      asUserId("1"),
       20,
     );
     expect(retries).toHaveLength(7);
@@ -109,12 +110,15 @@ describe("password login service", () => {
     if (result.value.kind !== "complete") {
       throw new Error("expected completed password login");
     }
-    expect(result.value.result.userId).toBe(1);
-    const session = await ctx.repos.sessions.listForUser(1);
+    expect(result.value.result.userId).toBe(asUserId("1"));
+    const session = await ctx.repos.sessions.listForUser(asUserId("1"));
     expect(session[0]?.ip_address).toBe(ipAddress);
     expect(session[0]?.user_agent).toBe(userAgent);
 
-    const events = await ctx.repos.authEvents.findRecentByUser(1, 5);
+    const events = await ctx.repos.authEvents.findRecentByUser(
+      asUserId("1"),
+      5,
+    );
     expect(events[0]?.method).toBe("password");
     expect(events[0]?.stage).toBe("login");
     expect(events[0]?.outcome).toBe("success");

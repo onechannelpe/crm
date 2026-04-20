@@ -1,8 +1,10 @@
 import { hashPassword } from "../../../src/lib/auth/password/password";
+import { createUserId } from "../../../src/server/shared/ids";
 import type { BrowserDbRuntime } from "../db/browser-runtime";
 import {
   BROWSER_TEST_PASSWORD,
   getSeededBrowserIdentityDefinition,
+  TEST_IDS,
   type SeededBrowserIdentityName,
 } from "../identities/seeded-identities";
 import type { BrowserIdentity, BrowserUserOptions } from "./browser-types";
@@ -89,8 +91,10 @@ export async function ensureBrowserUser(
       ? `${safeUsername.replace(/[^a-z0-9.]/gi, ".")}@test.local`
       : generated.email;
   const passwordHash = await hashPassword(BROWSER_TEST_PASSWORD);
-  const userId = await runtime.repos.users.create({
-    branch_id: options.branchId ?? 1,
+  const userId = createUserId();
+  await runtime.repos.users.create({
+    id: userId,
+    branch_id: options.branchId ?? TEST_IDS.BRANCH_LIMA,
     team_id: null,
     username,
     email,
@@ -114,7 +118,7 @@ export async function ensureBrowserUser(
     userId,
     username,
     email,
-    branchId: options.branchId ?? 1,
+    branchId: options.branchId ?? TEST_IDS.BRANCH_LIMA,
     role: options.role,
     password: BROWSER_TEST_PASSWORD,
   };

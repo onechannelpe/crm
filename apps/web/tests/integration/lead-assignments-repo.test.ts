@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  asUserId,
+  asContactId,
+  asAssignmentId,
+} from "../../src/server/shared/ids";
+import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
@@ -23,22 +28,25 @@ describe("lead assignment repository", () => {
       .insertInto("lead_assignments")
       .values([
         {
-          user_id: 1,
-          contact_id: 1,
+          id: asAssignmentId("00000000-0000-0000-0000-0000000000a1"),
+          user_id: asUserId("1"),
+          contact_id: asContactId("1"),
           assigned_at: now,
           expires_at: now + 60_000,
           status: "active",
         },
         {
-          user_id: 1,
-          contact_id: 2,
+          id: asAssignmentId("00000000-0000-0000-0000-0000000000a2"),
+          user_id: asUserId("1"),
+          contact_id: asContactId("2"),
           assigned_at: now,
           expires_at: now - 1,
           status: "active",
         },
         {
-          user_id: 1,
-          contact_id: 2,
+          id: asAssignmentId("00000000-0000-0000-0000-0000000000a3"),
+          user_id: asUserId("1"),
+          contact_id: asContactId("2"),
           assigned_at: now,
           expires_at: now + 60_000,
           status: "completed",
@@ -46,9 +54,11 @@ describe("lead assignment repository", () => {
       ])
       .execute();
 
-    const active = await ctx.repos.contactAssignments.findActiveByUser(1);
+    const active = await ctx.repos.contactAssignments.findActiveByUser(
+      asUserId("1"),
+    );
     expect(active).toHaveLength(1);
-    expect(active[0].contact_id).toBe(1);
+    expect(active[0].contact_id).toBe(asContactId("1"));
   });
 
   it("hasActiveForContact respects expiry and ownership", async () => {
@@ -57,15 +67,17 @@ describe("lead assignment repository", () => {
       .insertInto("lead_assignments")
       .values([
         {
-          user_id: 1,
-          contact_id: 1,
+          id: asAssignmentId("00000000-0000-0000-0000-0000000000b1"),
+          user_id: asUserId("1"),
+          contact_id: asContactId("1"),
           assigned_at: now,
           expires_at: now + 60_000,
           status: "active",
         },
         {
-          user_id: 3,
-          contact_id: 2,
+          id: asAssignmentId("00000000-0000-0000-0000-0000000000b2"),
+          user_id: asUserId("3"),
+          contact_id: asContactId("2"),
           assigned_at: now,
           expires_at: now + 60_000,
           status: "active",
@@ -73,14 +85,23 @@ describe("lead assignment repository", () => {
       ])
       .execute();
 
-    expect(await ctx.repos.contactAssignments.hasActiveForContact(1, 1)).toBe(
-      true,
-    );
-    expect(await ctx.repos.contactAssignments.hasActiveForContact(1, 2)).toBe(
-      false,
-    );
-    expect(await ctx.repos.contactAssignments.hasActiveForContact(3, 2)).toBe(
-      true,
-    );
+    expect(
+      await ctx.repos.contactAssignments.hasActiveForContact(
+        asUserId("1"),
+        asContactId("1"),
+      ),
+    ).toBe(true);
+    expect(
+      await ctx.repos.contactAssignments.hasActiveForContact(
+        asUserId("1"),
+        asContactId("2"),
+      ),
+    ).toBe(false);
+    expect(
+      await ctx.repos.contactAssignments.hasActiveForContact(
+        asUserId("3"),
+        asContactId("2"),
+      ),
+    ).toBe(true);
   });
 });

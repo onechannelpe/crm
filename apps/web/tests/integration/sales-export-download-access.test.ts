@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { downloadSalesExportById } from "../../src/server/sales-records/application/download-export";
 import { createSalesExportBlobStore } from "../../src/server/sales/export-blob-store";
+import { asUserId, asBranchId } from "../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -28,8 +29,8 @@ describe("sales export download access", () => {
     );
 
     const jobId = await ctx.repos.reportExportJobs.createJob({
-      requested_by_user_id: 2,
-      branch_id: 1,
+      requested_by_user_id: asUserId("2"),
+      branch_id: asBranchId("1"),
       format: "csv",
       filters_json: JSON.stringify({ status: "confirmed", scope: "branch" }),
       status: "completed",
@@ -48,7 +49,7 @@ describe("sales export download access", () => {
 
     const response = await downloadSalesExportById(
       jobId,
-      { userId: 2, role: "back_office", branchId: 1 },
+      { userId: asUserId("2"), role: "back_office", branchId: asBranchId("1") },
       { repos: ctx.repos, blobStore, now: () => now + 1 },
     );
 
@@ -60,7 +61,7 @@ describe("sales export download access", () => {
     const downloads =
       await ctx.repos.reportExportJobs.listDownloadsByJob(jobId);
     expect(downloads).toHaveLength(1);
-    expect(downloads[0]?.downloaded_by_user_id).toBe(2);
+    expect(downloads[0]?.downloaded_by_user_id).toBe(asUserId("2"));
   });
 
   it("denies cross-branch reviewer", async () => {
@@ -72,8 +73,8 @@ describe("sales export download access", () => {
     );
 
     const jobId = await ctx.repos.reportExportJobs.createJob({
-      requested_by_user_id: 2,
-      branch_id: 1,
+      requested_by_user_id: asUserId("2"),
+      branch_id: asBranchId("1"),
       format: "csv",
       filters_json: JSON.stringify({ status: "confirmed", scope: "branch" }),
       status: "completed",
@@ -92,7 +93,7 @@ describe("sales export download access", () => {
 
     const response = await downloadSalesExportById(
       jobId,
-      { userId: 4, role: "back_office", branchId: 2 },
+      { userId: asUserId("4"), role: "back_office", branchId: asBranchId("2") },
       { repos: ctx.repos, blobStore },
     );
 
@@ -115,8 +116,8 @@ describe("sales export download access", () => {
     );
 
     const jobId = await ctx.repos.reportExportJobs.createJob({
-      requested_by_user_id: 2,
-      branch_id: 1,
+      requested_by_user_id: asUserId("2"),
+      branch_id: asBranchId("1"),
       format: "csv",
       filters_json: JSON.stringify({ status: "confirmed", scope: "branch" }),
       status: "completed",
@@ -135,7 +136,7 @@ describe("sales export download access", () => {
 
     const response = await downloadSalesExportById(
       jobId,
-      { userId: 5, role: "superuser", branchId: 2 },
+      { userId: asUserId("5"), role: "superuser", branchId: asBranchId("2") },
       { repos: ctx.repos, blobStore },
     );
 
@@ -144,7 +145,7 @@ describe("sales export download access", () => {
     const downloads =
       await ctx.repos.reportExportJobs.listDownloadsByJob(jobId);
     expect(downloads).toHaveLength(1);
-    expect(downloads[0]?.downloaded_by_user_id).toBe(5);
+    expect(downloads[0]?.downloaded_by_user_id).toBe(asUserId("5"));
   });
 
   it("fails when file is not ready", async () => {
@@ -152,8 +153,8 @@ describe("sales export download access", () => {
     const blobStore = createSalesExportBlobStore(ctx.storageRoot);
 
     const jobId = await ctx.repos.reportExportJobs.createJob({
-      requested_by_user_id: 2,
-      branch_id: 1,
+      requested_by_user_id: asUserId("2"),
+      branch_id: asBranchId("1"),
       format: "csv",
       filters_json: JSON.stringify({ status: "confirmed", scope: "branch" }),
       status: "running",
@@ -164,7 +165,7 @@ describe("sales export download access", () => {
       requested_at: now,
       completed_at: null,
       expires_at: null,
-      lease_owner: "worker",
+      lease_owner: asUserId("worker"),
       lease_until: now + 10_000,
       attempt_count: 0,
       max_attempts: 5,
@@ -172,7 +173,7 @@ describe("sales export download access", () => {
 
     const response = await downloadSalesExportById(
       jobId,
-      { userId: 2, role: "back_office", branchId: 1 },
+      { userId: asUserId("2"), role: "back_office", branchId: asBranchId("1") },
       { repos: ctx.repos, blobStore },
     );
 

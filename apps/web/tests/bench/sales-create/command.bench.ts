@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { asBranchId, type UserId } from "../../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -15,7 +16,7 @@ import {
 
 describe("sales create command benchmark", () => {
   let ctx!: TestDbContext;
-  let userIds: number[] = [];
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
@@ -39,7 +40,7 @@ describe("sales create command benchmark", () => {
       const result = await ctx.salesRecords.createDraft({
         ...SALES_CREATE_BASE_DRAFT_INPUT,
         executiveUserId: userId,
-        branchId: 1,
+        branchId: asBranchId("00000000-0000-0000-0000-000000000011"),
       });
       if (!result.ok) {
         throw new Error(

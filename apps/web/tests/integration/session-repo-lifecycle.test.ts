@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asUserId, asBranchId } from "../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -23,8 +24,8 @@ describe("session repository lifecycle", () => {
 
     await ctx.repos.sessions.create({
       id: sessionId,
-      user_id: 1,
-      branch_id: 1,
+      user_id: asUserId("1"),
+      branch_id: asBranchId("1"),
       role: "executive",
       session_class: "app",
       primary_auth_method: "password",
@@ -56,8 +57,8 @@ describe("session repository lifecycle", () => {
     const now = Date.now();
     await ctx.repos.sessions.create({
       id: "active-1",
-      user_id: 1,
-      branch_id: 1,
+      user_id: asUserId("1"),
+      branch_id: asBranchId("1"),
       role: "executive",
       session_class: "app",
       primary_auth_method: "password",
@@ -71,8 +72,8 @@ describe("session repository lifecycle", () => {
     });
     await ctx.repos.sessions.create({
       id: "expired-1",
-      user_id: 1,
-      branch_id: 1,
+      user_id: asUserId("1"),
+      branch_id: asBranchId("1"),
       role: "executive",
       session_class: "app",
       primary_auth_method: "password",
@@ -104,8 +105,8 @@ describe("session repository lifecycle", () => {
       .values(
         Array.from({ length: 200 }, (_, i) => ({
           id: `bulk-${i}`,
-          user_id: 1,
-          branch_id: 1,
+          user_id: asUserId("1"),
+          branch_id: asBranchId("1"),
           role: "executive" as const,
           session_class: "app" as const,
           primary_auth_method: "password" as const,
@@ -120,9 +121,9 @@ describe("session repository lifecycle", () => {
       )
       .execute();
 
-    await ctx.repos.sessions.deleteAllForUser(1);
+    await ctx.repos.sessions.deleteAllForUser(asUserId("1"));
 
-    const remaining = await ctx.repos.sessions.listForUser(1);
+    const remaining = await ctx.repos.sessions.listForUser(asUserId("1"));
     expect(remaining).toHaveLength(0);
   });
 });

@@ -78,6 +78,10 @@ export type CapacityRequestId = Brand<number, "CapacityRequestId">;
 export const asCapacityRequestId = (id: number): CapacityRequestId =>
   brand<number, "CapacityRequestId">(id);
 
+export type InviteId = Brand<number, "InviteId">;
+export const asInviteId = (id: number): InviteId =>
+  brand<number, "InviteId">(id);
+
 // --- Tagged IDs (runtime dispatch semantics) ---
 
 export interface SearchReservationId {

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { currentMonthlyPeriod } from "~/server/shared/time";
 
+import { asUserId, type UserId } from "../../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -13,7 +14,7 @@ import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
 describe("search capacity grant repository benchmark", () => {
   let ctx!: TestDbContext;
-  let userIds: number[] = [];
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
@@ -23,7 +24,7 @@ describe("search capacity grant repository benchmark", () => {
     for (const userId of userIds) {
       await ctx.repos.searchCapacityGrants.insert({
         user_id: userId,
-        actor_user_id: 2,
+        actor_user_id: asUserId("2"),
         amount: 2,
         reason: "bench_seed",
       });

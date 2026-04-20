@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createPipelineCommandApiRuntime } from "../../src/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
+import { asUserId, asBranchId } from "../../src/server/shared/ids";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -38,9 +39,13 @@ describe("register lead", () => {
     });
 
     const result = await commandApi.registerLead({
-      actor: { userId: 1, role: "admin", branchId: 1 },
+      actor: {
+        userId: asUserId("1"),
+        role: "admin",
+        branchId: asBranchId("1"),
+      },
       ruc: "20100000001",
-      executiveId: 1,
+      executiveId: asUserId("1"),
     });
 
     expect(result.ok).toBe(true);
@@ -81,9 +86,13 @@ describe("register lead", () => {
     });
 
     const result = await commandApi.registerLead({
-      actor: { userId: 1, role: "admin", branchId: 1 },
+      actor: {
+        userId: asUserId("1"),
+        role: "admin",
+        branchId: asBranchId("1"),
+      },
       ruc: "20100000002",
-      executiveId: 1,
+      executiveId: asUserId("1"),
     });
 
     expect(result.ok).toBe(true);

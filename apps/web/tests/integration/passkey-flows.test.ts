@@ -9,6 +9,7 @@ import {
   createPasskeyLoginFinishAuthService,
   createPasskeyLoginStartAuthService,
 } from "../../src/server/auth/passkey/service";
+import { asUserId, type UserId } from "../../src/server/shared/ids";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
@@ -20,6 +21,8 @@ const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
 describe("passkey flows", () => {
   let ctx: TestDbContext;
+  const USER_1 = asUserId("00000000-0000-0000-0000-000000000001");
+  const USER_2 = asUserId("00000000-0000-0000-0000-000000000002");
   const ipAddress = "198.51.100.66";
 
   beforeEach(async () => {
@@ -49,7 +52,7 @@ describe("passkey flows", () => {
       ? await ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
     expect(challenge?.type).toBe("authentication");
-    expect(challenge?.user_id).toBe(1);
+    expect(challenge?.user_id).toBe(USER_1);
     expect(challenge?.challenge).toBe(result.value.requestOptions.challenge);
   });
 
@@ -79,7 +82,7 @@ describe("passkey flows", () => {
 
   it("finish passkey login consumes challenge and records failure on invalid assertion", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 1,
+      user_id: USER_1,
       type: "authentication",
       challenge: "challenge-1",
       expires_at: Date.now() + 60_000,
@@ -87,7 +90,7 @@ describe("passkey flows", () => {
     const flowId = await ctx.repos.loginFlows.create({
       identifier: "exec.one",
       primary_auth_method: "passkey",
-      user_id: 1,
+      user_id: USER_1,
       challenge_id: challengeId,
       state: "passkey",
       expires_at: Date.now() + 60_000,
@@ -121,7 +124,7 @@ describe("passkey flows", () => {
     const consumed = await ctx.repos.webauthnChallenges.findById(challengeId);
     expect(consumed).toBeUndefined();
 
-    const key = hashAuthKey("account:passkey_verify:user:1");
+    const key = hashAuthKey(`account:passkey_verify:user:${USER_1}`);
     const counter = await ctx.repos.authThrottle.findByScopeAndKey(
       "account",
       key,
@@ -129,7 +132,7 @@ describe("passkey flows", () => {
     expect(counter?.failure_count).toBe(1);
 
     const retries = await ctx.repos.authEvents.findRecentLoginRetriesByUser(
-      1,
+      USER_1,
       5,
     );
     expect(retries[0]?.method).toBe("passkey");
@@ -142,7 +145,7 @@ describe("passkey flows", () => {
     const result = await createPasskeyEnrollmentAuthService(
       ctx.repos,
     ).beginEnrollment({
-      userId: 1,
+      userId: USER_1,
       ipAddress,
     });
 
@@ -155,7 +158,7 @@ describe("passkey flows", () => {
       result.value.challengeId,
     );
     expect(challenge?.type).toBe("registration");
-    expect(challenge?.user_id).toBe(1);
+    expect(challenge?.user_id).toBe(USER_1);
     expect(challenge?.challenge).toBe(result.value.options.challenge);
   });
 
@@ -164,13 +167,16 @@ describe("passkey flows", () => {
       authThrottle: ctx.repos.authThrottle,
     });
     for (let attempt = 0; attempt < 9; attempt += 1) {
-      await throttleSvc.recordPasskeyChallengeFailure("user:1", ipAddress);
+      await throttleSvc.recordPasskeyChallengeFailure(
+        `user:${USER_1}`,
+        ipAddress,
+      );
     }
 
     const result = await createPasskeyEnrollmentAuthService(
       ctx.repos,
     ).beginEnrollment({
-      userId: 1,
+      userId: USER_1,
       ipAddress,
     });
 
@@ -201,7 +207,7 @@ describe("passkey flows", () => {
         },
       }),
     }).beginEnrollment({
-      userId: 1,
+      userId: USER_1,
       ipAddress,
     });
 
@@ -214,7 +220,7 @@ describe("passkey flows", () => {
 
   it("finish passkey registration rejects challenge ownership mismatch", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 1,
+      user_id: USER_1,
       type: "registration",
       challenge: "challenge-r1",
       expires_at: Date.now() + 60_000,
@@ -223,7 +229,7 @@ describe("passkey flows", () => {
     const result = await createPasskeyEnrollmentAuthService(
       ctx.repos,
     ).finishEnrollment({
-      userId: 2,
+      userId: USER_2,
       challengeId,
       response: {
         id: "cred-r1",
@@ -244,7 +250,7 @@ describe("passkey flows", () => {
     }
     expect(result.error.code).toBe("invalid_request");
 
-    const key = hashAuthKey("account:passkey_verify:user:2");
+    const key = hashAuthKey(`account:passkey_verify:user:${USER_2}`);
     const counter = await ctx.repos.authThrottle.findByScopeAndKey(
       "account",
       key,
@@ -254,7 +260,7 @@ describe("passkey flows", () => {
 
   it("returns invalid_request when passkey enrollment verification fails", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 1,
+      user_id: USER_1,
       type: "registration",
       challenge: "challenge-r2",
       expires_at: Date.now() + 60_000,
@@ -279,7 +285,7 @@ describe("passkey flows", () => {
         },
       }),
     }).finishEnrollment({
-      userId: 1,
+      userId: USER_1,
       challengeId,
       response: {
         id: "cred-r2",
@@ -303,7 +309,7 @@ describe("passkey flows", () => {
 
   it("returns unexpected when passkey enrollment persistence fails after verification", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 1,
+      user_id: USER_1,
       type: "registration",
       challenge: "challenge-r3",
       expires_at: Date.now() + 60_000,
@@ -328,7 +334,7 @@ describe("passkey flows", () => {
         },
       }),
     }).finishEnrollment({
-      userId: 1,
+      userId: USER_1,
       challengeId,
       response: {
         id: "cred-r3",
@@ -352,7 +358,7 @@ describe("passkey flows", () => {
 
   it("finish passkey login issues a session through the workflow service", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 1,
+      user_id: USER_1,
       type: "authentication",
       challenge: "challenge-workflow-1",
       expires_at: Date.now() + 60_000,
@@ -360,7 +366,7 @@ describe("passkey flows", () => {
     const flowId = await ctx.repos.loginFlows.create({
       identifier: "exec.one",
       primary_auth_method: "passkey",
-      user_id: 1,
+      user_id: USER_1,
       challenge_id: challengeId,
       state: "passkey",
       expires_at: Date.now() + 60_000,
@@ -381,7 +387,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
         async verifyAuthentication() {
-          return { verified: true, userId: 1 };
+          return { verified: true, userId: USER_1 };
         },
       }),
     }).finishLogin({
@@ -432,7 +438,7 @@ describe("passkey flows", () => {
   it("returns unexpected when passkey login flow persistence fails", async () => {
     await ctx.repos.passkeys.create({
       id: "pk-login-failure",
-      user_id: 1,
+      user_id: USER_1,
       public_key: "base64-public-key",
       counter: 0,
       transports: JSON.stringify(["internal"]),
@@ -489,7 +495,7 @@ describe("passkey flows", () => {
 
   it("returns invalid_credentials when an identified passkey flow verifies a different user", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 1,
+      user_id: USER_1,
       type: "authentication",
       challenge: "challenge-mismatch-1",
       expires_at: Date.now() + 60_000,
@@ -497,7 +503,7 @@ describe("passkey flows", () => {
     const flowId = await ctx.repos.loginFlows.create({
       identifier: "exec.one",
       primary_auth_method: "passkey",
-      user_id: 1,
+      user_id: USER_1,
       challenge_id: challengeId,
       state: "passkey",
       expires_at: Date.now() + 60_000,
@@ -518,7 +524,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
         async verifyAuthentication() {
-          return { verified: true, userId: 2 };
+          return { verified: true, userId: USER_2 };
         },
       }),
     }).finishLogin({
@@ -548,7 +554,7 @@ describe("passkey flows", () => {
 
   it("returns unexpected when passkey session issuance fails", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 1,
+      user_id: USER_1,
       type: "authentication",
       challenge: "challenge-workflow-2",
       expires_at: Date.now() + 60_000,
@@ -556,7 +562,7 @@ describe("passkey flows", () => {
     const flowId = await ctx.repos.loginFlows.create({
       identifier: "exec.one",
       primary_auth_method: "passkey",
-      user_id: 1,
+      user_id: USER_1,
       challenge_id: challengeId,
       state: "passkey",
       expires_at: Date.now() + 60_000,
@@ -577,7 +583,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
         async verifyAuthentication() {
-          return { verified: true, userId: 1 };
+          return { verified: true, userId: USER_1 };
         },
       }),
       async issueLoginSession() {

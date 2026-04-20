@@ -5,6 +5,7 @@ import {
   serializeAuditChanges,
   sessionRevokedByAdminChanges,
 } from "../../src/lib/contracts/audit";
+import { asUserId } from "../../src/server/shared/ids";
 
 describe("audit changes contracts", () => {
   it("serializes undefined changes as null", () => {
@@ -18,10 +19,19 @@ describe("audit changes contracts", () => {
   });
 
   it("builds typed session revoke payloads", () => {
-    expect(sessionRevokedByAdminChanges("s-1", 9)).toEqual({
+    expect(
+      sessionRevokedByAdminChanges(
+        "s-1",
+        asUserId("00000000-0000-0000-0000-000000000009"),
+      ),
+    ).toEqual({
       sessionId: "s-1",
-      revokedBy: 9,
+      revokedBy: asUserId("00000000-0000-0000-0000-000000000009"),
     });
-    expect(allSessionsRevokedChanges(9)).toEqual({ revokedBy: 9 });
+    expect(
+      allSessionsRevokedChanges(
+        asUserId("00000000-0000-0000-0000-000000000009"),
+      ),
+    ).toEqual({ revokedBy: asUserId("00000000-0000-0000-0000-000000000009") });
   });
 });

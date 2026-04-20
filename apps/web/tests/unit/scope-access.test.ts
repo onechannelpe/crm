@@ -3,8 +3,14 @@ import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { canManageExecutive } from "~/server/capacity/domain/access-policy";
+import {
+  asUserId,
+  asBranchId,
+  asTeamId,
+  type TeamId,
+} from "~/server/shared/ids";
 
-type TargetUser = { role: Role; branchId: number; teamId: number | null };
+type TargetUser = { role: Role; branchId: number; teamId: TeamId | null };
 
 // Roles that must never be able to manage an executive
 const NON_MANAGER_ROLES = [
@@ -18,9 +24,9 @@ const NON_MANAGER_ROLES = [
 function makeActor(role: Role = "admin", branchId = 1) {
   return {
     id: "test",
-    userId: 99,
+    userId: asUserId("99"),
     role,
-    branchId,
+    branchId: asBranchId(branchId.toString()),
     onboardingCompleted: true,
     sessionClass: "app" as const,
     primaryAuthMethod: "password" as const,
@@ -30,7 +36,7 @@ function makeActor(role: Role = "admin", branchId = 1) {
 }
 
 function makeRepos(
-  target: { role: Role; branchId: number; teamId: number | null } | undefined,
+  target: { role: Role; branchId: number; teamId: TeamId | null } | undefined,
 ) {
   return {
     users: {
@@ -57,7 +63,11 @@ describe("canManageExecutive", () => {
             teamId: null,
           };
           const repos = makeRepos(target);
-          const result = await canManageExecutive(actor, 1, repos);
+          const result = await canManageExecutive(
+            actor,
+            asUserId("100"),
+            repos as any,
+          );
           return !result.ok;
         },
       ),
@@ -68,7 +78,11 @@ describe("canManageExecutive", () => {
   it("returns ok false when target user does not exist", async () => {
     const actor = makeActor("superuser");
     const repos = makeRepos(undefined);
-    const result = await canManageExecutive(actor, 1, repos);
+    const result = await canManageExecutive(
+      actor,
+      asUserId("100"),
+      repos as any,
+    );
     expect(result.ok).toBe(false);
     expect(result.target).toBeNull();
   });
@@ -81,7 +95,11 @@ describe("canManageExecutive", () => {
       teamId: null,
     };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, 1, repos);
+    const result = await canManageExecutive(
+      actor,
+      asUserId("100"),
+      repos as any,
+    );
     expect(result.ok).toBe(false);
   });
 
@@ -93,7 +111,11 @@ describe("canManageExecutive", () => {
       teamId: null,
     };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, 1, repos);
+    const result = await canManageExecutive(
+      actor,
+      asUserId("100"),
+      repos as any,
+    );
     expect(result.ok).toBe(true);
   });
 
@@ -105,7 +127,11 @@ describe("canManageExecutive", () => {
       teamId: null,
     };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, 1, repos);
+    const result = await canManageExecutive(
+      actor,
+      asUserId("100"),
+      repos as any,
+    );
     expect(result.ok).toBe(true);
   });
 
@@ -117,35 +143,55 @@ describe("canManageExecutive", () => {
       teamId: null,
     };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, 1, repos);
+    const result = await canManageExecutive(
+      actor,
+      asUserId("100"),
+      repos as any,
+    );
     expect(result.ok).toBe(false);
   });
 
   it("supervisor can manage executive on their team in same branch", async () => {
     const actor = makeActor("supervisor", 1);
-    const target: TargetUser = { role: "executive", branchId: 1, teamId: 5 };
+    const target: TargetUser = {
+      role: "executive",
+      branchId: 1,
+      teamId: asTeamId("5"),
+    };
     const repos = {
       users: { findById: async () => target },
       teams: {
-        findBySupervisorId: async () => ({ id: 5 }),
+        findBySupervisorId: async () => ({ id: asTeamId("5") }),
         findByIdWithSupervisor: async () => undefined,
       },
     };
-    const result = await canManageExecutive(actor, 1, repos);
+    const result = await canManageExecutive(
+      actor,
+      asUserId("100"),
+      repos as any,
+    );
     expect(result.ok).toBe(true);
   });
 
   it("supervisor cannot manage executive on a different team", async () => {
     const actor = makeActor("supervisor", 1);
-    const target: TargetUser = { role: "executive", branchId: 1, teamId: 7 };
+    const target: TargetUser = {
+      role: "executive",
+      branchId: 1,
+      teamId: asTeamId("7"),
+    };
     const repos = {
       users: { findById: async () => target },
       teams: {
-        findBySupervisorId: async () => ({ id: 5 }),
+        findBySupervisorId: async () => ({ id: asTeamId("5") }),
         findByIdWithSupervisor: async () => undefined,
       },
     };
-    const result = await canManageExecutive(actor, 1, repos);
+    const result = await canManageExecutive(
+      actor,
+      asUserId("100"),
+      repos as any,
+    );
     expect(result.ok).toBe(false);
   });
 });

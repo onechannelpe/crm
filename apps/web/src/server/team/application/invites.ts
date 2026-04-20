@@ -3,6 +3,7 @@ import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
+import { type InviteId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
@@ -80,7 +81,7 @@ export async function createTeamInvite(
   ctx: AppContext,
   deps: TeamInviteCreateContext,
   input: CreateTeamInviteCommand,
-): Promise<Result<{ inviteId: number }, DomainError>> {
+): Promise<Result<{ inviteId: InviteId }, DomainError>> {
   await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
 
   const result = await deps.inviteService.createInvite({
@@ -125,7 +126,7 @@ export async function createTeamInvite(
 export async function resendTeamInvite(
   ctx: AppContext,
   deps: TeamInviteResendContext,
-  input: { inviteId: number },
+  input: { inviteId: InviteId },
 ): Promise<Result<void, DomainError>> {
   const result = await deps.inviteService.resendInvite({
     actorUserId: ctx.actor.userId,
@@ -168,7 +169,7 @@ export async function resendTeamInvite(
 export async function revokeTeamInvite(
   ctx: AppContext,
   deps: TeamInviteProvisioningContext,
-  input: { inviteId: number },
+  input: { inviteId: InviteId },
 ): Promise<Result<void, DomainError>> {
   return deps.inviteService.revokeInvite({
     actorUserId: ctx.actor.userId,

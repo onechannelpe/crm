@@ -3,6 +3,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import type { EngineClient } from "~/server/shared/engine/client";
+import { asBranchId, type BranchId, type UserId } from "~/server/shared/ids";
 
 import {
   cleanupTestDb,
@@ -17,7 +18,7 @@ import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
 describe("lead refill service benchmark", () => {
   let ctx!: TestDbContext;
   let engine!: EngineClient;
-  let userIds: number[] = [];
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
@@ -43,7 +44,7 @@ describe("lead refill service benchmark", () => {
       const result = await assignContacts(
         {
           actorUserId: userId,
-          branchId: 1,
+          branchId: asBranchId("00000000-0000-0000-0000-000000000011"),
         },
         {
           repos: {

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import type { UserId } from "../../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -11,7 +12,7 @@ import { seedSessionDeleteFixtures, USER_POOL_SIZE } from "./fixtures";
 
 describe("session delete repository benchmark", () => {
   let ctx!: TestDbContext;
-  let userIds: number[] = [];
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
