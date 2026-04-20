@@ -30,8 +30,7 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
       fileAsset.safeDisplayFilename,
     );
 
-    const body = new ArrayBuffer(bytes.byteLength);
-    new Uint8Array(body).set(bytes);
+    const body = bytes.slice().buffer;
 
     return new Response(body, { status: 200, headers });
   } catch (err) {
