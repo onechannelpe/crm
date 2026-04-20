@@ -2,6 +2,7 @@ import { ErrorBoundary, Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading/screen";
 
+import { HotkeyBoundary } from "../core/hotkeys/hotkey-boundary";
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 import { TopBar } from "../top-bar/top-bar";
@@ -26,7 +27,7 @@ export function Router(props: { isMobile: boolean }) {
                 SIDE_PANEL_PAGES_CONFIG[entry.page].component;
 
               return (
-                <div class={styles.pageContent}>
+                <HotkeyBoundary class={styles.pageContent}>
                   <PageInstanceProvider pageId={entry.pageId}>
                     <ErrorBoundary
                       fallback={
@@ -46,7 +47,7 @@ export function Router(props: { isMobile: boolean }) {
                       </Suspense>
                     </ErrorBoundary>
                   </PageInstanceProvider>
-                </div>
+                </HotkeyBoundary>
               );
             }}
           </Show>

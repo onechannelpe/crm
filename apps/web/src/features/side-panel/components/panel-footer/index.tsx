@@ -21,13 +21,14 @@ export function FooterButtonSecondary(
 }
 
 export function FooterButtonPrimary(
-  props: ParentProps & { onClick?: () => void },
+  props: ParentProps & { onClick?: () => void; disabled?: boolean },
 ) {
   return (
     <button
       type="button"
       class={styles.footerButtonPrimary}
       onClick={props.onClick}
+      disabled={props.disabled}
     >
       {props.children}
     </button>

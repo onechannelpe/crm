@@ -1,6 +1,6 @@
 import Building2 from "~/components/icons/building-2";
 import { Badge } from "~/components/ui/display/badge";
-import { formatDateTime } from "~/lib/utils";
+import { FieldsWidget } from "~/features/pipeline/fields/fields-widget";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import styles from "./lead-detail-overview.module.css";
@@ -12,20 +12,6 @@ function stageVariant(stage: string) {
 }
 
 export function LeadSummarySection(props: { data: LeadDetailView }) {
-  const fields = [
-    { label: "RUC", value: props.data.lead.ruc },
-    { label: "Razón social", value: props.data.lead.razonSocial ?? "" },
-    { label: "Dirección", value: props.data.lead.address ?? "" },
-    { label: "Estado", value: props.data.lead.status ?? "" },
-    { label: "Prioridad", value: props.data.lead.prioridad ?? "" },
-    { label: "SUNAT", value: props.data.sourceStatus.sunat.status },
-    { label: "Creado", value: formatDateTime(props.data.lead.createdAt) },
-    {
-      label: "Actualizado",
-      value: formatDateTime(props.data.lead.updatedAt),
-    },
-  ] as const;
-
   return (
     <>
       <section class={styles.hero}>
@@ -45,14 +31,7 @@ export function LeadSummarySection(props: { data: LeadDetailView }) {
 
       <section class={styles.section}>
         <div class={styles.sectionTitle}>Campos</div>
-        <dl class={styles.fieldGrid}>
-          {fields.map((field) => (
-            <div class={styles.fieldRow}>
-              <dt class={styles.fieldLabel}>{field.label}</dt>
-              <dd class={styles.fieldValue}>{field.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <FieldsWidget data={props.data} />
       </section>
     </>
   );

@@ -15,6 +15,7 @@ import {
 type BootstrapWidgetProps = {
   engineStatus?: string;
   onSubmit?: () => void;
+  submitting?: boolean;
 };
 
 export function BootstrapWidget(props: BootstrapWidgetProps) {
@@ -29,7 +30,7 @@ export function BootstrapWidget(props: BootstrapWidgetProps) {
       <WidgetBody>
         <RelationRow>
           <span>{props.engineStatus ?? ""}</span>
-          <PlusButton onClick={props.onSubmit}>
+          <PlusButton onClick={props.onSubmit} disabled={props.submitting}>
             <Plus size={14} />
           </PlusButton>
         </RelationRow>
