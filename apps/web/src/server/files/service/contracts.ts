@@ -22,7 +22,7 @@ export interface SyncExecutor {
   }>;
 }
 
-type ArtifactEventRepo = Pick<ArtifactRepo, "insertEvent">;
+export type ArtifactEventRepo = Pick<ArtifactRepo, "insertEvent">;
 
 export interface RequestArtifactInput {
   artifactType: ArtifactType;
@@ -135,5 +135,3 @@ export interface ArtifactServiceApi {
     deps: ListArtifactsDeps,
   ) => Promise<Result<WorkflowArtifact[], DomainError>>;
 }
-
-export type { ArtifactEventRepo };
