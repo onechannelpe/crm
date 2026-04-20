@@ -20,6 +20,7 @@ export function HomeTab(props: TabContentProps) {
           razonSocial={props.razonSocial}
           address={props.address}
           engineStatus={props.engineStatus}
+          submitting={props.submitting}
           onSubmit={props.onSubmit}
         />
       </div>
@@ -37,6 +38,7 @@ function CreateContent(props: {
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
+  submitting?: boolean;
   onSubmit?: () => void;
 }) {
   return (
@@ -47,6 +49,7 @@ function CreateContent(props: {
       />
       <BootstrapWidget
         engineStatus={props.engineStatus}
+        submitting={props.submitting}
         onSubmit={props.onSubmit}
       />
       <SunatWidget />

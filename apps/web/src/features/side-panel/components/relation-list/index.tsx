@@ -38,9 +38,16 @@ export function ActionRowLink(props: ParentProps & { href: string }) {
   );
 }
 
-export function PlusButton(props: ParentProps & { onClick?: () => void }) {
+export function PlusButton(
+  props: ParentProps & { onClick?: () => void; disabled?: boolean },
+) {
   return (
-    <button type="button" class={styles.plusButton} onClick={props.onClick}>
+    <button
+      type="button"
+      class={styles.plusButton}
+      onClick={props.onClick}
+      disabled={props.disabled}
+    >
       {props.children}
     </button>
   );

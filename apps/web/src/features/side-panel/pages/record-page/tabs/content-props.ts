@@ -7,6 +7,7 @@ export type CreateTabContentProps = {
   address?: string | null;
   engineStatus?: string;
   canCreate: boolean;
+  submitting?: boolean;
   onSubmit?: () => void;
 };
 

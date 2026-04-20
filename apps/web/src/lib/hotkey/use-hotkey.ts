@@ -28,6 +28,11 @@ interface UseHotkeyOptions {
   allowInInputs?: boolean;
   /** Prevent the default browser action when the hotkey fires. Defaults to true. */
   preventDefault?: boolean;
+  /**
+   * Optional predicate to gate hotkey handling for a specific event.
+   * Return false to skip this event.
+   */
+  shouldHandleEvent?: (event: KeyboardEvent) => boolean;
 }
 
 /**
@@ -47,7 +52,12 @@ export function useHotkey(
   handler: (event: KeyboardEvent) => void,
   options: UseHotkeyOptions = {},
 ): void {
-  const { enabled, allowInInputs = false, preventDefault = true } = options;
+  const {
+    enabled,
+    allowInInputs = false,
+    preventDefault = true,
+    shouldHandleEvent,
+  } = options;
   const parsed = parseCombo(combo);
 
   createEffect(() => {
@@ -55,6 +65,7 @@ export function useHotkey(
 
     const listener = (event: KeyboardEvent) => {
       if (!allowInInputs && isTypingContext(event)) return;
+      if (shouldHandleEvent && !shouldHandleEvent(event)) return;
       if (!matchesEvent(event, parsed)) return;
       if (preventDefault) event.preventDefault();
       handler(event);

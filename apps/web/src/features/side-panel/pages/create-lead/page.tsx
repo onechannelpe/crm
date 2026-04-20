@@ -1,30 +1,16 @@
 import { useAction } from "@solidjs/router";
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  on,
-  onCleanup,
-  onMount,
-  Show,
-} from "solid-js";
+import { createMemo, createResource, Show } from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import { queryLeadBootstrapPreview } from "~/actions/pipeline/queries/leads";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { createLeadMutation } from "~/features/pipeline/data/mutations";
-import {
-  addOptimisticLead,
-  createOptimisticLeadRow,
-} from "~/features/pipeline/data/optimistic-leads";
-import { toAppError } from "~/lib/app-errors";
-import { shortName } from "~/lib/users/display-name";
 
 import { HiddenTabContent } from "../../components/hidden-tab";
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";
+import { useScopedHotkey } from "../../core/hotkeys/create-scoped-hotkey";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadRecordDetailSidePanelPage } from "../../types/side-panel-page";
 import {
@@ -43,6 +29,7 @@ import { HomeTab } from "../record-page/tabs/home";
 import { NotesTab } from "../record-page/tabs/notes";
 import { TasksTab } from "../record-page/tabs/tasks";
 import { TimelineTab } from "../record-page/tabs/timeline";
+import { createCreateLeadController } from "./controller";
 import { useCreateLeadPageState } from "./state";
 
 import styles from "../record-page/page.module.css";
@@ -64,12 +51,8 @@ export function CreateLeadPage() {
   const { currentUser } = useAuthenticatedSession();
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
-  const [error, setError] = createSignal<string | null>(null);
 
   const { draftRuc, activeTab, setActiveTab } = useCreateLeadPageState();
-
-  createEffect(on(draftRuc, () => setError(null), { defer: true }));
-
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
     return /^\d{11}$/.test(value) ? value : null;
@@ -85,6 +68,25 @@ export function CreateLeadPage() {
   const latestBootstrapPreview = createMemo(
     () => bootstrapPreview.latest ?? null,
   );
+
+  const { error, submitting, submit } = createCreateLeadController({
+    draftRuc,
+    validRuc,
+    currentUser,
+    latestBootstrapPreview,
+    createLead,
+    onLeadCreated: ({ leadId, ruc }) => {
+      navigateTo(
+        createLeadRecordDetailSidePanelPage({
+          leadId,
+          title: latestBootstrapPreview()?.razonSocial ?? "",
+          subtitle: `RUC ${ruc}`,
+        }),
+        { resetStack: true },
+      );
+    },
+    setActiveTab,
+  });
 
   const engineStatus = createMemo(() => {
     const value = validRuc();
@@ -110,75 +112,10 @@ export function CreateLeadPage() {
     address: latestBootstrapPreview()?.address ?? null,
     engineStatus: engineStatus(),
     canCreate: validRuc() !== null,
-    onSubmit: () => void handleSubmit(),
+    submitting: submitting(),
+    onSubmit: () => void submit(),
   }));
-
-  onMount(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const isCtrlOrMeta = event.ctrlKey || event.metaKey;
-
-      if (!isCtrlOrMeta) return;
-
-      if (event.key === "Enter") {
-        event.preventDefault();
-        void handleSubmit();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    onCleanup(() => window.removeEventListener("keydown", onKeyDown));
-  });
-
-  async function handleSubmit() {
-    const value = validRuc();
-
-    if (!value) {
-      setError("El RUC debe tener 11 dígitos.");
-      setActiveTab("home");
-      return;
-    }
-
-    setError(null);
-
-    const rollbackOptimistic = addOptimisticLead(
-      ["mine", "review", "all"],
-      createOptimisticLeadRow({
-        ruc: value,
-        razonSocial: latestBootstrapPreview()?.razonSocial ?? null,
-        address: latestBootstrapPreview()?.address ?? null,
-        executiveId: currentUser().id,
-        executiveName: shortName(currentUser()),
-      }),
-    );
-
-    try {
-      const result = await createLead({
-        ruc: value,
-      });
-
-      navigateTo(
-        createLeadRecordDetailSidePanelPage({
-          leadId: result.leadId,
-          title: latestBootstrapPreview()?.razonSocial ?? "",
-          subtitle: `RUC ${value}`,
-        }),
-        { resetStack: true },
-      );
-    } catch (submitError) {
-      rollbackOptimistic();
-      const appError = toAppError(submitError, "Error al registrar prospecto");
-      if (
-        appError.code === "validation" &&
-        appError.publicMessage.includes("RUC")
-      ) {
-        setError(appError.publicMessage);
-        setActiveTab("home");
-        return;
-      }
-
-      setError(appError.publicMessage);
-    }
-  }
+  useScopedHotkey("Mod+Enter", () => void submit(), { allowInInputs: true });
 
   return (
     <div class={styles.pageShell}>
@@ -203,7 +140,7 @@ export function CreateLeadPage() {
         </div>
       </PanelList>
 
-      <Footer onOpen={() => void handleSubmit()} />
+      <Footer onOpen={() => void submit()} disabled={submitting()} />
     </div>
   );
 }

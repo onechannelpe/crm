@@ -1,5 +1,5 @@
 import { createAsync, revalidate } from "@solidjs/router";
-import { createEffect, onCleanup, Show } from "solid-js";
+import { Show } from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
@@ -17,6 +17,7 @@ import {
   type ExtendedTabId,
   type TabId,
 } from "./constants";
+import { createRecordPageController } from "./controller";
 import { useLeadRecordPageState } from "./state";
 import type { TabContentProps } from "./tabs/content-props";
 import { FilesTab } from "./tabs/files";
@@ -49,41 +50,17 @@ export function RecordPage() {
   const detailData = createAsync(async () => {
     return leadDetailQuery(leadId());
   });
-
-  let prevSunatStatus: string | undefined;
-  let pollStartedAt: number | undefined;
-
-  createEffect(() => {
-    const detail = detailData();
-    if (!detail) return;
-
-    const status = detail.sourceStatus.sunat.status;
-
-    if (
-      (prevSunatStatus === "queued" || prevSunatStatus === "running") &&
-      status !== "queued" &&
-      status !== "running"
-    ) {
-      void revalidate(leadListQuery.key);
-      pollStartedAt = undefined;
-    }
-    prevSunatStatus = status;
-
-    if (status !== "queued" && status !== "running") return;
-
-    if (pollStartedAt === undefined) {
-      pollStartedAt = Date.now();
-    }
-    if (Date.now() - pollStartedAt >= POLL_TIMEOUT_MS) {
-      pollStartedAt = undefined;
-      return;
-    }
-
-    const intervalId = setInterval(() => {
-      void revalidate(leadDetailQuery.keyFor(leadId()));
-    }, POLL_INTERVAL_MS);
-
-    onCleanup(() => clearInterval(intervalId));
+  createRecordPageController({
+    leadId,
+    detailData,
+    pollIntervalMs: POLL_INTERVAL_MS,
+    pollTimeoutMs: POLL_TIMEOUT_MS,
+    revalidateLeadDetail: async (currentLeadId) => {
+      await revalidate(leadDetailQuery.keyFor(currentLeadId));
+    },
+    revalidateLeadList: async () => {
+      await revalidate(leadListQuery.key);
+    },
   });
 
   return (

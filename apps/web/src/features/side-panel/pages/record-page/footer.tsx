@@ -11,6 +11,7 @@ import {
 
 type FooterProps = {
   onOpen: () => void;
+  disabled?: boolean;
 };
 
 export function Footer(props: FooterProps) {
@@ -21,12 +22,12 @@ export function Footer(props: FooterProps) {
         <FooterDots />
         <FooterShortcut>Ctrl O</FooterShortcut>
       </FooterButtonSecondary>
-      <FooterButtonPrimary onClick={props.onOpen}>
+      <FooterButtonPrimary onClick={props.onOpen} disabled={props.disabled}>
         <FooterIcon>
           <BrowserMaximize size={14} />
         </FooterIcon>
         <FooterLabel>Open</FooterLabel>
-        <FooterShortcut>Ctrl ⏎</FooterShortcut>
+        <FooterShortcut>Mod ⏎</FooterShortcut>
       </FooterButtonPrimary>
     </PanelFooter>
   );
