@@ -160,7 +160,7 @@ export interface ArtifactRepo {
     expiresAt: number;
     usedAt: number | null;
   } | null>;
-  markDownloadTokenUsed(tokenHash: string, usedAt: number): Promise<void>;
+  markDownloadTokenUsed(tokenHash: string, usedAt: number): Promise<boolean>;
 }
 
 export function createArtifactRepo(db: DB): ArtifactRepo {
@@ -388,11 +388,14 @@ export function createArtifactRepo(db: DB): ArtifactRepo {
     },
 
     async markDownloadTokenUsed(tokenHash, usedAt) {
-      await db
+      const result = await db
         .updateTable("artifact_download_tokens")
         .set({ used_at: usedAt })
         .where("token_hash", "=", tokenHash)
-        .execute();
+        .where("used_at", "is", null)
+        .executeTakeFirst();
+
+      return Number(result.numUpdatedRows) > 0;
     },
   };
 }

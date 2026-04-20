@@ -63,7 +63,17 @@ export async function executeDownload(
     );
   }
 
-  await repo.markDownloadTokenUsed(tokenHash, now);
+  const tokenConsumed = await repo.markDownloadTokenUsed(tokenHash, now);
+  if (!tokenConsumed) {
+    return Err(
+      domainError(
+        "conflict",
+        "token_already_used",
+        "Download token has already been used",
+      ),
+    );
+  }
+
   await repo.insertEvent({
     artifactId: artifact.id,
     eventType: "artifact.downloaded",

@@ -1,5 +1,3 @@
-import { TextEncoder } from "node:util";
-
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -8,6 +6,7 @@ import { checkArtifactPolicy } from "../policy";
 import type { FileStorage } from "../storage";
 import { assertValidTransition } from "../transitions";
 import type { ArtifactType, ArtifactWithAsset } from "../types";
+import { validateUploadFile } from "../validators";
 import type {
   RequestArtifactDeps,
   RequestArtifactInput,
@@ -45,24 +44,30 @@ async function runSyncExport(
     return Err(domainError("unexpected", "sync_executor_failed", msg));
   }
 
-  const encoder = new TextEncoder();
-  const bytes =
-    result.bytes instanceof Uint8Array
-      ? result.bytes
-      : encoder.encode(String(result.bytes));
+  const bytes = result.bytes;
+  const metadata = validateUploadFile(artifactType, result.filename, bytes);
+  if (!metadata.ok) {
+    return Err(
+      domainError(
+        "unexpected",
+        "sync_executor_invalid_output",
+        `Sync executor output failed validation: ${metadata.reason}`,
+      ),
+    );
+  }
 
-  const storageKey = `${artifactType}-${artifactId}-${now}.csv`;
+  const storageKey = `${artifactType}-${artifactId}-${now}.${metadata.extension}`;
   const { sha256 } = await storage.put(storageKey, bytes);
 
   const fileAssetId = await repo.insertFileAsset({
     storageKey,
     originalFilename: result.filename,
-    safeDisplayFilename: result.filename,
-    detectedMime: "text/csv; charset=utf-8",
-    extension: "csv",
+    safeDisplayFilename: metadata.safeDisplayFilename,
+    detectedMime: metadata.detectedMime,
+    extension: metadata.extension,
     sizeBytes: bytes.length,
     sha256Hex: sha256,
-    signatureKind: "csv",
+    signatureKind: metadata.signatureKind,
     scanStatus: "clean",
     now,
   });
