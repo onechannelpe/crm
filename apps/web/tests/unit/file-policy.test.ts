@@ -63,7 +63,7 @@ describe("checkArtifactPolicy - artifact.request", () => {
       "artifact.request",
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error.kind).toBe("forbidden");
+    expect(!result.ok && result.error.kind).toBe("forbidden");
   });
 
   it("denies supervisor from requesting (no file:artifact:request permission)", () => {
@@ -104,9 +104,7 @@ describe("checkArtifactPolicy - artifact.upload", () => {
       "artifact.upload",
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error.code).toBe(
-      "artifact_not_uploadable",
-    );
+    expect(!result.ok && result.error.code).toBe("artifact_not_uploadable");
   });
 
   it("denies upload when artifact is not in requested state", () => {
@@ -143,9 +141,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       "artifact.read",
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error.code).toBe(
-      "artifact_scope_mismatch",
-    );
+    expect(!result.ok && result.error.code).toBe("artifact_scope_mismatch");
   });
 
   it("allows superuser to read any scope artifact", () => {
@@ -166,9 +162,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       "artifact.read",
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error.code).toBe(
-      "artifact_unavailable",
-    );
+    expect(!result.ok && result.error.code).toBe("artifact_unavailable");
   });
 
   it("denies read on expired artifact", () => {
@@ -256,9 +250,7 @@ describe("checkDownloadPolicy", () => {
       artifact,
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error.code).toBe(
-      "artifact_not_downloadable",
-    );
+    expect(!result.ok && result.error.code).toBe("artifact_not_downloadable");
   });
 
   it("denies download when artifact is revoked", () => {

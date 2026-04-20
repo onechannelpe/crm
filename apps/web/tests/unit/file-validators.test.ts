@@ -25,7 +25,7 @@ describe("validateUploadFile - extension checks", () => {
       XLSX_MAGIC,
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe("extension_not_allowed");
+    expect(!result.ok && result.reason).toBe("extension_not_allowed");
   });
 
   it("accepts csv for leads_export", () => {
@@ -45,7 +45,7 @@ describe("validateUploadFile - extension checks", () => {
   it("rejects file without extension", () => {
     const result = validateUploadFile("integration_import", "noext", CSV_BYTES);
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe("missing_extension");
+    expect(!result.ok && result.reason).toBe("missing_extension");
   });
 });
 
@@ -57,7 +57,7 @@ describe("validateUploadFile - filename sanitization", () => {
       CSV_BYTES,
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe("filename_invalid");
+    expect(!result.ok && result.reason).toBe("filename_invalid");
   });
 
   it("rejects filenames exceeding 120 chars", () => {
@@ -68,7 +68,7 @@ describe("validateUploadFile - filename sanitization", () => {
       CSV_BYTES,
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe("filename_invalid");
+    expect(!result.ok && result.reason).toBe("filename_invalid");
   });
 
   it("sanitizes special chars in filename to underscores", () => {
@@ -88,7 +88,7 @@ describe("validateUploadFile - signature checks", () => {
   it("rejects xlsx bytes with csv extension", () => {
     const result = validateUploadFile("sales_export", "data.csv", XLSX_MAGIC);
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe("signature_mismatch");
+    expect(!result.ok && result.reason).toBe("signature_mismatch");
   });
 
   it("rejects non-xlsx bytes with xlsx extension", () => {
@@ -98,7 +98,7 @@ describe("validateUploadFile - signature checks", () => {
       NON_XLSX_BYTES,
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe("signature_mismatch");
+    expect(!result.ok && result.reason).toBe("signature_mismatch");
   });
 
   it("accepts real xlsx magic bytes with xlsx extension", () => {
@@ -135,7 +135,7 @@ describe("validateUploadFile - size limits", () => {
       bigBytes,
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe("file_too_large");
+    expect(!result.ok && result.reason).toBe("file_too_large");
   });
 
   it("accepts files within the default limit", () => {
@@ -156,9 +156,7 @@ describe("validateUploadFile - double extension", () => {
       CSV_BYTES,
     );
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.reason).toBe(
-      "double_extension_blocked",
-    );
+    expect(!result.ok && result.reason).toBe("double_extension_blocked");
   });
 });
 
