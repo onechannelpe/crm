@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   checkArtifactPolicy,
-  checkDownloadPolicy,
   type PolicyActor,
 } from "../../src/server/files/policy";
 import type { WorkflowArtifact } from "../../src/server/files/types";
@@ -184,6 +183,16 @@ describe("checkArtifactPolicy - artifact.read", () => {
     );
     expect(result.ok).toBe(false);
   });
+
+  it("allows read while processing because download readiness is enforced in service", () => {
+    const artifact = makeArtifact({ status: "processing", scopeBranchId: 1 });
+    const result = checkArtifactPolicy(
+      makeActor({ role: "back_office", branchId: 1 }),
+      artifact,
+      "artifact.read",
+    );
+    expect(result.ok).toBe(true);
+  });
 });
 
 describe("checkArtifactPolicy - artifact.audit.read", () => {
@@ -219,63 +228,6 @@ describe("checkArtifactPolicy - artifact.audit.read", () => {
       makeActor({ role: "executive" }),
       null,
       "artifact.audit.read",
-    );
-    expect(result.ok).toBe(false);
-  });
-});
-
-describe("checkDownloadPolicy", () => {
-  it("allows download when artifact is ready and actor has read permission in scope", () => {
-    const artifact = makeArtifact({ status: "ready", scopeBranchId: 1 });
-    const result = checkDownloadPolicy(
-      makeActor({ role: "back_office", branchId: 1 }),
-      artifact,
-    );
-    expect(result.ok).toBe(true);
-  });
-
-  it("allows download when artifact is completed", () => {
-    const artifact = makeArtifact({ status: "completed", scopeBranchId: 1 });
-    const result = checkDownloadPolicy(
-      makeActor({ role: "back_office", branchId: 1 }),
-      artifact,
-    );
-    expect(result.ok).toBe(true);
-  });
-
-  it("denies download when artifact is still processing", () => {
-    const artifact = makeArtifact({ status: "processing" });
-    const result = checkDownloadPolicy(
-      makeActor({ role: "back_office" }),
-      artifact,
-    );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.error.code).toBe("artifact_not_downloadable");
-  });
-
-  it("denies download when artifact is revoked", () => {
-    const artifact = makeArtifact({ status: "revoked" });
-    const result = checkDownloadPolicy(
-      makeActor({ role: "back_office" }),
-      artifact,
-    );
-    expect(result.ok).toBe(false);
-  });
-
-  it("denies download from wrong scope", () => {
-    const artifact = makeArtifact({ status: "ready", scopeBranchId: 99 });
-    const result = checkDownloadPolicy(
-      makeActor({ role: "back_office", branchId: 1 }),
-      artifact,
-    );
-    expect(result.ok).toBe(false);
-  });
-
-  it("denies download attempt by actor without file:artifact:read", () => {
-    const artifact = makeArtifact({ status: "ready" });
-    const result = checkDownloadPolicy(
-      makeActor({ role: "executive" }),
-      artifact,
     );
     expect(result.ok).toBe(false);
   });

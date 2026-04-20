@@ -54,7 +54,7 @@ export async function uploadImportFile(
         ctx,
         artifactId,
         { name: file.name, bytes },
-        { repo, storage, syncExecutor },
+        { repo, storage },
       );
       if (isErr(uploadResult)) return uploadResult;
 

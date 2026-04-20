@@ -12,14 +12,10 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
       return new Response("Invalid token", { status: 400 });
     }
 
-    const { repo, storage, syncExecutor } = serverRuntime.files;
+    const { repo, storage } = serverRuntime.files;
     const now = Date.now();
 
-    const result = await executeDownload(
-      token,
-      { repo, storage, syncExecutor },
-      now,
-    );
+    const result = await executeDownload(token, { repo, storage }, now);
 
     if (isErr(result)) {
       const kind = result.error.kind;

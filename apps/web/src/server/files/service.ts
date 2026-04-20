@@ -41,6 +41,80 @@ export interface ArtifactServiceDeps {
   syncExecutor: SyncExecutor;
 }
 
+type ArtifactEventRepo = Pick<ArtifactRepo, "insertEvent">;
+
+type RequestArtifactRepo = Pick<
+  ArtifactRepo,
+  | "insertArtifact"
+  | "updateArtifactStatus"
+  | "findArtifactById"
+  | "findFileAssetForArtifact"
+  | "insertFileAsset"
+  | "insertFileBinding"
+  | "insertEvent"
+>;
+
+type UploadArtifactRepo = Pick<
+  ArtifactRepo,
+  | "findArtifactById"
+  | "updateArtifactStatus"
+  | "insertFileAsset"
+  | "insertFileBinding"
+  | "insertEvent"
+>;
+
+type DownloadTokenRepo = Pick<
+  ArtifactRepo,
+  | "findArtifactById"
+  | "findFileAssetForArtifact"
+  | "insertDownloadToken"
+  | "insertEvent"
+>;
+
+type ExecuteDownloadRepo = Pick<
+  ArtifactRepo,
+  | "findDownloadToken"
+  | "findArtifactById"
+  | "findFileAssetById"
+  | "markDownloadTokenUsed"
+  | "insertEvent"
+>;
+
+type GetArtifactRepo = Pick<
+  ArtifactRepo,
+  "findArtifactById" | "findFileAssetForArtifact"
+>;
+
+type ListArtifactsRepo = Pick<ArtifactRepo, "listArtifacts">;
+
+export interface RequestArtifactDeps {
+  repo: RequestArtifactRepo;
+  storage: FileStorage;
+  syncExecutor: SyncExecutor;
+}
+
+export interface UploadArtifactDeps {
+  repo: UploadArtifactRepo;
+  storage: FileStorage;
+}
+
+export interface DownloadTokenDeps {
+  repo: DownloadTokenRepo;
+}
+
+export interface ExecuteDownloadDeps {
+  repo: ExecuteDownloadRepo;
+  storage: FileStorage;
+}
+
+export interface GetArtifactDeps {
+  repo: GetArtifactRepo;
+}
+
+export interface ListArtifactsDeps {
+  repo: ListArtifactsRepo;
+}
+
 function actorFromCtx(ctx: AppContext): PolicyActor {
   return {
     userId: ctx.actor.userId,
@@ -62,7 +136,7 @@ function hashIp(ip: string): string {
 }
 
 async function emitEvent(
-  repo: ArtifactRepo,
+  repo: ArtifactEventRepo,
   artifactId: number,
   eventType: string,
   ctx: AppContext,
@@ -91,7 +165,7 @@ export interface RequestArtifactInput {
 export async function requestArtifact(
   ctx: AppContext,
   input: RequestArtifactInput,
-  deps: ArtifactServiceDeps,
+  deps: RequestArtifactDeps,
 ): Promise<Result<ArtifactWithAsset, DomainError>> {
   const actor = actorFromCtx(ctx);
 
@@ -180,7 +254,7 @@ async function runSyncExport(
   artifactId: number,
   artifactType: ArtifactType,
   workflowContext: Record<string, unknown>,
-  repo: ArtifactRepo,
+  repo: RequestArtifactRepo,
   storage: FileStorage,
   syncExecutor: SyncExecutor,
 ): Promise<Result<void, DomainError>> {
@@ -239,7 +313,7 @@ export async function uploadArtifactFile(
   ctx: AppContext,
   artifactId: number,
   file: { name: string; bytes: Uint8Array },
-  deps: ArtifactServiceDeps,
+  deps: UploadArtifactDeps,
 ): Promise<Result<WorkflowArtifact, DomainError>> {
   const actor = actorFromCtx(ctx);
   const { repo, storage } = deps;
@@ -339,7 +413,7 @@ export async function uploadArtifactFile(
 export async function requestDownloadToken(
   ctx: AppContext,
   artifactId: number,
-  deps: ArtifactServiceDeps,
+  deps: DownloadTokenDeps,
 ): Promise<Result<{ token: string }, DomainError>> {
   const actor = actorFromCtx(ctx);
   const { repo } = deps;
@@ -403,7 +477,7 @@ export async function requestDownloadToken(
 
 export async function executeDownload(
   tokenRaw: string,
-  deps: ArtifactServiceDeps,
+  deps: ExecuteDownloadDeps,
   now: number,
 ): Promise<Result<DownloadReady, DomainError>> {
   const { repo, storage } = deps;
@@ -480,7 +554,7 @@ export async function executeDownload(
 export async function getArtifact(
   ctx: AppContext,
   artifactId: number,
-  deps: ArtifactServiceDeps,
+  deps: GetArtifactDeps,
 ): Promise<Result<ArtifactWithAsset, DomainError>> {
   const actor = actorFromCtx(ctx);
   const { repo } = deps;
@@ -512,7 +586,7 @@ export async function listArtifacts(
     limit?: number;
     offset?: number;
   },
-  deps: ArtifactServiceDeps,
+  deps: ListArtifactsDeps,
 ): Promise<Result<WorkflowArtifact[], DomainError>> {
   const actor = actorFromCtx(ctx);
 
