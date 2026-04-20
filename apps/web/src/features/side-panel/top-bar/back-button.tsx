@@ -47,7 +47,7 @@ export function BackButton(props: BackButtonProps) {
         class={styles.button}
         onClick={goBack}
         onContextMenu={openDropdown}
-        aria-label="Go back"
+        aria-label="Volver"
       >
         <ChevronLeft size={16} />
       </button>

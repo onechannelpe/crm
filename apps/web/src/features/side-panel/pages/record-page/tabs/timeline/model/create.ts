@@ -10,22 +10,24 @@ export function buildCreateGroups(props: {
       id: "create-open",
       createdAt: Date.now(),
       name: "lead.created",
-      author: "You",
-      action: "opened lead draft",
-      subject: props.ruc?.trim() ? `RUC ${props.ruc.trim()}` : "Draft opened",
-      description: props.engineStatus ?? "Engine bootstrap pending",
+      author: "Tú",
+      action: "abrió el borrador del prospecto",
+      subject: props.ruc?.trim()
+        ? `RUC ${props.ruc.trim()}`
+        : "Borrador abierto",
+      description: props.engineStatus ?? "Carga inicial pendiente",
       kind: "system" as const,
     },
     {
       id: "create-ruc-state",
       createdAt: Date.now() - 1_000,
       name: "lead.updated",
-      author: "System",
-      action: "prepared registration checks",
-      subject: "Validation pipeline",
+      author: "Sistema",
+      action: "preparó las validaciones de registro",
+      subject: "Flujo de validación",
       description: props.ruc?.trim()
-        ? "RUC captured and ready for submit"
-        : "Waiting for an 11-digit RUC",
+        ? "RUC registrado y listo para enviar"
+        : "Esperando un RUC de 11 dígitos",
       kind: "system" as const,
     },
   ]);

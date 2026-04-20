@@ -39,8 +39,8 @@ export const HIDDEN_TAB_ITEMS: ReadonlyArray<{
   id: HiddenTabId;
   label: string;
 }> = [
-  { id: LEAD_RECORD_SECONDARY_TABS[0], label: "Notes" },
-  { id: LEAD_RECORD_SECONDARY_TABS[1], label: "Files" },
-  { id: LEAD_RECORD_SECONDARY_TABS[2], label: "Emails" },
-  { id: LEAD_RECORD_SECONDARY_TABS[3], label: "Calendar" },
+  { id: LEAD_RECORD_SECONDARY_TABS[0], label: "Notas" },
+  { id: LEAD_RECORD_SECONDARY_TABS[1], label: "Archivos" },
+  { id: LEAD_RECORD_SECONDARY_TABS[2], label: "Correos" },
+  { id: LEAD_RECORD_SECONDARY_TABS[3], label: "Calendario" },
 ] as const;

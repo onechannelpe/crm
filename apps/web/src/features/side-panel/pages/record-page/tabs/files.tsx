@@ -6,8 +6,8 @@ export function FilesTab() {
     <ActivityTabContainer>
       <ActivityTabEmptyState
         type="noFile"
-        title="No Files"
-        subtitle="There are no associated files with this record."
+        title="Sin archivos"
+        subtitle="No hay archivos asociados a este registro."
       />
     </ActivityTabContainer>
   );

@@ -9,7 +9,7 @@ export function SearchCompanyPageInfo() {
   return (
     <PageInfoLayout
       icon={<Users size={14} />}
-      title={pageState().company.name ?? "Unknown company"}
+      title={pageState().company.name ?? "Empresa desconocida"}
       label={`Resultado de "${pageState().query}"`}
     />
   );

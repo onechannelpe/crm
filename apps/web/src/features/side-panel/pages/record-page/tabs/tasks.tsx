@@ -31,6 +31,11 @@ type TaskItem = {
   status: TaskStatus;
 };
 
+const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
+  TODO: "PENDIENTE",
+  DONE: "HECHO",
+};
+
 function deriveCreateTasks(props: {
   ruc?: string;
   engineStatus?: string;
@@ -42,28 +47,30 @@ function deriveCreateTasks(props: {
   return [
     {
       id: "validate-ruc",
-      title: "Validate RUC",
-      meta: rucIsValid ? "Ready to register" : "Enter an 11-digit RUC",
+      title: "Validar RUC",
+      meta: rucIsValid
+        ? "Listo para registrar"
+        : "Ingresa un RUC de 11 dígitos",
       status: rucIsValid ? "DONE" : "TODO",
     },
     {
       id: "engine-bootstrap",
-      title: "Bootstrap from Engine",
-      meta: props.engineStatus ?? "Pending",
+      title: "Carga inicial",
+      meta: props.engineStatus ?? "Pendiente",
       status: engineReady ? "DONE" : "TODO",
     },
     {
       id: "create-lead",
-      title: "Create lead",
+      title: "Crear prospecto",
       meta: props.canCreate
-        ? "Will create lead in PENDING_EXTERNAL_REVIEW"
-        : "Blocked until RUC is valid",
+        ? "Se creará el prospecto en PENDING_EXTERNAL_REVIEW"
+        : "Bloqueado hasta validar el RUC",
       status: props.canCreate ? "DONE" : "TODO",
     },
     {
       id: "sunat-queue",
-      title: "Queue SUNAT verification",
-      meta: props.canCreate ? "Queued after creation" : "Pending",
+      title: "Encolar verificación SUNAT",
+      meta: props.canCreate ? "En cola después de crear" : "Pendiente",
       status: props.canCreate ? "DONE" : "TODO",
     },
   ];
@@ -74,13 +81,13 @@ function deriveDetailTasks(
   isAssignedExecutive: boolean,
 ): TaskItem[] {
   const ownershipMeta = isAssignedExecutive
-    ? "Assigned to you"
-    : "Assigned to another executive";
+    ? "Asignado a ti"
+    : "Asignado a otro ejecutivo";
 
   const tasks: TaskItem[] = [
     {
       id: "next-step",
-      title: "Next step",
+      title: "Siguiente paso",
       meta: `${data.lead.nextStep} · ${ownershipMeta}`,
       status: "TODO",
     },
@@ -91,7 +98,7 @@ function deriveDetailTasks(
       data.blockingFields.map((field) => ({
         id: `blocking-${field}`,
         title: blockingTaskLabel(field),
-        meta: "Required to move forward",
+        meta: "Requerido para avanzar",
         status: "TODO" as const,
       })),
     );
@@ -105,8 +112,8 @@ function deriveDetailTasks(
         id: `action-${action.id}`,
         title: action.label,
         meta: isAssignedExecutive
-          ? "Available now"
-          : "Read-only: action available to assigned executive",
+          ? "Disponible ahora"
+          : "Solo lectura: acción disponible para el ejecutivo asignado",
         status: "TODO" as const,
       })),
     );
@@ -114,8 +121,8 @@ function deriveDetailTasks(
 
   return tasks.concat({
     id: "no-blockers",
-    title: "No blockers",
-    meta: "There are no pending tasks for this stage",
+    title: "Sin bloqueos",
+    meta: "No hay tareas pendientes para esta etapa",
     status: "DONE",
   });
 }
@@ -134,7 +141,7 @@ function TaskGroup(props: { title: string; items: readonly TaskItem[] }) {
                 <ActivityRowTitle>{task.title}</ActivityRowTitle>
                 <ActivityRowMeta>{task.meta}</ActivityRowMeta>
               </ActivityRowBody>
-              <ActivityRowEnd>{task.status}</ActivityRowEnd>
+              <ActivityRowEnd>{TASK_STATUS_LABEL[task.status]}</ActivityRowEnd>
             </ActivityListRow>
           )}
         </For>
@@ -173,16 +180,16 @@ export function TasksTab(props: TabContentProps) {
         fallback={
           <ActivityTabEmptyState
             type="noTask"
-            title="Mission accomplished!"
-            subtitle="All tasks addressed. Maintain the momentum."
+            title="Misión cumplida"
+            subtitle="Todas las tareas fueron atendidas. Mantén el impulso."
           />
         }
       >
         <Show when={todoTasks().length > 0}>
-          <TaskGroup title="TODO" items={todoTasks()} />
+          <TaskGroup title={TASK_STATUS_LABEL.TODO} items={todoTasks()} />
         </Show>
         <Show when={doneTasks().length > 0}>
-          <TaskGroup title="DONE" items={doneTasks()} />
+          <TaskGroup title={TASK_STATUS_LABEL.DONE} items={doneTasks()} />
         </Show>
       </Show>
     </ActivityTabContainer>

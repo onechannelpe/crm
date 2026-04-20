@@ -22,7 +22,7 @@ export function BootstrapWidget(props: BootstrapWidgetProps) {
   return (
     <Widget>
       <WidgetHeader>
-        <WidgetTitle text="Bootstrap desde Engine" />
+        <WidgetTitle text="Bootstrap (engine)" />
         <WidgetActions>
           <WidgetOptionsButton>...</WidgetOptionsButton>
         </WidgetActions>

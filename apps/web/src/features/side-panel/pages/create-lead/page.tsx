@@ -43,8 +43,8 @@ const TAB_COMPONENTS: Record<
   tasks: TasksTab,
   notes: NotesTab,
   files: () => <FilesTab />,
-  emails: () => <HiddenTabContent title="Emails" />,
-  calendar: () => <HiddenTabContent title="Calendar" />,
+  emails: () => <HiddenTabContent title="Correos" />,
+  calendar: () => <HiddenTabContent title="Calendario" />,
 };
 
 export function CreateLeadPage() {
@@ -97,12 +97,12 @@ export function CreateLeadPage() {
     }
 
     if (bootstrapPreview.loading && preview === null) {
-      return "Buscando en Engine";
+      return "Buscando...";
     }
 
     return preview?.engineStatus === "available"
       ? "Datos encontrados"
-      : "Sin datos en Engine";
+      : "Sin datos";
   });
 
   const createTabProps = createMemo<CreateTabContentProps>(() => ({

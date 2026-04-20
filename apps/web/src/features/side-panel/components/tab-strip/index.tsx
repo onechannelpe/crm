@@ -87,7 +87,7 @@ export function TabStrip<TAll extends string, TPrimary extends TAll>(
             onClick={() => setIsOverflowOpen((v) => !v)}
           >
             <span class={styles.moreTabContent}>
-              <span>+{props.hiddenTabs.length} More</span>
+              <span>+{props.hiddenTabs.length} más</span>
               <ChevronDown size={16} />
             </span>
           </button>

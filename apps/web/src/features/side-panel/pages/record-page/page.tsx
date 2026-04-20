@@ -40,8 +40,8 @@ const TAB_COMPONENTS: Record<
   tasks: TasksTab,
   notes: NotesTab,
   files: () => <FilesTab />,
-  emails: () => <HiddenTabContent title="Emails" />,
-  calendar: () => <HiddenTabContent title="Calendar" />,
+  emails: () => <HiddenTabContent title="Correos" />,
+  calendar: () => <HiddenTabContent title="Calendario" />,
 };
 
 export function RecordPage() {

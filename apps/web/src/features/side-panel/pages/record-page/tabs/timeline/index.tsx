@@ -36,8 +36,8 @@ export function TimelineTab(props: TabContentProps) {
         fallback={
           <ActivityTabEmptyState
             type="emptyTimeline"
-            title="No activity yet"
-            subtitle="There is no activity associated with this record."
+            title="Aún no hay actividad"
+            subtitle="No hay actividad asociada a este registro."
           />
         }
       >

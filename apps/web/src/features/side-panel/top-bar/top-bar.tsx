@@ -40,7 +40,7 @@ export function TopBar(props: { isMobile: boolean }) {
               type="button"
               class={styles.closeButton}
               onClick={closePanel}
-              aria-label="Close panel"
+              aria-label="Cerrar panel"
             >
               <X size={16} />
             </button>

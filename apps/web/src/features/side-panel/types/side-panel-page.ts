@@ -171,7 +171,7 @@ export function createSearchCompanyDetailSidePanelPage(
     entry: {
       page: "search-company-detail",
       pageId,
-      pageTitle: input.company.name ?? input.company.ruc ?? "Company",
+      pageTitle: input.company.name ?? input.company.ruc ?? "Empresa",
       pageIcon: Users,
     },
     state: {

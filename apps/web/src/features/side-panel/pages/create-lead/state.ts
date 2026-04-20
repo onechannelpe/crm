@@ -11,7 +11,7 @@ const LABEL_BY_TAB: Record<LeadRecordTabId, string> = {
   tasks: "Tareas",
   notes: "Notas",
   files: "Archivos",
-  emails: "Emails",
+  emails: "Correos",
   calendar: "Calendario",
 };
 

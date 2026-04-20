@@ -20,7 +20,7 @@ export function SearchCompanyPage() {
           </div>
           <div class={styles.heroText}>
             <div class={styles.title}>
-              {pageState().company.name ?? "Unknown company"}
+              {pageState().company.name ?? "Empresa desconocida"}
             </div>
             <div class={styles.subtitle}>
               RUC {pageState().company.ruc ?? "-"}
@@ -29,7 +29,7 @@ export function SearchCompanyPage() {
         </section>
 
         <section class={styles.section}>
-          <div class={styles.sectionTitle}>People</div>
+          <div class={styles.sectionTitle}>Personas</div>
           <div class={styles.list}>
             <For each={pageState().company.people}>
               {(person) => (
@@ -43,12 +43,12 @@ export function SearchCompanyPage() {
         </section>
 
         <section class={styles.section}>
-          <div class={styles.sectionTitle}>Phones</div>
+          <div class={styles.sectionTitle}>Teléfonos</div>
           <RecordChipList items={pageState().company.phones} shape="square" />
         </section>
 
         <section class={styles.section}>
-          <div class={styles.sectionTitle}>Emails</div>
+          <div class={styles.sectionTitle}>Correos</div>
           <RecordChipList items={pageState().company.emails} shape="square" />
         </section>
       </div>

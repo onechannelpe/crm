@@ -25,23 +25,23 @@ export function SearchPersonPage() {
         </section>
 
         <section class={styles.section}>
-          <div class={styles.sectionTitle}>Aliases</div>
+          <div class={styles.sectionTitle}>Alias</div>
           <RecordChipList items={pageState().person.aliases} shape="round" />
         </section>
 
         <section class={styles.section}>
-          <div class={styles.sectionTitle}>Phones</div>
+          <div class={styles.sectionTitle}>Teléfonos</div>
           <RecordChipList items={pageState().person.phones} shape="square" />
         </section>
 
         <section class={styles.section}>
-          <div class={styles.sectionTitle}>Companies</div>
+          <div class={styles.sectionTitle}>Empresas</div>
           <div class={styles.list}>
             <For each={pageState().person.companies}>
               {(company) => (
                 <div class={styles.row}>
                   <div class={styles.rowTitle}>
-                    {company.name ?? "Unknown company"}
+                    {company.name ?? "Empresa desconocida"}
                   </div>
                   <div class={styles.rowMeta}>{company.ruc ?? "-"}</div>
                 </div>

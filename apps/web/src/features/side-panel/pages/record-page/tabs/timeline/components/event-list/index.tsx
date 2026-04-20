@@ -21,7 +21,7 @@ export function EventList(props: EventListProps) {
           {(group, index) => {
             const monthLabel = new Date(
               group.items[0]?.createdAt ?? Date.now(),
-            ).toLocaleString("default", { month: "long" });
+            ).toLocaleString("es-PE", { month: "long" });
 
             const showYear =
               index() === 0 || props.groups[index() - 1].year !== group.year;

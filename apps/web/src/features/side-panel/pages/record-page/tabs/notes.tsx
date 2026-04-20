@@ -29,12 +29,12 @@ export function NotesTab(props: TabContentProps) {
         fallback={
           <ActivityTabEmptyState
             type="noNote"
-            title="No notes"
-            subtitle="There are no associated notes with this record."
+            title="Sin notas"
+            subtitle="No hay notas asociadas a este registro."
           />
         }
       >
-        <ActivitySection title="All" count={notes().length}>
+        <ActivitySection title="Todas" count={notes().length}>
           <ActivityGrid>
             <For each={notes()}>
               {(note) => (
