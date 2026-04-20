@@ -2,7 +2,6 @@ import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { startJobSubscriber } from "~/lib/redis/subscriber";
-import { createCrmExportQueue } from "~/server/integrations/queue/crm-export-queue";
 import { createCrmImportQueue } from "~/server/integrations/queue/crm-import-queue";
 import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
@@ -16,15 +15,12 @@ const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 export function startBackgroundJobs() {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
-  const { integration, blobStore } = serverRuntime.integrations;
+  const { integration } = serverRuntime.integrations;
+  const { storage: fileStorage } = serverRuntime.files;
 
-  const crmExportQueue = createCrmExportQueue(WORKER_ID, {
-    runtime: integration,
-    blobStore,
-  });
   const crmImportQueue = createCrmImportQueue(WORKER_ID, {
     runtime: integration,
-    blobStore,
+    blobStore: fileStorage,
   });
   const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID, {
     executor: integration.executor,
@@ -45,7 +41,6 @@ export function startBackgroundJobs() {
   const notificationsWhatsAppQueue =
     serverRuntime.notifications.createWhatsAppQueue(WORKER_ID);
   const queues: QueueRunner[] = [
-    crmExportQueue,
     crmImportQueue,
     needsExecutiveOutboxQueue,
     readyForQuotationOutboxQueue,
@@ -79,9 +74,6 @@ export function startBackgroundJobs() {
 
   // Redis triggered processing
   void startJobSubscriber({
-    CRM_EXPORT: () => {
-      void crmExportQueue.runOnce();
-    },
     CRM_IMPORT: () => {
       void crmImportQueue.runOnce();
     },

@@ -40,7 +40,11 @@ export type Permission =
   | "lead:review"
   | "lead:reassign"
   | "quotation:manage"
-  | "integration:manage";
+  | "integration:manage"
+  | "file:artifact:request"
+  | "file:artifact:upload"
+  | "file:artifact:read"
+  | "file:artifact:audit:read";
 
 export const ROLES = [
   "executive",
@@ -84,6 +88,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:manage",
     "audit:read",
     "lead:reassign",
+    "file:artifact:read",
+    "file:artifact:audit:read",
   ],
   back_office: [
     "lead:rate:simulate",
@@ -94,6 +100,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:review",
     "quotation:manage",
     "integration:manage",
+    "file:artifact:request",
+    "file:artifact:upload",
+    "file:artifact:read",
   ],
   sales_manager: [
     "lead:rate:simulate",
@@ -115,6 +124,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "lead:reassign",
+    "file:artifact:read",
+    "file:artifact:audit:read",
   ],
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
@@ -147,6 +158,10 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
+    "file:artifact:request",
+    "file:artifact:upload",
+    "file:artifact:read",
+    "file:artifact:audit:read",
   ],
   superuser: [
     "lead:rate:simulate",
@@ -180,6 +195,10 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
+    "file:artifact:request",
+    "file:artifact:upload",
+    "file:artifact:read",
+    "file:artifact:audit:read",
   ],
 };
 

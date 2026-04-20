@@ -2,9 +2,9 @@ import { TextDecoder } from "node:util";
 
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
+import type { FileStorage } from "~/server/files/storage";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { JobBlobStore } from "../../job-blob-store";
 import type {
   ImportBatchRunner,
   ImportJobProcessResult,
@@ -15,7 +15,7 @@ import { parseImportRows } from "./parse";
 
 export function createImportBatchRunner(deps: {
   executor: DatabaseExecutor;
-  blobStore: JobBlobStore;
+  blobStore: Pick<FileStorage, "get">;
 }): ImportBatchRunner {
   const { executor, blobStore } = deps;
   return {

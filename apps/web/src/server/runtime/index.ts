@@ -4,6 +4,7 @@ import { createCapacityRuntime } from "./capacity-runtime";
 import { createClientSearchRuntime } from "./client-search-runtime";
 import { createContactAssignmentsRuntime } from "./contact-assignments-runtime";
 import { createExtensionRuntime } from "./extension-runtime";
+import { createFilesRuntime } from "./files-runtime";
 import { createServerInfra } from "./infra";
 import { createIntegrationsRuntime } from "./integrations-runtime";
 import { createInventoryRuntime } from "./inventory-runtime";
@@ -25,6 +26,7 @@ export function createServerRuntime() {
   return {
     infra,
     admin: createAdminRuntime(infra),
+    files: createFilesRuntime(infra),
     auth: createAuthRuntime(infra, notifications),
     capacity: createCapacityRuntime(infra),
     clientSearch: createClientSearchRuntime(infra),

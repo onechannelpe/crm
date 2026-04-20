@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { createFileStorage } from "../../src/server/files/storage";
 import { downloadSalesExportById } from "../../src/server/sales-records/application/download-export";
-import { createSalesExportBlobStore } from "../../src/server/sales/export-blob-store";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -21,7 +21,7 @@ describe("sales export download access", () => {
 
   it("allows same-branch reviewer and logs download", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
+    const blobStore = createFileStorage(ctx.storageRoot);
     await blobStore.put(
       "sales-export-11.csv",
       new TextEncoder().encode("a,b\n1,2\n"),
@@ -65,7 +65,7 @@ describe("sales export download access", () => {
 
   it("denies cross-branch reviewer", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
+    const blobStore = createFileStorage(ctx.storageRoot);
     await blobStore.put(
       "sales-export-12.csv",
       new TextEncoder().encode("x,y\n1,2\n"),
@@ -108,7 +108,7 @@ describe("sales export download access", () => {
 
   it("allows superuser cross-branch", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
+    const blobStore = createFileStorage(ctx.storageRoot);
     await blobStore.put(
       "sales-export-13.csv",
       new TextEncoder().encode("x,y\n1,2\n"),
@@ -149,7 +149,7 @@ describe("sales export download access", () => {
 
   it("fails when file is not ready", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
+    const blobStore = createFileStorage(ctx.storageRoot);
 
     const jobId = await ctx.repos.reportExportJobs.createJob({
       requested_by_user_id: 2,

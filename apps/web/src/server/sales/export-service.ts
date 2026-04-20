@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 
-import type { SalesExportBlobStore } from "./export-blob-store";
+import type { FileStorage } from "~/server/files/storage";
+
 import type {
   ReportExportJobsPort,
   ReportExportLeasedJob,
@@ -127,7 +128,7 @@ export function createSalesExportService(
     reportExportJobs: ReportExportJobsPort;
     salesRecords: SalesRecordsPort;
   },
-  blobStore: SalesExportBlobStore,
+  blobStore: Pick<FileStorage, "put" | "delete">,
 ): SalesExportService {
   const processJob = async (
     job: ReportExportLeasedJob,
