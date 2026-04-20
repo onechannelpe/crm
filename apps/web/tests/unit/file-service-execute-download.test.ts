@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { executeDownload } from "../../src/server/files/service/execute-download";
 import type { ExecuteDownloadDeps } from "../../src/server/files/service/contracts";
+import { executeDownload } from "../../src/server/files/service/execute-download";
 import { isErr } from "../../src/server/shared/result";
 
 describe("executeDownload", () => {

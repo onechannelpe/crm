@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { requestArtifact } from "../../src/server/files/service/request-artifact";
 import type { RequestArtifactDeps } from "../../src/server/files/service/contracts";
+import { requestArtifact } from "../../src/server/files/service/request-artifact";
 import type { AppContext } from "../../src/server/shared/action-runtime";
 import { isErr } from "../../src/server/shared/result";
 
