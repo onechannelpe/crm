@@ -5,11 +5,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import {
-  checkArtifactPolicy,
-  checkDownloadPolicy,
-  type PolicyActor,
-} from "./policy";
+import { checkArtifactPolicy, type PolicyActor } from "./policy";
 import type { ArtifactRepo } from "./repo";
 import type { FileStorage } from "./storage";
 import {
@@ -26,6 +22,8 @@ import type {
   WorkflowArtifact,
 } from "./types";
 import { validateUploadFile } from "./validators";
+
+const DOWNLOAD_READY_STATUSES = new Set(["ready", "completed"]);
 
 export interface SyncExecutor {
   run(
@@ -354,8 +352,18 @@ export async function requestDownloadToken(
     );
   }
 
-  const policyResult = checkDownloadPolicy(actor, artifact);
+  const policyResult = checkArtifactPolicy(actor, artifact, "artifact.read");
   if (isErr(policyResult)) return policyResult;
+
+  if (!DOWNLOAD_READY_STATUSES.has(artifact.status)) {
+    return Err(
+      domainError(
+        "conflict",
+        "artifact_not_downloadable",
+        "Artifact file is not ready",
+      ),
+    );
+  }
 
   const bindingRole =
     artifact.direction === "upload" ? "source_upload" : "export_output";

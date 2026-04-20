@@ -1,4 +1,4 @@
-import { createAsync, useAction } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
@@ -13,7 +13,7 @@ import type {
   RecordIndexSource,
 } from "~/features/record-index/model/types";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import { queueLeadExportMutation } from "~/lib/mutations/integrations";
+import { requestAndDownload } from "~/lib/files/client";
 import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
 import { workspaceColumnsForRole } from "./columns";
@@ -60,10 +60,8 @@ export function LeadsWorkspace() {
   const { rowOpen } = useOpenLeadRecord();
   const createAction = useCreateLeadRecordAction();
 
-  const queueExport = useAction(queueLeadExportMutation);
-
   async function handleExport() {
-    await queueExport();
+    await requestAndDownload("leads_export", {});
   }
 
   const adapter = {

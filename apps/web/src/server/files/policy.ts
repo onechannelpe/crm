@@ -2,7 +2,7 @@ import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { ArtifactStatus, ArtifactType, WorkflowArtifact } from "./types";
+import type { ArtifactType, WorkflowArtifact } from "./types";
 
 export type PolicyAction =
   | "artifact.request"
@@ -25,11 +25,6 @@ const ARTIFACT_DIRECTIONS: Record<
   integration_import: "upload",
   sales_export: "download",
 };
-
-const DOWNLOAD_READY_STATUSES: ReadonlySet<ArtifactStatus> = new Set([
-  "ready",
-  "completed",
-]);
 
 function deny(code: string, message: string): Result<void, DomainError> {
   return Err(domainError("forbidden", code, message));
@@ -121,20 +116,6 @@ function canRead(
   return allow();
 }
 
-function canReadForDownload(
-  actor: PolicyActor,
-  artifact: WorkflowArtifact,
-): Result<void, DomainError> {
-  const readResult = canRead(actor, artifact);
-  if (!readResult.ok) return readResult;
-
-  if (!DOWNLOAD_READY_STATUSES.has(artifact.status)) {
-    return deny("artifact_not_downloadable", "Artifact file is not ready");
-  }
-
-  return allow();
-}
-
 function canRevoke(
   actor: PolicyActor,
   artifact: WorkflowArtifact,
@@ -197,11 +178,4 @@ export function checkArtifactPolicy(
       return deny("unknown_action", `Unknown action: ${String(_unreachable)}`);
     }
   }
-}
-
-export function checkDownloadPolicy(
-  actor: PolicyActor,
-  artifact: WorkflowArtifact,
-): Result<void, DomainError> {
-  return canReadForDownload(actor, artifact);
 }
