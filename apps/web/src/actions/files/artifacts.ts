@@ -1,12 +1,10 @@
 "use server";
 
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import {
-  listArtifacts,
-  requestArtifact,
-  requestDownloadToken,
-  uploadArtifactFile,
-} from "~/server/files/service";
+import { listArtifacts } from "~/server/files/service/list-artifacts";
+import { requestArtifact } from "~/server/files/service/request-artifact";
+import { requestDownloadToken } from "~/server/files/service/request-download-token";
+import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import type {
   ArtifactExecutionMode,
   ArtifactType,

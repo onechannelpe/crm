@@ -2,7 +2,7 @@ import { TextEncoder } from "node:util";
 
 import { buildLeadExportCsv } from "~/server/integrations/infrastructure/lead-export-builder";
 
-import type { SyncExecutor } from "./service";
+import type { SyncExecutor } from "./service/contracts";
 
 export function createLeadsExportExecutor(leadExportQuery: {
   export(filters: { executiveId?: number }): Promise<

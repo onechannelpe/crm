@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  requestDownloadToken,
-  type DownloadTokenDeps,
-} from "../../src/server/files/service";
+import type { DownloadTokenDeps } from "../../src/server/files/service/contracts";
+import { requestDownloadToken } from "../../src/server/files/service/request-download-token";
 import type { FileAsset, WorkflowArtifact } from "../../src/server/files/types";
 import type { AppContext } from "../../src/server/shared/action-runtime";
 import { isErr } from "../../src/server/shared/result";

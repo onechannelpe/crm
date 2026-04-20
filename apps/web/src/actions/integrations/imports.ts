@@ -3,7 +3,8 @@
 import { validationError, notFoundError } from "~/lib/app-errors";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
-import { requestArtifact, uploadArtifactFile } from "~/server/files/service";
+import { requestArtifact } from "~/server/files/service/request-artifact";
+import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
 import { listIntegrationJobsQuery } from "~/server/integrations/application/list-integration-jobs";
 import { serverRuntime } from "~/server/runtime";
