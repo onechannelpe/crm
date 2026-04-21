@@ -1,6 +1,15 @@
 import type { ColumnType, Generated } from "kysely";
 
 export type ExecutiveCategoryValue = "elite" | "corporativa";
+export type UserRoleValue =
+  | "executive"
+  | "supervisor"
+  | "back_office"
+  | "sales_manager"
+  | "logistics"
+  | "hr"
+  | "admin"
+  | "superuser";
 
 export function isExecutiveCategoryValue(
   value: string,
@@ -26,15 +35,7 @@ export interface UsersTable {
   avatar_updated_at: number | null;
   avatar_version: ColumnType<number, number | undefined, number>;
   onboarding_completed_at: number | null;
-  role:
-    | "executive"
-    | "supervisor"
-    | "back_office"
-    | "sales_manager"
-    | "logistics"
-    | "hr"
-    | "admin"
-    | "superuser";
+  role: UserRoleValue;
   executive_category: ExecutiveCategoryValue | null;
   is_active: number;
   created_at: number;

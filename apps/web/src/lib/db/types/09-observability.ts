@@ -1,6 +1,6 @@
 import type { Generated } from "kysely";
 
-import type { UsersTable } from "./02-crm";
+import type { UserRoleValue } from "./02-crm";
 
 export interface ActionObservationsTable {
   id: Generated<number>;
@@ -10,7 +10,7 @@ export interface ActionObservationsTable {
   http_method: string | null;
   action_name: string;
   actor_user_id: number | null;
-  actor_role: UsersTable["role"] | null;
+  actor_role: UserRoleValue | null;
   status: "ok" | "error";
   duration_ms: number;
   error_code: string | null;

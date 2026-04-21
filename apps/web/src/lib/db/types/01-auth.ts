@@ -1,4 +1,5 @@
 import type { Generated } from "kysely";
+import type { UserRoleValue } from "./02-crm";
 
 export type AuthFunnelSourceValue = "client" | "server";
 export type AuthFunnelEventNameValue =
@@ -82,7 +83,7 @@ export interface UserSessionsTable {
   id: string;
   user_id: number;
   branch_id: number;
-  role: import("./02-crm").UsersTable["role"];
+  role: UserRoleValue;
   session_class: "pre_auth" | "app";
   primary_auth_method: AuthMethodValue;
   strong_auth_method: "totp" | "passkey" | "federated" | null;
@@ -125,7 +126,7 @@ export interface UserInvitesTable {
   user_id: number;
   branch_id: number;
   email: string;
-  role: import("./02-crm").UsersTable["role"];
+  role: UserRoleValue;
   token_hash: string;
   status: "pending" | "accepted" | "revoked" | "expired";
   expires_at: number;
