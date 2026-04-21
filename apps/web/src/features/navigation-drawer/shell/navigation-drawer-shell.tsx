@@ -15,7 +15,11 @@ import { cn } from "~/lib/utils";
 import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "../constants/navigation-drawer-click-outside-id";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
-import { NAVIGATION_DRAWER_WIDTH_CONSTRAINTS } from "../state/navigation-drawer-width";
+import {
+  NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
+  NAVIGATION_DRAWER_WIDTH_VAR,
+} from "../state/navigation-drawer-width";
+import { NavigationDrawerWidthEffect } from "./navigation-drawer-width-effect";
 
 import styles from "./navigation-drawer-shell.module.css";
 
@@ -60,7 +64,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     onCollapse: () => setExpanded(false),
     onResizeStart: () => setResizing(true),
     onResizeEnd: () => setResizing(false),
-    cssVariableName: "--nav-drawer-current-width",
+    cssVariableName: NAVIGATION_DRAWER_WIDTH_VAR,
     dragThresholdPx: 4,
   });
 
@@ -78,12 +82,15 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
       class={styles.drawerHost}
       data-click-outside-id={NAVIGATION_DRAWER_CLICK_OUTSIDE_ID}
     >
+      <NavigationDrawerWidthEffect />
       <div
         class={cn(
           styles.drawer,
+          resizing() && styles.drawerResizing,
           props.className,
           isSettingsDrawer() && styles.drawerSettings,
-          !expanded() && styles.drawerCollapsed,
+          expanded() && !isMobile() && styles.drawerExpandedDesktop,
+          !expanded() && !isMobile() && styles.drawerCollapsedDesktop,
           isMobile() && expanded() && styles.drawerOpenMobile,
           isMobile() && !expanded() && styles.drawerClosedMobile,
         )}
@@ -92,7 +99,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
           ref={(element) => {
             drawerPanelRef = element;
           }}
-          class={cn(styles.drawerInner, !expanded() && styles.drawerCollapsed)}
+          class={styles.drawerInner}
         >
           <Show
             when={isSettingsDrawer()}
