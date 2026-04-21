@@ -11,6 +11,8 @@ import { ResizeGapFrame } from "./resize-gap";
 import { PanelShell } from "./shell";
 import { WidthEffect } from "./width-effect";
 
+import styles from "./desktop-frame.module.css";
+
 type DesktopSidePanelFrameProps = {
   isInteractive: boolean;
   renderContent?: () => JSX.Element;
@@ -34,7 +36,7 @@ export function DesktopSidePanelFrame(props: DesktopSidePanelFrameProps) {
   });
 
   return (
-    <>
+    <div class={styles.root}>
       <WidthEffect />
       <ResizeGapFrame
         isOpen={isOpen()}
@@ -46,6 +48,6 @@ export function DesktopSidePanelFrame(props: DesktopSidePanelFrameProps) {
         renderContent={props.renderContent}
         shouldRenderChildren={props.shouldRenderChildren}
       />
-    </>
+    </div>
   );
 }

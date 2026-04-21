@@ -1,4 +1,5 @@
 import type { Generated } from "kysely";
+
 import type { UserRoleValue } from "./02-crm";
 
 export type AuthFunnelSourceValue = "client" | "server";
