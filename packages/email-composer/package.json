@@ -10,8 +10,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/mjml": "^4.7.4",
+    "@types/mjml": "^5.0.0",
     "mjml": "^5.0.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.5"
   }
 }
