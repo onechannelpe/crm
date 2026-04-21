@@ -7,6 +7,7 @@ import Search from "~/components/icons/search";
 import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
@@ -51,38 +52,17 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     getContainer: () => drawerPanelRef,
   });
 
-  const handleResizeStart = (event: MouseEvent) => {
-    if (!expanded() || isMobile() || isSettingsDrawer()) {
-      return;
-    }
-
-    event.preventDefault();
-    setResizing(true);
-
-    const startX = event.clientX;
-    const startWidth = width();
-
-    const handleMove = (moveEvent: MouseEvent) => {
-      const nextWidth = Math.min(
-        NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.max,
-        Math.max(
-          NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.min,
-          startWidth + moveEvent.clientX - startX,
-        ),
-      );
-
-      setWidth(nextWidth);
-    };
-
-    const handleEnd = () => {
-      setResizing(false);
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleEnd);
-    };
-
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleEnd);
-  };
+  const { onPointerDown } = useResizablePanel({
+    side: "right",
+    constraints: NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
+    getCurrentWidth: width,
+    onWidthChange: setWidth,
+    onCollapse: () => setExpanded(false),
+    onResizeStart: () => setResizing(true),
+    onResizeEnd: () => setResizing(false),
+    cssVariableName: "--nav-drawer-current-width",
+    dragThresholdPx: 4,
+  });
 
   const memorizeNavigation = () =>
     memorizeNavigationState(location.pathname + location.search, expanded());
@@ -107,9 +87,6 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
           isMobile() && expanded() && styles.drawerOpenMobile,
           isMobile() && !expanded() && styles.drawerClosedMobile,
         )}
-        style={{
-          width: isMobile() ? undefined : expanded() ? `${width()}px` : "40px",
-        }}
       >
         <div
           ref={(element) => {
@@ -176,7 +153,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
             <button
               type="button"
               class={cn(styles.resizeHandle, resizing() && styles.resizing)}
-              onMouseDown={handleResizeStart}
+              onPointerDown={onPointerDown}
               aria-label="Redimensionar barra lateral"
             />
           </Show>

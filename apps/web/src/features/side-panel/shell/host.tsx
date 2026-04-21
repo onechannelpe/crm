@@ -1,7 +1,12 @@
-import { Show, createSignal, onCleanup, onMount, type JSX } from "solid-js";
+import { Show, createSignal, onCleanup, onMount } from "solid-js";
 
-import { useResizablePanel } from "../hooks/use-resizable-panel";
+import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
+
 import { Router } from "../router/router";
+import {
+  SIDE_PANEL_WIDTH_CONSTRAINTS,
+  SIDE_PANEL_WIDTH_VAR,
+} from "../state/side-panel-width";
 import { useSidePanel } from "../state/use-side-panel";
 import { DesktopSidePanelContent } from "./desktop-content";
 import { DesktopSidePanelFrame } from "./desktop-frame";
@@ -13,26 +18,18 @@ function SidePanelDesktopController(props: {
 }) {
   const { closePanel, panelWidth, setPanelWidth } = useSidePanel();
   const [isResizing, setIsResizing] = createSignal(false);
-  const [gapPointerDown, setGapPointerDown] =
-    createSignal<JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>>();
-
-  onMount(() => {
-    const { onPointerDown } = useResizablePanel({
-      get currentWidth() {
-        return panelWidth();
-      },
-      onWidthChange: (width) => {
-        setIsResizing(false);
-        setPanelWidth(width);
-      },
-      onCollapse: () => {
-        setIsResizing(false);
-        closePanel();
-      },
-      onResizeStart: () => setIsResizing(true),
-    });
-
-    setGapPointerDown(() => onPointerDown);
+  const { onPointerDown } = useResizablePanel({
+    side: "left",
+    constraints: SIDE_PANEL_WIDTH_CONSTRAINTS,
+    getCurrentWidth: panelWidth,
+    onWidthChange: (width) => {
+      setPanelWidth(width);
+    },
+    onCollapse: closePanel,
+    onResizeStart: () => setIsResizing(true),
+    onResizeEnd: () => setIsResizing(false),
+    cssVariableName: SIDE_PANEL_WIDTH_VAR,
+    dragThresholdPx: 4,
   });
 
   const isInteractive = () => props.isHydrated && !props.isMobile;
@@ -42,7 +39,7 @@ function SidePanelDesktopController(props: {
   return (
     <>
       <DesktopSidePanelFrame
-        gapPointerDown={isInteractive() ? gapPointerDown() : undefined}
+        gapPointerDown={isInteractive() ? onPointerDown : undefined}
         isInteractive={isInteractive()}
         isResizing={isResizing()}
         renderContent={renderDesktopContent}
