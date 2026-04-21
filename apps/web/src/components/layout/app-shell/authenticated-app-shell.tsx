@@ -1,7 +1,6 @@
 import type { RouteSectionProps } from "@solidjs/router";
 import { useLocation } from "@solidjs/router";
 
-import { ResizeCoordinationProvider } from "~/components/ui/layout/resizable-panel/resize-coordination-provider";
 import { NavigationDrawerStateProvider } from "~/features/navigation-drawer/state/navigation-drawer-provider";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
 import { traceSsrBoundary } from "~/lib/observability/diagnostics/server";
@@ -19,9 +18,7 @@ export function AuthenticatedAppShell(props: RouteSectionProps) {
 
   return (
     <NavigationDrawerStateProvider>
-      <ResizeCoordinationProvider>
-        <AppShell {...props} />
-      </ResizeCoordinationProvider>
+      <AppShell {...props} />
     </NavigationDrawerStateProvider>
   );
 }
