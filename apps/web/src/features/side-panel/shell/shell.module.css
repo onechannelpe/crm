@@ -6,6 +6,10 @@
   width: 0;
 }
 
+.wrapperResizing {
+  transition: none;
+}
+
 .wrapperOpen {
   width: var(--side-panel-width);
 }

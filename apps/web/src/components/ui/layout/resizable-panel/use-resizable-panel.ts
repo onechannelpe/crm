@@ -104,6 +104,10 @@ export function useResizablePanel(
   };
 
   const onPointerDown = (event: PointerEvent): void => {
+    if (!event.isPrimary || event.button !== 0) {
+      return;
+    }
+
     event.preventDefault();
 
     startX = event.clientX;
