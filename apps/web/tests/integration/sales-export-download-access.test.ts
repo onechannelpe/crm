@@ -58,9 +58,8 @@ describe("sales export download access", () => {
     );
 
     expect(response.ok).toBe(true);
-    if (response.ok) {
-      expect(response.value.mimeType).toContain("text/csv");
-    }
+    if (!response.ok) throw new Error("Expected success");
+    expect(response.value.mimeType).toContain("text/csv");
 
     const downloads =
       await ctx.repos.reportExportJobs.listDownloadsByJob(jobId);
@@ -101,9 +100,8 @@ describe("sales export download access", () => {
     );
 
     expect(response.ok).toBe(false);
-    if (!response.ok) {
-      expect(response.error.message).toBe("Export job not found");
-    }
+    if (response.ok) throw new Error("Expected failure");
+    expect(response.error.message).toBe("Export job not found");
 
     const downloads =
       await ctx.repos.reportExportJobs.listDownloadsByJob(jobId);
@@ -180,8 +178,7 @@ describe("sales export download access", () => {
     );
 
     expect(response.ok).toBe(false);
-    if (!response.ok) {
-      expect(response.error.message).toBe("Export file is not ready");
-    }
+    if (response.ok) throw new Error("Expected failure");
+    expect(response.error.message).toBe("Export file is not ready");
   });
 });

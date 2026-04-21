@@ -89,13 +89,12 @@ describe("runDirectSearch", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.details).toMatchObject({
-        status: 503,
-        request_id: "req-search-1",
-        engine_error: "service unavailable",
-      });
-    }
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.details).toMatchObject({
+      status: 503,
+      request_id: "req-search-1",
+      engine_error: "service unavailable",
+    });
     expect(repos.searchUsageReservations.rows).toHaveLength(1);
     expect(repos.searchUsageReservations.rows[0].status).toBe("cancelled");
     expect(repos.searchUsageCommits.rows).toHaveLength(0);
@@ -138,9 +137,8 @@ describe("runDirectSearch", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("search_exhausted");
-    }
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.code).toBe("search_exhausted");
     expect(engineCalled).toBe(false);
   });
 });

@@ -76,7 +76,8 @@ describe("profile picture service", () => {
     const result = await service.upload(10, file);
 
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.value.avatarVersion).toBe(3);
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.value.avatarVersion).toBe(3);
     expect(updateAvatar).toHaveBeenCalledOnce();
     expect(remove).toHaveBeenCalledWith("10/old.png");
   });
@@ -91,7 +92,8 @@ describe("profile picture service", () => {
     const result = await service.remove(10);
 
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.value.avatarVersion).toBe(10);
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.value.avatarVersion).toBe(10);
     expect(clearAvatar).toHaveBeenCalledOnce();
   });
 
@@ -109,7 +111,8 @@ describe("profile picture service", () => {
     const result = await service.upload(10, file);
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("repository_unavailable");
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.code).toBe("repository_unavailable");
 
     // The exact key written to storage must be the one rolled back,
     // not the old key, not some arbitrary key.
@@ -131,12 +134,12 @@ describe("profile picture service", () => {
     ]);
 
     expect(uploadResult.ok).toBe(false);
-    if (!uploadResult.ok)
-      expect(uploadResult.error.code).toBe("user_not_found");
+    if (uploadResult.ok) throw new Error("Expected failure");
+    expect(uploadResult.error.code).toBe("user_not_found");
 
     expect(removeResult.ok).toBe(false);
-    if (!removeResult.ok)
-      expect(removeResult.error.code).toBe("user_not_found");
+    if (removeResult.ok) throw new Error("Expected failure");
+    expect(removeResult.error.code).toBe("user_not_found");
   });
 
   it("rejects unsupported mime type", async () => {
@@ -146,7 +149,8 @@ describe("profile picture service", () => {
     });
     const result = await service.upload(1, file);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("unsupported_mime");
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.code).toBe("unsupported_mime");
   });
 
   it("rejects empty file", async () => {
@@ -154,7 +158,8 @@ describe("profile picture service", () => {
     const file = new File([], "avatar.png", { type: "image/png" });
     const result = await service.upload(1, file);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("invalid_file");
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.code).toBe("invalid_file");
   });
 
   it("rejects files larger than 10MB", async () => {
@@ -166,7 +171,8 @@ describe("profile picture service", () => {
     );
     const result = await service.upload(1, file);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("too_large");
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.code).toBe("too_large");
   });
 
   it("returns avatar_not_found when no avatar exists for read", async () => {
@@ -181,7 +187,8 @@ describe("profile picture service", () => {
     );
     const result = await service.get(2);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("avatar_not_found");
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.code).toBe("avatar_not_found");
   });
 
   it("returns storage_unavailable when avatar bytes cannot be read", async () => {
@@ -196,6 +203,7 @@ describe("profile picture service", () => {
     get.mockRejectedValue(new Error("blob read failed"));
     const result = await service.get(2);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("storage_unavailable");
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.code).toBe("storage_unavailable");
   });
 });

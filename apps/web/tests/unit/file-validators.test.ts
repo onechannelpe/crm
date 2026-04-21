@@ -78,9 +78,8 @@ describe("validateUploadFile - filename sanitization", () => {
       CSV_BYTES,
     );
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.safeDisplayFilename).toBe("mi archivo_datos.csv");
-    }
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.safeDisplayFilename).toBe("mi archivo_datos.csv");
   });
 });
 
@@ -108,9 +107,8 @@ describe("validateUploadFile - signature checks", () => {
       XLSX_MAGIC,
     );
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.signatureKind).toBe("xlsx");
-    }
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.signatureKind).toBe("xlsx");
   });
 
   it("accepts csv bytes and sets signatureKind to csv", () => {
@@ -120,9 +118,8 @@ describe("validateUploadFile - signature checks", () => {
       CSV_BYTES,
     );
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.signatureKind).toBe("csv");
-    }
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.signatureKind).toBe("csv");
   });
 });
 
@@ -168,9 +165,8 @@ describe("validateUploadFile - MIME output", () => {
       CSV_BYTES,
     );
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.detectedMime).toBe("text/csv; charset=utf-8");
-    }
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.detectedMime).toBe("text/csv; charset=utf-8");
   });
 
   it("returns correct MIME for xlsx", () => {
@@ -180,10 +176,9 @@ describe("validateUploadFile - MIME output", () => {
       XLSX_MAGIC,
     );
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.detectedMime).toBe(
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      );
-    }
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.detectedMime).toBe(
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
   });
 });

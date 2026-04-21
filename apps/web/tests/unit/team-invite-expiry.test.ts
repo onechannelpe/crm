@@ -44,11 +44,8 @@ describe("team invite expiry helpers", () => {
     const result = parseInviteExpiryDate("2026-03-31", fixedNow);
 
     expect(result.isErr).toBe(false);
-    if (!result.isErr) {
-      expect(result.value).toBe(
-        new Date(2026, 2, 31, 23, 59, 59, 999).getTime(),
-      );
-    }
+    if (result.isErr) throw new Error("Expected success");
+    expect(result.value).toBe(new Date(2026, 2, 31, 23, 59, 59, 999).getTime());
   });
 
   it("only shows inline field errors after a full date is present", () => {

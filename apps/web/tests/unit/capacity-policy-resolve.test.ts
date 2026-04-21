@@ -1,5 +1,5 @@
 import * as fc from "fast-check";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   resolveLeadPolicy,
@@ -97,7 +97,7 @@ describe("resolveSearchPolicy", () => {
       teamDefault: null,
       branchDefault: null,
     });
-    return policy.source === "system";
+    expect(policy.source).toBe("system");
   });
 });
 
@@ -171,6 +171,6 @@ describe("resolveLeadPolicy", () => {
       teamDefault: null,
       branchDefault: null,
     });
-    return policy.source === "system";
+    expect(policy.source).toBe("system");
   });
 });

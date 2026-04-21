@@ -86,10 +86,9 @@ describe("assignContacts", () => {
     );
 
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.value.requested).toBe(0);
-      expect(result.value.assigned).toBe(0);
-    }
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.value.requested).toBe(0);
+    expect(result.value.assigned).toBe(0);
     expect(repos.leadUsageReservations.rows).toHaveLength(0);
   });
 
@@ -127,10 +126,8 @@ describe("assignContacts", () => {
     );
 
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      // assigned < requested means partial use cancellation happened
-      expect(result.value.assigned).toBeLessThan(result.value.requested);
-    }
+    if (!result.ok) throw new Error("Expected success");
+    expect(result.value.assigned).toBeLessThan(result.value.requested);
 
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations).toHaveLength(1);
@@ -198,13 +195,12 @@ describe("assignContacts", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.details).toMatchObject({
-        status: 503,
-        request_id: "req-leads-1",
-        engine_error: "service unavailable",
-      });
-    }
+    if (result.ok) throw new Error("Expected failure");
+    expect(result.error.details).toMatchObject({
+      status: 503,
+      request_id: "req-leads-1",
+      engine_error: "service unavailable",
+    });
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");
