@@ -110,12 +110,6 @@ export function createLeadImportRunner(deps: {
           validRows,
           invalidRows,
           onProgress: async (progress) => {
-            await updateProgress({
-              jobId: job.id,
-              rowsTotal: progress.rowsTotal,
-              rowsApplied: progress.rowsApplied,
-              rowsFailed: progress.rowsFailed,
-            });
             await publishLeadImportProgress(
               buildLeadImportProgressEvent({
                 job,
@@ -130,6 +124,12 @@ export function createLeadImportRunner(deps: {
         },
         executor,
       );
+      await updateProgress({
+        jobId: job.id,
+        rowsTotal,
+        rowsApplied: applied.applied,
+        rowsFailed: applied.failed,
+      });
 
       if (signal.aborted) {
         throw new Error("Job aborted after processing");

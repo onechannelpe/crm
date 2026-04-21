@@ -40,6 +40,16 @@ function buildProgressMessage(event: {
   return `Importando ${importTypeLabel(event.importType)}: ${processed}/${event.rowsTotal}`;
 }
 
+function buildCompletedMessage(event: {
+  importType: ImportType;
+  rowsApplied: number;
+  rowsFailed: number;
+  rowsTotal: number;
+}): string {
+  const processed = event.rowsApplied + event.rowsFailed;
+  return `Importación de ${importTypeLabel(event.importType)} completada: ${processed}/${event.rowsTotal}`;
+}
+
 function parseProgressMessage(raw: string): LeadImportProgressMessage | null {
   let parsed: unknown;
   try {
@@ -126,6 +136,26 @@ export function useLeadsImport() {
     }
   }
 
+  function completeProgressToast(event: {
+    importType: ImportType;
+    rowsApplied: number;
+    rowsFailed: number;
+    rowsTotal: number;
+  }) {
+    if (progressToastId) {
+      updateToast(progressToastId, {
+        type: "success",
+        message: buildCompletedMessage(event),
+        duration: 3000,
+        remaining: 3000,
+      });
+      progressToastId = null;
+      return;
+    }
+
+    showToast("success", buildCompletedMessage(event), 3000);
+  }
+
   function stopActiveTracking() {
     clearPolling();
     closeSocket();
@@ -156,7 +186,12 @@ export function useLeadsImport() {
       }
 
       if (job.status === "COMPLETED") {
-        finalizeProgressToast();
+        completeProgressToast({
+          importType: activeImportType,
+          rowsApplied,
+          rowsFailed,
+          rowsTotal,
+        });
         stopActiveTracking();
         return;
       }
@@ -190,7 +225,12 @@ export function useLeadsImport() {
     }
 
     if (event.status === "COMPLETED") {
-      finalizeProgressToast();
+      completeProgressToast({
+        importType: event.importType,
+        rowsApplied: event.rowsApplied,
+        rowsFailed: event.rowsFailed,
+        rowsTotal: event.rowsTotal,
+      });
       stopActiveTracking();
       return;
     }
