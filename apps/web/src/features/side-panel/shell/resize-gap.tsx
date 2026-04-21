@@ -12,8 +12,7 @@ import { useSidePanel } from "../state/use-side-panel";
 import styles from "./resize-gap.module.css";
 
 type ResizeGapProps = {
-  onResizeStart?: () => void;
-  onResizeEnd?: () => void;
+  isInteractive?: boolean;
 };
 
 type ResizeGapFrameProps = {
@@ -39,18 +38,16 @@ export function ResizeGap(props: ResizeGapProps) {
     side: "left",
     constraints: SIDE_PANEL_WIDTH_CONSTRAINTS,
     getCurrentWidth: panelWidth,
-    onWidthChange: (w) => {
-      props.onResizeEnd?.();
-      setPanelWidth(w);
-    },
-    onCollapse: () => {
-      props.onResizeEnd?.();
-      closePanel();
-    },
-    onResizeStart: () => props.onResizeStart?.(),
+    onWidthChange: setPanelWidth,
+    onCollapse: closePanel,
     cssVariableName: SIDE_PANEL_WIDTH_VAR,
     dragThresholdPx: 4,
   });
 
-  return <ResizeGapFrame isOpen={isOpen()} onPointerDown={onPointerDown} />;
+  return (
+    <ResizeGapFrame
+      isOpen={isOpen()}
+      onPointerDown={props.isInteractive === false ? undefined : onPointerDown}
+    />
+  );
 }

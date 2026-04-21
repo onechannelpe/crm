@@ -10,10 +10,6 @@
   width: var(--side-panel-width);
 }
 
-.wrapperResizing {
-  transition: none;
-}
-
 .aside {
   background: var(--background);
   border: 1px solid var(--border);

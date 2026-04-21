@@ -12,7 +12,6 @@ import styles from "./shell.module.css";
 
 type PanelShellProps = {
   renderContent?: () => JSX.Element;
-  isResizing?: boolean;
   isInteractive?: boolean;
   shouldRenderChildren?: boolean;
 };
@@ -52,11 +51,7 @@ export function PanelShell(props: PanelShellProps) {
 
   return (
     <div
-      class={cn(
-        styles.wrapper,
-        isOpen() && styles.wrapperOpen,
-        props.isResizing && styles.wrapperResizing,
-      )}
+      class={cn(styles.wrapper, isOpen() && styles.wrapperOpen)}
       data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
       onTransitionEnd={handleTransitionEnd}
     >
