@@ -109,8 +109,8 @@ export function createLeadImportRunner(deps: {
           actorId: job.requested_by_user_id,
           validRows,
           invalidRows,
-          onProgress: async (progress) => {
-            await publishLeadImportProgress(
+          onProgress: (progress) => {
+            void publishLeadImportProgress(
               buildLeadImportProgressEvent({
                 job,
                 status: "PROCESSING",

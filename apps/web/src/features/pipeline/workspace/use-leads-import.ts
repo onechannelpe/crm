@@ -5,31 +5,19 @@ import {
   uploadLeadImportFile,
 } from "~/actions/leads/imports";
 import { useToast } from "~/components/feedback/toast/provider";
+import {
+  leadImportTopic,
+  parseLeadImportProgressMessage,
+  type LeadImportType,
+  type LeadImportProgressEvent,
+} from "~/features/leads-imports/contracts";
 import { getErrorMessage } from "~/lib/errors";
-
-type ImportType = "import_status" | "import_prioridad";
-
-type JobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 1200;
 
-interface LeadImportProgressMessage {
-  type: "job_progress";
-  jobId: number;
-  importType: ImportType;
-  status: JobStatus;
-  rowsApplied: number;
-  rowsFailed: number;
-  rowsTotal: number;
-  errorMessage: string | null;
-}
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function importTypeUnit(type: ImportType, count: number): string {
+function importTypeUnit(type: LeadImportType, count: number): string {
   if (type === "import_status") {
     return count === 1 ? "estado" : "estados";
   }
@@ -37,7 +25,7 @@ function importTypeUnit(type: ImportType, count: number): string {
 }
 
 function buildProgressMessage(event: {
-  importType: ImportType;
+  importType: LeadImportType;
   rowsApplied: number;
   rowsFailed: number;
   rowsTotal: number;
@@ -47,7 +35,7 @@ function buildProgressMessage(event: {
 }
 
 function buildCompletedMessage(event: {
-  importType: ImportType;
+  importType: LeadImportType;
   rowsApplied: number;
   rowsFailed: number;
   rowsTotal: number;
@@ -57,48 +45,6 @@ function buildCompletedMessage(event: {
     return `Procesados ${event.rowsTotal} ${unit} (${event.rowsFailed} con error)`;
   }
   return `Procesados ${event.rowsTotal} ${unit}`;
-}
-
-function parseProgressMessage(raw: string): LeadImportProgressMessage | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return null;
-  }
-
-  if (!isObjectRecord(parsed)) {
-    return null;
-  }
-
-  const event = parsed;
-  if (
-    event.type !== "job_progress" ||
-    (event.importType !== "import_status" &&
-      event.importType !== "import_prioridad") ||
-    (event.status !== "PENDING" &&
-      event.status !== "PROCESSING" &&
-      event.status !== "COMPLETED" &&
-      event.status !== "FAILED") ||
-    typeof event.jobId !== "number" ||
-    typeof event.rowsApplied !== "number" ||
-    typeof event.rowsFailed !== "number" ||
-    typeof event.rowsTotal !== "number"
-  ) {
-    return null;
-  }
-
-  return {
-    type: event.type,
-    jobId: event.jobId,
-    importType: event.importType,
-    status: event.status,
-    rowsApplied: event.rowsApplied,
-    rowsFailed: event.rowsFailed,
-    rowsTotal: event.rowsTotal,
-    errorMessage:
-      typeof event.errorMessage === "string" ? event.errorMessage : null,
-  };
 }
 
 function isCsvFile(file: File): boolean {
@@ -115,7 +61,7 @@ export function useLeadsImport() {
 
   let fileInputRef: HTMLInputElement | undefined;
   let activeJobId: number | null = null;
-  let activeImportType: ImportType | null = null;
+  let activeImportType: LeadImportType | null = null;
   let progressToastId: string | null = null;
   let socket: WebSocket | null = null;
   let pollTimer: number | null = null;
@@ -146,7 +92,7 @@ export function useLeadsImport() {
   }
 
   function completeProgressToast(event: {
-    importType: ImportType;
+    importType: LeadImportType;
     rowsApplied: number;
     rowsFailed: number;
     rowsTotal: number;
@@ -226,8 +172,8 @@ export function useLeadsImport() {
     }, 2_000);
   }
 
-  function handleProgressEvent(event: LeadImportProgressMessage) {
-    if (event.jobId !== activeJobId || event.importType !== activeImportType) {
+  function handleProgressEvent(event: LeadImportProgressEvent) {
+    if (event.jobId !== activeJobId) {
       return;
     }
 
@@ -262,15 +208,15 @@ export function useLeadsImport() {
     socket.addEventListener("open", () => {
       clearPolling();
       socket?.send(
-        JSON.stringify({
+        buildRealtimeSubscriptionMessage({
           type: "subscribe",
-          jobId,
+          topic: leadImportTopic(jobId),
         }),
       );
     });
 
     socket.addEventListener("message", (event) => {
-      const payload = parseProgressMessage(String(event.data));
+      const payload = parseLeadImportProgressMessage(String(event.data));
       if (!payload) {
         return;
       }

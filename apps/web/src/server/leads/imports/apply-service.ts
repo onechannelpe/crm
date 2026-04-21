@@ -16,7 +16,7 @@ export async function applyLeadImportRows(
       rowsTotal: number;
       rowsApplied: number;
       rowsFailed: number;
-    }) => Promise<void> | void;
+    }) => void;
   },
   executor: DatabaseExecutor,
 ): Promise<{

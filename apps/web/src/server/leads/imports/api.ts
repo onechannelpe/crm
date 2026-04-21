@@ -1,3 +1,4 @@
+import type { LeadImportType } from "~/features/leads-imports/contracts";
 import type { Role } from "~/lib/auth/access/rbac";
 import type {
   IntegrationJobRow,
@@ -8,7 +9,6 @@ import { parsePriorityImport } from "./priority-parser";
 import { parseStatusImport } from "./status-parser";
 import {
   detectLeadImportTypeFromCsv,
-  type LeadImportType,
   type LeadImportTypeDetectionErrorCode,
 } from "./type-detection";
 

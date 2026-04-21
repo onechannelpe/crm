@@ -1,34 +1,34 @@
-import { RedisClient } from "bun";
-
 import type { JobChannel } from "~/lib/job-queue/channels";
 import { createLogger } from "~/lib/observability/logger";
 
+import { getRedisPublisherClient } from "./client";
+
 const logger = createLogger("redis-publisher");
 
-let publisher: RedisClient | null = null;
-
-/**
- * Returns a shared RedisClient instance for publishing messages.
- * Connection is opened lazily on first use.
- */
-export function getPublisher(): RedisClient {
-  if (!publisher) {
-    const url = process.env.REDIS_URL || "redis://localhost:6379";
-    logger.info("initializing_publisher", { url });
-    publisher = new RedisClient(url);
-  }
-  return publisher;
+export function getPublisher() {
+  return getRedisPublisherClient();
 }
 
-/**
- * Publishes a message to a channel.
- */
 export async function publishJob(channel: JobChannel, jobId: number) {
   try {
-    const client = getPublisher();
-    await client.publish(channel, String(jobId));
-  } catch (err: any) {
-    logger.error("publish_failed", { channel, jobId, error: err.message });
-    // This is fine; the fallback poll will pick it up within 30s
+    await getPublisher().publish(channel, String(jobId));
+  } catch (error: unknown) {
+    logger.error("publish_failed", {
+      channel,
+      jobId,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    // Fallback polling will process pending jobs.
+  }
+}
+
+export async function publishJson(channel: JobChannel, payload: unknown) {
+  try {
+    await getPublisher().publish(channel, JSON.stringify(payload));
+  } catch (error: unknown) {
+    logger.error("publish_json_failed", {
+      channel,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 }

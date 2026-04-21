@@ -1,9 +1,8 @@
+import type { LeadImportType } from "~/features/leads-imports/contracts";
 import { parseCsv } from "~/server/integrations/csv-parser";
 
 import { PRIORITY_IMPORT_HEADERS } from "./priority-parser";
 import { STATUS_IMPORT_HEADERS } from "./status-parser";
-
-export type LeadImportType = "import_status" | "import_prioridad";
 
 export type LeadImportTypeDetectionErrorCode =
   | "unknown_headers"

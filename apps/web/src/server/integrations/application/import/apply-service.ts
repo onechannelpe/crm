@@ -28,7 +28,7 @@ export async function applyImportRows(
       rowsTotal: number;
       rowsApplied: number;
       rowsFailed: number;
-    }) => Promise<void> | void;
+    }) => void;
   },
   executor: DatabaseExecutor,
 ): Promise<{
@@ -49,7 +49,7 @@ export async function applyImportRows(
   const outboxPlan = createEmptyOutboxPlan();
 
   if (input.onProgress) {
-    await input.onProgress({
+    input.onProgress({
       rowsTotal,
       rowsApplied: applied,
       rowsFailed: failed,
@@ -71,7 +71,7 @@ export async function applyImportRows(
       if (!mutationResult.ok) {
         failed++;
         if (input.onProgress) {
-          await input.onProgress({
+          input.onProgress({
             rowsTotal,
             rowsApplied: applied,
             rowsFailed: failed,
@@ -92,7 +92,7 @@ export async function applyImportRows(
       });
       applied++;
       if (input.onProgress) {
-        await input.onProgress({
+        input.onProgress({
           rowsTotal,
           rowsApplied: applied,
           rowsFailed: failed,

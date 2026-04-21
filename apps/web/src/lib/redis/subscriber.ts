@@ -1,93 +1,110 @@
-import { RedisClient } from "bun";
-
 import { createLogger } from "~/lib/observability/logger";
 
-import { JOB_CHANNELS } from "../job-queue/channels";
+import { getRedisSubscriberClient } from "./client";
 
 const logger = createLogger("redis-subscriber");
 
-let subscriber: RedisClient | null = null;
+type RedisMessageHandler = (message: string, channel: string) => void;
 
-/**
- * Starts a Redis subscriber that listens for job notifications.
- * When a message is received on a channel, it calls the provided trigger function.
- */
-export async function startJobSubscriber(triggers: {
-  [K in keyof typeof JOB_CHANNELS]?: () => void;
-}) {
-  const url = process.env.REDIS_URL || "redis://localhost:6379";
-  logger.info("initializing_subscriber", { url });
+const handlersByChannel = new Map<string, Set<RedisMessageHandler>>();
+const subscribedChannels = new Set<string>();
+
+let subscriberStarted = false;
+
+function subscribeFn() {
+  const client = getRedisSubscriberClient();
+  const subscribe = Reflect.get(client, "subscribe");
+  if (typeof subscribe !== "function") {
+    throw new Error("Redis subscriber does not expose subscribe()");
+  }
+  return { client, subscribe };
+}
+
+async function ensureSubscriberLoop(): Promise<void> {
+  if (subscriberStarted) {
+    return;
+  }
+  subscriberStarted = true;
 
   try {
-    subscriber = new RedisClient(url);
-    const channelEntries = [
-      { key: "CRM_EXPORT", channel: JOB_CHANNELS.CRM_EXPORT },
-      { key: "CRM_IMPORT", channel: JOB_CHANNELS.CRM_IMPORT },
-      {
-        key: "LEADS_IMPORT_PROGRESS",
-        channel: JOB_CHANNELS.LEADS_IMPORT_PROGRESS,
-      },
-      {
-        key: "INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT",
-        channel: JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,
-      },
-      {
-        key: "INTEGRATION_OUTBOX_READY_FOR_QUOTATION",
-        channel: JOB_CHANNELS.INTEGRATION_OUTBOX_READY_FOR_QUOTATION,
-      },
-      { key: "SALES_EXPORT", channel: JOB_CHANNELS.SALES_EXPORT },
-      { key: "ENRICHMENT", channel: JOB_CHANNELS.ENRICHMENT },
-      {
-        key: "ENRICHMENT_WRITEBACK",
-        channel: JOB_CHANNELS.ENRICHMENT_WRITEBACK,
-      },
-      {
-        key: "NOTIFICATIONS_EMAIL",
-        channel: JOB_CHANNELS.NOTIFICATIONS_EMAIL,
-      },
-      {
-        key: "NOTIFICATIONS_WHATSAPP",
-        channel: JOB_CHANNELS.NOTIFICATIONS_WHATSAPP,
-      },
-    ] as const;
-    const keyByChannel = new Map<string, keyof typeof JOB_CHANNELS>(
-      channelEntries.map(({ key, channel }) => [channel, key]),
+    const { client, subscribe } = subscribeFn();
+    const channels = Array.from(handlersByChannel.keys()).filter(
+      (channel) => !subscribedChannels.has(channel),
     );
-
-    const resolveKey = (
-      channel: string,
-    ): keyof typeof JOB_CHANNELS | undefined => {
-      return keyByChannel.get(channel);
-    };
-
-    const subscribe = Reflect.get(subscriber, "subscribe");
-    if (typeof subscribe !== "function") {
-      throw new Error("Redis subscriber does not expose subscribe()");
-    }
-
-    const onMessage = (_message: string, channel: string) => {
-      const key = resolveKey(channel);
-      const trigger = key ? triggers[key] : null;
-      if (!trigger) {
-        return;
-      }
-      logger.debug("job_doorbell_received", { channel, key });
-      trigger();
-    };
-
     await Promise.all(
-      channelEntries.map(({ channel }) =>
-        subscribe.call(subscriber, [channel], onMessage),
-      ),
+      channels.map(async (channel) => {
+        await subscribe.call(
+          client,
+          [channel],
+          (message: string, from: string) => {
+            const handlers = handlersByChannel.get(from);
+            if (!handlers || handlers.size === 0) {
+              return;
+            }
+            for (const handler of handlers) {
+              handler(message, from);
+            }
+          },
+        );
+        subscribedChannels.add(channel);
+      }),
     );
-
-    logger.info("subscriber_listening", {
-      channels: Object.values(JOB_CHANNELS),
-    });
   } catch (error: unknown) {
+    subscriberStarted = false;
     logger.error("subscriber_failed", {
       error: error instanceof Error ? error.message : "Unknown error",
     });
-    // Fallback polling will handle it
+    throw error;
   }
+}
+
+async function ensureChannelSubscription(channel: string): Promise<void> {
+  await ensureSubscriberLoop();
+  if (subscribedChannels.has(channel)) {
+    return;
+  }
+
+  const { client, subscribe } = subscribeFn();
+  await subscribe.call(client, [channel], (message: string, from: string) => {
+    const handlers = handlersByChannel.get(from);
+    if (!handlers || handlers.size === 0) {
+      return;
+    }
+    for (const handler of handlers) {
+      handler(message, from);
+    }
+  });
+  subscribedChannels.add(channel);
+}
+
+export async function subscribeRedisChannel(
+  channel: string,
+  handler: RedisMessageHandler,
+): Promise<() => void> {
+  const handlers =
+    handlersByChannel.get(channel) ?? new Set<RedisMessageHandler>();
+  handlers.add(handler);
+  handlersByChannel.set(channel, handlers);
+
+  try {
+    await ensureChannelSubscription(channel);
+    logger.debug("subscriber_channel_registered", { channel });
+  } catch {
+    handlers.delete(handler);
+    if (handlers.size === 0) {
+      handlersByChannel.delete(channel);
+    }
+    throw new Error(`Failed to subscribe redis channel: ${channel}`);
+  }
+
+  return () => {
+    const current = handlersByChannel.get(channel);
+    if (!current) {
+      return;
+    }
+    current.delete(handler);
+    if (current.size === 0) {
+      handlersByChannel.delete(channel);
+    }
+  };
 }

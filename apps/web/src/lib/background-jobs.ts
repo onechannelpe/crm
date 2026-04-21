@@ -1,7 +1,7 @@
+import { startQueueDoorbellSubscriber } from "~/lib/job-queue/doorbell-subscriber";
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
-import { startJobSubscriber } from "~/lib/redis/subscriber";
 import { createCrmImportQueue } from "~/server/integrations/queue/crm-import-queue";
 import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
@@ -73,7 +73,7 @@ export function startBackgroundJobs() {
   }, 30_000);
 
   // Redis triggered processing
-  void startJobSubscriber({
+  void startQueueDoorbellSubscriber({
     CRM_IMPORT: () => {
       void crmImportQueue.runOnce();
     },
