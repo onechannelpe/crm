@@ -87,7 +87,7 @@ export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
       />
 
       {/* Foreground layer (parallax) */}
-      <SpringParallax>
+      <SpringParallax class={styles.parallaxLayer}>
         <div class={styles.fgWrapper}>
           <img
             src={fg()}

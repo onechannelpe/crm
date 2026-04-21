@@ -2,6 +2,8 @@ import { onCleanup, onMount, type JSX } from "solid-js";
 
 interface SpringParallaxProps {
   children: JSX.Element;
+  class?: string;
+  style?: JSX.CSSProperties;
   /** Max translation in px (applied symmetrically from center). Default: 2 */
   range?: number;
   /** Spring stiffness. Default: 100 (matches motion/framer-motion default) */
@@ -19,7 +21,7 @@ interface SpringParallaxProps {
  *   - Leave: analytical underdamped spring ease-back to center.
  *
  * Closed-form underdamped solution:
- *   x(t) = -e^(-ζω₀t) · [A·sin(ωd·t) + x₀·cos(ωd·t)]
+ *   x(t) = e^(-ζω₀t) · [A·sin(ωd·t) + x₀·cos(ωd·t)]
  * where ωd = ω₀·√(1−ζ²), A = (v₀ + ζω₀x₀)/ωd
  */
 export function SpringParallax(props: SpringParallaxProps) {
@@ -76,8 +78,8 @@ export function SpringParallax(props: SpringParallaxProps) {
         const sin = Math.sin(omegaD * t);
         const cos = Math.cos(omegaD * t);
 
-        const x = -envelope * (Ax * sin + x0 * cos);
-        const y = -envelope * (Ay * sin + y0 * cos);
+        const x = envelope * (Ax * sin + x0 * cos);
+        const y = envelope * (Ay * sin + y0 * cos);
         setTranslate(x, y);
 
         if (envelope < 0.001) {
@@ -100,5 +102,13 @@ export function SpringParallax(props: SpringParallaxProps) {
     });
   });
 
-  return <div ref={(el) => (containerRef = el)}>{props.children}</div>;
+  return (
+    <div
+      ref={(el) => (containerRef = el)}
+      class={props.class}
+      style={props.style}
+    >
+      {props.children}
+    </div>
+  );
 }
