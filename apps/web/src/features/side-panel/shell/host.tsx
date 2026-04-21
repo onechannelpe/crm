@@ -1,5 +1,6 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 
+import { useMobileBreakpoint } from "~/components/ui/layout/resizable-panel/use-mobile-breakpoint";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 
 import { Router } from "../router/router";
@@ -56,19 +57,10 @@ function SidePanelDesktopController(props: {
 
 export function Host() {
   const [isHydrated, setIsHydrated] = createSignal(false);
-  const [isMobile, setIsMobile] = createSignal(false);
+  const isMobile = useMobileBreakpoint();
 
   onMount(() => {
     setIsHydrated(true);
-
-    const mq = window.matchMedia("(max-width: 768px)");
-    setIsMobile(mq.matches);
-
-    const handleChange = (event: MediaQueryListEvent) =>
-      setIsMobile(event.matches);
-
-    mq.addEventListener("change", handleChange);
-    onCleanup(() => mq.removeEventListener("change", handleChange));
   });
 
   return (
