@@ -29,7 +29,10 @@ export function persistNavigationDrawerWidthToCookie(width: number): number {
 }
 
 export function clampNavigationDrawerWidth(width: number): number {
-  return clampPanelWidthToConstraints(width, NAVIGATION_DRAWER_WIDTH_CONSTRAINTS);
+  return clampPanelWidthToConstraints(
+    width,
+    NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
+  );
 }
 
 export const NAVIGATION_DRAWER_WIDTH_CONSTRAINTS = {
