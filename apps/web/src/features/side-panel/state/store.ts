@@ -10,6 +10,7 @@ import type {
 } from "../types/side-panel-page";
 import type { SidePanelState } from "../types/side-panel-state";
 import {
+  clampSidePanelWidth,
   SIDE_PANEL_WIDTH_CONSTRAINTS,
   persistSidePanelWidthToCookie,
 } from "./side-panel-width";
@@ -17,13 +18,6 @@ import {
 type SidePanelStoreOptions = {
   initialWidth?: number;
 };
-
-function clampPanelWidth(width: number): number {
-  return Math.min(
-    SIDE_PANEL_WIDTH_CONSTRAINTS.max,
-    Math.max(SIDE_PANEL_WIDTH_CONSTRAINTS.min, width),
-  );
-}
 
 export function createSidePanelStore(options?: SidePanelStoreOptions) {
   const [state, setState] = createStore<SidePanelState>({
@@ -98,7 +92,7 @@ export function createSidePanelStore(options?: SidePanelStoreOptions) {
   };
 
   const setPanelWidth = (width: number) => {
-    const nextWidth = clampPanelWidth(width);
+    const nextWidth = clampSidePanelWidth(width);
     applyAction({
       type: "set-panel-width",
       width: nextWidth,

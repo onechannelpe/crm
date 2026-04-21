@@ -3,6 +3,7 @@ import { createSignal } from "solid-js";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
 
 import {
+  clampNavigationDrawerWidth,
   NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
   persistNavigationDrawerWidthToCookie,
 } from "./navigation-drawer-width";
@@ -44,13 +45,6 @@ export interface NavigationDrawerStateValue {
   toggleSectionOpen: (id: string) => void;
   isFolderOpen: (id: string) => boolean;
   toggleFolderOpen: (id: string) => void;
-}
-
-function clampWidth(value: number) {
-  return Math.min(
-    NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.max,
-    Math.max(NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.min, Math.round(value)),
-  );
 }
 
 function isSettingsLikePath(path: string) {
@@ -145,7 +139,7 @@ export function createNavigationDrawerStore(
     setExpanded,
     width,
     setWidth: (next) => {
-      const clampedWidth = clampWidth(next);
+      const clampedWidth = clampNavigationDrawerWidth(Math.round(next));
       setWidthSignal(clampedWidth);
       persistNavigationDrawerWidthToCookie(clampedWidth);
     },
