@@ -52,7 +52,7 @@ export async function executeDownload(
 
   let bytes: Uint8Array;
   try {
-    bytes = await storage.get(fileAsset.storageKey);
+    bytes = await storage.getBytes(fileAsset.storageKey);
   } catch {
     return Err(
       domainError(
@@ -87,5 +87,7 @@ export async function executeDownload(
     now,
   });
 
-  return Ok({ artifact, fileAsset, bytes });
+  const body = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(body).set(bytes);
+  return Ok({ artifact, fileAsset, body });
 }

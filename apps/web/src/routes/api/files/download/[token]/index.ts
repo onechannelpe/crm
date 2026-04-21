@@ -24,13 +24,13 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
       return new Response(result.error.message, { status });
     }
 
-    const { fileAsset, bytes } = result.value;
+    const { fileAsset, body } = result.value;
     const headers = buildFileDownloadHeaders(
       fileAsset.detectedMime,
       fileAsset.safeDisplayFilename,
     );
 
-    return new Response(bytes.slice().buffer, { status: 200, headers });
+    return new Response(body, { status: 200, headers });
   } catch (err) {
     return new Response(
       err instanceof Error ? err.message : "Unexpected error",

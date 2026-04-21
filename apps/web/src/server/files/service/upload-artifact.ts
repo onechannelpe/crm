@@ -5,14 +5,24 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import { checkArtifactPolicy } from "../policy";
 import { assertValidTransition, isValidTransition } from "../transitions";
 import type { ArtifactStatus, WorkflowArtifact } from "../types";
-import { validateUploadFile } from "../validators";
-import type { UploadArtifactDeps } from "./contracts";
+import {
+  buildUploadMetadata,
+  createUploadStreamInspector,
+  validateUploadMetadata,
+} from "../validators";
+import type { UploadArtifactDeps, UploadArtifactInput } from "./contracts";
 import { actorFromCtx, buildStorageKey, emitEvent } from "./helpers";
+
+class UploadValidationError extends Error {
+  constructor(readonly reason: string) {
+    super(`upload_validation_${reason}`);
+  }
+}
 
 export async function uploadArtifactFile(
   ctx: AppContext,
   artifactId: number,
-  file: { name: string; bytes: Uint8Array },
+  file: UploadArtifactInput,
   deps: UploadArtifactDeps,
 ): Promise<Result<WorkflowArtifact, DomainError>> {
   const actor = actorFromCtx(ctx);
@@ -53,20 +63,19 @@ export async function uploadArtifactFile(
     await transitionTo("receiving");
     await emitEvent(repo, artifactId, "artifact.receiving", ctx, {
       originalFilename: file.name,
-      sizeBytes: file.bytes.length,
+      sizeBytes: file.sizeBytes ?? null,
     });
 
     await transitionTo("validating");
 
-    const validation = validateUploadFile(
+    const staticValidation = validateUploadMetadata(
       artifact.artifactType,
       file.name,
-      file.bytes,
     );
-    if (!validation.ok) {
-      const message = `File validation failed: ${validation.reason}`;
-      await failArtifact(validation.reason, message);
-      return Err(domainError("validation", validation.reason, message));
+    if (!staticValidation.ok) {
+      const message = `File validation failed: ${staticValidation.reason}`;
+      await failArtifact(staticValidation.reason, message);
+      return Err(domainError("validation", staticValidation.reason, message));
     }
 
     await transitionTo("scanning");
@@ -75,50 +84,86 @@ export async function uploadArtifactFile(
       artifact.artifactType,
       artifactId,
       now,
-      validation.extension,
+      staticValidation.extension,
     );
-    const { sha256 } = await storage.put(storageKey, file.bytes);
+    const inspector = createUploadStreamInspector(
+      artifact.artifactType,
+      staticValidation.extension,
+    );
+    try {
+      const storageResult = await storage.putFromWebStream({
+        key: storageKey,
+        stream: file.stream,
+        onChunk: (chunk) => {
+          const validationError = inspector.pushChunk(chunk);
+          if (validationError) {
+            throw new UploadValidationError(validationError.reason);
+          }
+        },
+      });
 
-    const fileAssetId = await repo.insertFileAsset({
-      storageKey,
-      originalFilename: file.name,
-      safeDisplayFilename: validation.safeDisplayFilename,
-      detectedMime: validation.detectedMime,
-      extension: validation.extension,
-      sizeBytes: file.bytes.length,
-      sha256Hex: sha256,
-      signatureKind: validation.signatureKind,
-      scanStatus: "clean",
-      now,
-    });
+      const streamValidation = inspector.finalize();
+      if (!streamValidation.ok) {
+        await storage.delete(storageKey);
+        const message = `File validation failed: ${streamValidation.reason}`;
+        await failArtifact(streamValidation.reason, message);
+        return Err(domainError("validation", streamValidation.reason, message));
+      }
 
-    await repo.insertFileBinding({
-      artifactId,
-      fileAssetId,
-      bindingRole: "source_upload",
-      versionNo: 1,
-      now,
-    });
-
-    await transitionTo("ready");
-
-    await emitEvent(repo, artifactId, "artifact.ready", ctx, {
-      fileAssetId,
-      sha256Hex: sha256,
-    });
-
-    const updated = await repo.findArtifactById(artifactId);
-    if (!updated) {
-      return Err(
-        domainError(
-          "not_found",
-          "artifact_vanished",
-          "Artifact not found after update",
-        ),
+      const metadata = buildUploadMetadata(
+        staticValidation.safeDisplayFilename,
+        staticValidation.extension,
+        streamValidation,
       );
-    }
 
-    return Ok(updated);
+      const fileAssetId = await repo.insertFileAsset({
+        storageKey,
+        originalFilename: file.name,
+        safeDisplayFilename: metadata.safeDisplayFilename,
+        detectedMime: metadata.detectedMime,
+        extension: metadata.extension,
+        sizeBytes: metadata.sizeBytes,
+        sha256Hex: storageResult.sha256,
+        signatureKind: metadata.signatureKind,
+        scanStatus: "clean",
+        now,
+      });
+
+      await repo.insertFileBinding({
+        artifactId,
+        fileAssetId,
+        bindingRole: "source_upload",
+        versionNo: 1,
+        now,
+      });
+
+      await transitionTo("ready");
+
+      await emitEvent(repo, artifactId, "artifact.ready", ctx, {
+        fileAssetId,
+        sha256Hex: storageResult.sha256,
+      });
+
+      const updated = await repo.findArtifactById(artifactId);
+      if (!updated) {
+        return Err(
+          domainError(
+            "not_found",
+            "artifact_vanished",
+            "Artifact not found after update",
+          ),
+        );
+      }
+
+      return Ok(updated);
+    } catch (err) {
+      if (err instanceof UploadValidationError) {
+        const message = `File validation failed: ${err.reason}`;
+        await failArtifact(err.reason, message);
+        return Err(domainError("validation", err.reason, message));
+      }
+      throw err;
+    }
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Unexpected upload error";

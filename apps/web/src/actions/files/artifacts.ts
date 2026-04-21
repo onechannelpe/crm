@@ -12,6 +12,7 @@ import type {
   ArtifactWithAsset,
   WorkflowArtifact,
 } from "~/server/files/types";
+import { ABSOLUTE_MAX_UPLOAD_BYTES } from "~/server/files/validators";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -93,13 +94,14 @@ export async function uploadArtifactAction(
       if (!(file instanceof File)) {
         throw validationError("file is required");
       }
-
-      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (file.size > ABSOLUTE_MAX_UPLOAD_BYTES) {
+        throw validationError("file_too_large");
+      }
 
       return uploadArtifactFile(
         ctx,
         safeArtifactId,
-        { name: file.name, bytes },
+        { name: file.name, sizeBytes: file.size, stream: file.stream() },
         getFileDeps(),
       );
     },

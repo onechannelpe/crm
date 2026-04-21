@@ -78,5 +78,5 @@ export interface ArtifactWithAsset {
 export interface DownloadReady {
   artifact: WorkflowArtifact;
   fileAsset: FileAsset;
-  bytes: Uint8Array;
+  body: ArrayBuffer;
 }

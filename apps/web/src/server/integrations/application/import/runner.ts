@@ -15,7 +15,7 @@ import { parseImportRows } from "./parse";
 
 export function createImportBatchRunner(deps: {
   executor: DatabaseExecutor;
-  blobStore: Pick<FileStorage, "get">;
+  blobStore: Pick<FileStorage, "getBytes">;
 }): ImportBatchRunner {
   const { executor, blobStore } = deps;
   return {
@@ -28,7 +28,7 @@ export function createImportBatchRunner(deps: {
       }
 
       const text = new TextDecoder("utf-8").decode(
-        await blobStore.get(job.file_path),
+        await blobStore.getBytes(job.file_path),
       );
       if (signal.aborted) {
         throw new Error("Job aborted");

@@ -5,6 +5,7 @@ import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
 import { requestArtifact } from "~/server/files/service/request-artifact";
 import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
+import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
 import { listIntegrationJobsQuery } from "~/server/integrations/application/list-integration-jobs";
 import { serverRuntime } from "~/server/runtime";
@@ -27,8 +28,9 @@ export async function uploadImportFile(
   if (typeof type !== "string" || !isImportType(type)) {
     throw validationError("type must be import_status or import_prioridad");
   }
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (file.size > maxUploadBytesForArtifactType("integration_import")) {
+    throw validationError("file_too_large");
+  }
 
   return runAction({
     actionName: "integration.upload_import",
@@ -54,7 +56,7 @@ export async function uploadImportFile(
       const uploadResult = await uploadArtifactFile(
         ctx,
         artifactId,
-        { name: file.name, bytes },
+        { name: file.name, sizeBytes: file.size, stream: file.stream() },
         { repo, storage },
       );
       if (isErr(uploadResult)) return uploadResult;

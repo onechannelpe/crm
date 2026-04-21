@@ -54,8 +54,9 @@ describe("executeDownload", () => {
         },
       },
       storage: {
-        put: async () => ({ sha256: "unused" }),
-        get: async () => new TextEncoder().encode("csv"),
+        putFromWebStream: async () => ({ sha256: "unused", sizeBytes: 0 }),
+        putBytes: async () => ({ sha256: "unused", sizeBytes: 0 }),
+        getBytes: async () => new TextEncoder().encode("csv"),
         delete: async () => {},
       },
     };

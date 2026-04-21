@@ -10,7 +10,7 @@ import type {
 
 interface CrmImportQueueDeps {
   runtime: IntegrationRuntime;
-  blobStore: Pick<FileStorage, "get">;
+  blobStore: Pick<FileStorage, "getBytes">;
   runner?: ImportBatchRunner;
 }
 

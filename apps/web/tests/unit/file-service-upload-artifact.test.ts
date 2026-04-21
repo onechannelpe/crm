@@ -52,6 +52,15 @@ function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
 
 const CSV_BYTES = new TextEncoder().encode("id,name\n1,test\n");
 
+function streamFromBytes(bytes: Uint8Array): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    start(controller) {
+      controller.enqueue(bytes);
+      controller.close();
+    },
+  });
+}
+
 describe("uploadArtifactFile", () => {
   it("marks artifact as failed on unexpected storage error", async () => {
     const updates: Array<{
@@ -71,10 +80,11 @@ describe("uploadArtifactFile", () => {
         insertEvent: async () => {},
       },
       storage: {
-        put: async () => {
+        putFromWebStream: async () => {
           throw new Error("storage unavailable");
         },
-        get: async () => new Uint8Array(),
+        putBytes: async () => ({ sha256: "unused", sizeBytes: 0 }),
+        getBytes: async () => new Uint8Array(),
         delete: async () => {},
       },
     };
@@ -82,7 +92,11 @@ describe("uploadArtifactFile", () => {
     const result = await uploadArtifactFile(
       makeContext(),
       42,
-      { name: "import.csv", bytes: CSV_BYTES },
+      {
+        name: "import.csv",
+        sizeBytes: CSV_BYTES.length,
+        stream: streamFromBytes(CSV_BYTES),
+      },
       deps,
     );
 
@@ -114,8 +128,12 @@ describe("uploadArtifactFile", () => {
         insertEvent: async () => {},
       },
       storage: {
-        put: async () => ({ sha256: "abc123" }),
-        get: async () => new Uint8Array(),
+        putFromWebStream: async () => ({
+          sha256: "abc123",
+          sizeBytes: CSV_BYTES.length,
+        }),
+        putBytes: async () => ({ sha256: "unused", sizeBytes: 0 }),
+        getBytes: async () => new Uint8Array(),
         delete: async () => {},
       },
     };
@@ -123,7 +141,11 @@ describe("uploadArtifactFile", () => {
     const result = await uploadArtifactFile(
       makeContext({ now: () => operationNow }),
       42,
-      { name: "import.csv", bytes: CSV_BYTES },
+      {
+        name: "import.csv",
+        sizeBytes: CSV_BYTES.length,
+        stream: streamFromBytes(CSV_BYTES),
+      },
       deps,
     );
 

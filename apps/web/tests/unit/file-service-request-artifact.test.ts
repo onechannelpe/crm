@@ -91,8 +91,15 @@ describe("requestArtifact sync export metadata", () => {
         insertEvent: async () => {},
       },
       storage: {
-        put: async () => ({ sha256: "hash" }),
-        get: async () => XLSX_BYTES,
+        putFromWebStream: async () => ({
+          sha256: "unused",
+          sizeBytes: XLSX_BYTES.length,
+        }),
+        putBytes: async () => ({
+          sha256: "hash",
+          sizeBytes: XLSX_BYTES.length,
+        }),
+        getBytes: async () => XLSX_BYTES,
         delete: async () => {},
       },
       syncExecutor: {

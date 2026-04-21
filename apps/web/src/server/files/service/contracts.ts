@@ -85,6 +85,12 @@ export interface UploadArtifactDeps {
   storage: FileStorage;
 }
 
+export interface UploadArtifactInput {
+  name: string;
+  sizeBytes?: number;
+  stream: ReadableStream<Uint8Array>;
+}
+
 export interface DownloadTokenDeps {
   repo: DownloadTokenRepo;
 }
@@ -111,7 +117,7 @@ export interface ArtifactServiceApi {
   uploadArtifactFile: (
     ctx: AppContext,
     artifactId: number,
-    file: { name: string; bytes: Uint8Array },
+    file: UploadArtifactInput,
     deps: UploadArtifactDeps,
   ) => Promise<Result<WorkflowArtifact, DomainError>>;
   requestDownloadToken: (

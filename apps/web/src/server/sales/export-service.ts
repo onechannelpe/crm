@@ -128,7 +128,7 @@ export function createSalesExportService(
     reportExportJobs: ReportExportJobsPort;
     salesRecords: SalesRecordsPort;
   },
-  blobStore: Pick<FileStorage, "put" | "delete">,
+  blobStore: Pick<FileStorage, "putBytes" | "delete">,
 ): SalesExportService {
   const processJob = async (
     job: ReportExportLeasedJob,
@@ -170,7 +170,7 @@ export function createSalesExportService(
       `sales-export-${job.id}-${timestamp}.${extension}`,
     );
 
-    const stored = await blobStore.put(storageKey, fileBytes);
+    const stored = await blobStore.putBytes(storageKey, fileBytes);
 
     if (signal?.aborted) throw new Error("Job aborted after store put");
 

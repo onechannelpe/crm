@@ -6,7 +6,11 @@ import { checkArtifactPolicy } from "../policy";
 import type { FileStorage } from "../storage";
 import { assertValidTransition } from "../transitions";
 import type { ArtifactType, ArtifactWithAsset } from "../types";
-import { validateUploadFile } from "../validators";
+import {
+  buildUploadMetadata,
+  createUploadStreamInspector,
+  validateUploadMetadata,
+} from "../validators";
 import type {
   RequestArtifactDeps,
   RequestArtifactInput,
@@ -50,24 +54,56 @@ async function runSyncExport(
   }
 
   const bytes = result.bytes;
-  const metadata = validateUploadFile(artifactType, result.filename, bytes);
-  if (!metadata.ok) {
+  const staticValidation = validateUploadMetadata(
+    artifactType,
+    result.filename,
+  );
+  if (!staticValidation.ok) {
     return Err(
       domainError(
         "unexpected",
         "sync_executor_invalid_output",
-        `Sync executor output failed validation: ${metadata.reason}`,
+        `Sync executor output failed validation: ${staticValidation.reason}`,
       ),
     );
   }
+  const inspector = createUploadStreamInspector(
+    artifactType,
+    staticValidation.extension,
+  );
+  const streamError = inspector.pushChunk(bytes);
+  if (streamError) {
+    return Err(
+      domainError(
+        "unexpected",
+        "sync_executor_invalid_output",
+        `Sync executor output failed validation: ${streamError.reason}`,
+      ),
+    );
+  }
+  const streamValidation = inspector.finalize();
+  if (!streamValidation.ok) {
+    return Err(
+      domainError(
+        "unexpected",
+        "sync_executor_invalid_output",
+        `Sync executor output failed validation: ${streamValidation.reason}`,
+      ),
+    );
+  }
+  const metadata = buildUploadMetadata(
+    staticValidation.safeDisplayFilename,
+    staticValidation.extension,
+    streamValidation,
+  );
 
   const storageKey = buildStorageKey(
     artifactType,
     artifactId,
     now,
-    metadata.extension,
+    staticValidation.extension,
   );
-  const { sha256 } = await storage.put(storageKey, bytes);
+  const stored = await storage.putBytes(storageKey, bytes);
 
   const fileAssetId = await repo.insertFileAsset({
     storageKey,
@@ -75,8 +111,8 @@ async function runSyncExport(
     safeDisplayFilename: metadata.safeDisplayFilename,
     detectedMime: metadata.detectedMime,
     extension: metadata.extension,
-    sizeBytes: bytes.length,
-    sha256Hex: sha256,
+    sizeBytes: metadata.sizeBytes,
+    sha256Hex: stored.sha256,
     signatureKind: metadata.signatureKind,
     scanStatus: "clean",
     now,
@@ -93,7 +129,7 @@ async function runSyncExport(
   await repo.updateArtifactStatus(artifactId, "ready", now);
   await emitEvent(repo, artifactId, "artifact.ready", ctx, {
     fileAssetId,
-    sha256Hex: sha256,
+    sha256Hex: stored.sha256,
   });
 
   return Ok(undefined);
