@@ -4,12 +4,15 @@ import {
   createNavigationDrawerStore,
   type NavigationDrawerStateValue,
 } from "./navigation-drawer-store";
+import { readNavigationDrawerWidthFromCookie } from "./navigation-drawer-width";
 
 const NavigationDrawerStateContext =
   createContext<NavigationDrawerStateValue>();
 
 export function NavigationDrawerStateProvider(props: ParentProps) {
-  const value = createNavigationDrawerStore();
+  const value = createNavigationDrawerStore({
+    initialWidth: readNavigationDrawerWidthFromCookie(),
+  });
 
   return (
     <NavigationDrawerStateContext.Provider value={value}>

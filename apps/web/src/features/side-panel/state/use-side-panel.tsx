@@ -2,7 +2,6 @@ import {
   type Accessor,
   type ParentProps,
   createContext,
-  onMount,
   useContext,
 } from "solid-js";
 
@@ -12,7 +11,8 @@ import type {
   SidePanelPageDefinition,
   SidePanelPageState,
 } from "../types/side-panel-page";
-import { createSidePanelStore, readStoredSidePanelWidth } from "./store";
+import { readSidePanelWidthFromCookie } from "./side-panel-width";
+import { createSidePanelStore } from "./store";
 
 export type SidePanelContextValue = {
   isOpen: Accessor<boolean>;
@@ -42,7 +42,9 @@ export type SidePanelContextValue = {
 const SidePanelContext = createContext<SidePanelContextValue>();
 
 export function SidePanelProvider(props: ParentProps) {
-  const store = createSidePanelStore();
+  const store = createSidePanelStore({
+    initialWidth: readSidePanelWidthFromCookie(),
+  });
   const { state } = store;
   const currentEntry: Accessor<SidePanelNavigationEntry | null> = () =>
     selectCurrentEntry(state);
@@ -67,14 +69,6 @@ export function SidePanelProvider(props: ParentProps) {
     setSearchText: store.setSearchText,
     setPanelWidth: store.setPanelWidth,
   };
-
-  onMount(() => {
-    const persistedWidth = readStoredSidePanelWidth();
-
-    if (persistedWidth !== state.panelWidth) {
-      store.setPanelWidth(persistedWidth);
-    }
-  });
 
   return (
     <SidePanelContext.Provider value={value}>

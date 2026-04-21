@@ -1,6 +1,9 @@
 import { onCleanup } from "solid-js";
 
-import { SIDE_PANEL_WIDTH_MAX, SIDE_PANEL_WIDTH_MIN } from "../state/store";
+import {
+  SIDE_PANEL_WIDTH_CONSTRAINTS,
+  SIDE_PANEL_WIDTH_VAR,
+} from "../state/side-panel-width";
 
 type UseResizablePanelProps = {
   currentWidth: number;
@@ -28,13 +31,16 @@ export function useResizablePanel(
     // Panel is on the right: dragging left (negative delta) increases width
     const delta = startX - e.clientX;
     const raw = startWidth + delta;
-    const clamped = Math.min(SIDE_PANEL_WIDTH_MAX, Math.max(0, raw));
+    const clamped = Math.min(
+      SIDE_PANEL_WIDTH_CONSTRAINTS.max,
+      Math.max(0, raw),
+    );
 
     currentComputedWidth = clamped;
 
     document.documentElement.style.setProperty(
-      "--side-panel-width",
-      `${Math.max(SIDE_PANEL_WIDTH_MIN, clamped)}px`,
+      SIDE_PANEL_WIDTH_VAR,
+      `${Math.max(SIDE_PANEL_WIDTH_CONSTRAINTS.min, clamped)}px`,
     );
 
     if (!resizeStarted && Math.abs(delta) > 4) {
@@ -52,7 +58,7 @@ export function useResizablePanel(
     document.removeEventListener("pointermove", handlePointerMove);
     document.removeEventListener("pointerup", handlePointerUp);
 
-    if (currentComputedWidth <= SIDE_PANEL_WIDTH_MIN) {
+    if (currentComputedWidth <= SIDE_PANEL_WIDTH_CONSTRAINTS.min) {
       props.onCollapse();
     } else {
       props.onWidthChange(currentComputedWidth);

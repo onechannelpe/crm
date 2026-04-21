@@ -8,17 +8,15 @@ import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
+import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "../constants/navigation-drawer-click-outside-id";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
+import { NAVIGATION_DRAWER_WIDTH_CONSTRAINTS } from "../state/navigation-drawer-width";
 
 import styles from "./navigation-drawer-shell.module.css";
-
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 350;
 
 interface NavigationDrawerProps {
   title: string;
@@ -66,8 +64,11 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
 
     const handleMove = (moveEvent: MouseEvent) => {
       const nextWidth = Math.min(
-        MAX_WIDTH,
-        Math.max(MIN_WIDTH, startWidth + moveEvent.clientX - startX),
+        NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.max,
+        Math.max(
+          NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.min,
+          startWidth + moveEvent.clientX - startX,
+        ),
       );
 
       setWidth(nextWidth);

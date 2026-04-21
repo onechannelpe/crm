@@ -2,11 +2,16 @@ import { createSignal } from "solid-js";
 
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
 
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 350;
-const DEFAULT_WIDTH = 220;
+import {
+  NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
+  persistNavigationDrawerWidthToCookie,
+} from "./navigation-drawer-width";
 
 type MobileDrawerType = "main" | "settings";
+
+type NavigationDrawerStoreOptions = {
+  initialWidth?: number;
+};
 
 export interface NavigationDrawerStateValue {
   expanded: () => boolean;
@@ -42,16 +47,23 @@ export interface NavigationDrawerStateValue {
 }
 
 function clampWidth(value: number) {
-  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(value)));
+  return Math.min(
+    NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.max,
+    Math.max(NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.min, Math.round(value)),
+  );
 }
 
 function isSettingsLikePath(path: string) {
   return isSettingsRoutePath(path);
 }
 
-export function createNavigationDrawerStore(): NavigationDrawerStateValue {
+export function createNavigationDrawerStore(
+  options?: NavigationDrawerStoreOptions,
+): NavigationDrawerStateValue {
   const [expanded, setExpandedSignal] = createSignal(true);
-  const [width, setWidthSignal] = createSignal(DEFAULT_WIDTH);
+  const [width, setWidthSignal] = createSignal(
+    options?.initialWidth ?? NAVIGATION_DRAWER_WIDTH_CONSTRAINTS.default,
+  );
   const [isMobile, setIsMobile] = createSignal(false);
   const [currentMobileDrawer, setCurrentMobileDrawer] =
     createSignal<MobileDrawerType>("main");
@@ -132,7 +144,11 @@ export function createNavigationDrawerStore(): NavigationDrawerStateValue {
     expanded,
     setExpanded,
     width,
-    setWidth: (next) => setWidthSignal(clampWidth(next)),
+    setWidth: (next) => {
+      const clampedWidth = clampWidth(next);
+      setWidthSignal(clampedWidth);
+      persistNavigationDrawerWidthToCookie(clampedWidth);
+    },
     isMobile,
     setIsMobile,
     currentMobileDrawer,

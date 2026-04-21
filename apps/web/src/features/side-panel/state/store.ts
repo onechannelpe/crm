@@ -9,42 +9,30 @@ import type {
   SidePanelPageState,
 } from "../types/side-panel-page";
 import type { SidePanelState } from "../types/side-panel-state";
+import {
+  SIDE_PANEL_WIDTH_CONSTRAINTS,
+  persistSidePanelWidthToCookie,
+} from "./side-panel-width";
 
-// Constants
-
-export const SIDE_PANEL_WIDTH_KEY = "side-panel-width";
-export const SIDE_PANEL_WIDTH_DEFAULT = 400;
-export const SIDE_PANEL_WIDTH_MIN = 320;
-export const SIDE_PANEL_WIDTH_MAX = 600;
+type SidePanelStoreOptions = {
+  initialWidth?: number;
+};
 
 function clampPanelWidth(width: number): number {
-  return Math.min(SIDE_PANEL_WIDTH_MAX, Math.max(SIDE_PANEL_WIDTH_MIN, width));
+  return Math.min(
+    SIDE_PANEL_WIDTH_CONSTRAINTS.max,
+    Math.max(SIDE_PANEL_WIDTH_CONSTRAINTS.min, width),
+  );
 }
 
-export function readStoredSidePanelWidth(): number {
-  try {
-    const raw = localStorage.getItem(SIDE_PANEL_WIDTH_KEY);
-    if (raw === null) return SIDE_PANEL_WIDTH_DEFAULT;
-    const parsed = parseInt(raw, 10);
-    if (Number.isNaN(parsed)) {
-      return SIDE_PANEL_WIDTH_DEFAULT;
-    }
-    return clampPanelWidth(parsed);
-  } catch {
-    return SIDE_PANEL_WIDTH_DEFAULT;
-  }
-}
-
-// Store factory
-
-export function createSidePanelStore() {
+export function createSidePanelStore(options?: SidePanelStoreOptions) {
   const [state, setState] = createStore<SidePanelState>({
     isOpen: false,
     isClosing: false,
     stack: [],
     pageStateById: {},
     searchText: "",
-    panelWidth: SIDE_PANEL_WIDTH_DEFAULT,
+    panelWidth: options?.initialWidth ?? SIDE_PANEL_WIDTH_CONSTRAINTS.default,
   });
 
   function applyAction(action: Parameters<typeof reduceSidePanelPatch>[1]) {
@@ -115,11 +103,7 @@ export function createSidePanelStore() {
       type: "set-panel-width",
       width: nextWidth,
     });
-    try {
-      localStorage.setItem(SIDE_PANEL_WIDTH_KEY, String(nextWidth));
-    } catch {
-      // localStorage may be unavailable in some environments
-    }
+    persistSidePanelWidthToCookie(nextWidth);
   };
 
   return {

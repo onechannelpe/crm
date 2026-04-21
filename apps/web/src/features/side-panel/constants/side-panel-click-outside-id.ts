@@ -1,6 +1,6 @@
-export const SIDE_PANEL_CLICK_OUTSIDE_ID = "side-panel";
+import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "~/features/navigation-drawer/constants/navigation-drawer-click-outside-id";
 
-export const NAVIGATION_DRAWER_CLICK_OUTSIDE_ID = "navigation-drawer";
+export const SIDE_PANEL_CLICK_OUTSIDE_ID = "side-panel";
 export const PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID =
   "page-header-side-panel-button";
 
