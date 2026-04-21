@@ -13,7 +13,12 @@ import type {
   RequestArtifactRepo,
   SyncExecutor,
 } from "./contracts";
-import { actorFromCtx, buildPolicySnapshot, emitEvent } from "./helpers";
+import {
+  actorFromCtx,
+  buildPolicySnapshot,
+  buildStorageKey,
+  emitEvent,
+} from "./helpers";
 
 const DIRECTION_MAP: Record<
   ArtifactType,
@@ -56,7 +61,12 @@ async function runSyncExport(
     );
   }
 
-  const storageKey = `${artifactType}-${artifactId}-${now}.${metadata.extension}`;
+  const storageKey = buildStorageKey(
+    artifactType,
+    artifactId,
+    now,
+    metadata.extension,
+  );
   const { sha256 } = await storage.put(storageKey, bytes);
 
   const fileAssetId = await repo.insertFileAsset({

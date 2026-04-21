@@ -1,5 +1,6 @@
 "use server";
 
+import { validationError } from "~/lib/app-errors";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { listArtifacts } from "~/server/files/service/list-artifacts";
 import { requestArtifact } from "~/server/files/service/request-artifact";
@@ -27,7 +28,7 @@ function parseListLimit(value: number | undefined): number {
 function parseListOffset(value: number | undefined): number {
   if (value === undefined) return 0;
   if (!Number.isInteger(value) || value < 0) {
-    throw new Error("offset must be a non-negative integer");
+    throw validationError("offset must be a non-negative integer");
   }
   return value;
 }
@@ -90,7 +91,7 @@ export async function uploadArtifactAction(
     execute: async (ctx) => {
       const file = formData.get("file");
       if (!(file instanceof File)) {
-        throw new Error("file is required");
+        throw validationError("file is required");
       }
 
       const bytes = new Uint8Array(await file.arrayBuffer());

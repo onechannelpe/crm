@@ -1,8 +1,9 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import type { AppContext } from "~/server/shared/action-runtime";
 
 import type { PolicyActor } from "../policy";
+import type { ArtifactType } from "../types";
 import type { ArtifactEventRepo } from "./contracts";
 
 export function actorFromCtx(ctx: AppContext): PolicyActor {
@@ -44,6 +45,16 @@ export async function emitEvent(
     details,
     now: ctx.now(),
   });
+}
+
+export function buildStorageKey(
+  artifactType: ArtifactType,
+  artifactId: number,
+  now: number,
+  extension: string,
+): string {
+  const uniqueSuffix = randomUUID().replaceAll("-", "").slice(0, 12);
+  return `${artifactType}-${artifactId}-${now}-${uniqueSuffix}.${extension}`;
 }
 
 export const DOWNLOAD_READY_STATUSES = new Set(["ready", "completed"]);

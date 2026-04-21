@@ -7,7 +7,7 @@ import { assertValidTransition, isValidTransition } from "../transitions";
 import type { ArtifactStatus, WorkflowArtifact } from "../types";
 import { validateUploadFile } from "../validators";
 import type { UploadArtifactDeps } from "./contracts";
-import { actorFromCtx, emitEvent } from "./helpers";
+import { actorFromCtx, buildStorageKey, emitEvent } from "./helpers";
 
 export async function uploadArtifactFile(
   ctx: AppContext,
@@ -71,7 +71,12 @@ export async function uploadArtifactFile(
 
     await transitionTo("scanning");
 
-    const storageKey = `${artifact.artifactType}-${artifactId}-${now}${validation.extension ? `.${validation.extension}` : ""}`;
+    const storageKey = buildStorageKey(
+      artifact.artifactType,
+      artifactId,
+      now,
+      validation.extension,
+    );
     const { sha256 } = await storage.put(storageKey, file.bytes);
 
     const fileAssetId = await repo.insertFileAsset({

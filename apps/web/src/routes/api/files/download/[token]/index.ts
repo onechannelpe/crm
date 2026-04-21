@@ -30,9 +30,7 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
       fileAsset.safeDisplayFilename,
     );
 
-    const body = bytes.slice().buffer;
-
-    return new Response(body, { status: 200, headers });
+    return new Response(bytes.slice().buffer, { status: 200, headers });
   } catch (err) {
     return new Response(
       err instanceof Error ? err.message : "Unexpected error",
