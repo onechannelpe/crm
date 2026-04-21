@@ -1,0 +1,67 @@
+.stepStack {
+  display: grid;
+  gap: 12px;
+}
+
+.helperText {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+  text-align: left;
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.choiceCard {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 12px;
+  min-height: 96px;
+  padding: 14px;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  text-align: left;
+  font: inherit;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.choiceCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.choiceTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.configuredBadge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--success-foreground, #16a34a);
+  background: var(--success-bg, #dcfce7);
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.choiceDescription {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+@media (max-width: 800px) {
+  .choiceGrid {
+    grid-template-columns: 1fr;
+  }
+}

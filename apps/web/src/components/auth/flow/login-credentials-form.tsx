@@ -13,8 +13,7 @@ import { LoginPasskeyPanel } from "./login-passkey-panel";
 
 import shellStyles from "./auth-flow-shell.module.css";
 import linkStyles from "./auth-links.module.css";
-import styles from "~/routes/auth/auth-shell.module.css";
-import pageStyles from "~/routes/auth/login-page.module.css";
+import styles from "./login-credentials-form.module.css";
 
 export function LoginCredentialsForm() {
   const loginMethods = useLoginFlow();
@@ -57,9 +56,9 @@ export function LoginCredentialsForm() {
   }
 
   return (
-    <div class={pageStyles.formStack}>
+    <div class={styles.formStack}>
       <form
-        class={`${pageStyles.formStack} ${pageStyles.credentialForm}`}
+        class={`${styles.formStack} ${styles.credentialForm}`}
         action={passwordLoginMutation}
         method="post"
         onSubmit={() => {

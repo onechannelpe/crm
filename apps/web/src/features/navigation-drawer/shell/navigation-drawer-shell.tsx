@@ -7,18 +7,22 @@ import Search from "~/components/icons/search";
 import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { useResizeCoordination } from "~/components/ui/layout/resizable-panel/resize-coordination-provider";
+import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
+import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "../constants/navigation-drawer-click-outside-id";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
+import {
+  NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
+  NAVIGATION_DRAWER_WIDTH_VAR,
+} from "../state/navigation-drawer-width";
+import { NavigationDrawerWidthEffect } from "./navigation-drawer-width-effect";
 
 import styles from "./navigation-drawer-shell.module.css";
-
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 350;
 
 interface NavigationDrawerProps {
   title: string;
@@ -42,6 +46,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     memorizeNavigationState,
   } = useNavigationDrawerState();
   const isSettingsDrawer = useIsSettingsDrawer();
+  const { setResizeIsActive } = useResizeCoordination();
 
   const [resizing, setResizing] = createSignal(false);
 
@@ -53,35 +58,23 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     getContainer: () => drawerPanelRef,
   });
 
-  const handleResizeStart = (event: MouseEvent) => {
-    if (!expanded() || isMobile() || isSettingsDrawer()) {
-      return;
-    }
-
-    event.preventDefault();
-    setResizing(true);
-
-    const startX = event.clientX;
-    const startWidth = width();
-
-    const handleMove = (moveEvent: MouseEvent) => {
-      const nextWidth = Math.min(
-        MAX_WIDTH,
-        Math.max(MIN_WIDTH, startWidth + moveEvent.clientX - startX),
-      );
-
-      setWidth(nextWidth);
-    };
-
-    const handleEnd = () => {
+  const { onPointerDown } = useResizablePanel({
+    side: "right",
+    constraints: NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
+    getCurrentWidth: width,
+    onWidthChange: setWidth,
+    onCollapse: () => setExpanded(false),
+    onResizeStart: () => {
+      setResizing(true);
+      setResizeIsActive(false);
+    },
+    onResizeEnd: () => {
       setResizing(false);
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleEnd);
-    };
-
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleEnd);
-  };
+      setResizeIsActive(true);
+    },
+    cssVariableName: NAVIGATION_DRAWER_WIDTH_VAR,
+    dragThresholdPx: 4,
+  });
 
   const memorizeNavigation = () =>
     memorizeNavigationState(location.pathname + location.search, expanded());
@@ -97,24 +90,24 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
       class={styles.drawerHost}
       data-click-outside-id={NAVIGATION_DRAWER_CLICK_OUTSIDE_ID}
     >
+      <NavigationDrawerWidthEffect />
       <div
         class={cn(
           styles.drawer,
+          resizing() && styles.drawerResizing,
           props.className,
           isSettingsDrawer() && styles.drawerSettings,
-          !expanded() && styles.drawerCollapsed,
+          expanded() && !isMobile() && styles.drawerExpandedDesktop,
+          !expanded() && !isMobile() && styles.drawerCollapsedDesktop,
           isMobile() && expanded() && styles.drawerOpenMobile,
           isMobile() && !expanded() && styles.drawerClosedMobile,
         )}
-        style={{
-          width: isMobile() ? undefined : expanded() ? `${width()}px` : "40px",
-        }}
       >
         <div
           ref={(element) => {
             drawerPanelRef = element;
           }}
-          class={cn(styles.drawerInner, !expanded() && styles.drawerCollapsed)}
+          class={styles.drawerInner}
         >
           <Show
             when={isSettingsDrawer()}
@@ -175,7 +168,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
             <button
               type="button"
               class={cn(styles.resizeHandle, resizing() && styles.resizing)}
-              onMouseDown={handleResizeStart}
+              onPointerDown={onPointerDown}
               aria-label="Redimensionar barra lateral"
             />
           </Show>

@@ -52,9 +52,8 @@
   --line-height-md: 1.1;
 
   /* navigation */
-  --nav-drawer-width: 220px;
+  --navigation-drawer-width: 220px;
   --nav-drawer-collapsed-width: 40px;
-  --nav-drawer-current-width: var(--nav-drawer-width);
   --topbar-height: 39px;
 
   /* table */

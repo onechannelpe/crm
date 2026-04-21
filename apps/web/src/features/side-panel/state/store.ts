@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import {
@@ -9,42 +10,27 @@ import type {
   SidePanelPageState,
 } from "../types/side-panel-page";
 import type { SidePanelState } from "../types/side-panel-state";
+import {
+  clampSidePanelWidth,
+  SIDE_PANEL_WIDTH_CONSTRAINTS,
+  persistSidePanelWidthToCookie,
+} from "./side-panel-width";
 
-// Constants
+type SidePanelStoreOptions = {
+  initialWidth?: number;
+};
 
-export const SIDE_PANEL_WIDTH_KEY = "side-panel-width";
-export const SIDE_PANEL_WIDTH_DEFAULT = 400;
-export const SIDE_PANEL_WIDTH_MIN = 320;
-export const SIDE_PANEL_WIDTH_MAX = 600;
+export function createSidePanelStore(options?: SidePanelStoreOptions) {
+  const [panelWidth, setPanelWidthSignal] = createSignal(
+    options?.initialWidth ?? SIDE_PANEL_WIDTH_CONSTRAINTS.default,
+  );
 
-function clampPanelWidth(width: number): number {
-  return Math.min(SIDE_PANEL_WIDTH_MAX, Math.max(SIDE_PANEL_WIDTH_MIN, width));
-}
-
-export function readStoredSidePanelWidth(): number {
-  try {
-    const raw = localStorage.getItem(SIDE_PANEL_WIDTH_KEY);
-    if (raw === null) return SIDE_PANEL_WIDTH_DEFAULT;
-    const parsed = parseInt(raw, 10);
-    if (Number.isNaN(parsed)) {
-      return SIDE_PANEL_WIDTH_DEFAULT;
-    }
-    return clampPanelWidth(parsed);
-  } catch {
-    return SIDE_PANEL_WIDTH_DEFAULT;
-  }
-}
-
-// Store factory
-
-export function createSidePanelStore() {
   const [state, setState] = createStore<SidePanelState>({
     isOpen: false,
     isClosing: false,
     stack: [],
     pageStateById: {},
     searchText: "",
-    panelWidth: SIDE_PANEL_WIDTH_DEFAULT,
   });
 
   function applyAction(action: Parameters<typeof reduceSidePanelPatch>[1]) {
@@ -110,20 +96,14 @@ export function createSidePanelStore() {
   };
 
   const setPanelWidth = (width: number) => {
-    const nextWidth = clampPanelWidth(width);
-    applyAction({
-      type: "set-panel-width",
-      width: nextWidth,
-    });
-    try {
-      localStorage.setItem(SIDE_PANEL_WIDTH_KEY, String(nextWidth));
-    } catch {
-      // localStorage may be unavailable in some environments
-    }
+    const nextWidth = clampSidePanelWidth(width);
+    setPanelWidthSignal(nextWidth);
+    persistSidePanelWidthToCookie(nextWidth);
   };
 
   return {
     state,
+    panelWidth,
     openPanel,
     closePanel,
     navigateTo,

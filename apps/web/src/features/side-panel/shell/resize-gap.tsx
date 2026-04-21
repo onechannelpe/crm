@@ -1,15 +1,19 @@
 import type { JSX } from "solid-js";
 
+import { useResizeCoordination } from "~/components/ui/layout/resizable-panel/resize-coordination-provider";
+import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 import { cn } from "~/lib/utils";
 
-import { useResizablePanel } from "../hooks/use-resizable-panel";
+import {
+  SIDE_PANEL_WIDTH_CONSTRAINTS,
+  SIDE_PANEL_WIDTH_VAR,
+} from "../state/side-panel-width";
 import { useSidePanel } from "../state/use-side-panel";
 
 import styles from "./resize-gap.module.css";
 
 type ResizeGapProps = {
-  onResizeStart?: () => void;
-  onResizeEnd?: () => void;
+  isInteractive?: boolean;
 };
 
 type ResizeGapFrameProps = {
@@ -30,21 +34,24 @@ export function ResizeGapFrame(props: ResizeGapFrameProps) {
 
 export function ResizeGap(props: ResizeGapProps) {
   const { isOpen, panelWidth, setPanelWidth, closePanel } = useSidePanel();
+  const { setResizeIsActive } = useResizeCoordination();
 
   const { onPointerDown } = useResizablePanel({
-    get currentWidth() {
-      return panelWidth();
-    },
-    onWidthChange: (w) => {
-      props.onResizeEnd?.();
-      setPanelWidth(w);
-    },
-    onCollapse: () => {
-      props.onResizeEnd?.();
-      closePanel();
-    },
-    onResizeStart: () => props.onResizeStart?.(),
+    side: "left",
+    constraints: SIDE_PANEL_WIDTH_CONSTRAINTS,
+    getCurrentWidth: panelWidth,
+    onWidthChange: setPanelWidth,
+    onCollapse: closePanel,
+    onResizeStart: () => setResizeIsActive(false),
+    onResizeEnd: () => setResizeIsActive(true),
+    cssVariableName: SIDE_PANEL_WIDTH_VAR,
+    dragThresholdPx: 4,
   });
 
-  return <ResizeGapFrame isOpen={isOpen()} onPointerDown={onPointerDown} />;
+  return (
+    <ResizeGapFrame
+      isOpen={isOpen()}
+      onPointerDown={props.isInteractive === false ? undefined : onPointerDown}
+    />
+  );
 }

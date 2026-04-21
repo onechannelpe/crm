@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import styles from "~/routes/onboarding-page.module.css";
+import styles from "./onboarding-security-step.module.css";
 
 interface OnboardingSecurityStepProps {
   hasPasskey: boolean;

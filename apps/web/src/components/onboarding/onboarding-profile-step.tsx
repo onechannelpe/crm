@@ -4,7 +4,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
 import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
 
-import styles from "~/routes/onboarding-page.module.css";
+import styles from "./onboarding-profile-step.module.css";
 
 interface OnboardingProfileStepProps {
   email: string;

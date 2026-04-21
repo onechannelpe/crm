@@ -1,80 +1,3 @@
-.stepStack {
-  display: grid;
-  gap: 12px;
-}
-
-.formStack {
-  display: grid;
-  gap: 12px;
-}
-
-.helperHeader {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--foreground);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-}
-
-.helperCopy {
-  display: grid;
-  gap: 8px;
-  text-align: left;
-}
-
-.helperText {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  line-height: 1.5;
-  text-align: left;
-}
-
-.choiceGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.choiceCard {
-  appearance: none;
-  border: 1px solid var(--border);
-  background: var(--panel-bg);
-  border-radius: 12px;
-  min-height: 96px;
-  padding: 14px;
-  display: grid;
-  align-content: start;
-  gap: 4px;
-  text-align: left;
-  font: inherit;
-  color: var(--foreground);
-  cursor: pointer;
-}
-
-.choiceTitle {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
-}
-
-.choiceDescription {
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-}
-
-.configuredDescription {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  line-height: 1.5;
-}
-
-.totpStack {
-  display: grid;
-  gap: 12px;
-}
-
 .footerActions {
   display: flex;
   justify-content: flex-end;
@@ -96,156 +19,11 @@
   transition: width 300ms ease;
 }
 
-.choiceCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.totpStack {
+  display: grid;
+  gap: 12px;
 }
 
-.configuredBadge {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--success-foreground, #16a34a);
-  background: var(--success-bg, #dcfce7);
-  padding: 2px 6px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.helperTextError {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--destructive, #dc2626);
-  line-height: 1.5;
-  text-align: left;
-}
-
-/* Profile step (confirm info) */
-.confirmHint {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  line-height: 1.5;
-}
-
-.infoList {
-  display: flex;
-  flex-direction: column;
-}
-
-.infoRow {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.infoRow:first-child {
-  padding-top: 0;
-}
-
-.infoRow:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.infoRowMissing {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.infoRowMissing:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.infoKey {
-  flex-shrink: 0;
-  width: 64px;
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  font-weight: var(--font-weight-medium);
-}
-
-.infoValue {
-  font-size: var(--font-size-sm);
-  color: var(--foreground);
-  word-break: break-all;
-}
-
-.infoValueMissing {
-  font-size: var(--font-size-sm);
-  color: color-mix(in oklab, var(--destructive, #dc2626) 80%, transparent);
-  font-style: italic;
-}
-
-/* Phone field */
-.phoneField {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.phoneLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.phoneLabelText {
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  font-weight: var(--font-weight-medium);
-}
-
-.phoneRow {
-  display: flex;
-  align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--input-bg, var(--panel-bg));
-  transition: outline 0.15s;
-}
-
-.phoneRow:focus-within {
-  outline: 2px solid var(--foreground);
-  outline-offset: 1px;
-}
-
-.phonePrefix {
-  padding: 10px 10px 10px 14px;
-  font-size: var(--font-size-body);
-  color: var(--muted-foreground);
-  font-weight: var(--font-weight-medium);
-  background: color-mix(in oklab, var(--border) 40%, transparent);
-  user-select: none;
-  white-space: nowrap;
-  border-right: 1px solid var(--border);
-}
-
-.phoneInput {
-  flex: 1;
-  padding: 10px 12px;
-  font: inherit;
-  font-size: var(--font-size-body);
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--foreground);
-  min-width: 0;
-}
-
-.phoneInput::placeholder {
-  color: var(--muted-foreground);
-}
-
-/* TOTP inline enrollment */
 .totpInline {
   display: grid;
   gap: 12px;
@@ -265,7 +43,6 @@
   border: 1px solid var(--border);
 }
 
-/* Secret key disclosure */
 .secretDetails {
   font-size: var(--font-size-sm);
   color: var(--muted-foreground);
@@ -314,7 +91,6 @@
   text-align: center;
 }
 
-/* Passkey inline enrollment */
 .passkeyEnrollStep {
   display: grid;
   gap: 12px;
@@ -337,10 +113,6 @@
 }
 
 @media (max-width: 800px) {
-  .choiceGrid {
-    grid-template-columns: 1fr;
-  }
-
   .footerActions {
     flex-direction: column-reverse;
   }

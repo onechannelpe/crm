@@ -13,8 +13,20 @@
   max-height: 100%;
   overflow: hidden;
   position: relative;
-  width: var(--nav-drawer-current-width);
+  width: var(--nav-drawer-collapsed-width);
   transition: width var(--motion-normal) var(--ease-standard);
+}
+
+.drawerExpandedDesktop {
+  width: var(--navigation-drawer-width);
+}
+
+.drawerCollapsedDesktop {
+  width: var(--nav-drawer-collapsed-width);
+}
+
+.drawerResizing {
+  transition: none;
 }
 
 .drawerInner {

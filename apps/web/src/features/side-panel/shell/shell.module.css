@@ -6,12 +6,12 @@
   width: 0;
 }
 
-.wrapperOpen {
-  width: var(--side-panel-width);
-}
-
 .wrapperResizing {
   transition: none;
+}
+
+.wrapperOpen {
+  width: var(--side-panel-width);
 }
 
 .aside {

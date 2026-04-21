@@ -1,5 +1,6 @@
 import { type JSX, Show, onCleanup, onMount } from "solid-js";
 
+import { useResizeCoordination } from "~/components/ui/layout/resizable-panel/resize-coordination-provider";
 import { cn } from "~/lib/utils";
 
 import {
@@ -12,7 +13,6 @@ import styles from "./shell.module.css";
 
 type PanelShellProps = {
   renderContent?: () => JSX.Element;
-  isResizing?: boolean;
   isInteractive?: boolean;
   shouldRenderChildren?: boolean;
 };
@@ -20,6 +20,7 @@ type PanelShellProps = {
 export function PanelShell(props: PanelShellProps) {
   const { isOpen, isClosing, closePanel, onCloseAnimationComplete } =
     useSidePanel();
+  const { resizeIsActive } = useResizeCoordination();
 
   function handleTransitionEnd(event: TransitionEvent) {
     if (event.propertyName === "width" && !isOpen() && isClosing()) {
@@ -55,8 +56,9 @@ export function PanelShell(props: PanelShellProps) {
       class={cn(
         styles.wrapper,
         isOpen() && styles.wrapperOpen,
-        props.isResizing && styles.wrapperResizing,
+        !resizeIsActive() && styles.wrapperResizing,
       )}
+      data-side-panel=""
       data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
       onTransitionEnd={handleTransitionEnd}
     >
