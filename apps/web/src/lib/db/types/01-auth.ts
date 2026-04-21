@@ -18,6 +18,9 @@ export type AuthFunnelMethodValue =
   | "password_totp"
   | "passkey"
   | "google";
+
+export type AuthMethodValue = "password" | "google" | "passkey";
+
 export type AuthFunnelOutcomeValue =
   | "viewed"
   | "failed"
@@ -29,7 +32,7 @@ export type AuthFunnelOutcomeValue =
 export interface LoginFlowsTable {
   id: Generated<number>;
   identifier: string;
-  primary_auth_method: "password" | "google" | "passkey";
+  primary_auth_method: AuthMethodValue;
   user_id: number | null;
   challenge_id: number | null;
   state: "totp" | "passkey";
@@ -81,7 +84,7 @@ export interface UserSessionsTable {
   branch_id: number;
   role: import("./02-crm").UsersTable["role"];
   session_class: "pre_auth" | "app";
-  primary_auth_method: "password" | "google" | "passkey";
+  primary_auth_method: AuthMethodValue;
   strong_auth_method: "totp" | "passkey" | "federated" | null;
   strong_auth_at: number | null;
   ip_address: string | null;
