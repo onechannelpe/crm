@@ -4,6 +4,7 @@ import { useResizeCoordination } from "~/components/ui/layout/resizable-panel/re
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 import { cn } from "~/lib/utils";
 
+import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 import {
   SIDE_PANEL_WIDTH_CONSTRAINTS,
   SIDE_PANEL_WIDTH_VAR,
@@ -26,6 +27,7 @@ export function ResizeGapFrame(props: ResizeGapFrameProps) {
     <div
       class={cn(styles.gap, !props.isOpen && styles.gapClosed)}
       onPointerDown={props.onPointerDown}
+      data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
       role="separator"
       aria-orientation="vertical"
     />
