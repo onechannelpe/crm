@@ -135,7 +135,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
   it("denies back_office from reading artifact in different scope", () => {
     const artifact = makeArtifact({ scopeBranchId: 99 });
     const result = checkArtifactPolicy(
-      makeActor({ role: "back_office", branchId: 1 }),
+      makeActor({ role: "back_office", branchId: 1, userId: 11 }),
       artifact,
       "artifact.read",
     );
