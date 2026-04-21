@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { createFileStorage } from "../../src/server/files/storage";
 import { downloadSalesExportById } from "../../src/server/sales-records/application/download-export";
-import { createSalesExportBlobStore } from "../../src/server/sales/export-blob-store";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -10,6 +10,12 @@ import {
 
 describe("sales export download access", () => {
   let ctx: TestDbContext;
+
+  async function writeBlob(storageKey: string, content: Uint8Array) {
+    const blobStore = createFileStorage(ctx.storageRoot);
+    await blobStore.putBytes(storageKey, content);
+    return blobStore;
+  }
 
   beforeEach(async () => {
     ctx = await createIsolatedTestDb("sales-export-download-access");
@@ -21,8 +27,7 @@ describe("sales export download access", () => {
 
   it("allows same-branch reviewer and logs download", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
-    await blobStore.put(
+    const blobStore = await writeBlob(
       "sales-export-11.csv",
       new TextEncoder().encode("a,b\n1,2\n"),
     );
@@ -65,8 +70,7 @@ describe("sales export download access", () => {
 
   it("denies cross-branch reviewer", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
-    await blobStore.put(
+    const blobStore = await writeBlob(
       "sales-export-12.csv",
       new TextEncoder().encode("x,y\n1,2\n"),
     );
@@ -108,8 +112,7 @@ describe("sales export download access", () => {
 
   it("allows superuser cross-branch", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
-    await blobStore.put(
+    const blobStore = await writeBlob(
       "sales-export-13.csv",
       new TextEncoder().encode("x,y\n1,2\n"),
     );
@@ -149,7 +152,7 @@ describe("sales export download access", () => {
 
   it("fails when file is not ready", async () => {
     const now = Date.now();
-    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
+    const blobStore = createFileStorage(ctx.storageRoot);
 
     const jobId = await ctx.repos.reportExportJobs.createJob({
       requested_by_user_id: 2,

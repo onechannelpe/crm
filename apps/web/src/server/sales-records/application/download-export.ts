@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { FileStorage } from "~/server/files/storage";
 import type { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -13,9 +14,7 @@ interface DownloadSalesExportDeps {
   repos: {
     reportExportJobs: ReturnType<typeof createReportExportRepo>;
   };
-  blobStore: {
-    get(storageKey: string): Promise<Uint8Array>;
-  };
+  blobStore: Pick<FileStorage, "getBytes">;
   now?: () => number;
 }
 
@@ -56,7 +55,7 @@ export async function downloadSalesExportById(
 
   let fileBytes: Uint8Array;
   try {
-    fileBytes = await deps.blobStore.get(job.file_storage_key);
+    fileBytes = await deps.blobStore.getBytes(job.file_storage_key);
   } catch {
     return Err(
       domainError(

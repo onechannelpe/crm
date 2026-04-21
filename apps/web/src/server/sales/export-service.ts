@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 
-import type { SalesExportBlobStore } from "./export-blob-store";
+import type { FileStorage } from "~/server/files/storage";
+
 import type {
   ReportExportJobsPort,
   ReportExportLeasedJob,
@@ -127,7 +128,7 @@ export function createSalesExportService(
     reportExportJobs: ReportExportJobsPort;
     salesRecords: SalesRecordsPort;
   },
-  blobStore: SalesExportBlobStore,
+  blobStore: Pick<FileStorage, "putBytes" | "delete">,
 ): SalesExportService {
   const processJob = async (
     job: ReportExportLeasedJob,
@@ -169,7 +170,7 @@ export function createSalesExportService(
       `sales-export-${job.id}-${timestamp}.${extension}`,
     );
 
-    const stored = await blobStore.put(storageKey, fileBytes);
+    const stored = await blobStore.putBytes(storageKey, fileBytes);
 
     if (signal?.aborted) throw new Error("Job aborted after store put");
 

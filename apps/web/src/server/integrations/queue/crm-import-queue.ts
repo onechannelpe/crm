@@ -1,7 +1,7 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
+import type { FileStorage } from "~/server/files/storage";
 
 import { createImportBatchRunner } from "../application/import/runner";
-import type { JobBlobStore } from "../job-blob-store";
 import type {
   ImportBatchRunner,
   ImportJobProcessResult,
@@ -10,7 +10,7 @@ import type {
 
 interface CrmImportQueueDeps {
   runtime: IntegrationRuntime;
-  blobStore: JobBlobStore;
+  blobStore: Pick<FileStorage, "getBytes">;
   runner?: ImportBatchRunner;
 }
 

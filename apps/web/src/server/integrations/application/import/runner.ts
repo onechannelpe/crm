@@ -2,9 +2,9 @@ import { TextDecoder } from "node:util";
 
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
+import type { FileStorage } from "~/server/files/storage";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { JobBlobStore } from "../../job-blob-store";
 import type {
   ImportBatchRunner,
   ImportJobProcessResult,
@@ -15,7 +15,7 @@ import { parseImportRows } from "./parse";
 
 export function createImportBatchRunner(deps: {
   executor: DatabaseExecutor;
-  blobStore: JobBlobStore;
+  blobStore: Pick<FileStorage, "getBytes">;
 }): ImportBatchRunner {
   const { executor, blobStore } = deps;
   return {
@@ -28,7 +28,7 @@ export function createImportBatchRunner(deps: {
       }
 
       const text = new TextDecoder("utf-8").decode(
-        await blobStore.get(job.file_path),
+        await blobStore.getBytes(job.file_path),
       );
       if (signal.aborted) {
         throw new Error("Job aborted");

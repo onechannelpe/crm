@@ -1,12 +1,16 @@
 "use server";
 
-import { notFoundError, validationError } from "~/lib/app-errors";
+import { validationError, notFoundError } from "~/lib/app-errors";
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import { publishJob } from "~/lib/redis/publisher";
+import { requestArtifact } from "~/server/files/service/request-artifact";
+import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
+import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
 import { listIntegrationJobsQuery } from "~/server/integrations/application/list-integration-jobs";
-import { queueImportJobUseCase } from "~/server/integrations/application/queue-import-job";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/server/shared/result";
 
 type ImportType = "import_status" | "import_prioridad";
 
@@ -16,7 +20,7 @@ function isImportType(v: string): v is ImportType {
 
 export async function uploadImportFile(
   formData: FormData,
-): Promise<{ jobId: number }> {
+): Promise<{ artifactId: number; jobId: number }> {
   const file = formData.get("file");
   const type = formData.get("type");
 
@@ -24,32 +28,74 @@ export async function uploadImportFile(
   if (typeof type !== "string" || !isImportType(type)) {
     throw validationError("type must be import_status or import_prioridad");
   }
-  if (!file.name.toLowerCase().endsWith(".csv")) {
-    throw validationError("Only CSV files are accepted");
+  if (file.size > maxUploadBytesForArtifactType("integration_import")) {
+    throw validationError("file_too_large");
   }
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
 
   return runAction({
     actionName: "integration.upload_import",
-    access: { kind: "permission", permission: "integration:manage" },
-    input: {},
-    execute: (ctx) =>
-      queueImportJobUseCase({
+    access: { kind: "permission", permission: "file:artifact:upload" },
+    input: { type },
+    execute: async (ctx) => {
+      const { repo, storage, syncExecutor } = serverRuntime.files;
+      const { integration } = serverRuntime.integrations;
+
+      const artifactResult = await requestArtifact(
+        ctx,
+        {
+          artifactType: "integration_import",
+          executionMode: "async",
+          workflowContext: { importType: type },
+        },
+        { repo, storage, syncExecutor },
+      );
+      if (isErr(artifactResult)) return artifactResult;
+
+      const artifactId = artifactResult.value.artifact.id;
+
+      const uploadResult = await uploadArtifactFile(
+        ctx,
+        artifactId,
+        { name: file.name, sizeBytes: file.size, stream: file.stream() },
+        { repo, storage },
+      );
+      if (isErr(uploadResult)) return uploadResult;
+
+      const fileAsset = await repo.findFileAssetForArtifact(
+        artifactId,
+        "source_upload",
+      );
+      if (!fileAsset) {
+        return {
+          ok: false as const,
+          error: {
+            kind: "unexpected" as const,
+            code: "file_asset_missing",
+            message: "File asset missing after upload",
+          },
+        };
+      }
+
+      const jobId = await integration.jobs.insert({
         type,
-        actorId: ctx.actor.userId,
-        fileName: file.name,
-        bytes,
-        jobs: serverRuntime.integrations.integration.jobs,
-        blobStore: serverRuntime.integrations.blobStore,
-      }),
+        status: "PENDING",
+        requested_by_user_id: ctx.actor.userId,
+        file_path: fileAsset.storageKey,
+        max_attempts: 3,
+        created_at: ctx.now(),
+      });
+
+      await publishJob(JOB_CHANNELS.CRM_IMPORT, jobId);
+
+      return Ok({ artifactId, jobId });
+    },
   });
 }
 
 export async function getImportJob(jobId: number) {
   return runAction({
     actionName: "integration.get_import_job",
-    access: { kind: "permission", permission: "integration:manage" },
+    access: { kind: "permission", permission: "file:artifact:read" },
     input: { jobId },
     execute: async () => {
       const job = await getIntegrationJobQuery(
@@ -68,7 +114,7 @@ export async function listIntegrationJobs(filters: {
 }) {
   return runAction({
     actionName: "integration.list_jobs",
-    access: { kind: "permission", permission: "integration:manage" },
+    access: { kind: "permission", permission: "file:artifact:read" },
     input: {},
     execute: async () =>
       Ok(

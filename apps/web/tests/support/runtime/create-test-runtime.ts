@@ -1,9 +1,9 @@
 import { createSessionService } from "~/server/auth/application/session-service";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
+import { createFileStorage } from "~/server/files/storage";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createPipelineRuntime } from "~/server/runtime/pipeline-runtime";
-import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
@@ -30,7 +30,7 @@ export interface TestRuntime {
   };
   pipeline: ReturnType<typeof createPipelineRuntime>;
   sales: {
-    salesExportBlobStore: ReturnType<typeof createSalesExportBlobStore>;
+    salesExportBlobStore: ReturnType<typeof createFileStorage>;
     salesExportService: ReturnType<typeof createSalesExportService>;
   };
   integrations: ReturnType<typeof createIntegrationRuntime>;
@@ -65,7 +65,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     now: now.get,
     logger,
   });
-  const salesExportBlobStore = createSalesExportBlobStore(ctx.storageRoot);
+  const salesExportBlobStore = createFileStorage(ctx.storageRoot);
   const salesExportService = createSalesExportService(
     {
       reportExportJobs: createReportExportRepo(ctx.db),

@@ -92,7 +92,7 @@ describe("sales export service", () => {
 
     if (job.file_storage_key == null)
       throw new Error("expected file_storage_key to be set");
-    const file = await runtime.sales.salesExportBlobStore.get(
+    const file = await runtime.sales.salesExportBlobStore.getBytes(
       job.file_storage_key,
     );
     const signature = String.fromCharCode(file[0] ?? 0, file[1] ?? 0);
@@ -146,7 +146,10 @@ describe("sales export service", () => {
     const service = runtime.sales.salesExportService;
 
     const storageKey = "sales-export-expire-test.csv";
-    await blobStore.put(storageKey, new TextEncoder().encode("a,b\n1,2\n"));
+    await blobStore.putBytes(
+      storageKey,
+      new TextEncoder().encode("a,b\n1,2\n"),
+    );
 
     const jobId = await runtime.ctx.repos.reportExportJobs.createJob({
       requested_by_user_id: 2,
@@ -179,6 +182,6 @@ describe("sales export service", () => {
     expect(job?.file_storage_key).toBeNull();
     expect(job?.file_sha256).toBeNull();
 
-    await expect(blobStore.get(storageKey)).rejects.toBeTruthy();
+    await expect(blobStore.getBytes(storageKey)).rejects.toBeTruthy();
   });
 });
