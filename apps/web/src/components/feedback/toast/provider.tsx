@@ -90,7 +90,7 @@ export function ToastProvider(props: { children: JSX.Element }) {
       );
 
       toasts.forEach((toast) => {
-        if (toast.remaining <= 0) {
+        if (toast.duration > 0 && toast.remaining <= 0) {
           removeToast(toast.id);
         }
       });

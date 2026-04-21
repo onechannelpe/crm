@@ -11,6 +11,9 @@ type ImportType = "import_status" | "import_prioridad";
 
 type JobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
+const IMPORT_PROGRESS_DURATION_MS = 0;
+const IMPORT_COMPLETED_DURATION_MS = 1200;
+
 interface LeadImportProgressMessage {
   type: "job_progress";
   jobId: number;
@@ -26,8 +29,11 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function importTypeLabel(type: ImportType): string {
-  return type === "import_status" ? "estados" : "prioridades";
+function importTypeUnit(type: ImportType, count: number): string {
+  if (type === "import_status") {
+    return count === 1 ? "estado" : "estados";
+  }
+  return count === 1 ? "prioridad" : "prioridades";
 }
 
 function buildProgressMessage(event: {
@@ -37,7 +43,7 @@ function buildProgressMessage(event: {
   rowsTotal: number;
 }): string {
   const processed = event.rowsApplied + event.rowsFailed;
-  return `Importando ${importTypeLabel(event.importType)}: ${processed}/${event.rowsTotal}`;
+  return `Procesando ${importTypeUnit(event.importType, event.rowsTotal)}: ${processed} de ${event.rowsTotal}`;
 }
 
 function buildCompletedMessage(event: {
@@ -46,8 +52,11 @@ function buildCompletedMessage(event: {
   rowsFailed: number;
   rowsTotal: number;
 }): string {
-  const processed = event.rowsApplied + event.rowsFailed;
-  return `Importación de ${importTypeLabel(event.importType)} completada: ${processed}/${event.rowsTotal}`;
+  const unit = importTypeUnit(event.importType, event.rowsTotal);
+  if (event.rowsFailed > 0) {
+    return `Procesados ${event.rowsTotal} ${unit} (${event.rowsFailed} con error)`;
+  }
+  return `Procesados ${event.rowsTotal} ${unit}`;
 }
 
 function parseProgressMessage(raw: string): LeadImportProgressMessage | null {
@@ -144,16 +153,20 @@ export function useLeadsImport() {
   }) {
     if (progressToastId) {
       updateToast(progressToastId, {
-        type: "success",
+        type: event.rowsFailed > 0 ? "warning" : "success",
         message: buildCompletedMessage(event),
-        duration: 3000,
-        remaining: 3000,
+        duration: IMPORT_COMPLETED_DURATION_MS,
+        remaining: IMPORT_COMPLETED_DURATION_MS,
       });
       progressToastId = null;
       return;
     }
 
-    showToast("success", buildCompletedMessage(event), 3000);
+    showToast(
+      event.rowsFailed > 0 ? "warning" : "success",
+      buildCompletedMessage(event),
+      IMPORT_COMPLETED_DURATION_MS,
+    );
   }
 
   function stopActiveTracking() {
@@ -301,7 +314,7 @@ export function useLeadsImport() {
           rowsFailed: 0,
           rowsTotal: result.rowsTotal,
         }),
-        0,
+        IMPORT_PROGRESS_DURATION_MS,
       );
 
       startPolling();
