@@ -139,4 +139,20 @@ describe("requestDownloadToken", () => {
     expect(isErr(result)).toBe(true);
     expect(isErr(result) && result.error.code).toBe("artifact_file_not_found");
   });
+
+  it("rejects token issuance for null-scope artifact when actor is not owner", async () => {
+    const deps = createDownloadTokenDeps({
+      artifact: makeArtifact({
+        status: "ready",
+        scopeBranchId: null,
+        requestedByUserId: 999,
+      }),
+      fileAsset: makeFileAsset(),
+    });
+
+    const result = await requestDownloadToken(makeContext(), 42, deps);
+
+    expect(isErr(result)).toBe(true);
+    expect(isErr(result) && result.error.code).toBe("artifact_read_not_owner");
+  });
 });

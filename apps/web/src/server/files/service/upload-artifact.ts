@@ -144,18 +144,13 @@ export async function uploadArtifactFile(
         sha256Hex: storageResult.sha256,
       });
 
-      const updated = await repo.findArtifactById(artifactId);
-      if (!updated) {
-        return Err(
-          domainError(
-            "not_found",
-            "artifact_vanished",
-            "Artifact not found after update",
-          ),
-        );
-      }
-
-      return Ok(updated);
+      return Ok({
+        ...artifact,
+        status: currentStatus,
+        errorCode: null,
+        errorMessage: null,
+        updatedAt: now,
+      });
     } catch (err) {
       if (err instanceof UploadValidationError) {
         const message = `File validation failed: ${err.reason}`;

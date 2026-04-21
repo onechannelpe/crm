@@ -107,10 +107,23 @@ function canRead(
     return deny("artifact_unavailable", "Artifact is no longer available");
   }
 
-  if (actor.role !== "superuser" && artifact.scopeBranchId !== null) {
-    if (artifact.scopeBranchId !== actor.branchId) {
-      return deny("artifact_scope_mismatch", "Artifact is outside your scope");
-    }
+  if (actor.role === "superuser" || actor.role === "admin") {
+    return allow();
+  }
+
+  if (artifact.requestedByUserId === actor.userId) {
+    return allow();
+  }
+
+  if (artifact.scopeBranchId === null) {
+    return deny(
+      "artifact_read_not_owner",
+      "Only requester or elevated roles may read this artifact",
+    );
+  }
+
+  if (artifact.scopeBranchId !== actor.branchId) {
+    return deny("artifact_scope_mismatch", "Artifact is outside your scope");
   }
 
   return allow();

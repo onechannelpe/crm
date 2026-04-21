@@ -153,6 +153,33 @@ describe("checkArtifactPolicy - artifact.read", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("allows owner to read null-scope artifact", () => {
+    const artifact = makeArtifact({
+      scopeBranchId: null,
+      requestedByUserId: 10,
+    });
+    const result = checkArtifactPolicy(
+      makeActor({ role: "back_office", userId: 10, branchId: 1 }),
+      artifact,
+      "artifact.read",
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it("denies non-owner from reading null-scope artifact", () => {
+    const artifact = makeArtifact({
+      scopeBranchId: null,
+      requestedByUserId: 99,
+    });
+    const result = checkArtifactPolicy(
+      makeActor({ role: "back_office", userId: 10, branchId: 1 }),
+      artifact,
+      "artifact.read",
+    );
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error.code).toBe("artifact_read_not_owner");
+  });
+
   it("denies read on revoked artifact", () => {
     const artifact = makeArtifact({ status: "revoked" });
     const result = checkArtifactPolicy(
