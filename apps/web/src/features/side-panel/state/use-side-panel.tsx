@@ -57,7 +57,7 @@ export function SidePanelProvider(props: ParentProps) {
     currentEntry,
     navigationStack,
     searchText: () => state.searchText,
-    panelWidth: () => state.panelWidth,
+    panelWidth: store.panelWidth,
     getPageState: (pageId) => state.pageStateById[pageId],
     updatePageState: store.updatePageState,
     openPanel: store.openPanel,

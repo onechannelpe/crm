@@ -7,6 +7,7 @@ import Search from "~/components/icons/search";
 import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { useResizeCoordination } from "~/components/ui/layout/resizable-panel/resize-coordination-provider";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { shortName } from "~/lib/users/display-name";
@@ -45,6 +46,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     memorizeNavigationState,
   } = useNavigationDrawerState();
   const isSettingsDrawer = useIsSettingsDrawer();
+  const { setResizeIsActive } = useResizeCoordination();
 
   const [resizing, setResizing] = createSignal(false);
 
@@ -62,8 +64,14 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     getCurrentWidth: width,
     onWidthChange: setWidth,
     onCollapse: () => setExpanded(false),
-    onResizeStart: () => setResizing(true),
-    onResizeEnd: () => setResizing(false),
+    onResizeStart: () => {
+      setResizing(true);
+      setResizeIsActive(false);
+    },
+    onResizeEnd: () => {
+      setResizing(false);
+      setResizeIsActive(true);
+    },
     cssVariableName: NAVIGATION_DRAWER_WIDTH_VAR,
     dragThresholdPx: 4,
   });

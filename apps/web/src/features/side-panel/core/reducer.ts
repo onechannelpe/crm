@@ -12,18 +12,12 @@ export type SidePanelAction =
   | { type: "navigate-to"; page: SidePanelPageDefinition; resetStack?: boolean }
   | { type: "go-back" }
   | { type: "navigate-to-stack-index"; index: number }
-  | { type: "set-search-text"; text: string }
-  | { type: "set-panel-width"; width: number };
+  | { type: "set-search-text"; text: string };
 
 export type SidePanelStatePatch = Partial<
   Pick<
     SidePanelState,
-    | "isOpen"
-    | "isClosing"
-    | "stack"
-    | "pageStateById"
-    | "searchText"
-    | "panelWidth"
+    "isOpen" | "isClosing" | "stack" | "pageStateById" | "searchText"
   >
 >;
 
@@ -148,8 +142,6 @@ export function reduceSidePanelPatch(
     }
     case "set-search-text":
       return { searchText: action.text };
-    case "set-panel-width":
-      return { panelWidth: action.width };
     default: {
       const exhaustive: never = action;
       throw new Error(`Unhandled side panel action: ${String(exhaustive)}`);

@@ -52,6 +52,7 @@ export function PanelShell(props: PanelShellProps) {
   return (
     <div
       class={cn(styles.wrapper, isOpen() && styles.wrapperOpen)}
+      data-side-panel=""
       data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
       onTransitionEnd={handleTransitionEnd}
     >

@@ -9,5 +9,4 @@ export type SidePanelState = {
   stack: SidePanelNavigationEntry[];
   pageStateById: Record<string, SidePanelPageState>;
   searchText: string;
-  panelWidth: number;
 };

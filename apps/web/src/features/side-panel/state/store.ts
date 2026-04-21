@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import {
@@ -20,13 +21,16 @@ type SidePanelStoreOptions = {
 };
 
 export function createSidePanelStore(options?: SidePanelStoreOptions) {
+  const [panelWidth, setPanelWidthSignal] = createSignal(
+    options?.initialWidth ?? SIDE_PANEL_WIDTH_CONSTRAINTS.default,
+  );
+
   const [state, setState] = createStore<SidePanelState>({
     isOpen: false,
     isClosing: false,
     stack: [],
     pageStateById: {},
     searchText: "",
-    panelWidth: options?.initialWidth ?? SIDE_PANEL_WIDTH_CONSTRAINTS.default,
   });
 
   function applyAction(action: Parameters<typeof reduceSidePanelPatch>[1]) {
@@ -93,15 +97,13 @@ export function createSidePanelStore(options?: SidePanelStoreOptions) {
 
   const setPanelWidth = (width: number) => {
     const nextWidth = clampSidePanelWidth(width);
-    applyAction({
-      type: "set-panel-width",
-      width: nextWidth,
-    });
+    setPanelWidthSignal(nextWidth);
     persistSidePanelWidthToCookie(nextWidth);
   };
 
   return {
     state,
+    panelWidth,
     openPanel,
     closePanel,
     navigateTo,
