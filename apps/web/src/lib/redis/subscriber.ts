@@ -24,6 +24,10 @@ export async function startJobSubscriber(triggers: {
       { key: "CRM_EXPORT", channel: JOB_CHANNELS.CRM_EXPORT },
       { key: "CRM_IMPORT", channel: JOB_CHANNELS.CRM_IMPORT },
       {
+        key: "LEADS_IMPORT_PROGRESS",
+        channel: JOB_CHANNELS.LEADS_IMPORT_PROGRESS,
+      },
+      {
         key: "INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT",
         channel: JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,
       },

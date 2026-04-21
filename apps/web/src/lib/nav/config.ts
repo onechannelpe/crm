@@ -65,10 +65,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Detalle de venta", icon: "sales" },
   },
   {
-    match: /^\/integrations\/imports\/[^/]+$/,
-    header: { label: "Detalle de importación", icon: "confirmed" },
-  },
-  {
     match: /^\/team\/members\/[^/]+\/capacity$/,
     header: { label: "Capacidad del ejecutivo", icon: "team" },
   },
@@ -83,14 +79,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   },
   { match: "/quotations", header: { label: "Cotizaciones", icon: "sales" } },
   { match: "/sales/crm", header: { label: "Ventas CRM", icon: "sales" } },
-  {
-    match: "/integrations",
-    header: { label: "Integraciones", icon: "confirmed" },
-  },
-  {
-    match: "/integrations/imports",
-    header: { label: "Importaciones", icon: "confirmed" },
-  },
   {
     match: "/me/capacity",
     header: { label: "Mi capacidad", icon: "capacity" },
@@ -222,20 +210,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
   },
 
   // Secondary › Administración
-  {
-    id: "integrations",
-    href: "/integrations",
-    activePrefixes: ["/integrations"],
-    label: "Integraciones",
-    navLabel: "Integraciones",
-    icon: "confirmed",
-    section: "secondary",
-    order: 6,
-    group: "Administración",
-    children: [
-      { href: "/integrations/imports", label: "Importaciones", order: 1 },
-    ],
-  },
   {
     id: "audit",
     href: "/audit/log",

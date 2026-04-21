@@ -50,6 +50,10 @@ export interface IntegrationJobsPort {
     types?: IntegrationJobType[],
   ): Promise<IntegrationJobRow[]>;
   markCompleted(id: number, result: IntegrationJobCompletion): Promise<unknown>;
+  updateProgress(
+    id: number,
+    progress: { rowsTotal?: number; rowsApplied?: number; rowsFailed?: number },
+  ): Promise<unknown>;
   extendLease(id: number, workerId: string, leaseMs: number): Promise<boolean>;
   scheduleRetry(id: number, availableAt: number): Promise<unknown>;
   markFailed(id: number, errorMessage: string): Promise<unknown>;

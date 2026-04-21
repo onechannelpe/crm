@@ -131,6 +131,40 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         .execute();
     },
 
+    updateProgress(
+      id: number,
+      progress: {
+        rowsTotal?: number;
+        rowsApplied?: number;
+        rowsFailed?: number;
+      },
+    ) {
+      const values: {
+        rows_total?: number;
+        rows_applied?: number;
+        rows_failed?: number;
+      } = {};
+      if (progress.rowsTotal !== undefined) {
+        values.rows_total = progress.rowsTotal;
+      }
+      if (progress.rowsApplied !== undefined) {
+        values.rows_applied = progress.rowsApplied;
+      }
+      if (progress.rowsFailed !== undefined) {
+        values.rows_failed = progress.rowsFailed;
+      }
+
+      if (Object.keys(values).length === 0) {
+        return Promise.resolve();
+      }
+
+      return db
+        .updateTable("pipeline_integration_jobs")
+        .set(values)
+        .where("id", "=", id)
+        .execute();
+    },
+
     async extendLease(
       id: number,
       workerId: string,

@@ -24,6 +24,11 @@ export async function applyImportRows(
       reason: string;
       type: "import_status" | "import_prioridad";
     }>;
+    onProgress?: (progress: {
+      rowsTotal: number;
+      rowsApplied: number;
+      rowsFailed: number;
+    }) => Promise<void> | void;
   },
   executor: DatabaseExecutor,
 ): Promise<{
@@ -31,6 +36,7 @@ export async function applyImportRows(
   applied: number;
   failed: number;
 }> {
+  const rowsTotal = input.validRows.length + input.invalidRows.length;
   const now = Date.now();
   const results: RowResult[] = input.invalidRows.map((row) => ({
     row: row.row,
@@ -39,7 +45,16 @@ export async function applyImportRows(
   }));
   const sortedRows = input.validRows.toSorted((a, b) => a.row - b.row);
   let applied = 0;
+  let failed = input.invalidRows.length;
   const outboxPlan = createEmptyOutboxPlan();
+
+  if (input.onProgress) {
+    await input.onProgress({
+      rowsTotal,
+      rowsApplied: applied,
+      rowsFailed: failed,
+    });
+  }
 
   await executor.transaction().execute(async (trx) => {
     await stageImportRows(trx, input.jobId, sortedRows, input.invalidRows, now);
@@ -54,6 +69,14 @@ export async function applyImportRows(
       });
       results.push(mutationResult.rowResult);
       if (!mutationResult.ok) {
+        failed++;
+        if (input.onProgress) {
+          await input.onProgress({
+            rowsTotal,
+            rowsApplied: applied,
+            rowsFailed: failed,
+          });
+        }
         continue;
       }
 
@@ -68,6 +91,13 @@ export async function applyImportRows(
         outboxPlan,
       });
       applied++;
+      if (input.onProgress) {
+        await input.onProgress({
+          rowsTotal,
+          rowsApplied: applied,
+          rowsFailed: failed,
+        });
+      }
     }
     /* eslint-enable no-await-in-loop */
 
@@ -82,6 +112,6 @@ export async function applyImportRows(
   return {
     results: sortedResults,
     applied,
-    failed: results.filter((row) => !row.ok).length,
+    failed: sortedResults.filter((row) => !row.ok).length,
   };
 }

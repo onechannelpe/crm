@@ -27,6 +27,15 @@ export default defineConfig({
       extensions: ["mdx"],
     }),
     nitroV2Plugin({
+      experimental: {
+        websocket: true,
+      },
+      handlers: [
+        {
+          route: "/api/leads/imports/ws",
+          handler: "./src/server/realtime/leads-imports-ws.ts",
+        },
+      ],
       prerender: {
         routes: [
           "/legal/privacy",

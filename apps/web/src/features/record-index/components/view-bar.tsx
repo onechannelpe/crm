@@ -10,6 +10,7 @@ import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 export function RecordIndexViewBar() {
   const model = useRecordIndexModelContext();
   const setup = useRecordIndexSetup();
+  const optionActions = () => setup.actions ?? [];
 
   return (
     <>
@@ -139,22 +140,24 @@ export function RecordIndexViewBar() {
             </button>
           )}
         </For>
-        <Show when={setup.exportAction}>
-          {(exportAction) => (
-            <>
-              <div class={sharedStyles.menuSectionLabel}>Acciones</div>
-              <button
-                type="button"
-                class={sharedStyles.menuItem}
-                onClick={() => {
-                  model.columns.setOpenMenu(null);
-                  void exportAction()();
-                }}
-              >
-                Exportar
-              </button>
-            </>
-          )}
+        <Show when={optionActions().length > 0}>
+          <>
+            <div class={sharedStyles.menuSectionLabel}>Acciones</div>
+            <For each={optionActions()}>
+              {(action) => (
+                <button
+                  type="button"
+                  class={sharedStyles.menuItem}
+                  onClick={() => {
+                    model.columns.setOpenMenu(null);
+                    void action.onClick();
+                  }}
+                >
+                  {action.label}
+                </button>
+              )}
+            </For>
+          </>
         </Show>
       </DataGridToolbarMenu>
     </>

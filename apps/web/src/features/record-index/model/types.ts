@@ -20,6 +20,12 @@ export type RecordIndexCreateAction = {
   onClick: () => void;
 };
 
+export type RecordIndexToolbarAction = {
+  key: string;
+  label: string;
+  onClick: () => void | Promise<void>;
+};
+
 export type RecordIndexViewDefinition = {
   readonly id: string;
   readonly label: string;
@@ -66,7 +72,7 @@ export type RecordIndexAdapter<
   emptyState: RecordIndexEmptyState;
   createAction?: RecordIndexCreateAction;
   views?: RecordIndexViews;
-  exportAction?: () => Promise<void>;
+  actions?: ReadonlyArray<RecordIndexToolbarAction>;
   filter?: RecordIndexFilterDefinition<T, TFilterValue>;
   sort?: RecordIndexSortDefinition<T, TSortValue>;
 };
@@ -82,7 +88,7 @@ export type RecordIndexSetup = {
     label: string;
   }>;
   views?: RecordIndexViews;
-  exportAction?: () => Promise<void>;
+  actions?: ReadonlyArray<RecordIndexToolbarAction>;
   filter?: {
     label: string;
     menuId: string;
