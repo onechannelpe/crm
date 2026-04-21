@@ -17,6 +17,12 @@
   max-width: 245px;
 }
 
+.parallaxLayer {
+  inset: 0;
+  position: absolute;
+  will-change: transform;
+}
+
 .fgWrapper {
   position: absolute;
   top: 50%;
@@ -24,7 +30,6 @@
 }
 
 .fg {
-  /* centered inside wrapper */
   transform: translate(-50%, -50%);
   max-width: 130px;
   max-height: 130px;
