@@ -74,6 +74,18 @@ describe("resolveLeadPolicy", () => {
     });
     expect(policy.source).toBe("team");
     expect(policy.bufferTarget).toBe(8);
+    expect(policy.dailyLimit).toBe(4);
+  });
+
+  it("source is branch when only branch default is present", () => {
+    const policy = resolveLeadPolicy({
+      userOverride: null,
+      teamDefault: null,
+      branchDefault: { active_buffer_target: 6, daily_refill_limit: 3 },
+    });
+    expect(policy.source).toBe("branch");
+    expect(policy.bufferTarget).toBe(6);
+    expect(policy.dailyLimit).toBe(3);
   });
 
   it("source is system when all overrides are absent", () => {
@@ -91,5 +103,6 @@ describe("resolveLeadPolicy", () => {
     const policy = resolveLeadPolicy({});
     expect(policy.source).toBe("system");
     expect(policy.bufferTarget).toBe(10);
+    expect(policy.dailyLimit).toBe(25);
   });
 });

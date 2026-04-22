@@ -101,6 +101,6 @@ describe("buildLeadCapacitySnapshot", () => {
     expect(snapshot.committed).toBe(2);
     expect(snapshot.pending).toBe(3);
     expect(snapshot.activeAssignments).toBe(7);
-    expect(snapshot.remaining).toBe(20); // dailyLimit + granted - committed - pending (if that's how it works)
+    expect(snapshot.remaining).toBe(20); // dailyLimit (20) + granted (5) - committed (2) - pending (3)
   });
 });
