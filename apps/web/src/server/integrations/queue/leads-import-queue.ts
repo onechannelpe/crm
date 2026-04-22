@@ -1,13 +1,6 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { FileStorage } from "~/server/files/storage";
 import {
-  markLeadImportCompleted,
-  markLeadImportFailed,
-  scheduleLeadImportRetry,
-  updateLeadImportProgress,
-  claimPendingLeadImportJobs,
-} from "~/server/leads/imports/job-repo";
-import {
   buildLeadImportProgressEvent,
   publishLeadImportProgress,
 } from "~/server/leads/imports/progress-events";
@@ -26,15 +19,17 @@ interface LeadImportRunner {
   ): Promise<ImportJobProcessResult>;
 }
 
-interface CrmImportQueueDeps {
+interface LeadsImportQueueDeps {
   runtime: IntegrationRuntime;
   blobStore: Pick<FileStorage, "getBytes">;
   runner?: LeadImportRunner;
 }
 
-export function createCrmImportQueue(
+const LEAD_IMPORT_TYPES = ["import_status", "import_prioridad"] as const;
+
+export function createLeadsImportQueue(
   workerId: string,
-  deps: CrmImportQueueDeps,
+  deps: LeadsImportQueueDeps,
 ) {
   const leaseMs = 30_000;
   const batchSize = 10;
@@ -45,32 +40,22 @@ export function createCrmImportQueue(
       executor: deps.runtime.executor,
       blobStore: deps.blobStore,
       updateProgress: (progress) =>
-        updateLeadImportProgress(runtime.jobs, progress.jobId, progress),
+        runtime.jobs.updateProgress(progress.jobId, progress),
     });
 
   return createJobQueue({
-    name: "crm-import",
+    name: "leads-import",
     leaseMs,
     batchSize,
     poll: (limit: number) =>
-      claimPendingLeadImportJobs(runtime.jobs, leaseMs, workerId, limit),
-    handle: async (job, signal: AbortSignal) => {
-      await publishLeadImportProgress(
-        buildLeadImportProgressEvent({
-          job,
-          status: "PROCESSING",
-          rowsApplied: job.rows_applied ?? 0,
-          rowsFailed: job.rows_failed ?? 0,
-          rowsTotal: job.rows_total ?? 0,
-          errorMessage: null,
-        }),
-      );
-      return runner.process(job, signal);
-    },
+      runtime.jobs.claimPending(leaseMs, workerId, limit, [
+        ...LEAD_IMPORT_TYPES,
+      ]),
+    handle: async (job, signal: AbortSignal) => runner.process(job, signal),
     extendLease: (id: number) =>
       runtime.jobs.extendLease(id, workerId, leaseMs),
     onComplete: async (id: number, result: ImportJobProcessResult) => {
-      await markLeadImportCompleted(runtime.jobs, id, {
+      await runtime.jobs.markCompleted(id, {
         rowsTotal: result.rowsTotal,
         rowsApplied: result.rowsApplied,
         rowsFailed: result.rowsFailed,
@@ -94,7 +79,7 @@ export function createCrmImportQueue(
       }
     },
     onRetry: async (id: number, availableAt: number) => {
-      await scheduleLeadImportRetry(runtime.jobs, id, availableAt);
+      await runtime.jobs.scheduleRetry(id, availableAt);
       const job = await runtime.jobs.findById(id);
       if (
         job &&
@@ -109,7 +94,7 @@ export function createCrmImportQueue(
       }
     },
     onFail: async (id: number, reason: string) => {
-      await markLeadImportFailed(runtime.jobs, id, reason);
+      await runtime.jobs.markFailed(id, reason);
       const job = await runtime.jobs.findById(id);
       if (
         job &&

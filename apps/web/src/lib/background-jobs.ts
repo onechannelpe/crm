@@ -2,9 +2,9 @@ import { startQueueDoorbellSubscriber } from "~/lib/job-queue/doorbell-subscribe
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
-import { createCrmImportQueue } from "~/server/integrations/queue/crm-import-queue";
 import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+import { createLeadsImportQueue } from "~/server/integrations/queue/leads-import-queue";
 import { serverRuntime } from "~/server/runtime";
 import { createSalesExportQueue } from "~/server/sales/queue/sales-export-queue";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
@@ -18,7 +18,7 @@ export function startBackgroundJobs() {
   const { integration } = serverRuntime.integrations;
   const { storage: fileStorage } = serverRuntime.files;
 
-  const crmImportQueue = createCrmImportQueue(WORKER_ID, {
+  const leadsImportQueue = createLeadsImportQueue(WORKER_ID, {
     runtime: integration,
     blobStore: fileStorage,
   });
@@ -41,7 +41,7 @@ export function startBackgroundJobs() {
   const notificationsWhatsAppQueue =
     serverRuntime.notifications.createWhatsAppQueue(WORKER_ID);
   const queues: QueueRunner[] = [
-    crmImportQueue,
+    leadsImportQueue,
     needsExecutiveOutboxQueue,
     readyForQuotationOutboxQueue,
     salesExportQueue,
@@ -74,8 +74,8 @@ export function startBackgroundJobs() {
 
   // Redis triggered processing
   void startQueueDoorbellSubscriber({
-    CRM_IMPORT: () => {
-      void crmImportQueue.runOnce();
+    LEADS_IMPORT: () => {
+      void leadsImportQueue.runOnce();
     },
     INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT: () => {
       void needsExecutiveOutboxQueue.runOnce();

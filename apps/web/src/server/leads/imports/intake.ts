@@ -1,8 +1,7 @@
 import type { LeadImportType } from "~/features/leads-imports/contracts";
 import { normalizeHeader } from "~/server/integrations/csv-parser";
-
-import { PRIORITY_IMPORT_HEADERS } from "./priority-parser";
-import { STATUS_IMPORT_HEADERS } from "./status-parser";
+import { PRIORITY_IMPORT_HEADERS } from "~/server/integrations/infrastructure/prioridad-import-parser";
+import { STATUS_IMPORT_HEADERS } from "~/server/integrations/infrastructure/status-import-parser";
 
 export type LeadImportTypeDetectionErrorCode =
   | "unknown_headers"

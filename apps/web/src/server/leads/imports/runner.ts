@@ -1,17 +1,23 @@
 import { TextDecoder } from "node:util";
 
 import type { FileStorage } from "~/server/files/storage";
+import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
+import {
+  parsePrioridadImport,
+  type ParsedPrioridadRow,
+} from "~/server/integrations/infrastructure/prioridad-import-parser";
+import {
+  parseStatusImport,
+  type ParsedStatusRow,
+} from "~/server/integrations/infrastructure/status-import-parser";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { applyLeadImportRows } from "./apply-service";
-import { parsePriorityImport } from "./priority-parser";
 import {
   buildLeadImportProgressEvent,
   publishLeadImportProgress,
 } from "./progress-events";
-import { parseStatusImport } from "./status-parser";
 
 export function createLeadImportRunner(deps: {
   executor: DatabaseExecutor;
@@ -59,7 +65,7 @@ export function createLeadImportRunner(deps: {
 
       if (job.type === "import_status") {
         const parsed = parseStatusImport(fileText);
-        validRows = parsed.valid.map((row) => ({
+        validRows = parsed.valid.map((row: ParsedStatusRow) => ({
           row: row.row,
           ruc: row.ruc,
           type: "import_status",
@@ -71,8 +77,8 @@ export function createLeadImportRunner(deps: {
           type: "import_status",
         }));
       } else {
-        const parsed = parsePriorityImport(fileText);
-        validRows = parsed.valid.map((row) => ({
+        const parsed = parsePrioridadImport(fileText);
+        validRows = parsed.valid.map((row: ParsedPrioridadRow) => ({
           row: row.row,
           ruc: row.ruc,
           type: "import_prioridad",
@@ -103,7 +109,7 @@ export function createLeadImportRunner(deps: {
         }),
       );
 
-      const applied = await applyLeadImportRows(
+      const applied = await applyImportRows(
         {
           jobId: job.id,
           actorId: job.requested_by_user_id,

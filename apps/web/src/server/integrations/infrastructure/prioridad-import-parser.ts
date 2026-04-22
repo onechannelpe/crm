@@ -2,7 +2,7 @@ import type { LeadPriority } from "~/pipeline/contracts/lead-schema";
 import { parseCsv, validateHeaders } from "~/server/integrations/csv-parser";
 import { parseLeadPriority } from "~/server/pipeline/domain/lead-schema-parser";
 
-const PRIORIDAD_COLUMNS = [
+export const PRIORITY_IMPORT_HEADERS = [
   "nro_de_solicitud",
   "fecha",
   "usuario",
@@ -39,8 +39,8 @@ export function parsePrioridadImport(text: string): {
   const parsed = parseCsv(text);
   const headerError = validateHeaders(
     parsed.headers,
-    PRIORIDAD_COLUMNS,
-    PRIORIDAD_COLUMNS,
+    PRIORITY_IMPORT_HEADERS,
+    PRIORITY_IMPORT_HEADERS,
   );
   if (headerError) {
     throw new Error(headerError);

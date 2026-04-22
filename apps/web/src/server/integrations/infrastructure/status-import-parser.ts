@@ -2,7 +2,7 @@ import type { LeadStatus } from "~/pipeline/contracts/lead-schema";
 import { parseCsv, validateHeaders } from "~/server/integrations/csv-parser";
 import { parseLeadStatus } from "~/server/pipeline/domain/lead-schema-parser";
 
-const STATUS_COLUMNS = [
+export const STATUS_IMPORT_HEADERS = [
   "nro_de_solicitud",
   "fecha_de_solicitud",
   "canal",
@@ -34,8 +34,8 @@ export function parseStatusImport(text: string): {
   const parsed = parseCsv(text);
   const headerError = validateHeaders(
     parsed.headers,
-    STATUS_COLUMNS,
-    STATUS_COLUMNS,
+    STATUS_IMPORT_HEADERS,
+    STATUS_IMPORT_HEADERS,
   );
   if (headerError) {
     throw new Error(headerError);

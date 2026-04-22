@@ -66,23 +66,21 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
     throw validationError("file_too_large");
   }
 
-  const fileText = await file.text();
-  const detection = detectLeadImportFile({ fileText });
-  if (!detection.ok) {
-    throw validationError(detection.message);
-  }
-
   return runAction({
     actionName: "leads.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
     input: {
       fileName: file.name,
       fileSize: file.size,
-      importType: detection.importType,
     },
     execute: async (ctx) => {
       const { repo, storage, syncExecutor } = serverRuntime.files;
       const { integration } = serverRuntime.integrations;
+      const fileText = await file.text();
+      const detection = detectLeadImportFile({ fileText });
+      if (!detection.ok) {
+        throw validationError(detection.message);
+      }
 
       const artifactResult = await requestArtifact(
         ctx,
@@ -153,7 +151,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
         }),
       );
 
-      await publishJob(JOB_CHANNELS.CRM_IMPORT, jobId);
+      await publishJob(JOB_CHANNELS.LEADS_IMPORT, jobId);
 
       return Ok({
         artifactId,
