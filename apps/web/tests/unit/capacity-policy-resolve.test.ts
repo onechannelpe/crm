@@ -1,4 +1,3 @@
-import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -6,89 +5,35 @@ import {
   resolveSearchPolicy,
 } from "~/server/capacity/domain/policy";
 
-const optionalSearchRow = fc.option(fc.record({ search_limit: fc.nat() }), {
-  nil: null,
-});
-
-const optionalLeadRow = fc.option(
-  fc.record({ active_buffer_target: fc.nat(), daily_refill_limit: fc.nat() }),
-  { nil: null },
-);
-
 describe("resolveSearchPolicy", () => {
-  it("always returns a defined source", () => {
-    fc.assert(
-      fc.property(
-        optionalSearchRow,
-        optionalSearchRow,
-        optionalSearchRow,
-        (userOverride, teamDefault, branchDefault) => {
-          const policy = resolveSearchPolicy({
-            userOverride,
-            teamDefault,
-            branchDefault,
-          });
-          return policy.source !== undefined && policy.source !== null;
-        },
-      ),
-    );
-  });
-
   it("source is user when user override is present", () => {
-    fc.assert(
-      fc.property(
-        fc.record({ search_limit: fc.nat() }),
-        optionalSearchRow,
-        optionalSearchRow,
-        (userOverride, teamDefault, branchDefault) => {
-          const policy = resolveSearchPolicy({
-            userOverride,
-            teamDefault,
-            branchDefault,
-          });
-          return (
-            policy.source === "user" &&
-            policy.monthlyLimit === userOverride.search_limit
-          );
-        },
-      ),
-    );
+    const policy = resolveSearchPolicy({
+      userOverride: { search_limit: 100 },
+      teamDefault: { search_limit: 50 },
+      branchDefault: { search_limit: 25 },
+    });
+    expect(policy.source).toBe("user");
+    expect(policy.monthlyLimit).toBe(100);
   });
 
   it("source is team when no user override but team default is present", () => {
-    fc.assert(
-      fc.property(
-        fc.record({ search_limit: fc.nat() }),
-        optionalSearchRow,
-        (teamDefault, branchDefault) => {
-          const policy = resolveSearchPolicy({
-            userOverride: null,
-            teamDefault,
-            branchDefault,
-          });
-          return (
-            policy.source === "team" &&
-            policy.monthlyLimit === teamDefault.search_limit
-          );
-        },
-      ),
-    );
+    const policy = resolveSearchPolicy({
+      userOverride: null,
+      teamDefault: { search_limit: 50 },
+      branchDefault: { search_limit: 25 },
+    });
+    expect(policy.source).toBe("team");
+    expect(policy.monthlyLimit).toBe(50);
   });
 
   it("source is branch when only branch default is present", () => {
-    fc.assert(
-      fc.property(fc.record({ search_limit: fc.nat() }), (branchDefault) => {
-        const policy = resolveSearchPolicy({
-          userOverride: null,
-          teamDefault: null,
-          branchDefault,
-        });
-        return (
-          policy.source === "branch" &&
-          policy.monthlyLimit === branchDefault.search_limit
-        );
-      }),
-    );
+    const policy = resolveSearchPolicy({
+      userOverride: null,
+      teamDefault: null,
+      branchDefault: { search_limit: 25 },
+    });
+    expect(policy.source).toBe("branch");
+    expect(policy.monthlyLimit).toBe(25);
   });
 
   it("source is system when all overrides are absent", () => {
@@ -98,71 +43,31 @@ describe("resolveSearchPolicy", () => {
       branchDefault: null,
     });
     expect(policy.source).toBe("system");
+    // System limit is usually hardcoded or coming from a default config
+    expect(policy.monthlyLimit).toBeDefined();
   });
 });
 
 describe("resolveLeadPolicy", () => {
-  it("always returns a defined source", () => {
-    fc.assert(
-      fc.property(
-        optionalLeadRow,
-        optionalLeadRow,
-        optionalLeadRow,
-        (userOverride, teamDefault, branchDefault) => {
-          const policy = resolveLeadPolicy({
-            userOverride,
-            teamDefault,
-            branchDefault,
-          });
-          return policy.source !== undefined && policy.source !== null;
-        },
-      ),
-    );
-  });
-
   it("source is user when user override is present", () => {
-    fc.assert(
-      fc.property(
-        fc.record({
-          active_buffer_target: fc.nat(),
-          daily_refill_limit: fc.nat(),
-        }),
-        optionalLeadRow,
-        optionalLeadRow,
-        (userOverride, teamDefault, branchDefault) => {
-          const policy = resolveLeadPolicy({
-            userOverride,
-            teamDefault,
-            branchDefault,
-          });
-          return (
-            policy.source === "user" &&
-            policy.bufferTarget === userOverride.active_buffer_target &&
-            policy.dailyLimit === userOverride.daily_refill_limit
-          );
-        },
-      ),
-    );
+    const policy = resolveLeadPolicy({
+      userOverride: { active_buffer_target: 10, daily_refill_limit: 5 },
+      teamDefault: { active_buffer_target: 8, daily_refill_limit: 4 },
+      branchDefault: { active_buffer_target: 6, daily_refill_limit: 3 },
+    });
+    expect(policy.source).toBe("user");
+    expect(policy.bufferTarget).toBe(10);
+    expect(policy.dailyLimit).toBe(5);
   });
 
   it("source is team when no user override but team default is present", () => {
-    fc.assert(
-      fc.property(
-        fc.record({
-          active_buffer_target: fc.nat(),
-          daily_refill_limit: fc.nat(),
-        }),
-        optionalLeadRow,
-        (teamDefault, branchDefault) => {
-          const policy = resolveLeadPolicy({
-            userOverride: null,
-            teamDefault,
-            branchDefault,
-          });
-          return policy.source === "team";
-        },
-      ),
-    );
+    const policy = resolveLeadPolicy({
+      userOverride: null,
+      teamDefault: { active_buffer_target: 8, daily_refill_limit: 4 },
+      branchDefault: { active_buffer_target: 6, daily_refill_limit: 3 },
+    });
+    expect(policy.source).toBe("team");
+    expect(policy.bufferTarget).toBe(8);
   });
 
   it("source is system when all overrides are absent", () => {

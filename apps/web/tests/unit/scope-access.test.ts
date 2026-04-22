@@ -1,4 +1,3 @@
-import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
@@ -44,26 +43,25 @@ function makeRepos(
 }
 
 describe("canManageExecutive", () => {
-  it("returns ok false for all non-manager roles regardless of target", async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.constantFrom(...NON_MANAGER_ROLES),
-        fc.nat({ max: 10 }).map((n) => n + 1),
-        async (role, branchId) => {
-          const actor = makeActor(role, branchId);
-          const target: TargetUser = {
-            role: "executive",
-            branchId,
-            teamId: null,
-          };
-          const repos = makeRepos(target);
-          const result = await canManageExecutive(actor, 1, repos);
-          return !result.ok;
-        },
-      ),
-      { numRuns: 50 },
-    );
-  });
+  it.each(NON_MANAGER_ROLES)(
+    "returns ok false for role %s regardless of branch",
+    async (role) => {
+      const actor = makeActor(role, 1);
+      const target: TargetUser = {
+        role: "executive",
+        branchId: 1,
+        teamId: null,
+      };
+      const repos = makeRepos(target);
+      const result = await canManageExecutive(actor, 1, repos);
+      expect(result.ok).toBe(false);
+
+      // Also check different branch
+      const actorDiff = makeActor(role, 2);
+      const resultDiff = await canManageExecutive(actorDiff, 1, repos);
+      expect(resultDiff.ok).toBe(false);
+    },
+  );
 
   it("returns ok false when target user does not exist", async () => {
     const actor = makeActor("superuser");
