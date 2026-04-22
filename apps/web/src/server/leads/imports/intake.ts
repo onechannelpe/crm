@@ -1,11 +1,5 @@
 import type { LeadImportType } from "~/features/leads-imports/contracts";
-import {
-  normalizeCsvHeader,
-  parseCsvRows,
-  readFirstNonEmptyCsvRow,
-  type CsvDelimiter,
-  type CsvRow,
-} from "~/server/csv/core";
+import { normalizeCsvHeader, type CsvDelimiter } from "~/server/csv/core";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import {
   parseLeadPriority,
@@ -53,6 +47,8 @@ export type LeadImportCsvInspectionResult =
       headers: string[];
     };
 
+type LeadImportStreamFactory = () => ReadableStream<Uint8Array>;
+
 interface HeaderMatch {
   expected: readonly string[];
   missing: string[];
@@ -60,16 +56,35 @@ interface HeaderMatch {
   exact: boolean;
 }
 
-interface DelimiterInspection {
+interface HeaderCandidate {
   delimiter: CsvDelimiter;
-  headerRow: CsvRow;
   headers: string[];
   statusMatch: HeaderMatch;
   priorityMatch: HeaderMatch;
 }
 
-function isHeaderRowEmpty(headers: readonly string[]): boolean {
-  return headers.every((header) => header.trim().length === 0);
+interface ResolvedLayout {
+  delimiter: CsvDelimiter;
+  headers: string[];
+}
+
+function normalizeCell(cell: string): string {
+  return normalizeCsvHeader(cell.replace(/^\uFEFF/, ""));
+}
+
+function splitCsvLine(line: string, delimiter: CsvDelimiter): string[] {
+  return line.split(delimiter).map((cell) => cell.trim());
+}
+
+function isLineEmpty(line: string): boolean {
+  return line.trim().length === 0;
+}
+
+function assertSupportedLeadCsvLine(line: string): void {
+  if (!line.includes('"')) {
+    return;
+  }
+  throw new Error("Quoted CSV fields are not supported for lead imports");
 }
 
 function buildHeaderMatch(
@@ -82,8 +97,15 @@ function buildHeaderMatch(
     expected,
     missing,
     unknown,
-    exact: missing.length === 0 && unknown.length === 0,
+    exact:
+      missing.length === 0 &&
+      unknown.length === 0 &&
+      headers.length === expected.length,
   };
+}
+
+function getMatchIssueScore(match: HeaderMatch): number {
+  return match.missing.length + match.unknown.length;
 }
 
 function isBestMatchCandidate(match: HeaderMatch): boolean {
@@ -91,10 +113,6 @@ function isBestMatchCandidate(match: HeaderMatch): boolean {
     match.missing.length < match.expected.length ||
     match.unknown.length < match.expected.length
   );
-}
-
-function getMatchIssueScore(match: HeaderMatch): number {
-  return match.missing.length + match.unknown.length;
 }
 
 function formatHeaderErrors(
@@ -111,7 +129,6 @@ function formatHeaderErrors(
 
   const importLabel =
     importType === "import_status" ? "status import" : "priority import";
-
   if (details.length === 0) {
     return `CSV headers do not match ${importLabel}`;
   }
@@ -119,67 +136,106 @@ function formatHeaderErrors(
   return `Invalid headers for ${importLabel} (${details.join("; ")})`;
 }
 
-function readDelimiterInspections(csvText: string): DelimiterInspection[] {
-  const inspections: DelimiterInspection[] = [];
-
-  for (const delimiter of LEAD_IMPORT_DELIMITERS) {
-    const headerRow = readFirstNonEmptyCsvRow(csvText, delimiter);
-    if (!headerRow) {
-      continue;
-    }
-
-    const headers = headerRow.cells.map(normalizeCsvHeader);
-    inspections.push({
+function headerCandidatesFromLine(line: string): HeaderCandidate[] {
+  return LEAD_IMPORT_DELIMITERS.map((delimiter) => {
+    const headers = splitCsvLine(line, delimiter).map(normalizeCell);
+    return {
       delimiter,
-      headerRow,
       headers,
       statusMatch: buildHeaderMatch(headers, STATUS_IMPORT_HEADERS),
       priorityMatch: buildHeaderMatch(headers, PRIORITY_IMPORT_HEADERS),
-    });
-  }
-
-  return inspections;
+    };
+  });
 }
 
-function resolveLeadImportDelimiter(
-  csvText: string,
-  importType: "import_status" | "import_prioridad",
+function inspectHeaderCandidates(
+  candidates: readonly HeaderCandidate[],
+): LeadImportCsvInspectionResult {
+  const exactStatus = candidates.filter((c) => c.statusMatch.exact);
+  const exactPriority = candidates.filter((c) => c.priorityMatch.exact);
+
+  if (exactStatus.length > 0 && exactPriority.length > 0) {
+    return {
+      ok: false,
+      code: "ambiguous_headers",
+      message: "CSV headers match multiple import types",
+      headers: candidates[0]?.headers ?? [],
+    };
+  }
+
+  if (exactStatus.length === 1) {
+    return {
+      ok: true,
+      importType: "import_status",
+      headers: exactStatus[0].headers,
+    };
+  }
+
+  if (exactPriority.length === 1) {
+    return {
+      ok: true,
+      importType: "import_prioridad",
+      headers: exactPriority[0].headers,
+    };
+  }
+
+  const bestStatus = candidates
+    .map((candidate) => candidate.statusMatch)
+    .toSorted((a, b) => getMatchIssueScore(a) - getMatchIssueScore(b))[0];
+  const bestPriority = candidates
+    .map((candidate) => candidate.priorityMatch)
+    .toSorted((a, b) => getMatchIssueScore(a) - getMatchIssueScore(b))[0];
+
+  if (
+    bestStatus &&
+    bestPriority &&
+    (isBestMatchCandidate(bestStatus) || isBestMatchCandidate(bestPriority))
+  ) {
+    const preferStatus =
+      getMatchIssueScore(bestStatus) <= getMatchIssueScore(bestPriority);
+    return {
+      ok: false,
+      code: "missing_required_headers",
+      message: preferStatus
+        ? formatHeaderErrors(bestStatus, "import_status")
+        : formatHeaderErrors(bestPriority, "import_prioridad"),
+      headers: candidates[0]?.headers ?? [],
+    };
+  }
+
+  return {
+    ok: false,
+    code: "unknown_headers",
+    message: "CSV headers do not match a supported import template",
+    headers: candidates[0]?.headers ?? [],
+  };
+}
+
+function resolveLayoutForImportType(
+  line: string,
+  importType: LeadImportType,
 ):
-  | {
-      ok: true;
-      delimiter: CsvDelimiter;
-      headerRowNumber: number;
-      headers: string[];
-    }
+  | { ok: true; layout: ResolvedLayout }
   | {
       ok: false;
       code: LeadImportTypeDetectionErrorCode;
       message: string;
       headers: string[];
     } {
-  const inspections = readDelimiterInspections(csvText);
-  if (inspections.length === 0) {
-    return {
-      ok: false,
-      code: "missing_required_headers",
-      message: "CSV header row is required",
-      headers: [],
-    };
-  }
-
-  const matches = inspections.filter((inspection) =>
+  const candidates = headerCandidatesFromLine(line);
+  const matches = candidates.filter((candidate) =>
     importType === "import_status"
-      ? inspection.statusMatch.exact
-      : inspection.priorityMatch.exact,
+      ? candidate.statusMatch.exact
+      : candidate.priorityMatch.exact,
   );
 
   if (matches.length === 1) {
-    const match = matches[0];
     return {
       ok: true,
-      delimiter: match.delimiter,
-      headerRowNumber: match.headerRow.rowNumber,
-      headers: match.headers,
+      layout: {
+        delimiter: matches[0].delimiter,
+        headers: matches[0].headers,
+      },
     };
   }
 
@@ -192,40 +248,122 @@ function resolveLeadImportDelimiter(
     };
   }
 
-  const best = inspections
-    .map((inspection) =>
+  const best = candidates
+    .map((candidate) =>
       importType === "import_status"
-        ? inspection.statusMatch
-        : inspection.priorityMatch,
+        ? candidate.statusMatch
+        : candidate.priorityMatch,
     )
     .toSorted((a, b) => getMatchIssueScore(a) - getMatchIssueScore(b))[0];
 
   return {
     ok: false,
     code: "missing_required_headers",
-    message: formatHeaderErrors(best, importType),
-    headers: inspections[0].headers,
+    message: best
+      ? formatHeaderErrors(best, importType)
+      : "CSV header row is required",
+    headers: candidates[0]?.headers ?? [],
   };
+}
+
+function findFirstNonEmptyLine(csvText: string): string | null {
+  const lines = csvText.split(/\r?\n/);
+  for (const line of lines) {
+    if (!isLineEmpty(line)) {
+      return line;
+    }
+  }
+  return null;
 }
 
 function readRecord(
   headers: readonly string[],
-  row: CsvRow,
+  cells: readonly string[],
 ): Record<string, string> {
   const record: Record<string, string> = {};
 
   for (let index = 0; index < headers.length; index++) {
-    record[headers[index]] = (row.cells[index] ?? "").trim();
+    record[headers[index]] = (cells[index] ?? "").trim();
   }
 
   return record;
 }
 
+async function consumeCsvLinesFromStream(
+  stream: ReadableStream<Uint8Array>,
+  onLine: (line: string, rowNumber: number) => boolean | void,
+): Promise<void> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffered = "";
+  let rowNumber = 0;
+
+  const processBufferedLines = (flushLastLine: boolean): boolean => {
+    while (true) {
+      const newlineIndex = buffered.indexOf("\n");
+      if (newlineIndex < 0) {
+        break;
+      }
+
+      let line = buffered.slice(0, newlineIndex);
+      if (line.endsWith("\r")) {
+        line = line.slice(0, -1);
+      }
+
+      rowNumber++;
+      const shouldContinue = onLine(line, rowNumber);
+      buffered = buffered.slice(newlineIndex + 1);
+      if (shouldContinue === false) {
+        return false;
+      }
+    }
+
+    if (flushLastLine && buffered.length > 0) {
+      let line = buffered;
+      if (line.endsWith("\r")) {
+        line = line.slice(0, -1);
+      }
+
+      rowNumber++;
+      const shouldContinue = onLine(line, rowNumber);
+      buffered = "";
+      if (shouldContinue === false) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  try {
+    const readNext = async (): Promise<void> => {
+      const { done, value } = await reader.read();
+      if (done) {
+        return;
+      }
+
+      buffered += decoder.decode(value, { stream: true });
+      if (!processBufferedLines(false)) {
+        return;
+      }
+
+      await readNext();
+    };
+
+    await readNext();
+
+    buffered += decoder.decode();
+    processBufferedLines(true);
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export function inspectLeadImportCsv(
   csvText: string,
 ): LeadImportCsvInspectionResult {
-  const inspections = readDelimiterInspections(csvText);
-  if (inspections.length === 0) {
+  const headerLine = findFirstNonEmptyLine(csvText);
+  if (!headerLine) {
     return {
       ok: false,
       code: "missing_required_headers",
@@ -234,115 +372,65 @@ export function inspectLeadImportCsv(
     };
   }
 
-  const exactStatus = inspections.filter(
-    (inspection) => inspection.statusMatch.exact,
-  );
-  const exactPriority = inspections.filter(
-    (inspection) => inspection.priorityMatch.exact,
-  );
-
-  if (exactStatus.length > 0 && exactPriority.length > 0) {
+  if (headerLine.includes('"')) {
     return {
       ok: false,
-      code: "ambiguous_headers",
-      message: "CSV headers match multiple import types",
-      headers: inspections[0].headers,
+      code: "unknown_headers",
+      message: "Quoted CSV fields are not supported for lead imports",
+      headers: [],
     };
   }
 
-  if (exactStatus.length === 1) {
-    const inspection = exactStatus[0];
-    return {
-      ok: true,
-      importType: "import_status",
-      headers: inspection.headers,
-    };
-  }
-
-  if (exactPriority.length === 1) {
-    const inspection = exactPriority[0];
-    return {
-      ok: true,
-      importType: "import_prioridad",
-      headers: inspection.headers,
-    };
-  }
-
-  const firstHeaders = inspections[0].headers;
-  if (isHeaderRowEmpty(firstHeaders)) {
-    return {
-      ok: false,
-      code: "missing_required_headers",
-      message: "CSV header row is required",
-      headers: firstHeaders,
-    };
-  }
-
-  const bestStatusMatch = inspections
-    .map((inspection) => inspection.statusMatch)
-    .toSorted((a, b) => getMatchIssueScore(a) - getMatchIssueScore(b))[0];
-  const bestPriorityMatch = inspections
-    .map((inspection) => inspection.priorityMatch)
-    .toSorted((a, b) => getMatchIssueScore(a) - getMatchIssueScore(b))[0];
-
-  if (
-    isBestMatchCandidate(bestStatusMatch) ||
-    isBestMatchCandidate(bestPriorityMatch)
-  ) {
-    const preferStatus =
-      getMatchIssueScore(bestStatusMatch) <=
-      getMatchIssueScore(bestPriorityMatch);
-    return {
-      ok: false,
-      code: "missing_required_headers",
-      message: preferStatus
-        ? formatHeaderErrors(bestStatusMatch, "import_status")
-        : formatHeaderErrors(bestPriorityMatch, "import_prioridad"),
-      headers: firstHeaders,
-    };
-  }
-
-  return {
-    ok: false,
-    code: "unknown_headers",
-    message: "CSV headers do not match a supported import template",
-    headers: firstHeaders,
-  };
+  return inspectHeaderCandidates(headerCandidatesFromLine(headerLine));
 }
 
-export function parseLeadImportRows(input: {
-  csvText: string;
-  importType: "import_status" | "import_prioridad";
-}): {
+export async function parseLeadImportRowsFromStream(input: {
+  streamFactory: LeadImportStreamFactory;
+  importType: LeadImportType;
+}): Promise<{
   validRows: ImportRowInput[];
   invalidRows: Array<{
     row: number;
     reason: string;
     type: "import_status" | "import_prioridad";
   }>;
-} {
-  const resolved = resolveLeadImportDelimiter(input.csvText, input.importType);
-  if (!resolved.ok) {
-    throw new Error(resolved.message);
-  }
-
-  const rows = parseCsvRows(input.csvText, resolved.delimiter);
+}> {
   const validRows: ImportRowInput[] = [];
   const invalidRows: Array<{
     row: number;
     reason: string;
     type: "import_status" | "import_prioridad";
   }> = [];
+
+  let layout: ResolvedLayout | null = null;
   let processedRows = 0;
 
-  for (const row of rows) {
-    if (row.rowNumber <= resolved.headerRowNumber) {
-      continue;
+  await consumeCsvLinesFromStream(input.streamFactory(), (line, rowNumber) => {
+    if (isLineEmpty(line)) {
+      return;
     }
 
-    if (row.cells.every((cell) => cell.trim().length === 0)) {
-      continue;
+    assertSupportedLeadCsvLine(line);
+
+    if (!layout) {
+      const resolution = resolveLayoutForImportType(line, input.importType);
+      if (!resolution.ok) {
+        throw new Error(resolution.message);
+      }
+      layout = resolution.layout;
+      return;
     }
+
+    const cells = splitCsvLine(line, layout.delimiter);
+    if (cells.length !== layout.headers.length) {
+      invalidRows.push({
+        row: rowNumber,
+        reason: `Invalid column count: expected ${layout.headers.length}, got ${cells.length}`,
+        type: input.importType,
+      });
+      return;
+    }
+
     processedRows++;
     if (processedRows > MAX_LEAD_IMPORT_ROWS) {
       throw new Error(
@@ -350,16 +438,16 @@ export function parseLeadImportRows(input: {
       );
     }
 
-    const record = readRecord(resolved.headers, row);
+    const record = readRecord(layout.headers, cells);
     const ruc = record.documento ?? "";
 
     if (!/^\d+$/.test(ruc)) {
       invalidRows.push({
-        row: row.rowNumber,
+        row: rowNumber,
         reason: "Invalid RUC",
         type: input.importType,
       });
-      continue;
+      return;
     }
 
     if (input.importType === "import_status") {
@@ -367,20 +455,20 @@ export function parseLeadImportRows(input: {
       const status = parseLeadStatus(statusRaw);
       if (!status.ok || status.value === undefined) {
         invalidRows.push({
-          row: row.rowNumber,
+          row: rowNumber,
           reason: `Invalid resultado: ${statusRaw}`,
           type: "import_status",
         });
-        continue;
+        return;
       }
 
       validRows.push({
-        row: row.rowNumber,
+        row: rowNumber,
         ruc,
         type: "import_status",
         status: status.value,
       });
-      continue;
+      return;
     }
 
     const priorityRaw = (record.prioridad ?? "").trim().toUpperCase();
@@ -393,19 +481,23 @@ export function parseLeadImportRows(input: {
 
     if (!prioridad.ok || prioridad.value === undefined) {
       invalidRows.push({
-        row: row.rowNumber,
+        row: rowNumber,
         reason: `Invalid prioridad: ${priorityInput}`,
         type: "import_prioridad",
       });
-      continue;
+      return;
     }
 
     validRows.push({
-      row: row.rowNumber,
+      row: rowNumber,
       ruc,
       type: "import_prioridad",
       prioridad: prioridad.value,
     });
+  });
+
+  if (!layout) {
+    throw new Error("CSV header row is required");
   }
 
   return { validRows, invalidRows };
