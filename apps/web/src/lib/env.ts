@@ -141,8 +141,8 @@ function parseGoogleOAuthEnv(source: EnvSource) {
 
 function parseNotificationsEnv(source: EnvSource) {
   return {
-    resendApiKey: optional(source, "RESEND_API_KEY", ""),
-    emailFrom: optional(source, "EMAIL_FROM", ""),
+    resendApiKey: required(source, "RESEND_API_KEY"),
+    emailFrom: required(source, "EMAIL_FROM"),
     whatsappAccessToken: optional(source, "WHATSAPP_ACCESS_TOKEN", ""),
     whatsappPhoneNumberId: optional(source, "WHATSAPP_PHONE_NUMBER_ID", ""),
     whatsappApiVersion: optional(source, "WHATSAPP_GRAPH_API_VERSION", "v23.0"),
@@ -175,6 +175,10 @@ const envParsers: {
   notifications: parseNotificationsEnv,
 };
 
+const envCache: {
+  [K in EnvCapability]?: EnvByCapability[K];
+} = {};
+
 export function parseEnvFor<C extends EnvCapability>(
   capability: C,
   source: EnvSource,
@@ -185,5 +189,12 @@ export function parseEnvFor<C extends EnvCapability>(
 export function getEnvFor<C extends EnvCapability>(
   capability: C,
 ): EnvByCapability[C] {
-  return parseEnvFor(capability, process.env);
+  const cached = envCache[capability];
+  if (cached) {
+    return cached;
+  }
+
+  const parsed = parseEnvFor(capability, process.env);
+  envCache[capability] = parsed;
+  return parsed;
 }
