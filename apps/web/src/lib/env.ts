@@ -175,7 +175,7 @@ const envParsers: {
   notifications: parseNotificationsEnv,
 };
 
-const envCache: {
+let envCache: {
   [K in EnvCapability]?: EnvByCapability[K];
 } = {};
 
@@ -201,7 +201,5 @@ export function getEnvFor<C extends EnvCapability>(
 
 /** @internal - Only for testing */
 export function _resetEnvCache() {
-  for (const key in envCache) {
-    delete envCache[key as EnvCapability];
-  }
+  envCache = {};
 }
