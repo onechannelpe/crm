@@ -1,6 +1,6 @@
 import { createPrivateKey, createPublicKey } from "node:crypto";
 
-import { env } from "~/lib/env";
+import { getEnv } from "~/lib/env";
 
 import type {
   ExtensionHandoffClaims,
@@ -59,6 +59,7 @@ function encodeSigningInput(
 }
 
 async function importPrivateKey(): Promise<CryptoKey> {
+  const env = getEnv();
   if (!env.extensionHandoffPrivateKeyPkcs8Base64) {
     throw new Error("Missing extension handoff private key");
   }
@@ -73,6 +74,7 @@ async function importPrivateKey(): Promise<CryptoKey> {
 }
 
 async function importPublicKey(): Promise<CryptoKey> {
+  const env = getEnv();
   if (!env.extensionHandoffPrivateKeyPkcs8Base64) {
     throw new Error("Missing extension handoff private key");
   }

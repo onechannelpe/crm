@@ -1,11 +1,12 @@
 import { createHash, randomBytes, webcrypto } from "node:crypto";
 
-import { env } from "~/lib/env";
+import { getEnv } from "~/lib/env";
 
 const IV_BYTES = 12;
 const ALGORITHM = "AES-GCM";
 
 async function getKey() {
+  const env = getEnv();
   const digest = createHash("sha256").update(env.totpEncryptionKey).digest();
   return webcrypto.subtle.importKey("raw", digest, ALGORITHM, false, [
     "encrypt",

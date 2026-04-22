@@ -1,5 +1,5 @@
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { env } from "~/lib/env";
+import { getEnv } from "~/lib/env";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -60,7 +60,7 @@ export async function createHandoffToken(
         message: "Missing request origin",
       });
     }
-    if (input.origin !== env.extensionExpectedOrigin) {
+    if (input.origin !== getEnv().extensionExpectedOrigin) {
       return Err({
         reason: "invalid_origin",
         message: "Request origin is not allowed for extension handoff",

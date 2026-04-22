@@ -1,7 +1,7 @@
 import { createEmailComposer } from "@crm/email-composer";
 import { createMessageChannels } from "@crm/message-channels";
 
-import { env } from "~/lib/env";
+import { getEnv } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
@@ -19,6 +19,7 @@ import { createAppNotificationService } from "~/server/notifications/service";
 import type { ServerInfra } from "./infra";
 
 export function createNotificationsRuntime(infra: ServerInfra) {
+  const env = getEnv();
   const channels = createMessageChannels({
     resendApiKey: env.resendApiKey || undefined,
     fromEmail: env.emailFrom || undefined,

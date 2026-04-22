@@ -117,4 +117,13 @@ export function parseEnv(source: EnvSource) {
 
 export type AppEnv = ReturnType<typeof parseEnv>;
 
-export const env = parseEnv(process.env);
+let cachedEnv: AppEnv | undefined;
+
+function loadEnv(): AppEnv {
+  cachedEnv ??= parseEnv(process.env);
+  return cachedEnv;
+}
+
+export function getEnv(): AppEnv {
+  return loadEnv();
+}

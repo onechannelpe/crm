@@ -1,8 +1,8 @@
-import { env } from "~/lib/env";
+import { getEnv } from "~/lib/env";
 
 export function getClientIp(
   headers: Headers,
-  trustedProxy = env.trustedProxy === "true",
+  trustedProxy = getEnv().trustedProxy === "true",
 ): string {
   if (!trustedProxy) return "127.0.0.1";
 

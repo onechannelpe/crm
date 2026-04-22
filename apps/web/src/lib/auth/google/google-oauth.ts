@@ -1,14 +1,20 @@
 import { decodeIdToken, Google } from "arctic";
 
-import { env } from "~/lib/env";
+import { getEnv } from "~/lib/env";
 import { isPlainRecord } from "~/lib/type-guards";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-export const googleOAuth = new Google(
-  env.googleClientId,
-  env.googleClientSecret,
-  env.googleRedirectUri,
-);
+let googleOAuth: Google | undefined;
+
+export function getGoogleOAuth(): Google {
+  const env = getEnv();
+  googleOAuth ??= new Google(
+    env.googleClientId,
+    env.googleClientSecret,
+    env.googleRedirectUri,
+  );
+  return googleOAuth;
+}
 
 export interface GoogleIdTokenClaims {
   sub: string;
@@ -48,7 +54,7 @@ export async function authenticateGoogleAuthorizationCode(input: {
   >
 > {
   try {
-    const tokens = await googleOAuth.validateAuthorizationCode(
+    const tokens = await getGoogleOAuth().validateAuthorizationCode(
       input.code,
       input.codeVerifier,
     );
