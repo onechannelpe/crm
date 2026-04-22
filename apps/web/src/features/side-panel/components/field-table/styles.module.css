@@ -80,6 +80,13 @@
   width: 100%;
 }
 
+.fieldInputValue {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
 .fieldTextValue {
   align-items: center;
   color: var(--foreground);

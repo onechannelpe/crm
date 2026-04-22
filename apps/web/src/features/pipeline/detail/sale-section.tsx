@@ -1,7 +1,9 @@
-import { useAction } from "@solidjs/router";
+import { useAction, useNavigate } from "@solidjs/router";
 import { createSignal } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
+import Link from "~/components/icons/link";
+import Lock from "~/components/icons/lock";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
@@ -16,46 +18,42 @@ import {
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailCommercialInputView } from "~/server/pipeline/application/queries/views/lead-detail";
 
-import { completeCommercialInputMutation } from "../data/mutations";
+import { createSaleMutation } from "../data/mutations";
 
-import styles from "./commercial-input-section.module.css";
+import styles from "./sale-section.module.css";
 
-export function CommercialInputSection(props: {
+type SaleSectionProps = {
   leadId: number;
-  initialValues?: LeadDetailCommercialInputView;
-}) {
-  const complete = useAction(completeCommercialInputMutation);
+};
 
-  const [proveedorActual, setProveedorActual] = createSignal(
-    props.initialValues?.proveedorActual ?? "",
-  );
-  const [tasaActual, setTasaActual] = createSignal(
-    props.initialValues?.tasaActual?.toString() ?? "",
-  );
-  const [gpv, setGpv] = createSignal(
-    props.initialValues?.gpv?.toString() ?? "",
-  );
-  const [ticket, setTicket] = createSignal(
-    props.initialValues?.ticket?.toString() ?? "",
-  );
-  const [abono, setAbono] = createSignal(
-    props.initialValues?.abono?.toString() ?? "",
-  );
-  const [cantidadPos, setCantidadPos] = createSignal(
-    props.initialValues?.cantidadPos?.toString() ?? "",
-  );
+export function SaleSection(props: SaleSectionProps) {
+  const navigate = useNavigate();
+  const create = useAction(createSaleMutation);
+
+  const [proveedorActual, setProveedorActual] = createSignal("");
+  const [tasaActual, setTasaActual] = createSignal("");
+  const [gpv, setGpv] = createSignal("");
+  const [ticket, setTicket] = createSignal("");
+  const [abono, setAbono] = createSignal("");
+  const [cantidadPos, setCantidadPos] = createSignal("");
+  const [banco, setBanco] = createSignal("");
+  const [nroCuenta, setNroCuenta] = createSignal("");
+  const [cci, setCci] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    if (!proveedorActual().trim()) return;
+    const isNonBcp = banco().trim().toLowerCase() !== "bcp";
+    if (isNonBcp && !cci().trim()) {
+      setError("CCI es requerido para bancos distintos a BCP");
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
-      await complete({
+      await create({
         leadId: props.leadId,
         proveedorActual: proveedorActual(),
         tasaActual: Number(tasaActual()),
@@ -63,9 +61,13 @@ export function CommercialInputSection(props: {
         ticket: Number(ticket()),
         abono: Number(abono()),
         cantidadPos: Number(cantidadPos()),
+        banco: banco(),
+        nroCuenta: nroCuenta(),
+        cci: cci().trim() || null,
       });
+      navigate("/leads");
     } catch (err) {
-      setError(toAppError(err, "Error al guardar").publicMessage);
+      setError(toAppError(err, "Error al registrar venta").publicMessage);
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +75,7 @@ export function CommercialInputSection(props: {
 
   return (
     <section class={styles.section}>
-      <p class={styles.eyebrow}>Datos comerciales</p>
+      <p class={styles.eyebrow}>Venta</p>
       <form onSubmit={(e) => void handleSubmit(e)}>
         <FieldTable>
           <FieldRow readonly>
@@ -187,6 +189,49 @@ export function CommercialInputSection(props: {
               />
             </FieldInputValue>
           </FieldRow>
+          <FieldRow readonly>
+            <FieldLabel>
+              <FieldIcon>
+                <Building2 size={16} />
+              </FieldIcon>
+              <FieldLabelText>Banco</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>
+              <TextInput
+                sizeVariant="sm"
+                value={banco()}
+                onChange={setBanco}
+                required
+              />
+            </FieldInputValue>
+          </FieldRow>
+          <FieldRow readonly>
+            <FieldLabel>
+              <FieldIcon>
+                <Link size={16} />
+              </FieldIcon>
+              <FieldLabelText>Nro. cuenta</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>
+              <TextInput
+                sizeVariant="sm"
+                value={nroCuenta()}
+                onChange={setNroCuenta}
+                required
+              />
+            </FieldInputValue>
+          </FieldRow>
+          <FieldRow readonly>
+            <FieldLabel>
+              <FieldIcon>
+                <Lock size={16} />
+              </FieldIcon>
+              <FieldLabelText>CCI</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>
+              <TextInput sizeVariant="sm" value={cci()} onChange={setCci} />
+            </FieldInputValue>
+          </FieldRow>
         </FieldTable>
         {error() && <p class={styles.error}>{error()}</p>}
         <div class={styles.actions}>
@@ -196,7 +241,7 @@ export function CommercialInputSection(props: {
             size="sm"
             loading={submitting()}
           >
-            Guardar datos comerciales
+            Registrar venta
           </Button>
         </div>
       </form>

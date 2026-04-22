@@ -50,32 +50,3 @@
   margin: 0;
   padding: 0 8px 8px;
 }
-
-.commercialInputSection {
-  border-bottom: 1px solid var(--border);
-  padding: 12px 8px 16px;
-}
-
-.commercialInputTitle {
-  color: var(--foreground);
-  font-size: 13px;
-  font-weight: 600;
-  margin: 0 0 12px;
-}
-
-.commercialInputGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.commercialInputFull {
-  grid-column: 1 / -1;
-}
-
-.commercialInputActions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 12px;
-}

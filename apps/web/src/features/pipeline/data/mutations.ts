@@ -6,7 +6,11 @@ import {
   requestLeadReassignment,
   requestLeadReview,
 } from "~/actions/pipeline/commands/leads";
-import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
+import {
+  requestQuotationCreation,
+  requestSaleApproval,
+} from "~/actions/pipeline/commands/quotations";
+import { requestSaleCreation } from "~/actions/pipeline/commands/sales";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 
@@ -64,6 +68,47 @@ export const completeCommercialInputMutation = action(
     );
   },
   "pipeline.completeCommercialInput",
+);
+
+export const createQuotationMutation = action(
+  async (input: {
+    leadId: number;
+    paybackPricing: number;
+    tarifaDebito: number;
+    tarifaCredito: number;
+    tarifaForaneo: number;
+    fee: number;
+    moneda: "PEN" | "USD";
+  }) => {
+    await requestQuotationCreation(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "pipeline.createQuotation",
+);
+
+export const createSaleMutation = action(
+  async (input: {
+    leadId: number;
+    proveedorActual: string;
+    tasaActual: number;
+    gpv: number;
+    ticket: number;
+    abono: number;
+    cantidadPos: number;
+    banco: string;
+    nroCuenta: string;
+    cci: string | null;
+  }) => {
+    await requestSaleCreation(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "pipeline.createSale",
 );
 
 export const reassignLeadMutation = action(

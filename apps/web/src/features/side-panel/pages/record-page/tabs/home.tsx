@@ -2,6 +2,8 @@ import { Show } from "solid-js";
 
 import { CommercialInputSection } from "~/features/pipeline/detail/commercial-input-section";
 import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
+import { QuotationSection } from "~/features/pipeline/detail/quotation-section";
+import { SaleSection } from "~/features/pipeline/detail/sale-section";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { BootstrapWidget } from "../widgets/bootstrap";
@@ -67,6 +69,19 @@ function DetailContent(props: { data: LeadDetailView }) {
           leadId={props.data.lead.id}
           initialValues={props.data.commercialInput}
         />
+      </Show>
+
+      <Show when={props.data.lead.stage === "READY_FOR_QUOTATION"}>
+        <QuotationSection
+          leadId={props.data.lead.id}
+          existingQuotation={
+            props.data.quotations[props.data.quotations.length - 1]
+          }
+        />
+      </Show>
+
+      <Show when={props.data.lead.stage === "READY_FOR_SALE"}>
+        <SaleSection leadId={props.data.lead.id} />
       </Show>
 
       <WorkflowWidget data={props.data} />

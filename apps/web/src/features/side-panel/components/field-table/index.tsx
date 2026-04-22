@@ -52,3 +52,7 @@ export function FieldValue(props: ParentProps) {
 export function FieldTextValue(props: ParentProps) {
   return <span class={styles.fieldTextValue}>{props.children}</span>;
 }
+
+export function FieldInputValue(props: ParentProps) {
+  return <div class={styles.fieldInputValue}>{props.children}</div>;
+}
