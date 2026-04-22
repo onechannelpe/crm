@@ -95,7 +95,7 @@ export function LeadsWorkspace() {
       ? [
           {
             key: "import-csv",
-            label: "Importar CSV",
+            label: "Importar",
             onClick: () => leadImport.openFilePicker(),
           },
           {
