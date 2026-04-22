@@ -1,4 +1,5 @@
 import { defineWebSocketHandler } from "h3";
+import type { WebSocketMessage } from "h3";
 
 import { parseRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
 
@@ -8,7 +9,7 @@ import {
   resolvePeerSession,
   type AppPeerSession,
 } from "./ws-auth";
-import type { WsMessage, WsPeer } from "./ws-types";
+import type { WsPeer } from "./ws-types";
 
 interface TopicSubscriptionHandlerConfig<TKey> {
   hub: TopicHub;
@@ -27,7 +28,7 @@ interface TopicSubscriptionHandlerConfig<TKey> {
   ) => Promise<string | null> | string | null;
 }
 
-function messageToText(message: WsMessage): string {
+function messageToText(message: WebSocketMessage): string {
   if (
     typeof message === "object" &&
     message !== null &&
@@ -54,7 +55,7 @@ export function createTopicSubscriptionWsHandler<TKey>(
       peer.context.session = session;
     },
 
-    async message(peer: WsPeer, message: WsMessage) {
+    async message(peer: WsPeer, message: WebSocketMessage) {
       const session = readPeerSession(peer);
       if (!session) {
         peer.close();
