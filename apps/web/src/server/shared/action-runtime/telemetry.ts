@@ -1,6 +1,6 @@
 import { isAppError, type AppErrorCode } from "~/lib/app-errors";
 import { getErrorMessage } from "~/lib/errors";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 import type { AppContext } from "./context";
 
@@ -24,7 +24,7 @@ export function toTelemetryError(error: unknown): ActionTelemetryError {
 }
 
 export function recordActionSuccess(input: ActionTelemetryInput) {
-  const { observabilityService } = serverRuntime.observability;
+  const { observabilityService } = getServerRuntime().observability;
   void observabilityService
     .recordAction({
       traceId: input.ctx.traceId,
@@ -48,7 +48,7 @@ export function recordActionError(
   input: ActionTelemetryInput,
   error: ActionTelemetryError,
 ) {
-  const { observabilityService } = serverRuntime.observability;
+  const { observabilityService } = getServerRuntime().observability;
   void observabilityService
     .recordAction({
       traceId: input.ctx.traceId,

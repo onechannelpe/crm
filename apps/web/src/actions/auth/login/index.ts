@@ -14,7 +14,7 @@ import { startPasskeyLogin } from "~/server/auth/application/commands/start-pass
 import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
 import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 import {
@@ -39,7 +39,7 @@ export async function passwordLogin(
   const identifier = readLoginText(formData, "identifier");
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
-  const loginContext = serverRuntime.auth.login;
+  const loginContext = getServerRuntime().auth.login;
   const result = await submitPasswordLogin(
     {
       identifier,
@@ -110,7 +110,7 @@ export async function passkeyStart(
   }
 
   const request = getRequestClientMetadata();
-  const loginContext = serverRuntime.auth.login;
+  const loginContext = getServerRuntime().auth.login;
   const result =
     mode === "identified"
       ? await startPasskeyLogin(
@@ -170,7 +170,7 @@ export async function totpLogin(
     throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestClientMetadata();
-  const loginContext = serverRuntime.auth.login;
+  const loginContext = getServerRuntime().auth.login;
   const result = await submitTotpForLoginFlow(
     {
       flowId,

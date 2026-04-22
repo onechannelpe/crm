@@ -1,10 +1,10 @@
 import { requirePermission } from "~/lib/auth/access/session";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 export async function GET(): Promise<Response> {
   try {
-    const { extensionService } = serverRuntime.extension;
+    const { extensionService } = getServerRuntime().extension;
     const session = await requirePermission("team:read");
     const result = await extensionService.listTeamExecutiveStatuses({
       role: session.role,

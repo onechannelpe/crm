@@ -4,7 +4,7 @@ import { validationError } from "~/lib/app-errors";
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 function assertAudienceType(value: string): "user" | "role" | "global" {
   if (value === "user" || value === "role" || value === "global") {
@@ -59,7 +59,7 @@ export async function sendBroadcastNotification(params: {
   const audienceType = assertAudienceType(params.audienceType);
   const audienceRef = assertAudienceRef(audienceType, params.audienceRef);
 
-  await serverRuntime.notifications.service.publishCampaign({
+  await getServerRuntime().notifications.service.publishCampaign({
     type: "broadcast",
     eventType: "broadcast.general",
     audienceType,
@@ -69,6 +69,6 @@ export async function sendBroadcastNotification(params: {
     createdByUserId: session.userId,
   });
 
-  await serverRuntime.notifications.service.enqueueDueCampaigns(10);
-  await serverRuntime.notifications.dispatchPendingJobs();
+  await getServerRuntime().notifications.service.enqueueDueCampaigns(10);
+  await getServerRuntime().notifications.dispatchPendingJobs();
 }

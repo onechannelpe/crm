@@ -1,5 +1,5 @@
 import { isRole, type Role } from "~/lib/auth/access/rbac";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 import type { WsPeer } from "./ws-types";
 
@@ -76,7 +76,9 @@ export async function resolvePeerSession(
   }
 
   const validation =
-    await serverRuntime.auth.sessionService.validateSessionToken(sessionToken);
+    await getServerRuntime().auth.sessionService.validateSessionToken(
+      sessionToken,
+    );
   if (!validation.session) {
     return null;
   }

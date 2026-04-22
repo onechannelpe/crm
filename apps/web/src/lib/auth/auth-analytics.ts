@@ -4,7 +4,7 @@ import {
   type AuthFunnelScreen,
 } from "~/lib/observability/auth-funnel";
 import type { ActionRequestContext } from "~/lib/observability/context";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 export function isAuthAnalyticsScreen(
   value: unknown,
@@ -16,7 +16,7 @@ export function recordAuthAnalyticsEvent(
   event: AuthFunnelEvent,
   requestContext: ActionRequestContext,
 ): Promise<void> {
-  const { observabilityService } = serverRuntime.observability;
+  const { observabilityService } = getServerRuntime().observability;
   return observabilityService.recordAuthFunnelEvent({
     traceId: requestContext.traceId,
     requestId: requestContext.requestId,

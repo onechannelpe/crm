@@ -16,7 +16,7 @@ import {
   buildLeadImportProgressEvent,
   publishLeadImportProgress,
 } from "~/server/leads/imports/progress-events";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr, Ok } from "~/server/shared/result";
 
@@ -28,7 +28,8 @@ async function getAuthorizedLeadImportJob(
   actor: { userId: number; branchId: number; role: Role },
   jobId: number,
 ): Promise<IntegrationJobRow> {
-  const job = await serverRuntime.integrations.integration.jobs.findById(jobId);
+  const job =
+    await getServerRuntime().integrations.integration.jobs.findById(jobId);
   if (
     !job ||
     (job.type !== "import_status" && job.type !== "import_prioridad")
@@ -39,7 +40,7 @@ async function getAuthorizedLeadImportJob(
   const authorized = await canAccessLeadImportJob(
     actor,
     job,
-    serverRuntime.integrations.integration,
+    getServerRuntime().integrations.integration,
   );
   if (!authorized) {
     throw notFoundError("Import job not found");
@@ -74,8 +75,8 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
       fileSize: file.size,
     },
     execute: async (ctx) => {
-      const { repo, storage, syncExecutor } = serverRuntime.files;
-      const { integration } = serverRuntime.integrations;
+      const { repo, storage, syncExecutor } = getServerRuntime().files;
+      const { integration } = getServerRuntime().integrations;
       const headerChunkText = await file.slice(0, 64 * 1024).text();
       const detection = detectLeadImportFile({ fileText: headerChunkText });
       if (!detection.ok) {

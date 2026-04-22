@@ -9,7 +9,7 @@ import {
   ensureLeadImportsRealtimeBridge,
   getLeadImportsTopicHub,
 } from "~/server/leads/imports/realtime";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 import { createTopicSubscriptionWsHandler } from "./core/ws-handler-factory";
 
@@ -25,7 +25,7 @@ export default createTopicSubscriptionWsHandler<number>({
     await ensureLeadImportsRealtimeBridge();
 
     const job =
-      await serverRuntime.integrations.integration.jobs.findById(jobId);
+      await getServerRuntime().integrations.integration.jobs.findById(jobId);
     if (
       !job ||
       (job.type !== "import_status" && job.type !== "import_prioridad")
@@ -40,12 +40,12 @@ export default createTopicSubscriptionWsHandler<number>({
         role: session.role,
       },
       job,
-      serverRuntime.integrations.integration,
+      getServerRuntime().integrations.integration,
     );
   },
   async initialPayload(_session, jobId) {
     const job =
-      await serverRuntime.integrations.integration.jobs.findById(jobId);
+      await getServerRuntime().integrations.integration.jobs.findById(jobId);
     if (
       !job ||
       (job.type !== "import_status" && job.type !== "import_prioridad")

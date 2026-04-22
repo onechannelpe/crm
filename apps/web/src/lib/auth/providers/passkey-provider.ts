@@ -10,7 +10,7 @@ import {
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 
-import { getEnv } from "~/lib/env";
+import { getEnvFor } from "~/lib/env";
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -26,7 +26,7 @@ export function resolveWebauthnRelyingParty(
   request?: Request,
 ): WebauthnRelyingParty {
   if (!request) {
-    const env = getEnv();
+    const env = getEnvFor("passkey");
     return {
       rpID: env.webauthnRpId,
       origin: env.webauthnOrigin,

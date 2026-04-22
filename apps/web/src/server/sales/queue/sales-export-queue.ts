@@ -1,5 +1,5 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 import type { SalesExportProcessResult, SalesExportService } from "../types";
 
@@ -15,7 +15,7 @@ export function createSalesExportQueue(
 ) {
   const leaseMs = deps.leaseMs ?? 30_000;
   const batchSize = deps.batchSize ?? 25;
-  const service = deps.service ?? serverRuntime.sales.salesExportService;
+  const service = deps.service ?? getServerRuntime().sales.salesExportService;
 
   return createJobQueue({
     name: "sales-export",

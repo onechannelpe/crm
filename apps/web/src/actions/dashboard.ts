@@ -2,7 +2,7 @@
 
 import { requireAuth } from "~/lib/auth/access/session";
 import { requirePermission } from "~/lib/auth/access/session";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 export interface DashboardStats {
   activeLeads: number;
@@ -15,8 +15,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const session = await requireAuth();
   await requirePermission("sales:review");
 
-  const { contactAssignments } = serverRuntime.contactAssignments.read;
-  const { salesRecords } = serverRuntime.salesRecords.read.repos;
+  const { contactAssignments } = getServerRuntime().contactAssignments.read;
+  const { salesRecords } = getServerRuntime().salesRecords.read.repos;
 
   const activeLeads = await contactAssignments.findActiveByUser(session.userId);
   const pendingSalesCount = await salesRecords.countByExecutiveAndStatus(

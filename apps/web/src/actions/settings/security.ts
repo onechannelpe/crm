@@ -8,11 +8,11 @@ import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import type { UserId } from "~/server/shared/ids";
 
 async function requireCurrentUserWithStrongAuthState(userId: UserId) {
-  const repos = serverRuntime.security;
+  const repos = getServerRuntime().security;
   const user = await repos.users.findById(userId);
   if (!user) throw notFoundError("User not found");
 
@@ -48,7 +48,7 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<ActionSuccess> {
-  const { users, auditLogs } = serverRuntime.security;
+  const { users, auditLogs } = getServerRuntime().security;
   const safeCurrent = assertNonEmptyString(currentPassword, "currentPassword");
   const safeNew = assertNonEmptyString(newPassword, "newPassword");
   const session = await requireSession();
@@ -75,7 +75,7 @@ export async function changePassword(
 }
 
 export async function removeAllPasskeys(): Promise<ActionSuccess> {
-  const { passkeys, auditLogs } = serverRuntime.security;
+  const { passkeys, auditLogs } = getServerRuntime().security;
   const session = await requireSession();
   const { user, strongAuthStatus } =
     await requireCurrentUserWithStrongAuthState(session.userId);
@@ -102,7 +102,7 @@ export async function removeAllPasskeys(): Promise<ActionSuccess> {
 
 export async function disableTotp(): Promise<ActionSuccess> {
   const { userTotpFactors, userTotpRecoveryCodes, auditLogs } =
-    serverRuntime.security;
+    getServerRuntime().security;
   const session = await requireSession();
   const { user, strongAuthStatus } =
     await requireCurrentUserWithStrongAuthState(session.userId);

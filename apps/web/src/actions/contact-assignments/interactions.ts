@@ -4,7 +4,7 @@ import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/actions/contact-assignments/
 import type { CompleteContactAssignmentCallResult } from "~/actions/contact-assignments/contracts";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 type CallOutcome = (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
@@ -64,7 +64,7 @@ export async function completeContactAssignmentCall(
           outcome: parsedInput.outcome,
           notes: notes?.trim() ? notes : null,
         },
-        serverRuntime.contactAssignments.interactionRunner,
+        getServerRuntime().contactAssignments.interactionRunner,
       ),
   });
 }

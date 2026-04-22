@@ -5,7 +5,7 @@ import type {
   BulkParseResult,
 } from "~/actions/team/contracts";
 import { validationError } from "~/lib/app-errors";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
   applyBulkImport as applyBulkImportService,
@@ -48,7 +48,7 @@ export async function applyBulkImport(
     access: { kind: "permission", permission: "admin:manage" },
     input: { role: safeRole },
     execute: (ctx) =>
-      applyBulkImportService(ctx, serverRuntime.team.invites, {
+      applyBulkImportService(ctx, getServerRuntime().team.invites, {
         csvContent,
         role: safeRole,
       }),

@@ -15,7 +15,7 @@ vi.mock("../../src/lib/auth/access/session", () => ({
 }));
 
 vi.mock("../../src/server/runtime", () => ({
-  serverRuntime: {
+  getServerRuntime: () => ({
     extension: {
       extensionService: {
         claimInstallationSession: mocks.claimInstallationSession,
@@ -24,7 +24,7 @@ vi.mock("../../src/server/runtime", () => ({
         createHandoffToken: mocks.createHandoffToken,
       },
     },
-  },
+  }),
 }));
 
 import { POST as postEvents } from "../../src/routes/api/extension/events";

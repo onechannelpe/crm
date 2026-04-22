@@ -12,7 +12,7 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { completeOnboarding as completeOnboardingService } from "~/server/auth/application/commands/complete-onboarding";
 import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 export interface OnboardingRedirectResponse {
@@ -42,14 +42,14 @@ export async function completeOnboarding(
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const onboardingContext = serverRuntime.auth.onboarding;
+  const onboardingContext = getServerRuntime().auth.onboarding;
   const result = await completeOnboardingService(onboardingContext, {
     session,
     phoneE164: normalizePeruvianPhone(phoneE164),
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
     invalidateSession: (sessionId) =>
-      serverRuntime.auth.sessionService.invalidateSession(sessionId),
+      getServerRuntime().auth.sessionService.invalidateSession(sessionId),
   });
   if (isErr(result)) {
     mapOnboardingError(result.error);
@@ -64,7 +64,7 @@ export async function completePasskeyOnboarding(
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const onboardingContext = serverRuntime.auth.onboarding;
+  const onboardingContext = getServerRuntime().auth.onboarding;
   const registrationResult = await finishPasskeyRegistrationService(
     onboardingContext.repos,
     {
@@ -75,7 +75,7 @@ export async function completePasskeyOnboarding(
       userAgent: request.userAgent,
       createWebauthnProvider: createRequestPasskeyProviderFactory(),
       invalidateSession: (sessionId) =>
-        serverRuntime.auth.sessionService.invalidateSession(sessionId),
+        getServerRuntime().auth.sessionService.invalidateSession(sessionId),
     },
   );
   if (isErr(registrationResult)) {
@@ -91,7 +91,7 @@ export async function completePasskeyOnboarding(
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
     invalidateSession: (sessionId) =>
-      serverRuntime.auth.sessionService.invalidateSession(sessionId),
+      getServerRuntime().auth.sessionService.invalidateSession(sessionId),
   });
   if (isErr(result)) {
     mapOnboardingError(result.error);

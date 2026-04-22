@@ -3,7 +3,7 @@
 import type { SearchDirectResult } from "~/actions/search/contracts";
 import { requirePermission } from "~/lib/auth/access/session";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { isErr } from "~/server/shared/result";
 
@@ -15,7 +15,7 @@ export async function searchDirect(
   value: unknown,
   limit?: unknown,
 ): Promise<SearchDirectResult> {
-  const { repos, rateLimitDeps } = serverRuntime.search;
+  const { repos, rateLimitDeps } = getServerRuntime().search;
   const session = await requirePermission("search:use");
   await checkActionRateLimit("search.use", session.userId, rateLimitDeps);
 

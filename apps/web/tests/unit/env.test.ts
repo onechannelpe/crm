@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 describe("env validation", () => {
   let validateSecret: (key: string, value: string) => void;
-  let parseEnv: typeof import("../../src/lib/env").parseEnv;
+  let parseEnvFor: typeof import("../../src/lib/env").parseEnvFor;
   const baseEnv = {
     SESSION_SECRET: "temp_secret_for_initial_import_32_chars_long",
     TOTP_ENCRYPTION_KEY: "temp_secret_for_initial_import_32_chars_long",
@@ -28,7 +28,7 @@ describe("env validation", () => {
 
     const mod = await import("../../src/lib/env");
     validateSecret = mod.validateSecret;
-    parseEnv = mod.parseEnv;
+    parseEnvFor = mod.parseEnvFor;
   });
 
   it("throws if secret is too short", () => {
@@ -64,12 +64,12 @@ describe("env validation", () => {
   });
 
   it("defaults engine connect mode to local", () => {
-    expect(parseEnv(baseEnv).engineConnectMode).toBe("local");
+    expect(parseEnvFor("engine", baseEnv).engineConnectMode).toBe("local");
   });
 
   it("rejects invalid engine connect mode values", () => {
     expect(() =>
-      parseEnv({
+      parseEnvFor("engine", {
         ...baseEnv,
         ENGINE_CONNECT_MODE: "invalid",
       }),

@@ -4,7 +4,7 @@ import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -28,7 +28,7 @@ function createCleanupRepos(executor: DatabaseExecutor) {
 }
 
 export async function cleanupExpiredSessions(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.sessions.deleteExpired();
   if (deleted > 0) {
     logger.info("expired_sessions_deleted", { deleted });
@@ -36,7 +36,7 @@ export async function cleanupExpiredSessions(): Promise<void> {
 }
 
 export async function cleanupExpiredRequestSessions(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.requestSessions.deleteExpired();
   if (deleted > 0) {
     logger.info("expired_request_sessions_deleted", { deleted });
@@ -44,7 +44,7 @@ export async function cleanupExpiredRequestSessions(): Promise<void> {
 }
 
 export async function cleanupExpiredWebauthnChallenges(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.webauthnChallenges.deleteExpired();
   if (deleted > 0) {
     logger.info("expired_webauthn_challenges_deleted", { deleted });
@@ -52,7 +52,7 @@ export async function cleanupExpiredWebauthnChallenges(): Promise<void> {
 }
 
 export async function cleanupStaleAuthThrottle(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const expiredBlocks = await repos.authThrottle.deleteExpiredBlocks();
   const stale = await repos.authThrottle.deleteUpdatedBefore(
     Date.now() - config.auth.throttleRetentionMs,
@@ -64,7 +64,7 @@ export async function cleanupStaleAuthThrottle(): Promise<void> {
 }
 
 export async function cleanupStaleAuthEvents(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.authEvents.deleteCreatedBefore(
     Date.now() - config.auth.eventsRetentionMs,
   );
@@ -74,7 +74,7 @@ export async function cleanupStaleAuthEvents(): Promise<void> {
 }
 
 export async function cleanupStaleActionObservations(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.actionObservations.deleteCreatedBefore(
     Date.now() - config.observability.retentionMs,
   );
@@ -84,7 +84,7 @@ export async function cleanupStaleActionObservations(): Promise<void> {
 }
 
 export async function cleanupStaleAuthFunnelEvents(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.authFunnelEvents.deleteCreatedBefore(
     Date.now() - config.observability.retentionMs,
   );
@@ -94,7 +94,7 @@ export async function cleanupStaleAuthFunnelEvents(): Promise<void> {
 }
 
 export async function cleanupStaleActionRateLimits(): Promise<void> {
-  const repos = createCleanupRepos(serverRuntime.infra.db);
+  const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.actionRateLimits.deleteUpdatedBefore(
     Date.now() - config.security.rateLimitRetentionMs,
   );

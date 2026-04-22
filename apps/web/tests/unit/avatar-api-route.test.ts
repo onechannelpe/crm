@@ -10,13 +10,13 @@ vi.mock("../../src/lib/auth/access/session", () => ({
 }));
 
 vi.mock("../../src/server/runtime", () => ({
-  serverRuntime: {
+  getServerRuntime: () => ({
     profilePicture: {
       profilePictureService: {
         get: getMock,
       },
     },
-  },
+  }),
 }));
 
 import { GET } from "../../src/routes/api/me/avatar";

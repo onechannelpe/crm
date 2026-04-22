@@ -9,7 +9,7 @@ import type {
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/application/commands/request-password-reset";
 import { resetPassword as resetPasswordService } from "~/server/auth/application/commands/reset-password";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 function getOrigin(): string {
   const event = getRequestEvent();
@@ -22,7 +22,7 @@ export async function requestPasswordReset(
 ): Promise<RequestPasswordResetResult> {
   const rawEmail = formData.get("email");
   return requestPasswordResetService({
-    deps: serverRuntime.auth.passwordReset,
+    deps: getServerRuntime().auth.passwordReset,
     email: typeof rawEmail === "string" ? rawEmail : "",
     origin: getOrigin(),
   });
@@ -39,7 +39,7 @@ export async function resetPassword(
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
   return resetPasswordService({
-    repos: serverRuntime.auth.passwordReset.repos,
+    repos: getServerRuntime().auth.passwordReset.repos,
     token,
     password,
     confirmPassword,

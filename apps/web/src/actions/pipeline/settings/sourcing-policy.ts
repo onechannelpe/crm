@@ -3,7 +3,7 @@
 import { getSourcingPolicy } from "~/server/pipeline/application/queries/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/pipeline/application/settings/update-sourcing-policy";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function querySourcingPolicy(branchId: number) {
@@ -12,7 +12,7 @@ export async function querySourcingPolicy(branchId: number) {
     access: { kind: "auth" },
     input: { branchId },
     execute: (ctx) =>
-      getSourcingPolicy(serverRuntime.pipeline.deps.sourcingPolicy, {
+      getSourcingPolicy(getServerRuntime().pipeline.deps.sourcingPolicy, {
         actorRole: ctx.actor.role,
         branchId,
       }),

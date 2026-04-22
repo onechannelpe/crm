@@ -13,7 +13,7 @@ import {
   type AuthFunnelSource,
   type AuthFunnelScreen,
 } from "~/lib/observability/auth-funnel";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 import { resolveBoundedPositiveInt } from "./analytics-input";
 
@@ -109,7 +109,7 @@ export async function getAuthFunnelSnapshot(params?: {
   const eventName = assertEventName(params?.eventName);
   const method = assertMethod(params?.method);
   const outcome = assertOutcome(params?.outcome);
-  const { observabilityService } = serverRuntime.observability;
+  const { observabilityService } = getServerRuntime().observability;
 
   const [summary, recent] = await Promise.all([
     observabilityService.summarizeAuthFunnel({
