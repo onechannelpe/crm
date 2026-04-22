@@ -1,5 +1,7 @@
 import type { Generated } from "kysely";
 
+import type { Moneda } from "~/pipeline/contracts/lead-schema";
+
 export type PipelineStageValue =
   | "PENDING_EXTERNAL_REVIEW"
   | "REJECTED_BY_STATUS"
@@ -46,7 +48,7 @@ export interface PipelineQuotationsTable {
   tarifa_credito: number;
   tarifa_foraneo: number;
   fee: number;
-  moneda: "PEN" | "USD";
+  moneda: Moneda;
   version: number;
   created_at: number;
   created_by: number;

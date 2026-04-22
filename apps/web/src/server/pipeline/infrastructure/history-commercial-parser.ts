@@ -5,7 +5,7 @@ import { Ok, type Result } from "~/server/shared/result";
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
 import {
-  requireCurrency,
+  requireMoneda,
   requireNumber,
   requireString,
 } from "./history-payload-fields";
@@ -56,7 +56,7 @@ export function toQuotationEntry(
   const version = requireNumber(payload, "version", row);
   if (!version.ok) return version;
 
-  const moneda = requireCurrency(payload, row);
+  const moneda = requireMoneda(payload, row);
   if (!moneda.ok) return moneda;
 
   return Ok({

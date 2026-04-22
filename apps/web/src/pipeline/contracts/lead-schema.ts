@@ -26,7 +26,14 @@ export const LEAD_CALL_OUTCOMES = [
   "disqualified",
 ] as const;
 
+export const MONEDAS = ["PEN", "USD"] as const;
+
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
 export type LeadCallOutcome = (typeof LEAD_CALL_OUTCOMES)[number];
+export type Moneda = (typeof MONEDAS)[number];
+
+export function isMoneda(value: string): value is Moneda {
+  return (MONEDAS as readonly string[]).includes(value);
+}

@@ -1,3 +1,5 @@
+import type { Moneda } from "~/pipeline/contracts/lead-schema";
+
 export type LeadQuotation = {
   id: number;
   leadId: number;
@@ -6,7 +8,7 @@ export type LeadQuotation = {
   tarifaCredito: number;
   tarifaForaneo: number;
   fee: number;
-  moneda: "PEN" | "USD";
+  moneda: Moneda;
   version: number;
   createdAt: number;
   createdBy: number;

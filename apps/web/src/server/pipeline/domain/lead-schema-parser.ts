@@ -2,9 +2,11 @@ import {
   LEAD_PRIORITIES,
   LEAD_STAGES,
   LEAD_STATUSES,
+  MONEDAS,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
+  type Moneda,
 } from "~/pipeline/contracts/lead-schema";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -123,5 +125,16 @@ export function parseRequiredLeadPriority(
     LEAD_PRIORITIES,
     "invalid_prioridad",
     "Invalid prioridad",
+  );
+}
+
+export function parseRequiredMoneda(
+  value: string,
+): Result<Moneda, DomainError> {
+  return parseRequiredLeadValue(
+    value,
+    MONEDAS,
+    "invalid_moneda",
+    "Invalid moneda",
   );
 }

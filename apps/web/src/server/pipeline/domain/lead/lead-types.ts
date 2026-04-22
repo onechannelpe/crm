@@ -3,6 +3,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
+  Moneda,
 } from "~/pipeline/contracts/lead-schema";
 
 import type { LeadRecord } from "../lead-record";
@@ -56,7 +57,7 @@ export type LeadMutationIntent =
       kind: "create_quotation";
       quotationId: number;
       version: number;
-      moneda: "PEN" | "USD";
+      moneda: Moneda;
     }
   | {
       kind: "complete_commercial_input";

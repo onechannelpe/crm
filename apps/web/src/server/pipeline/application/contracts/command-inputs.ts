@@ -2,6 +2,7 @@ import type {
   LeadCallOutcome,
   LeadPriority,
   LeadStatus,
+  Moneda,
 } from "~/pipeline/contracts/lead-schema";
 
 import type { ActorContext } from "./actor-context";
@@ -61,7 +62,7 @@ export type CreateQuotationInput = {
   tarifaCredito: number;
   tarifaForaneo: number;
   fee: number;
-  moneda: "PEN" | "USD";
+  moneda: Moneda;
 };
 
 export type CompleteCommercialInputInput = {

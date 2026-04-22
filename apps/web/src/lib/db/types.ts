@@ -1,5 +1,7 @@
 import type { ColumnType, Generated } from "kysely";
 
+import type { Moneda } from "~/pipeline/contracts/lead-schema";
+
 type AuthFunnelSourceValue = "client" | "server";
 type AuthFunnelEventNameValue =
   | "screen_viewed"
@@ -839,7 +841,7 @@ export interface PipelineQuotationsTable {
   tarifa_credito: number;
   tarifa_foraneo: number;
   fee: number;
-  moneda: "PEN" | "USD";
+  moneda: Moneda;
   version: number;
   created_at: number;
   created_by: number;

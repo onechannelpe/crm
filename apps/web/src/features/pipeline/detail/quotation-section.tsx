@@ -14,6 +14,11 @@ import {
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import { toAppError } from "~/lib/app-errors";
+import {
+  isMoneda,
+  MONEDAS,
+  type Moneda,
+} from "~/pipeline/contracts/lead-schema";
 import type { LeadDetailQuotationView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { createQuotationMutation } from "../data/mutations";
@@ -43,7 +48,7 @@ export function QuotationSection(props: QuotationSectionProps) {
   const [fee, setFee] = createSignal(
     props.existingQuotation?.fee?.toString() ?? "",
   );
-  const [moneda, setMoneda] = createSignal<"PEN" | "USD">(
+  const [moneda, setMoneda] = createSignal<Moneda>(
     props.existingQuotation?.moneda ?? "PEN",
   );
   const [submitting, setSubmitting] = createSignal(false);
@@ -181,12 +186,16 @@ export function QuotationSection(props: QuotationSectionProps) {
               <select
                 class={styles.select}
                 value={moneda()}
-                onChange={(e) =>
-                  setMoneda(e.currentTarget.value as "PEN" | "USD")
-                }
+                onChange={(e) => {
+                  const val = e.currentTarget.value;
+                  if (isMoneda(val)) {
+                    setMoneda(val);
+                  }
+                }}
               >
-                <option value="PEN">PEN</option>
-                <option value="USD">USD</option>
+                {MONEDAS.map((m) => (
+                  <option value={m}>{m}</option>
+                ))}
               </select>
             </FieldInputValue>
           </FieldRow>

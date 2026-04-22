@@ -11,6 +11,7 @@ import {
   requestSaleApproval,
 } from "~/actions/pipeline/commands/quotations";
 import { requestSaleCreation } from "~/actions/pipeline/commands/sales";
+import type { Moneda } from "~/pipeline/contracts/lead-schema";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 
@@ -78,7 +79,7 @@ export const createQuotationMutation = action(
     tarifaCredito: number;
     tarifaForaneo: number;
     fee: number;
-    moneda: "PEN" | "USD";
+    moneda: Moneda;
   }) => {
     await requestQuotationCreation(input);
     return json(
