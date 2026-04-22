@@ -1,5 +1,5 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { Show, createSignal } from "solid-js";
+import { Show, createSignal, createUniqueId } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import Link from "~/components/icons/link";
@@ -34,6 +34,7 @@ type SaleSectionProps = {
 export function SaleSection(props: SaleSectionProps) {
   const navigate = useNavigate();
   const create = useAction(createSaleMutation);
+  const bankKindRadioName = `sale-bank-kind-${props.leadId}-${createUniqueId()}`;
 
   const [proveedorActual, setProveedorActual] = createSignal("");
   const [tasaActual, setTasaActual] = createSignal("");
@@ -225,7 +226,7 @@ export function SaleSection(props: SaleSectionProps) {
                   <label class={styles.bankKindOption}>
                     <input
                       type="radio"
-                      name="bank-kind"
+                      name={bankKindRadioName}
                       value={kind}
                       checked={bankChoice() === kind}
                       onChange={() => handleBankKindChange(kind)}
