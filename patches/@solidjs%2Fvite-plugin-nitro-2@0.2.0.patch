@@ -1,0 +1,28 @@
+diff --git a/dist/index.js b/dist/index.js
+index 9c8da4ac20e8e0cf1aa0feb0ab6d9a0a9abbc59d..8d9ec5e8ccb56fe2f23faa1522841d6438f6f9d2 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -93,9 +93,21 @@ export function nitroV2Plugin(nitroConfig) {
+                                 },
+                                 virtual: {
+                                     ...nitroConfig?.virtual,
+-                                    [virtualEntry]: `import { fromWebHandler } from 'h3'
++                                    [virtualEntry]: `import { toRequest } from 'h3'
+                                   import handler from '${ssrEntryFile}'
+-                                  export default fromWebHandler(handler.fetch)`,
++                                  export default async function nitroSolidStartBridge(event) {
++                                    const method = event.req?.method || 'GET'
++                                    const hasBody = !['GET', 'HEAD'].includes(method)
++                                    const request = toRequest(
++                                      event.req?.url || event.path || '/',
++                                      {
++                                        method,
++                                        headers: event.req?.headers,
++                                        body: hasBody ? event.req?.body : undefined,
++                                      }
++                                    )
++                                    return handler.fetch(request, event.context)
++                                  }`,
+                                 },
+                             };
+                             const nitro = await createNitro(resolvedNitroConfig);
