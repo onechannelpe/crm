@@ -4,11 +4,13 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
+  Moneda,
 } from "~/pipeline/contracts/lead-schema";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStage,
   parseRequiredLeadStatus,
+  parseRequiredMoneda,
 } from "~/server/pipeline/domain/lead-schema-parser";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -209,13 +211,11 @@ export function requireCallOutcome(
   }
 }
 
-export function requireCurrency(
+export function requireMoneda(
   payload: Record<string, unknown> | null,
   row: HistoryEventRow,
-): Result<"PEN" | "USD", DomainError> {
-  if (payload?.moneda === "PEN" || payload?.moneda === "USD") {
-    return Ok(payload.moneda);
-  }
-
-  return Err(invalidPayload(row, "moneda"));
+): Result<Moneda, DomainError> {
+  const value = requireString(payload, "moneda", row);
+  if (!value.ok) return value;
+  return parseRequiredMoneda(value.value);
 }

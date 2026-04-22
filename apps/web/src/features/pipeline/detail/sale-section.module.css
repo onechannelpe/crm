@@ -1,0 +1,35 @@
+.section {
+  padding: var(--spacing-1) 0;
+}
+
+.eyebrow {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-label);
+  padding: var(--spacing-3) 0 var(--spacing-2);
+}
+
+.bankKindGroup {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.bankKindOption {
+  align-items: center;
+  color: var(--foreground);
+  display: flex;
+  gap: var(--spacing-1);
+  height: 24px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-3);
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-2);
+  text-align: right;
+}

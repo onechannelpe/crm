@@ -2,6 +2,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
+  Moneda,
 } from "~/pipeline/contracts/lead-schema";
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 
@@ -55,7 +56,7 @@ export type LeadDetailQuotationView = {
   id: number;
   leadId: number;
   version: number;
-  moneda: "PEN" | "USD";
+  moneda: Moneda;
   fee: number;
   paybackPricing: number;
   tarifaDebito: number;

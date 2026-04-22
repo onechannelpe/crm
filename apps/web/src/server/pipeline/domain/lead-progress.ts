@@ -1,4 +1,5 @@
 import type { LeadStage } from "~/pipeline/contracts/lead-schema";
+import { isBcpBank } from "~/pipeline/contracts/lead-schema";
 
 import type { LeadRecord } from "./lead-record";
 
@@ -63,7 +64,7 @@ export function resolveLeadBlockingFields(input: {
       ];
     case "READY_FOR_SALE": {
       const fields: LeadBlockingField[] = ["banco", "nroCuenta"];
-      if ((input.bank ?? "").trim().toUpperCase() !== "BCP") {
+      if (!isBcpBank(input.bank)) {
         fields.push("cci");
       }
       return fields;

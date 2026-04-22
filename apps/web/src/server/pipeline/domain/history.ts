@@ -3,6 +3,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
+  Moneda,
 } from "~/pipeline/contracts/lead-schema";
 
 export type LeadHistoryEventType =
@@ -66,7 +67,7 @@ export type LeadHistoryPayloadByEvent = {
   quotation_created: {
     quotationId: number;
     version: number;
-    moneda: "PEN" | "USD";
+    moneda: Moneda;
   };
   sale_approved: null;
   sale_created: {

@@ -1,5 +1,6 @@
 "use server";
 
+import type { Moneda } from "~/pipeline/contracts/lead-schema";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
 import { runAction } from "~/server/shared/action-runtime";
@@ -11,7 +12,7 @@ export async function requestQuotationCreation(input: {
   tarifaCredito: number;
   tarifaForaneo: number;
   fee: number;
-  moneda: "PEN" | "USD";
+  moneda: Moneda;
 }) {
   return runAction({
     actionName: "pipeline.create_quotation",
