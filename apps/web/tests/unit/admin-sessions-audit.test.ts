@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { revokeAllUserSessions } from "../../src/server/auth/application/commands/revoke-all-user-sessions";
 import { revokeUserSession } from "../../src/server/auth/application/commands/revoke-user-session";
 import type { AdminSessionRevocationPort } from "../../src/server/auth/application/ports";
-import type { AppContext } from "../../src/server/shared/action-runtime";
 
 type AuditPayload = {
   userId: number;
@@ -14,26 +13,21 @@ type AuditPayload = {
   createdAt: number;
 };
 
-function makeContext(): AppContext {
-  return {
-    actor: {
+import type { UserId } from "../../src/server/shared/ids";
+import { makeActor, makeAppContext } from "../support/unit-factories";
+
+function makeTestContext() {
+  return makeAppContext({
+    actor: makeActor({
       id: "sid-admin",
-      userId: 9001,
-      branchId: 1,
+      userId: 9001 as UserId,
       role: "admin",
-      onboardingCompleted: true,
-      sessionClass: "app",
       primaryAuthMethod: "passkey",
       strongAuthMethod: "passkey",
       strongAuthAt: 1_700_000_000_000,
-    },
-    requestId: "req-test",
-    traceId: "trace-test",
-    ipAddress: "127.0.0.1",
-    userAgent: "vitest",
-    publicOrigin: "http://localhost:3000",
+    }),
     now: () => 1_700_000_100_000,
-  };
+  });
 }
 
 function makeDeps() {
@@ -85,7 +79,7 @@ describe("admin session revocation", () => {
   it("revokes one session and writes an audit record for the target user", async () => {
     const harness = makeDeps();
 
-    const result = await revokeUserSession(makeContext(), harness.port, {
+    const result = await revokeUserSession(makeTestContext(), harness.port, {
       sessionId: "session-abc",
       targetUserId: 42,
     });
@@ -119,9 +113,13 @@ describe("admin session revocation", () => {
   it("revokes all user sessions and writes a single audit record", async () => {
     const harness = makeDeps();
 
-    const result = await revokeAllUserSessions(makeContext(), harness.port, {
-      targetUserId: 77,
-    });
+    const result = await revokeAllUserSessions(
+      makeTestContext(),
+      harness.port,
+      {
+        targetUserId: 77,
+      },
+    );
 
     expect(result.ok).toBe(true);
     expect(harness.invalidatedUsers).toEqual([77]);

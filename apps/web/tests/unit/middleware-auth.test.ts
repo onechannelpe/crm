@@ -8,23 +8,7 @@ import {
 } from "../../src/lib/auth/access/request-auth";
 import type { AuthSession } from "../../src/lib/auth/access/session-types";
 import type { RequestContext } from "../../src/lib/http/request-context";
-
-function createSession(
-  role: AuthSession["role"],
-  onboardingCompleted = true,
-): AuthSession {
-  return {
-    id: "session-id",
-    userId: 1,
-    branchId: 1,
-    role,
-    onboardingCompleted,
-    sessionClass: onboardingCompleted ? "app" : "pre_auth",
-    primaryAuthMethod: "password",
-    strongAuthMethod: null,
-    strongAuthAt: null,
-  };
-}
+import { makeAuthSession } from "../support/unit-factories";
 
 function createRequestContext(
   session: AuthSession | null,
@@ -166,7 +150,7 @@ describe("auth middleware request guard", () => {
   });
 
   it("keeps the validated session on request context when token is valid", async () => {
-    const session = createSession("executive");
+    const session = makeAuthSession({ role: "executive" });
     const event: { request: Request; locals: App.RequestEventLocals } = {
       request: new Request("http://localhost:3000/leads"),
       locals: { nonce: "nonce", requestContext: createRequestContext(session) },
@@ -185,7 +169,9 @@ describe("auth middleware request guard", () => {
       request: new Request("http://localhost:3000/dashboard"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(createSession("executive", false)),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "executive", onboardingCompleted: false }),
+        ),
       },
     });
 
@@ -197,7 +183,9 @@ describe("auth middleware request guard", () => {
       request: new Request("http://localhost:3000/onboarding"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(createSession("executive")),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "executive" }),
+        ),
       },
     });
 
@@ -211,7 +199,9 @@ describe("auth middleware request guard", () => {
       request: new Request("http://localhost:3000/audit"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(createSession("executive")),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "executive" }),
+        ),
       },
     });
 
@@ -225,7 +215,9 @@ describe("auth middleware request guard", () => {
       request: new Request("http://localhost:3000/"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(createSession("logistics")),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "logistics" }),
+        ),
       },
     });
 
@@ -239,7 +231,9 @@ describe("auth middleware request guard", () => {
       request: new Request("http://localhost:3000/settings/profile"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(createSession("admin")),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "admin" }),
+        ),
       },
     });
 
@@ -251,7 +245,9 @@ describe("auth middleware request guard", () => {
       request: new Request("http://localhost:3000/onboarding"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(createSession("executive", false)),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "executive", onboardingCompleted: false }),
+        ),
       },
     });
 

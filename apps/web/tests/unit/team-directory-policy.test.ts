@@ -1,33 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { Role } from "~/lib/auth/access/rbac";
-
-import type { AppContext } from "../../src/server/shared/action-runtime";
+import type { BranchId, UserId } from "../../src/server/shared/ids";
 import { Err, Ok } from "../../src/server/shared/result";
 import { getInviteManagement } from "../../src/server/team/application/invites";
 import type { InviteManagementQueryPort } from "../../src/server/team/application/ports";
-
-function makeContext(role: Role = "hr"): AppContext {
-  return {
-    actor: {
-      id: "session-1",
-      userId: 7,
-      role,
-      branchId: 3,
-      onboardingCompleted: true,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-    },
-    requestId: "req-test",
-    traceId: "trace-test",
-    ipAddress: "127.0.0.1",
-    userAgent: "vitest",
-    publicOrigin: "http://localhost:3000",
-    now: () => 1_700_000_000_000,
-  };
-}
+import { makeActor, makeAppContext } from "../support/unit-factories";
 
 describe("getInviteManagement", () => {
   it("returns teams, pending invites, and assignable roles for the actor branch", async () => {
@@ -60,7 +37,16 @@ describe("getInviteManagement", () => {
       },
     } satisfies InviteManagementQueryPort;
 
-    const result = await getInviteManagement(makeContext(), port);
+    const result = await getInviteManagement(
+      makeAppContext({
+        actor: makeActor({
+          userId: 7 as UserId,
+          role: "hr",
+          branchId: 3 as BranchId,
+        }),
+      }),
+      port,
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) {
@@ -97,7 +83,16 @@ describe("getInviteManagement", () => {
         }),
     } satisfies InviteManagementQueryPort;
 
-    const result = await getInviteManagement(makeContext(), port);
+    const result = await getInviteManagement(
+      makeAppContext({
+        actor: makeActor({
+          userId: 7 as UserId,
+          role: "hr",
+          branchId: 3 as BranchId,
+        }),
+      }),
+      port,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) {
