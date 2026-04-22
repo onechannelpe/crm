@@ -2,6 +2,8 @@ import { generateKeyPairSync } from "node:crypto";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { _resetEnvCache } from "../../src/lib/env";
+import { createExtensionService } from "../../src/server/extension/service";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -20,20 +22,20 @@ function createTransactionRunner(ctx: TestDbContext) {
 
 describe("extension runtime status invariants", () => {
   let ctx: TestDbContext;
-  let createExtensionService: typeof import("../../src/server/extension/service").createExtensionService;
 
   beforeEach(async () => {
+    _resetEnvCache();
     const { privateKey } = generateKeyPairSync("ed25519");
-    process.env.EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64 = Buffer.from(
-      privateKey.export({
-        format: "der",
-        type: "pkcs8",
-      }),
-    ).toString("base64");
-    process.env.EXTENSION_EXPECTED_ORIGIN = "http://localhost:3000";
-    vi.resetModules();
-    ({ createExtensionService } =
-      await import("../../src/server/extension/service"));
+    vi.stubEnv(
+      "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
+      Buffer.from(
+        privateKey.export({
+          format: "der",
+          type: "pkcs8",
+        }),
+      ).toString("base64"),
+    );
+    vi.stubEnv("EXTENSION_EXPECTED_ORIGIN", "http://localhost:3000");
     ctx = await createIsolatedTestDb("extension-runtime-status");
   });
 
