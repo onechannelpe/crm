@@ -1,10 +1,8 @@
 import { getEnvFor } from "~/lib/env";
 
-const TRUSTED_PROXY_ENABLED = getEnvFor("security").trustedProxy === "true";
-
 export function getClientIp(
   headers: Headers,
-  trustedProxy = TRUSTED_PROXY_ENABLED,
+  trustedProxy = isTrustedProxyEnabled(),
 ): string {
   if (!trustedProxy) return "127.0.0.1";
 
@@ -21,6 +19,10 @@ export function getClientIp(
   if (realIp) return realIp;
 
   return "127.0.0.1";
+}
+
+function isTrustedProxyEnabled(): boolean {
+  return getEnvFor("security").trustedProxy === "true";
 }
 
 function cleanIp(value: string | null | undefined): string | null {
