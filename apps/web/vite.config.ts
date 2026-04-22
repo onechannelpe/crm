@@ -47,11 +47,12 @@ export default defineConfig({
         },
       ],
       prerender: {
+        autoSubfolderIndex: true,
         routes: [
           "/legal/privacy",
           "/legal/terms",
           "/releases",
-          "/docs",
+          "/docs/",
           "/docs/getting-started",
         ],
       },
