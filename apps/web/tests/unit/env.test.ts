@@ -1,6 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { _resetEnvCache, parseEnvFor, validateSecret } from "../../src/lib/env";
+import { parseEnvFor, validateSecret } from "../../src/lib/env";
 
 describe("env validation", () => {
   const baseEnv = {
@@ -14,22 +14,6 @@ describe("env validation", () => {
     RESEND_API_KEY: "re_test_key",
     EMAIL_FROM: "support@example.com",
   } satisfies Record<string, string>;
-
-  beforeEach(() => {
-    _resetEnvCache();
-  });
-
-  beforeAll(() => {
-    process.env.SESSION_SECRET = baseEnv.SESSION_SECRET;
-    process.env.TOTP_ENCRYPTION_KEY = baseEnv.TOTP_ENCRYPTION_KEY;
-    process.env.ENGINE_HMAC_KEY_ID = baseEnv.ENGINE_HMAC_KEY_ID;
-    process.env.ENGINE_HMAC_SECRET = baseEnv.ENGINE_HMAC_SECRET;
-    process.env.GOOGLE_CLIENT_ID = baseEnv.GOOGLE_CLIENT_ID;
-    process.env.GOOGLE_CLIENT_SECRET = baseEnv.GOOGLE_CLIENT_SECRET;
-    process.env.GOOGLE_REDIRECT_URI = baseEnv.GOOGLE_REDIRECT_URI;
-    process.env.RESEND_API_KEY = baseEnv.RESEND_API_KEY;
-    process.env.EMAIL_FROM = baseEnv.EMAIL_FROM;
-  });
 
   it("throws if secret is too short", () => {
     expect(() => validateSecret("TEST_SECRET", "short")).toThrow(
