@@ -42,9 +42,7 @@ export function LeadActionsWidget(props: {
   const [approving, setApproving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  const actions = createMemo(() =>
-    mapLeadActionsToUi(props.leadId, props.availableActions),
-  );
+  const actions = createMemo(() => mapLeadActionsToUi(props.availableActions));
 
   onMount(() => {
     function onKeyDown(event: KeyboardEvent) {

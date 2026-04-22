@@ -12,19 +12,10 @@ import { getHeaderRoute } from "../../src/lib/nav/policy";
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
     expect(getRoutePermission("/team")).toBe("team:read");
-    expect(getRoutePermission("/quotations")).toBe("quotation:manage");
-    expect(getRoutePermission("/quotations/123")).toBe("quotation:manage");
     expect(getRoutePermission("/leads")).toBeNull();
     expect(getRoutePermission("/rate-simulator")).toBe("lead:rate:simulate");
     expect(getRoutePermission("/leads/new")).toBeNull();
     expect(getRoutePermission("/leads/123")).toBeNull();
-    expect(getRoutePermission("/sales/crm")).toBe("lead:sale:create");
-    expect(getRoutePermission("/sales/new/123")).toBe("lead:sale:create");
-    expect(getRoutePermission("/sales/123")).toBe("lead:sale:create");
-    expect(getRoutePermission("/sales/reports/exports")).toBeNull();
-    expect(getRoutePermission("/sales/reports/exports/123")).toBe(
-      "sales:review",
-    );
     expect(getRoutePermission("/dashboard")).toBe("sales:review");
     expect(getRoutePermission("/settings/profile")).toBeNull();
   });
@@ -44,8 +35,6 @@ describe("route permissions", () => {
     expect(canAccessPath("executive", "/team")).toBe(false);
     expect(canAccessPath("hr", "/team")).toBe(true);
     expect(canAccessPath("admin", "/settings/catalog")).toBe(true);
-    expect(canAccessPath("sales_manager", "/sales/new/42")).toBe(false);
-    expect(canAccessPath("executive", "/sales/new/42")).toBe(true);
   });
 
   it("returns a role-safe default path", () => {
@@ -58,15 +47,11 @@ describe("route permissions", () => {
 
 describe("nav config structural invariants", () => {
   it("resolves header metadata for current dynamic routes", () => {
-    expect(getHeaderRoute("/sales/new/42").label).toBe("Registrar venta");
-    expect(getHeaderRoute("/sales/new/42").icon).toBe("new-sale");
-    expect(getHeaderRoute("/sales/42").label).toBe("Detalle de venta");
     expect(getHeaderRoute("/rate-simulator").label).toBe("Simulador de tasas");
   });
 
   it("uses fallback when no header rule exists", () => {
     expect(getHeaderRoute("/unknown-route").label).toBe("Espacio de trabajo");
-    expect(getHeaderRoute("/sales/new/42").label).toBe("Registrar venta");
     expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
   });
 

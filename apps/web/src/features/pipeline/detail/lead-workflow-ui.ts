@@ -38,28 +38,15 @@ export function blockingTaskLabel(field: LeadBlockingField): string {
 }
 
 export function mapLeadActionsToUi(
-  leadId: number,
   actions: LeadAvailableAction[],
 ): LeadActionUiItem[] {
   const items: LeadActionUiItem[] = [];
 
   for (const action of actions) {
     switch (action) {
+      // create-sale and create-quotation are rendered as inline form sections, not action links.
       case "create-sale":
-        items.push({
-          id: action,
-          label: "Crear venta",
-          href: `/sales/new/${leadId}`,
-          kind: "link",
-        });
-        break;
       case "create-quotation":
-        items.push({
-          id: action,
-          label: "Crear cotizacion",
-          href: `/quotations/${leadId}`,
-          kind: "link",
-        });
         break;
       case "approve-for-sale":
         items.push({ id: action, label: "Aprobar para venta", kind: "button" });

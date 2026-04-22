@@ -16,8 +16,6 @@ export type AppPath =
   | "/inventory"
   | "/leads"
   | "/rate-simulator"
-  | "/quotations"
-  | "/sales/crm"
   | "/dashboard"
   | "/audit"
   | "/audit/auth"
@@ -52,8 +50,6 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/leads": {},
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
-  "/quotations": { permission: "quotation:manage", landingPriority: 3 },
-  "/sales/crm": { permission: "lead:sale:create" },
   "/dashboard": { permission: "sales:review", landingPriority: 1 },
   "/audit": { permission: "audit:read", landingPriority: 8 },
   "/audit/auth": { permission: "audit:read" },
@@ -64,8 +60,6 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 };
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
-  { pattern: /^\/quotations\/[^/]+$/, permission: "quotation:manage" },
-  { pattern: /^\/sales\/new\/[^/]+$/, permission: "lead:sale:create" },
   { pattern: /^\/sales\/[0-9]+$/, permission: "lead:sale:create" },
   { pattern: /^\/sales\/records\/[^/]+\/edit$/, permission: "sales:create" },
   {

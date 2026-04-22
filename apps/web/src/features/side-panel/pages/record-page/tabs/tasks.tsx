@@ -105,7 +105,7 @@ function deriveDetailTasks(
   }
 
   if (data.availableActions.length > 0) {
-    const actionItems = mapLeadActionsToUi(data.lead.id, data.availableActions);
+    const actionItems = mapLeadActionsToUi(data.availableActions);
 
     return tasks.concat(
       actionItems.map((action) => ({

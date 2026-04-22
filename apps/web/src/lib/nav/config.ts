@@ -53,14 +53,6 @@ export interface PageHeaderRule {
 export const PAGE_HEADERS: PageHeaderRule[] = [
   // Dynamic patterns first
   {
-    match: /^\/quotations\/[^/]+$/,
-    header: { label: "Cotización", icon: "sales" },
-  },
-  {
-    match: /^\/sales\/new\/[^/]+$/,
-    header: { label: "Registrar venta", icon: "new-sale" },
-  },
-  {
     match: /^\/sales\/[0-9]+$/,
     header: { label: "Detalle de venta", icon: "sales" },
   },
@@ -77,8 +69,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: "/rate-simulator",
     header: { label: "Simulador de tasas", icon: "rate-simulator" },
   },
-  { match: "/quotations", header: { label: "Cotizaciones", icon: "sales" } },
-  { match: "/sales/crm", header: { label: "Ventas CRM", icon: "sales" } },
   {
     match: "/me/capacity",
     header: { label: "Mi capacidad", icon: "capacity" },
@@ -137,7 +127,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
   {
     id: "leads",
     href: "/leads",
-    activePrefixes: ["/leads", "/sales/new"],
+    activePrefixes: ["/leads"],
     label: "Prospectos",
     navLabel: "Prospectos",
     icon: "leads",
@@ -169,17 +159,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
   },
 
   // Secondary › Operaciones
-  {
-    id: "quotations",
-    href: "/quotations",
-    activePrefixes: ["/quotations"],
-    label: "Cotizaciones",
-    navLabel: "Cotizaciones",
-    icon: "sales",
-    section: "secondary",
-    order: 3,
-    group: "Operaciones",
-  },
   {
     id: "inventory",
     href: "/inventory",
