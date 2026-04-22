@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Match, Show, Switch } from "solid-js";
 
 import { CommercialInputSection } from "~/features/pipeline/detail/commercial-input-section";
 import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
@@ -64,24 +64,30 @@ function DetailContent(props: { data: LeadDetailView }) {
     <>
       <DetailFieldsWidget data={props.data} />
 
-      <Show when={props.data.lead.stage === "NEEDS_EXECUTIVE_INPUT"}>
-        <CommercialInputSection
-          leadId={props.data.lead.id}
-          initialValues={props.data.commercialInput}
-        />
-      </Show>
+      <Show when={props.data.lead.id} keyed>
+        {(leadId) => (
+          <Switch>
+            <Match when={props.data.lead.stage === "NEEDS_EXECUTIVE_INPUT"}>
+              <CommercialInputSection
+                leadId={leadId}
+                initialValues={props.data.commercialInput}
+              />
+            </Match>
 
-      <Show when={props.data.lead.stage === "READY_FOR_QUOTATION"}>
-        <QuotationSection
-          leadId={props.data.lead.id}
-          existingQuotation={
-            props.data.quotations[props.data.quotations.length - 1]
-          }
-        />
-      </Show>
+            <Match when={props.data.lead.stage === "READY_FOR_QUOTATION"}>
+              <QuotationSection
+                leadId={leadId}
+                existingQuotation={
+                  props.data.quotations[props.data.quotations.length - 1]
+                }
+              />
+            </Match>
 
-      <Show when={props.data.lead.stage === "READY_FOR_SALE"}>
-        <SaleSection leadId={props.data.lead.id} />
+            <Match when={props.data.lead.stage === "READY_FOR_SALE"}>
+              <SaleSection leadId={leadId} />
+            </Match>
+          </Switch>
+        )}
       </Show>
 
       <WorkflowWidget data={props.data} />
