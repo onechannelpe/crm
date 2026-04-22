@@ -2,18 +2,10 @@ import { TextDecoder } from "node:util";
 
 import type { FileStorage } from "~/server/files/storage";
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
-import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import {
-  parsePrioridadImport,
-  type ParsedPrioridadRow,
-} from "~/server/integrations/infrastructure/prioridad-import-parser";
-import {
-  parseStatusImport,
-  type ParsedStatusRow,
-} from "~/server/integrations/infrastructure/status-import-parser";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import { parseLeadImportRows } from "./intake";
 import {
   buildLeadImportProgressEvent,
   publishLeadImportProgress,
@@ -56,40 +48,10 @@ export function createLeadImportRunner(deps: {
         throw new Error(`Unsupported import type: ${job.type}`);
       }
 
-      let validRows: ImportRowInput[] = [];
-      let invalidRows: Array<{
-        row: number;
-        reason: string;
-        type: "import_status" | "import_prioridad";
-      }> = [];
-
-      if (job.type === "import_status") {
-        const parsed = parseStatusImport(fileText);
-        validRows = parsed.valid.map((row: ParsedStatusRow) => ({
-          row: row.row,
-          ruc: row.ruc,
-          type: "import_status",
-          status: row.status,
-        }));
-        invalidRows = parsed.invalid.map((row) => ({
-          row: row.row,
-          reason: row.reason,
-          type: "import_status",
-        }));
-      } else {
-        const parsed = parsePrioridadImport(fileText);
-        validRows = parsed.valid.map((row: ParsedPrioridadRow) => ({
-          row: row.row,
-          ruc: row.ruc,
-          type: "import_prioridad",
-          prioridad: row.prioridad,
-        }));
-        invalidRows = parsed.invalid.map((row) => ({
-          row: row.row,
-          reason: row.reason,
-          type: "import_prioridad",
-        }));
-      }
+      const { validRows, invalidRows } = parseLeadImportRows({
+        csvText: fileText,
+        importType: job.type,
+      });
 
       const rowsTotal = validRows.length + invalidRows.length;
       await updateProgress({
