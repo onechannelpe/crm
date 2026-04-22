@@ -5,12 +5,10 @@ import type {
   IntegrationRuntime,
 } from "~/server/integrations/types";
 
-import { parsePriorityImport } from "./priority-parser";
-import { parseStatusImport } from "./status-parser";
 import {
-  detectLeadImportTypeFromCsv,
+  inspectLeadImportCsv,
   type LeadImportTypeDetectionErrorCode,
-} from "./type-detection";
+} from "./intake";
 
 interface ActorScope {
   userId: number;
@@ -30,35 +28,23 @@ export function detectLeadImportFile(input: { fileText: string }):
     }
   | {
       ok: false;
-      code: LeadImportTypeDetectionErrorCode | "invalid_file";
+      code: LeadImportTypeDetectionErrorCode;
       message: string;
     } {
-  const detection = detectLeadImportTypeFromCsv(input.fileText);
-  if (!detection.ok) {
+  const inspection = inspectLeadImportCsv(input.fileText);
+  if (!inspection.ok) {
     return {
       ok: false,
-      code: detection.code,
-      message: detection.message,
+      code: inspection.code,
+      message: inspection.message,
     };
   }
 
-  try {
-    const parsed =
-      detection.type === "import_status"
-        ? parseStatusImport(input.fileText)
-        : parsePriorityImport(input.fileText);
-    return {
-      ok: true,
-      importType: detection.type,
-      rowsTotal: parsed.valid.length + parsed.invalid.length,
-    };
-  } catch (error: unknown) {
-    return {
-      ok: false,
-      code: "invalid_file",
-      message: error instanceof Error ? error.message : "Invalid CSV file",
-    };
-  }
+  return {
+    ok: true,
+    importType: inspection.importType,
+    rowsTotal: inspection.rowsTotal,
+  };
 }
 
 export async function canAccessLeadImportJob(
