@@ -1,3 +1,4 @@
+import { isBcpBank } from "~/pipeline/contracts/lead-schema";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -41,7 +42,10 @@ export async function createSaleCommand(
       ),
     );
   }
-  if (input.banco.trim().toUpperCase() !== "BCP" && !input.cci?.trim()) {
+  const banco = input.banco.trim();
+  const isBcp = isBcpBank(banco);
+  const cci = isBcp ? null : input.cci?.trim() || null;
+  if (!isBcp && !cci) {
     return Err(
       domainError(
         "validation",
@@ -61,9 +65,9 @@ export async function createSaleCommand(
     ticket: input.ticket,
     abono: input.abono,
     cantidadPos: input.cantidadPos,
-    banco: input.banco,
+    banco,
     nroCuenta: input.nroCuenta,
-    cci: input.cci,
+    cci,
     createdAt: now,
   });
 

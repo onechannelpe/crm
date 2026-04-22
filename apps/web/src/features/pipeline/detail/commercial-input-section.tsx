@@ -76,7 +76,7 @@ export function CommercialInputSection(props: {
       <p class={styles.eyebrow}>Datos comerciales</p>
       <form onSubmit={(e) => void handleSubmit(e)}>
         <FieldTable>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Building2 size={16} />
@@ -92,7 +92,7 @@ export function CommercialInputSection(props: {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Target size={16} />
@@ -111,7 +111,7 @@ export function CommercialInputSection(props: {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -130,7 +130,7 @@ export function CommercialInputSection(props: {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -149,7 +149,7 @@ export function CommercialInputSection(props: {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -168,7 +168,7 @@ export function CommercialInputSection(props: {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Package size={16} />

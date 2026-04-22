@@ -80,7 +80,7 @@ export function QuotationSection(props: QuotationSectionProps) {
       <p class={styles.eyebrow}>Cotizacion</p>
       <form onSubmit={(e) => void handleSubmit(e)}>
         <FieldTable>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -99,7 +99,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -118,7 +118,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -137,7 +137,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -156,7 +156,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -175,7 +175,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Package size={16} />

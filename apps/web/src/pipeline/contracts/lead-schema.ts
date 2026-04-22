@@ -27,13 +27,19 @@ export const LEAD_CALL_OUTCOMES = [
 ] as const;
 
 export const MONEDAS = ["PEN", "USD"] as const;
+export const SALE_BANK_KINDS = ["BCP", "OTRO"] as const;
 
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
 export type LeadCallOutcome = (typeof LEAD_CALL_OUTCOMES)[number];
 export type Moneda = (typeof MONEDAS)[number];
+export type SaleBankKind = (typeof SALE_BANK_KINDS)[number];
 
 export function isMoneda(value: string): value is Moneda {
   return (MONEDAS as readonly string[]).includes(value);
+}
+
+export function isBcpBank(value: string | null | undefined): boolean {
+  return (value ?? "").trim().toUpperCase() === "BCP";
 }

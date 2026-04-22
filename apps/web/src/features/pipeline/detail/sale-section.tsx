@@ -1,5 +1,5 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import Link from "~/components/icons/link";
@@ -18,6 +18,10 @@ import {
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import { toAppError } from "~/lib/app-errors";
+import {
+  SALE_BANK_KINDS,
+  type SaleBankKind,
+} from "~/pipeline/contracts/lead-schema";
 
 import { createSaleMutation } from "../data/mutations";
 
@@ -37,16 +41,35 @@ export function SaleSection(props: SaleSectionProps) {
   const [ticket, setTicket] = createSignal("");
   const [abono, setAbono] = createSignal("");
   const [cantidadPos, setCantidadPos] = createSignal("");
-  const [banco, setBanco] = createSignal("");
+  const [bankChoice, setBankChoice] = createSignal<SaleBankKind | "">("");
+  const [otherBank, setOtherBank] = createSignal("");
   const [nroCuenta, setNroCuenta] = createSignal("");
   const [cci, setCci] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
+  function handleBankKindChange(kind: SaleBankKind) {
+    setBankChoice(kind);
+    if (kind === "BCP") {
+      setOtherBank("");
+      setCci("");
+    }
+  }
+
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    const isNonBcp = banco().trim().toLowerCase() !== "bcp";
-    if (isNonBcp && !cci().trim()) {
+    if (!bankChoice()) {
+      setError("Selecciona un tipo de banco");
+      return;
+    }
+    const requiresCci = bankChoice() === "OTRO";
+    if (requiresCci && !otherBank().trim()) {
+      setError("Ingresa el nombre del banco");
+      return;
+    }
+    const banco = requiresCci ? otherBank().trim() : "BCP";
+    const normalizedCci = requiresCci ? cci().trim() || null : null;
+    if (requiresCci && !normalizedCci) {
       setError("CCI es requerido para bancos distintos a BCP");
       return;
     }
@@ -61,9 +84,9 @@ export function SaleSection(props: SaleSectionProps) {
         ticket: Number(ticket()),
         abono: Number(abono()),
         cantidadPos: Number(cantidadPos()),
-        banco: banco(),
+        banco,
         nroCuenta: nroCuenta(),
-        cci: cci().trim() || null,
+        cci: normalizedCci,
       });
       navigate("/leads");
     } catch (err) {
@@ -78,7 +101,7 @@ export function SaleSection(props: SaleSectionProps) {
       <p class={styles.eyebrow}>Venta</p>
       <form onSubmit={(e) => void handleSubmit(e)}>
         <FieldTable>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Building2 size={16} />
@@ -94,7 +117,7 @@ export function SaleSection(props: SaleSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Target size={16} />
@@ -113,7 +136,7 @@ export function SaleSection(props: SaleSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -132,7 +155,7 @@ export function SaleSection(props: SaleSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -151,7 +174,7 @@ export function SaleSection(props: SaleSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Moneybag size={16} />
@@ -170,7 +193,7 @@ export function SaleSection(props: SaleSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Package size={16} />
@@ -189,23 +212,49 @@ export function SaleSection(props: SaleSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Building2 size={16} />
               </FieldIcon>
-              <FieldLabelText>Banco</FieldLabelText>
+              <FieldLabelText>Tipo banco</FieldLabelText>
             </FieldLabel>
             <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                value={banco()}
-                onChange={setBanco}
-                required
-              />
+              <div class={styles.bankKindGroup}>
+                {SALE_BANK_KINDS.map((kind) => (
+                  <label class={styles.bankKindOption}>
+                    <input
+                      type="radio"
+                      name="bank-kind"
+                      value={kind}
+                      checked={bankChoice() === kind}
+                      onChange={() => handleBankKindChange(kind)}
+                    />
+                    <span>{kind === "BCP" ? "BCP" : "Otro banco"}</span>
+                  </label>
+                ))}
+              </div>
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
+          <Show when={bankChoice() === "OTRO"}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Building2 size={16} />
+                </FieldIcon>
+                <FieldLabelText>Otro banco</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  value={otherBank()}
+                  onChange={setOtherBank}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+          </Show>
+          <FieldRow>
             <FieldLabel>
               <FieldIcon>
                 <Link size={16} />
@@ -221,17 +270,19 @@ export function SaleSection(props: SaleSectionProps) {
               />
             </FieldInputValue>
           </FieldRow>
-          <FieldRow readonly>
-            <FieldLabel>
-              <FieldIcon>
-                <Lock size={16} />
-              </FieldIcon>
-              <FieldLabelText>CCI</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput sizeVariant="sm" value={cci()} onChange={setCci} />
-            </FieldInputValue>
-          </FieldRow>
+          <Show when={bankChoice() === "OTRO"}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Lock size={16} />
+                </FieldIcon>
+                <FieldLabelText>CCI</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput sizeVariant="sm" value={cci()} onChange={setCci} />
+              </FieldInputValue>
+            </FieldRow>
+          </Show>
         </FieldTable>
         {error() && <p class={styles.error}>{error()}</p>}
         <div class={styles.actions}>
