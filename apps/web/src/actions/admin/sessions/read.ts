@@ -5,7 +5,7 @@ import { validationError } from "~/lib/app-errors";
 import { countActiveSessions as countActiveSessionsService } from "~/server/auth/application/queries/count-active-sessions";
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr, Ok } from "~/server/shared/result";
 
@@ -25,7 +25,7 @@ export async function listUserSessions(userId: number) {
       Ok(
         await listUserSessionsService(
           ctx,
-          serverRuntime.auth.adminSessionsRead,
+          getServerRuntime().auth.adminSessionsRead,
           parsedInput.value,
         ),
       ),
@@ -39,7 +39,9 @@ export async function getActiveSessionsCount(): Promise<number> {
     stepUp: "recent_strong_auth",
     execute: async () =>
       Ok(
-        await countActiveSessionsService(serverRuntime.auth.adminSessionsRead),
+        await countActiveSessionsService(
+          getServerRuntime().auth.adminSessionsRead,
+        ),
       ),
   });
 }
@@ -52,7 +54,7 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     execute: async () =>
       Ok(
         await listAllActiveSessionsService(
-          serverRuntime.auth.adminSessionsRead,
+          getServerRuntime().auth.adminSessionsRead,
         ),
       ),
   });

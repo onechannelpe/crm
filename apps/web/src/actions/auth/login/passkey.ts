@@ -11,7 +11,7 @@ import { getActionRequestContext } from "~/lib/observability/context";
 import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/application/commands/finish-passkey-login";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import type { FinishPasskeyLoginError } from "~/server/auth/passkey/service";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
@@ -48,7 +48,7 @@ export async function finishPasskeyLogin(
     }
 > {
   const request = getRequestClientMetadata();
-  const loginContext = serverRuntime.auth.login;
+  const loginContext = getServerRuntime().auth.login;
   const result = await finishPasskeyLoginService(
     {
       repos: loginContext.repos,
@@ -85,7 +85,7 @@ export async function finishPasskeyLogin(
     getActionRequestContext(),
   );
   await replaceCurrentSession(result.value.token, (sessionId) =>
-    serverRuntime.auth.sessionService.invalidateSession(sessionId),
+    getServerRuntime().auth.sessionService.invalidateSession(sessionId),
   );
   return {
     ok: true,

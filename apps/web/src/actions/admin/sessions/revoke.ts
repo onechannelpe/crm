@@ -4,7 +4,7 @@ import { validationError } from "~/lib/app-errors";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/application/commands/revoke-all-user-sessions";
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/application/commands/revoke-user-session";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -29,7 +29,7 @@ export async function revokeUserSession(
     execute: (ctx) =>
       revokeUserSessionService(
         ctx,
-        serverRuntime.auth.adminSessionRevocation,
+        getServerRuntime().auth.adminSessionRevocation,
         parsedInput.value,
       ),
   });
@@ -50,7 +50,7 @@ export async function revokeAllUserSessions(
     execute: (ctx) =>
       revokeAllUserSessionsService(
         ctx,
-        serverRuntime.auth.adminSessionRevocation,
+        getServerRuntime().auth.adminSessionRevocation,
         parsedInput.value,
       ),
   });

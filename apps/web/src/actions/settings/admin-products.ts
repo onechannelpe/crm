@@ -11,7 +11,7 @@ import {
   assertFinitePositive,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 export type ProductCatalogItem = {
   id: number;
@@ -54,7 +54,7 @@ function parseUpdateProductPricingInput(input: {
 
 export async function getProductCatalog(): Promise<ProductCatalogItem[]> {
   await requirePermission("admin:manage");
-  const rows = await serverRuntime.admin.products.findAll();
+  const rows = await getServerRuntime().admin.products.findAll();
   return rows.map(toProductCatalogItem);
 }
 
@@ -63,7 +63,7 @@ export async function updateProductPricing(
   price: number,
   isActive: boolean,
 ): Promise<ActionSuccess> {
-  const { products, auditLogs } = serverRuntime.admin;
+  const { products, auditLogs } = getServerRuntime().admin;
   const parsedInput = parseUpdateProductPricingInput({
     productId,
     price,

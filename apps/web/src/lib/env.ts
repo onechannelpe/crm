@@ -73,11 +73,20 @@ function optionalEnum<const T extends readonly string[]>(
   throw new Error(`${key} must be one of: ${values.join(", ")}`);
 }
 
-export function parseEnv(source: EnvSource) {
+function parseSessionEnv(source: EnvSource) {
   return {
-    nodeEnv: optional(source, "NODE_ENV", "development"),
     sessionSecret: required(source, "SESSION_SECRET", true),
+  } as const;
+}
+
+function parseTotpEnv(source: EnvSource) {
+  return {
     totpEncryptionKey: required(source, "TOTP_ENCRYPTION_KEY", true),
+  } as const;
+}
+
+function parseExtensionEnv(source: EnvSource) {
+  return {
     extensionHandoffPrivateKeyPkcs8Base64: optional(
       source,
       "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
@@ -88,7 +97,17 @@ export function parseEnv(source: EnvSource) {
       "EXTENSION_EXPECTED_ORIGIN",
       "http://localhost:3000",
     ),
+  } as const;
+}
+
+function parseSecurityEnv(source: EnvSource) {
+  return {
     trustedProxy: optional(source, "TRUSTED_PROXY", "false"),
+  } as const;
+}
+
+function parseEngineEnv(source: EnvSource) {
+  return {
     engineConnectMode: optionalEnum(
       source,
       "ENGINE_CONNECT_MODE",
@@ -98,32 +117,73 @@ export function parseEnv(source: EnvSource) {
     engineUrl: optional(source, "ENGINE_URL", "http://127.0.0.1:3001"),
     engineHmacKeyId: required(source, "ENGINE_HMAC_KEY_ID"),
     engineHmacSecret: required(source, "ENGINE_HMAC_SECRET", true),
+  } as const;
+}
+
+function parsePasskeyEnv(source: EnvSource) {
+  return {
     webauthnRpId: optional(source, "WEBAUTHN_RP_ID", "localhost"),
     webauthnOrigin: optional(
       source,
       "WEBAUTHN_ORIGIN",
       "http://localhost:5173",
     ),
+  } as const;
+}
+
+function parseGoogleOAuthEnv(source: EnvSource) {
+  return {
     googleClientId: required(source, "GOOGLE_CLIENT_ID"),
     googleClientSecret: required(source, "GOOGLE_CLIENT_SECRET"),
     googleRedirectUri: required(source, "GOOGLE_REDIRECT_URI"),
-    resendApiKey: required(source, "RESEND_API_KEY"),
-    emailFrom: required(source, "EMAIL_FROM"),
+  } as const;
+}
+
+function parseNotificationsEnv(source: EnvSource) {
+  return {
+    resendApiKey: optional(source, "RESEND_API_KEY", ""),
+    emailFrom: optional(source, "EMAIL_FROM", ""),
     whatsappAccessToken: optional(source, "WHATSAPP_ACCESS_TOKEN", ""),
     whatsappPhoneNumberId: optional(source, "WHATSAPP_PHONE_NUMBER_ID", ""),
     whatsappApiVersion: optional(source, "WHATSAPP_GRAPH_API_VERSION", "v23.0"),
   } as const;
 }
 
-export type AppEnv = ReturnType<typeof parseEnv>;
+type EnvByCapability = {
+  session: ReturnType<typeof parseSessionEnv>;
+  totp: ReturnType<typeof parseTotpEnv>;
+  extension: ReturnType<typeof parseExtensionEnv>;
+  security: ReturnType<typeof parseSecurityEnv>;
+  engine: ReturnType<typeof parseEngineEnv>;
+  passkey: ReturnType<typeof parsePasskeyEnv>;
+  googleOAuth: ReturnType<typeof parseGoogleOAuthEnv>;
+  notifications: ReturnType<typeof parseNotificationsEnv>;
+};
 
-let cachedEnv: AppEnv | undefined;
+export type EnvCapability = keyof EnvByCapability;
 
-function loadEnv(): AppEnv {
-  cachedEnv ??= parseEnv(process.env);
-  return cachedEnv;
+const envParsers: {
+  [K in EnvCapability]: (source: EnvSource) => EnvByCapability[K];
+} = {
+  session: parseSessionEnv,
+  totp: parseTotpEnv,
+  extension: parseExtensionEnv,
+  security: parseSecurityEnv,
+  engine: parseEngineEnv,
+  passkey: parsePasskeyEnv,
+  googleOAuth: parseGoogleOAuthEnv,
+  notifications: parseNotificationsEnv,
+};
+
+export function parseEnvFor<C extends EnvCapability>(
+  capability: C,
+  source: EnvSource,
+): EnvByCapability[C] {
+  return envParsers[capability](source);
 }
 
-export function getEnv(): AppEnv {
-  return loadEnv();
+export function getEnvFor<C extends EnvCapability>(
+  capability: C,
+): EnvByCapability[C] {
+  return parseEnvFor(capability, process.env);
 }

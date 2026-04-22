@@ -7,7 +7,7 @@ import type {
 } from "~/actions/sales-exports/contracts";
 import { validationError } from "~/lib/app-errors";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import {
   getSalesExportJobForActor,
   listSalesExportDownloadsForActor,
@@ -43,7 +43,7 @@ export async function listSalesExportJobs(
       value: await listSalesExportJobsForActor(
         ctx.actor,
         safeLimit,
-        serverRuntime.sales.exportDeps,
+        getServerRuntime().sales.exportDeps,
       ),
     }),
   });
@@ -62,7 +62,7 @@ export async function getSalesExportJob(
       value: await getSalesExportJobForActor(
         ctx.actor,
         safeJobId,
-        serverRuntime.sales.exportDeps,
+        getServerRuntime().sales.exportDeps,
       ),
     }),
   });
@@ -81,7 +81,7 @@ export async function listSalesExportDownloads(
       value: await listSalesExportDownloadsForActor(
         ctx.actor,
         safeJobId,
-        serverRuntime.sales.exportDeps,
+        getServerRuntime().sales.exportDeps,
       ),
     }),
   });
@@ -102,7 +102,7 @@ export async function requestSalesExport(
       value: await requestSalesExportJob(
         ctx,
         { format },
-        serverRuntime.sales.exportDeps,
+        getServerRuntime().sales.exportDeps,
       ),
     }),
   });

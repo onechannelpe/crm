@@ -11,12 +11,12 @@ import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
 } from "~/server/audit-reader/policy-service";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
   await requirePermission("audit:read");
   const auditPolicyService = createAuditPolicyService({
-    auditActionPolicies: serverRuntime.admin.auditActionPolicies,
+    auditActionPolicies: getServerRuntime().admin.auditActionPolicies,
   });
   return auditPolicyService.getSnapshot();
 }
@@ -34,7 +34,7 @@ export async function upsertAuditPolicy(input: {
 }): Promise<void> {
   const session = await requireRole("admin");
   const auditPolicyService = createAuditPolicyService({
-    auditActionPolicies: serverRuntime.admin.auditActionPolicies,
+    auditActionPolicies: getServerRuntime().admin.auditActionPolicies,
   });
   const payload: UpsertAuditPolicyInput = {
     action: input.action,

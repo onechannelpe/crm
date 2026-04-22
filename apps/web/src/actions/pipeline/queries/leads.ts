@@ -7,7 +7,7 @@ import type { LeadBootstrapPreviewView } from "~/server/pipeline/application/que
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list";
 import { createPipelineQueryApiRuntime } from "~/server/pipeline/infrastructure/runtime/pipeline-query-api-factory";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function queryLeadList(filters: {
@@ -23,7 +23,7 @@ export async function queryLeadList(filters: {
     access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
-      listLeads(serverRuntime.pipeline.deps.leadList, {
+      listLeads(getServerRuntime().pipeline.deps.leadList, {
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         filters,
@@ -38,7 +38,7 @@ export async function queryLeadDetail(leadId: number): Promise<LeadDetailView> {
     input: { leadId },
     execute: (ctx) => {
       const queryApi = createPipelineQueryApiRuntime(
-        serverRuntime.pipeline.deps,
+        getServerRuntime().pipeline.deps,
       );
       return queryApi.getLeadDetail({
         actor: {
@@ -61,7 +61,7 @@ export async function queryLeadBootstrapPreview(
     input: { ruc },
     execute: () =>
       getLeadBootstrapPreview(
-        serverRuntime.pipeline.deps.leadBootstrapPreview,
+        getServerRuntime().pipeline.deps.leadBootstrapPreview,
         {
           ruc,
         },
@@ -80,7 +80,7 @@ export async function queryAssignableExecutives(input: {
     input,
     execute: (ctx) => {
       const queryApi = createPipelineQueryApiRuntime(
-        serverRuntime.pipeline.deps,
+        getServerRuntime().pipeline.deps,
       );
       return queryApi.listAssignableExecutives({
         actor: {

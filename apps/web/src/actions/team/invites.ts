@@ -1,7 +1,7 @@
 "use server";
 
 import type { InviteInfo } from "~/actions/team/contracts";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 import {
@@ -16,7 +16,7 @@ import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
 export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
   const result = await getInviteInfoService({
     token,
-    repos: serverRuntime.team.invites.repos,
+    repos: getServerRuntime().team.invites.repos,
   });
   if (isErr(result)) {
     throw result.error;
@@ -44,7 +44,7 @@ export async function createTeamInvite(input: {
       hasTeamId: safeInput.teamId !== null,
     },
     execute: (ctx) =>
-      createTeamInviteService(ctx, serverRuntime.team.invites, safeInput),
+      createTeamInviteService(ctx, getServerRuntime().team.invites, safeInput),
   });
 }
 
@@ -61,7 +61,7 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
     execute: (ctx) =>
       resendTeamInviteService(
         ctx,
-        serverRuntime.team.invites,
+        getServerRuntime().team.invites,
         parsedInput.value,
       ),
   });
@@ -80,7 +80,7 @@ export async function revokeTeamInvite(inviteId: number): Promise<void> {
     execute: (ctx) =>
       revokeTeamInviteService(
         ctx,
-        serverRuntime.team.invites,
+        getServerRuntime().team.invites,
         parsedInput.value,
       ),
   });

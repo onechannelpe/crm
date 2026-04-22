@@ -1,5 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 const logger = createLogger("stale-scanner");
@@ -33,7 +33,7 @@ const JOB_TABLES = [
 ] as const;
 
 export async function resetStalledJobs(
-  executor: DatabaseExecutor = serverRuntime.infra.db,
+  executor: DatabaseExecutor = getServerRuntime().infra.db,
 ) {
   const now = Date.now();
   await Promise.all(

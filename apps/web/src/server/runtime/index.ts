@@ -47,4 +47,11 @@ export function createServerRuntime() {
   };
 }
 
-export const serverRuntime = createServerRuntime();
+export type ServerRuntime = ReturnType<typeof createServerRuntime>;
+
+let cachedServerRuntime: ServerRuntime | undefined;
+
+export function getServerRuntime(): ServerRuntime {
+  cachedServerRuntime ??= createServerRuntime();
+  return cachedServerRuntime;
+}

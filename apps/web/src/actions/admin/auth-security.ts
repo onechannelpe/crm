@@ -7,7 +7,7 @@ import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { Database } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 type AuthEventRow = Selectable<Database["auth_events"]>;
 
@@ -27,7 +27,7 @@ export interface UserLoginRetryReport {
 export async function getUserLoginRetryReport(
   username: string,
 ): Promise<UserLoginRetryReport | null> {
-  const { users, authEvents } = serverRuntime.auth.login.repos;
+  const { users, authEvents } = getServerRuntime().auth.login.repos;
   const safeUsername = assertNonEmptyString(username, "username").toLowerCase();
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);

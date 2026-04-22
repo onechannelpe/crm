@@ -5,7 +5,7 @@ import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { submitInviteAcceptance } from "~/server/auth/application/commands/submit-invite-acceptance";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 import { parseAcceptTeamInviteInput } from "./input";
@@ -23,7 +23,7 @@ export async function acceptTeamInvite(input: {
   const request = getRequestClientMetadata();
 
   const result = await submitInviteAcceptance(
-    serverRuntime.auth.inviteAcceptance,
+    getServerRuntime().auth.inviteAcceptance,
     {
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,

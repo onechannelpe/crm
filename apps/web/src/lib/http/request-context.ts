@@ -10,7 +10,7 @@ import {
   getRequestSessionMaxAgeSeconds,
   setRequestSessionCookie,
 } from "~/lib/security/request-session";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 import { getRequestPublicOrigin } from "./public-origin";
 
@@ -86,7 +86,7 @@ async function loadRequestSession(): Promise<AuthSession | null> {
   }
 
   const { session } =
-    await serverRuntime.auth.sessionService.validateSessionToken(token);
+    await getServerRuntime().auth.sessionService.validateSessionToken(token);
   return session;
 }
 
@@ -95,7 +95,7 @@ async function loadRequestSessionState(
   createIfMissing: boolean,
 ): Promise<{ id: string; csrfToken: string } | null> {
   const existingId = getRequestSessionCookie();
-  const requestSessions = serverRuntime.security.requestSessions;
+  const requestSessions = getServerRuntime().security.requestSessions;
   if (existingId) {
     const existing = await requestSessions.findById(existingId);
     const now = Date.now();

@@ -13,11 +13,11 @@ import type {
   WorkflowArtifact,
 } from "~/server/files/types";
 import { ABSOLUTE_MAX_UPLOAD_BYTES } from "~/server/files/validators";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 function getFileDeps() {
-  const { repo, storage, syncExecutor } = serverRuntime.files;
+  const { repo, storage, syncExecutor } = getServerRuntime().files;
   return { repo, storage, syncExecutor };
 }
 

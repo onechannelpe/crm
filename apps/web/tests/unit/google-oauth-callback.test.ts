@@ -12,14 +12,14 @@ vi.mock("~/lib/auth/google/google-callback-login", () => ({
 }));
 
 vi.mock("~/server/runtime", () => ({
-  serverRuntime: {
+  getServerRuntime: () => ({
     auth: {
       login: {
         repos: {},
         privilegedLoginAlertSender: vi.fn<() => Promise<void>>(),
       },
     },
-  },
+  }),
 }));
 
 import { GET } from "../../src/routes/api/auth/google/callback";

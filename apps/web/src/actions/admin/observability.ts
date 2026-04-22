@@ -2,7 +2,7 @@
 
 import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 
 import { resolveBoundedPositiveInt, trimOrUndefined } from "./analytics-input";
 
@@ -72,7 +72,7 @@ export async function getObservabilitySnapshot(params?: {
   const fromInclusive = now - windowMinutes * 60 * 1000;
   const status = assertStatus(params?.status);
   const actionName = trimOrUndefined(params?.actionName);
-  const { observabilityService } = serverRuntime.observability;
+  const { observabilityService } = getServerRuntime().observability;
 
   const [summary, recent] = await Promise.all([
     observabilityService.summarizeByAction({

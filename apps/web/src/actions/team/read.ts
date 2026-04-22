@@ -4,7 +4,7 @@ import type {
   BulkImportSetup,
   InviteManagement,
 } from "~/actions/team/contracts";
-import { serverRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
   getBulkImportSetup as getBulkImportSetupService,
@@ -16,7 +16,7 @@ export async function getInviteManagement(): Promise<InviteManagement> {
     actionName: "team.invite_management.read",
     access: { kind: "permission", permission: "hr:manage" },
     execute: (ctx) =>
-      getInviteManagementService(ctx, serverRuntime.team.inviteManagement),
+      getInviteManagementService(ctx, getServerRuntime().team.inviteManagement),
   });
 }
 
