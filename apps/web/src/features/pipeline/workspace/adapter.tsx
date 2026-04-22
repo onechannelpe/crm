@@ -19,8 +19,10 @@ import type { LeadListRowView } from "~/server/pipeline/application/queries/view
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";
 import { LEAD_WORKSPACE_FILTER, type LeadStageFilterValue } from "./filter";
+import { ImportDropzone } from "./import-dropzone";
 import { useOpenLeadRecord } from "./open-row";
 import { LEAD_WORKSPACE_SORT, type LeadSortKey } from "./sort";
+import { useLeadsImport } from "./use-leads-import";
 import { defaultViewIdForRole, viewsForRole } from "./views";
 
 import styles from "./styles.module.css";
@@ -59,6 +61,8 @@ export function LeadsWorkspace() {
 
   const { rowOpen } = useOpenLeadRecord();
   const createAction = useCreateLeadRecordAction();
+  const leadImport = useLeadsImport();
+  const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
   async function handleExport() {
     await requestAndDownload("leads_export", {});
@@ -87,8 +91,19 @@ export function LeadsWorkspace() {
       active: activeView,
       onSelect: setActiveId,
     },
-    exportAction: hasPermission(user.role, "integration:manage")
-      ? handleExport
+    actions: canManageIntegrations
+      ? [
+          {
+            key: "import-csv",
+            label: "Importar CSV",
+            onClick: () => leadImport.openFilePicker(),
+          },
+          {
+            key: "export",
+            label: "Exportar",
+            onClick: handleExport,
+          },
+        ]
       : undefined,
     filter: LEAD_WORKSPACE_FILTER,
     sort: LEAD_WORKSPACE_SORT,
@@ -98,5 +113,19 @@ export function LeadsWorkspace() {
     LeadSortKey
   >;
 
-  return <RecordIndexScreen adapter={adapter} />;
+  return (
+    <ImportDropzone
+      enabled={canManageIntegrations}
+      onFileDropped={leadImport.importFile}
+    >
+      <input
+        ref={leadImport.bindFileInput}
+        type="file"
+        accept=".csv"
+        style={{ display: "none" }}
+        onChange={leadImport.onFileInputChange}
+      />
+      <RecordIndexScreen adapter={adapter} />
+    </ImportDropzone>
+  );
 }

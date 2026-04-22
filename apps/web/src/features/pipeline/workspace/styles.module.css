@@ -6,6 +6,49 @@
   width: 100%;
 }
 
+.dropzoneHost {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.dropzoneOverlay {
+  align-items: center;
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+  border: 2px dashed var(--foreground-secondary);
+  border-radius: var(--radius-md);
+  display: flex;
+  inset: 8px;
+  justify-content: center;
+  pointer-events: none;
+  position: absolute;
+  z-index: 15;
+}
+
+.dropzoneCard {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-width: 420px;
+  padding: 18px 22px;
+  text-align: center;
+}
+
+.dropzoneTitle {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.dropzoneHint {
+  color: var(--foreground-secondary);
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
 .identifierText {
   color: var(--foreground);
   font-weight: 500;

@@ -38,7 +38,10 @@ export function ToastContainer() {
               <div
                 class={styles.progressBar}
                 style={{
-                  width: `${(toast.remaining / toast.duration) * 100}%`,
+                  width:
+                    toast.duration <= 0
+                      ? "100%"
+                      : `${(toast.remaining / toast.duration) * 100}%`,
                 }}
               />
               <div class={styles.icon}>

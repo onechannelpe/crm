@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 import mdx from "@mdx-js/rollup";
 import { solidStart } from "@solidjs/start/config";
 import { nitroV2Plugin } from "@solidjs/vite-plugin-nitro-2";
@@ -27,6 +29,23 @@ export default defineConfig({
       extensions: ["mdx"],
     }),
     nitroV2Plugin({
+      alias: {
+        "~": resolve(process.cwd(), "src"),
+      },
+      esbuild: {
+        options: {
+          target: "esnext",
+        },
+      },
+      experimental: {
+        websocket: true,
+      },
+      handlers: [
+        {
+          route: "/api/leads/imports/ws",
+          handler: "./src/server/realtime/leads-imports-ws.ts",
+        },
+      ],
       prerender: {
         routes: [
           "/legal/privacy",

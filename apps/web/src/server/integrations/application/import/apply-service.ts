@@ -24,6 +24,12 @@ export async function applyImportRows(
       reason: string;
       type: "import_status" | "import_prioridad";
     }>;
+    onProgress?: (progress: {
+      rowsTotal: number;
+      rowsApplied: number;
+      rowsFailed: number;
+    }) => void;
+    progressEveryRows?: number;
   },
   executor: DatabaseExecutor,
 ): Promise<{
@@ -31,6 +37,7 @@ export async function applyImportRows(
   applied: number;
   failed: number;
 }> {
+  const rowsTotal = input.validRows.length + input.invalidRows.length;
   const now = Date.now();
   const results: RowResult[] = input.invalidRows.map((row) => ({
     row: row.row,
@@ -39,7 +46,34 @@ export async function applyImportRows(
   }));
   const sortedRows = input.validRows.toSorted((a, b) => a.row - b.row);
   let applied = 0;
+  let failed = input.invalidRows.length;
   const outboxPlan = createEmptyOutboxPlan();
+  const progressEveryRows = Math.max(1, input.progressEveryRows ?? 50);
+  let lastEmittedProcessed = -1;
+
+  function emitProgress(force: boolean): void {
+    if (!input.onProgress) {
+      return;
+    }
+
+    const processed = applied + failed;
+    if (
+      !force &&
+      processed - lastEmittedProcessed < progressEveryRows &&
+      processed < rowsTotal
+    ) {
+      return;
+    }
+
+    lastEmittedProcessed = processed;
+    input.onProgress({
+      rowsTotal,
+      rowsApplied: applied,
+      rowsFailed: failed,
+    });
+  }
+
+  emitProgress(true);
 
   await executor.transaction().execute(async (trx) => {
     await stageImportRows(trx, input.jobId, sortedRows, input.invalidRows, now);
@@ -54,6 +88,8 @@ export async function applyImportRows(
       });
       results.push(mutationResult.rowResult);
       if (!mutationResult.ok) {
+        failed++;
+        emitProgress(false);
         continue;
       }
 
@@ -68,6 +104,7 @@ export async function applyImportRows(
         outboxPlan,
       });
       applied++;
+      emitProgress(false);
     }
     /* eslint-enable no-await-in-loop */
 
@@ -77,11 +114,12 @@ export async function applyImportRows(
       now: Date.now(),
     });
   });
+  emitProgress(true);
 
   const sortedResults = results.toSorted(resultSort);
   return {
     results: sortedResults,
     applied,
-    failed: results.filter((row) => !row.ok).length,
+    failed: sortedResults.filter((row) => !row.ok).length,
   };
 }

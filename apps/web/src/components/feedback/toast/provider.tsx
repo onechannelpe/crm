@@ -18,7 +18,15 @@ interface Toast {
 
 interface ToastContextValue {
   toasts: Toast[];
-  showToast: (type: Toast["type"], message: string, duration?: number) => void;
+  showToast: (
+    type: Toast["type"],
+    message: string,
+    duration?: number,
+  ) => string;
+  updateToast: (
+    id: string,
+    patch: Partial<Pick<Toast, "type" | "message" | "duration" | "remaining">>,
+  ) => void;
   removeToast: (id: string) => void;
   pauseToast: (id: string) => void;
   resumeToast: (id: string) => void;
@@ -37,6 +45,28 @@ export function ToastProvider(props: { children: JSX.Element }) {
       ...prev,
       { id, type, message, duration, remaining: duration, paused: false },
     ]);
+    return id;
+  };
+
+  const updateToast = (
+    id: string,
+    patch: Partial<Pick<Toast, "type" | "message" | "duration" | "remaining">>,
+  ) => {
+    setToasts(
+      (toast) => toast.id === id,
+      (toast) => {
+        const duration = patch.duration ?? toast.duration;
+        const remaining =
+          patch.remaining ??
+          (patch.duration !== undefined ? duration : toast.remaining);
+        return {
+          ...toast,
+          ...patch,
+          duration,
+          remaining,
+        };
+      },
+    );
   };
 
   const removeToast = (id: string) => {
@@ -54,13 +84,13 @@ export function ToastProvider(props: { children: JSX.Element }) {
   onMount(() => {
     const tickInterval = setInterval(() => {
       setToasts(
-        (t) => !t.paused,
+        (t) => !t.paused && t.duration > 0,
         "remaining",
         (r) => Math.max(0, r - 100),
       );
 
       toasts.forEach((toast) => {
-        if (toast.remaining <= 0) {
+        if (toast.duration > 0 && toast.remaining <= 0) {
           removeToast(toast.id);
         }
       });
@@ -71,7 +101,14 @@ export function ToastProvider(props: { children: JSX.Element }) {
 
   return (
     <ToastContext.Provider
-      value={{ toasts, showToast, removeToast, pauseToast, resumeToast }}
+      value={{
+        toasts,
+        showToast,
+        updateToast,
+        removeToast,
+        pauseToast,
+        resumeToast,
+      }}
     >
       {props.children}
     </ToastContext.Provider>

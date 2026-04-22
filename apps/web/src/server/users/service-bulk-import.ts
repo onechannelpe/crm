@@ -3,6 +3,11 @@ import {
   isExecutiveCategoryValue,
   type ExecutiveCategoryValue,
 } from "~/lib/db/types";
+import {
+  parseCsvRows,
+  readFirstNonEmptyCsvRow,
+  type CsvDelimiter,
+} from "~/server/csv/core";
 import type { InviteService } from "~/server/invites/application/types";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -115,90 +120,160 @@ const CSV_COLUMNS = [
   "EXECUTIVE_CATEGORY",
 ] as const;
 
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (const char of line) {
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
+const BULK_IMPORT_DELIMITERS: readonly CsvDelimiter[] = [",", ";"] as const;
+
+function normalizeBulkHeader(header: string): string {
+  return header.trim().toUpperCase().replace(/\s+/g, "_");
+}
+
+function resolveBulkImportLayout(
+  csv: string,
+  role: Role,
+):
+  | {
+      ok: true;
+      delimiter: CsvDelimiter;
+      headerRowNumber: number;
+      columnIndex: Readonly<Record<string, number>>;
     }
+  | {
+      ok: false;
+      message: string;
+    } {
+  const isExecutive = role === "executive";
+  const requiredColumns = isExecutive
+    ? `${CSV_COLUMNS.slice(0, 4).join(",")},DATE_EXPIRY,EXECUTIVE_CATEGORY`
+    : CSV_COLUMNS.slice(0, 4).join(",");
+
+  for (const delimiter of BULK_IMPORT_DELIMITERS) {
+    const headerRow = readFirstNonEmptyCsvRow(csv, delimiter);
+    if (!headerRow) {
+      continue;
+    }
+
+    const header = headerRow.cells.map(normalizeBulkHeader);
+    if (
+      !header
+        .slice(0, 4)
+        .every((column, index) => column === CSV_COLUMNS[index])
+    ) {
+      continue;
+    }
+    if (isExecutive && !header.includes("EXECUTIVE_CATEGORY")) {
+      continue;
+    }
+
+    const columnIndex: Record<string, number> = {};
+    for (let index = 0; index < header.length; index++) {
+      columnIndex[header[index]] = index;
+    }
+
+    return {
+      ok: true,
+      delimiter,
+      headerRowNumber: headerRow.rowNumber,
+      columnIndex,
+    };
   }
-  result.push(current.trim());
-  return result;
+
+  if (isExecutive) {
+    return {
+      ok: false,
+      message: `Encabezado inválido. Se esperaba: ${requiredColumns}`,
+    };
+  }
+
+  return {
+    ok: false,
+    message: `Encabezado inválido. Se esperaba: ${requiredColumns}`,
+  };
+}
+
+function readCell(
+  row: readonly string[],
+  columnIndex: Readonly<Record<string, number>>,
+  column: string,
+): string {
+  const index = columnIndex[column];
+  if (index === undefined) {
+    return "";
+  }
+  return (row[index] ?? "").trim();
 }
 
 export function parseAndValidateCsvRows(
   csv: string,
   role: Role,
 ): Result<BulkParseResult, BulkImportError> {
-  const isExecutive = role === "executive";
-
-  const lines = csv
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-
-  if (lines.length === 0) {
+  if (csv.trim().length === 0) {
     return Err({ reason: "parse_error", message: "El archivo CSV está vacío" });
   }
 
-  const header = parseCsvLine(lines[0]).map((h) =>
-    h.toUpperCase().replace(/^"(.+)"$/, "$1"),
-  );
-  const requiredColumns = isExecutive
-    ? CSV_COLUMNS.slice(0, 4).join(",") + ",DATE_EXPIRY,EXECUTIVE_CATEGORY"
-    : CSV_COLUMNS.slice(0, 4).join(",");
-  if (!header.slice(0, 4).every((col, i) => col === CSV_COLUMNS[i])) {
+  const isExecutive = role === "executive";
+  const layout = resolveBulkImportLayout(csv, role);
+  if (!layout.ok) {
     return Err({
       reason: "parse_error",
-      message: `Encabezado inválido. Se esperaba: ${requiredColumns}`,
-    });
-  }
-  if (isExecutive && header[5] !== "EXECUTIVE_CATEGORY") {
-    return Err({
-      reason: "parse_error",
-      message: `Para el rol ejecutivo se requiere la columna EXECUTIVE_CATEGORY. Se esperaba: ${requiredColumns}`,
+      message: layout.message,
     });
   }
 
+  const rows = parseCsvRows(csv, layout.delimiter);
   const valid: BulkImportRow[] = [];
   const errors: BulkRowError[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCsvLine(lines[i]);
-    const rowNum = i + 1;
+  for (const row of rows) {
+    if (row.rowNumber <= layout.headerRowNumber) {
+      continue;
+    }
 
-    const firstSurname = cols[0]?.trim() ?? "";
-    const secondSurname = cols[1]?.trim() ?? "";
-    const names = cols[2]?.trim() ?? "";
-    const rawEmail = cols[3]?.trim() ?? "";
-    const rawDate = cols[4]?.trim() ?? "";
-    const rawCategory = cols[5]?.trim().toLowerCase() ?? "";
+    if (row.cells.every((cell) => cell.trim().length === 0)) {
+      continue;
+    }
+
+    const firstSurname = readCell(
+      row.cells,
+      layout.columnIndex,
+      "FIRST_SURNAME",
+    );
+    const secondSurname = readCell(
+      row.cells,
+      layout.columnIndex,
+      "SECOND_SURNAME",
+    );
+    const names = readCell(row.cells, layout.columnIndex, "NAMES");
+    const rawEmail = readCell(row.cells, layout.columnIndex, "EMAIL");
+    const rawDate = readCell(row.cells, layout.columnIndex, "DATE_EXPIRY");
+    const rawCategory = readCell(
+      row.cells,
+      layout.columnIndex,
+      "EXECUTIVE_CATEGORY",
+    ).toLowerCase();
 
     if (!firstSurname) {
-      errors.push({ row: rowNum, message: "Primer apellido requerido" });
+      errors.push({ row: row.rowNumber, message: "Primer apellido requerido" });
       continue;
     }
     if (!secondSurname) {
-      errors.push({ row: rowNum, message: "Segundo apellido requerido" });
+      errors.push({
+        row: row.rowNumber,
+        message: "Segundo apellido requerido",
+      });
       continue;
     }
     if (!names) {
-      errors.push({ row: rowNum, message: "Nombres requeridos" });
+      errors.push({ row: row.rowNumber, message: "Nombres requeridos" });
       continue;
     }
     if (!rawEmail) {
-      errors.push({ row: rowNum, message: "Correo requerido" });
+      errors.push({ row: row.rowNumber, message: "Correo requerido" });
       continue;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
-      errors.push({ row: rowNum, message: `Correo inválido: ${rawEmail}` });
+      errors.push({
+        row: row.rowNumber,
+        message: `Correo inválido: ${rawEmail}`,
+      });
       continue;
     }
 
@@ -206,12 +281,15 @@ export function parseAndValidateCsvRows(
     if (rawDate) {
       const parsed = Date.parse(rawDate);
       if (isNaN(parsed)) {
-        errors.push({ row: rowNum, message: `Fecha inválida: ${rawDate}` });
+        errors.push({
+          row: row.rowNumber,
+          message: `Fecha inválida: ${rawDate}`,
+        });
         continue;
       }
       if (parsed <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
         errors.push({
-          row: rowNum,
+          row: row.rowNumber,
           message: `La fecha de vencimiento debe ser al menos 7 días en el futuro: ${rawDate}`,
         });
         continue;
@@ -223,7 +301,7 @@ export function parseAndValidateCsvRows(
     if (isExecutive) {
       if (!isExecutiveCategoryValue(rawCategory)) {
         errors.push({
-          row: rowNum,
+          row: row.rowNumber,
           message: `Categoría de ejecutivo inválida: "${rawCategory}". Valores permitidos: elite, corporativa`,
         });
         continue;
