@@ -1,8 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+
+import { _resetEnvCache, parseEnvFor, validateSecret } from "../../src/lib/env";
 
 describe("env validation", () => {
-  let validateSecret: (key: string, value: string) => void;
-  let parseEnvFor: typeof import("../../src/lib/env").parseEnvFor;
   const baseEnv = {
     SESSION_SECRET: "temp_secret_for_initial_import_32_chars_long",
     TOTP_ENCRYPTION_KEY: "temp_secret_for_initial_import_32_chars_long",
@@ -15,7 +15,11 @@ describe("env validation", () => {
     EMAIL_FROM: "support@example.com",
   } satisfies Record<string, string>;
 
-  beforeAll(async () => {
+  beforeEach(() => {
+    _resetEnvCache();
+  });
+
+  beforeAll(() => {
     process.env.SESSION_SECRET = baseEnv.SESSION_SECRET;
     process.env.TOTP_ENCRYPTION_KEY = baseEnv.TOTP_ENCRYPTION_KEY;
     process.env.ENGINE_HMAC_KEY_ID = baseEnv.ENGINE_HMAC_KEY_ID;
@@ -25,10 +29,6 @@ describe("env validation", () => {
     process.env.GOOGLE_REDIRECT_URI = baseEnv.GOOGLE_REDIRECT_URI;
     process.env.RESEND_API_KEY = baseEnv.RESEND_API_KEY;
     process.env.EMAIL_FROM = baseEnv.EMAIL_FROM;
-
-    const mod = await import("../../src/lib/env");
-    validateSecret = mod.validateSecret;
-    parseEnvFor = mod.parseEnvFor;
   });
 
   it("throws if secret is too short", () => {

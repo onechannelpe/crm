@@ -198,3 +198,10 @@ export function getEnvFor<C extends EnvCapability>(
   envCache[capability] = parsed;
   return parsed;
 }
+
+/** @internal - Only for testing */
+export function _resetEnvCache() {
+  for (const key in envCache) {
+    delete envCache[key as EnvCapability];
+  }
+}

@@ -1,9 +1,14 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+
+import { resolveWebauthnRelyingParty } from "../../src/lib/auth/providers/passkey-provider";
+import { _resetEnvCache } from "../../src/lib/env";
 
 describe("passkey relying party resolution", () => {
-  let resolveWebauthnRelyingParty: typeof import("../../src/lib/auth/providers/passkey-provider").resolveWebauthnRelyingParty;
+  beforeEach(() => {
+    _resetEnvCache();
+  });
 
-  beforeAll(async () => {
+  beforeAll(() => {
     process.env.SESSION_SECRET = "temp_secret_for_initial_import_32_chars_long";
     process.env.TOTP_ENCRYPTION_KEY =
       "temp_secret_for_initial_import_32_chars_long";
@@ -16,9 +21,6 @@ describe("passkey relying party resolution", () => {
       "http://localhost:3000/api/auth/google/callback";
     process.env.RESEND_API_KEY = "re_test_key";
     process.env.EMAIL_FROM = "support@example.com";
-
-    ({ resolveWebauthnRelyingParty } =
-      await import("../../src/lib/auth/providers/passkey-provider"));
   });
 
   it("uses the forwarded public origin and host behind a trusted proxy", () => {

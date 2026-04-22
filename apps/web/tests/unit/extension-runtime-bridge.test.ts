@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { handoffLeadToExtension } from "../../src/lib/extension/runtime";
+
 describe("extension runtime bridge", () => {
   beforeEach(() => {
-    vi.resetModules();
     vi.stubEnv("VITE_CRM_EXTENSION_ID", "ext-test");
   });
 
@@ -39,8 +40,6 @@ describe("extension runtime bridge", () => {
       },
     });
 
-    const { handoffLeadToExtension } =
-      await import("../../src/lib/extension/runtime");
     const result = await handoffLeadToExtension({ token: "handoff-token" });
 
     expect(result.ok).toBe(false);

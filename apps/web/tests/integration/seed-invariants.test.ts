@@ -9,6 +9,7 @@ import {
 } from "../../src/lib/auth/security/strong-auth-status";
 import { createDb } from "../../src/lib/db/client";
 import { migrateToLatest } from "../../src/lib/db/migrate";
+import { seedIfEmpty } from "../../src/lib/db/seed";
 import { createTestRepositories } from "../support/test-repositories";
 
 describe("seed invariants", () => {
@@ -34,7 +35,6 @@ describe("seed invariants", () => {
     try {
       await migrateToLatest(db);
       process.env.WEB_DB_PATH = dbPath;
-      const { seedIfEmpty } = await import("../../src/lib/db/seed");
       await seedIfEmpty(db);
 
       const repos = createTestRepositories(db);
