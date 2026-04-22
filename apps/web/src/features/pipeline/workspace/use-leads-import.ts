@@ -16,6 +16,11 @@ import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4000;
+const POLL_BASE_MS = 2_000;
+const POLL_MAX_MS = 15_000;
+const WS_RECONNECT_BASE_MS = 1_000;
+const WS_RECONNECT_MAX_MS = 15_000;
+const RECONNECT_JITTER_MS = 300;
 
 function importTypeLabel(type: LeadImportType): string {
   if (type === "import_status") {
@@ -76,11 +81,43 @@ export function useLeadsImport() {
   let progressToastId: string | null = null;
   let socket: WebSocket | null = null;
   let pollTimer: number | null = null;
+  let wsReconnectTimer: number | null = null;
+  let pollFailureCount = 0;
+  let wsReconnectAttempt = 0;
+
+  function withJitter(ms: number): number {
+    const delta = Math.floor(Math.random() * (RECONNECT_JITTER_MS + 1));
+    return ms + delta;
+  }
+
+  function pollDelayMs(): number {
+    const exponential = Math.min(
+      POLL_BASE_MS * 2 ** pollFailureCount,
+      POLL_MAX_MS,
+    );
+    return withJitter(exponential);
+  }
+
+  function wsReconnectDelayMs(): number {
+    const retryExponent = Math.max(0, wsReconnectAttempt - 1);
+    const exponential = Math.min(
+      WS_RECONNECT_BASE_MS * 2 ** retryExponent,
+      WS_RECONNECT_MAX_MS,
+    );
+    return withJitter(exponential);
+  }
 
   function clearPolling() {
     if (pollTimer !== null) {
-      window.clearInterval(pollTimer);
+      window.clearTimeout(pollTimer);
       pollTimer = null;
+    }
+  }
+
+  function clearWebsocketReconnect() {
+    if (wsReconnectTimer !== null) {
+      window.clearTimeout(wsReconnectTimer);
+      wsReconnectTimer = null;
     }
   }
 
@@ -128,14 +165,17 @@ export function useLeadsImport() {
 
   function stopActiveTracking() {
     clearPolling();
-    closeSocket();
+    clearWebsocketReconnect();
     activeJobId = null;
     activeImportType = null;
+    closeSocket();
+    pollFailureCount = 0;
+    wsReconnectAttempt = 0;
   }
 
-  async function pollJobProgress(): Promise<void> {
+  async function pollJobProgress(): Promise<"ok" | "retry"> {
     if (activeJobId === null || activeImportType === null) {
-      return;
+      return "ok";
     }
 
     try {
@@ -163,24 +203,48 @@ export function useLeadsImport() {
           rowsTotal,
         });
         stopActiveTracking();
-        return;
+        return "ok";
       }
 
       if (job.status === "FAILED") {
         finalizeProgressToast();
         showToast("error", job.error_message ?? "La importación falló");
         stopActiveTracking();
+        return "ok";
       }
+      return "ok";
     } catch {
       // Keep polling. Transient failures should not break tracking.
+      return "retry";
     }
   }
 
-  function startPolling() {
+  function schedulePolling(delayMs: number) {
     clearPolling();
-    pollTimer = window.setInterval(() => {
-      void pollJobProgress();
-    }, 2_000);
+    pollTimer = window.setTimeout(() => {
+      void (async () => {
+        if (activeJobId === null) {
+          return;
+        }
+
+        const result = await pollJobProgress();
+        if (activeJobId === null) {
+          return;
+        }
+
+        if (result === "retry") {
+          pollFailureCount++;
+        } else {
+          pollFailureCount = 0;
+        }
+
+        schedulePolling(pollDelayMs());
+      })();
+    }, delayMs);
+  }
+
+  function startPolling() {
+    schedulePolling(0);
   }
 
   function handleProgressEvent(event: LeadImportProgressEvent) {
@@ -212,11 +276,29 @@ export function useLeadsImport() {
     }
   }
 
+  function scheduleWebsocketReconnect(jobId: number) {
+    if (activeJobId !== jobId || wsReconnectTimer !== null) {
+      return;
+    }
+
+    wsReconnectAttempt++;
+    const delay = wsReconnectDelayMs();
+    wsReconnectTimer = window.setTimeout(() => {
+      wsReconnectTimer = null;
+      if (activeJobId !== jobId) {
+        return;
+      }
+      connectWebsocket(jobId);
+    }, delay);
+  }
+
   function connectWebsocket(jobId: number) {
     closeSocket();
+    clearWebsocketReconnect();
 
     socket = new WebSocket(websocketUrl());
     socket.addEventListener("open", () => {
+      wsReconnectAttempt = 0;
       clearPolling();
       socket?.send(
         buildRealtimeSubscriptionMessage({
@@ -237,12 +319,14 @@ export function useLeadsImport() {
     socket.addEventListener("close", () => {
       if (activeJobId !== null) {
         startPolling();
+        scheduleWebsocketReconnect(jobId);
       }
     });
 
     socket.addEventListener("error", () => {
       if (activeJobId !== null) {
         startPolling();
+        scheduleWebsocketReconnect(jobId);
       }
     });
   }

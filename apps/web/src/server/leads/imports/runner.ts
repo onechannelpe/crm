@@ -1,11 +1,8 @@
-import { TextDecoder } from "node:util";
-
-import type { FileStorage } from "~/server/files/storage";
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { parseLeadImportRows } from "./intake";
+import { parseLeadImportRowsFromStream } from "./intake";
 import {
   buildLeadImportProgressEvent,
   publishLeadImportProgress,
@@ -13,7 +10,7 @@ import {
 
 export function createLeadImportRunner(deps: {
   executor: DatabaseExecutor;
-  blobStore: Pick<FileStorage, "getBytes">;
+  openFileStream: (filePath: string) => ReadableStream<Uint8Array>;
   updateProgress: (input: {
     jobId: number;
     rowsTotal?: number;
@@ -21,7 +18,7 @@ export function createLeadImportRunner(deps: {
     rowsFailed?: number;
   }) => Promise<unknown>;
 }) {
-  const { executor, blobStore, updateProgress } = deps;
+  const { executor, openFileStream, updateProgress } = deps;
 
   return {
     async process(
@@ -36,22 +33,19 @@ export function createLeadImportRunner(deps: {
       if (!job.file_path) {
         throw new Error("Missing file path for import job");
       }
-
-      const fileText = new TextDecoder("utf-8").decode(
-        await blobStore.getBytes(job.file_path),
-      );
-      if (signal.aborted) {
-        throw new Error("Job aborted");
-      }
+      const filePath = job.file_path;
 
       if (job.type !== "import_status" && job.type !== "import_prioridad") {
         throw new Error(`Unsupported import type: ${job.type}`);
       }
 
-      const { validRows, invalidRows } = parseLeadImportRows({
-        csvText: fileText,
+      const { validRows, invalidRows } = await parseLeadImportRowsFromStream({
+        streamFactory: () => openFileStream(filePath),
         importType: job.type,
       });
+      if (signal.aborted) {
+        throw new Error("Job aborted");
+      }
 
       const rowsTotal = validRows.length + invalidRows.length;
       await updateProgress({

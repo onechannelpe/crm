@@ -62,12 +62,17 @@ export class TopicHub {
       return;
     }
 
+    const failedPeers: RealtimePeer[] = [];
     for (const peer of peers) {
       try {
         peer.send(payload);
       } catch {
-        this.removePeer(peer);
+        failedPeers.push(peer);
       }
+    }
+
+    for (const peer of failedPeers) {
+      this.removePeer(peer);
     }
   }
 }

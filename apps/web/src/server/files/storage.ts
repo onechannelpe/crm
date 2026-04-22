@@ -1,8 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { createWriteStream } from "node:fs";
+import { createReadStream, createWriteStream } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { Readable } from "node:stream";
 
 export interface FileStorage {
   putFromWebStream(input: {
@@ -37,8 +38,46 @@ async function writeToFile(root: string, key: string, content: Uint8Array) {
   await writeFile(finalPath, content);
 }
 
+const WORKFLOW_FILES_DIR = "workflow-files";
+
+function toUint8Array(value: unknown): Uint8Array {
+  if (value instanceof Uint8Array) {
+    return value;
+  }
+  if (value instanceof ArrayBuffer) {
+    return new Uint8Array(value);
+  }
+  if (ArrayBuffer.isView(value)) {
+    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  }
+  throw new Error("Unsupported stream chunk type");
+}
+
+export function openStoredFileStream(
+  baseDir: string,
+  key: string,
+): ReadableStream<Uint8Array> {
+  const nodeStream = createReadStream(join(baseDir, WORKFLOW_FILES_DIR, key));
+  const webStream = Readable.toWeb(nodeStream);
+  const reader = webStream.getReader();
+
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      const { done, value } = await reader.read();
+      if (done) {
+        controller.close();
+        return;
+      }
+      controller.enqueue(toUint8Array(value));
+    },
+    async cancel(reason) {
+      await reader.cancel(reason);
+    },
+  });
+}
+
 export function createFileStorage(baseDir: string): FileStorage {
-  const root = join(baseDir, "workflow-files");
+  const root = join(baseDir, WORKFLOW_FILES_DIR);
 
   return {
     async putFromWebStream({ key, stream, onChunk }) {

@@ -1,7 +1,9 @@
+import { config } from "~/lib/config";
 import { startQueueDoorbellSubscriber } from "~/lib/job-queue/doorbell-subscriber";
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
+import { openStoredFileStream } from "~/server/files/storage";
 import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
 import { createLeadsImportQueue } from "~/server/integrations/queue/leads-import-queue";
@@ -16,11 +18,11 @@ export function startBackgroundJobs() {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
   const { integration } = serverRuntime.integrations;
-  const { storage: fileStorage } = serverRuntime.files;
 
   const leadsImportQueue = createLeadsImportQueue(WORKER_ID, {
     runtime: integration,
-    blobStore: fileStorage,
+    openFileStream: (filePath) =>
+      openStoredFileStream(config.uploads.storageRoot, filePath),
   });
   const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID, {
     executor: integration.executor,

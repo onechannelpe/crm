@@ -1,5 +1,4 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type { FileStorage } from "~/server/files/storage";
 import {
   buildLeadImportProgressEvent,
   publishLeadImportProgress,
@@ -21,7 +20,7 @@ interface LeadImportRunner {
 
 interface LeadsImportQueueDeps {
   runtime: IntegrationRuntime;
-  blobStore: Pick<FileStorage, "getBytes">;
+  openFileStream: (filePath: string) => ReadableStream<Uint8Array>;
   runner?: LeadImportRunner;
 }
 
@@ -38,7 +37,7 @@ export function createLeadsImportQueue(
     deps.runner ??
     createLeadImportRunner({
       executor: deps.runtime.executor,
-      blobStore: deps.blobStore,
+      openFileStream: deps.openFileStream,
       updateProgress: (progress) =>
         runtime.jobs.updateProgress(progress.jobId, progress),
     });
