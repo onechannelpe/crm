@@ -18,7 +18,7 @@ describe("remainingCapacity", () => {
     ).toBe(80);
   });
 
-  it("is always >= 0 even when over capacity", () => {
+  it("is always >= 0 even when over capacity (bounded at zero)", () => {
     expect(
       remainingCapacity({
         limit: 10,
@@ -51,8 +51,9 @@ describe("buildSearchCapacitySnapshot", () => {
       commits: [{ amount: 30 }],
       reservations: [
         { amount: 10, status: "pending" },
-        { amount: 5, status: "committed" }, // committed reservations are often ignored in some domains if commits already include them
+        { amount: 5, status: "committed" },
         { amount: 7, status: "cancelled" },
+        { amount: 3, status: "expired" },
       ],
       periodStart: "2026-03-01",
       periodEnd: "2026-03-31",
@@ -61,6 +62,7 @@ describe("buildSearchCapacitySnapshot", () => {
     expect(snapshot.policy).toBe(mockPolicy);
     expect(snapshot.granted).toBe(20);
     expect(snapshot.committed).toBe(30);
+    // Explicit verification that only 'pending' status was summed (10)
     expect(snapshot.pending).toBe(10);
     expect(snapshot.remaining).toBe(80); // 100 + 20 - 30 - 10
   });

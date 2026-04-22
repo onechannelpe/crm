@@ -43,8 +43,14 @@ describe("resolveSearchPolicy", () => {
       branchDefault: null,
     });
     expect(policy.source).toBe("system");
-    // System limit is usually hardcoded or coming from a default config
-    expect(policy.monthlyLimit).toBeDefined();
+    // Verify fallback to config.searchAccess.defaultMonthlyLimit
+    expect(policy.monthlyLimit).toBe(250);
+  });
+
+  it("handles empty input by falling back to system", () => {
+    const policy = resolveSearchPolicy({});
+    expect(policy.source).toBe("system");
+    expect(policy.monthlyLimit).toBe(250);
   });
 });
 
@@ -77,5 +83,13 @@ describe("resolveLeadPolicy", () => {
       branchDefault: null,
     });
     expect(policy.source).toBe("system");
+    expect(policy.bufferTarget).toBe(10); // config.leadAssignment.defaultBufferTarget
+    expect(policy.dailyLimit).toBe(25); // config.leadAssignment.defaultDailyRefillLimit
+  });
+
+  it("handles empty input by falling back to system", () => {
+    const policy = resolveLeadPolicy({});
+    expect(policy.source).toBe("system");
+    expect(policy.bufferTarget).toBe(10);
   });
 });

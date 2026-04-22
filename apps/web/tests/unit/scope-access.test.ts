@@ -133,9 +133,23 @@ describe("canManageExecutive", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("supervisor cannot manage executive on a different team", async () => {
+  it("supervisor cannot manage executive on a different team in same branch", async () => {
     const actor = makeActor("supervisor", 1);
     const target: TargetUser = { role: "executive", branchId: 1, teamId: 7 };
+    const repos = {
+      users: { findById: async () => target },
+      teams: {
+        findBySupervisorId: async () => ({ id: 5 }), // Actor is supervisor of Team 5
+        findByIdWithSupervisor: async () => undefined,
+      },
+    };
+    const result = await canManageExecutive(actor, 1, repos);
+    expect(result.ok).toBe(false);
+  });
+
+  it("supervisor cannot manage executive on their team but in a different branch", async () => {
+    const actor = makeActor("supervisor", 1);
+    const target: TargetUser = { role: "executive", branchId: 2, teamId: 5 };
     const repos = {
       users: { findById: async () => target },
       teams: {
@@ -144,6 +158,8 @@ describe("canManageExecutive", () => {
       },
     };
     const result = await canManageExecutive(actor, 1, repos);
+    // Even if it's "their team id", branch boundaries usually take precedence or
+    // are checked as primary scope.
     expect(result.ok).toBe(false);
   });
 });
