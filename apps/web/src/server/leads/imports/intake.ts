@@ -1,6 +1,5 @@
 import type { LeadImportType } from "~/features/leads-imports/contracts";
 import {
-  countNonEmptyCsvRows,
   normalizeCsvHeader,
   parseCsvRows,
   readFirstNonEmptyCsvRow,
@@ -14,6 +13,7 @@ import {
 } from "~/server/pipeline/domain/lead-schema-parser";
 
 const LEAD_IMPORT_DELIMITERS: readonly CsvDelimiter[] = [",", ";"] as const;
+export const MAX_LEAD_IMPORT_ROWS = 10_000;
 
 export const STATUS_IMPORT_HEADERS = [
   "nro_de_solicitud",
@@ -45,7 +45,6 @@ export type LeadImportCsvInspectionResult =
       ok: true;
       importType: LeadImportType;
       headers: string[];
-      rowsTotal: number;
     }
   | {
       ok: false;
@@ -257,9 +256,6 @@ export function inspectLeadImportCsv(
       ok: true,
       importType: "import_status",
       headers: inspection.headers,
-      rowsTotal: countNonEmptyCsvRows(csvText, inspection.delimiter, {
-        afterRowNumber: inspection.headerRow.rowNumber,
-      }),
     };
   }
 
@@ -269,9 +265,6 @@ export function inspectLeadImportCsv(
       ok: true,
       importType: "import_prioridad",
       headers: inspection.headers,
-      rowsTotal: countNonEmptyCsvRows(csvText, inspection.delimiter, {
-        afterRowNumber: inspection.headerRow.rowNumber,
-      }),
     };
   }
 
@@ -340,6 +333,7 @@ export function parseLeadImportRows(input: {
     reason: string;
     type: "import_status" | "import_prioridad";
   }> = [];
+  let processedRows = 0;
 
   for (const row of rows) {
     if (row.rowNumber <= resolved.headerRowNumber) {
@@ -348,6 +342,12 @@ export function parseLeadImportRows(input: {
 
     if (row.cells.every((cell) => cell.trim().length === 0)) {
       continue;
+    }
+    processedRows++;
+    if (processedRows > MAX_LEAD_IMPORT_ROWS) {
+      throw new Error(
+        `Import exceeds maximum supported rows (${MAX_LEAD_IMPORT_ROWS})`,
+      );
     }
 
     const record = readRecord(resolved.headers, row);

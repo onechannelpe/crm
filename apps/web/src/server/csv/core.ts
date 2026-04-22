@@ -16,9 +16,9 @@ export function normalizeCsvHeader(header: string): string {
     .replace(/\s+/g, "_");
 }
 
-function flushField(cells: string[], field: string): string {
-  cells.push(field);
-  return "";
+function flushField(cells: string[], fieldBuffer: string[]): void {
+  cells.push(fieldBuffer.join(""));
+  fieldBuffer.length = 0;
 }
 
 function isRowEmpty(cells: readonly string[]): boolean {
@@ -31,7 +31,7 @@ function scanCsvRows(
   onRow: (row: CsvRow) => boolean | void,
 ): void {
   let inQuotes = false;
-  let field = "";
+  const fieldBuffer: string[] = [];
   let currentLine = 1;
   let rowStartLine = 1;
   let cells: string[] = [];
@@ -48,7 +48,7 @@ function scanCsvRows(
 
     if (ch === '"') {
       if (inQuotes && content[i + 1] === '"') {
-        field += '"';
+        fieldBuffer.push('"');
         i++;
       } else {
         inQuotes = !inQuotes;
@@ -57,14 +57,14 @@ function scanCsvRows(
     }
 
     if (!inQuotes && ch === delimiter) {
-      field = flushField(cells, field);
+      flushField(cells, fieldBuffer);
       continue;
     }
 
     if (ch === "\r" || ch === "\n") {
       const isCrlf = ch === "\r" && content[i + 1] === "\n";
       if (inQuotes) {
-        field += "\n";
+        fieldBuffer.push("\n");
         if (isCrlf) {
           i++;
         }
@@ -72,7 +72,7 @@ function scanCsvRows(
         continue;
       }
 
-      field = flushField(cells, field);
+      flushField(cells, fieldBuffer);
       if (!emitRow()) {
         return;
       }
@@ -85,11 +85,11 @@ function scanCsvRows(
       continue;
     }
 
-    field += ch;
+    fieldBuffer.push(ch);
   }
 
-  if (field.length > 0 || cells.length > 0) {
-    field = flushField(cells, field);
+  if (fieldBuffer.length > 0 || cells.length > 0) {
+    flushField(cells, fieldBuffer);
     emitRow();
   }
 }

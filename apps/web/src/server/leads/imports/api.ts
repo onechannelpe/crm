@@ -24,7 +24,6 @@ export function detectLeadImportFile(input: { fileText: string }):
   | {
       ok: true;
       importType: LeadImportType;
-      rowsTotal: number;
     }
   | {
       ok: false;
@@ -43,7 +42,6 @@ export function detectLeadImportFile(input: { fileText: string }):
   return {
     ok: true,
     importType: inspection.importType,
-    rowsTotal: inspection.rowsTotal,
   };
 }
 

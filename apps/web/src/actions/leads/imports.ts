@@ -76,8 +76,8 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
     execute: async (ctx) => {
       const { repo, storage, syncExecutor } = serverRuntime.files;
       const { integration } = serverRuntime.integrations;
-      const fileText = await file.text();
-      const detection = detectLeadImportFile({ fileText });
+      const headerChunkText = await file.slice(0, 64 * 1024).text();
+      const detection = detectLeadImportFile({ fileText: headerChunkText });
       if (!detection.ok) {
         throw validationError(detection.message);
       }
@@ -132,7 +132,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
       });
 
       await integration.jobs.updateProgress(jobId, {
-        rowsTotal: detection.rowsTotal,
+        rowsTotal: 0,
         rowsApplied: 0,
         rowsFailed: 0,
       });
@@ -145,7 +145,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
             status: "PENDING",
             rows_applied: 0,
             rows_failed: 0,
-            rows_total: detection.rowsTotal,
+            rows_total: 0,
             error_message: null,
           },
         }),
@@ -157,7 +157,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
         artifactId,
         jobId,
         importType: detection.importType,
-        rowsTotal: detection.rowsTotal,
+        rowsTotal: 0,
       });
     },
   });

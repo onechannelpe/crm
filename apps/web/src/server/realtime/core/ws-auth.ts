@@ -1,4 +1,4 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { serverRuntime } from "~/server/runtime";
 
 import type { WsPeer } from "./ws-types";
@@ -49,14 +49,8 @@ export function readPeerSession(peer: WsPeer): AppPeerSession | null {
   if (
     typeof userId !== "number" ||
     typeof branchId !== "number" ||
-    (role !== "executive" &&
-      role !== "supervisor" &&
-      role !== "back_office" &&
-      role !== "sales_manager" &&
-      role !== "logistics" &&
-      role !== "hr" &&
-      role !== "admin" &&
-      role !== "superuser") ||
+    typeof role !== "string" ||
+    !isRole(role) ||
     (sessionClass !== "app" && sessionClass !== "pre_auth") ||
     typeof onboardingCompleted !== "boolean"
   ) {

@@ -29,6 +29,7 @@ export async function applyImportRows(
       rowsApplied: number;
       rowsFailed: number;
     }) => void;
+    progressEveryRows?: number;
   },
   executor: DatabaseExecutor,
 ): Promise<{
@@ -47,14 +48,32 @@ export async function applyImportRows(
   let applied = 0;
   let failed = input.invalidRows.length;
   const outboxPlan = createEmptyOutboxPlan();
+  const progressEveryRows = Math.max(1, input.progressEveryRows ?? 50);
+  let lastEmittedProcessed = -1;
 
-  if (input.onProgress) {
+  function emitProgress(force: boolean): void {
+    if (!input.onProgress) {
+      return;
+    }
+
+    const processed = applied + failed;
+    if (
+      !force &&
+      processed - lastEmittedProcessed < progressEveryRows &&
+      processed < rowsTotal
+    ) {
+      return;
+    }
+
+    lastEmittedProcessed = processed;
     input.onProgress({
       rowsTotal,
       rowsApplied: applied,
       rowsFailed: failed,
     });
   }
+
+  emitProgress(true);
 
   await executor.transaction().execute(async (trx) => {
     await stageImportRows(trx, input.jobId, sortedRows, input.invalidRows, now);
@@ -70,13 +89,7 @@ export async function applyImportRows(
       results.push(mutationResult.rowResult);
       if (!mutationResult.ok) {
         failed++;
-        if (input.onProgress) {
-          input.onProgress({
-            rowsTotal,
-            rowsApplied: applied,
-            rowsFailed: failed,
-          });
-        }
+        emitProgress(false);
         continue;
       }
 
@@ -91,13 +104,7 @@ export async function applyImportRows(
         outboxPlan,
       });
       applied++;
-      if (input.onProgress) {
-        input.onProgress({
-          rowsTotal,
-          rowsApplied: applied,
-          rowsFailed: failed,
-        });
-      }
+      emitProgress(false);
     }
     /* eslint-enable no-await-in-loop */
 
@@ -107,6 +114,7 @@ export async function applyImportRows(
       now: Date.now(),
     });
   });
+  emitProgress(true);
 
   const sortedResults = results.toSorted(resultSort);
   return {

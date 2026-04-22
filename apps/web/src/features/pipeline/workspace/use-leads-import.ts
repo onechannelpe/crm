@@ -15,7 +15,14 @@ import { getErrorMessage } from "~/lib/errors";
 import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
-const IMPORT_COMPLETED_DURATION_MS = 1200;
+const IMPORT_COMPLETED_DURATION_MS = 4000;
+
+function importTypeLabel(type: LeadImportType): string {
+  if (type === "import_status") {
+    return "estados";
+  }
+  return "prioridades";
+}
 
 function importTypeUnit(type: LeadImportType, count: number): string {
   if (type === "import_status") {
@@ -30,6 +37,10 @@ function buildProgressMessage(event: {
   rowsFailed: number;
   rowsTotal: number;
 }): string {
+  if (event.rowsTotal <= 0) {
+    return `Procesando ${importTypeLabel(event.importType)}...`;
+  }
+
   const processed = event.rowsApplied + event.rowsFailed;
   return `Procesando ${importTypeUnit(event.importType, event.rowsTotal)}: ${processed} de ${event.rowsTotal}`;
 }
