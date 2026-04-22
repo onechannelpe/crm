@@ -267,12 +267,26 @@ function resolveLayoutForImportType(
 }
 
 function findFirstNonEmptyLine(csvText: string): string | null {
-  const lines = csvText.split(/\r?\n/);
-  for (const line of lines) {
+  let start = 0;
+
+  while (start < csvText.length) {
+    const newlineIndex = csvText.indexOf("\n", start);
+    const rawLine =
+      newlineIndex === -1
+        ? csvText.slice(start)
+        : csvText.slice(start, newlineIndex);
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+
     if (!isLineEmpty(line)) {
       return line;
     }
+
+    if (newlineIndex === -1) {
+      break;
+    }
+    start = newlineIndex + 1;
   }
+
   return null;
 }
 
@@ -336,7 +350,7 @@ async function consumeCsvLinesFromStream(
   };
 
   try {
-    const readNext = async (): Promise<void> => {
+    const readSequentially = async (): Promise<void> => {
       const { done, value } = await reader.read();
       if (done) {
         return;
@@ -347,10 +361,10 @@ async function consumeCsvLinesFromStream(
         return;
       }
 
-      await readNext();
+      await readSequentially();
     };
 
-    await readNext();
+    await readSequentially();
 
     buffered += decoder.decode();
     processBufferedLines(true);
