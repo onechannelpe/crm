@@ -5,11 +5,11 @@ import { RecordShowHeader } from "~/features/record-show/header/record-show-head
 import shellStyles from "~/components/layout/shell.module.css";
 
 export function RecordShowShell(props: RouteSectionProps) {
-  const params = useParams<{ leadId: string }>();
+  const params = useParams<{ recordId: string }>();
 
   return (
     <div class={shellStyles.main}>
-      <RecordShowHeader leadId={params.leadId} />
+      <RecordShowHeader leadId={params.recordId} />
       <main class={shellStyles.settingsBody}>{props.children}</main>
     </div>
   );
