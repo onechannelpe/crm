@@ -1,6 +1,7 @@
+import { randomUUIDv7 } from "bun";
+
 import { serializeAuditChanges } from "~/lib/contracts/audit";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createUuidV7 } from "~/server/shared/uuid-v7";
 
 import type {
   AuditLogDraft,
@@ -42,7 +43,7 @@ export function createWorkflowAuditLogsRepo(executor: DatabaseExecutor) {
       changes: string | null;
       created_at: number;
     }) {
-      const id = createUuidV7(values.created_at);
+      const id = randomUUIDv7("hex", values.created_at);
       return executor
         .insertInto("workflow_audit_logs")
         .values({ id, ...values })

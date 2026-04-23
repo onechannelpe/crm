@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -16,6 +17,7 @@ export async function enqueueReadyForQuotationOutboxEvents(
     .insertInto("workflow_integration_outbox_ready_for_quotation")
     .values(
       events.map((event) => ({
+        id: randomUUIDv7("hex", now),
         lead_id: event.leadId,
         ruc: event.ruc,
         branch_id: event.branchId,

@@ -1,9 +1,9 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadSale } from "~/server/pipeline/application/ports/sale-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createUuidV7 } from "~/server/shared/uuid-v7";
 
 export type SaleRow = Selectable<Database["workflow_sales"]>;
 export type NewSaleRow = Insertable<Database["workflow_sales"]>;
@@ -29,7 +29,7 @@ function toLeadSale(row: SaleRow): LeadSale {
 export function createSaleRepo(db: DatabaseExecutor) {
   return {
     async insert(values: Omit<LeadSale, "id">): Promise<string> {
-      const id = createUuidV7();
+      const id = randomUUIDv7();
       await db
         .insertInto("workflow_sales")
         .values({

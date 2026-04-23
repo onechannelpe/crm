@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -8,7 +9,6 @@ import {
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { createUuidV7 } from "~/server/shared/uuid-v7";
 
 import { toHistoryEntry } from "./history-entry-parser";
 
@@ -17,7 +17,7 @@ type NewHistoryEventRow = Insertable<Database["workflow_history_events"]>;
 export function createHistoryRepo(db: DatabaseExecutor) {
   return {
     async insert(values: LeadHistoryEventDraft): Promise<string> {
-      const id = createUuidV7();
+      const id = randomUUIDv7();
       await db
         .insertInto("workflow_history_events")
         .values({

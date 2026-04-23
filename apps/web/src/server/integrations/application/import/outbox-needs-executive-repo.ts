@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -16,6 +17,7 @@ export async function enqueueNeedsExecutiveOutboxEvents(
     .insertInto("workflow_integration_outbox_needs_executive_input")
     .values(
       events.map((event) => ({
+        id: randomUUIDv7("hex", now),
         lead_id: event.leadId,
         ruc: event.ruc,
         executive_id: event.executiveId,

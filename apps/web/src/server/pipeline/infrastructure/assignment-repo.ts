@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -6,7 +7,6 @@ import type {
   LeadAssignmentDraft,
 } from "~/server/pipeline/application/ports/assignment-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createUuidV7 } from "~/server/shared/uuid-v7";
 
 type AssignmentRow = Selectable<Database["workflow_lead_assignments"]>;
 type NewAssignmentRow = Insertable<Database["workflow_lead_assignments"]>;
@@ -25,7 +25,7 @@ function toLeadAssignment(row: AssignmentRow): LeadAssignment {
 export function createAssignmentRepo(db: DatabaseExecutor) {
   return {
     async insert(values: LeadAssignmentDraft): Promise<string> {
-      const id = createUuidV7();
+      const id = randomUUIDv7();
       await db
         .insertInto("workflow_lead_assignments")
         .values({

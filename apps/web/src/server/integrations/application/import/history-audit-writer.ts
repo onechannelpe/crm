@@ -1,3 +1,5 @@
+import { randomUUIDv7 } from "bun";
+
 import { createHistoryEvent } from "~/server/pipeline/domain/history";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
@@ -43,6 +45,7 @@ export async function writeHistoryAndAudit(input: {
   await input.executor
     .insertInto("workflow_history_events")
     .values({
+      id: randomUUIDv7("hex", mutation.changedAt),
       lead_id: primaryHistory.leadId,
       event_type: primaryHistory.eventType,
       actor_user_id: primaryHistory.actorUserId,
@@ -55,6 +58,7 @@ export async function writeHistoryAndAudit(input: {
   await input.executor
     .insertInto("workflow_audit_logs")
     .values({
+      id: randomUUIDv7("hex", mutation.changedAt),
       user_id: input.actorId,
       action:
         row.type === "import_status"
@@ -112,6 +116,7 @@ export async function writeHistoryAndAudit(input: {
     .insertInto("workflow_history_events")
     .values([
       {
+        id: randomUUIDv7("hex", mutation.changedAt),
         lead_id: reviewedHistory.leadId,
         event_type: reviewedHistory.eventType,
         actor_user_id: reviewedHistory.actorUserId,
@@ -120,6 +125,7 @@ export async function writeHistoryAndAudit(input: {
         occurred_at: reviewedHistory.occurredAt,
       },
       {
+        id: randomUUIDv7("hex", mutation.changedAt),
         lead_id: stageHistory.leadId,
         event_type: stageHistory.eventType,
         actor_user_id: stageHistory.actorUserId,
@@ -133,6 +139,7 @@ export async function writeHistoryAndAudit(input: {
   await input.executor
     .insertInto("workflow_audit_logs")
     .values({
+      id: randomUUIDv7("hex", mutation.changedAt),
       user_id: input.actorId,
       action: "lead_reviewed",
       entity_type: "lead",

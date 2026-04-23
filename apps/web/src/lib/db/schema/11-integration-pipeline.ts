@@ -1,21 +1,9 @@
-import { sql, type Kysely } from "kysely";
-
-const DEFAULT_UUID_SQL = sql<string>`(
-  lower(
-    hex(randomblob(4)) || '-' ||
-    hex(randomblob(2)) || '-' ||
-    '4' || substr(hex(randomblob(2)), 2) || '-' ||
-    substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)), 2) || '-' ||
-    hex(randomblob(6))
-  )
-)`;
+import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_integration_import_rows")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("integration_job_id", "text", (col) =>
       col
         .notNull()
@@ -49,9 +37,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_integration_outbox_needs_executive_input")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id"),
     )
@@ -78,9 +64,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_integration_outbox_ready_for_quotation")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id"),
     )

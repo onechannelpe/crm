@@ -1,21 +1,9 @@
-import { sql, type Kysely } from "kysely";
-
-const DEFAULT_UUID_SQL = sql<string>`(
-  lower(
-    hex(randomblob(4)) || '-' ||
-    hex(randomblob(2)) || '-' ||
-    '4' || substr(hex(randomblob(2)), 2) || '-' ||
-    substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)), 2) || '-' ||
-    hex(randomblob(6))
-  )
-)`;
+import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_leads")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("ruc", "varchar(11)", (col) => col.notNull().unique())
     .addColumn("razon_social", "varchar(255)")
     .addColumn("address", "text")
@@ -80,9 +68,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_quotations")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
@@ -107,9 +93,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_sales")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id"),
     )
@@ -141,9 +125,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_lead_assignments")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id"),
     )
@@ -173,9 +155,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_history_events")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
@@ -196,9 +176,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_audit_logs")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
@@ -231,9 +209,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_integration_jobs")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(DEFAULT_UUID_SQL),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("type", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("requested_by_user_id", "integer", (col) =>

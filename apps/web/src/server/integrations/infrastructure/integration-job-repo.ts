@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { sql } from "kysely";
 
 import type {
@@ -6,12 +7,11 @@ import type {
   NewIntegrationJob,
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createUuidV7 } from "~/server/shared/uuid-v7";
 
 export function createIntegrationJobRepo(db: DatabaseExecutor) {
   return {
     async insert(values: NewIntegrationJob): Promise<string> {
-      const id = createUuidV7();
+      const id = randomUUIDv7();
       await db
         .insertInto("workflow_integration_jobs")
         .values({ ...values, id })

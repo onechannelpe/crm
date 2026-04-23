@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -7,7 +8,6 @@ import type {
   LeadRecord,
 } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createUuidV7 } from "~/server/shared/uuid-v7";
 
 export type LeadRow = Selectable<Database["workflow_leads"]>;
 export type NewLeadRow = Insertable<Database["workflow_leads"]>;
@@ -68,7 +68,7 @@ export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
 export function createLeadRepo(db: DatabaseExecutor) {
   return {
     async insert(values: LeadDraft): Promise<string> {
-      const id = createUuidV7();
+      const id = randomUUIDv7();
       await db
         .insertInto("workflow_leads")
         .values({ ...toNewLeadRow(values), id })

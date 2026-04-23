@@ -1,9 +1,9 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadQuotation } from "~/server/pipeline/application/ports/quotation-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createUuidV7 } from "~/server/shared/uuid-v7";
 
 export type QuotationRow = Selectable<Database["workflow_quotations"]>;
 export type NewQuotationRow = Insertable<Database["workflow_quotations"]>;
@@ -27,7 +27,7 @@ function toLeadQuotation(row: QuotationRow): LeadQuotation {
 export function createQuotationRepo(db: DatabaseExecutor) {
   return {
     async insert(values: Omit<LeadQuotation, "id">): Promise<string> {
-      const id = createUuidV7();
+      const id = randomUUIDv7();
       await db
         .insertInto("workflow_quotations")
         .values({
