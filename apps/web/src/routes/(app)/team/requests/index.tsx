@@ -16,9 +16,20 @@ import {
 } from "~/lib/mutations/capacity";
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
 
+type PendingCapacityRequestGridRow = Omit<PendingCapacityRequestView, "id"> & {
+  id: string;
+  requestId: number;
+};
+
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());
-  const rows = () => requests() ?? [];
+  const rows = (): PendingCapacityRequestGridRow[] =>
+    (requests() ?? []).map((request) =>
+      Object.assign({}, request, {
+        id: `capacity-request:${request.id}`,
+        requestId: request.id,
+      }),
+    );
   const isLoading = () => requests() === undefined;
   const approve = useAction(approveCapacityRequestMutation);
   const reject = useAction(rejectCapacityRequestMutation);
@@ -63,20 +74,22 @@ export default function TeamRequestsPage() {
       width: 240,
       renderCell: (request) => (
         <div class="flex gap-2">
-          <Button type="button" onClick={() => void approve(request.id)}>
+          <Button type="button" onClick={() => void approve(request.requestId)}>
             Aprobar
           </Button>
           <Button
             type="button"
             variant="outline"
-            onClick={() => void reject(request.id, "Rechazado desde la cola")}
+            onClick={() =>
+              void reject(request.requestId, "Rechazado desde la cola")
+            }
           >
             Rechazar
           </Button>
         </div>
       ),
     },
-  ] satisfies ReadonlyArray<DataGridColumn<PendingCapacityRequestView>>;
+  ] satisfies ReadonlyArray<DataGridColumn<PendingCapacityRequestGridRow>>;
 
   return (
     <AppPage width="wide">
