@@ -9,6 +9,12 @@ import User from "~/components/icons/user";
 import { Badge } from "~/components/ui/display/badge";
 import { RecordChip } from "~/components/ui/record-chip/record-chip";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import {
+  leadNextStepLabel,
+  leadPriorityLabel,
+  leadStageLabel,
+  leadStatusLabel,
+} from "~/features/workflow/presentation/lead-display";
 import type { Role } from "~/lib/auth/access/rbac";
 import { formatDate } from "~/lib/utils";
 import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
@@ -54,7 +60,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
               : "secondary"
         }
       >
-        {lead.stage}
+        {leadStageLabel(lead.stage)}
       </Badge>
     ),
   },
@@ -63,7 +69,9 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     label: "Estado",
     icon: Info,
     width: 168,
-    renderCell: (lead) => <Badge variant="outline">{lead.status ?? "-"}</Badge>,
+    renderCell: (lead) => (
+      <Badge variant="outline">{leadStatusLabel(lead.status)}</Badge>
+    ),
   },
   {
     key: "prioridad",
@@ -71,7 +79,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     icon: Package,
     width: 152,
     renderCell: (lead) => (
-      <Badge variant="secondary">{lead.prioridad ?? "-"}</Badge>
+      <Badge variant="secondary">{leadPriorityLabel(lead.prioridad)}</Badge>
     ),
   },
   {
@@ -80,7 +88,9 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     icon: TimelineEvent,
     minWidth: 220,
     renderCell: (lead) => (
-      <span class={styles.mutedCellText}>{lead.nextStep}</span>
+      <span class={styles.mutedCellText}>
+        {leadNextStepLabel(lead.nextStep)}
+      </span>
     ),
   },
   {

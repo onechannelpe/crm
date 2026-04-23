@@ -9,6 +9,12 @@ import User from "~/components/icons/user";
 import { RecordInlineCell } from "~/components/ui/field-row";
 import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import { FieldTextValue } from "~/features/side-panel/components/field-table";
+import {
+  leadNextStepLabel,
+  leadPriorityLabel,
+  leadStageLabel,
+  leadStatusLabel,
+} from "~/features/workflow/presentation/lead-display";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
@@ -59,7 +65,7 @@ export const LEAD_DETAIL_FIELD_LAYOUT: FieldConfig[] = [
     label: "Estado",
     renderCell: (data) => (
       <RecordInlineCell label="Estado" icon={Package}>
-        <FieldTextValue>{data.lead.status ?? ""}</FieldTextValue>
+        <FieldTextValue>{leadStatusLabel(data.lead.status)}</FieldTextValue>
       </RecordInlineCell>
     ),
   },
@@ -68,7 +74,9 @@ export const LEAD_DETAIL_FIELD_LAYOUT: FieldConfig[] = [
     label: "Prioridad",
     renderCell: (data) => (
       <RecordInlineCell label="Prioridad" icon={Checkbox}>
-        <FieldTextValue>{data.lead.prioridad ?? ""}</FieldTextValue>
+        <FieldTextValue>
+          {leadPriorityLabel(data.lead.prioridad)}
+        </FieldTextValue>
       </RecordInlineCell>
     ),
   },
@@ -77,7 +85,7 @@ export const LEAD_DETAIL_FIELD_LAYOUT: FieldConfig[] = [
     label: "Etapa",
     renderCell: (data) => (
       <RecordInlineCell label="Etapa" icon={Package}>
-        <FieldTextValue>{data.lead.stage}</FieldTextValue>
+        <FieldTextValue>{leadStageLabel(data.lead.stage)}</FieldTextValue>
       </RecordInlineCell>
     ),
   },
@@ -86,7 +94,7 @@ export const LEAD_DETAIL_FIELD_LAYOUT: FieldConfig[] = [
     label: "Siguiente paso",
     renderCell: (data) => (
       <RecordInlineCell label="Siguiente paso" icon={User}>
-        <FieldTextValue>{data.lead.nextStep}</FieldTextValue>
+        <FieldTextValue>{leadNextStepLabel(data.lead.nextStep)}</FieldTextValue>
       </RecordInlineCell>
     ),
   },

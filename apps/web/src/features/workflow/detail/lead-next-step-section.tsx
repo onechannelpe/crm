@@ -1,5 +1,6 @@
 import { For, Show } from "solid-js";
 
+import { leadNextStepLabel } from "~/features/workflow/presentation/lead-display";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { blockingFieldLabel } from "./lead-workflow-ui";
@@ -13,7 +14,9 @@ export function LeadNextStepSection(props: { data: LeadDetailView }) {
       <div class={styles.fieldGrid}>
         <div class={styles.fieldRow}>
           <dt class={styles.fieldLabel}>Paso</dt>
-          <dd class={styles.fieldValue}>{props.data.lead.nextStep}</dd>
+          <dd class={styles.fieldValue}>
+            {leadNextStepLabel(props.data.lead.nextStep)}
+          </dd>
         </div>
         <div class={styles.fieldRow}>
           <dt class={styles.fieldLabel}>Bloqueos</dt>

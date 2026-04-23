@@ -29,6 +29,7 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { ExecutivePicker } from "~/features/workflow/detail/executive-picker";
 import { FieldsWidget } from "~/features/workflow/fields/fields-widget";
+import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;
@@ -47,7 +48,7 @@ const LEAD_CREATE_FIELD_ROWS: ReadonlyArray<LeadCreateFieldRow> = [
   {
     label: "Etapa inicial",
     icon: Package,
-    value: "PENDING_EXTERNAL_REVIEW",
+    value: leadStageLabel("PENDING_EXTERNAL_REVIEW"),
   },
   { label: "Última actualización", icon: Clock, value: "" },
 ] as const;
