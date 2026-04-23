@@ -22,6 +22,7 @@ export type LeadTimelineItem = {
 export type LeadDetailLeadView = {
   id: string;
   ruc: string;
+  isFavorite: boolean;
   razonSocial: string | null;
   address: string | null;
   district: string | null;

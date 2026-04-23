@@ -154,6 +154,27 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("workflow_lead_favorites")
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id").onDelete("cascade"),
+    )
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addPrimaryKeyConstraint("pk_workflow_lead_favorites", [
+      "lead_id",
+      "user_id",
+    ])
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_lead_favorites_user")
+    .on("workflow_lead_favorites")
+    .column("user_id")
+    .execute();
+
+  await db.schema
     .createTable("workflow_history_events")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>

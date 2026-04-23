@@ -5,10 +5,12 @@ import {
   requestSaleApproval,
 } from "~/actions/workflow/commands/quotations";
 import {
+  requestAddLeadToFavorites,
   requestLeadCommercialInputCompletion,
   requestLeadCreation,
   requestLeadReassignment,
   requestLeadReview,
+  requestRemoveLeadFromFavorites,
 } from "~/actions/workflow/commands/records";
 import { requestSaleCreation } from "~/actions/workflow/commands/sales";
 import type { Moneda } from "~/workflow/contracts/lead-schema";
@@ -123,4 +125,26 @@ export const reassignLeadMutation = action(
     );
   },
   "workflow.reassignLead",
+);
+
+export const addLeadToFavoritesMutation = action(
+  async (input: { leadId: string }) => {
+    await requestAddLeadToFavorites(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.addLeadToFavorites",
+);
+
+export const removeLeadFromFavoritesMutation = action(
+  async (input: { leadId: string }) => {
+    await requestRemoveLeadFromFavorites(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.removeLeadFromFavorites",
 );

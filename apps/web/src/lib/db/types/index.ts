@@ -104,6 +104,7 @@ export {
   type WorkflowQuotationsTable,
   type WorkflowSalesTable,
   type WorkflowLeadAssignmentsTable,
+  type WorkflowLeadFavoritesTable,
   type WorkflowHistoryEventsTable,
   type WorkflowAuditLogsTable,
   type LeadSourcingPoliciesTable,
@@ -183,6 +184,7 @@ export interface Database {
   workflow_quotations: workflow.WorkflowQuotationsTable;
   workflow_sales: workflow.WorkflowSalesTable;
   workflow_lead_assignments: workflow.WorkflowLeadAssignmentsTable;
+  workflow_lead_favorites: workflow.WorkflowLeadFavoritesTable;
   workflow_history_events: workflow.WorkflowHistoryEventsTable;
   workflow_audit_logs: workflow.WorkflowAuditLogsTable;
   lead_sourcing_policies: workflow.LeadSourcingPoliciesTable;

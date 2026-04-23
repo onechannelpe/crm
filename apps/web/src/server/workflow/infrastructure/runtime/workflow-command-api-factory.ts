@@ -11,6 +11,7 @@ import type { LeadEnrichmentQueue } from "../../application/ports/enrichment-que
 import type { WorkflowNotificationCenter } from "../../application/ports/notification-center";
 import { systemLeadClock } from "../../application/services/lead-clock";
 import { createCommercialInputRepo } from "../commercial-input-repo";
+import { createLeadFavoriteRepo } from "../lead-favorite-repo";
 import { createQuotationRepo } from "../quotation-repo";
 import { createLeadMutationUow } from "../repos/lead-mutation-uow";
 import { createLeadReadRepository } from "../repos/lead-read-repo";
@@ -31,6 +32,7 @@ export function createWorkflowCommandApiRuntime(
 ): WorkflowCommandApi {
   return createWorkflowCommandApi({
     leadReader: createLeadReadRepository(input.deps.leadMutations.leads),
+    leadFavorites: createLeadFavoriteRepo(input.executor),
     mutationUow: createLeadMutationUow(input.executor),
     users: createLeadUserScopeRepository(input.deps.leadMutations.users),
     notificationCenter: input.notificationCenter,

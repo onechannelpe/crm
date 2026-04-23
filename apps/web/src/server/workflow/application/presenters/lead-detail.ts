@@ -21,6 +21,7 @@ import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
   lead: LeadRecord;
+  isFavorite: boolean;
   executiveName: string;
   createdByName: string;
   updatedByName: string | null;
@@ -52,6 +53,7 @@ function toLeadSourceStatus(
 
 function toLeadDetailLead(
   lead: LeadRecord,
+  isFavorite: boolean,
   executiveName: string,
   createdByName: string,
   updatedByName: string | null,
@@ -60,6 +62,7 @@ function toLeadDetailLead(
   return {
     id: lead.id,
     ruc: lead.ruc,
+    isFavorite,
     razonSocial: lead.razonSocial,
     address: lead.address,
     district: lead.district,
@@ -135,6 +138,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
     lead: toLeadDetailLead(
       source.lead,
+      source.isFavorite,
       source.executiveName,
       source.createdByName,
       source.updatedByName,

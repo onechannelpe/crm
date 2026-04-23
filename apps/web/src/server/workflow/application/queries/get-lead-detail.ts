@@ -31,6 +31,7 @@ export async function getLeadDetail(
   }
 
   const [
+    isFavorite,
     commercialInput,
     quotations,
     sale,
@@ -38,6 +39,10 @@ export async function getLeadDetail(
     sourceStatus,
     userRows,
   ] = await Promise.all([
+    deps.leadFavorites.isFavoriteForUser({
+      leadId: input.leadId,
+      userId: input.actorUserId,
+    }),
     deps.leadCommercialInputs.findByLeadId(input.leadId),
     deps.leadQuotations.listByLeadId(input.leadId),
     deps.leadSales.findByLeadId(input.leadId),
@@ -72,6 +77,7 @@ export async function getLeadDetail(
   return Ok(
     presentLeadDetail({
       lead,
+      isFavorite,
       executiveName,
       createdByName,
       updatedByName,

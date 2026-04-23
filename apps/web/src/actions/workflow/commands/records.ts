@@ -133,6 +133,46 @@ export async function requestLeadReassignment(input: {
   });
 }
 
+export async function requestAddLeadToFavorites(input: { leadId: string }) {
+  return runAction({
+    actionName: "workflow.add_lead_to_favorites",
+    access: { kind: "auth" },
+    input,
+    execute: (ctx) =>
+      runWorkflowCommand((runtime) =>
+        createWorkflowCommandApiRuntime(runtime).addToFavorites({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
+          leadId: input.leadId,
+        }),
+      ),
+  });
+}
+
+export async function requestRemoveLeadFromFavorites(input: {
+  leadId: string;
+}) {
+  return runAction({
+    actionName: "workflow.remove_lead_from_favorites",
+    access: { kind: "auth" },
+    input,
+    execute: (ctx) =>
+      runWorkflowCommand((runtime) =>
+        createWorkflowCommandApiRuntime(runtime).removeFromFavorites({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
+          leadId: input.leadId,
+        }),
+      ),
+  });
+}
+
 export async function requestLeadSunatRefresh(input: { leadId: string }) {
   return runAction({
     actionName: "workflow.request_sunat_refresh",

@@ -1,4 +1,4 @@
-import { createAsync, useNavigate } from "@solidjs/router";
+import { createAsync, useAction, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal, onMount } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
@@ -12,7 +12,14 @@ import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import { leadListQuery } from "~/features/workflow/data/queries";
+import {
+  addLeadToFavoritesMutation,
+  removeLeadFromFavoritesMutation,
+} from "~/features/workflow/data/mutations";
+import {
+  leadDetailQuery,
+  leadListQuery,
+} from "~/features/workflow/data/queries";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
 import styles from "./record-show-header.module.css";
@@ -25,9 +32,12 @@ const LEAD_NAVIGATION_LIMIT = 200;
 
 export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const navigate = useNavigate();
+  const detail = createAsync(() => leadDetailQuery(props.leadId));
   const leadList = createAsync(() =>
     leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
   );
+  const addFavorite = useAction(addLeadToFavoritesMutation);
+  const removeFavorite = useAction(removeLeadFromFavoritesMutation);
 
   const currentIndex = createMemo(() => {
     const rows = leadList()?.rows;
@@ -59,7 +69,10 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   });
 
   const [modKey, setModKey] = createSignal("Ctrl");
+  const [favoriteBusy, setFavoriteBusy] = createSignal(false);
   const { isOpen, openPanel, closePanel } = useSidePanel();
+
+  const isFavorite = () => detail()?.lead.isFavorite ?? false;
 
   onMount(() => {
     if (/Mac/i.test(navigator.platform)) {
@@ -86,6 +99,24 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     navigate(`/records/${leadId}`);
   };
 
+  const toggleFavorite = async () => {
+    if (favoriteBusy()) {
+      return;
+    }
+
+    setFavoriteBusy(true);
+    try {
+      if (isFavorite()) {
+        await removeFavorite({ leadId: props.leadId });
+        return;
+      }
+
+      await addFavorite({ leadId: props.leadId });
+    } finally {
+      setFavoriteBusy(false);
+    }
+  };
+
   return (
     <>
       <TopBarTooltip content="Registro siguiente">
@@ -110,14 +141,20 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
         </TopBarActionButton>
       </TopBarTooltip>
 
-      <TopBarTooltip content="Favoritos estará disponible pronto">
+      <TopBarTooltip
+        content={isFavorite() ? "Quitar de favoritos" : "Agregar a favoritos"}
+      >
         <TopBarActionButton
-          ariaLabel="Agregar a favoritos"
+          ariaLabel={
+            isFavorite() ? "Quitar de favoritos" : "Agregar a favoritos"
+          }
           iconOnly
-          disabled
+          disabled={favoriteBusy()}
+          pressed={isFavorite()}
+          onClick={() => void toggleFavorite()}
           class={styles.desktopAction}
         >
-          <Heart size={16} />
+          <Heart size={16} color={isFavorite() ? "var(--accent)" : undefined} />
         </TopBarActionButton>
       </TopBarTooltip>
 

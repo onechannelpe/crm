@@ -11,6 +11,7 @@ import { createAssignmentRepo } from "~/server/workflow/infrastructure/assignmen
 import { createCommercialInputRepo } from "~/server/workflow/infrastructure/commercial-input-repo";
 import { createEngineGateway } from "~/server/workflow/infrastructure/engine-gateway";
 import { createHistoryRepo } from "~/server/workflow/infrastructure/history-repo";
+import { createLeadFavoriteRepo } from "~/server/workflow/infrastructure/lead-favorite-repo";
 import { createLeadQueries } from "~/server/workflow/infrastructure/lead-queries";
 import { createLeadRepo } from "~/server/workflow/infrastructure/lead-repo";
 import { createQuotationRepo } from "~/server/workflow/infrastructure/quotation-repo";
@@ -34,6 +35,7 @@ export function createWorkflowFeatureDeps(
 ): WorkflowDeps {
   const leads = createLeadRepo(executor);
   const leadQueries = createLeadQueries(executor);
+  const leadFavorites = createLeadFavoriteRepo(executor);
   const leadAssignments = createAssignmentRepo(executor);
   const leadCommercialInputs = createCommercialInputRepo(executor);
   const leadHistory = createHistoryRepo(executor);
@@ -50,6 +52,7 @@ export function createWorkflowFeatureDeps(
     leadList: { leads: leadQueries },
     leadDetail: {
       leads,
+      leadFavorites,
       leadCommercialInputs,
       leadHistory,
       leadQuotations,

@@ -13,6 +13,16 @@ export type ReassignLeadInput = {
   toExecutiveId: number;
 };
 
+export type AddLeadToFavoritesInput = {
+  actor: ActorContext;
+  leadId: string;
+};
+
+export type RemoveLeadFromFavoritesInput = {
+  actor: ActorContext;
+  leadId: string;
+};
+
 export type ReviewLeadInput = {
   actor: ActorContext;
   leadId: string;

@@ -777,6 +777,12 @@ export interface WorkflowLeadAssignmentsTable {
   assigned_at: number;
 }
 
+export interface WorkflowLeadFavoritesTable {
+  lead_id: string;
+  user_id: number;
+  created_at: number;
+}
+
 export interface WorkflowHistoryEventsTable {
   id: Generated<string>;
   lead_id: string;
@@ -943,6 +949,7 @@ export interface Database {
   workflow_quotations: WorkflowQuotationsTable;
   workflow_sales: WorkflowSalesTable;
   workflow_lead_assignments: WorkflowLeadAssignmentsTable;
+  workflow_lead_favorites: WorkflowLeadFavoritesTable;
   workflow_history_events: WorkflowHistoryEventsTable;
   workflow_audit_logs: WorkflowAuditLogsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;

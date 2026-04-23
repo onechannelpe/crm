@@ -1,6 +1,7 @@
 import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
 import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
 import type { LeadQueries } from "../ports/lead-queries";
 import type { LeadRepository } from "../ports/lead-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
@@ -14,6 +15,7 @@ export type LeadListDeps = {
 
 export type LeadDetailDeps = {
   leads: LeadRepository;
+  leadFavorites: LeadFavoriteRepository;
   leadCommercialInputs: LeadCommercialInputRepository;
   leadHistory: LeadHistoryRepository;
   leadQuotations: LeadQuotationRepository;
