@@ -16,6 +16,9 @@ import { ABSOLUTE_MAX_UPLOAD_BYTES } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function getFileDeps() {
   const { repo, storage, syncExecutor } = getServerRuntime().files;
   return { repo, storage, syncExecutor };
@@ -32,6 +35,21 @@ function parseListOffset(value: number | undefined): number {
     throw validationError("offset must be a non-negative integer");
   }
   return value;
+}
+
+function parseArtifactId(value: unknown): string {
+  if (typeof value !== "string") {
+    throw validationError("artifactId is required");
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    throw validationError("artifactId is required");
+  }
+  if (!UUID_PATTERN.test(normalized)) {
+    throw validationError("artifactId is invalid");
+  }
+  return normalized;
 }
 
 export async function requestArtifactAction(input: {
@@ -67,12 +85,9 @@ export async function listArtifactsAction(input: {
 }
 
 export async function requestDownloadTokenAction(
-  artifactId: string,
+  artifactId: unknown,
 ): Promise<{ token: string }> {
-  const safeArtifactId = artifactId.trim();
-  if (!safeArtifactId) {
-    throw validationError("artifactId is required");
-  }
+  const safeArtifactId = parseArtifactId(artifactId);
 
   return runAction({
     actionName: "files.artifact.download_token",
@@ -83,13 +98,10 @@ export async function requestDownloadTokenAction(
 }
 
 export async function uploadArtifactAction(
-  artifactId: string,
+  artifactId: unknown,
   formData: FormData,
 ): Promise<WorkflowArtifact> {
-  const safeArtifactId = artifactId.trim();
-  if (!safeArtifactId) {
-    throw validationError("artifactId is required");
-  }
+  const safeArtifactId = parseArtifactId(artifactId);
 
   return runAction({
     actionName: "files.artifact.upload",
