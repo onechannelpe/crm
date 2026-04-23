@@ -191,7 +191,7 @@ describe("auth middleware request guard", () => {
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind !== "redirect_home") throw new Error("Expected redirect");
-    expect(decision.to).toBe("/leads");
+    expect(decision.to).toBe("/records");
   });
 
   it("redirects users from routes they cannot access", async () => {
@@ -207,7 +207,7 @@ describe("auth middleware request guard", () => {
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind !== "redirect_home") throw new Error("Expected redirect");
-    expect(decision.to).toBe("/leads");
+    expect(decision.to).toBe("/records");
   });
 
   it("redirects authenticated users from root to their home route", async () => {

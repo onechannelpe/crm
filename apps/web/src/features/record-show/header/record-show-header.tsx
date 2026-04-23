@@ -33,8 +33,8 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
       }
       title={
         <span class={styles.breadcrumb}>
-          <A href="/leads" class={styles.breadcrumbLink}>
-            Prospectos
+          <A href="/records" class={styles.breadcrumbLink}>
+            Registros
           </A>
           <span class={styles.breadcrumbSep}>/</span>
           <span class={styles.breadcrumbCurrent}>{displayName()}</span>
