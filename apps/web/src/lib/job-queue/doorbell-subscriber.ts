@@ -17,7 +17,6 @@ export async function startQueueDoorbellSubscriber(triggers: {
       key: "INTEGRATION_OUTBOX_READY_FOR_QUOTATION",
       channel: JOB_CHANNELS.INTEGRATION_OUTBOX_READY_FOR_QUOTATION,
     },
-    { key: "SALES_EXPORT", channel: JOB_CHANNELS.SALES_EXPORT },
     { key: "ENRICHMENT", channel: JOB_CHANNELS.ENRICHMENT },
     {
       key: "ENRICHMENT_WRITEBACK",

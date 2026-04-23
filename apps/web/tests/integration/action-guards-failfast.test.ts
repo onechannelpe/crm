@@ -3,11 +3,6 @@ import { describe, expect, it } from "vitest";
 import { getUserLoginRetryReport } from "../../src/actions/admin/auth-security";
 import { listUserSessions } from "../../src/actions/admin/sessions/read";
 import { revokeUserSession } from "../../src/actions/admin/sessions/revoke";
-import { requestSalesExport } from "../../src/actions/sales-exports";
-import {
-  createSalesRecordDraft,
-  rejectSalesRecord,
-} from "../../src/actions/sales-records/mutations";
 import { updateProductPricing } from "../../src/actions/settings/admin-products";
 import { acceptTeamInvite } from "../../src/actions/team/acceptance";
 import {
@@ -18,9 +13,6 @@ import {
 
 describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {
-    await expect(rejectSalesRecord(0, "missing docs")).rejects.toThrow(
-      "recordId must be a positive integer",
-    );
     await expect(updateProductPricing(0, 10, true)).rejects.toThrow(
       "productId must be a positive integer",
     );
@@ -30,12 +22,6 @@ describe("action guards fail fast", () => {
   });
 
   it("rejects malformed textual payloads before auth", async () => {
-    await expect(requestSalesExport("pdf")).rejects.toThrow(
-      "format is invalid",
-    );
-    await expect(rejectSalesRecord(1, "   ")).rejects.toThrow(
-      "reason is required",
-    );
     await expect(revokeUserSession("   ", 1)).rejects.toThrow(
       "sessionId is required",
     );
@@ -71,35 +57,6 @@ describe("action guards fail fast", () => {
   });
 
   it("rejects invalid range/count values before auth", async () => {
-    await expect(
-      createSalesRecordDraft({
-        source: "manual",
-        leadAssignmentId: null,
-        client: {
-          ruc: null,
-          companyName: "Acme",
-          contactName: "Contact",
-          dni: "12345678",
-          phones: [],
-          engineMatchId: null,
-          completenessScore: 10,
-        },
-        addresses: [
-          {
-            addressType: "installation",
-            fullText: "",
-            department: null,
-            province: null,
-            district: null,
-            ubigeo: null,
-            latitude: null,
-            longitude: null,
-            isPrimary: true,
-          },
-        ],
-        products: [{ productId: 1, quantity: 1 }],
-      }),
-    ).rejects.toThrow("addresses[0].fullText is required");
     await expect(resendTeamInvite(0)).rejects.toThrow(
       "inviteId must be a positive integer",
     );

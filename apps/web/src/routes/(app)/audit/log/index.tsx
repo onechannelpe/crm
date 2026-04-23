@@ -158,7 +158,7 @@ export default function AuditLogPage() {
             label="Acción"
             value={actionFilter()}
             onInput={(e) => setActionFilter(e.currentTarget.value)}
-            placeholder="sales_record_confirmed"
+            placeholder="lead_refill_granted"
           />
         </div>
         <div style={{ width: "11rem" }}>
@@ -166,7 +166,7 @@ export default function AuditLogPage() {
             label="Entidad"
             value={entityTypeFilter()}
             onInput={(e) => setEntityTypeFilter(e.currentTarget.value)}
-            placeholder="sales_record"
+            placeholder="lead_policy"
           />
         </div>
         <div style={{ width: "7rem" }}>

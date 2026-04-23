@@ -42,7 +42,7 @@ export async function notifyReadyForSale(input: {
     type: "lead.ready_for_sale",
     title: "Prospecto listo para venta",
     bodyText: `El prospecto RUC ${input.ruc} fue aprobado. Puedes registrar la venta.`,
-    actionUrl: `/sales/new/${input.leadId}`,
+    actionUrl: `/leads/${input.leadId}`,
     priority: "high",
     dedupeKey: `lead_rfs_${input.leadId}`,
   });

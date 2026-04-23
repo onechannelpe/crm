@@ -12,8 +12,6 @@ import { createNotificationsRuntime } from "./notifications-runtime";
 import { createObservabilityRuntime } from "./observability-runtime";
 import { createPipelineRuntime } from "./pipeline-runtime";
 import { createProfilePictureRuntime } from "./profile-picture-runtime";
-import { createSalesRecordsRuntime } from "./sales-records-runtime";
-import { createSalesRuntime } from "./sales-runtime";
 import { createSearchRuntime } from "./search-runtime";
 import { createSecurityRuntime } from "./security-runtime";
 import { createTeamRuntime } from "./team-runtime";
@@ -39,8 +37,6 @@ export function createServerRuntime() {
     pipeline: createPipelineRuntime(infra),
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
-    sales: createSalesRuntime(infra),
-    salesRecords: createSalesRecordsRuntime(infra),
     search: createSearchRuntime(infra),
     team: createTeamRuntime(infra),
     users: createUsersRuntime(infra),

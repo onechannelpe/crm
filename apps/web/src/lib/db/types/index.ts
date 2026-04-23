@@ -2,7 +2,6 @@ import * as core from "./00-core";
 import * as auth from "./01-auth";
 import * as crm from "./02-crm";
 import * as capacity from "./03-capacity";
-import * as sales from "./04-sales";
 import * as notifications from "./05-notifications";
 import * as extensions from "./06-extensions";
 import * as search from "./07-search";
@@ -59,14 +58,6 @@ export {
   type SearchPolicyDefaultsTable,
   type SearchPolicyOverridesTable,
 } from "./03-capacity";
-
-export {
-  type SalesRecordsTable,
-  type SalesRecordClientTable,
-  type SalesRecordAddressesTable,
-  type SalesRecordProductsTable,
-  type SalesRecordAttemptsTable,
-} from "./04-sales";
 
 export {
   type NotificationContactsTable,
@@ -161,11 +152,6 @@ export interface Database {
   organizations: core.OrganizationsTable;
   contacts: crm.ContactsTable;
   lead_assignments: crm.LeadAssignmentsTable;
-  sales_records: sales.SalesRecordsTable;
-  sales_record_client: sales.SalesRecordClientTable;
-  sales_record_addresses: sales.SalesRecordAddressesTable;
-  sales_record_products: sales.SalesRecordProductsTable;
-  sales_record_attempts: sales.SalesRecordAttemptsTable;
   lead_policy_defaults: capacity.LeadPolicyDefaultsTable;
   lead_policy_overrides: capacity.LeadPolicyOverridesTable;
   search_capacity_grants: capacity.SearchCapacityGrantsTable;

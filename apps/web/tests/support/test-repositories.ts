@@ -39,8 +39,6 @@ import { createNotificationContactRepo } from "../../src/server/notifications/re
 import { createNotificationPreferenceRepo } from "../../src/server/notifications/repos/preference";
 import { createActionObservationsRepo } from "../../src/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "../../src/server/observability/repos-auth-funnel-events";
-import { createReportExportRepo } from "../../src/server/sales/repos-report-exports";
-import { createSalesRecordsRepo } from "../../src/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "../../src/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "../../src/server/security/repos-request-sessions";
 import { createSessionRepository } from "../../src/server/sessions/repos-sessions";
@@ -82,8 +80,6 @@ export function createTestRepositories(db: Kysely<Database>) {
     leadUsageReservations: createLeadUsageReservationsRepo(db),
     leadUsageCommits: createLeadUsageCommitsRepo(db),
     capacityRequests: createCapacityRequestsRepo(db),
-    reportExportJobs: createReportExportRepo(db),
-    salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
     products: createProductsRepo(db),
     notificationCampaigns: createNotificationCampaignRepo(db),

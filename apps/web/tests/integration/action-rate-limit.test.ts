@@ -165,12 +165,7 @@ describe("action rate limit", () => {
 
     // Different action, uses a separate counter.
     await expect(
-      checkActionRateLimit(
-        "sales_records.create_draft",
-        1,
-        ctx.repos,
-        "198.51.100.1",
-      ),
+      checkActionRateLimit("team.invite.create", 1, ctx.repos, "198.51.100.1"),
     ).resolves.toBeUndefined();
   });
 

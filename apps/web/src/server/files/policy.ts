@@ -23,7 +23,6 @@ const ARTIFACT_DIRECTIONS: Record<
 > = {
   leads_export: "download",
   integration_import: "upload",
-  sales_export: "download",
 };
 
 function deny(code: string, message: string): Result<void, DomainError> {

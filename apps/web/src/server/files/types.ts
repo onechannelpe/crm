@@ -1,8 +1,4 @@
-export const ARTIFACT_TYPES = [
-  "leads_export",
-  "integration_import",
-  "sales_export",
-] as const;
+export const ARTIFACT_TYPES = ["leads_export", "integration_import"] as const;
 export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 
 export const EXECUTION_MODES = ["sync", "async"] as const;
