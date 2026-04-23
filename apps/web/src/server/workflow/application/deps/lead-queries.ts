@@ -27,10 +27,6 @@ export type LeadBootstrapPreviewDeps = {
   engineGateway: PipelineEngineGateway;
 };
 
-export type SaleQueryDeps = {
-  leadSales: LeadSaleRepository;
-};
-
 export type AssignableExecutivesDeps = {
   leads: LeadRepository;
   users: PipelineUserRepository;

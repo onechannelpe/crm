@@ -4,7 +4,6 @@ import type {
   LeadBootstrapPreviewDeps,
   LeadDetailDeps,
   LeadListDeps,
-  SaleQueryDeps,
 } from "~/server/workflow/application/deps/lead-queries";
 import type { RegisterLeadDeps } from "~/server/workflow/application/deps/register-lead";
 import type { SourcingPolicyDeps } from "~/server/workflow/application/deps/sourcing-policy";
@@ -26,7 +25,6 @@ export type WorkflowDeps = {
   leadList: LeadListDeps;
   leadDetail: LeadDetailDeps;
   leadBootstrapPreview: LeadBootstrapPreviewDeps;
-  saleQueries: SaleQueryDeps;
   assignableExecutives: AssignableExecutivesDeps;
   sourcingPolicy: SourcingPolicyDeps;
 };
@@ -60,7 +58,6 @@ export function createWorkflowFeatureDeps(
       users,
     },
     leadBootstrapPreview: { leads, engineGateway },
-    saleQueries: { leadSales },
     assignableExecutives: { leads, users },
     sourcingPolicy: { sourcingPolicies },
   };
