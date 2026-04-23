@@ -9,13 +9,13 @@ import type { ActorContext } from "./actor-context";
 
 export type ReassignLeadInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   toExecutiveId: number;
 };
 
 export type ReviewLeadInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   status: LeadStatus;
   prioridad: LeadPriority;
   reason: string;
@@ -23,20 +23,20 @@ export type ReviewLeadInput = {
 
 export type AddLeadNoteInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   body: string;
 };
 
 export type LogLeadCallInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   outcome: LeadCallOutcome;
   notes?: string | null;
 };
 
 export type ApplyImportedReviewInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   type: "import_status" | "import_prioridad";
   status?: LeadStatus;
   prioridad?: LeadPriority;
@@ -51,12 +51,12 @@ export type RegisterLeadInput = {
 
 export type ApproveForSaleInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
 };
 
 export type CreateQuotationInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
@@ -67,7 +67,7 @@ export type CreateQuotationInput = {
 
 export type CompleteCommercialInputInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;
@@ -78,7 +78,7 @@ export type CompleteCommercialInputInput = {
 
 export type CreateSaleInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;

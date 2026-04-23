@@ -9,7 +9,7 @@ export function getPublisher() {
   return getRedisPublisherClient();
 }
 
-export async function publishJob(channel: JobChannel, jobId: number) {
+export async function publishJob(channel: JobChannel, jobId: string | number) {
   try {
     await getPublisher().publish(channel, String(jobId));
   } catch (error: unknown) {

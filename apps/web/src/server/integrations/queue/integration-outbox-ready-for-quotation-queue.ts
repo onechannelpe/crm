@@ -12,10 +12,10 @@ interface ReadyForQuotationOutboxQueueDeps {
 }
 
 type ReadyForQuotationOutboxJob = {
-  id: number;
+  id: string;
   attempt_count: number;
   max_attempts: number;
-  lead_id: number;
+  lead_id: string;
   ruc: string;
   branch_id: number;
 };
@@ -65,10 +65,10 @@ export function createReadyForQuotationOutboxQueue(
         .onConflict((oc) => oc.columns(["user_id", "dedupe_key"]).doNothing())
         .execute();
     },
-    extendLease: (id: number) => repo.extendLease(id, workerId, leaseMs),
-    onComplete: (id: number) => repo.markCompleted(id),
-    onRetry: (id: number, availableAt: number) =>
+    extendLease: (id: string) => repo.extendLease(id, workerId, leaseMs),
+    onComplete: (id: string) => repo.markCompleted(id),
+    onRetry: (id: string, availableAt: number) =>
       repo.scheduleRetry(id, availableAt),
-    onFail: (id: number, reason: string) => repo.markFailed(id, reason),
+    onFail: (id: string, reason: string) => repo.markFailed(id, reason),
   });
 }

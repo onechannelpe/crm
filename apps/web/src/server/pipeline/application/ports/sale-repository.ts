@@ -1,6 +1,6 @@
 export type LeadSale = {
-  id: number;
-  leadId: number;
+  id: string;
+  leadId: string;
   executiveId: number;
   proveedorActual: string;
   tasaActual: number;
@@ -15,9 +15,9 @@ export type LeadSale = {
 };
 
 export type LeadSaleRepository = {
-  insert(values: Omit<LeadSale, "id">): Promise<number>;
-  findById(id: number): Promise<LeadSale | undefined>;
-  findByLeadId(leadId: number): Promise<LeadSale | undefined>;
+  insert(values: Omit<LeadSale, "id">): Promise<string>;
+  findById(id: string): Promise<LeadSale | undefined>;
+  findByLeadId(leadId: string): Promise<LeadSale | undefined>;
   list(limit: number, offset: number): Promise<LeadSale[]>;
   listByExecutive(
     executiveId: number,

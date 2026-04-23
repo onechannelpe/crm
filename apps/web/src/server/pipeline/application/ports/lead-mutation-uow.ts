@@ -10,17 +10,17 @@ import type {
 
 export type LeadMutationOutcome = {
   events: LeadMutationEvents;
-  historyIds: number[];
+  historyIds: string[];
 };
 
 export type CheckedLeadMutationOutcome = {
   applied: boolean;
   events?: LeadMutationOutcome["events"];
-  historyIds?: number[];
+  historyIds?: string[];
 };
 
 export type LeadAssignmentMutationInput = {
-  leadId: number;
+  leadId: string;
   toExecutiveId: number;
   assignedBy: number;
   assignedAt: number;

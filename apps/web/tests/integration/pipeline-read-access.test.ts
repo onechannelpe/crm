@@ -20,9 +20,9 @@ describe("pipeline read access", () => {
 
   it("lets review users read record detail even when they are not the assigned executive", async () => {
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values({
-        id: 11,
+        id: "lead-11",
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -37,7 +37,7 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
-      leadId: 11,
+      leadId: "lead-11",
       actorUserId: 2,
       actorRole: "back_office",
     });
@@ -45,15 +45,15 @@ describe("pipeline read access", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.lead.id).toBe(11);
+    expect(result.value.lead.id).toBe("lead-11");
     expect(result.value.timeline).toEqual([]);
   });
 
   it("blocks executives from reading another executive's record detail", async () => {
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values({
-        id: 12,
+        id: "lead-12",
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -68,7 +68,7 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
-      leadId: 12,
+      leadId: "lead-12",
       actorUserId: 3,
       actorRole: "executive",
     });
@@ -81,9 +81,9 @@ describe("pipeline read access", () => {
 
   it("lets an executive read only their own sale detail", async () => {
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values({
-        id: 11,
+        id: "lead-21",
         executive_id: 1,
         stage: "READY_FOR_SALE",
         status: null,
@@ -98,10 +98,10 @@ describe("pipeline read access", () => {
       .execute();
 
     await runtime.ctx.db
-      .insertInto("pipeline_sales")
+      .insertInto("workflow_sales")
       .values({
-        id: 21,
-        lead_id: 11,
+        id: "sale-21",
+        lead_id: "lead-21",
         executive_id: 1,
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,
@@ -117,7 +117,7 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
-      saleId: 21,
+      saleId: "sale-21",
       actorUserId: 1,
       actorRole: "executive",
     });
@@ -125,14 +125,14 @@ describe("pipeline read access", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.id).toBe(21);
+    expect(result.value.id).toBe("sale-21");
   });
 
   it("blocks an executive from reading another executive's sale detail", async () => {
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values({
-        id: 12,
+        id: "lead-22",
         executive_id: 1,
         stage: "READY_FOR_SALE",
         status: null,
@@ -147,10 +147,10 @@ describe("pipeline read access", () => {
       .execute();
 
     await runtime.ctx.db
-      .insertInto("pipeline_sales")
+      .insertInto("workflow_sales")
       .values({
-        id: 22,
-        lead_id: 12,
+        id: "sale-22",
+        lead_id: "lead-22",
         executive_id: 1,
         proveedor_actual: "Banco A",
         tasa_actual: 1.1,
@@ -166,7 +166,7 @@ describe("pipeline read access", () => {
       .execute();
 
     const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
-      saleId: 22,
+      saleId: "sale-22",
       actorUserId: 3,
       actorRole: "executive",
     });

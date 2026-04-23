@@ -5,7 +5,7 @@ import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
 import { DataGridActionRow } from "./action-row";
 import { DataGridRow } from "./row";
 
-export function DataGridBody<T extends { id: number }>(props: {
+export function DataGridBody<T extends { id: string | number }>(props: {
   actionRow?: DataGridActionRowConfig;
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;

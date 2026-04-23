@@ -1,6 +1,6 @@
 export type LeadAssignmentRepositoryPort = {
   replaceActiveAssignment(input: {
-    leadId: number;
+    leadId: string;
     toExecutiveId: number;
     assignedBy: number;
     assignedAt: number;

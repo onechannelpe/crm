@@ -41,7 +41,7 @@ export async function writeHistoryAndAudit(input: {
   });
 
   await input.executor
-    .insertInto("pipeline_history_events")
+    .insertInto("workflow_history_events")
     .values({
       lead_id: primaryHistory.leadId,
       event_type: primaryHistory.eventType,
@@ -53,7 +53,7 @@ export async function writeHistoryAndAudit(input: {
     .execute();
 
   await input.executor
-    .insertInto("audit_logs")
+    .insertInto("workflow_audit_logs")
     .values({
       user_id: input.actorId,
       action:
@@ -109,7 +109,7 @@ export async function writeHistoryAndAudit(input: {
   });
 
   await input.executor
-    .insertInto("pipeline_history_events")
+    .insertInto("workflow_history_events")
     .values([
       {
         lead_id: reviewedHistory.leadId,
@@ -131,7 +131,7 @@ export async function writeHistoryAndAudit(input: {
     .execute();
 
   await input.executor
-    .insertInto("audit_logs")
+    .insertInto("workflow_audit_logs")
     .values({
       user_id: input.actorId,
       action: "lead_reviewed",

@@ -1,7 +1,7 @@
 import type { RecordIndexAdapter, RecordIndexSetup } from "./types";
 
 export function createRecordIndexSetup<
-  T extends { id: number },
+  T extends { id: string | number },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>): RecordIndexSetup {

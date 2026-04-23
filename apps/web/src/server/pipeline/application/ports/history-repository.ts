@@ -7,8 +7,8 @@ import type {
 } from "../../domain/history";
 
 export type LeadHistoryRepository = {
-  insert(values: LeadHistoryEventDraft): Promise<number>;
+  insert(values: LeadHistoryEventDraft): Promise<string>;
   listByLeadId(
-    leadId: number,
+    leadId: string,
   ): Promise<Result<LeadHistoryEntry[], DomainError>>;
 };

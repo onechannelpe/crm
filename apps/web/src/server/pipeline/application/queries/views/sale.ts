@@ -1,6 +1,6 @@
 export type SaleView = {
-  id: number;
-  leadId: number;
+  id: string;
+  leadId: string;
   executiveId: number;
   proveedorActual: string;
   tasaActual: number;

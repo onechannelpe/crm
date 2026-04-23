@@ -6,7 +6,7 @@ const logger = createLogger("stale-scanner");
 
 const JOB_TABLES = [
   {
-    name: "pipeline_integration_jobs",
+    name: "workflow_integration_jobs",
     staleStatuses: ["PROCESSING"],
     resetStatus: "PENDING",
   },

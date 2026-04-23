@@ -2,12 +2,12 @@ import type { ActorContext } from "./actor-context";
 
 export type GetLeadDetailInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
 };
 
 export type ListAssignableExecutivesInput = {
   actor: ActorContext;
-  leadId: number;
+  leadId: string;
   search?: string;
   limit?: number;
 };

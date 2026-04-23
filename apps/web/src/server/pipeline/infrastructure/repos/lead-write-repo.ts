@@ -33,7 +33,7 @@ export function createCheckedLeadWriteRepository(
       });
 
       const result = await executor
-        .updateTable("pipeline_leads")
+        .updateTable("workflow_leads")
         .set(patchRow)
         .where("id", "=", input.leadId)
         .where("updated_at", "=", input.expectedUpdatedAt)

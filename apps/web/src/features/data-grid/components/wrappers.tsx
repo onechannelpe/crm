@@ -12,7 +12,7 @@ export function DataGridWrappers(props: {
   getContainer: () => HTMLElement | undefined;
   getScrollWrapper: () => HTMLElement | undefined;
   interaction: DataGridInteractionModel;
-  rows: Array<{ id: number }>;
+  rows: Array<{ id: string | number }>;
   suspendEscapeSelectionClear: boolean;
 }) {
   const isInteractive = createDataGridInteractionReady();

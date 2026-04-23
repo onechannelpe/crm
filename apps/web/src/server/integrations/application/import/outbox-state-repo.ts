@@ -1,15 +1,15 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type OutboxTableName =
-  | "pipeline_integration_outbox_needs_executive_input"
-  | "pipeline_integration_outbox_ready_for_quotation";
+  | "workflow_integration_outbox_needs_executive_input"
+  | "workflow_integration_outbox_ready_for_quotation";
 
 export function createOutboxStateRepo(
   executor: DatabaseExecutor,
   tableName: OutboxTableName,
 ) {
   return {
-    async extendLease(id: number, workerId: string, leaseMs: number) {
+    async extendLease(id: string, workerId: string, leaseMs: number) {
       const now = Date.now();
       const result = await executor
         .updateTable(tableName)
@@ -22,7 +22,7 @@ export function createOutboxStateRepo(
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    async markCompleted(id: number) {
+    async markCompleted(id: string) {
       await executor
         .updateTable(tableName)
         .set({
@@ -36,7 +36,7 @@ export function createOutboxStateRepo(
         .execute();
     },
 
-    async scheduleRetry(id: number, availableAt: number) {
+    async scheduleRetry(id: string, availableAt: number) {
       await executor
         .updateTable(tableName)
         .set({
@@ -49,7 +49,7 @@ export function createOutboxStateRepo(
         .execute();
     },
 
-    async markFailed(id: number, reason: string) {
+    async markFailed(id: string, reason: string) {
       await executor
         .updateTable(tableName)
         .set({

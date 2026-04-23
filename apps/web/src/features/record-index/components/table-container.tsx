@@ -8,7 +8,7 @@ import type { RecordIndexScreenModel } from "../model/types";
 import { RecordIndexEmpty } from "./empty";
 
 export function RecordIndexTableContainer<
-  T extends { id: number },
+  T extends { id: string | number },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {

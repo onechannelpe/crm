@@ -796,7 +796,7 @@ export function isExecutiveCategoryValue(
 }
 
 export interface PipelineLeadsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   ruc: string;
   razon_social: string | null;
   address: string | null;
@@ -820,7 +820,7 @@ export interface PipelineLeadsTable {
 }
 
 export interface PipelineLeadCommercialInputsTable {
-  lead_id: number;
+  lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
   gpv: number | null;
@@ -832,8 +832,8 @@ export interface PipelineLeadCommercialInputsTable {
 }
 
 export interface PipelineQuotationsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   payback_pricing: number;
   tarifa_debito: number;
   tarifa_credito: number;
@@ -846,8 +846,8 @@ export interface PipelineQuotationsTable {
 }
 
 export interface PipelineSalesTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   executive_id: number;
   proveedor_actual: string;
   tasa_actual: number;
@@ -862,8 +862,8 @@ export interface PipelineSalesTable {
 }
 
 export interface PipelineLeadAssignmentsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   executive_id: number;
   assigned_by: number;
   is_active: number;
@@ -871,8 +871,8 @@ export interface PipelineLeadAssignmentsTable {
 }
 
 export interface PipelineHistoryEventsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   event_type:
     | "lead_registered"
     | "lead_status_updated"
@@ -900,8 +900,18 @@ export interface LeadSourcingPoliciesTable {
   updated_by_user_id: number;
 }
 
+export interface WorkflowAuditLogsTable {
+  id: Generated<string>;
+  user_id: number;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  changes: string | null;
+  created_at: number;
+}
+
 export interface PipelineIntegrationJobsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
   requested_by_user_id: number;
@@ -921,23 +931,23 @@ export interface PipelineIntegrationJobsTable {
 }
 
 export interface PipelineIntegrationImportRowsTable {
-  id: Generated<number>;
-  integration_job_id: number;
+  id: Generated<string>;
+  integration_job_id: string;
   row_number: number;
   type: "import_status" | "import_prioridad";
   ruc: string;
   status_value: string | null;
   prioridad_value: string | null;
   state: "staged" | "applied" | "failed";
-  lead_id: number | null;
+  lead_id: string | null;
   failure_reason: string | null;
   created_at: number;
   applied_at: number | null;
 }
 
 export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   ruc: string;
   executive_id: number;
   status: "pending" | "processing" | "completed" | "failed";
@@ -952,8 +962,8 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
 }
 
 export interface PipelineIntegrationOutboxReadyForQuotationTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   ruc: string;
   branch_id: number;
   status: "pending" | "processing" | "completed" | "failed";
@@ -1028,17 +1038,18 @@ export interface Database {
   webauthn_challenges: WebauthnChallengesTable;
   user_oauth_accounts: UserOAuthAccountsTable;
   password_reset_tokens: PasswordResetTokensTable;
-  pipeline_leads: PipelineLeadsTable;
-  pipeline_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
-  pipeline_quotations: PipelineQuotationsTable;
-  pipeline_sales: PipelineSalesTable;
-  pipeline_lead_assignments: PipelineLeadAssignmentsTable;
-  pipeline_history_events: PipelineHistoryEventsTable;
+  workflow_leads: PipelineLeadsTable;
+  workflow_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
+  workflow_quotations: PipelineQuotationsTable;
+  workflow_sales: PipelineSalesTable;
+  workflow_lead_assignments: PipelineLeadAssignmentsTable;
+  workflow_history_events: PipelineHistoryEventsTable;
+  workflow_audit_logs: WorkflowAuditLogsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;
-  pipeline_integration_jobs: PipelineIntegrationJobsTable;
-  pipeline_integration_import_rows: PipelineIntegrationImportRowsTable;
-  pipeline_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
-  pipeline_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
+  workflow_integration_jobs: PipelineIntegrationJobsTable;
+  workflow_integration_import_rows: PipelineIntegrationImportRowsTable;
+  workflow_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
+  workflow_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
   workflow_artifacts: WorkflowArtifactsTable;
   file_assets: FileAssetsTable;
   artifact_file_bindings: ArtifactFileBindingsTable;

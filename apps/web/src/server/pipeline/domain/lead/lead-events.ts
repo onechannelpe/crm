@@ -7,7 +7,7 @@ import type { LeadMutationIntent, LeadMutationPatch } from "./lead-types";
 
 type LeadAuditDraft = {
   action: string;
-  entityId: number;
+  entityId: string;
   changes?: Record<string, unknown>;
 };
 

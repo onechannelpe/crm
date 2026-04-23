@@ -9,7 +9,7 @@ export function RecordShowShell(props: RouteSectionProps) {
 
   return (
     <div class={shellStyles.main}>
-      <RecordShowHeader leadId={Number(params.leadId)} />
+      <RecordShowHeader leadId={params.leadId} />
       <main class={shellStyles.settingsBody}>{props.children}</main>
     </div>
   );

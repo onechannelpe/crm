@@ -3,7 +3,7 @@ import type { PipelineNotificationCenter } from "./ports/notification-center";
 export async function notifyExecutiveInputRequired(input: {
   center: PipelineNotificationCenter;
   executiveId: number;
-  leadId: number;
+  leadId: string;
   ruc: string;
 }) {
   await input.center.notifyUsers([input.executiveId], {
@@ -19,7 +19,7 @@ export async function notifyExecutiveInputRequired(input: {
 export async function notifyReadyForQuotation(input: {
   center: PipelineNotificationCenter;
   branchId: number;
-  leadId: number;
+  leadId: string;
   ruc: string;
 }) {
   await input.center.notifyBranchRoles(input.branchId, ["back_office"], {
@@ -35,7 +35,7 @@ export async function notifyReadyForQuotation(input: {
 export async function notifyReadyForSale(input: {
   center: PipelineNotificationCenter;
   executiveId: number;
-  leadId: number;
+  leadId: string;
   ruc: string;
 }) {
   await input.center.notifyUsers([input.executiveId], {

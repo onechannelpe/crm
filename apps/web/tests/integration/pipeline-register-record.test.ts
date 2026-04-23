@@ -47,12 +47,12 @@ describe("register lead", () => {
     if (!result.ok) return;
 
     const record = await runtime.ctx.db
-      .selectFrom("pipeline_leads")
+      .selectFrom("workflow_leads")
       .selectAll()
       .where("id", "=", result.value.leadId)
       .executeTakeFirstOrThrow();
     const history = await runtime.ctx.db
-      .selectFrom("pipeline_history_events")
+      .selectFrom("workflow_history_events")
       .select(["event_type", "subject_user_id", "payload_json"])
       .where("lead_id", "=", result.value.leadId)
       .orderBy("occurred_at", "asc")
@@ -90,7 +90,7 @@ describe("register lead", () => {
     if (!result.ok) return;
 
     const record = await runtime.ctx.db
-      .selectFrom("pipeline_leads")
+      .selectFrom("workflow_leads")
       .select(["razon_social", "address"])
       .where("id", "=", result.value.leadId)
       .executeTakeFirstOrThrow();

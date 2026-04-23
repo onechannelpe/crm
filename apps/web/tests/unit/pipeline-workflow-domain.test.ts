@@ -4,7 +4,7 @@ import type { PendingReviewLeadSubject } from "../../src/server/pipeline/domain/
 import { resolveReviewTransition } from "../../src/server/pipeline/domain/workflow";
 
 const pendingReviewLead: PendingReviewLeadSubject = {
-  id: 1,
+  id: "lead-1",
   ruc: "20123456789",
   razonSocial: "Acme SAC",
   address: "Lima",

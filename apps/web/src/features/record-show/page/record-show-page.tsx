@@ -13,7 +13,7 @@ import { RecordRightPanel } from "../right-panel/record-right-panel";
 import styles from "./record-show-page.module.css";
 
 type RecordShowPageProps = {
-  leadId: number;
+  leadId: string;
 };
 
 const POLL_INTERVAL_MS = 3_500;

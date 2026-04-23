@@ -167,7 +167,7 @@ export function reconcileRecordIndexOpenMenu(
 }
 
 export function createRecordIndexContextModel<
-  T extends { id: number },
+  T extends { id: string | number },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(model: RecordIndexScreenModel<T, TFilterValue, TSortValue>) {

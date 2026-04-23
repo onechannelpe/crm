@@ -22,7 +22,7 @@ export function createOptimisticLeadRow(input: {
   const now = input.now ?? Date.now();
 
   return {
-    id: nextOptimisticLeadId--,
+    id: `optimistic-${nextOptimisticLeadId--}`,
     ruc: input.ruc,
     razonSocial: input.razonSocial,
     address: input.address,

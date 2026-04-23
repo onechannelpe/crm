@@ -80,17 +80,18 @@ export function createSelectionBox(
 export function getSelectableRowIdsInBox(
   container: HTMLElement,
   selectionBox: DataGridSelectionBox,
-): number[] {
+): Array<string | number> {
   const containerRect = container.getBoundingClientRect();
-  const selectedRowIds: number[] = [];
+  const selectedRowIds: Array<string | number> = [];
 
   for (const rowElement of container.querySelectorAll<HTMLElement>(
     "[data-selectable-id]",
   )) {
-    const rowId = Number(rowElement.dataset.selectableId);
-    if (Number.isNaN(rowId)) {
+    const rawId = rowElement.dataset.selectableId;
+    if (!rawId) {
       continue;
     }
+    const rowId = parseSelectableId(rawId);
 
     const rect = rowElement.getBoundingClientRect();
     const rowBox = {
@@ -106,6 +107,14 @@ export function getSelectableRowIdsInBox(
   }
 
   return selectedRowIds;
+}
+
+function parseSelectableId(value: string): string | number {
+  if (/^-?\d+$/.test(value)) {
+    return Number(value);
+  }
+
+  return value;
 }
 
 function boxesIntersect(

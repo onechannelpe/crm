@@ -7,7 +7,7 @@ function createLeadRepositoryDouble() {
   const updateByRuc = vi.fn<LeadRepository["updateByRuc"]>(async () => []);
 
   const repo = {
-    insert: async () => 1,
+    insert: async () => "lead-1",
     findById: async () => undefined,
     findByRuc: async () => undefined,
     findByRucMany: async () => [],

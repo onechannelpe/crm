@@ -13,7 +13,7 @@ export async function writeLeadRegistrationEffects(input: {
   executiveId: number;
   draft: LeadDraft;
   now: number;
-}): Promise<Result<{ leadId: number }, DomainError>> {
+}): Promise<Result<{ leadId: string }, DomainError>> {
   const leadId = await input.deps.leads.insert(input.draft);
   await input.deps.leadAssignments.insert({
     leadId,

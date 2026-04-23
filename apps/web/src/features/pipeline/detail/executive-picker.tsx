@@ -7,7 +7,7 @@ import { reassignLeadMutation } from "../data/mutations";
 import { assignableExecutivesQuery } from "../data/queries";
 
 export interface ExecutivePickerProps {
-  leadId: number;
+  leadId: string;
   currentUserId: number;
   onSelect: () => void;
   onClose: () => void;

@@ -1,23 +1,25 @@
 import { createMemo, createSignal, type Accessor } from "solid-js";
 
 export type DataGridSelectionModel = {
-  selectedIds: Accessor<number[]>;
+  selectedIds: Accessor<Array<string | number>>;
   allSelected: Accessor<boolean>;
   clear: () => void;
-  setSelected: (id: number, checked: boolean) => void;
+  setSelected: (id: string | number, checked: boolean) => void;
   toggleAll: (checked: boolean) => void;
 };
 
-export function createDataGridSelection<T extends { id: number }>(
+export function createDataGridSelection<T extends { id: string | number }>(
   rows: Accessor<T[]>,
 ): DataGridSelectionModel {
-  const [selectedIds, setSelectedIds] = createSignal<number[]>([]);
+  const [selectedIds, setSelectedIds] = createSignal<Array<string | number>>(
+    [],
+  );
 
   const allSelected = createMemo(
     () => rows().length > 0 && selectedIds().length === rows().length,
   );
 
-  function setSelected(id: number, checked: boolean) {
+  function setSelected(id: string | number, checked: boolean) {
     setSelectedIds((current) => {
       if (checked) {
         return current.includes(id) ? current : [...current, id];

@@ -51,9 +51,9 @@ export function createLeadsImportQueue(
         ...LEAD_IMPORT_TYPES,
       ]),
     handle: async (job, signal: AbortSignal) => runner.process(job, signal),
-    extendLease: (id: number) =>
+    extendLease: (id: string) =>
       runtime.jobs.extendLease(id, workerId, leaseMs),
-    onComplete: async (id: number, result: ImportJobProcessResult) => {
+    onComplete: async (id: string, result: ImportJobProcessResult) => {
       await runtime.jobs.markCompleted(id, {
         rowsTotal: result.rowsTotal,
         rowsApplied: result.rowsApplied,
@@ -77,7 +77,7 @@ export function createLeadsImportQueue(
         );
       }
     },
-    onRetry: async (id: number, availableAt: number) => {
+    onRetry: async (id: string, availableAt: number) => {
       await runtime.jobs.scheduleRetry(id, availableAt);
       const job = await runtime.jobs.findById(id);
       if (
@@ -92,7 +92,7 @@ export function createLeadsImportQueue(
         );
       }
     },
-    onFail: async (id: number, reason: string) => {
+    onFail: async (id: string, reason: string) => {
       await runtime.jobs.markFailed(id, reason);
       const job = await runtime.jobs.findById(id);
       if (

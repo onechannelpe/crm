@@ -12,7 +12,7 @@ export function createLeadImportRunner(deps: {
   executor: DatabaseExecutor;
   openFileStream: (filePath: string) => ReadableStream<Uint8Array>;
   updateProgress: (input: {
-    jobId: number;
+    jobId: string;
     rowsTotal?: number;
     rowsApplied?: number;
     rowsFailed?: number;

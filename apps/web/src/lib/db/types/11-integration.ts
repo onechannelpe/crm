@@ -1,7 +1,7 @@
 import type { Generated, ColumnType } from "kysely";
 
 export interface PipelineIntegrationJobsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
   requested_by_user_id: number;
@@ -21,23 +21,23 @@ export interface PipelineIntegrationJobsTable {
 }
 
 export interface PipelineIntegrationImportRowsTable {
-  id: Generated<number>;
-  integration_job_id: number;
+  id: Generated<string>;
+  integration_job_id: string;
   row_number: number;
   type: "import_status" | "import_prioridad";
   ruc: string;
   status_value: string | null;
   prioridad_value: string | null;
   state: "staged" | "applied" | "failed";
-  lead_id: number | null;
+  lead_id: string | null;
   failure_reason: string | null;
   created_at: number;
   applied_at: number | null;
 }
 
 export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   ruc: string;
   executive_id: number;
   status: "pending" | "processing" | "completed" | "failed";
@@ -52,8 +52,8 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
 }
 
 export interface PipelineIntegrationOutboxReadyForQuotationTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   ruc: string;
   branch_id: number;
   status: "pending" | "processing" | "completed" | "failed";
@@ -68,8 +68,8 @@ export interface PipelineIntegrationOutboxReadyForQuotationTable {
 }
 
 export type Db = {
-  pipeline_integration_jobs: PipelineIntegrationJobsTable;
-  pipeline_integration_import_rows: PipelineIntegrationImportRowsTable;
-  pipeline_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
-  pipeline_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
+  workflow_integration_jobs: PipelineIntegrationJobsTable;
+  workflow_integration_import_rows: PipelineIntegrationImportRowsTable;
+  workflow_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
+  workflow_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
 };

@@ -1,5 +1,5 @@
 export interface QueueJobBase {
-  id: number;
+  id: string | number;
   attempt_count: number;
   max_attempts: number;
 }
@@ -20,10 +20,14 @@ export interface JobQueueConfig<TJob extends QueueJobBase, TResult> {
     | { kind: "retry"; availableAt: number; reason?: string }
     | { kind: "fail"; reason: string }
   >;
-  extendLease(jobId: number): Promise<boolean>;
-  onComplete(jobId: number, result: TResult): Promise<void>;
-  onRetry(jobId: number, availableAt: number, reason?: string): Promise<void>;
-  onFail(jobId: number, reason: string): Promise<void>;
+  extendLease(jobId: TJob["id"]): Promise<boolean>;
+  onComplete(jobId: TJob["id"], result: TResult): Promise<void>;
+  onRetry(
+    jobId: TJob["id"],
+    availableAt: number,
+    reason?: string,
+  ): Promise<void>;
+  onFail(jobId: TJob["id"], reason: string): Promise<void>;
 }
 
 export interface QueueRunner {

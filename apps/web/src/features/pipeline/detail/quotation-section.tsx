@@ -26,7 +26,7 @@ import { createQuotationMutation } from "../data/mutations";
 import styles from "./quotation-section.module.css";
 
 type QuotationSectionProps = {
-  leadId: number;
+  leadId: string;
   existingQuotation?: LeadDetailQuotationView;
 };
 

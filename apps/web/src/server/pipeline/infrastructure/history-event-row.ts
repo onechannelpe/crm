@@ -2,8 +2,8 @@ import type { LeadHistoryPerson } from "~/server/pipeline/domain/history";
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
 
 export type HistoryEventRow = {
-  id: number;
-  lead_id: number;
+  id: string;
+  lead_id: string;
   event_type: LeadHistoryEntry["eventType"];
   actor_user_id: number | null;
   subject_user_id: number | null;
@@ -18,8 +18,8 @@ export type HistoryEventRow = {
 };
 
 export type HistoryEntryBase = {
-  id: number;
-  leadId: number;
+  id: string;
+  leadId: string;
   actorUserId: number | null;
   subjectUserId: number | null;
   occurredAt: number;

@@ -16,7 +16,7 @@ import { createInteractionState } from "./state";
 import styles from "../lead-detail-overview.module.css";
 
 export function InteractionsPanel(props: {
-  leadId: number;
+  leadId: string;
   availableActions: LeadAvailableAction[];
   onChanged?: () => void;
 }) {

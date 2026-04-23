@@ -28,7 +28,7 @@ import { createSaleMutation } from "../data/mutations";
 import styles from "./sale-section.module.css";
 
 type SaleSectionProps = {
-  leadId: number;
+  leadId: string;
 };
 
 export function SaleSection(props: SaleSectionProps) {

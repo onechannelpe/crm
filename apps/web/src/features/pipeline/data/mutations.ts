@@ -26,7 +26,7 @@ export const createLeadMutation = action(async (input: CreateLeadInput) => {
 }, "pipeline.createLead");
 
 export const approveForSaleMutation = action(
-  async (input: { leadId: number }) => {
+  async (input: { leadId: string }) => {
     await requestSaleApproval(input.leadId);
     return json(
       {},
@@ -38,7 +38,7 @@ export const approveForSaleMutation = action(
 
 export const reviewLeadMutation = action(
   async (input: {
-    leadId: number;
+    leadId: string;
     status: string;
     prioridad: string;
     reason: string;
@@ -54,7 +54,7 @@ export const reviewLeadMutation = action(
 
 export const completeCommercialInputMutation = action(
   async (input: {
-    leadId: number;
+    leadId: string;
     proveedorActual: string;
     tasaActual: number;
     gpv: number;
@@ -73,7 +73,7 @@ export const completeCommercialInputMutation = action(
 
 export const createQuotationMutation = action(
   async (input: {
-    leadId: number;
+    leadId: string;
     paybackPricing: number;
     tarifaDebito: number;
     tarifaCredito: number;
@@ -92,7 +92,7 @@ export const createQuotationMutation = action(
 
 export const createSaleMutation = action(
   async (input: {
-    leadId: number;
+    leadId: string;
     proveedorActual: string;
     tasaActual: number;
     gpv: number;
@@ -113,7 +113,7 @@ export const createSaleMutation = action(
 );
 
 export const reassignLeadMutation = action(
-  async (input: { leadId: number; newExecutiveId: number }) => {
+  async (input: { leadId: string; newExecutiveId: number }) => {
     await requestLeadReassignment(input);
     return json(
       {},

@@ -6,7 +6,7 @@ import { AppPage } from "~/components/layout/page";
 
 export default function LeadSaleDetailPage() {
   const params = useParams<{ saleId: string }>();
-  const sale = createAsync(() => querySaleDetail(Number(params.saleId)));
+  const sale = createAsync(() => querySaleDetail(params.saleId));
 
   return (
     <AppPage>

@@ -10,7 +10,7 @@ import { Ok } from "~/server/shared/result";
 import { normalizeLeadRuc } from "./lead-schema-parser";
 
 export type LeadRecord = {
-  id: number;
+  id: string;
   ruc: string;
   razonSocial: string | null;
   address: string | null;

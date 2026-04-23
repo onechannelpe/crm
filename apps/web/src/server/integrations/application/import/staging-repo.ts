@@ -6,7 +6,7 @@ import type { ImportRowInput } from "./types";
 
 export async function stageImportRows(
   trx: Transaction<Database>,
-  jobId: number,
+  jobId: string,
   validRows: ImportRowInput[],
   invalidRows: Array<{
     row: number;
@@ -17,7 +17,7 @@ export async function stageImportRows(
 ) {
   if (validRows.length > 0) {
     await trx
-      .insertInto("pipeline_integration_import_rows")
+      .insertInto("workflow_integration_import_rows")
       .values(
         validRows.map((row) => ({
           integration_job_id: jobId,
@@ -39,7 +39,7 @@ export async function stageImportRows(
 
   if (invalidRows.length > 0) {
     await trx
-      .insertInto("pipeline_integration_import_rows")
+      .insertInto("workflow_integration_import_rows")
       .values(
         invalidRows.map((row) => ({
           integration_job_id: jobId,

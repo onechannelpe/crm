@@ -8,7 +8,7 @@ import { PageHeader } from "~/features/settings-shell/page/page-header";
 
 import styles from "./record-show-header.module.css";
 
-type RecordShowHeaderProps = { leadId: number };
+type RecordShowHeaderProps = { leadId: string };
 
 export function RecordShowHeader(props: RecordShowHeaderProps) {
   const { expanded, isMobile, setExpanded } = useNavigationDrawerState();

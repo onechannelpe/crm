@@ -22,7 +22,7 @@ export type LeadExportFilters = {
  * (e.g. nextStep) are applied.
  */
 export type LeadListRow = {
-  id: number;
+  id: string;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
@@ -36,7 +36,7 @@ export type LeadListRow = {
 };
 
 export type LeadExportRow = {
-  id: number;
+  id: string;
   ruc: string;
   razonSocial: string | null;
   address: string | null;

@@ -1,8 +1,8 @@
 import type { Moneda } from "~/pipeline/contracts/lead-schema";
 
 export type LeadQuotation = {
-  id: number;
-  leadId: number;
+  id: string;
+  leadId: string;
   paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
@@ -15,7 +15,7 @@ export type LeadQuotation = {
 };
 
 export type LeadQuotationRepository = {
-  insert(values: Omit<LeadQuotation, "id">): Promise<number>;
-  listByLeadId(leadId: number): Promise<LeadQuotation[]>;
-  nextVersion(leadId: number): Promise<number>;
+  insert(values: Omit<LeadQuotation, "id">): Promise<string>;
+  listByLeadId(leadId: string): Promise<LeadQuotation[]>;
+  nextVersion(leadId: string): Promise<number>;
 };

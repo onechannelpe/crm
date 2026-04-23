@@ -6,7 +6,7 @@ import { createPipelineCommandApiRuntime } from "~/server/pipeline/infrastructur
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestQuotationCreation(input: {
-  leadId: number;
+  leadId: string;
   paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
@@ -32,7 +32,7 @@ export async function requestQuotationCreation(input: {
   });
 }
 
-export async function requestSaleApproval(leadId: number) {
+export async function requestSaleApproval(leadId: string) {
   return runAction({
     actionName: "pipeline.approve_for_sale",
     access: { kind: "auth" },
