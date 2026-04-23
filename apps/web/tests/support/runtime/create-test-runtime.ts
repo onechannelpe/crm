@@ -2,7 +2,7 @@ import { createSessionService } from "~/server/auth/application/session-service"
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
-import { createPipelineRuntime } from "~/server/runtime/pipeline-runtime";
+import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
 
 import {
   cleanupTestDb,
@@ -24,7 +24,7 @@ export interface TestRuntime {
   auth: {
     sessionService: ReturnType<typeof createSessionService>;
   };
-  pipeline: ReturnType<typeof createPipelineRuntime>;
+  workflow: ReturnType<typeof createWorkflowRuntime>;
   integrations: ReturnType<typeof createIntegrationRuntime>;
   dispose(): Promise<void>;
 }
@@ -52,7 +52,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
       logger,
     }),
   };
-  const pipeline = createPipelineRuntime({
+  const workflow = createWorkflowRuntime({
     db: ctx.db,
     now: now.get,
     logger,
@@ -63,7 +63,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     ctx,
     now,
     auth,
-    pipeline,
+    workflow,
     integrations,
     async dispose() {
       await cleanupTestDb(ctx);

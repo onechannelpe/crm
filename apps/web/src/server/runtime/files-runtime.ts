@@ -2,7 +2,7 @@ import { config } from "~/lib/config";
 import { createLeadsExportExecutor } from "~/server/files/leads-export-executor";
 import { createArtifactRepo } from "~/server/files/repo";
 import { createFileStorage } from "~/server/files/storage";
-import { createLeadQueries } from "~/server/pipeline/infrastructure/lead-queries";
+import { createLeadQueries } from "~/server/workflow/infrastructure/lead-queries";
 
 import type { ServerInfra } from "./infra";
 

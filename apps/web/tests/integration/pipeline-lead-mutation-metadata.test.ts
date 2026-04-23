@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
-import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
-import { createPipelineCommandApiRuntime } from "../../src/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
+import { getLeadDetail } from "../../src/server/workflow/application/queries/get-lead-detail";
+import { createWorkflowCommandApiRuntime } from "../../src/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -38,8 +38,8 @@ describe("pipeline lead mutation metadata", () => {
       })
       .execute();
 
-    const commandApi = createPipelineCommandApiRuntime({
-      deps: runtime.pipeline.deps,
+    const commandApi = createWorkflowCommandApiRuntime({
+      deps: runtime.workflow.deps,
       executor: runtime.ctx.db,
       notificationCenter: {
         notifyUsers: async () => {},
@@ -130,8 +130,8 @@ describe("pipeline lead mutation metadata", () => {
       })
       .execute();
 
-    const commandApi = createPipelineCommandApiRuntime({
-      deps: runtime.pipeline.deps,
+    const commandApi = createWorkflowCommandApiRuntime({
+      deps: runtime.workflow.deps,
       executor: runtime.ctx.db,
       notificationCenter: {
         notifyUsers: async () => {},
@@ -163,7 +163,7 @@ describe("pipeline lead mutation metadata", () => {
     expect(lead.updated_by).toBe(11);
 
     const previousExecutiveAccess = await getLeadDetail(
-      runtime.pipeline.deps.leadDetail,
+      runtime.workflow.deps.leadDetail,
       {
         actorUserId: 1,
         actorRole: "executive",
@@ -173,7 +173,7 @@ describe("pipeline lead mutation metadata", () => {
     expect(previousExecutiveAccess.ok).toBe(false);
 
     const newExecutiveAccess = await getLeadDetail(
-      runtime.pipeline.deps.leadDetail,
+      runtime.workflow.deps.leadDetail,
       {
         actorUserId: 12,
         actorRole: "executive",

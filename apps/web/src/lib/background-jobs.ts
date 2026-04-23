@@ -35,7 +35,7 @@ export function startBackgroundJobs() {
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
   const sunatEnrichmentWritebackQueue =
-    getServerRuntime().pipeline.createSunatEnrichmentWritebackQueue(WORKER_ID);
+    getServerRuntime().workflow.createSunatEnrichmentWritebackQueue(WORKER_ID);
   const notificationsEmailQueue =
     getServerRuntime().notifications.createEmailQueue(WORKER_ID);
   const notificationsWhatsAppQueue =

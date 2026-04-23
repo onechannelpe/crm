@@ -5,7 +5,7 @@ import { Dynamic } from "solid-js/web";
 import {
   leadDetailQuery,
   leadListQuery,
-} from "~/features/pipeline/data/queries";
+} from "~/features/workflow/data/queries";
 
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";

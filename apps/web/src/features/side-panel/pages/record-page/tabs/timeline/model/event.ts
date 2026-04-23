@@ -1,4 +1,4 @@
-import type { LeadTimelineItem } from "~/server/pipeline/application/queries/views/lead-detail";
+import type { LeadTimelineItem } from "~/server/workflow/application/queries/views/lead-detail";
 
 export type Event = {
   id: string;

@@ -10,8 +10,6 @@ import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 import { RelationFieldRow } from "~/components/ui/field-row";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
-import { ExecutivePicker } from "~/features/pipeline/detail/executive-picker";
-import { FieldsWidget } from "~/features/pipeline/fields/fields-widget";
 import {
   FieldIcon,
   FieldLabel,
@@ -29,7 +27,9 @@ import {
   WidgetSectionHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
+import { ExecutivePicker } from "~/features/workflow/detail/executive-picker";
+import { FieldsWidget } from "~/features/workflow/fields/fields-widget";
+import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;
 

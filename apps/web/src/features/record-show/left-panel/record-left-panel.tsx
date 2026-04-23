@@ -1,12 +1,12 @@
 import { createMemo, Show } from "solid-js";
 
-import { CommercialInputSection } from "~/features/pipeline/detail/commercial-input-section";
-import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
-import { QuotationSection } from "~/features/pipeline/detail/quotation-section";
-import { SaleSection } from "~/features/pipeline/detail/sale-section";
 import { DetailFieldsWidget } from "~/features/side-panel/pages/record-page/widgets/fields";
 import { WorkflowWidget } from "~/features/side-panel/pages/record-page/widgets/workflow";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
+import { CommercialInputSection } from "~/features/workflow/detail/commercial-input-section";
+import { LeadActionsWidget } from "~/features/workflow/detail/lead-actions-widget";
+import { QuotationSection } from "~/features/workflow/detail/quotation-section";
+import { SaleSection } from "~/features/workflow/detail/sale-section";
+import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { RecordSummaryCard } from "../summary-card/record-summary-card";
 

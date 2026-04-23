@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
-import { getSaleDetail } from "../../src/server/pipeline/application/queries/get-sale-detail";
+import { getLeadDetail } from "../../src/server/workflow/application/queries/get-lead-detail";
+import { getSaleDetail } from "../../src/server/workflow/application/queries/get-sale-detail";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -36,7 +36,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
+    const result = await getLeadDetail(runtime.workflow.deps.leadDetail, {
       leadId: "lead-11",
       actorUserId: 2,
       actorRole: "back_office",
@@ -67,7 +67,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
+    const result = await getLeadDetail(runtime.workflow.deps.leadDetail, {
       leadId: "lead-12",
       actorUserId: 3,
       actorRole: "executive",
@@ -116,7 +116,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
+    const result = await getSaleDetail(runtime.workflow.deps.saleQueries, {
       saleId: "sale-21",
       actorUserId: 1,
       actorRole: "executive",
@@ -165,7 +165,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
+    const result = await getSaleDetail(runtime.workflow.deps.saleQueries, {
       saleId: "sale-22",
       actorUserId: 3,
       actorRole: "executive",

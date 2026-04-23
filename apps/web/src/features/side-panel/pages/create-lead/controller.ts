@@ -4,7 +4,7 @@ import type { CurrentUserView } from "~/actions/auth/contracts";
 import {
   addOptimisticLead,
   createOptimisticLeadRow,
-} from "~/features/pipeline/data/optimistic-leads";
+} from "~/features/workflow/data/optimistic-leads";
 import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
 

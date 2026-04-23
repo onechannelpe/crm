@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { applySunatEnrichment } from "~/server/pipeline/application/commands/apply-sunat-enrichment";
-import type { LeadRepository } from "~/server/pipeline/application/ports/lead-repository";
+import { applySunatEnrichment } from "~/server/workflow/application/commands/apply-sunat-enrichment";
+import type { LeadRepository } from "~/server/workflow/application/ports/lead-repository";
 
 function createLeadRepositoryDouble() {
   const updateByRuc = vi.fn<LeadRepository["updateByRuc"]>(async () => []);
