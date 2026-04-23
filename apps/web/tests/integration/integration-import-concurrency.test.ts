@@ -8,7 +8,7 @@ import {
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
 
-describe("integration import pipeline concurrency", () => {
+describe("integration import workflow concurrency", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
@@ -81,10 +81,10 @@ describe("integration import pipeline concurrency", () => {
       })
       .execute();
 
-    const leadExportQuery = runtime.integrations.leadExportQuery;
+    const recordExportQuery = runtime.integrations.recordExportQuery;
     const concurrentExportReads = (async () => {
       for (let i = 0; i < 40; i++) {
-        await leadExportQuery.export({});
+        await recordExportQuery.export({});
       }
     })();
 

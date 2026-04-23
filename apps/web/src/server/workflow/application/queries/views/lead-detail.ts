@@ -1,10 +1,10 @@
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
   Moneda,
-} from "~/pipeline/contracts/lead-schema";
-import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
+} from "~/workflow/contracts/lead-schema";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";

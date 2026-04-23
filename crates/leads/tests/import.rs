@@ -1,4 +1,4 @@
-use leads::contracts::{LeadImportRequest, LeadImportRow};
+use leads::contracts::{RecordImportRequest, RecordImportRow};
 use leads::service::ImportService;
 use proptest::prelude::*;
 use r2d2::Pool;
@@ -16,7 +16,7 @@ fn make_test_pool() -> SqlitePool {
     pool
 }
 
-fn arb_valid_row() -> impl Strategy<Value = LeadImportRow> {
+fn arb_valid_row() -> impl Strategy<Value = RecordImportRow> {
     (
         "[0-9]{11}",
         "[0-9]{8,12}",
@@ -24,7 +24,7 @@ fn arb_valid_row() -> impl Strategy<Value = LeadImportRow> {
         "[a-z]{1,20}",
         "[0-9]{7,9}",
     )
-        .prop_map(|(ruc, dni, org, person, phone)| LeadImportRow {
+        .prop_map(|(ruc, dni, org, person, phone)| RecordImportRow {
             ruc,
             organization_name: org,
             dni,
@@ -36,9 +36,9 @@ fn arb_valid_row() -> impl Strategy<Value = LeadImportRow> {
         })
 }
 
-fn arb_invalid_row() -> impl Strategy<Value = LeadImportRow> {
+fn arb_invalid_row() -> impl Strategy<Value = RecordImportRow> {
     // RUC shorter than 11 digits always fails validation.
-    "[0-9]{1,10}".prop_map(|ruc| LeadImportRow {
+    "[0-9]{1,10}".prop_map(|ruc| RecordImportRow {
         ruc,
         organization_name: "org".into(),
         dni: "12345678".into(),
@@ -65,13 +65,13 @@ proptest! {
 
         let svc = ImportService::new(make_test_pool());
 
-        let r1 = svc.import_leads(&LeadImportRequest { rows: rows.clone(), source: "test".into() })
+        let r1 = svc.import_leads(&RecordImportRequest { rows: rows.clone(), source: "test".into() })
             .expect("first import");
         prop_assert_eq!(r1.inserted, n, "first call should insert all");
         prop_assert_eq!(r1.updated,  0);
         prop_assert_eq!(r1.skipped,  0);
 
-        let r2 = svc.import_leads(&LeadImportRequest { rows, source: "test".into() })
+        let r2 = svc.import_leads(&RecordImportRequest { rows, source: "test".into() })
             .expect("second import");
         prop_assert_eq!(r2.inserted, 0, "second call should insert nothing");
         prop_assert_eq!(r2.updated,  n, "second call should update all");
@@ -96,7 +96,7 @@ proptest! {
         let total = rows.len();
 
         let svc    = ImportService::new(make_test_pool());
-        let result = svc.import_leads(&LeadImportRequest { rows, source: "test".into() })
+        let result = svc.import_leads(&RecordImportRequest { rows, source: "test".into() })
             .expect("import should not fail");
 
         prop_assert_eq!(result.total,   total);
@@ -105,8 +105,8 @@ proptest! {
     }
 }
 
-fn fixed_valid_row() -> LeadImportRow {
-    LeadImportRow {
+fn fixed_valid_row() -> RecordImportRow {
+    RecordImportRow {
         ruc: "20100000001".into(),
         organization_name: "Org".into(),
         dni: "12345678".into(),
@@ -129,14 +129,14 @@ fn concurrent_identical_imports_are_idempotent() {
     let service_a = ImportService::new(pool.clone());
     let service_b = ImportService::new(pool.clone());
     let t1 = thread::spawn(move || {
-        service_a.import_leads(&LeadImportRequest {
+        service_a.import_leads(&RecordImportRequest {
             rows: vec![fixed_valid_row()],
             source: "concurrency".into(),
         })
     });
 
     let t2 = thread::spawn(move || {
-        service_b.import_leads(&LeadImportRequest {
+        service_b.import_leads(&RecordImportRequest {
             rows: vec![fixed_valid_row()],
             source: "concurrency".into(),
         })

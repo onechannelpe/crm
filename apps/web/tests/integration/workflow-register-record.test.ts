@@ -10,7 +10,7 @@ describe("register lead", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
-    runtime = await createTestRuntime("pipeline-register-record");
+    runtime = await createTestRuntime("workflow-register-record");
   });
 
   afterEach(async () => {

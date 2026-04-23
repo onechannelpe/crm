@@ -22,7 +22,7 @@ import { LEAD_WORKSPACE_FILTER, type LeadStageFilterValue } from "./filter";
 import { ImportDropzone } from "./import-dropzone";
 import { useOpenLeadRecord } from "./open-row";
 import { LEAD_WORKSPACE_SORT, type LeadSortKey } from "./sort";
-import { useLeadsImport } from "./use-leads-import";
+import { useRecordsImport } from "./use-records-import";
 import { defaultViewIdForRole, viewsForRole } from "./views";
 
 import styles from "./styles.module.css";
@@ -61,11 +61,11 @@ export function LeadsWorkspace() {
 
   const { rowOpen } = useOpenLeadRecord();
   const createAction = useCreateLeadRecordAction();
-  const leadImport = useLeadsImport();
+  const recordImport = useRecordsImport();
   const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
   async function handleExport() {
-    await requestAndDownload("leads_export", {});
+    await requestAndDownload("records_export", {});
   }
 
   const adapter = {
@@ -96,7 +96,7 @@ export function LeadsWorkspace() {
           {
             key: "import-csv",
             label: "Importar",
-            onClick: () => leadImport.openFilePicker(),
+            onClick: () => recordImport.openFilePicker(),
           },
           {
             key: "export",
@@ -116,14 +116,14 @@ export function LeadsWorkspace() {
   return (
     <ImportDropzone
       enabled={canManageIntegrations}
-      onFileDropped={leadImport.importFile}
+      onFileDropped={recordImport.importFile}
     >
       <input
-        ref={leadImport.bindFileInput}
+        ref={recordImport.bindFileInput}
         type="file"
         accept=".csv"
         style={{ display: "none" }}
-        onChange={leadImport.onFileInputChange}
+        onChange={recordImport.onFileInputChange}
       />
       <RecordIndexScreen adapter={adapter} />
     </ImportDropzone>

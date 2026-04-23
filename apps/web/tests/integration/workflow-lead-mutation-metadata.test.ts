@@ -8,11 +8,11 @@ import {
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
 
-describe("pipeline lead mutation metadata", () => {
+describe("workflow lead mutation metadata", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
-    runtime = await createTestRuntime("pipeline-lead-mutation-metadata");
+    runtime = await createTestRuntime("workflow-lead-mutation-metadata");
   });
 
   afterEach(async () => {

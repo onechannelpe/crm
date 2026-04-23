@@ -16,12 +16,12 @@ import type {
 import { getLeadDetailQuery } from "./get-lead-detail";
 import { listAssignableExecutivesQuery } from "./list-assignable-executives";
 
-export type PipelineQueryApiDeps = {
+export type WorkflowQueryApiDeps = {
   leadDetail: LeadDetailDeps;
   assignableExecutives: AssignableExecutivesDeps;
 };
 
-export type PipelineQueryApi = {
+export type WorkflowQueryApi = {
   getLeadDetail(
     input: GetLeadDetailInput,
   ): Promise<Result<LeadDetailResult, DomainError>>;
@@ -31,8 +31,8 @@ export type PipelineQueryApi = {
 };
 
 export function createWorkflowQueryApi(
-  deps: PipelineQueryApiDeps,
-): PipelineQueryApi {
+  deps: WorkflowQueryApiDeps,
+): WorkflowQueryApi {
   return {
     getLeadDetail: (input) => getLeadDetailQuery(deps, input),
     listAssignableExecutives: (input) =>

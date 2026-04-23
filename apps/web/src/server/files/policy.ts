@@ -21,7 +21,7 @@ const ARTIFACT_DIRECTIONS: Record<
   ArtifactType,
   "upload" | "download" | "bidirectional"
 > = {
-  leads_export: "download",
+  records_export: "download",
   integration_import: "upload",
 };
 
@@ -44,7 +44,7 @@ function canRequest(
     );
   }
 
-  if (artifactType === "leads_export" && actor.role === "executive") {
+  if (artifactType === "records_export" && actor.role === "executive") {
     return deny(
       "executive_cross_scope_denied",
       "Executives cannot request exports",
@@ -167,7 +167,7 @@ export function checkArtifactPolicy(
 ): Result<void, DomainError> {
   switch (action) {
     case "artifact.request":
-      return canRequest(actor, artifact?.artifactType ?? "leads_export");
+      return canRequest(actor, artifact?.artifactType ?? "records_export");
     case "artifact.upload":
       if (!artifact) {
         return deny("artifact_not_found", "Artifact not found");

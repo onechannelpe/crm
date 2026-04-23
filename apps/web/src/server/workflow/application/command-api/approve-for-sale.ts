@@ -12,13 +12,13 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { PipelineNotificationCenter } from "../ports/notification-center";
+import type { WorkflowNotificationCenter } from "../ports/notification-center";
 import type { LeadClock } from "../services/lead-clock";
 
 type ApproveForSaleCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
-  notificationCenter: PipelineNotificationCenter;
+  notificationCenter: WorkflowNotificationCenter;
   clock: LeadClock;
 };
 

@@ -42,8 +42,8 @@ export default defineConfig({
       },
       handlers: [
         {
-          route: "/api/leads/imports/ws",
-          handler: "./src/server/realtime/leads-imports-ws.ts",
+          route: "/api/records/imports/ws",
+          handler: "./src/server/realtime/records-imports-ws.ts",
         },
       ],
       prerender: {

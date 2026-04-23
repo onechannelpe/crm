@@ -6,7 +6,7 @@ import type {
   AssignContactsTransactionRunner,
 } from "~/server/contact-assignments/application/contact-assignment-writer";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { type LeadCandidate } from "~/server/shared/engine/lead-contract";
+import { type RecordCandidate } from "~/server/shared/engine/record-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -19,7 +19,7 @@ import {
 const USER_ID = 1;
 const BRANCH_ID = 1;
 
-function makeCandidate(n: number): LeadCandidate {
+function makeCandidate(n: number): RecordCandidate {
   return {
     ruc: `2010000000${n}`,
     organization_name: `Org ${n}`,
@@ -67,8 +67,9 @@ function makeTransaction(
 }
 
 const emptyEngine = {
-  requestCandidates: async (): Promise<Result<LeadCandidate[], DomainError>> =>
-    Ok([]),
+  requestCandidates: async (): Promise<
+    Result<RecordCandidate[], DomainError>
+  > => Ok([]),
 };
 
 describe("assignContacts", () => {
@@ -107,7 +108,7 @@ describe("assignContacts", () => {
       return { id: contactCallCount, cooldown_until };
     };
 
-    const candidates: LeadCandidate[] = [
+    const candidates: RecordCandidate[] = [
       makeCandidate(1),
       makeCandidate(2),
       makeCandidate(3),
@@ -117,7 +118,7 @@ describe("assignContacts", () => {
         branchId: number;
         userId: number;
         amount: number;
-      }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
+      }): Promise<Result<RecordCandidate[], DomainError>> => Ok(candidates),
     };
 
     const result = await assignContacts(
@@ -144,13 +145,13 @@ describe("assignContacts", () => {
 
   it("commits full amount when all candidates are assigned", async () => {
     const repos = makeRepos(0);
-    const candidates: LeadCandidate[] = [makeCandidate(1)];
+    const candidates: RecordCandidate[] = [makeCandidate(1)];
     const engine = {
       requestCandidates: async (_input: {
         branchId: number;
         userId: number;
         amount: number;
-      }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
+      }): Promise<Result<RecordCandidate[], DomainError>> => Ok(candidates),
     };
 
     const result = await assignContacts(
@@ -174,7 +175,7 @@ describe("assignContacts", () => {
         branchId: number;
         userId: number;
         amount: number;
-      }): Promise<Result<LeadCandidate[], DomainError>> =>
+      }): Promise<Result<RecordCandidate[], DomainError>> =>
         Err(
           domainError(
             "external",

@@ -1,4 +1,4 @@
-use crate::contracts::{LeadCandidateRequest, LeadImportRequest};
+use crate::contracts::{RecordCandidateRequest, RecordImportRequest};
 use crate::service::{CandidateService, ImportService};
 use axum::Router;
 use axum::body::Bytes;
@@ -49,7 +49,7 @@ async fn handle_lead_candidates_with_request_id(
     let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
         .map_err(|e| e.with_request_id(request_id.clone()))?;
 
-    let req: LeadCandidateRequest = serde_json::from_slice(&body).map_err(|_| {
+    let req: RecordCandidateRequest = serde_json::from_slice(&body).map_err(|_| {
         ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
     })?;
 
@@ -102,7 +102,7 @@ async fn handle_import_with_request_id(
     let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
         .map_err(|e| e.with_request_id(request_id.clone()))?;
 
-    let req: LeadImportRequest = serde_json::from_slice(&body).map_err(|_| {
+    let req: RecordImportRequest = serde_json::from_slice(&body).map_err(|_| {
         ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
     })?;
 

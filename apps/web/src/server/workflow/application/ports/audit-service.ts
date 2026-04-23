@@ -11,7 +11,7 @@ export type AuditLogRepository = {
   create(values: AuditLogDraft): Promise<unknown>;
 };
 
-export type PipelineAuditService = {
+export type WorkflowAuditService = {
   log(
     actorUserId: number,
     action: string,

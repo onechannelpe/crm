@@ -19,7 +19,7 @@ import * as s07 from "./07-search";
 import * as s08 from "./08-platform";
 import * as s09 from "./09-observability";
 import * as s10 from "./10-workflow";
-import * as s11 from "./11-integration-pipeline";
+import * as s11 from "./11-integration-workflow";
 import * as s12 from "./12-workflow-files";
 
 export const SCHEMA_MODULES: SchemaModule[] = [

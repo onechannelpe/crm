@@ -1,6 +1,6 @@
-import { isBcpBank } from "~/pipeline/contracts/lead-schema";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import { isBcpBank } from "~/workflow/contracts/lead-schema";
 
 import { isReadyForSaleLeadSubject } from "../../domain/lead-subjects";
 import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";

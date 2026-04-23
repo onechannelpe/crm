@@ -27,8 +27,12 @@ describe("validateUploadFile - extension checks", () => {
     expect(!result.ok && result.reason).toBe("extension_not_allowed");
   });
 
-  it("accepts csv for leads_export", () => {
-    const result = validateUploadFile("leads_export", "export.csv", CSV_BYTES);
+  it("accepts csv for records_export", () => {
+    const result = validateUploadFile(
+      "records_export",
+      "export.csv",
+      CSV_BYTES,
+    );
     expect(result.ok).toBe(true);
   });
 

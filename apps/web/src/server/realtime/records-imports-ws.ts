@@ -1,28 +1,28 @@
 import {
-  parseLeadImportTopic,
-  leadImportTopic,
-} from "~/features/leads-imports/contracts";
+  parseRecordImportTopic,
+  recordImportTopic,
+} from "~/features/records-imports/contracts";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import { canAccessLeadImportJob } from "~/server/leads/imports/api";
-import { buildLeadImportProgressEvent } from "~/server/leads/imports/progress-events";
+import { canAccessRecordImportJob } from "~/server/records/imports/api";
+import { buildRecordImportProgressEvent } from "~/server/records/imports/progress-events";
 import {
-  ensureLeadImportsRealtimeBridge,
-  getLeadImportsTopicHub,
-} from "~/server/leads/imports/realtime";
+  ensureRecordImportsRealtimeBridge,
+  getRecordImportsTopicHub,
+} from "~/server/records/imports/realtime";
 import { getServerRuntime } from "~/server/runtime";
 
 import { createTopicSubscriptionWsHandler } from "./core/ws-handler-factory";
 
 export default createTopicSubscriptionWsHandler<string>({
-  hub: getLeadImportsTopicHub(),
+  hub: getRecordImportsTopicHub(),
   canOpen: (session) =>
     session.sessionClass === "app" &&
     session.onboardingCompleted &&
     hasPermission(session.role, "integration:manage"),
-  parseTopic: parseLeadImportTopic,
-  topicFromKey: leadImportTopic,
+  parseTopic: parseRecordImportTopic,
+  topicFromKey: recordImportTopic,
   async authorizeSubscribe(session, jobId) {
-    await ensureLeadImportsRealtimeBridge();
+    await ensureRecordImportsRealtimeBridge();
 
     const job =
       await getServerRuntime().integrations.integration.jobs.findById(jobId);
@@ -33,7 +33,7 @@ export default createTopicSubscriptionWsHandler<string>({
       return false;
     }
 
-    return canAccessLeadImportJob(
+    return canAccessRecordImportJob(
       {
         userId: session.userId,
         branchId: session.branchId,
@@ -53,6 +53,6 @@ export default createTopicSubscriptionWsHandler<string>({
       return null;
     }
 
-    return JSON.stringify(buildLeadImportProgressEvent({ job }));
+    return JSON.stringify(buildRecordImportProgressEvent({ job }));
   },
 });

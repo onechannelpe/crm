@@ -20,7 +20,7 @@ const pendingReviewLead: PendingReviewLeadSubject = {
   updatedAt: 1,
 };
 
-describe("pipeline workflow domain", () => {
+describe("workflow domain", () => {
   it("rejects the record when a rejected status arrives during external review", () => {
     const result = resolveReviewTransition({
       lead: pendingReviewLead,

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseLeadApiSpec } from "../src/lead-api/parse.ts";
-import { renderLeadContractRust } from "../src/lead-api/render-rust.ts";
-import { renderLeadContractTs } from "../src/lead-api/render-ts.ts";
+import { parseRecordApiSpec } from "../src/record-api/parse.ts";
+import { renderRecordContractRust } from "../src/record-api/render-rust.ts";
+import { renderRecordContractTs } from "../src/record-api/render-ts.ts";
 
 // fixture
 
@@ -28,45 +28,45 @@ const VALID_SPEC = {
   },
 };
 
-describe("parseLeadApiSpec", () => {
+describe("parseRecordApiSpec", () => {
   test("accepts a valid spec", () => {
-    const spec = parseLeadApiSpec(VALID_SPEC);
+    const spec = parseRecordApiSpec(VALID_SPEC);
     expect(spec.response.candidate.fields).toHaveLength(3);
     expect(spec.request.import_row.fields).toHaveLength(4);
   });
 
   test("optional flag defaults to false when absent", () => {
-    const spec = parseLeadApiSpec(VALID_SPEC);
+    const spec = parseRecordApiSpec(VALID_SPEC);
     const field = spec.response.candidate.fields[0]!;
     expect(field.optional).toBe(false);
   });
 
   test("optional flag is preserved when true", () => {
-    const spec = parseLeadApiSpec(VALID_SPEC);
+    const spec = parseRecordApiSpec(VALID_SPEC);
     const fields = spec.request.import_row.fields;
     expect(fields.find((f) => f.name === "quality_tier")!.optional).toBe(true);
   });
 
   test("rejects non-object input", () => {
-    expect(() => parseLeadApiSpec(null)).toThrow();
-    expect(() => parseLeadApiSpec("string")).toThrow();
+    expect(() => parseRecordApiSpec(null)).toThrow();
+    expect(() => parseRecordApiSpec("string")).toThrow();
   });
 
   test("rejects missing response", () => {
-    expect(() => parseLeadApiSpec({ request: VALID_SPEC.request })).toThrow(
+    expect(() => parseRecordApiSpec({ request: VALID_SPEC.request })).toThrow(
       "response",
     );
   });
 
   test("rejects missing request", () => {
-    expect(() => parseLeadApiSpec({ response: VALID_SPEC.response })).toThrow(
+    expect(() => parseRecordApiSpec({ response: VALID_SPEC.response })).toThrow(
       "request",
     );
   });
 
   test("rejects invalid field type", () => {
     expect(() =>
-      parseLeadApiSpec({
+      parseRecordApiSpec({
         ...VALID_SPEC,
         response: {
           candidate: { fields: [{ name: "x", type: "float" }] },
@@ -77,7 +77,7 @@ describe("parseLeadApiSpec", () => {
 
   test("rejects non-boolean optional", () => {
     expect(() =>
-      parseLeadApiSpec({
+      parseRecordApiSpec({
         ...VALID_SPEC,
         request: {
           import_row: {
@@ -89,63 +89,63 @@ describe("parseLeadApiSpec", () => {
   });
 });
 
-describe("renderLeadContractRust", () => {
+describe("renderRecordContractRust", () => {
   test("output is marked as generated", () => {
-    const output = renderLeadContractRust(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractRust(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("GENERATED FILE");
   });
 
-  test("LeadCandidate struct is present", () => {
-    const output = renderLeadContractRust(parseLeadApiSpec(VALID_SPEC));
-    expect(output).toContain("pub struct LeadCandidate");
+  test("RecordCandidate struct is present", () => {
+    const output = renderRecordContractRust(parseRecordApiSpec(VALID_SPEC));
+    expect(output).toContain("pub struct RecordCandidate");
   });
 
   test("optional i32 field renders as Option<i32>", () => {
-    const output = renderLeadContractRust(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractRust(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("pub quality_tier: Option<i32>");
   });
 
   test("optional i64 field renders as Option<i64>", () => {
-    const output = renderLeadContractRust(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractRust(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("pub branch_tag: Option<i64>");
   });
 
   test("required string field renders without Option", () => {
-    const output = renderLeadContractRust(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractRust(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("pub ruc: String");
     expect(output).not.toContain("pub ruc: Option<String>");
   });
 
   test("output ends with newline", () => {
-    const output = renderLeadContractRust(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractRust(parseRecordApiSpec(VALID_SPEC));
     expect(output.endsWith("\n")).toBe(true);
   });
 });
 
-describe("renderLeadContractTs", () => {
+describe("renderRecordContractTs", () => {
   test("output is marked as generated", () => {
-    const output = renderLeadContractTs(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractTs(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("GENERATED FILE");
   });
 
-  test("LeadCandidate interface is present", () => {
-    const output = renderLeadContractTs(parseLeadApiSpec(VALID_SPEC));
-    expect(output).toContain("export interface LeadCandidate");
+  test("RecordCandidate interface is present", () => {
+    const output = renderRecordContractTs(parseRecordApiSpec(VALID_SPEC));
+    expect(output).toContain("export interface RecordCandidate");
   });
 
   test("optional field uses ? notation", () => {
-    const output = renderLeadContractTs(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractTs(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("quality_tier?:");
   });
 
   test("required field has no ?", () => {
-    const output = renderLeadContractTs(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractTs(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("ruc: string;");
     expect(output).not.toContain("ruc?:");
   });
 
   test("numeric types render as number", () => {
-    const output = renderLeadContractTs(parseLeadApiSpec(VALID_SPEC));
+    const output = renderRecordContractTs(parseRecordApiSpec(VALID_SPEC));
     expect(output).toContain("quality_tier?: number");
     expect(output).toContain("branch_tag?: number");
   });

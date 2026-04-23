@@ -8,6 +8,6 @@ export type {
 } from "~/server/shared/engine/result-contract";
 
 export type {
-  LeadCandidate,
-  LeadCandidatesResponse,
-} from "~/server/shared/engine/lead-contract";
+  RecordCandidate,
+  RecordCandidatesResponse,
+} from "~/server/shared/engine/record-contract";

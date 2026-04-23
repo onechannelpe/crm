@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-import type { LeadCallOutcome } from "~/pipeline/contracts/lead-schema";
+import type { LeadCallOutcome } from "~/workflow/contracts/lead-schema";
 
 export type InteractionMode = "call" | "note";
 

@@ -1,7 +1,7 @@
 import { domainError } from "~/server/shared/domain-error";
 import type {
   EngineClient,
-  LeadCandidatesRequest,
+  RecordCandidatesRequest,
 } from "~/server/shared/engine/client";
 import type { EngineClientConfig } from "~/server/shared/engine/config";
 import {
@@ -11,7 +11,10 @@ import {
 import { signRequest } from "~/server/shared/engine/signature";
 import { Err, Ok } from "~/server/shared/result";
 
-import { decodeSearchResponse, decodeLeadCandidatesResponse } from "./decoder";
+import {
+  decodeSearchResponse,
+  decodeRecordCandidatesResponse,
+} from "./decoder";
 import { mapEngineErrorResponse, mapEngineNetworkError } from "./mapper";
 
 export function createEngineAdapter(config: EngineClientConfig): EngineClient {
@@ -97,7 +100,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       }
     },
 
-    async requestCandidates(input: LeadCandidatesRequest) {
+    async requestCandidates(input: RecordCandidatesRequest) {
       const requestId = crypto.randomUUID();
       const body = JSON.stringify({
         branch_id: input.branchId,
@@ -139,7 +142,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       }
 
       try {
-        const decoded = decodeLeadCandidatesResponse(responseJson);
+        const decoded = decodeRecordCandidatesResponse(responseJson);
         return Ok(decoded.candidates);
       } catch (err) {
         return Err(

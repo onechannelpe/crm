@@ -6,11 +6,11 @@ import {
 } from "~/server/features/workflow/application/workflow-deps";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
-import { runInPipelineTransaction } from "../../shared/pipeline-transaction";
-import type { PipelineAuditService } from "../application/ports/audit-service";
-import type { PipelineEngineGateway } from "../application/ports/engine-gateway";
+import { runInWorkflowTransaction } from "../../shared/workflow-transaction";
+import type { WorkflowAuditService } from "../application/ports/audit-service";
+import type { WorkflowEngineGateway } from "../application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../application/ports/enrichment-queue";
-import type { PipelineNotificationCenter } from "../application/ports/notification-center";
+import type { WorkflowNotificationCenter } from "../application/ports/notification-center";
 import {
   createWorkflowAuditLogRepo,
   createWorkflowAuditService,
@@ -22,10 +22,10 @@ import { createWorkflowNotificationCenter } from "./notifications";
 export type WorkflowCommandRuntime = {
   executor: DatabaseExecutor;
   deps: WorkflowDeps;
-  auditService: PipelineAuditService;
-  engineGateway: PipelineEngineGateway;
+  auditService: WorkflowAuditService;
+  engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
-  notificationCenter: PipelineNotificationCenter;
+  notificationCenter: WorkflowNotificationCenter;
 };
 
 function createWorkflowAuditServiceRuntime(executor: DatabaseExecutor) {
@@ -59,7 +59,7 @@ function createWorkflowCommandRuntime(
 export async function runWorkflowCommand<TResult>(
   operation: (runtime: WorkflowCommandRuntime) => Promise<TResult>,
 ): Promise<TResult> {
-  return runInPipelineTransaction(async ({ executor }) =>
+  return runInWorkflowTransaction(async ({ executor }) =>
     operation(createWorkflowCommandRuntime(executor)),
   );
 }

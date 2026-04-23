@@ -9,7 +9,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { AssignableExecutivesScope } from "../../ports/lead-user-scope-repository";
 
 const LEAD_READ_PERMISSIONS: Permission[] = [
-  "lead:pipeline",
+  "lead:workflow",
   "lead:register",
   "lead:commercial-input:complete",
   "lead:sale:create",
@@ -46,7 +46,7 @@ export function canViewAllSales(role: Role) {
 }
 
 export function canAddLeadInteraction(role: Role) {
-  return hasPermission(role, "lead:pipeline");
+  return hasPermission(role, "lead:workflow");
 }
 
 export function canRegisterLead(role: Role) {

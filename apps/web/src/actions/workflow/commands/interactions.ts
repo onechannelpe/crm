@@ -1,8 +1,8 @@
 "use server";
-import type { LeadCallOutcome } from "~/pipeline/contracts/lead-schema";
 import { runAction } from "~/server/shared/action-runtime";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
 import { createWorkflowCommandApiRuntime } from "~/server/workflow/infrastructure/runtime/workflow-command-api-factory";
+import type { LeadCallOutcome } from "~/workflow/contracts/lead-schema";
 
 export async function recordLeadCall(input: {
   leadId: string;

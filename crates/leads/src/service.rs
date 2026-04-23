@@ -1,6 +1,6 @@
 use crate::contracts::{
-    LeadCandidateRequest, LeadCandidatesResponse, LeadImportRequest, LeadImportResponse,
-    LeadImportRow,
+    RecordCandidateRequest, RecordCandidatesResponse, RecordImportRequest, RecordImportResponse,
+    RecordImportRow,
 };
 use crate::domain;
 use crate::repo::{LeadsRepository, SqliteLeadsRepository};
@@ -35,8 +35,8 @@ impl CandidateService {
     #[tracing::instrument(skip(self, req), fields(branch_id = req.branch_id, user_id = req.user_id, amount = req.amount))]
     pub fn candidates(
         &self,
-        req: &LeadCandidateRequest,
-    ) -> Result<LeadCandidatesResponse, ApiError> {
+        req: &RecordCandidateRequest,
+    ) -> Result<RecordCandidatesResponse, ApiError> {
         validate_candidate_request(req)?;
 
         let limit = req.amount.min(self.max_limit).max(1);
@@ -52,7 +52,7 @@ impl CandidateService {
         let deduped = domain::dedupe_candidates(ranked);
         let count = deduped.len();
 
-        Ok(LeadCandidatesResponse {
+        Ok(RecordCandidatesResponse {
             candidates: deduped,
             count,
         })
@@ -78,9 +78,12 @@ impl ImportService {
     }
 
     #[tracing::instrument(skip(self, req), fields(rows = req.rows.len(), source = %req.source))]
-    pub fn import_leads(&self, req: &LeadImportRequest) -> Result<LeadImportResponse, ApiError> {
+    pub fn import_leads(
+        &self,
+        req: &RecordImportRequest,
+    ) -> Result<RecordImportResponse, ApiError> {
         let total = req.rows.len();
-        let valid: Vec<&LeadImportRow> = req.rows.iter().filter(|r| is_valid_row(r)).collect();
+        let valid: Vec<&RecordImportRow> = req.rows.iter().filter(|r| is_valid_row(r)).collect();
         let skipped = total - valid.len();
 
         let mut conn = self
@@ -89,12 +92,12 @@ impl ImportService {
             .map_err(|e| ApiError::Service(format!("pool get failed: {e}")))?;
 
         let now = current_unix_secs()?;
-        let owned: Vec<LeadImportRow> = valid.into_iter().cloned().collect();
+        let owned: Vec<RecordImportRow> = valid.into_iter().cloned().collect();
         let (inserted, updated) = self
             .repo
             .upsert_batch(&mut conn, &owned, &req.source, now)?;
 
-        Ok(LeadImportResponse {
+        Ok(RecordImportResponse {
             inserted,
             updated,
             skipped,
@@ -105,7 +108,7 @@ impl ImportService {
 
 // private helpers
 
-fn validate_candidate_request(req: &LeadCandidateRequest) -> Result<(), ApiError> {
+fn validate_candidate_request(req: &RecordCandidateRequest) -> Result<(), ApiError> {
     if req.branch_id <= 0 {
         return Err(ApiError::Validation("branch_id must be positive".into()));
     }
@@ -121,7 +124,7 @@ fn validate_candidate_request(req: &LeadCandidateRequest) -> Result<(), ApiError
     Ok(())
 }
 
-fn is_valid_row(row: &LeadImportRow) -> bool {
+fn is_valid_row(row: &RecordImportRow) -> bool {
     let ruc_ok = row.ruc.len() == 11 && row.ruc.chars().all(|c| c.is_ascii_digit());
     let dni_ok = (8..=12).contains(&row.dni.len()) && row.dni.chars().all(|c| c.is_ascii_digit());
     let phone_ok = !row.phone_primary.trim().is_empty();

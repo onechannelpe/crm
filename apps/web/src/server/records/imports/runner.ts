@@ -2,13 +2,13 @@ import { applyImportRows } from "~/server/integrations/application/import/apply-
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { parseLeadImportRowsFromStream } from "./intake";
+import { parseRecordImportRowsFromStream } from "./intake";
 import {
-  buildLeadImportProgressEvent,
-  publishLeadImportProgress,
+  buildRecordImportProgressEvent,
+  publishRecordImportProgress,
 } from "./progress-events";
 
-export function createLeadImportRunner(deps: {
+export function createRecordImportRunner(deps: {
   executor: DatabaseExecutor;
   openFileStream: (filePath: string) => ReadableStream<Uint8Array>;
   updateProgress: (input: {
@@ -39,7 +39,7 @@ export function createLeadImportRunner(deps: {
         throw new Error(`Unsupported import type: ${job.type}`);
       }
 
-      const { validRows, invalidRows } = await parseLeadImportRowsFromStream({
+      const { validRows, invalidRows } = await parseRecordImportRowsFromStream({
         streamFactory: () => openFileStream(filePath),
         importType: job.type,
       });
@@ -54,8 +54,8 @@ export function createLeadImportRunner(deps: {
         rowsApplied: 0,
         rowsFailed: 0,
       });
-      await publishLeadImportProgress(
-        buildLeadImportProgressEvent({
+      await publishRecordImportProgress(
+        buildRecordImportProgressEvent({
           job,
           status: "PROCESSING",
           rowsTotal,
@@ -72,8 +72,8 @@ export function createLeadImportRunner(deps: {
           validRows,
           invalidRows,
           onProgress: (progress) => {
-            void publishLeadImportProgress(
-              buildLeadImportProgressEvent({
+            void publishRecordImportProgress(
+              buildRecordImportProgressEvent({
                 job,
                 status: "PROCESSING",
                 rowsTotal: progress.rowsTotal,

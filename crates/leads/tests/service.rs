@@ -1,4 +1,4 @@
-use leads::contracts::{LeadImportRequest, LeadImportRow};
+use leads::contracts::{RecordImportRequest, RecordImportRow};
 use leads::repo::LeadsRepository;
 use leads::service::ImportService;
 use shared::error::ApiError;
@@ -16,14 +16,14 @@ impl LeadsRepository for FailingLeadsRepo {
         _branch_id: i64,
         _user_id: i64,
         _strategy: leads::contracts::CandidateStrategy,
-    ) -> Result<Vec<leads::contracts::LeadCandidate>, ApiError> {
+    ) -> Result<Vec<leads::contracts::RecordCandidate>, ApiError> {
         Ok(Vec::new())
     }
 
     fn upsert_batch(
         &self,
         _conn: &mut Connection,
-        _rows: &[LeadImportRow],
+        _rows: &[RecordImportRow],
         _source: &str,
         _now: i64,
     ) -> Result<(usize, usize), ApiError> {
@@ -38,8 +38,8 @@ fn make_test_pool() -> shared::sqlite::SqlitePool {
 #[test]
 fn import_service_supports_repo_injection_for_failure_paths() {
     let service = ImportService::with_repo(make_test_pool(), Arc::new(FailingLeadsRepo));
-    let req = LeadImportRequest {
-        rows: vec![LeadImportRow {
+    let req = RecordImportRequest {
+        rows: vec![RecordImportRow {
             ruc: "20100000001".into(),
             organization_name: "Org".into(),
             dni: "12345678".into(),

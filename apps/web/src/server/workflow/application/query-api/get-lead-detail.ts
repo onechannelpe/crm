@@ -4,10 +4,10 @@ import type { Result } from "~/server/shared/result";
 import type { GetLeadDetailInput } from "../contracts/query-inputs";
 import type { LeadDetailResult } from "../contracts/query-results";
 import { getLeadDetail } from "../queries/get-lead-detail";
-import type { PipelineQueryApiDeps } from "./index";
+import type { WorkflowQueryApiDeps } from "./index";
 
 export function getLeadDetailQuery(
-  deps: PipelineQueryApiDeps,
+  deps: WorkflowQueryApiDeps,
   input: GetLeadDetailInput,
 ): Promise<Result<LeadDetailResult, DomainError>> {
   return getLeadDetail(deps.leadDetail, {

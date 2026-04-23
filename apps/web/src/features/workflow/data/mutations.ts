@@ -1,17 +1,17 @@
 import { action, json } from "@solidjs/router";
 
 import {
+  requestQuotationCreation,
+  requestSaleApproval,
+} from "~/actions/workflow/commands/quotations";
+import {
   requestLeadCommercialInputCompletion,
   requestLeadCreation,
   requestLeadReassignment,
   requestLeadReview,
-} from "~/actions/workflow/commands/leads";
-import {
-  requestQuotationCreation,
-  requestSaleApproval,
-} from "~/actions/workflow/commands/quotations";
+} from "~/actions/workflow/commands/records";
 import { requestSaleCreation } from "~/actions/workflow/commands/sales";
-import type { Moneda } from "~/pipeline/contracts/lead-schema";
+import type { Moneda } from "~/workflow/contracts/lead-schema";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 

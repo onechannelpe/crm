@@ -12,10 +12,10 @@ import { getHeaderRoute } from "../../src/lib/nav/policy";
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
     expect(getRoutePermission("/team")).toBe("team:read");
-    expect(getRoutePermission("/leads")).toBeNull();
+    expect(getRoutePermission("/records")).toBeNull();
     expect(getRoutePermission("/rate-simulator")).toBe("lead:rate:simulate");
-    expect(getRoutePermission("/leads/new")).toBeNull();
-    expect(getRoutePermission("/leads/123")).toBeNull();
+    expect(getRoutePermission("/records/new")).toBeNull();
+    expect(getRoutePermission("/records/123")).toBeNull();
     expect(getRoutePermission("/dashboard")).toBe("lead:work");
     expect(getRoutePermission("/settings/profile")).toBeNull();
   });
@@ -26,11 +26,11 @@ describe("route permissions", () => {
     expect(canAccessPath("executive", "/settings/capacity-policies")).toBe(
       false,
     );
-    expect(canAccessPath("executive", "/leads")).toBe(true);
+    expect(canAccessPath("executive", "/records")).toBe(true);
     expect(canAccessPath("executive", "/rate-simulator")).toBe(true);
-    expect(canAccessPath("admin", "/leads")).toBe(true);
+    expect(canAccessPath("admin", "/records")).toBe(true);
     expect(canAccessPath("admin", "/rate-simulator")).toBe(true);
-    expect(canAccessPath("logistics", "/leads")).toBe(true);
+    expect(canAccessPath("logistics", "/records")).toBe(true);
     expect(canAccessPath("logistics", "/rate-simulator")).toBe(false);
     expect(canAccessPath("executive", "/team")).toBe(false);
     expect(canAccessPath("hr", "/team")).toBe(true);

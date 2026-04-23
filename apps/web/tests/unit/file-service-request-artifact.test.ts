@@ -46,7 +46,7 @@ describe("requestArtifact sync export metadata", () => {
         updateArtifactStatus: async () => {},
         findArtifactById: async (id) => ({
           id,
-          artifactType: "leads_export",
+          artifactType: "records_export",
           direction: "download",
           executionMode: "sync",
           status: "ready",
@@ -63,9 +63,9 @@ describe("requestArtifact sync export metadata", () => {
         }),
         findFileAssetForArtifact: async () => ({
           id: 9,
-          storageKey: "leads_export-42-1700000000000.csv",
-          originalFilename: "leads-export.csv",
-          safeDisplayFilename: "leads-export.csv",
+          storageKey: "records_export-42-1700000000000.csv",
+          originalFilename: "records-export.csv",
+          safeDisplayFilename: "records-export.csv",
           detectedMime: "text/csv; charset=utf-8",
           extension: "csv",
           sizeBytes: CSV_BYTES.length,
@@ -104,7 +104,7 @@ describe("requestArtifact sync export metadata", () => {
       syncExecutor: {
         run: async () => ({
           bytes: CSV_BYTES,
-          filename: "leads-export.csv",
+          filename: "records-export.csv",
         }),
       },
     };
@@ -112,7 +112,7 @@ describe("requestArtifact sync export metadata", () => {
     const result = await requestArtifact(
       makeContext(),
       {
-        artifactType: "leads_export",
+        artifactType: "records_export",
         executionMode: "sync",
         workflowContext: {},
       },

@@ -1,5 +1,5 @@
-import type { LeadCallOutcome } from "~/pipeline/contracts/lead-schema";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
+import type { LeadCallOutcome } from "~/workflow/contracts/lead-schema";
 
 import type { LeadTimelineItem } from "../queries/views/lead-detail";
 import { formatTimelineActorName } from "./timeline-actor-name";

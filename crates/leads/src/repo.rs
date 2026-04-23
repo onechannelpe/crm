@@ -1,4 +1,4 @@
-use crate::contracts::{CandidateStrategy, LeadCandidate, LeadImportRow};
+use crate::contracts::{CandidateStrategy, RecordCandidate, RecordImportRow};
 use rusqlite::{Connection, Row, params};
 use shared::error::ApiError;
 use std::sync::LazyLock;
@@ -11,12 +11,12 @@ pub trait LeadsRepository: Send + Sync {
         branch_id: i64,
         user_id: i64,
         strategy: CandidateStrategy,
-    ) -> Result<Vec<LeadCandidate>, ApiError>;
+    ) -> Result<Vec<RecordCandidate>, ApiError>;
 
     fn upsert_batch(
         &self,
         conn: &mut Connection,
-        rows: &[LeadImportRow],
+        rows: &[RecordImportRow],
         source: &str,
         now: i64,
     ) -> Result<(usize, usize), ApiError>;
@@ -33,14 +33,14 @@ impl LeadsRepository for SqliteLeadsRepository {
         branch_id: i64,
         user_id: i64,
         strategy: CandidateStrategy,
-    ) -> Result<Vec<LeadCandidate>, ApiError> {
+    ) -> Result<Vec<RecordCandidate>, ApiError> {
         list_candidates(conn, limit, branch_id, user_id, strategy)
     }
 
     fn upsert_batch(
         &self,
         conn: &mut Connection,
-        rows: &[LeadImportRow],
+        rows: &[RecordImportRow],
         source: &str,
         now: i64,
     ) -> Result<(usize, usize), ApiError> {
@@ -78,7 +78,7 @@ pub fn list_candidates(
     branch_id: i64,
     user_id: i64,
     strategy: CandidateStrategy,
-) -> Result<Vec<LeadCandidate>, ApiError> {
+) -> Result<Vec<RecordCandidate>, ApiError> {
     match strategy {
         CandidateStrategy::Balanced => {
             let mut stmt = conn.prepare_cached(&SQL_BALANCED).map_err(db_err)?;
@@ -108,7 +108,7 @@ pub fn list_candidates(
 /// Validation is the caller's responsibility.
 pub fn upsert_batch(
     conn: &mut Connection,
-    rows: &[LeadImportRow],
+    rows: &[RecordImportRow],
     source: &str,
     now: i64,
 ) -> Result<(usize, usize), ApiError> {
@@ -179,8 +179,8 @@ pub fn upsert_batch(
 
 // helpers
 
-fn map_candidate_row(row: &Row<'_>) -> rusqlite::Result<LeadCandidate> {
-    Ok(LeadCandidate {
+fn map_candidate_row(row: &Row<'_>) -> rusqlite::Result<RecordCandidate> {
+    Ok(RecordCandidate {
         ruc: row.get("ruc")?,
         organization_name: row.get("organization_name")?,
         dni: row.get("dni")?,

@@ -21,7 +21,7 @@ import { toAppError } from "~/lib/app-errors";
 import {
   SALE_BANK_KINDS,
   type SaleBankKind,
-} from "~/pipeline/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 import { createSaleMutation } from "../data/mutations";
 

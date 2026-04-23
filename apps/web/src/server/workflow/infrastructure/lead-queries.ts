@@ -5,8 +5,8 @@ import type { Database } from "~/lib/db/types";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
-  LeadExportFilters,
-  LeadExportRow,
+  RecordExportFilters,
+  RecordExportRow,
   LeadListFilters,
   LeadListRow,
   LeadQueries,
@@ -28,7 +28,7 @@ type LeadListSource = Pick<
   | "updated_at"
 > & { executive_name: string };
 
-type LeadExportSource = Pick<
+type RecordExportSource = Pick<
   LeadCols,
   | "id"
   | "ruc"
@@ -57,7 +57,7 @@ function toListRow(row: LeadListSource): LeadListRow {
   };
 }
 
-function toExportRow(row: LeadExportSource): LeadExportRow {
+function toExportRow(row: RecordExportSource): RecordExportRow {
   return {
     id: row.id,
     ruc: row.ruc,
@@ -138,7 +138,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       return row.count;
     },
 
-    async export(filters: LeadExportFilters): Promise<LeadExportRow[]> {
+    async export(filters: RecordExportFilters): Promise<RecordExportRow[]> {
       let query = db
         .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id")

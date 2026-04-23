@@ -1,5 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { LeadStage } from "~/pipeline/contracts/lead-schema";
+import type { LeadStage } from "~/workflow/contracts/lead-schema";
 
 import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import {

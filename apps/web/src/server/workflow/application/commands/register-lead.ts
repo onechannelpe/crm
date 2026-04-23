@@ -9,8 +9,8 @@ import {
   canRegisterLead,
   requirePipelineActionAccess,
 } from "../policies/access";
-import type { PipelineAuditService } from "../ports/audit-service";
-import type { PipelineEngineGateway } from "../ports/engine-gateway";
+import type { WorkflowAuditService } from "../ports/audit-service";
+import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
@@ -26,8 +26,8 @@ export async function registerLead(input: {
   ruc: string;
   deps: RegisterLeadDeps;
   mutationUow: LeadMutationUow;
-  auditService: PipelineAuditService;
-  engineGateway: PipelineEngineGateway;
+  auditService: WorkflowAuditService;
+  engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
 }): Promise<Result<{ leadId: string }, DomainError>> {
   const canRegister = requirePipelineActionAccess(

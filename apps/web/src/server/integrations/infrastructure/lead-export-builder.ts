@@ -10,7 +10,7 @@ const EXPORT_HEADERS = [
   "prioridad",
 ] as const;
 
-export function buildLeadExportCsv(rows: Record<string, unknown>[]): string {
+export function buildRecordExportCsv(rows: Record<string, unknown>[]): string {
   const headers = [...EXPORT_HEADERS];
   const lines = rows.map((row) =>
     headers.map((key) => cell(row[key])).join(","),

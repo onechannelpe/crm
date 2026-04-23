@@ -5,9 +5,9 @@ import type { LeadCapabilitySet } from "./lead-types";
 export function resolveLeadCapabilities(role: Role): LeadCapabilitySet {
   const canReassign = hasPermission(role, "lead:reassign");
   const canReview = hasPermission(role, "lead:review");
-  const canInteract = hasPermission(role, "lead:pipeline");
+  const canInteract = hasPermission(role, "lead:workflow");
   const canRead =
-    hasPermission(role, "lead:pipeline") ||
+    hasPermission(role, "lead:workflow") ||
     hasPermission(role, "lead:register") ||
     hasPermission(role, "lead:commercial-input:complete") ||
     hasPermission(role, "lead:sale:create") ||

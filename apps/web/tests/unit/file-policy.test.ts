@@ -9,7 +9,7 @@ import type { WorkflowArtifact } from "../../src/server/files/types";
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {
     id: "artifact-1",
-    artifactType: "leads_export",
+    artifactType: "records_export",
     direction: "download",
     executionMode: "sync",
     status: "ready",
@@ -37,7 +37,7 @@ function makeActor(overrides?: Partial<PolicyActor>): PolicyActor {
 }
 
 describe("checkArtifactPolicy - artifact.request", () => {
-  it("allows back_office to request leads_export", () => {
+  it("allows back_office to request records_export", () => {
     const result = checkArtifactPolicy(
       makeActor({ role: "back_office" }),
       null,
@@ -93,7 +93,7 @@ describe("checkArtifactPolicy - artifact.upload", () => {
 
   it("denies upload to download-only artifact type", () => {
     const artifact = makeArtifact({
-      artifactType: "leads_export",
+      artifactType: "records_export",
       direction: "download",
       status: "requested",
     });

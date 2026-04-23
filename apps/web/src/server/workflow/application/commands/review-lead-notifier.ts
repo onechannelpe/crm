@@ -1,14 +1,14 @@
-import type { LeadStage } from "~/pipeline/contracts/lead-schema";
+import type { LeadStage } from "~/workflow/contracts/lead-schema";
 
 import type { PendingReviewLeadSubject } from "../../domain/lead-subjects";
 import {
   notifyExecutiveInputRequired,
   notifyReadyForQuotation,
 } from "../notifications";
-import type { PipelineNotificationCenter } from "../ports/notification-center";
+import type { WorkflowNotificationCenter } from "../ports/notification-center";
 
 export async function notifyLeadReviewOutcome(input: {
-  notificationCenter: PipelineNotificationCenter;
+  notificationCenter: WorkflowNotificationCenter;
   branchId: number;
   lead: PendingReviewLeadSubject;
   nextStage: LeadStage;

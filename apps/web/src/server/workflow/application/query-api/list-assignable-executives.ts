@@ -5,10 +5,10 @@ import { Err, type Result } from "~/server/shared/result";
 import type { ListAssignableExecutivesInput } from "../contracts/query-inputs";
 import type { AssignableExecutivesResult } from "../contracts/query-results";
 import { listAssignableExecutives } from "../queries/list-assignable-executives";
-import type { PipelineQueryApiDeps } from "./index";
+import type { WorkflowQueryApiDeps } from "./index";
 
 export async function listAssignableExecutivesQuery(
-  deps: PipelineQueryApiDeps,
+  deps: WorkflowQueryApiDeps,
   input: ListAssignableExecutivesInput,
 ): Promise<Result<AssignableExecutivesResult, DomainError>> {
   if (input.actor.branchId == null) {

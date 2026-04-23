@@ -1,8 +1,8 @@
 // GENERATED FILE. DO NOT EDIT.
-// Source: contracts/engine/lead-api.json
+// Source: contracts/engine/record-api.json
 // Generator: tools/codegen/bin/generate.ts
 
-export interface LeadCandidate {
+export interface RecordCandidate {
   ruc: string;
   organization_name: string;
   dni: string;
@@ -10,12 +10,12 @@ export interface LeadCandidate {
   phone_primary: string;
 }
 
-export interface LeadCandidatesResponse {
-  candidates: LeadCandidate[];
+export interface RecordCandidatesResponse {
+  candidates: RecordCandidate[];
   count: number;
 }
 
-export interface LeadImportRow {
+export interface RecordImportRow {
   ruc: string;
   organization_name: string;
   dni: string;
@@ -26,12 +26,12 @@ export interface LeadImportRow {
   branch_tag?: number;
 }
 
-export interface LeadImportRequest {
-  rows: LeadImportRow[];
+export interface RecordImportRequest {
+  rows: RecordImportRow[];
   source: string;
 }
 
-export interface LeadImportResponse {
+export interface RecordImportResponse {
   inserted: number;
   updated: number;
   skipped: number;

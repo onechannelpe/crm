@@ -1,7 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { LeadStage } from "~/pipeline/contracts/lead-schema";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { LeadStage } from "~/workflow/contracts/lead-schema";
 
 import { canViewAllLeads, resolveLeadCapabilities } from "./lead-capabilities";
 import {

@@ -14,12 +14,12 @@ import {
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import { toAppError } from "~/lib/app-errors";
+import type { LeadDetailQuotationView } from "~/server/workflow/application/queries/views/lead-detail";
 import {
   isMoneda,
   MONEDAS,
   type Moneda,
-} from "~/pipeline/contracts/lead-schema";
-import type { LeadDetailQuotationView } from "~/server/workflow/application/queries/views/lead-detail";
+} from "~/workflow/contracts/lead-schema";
 
 import { createQuotationMutation } from "../data/mutations";
 

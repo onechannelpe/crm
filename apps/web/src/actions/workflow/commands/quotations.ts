@@ -1,9 +1,9 @@
 "use server";
 
-import type { Moneda } from "~/pipeline/contracts/lead-schema";
 import { runAction } from "~/server/shared/action-runtime";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
 import { createWorkflowCommandApiRuntime } from "~/server/workflow/infrastructure/runtime/workflow-command-api-factory";
+import type { Moneda } from "~/workflow/contracts/lead-schema";
 
 export async function requestQuotationCreation(input: {
   leadId: string;

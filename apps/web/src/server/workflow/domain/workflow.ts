@@ -1,7 +1,7 @@
 import type {
   LeadPriority,
   LeadStatus,
-} from "~/pipeline/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 import type { PendingReviewLeadSubject } from "./lead-subjects";
 

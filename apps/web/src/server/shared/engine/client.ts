@@ -1,9 +1,12 @@
 import type { DomainError } from "~/server/shared/domain-error";
-import type { LeadCandidate, SearchResult } from "~/server/shared/engine/types";
-import type { SearchType } from "~/server/shared/pipeline-types";
+import type {
+  RecordCandidate,
+  SearchResult,
+} from "~/server/shared/engine/types";
 import type { Result } from "~/server/shared/result";
+import type { SearchType } from "~/server/shared/workflow-types";
 
-export interface LeadCandidatesRequest {
+export interface RecordCandidatesRequest {
   branchId: number;
   userId: number;
   amount: number;
@@ -19,6 +22,6 @@ export interface EngineClient {
     limit?: number,
   ): Promise<Result<SearchResult[], DomainError>>;
   requestCandidates(
-    input: LeadCandidatesRequest,
-  ): Promise<Result<LeadCandidate[], DomainError>>;
+    input: RecordCandidatesRequest,
+  ): Promise<Result<RecordCandidate[], DomainError>>;
 }

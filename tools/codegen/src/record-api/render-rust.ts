@@ -1,39 +1,39 @@
-import type { FieldSpec, LeadApiSpec } from "./parse.ts";
+import type { FieldSpec, RecordApiSpec } from "./parse.ts";
 
-export function renderLeadContractRust(spec: LeadApiSpec): string {
+export function renderRecordContractRust(spec: RecordApiSpec): string {
   const candidateFields = spec.response.candidate.fields;
   const importRowFields = spec.request.import_row.fields;
 
   return [
     "// GENERATED FILE. DO NOT EDIT.",
-    "// Source: contracts/engine/lead-api.json",
+    "// Source: contracts/engine/record-api.json",
     "// Generator: tools/codegen/bin/generate.ts",
     "use serde::{Deserialize, Serialize};",
     "",
     "#[derive(Debug, Serialize, Clone)]",
-    "pub struct LeadCandidate {",
+    "pub struct RecordCandidate {",
     ...candidateFields.map((f) => `    pub ${f.name}: ${rustType(f)},`),
     "}",
     "",
     "#[derive(Debug, Serialize)]",
-    "pub struct LeadCandidatesResponse {",
-    "    pub candidates: Vec<LeadCandidate>,",
+    "pub struct RecordCandidatesResponse {",
+    "    pub candidates: Vec<RecordCandidate>,",
     "    pub count: usize,",
     "}",
     "",
     "#[derive(Debug, Deserialize, Clone)]",
-    "pub struct LeadImportRow {",
+    "pub struct RecordImportRow {",
     ...importRowFields.map((f) => `    pub ${f.name}: ${rustType(f)},`),
     "}",
     "",
     "#[derive(Debug, Deserialize)]",
-    "pub struct LeadImportRequest {",
-    "    pub rows: Vec<LeadImportRow>,",
+    "pub struct RecordImportRequest {",
+    "    pub rows: Vec<RecordImportRow>,",
     "    pub source: String,",
     "}",
     "",
     "#[derive(Debug, Serialize)]",
-    "pub struct LeadImportResponse {",
+    "pub struct RecordImportResponse {",
     "    pub inserted: usize,",
     "    pub updated: usize,",
     "    pub skipped: usize,",

@@ -1,4 +1,4 @@
-import type { LeadImportType } from "~/features/leads-imports/contracts";
+import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { CsvDelimiter } from "~/server/csv/core";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import {
@@ -6,7 +6,7 @@ import {
   parseLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
 
-export interface LeadImportInvalidRow {
+export interface RecordImportInvalidRow {
   row: number;
   reason: string;
   type: "import_status" | "import_prioridad";
@@ -32,14 +32,14 @@ export function splitLeadCsvLine(
   return line.split(delimiter).map((cell) => cell.trim());
 }
 
-export function mapLeadImportRow(input: {
+export function mapRecordImportRow(input: {
   rowNumber: number;
-  importType: LeadImportType;
+  importType: RecordImportType;
   headers: readonly string[];
   cells: readonly string[];
 }):
   | { ok: true; row: ImportRowInput }
-  | { ok: false; row: LeadImportInvalidRow } {
+  | { ok: false; row: RecordImportInvalidRow } {
   const record = readRecord(input.headers, input.cells);
   const ruc = record.documento ?? "";
 

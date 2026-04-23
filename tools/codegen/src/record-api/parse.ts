@@ -12,15 +12,15 @@ export type StructSpec = {
   fields: FieldSpec[];
 };
 
-export type LeadApiSpec = {
+export type RecordApiSpec = {
   response: { candidate: StructSpec };
   request: { import_row: StructSpec };
 };
 
 const VALID_FIELD_TYPES = new Set(["string", "i32", "i64"]);
 
-export function parseLeadApiSpec(raw: unknown): LeadApiSpec {
-  const root = asObject(raw, "lead-api spec");
+export function parseRecordApiSpec(raw: unknown): RecordApiSpec {
+  const root = asObject(raw, "record-api spec");
 
   return {
     response: {

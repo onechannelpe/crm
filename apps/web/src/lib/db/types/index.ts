@@ -99,21 +99,21 @@ export {
 } from "./09-observability";
 
 export {
-  type PipelineLeadsTable,
-  type PipelineLeadCommercialInputsTable,
-  type PipelineQuotationsTable,
-  type PipelineSalesTable,
-  type PipelineLeadAssignmentsTable,
-  type PipelineHistoryEventsTable,
+  type WorkflowLeadsTable,
+  type WorkflowLeadCommercialInputsTable,
+  type WorkflowQuotationsTable,
+  type WorkflowSalesTable,
+  type WorkflowLeadAssignmentsTable,
+  type WorkflowHistoryEventsTable,
   type WorkflowAuditLogsTable,
   type LeadSourcingPoliciesTable,
 } from "./10-workflow";
 
 export {
-  type PipelineIntegrationJobsTable,
-  type PipelineIntegrationImportRowsTable,
-  type PipelineIntegrationOutboxNeedsExecutiveInputTable,
-  type PipelineIntegrationOutboxReadyForQuotationTable,
+  type WorkflowIntegrationJobsTable,
+  type WorkflowIntegrationImportRowsTable,
+  type WorkflowIntegrationOutboxNeedsExecutiveInputTable,
+  type WorkflowIntegrationOutboxReadyForQuotationTable,
 } from "./11-integration";
 
 export {
@@ -178,18 +178,18 @@ export interface Database {
   webauthn_challenges: auth.WebauthnChallengesTable;
   user_oauth_accounts: auth.UserOAuthAccountsTable;
   password_reset_tokens: auth.PasswordResetTokensTable;
-  workflow_leads: workflow.PipelineLeadsTable;
-  workflow_lead_commercial_inputs: workflow.PipelineLeadCommercialInputsTable;
-  workflow_quotations: workflow.PipelineQuotationsTable;
-  workflow_sales: workflow.PipelineSalesTable;
-  workflow_lead_assignments: workflow.PipelineLeadAssignmentsTable;
-  workflow_history_events: workflow.PipelineHistoryEventsTable;
+  workflow_leads: workflow.WorkflowLeadsTable;
+  workflow_lead_commercial_inputs: workflow.WorkflowLeadCommercialInputsTable;
+  workflow_quotations: workflow.WorkflowQuotationsTable;
+  workflow_sales: workflow.WorkflowSalesTable;
+  workflow_lead_assignments: workflow.WorkflowLeadAssignmentsTable;
+  workflow_history_events: workflow.WorkflowHistoryEventsTable;
   workflow_audit_logs: workflow.WorkflowAuditLogsTable;
   lead_sourcing_policies: workflow.LeadSourcingPoliciesTable;
-  workflow_integration_jobs: integration.PipelineIntegrationJobsTable;
-  workflow_integration_import_rows: integration.PipelineIntegrationImportRowsTable;
-  workflow_integration_outbox_needs_executive_input: integration.PipelineIntegrationOutboxNeedsExecutiveInputTable;
-  workflow_integration_outbox_ready_for_quotation: integration.PipelineIntegrationOutboxReadyForQuotationTable;
+  workflow_integration_jobs: integration.WorkflowIntegrationJobsTable;
+  workflow_integration_import_rows: integration.WorkflowIntegrationImportRowsTable;
+  workflow_integration_outbox_needs_executive_input: integration.WorkflowIntegrationOutboxNeedsExecutiveInputTable;
+  workflow_integration_outbox_ready_for_quotation: integration.WorkflowIntegrationOutboxReadyForQuotationTable;
   workflow_artifacts: workflowFiles.WorkflowArtifactsTable;
   file_assets: workflowFiles.FileAssetsTable;
   artifact_file_bindings: workflowFiles.ArtifactFileBindingsTable;

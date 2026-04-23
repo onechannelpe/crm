@@ -1,8 +1,11 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { LeadCandidate, SearchResult } from "~/server/shared/engine/types";
-import type { SearchType } from "~/server/shared/pipeline-types";
+import type {
+  RecordCandidate,
+  SearchResult,
+} from "~/server/shared/engine/types";
 import { Ok, type Result } from "~/server/shared/result";
+import type { SearchType } from "~/server/shared/workflow-types";
 
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
@@ -114,7 +117,7 @@ export async function seedLeadsRequestFixtures(
       branchId: number;
       userId: number;
       amount: number;
-    }): Promise<Result<LeadCandidate[], DomainError>> {
+    }): Promise<Result<RecordCandidate[], DomainError>> {
       const index = input.userId - USER_ID_START;
       return Ok([
         {

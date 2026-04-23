@@ -13,7 +13,7 @@ export function createIntegrationRuntime(
     executor,
     jobs: createIntegrationJobRepo(executor),
     leads: createLeadRepo(executor),
-    leadExportQuery: createLeadQueries(executor),
+    recordExportQuery: createLeadQueries(executor),
     users: createUsersRepo(executor),
   };
 }

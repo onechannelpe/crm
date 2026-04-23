@@ -1,38 +1,38 @@
-export type LeadImportType = "import_status" | "import_prioridad";
+export type RecordImportType = "import_status" | "import_prioridad";
 
-export type LeadImportJobStatus =
+export type RecordImportJobStatus =
   | "PENDING"
   | "PROCESSING"
   | "COMPLETED"
   | "FAILED";
 
-export interface LeadImportProgressEvent {
+export interface RecordImportProgressEvent {
   type: "job_progress";
   jobId: string;
-  importType: LeadImportType;
-  status: LeadImportJobStatus;
+  importType: RecordImportType;
+  status: RecordImportJobStatus;
   rowsApplied: number;
   rowsFailed: number;
   rowsTotal: number;
   errorMessage: string | null;
 }
 
-const LEAD_IMPORT_TOPIC_PREFIX = "leads.import.job";
+const RECORD_IMPORT_TOPIC_PREFIX = "records.import.job";
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-export function leadImportTopic(jobId: string): string {
-  return `${LEAD_IMPORT_TOPIC_PREFIX}.${jobId}`;
+export function recordImportTopic(jobId: string): string {
+  return `${RECORD_IMPORT_TOPIC_PREFIX}.${jobId}`;
 }
 
-export function parseLeadImportTopic(topic: string): string | null {
-  if (!topic.startsWith(`${LEAD_IMPORT_TOPIC_PREFIX}.`)) {
+export function parseRecordImportTopic(topic: string): string | null {
+  if (!topic.startsWith(`${RECORD_IMPORT_TOPIC_PREFIX}.`)) {
     return null;
   }
 
-  const rawJobId = topic.slice(`${LEAD_IMPORT_TOPIC_PREFIX}.`.length);
+  const rawJobId = topic.slice(`${RECORD_IMPORT_TOPIC_PREFIX}.`.length);
   if (rawJobId.trim().length < 1) {
     return null;
   }
@@ -40,9 +40,9 @@ export function parseLeadImportTopic(topic: string): string | null {
   return rawJobId;
 }
 
-export function isLeadImportProgressEvent(
+export function isRecordImportProgressEvent(
   value: unknown,
-): value is LeadImportProgressEvent {
+): value is RecordImportProgressEvent {
   if (!isObjectRecord(value)) {
     return false;
   }
@@ -63,9 +63,9 @@ export function isLeadImportProgressEvent(
   );
 }
 
-export function parseLeadImportProgressMessage(
+export function parseRecordImportProgressMessage(
   raw: string,
-): LeadImportProgressEvent | null {
+): RecordImportProgressEvent | null {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -73,5 +73,5 @@ export function parseLeadImportProgressMessage(
     return null;
   }
 
-  return isLeadImportProgressEvent(parsed) ? parsed : null;
+  return isRecordImportProgressEvent(parsed) ? parsed : null;
 }

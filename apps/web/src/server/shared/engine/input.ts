@@ -1,4 +1,4 @@
-import type { SearchType } from "~/server/shared/pipeline-types";
+import type { SearchType } from "~/server/shared/workflow-types";
 
 function isAsciiDigits(value: string): boolean {
   return /^\d+$/.test(value);

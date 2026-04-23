@@ -9,7 +9,7 @@ import {
 const ALL_PERMISSIONS: Permission[] = [
   "lead:rate:simulate",
   "lead:work",
-  "lead:pipeline",
+  "lead:workflow",
   "sales:create",
   "sales:submit",
   "sales:review",
@@ -79,27 +79,27 @@ describe("rbac boundaries", () => {
     expect(executivePerms.has("lead:rate:simulate")).toBe(true);
     expect(supervisorPerms.has("team:manage")).toBe(true);
     expect(executivePerms.has("team:manage")).toBe(false);
-    expect(executivePerms.has("lead:pipeline")).toBe(true);
-    expect(supervisorPerms.has("lead:pipeline")).toBe(false);
+    expect(executivePerms.has("lead:workflow")).toBe(true);
+    expect(supervisorPerms.has("lead:workflow")).toBe(false);
     expect(executivePerms.has("lead:register")).toBe(true);
     expect(supervisorPerms.has("lead:register")).toBe(false);
     expect(supervisorPerms.has("lead:reassign")).toBe(true);
   });
 
-  it("keeps pipeline permissions scoped to the intended roles", () => {
-    expect(hasPermission("executive", "lead:pipeline")).toBe(true);
+  it("keeps workflow permissions scoped to the intended roles", () => {
+    expect(hasPermission("executive", "lead:workflow")).toBe(true);
     expect(hasPermission("executive", "lead:register")).toBe(true);
     expect(hasPermission("executive", "lead:review")).toBe(false);
     expect(hasPermission("executive", "quotation:manage")).toBe(false);
 
-    expect(hasPermission("back_office", "lead:pipeline")).toBe(false);
+    expect(hasPermission("back_office", "lead:workflow")).toBe(false);
     expect(hasPermission("back_office", "lead:view:all")).toBe(true);
     expect(hasPermission("back_office", "lead:review")).toBe(true);
     expect(hasPermission("back_office", "quotation:manage")).toBe(true);
     expect(hasPermission("back_office", "integration:manage")).toBe(true);
     expect(hasPermission("back_office", "lead:register")).toBe(false);
 
-    expect(hasPermission("admin", "lead:pipeline")).toBe(false);
+    expect(hasPermission("admin", "lead:workflow")).toBe(false);
     expect(hasPermission("admin", "lead:register")).toBe(true);
     expect(hasPermission("admin", "lead:reassign")).toBe(true);
     expect(hasPermission("admin", "quotation:manage")).toBe(true);
@@ -108,7 +108,7 @@ describe("rbac boundaries", () => {
     expect(hasPermission("supervisor", "lead:reassign")).toBe(true);
     expect(hasPermission("sales_manager", "lead:reassign")).toBe(true);
 
-    expect(hasPermission("superuser", "lead:pipeline")).toBe(false);
+    expect(hasPermission("superuser", "lead:workflow")).toBe(false);
     expect(hasPermission("superuser", "lead:register")).toBe(true);
     expect(hasPermission("superuser", "lead:review")).toBe(true);
     expect(hasPermission("superuser", "quotation:manage")).toBe(true);

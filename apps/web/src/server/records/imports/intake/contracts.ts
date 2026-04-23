@@ -1,11 +1,11 @@
-import type { LeadImportType } from "~/features/leads-imports/contracts";
+import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { CsvDelimiter } from "~/server/csv/core";
 
-export const LEAD_IMPORT_DELIMITERS: readonly CsvDelimiter[] = [
+export const RECORD_IMPORT_DELIMITERS: readonly CsvDelimiter[] = [
   ",",
   ";",
 ] as const;
-export const MAX_LEAD_IMPORT_ROWS = 10_000;
+export const MAX_RECORD_IMPORT_ROWS = 10_000;
 
 export const STATUS_IMPORT_HEADERS = [
   "nro_de_solicitud",
@@ -27,25 +27,25 @@ export const PRIORITY_IMPORT_HEADERS = [
   "categoria",
 ] as const;
 
-export type LeadImportTypeDetectionErrorCode =
+export type RecordImportTypeDetectionErrorCode =
   | "unknown_headers"
   | "ambiguous_headers"
   | "missing_required_headers";
 
-export type LeadImportCsvInspectionResult =
+export type RecordImportCsvInspectionResult =
   | {
       ok: true;
-      importType: LeadImportType;
+      importType: RecordImportType;
       headers: string[];
     }
   | {
       ok: false;
-      code: LeadImportTypeDetectionErrorCode;
+      code: RecordImportTypeDetectionErrorCode;
       message: string;
       headers: string[];
     };
 
-export type LeadImportStreamFactory = () => ReadableStream<Uint8Array>;
+export type RecordImportStreamFactory = () => ReadableStream<Uint8Array>;
 
 export interface HeaderMatch {
   expected: readonly string[];

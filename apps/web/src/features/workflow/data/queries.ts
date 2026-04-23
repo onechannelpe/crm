@@ -4,7 +4,7 @@ import {
   queryAssignableExecutives,
   queryLeadDetail,
   queryLeadList,
-} from "~/actions/workflow/queries/leads";
+} from "~/actions/workflow/queries/records";
 import type { AssignableExecutiveView } from "~/server/workflow/application/queries/views/assignable-executive";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/workflow/application/queries/views/lead-list";
