@@ -1,7 +1,11 @@
 .layout {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   display: grid;
   grid-template-columns: var(--record-left-panel-width, 280px) 1fr;
   grid-template-rows: minmax(0, 1fr);
   height: 100%;
+  overflow: hidden;
   width: 100%;
 }

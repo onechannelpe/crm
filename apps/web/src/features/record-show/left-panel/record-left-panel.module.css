@@ -5,6 +5,7 @@
   border-top-left-radius: var(--radius-md);
   box-sizing: border-box;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   height: 100%;
   overflow: hidden;

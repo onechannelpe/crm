@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import Checkbox from "~/components/icons/checkbox";
@@ -39,11 +39,17 @@ export function RecordRightPanel(props: RecordRightPanelProps) {
         onHiddenTabSelect={setActiveTab}
       />
       <div class={styles.tabContent}>
-        <Dynamic
-          component={TAB_COMPONENTS[activeTab()]}
-          mode="view"
-          data={props.data}
-        />
+        <Show when={activeTab()} keyed>
+          {(tab) => (
+            <div class={styles.tabPane}>
+              <Dynamic
+                component={TAB_COMPONENTS[tab]}
+                mode="view"
+                data={props.data}
+              />
+            </div>
+          )}
+        </Show>
       </div>
     </div>
   );

@@ -1,12 +1,13 @@
 .card {
+  align-items: center;
   border-bottom: 1px solid var(--border-light, var(--border));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-2);
-  min-height: 127px;
-  padding: var(--spacing-4) var(--spacing-4) var(--spacing-3);
+  gap: var(--spacing-3);
+  height: 127px;
+  justify-content: center;
+  padding: var(--spacing-4);
 }
 
 .iconWrapper {
@@ -23,13 +24,13 @@
 
 .name {
   color: var(--foreground);
-  font-size: var(--font-size-heading-sm);
+  font-size: var(--font-size-heading-md);
   font-weight: var(--font-weight-semibold);
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
+  width: 90%;
 }
 
 .ruc {
@@ -52,27 +53,29 @@
 
 @media (max-width: 768px) {
   .card {
-    flex-direction: row;
     align-items: flex-start;
-    min-height: 77px;
-    gap: var(--spacing-3);
+    flex-direction: row;
+    gap: var(--spacing-2);
+    height: 77px;
+    justify-content: flex-start;
   }
 
   .iconWrapper {
+    flex-shrink: 0;
     height: 32px;
     width: 32px;
-    flex-shrink: 0;
   }
 
   .info {
     display: flex;
-    flex-direction: column;
     flex: 1;
+    flex-direction: column;
     min-width: 0;
   }
 
   .name {
     text-align: left;
+    width: 100%;
   }
 
   .ruc,

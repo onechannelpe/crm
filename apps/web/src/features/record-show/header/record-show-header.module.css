@@ -2,17 +2,20 @@
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--foreground-secondary);
   display: inline-flex;
   flex-shrink: 0;
   height: 28px;
   justify-content: center;
+  transition:
+    background var(--motion-fast) ease,
+    color var(--motion-fast) ease;
   width: 28px;
 }
 
 .drawerExpandButton:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 

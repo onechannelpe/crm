@@ -44,6 +44,7 @@
   justify-content: center;
   position: relative;
   text-decoration: none;
+  transition: color var(--motion-fast) ease;
 }
 
 .tabContent,
@@ -53,6 +54,7 @@
   font-weight: var(--font-weight-medium);
   gap: var(--spacing-1);
   padding: var(--spacing-1) var(--spacing-2);
+  transition: background var(--motion-fast) ease;
   white-space: nowrap;
 }
 
@@ -101,10 +103,10 @@
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-elevation-2);
   min-width: 160px;
-  padding: 4px;
+  padding: var(--spacing-1);
   position: absolute;
   right: 0;
-  top: calc(100% + 4px);
+  top: calc(100% + var(--spacing-1));
   z-index: 2;
 }
 
@@ -112,13 +114,14 @@
   align-items: center;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--foreground);
   cursor: pointer;
   display: flex;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   justify-content: flex-start;
-  padding: 6px 8px;
+  padding: var(--spacing-1) var(--spacing-2);
+  transition: background var(--motion-fast) ease;
   width: 100%;
 }
 
