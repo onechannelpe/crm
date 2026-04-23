@@ -15,6 +15,12 @@ export default defineConfig({
     fileParallelism: false,
     alias: {
       "~": path.resolve(__dirname, "./src"),
+      bun: path.resolve(__dirname, "./tests/mocks/bun.ts"),
+    },
+  },
+  resolve: {
+    alias: {
+      bun: path.resolve(__dirname, "./tests/mocks/bun.ts"),
     },
   },
 });
