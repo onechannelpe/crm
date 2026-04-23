@@ -13,13 +13,10 @@ export default defineConfig({
     runner: "./tests/bench/runner.ts",
     environment: "node",
     fileParallelism: false,
-    alias: {
-      "~": path.resolve(__dirname, "./src"),
-      bun: path.resolve(__dirname, "./tests/mocks/bun.ts"),
-    },
   },
   resolve: {
     alias: {
+      "~": path.resolve(__dirname, "./src"),
       bun: path.resolve(__dirname, "./tests/mocks/bun.ts"),
     },
   },
