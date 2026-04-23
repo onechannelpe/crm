@@ -14,7 +14,7 @@ function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
     return type;
   }
 
-  throw new Error(`Unsupported lead import type: ${type}`);
+  throw new Error(`Unsupported record import type: ${type}`);
 }
 
 export function buildRecordImportProgressEvent(input: {

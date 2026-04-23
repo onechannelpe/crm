@@ -1,5 +1,6 @@
 "use server";
 
+import type { RecordImportType } from "~/features/records-imports/contracts";
 import { notFoundError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
@@ -52,7 +53,7 @@ async function getAuthorizedRecordImportJob(
 export async function uploadRecordImportFile(formData: FormData): Promise<{
   artifactId: string;
   jobId: string;
-  importType: "import_status" | "import_prioridad";
+  importType: RecordImportType;
   rowsTotal: number;
 }> {
   const file = formData.get("file");

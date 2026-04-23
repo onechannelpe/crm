@@ -9,7 +9,7 @@ import {
 export interface RecordImportInvalidRow {
   row: number;
   reason: string;
-  type: "import_status" | "import_prioridad";
+  type: RecordImportType;
 }
 
 function readRecord(

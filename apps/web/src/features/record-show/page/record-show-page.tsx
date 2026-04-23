@@ -13,17 +13,17 @@ import { RecordRightPanel } from "../right-panel/record-right-panel";
 import styles from "./record-show-page.module.css";
 
 type RecordShowPageProps = {
-  leadId: string;
+  recordId: string;
 };
 
 const POLL_INTERVAL_MS = 3_500;
 const POLL_TIMEOUT_MS = 60_000;
 
 export function RecordShowPage(props: RecordShowPageProps) {
-  const data = createAsync(() => leadDetailQuery(props.leadId));
+  const data = createAsync(() => leadDetailQuery(props.recordId));
 
   createRecordPageController({
-    leadId: () => props.leadId,
+    leadId: () => props.recordId,
     detailData: data,
     pollIntervalMs: POLL_INTERVAL_MS,
     pollTimeoutMs: POLL_TIMEOUT_MS,

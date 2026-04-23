@@ -4,5 +4,5 @@ import { RecordShowPage } from "~/features/record-show/page/record-show-page";
 
 export default function RecordShowRoute() {
   const params = useParams<{ recordId: string }>();
-  return <RecordShowPage leadId={params.recordId} />;
+  return <RecordShowPage recordId={params.recordId} />;
 }
