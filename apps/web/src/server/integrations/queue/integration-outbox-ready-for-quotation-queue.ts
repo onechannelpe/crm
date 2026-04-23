@@ -55,7 +55,7 @@ export function createReadyForQuotationOutboxQueue(
             priority: "normal",
             title: "Prospecto listo para cotizacion",
             body_text: `El prospecto RUC ${job.ruc} esta listo para cotizar`,
-            action_url: `/quotations/${job.lead_id}`,
+            action_url: `/leads/${job.lead_id}`,
             dedupe_key: `lead_rfq_${job.lead_id}`,
             metadata_json: null,
             created_at: Date.now(),
