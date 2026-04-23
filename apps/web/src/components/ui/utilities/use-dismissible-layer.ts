@@ -6,14 +6,20 @@ interface UseDismissibleLayerOptions {
   enabled: () => boolean;
   onDismiss: () => void;
   getContainer: () => HTMLElement | undefined;
+  getAdditionalContainers?: () => Array<HTMLElement | undefined>;
 }
 
 export function useDismissibleLayer(options: UseDismissibleLayerOptions) {
   const handlePointerDown = (event: PointerEvent) => {
     const container = options.getContainer();
+    const additional = options.getAdditionalContainers?.() ?? [];
     const target = event.target;
     if (!options.enabled() || !container || !(target instanceof Node)) return;
-    if (!container.contains(target)) {
+    const insidePrimary = container.contains(target);
+    const insideAdditional = additional.some(
+      (candidate) => candidate?.contains(target) === true,
+    );
+    if (!insidePrimary && !insideAdditional) {
       options.onDismiss();
     }
   };

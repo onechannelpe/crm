@@ -12,14 +12,14 @@ export type LeadSortKey =
   | "ruc_desc";
 
 export const LEAD_WORKSPACE_SORTS = [
-  { value: "createdAt_desc", label: "Registro: más recientes" },
-  { value: "createdAt_asc", label: "Registro: más antiguos" },
-  { value: "updatedAt_desc", label: "Última modificación: más recientes" },
-  { value: "updatedAt_asc", label: "Última modificación: más antiguos" },
-  { value: "registeredBy_asc", label: "Registrado por: A-Z" },
-  { value: "registeredBy_desc", label: "Registrado por: Z-A" },
-  { value: "ruc_asc", label: "RUC A-Z" },
-  { value: "ruc_desc", label: "RUC Z-A" },
+  { value: "createdAt_desc", label: "Más recientes" },
+  { value: "createdAt_asc", label: "Más antiguos" },
+  { value: "updatedAt_desc", label: "Más recientes" },
+  { value: "updatedAt_asc", label: "Más antiguos" },
+  { value: "registeredBy_asc", label: "A-Z" },
+  { value: "registeredBy_desc", label: "Z-A" },
+  { value: "ruc_asc", label: "A-Z" },
+  { value: "ruc_desc", label: "Z-A" },
 ] as const satisfies ReadonlyArray<{ label: string; value: LeadSortKey }>;
 
 export function sortLeadRows(leads: LeadListRowView[], sortKey: LeadSortKey) {

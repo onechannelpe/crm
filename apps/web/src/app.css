@@ -96,6 +96,36 @@
   --background-transparent-light: var(--bg-translucent);
   --background-transparent-medium: var(--bg-translucent-medium);
 
+  --t-spacing-0: 0px;
+  --t-spacing-1: var(--spacing-1);
+  --t-spacing-2: var(--spacing-2);
+  --t-spacing-3: var(--spacing-3);
+  --t-spacing-4: var(--spacing-4);
+  --t-spacing-5: var(--spacing-5);
+  --t-spacing-6: var(--spacing-6);
+  --t-spacing-7: var(--spacing-7);
+  --t-spacing-8: var(--spacing-8);
+  --t-spacing-9: var(--spacing-9);
+  --t-spacing-10: var(--spacing-10);
+  --t-spacing-11: var(--spacing-11);
+  --t-spacing-12: var(--spacing-12);
+  --t-border-radius-xs: 2px;
+  --t-border-radius-sm: var(--radius-sm);
+  --t-border-radius-md: var(--radius-md);
+  --t-border-radius-xl: 20px;
+  --t-border-radius-xxl: 40px;
+  --t-font-size-xxs: 0.625rem;
+  --t-font-size-xs: 0.85rem;
+  --t-font-size-sm: 0.92rem;
+  --t-font-size-md: 1rem;
+  --t-font-size-lg: 1.23rem;
+  --t-font-size-xl: 1.54rem;
+  --t-font-size-xxl: 1.85rem;
+  --t-font-weight-regular: 400;
+  --t-font-weight-medium: 500;
+  --t-font-weight-semi-bold: 600;
+  --t-font-family: var(--font-sans);
+
   /* accent blue (focus rings, active borders) */
   --color-blue: color(display-p3 0.306 0.506 0.957);
 
@@ -146,6 +176,22 @@
   --border-light: color(display-p3 0.965 0.965 0.965);
   --input: color(display-p3 0.945 0.945 0.945);
   --ring: color(display-p3 0.2 0.2 0.2);
+
+  --t-background-primary: var(--background);
+  --t-background-secondary: var(--secondary);
+  --t-background-transparent-lighter: var(--background-transparent-lighter);
+  --t-background-transparent-light: var(--background-transparent-light);
+  --t-background-transparent-medium: var(--background-transparent-medium);
+  --t-border-color-strong: color(display-p3 0.839 0.839 0.839);
+  --t-border-color-medium: color(display-p3 0.922 0.922 0.922);
+  --t-border-color-light: color(display-p3 0.945 0.945 0.945);
+  --t-font-color-primary: var(--foreground);
+  --t-font-color-secondary: var(--foreground-secondary);
+  --t-font-color-tertiary: var(--foreground-tertiary);
+  --t-font-color-light: var(--foreground-light);
+  --t-blur-light: blur(6px) saturate(200%) contrast(50%) brightness(130%);
+  --t-blur-medium: blur(12px) saturate(200%) contrast(50%) brightness(130%);
+  --t-blur-strong: blur(20px) saturate(200%) contrast(50%) brightness(130%);
 
   --shadow-elevation-1:
     0px 2px 4px 0px color(display-p3 0 0 0 / 0.039),
@@ -207,6 +253,22 @@
   --border-light: color(display-p3 0.098 0.098 0.098);
   --input: color(display-p3 0.114 0.114 0.114);
   --ring: color(display-p3 0.922 0.922 0.922);
+
+  --t-background-primary: var(--background);
+  --t-background-secondary: var(--secondary);
+  --t-background-transparent-lighter: var(--background-transparent-lighter);
+  --t-background-transparent-light: var(--background-transparent-light);
+  --t-background-transparent-medium: var(--background-transparent-medium);
+  --t-border-color-strong: color(display-p3 0.282 0.282 0.282);
+  --t-border-color-medium: color(display-p3 0.133 0.133 0.133);
+  --t-border-color-light: color(display-p3 0.114 0.114 0.114);
+  --t-font-color-primary: var(--foreground);
+  --t-font-color-secondary: var(--foreground-secondary);
+  --t-font-color-tertiary: var(--foreground-tertiary);
+  --t-font-color-light: var(--foreground-light);
+  --t-blur-light: blur(6px) saturate(200%) contrast(100%) brightness(130%);
+  --t-blur-medium: blur(12px) saturate(200%) contrast(100%) brightness(130%);
+  --t-blur-strong: blur(20px) saturate(200%) contrast(100%) brightness(130%);
 
   --shadow-elevation-1:
     0px 2px 4px 0px color(display-p3 0 0 0 / 0.04),

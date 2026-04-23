@@ -3,24 +3,24 @@ import type { LeadListRowView } from "~/server/workflow/application/queries/view
 
 export const LEAD_WORKSPACE_FILTERS = [
   { value: "all", label: "Todos" },
-  { value: "updated_today", label: "Modificados hoy" },
+  { value: "updated_today", label: "Hoy" },
   {
     value: "stage:PENDING_EXTERNAL_REVIEW",
-    label: "Etapa: Pendiente revisión",
+    label: "Pendiente revisión",
   },
   {
     value: "stage:NEEDS_EXECUTIVE_INPUT",
-    label: "Etapa: Necesita información ejecutiva",
+    label: "Necesita información ejecutiva",
   },
-  { value: "stage:READY_FOR_QUOTATION", label: "Etapa: Listo para cotizar" },
-  { value: "stage:QUOTED", label: "Etapa: Cotizado" },
-  { value: "stage:READY_FOR_SALE", label: "Etapa: Listo para venta" },
-  { value: "stage:CONVERTED", label: "Etapa: Convertido" },
-  { value: "stage:REJECTED_BY_STATUS", label: "Etapa: Rechazado" },
-  { value: "status:DISPONIBLE", label: "Estado: Disponible" },
-  { value: "status:SIN RESULTADO", label: "Estado: Sin resultado" },
-  { value: "status:CARTERIZADO", label: "Estado: Carterizado" },
-  { value: "status:STOCK", label: "Estado: Stock" },
+  { value: "stage:READY_FOR_QUOTATION", label: "Listo para cotizar" },
+  { value: "stage:QUOTED", label: "Cotizado" },
+  { value: "stage:READY_FOR_SALE", label: "Listo para venta" },
+  { value: "stage:CONVERTED", label: "Convertido" },
+  { value: "stage:REJECTED_BY_STATUS", label: "Rechazado" },
+  { value: "status:DISPONIBLE", label: "Disponible" },
+  { value: "status:SIN RESULTADO", label: "Sin resultado" },
+  { value: "status:CARTERIZADO", label: "Carterizado" },
+  { value: "status:STOCK", label: "Stock" },
 ] as const;
 
 export type LeadWorkspaceFilterValue =
