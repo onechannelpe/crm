@@ -1,7 +1,7 @@
 use axum::Router;
 use axum::routing::get;
 use axum_test::TestServer;
-use leads::api::{RecordState, router as lead_router};
+use leads::api::{RecordState, router as record_router};
 use leads::service::{CandidateService, ImportService};
 use rusqlite::Connection;
 use search::api::{SearchState, router as search_router};
@@ -102,7 +102,7 @@ pub fn make_test_server() -> (TestServer, tempfile::NamedTempFile) {
             get(|| async { axum::Json(serde_json::json!({"status": "ok"})) }),
         )
         .merge(search_router(search_state))
-        .merge(lead_router(record_state));
+        .merge(record_router(record_state));
 
     let server = TestServer::new(app);
     (server, db)

@@ -26,7 +26,7 @@ pub struct RecordState {
 pub fn router(state: Arc<RecordState>) -> Router {
     Router::new()
         .route("/v1/records/candidates", post(handle_record_candidates))
-        .route("/v1/records/imports", post(handle_record_import))
+        .route("/v1/records/imports", post(handle_record_imports))
         .with_state(state)
 }
 
@@ -75,17 +75,17 @@ async fn handle_record_candidates_with_request_id(
     ))
 }
 
-async fn handle_record_import(
+async fn handle_record_imports(
     State(state): State<Arc<RecordState>>,
     headers: HeaderMap,
     request: Request,
 ) -> Result<Response, RequestError> {
     let request_id = Uuid::new_v4().to_string();
-    handle_record_import_with_request_id(state, headers, request, request_id).await
+    handle_record_imports_with_request_id(state, headers, request, request_id).await
 }
 
 #[tracing::instrument(skip(state, headers, request), fields(request_id = %request_id))]
-async fn handle_record_import_with_request_id(
+async fn handle_record_imports_with_request_id(
     state: Arc<RecordState>,
     headers: HeaderMap,
     request: Request,
