@@ -3,7 +3,7 @@ use axum::routing::get;
 use engine::config::EngineConfig;
 use engine::health::health_handler;
 use engine::logging;
-use leads::api::{LeadState, router as lead_router};
+use leads::api::{RecordState, router as lead_router};
 use leads::repo::SqliteLeadsRepository;
 use leads::service::{CandidateService, ImportService};
 use search::api::{SearchState, router as search_router};
@@ -77,7 +77,7 @@ async fn run() -> Result<(), StartupError> {
         hmac: hmac.clone(),
         limiter: limiter.clone(),
     });
-    let lead_state = Arc::new(LeadState {
+    let record_state = Arc::new(RecordState {
         service: Arc::new(CandidateService::with_repo(
             leads_pool.clone(),
             cfg.max_limit,
@@ -98,7 +98,7 @@ async fn run() -> Result<(), StartupError> {
             get(move || health_handler(health_pool.clone())),
         )
         .merge(search_router(search_state))
-        .merge(lead_router(lead_state));
+        .merge(lead_router(record_state));
 
     let bind = format!("{}:{}", cfg.host, cfg.port);
     let listener = tokio::net::TcpListener::bind(&bind)

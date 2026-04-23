@@ -16,32 +16,32 @@ use uuid::Uuid;
 
 const IMPORT_BODY_LIMIT: usize = 10 * 1024 * 1024; // 10 MB
 
-pub struct LeadState {
+pub struct RecordState {
     pub service: Arc<CandidateService>,
     pub import_service: Arc<ImportService>,
     pub hmac: Arc<HmacVerifier>,
     pub limiter: Arc<RateLimiter>,
 }
 
-pub fn router(state: Arc<LeadState>) -> Router {
+pub fn router(state: Arc<RecordState>) -> Router {
     Router::new()
-        .route("/v1/lead-candidates", post(handle_lead_candidates))
-        .route("/v1/leads/import", post(handle_import))
+        .route("/v1/records/candidates", post(handle_record_candidates))
+        .route("/v1/records/imports", post(handle_record_import))
         .with_state(state)
 }
 
-async fn handle_lead_candidates(
-    State(state): State<Arc<LeadState>>,
+async fn handle_record_candidates(
+    State(state): State<Arc<RecordState>>,
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<Response, RequestError> {
     let request_id = Uuid::new_v4().to_string();
-    handle_lead_candidates_with_request_id(state, headers, body, request_id).await
+    handle_record_candidates_with_request_id(state, headers, body, request_id).await
 }
 
 #[tracing::instrument(skip(state, headers, body), fields(request_id = %request_id))]
-async fn handle_lead_candidates_with_request_id(
-    state: Arc<LeadState>,
+async fn handle_record_candidates_with_request_id(
+    state: Arc<RecordState>,
     headers: HeaderMap,
     body: Bytes,
     request_id: String,
@@ -53,7 +53,7 @@ async fn handle_lead_candidates_with_request_id(
         ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
     })?;
 
-    let limiter_key = format!("lead_candidates:{key_id}");
+    let limiter_key = format!("records_candidates:{key_id}");
     if !state
         .limiter
         .allow(&limiter_key, candidate_cost(req.amount))
@@ -75,18 +75,18 @@ async fn handle_lead_candidates_with_request_id(
     ))
 }
 
-async fn handle_import(
-    State(state): State<Arc<LeadState>>,
+async fn handle_record_import(
+    State(state): State<Arc<RecordState>>,
     headers: HeaderMap,
     request: Request,
 ) -> Result<Response, RequestError> {
     let request_id = Uuid::new_v4().to_string();
-    handle_import_with_request_id(state, headers, request, request_id).await
+    handle_record_import_with_request_id(state, headers, request, request_id).await
 }
 
 #[tracing::instrument(skip(state, headers, request), fields(request_id = %request_id))]
-async fn handle_import_with_request_id(
-    state: Arc<LeadState>,
+async fn handle_record_import_with_request_id(
+    state: Arc<RecordState>,
     headers: HeaderMap,
     request: Request,
     request_id: String,
@@ -106,7 +106,7 @@ async fn handle_import_with_request_id(
         ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
     })?;
 
-    let limiter_key = format!("leads_import:{key_id}");
+    let limiter_key = format!("records_imports:{key_id}");
     if !state
         .limiter
         .allow(&limiter_key, import_cost(req.rows.len()))
