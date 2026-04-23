@@ -1,21 +1,50 @@
 import { A, createAsync } from "@solidjs/router";
-import { createMemo } from "solid-js";
+import { Show, createMemo, type ParentProps } from "solid-js";
 
+import Building2 from "~/components/icons/building-2";
 import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
 import { PageHeader } from "~/features/settings-shell/page/page-header";
-import { leadDetailQuery } from "~/features/workflow/data/queries";
+import {
+  leadDetailQuery,
+  leadListQuery,
+} from "~/features/workflow/data/queries";
 
 import styles from "./record-show-header.module.css";
 
-type RecordShowHeaderProps = { leadId: string };
+type RecordShowHeaderProps = ParentProps<{ leadId: string }>;
+
+const LEAD_NAVIGATION_LIMIT = 200;
 
 export function RecordShowHeader(props: RecordShowHeaderProps) {
   const { expanded, isMobile, setExpanded } = useNavigationDrawerState();
   const data = createAsync(() => leadDetailQuery(props.leadId));
+  const leadList = createAsync(() =>
+    leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
+  );
+
   const displayName = createMemo(
     () => data()?.lead.razonSocial ?? data()?.lead.ruc ?? "—",
   );
+
+  const currentIndex = createMemo(() => {
+    const rows = leadList()?.rows;
+    if (!rows) {
+      return -1;
+    }
+
+    return rows.findIndex((row) => row.id === props.leadId);
+  });
+
+  const paginationLabel = createMemo(() => {
+    const totalCount = leadList()?.totalCount;
+    const index = currentIndex();
+    if (!totalCount || index < 0) {
+      return null;
+    }
+
+    return `(${index + 1}/${totalCount})`;
+  });
 
   return (
     <PageHeader
@@ -34,12 +63,24 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
       title={
         <span class={styles.breadcrumb}>
           <A href="/records" class={styles.breadcrumbLink}>
-            Registros
+            <span class={styles.breadcrumbPrefix}>
+              <span class={styles.objectIconBadge}>
+                <Building2 size={14} />
+              </span>
+              <span>Registros</span>
+            </span>
           </A>
           <span class={styles.breadcrumbSep}>/</span>
-          <span class={styles.breadcrumbCurrent}>{displayName()}</span>
+          <span class={styles.breadcrumbCurrent} title={displayName()}>
+            {displayName()}
+          </span>
+          <Show when={paginationLabel()}>
+            {(label) => <span class={styles.paginationInfo}>{label()}</span>}
+          </Show>
         </span>
       }
-    />
+    >
+      {props.children}
+    </PageHeader>
   );
 }
