@@ -1,0 +1,50 @@
+.drawerExpandButton {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.drawerExpandButton:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.breadcrumb {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-2);
+  overflow: hidden;
+}
+
+.breadcrumbLink {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.breadcrumbLink:hover {
+  color: var(--foreground);
+}
+
+.breadcrumbSep {
+  color: var(--foreground-tertiary);
+  flex-shrink: 0;
+}
+
+.breadcrumbCurrent {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

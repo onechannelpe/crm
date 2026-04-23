@@ -1,0 +1,16 @@
+.panel {
+  background: var(--secondary, var(--background-transparent-lighter));
+  border-bottom-left-radius: var(--radius-md);
+  border-right: 1px solid var(--border);
+  border-top-left-radius: var(--radius-md);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scrollBody {
+  overflow-y: auto;
+  padding: var(--spacing-3) var(--spacing-3) var(--spacing-6);
+}

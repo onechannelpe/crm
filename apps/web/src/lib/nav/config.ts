@@ -53,6 +53,10 @@ export interface PageHeaderRule {
 export const PAGE_HEADERS: PageHeaderRule[] = [
   // Dynamic patterns first
   {
+    match: /^\/leads\/\d+$/,
+    header: { label: "Prospectos", icon: "leads" },
+  },
+  {
     match: /^\/sales\/[0-9]+$/,
     header: { label: "Detalle de venta", icon: "sales" },
   },
