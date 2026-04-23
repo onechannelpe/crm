@@ -67,9 +67,12 @@ export async function listArtifactsAction(input: {
 }
 
 export async function requestDownloadTokenAction(
-  artifactId: number,
+  artifactId: string,
 ): Promise<{ token: string }> {
-  const safeArtifactId = assertPositiveInt(artifactId, "artifactId");
+  const safeArtifactId = artifactId.trim();
+  if (!safeArtifactId) {
+    throw validationError("artifactId is required");
+  }
 
   return runAction({
     actionName: "files.artifact.download_token",
@@ -80,10 +83,13 @@ export async function requestDownloadTokenAction(
 }
 
 export async function uploadArtifactAction(
-  artifactId: number,
+  artifactId: string,
   formData: FormData,
 ): Promise<WorkflowArtifact> {
-  const safeArtifactId = assertPositiveInt(artifactId, "artifactId");
+  const safeArtifactId = artifactId.trim();
+  if (!safeArtifactId) {
+    throw validationError("artifactId is required");
+  }
 
   return runAction({
     actionName: "files.artifact.upload",

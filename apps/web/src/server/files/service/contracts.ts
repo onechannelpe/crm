@@ -116,13 +116,13 @@ export interface ArtifactServiceApi {
   ) => Promise<Result<ArtifactWithAsset, DomainError>>;
   uploadArtifactFile: (
     ctx: AppContext,
-    artifactId: number,
+    artifactId: string,
     file: UploadArtifactInput,
     deps: UploadArtifactDeps,
   ) => Promise<Result<WorkflowArtifact, DomainError>>;
   requestDownloadToken: (
     ctx: AppContext,
-    artifactId: number,
+    artifactId: string,
     deps: DownloadTokenDeps,
   ) => Promise<Result<{ token: string }, DomainError>>;
   executeDownload: (
@@ -132,7 +132,7 @@ export interface ArtifactServiceApi {
   ) => Promise<Result<DownloadReady, DomainError>>;
   getArtifact: (
     ctx: AppContext,
-    artifactId: number,
+    artifactId: string,
     deps: GetArtifactDeps,
   ) => Promise<Result<ArtifactWithAsset, DomainError>>;
   listArtifacts: (

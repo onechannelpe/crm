@@ -34,7 +34,7 @@ const DIRECTION_MAP: Record<
 
 async function runSyncExport(
   ctx: AppContext,
-  artifactId: number,
+  artifactId: string,
   artifactType: ArtifactType,
   workflowContext: Record<string, unknown>,
   repo: RequestArtifactRepo,

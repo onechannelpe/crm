@@ -13,7 +13,7 @@ import { actorFromCtx, DOWNLOAD_READY_STATUSES, emitEvent } from "./helpers";
 
 export async function requestDownloadToken(
   ctx: AppContext,
-  artifactId: number,
+  artifactId: string,
   deps: DownloadTokenDeps,
 ): Promise<Result<{ token: string }, DomainError>> {
   const actor = actorFromCtx(ctx);

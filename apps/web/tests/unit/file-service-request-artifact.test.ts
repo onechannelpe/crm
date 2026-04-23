@@ -42,7 +42,7 @@ describe("requestArtifact sync export metadata", () => {
 
     const deps: RequestArtifactDeps = {
       repo: {
-        insertArtifact: async () => 42,
+        insertArtifact: async () => "artifact-42",
         updateArtifactStatus: async () => {},
         findArtifactById: async (id) => ({
           id,

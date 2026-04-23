@@ -10,14 +10,14 @@ describe("executeDownload", () => {
       repo: {
         findDownloadToken: async () => ({
           id: 1,
-          artifactId: 10,
+          artifactId: "artifact-10",
           fileAssetId: 20,
           requestedByUserId: 7,
           expiresAt: 2_000_000_000_000,
           usedAt: null,
         }),
         findArtifactById: async () => ({
-          id: 10,
+          id: "artifact-10",
           artifactType: "leads_export",
           direction: "download",
           executionMode: "sync",

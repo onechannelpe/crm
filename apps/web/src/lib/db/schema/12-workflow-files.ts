@@ -3,7 +3,7 @@ import type { Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_artifacts")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("artifact_type", "varchar(60)", (col) => col.notNull())
     .addColumn("direction", "varchar(20)", (col) => col.notNull())
     .addColumn("execution_mode", "varchar(10)", (col) => col.notNull())
@@ -58,7 +58,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("artifact_file_bindings")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("artifact_id", "integer", (col) =>
+    .addColumn("artifact_id", "text", (col) =>
       col.notNull().references("workflow_artifacts.id").onDelete("cascade"),
     )
     .addColumn("file_asset_id", "integer", (col) =>
@@ -78,7 +78,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("artifact_events")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("artifact_id", "integer", (col) =>
+    .addColumn("artifact_id", "text", (col) =>
       col.notNull().references("workflow_artifacts.id").onDelete("cascade"),
     )
     .addColumn("event_type", "varchar(80)", (col) => col.notNull())
@@ -101,7 +101,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("artifact_download_tokens")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("artifact_id", "integer", (col) =>
+    .addColumn("artifact_id", "text", (col) =>
       col.notNull().references("workflow_artifacts.id").onDelete("cascade"),
     )
     .addColumn("file_asset_id", "integer", (col) =>

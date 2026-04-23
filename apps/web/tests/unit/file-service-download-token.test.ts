@@ -31,7 +31,7 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
 
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {
-    id: 42,
+    id: "artifact-42",
     artifactType: "leads_export",
     direction: "download",
     executionMode: "sync",
@@ -102,7 +102,11 @@ describe("requestDownloadToken", () => {
       },
     });
 
-    const result = await requestDownloadToken(makeContext(), 42, deps);
+    const result = await requestDownloadToken(
+      makeContext(),
+      "artifact-42",
+      deps,
+    );
 
     expect(isErr(result)).toBe(true);
     expect(isErr(result) && result.error.code).toBe(
@@ -121,7 +125,11 @@ describe("requestDownloadToken", () => {
       },
     });
 
-    const result = await requestDownloadToken(makeContext(), 42, deps);
+    const result = await requestDownloadToken(
+      makeContext(),
+      "artifact-42",
+      deps,
+    );
 
     expect(isErr(result)).toBe(false);
     expect(!isErr(result) && result.value.token.length > 10).toBe(true);
@@ -134,7 +142,11 @@ describe("requestDownloadToken", () => {
       fileAsset: null,
     });
 
-    const result = await requestDownloadToken(makeContext(), 42, deps);
+    const result = await requestDownloadToken(
+      makeContext(),
+      "artifact-42",
+      deps,
+    );
 
     expect(isErr(result)).toBe(true);
     expect(isErr(result) && result.error.code).toBe("artifact_file_not_found");
@@ -150,7 +162,11 @@ describe("requestDownloadToken", () => {
       fileAsset: makeFileAsset(),
     });
 
-    const result = await requestDownloadToken(makeContext(), 42, deps);
+    const result = await requestDownloadToken(
+      makeContext(),
+      "artifact-42",
+      deps,
+    );
 
     expect(isErr(result)).toBe(true);
     expect(isErr(result) && result.error.code).toBe("artifact_read_not_owner");

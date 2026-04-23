@@ -31,7 +31,7 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
 
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {
-    id: 42,
+    id: "artifact-42",
     artifactType: "integration_import",
     direction: "upload",
     executionMode: "async",
@@ -91,7 +91,7 @@ describe("uploadArtifactFile", () => {
 
     const result = await uploadArtifactFile(
       makeContext(),
-      42,
+      "artifact-42",
       {
         name: "import.csv",
         sizeBytes: CSV_BYTES.length,
@@ -140,7 +140,7 @@ describe("uploadArtifactFile", () => {
 
     const result = await uploadArtifactFile(
       makeContext({ now: () => operationNow }),
-      42,
+      "artifact-42",
       {
         name: "import.csv",
         sizeBytes: CSV_BYTES.length,

@@ -28,7 +28,7 @@ function hashIp(ip: string): string {
 
 export async function emitEvent(
   repo: ArtifactEventRepo,
-  artifactId: number,
+  artifactId: string,
   eventType: string,
   ctx: AppContext,
   details: Record<string, unknown> = {},
@@ -49,7 +49,7 @@ export async function emitEvent(
 
 export function buildStorageKey(
   artifactType: ArtifactType,
-  artifactId: number,
+  artifactId: string,
   now: number,
   extension: string,
 ): string {

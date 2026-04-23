@@ -958,7 +958,7 @@ export interface Database {
 }
 
 export interface WorkflowArtifactsTable {
-  id: Generated<number>;
+  id: string;
   artifact_type: "leads_export" | "integration_import";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
@@ -1003,7 +1003,7 @@ export interface FileAssetsTable {
 
 export interface ArtifactFileBindingsTable {
   id: Generated<number>;
-  artifact_id: number;
+  artifact_id: string;
   file_asset_id: number;
   binding_role: "source_upload" | "export_output" | "derived_output";
   version_no: number;
@@ -1012,7 +1012,7 @@ export interface ArtifactFileBindingsTable {
 
 export interface ArtifactEventsTable {
   id: Generated<number>;
-  artifact_id: number;
+  artifact_id: string;
   event_type: string;
   actor_user_id: number | null;
   actor_role: string | null;
@@ -1026,7 +1026,7 @@ export interface ArtifactEventsTable {
 
 export interface ArtifactDownloadTokensTable {
   id: Generated<number>;
-  artifact_id: number;
+  artifact_id: string;
   file_asset_id: number;
   token_hash: string;
   requested_by_user_id: number;
