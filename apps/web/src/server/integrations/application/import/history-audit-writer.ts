@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 
-import { createHistoryEvent } from "~/server/pipeline/domain/history";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { createHistoryEvent } from "~/server/workflow/domain/history";
 
 import type { LeadMutationOutcome } from "./types";
 

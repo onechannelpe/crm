@@ -9,12 +9,12 @@ import { createServerInfra } from "./infra";
 import { createIntegrationsRuntime } from "./integrations-runtime";
 import { createNotificationsRuntime } from "./notifications-runtime";
 import { createObservabilityRuntime } from "./observability-runtime";
-import { createPipelineRuntime } from "./pipeline-runtime";
 import { createProfilePictureRuntime } from "./profile-picture-runtime";
 import { createSearchRuntime } from "./search-runtime";
 import { createSecurityRuntime } from "./security-runtime";
 import { createTeamRuntime } from "./team-runtime";
 import { createUsersRuntime } from "./users-runtime";
+import { createWorkflowRuntime } from "./workflow-runtime";
 
 export function createServerRuntime() {
   const infra = createServerInfra();
@@ -32,7 +32,7 @@ export function createServerRuntime() {
     integrations: createIntegrationsRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),
-    pipeline: createPipelineRuntime(infra),
+    workflow: createWorkflowRuntime(infra),
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
     search: createSearchRuntime(infra),

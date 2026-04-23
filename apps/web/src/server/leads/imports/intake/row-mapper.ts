@@ -4,7 +4,7 @@ import type { ImportRowInput } from "~/server/integrations/application/import/ty
 import {
   parseLeadPriority,
   parseLeadStatus,
-} from "~/server/pipeline/domain/lead-schema-parser";
+} from "~/server/workflow/domain/lead-schema-parser";
 
 export interface LeadImportInvalidRow {
   row: number;

@@ -8,7 +8,7 @@ import TimelineEvent from "~/components/icons/timeline-event";
 import { TabStrip } from "~/features/side-panel/components/tab-strip";
 import type { TabItem } from "~/features/side-panel/components/tab-strip";
 import { TAB_COMPONENTS } from "~/features/side-panel/pages/record-page/tabs/tab-components";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import styles from "./record-right-panel.module.css";
 

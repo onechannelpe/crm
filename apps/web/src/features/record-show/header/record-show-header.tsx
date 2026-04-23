@@ -3,8 +3,8 @@ import { createMemo } from "solid-js";
 
 import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
-import { leadDetailQuery } from "~/features/pipeline/data/queries";
 import { PageHeader } from "~/features/settings-shell/page/page-header";
+import { leadDetailQuery } from "~/features/workflow/data/queries";
 
 import styles from "./record-show-header.module.css";
 

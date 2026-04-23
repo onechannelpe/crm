@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createPipelineCommandApiRuntime } from "../../src/server/pipeline/infrastructure/runtime/pipeline-command-api-factory";
+import { createWorkflowCommandApiRuntime } from "../../src/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -20,8 +20,8 @@ describe("register lead", () => {
   it("fills legal name and address from engine enrichment and writes history events", async () => {
     const auditLog = vi.fn<() => Promise<void>>(async () => undefined);
 
-    const commandApi = createPipelineCommandApiRuntime({
-      deps: runtime.pipeline.deps,
+    const commandApi = createWorkflowCommandApiRuntime({
+      deps: runtime.workflow.deps,
       executor: runtime.ctx.db,
       notificationCenter: {
         notifyUsers: async () => {},
@@ -68,8 +68,8 @@ describe("register lead", () => {
   });
 
   it("keeps registration working when enrichment is unavailable", async () => {
-    const commandApi = createPipelineCommandApiRuntime({
-      deps: runtime.pipeline.deps,
+    const commandApi = createWorkflowCommandApiRuntime({
+      deps: runtime.workflow.deps,
       executor: runtime.ctx.db,
       notificationCenter: {
         notifyUsers: async () => {},

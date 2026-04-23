@@ -2,10 +2,6 @@ import { createMemo, For, Show } from "solid-js";
 
 import Checkbox from "~/components/icons/checkbox";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import {
-  blockingTaskLabel,
-  mapLeadActionsToUi,
-} from "~/features/pipeline/detail/lead-workflow-ui";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import {
   ActivityListCard,
@@ -18,7 +14,11 @@ import {
   ActivitySection,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
+import {
+  blockingTaskLabel,
+  mapLeadActionsToUi,
+} from "~/features/workflow/detail/lead-workflow-ui";
+import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import type { TabContentProps } from "./content-props";
 

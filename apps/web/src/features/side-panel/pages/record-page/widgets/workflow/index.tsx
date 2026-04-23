@@ -1,6 +1,5 @@
 import { Show } from "solid-js";
 
-import { blockingFieldLabel } from "~/features/pipeline/detail/lead-workflow-ui";
 import {
   RelationList,
   RelationMeta,
@@ -12,7 +11,8 @@ import {
   WidgetHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
+import { blockingFieldLabel } from "~/features/workflow/detail/lead-workflow-ui";
+import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 export function WorkflowWidget(props: { data: LeadDetailView }) {
   return (

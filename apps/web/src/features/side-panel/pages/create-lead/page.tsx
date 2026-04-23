@@ -3,9 +3,9 @@ import { createMemo, createResource, Show } from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { queryLeadBootstrapPreview } from "~/actions/pipeline/queries/leads";
+import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/leads";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { createLeadMutation } from "~/features/pipeline/data/mutations";
+import { createLeadMutation } from "~/features/workflow/data/mutations";
 
 import { HiddenTabContent } from "../../components/hidden-tab";
 import { PanelList } from "../../components/list";

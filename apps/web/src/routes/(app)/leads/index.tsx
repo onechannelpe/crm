@@ -1,5 +1,5 @@
 import { AppPage } from "~/components/layout/page";
-import { LeadsWorkspace } from "~/features/pipeline/workspace/adapter";
+import { LeadsWorkspace } from "~/features/workflow/workspace/adapter";
 
 export default function LeadsPage() {
   return (
