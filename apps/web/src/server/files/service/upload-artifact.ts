@@ -21,7 +21,7 @@ class UploadValidationError extends Error {
 
 export async function uploadArtifactFile(
   ctx: AppContext,
-  artifactId: number,
+  artifactId: string,
   file: UploadArtifactInput,
   deps: UploadArtifactDeps,
 ): Promise<Result<WorkflowArtifact, DomainError>> {

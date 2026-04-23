@@ -8,7 +8,7 @@ import type { WorkflowArtifact } from "../../src/server/files/types";
 
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {
-    id: 1,
+    id: "artifact-1",
     artifactType: "leads_export",
     direction: "download",
     executionMode: "sync",

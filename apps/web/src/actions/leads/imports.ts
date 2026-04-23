@@ -50,7 +50,7 @@ async function getAuthorizedLeadImportJob(
 }
 
 export async function uploadLeadImportFile(formData: FormData): Promise<{
-  artifactId: number;
+  artifactId: string;
   jobId: string;
   importType: "import_status" | "import_prioridad";
   rowsTotal: number;

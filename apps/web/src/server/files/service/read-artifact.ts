@@ -9,7 +9,7 @@ import { actorFromCtx } from "./helpers";
 
 export async function getArtifact(
   ctx: AppContext,
-  artifactId: number,
+  artifactId: string,
   deps: GetArtifactDeps,
 ): Promise<Result<ArtifactWithAsset, DomainError>> {
   const actor = actorFromCtx(ctx);

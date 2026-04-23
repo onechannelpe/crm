@@ -33,7 +33,7 @@ export type ScanStatus = "pending" | "clean" | "infected" | "error";
 export type BindingRole = "source_upload" | "export_output" | "derived_output";
 
 export interface WorkflowArtifact {
-  id: number;
+  id: string;
   artifactType: ArtifactType;
   direction: ArtifactDirection;
   executionMode: ArtifactExecutionMode;

@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely, Selectable } from "kysely";
 
 import type {
@@ -87,7 +88,7 @@ export interface InsertFileAssetInput {
 }
 
 export interface InsertEventInput {
-  artifactId: number;
+  artifactId: string;
   eventType: string;
   actorUserId: number | null;
   actorRole: string | null;
@@ -100,7 +101,7 @@ export interface InsertEventInput {
 }
 
 export interface InsertDownloadTokenInput {
-  artifactId: number;
+  artifactId: string;
   fileAssetId: number;
   tokenHash: string;
   requestedByUserId: number;
@@ -109,14 +110,14 @@ export interface InsertDownloadTokenInput {
 }
 
 export interface ArtifactRepo {
-  insertArtifact(input: InsertArtifactInput): Promise<number>;
+  insertArtifact(input: InsertArtifactInput): Promise<string>;
   updateArtifactStatus(
-    id: number,
+    id: string,
     status: ArtifactStatus,
     now: number,
     error?: { code: string; message: string },
   ): Promise<void>;
-  findArtifactById(id: number): Promise<WorkflowArtifact | null>;
+  findArtifactById(id: string): Promise<WorkflowArtifact | null>;
   listArtifacts(filters: {
     artifactType?: ArtifactType;
     scopeBranchId?: number;
@@ -127,12 +128,12 @@ export interface ArtifactRepo {
   insertFileAsset(input: InsertFileAssetInput): Promise<number>;
   findFileAssetById(id: number): Promise<FileAsset | null>;
   findFileAssetForArtifact(
-    artifactId: number,
+    artifactId: string,
     role: BindingRole,
   ): Promise<FileAsset | null>;
 
   insertFileBinding(input: {
-    artifactId: number;
+    artifactId: string;
     fileAssetId: number;
     bindingRole: BindingRole;
     versionNo: number;
@@ -140,7 +141,7 @@ export interface ArtifactRepo {
   }): Promise<void>;
 
   insertEvent(input: InsertEventInput): Promise<void>;
-  listEvents(artifactId: number): Promise<
+  listEvents(artifactId: string): Promise<
     Array<{
       id: number;
       eventType: string;
@@ -154,7 +155,7 @@ export interface ArtifactRepo {
   insertDownloadToken(input: InsertDownloadTokenInput): Promise<void>;
   findDownloadToken(tokenHash: string): Promise<{
     id: number;
-    artifactId: number;
+    artifactId: string;
     fileAssetId: number;
     requestedByUserId: number;
     expiresAt: number;
@@ -166,9 +167,11 @@ export interface ArtifactRepo {
 export function createArtifactRepo(db: DB): ArtifactRepo {
   return {
     async insertArtifact(input) {
-      const result = await db
+      const id = randomUUIDv7();
+      await db
         .insertInto("workflow_artifacts")
         .values({
+          id,
           artifact_type: input.artifactType,
           direction: input.direction,
           execution_mode: input.executionMode,
@@ -185,7 +188,7 @@ export function createArtifactRepo(db: DB): ArtifactRepo {
           updated_at: input.now,
         })
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return id;
     },
 
     async updateArtifactStatus(id, status, now, error) {

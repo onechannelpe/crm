@@ -23,7 +23,7 @@ export async function requestArtifact(input: {
 }
 
 export async function uploadArtifactFile(
-  artifactId: number,
+  artifactId: string,
   file: File,
 ): Promise<WorkflowArtifact> {
   const formData = new FormData();
@@ -32,7 +32,7 @@ export async function uploadArtifactFile(
 }
 
 export async function requestDownloadToken(
-  artifactId: number,
+  artifactId: string,
 ): Promise<string> {
   const result = await requestDownloadTokenAction(artifactId);
   return result.token;
