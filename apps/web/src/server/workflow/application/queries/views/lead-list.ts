@@ -11,6 +11,8 @@ export type LeadListRowView = {
   address: string | null;
   executiveId: number;
   executiveName: string;
+  createdBy: number;
+  createdByName: string;
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;

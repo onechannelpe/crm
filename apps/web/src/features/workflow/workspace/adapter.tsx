@@ -18,7 +18,7 @@ import type { LeadListRowView } from "~/server/workflow/application/queries/view
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";
-import { LEAD_WORKSPACE_FILTER, type LeadStageFilterValue } from "./filter";
+import { LEAD_WORKSPACE_FILTER, type LeadWorkspaceFilterValue } from "./filter";
 import { ImportDropzone } from "./import-dropzone";
 import { useOpenLeadRecord } from "./open-row";
 import { LEAD_WORKSPACE_SORT, type LeadSortKey } from "./sort";
@@ -109,7 +109,7 @@ export function LeadsWorkspace() {
     sort: LEAD_WORKSPACE_SORT,
   } satisfies RecordIndexAdapter<
     LeadListRowView,
-    LeadStageFilterValue,
+    LeadWorkspaceFilterValue,
     LeadSortKey
   >;
 

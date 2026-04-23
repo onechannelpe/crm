@@ -21,12 +21,13 @@ type LeadListSource = Pick<
   | "razon_social"
   | "address"
   | "executive_id"
+  | "created_by"
   | "stage"
   | "status"
   | "prioridad"
   | "created_at"
   | "updated_at"
-> & { executive_name: string };
+> & { executive_name: string; created_by_name: string };
 
 type RecordExportSource = Pick<
   LeadCols,
@@ -49,6 +50,8 @@ function toListRow(row: LeadListSource): LeadListRow {
     address: row.address,
     executiveId: row.executive_id,
     executiveName: row.executive_name,
+    createdBy: row.created_by,
+    createdByName: row.created_by_name,
     stage: row.stage,
     status: row.status,
     prioridad: row.prioridad,
@@ -78,6 +81,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       let query = db
         .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id")
+        .innerJoin("users as creator", "creator.id", "lead.created_by")
         .select([
           "lead.id",
           "lead.ruc",
@@ -86,6 +90,10 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.executive_id",
           sql<string>`executive.names || ' ' || executive.first_surname`.as(
             "executive_name",
+          ),
+          "lead.created_by",
+          sql<string>`creator.names || ' ' || creator.first_surname`.as(
+            "created_by_name",
           ),
           "lead.stage",
           "lead.status",

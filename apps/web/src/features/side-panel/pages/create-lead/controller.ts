@@ -68,6 +68,8 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
             address: preview?.address ?? null,
             executiveId: user.id,
             executiveName: shortName(user),
+            createdBy: user.id,
+            createdByName: shortName(user),
           }),
         ),
     });

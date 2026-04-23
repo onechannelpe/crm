@@ -97,12 +97,12 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
 const BACK_OFFICE_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
   ...COMMON_COLUMNS,
   {
-    key: "executiveId",
+    key: "createdBy",
     label: "Registrado por",
     icon: User,
     width: 150,
     renderCell: (lead) => (
-      <RecordChip name={lead.executiveName} shape="round" />
+      <RecordChip name={lead.createdByName} shape="round" />
     ),
   },
 ];
