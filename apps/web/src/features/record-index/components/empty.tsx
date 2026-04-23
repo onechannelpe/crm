@@ -7,7 +7,7 @@ import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
 import type { RecordIndexScreenModel } from "../model/types";
 
 export function RecordIndexEmpty<
-  T extends { id: string | number },
+  T extends { id: string },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {

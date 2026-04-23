@@ -11,7 +11,7 @@ import { RecordIndexLayout } from "./layout";
 import { RecordIndexTableContainer } from "./table-container";
 
 export function RecordIndexScreen<
-  T extends { id: string | number },
+  T extends { id: string },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { adapter: RecordIndexAdapter<T, TFilterValue, TSortValue> }) {
@@ -27,7 +27,7 @@ export function RecordIndexScreen<
 }
 
 function RecordIndexScreenContent<
-  T extends { id: string | number },
+  T extends { id: string },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { adapter: RecordIndexAdapter<T, TFilterValue, TSortValue> }) {

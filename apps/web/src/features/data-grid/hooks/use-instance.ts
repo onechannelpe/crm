@@ -11,7 +11,7 @@ import type { DataGridReorderConfig } from "../dnd/types";
 import type { DataGridRowOpenMode } from "../model/row-open";
 import type { DataGridSelectionModel } from "./use-selection";
 
-type DataGridRowId = string | number;
+type DataGridRowId = string;
 
 export type DataGridInteractionModel = {
   isRowActive: (id: DataGridRowId) => boolean;

@@ -24,7 +24,7 @@ import type { AuditActionPolicyItem } from "~/server/audit-reader/contracts";
 import styles from "./settings-page.module.css";
 
 type PolicyRiskLevel = "high" | "medium" | "low";
-type SecurityPolicyRow = AuditActionPolicyItem & { id: number };
+type SecurityPolicyRow = AuditActionPolicyItem & { id: string };
 
 const SECURITY_POLICY_COLUMNS = [
   {
@@ -87,7 +87,7 @@ export default function SecurityPoliciesPage() {
   const rows = createMemo<SecurityPolicyRow[]>(() =>
     (policySnapshot()?.items ?? []).map((item, index) =>
       Object.assign({}, item, {
-        id: index + 1,
+        id: `security-policy:${item.action}:${index}`,
       }),
     ),
   );

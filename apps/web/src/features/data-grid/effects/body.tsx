@@ -3,9 +3,7 @@ import { DataGridFocusClickOutsideEffect } from "./focus-click-outside";
 import { DataGridReorderEffect } from "./reorder";
 import { DataGridSelectionEffects } from "./selection";
 
-export function DataGridBodyEffects(props: {
-  rows: Array<{ id: string | number }>;
-}) {
+export function DataGridBodyEffects(props: { rows: Array<{ id: string }> }) {
   return (
     <>
       <DataGridDragSelectEffect />

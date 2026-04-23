@@ -20,7 +20,7 @@ import { authFunnelSnapshotQuery } from "~/lib/queries/audit";
 import { formatDateTime } from "~/lib/utils";
 
 type BadgeVariant = "success" | "destructive" | "outline";
-type AuditAuthRow = AuthFunnelSnapshot["recent"][number] & { id: number };
+type AuditAuthRow = AuthFunnelSnapshot["recent"][number] & { id: string };
 
 const AUDIT_AUTH_COLUMNS = [
   {
@@ -121,7 +121,7 @@ export default function AuditAuthPage() {
   const rows = createMemo<AuditAuthRow[]>(() =>
     (latestSnapshot()?.recent ?? []).map((row, index) =>
       Object.assign({}, row, {
-        id: index + 1,
+        id: `auth:${row.createdAt}:${index}`,
       }),
     ),
   );

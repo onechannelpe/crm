@@ -23,7 +23,7 @@ import { formatDateTime } from "~/lib/utils";
 import type { AuditReaderSnapshot } from "~/server/audit-reader/contracts";
 
 type AuditLogEvent = AuditReaderSnapshot["events"][number];
-type AuditLogGridRow = AuditLogEvent & { id: number };
+type AuditLogGridRow = AuditLogEvent & { id: string };
 
 const AUDIT_LOG_COLUMNS = [
   {
@@ -127,7 +127,7 @@ export default function AuditLogPage() {
   const rows = createMemo<AuditLogGridRow[]>(() =>
     (latestSnapshot()?.events ?? []).map((event, index) =>
       Object.assign({}, event, {
-        id: index + 1,
+        id: `audit:${event.createdAt}:${index}`,
       }),
     ),
   );

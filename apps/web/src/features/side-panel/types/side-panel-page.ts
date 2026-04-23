@@ -98,10 +98,7 @@ function createSidePanelPageId() {
   return crypto.randomUUID();
 }
 
-function createEntitySidePanelPageId(
-  page: SidePanelPageKey,
-  entityId: number | string,
-) {
+function createEntitySidePanelPageId(page: SidePanelPageKey, entityId: string) {
   return `${page}:${entityId}`;
 }
 

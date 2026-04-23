@@ -21,7 +21,7 @@ import type {
 } from "../model/types";
 
 export function useRecordIndexModel<
-  T extends { id: string | number },
+  T extends { id: string },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(
