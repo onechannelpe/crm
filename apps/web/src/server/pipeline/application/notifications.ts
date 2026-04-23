@@ -26,7 +26,7 @@ export async function notifyReadyForQuotation(input: {
     type: "lead.ready_for_quotation",
     title: "Prospecto listo para cotizacion",
     bodyText: `El prospecto RUC ${input.ruc} esta listo para cotizar`,
-    actionUrl: `/quotations/${input.leadId}`,
+    actionUrl: `/leads/${input.leadId}`,
     priority: "normal",
     dedupeKey: `lead_rfq_${input.leadId}`,
   });
