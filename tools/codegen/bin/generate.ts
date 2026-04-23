@@ -6,9 +6,9 @@
  *   contracts/engine/api.json
  *     → apps/web/src/server/shared/engine/contract.ts
  *
- *   contracts/engine/lead-api.json
+ *   contracts/engine/record-api.json
  *     → crates/leads/src/contracts_generated.rs
- *     → apps/web/src/server/shared/engine/lead-contract.ts
+ *     → apps/web/src/server/shared/engine/record-contract.ts
  *
  *   contracts/engine/search-projection.json
  *     → crates/search/src/projection_contract_generated.rs
@@ -22,10 +22,10 @@ import {
   renderEngineApiContract,
 } from "../src/engine-api/index.ts";
 import {
-  parseLeadApiSpec,
-  renderLeadContractRust,
-  renderLeadContractTs,
-} from "../src/lead-api/index.ts";
+  parseRecordApiSpec,
+  renderRecordContractRust,
+  renderRecordContractTs,
+} from "../src/record-api/index.ts";
 import {
   parseProjectionSpec,
   renderProjectionContractRust,
@@ -48,17 +48,17 @@ await writeOrCheck(
 );
 
 // lead API
-const leadSpec = parseLeadApiSpec(
-  await loadJson("contracts/engine/lead-api.json"),
+const leadSpec = parseRecordApiSpec(
+  await loadJson("contracts/engine/record-api.json"),
 );
 await writeOrCheck(
   "crates/leads/src/contracts_generated.rs",
-  renderLeadContractRust(leadSpec),
+  renderRecordContractRust(leadSpec),
   check,
 );
 await writeOrCheck(
-  "apps/web/src/server/shared/engine/lead-contract.ts",
-  renderLeadContractTs(leadSpec),
+  "apps/web/src/server/shared/engine/record-contract.ts",
+  renderRecordContractTs(leadSpec),
   check,
 );
 

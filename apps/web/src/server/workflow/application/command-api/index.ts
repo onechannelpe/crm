@@ -22,12 +22,12 @@ import type {
   LeadSaleResult,
 } from "../contracts/command-results";
 import type { RegisterLeadDeps } from "../deps/register-lead";
-import type { PipelineAuditService } from "../ports/audit-service";
+import type { WorkflowAuditService } from "../ports/audit-service";
 import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
-import type { PipelineEngineGateway } from "../ports/engine-gateway";
+import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { PipelineNotificationCenter } from "../ports/notification-center";
+import type { WorkflowNotificationCenter } from "../ports/notification-center";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
 import type { LeadSaleRepository } from "../ports/sale-repository";
 import type { LeadClock } from "../services/lead-clock";
@@ -46,11 +46,11 @@ export type WorkflowCommandApiDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
   users: LeadUserScopeRepository;
-  notificationCenter: PipelineNotificationCenter;
+  notificationCenter: WorkflowNotificationCenter;
   clock: LeadClock;
   registerLead: RegisterLeadDeps;
-  auditService: PipelineAuditService;
-  engineGateway: PipelineEngineGateway;
+  auditService: WorkflowAuditService;
+  engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
   leadQuotations: LeadQuotationRepository;
   leadCommercialInputs: LeadCommercialInputRepository;

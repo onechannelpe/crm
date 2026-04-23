@@ -1,37 +1,37 @@
-import type { FieldSpec, LeadApiSpec } from "./parse.ts";
+import type { FieldSpec, RecordApiSpec } from "./parse.ts";
 
-export function renderLeadContractTs(spec: LeadApiSpec): string {
+export function renderRecordContractTs(spec: RecordApiSpec): string {
   const candidateFields = spec.response.candidate.fields;
   const importRowFields = spec.request.import_row.fields;
 
   return [
     "// GENERATED FILE. DO NOT EDIT.",
-    "// Source: contracts/engine/lead-api.json",
+    "// Source: contracts/engine/record-api.json",
     "// Generator: tools/codegen/bin/generate.ts",
     "",
     renderInterface(
-      "LeadCandidate",
+      "RecordCandidate",
       candidateFields.map((f) => `  ${f.name}: ${tsType(f)};`),
     ),
     "",
-    renderInterface("LeadCandidatesResponse", [
-      "  candidates: LeadCandidate[];",
+    renderInterface("RecordCandidatesResponse", [
+      "  candidates: RecordCandidate[];",
       "  count: number;",
     ]),
     "",
     renderInterface(
-      "LeadImportRow",
+      "RecordImportRow",
       importRowFields.map(
         (f) => `  ${f.optional ? `${f.name}?` : f.name}: ${tsBaseType(f)};`,
       ),
     ),
     "",
-    renderInterface("LeadImportRequest", [
-      "  rows: LeadImportRow[];",
+    renderInterface("RecordImportRequest", [
+      "  rows: RecordImportRow[];",
       "  source: string;",
     ]),
     "",
-    renderInterface("LeadImportResponse", [
+    renderInterface("RecordImportResponse", [
       "  inserted: number;",
       "  updated: number;",
       "  skipped: number;",

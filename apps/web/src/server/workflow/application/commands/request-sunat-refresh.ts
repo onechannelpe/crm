@@ -4,7 +4,7 @@ import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
 import { requireLeadReadAccess } from "../policies/access";
-import type { PipelineAuditService } from "../ports/audit-service";
+import type { WorkflowAuditService } from "../ports/audit-service";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadRepository } from "../ports/lead-repository";
 
@@ -14,7 +14,7 @@ export async function requestSunatRefresh(input: {
   leadId: string;
   leadRepo: LeadRepository;
   enrichmentQueue: LeadEnrichmentQueue;
-  auditService: PipelineAuditService;
+  auditService: WorkflowAuditService;
 }): Promise<Result<void, DomainError>> {
   const canRead = requireLeadReadAccess(input.actorRole);
   if (!canRead.ok) {

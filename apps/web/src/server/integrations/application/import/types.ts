@@ -2,7 +2,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/pipeline/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 export type RowResult =
   | { row: number; ok: false; reason: string }

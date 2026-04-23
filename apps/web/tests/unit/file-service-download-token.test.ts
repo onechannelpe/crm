@@ -32,7 +32,7 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {
     id: "artifact-42",
-    artifactType: "leads_export",
+    artifactType: "records_export",
     direction: "download",
     executionMode: "sync",
     status: "ready",
@@ -53,7 +53,7 @@ function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
 function makeFileAsset(overrides?: Partial<FileAsset>): FileAsset {
   return {
     id: 7,
-    storageKey: "files/leads-export-42.csv",
+    storageKey: "files/records-export-42.csv",
     originalFilename: "leads.csv",
     safeDisplayFilename: "leads.csv",
     detectedMime: "text/csv",

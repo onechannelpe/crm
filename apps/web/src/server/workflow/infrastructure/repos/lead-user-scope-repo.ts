@@ -1,8 +1,8 @@
-import type { PipelineUserRepository } from "../../application/ports/user-repository";
+import type { WorkflowUserRepository } from "../../application/ports/user-repository";
 import type { LeadUserScopeRepository } from "../../ports/lead-user-scope-repository";
 
 export function createLeadUserScopeRepository(
-  users: PipelineUserRepository,
+  users: WorkflowUserRepository,
 ): LeadUserScopeRepository {
   return {
     findUserById(id) {

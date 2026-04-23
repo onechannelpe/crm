@@ -1,5 +1,5 @@
-import type { LeadStage } from "~/pipeline/contracts/lead-schema";
-import { isBcpBank } from "~/pipeline/contracts/lead-schema";
+import type { LeadStage } from "~/workflow/contracts/lead-schema";
+import { isBcpBank } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "./lead-record";
 

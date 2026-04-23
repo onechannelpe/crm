@@ -1,9 +1,9 @@
-import type { PipelineIntegrationJobsTable } from "~/lib/db/types";
+import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export type IntegrationJobType = PipelineIntegrationJobsTable["type"];
-export type IntegrationJobStatus = PipelineIntegrationJobsTable["status"];
+export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
+export type IntegrationJobStatus = WorkflowIntegrationJobsTable["status"];
 
 export interface IntegrationJobRow extends QueueJobBase {
   id: string;
@@ -63,7 +63,7 @@ export interface IntegrationJobsPort {
 export interface IntegrationRuntime {
   executor: DatabaseExecutor;
   jobs: IntegrationJobsPort;
-  leadExportQuery: {
+  recordExportQuery: {
     export(filters: { executiveId?: number }): Promise<
       Array<{
         id: string;

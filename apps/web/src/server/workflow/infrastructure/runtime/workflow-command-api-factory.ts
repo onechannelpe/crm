@@ -5,10 +5,10 @@ import {
   createWorkflowCommandApi,
   type WorkflowCommandApi,
 } from "../../application/command-api";
-import type { PipelineAuditService } from "../../application/ports/audit-service";
-import type { PipelineEngineGateway } from "../../application/ports/engine-gateway";
+import type { WorkflowAuditService } from "../../application/ports/audit-service";
+import type { WorkflowEngineGateway } from "../../application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../../application/ports/enrichment-queue";
-import type { PipelineNotificationCenter } from "../../application/ports/notification-center";
+import type { WorkflowNotificationCenter } from "../../application/ports/notification-center";
 import { systemLeadClock } from "../../application/services/lead-clock";
 import { createCommercialInputRepo } from "../commercial-input-repo";
 import { createQuotationRepo } from "../quotation-repo";
@@ -20,9 +20,9 @@ import { createSaleRepo } from "../sale-repo";
 export type WorkflowCommandApiRuntimeInput = {
   executor: DatabaseExecutor;
   deps: WorkflowDeps;
-  notificationCenter: PipelineNotificationCenter;
-  auditService: PipelineAuditService;
-  engineGateway: PipelineEngineGateway;
+  notificationCenter: WorkflowNotificationCenter;
+  auditService: WorkflowAuditService;
+  engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
 };
 

@@ -1,16 +1,16 @@
 import { onCleanup } from "solid-js";
 
 import {
-  getLeadImportJob,
-  uploadLeadImportFile,
-} from "~/actions/leads/imports";
+  getRecordImportJob,
+  uploadRecordImportFile,
+} from "~/actions/records/imports";
 import { useToast } from "~/components/feedback/toast/provider";
 import {
-  leadImportTopic,
-  parseLeadImportProgressMessage,
-  type LeadImportType,
-  type LeadImportProgressEvent,
-} from "~/features/leads-imports/contracts";
+  recordImportTopic,
+  parseRecordImportProgressMessage,
+  type RecordImportType,
+  type RecordImportProgressEvent,
+} from "~/features/records-imports/contracts";
 import { getErrorMessage } from "~/lib/errors";
 import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
 
@@ -22,14 +22,14 @@ const WS_RECONNECT_BASE_MS = 1_000;
 const WS_RECONNECT_MAX_MS = 15_000;
 const RECONNECT_JITTER_MS = 300;
 
-function importTypeLabel(type: LeadImportType): string {
+function importTypeLabel(type: RecordImportType): string {
   if (type === "import_status") {
     return "estados";
   }
   return "prioridades";
 }
 
-function importTypeUnit(type: LeadImportType, count: number): string {
+function importTypeUnit(type: RecordImportType, count: number): string {
   if (type === "import_status") {
     return count === 1 ? "estado" : "estados";
   }
@@ -37,7 +37,7 @@ function importTypeUnit(type: LeadImportType, count: number): string {
 }
 
 function buildProgressMessage(event: {
-  importType: LeadImportType;
+  importType: RecordImportType;
   rowsApplied: number;
   rowsFailed: number;
   rowsTotal: number;
@@ -51,7 +51,7 @@ function buildProgressMessage(event: {
 }
 
 function buildCompletedMessage(event: {
-  importType: LeadImportType;
+  importType: RecordImportType;
   rowsApplied: number;
   rowsFailed: number;
   rowsTotal: number;
@@ -69,15 +69,15 @@ function isCsvFile(file: File): boolean {
 
 function websocketUrl(): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.host}/api/leads/imports/ws`;
+  return `${protocol}//${window.location.host}/api/records/imports/ws`;
 }
 
-export function useLeadsImport() {
+export function useRecordsImport() {
   const { showToast, updateToast, removeToast } = useToast();
 
   let fileInputRef: HTMLInputElement | undefined;
   let activeJobId: string | null = null;
-  let activeImportType: LeadImportType | null = null;
+  let activeImportType: RecordImportType | null = null;
   let progressToastId: string | null = null;
   let socket: WebSocket | null = null;
   let pollTimer: number | null = null;
@@ -140,7 +140,7 @@ export function useLeadsImport() {
   }
 
   function completeProgressToast(event: {
-    importType: LeadImportType;
+    importType: RecordImportType;
     rowsApplied: number;
     rowsFailed: number;
     rowsTotal: number;
@@ -179,7 +179,7 @@ export function useLeadsImport() {
     }
 
     try {
-      const job = await getLeadImportJob(activeJobId);
+      const job = await getRecordImportJob(activeJobId);
       const rowsApplied = job.rows_applied ?? 0;
       const rowsFailed = job.rows_failed ?? 0;
       const rowsTotal = job.rows_total ?? 0;
@@ -247,7 +247,7 @@ export function useLeadsImport() {
     schedulePolling(0);
   }
 
-  function handleProgressEvent(event: LeadImportProgressEvent) {
+  function handleProgressEvent(event: RecordImportProgressEvent) {
     if (event.jobId !== activeJobId) {
       return;
     }
@@ -303,13 +303,13 @@ export function useLeadsImport() {
       socket?.send(
         buildRealtimeSubscriptionMessage({
           type: "subscribe",
-          topic: leadImportTopic(jobId),
+          topic: recordImportTopic(jobId),
         }),
       );
     });
 
     socket.addEventListener("message", (event) => {
-      const payload = parseLeadImportProgressMessage(String(event.data));
+      const payload = parseRecordImportProgressMessage(String(event.data));
       if (!payload) {
         return;
       }
@@ -341,7 +341,7 @@ export function useLeadsImport() {
     formData.set("file", file);
 
     try {
-      const result = await uploadLeadImportFile(formData);
+      const result = await uploadRecordImportFile(formData);
 
       activeJobId = result.jobId;
       activeImportType = result.importType;

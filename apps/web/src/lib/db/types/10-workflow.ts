@@ -1,6 +1,6 @@
 import type { Generated } from "kysely";
 
-export type PipelineStageValue =
+export type WorkflowStageValue =
   | "PENDING_EXTERNAL_REVIEW"
   | "REJECTED_BY_STATUS"
   | "NEEDS_EXECUTIVE_INPUT"
@@ -9,7 +9,7 @@ export type PipelineStageValue =
   | "READY_FOR_SALE"
   | "CONVERTED";
 
-export interface PipelineLeadsTable {
+export interface WorkflowLeadsTable {
   id: Generated<string>;
   ruc: string;
   razon_social: string | null;
@@ -17,7 +17,7 @@ export interface PipelineLeadsTable {
   district: string | null;
   department: string | null;
   executive_id: number;
-  stage: PipelineStageValue;
+  stage: WorkflowStageValue;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
   created_by: number;
@@ -26,7 +26,7 @@ export interface PipelineLeadsTable {
   updated_at: number;
 }
 
-export interface PipelineLeadCommercialInputsTable {
+export interface WorkflowLeadCommercialInputsTable {
   lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
@@ -38,7 +38,7 @@ export interface PipelineLeadCommercialInputsTable {
   updated_by: number;
 }
 
-export interface PipelineQuotationsTable {
+export interface WorkflowQuotationsTable {
   id: Generated<string>;
   lead_id: string;
   payback_pricing: number;
@@ -52,7 +52,7 @@ export interface PipelineQuotationsTable {
   created_by: number;
 }
 
-export interface PipelineSalesTable {
+export interface WorkflowSalesTable {
   id: Generated<string>;
   lead_id: string;
   executive_id: number;
@@ -68,7 +68,7 @@ export interface PipelineSalesTable {
   created_at: number;
 }
 
-export interface PipelineLeadAssignmentsTable {
+export interface WorkflowLeadAssignmentsTable {
   id: Generated<string>;
   lead_id: string;
   executive_id: number;
@@ -77,7 +77,7 @@ export interface PipelineLeadAssignmentsTable {
   assigned_at: number;
 }
 
-export interface PipelineHistoryEventsTable {
+export interface WorkflowHistoryEventsTable {
   id: Generated<string>;
   lead_id: string;
   event_type:
@@ -118,12 +118,12 @@ export interface WorkflowAuditLogsTable {
 }
 
 export type Db = {
-  workflow_leads: PipelineLeadsTable;
-  workflow_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
-  workflow_quotations: PipelineQuotationsTable;
-  workflow_sales: PipelineSalesTable;
-  workflow_lead_assignments: PipelineLeadAssignmentsTable;
-  workflow_history_events: PipelineHistoryEventsTable;
+  workflow_leads: WorkflowLeadsTable;
+  workflow_lead_commercial_inputs: WorkflowLeadCommercialInputsTable;
+  workflow_quotations: WorkflowQuotationsTable;
+  workflow_sales: WorkflowSalesTable;
+  workflow_lead_assignments: WorkflowLeadAssignmentsTable;
+  workflow_history_events: WorkflowHistoryEventsTable;
   workflow_audit_logs: WorkflowAuditLogsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;
 };

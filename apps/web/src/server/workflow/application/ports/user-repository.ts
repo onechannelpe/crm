@@ -4,18 +4,18 @@ import type {
   LeadUserWithName,
 } from "../../ports/lead-user-scope-repository";
 
-export type PipelineUser = LeadUser;
-export type PipelineUserWithName = LeadUserWithName;
+export type WorkflowUser = LeadUser;
+export type WorkflowUserWithName = LeadUserWithName;
 
-export type PipelineUserRepository = {
-  findById(id: number): Promise<PipelineUser | undefined>;
+export type WorkflowUserRepository = {
+  findById(id: number): Promise<WorkflowUser | undefined>;
   isExecutiveAssignable(
     scope: AssignableExecutivesScope,
     executiveId: number,
   ): Promise<boolean>;
-  findByIds(ids: number[]): Promise<PipelineUserWithName[]>;
+  findByIds(ids: number[]): Promise<WorkflowUserWithName[]>;
   listAssignableExecutives(
     input: AssignableExecutivesScope,
     options?: { search?: string; limit?: number },
-  ): Promise<PipelineUserWithName[]>;
+  ): Promise<WorkflowUserWithName[]>;
 };

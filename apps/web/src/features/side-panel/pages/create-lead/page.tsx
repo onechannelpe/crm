@@ -3,7 +3,7 @@ import { createMemo, createResource, Show } from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/leads";
+import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { createLeadMutation } from "~/features/workflow/data/mutations";
 

@@ -2,12 +2,12 @@ import type { WorkflowDeps } from "~/server/features/workflow/application/workfl
 
 import {
   createWorkflowQueryApi,
-  type PipelineQueryApi,
+  type WorkflowQueryApi,
 } from "../../application/query-api";
 
 export function createWorkflowQueryApiRuntime(
   deps: WorkflowDeps,
-): PipelineQueryApi {
+): WorkflowQueryApi {
   return createWorkflowQueryApi({
     leadDetail: deps.leadDetail,
     assignableExecutives: deps.assignableExecutives,

@@ -4,8 +4,8 @@
  */
 export const JOB_CHANNELS = {
   CRM_EXPORT: "job:crm-export",
-  LEADS_IMPORT: "job:leads-import",
-  LEADS_IMPORT_PROGRESS: "job:leads-import-progress",
+  RECORDS_IMPORT: "job:records-import",
+  RECORDS_IMPORT_PROGRESS: "job:records-import-progress",
   INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT:
     "job:integration-outbox-needs-executive-input",
   INTEGRATION_OUTBOX_READY_FOR_QUOTATION:

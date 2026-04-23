@@ -1,15 +1,15 @@
-import type { LeadImportType } from "~/features/leads-imports/contracts";
+import type { RecordImportType } from "~/features/records-imports/contracts";
 import { normalizeCsvHeader } from "~/server/csv/core";
 
 import type {
   HeaderCandidate,
   HeaderMatch,
-  LeadImportCsvInspectionResult,
-  LeadImportTypeDetectionErrorCode,
+  RecordImportCsvInspectionResult,
+  RecordImportTypeDetectionErrorCode,
   ResolvedLayout,
 } from "./contracts";
 import {
-  LEAD_IMPORT_DELIMITERS,
+  RECORD_IMPORT_DELIMITERS,
   PRIORITY_IMPORT_HEADERS,
   STATUS_IMPORT_HEADERS,
 } from "./contracts";
@@ -56,7 +56,7 @@ function isBestMatchCandidate(match: HeaderMatch): boolean {
 
 function formatHeaderErrors(
   match: HeaderMatch,
-  importType: LeadImportType,
+  importType: RecordImportType,
 ): string {
   const details: string[] = [];
   if (match.missing.length > 0) {
@@ -76,7 +76,7 @@ function formatHeaderErrors(
 }
 
 function headerCandidatesFromLine(line: string): HeaderCandidate[] {
-  return LEAD_IMPORT_DELIMITERS.map((delimiter) => {
+  return RECORD_IMPORT_DELIMITERS.map((delimiter) => {
     const headers = splitCsvLine(line, delimiter).map(normalizeCell);
     return {
       delimiter,
@@ -89,7 +89,7 @@ function headerCandidatesFromLine(line: string): HeaderCandidate[] {
 
 function inspectHeaderCandidates(
   candidates: readonly HeaderCandidate[],
-): LeadImportCsvInspectionResult {
+): RecordImportCsvInspectionResult {
   const exactStatus = candidates.filter((c) => c.statusMatch.exact);
   const exactPriority = candidates.filter((c) => c.priorityMatch.exact);
 
@@ -150,9 +150,9 @@ function inspectHeaderCandidates(
   };
 }
 
-export function inspectLeadImportCsv(
+export function inspectRecordImportCsv(
   csvText: string,
-): LeadImportCsvInspectionResult {
+): RecordImportCsvInspectionResult {
   const headerLine = findFirstNonEmptyLine(csvText);
   if (!headerLine) {
     return {
@@ -182,12 +182,12 @@ export function inspectLeadImportCsv(
 
 export function resolveLayoutForImportType(
   headerLine: string,
-  importType: LeadImportType,
+  importType: RecordImportType,
 ):
   | { ok: true; layout: ResolvedLayout }
   | {
       ok: false;
-      code: LeadImportTypeDetectionErrorCode;
+      code: RecordImportTypeDetectionErrorCode;
       message: string;
       headers: string[];
     } {

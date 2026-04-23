@@ -1,7 +1,7 @@
-import type { PipelineNotificationCenter } from "./ports/notification-center";
+import type { WorkflowNotificationCenter } from "./ports/notification-center";
 
 export async function notifyExecutiveInputRequired(input: {
-  center: PipelineNotificationCenter;
+  center: WorkflowNotificationCenter;
   executiveId: number;
   leadId: string;
   ruc: string;
@@ -17,7 +17,7 @@ export async function notifyExecutiveInputRequired(input: {
 }
 
 export async function notifyReadyForQuotation(input: {
-  center: PipelineNotificationCenter;
+  center: WorkflowNotificationCenter;
   branchId: number;
   leadId: string;
   ruc: string;
@@ -33,7 +33,7 @@ export async function notifyReadyForQuotation(input: {
 }
 
 export async function notifyReadyForSale(input: {
-  center: PipelineNotificationCenter;
+  center: WorkflowNotificationCenter;
   executiveId: number;
   leadId: string;
   ruc: string;

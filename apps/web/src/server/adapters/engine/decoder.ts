@@ -1,7 +1,7 @@
 import { isPlainRecord } from "~/lib/type-guards";
 import type {
-  LeadCandidate,
-  LeadCandidatesResponse,
+  RecordCandidate,
+  RecordCandidatesResponse,
   SearchResponse,
 } from "~/server/shared/engine/types";
 
@@ -9,7 +9,7 @@ function isArray(value: unknown): value is unknown[] {
   return Array.isArray(value);
 }
 
-function isLeadCandidate(value: unknown): value is LeadCandidate {
+function isRecordCandidate(value: unknown): value is RecordCandidate {
   if (!isPlainRecord(value)) return false;
   return (
     typeof value.ruc === "string" &&
@@ -35,15 +35,15 @@ export function decodeSearchResponse(value: unknown): SearchResponse {
   return value;
 }
 
-export function decodeLeadCandidatesResponse(
+export function decodeRecordCandidatesResponse(
   value: unknown,
-): LeadCandidatesResponse {
+): RecordCandidatesResponse {
   if (
     !isPlainRecord(value) ||
     !isArray(value.candidates) ||
-    !value.candidates.every(isLeadCandidate)
+    !value.candidates.every(isRecordCandidate)
   ) {
-    throw new Error("Invalid LeadCandidatesResponse structure");
+    throw new Error("Invalid RecordCandidatesResponse structure");
   }
 
   return {

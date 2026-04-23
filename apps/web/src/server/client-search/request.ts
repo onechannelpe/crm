@@ -7,7 +7,7 @@ import type { EnrichmentRepositoryPort } from "./ports";
 /**
  * Single canonical enqueue interface for enrichment requests.
  * Idempotent: always succeeds, returns job ID.
- * Called by both UI actions and pipeline commands.
+ * Called by both UI actions and workflow commands.
  */
 export interface EnrichmentCommand {
   enqueueRequest(

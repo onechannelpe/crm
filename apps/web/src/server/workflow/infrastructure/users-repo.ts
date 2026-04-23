@@ -3,14 +3,14 @@ import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
-  PipelineUserRepository,
-  PipelineUserWithName,
+  WorkflowUserRepository,
+  WorkflowUserWithName,
 } from "../application/ports/user-repository";
 import type { AssignableExecutivesScope } from "../ports/lead-user-scope-repository";
 
 export function createWorkflowUsersRepo(
   executor: DatabaseExecutor,
-): PipelineUserRepository {
+): WorkflowUserRepository {
   const users = createUsersRepo(executor);
 
   return {
@@ -25,7 +25,7 @@ export function createWorkflowUsersRepo(
         isActive: user.is_active === 1,
       };
     },
-    async findByIds(ids): Promise<PipelineUserWithName[]> {
+    async findByIds(ids): Promise<WorkflowUserWithName[]> {
       const rows = await users.findByIds(ids);
       return rows.map((user) => ({
         id: user.id,
@@ -59,7 +59,7 @@ export function createWorkflowUsersRepo(
     async listAssignableExecutives(
       input: AssignableExecutivesScope,
       options?: { search?: string; limit?: number },
-    ): Promise<PipelineUserWithName[]> {
+    ): Promise<WorkflowUserWithName[]> {
       const limit = options?.limit && options.limit > 0 ? options.limit : 50;
       const rows = await users.findAssignableExecutives({
         branchId:

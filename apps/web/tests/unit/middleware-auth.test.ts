@@ -152,7 +152,7 @@ describe("auth middleware request guard", () => {
   it("keeps the validated session on request context when token is valid", async () => {
     const session = makeAuthSession({ role: "executive" });
     const event: { request: Request; locals: App.RequestEventLocals } = {
-      request: new Request("http://localhost:3000/leads"),
+      request: new Request("http://localhost:3000/records"),
       locals: { nonce: "nonce", requestContext: createRequestContext(session) },
     };
 

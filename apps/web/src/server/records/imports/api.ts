@@ -1,4 +1,4 @@
-import type { LeadImportType } from "~/features/leads-imports/contracts";
+import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { Role } from "~/lib/auth/access/rbac";
 import type {
   IntegrationJobRow,
@@ -6,8 +6,8 @@ import type {
 } from "~/server/integrations/types";
 
 import {
-  inspectLeadImportCsv,
-  type LeadImportTypeDetectionErrorCode,
+  inspectRecordImportCsv,
+  type RecordImportTypeDetectionErrorCode,
 } from "./intake";
 
 interface ActorScope {
@@ -20,17 +20,17 @@ function canBypassBranchScope(role: Role): boolean {
   return role === "admin" || role === "superuser";
 }
 
-export function detectLeadImportFile(input: { fileText: string }):
+export function detectRecordImportFile(input: { fileText: string }):
   | {
       ok: true;
-      importType: LeadImportType;
+      importType: RecordImportType;
     }
   | {
       ok: false;
-      code: LeadImportTypeDetectionErrorCode;
+      code: RecordImportTypeDetectionErrorCode;
       message: string;
     } {
-  const inspection = inspectLeadImportCsv(input.fileText);
+  const inspection = inspectRecordImportCsv(input.fileText);
   if (!inspection.ok) {
     return {
       ok: false,
@@ -45,7 +45,7 @@ export function detectLeadImportFile(input: { fileText: string }):
   };
 }
 
-export async function canAccessLeadImportJob(
+export async function canAccessRecordImportJob(
   actor: ActorScope,
   job: IntegrationJobRow,
   runtime: IntegrationRuntime,

@@ -6,11 +6,11 @@ import {
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
 
-describe("pipeline read access", () => {
+describe("workflow read access", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
-    runtime = await createTestRuntime("pipeline-read-access");
+    runtime = await createTestRuntime("workflow-read-access");
   });
 
   afterEach(async () => {

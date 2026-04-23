@@ -1,9 +1,9 @@
-use leads::contracts::{CandidateStrategy, LeadCandidate};
+use leads::contracts::{CandidateStrategy, RecordCandidate};
 use leads::domain::{dedupe_candidates, rank_candidates};
 use proptest::prelude::*;
 use std::collections::HashSet;
 
-fn arb_candidate() -> impl Strategy<Value = LeadCandidate> {
+fn arb_candidate() -> impl Strategy<Value = RecordCandidate> {
     // Small digit strings produce natural duplicates across generated batches.
     (
         "[0-9]{1,3}",
@@ -12,7 +12,7 @@ fn arb_candidate() -> impl Strategy<Value = LeadCandidate> {
         "[a-z]{1,8}",
         "[0-9]{7,9}",
     )
-        .prop_map(|(ruc, dni, org, person, phone)| LeadCandidate {
+        .prop_map(|(ruc, dni, org, person, phone)| RecordCandidate {
             ruc,
             organization_name: org,
             dni,

@@ -5,16 +5,16 @@ import { registerLead } from "../commands/register-lead";
 import type { RegisterLeadInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import type { RegisterLeadDeps } from "../deps/register-lead";
-import type { PipelineAuditService } from "../ports/audit-service";
-import type { PipelineEngineGateway } from "../ports/engine-gateway";
+import type { WorkflowAuditService } from "../ports/audit-service";
+import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 
 type RegisterLeadCommandDeps = {
   registerLead: RegisterLeadDeps;
   mutationUow: LeadMutationUow;
-  auditService: PipelineAuditService;
-  engineGateway: PipelineEngineGateway;
+  auditService: WorkflowAuditService;
+  engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
 };
 

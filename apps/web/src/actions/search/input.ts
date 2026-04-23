@@ -1,8 +1,8 @@
 import type { RunDirectSearchCommand } from "~/server/search-workflow/run-search";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
-import { isSearchType } from "~/server/shared/pipeline-types";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import { isSearchType } from "~/server/shared/workflow-types";
 
 export function parseSearchCommand(
   actorUserId: UserId,

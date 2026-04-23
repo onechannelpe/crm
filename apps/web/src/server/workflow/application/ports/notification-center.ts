@@ -1,7 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { AppNotificationEvent } from "~/server/notifications/app-events";
 
-export type PipelineNotificationCenter = {
+export type WorkflowNotificationCenter = {
   notifyUsers(
     userIds: number[],
     notification: AppNotificationEvent,

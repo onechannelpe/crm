@@ -3,7 +3,7 @@ import type {
   LeadPriority,
   LeadStatus,
   Moneda,
-} from "~/pipeline/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 import type { ActorContext } from "./actor-context";
 

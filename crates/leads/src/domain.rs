@@ -1,4 +1,4 @@
-use crate::contracts::{CandidateStrategy, LeadCandidate};
+use crate::contracts::{CandidateStrategy, RecordCandidate};
 use std::collections::HashSet;
 
 /// Sorts candidates according to `strategy`.
@@ -6,9 +6,9 @@ use std::collections::HashSet;
 /// `Freshness` and `Conversion` ordering is applied at the SQL layer; this
 /// function is a no-op for those strategies so the list passes through unchanged.
 pub fn rank_candidates(
-    mut input: Vec<LeadCandidate>,
+    mut input: Vec<RecordCandidate>,
     strategy: CandidateStrategy,
-) -> Vec<LeadCandidate> {
+) -> Vec<RecordCandidate> {
     if matches!(strategy, CandidateStrategy::Balanced) {
         input.sort_by_key(|c| stable_hash(format!("{}:{}", c.ruc, c.dni).as_bytes()));
     }
@@ -16,7 +16,7 @@ pub fn rank_candidates(
 }
 
 /// Removes duplicates, keeping the first occurrence of each (ruc, dni) pair.
-pub fn dedupe_candidates(input: Vec<LeadCandidate>) -> Vec<LeadCandidate> {
+pub fn dedupe_candidates(input: Vec<RecordCandidate>) -> Vec<RecordCandidate> {
     let mut seen = HashSet::new();
     let mut output = Vec::with_capacity(input.len());
     for c in input {

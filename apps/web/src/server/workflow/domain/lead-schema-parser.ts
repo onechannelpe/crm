@@ -1,3 +1,5 @@
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   LEAD_PRIORITIES,
   LEAD_STAGES,
@@ -7,9 +9,7 @@ import {
   type LeadStage,
   type LeadStatus,
   type Moneda,
-} from "~/pipeline/contracts/lead-schema";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/workflow/contracts/lead-schema";
 
 function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));

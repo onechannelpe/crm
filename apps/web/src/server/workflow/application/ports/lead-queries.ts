@@ -2,7 +2,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/pipeline/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 export type LeadListFilters = {
   executiveId?: number;
@@ -13,7 +13,7 @@ export type LeadListFilters = {
   offset: number;
 };
 
-export type LeadExportFilters = {
+export type RecordExportFilters = {
   executiveId?: number;
 };
 
@@ -35,7 +35,7 @@ export type LeadListRow = {
   updatedAt: number;
 };
 
-export type LeadExportRow = {
+export type RecordExportRow = {
   id: string;
   ruc: string;
   razonSocial: string | null;
@@ -57,5 +57,5 @@ export type LeadExportRow = {
 export type LeadQueries = {
   list(filters: LeadListFilters): Promise<LeadListRow[]>;
   count(filters: LeadListFilters): Promise<number>;
-  export(filters: LeadExportFilters): Promise<LeadExportRow[]>;
+  export(filters: RecordExportFilters): Promise<RecordExportRow[]>;
 };

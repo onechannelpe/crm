@@ -1,9 +1,9 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import {
-  buildLeadImportProgressEvent,
-  publishLeadImportProgress,
-} from "~/server/leads/imports/progress-events";
-import { createLeadImportRunner } from "~/server/leads/imports/runner";
+  buildRecordImportProgressEvent,
+  publishRecordImportProgress,
+} from "~/server/records/imports/progress-events";
+import { createRecordImportRunner } from "~/server/records/imports/runner";
 
 import type {
   ImportJobProcessResult,
@@ -11,31 +11,31 @@ import type {
   IntegrationRuntime,
 } from "../types";
 
-interface LeadImportRunner {
+interface RecordImportRunner {
   process(
     job: IntegrationJobRow,
     signal: AbortSignal,
   ): Promise<ImportJobProcessResult>;
 }
 
-interface LeadsImportQueueDeps {
+interface RecordsImportQueueDeps {
   runtime: IntegrationRuntime;
   openFileStream: (filePath: string) => ReadableStream<Uint8Array>;
-  runner?: LeadImportRunner;
+  runner?: RecordImportRunner;
 }
 
-const LEAD_IMPORT_TYPES = ["import_status", "import_prioridad"] as const;
+const RECORD_IMPORT_TYPES = ["import_status", "import_prioridad"] as const;
 
-export function createLeadsImportQueue(
+export function createRecordsImportQueue(
   workerId: string,
-  deps: LeadsImportQueueDeps,
+  deps: RecordsImportQueueDeps,
 ) {
   const leaseMs = 30_000;
   const batchSize = 10;
   const { runtime } = deps;
   const runner =
     deps.runner ??
-    createLeadImportRunner({
+    createRecordImportRunner({
       executor: deps.runtime.executor,
       openFileStream: deps.openFileStream,
       updateProgress: (progress) =>
@@ -43,12 +43,12 @@ export function createLeadsImportQueue(
     });
 
   return createJobQueue({
-    name: "leads-import",
+    name: "records-import",
     leaseMs,
     batchSize,
     poll: (limit: number) =>
       runtime.jobs.claimPending(leaseMs, workerId, limit, [
-        ...LEAD_IMPORT_TYPES,
+        ...RECORD_IMPORT_TYPES,
       ]),
     handle: async (job, signal: AbortSignal) => runner.process(job, signal),
     extendLease: (id: string) =>
@@ -65,8 +65,8 @@ export function createLeadsImportQueue(
         job &&
         (job.type === "import_status" || job.type === "import_prioridad")
       ) {
-        await publishLeadImportProgress(
-          buildLeadImportProgressEvent({
+        await publishRecordImportProgress(
+          buildRecordImportProgressEvent({
             job,
             status: "COMPLETED",
             rowsApplied: result.rowsApplied,
@@ -84,8 +84,8 @@ export function createLeadsImportQueue(
         job &&
         (job.type === "import_status" || job.type === "import_prioridad")
       ) {
-        await publishLeadImportProgress(
-          buildLeadImportProgressEvent({
+        await publishRecordImportProgress(
+          buildRecordImportProgressEvent({
             job,
             status: "PENDING",
           }),
@@ -99,8 +99,8 @@ export function createLeadsImportQueue(
         job &&
         (job.type === "import_status" || job.type === "import_prioridad")
       ) {
-        await publishLeadImportProgress(
-          buildLeadImportProgressEvent({
+        await publishRecordImportProgress(
+          buildRecordImportProgressEvent({
             job,
             status: "FAILED",
             errorMessage: reason,

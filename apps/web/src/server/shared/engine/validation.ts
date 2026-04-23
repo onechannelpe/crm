@@ -1,7 +1,7 @@
 import { SEARCH_PROJECTION_PATHS } from "~/server/shared/engine/projection-contract";
 import type {
-  LeadCandidate,
-  LeadCandidatesResponse,
+  RecordCandidate,
+  RecordCandidatesResponse,
   SearchResponse,
   SearchResult,
 } from "~/server/shared/engine/types";
@@ -86,7 +86,7 @@ function isSearchResult(value: unknown): value is SearchResult {
   );
 }
 
-function isLeadCandidate(value: unknown): value is LeadCandidate {
+function isRecordCandidate(value: unknown): value is RecordCandidate {
   if (typeof value !== "object" || value === null) return false;
   return (
     typeof prop(value, "ruc") === "string" &&
@@ -140,9 +140,9 @@ export function assertSearchResponse(value: unknown): SearchResponse {
   return { results, count };
 }
 
-export function assertLeadCandidatesResponse(
+export function assertRecordCandidatesResponse(
   value: unknown,
-): LeadCandidatesResponse {
+): RecordCandidatesResponse {
   if (typeof value !== "object" || value === null) {
     throw new Error("Engine returned invalid candidate response shape");
   }
@@ -152,7 +152,7 @@ export function assertLeadCandidatesResponse(
   if (!Array.isArray(candidates) || typeof count !== "number") {
     throw new Error("Engine returned invalid candidate response shape");
   }
-  if (!candidates.every(isLeadCandidate)) {
+  if (!candidates.every(isRecordCandidate)) {
     throw new Error("Engine returned invalid candidate response shape");
   }
 

@@ -4,13 +4,13 @@ import type { DatabaseExecutor } from "./db-executor";
 
 export type AfterCommitEffect = () => Promise<void>;
 
-export interface PipelineTransaction {
+export interface WorkflowTransaction {
   executor: DatabaseExecutor;
   afterCommit: (effect: AfterCommitEffect) => void;
 }
 
-export async function runInPipelineTransaction<T>(
-  operation: (transaction: PipelineTransaction) => Promise<T>,
+export async function runInWorkflowTransaction<T>(
+  operation: (transaction: WorkflowTransaction) => Promise<T>,
 ): Promise<T> {
   const afterCommitEffects: AfterCommitEffect[] = [];
   const result = await getServerRuntime()

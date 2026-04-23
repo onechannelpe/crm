@@ -1,10 +1,10 @@
 import { TextEncoder } from "node:util";
 
-import { buildLeadExportCsv } from "~/server/integrations/infrastructure/lead-export-builder";
+import { buildRecordExportCsv } from "~/server/integrations/infrastructure/lead-export-builder";
 
 import type { SyncExecutor } from "./service/contracts";
 
-export function createLeadsExportExecutor(leadExportQuery: {
+export function createRecordsExportExecutor(recordExportQuery: {
   export(filters: { executiveId?: number }): Promise<
     Array<{
       ruc: string;
@@ -21,8 +21,8 @@ export function createLeadsExportExecutor(leadExportQuery: {
 }): SyncExecutor {
   return {
     async run(_artifactType, _context) {
-      const leads = await leadExportQuery.export({});
-      const csv = buildLeadExportCsv(
+      const leads = await recordExportQuery.export({});
+      const csv = buildRecordExportCsv(
         leads.map((lead) => ({
           ruc: lead.ruc,
           razon_social: lead.razonSocial ?? "",
@@ -36,7 +36,7 @@ export function createLeadsExportExecutor(leadExportQuery: {
         })),
       );
       const bytes = new TextEncoder().encode(csv);
-      return { bytes, filename: "leads-export.csv" };
+      return { bytes, filename: "records-export.csv" };
     },
   };
 }

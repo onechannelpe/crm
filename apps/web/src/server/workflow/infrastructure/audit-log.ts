@@ -6,7 +6,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   AuditLogDraft,
   AuditLogRepository,
-  PipelineAuditService,
+  WorkflowAuditService,
 } from "../application/ports/audit-service";
 
 export function createWorkflowAuditLogRepo(auditLogs: {
@@ -54,7 +54,7 @@ export function createWorkflowAuditLogsRepo(executor: DatabaseExecutor) {
 
 export function createWorkflowAuditService(deps: {
   auditLogs: AuditLogRepository;
-}): PipelineAuditService {
+}): WorkflowAuditService {
   return {
     log(actorUserId, action, entityType, entityId, changes) {
       return deps.auditLogs.create({

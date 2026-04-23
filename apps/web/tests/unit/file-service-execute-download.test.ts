@@ -18,7 +18,7 @@ describe("executeDownload", () => {
         }),
         findArtifactById: async () => ({
           id: "artifact-10",
-          artifactType: "leads_export",
+          artifactType: "records_export",
           direction: "download",
           executionMode: "sync",
           status: "ready",

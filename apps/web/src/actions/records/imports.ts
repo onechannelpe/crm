@@ -1,5 +1,6 @@
 "use server";
 
+import type { RecordImportType } from "~/features/records-imports/contracts";
 import { notFoundError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
@@ -9,13 +10,13 @@ import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import {
-  detectLeadImportFile,
-  canAccessLeadImportJob,
-} from "~/server/leads/imports/api";
+  detectRecordImportFile,
+  canAccessRecordImportJob,
+} from "~/server/records/imports/api";
 import {
-  buildLeadImportProgressEvent,
-  publishLeadImportProgress,
-} from "~/server/leads/imports/progress-events";
+  buildRecordImportProgressEvent,
+  publishRecordImportProgress,
+} from "~/server/records/imports/progress-events";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr, Ok } from "~/server/shared/result";
@@ -24,7 +25,7 @@ function isCsvFile(file: File): boolean {
   return file.name.toLowerCase().endsWith(".csv");
 }
 
-async function getAuthorizedLeadImportJob(
+async function getAuthorizedRecordImportJob(
   actor: { userId: number; branchId: number; role: Role },
   jobId: string,
 ): Promise<IntegrationJobRow> {
@@ -37,7 +38,7 @@ async function getAuthorizedLeadImportJob(
     throw notFoundError("Import job not found");
   }
 
-  const authorized = await canAccessLeadImportJob(
+  const authorized = await canAccessRecordImportJob(
     actor,
     job,
     getServerRuntime().integrations.integration,
@@ -49,10 +50,10 @@ async function getAuthorizedLeadImportJob(
   return job;
 }
 
-export async function uploadLeadImportFile(formData: FormData): Promise<{
+export async function uploadRecordImportFile(formData: FormData): Promise<{
   artifactId: string;
   jobId: string;
-  importType: "import_status" | "import_prioridad";
+  importType: RecordImportType;
   rowsTotal: number;
 }> {
   const file = formData.get("file");
@@ -68,7 +69,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
   }
 
   return runAction({
-    actionName: "leads.import.upload",
+    actionName: "records.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
     input: {
       fileName: file.name,
@@ -78,7 +79,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
       const { repo, storage, syncExecutor } = getServerRuntime().files;
       const { integration } = getServerRuntime().integrations;
       const headerChunkText = await file.slice(0, 64 * 1024).text();
-      const detection = detectLeadImportFile({ fileText: headerChunkText });
+      const detection = detectRecordImportFile({ fileText: headerChunkText });
       if (!detection.ok) {
         throw validationError(detection.message);
       }
@@ -138,8 +139,8 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
         rowsFailed: 0,
       });
 
-      await publishLeadImportProgress(
-        buildLeadImportProgressEvent({
+      await publishRecordImportProgress(
+        buildRecordImportProgressEvent({
           job: {
             id: jobId,
             type: detection.importType,
@@ -152,7 +153,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
         }),
       );
 
-      await publishJob(JOB_CHANNELS.LEADS_IMPORT, jobId);
+      await publishJob(JOB_CHANNELS.RECORDS_IMPORT, jobId);
 
       return Ok({
         artifactId,
@@ -164,15 +165,15 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
   });
 }
 
-export async function getLeadImportJob(
+export async function getRecordImportJob(
   jobId: string,
 ): Promise<IntegrationJobRow> {
   return runAction({
-    actionName: "leads.import.get_job",
+    actionName: "records.import.get_job",
     access: { kind: "permission", permission: "integration:manage" },
     input: { jobId },
     execute: async (ctx) => {
-      const job = await getAuthorizedLeadImportJob(ctx.actor, jobId);
+      const job = await getAuthorizedRecordImportJob(ctx.actor, jobId);
       return Ok(job);
     },
   });

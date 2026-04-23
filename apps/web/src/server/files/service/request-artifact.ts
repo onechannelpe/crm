@@ -28,7 +28,7 @@ const DIRECTION_MAP: Record<
   ArtifactType,
   "upload" | "download" | "bidirectional"
 > = {
-  leads_export: "download",
+  records_export: "download",
   integration_import: "upload",
 };
 

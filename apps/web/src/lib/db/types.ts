@@ -702,7 +702,7 @@ export function isExecutiveCategoryValue(
   return value === "elite" || value === "corporativa";
 }
 
-export interface PipelineLeadsTable {
+export interface WorkflowLeadsTable {
   id: Generated<string>;
   ruc: string;
   razon_social: string | null;
@@ -726,7 +726,7 @@ export interface PipelineLeadsTable {
   updated_at: number;
 }
 
-export interface PipelineLeadCommercialInputsTable {
+export interface WorkflowLeadCommercialInputsTable {
   lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
@@ -738,7 +738,7 @@ export interface PipelineLeadCommercialInputsTable {
   updated_by: number;
 }
 
-export interface PipelineQuotationsTable {
+export interface WorkflowQuotationsTable {
   id: Generated<string>;
   lead_id: string;
   payback_pricing: number;
@@ -752,7 +752,7 @@ export interface PipelineQuotationsTable {
   created_by: number;
 }
 
-export interface PipelineSalesTable {
+export interface WorkflowSalesTable {
   id: Generated<string>;
   lead_id: string;
   executive_id: number;
@@ -768,7 +768,7 @@ export interface PipelineSalesTable {
   created_at: number;
 }
 
-export interface PipelineLeadAssignmentsTable {
+export interface WorkflowLeadAssignmentsTable {
   id: Generated<string>;
   lead_id: string;
   executive_id: number;
@@ -777,7 +777,7 @@ export interface PipelineLeadAssignmentsTable {
   assigned_at: number;
 }
 
-export interface PipelineHistoryEventsTable {
+export interface WorkflowHistoryEventsTable {
   id: Generated<string>;
   lead_id: string;
   event_type:
@@ -817,7 +817,7 @@ export interface WorkflowAuditLogsTable {
   created_at: number;
 }
 
-export interface PipelineIntegrationJobsTable {
+export interface WorkflowIntegrationJobsTable {
   id: Generated<string>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
@@ -837,7 +837,7 @@ export interface PipelineIntegrationJobsTable {
   completed_at: number | null;
 }
 
-export interface PipelineIntegrationImportRowsTable {
+export interface WorkflowIntegrationImportRowsTable {
   id: Generated<string>;
   integration_job_id: string;
   row_number: number;
@@ -852,7 +852,7 @@ export interface PipelineIntegrationImportRowsTable {
   applied_at: number | null;
 }
 
-export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
+export interface WorkflowIntegrationOutboxNeedsExecutiveInputTable {
   id: Generated<string>;
   lead_id: string;
   ruc: string;
@@ -868,7 +868,7 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
   processed_at: number | null;
 }
 
-export interface PipelineIntegrationOutboxReadyForQuotationTable {
+export interface WorkflowIntegrationOutboxReadyForQuotationTable {
   id: Generated<string>;
   lead_id: string;
   ruc: string;
@@ -938,18 +938,18 @@ export interface Database {
   webauthn_challenges: WebauthnChallengesTable;
   user_oauth_accounts: UserOAuthAccountsTable;
   password_reset_tokens: PasswordResetTokensTable;
-  workflow_leads: PipelineLeadsTable;
-  workflow_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
-  workflow_quotations: PipelineQuotationsTable;
-  workflow_sales: PipelineSalesTable;
-  workflow_lead_assignments: PipelineLeadAssignmentsTable;
-  workflow_history_events: PipelineHistoryEventsTable;
+  workflow_leads: WorkflowLeadsTable;
+  workflow_lead_commercial_inputs: WorkflowLeadCommercialInputsTable;
+  workflow_quotations: WorkflowQuotationsTable;
+  workflow_sales: WorkflowSalesTable;
+  workflow_lead_assignments: WorkflowLeadAssignmentsTable;
+  workflow_history_events: WorkflowHistoryEventsTable;
   workflow_audit_logs: WorkflowAuditLogsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;
-  workflow_integration_jobs: PipelineIntegrationJobsTable;
-  workflow_integration_import_rows: PipelineIntegrationImportRowsTable;
-  workflow_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
-  workflow_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
+  workflow_integration_jobs: WorkflowIntegrationJobsTable;
+  workflow_integration_import_rows: WorkflowIntegrationImportRowsTable;
+  workflow_integration_outbox_needs_executive_input: WorkflowIntegrationOutboxNeedsExecutiveInputTable;
+  workflow_integration_outbox_ready_for_quotation: WorkflowIntegrationOutboxReadyForQuotationTable;
   workflow_artifacts: WorkflowArtifactsTable;
   file_assets: FileAssetsTable;
   artifact_file_bindings: ArtifactFileBindingsTable;
@@ -959,7 +959,7 @@ export interface Database {
 
 export interface WorkflowArtifactsTable {
   id: string;
-  artifact_type: "leads_export" | "integration_import";
+  artifact_type: "records_export" | "integration_import";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
   status:

@@ -1,14 +1,14 @@
-import type { LeadImportType } from "~/features/leads-imports/contracts";
+import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 
 import {
-  MAX_LEAD_IMPORT_ROWS,
-  type LeadImportStreamFactory,
+  MAX_RECORD_IMPORT_ROWS,
+  type RecordImportStreamFactory,
   type ResolvedLayout,
 } from "./contracts";
 import {
   resolveLayoutForImportType,
-  inspectLeadImportCsv,
+  inspectRecordImportCsv,
 } from "./header-match";
 import {
   assertSupportedLeadCsvLine,
@@ -16,29 +16,29 @@ import {
   isLineEmpty,
 } from "./line-reader";
 import {
-  mapLeadImportRow,
+  mapRecordImportRow,
   splitLeadCsvLine,
-  type LeadImportInvalidRow,
+  type RecordImportInvalidRow,
 } from "./row-mapper";
 
 export {
-  MAX_LEAD_IMPORT_ROWS,
+  MAX_RECORD_IMPORT_ROWS,
   PRIORITY_IMPORT_HEADERS,
   STATUS_IMPORT_HEADERS,
-  type LeadImportCsvInspectionResult,
-  type LeadImportTypeDetectionErrorCode,
+  type RecordImportCsvInspectionResult,
+  type RecordImportTypeDetectionErrorCode,
 } from "./contracts";
-export { inspectLeadImportCsv };
+export { inspectRecordImportCsv };
 
-export async function parseLeadImportRowsFromStream(input: {
-  streamFactory: LeadImportStreamFactory;
-  importType: LeadImportType;
+export async function parseRecordImportRowsFromStream(input: {
+  streamFactory: RecordImportStreamFactory;
+  importType: RecordImportType;
 }): Promise<{
   validRows: ImportRowInput[];
-  invalidRows: LeadImportInvalidRow[];
+  invalidRows: RecordImportInvalidRow[];
 }> {
   const validRows: ImportRowInput[] = [];
-  const invalidRows: LeadImportInvalidRow[] = [];
+  const invalidRows: RecordImportInvalidRow[] = [];
   let layout: ResolvedLayout | null = null;
   let processedRows = 0;
 
@@ -69,13 +69,13 @@ export async function parseLeadImportRowsFromStream(input: {
     }
 
     processedRows++;
-    if (processedRows > MAX_LEAD_IMPORT_ROWS) {
+    if (processedRows > MAX_RECORD_IMPORT_ROWS) {
       throw new Error(
-        `Import exceeds maximum supported rows (${MAX_LEAD_IMPORT_ROWS})`,
+        `Import exceeds maximum supported rows (${MAX_RECORD_IMPORT_ROWS})`,
       );
     }
 
-    const mapped = mapLeadImportRow({
+    const mapped = mapRecordImportRow({
       rowNumber,
       importType: input.importType,
       headers: layout.headers,

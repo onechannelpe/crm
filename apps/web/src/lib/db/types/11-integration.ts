@@ -1,6 +1,6 @@
 import type { Generated, ColumnType } from "kysely";
 
-export interface PipelineIntegrationJobsTable {
+export interface WorkflowIntegrationJobsTable {
   id: Generated<string>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
@@ -20,7 +20,7 @@ export interface PipelineIntegrationJobsTable {
   completed_at: number | null;
 }
 
-export interface PipelineIntegrationImportRowsTable {
+export interface WorkflowIntegrationImportRowsTable {
   id: Generated<string>;
   integration_job_id: string;
   row_number: number;
@@ -35,7 +35,7 @@ export interface PipelineIntegrationImportRowsTable {
   applied_at: number | null;
 }
 
-export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
+export interface WorkflowIntegrationOutboxNeedsExecutiveInputTable {
   id: Generated<string>;
   lead_id: string;
   ruc: string;
@@ -51,7 +51,7 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
   processed_at: number | null;
 }
 
-export interface PipelineIntegrationOutboxReadyForQuotationTable {
+export interface WorkflowIntegrationOutboxReadyForQuotationTable {
   id: Generated<string>;
   lead_id: string;
   ruc: string;
@@ -68,8 +68,8 @@ export interface PipelineIntegrationOutboxReadyForQuotationTable {
 }
 
 export type Db = {
-  workflow_integration_jobs: PipelineIntegrationJobsTable;
-  workflow_integration_import_rows: PipelineIntegrationImportRowsTable;
-  workflow_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
-  workflow_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
+  workflow_integration_jobs: WorkflowIntegrationJobsTable;
+  workflow_integration_import_rows: WorkflowIntegrationImportRowsTable;
+  workflow_integration_outbox_needs_executive_input: WorkflowIntegrationOutboxNeedsExecutiveInputTable;
+  workflow_integration_outbox_ready_for_quotation: WorkflowIntegrationOutboxReadyForQuotationTable;
 };

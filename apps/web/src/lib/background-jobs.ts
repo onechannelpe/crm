@@ -6,7 +6,7 @@ import { createLogger } from "~/lib/observability/logger";
 import { openStoredFileStream } from "~/server/files/storage";
 import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
-import { createLeadsImportQueue } from "~/server/integrations/queue/leads-import-queue";
+import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import { getServerRuntime } from "~/server/runtime";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 
@@ -18,7 +18,7 @@ export function startBackgroundJobs() {
 
   const { integration } = getServerRuntime().integrations;
 
-  const leadsImportQueue = createLeadsImportQueue(WORKER_ID, {
+  const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
     openFileStream: (filePath) =>
       openStoredFileStream(config.uploads.storageRoot, filePath),
@@ -41,7 +41,7 @@ export function startBackgroundJobs() {
   const notificationsWhatsAppQueue =
     getServerRuntime().notifications.createWhatsAppQueue(WORKER_ID);
   const queues: QueueRunner[] = [
-    leadsImportQueue,
+    recordsImportQueue,
     needsExecutiveOutboxQueue,
     readyForQuotationOutboxQueue,
     enrichmentQueue,
@@ -73,8 +73,8 @@ export function startBackgroundJobs() {
 
   // Redis triggered processing
   void startQueueDoorbellSubscriber({
-    LEADS_IMPORT: () => {
-      void leadsImportQueue.runOnce();
+    RECORDS_IMPORT: () => {
+      void recordsImportQueue.runOnce();
     },
     INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT: () => {
       void needsExecutiveOutboxQueue.runOnce();

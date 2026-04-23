@@ -1,10 +1,10 @@
 // GENERATED FILE. DO NOT EDIT.
-// Source: contracts/engine/lead-api.json
+// Source: contracts/engine/record-api.json
 // Generator: tools/codegen/bin/generate.ts
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Clone)]
-pub struct LeadCandidate {
+pub struct RecordCandidate {
     pub ruc: String,
     pub organization_name: String,
     pub dni: String,
@@ -13,13 +13,13 @@ pub struct LeadCandidate {
 }
 
 #[derive(Debug, Serialize)]
-pub struct LeadCandidatesResponse {
-    pub candidates: Vec<LeadCandidate>,
+pub struct RecordCandidatesResponse {
+    pub candidates: Vec<RecordCandidate>,
     pub count: usize,
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct LeadImportRow {
+pub struct RecordImportRow {
     pub ruc: String,
     pub organization_name: String,
     pub dni: String,
@@ -31,13 +31,13 @@ pub struct LeadImportRow {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct LeadImportRequest {
-    pub rows: Vec<LeadImportRow>,
+pub struct RecordImportRequest {
+    pub rows: Vec<RecordImportRow>,
     pub source: String,
 }
 
 #[derive(Debug, Serialize)]
-pub struct LeadImportResponse {
+pub struct RecordImportResponse {
     pub inserted: usize,
     pub updated: usize,
     pub skipped: usize,

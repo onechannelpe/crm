@@ -4,7 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-} from "~/pipeline/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 export type LeadHistoryEventType =
   | "lead_registered"

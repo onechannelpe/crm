@@ -1,7 +1,7 @@
 import {
-  type LeadImportProgressEvent,
-  type LeadImportType,
-} from "~/features/leads-imports/contracts";
+  type RecordImportProgressEvent,
+  type RecordImportType,
+} from "~/features/records-imports/contracts";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJson } from "~/lib/redis/publisher";
 import type {
@@ -9,15 +9,15 @@ import type {
   IntegrationJobStatus,
 } from "~/server/integrations/types";
 
-function toLeadImportType(type: IntegrationJobRow["type"]): LeadImportType {
+function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
   if (type === "import_status" || type === "import_prioridad") {
     return type;
   }
 
-  throw new Error(`Unsupported lead import type: ${type}`);
+  throw new Error(`Unsupported record import type: ${type}`);
 }
 
-export function buildLeadImportProgressEvent(input: {
+export function buildRecordImportProgressEvent(input: {
   job: Pick<
     IntegrationJobRow,
     | "id"
@@ -33,11 +33,11 @@ export function buildLeadImportProgressEvent(input: {
   rowsTotal?: number;
   status?: IntegrationJobStatus;
   errorMessage?: string | null;
-}): LeadImportProgressEvent {
+}): RecordImportProgressEvent {
   return {
     type: "job_progress",
     jobId: input.job.id,
-    importType: toLeadImportType(input.job.type),
+    importType: toRecordImportType(input.job.type),
     status: input.status ?? input.job.status,
     rowsApplied: input.rowsApplied ?? input.job.rows_applied ?? 0,
     rowsFailed: input.rowsFailed ?? input.job.rows_failed ?? 0,
@@ -46,8 +46,8 @@ export function buildLeadImportProgressEvent(input: {
   };
 }
 
-export async function publishLeadImportProgress(
-  event: LeadImportProgressEvent,
+export async function publishRecordImportProgress(
+  event: RecordImportProgressEvent,
 ): Promise<void> {
-  await publishJson(JOB_CHANNELS.LEADS_IMPORT_PROGRESS, event);
+  await publishJson(JOB_CHANNELS.RECORDS_IMPORT_PROGRESS, event);
 }

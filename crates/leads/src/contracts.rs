@@ -3,11 +3,12 @@ use serde::Deserialize;
 // Generated struct types are re-exported here so callers only import from
 // `leads::contracts`, never from the generated module directly.
 pub use crate::contracts_generated::{
-    LeadCandidate, LeadCandidatesResponse, LeadImportRequest, LeadImportResponse, LeadImportRow,
+    RecordCandidate, RecordCandidatesResponse, RecordImportRequest, RecordImportResponse,
+    RecordImportRow,
 };
 
 #[derive(Debug, Deserialize)]
-pub struct LeadCandidateRequest {
+pub struct RecordCandidateRequest {
     pub branch_id: i64,
     pub user_id: i64,
     #[serde(default = "default_amount")]

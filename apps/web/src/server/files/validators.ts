@@ -7,7 +7,7 @@ const DOUBLE_EXT_RE = /\.[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/;
 const PATH_SEGMENT_RE = /[/\\]/;
 
 const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
-  leads_export: ["csv"],
+  records_export: ["csv"],
   integration_import: ["csv"],
 };
 

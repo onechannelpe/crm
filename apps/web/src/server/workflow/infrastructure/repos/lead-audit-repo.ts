@@ -1,8 +1,8 @@
-import type { PipelineAuditService } from "../../application/ports/audit-service";
+import type { WorkflowAuditService } from "../../application/ports/audit-service";
 import type { LeadAuditRepository } from "../../ports/lead-audit-repository";
 
 export function createLeadAuditRepository(
-  auditService: PipelineAuditService,
+  auditService: WorkflowAuditService,
 ): LeadAuditRepository {
   return {
     async append(input) {

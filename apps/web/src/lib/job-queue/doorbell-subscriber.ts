@@ -8,7 +8,7 @@ export async function startQueueDoorbellSubscriber(triggers: {
   [K in keyof typeof JOB_CHANNELS]?: () => void;
 }) {
   const channelEntries = [
-    { key: "LEADS_IMPORT", channel: JOB_CHANNELS.LEADS_IMPORT },
+    { key: "RECORDS_IMPORT", channel: JOB_CHANNELS.RECORDS_IMPORT },
     {
       key: "INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT",
       channel: JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,

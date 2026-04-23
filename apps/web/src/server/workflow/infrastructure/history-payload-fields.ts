@@ -1,11 +1,4 @@
 import { isPlainRecord } from "~/lib/type-guards";
-import type {
-  LeadCallOutcome,
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-  Moneda,
-} from "~/pipeline/contracts/lead-schema";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import {
@@ -14,6 +7,13 @@ import {
   parseRequiredLeadStatus,
   parseRequiredMoneda,
 } from "~/server/workflow/domain/lead-schema-parser";
+import type {
+  LeadCallOutcome,
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+  Moneda,
+} from "~/workflow/contracts/lead-schema";
 
 import type { HistoryEventRow } from "./history-event-row";
 

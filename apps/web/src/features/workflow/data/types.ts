@@ -2,7 +2,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/pipeline/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 export type LeadListFilters = {
   stage?: LeadStage;
