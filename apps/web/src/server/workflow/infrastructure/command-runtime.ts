@@ -19,7 +19,7 @@ import {
 import { createEngineGateway } from "./engine-gateway";
 import { createWorkflowNotificationCenter } from "./notifications";
 
-export type PipelineCommandRuntime = {
+export type WorkflowCommandRuntime = {
   executor: DatabaseExecutor;
   deps: WorkflowDeps;
   auditService: PipelineAuditService;
@@ -28,7 +28,7 @@ export type PipelineCommandRuntime = {
   notificationCenter: PipelineNotificationCenter;
 };
 
-function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
+function createWorkflowAuditServiceRuntime(executor: DatabaseExecutor) {
   return createWorkflowAuditService({
     auditLogs: createWorkflowAuditLogRepo(
       createWorkflowAuditLogsRepo(executor),
@@ -36,16 +36,16 @@ function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
   });
 }
 
-function createPipelineCommandRuntime(
+function createWorkflowCommandRuntime(
   executor: DatabaseExecutor,
-): PipelineCommandRuntime {
+): WorkflowCommandRuntime {
   const enrichmentRepo = createSearchEnrichmentRepo(executor);
   const enrichmentCommand = createEnrichmentCommand(enrichmentRepo);
 
   return {
     executor,
     deps: createWorkflowFeatureDeps(executor),
-    auditService: createPipelineAuditServiceRuntime(executor),
+    auditService: createWorkflowAuditServiceRuntime(executor),
     engineGateway: createEngineGateway(),
     leadEnrichmentQueue: {
       async enqueueRucVerification(ruc, requestedByUserId) {
@@ -57,9 +57,9 @@ function createPipelineCommandRuntime(
 }
 
 export async function runWorkflowCommand<TResult>(
-  operation: (runtime: PipelineCommandRuntime) => Promise<TResult>,
+  operation: (runtime: WorkflowCommandRuntime) => Promise<TResult>,
 ): Promise<TResult> {
   return runInPipelineTransaction(async ({ executor }) =>
-    operation(createPipelineCommandRuntime(executor)),
+    operation(createWorkflowCommandRuntime(executor)),
   );
 }

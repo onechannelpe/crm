@@ -42,7 +42,7 @@ import { reassignLeadCommand } from "./reassign-lead";
 import { registerLeadCommand } from "./register-lead";
 import { reviewLeadCommand } from "./review-lead";
 
-export type PipelineCommandApiDeps = {
+export type WorkflowCommandApiDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
   users: LeadUserScopeRepository;
@@ -57,7 +57,7 @@ export type PipelineCommandApiDeps = {
   leadSales: LeadSaleRepository;
 };
 
-export type PipelineCommandApi = {
+export type WorkflowCommandApi = {
   registerLead(
     input: RegisterLeadInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;
@@ -91,8 +91,8 @@ export type PipelineCommandApi = {
 };
 
 export function createWorkflowCommandApi(
-  deps: PipelineCommandApiDeps,
-): PipelineCommandApi {
+  deps: WorkflowCommandApiDeps,
+): WorkflowCommandApi {
   return {
     registerLead: (input) => registerLeadCommand(deps, input),
     reassignLead: (input) => reassignLeadCommand(deps, input),

@@ -3,7 +3,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import {
   createWorkflowCommandApi,
-  type PipelineCommandApi,
+  type WorkflowCommandApi,
 } from "../../application/command-api";
 import type { PipelineAuditService } from "../../application/ports/audit-service";
 import type { PipelineEngineGateway } from "../../application/ports/engine-gateway";
@@ -17,7 +17,7 @@ import { createLeadReadRepository } from "../repos/lead-read-repo";
 import { createLeadUserScopeRepository } from "../repos/lead-user-scope-repo";
 import { createSaleRepo } from "../sale-repo";
 
-export type PipelineCommandApiRuntimeInput = {
+export type WorkflowCommandApiRuntimeInput = {
   executor: DatabaseExecutor;
   deps: WorkflowDeps;
   notificationCenter: PipelineNotificationCenter;
@@ -27,8 +27,8 @@ export type PipelineCommandApiRuntimeInput = {
 };
 
 export function createWorkflowCommandApiRuntime(
-  input: PipelineCommandApiRuntimeInput,
-): PipelineCommandApi {
+  input: WorkflowCommandApiRuntimeInput,
+): WorkflowCommandApi {
   return createWorkflowCommandApi({
     leadReader: createLeadReadRepository(input.deps.leadMutations.leads),
     mutationUow: createLeadMutationUow(input.executor),
