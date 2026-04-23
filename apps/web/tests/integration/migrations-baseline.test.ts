@@ -39,7 +39,6 @@ describe("schema baseline", () => {
       `.execute(db);
       const tableNames = new Set(tables.rows.map((row) => row.name));
       expect(tableNames.has("users")).toBe(true);
-      expect(tableNames.has("inventory_items")).toBe(true);
       expect(tableNames.has("audit_logs")).toBe(true);
       expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);

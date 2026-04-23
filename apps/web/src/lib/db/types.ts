@@ -330,15 +330,6 @@ export interface CapacityRequestsTable {
   decided_at: number | null;
 }
 
-export interface ProductsTable {
-  id: Generated<number>;
-  name: string;
-  category: string;
-  subtype: string | null;
-  price: number;
-  is_active: number;
-}
-
 export interface InteractionLogsTable {
   id: Generated<number>;
   contact_id: number;
@@ -346,14 +337,6 @@ export interface InteractionLogsTable {
   outcome: string;
   notes: string | null;
   duration_seconds: number | null;
-  created_at: number;
-}
-
-export interface InventoryItemsTable {
-  id: Generated<number>;
-  product_id: number;
-  serial_number: string;
-  status: "available" | "reserved" | "sold";
   created_at: number;
 }
 
@@ -936,9 +919,7 @@ export interface Database {
   lead_usage_reservations: LeadUsageReservationsTable;
   lead_usage_commits: LeadUsageCommitsTable;
   capacity_requests: CapacityRequestsTable;
-  products: ProductsTable;
   interaction_logs: InteractionLogsTable;
-  inventory_items: InventoryItemsTable;
   extension_handoffs: ExtensionHandoffsTable;
   extension_installation_sessions: ExtensionInstallationSessionsTable;
   extension_runtime_events: ExtensionRuntimeEventsTable;

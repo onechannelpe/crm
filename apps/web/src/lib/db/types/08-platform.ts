@@ -1,22 +1,5 @@
 import type { Generated } from "kysely";
 
-export interface ProductsTable {
-  id: Generated<number>;
-  name: string;
-  category: string;
-  subtype: string | null;
-  price: number;
-  is_active: number;
-}
-
-export interface InventoryItemsTable {
-  id: Generated<number>;
-  product_id: number;
-  serial_number: string;
-  status: "available" | "reserved" | "sold";
-  created_at: number;
-}
-
 export interface AuditLogsTable {
   id: Generated<number>;
   user_id: number;
@@ -68,8 +51,6 @@ export interface ReportExportDownloadsTable {
 }
 
 export type Db = {
-  products: ProductsTable;
-  inventory_items: InventoryItemsTable;
   audit_logs: AuditLogsTable;
   audit_action_policies: AuditActionPoliciesTable;
   report_export_jobs: ReportExportJobsTable;

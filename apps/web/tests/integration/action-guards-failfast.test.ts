@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { getUserLoginRetryReport } from "../../src/actions/admin/auth-security";
 import { listUserSessions } from "../../src/actions/admin/sessions/read";
 import { revokeUserSession } from "../../src/actions/admin/sessions/revoke";
-import { updateProductPricing } from "../../src/actions/settings/admin-products";
 import { acceptTeamInvite } from "../../src/actions/team/acceptance";
 import {
   createTeamInvite,
@@ -13,9 +12,6 @@ import {
 
 describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {
-    await expect(updateProductPricing(0, 10, true)).rejects.toThrow(
-      "productId must be a positive integer",
-    );
     await expect(listUserSessions(0)).rejects.toThrow(
       "userId must be a positive integer",
     );

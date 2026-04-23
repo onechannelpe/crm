@@ -111,55 +111,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .execute();
 
   await db
-    .insertInto("products")
-    .values([
-      {
-        name: "Plan Movil 50GB",
-        category: "mobile",
-        subtype: "mono",
-        price: 69.9,
-        is_active: 1,
-      },
-      {
-        name: "Fibra 200Mbps",
-        category: "fiber",
-        subtype: "mono",
-        price: 89.9,
-        is_active: 1,
-      },
-      {
-        name: "Duo Fibra + Movil",
-        category: "bundle",
-        subtype: "duo",
-        price: 129.9,
-        is_active: 1,
-      },
-      {
-        name: "Plan Movil 120GB",
-        category: "mobile",
-        subtype: "mono",
-        price: 109.9,
-        is_active: 1,
-      },
-      {
-        name: "Trio Empresa Full",
-        category: "bundle",
-        subtype: "trio",
-        price: 219.9,
-        is_active: 1,
-      },
-      {
-        name: "Plan Legacy 20GB",
-        category: "mobile",
-        subtype: "mono",
-        price: 49.9,
-        is_active: 0,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
     .insertInto("search_policy_defaults")
     .values([
       {
@@ -235,15 +186,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
       },
       {
         action: "session_revoked_by_admin",
-        risk_level: "high",
-        is_active: 1,
-        is_protected: 1,
-        updated_by_user_id: null,
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        action: "product_updated",
         risk_level: "high",
         is_active: 1,
         is_protected: 1,
@@ -538,79 +480,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
     .execute();
 
   const oneDay = 86400000;
-  // Inventory items
-  await db
-    .insertInto("inventory_items")
-    .values([
-      {
-        product_id: 1,
-        serial_number: "MOV-2026-0001",
-        status: "available",
-        created_at: now,
-      },
-      {
-        product_id: 1,
-        serial_number: "MOV-2026-0002",
-        status: "available",
-        created_at: now,
-      },
-      {
-        product_id: 1,
-        serial_number: "MOV-2026-0003",
-        status: "reserved",
-        created_at: now,
-      },
-      {
-        product_id: 2,
-        serial_number: "FIB-2026-0001",
-        status: "available",
-        created_at: now,
-      },
-      {
-        product_id: 2,
-        serial_number: "FIB-2026-0002",
-        status: "sold",
-        created_at: now,
-      },
-      {
-        product_id: 3,
-        serial_number: "DUO-2026-0001",
-        status: "available",
-        created_at: now,
-      },
-      {
-        product_id: 3,
-        serial_number: "DUO-2026-0002",
-        status: "available",
-        created_at: now,
-      },
-      {
-        product_id: 3,
-        serial_number: "DUO-2026-0003",
-        status: "reserved",
-        created_at: now,
-      },
-      {
-        product_id: 1,
-        serial_number: "MOV-2026-0101",
-        status: "available",
-        created_at: now,
-      },
-      {
-        product_id: 2,
-        serial_number: "FIB-2026-0101",
-        status: "available",
-        created_at: now,
-      },
-      {
-        product_id: 2,
-        serial_number: "FIB-2026-0102",
-        status: "reserved",
-        created_at: now,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
 
   await db
     .insertInto("agent_status_logs")
@@ -704,24 +573,6 @@ export async function seedIfEmpty(db: Kysely<Database>) {
         comment: "Pausa activa",
         started_at: now - oneDay / 6,
         ended_at: null,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
-    .insertInto("audit_logs")
-    .values([
-      {
-        user_id: 12,
-        action: "product_updated",
-        entity_type: "product",
-        entity_id: 1,
-        changes: JSON.stringify({
-          previous: { price: 69.9, is_active: 1 },
-          next: { price: 72.9, is_active: 1 },
-        }),
-        created_at: now - oneDay * 2,
       },
     ])
     .onConflict((oc) => oc.doNothing())

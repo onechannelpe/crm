@@ -27,7 +27,6 @@ export type SidePanelPageKey =
   | "search-company-detail"
   | "create-lead"
   | "view-record"
-  | "inventory-detail"
   | "data-grid-detail";
 
 export type SidePanelNavigationEntry = {
@@ -70,16 +69,6 @@ export type ViewRecordSidePanelPageState = {
   activeTab: LeadRecordTabId;
 };
 
-export type InventoryDetailSidePanelPageState = {
-  page: "inventory-detail";
-  inventoryItemId: number;
-  productName: string;
-  serialNumber: string;
-  category: string;
-  status: string;
-  createdAt: number;
-};
-
 export type DataGridDetailSidePanelItem = {
   label: string;
   value: string;
@@ -98,7 +87,6 @@ export type SidePanelPageState =
   | SearchCompanyDetailSidePanelPageState
   | CreateLeadSidePanelPageState
   | ViewRecordSidePanelPageState
-  | InventoryDetailSidePanelPageState
   | DataGridDetailSidePanelPageState;
 
 export type SidePanelPageDefinition = {
@@ -227,42 +215,6 @@ export function createLeadRecordDetailSidePanelPage(
       title: input.title,
       subtitle: input.subtitle ?? `Prospecto ${input.leadId}`,
       activeTab: "home",
-    },
-  };
-}
-
-type CreateInventoryDetailSidePanelPageInput = {
-  inventoryItemId: number;
-  productName: string;
-  serialNumber: string;
-  category: string;
-  status: string;
-  createdAt: number;
-};
-
-export function createInventoryDetailSidePanelPage(
-  input: CreateInventoryDetailSidePanelPageInput,
-): SidePanelPageDefinition {
-  const pageId = createEntitySidePanelPageId(
-    "inventory-detail",
-    input.inventoryItemId,
-  );
-
-  return {
-    entry: {
-      page: "inventory-detail",
-      pageId,
-      pageTitle: input.productName,
-      pageIcon: Building2,
-    },
-    state: {
-      page: "inventory-detail",
-      inventoryItemId: input.inventoryItemId,
-      productName: input.productName,
-      serialNumber: input.serialNumber,
-      category: input.category,
-      status: input.status,
-      createdAt: input.createdAt,
     },
   };
 }

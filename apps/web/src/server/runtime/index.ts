@@ -7,7 +7,6 @@ import { createExtensionRuntime } from "./extension-runtime";
 import { createFilesRuntime } from "./files-runtime";
 import { createServerInfra } from "./infra";
 import { createIntegrationsRuntime } from "./integrations-runtime";
-import { createInventoryRuntime } from "./inventory-runtime";
 import { createNotificationsRuntime } from "./notifications-runtime";
 import { createObservabilityRuntime } from "./observability-runtime";
 import { createPipelineRuntime } from "./pipeline-runtime";
@@ -31,7 +30,6 @@ export function createServerRuntime() {
     contactAssignments: createContactAssignmentsRuntime(infra),
     extension: createExtensionRuntime(infra),
     integrations: createIntegrationsRuntime(infra),
-    inventory: createInventoryRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),
     pipeline: createPipelineRuntime(infra),

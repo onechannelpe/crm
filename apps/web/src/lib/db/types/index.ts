@@ -84,8 +84,6 @@ export {
 } from "./07-search";
 
 export {
-  type ProductsTable,
-  type InventoryItemsTable,
   type AuditLogsTable,
   type AuditActionPoliciesTable,
   type ReportExportJobsTable,
@@ -161,9 +159,7 @@ export interface Database {
   lead_usage_reservations: capacity.LeadUsageReservationsTable;
   lead_usage_commits: capacity.LeadUsageCommitsTable;
   capacity_requests: capacity.CapacityRequestsTable;
-  products: platform.ProductsTable;
   interaction_logs: crm.InteractionLogsTable;
-  inventory_items: platform.InventoryItemsTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;

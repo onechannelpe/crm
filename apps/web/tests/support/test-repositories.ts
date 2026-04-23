@@ -31,8 +31,6 @@ import { createContactsRepo } from "../../src/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "../../src/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "../../src/server/extension/repos";
 import { createIntegrationJobRepo } from "../../src/server/integrations/infrastructure/integration-job-repo";
-import { createInventoryRepo } from "../../src/server/inventory/repos";
-import { createProductsRepo } from "../../src/server/inventory/repos-products";
 import { createAppNotificationRepo } from "../../src/server/notifications/repos/app-notification";
 import { createNotificationCampaignRepo } from "../../src/server/notifications/repos/campaign";
 import { createNotificationContactRepo } from "../../src/server/notifications/repos/contact";
@@ -81,14 +79,12 @@ export function createTestRepositories(db: Kysely<Database>) {
     leadUsageCommits: createLeadUsageCommitsRepo(db),
     capacityRequests: createCapacityRequestsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
-    products: createProductsRepo(db),
     notificationCampaigns: createNotificationCampaignRepo(db),
     notificationContacts: createNotificationContactRepo(db),
     notificationPreferences: createNotificationPreferenceRepo(db),
     appNotifications: createAppNotificationRepo(db),
     actionObservations: createActionObservationsRepo(db),
     authFunnelEvents: createAuthFunnelEventsRepo(db),
-    inventory: createInventoryRepo(db),
     extensionRuntime: createExtensionRuntimeRepo(db),
     auditLogs: createAuditLogsRepo(db),
     auditActionPolicies: createAuditActionPoliciesRepo(db),

@@ -166,18 +166,6 @@ async function seedTemplate(db: Kysely<Database>) {
       },
     ])
     .execute();
-
-  await db
-    .insertInto("products")
-    .values({
-      id: 1,
-      name: "Plan Test",
-      category: "mobile",
-      subtype: "mono",
-      price: 10,
-      is_active: 1,
-    })
-    .execute();
 }
 
 export interface TestDbContext {
