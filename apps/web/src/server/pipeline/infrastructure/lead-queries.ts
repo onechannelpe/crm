@@ -12,7 +12,7 @@ import type {
   LeadQueries,
 } from "../application/ports/lead-queries";
 
-type LeadCols = Selectable<Database["pipeline_leads"]>;
+type LeadCols = Selectable<Database["workflow_leads"]>;
 
 type LeadListSource = Pick<
   LeadCols,
@@ -76,7 +76,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
   return {
     async list(filters: LeadListFilters): Promise<LeadListRow[]> {
       let query = db
-        .selectFrom("pipeline_leads as lead")
+        .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select([
           "lead.id",
@@ -118,7 +118,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
 
     async count(filters: LeadListFilters): Promise<number> {
       let query = db
-        .selectFrom("pipeline_leads as lead")
+        .selectFrom("workflow_leads as lead")
         .select((eb) => eb.fn.countAll<number>().as("count"));
 
       if (filters.executiveId !== undefined) {
@@ -140,7 +140,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
 
     async export(filters: LeadExportFilters): Promise<LeadExportRow[]> {
       let query = db
-        .selectFrom("pipeline_leads as lead")
+        .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select([
           "lead.id",

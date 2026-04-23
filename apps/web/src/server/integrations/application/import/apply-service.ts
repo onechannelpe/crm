@@ -16,7 +16,7 @@ function resultSort(a: RowResult, b: RowResult): number {
 
 export async function applyImportRows(
   input: {
-    jobId: number;
+    jobId: string;
     actorId: number;
     validRows: ImportRowInput[];
     invalidRows: Array<{

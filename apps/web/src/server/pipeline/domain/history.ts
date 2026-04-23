@@ -65,13 +65,13 @@ export type LeadHistoryPayloadByEvent = {
     cantidadPos: number;
   };
   quotation_created: {
-    quotationId: number;
+    quotationId: string;
     version: number;
     moneda: Moneda;
   };
   sale_approved: null;
   sale_created: {
-    saleId: number;
+    saleId: string;
   };
   call_logged: {
     outcome: LeadCallOutcome;
@@ -84,7 +84,7 @@ export type LeadHistoryPayloadByEvent = {
 
 export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
   {
-    leadId: number;
+    leadId: string;
     eventType: TEventType;
     actorUserId: number | null;
     subjectUserId: number | null;
@@ -105,8 +105,8 @@ export type LeadHistoryPerson = {
 export type LeadHistoryEntryFor<
   TEventType extends keyof LeadHistoryPayloadByEvent,
 > = {
-  id: number;
-  leadId: number;
+  id: string;
+  leadId: string;
   eventType: TEventType;
   actorUserId: number | null;
   subjectUserId: number | null;
@@ -123,7 +123,7 @@ export type LeadHistoryEntry = {
 export function createHistoryEvent<
   TEventType extends LeadHistoryEventType,
 >(input: {
-  leadId: number;
+  leadId: string;
   eventType: TEventType;
   actorUserId?: number | null;
   subjectUserId?: number | null;

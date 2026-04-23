@@ -1,5 +1,5 @@
 export type LeadAssignmentDraft = {
-  leadId: number;
+  leadId: string;
   executiveId: number;
   assignedBy: number;
   isActive: boolean;
@@ -7,11 +7,11 @@ export type LeadAssignmentDraft = {
 };
 
 export type LeadAssignment = LeadAssignmentDraft & {
-  id: number;
+  id: string;
 };
 
 export type LeadAssignmentRepository = {
-  insert(values: LeadAssignmentDraft): Promise<number>;
-  deactivateActiveForLead(leadId: number): Promise<unknown>;
-  findActiveByLead(leadId: number): Promise<LeadAssignment | undefined>;
+  insert(values: LeadAssignmentDraft): Promise<string>;
+  deactivateActiveForLead(leadId: string): Promise<unknown>;
+  findActiveByLead(leadId: string): Promise<LeadAssignment | undefined>;
 };

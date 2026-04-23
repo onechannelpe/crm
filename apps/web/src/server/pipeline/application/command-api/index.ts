@@ -75,7 +75,7 @@ export type PipelineCommandApi = {
   ): Promise<Result<LeadInteractionResult, DomainError>>;
   applyImportedReview(
     input: ApplyImportedReviewInput,
-  ): Promise<Result<{ applied: boolean; leadId: number }, DomainError>>;
+  ): Promise<Result<{ applied: boolean; leadId: string }, DomainError>>;
   approveForSale(
     input: ApproveForSaleInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;

@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -6,7 +7,7 @@ import type { ImportRowInput } from "./types";
 
 export async function stageImportRows(
   trx: Transaction<Database>,
-  jobId: number,
+  jobId: string,
   validRows: ImportRowInput[],
   invalidRows: Array<{
     row: number;
@@ -17,9 +18,10 @@ export async function stageImportRows(
 ) {
   if (validRows.length > 0) {
     await trx
-      .insertInto("pipeline_integration_import_rows")
+      .insertInto("workflow_integration_import_rows")
       .values(
         validRows.map((row) => ({
+          id: randomUUIDv7("hex", now),
           integration_job_id: jobId,
           row_number: row.row,
           type: row.type,
@@ -39,9 +41,10 @@ export async function stageImportRows(
 
   if (invalidRows.length > 0) {
     await trx
-      .insertInto("pipeline_integration_import_rows")
+      .insertInto("workflow_integration_import_rows")
       .values(
         invalidRows.map((row) => ({
+          id: randomUUIDv7("hex", now),
           integration_job_id: jobId,
           row_number: row.row,
           type: row.type,

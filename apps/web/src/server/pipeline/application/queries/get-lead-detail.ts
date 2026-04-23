@@ -13,7 +13,7 @@ export async function getLeadDetail(
   input: {
     actorUserId: number;
     actorRole: Role;
-    leadId: number;
+    leadId: string;
   },
 ): Promise<Result<LeadDetailView, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);

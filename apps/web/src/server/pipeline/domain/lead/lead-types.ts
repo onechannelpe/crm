@@ -55,7 +55,7 @@ export type LeadMutationIntent =
   | { kind: "approve_for_sale" }
   | {
       kind: "create_quotation";
-      quotationId: number;
+      quotationId: string;
       version: number;
       moneda: Moneda;
     }
@@ -68,7 +68,7 @@ export type LeadMutationIntent =
       abono: number;
       cantidadPos: number;
     }
-  | { kind: "create_sale"; saleId: number };
+  | { kind: "create_sale"; saleId: string };
 
 export type LeadMutationPatch = {
   executiveId?: number;

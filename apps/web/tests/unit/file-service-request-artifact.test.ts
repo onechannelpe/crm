@@ -28,7 +28,7 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
   };
 }
 
-const XLSX_BYTES = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x01, 0x02]);
+const CSV_BYTES = new TextEncoder().encode("ruc,nombre\n201,Acme");
 
 describe("requestArtifact sync export metadata", () => {
   it("uses file metadata derived from executor output", async () => {
@@ -46,7 +46,7 @@ describe("requestArtifact sync export metadata", () => {
         updateArtifactStatus: async () => {},
         findArtifactById: async (id) => ({
           id,
-          artifactType: "sales_export",
+          artifactType: "leads_export",
           direction: "download",
           executionMode: "sync",
           status: "ready",
@@ -63,15 +63,14 @@ describe("requestArtifact sync export metadata", () => {
         }),
         findFileAssetForArtifact: async () => ({
           id: 9,
-          storageKey: "sales_export-42-1700000000000.xlsx",
-          originalFilename: "sales-export.xlsx",
-          safeDisplayFilename: "sales-export.xlsx",
-          detectedMime:
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          extension: "xlsx",
-          sizeBytes: XLSX_BYTES.length,
+          storageKey: "leads_export-42-1700000000000.csv",
+          originalFilename: "leads-export.csv",
+          safeDisplayFilename: "leads-export.csv",
+          detectedMime: "text/csv; charset=utf-8",
+          extension: "csv",
+          sizeBytes: CSV_BYTES.length,
           sha256Hex: "hash",
-          signatureKind: "xlsx",
+          signatureKind: "csv",
           scanStatus: "clean",
           scanEngine: null,
           scanReference: null,
@@ -93,19 +92,19 @@ describe("requestArtifact sync export metadata", () => {
       storage: {
         putFromWebStream: async () => ({
           sha256: "unused",
-          sizeBytes: XLSX_BYTES.length,
+          sizeBytes: CSV_BYTES.length,
         }),
         putBytes: async () => ({
           sha256: "hash",
-          sizeBytes: XLSX_BYTES.length,
+          sizeBytes: CSV_BYTES.length,
         }),
-        getBytes: async () => XLSX_BYTES,
+        getBytes: async () => CSV_BYTES,
         delete: async () => {},
       },
       syncExecutor: {
         run: async () => ({
-          bytes: XLSX_BYTES,
-          filename: "sales-export.xlsx",
+          bytes: CSV_BYTES,
+          filename: "leads-export.csv",
         }),
       },
     };
@@ -113,7 +112,7 @@ describe("requestArtifact sync export metadata", () => {
     const result = await requestArtifact(
       makeContext(),
       {
-        artifactType: "sales_export",
+        artifactType: "leads_export",
         executionMode: "sync",
         workflowContext: {},
       },
@@ -121,11 +120,9 @@ describe("requestArtifact sync export metadata", () => {
     );
 
     expect(isErr(result)).toBe(false);
-    expect(insertedAssets[0]?.extension).toBe("xlsx");
-    expect(insertedAssets[0]?.signatureKind).toBe("xlsx");
-    expect(insertedAssets[0]?.detectedMime).toBe(
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
-    expect(insertedAssets[0]?.storageKey.endsWith(".xlsx")).toBe(true);
+    expect(insertedAssets[0]?.extension).toBe("csv");
+    expect(insertedAssets[0]?.signatureKind).toBe("csv");
+    expect(insertedAssets[0]?.detectedMime).toBe("text/csv; charset=utf-8");
+    expect(insertedAssets[0]?.storageKey.endsWith(".csv")).toBe(true);
   });
 });

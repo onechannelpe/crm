@@ -40,7 +40,7 @@ export async function requestLeadCreation(input: {
 }
 
 export async function requestLeadReview(input: {
-  leadId: number;
+  leadId: string;
   status: string;
   prioridad: string;
   reason: string;
@@ -80,7 +80,7 @@ export async function requestLeadReview(input: {
 }
 
 export async function requestLeadCommercialInputCompletion(input: {
-  leadId: number;
+  leadId: string;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;
@@ -111,7 +111,7 @@ export async function requestLeadCommercialInputCompletion(input: {
 }
 
 export async function requestLeadReassignment(input: {
-  leadId: number;
+  leadId: string;
   newExecutiveId: number;
 }) {
   return runAction({
@@ -133,7 +133,7 @@ export async function requestLeadReassignment(input: {
   });
 }
 
-export async function requestLeadSunatRefresh(input: { leadId: number }) {
+export async function requestLeadSunatRefresh(input: { leadId: string }) {
   return runAction({
     actionName: "pipeline.request_sunat_refresh",
     access: { kind: "auth" },

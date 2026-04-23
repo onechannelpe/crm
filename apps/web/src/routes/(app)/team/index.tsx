@@ -14,6 +14,11 @@ import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
+type ManagedExecutiveGridRow = ManagedExecutiveView & {
+  id: string;
+  executiveId: number;
+};
+
 const TEAM_COLUMNS = [
   {
     key: "fullName",
@@ -83,7 +88,7 @@ const TEAM_COLUMNS = [
           executive.executiveCategory.slice(1)
         : "—",
   },
-] satisfies ReadonlyArray<DataGridColumn<ManagedExecutiveView>>;
+] satisfies ReadonlyArray<DataGridColumn<ManagedExecutiveGridRow>>;
 
 export default function TeamPage() {
   const navigate = useNavigate();
@@ -91,15 +96,21 @@ export default function TeamPage() {
   const [filter, setFilter] = createSignal("");
   const filtered = createMemo(() => {
     const value = filter().trim().toLowerCase();
-    const rows = executives() ?? [];
+    const rows: ManagedExecutiveGridRow[] = (executives() ?? []).map(
+      (executive) =>
+        Object.assign({}, executive, {
+          id: `team-executive:${executive.id}`,
+          executiveId: executive.id,
+        }),
+    );
     if (!value) return rows;
     return rows.filter((executive) =>
       `${executive.fullName} ${executive.email}`.toLowerCase().includes(value),
     );
   });
   const isLoading = () => executives() === undefined;
-  const rowOpen = createRouteRowOpen<ManagedExecutiveView>((executive) => {
-    navigate(`/team/members/${executive.id}/capacity`);
+  const rowOpen = createRouteRowOpen<ManagedExecutiveGridRow>((executive) => {
+    navigate(`/team/members/${executive.executiveId}/capacity`);
   });
 
   return (

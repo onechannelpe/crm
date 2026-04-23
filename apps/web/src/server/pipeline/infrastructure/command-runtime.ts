@@ -7,7 +7,6 @@ import {
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { runInPipelineTransaction } from "../../shared/pipeline-transaction";
-import { createAuditLogsRepo } from "../../shared/repos-audit-logs";
 import type { PipelineAuditService } from "../application/ports/audit-service";
 import type { PipelineEngineGateway } from "../application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../application/ports/enrichment-queue";
@@ -15,6 +14,7 @@ import type { PipelineNotificationCenter } from "../application/ports/notificati
 import {
   createPipelineAuditLogRepo,
   createPipelineAuditService,
+  createWorkflowAuditLogsRepo,
 } from "./audit-log";
 import { createEngineGateway } from "./engine-gateway";
 import { createPipelineNotificationCenter } from "./notifications";
@@ -30,7 +30,9 @@ export type PipelineCommandRuntime = {
 
 function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
   return createPipelineAuditService({
-    auditLogs: createPipelineAuditLogRepo(createAuditLogsRepo(executor)),
+    auditLogs: createPipelineAuditLogRepo(
+      createWorkflowAuditLogsRepo(executor),
+    ),
   });
 }
 

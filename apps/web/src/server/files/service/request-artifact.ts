@@ -30,7 +30,6 @@ const DIRECTION_MAP: Record<
 > = {
   leads_export: "download",
   integration_import: "upload",
-  sales_export: "download",
 };
 
 async function runSyncExport(

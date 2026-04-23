@@ -19,7 +19,7 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
   let runningCount = 0;
   const logger = createLogger(`queue:${name}`);
 
-  async function renewLease(jobId: number, controller: AbortController) {
+  async function renewLease(jobId: TJob["id"], controller: AbortController) {
     try {
       const ok = await config.extendLease(jobId);
       if (!ok) {

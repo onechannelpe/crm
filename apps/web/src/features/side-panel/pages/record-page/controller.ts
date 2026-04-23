@@ -5,13 +5,13 @@ import { createPollingController } from "../../core/polling/create-polling-contr
 const POLLING_STATUSES = new Set(["queued", "running"]);
 
 type RecordPageControllerInput = {
-  leadId: Accessor<number>;
+  leadId: Accessor<string>;
   detailData: Accessor<
     { sourceStatus: { sunat: { status: string } } } | undefined
   >;
   pollIntervalMs: number;
   pollTimeoutMs: number;
-  revalidateLeadDetail: (leadId: number) => Promise<void>;
+  revalidateLeadDetail: (leadId: string) => Promise<void>;
   revalidateLeadList: () => Promise<void>;
 };
 

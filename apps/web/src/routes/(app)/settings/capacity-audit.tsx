@@ -14,6 +14,7 @@ import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/s
 import { capacityAuditEventsQuery } from "~/lib/queries/capacity";
 
 type CapacityAuditChange = CapacityAuditEvent["changes"];
+type CapacityAuditGridRow = CapacityAuditEvent & { id: string };
 
 const EMPTY_EVENTS: CapacityAuditEvent[] = [];
 const CAPACITY_AUDIT_COLUMNS = [
@@ -56,7 +57,7 @@ const CAPACITY_AUDIT_COLUMNS = [
     grow: true,
     renderCell: (event) => formatChanges(event.changes),
   },
-] satisfies ReadonlyArray<DataGridColumn<CapacityAuditEvent>>;
+] satisfies ReadonlyArray<DataGridColumn<CapacityAuditGridRow>>;
 
 function formatTime(value: number): string {
   return new Date(value).toLocaleString();
@@ -75,10 +76,14 @@ function formatChanges(value: CapacityAuditChange): string {
 export default function CapacityAuditPage() {
   const events = createAsync(() => capacityAuditEventsQuery(120));
 
-  const rows = createMemo<CapacityAuditEvent[]>(() => events() ?? EMPTY_EVENTS);
+  const rows = createMemo<CapacityAuditGridRow[]>(() =>
+    (events() ?? EMPTY_EVENTS).map((event) =>
+      Object.assign({}, event, { id: `capacity-audit:${event.id}` }),
+    ),
+  );
   const isLoading = () => events() === undefined;
 
-  const rowOpen = useSidePanelRowOpen<CapacityAuditEvent>((event) =>
+  const rowOpen = useSidePanelRowOpen<CapacityAuditGridRow>((event) =>
     createDataGridDetailSidePanelPage({
       title: event.action,
       subtitle: `${event.entityType}:${event.entityId}`,

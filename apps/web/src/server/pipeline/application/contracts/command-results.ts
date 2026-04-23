@@ -1,15 +1,15 @@
 export type LeadCommandResult = {
-  leadId: number;
+  leadId: string;
 };
 
 export type LeadInteractionResult = {
-  interactionId: number;
+  interactionId: string;
 };
 
 export type LeadQuotationResult = {
-  id: number;
+  id: string;
 };
 
 export type LeadSaleResult = {
-  id: number;
+  id: string;
 };

@@ -2,7 +2,7 @@ export type AuditLogDraft = {
   userId: number;
   action: string;
   entityType: string;
-  entityId: number;
+  entityId: string;
   changes: string | null;
   createdAt: number;
 };
@@ -16,7 +16,7 @@ export type PipelineAuditService = {
     actorUserId: number,
     action: string,
     entity: string,
-    entityId: number,
+    entityId: string,
     changes?: Record<string, unknown>,
   ): Promise<unknown>;
 };

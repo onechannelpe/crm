@@ -2,9 +2,9 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function requireFirstHistoryId(
-  historyIds: number[],
+  historyIds: string[],
   code: string,
-): Result<number, DomainError> {
+): Result<string, DomainError> {
   const historyId = historyIds[0];
   if (historyId == null) {
     return Err(

@@ -24,9 +24,9 @@ describe("action observability repository", () => {
     await service.recordAction({
       traceId: "trace-a",
       requestId: "req-a",
-      routePath: "/sales/records/new",
+      routePath: "/leads",
       httpMethod: "POST",
-      actionName: "sales.create",
+      actionName: "leads.request",
       actorUserId: 1,
       actorRole: "executive",
       status: "ok",
@@ -40,9 +40,9 @@ describe("action observability repository", () => {
     await service.recordAction({
       traceId: "trace-b",
       requestId: "req-b",
-      routePath: "/sales/records/new",
+      routePath: "/leads",
       httpMethod: "POST",
-      actionName: "sales.create",
+      actionName: "leads.request",
       actorUserId: 1,
       actorRole: "executive",
       status: "error",
@@ -66,7 +66,7 @@ describe("action observability repository", () => {
       toInclusive: baseTime + 1000,
     });
     expect(summary).toHaveLength(1);
-    expect(summary[0]?.action_name).toBe("sales.create");
+    expect(summary[0]?.action_name).toBe("leads.request");
     expect(summary[0]?.count ?? 0).toBe(2);
     expect(summary[0]?.error_count ?? 0).toBe(1);
   });
@@ -174,9 +174,9 @@ describe("action observability repository", () => {
     await service.recordAction({
       traceId: "trace-3",
       requestId: "req-3",
-      routePath: "/sales/records/new",
+      routePath: "/leads",
       httpMethod: "POST",
-      actionName: "sales.create",
+      actionName: "leads.request",
       actorUserId: 1,
       actorRole: "executive",
       status: "error",

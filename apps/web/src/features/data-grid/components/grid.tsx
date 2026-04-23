@@ -16,7 +16,7 @@ import type {
 import { DataGridContent } from "./content";
 import { DataGridWrappers } from "./wrappers";
 
-export function DataGrid<T extends { id: number }>(props: {
+export function DataGrid<T extends { id: string }>(props: {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: DataGridColumn<T>[];

@@ -31,9 +31,6 @@ export default function DashboardPage() {
   const stats = createAsync(() => dashboardStatsQuery(), {
     initialValue: {
       activeLeads: 0,
-      pendingSales: 0,
-      draftSales: 0,
-      confirmedSales: 0,
     },
   });
 
@@ -72,54 +69,6 @@ export default function DashboardPage() {
         ],
         actionLabel: "Ver clientes",
         actionHref: "/leads",
-      },
-      {
-        key: "screening",
-        label: "Evaluación",
-        tone: styles.tagScreening,
-        amount: s.draftSales,
-        cards: [
-          {
-            title: "Venta en borrador",
-            value: `${s.draftSales}`,
-            detail: "Notas en borrador",
-            href: "/sales/records/new",
-          },
-        ],
-        actionLabel: "Continuar borrador",
-        actionHref: "/sales/records/new",
-      },
-      {
-        key: "review",
-        label: "Revisión",
-        tone: styles.tagReview,
-        amount: s.pendingSales,
-        cards: [
-          {
-            title: "Confirmaciones pendientes",
-            value: `${s.pendingSales}`,
-            detail: "Esperando validación",
-            href: "/sales/confirmations",
-          },
-        ],
-        actionLabel: "Ver pendientes",
-        actionHref: "/sales/confirmations",
-      },
-      {
-        key: "customer",
-        label: "Cliente",
-        tone: styles.tagCustomer,
-        amount: s.confirmedSales,
-        cards: [
-          {
-            title: "Ventas confirmadas",
-            value: `${s.confirmedSales}`,
-            detail: "Operaciones cerradas",
-            href: "/sales/confirmed",
-          },
-        ],
-        actionLabel: "Ver confirmadas",
-        actionHref: "/sales/confirmed",
       },
     ];
   });

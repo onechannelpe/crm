@@ -3,26 +3,9 @@ import { join } from "node:path";
 
 import { sql, type Kysely } from "kysely";
 
-import type { Role } from "../../src/lib/auth/access/rbac";
 import { createDb } from "../../src/lib/db/client";
 import { migrateToLatest } from "../../src/lib/db/migrate";
 import type { Database } from "../../src/lib/db/types";
-import { confirmRecord } from "../../src/server/sales-records/application/commands/confirm-record";
-import { createDraft } from "../../src/server/sales-records/application/commands/create-draft";
-import { registerAttempt } from "../../src/server/sales-records/application/commands/register-attempt";
-import { rejectRecord } from "../../src/server/sales-records/application/commands/reject-record";
-import type { SalesRecordRateLimitedMutationDeps } from "../../src/server/sales-records/application/commands/shared";
-import { submitRecord } from "../../src/server/sales-records/application/commands/submit-draft";
-import { updateDraft } from "../../src/server/sales-records/application/commands/update-draft";
-import type {
-  CreateSalesRecordDraftInput,
-  RegisterSalesRecordAttemptInput,
-  UpdateSalesRecordDraftInput,
-} from "../../src/server/sales-records/application/contracts";
-import { createActionRateLimitsRepo } from "../../src/server/security/repos-action-rate-limits";
-import type { AppContext } from "../../src/server/shared/action-runtime";
-import type { DomainError } from "../../src/server/shared/domain-error";
-import type { Result } from "../../src/server/shared/result";
 import {
   createTestRepositories,
   type TestRepositories,
@@ -32,201 +15,6 @@ const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 const TEMPLATE_DB_NAME = "__template-seeded.db";
 
 let templateDbPathPromise: Promise<string> | null = null;
-
-type TestSalesRecordCreateDraftInput = CreateSalesRecordDraftInput & {
-  executiveUserId: number;
-  branchId: number;
-};
-
-type TestSalesRecordCommands = {
-  createDraft(
-    input: TestSalesRecordCreateDraftInput,
-  ): Promise<Result<number, DomainError>>;
-  submit(
-    recordId: number,
-    executiveUserId: number,
-  ): Promise<Result<void, DomainError>>;
-  confirm(
-    recordId: number,
-    reviewerUserId: number,
-    reviewerBranchId: number,
-    bypassBranchScope: boolean,
-  ): Promise<Result<void, DomainError>>;
-  reject(
-    recordId: number,
-    reviewerUserId: number,
-    reviewerBranchId: number,
-    bypassBranchScope: boolean,
-    reason: string,
-  ): Promise<Result<void, DomainError>>;
-  updateDraft(
-    recordId: number,
-    executiveUserId: number,
-    input: UpdateSalesRecordDraftInput,
-    correctionNotes?: string | null,
-  ): Promise<Result<void, DomainError>>;
-  registerAttempt(
-    recordId: number,
-    reviewerUserId: number,
-    reviewerBranchId: number,
-    bypassBranchScope: boolean,
-    outcome: RegisterSalesRecordAttemptInput["outcome"],
-    notes: string | null,
-    nextAttemptAt: number | null,
-  ): Promise<Result<void, DomainError>>;
-};
-
-function createTestAppContext(input: {
-  userId: number;
-  role: Role;
-  branchId: number;
-}): AppContext {
-  return {
-    actor: {
-      id: `test-session-${input.userId}`,
-      userId: input.userId,
-      role: input.role,
-      branchId: input.branchId,
-      onboardingCompleted: true,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-    },
-    requestId: "test-request",
-    traceId: "test-trace",
-    ipAddress: "127.0.0.1",
-    userAgent: null,
-    publicOrigin: "http://localhost",
-    now: Date.now,
-  };
-}
-
-function createTestSalesRecordCommands(
-  deps: SalesRecordRateLimitedMutationDeps,
-): TestSalesRecordCommands {
-  return {
-    async createDraft(input) {
-      const result = await createDraft(
-        createTestAppContext({
-          userId: input.executiveUserId,
-          role: "executive",
-          branchId: input.branchId,
-        }),
-        deps,
-        input,
-      );
-      if (!result.ok) {
-        return result;
-      }
-      return { ok: true, value: result.value.id };
-    },
-
-    async submit(recordId, executiveUserId) {
-      const result = await submitRecord(
-        createTestAppContext({
-          userId: executiveUserId,
-          role: "executive",
-          branchId: 1,
-        }),
-        deps,
-        { recordId },
-      );
-      if (!result.ok) {
-        return result;
-      }
-      return { ok: true, value: undefined };
-    },
-
-    async confirm(
-      recordId,
-      reviewerUserId,
-      reviewerBranchId,
-      bypassBranchScope,
-    ) {
-      const result = await confirmRecord(
-        createTestAppContext({
-          userId: reviewerUserId,
-          role: bypassBranchScope ? "superuser" : "back_office",
-          branchId: reviewerBranchId,
-        }),
-        deps,
-        { recordId },
-      );
-      if (!result.ok) {
-        return result;
-      }
-      return { ok: true, value: undefined };
-    },
-
-    async reject(
-      recordId,
-      reviewerUserId,
-      reviewerBranchId,
-      bypassBranchScope,
-      reason,
-    ) {
-      const result = await rejectRecord(
-        createTestAppContext({
-          userId: reviewerUserId,
-          role: bypassBranchScope ? "superuser" : "back_office",
-          branchId: reviewerBranchId,
-        }),
-        deps,
-        { recordId, reason },
-      );
-      if (!result.ok) {
-        return result;
-      }
-      return { ok: true, value: undefined };
-    },
-
-    async updateDraft(
-      recordId,
-      executiveUserId,
-      input,
-      correctionNotes = null,
-    ) {
-      const result = await updateDraft(
-        createTestAppContext({
-          userId: executiveUserId,
-          role: "executive",
-          branchId: 1,
-        }),
-        deps,
-        { recordId, draft: input, correctionNotes },
-      );
-      if (!result.ok) {
-        return result;
-      }
-      return { ok: true, value: undefined };
-    },
-
-    async registerAttempt(
-      recordId,
-      reviewerUserId,
-      reviewerBranchId,
-      bypassBranchScope,
-      outcome,
-      notes,
-      nextAttemptAt,
-    ) {
-      const result = await registerAttempt(
-        createTestAppContext({
-          userId: reviewerUserId,
-          role: bypassBranchScope ? "superuser" : "back_office",
-          branchId: reviewerBranchId,
-        }),
-        deps,
-        { recordId, outcome, notes, nextAttemptAt },
-      );
-      if (!result.ok) {
-        return result;
-      }
-      return { ok: true, value: undefined };
-    },
-  };
-}
 
 async function seedTemplate(db: Kysely<Database>) {
   const now = Date.now();
@@ -378,18 +166,6 @@ async function seedTemplate(db: Kysely<Database>) {
       },
     ])
     .execute();
-
-  await db
-    .insertInto("products")
-    .values({
-      id: 1,
-      name: "Plan Test",
-      category: "mobile",
-      subtype: "mono",
-      price: 10,
-      is_active: 1,
-    })
-    .execute();
 }
 
 export interface TestDbContext {
@@ -397,7 +173,6 @@ export interface TestDbContext {
   storageRoot: string;
   db: Kysely<Database>;
   repos: TestRepositories;
-  salesRecords: TestSalesRecordCommands;
 }
 
 async function buildSeededTemplateDb(templateDbPath: string): Promise<void> {
@@ -460,29 +235,12 @@ export async function createIsolatedTestDb(
   await copyFile(templateDbPath, dbPath);
   const db = createDb(dbPath);
   const repos = createTestRepositories(db);
-  const mutationDeps: SalesRecordRateLimitedMutationDeps = {
-    rateLimitDeps: {
-      actionRateLimits: createActionRateLimitsRepo(db),
-      auditLogs: repos.auditLogs,
-    },
-    repos,
-    runInTransaction: async <T>(
-      operation: (activeRepos: typeof repos) => Promise<T>,
-    ): Promise<T> =>
-      db
-        .transaction()
-        .execute((transactionDb) =>
-          operation(createTestRepositories(transactionDb)),
-        ),
-  };
-  const salesRecords = createTestSalesRecordCommands(mutationDeps);
 
   return {
     dbPath,
     storageRoot,
     db,
     repos,
-    salesRecords,
   };
 }
 

@@ -10,7 +10,7 @@ export type PipelineStageValue =
   | "CONVERTED";
 
 export interface PipelineLeadsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   ruc: string;
   razon_social: string | null;
   address: string | null;
@@ -27,7 +27,7 @@ export interface PipelineLeadsTable {
 }
 
 export interface PipelineLeadCommercialInputsTable {
-  lead_id: number;
+  lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
   gpv: number | null;
@@ -39,8 +39,8 @@ export interface PipelineLeadCommercialInputsTable {
 }
 
 export interface PipelineQuotationsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   payback_pricing: number;
   tarifa_debito: number;
   tarifa_credito: number;
@@ -53,8 +53,8 @@ export interface PipelineQuotationsTable {
 }
 
 export interface PipelineSalesTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   executive_id: number;
   proveedor_actual: string;
   tasa_actual: number;
@@ -69,8 +69,8 @@ export interface PipelineSalesTable {
 }
 
 export interface PipelineLeadAssignmentsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   executive_id: number;
   assigned_by: number;
   is_active: number;
@@ -78,8 +78,8 @@ export interface PipelineLeadAssignmentsTable {
 }
 
 export interface PipelineHistoryEventsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   event_type:
     | "lead_registered"
     | "lead_status_updated"
@@ -107,12 +107,23 @@ export interface LeadSourcingPoliciesTable {
   updated_by_user_id: number;
 }
 
+export interface WorkflowAuditLogsTable {
+  id: Generated<string>;
+  user_id: number;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  changes: string | null;
+  created_at: number;
+}
+
 export type Db = {
-  pipeline_leads: PipelineLeadsTable;
-  pipeline_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
-  pipeline_quotations: PipelineQuotationsTable;
-  pipeline_sales: PipelineSalesTable;
-  pipeline_lead_assignments: PipelineLeadAssignmentsTable;
-  pipeline_history_events: PipelineHistoryEventsTable;
+  workflow_leads: PipelineLeadsTable;
+  workflow_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
+  workflow_quotations: PipelineQuotationsTable;
+  workflow_sales: PipelineSalesTable;
+  workflow_lead_assignments: PipelineLeadAssignmentsTable;
+  workflow_history_events: PipelineHistoryEventsTable;
+  workflow_audit_logs: WorkflowAuditLogsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;
 };

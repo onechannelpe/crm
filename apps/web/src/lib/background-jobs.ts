@@ -8,7 +8,6 @@ import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/int
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
 import { createLeadsImportQueue } from "~/server/integrations/queue/leads-import-queue";
 import { getServerRuntime } from "~/server/runtime";
-import { createSalesExportQueue } from "~/server/sales/queue/sales-export-queue";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 
 const WORKER_ID = `bg-${process.pid}`;
@@ -33,7 +32,6 @@ export function startBackgroundJobs() {
       executor: integration.executor,
     },
   );
-  const salesExportQueue = createSalesExportQueue(WORKER_ID);
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
   const sunatEnrichmentWritebackQueue =
@@ -46,7 +44,6 @@ export function startBackgroundJobs() {
     leadsImportQueue,
     needsExecutiveOutboxQueue,
     readyForQuotationOutboxQueue,
-    salesExportQueue,
     enrichmentQueue,
     sunatEnrichmentWritebackQueue,
     notificationsEmailQueue,
@@ -84,9 +81,6 @@ export function startBackgroundJobs() {
     },
     INTEGRATION_OUTBOX_READY_FOR_QUOTATION: () => {
       void readyForQuotationOutboxQueue.runOnce();
-    },
-    SALES_EXPORT: () => {
-      void salesExportQueue.runOnce();
     },
     ENRICHMENT: () => {
       void enrichmentQueue.runOnce();

@@ -47,8 +47,8 @@ export function DataGridDragSelectEffect() {
       for (const rowElement of scrollWrapper.querySelectorAll<HTMLElement>(
         "[data-selectable-id]",
       )) {
-        const rowId = Number(rowElement.dataset.selectableId);
-        if (Number.isNaN(rowId)) {
+        const rowId = rowElement.dataset.selectableId;
+        if (!rowId) {
           continue;
         }
 

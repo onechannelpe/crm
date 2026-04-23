@@ -2,7 +2,7 @@ import type { Generated } from "kysely";
 
 export interface WorkflowArtifactsTable {
   id: Generated<number>;
-  artifact_type: "leads_export" | "integration_import" | "sales_export";
+  artifact_type: "leads_export" | "integration_import";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
   status:

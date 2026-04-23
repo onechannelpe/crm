@@ -14,7 +14,7 @@ import { DataGridLoadingState } from "./loading-state";
 
 import styles from "../styles/data-grid.module.css";
 
-export function DataGridContent<T extends { id: number }>(props: {
+export function DataGridContent<T extends { id: string }>(props: {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: DataGridColumn<T>[];

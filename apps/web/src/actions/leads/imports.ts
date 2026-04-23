@@ -26,7 +26,7 @@ function isCsvFile(file: File): boolean {
 
 async function getAuthorizedLeadImportJob(
   actor: { userId: number; branchId: number; role: Role },
-  jobId: number,
+  jobId: string,
 ): Promise<IntegrationJobRow> {
   const job =
     await getServerRuntime().integrations.integration.jobs.findById(jobId);
@@ -51,7 +51,7 @@ async function getAuthorizedLeadImportJob(
 
 export async function uploadLeadImportFile(formData: FormData): Promise<{
   artifactId: number;
-  jobId: number;
+  jobId: string;
   importType: "import_status" | "import_prioridad";
   rowsTotal: number;
 }> {
@@ -165,7 +165,7 @@ export async function uploadLeadImportFile(formData: FormData): Promise<{
 }
 
 export async function getLeadImportJob(
-  jobId: number,
+  jobId: string,
 ): Promise<IntegrationJobRow> {
   return runAction({
     actionName: "leads.import.get_job",

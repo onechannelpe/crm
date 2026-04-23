@@ -6,7 +6,6 @@ const CSV_BYTES = new TextEncoder().encode(
   "ruc,nombre\n12345678901,Empresa SA",
 );
 const XLSX_MAGIC = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00]);
-const NON_XLSX_BYTES = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
 
 describe("validateUploadFile - extension checks", () => {
   it("accepts csv for integration_import", () => {
@@ -30,15 +29,6 @@ describe("validateUploadFile - extension checks", () => {
 
   it("accepts csv for leads_export", () => {
     const result = validateUploadFile("leads_export", "export.csv", CSV_BYTES);
-    expect(result.ok).toBe(true);
-  });
-
-  it("accepts xlsx for sales_export", () => {
-    const result = validateUploadFile(
-      "sales_export",
-      "report.xlsx",
-      XLSX_MAGIC,
-    );
     expect(result.ok).toBe(true);
   });
 
@@ -84,33 +74,6 @@ describe("validateUploadFile - filename sanitization", () => {
 });
 
 describe("validateUploadFile - signature checks", () => {
-  it("rejects xlsx bytes with csv extension", () => {
-    const result = validateUploadFile("sales_export", "data.csv", XLSX_MAGIC);
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("signature_mismatch");
-  });
-
-  it("rejects non-xlsx bytes with xlsx extension", () => {
-    const result = validateUploadFile(
-      "sales_export",
-      "report.xlsx",
-      NON_XLSX_BYTES,
-    );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("signature_mismatch");
-  });
-
-  it("accepts real xlsx magic bytes with xlsx extension", () => {
-    const result = validateUploadFile(
-      "sales_export",
-      "report.xlsx",
-      XLSX_MAGIC,
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected success");
-    expect(result.signatureKind).toBe("xlsx");
-  });
-
   it("accepts csv bytes and sets signatureKind to csv", () => {
     const result = validateUploadFile(
       "integration_import",
@@ -167,18 +130,5 @@ describe("validateUploadFile - MIME output", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("Expected success");
     expect(result.detectedMime).toBe("text/csv; charset=utf-8");
-  });
-
-  it("returns correct MIME for xlsx", () => {
-    const result = validateUploadFile(
-      "sales_export",
-      "report.xlsx",
-      XLSX_MAGIC,
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected success");
-    expect(result.detectedMime).toBe(
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    );
   });
 });

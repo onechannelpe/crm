@@ -5,7 +5,7 @@ import type {
 } from "~/pipeline/contracts/lead-schema";
 
 export type LeadListRowView = {
-  id: number;
+  id: string;
   ruc: string;
   razonSocial: string | null;
   address: string | null;

@@ -1,11 +1,12 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadSale } from "~/server/pipeline/application/ports/sale-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export type SaleRow = Selectable<Database["pipeline_sales"]>;
-export type NewSaleRow = Insertable<Database["pipeline_sales"]>;
+export type SaleRow = Selectable<Database["workflow_sales"]>;
+export type NewSaleRow = Insertable<Database["workflow_sales"]>;
 
 function toLeadSale(row: SaleRow): LeadSale {
   return {
@@ -27,10 +28,12 @@ function toLeadSale(row: SaleRow): LeadSale {
 
 export function createSaleRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: Omit<LeadSale, "id">): Promise<number> {
-      const result = await db
-        .insertInto("pipeline_sales")
+    async insert(values: Omit<LeadSale, "id">): Promise<string> {
+      const id = randomUUIDv7();
+      await db
+        .insertInto("workflow_sales")
         .values({
+          id,
           lead_id: values.leadId,
           executive_id: values.executiveId,
           proveedor_actual: values.proveedorActual,
@@ -46,12 +49,12 @@ export function createSaleRepo(db: DatabaseExecutor) {
         } satisfies NewSaleRow)
         .executeTakeFirstOrThrow();
 
-      return Number(result.insertId);
+      return id;
     },
 
-    async findById(id: number): Promise<LeadSale | undefined> {
+    async findById(id: string): Promise<LeadSale | undefined> {
       const row = await db
-        .selectFrom("pipeline_sales")
+        .selectFrom("workflow_sales")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
@@ -59,9 +62,9 @@ export function createSaleRepo(db: DatabaseExecutor) {
       return row ? toLeadSale(row) : undefined;
     },
 
-    async findByLeadId(leadId: number): Promise<LeadSale | undefined> {
+    async findByLeadId(leadId: string): Promise<LeadSale | undefined> {
       const row = await db
-        .selectFrom("pipeline_sales")
+        .selectFrom("workflow_sales")
         .selectAll()
         .where("lead_id", "=", leadId)
         .orderBy("created_at", "desc")
@@ -72,7 +75,7 @@ export function createSaleRepo(db: DatabaseExecutor) {
 
     async list(limit: number, offset: number): Promise<LeadSale[]> {
       const rows = await db
-        .selectFrom("pipeline_sales")
+        .selectFrom("workflow_sales")
         .selectAll()
         .orderBy("created_at", "desc")
         .limit(limit)
@@ -88,7 +91,7 @@ export function createSaleRepo(db: DatabaseExecutor) {
       offset: number,
     ): Promise<LeadSale[]> {
       const rows = await db
-        .selectFrom("pipeline_sales")
+        .selectFrom("workflow_sales")
         .selectAll()
         .where("executive_id", "=", executiveId)
         .orderBy("created_at", "desc")

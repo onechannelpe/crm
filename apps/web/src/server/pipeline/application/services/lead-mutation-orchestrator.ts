@@ -31,7 +31,7 @@ export async function executeLeadMutation(input: {
   now: number;
   intent: LeadMutationIntent;
 }): Promise<
-  Result<{ events: LeadMutationEvents; historyIds: number[] }, DomainError>
+  Result<{ events: LeadMutationEvents; historyIds: string[] }, DomainError>
 > {
   const validIntent = validateLeadIntent(input.lead.stage, input.intent);
   if (!validIntent.ok) {
@@ -86,7 +86,7 @@ export async function executeCheckedLeadMutation(input: {
   intent: LeadMutationIntent;
 }): Promise<
   Result<
-    { applied: boolean; events?: LeadMutationEvents; historyIds?: number[] },
+    { applied: boolean; events?: LeadMutationEvents; historyIds?: string[] },
     DomainError
   >
 > {

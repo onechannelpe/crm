@@ -16,7 +16,7 @@ describe("route permissions", () => {
     expect(getRoutePermission("/rate-simulator")).toBe("lead:rate:simulate");
     expect(getRoutePermission("/leads/new")).toBeNull();
     expect(getRoutePermission("/leads/123")).toBeNull();
-    expect(getRoutePermission("/dashboard")).toBe("sales:review");
+    expect(getRoutePermission("/dashboard")).toBe("lead:work");
     expect(getRoutePermission("/settings/profile")).toBeNull();
   });
 

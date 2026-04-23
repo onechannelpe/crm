@@ -9,7 +9,6 @@ const PATH_SEGMENT_RE = /[/\\]/;
 const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
   leads_export: ["csv"],
   integration_import: ["csv"],
-  sales_export: ["csv", "xlsx"],
 };
 
 const MAX_SIZE_OVERRIDES: Partial<Record<ArtifactType, number>> = {};

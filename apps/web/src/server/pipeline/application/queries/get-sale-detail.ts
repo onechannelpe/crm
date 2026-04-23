@@ -11,7 +11,7 @@ export async function getSaleDetail(
   input: {
     actorRole: Role;
     actorUserId: number;
-    saleId: number;
+    saleId: string;
   },
 ): Promise<Result<SaleView, DomainError>> {
   const sale = await deps.leadSales.findById(input.saleId);

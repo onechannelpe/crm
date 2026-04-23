@@ -2,7 +2,6 @@ import * as core from "./00-core";
 import * as auth from "./01-auth";
 import * as crm from "./02-crm";
 import * as capacity from "./03-capacity";
-import * as sales from "./04-sales";
 import * as notifications from "./05-notifications";
 import * as extensions from "./06-extensions";
 import * as search from "./07-search";
@@ -61,14 +60,6 @@ export {
 } from "./03-capacity";
 
 export {
-  type SalesRecordsTable,
-  type SalesRecordClientTable,
-  type SalesRecordAddressesTable,
-  type SalesRecordProductsTable,
-  type SalesRecordAttemptsTable,
-} from "./04-sales";
-
-export {
   type NotificationContactsTable,
   type NotificationPreferencesTable,
   type NotificationCampaignsTable,
@@ -93,8 +84,6 @@ export {
 } from "./07-search";
 
 export {
-  type ProductsTable,
-  type InventoryItemsTable,
   type AuditLogsTable,
   type AuditActionPoliciesTable,
   type ReportExportJobsTable,
@@ -116,6 +105,7 @@ export {
   type PipelineSalesTable,
   type PipelineLeadAssignmentsTable,
   type PipelineHistoryEventsTable,
+  type WorkflowAuditLogsTable,
   type LeadSourcingPoliciesTable,
 } from "./10-workflow";
 
@@ -160,11 +150,6 @@ export interface Database {
   organizations: core.OrganizationsTable;
   contacts: crm.ContactsTable;
   lead_assignments: crm.LeadAssignmentsTable;
-  sales_records: sales.SalesRecordsTable;
-  sales_record_client: sales.SalesRecordClientTable;
-  sales_record_addresses: sales.SalesRecordAddressesTable;
-  sales_record_products: sales.SalesRecordProductsTable;
-  sales_record_attempts: sales.SalesRecordAttemptsTable;
   lead_policy_defaults: capacity.LeadPolicyDefaultsTable;
   lead_policy_overrides: capacity.LeadPolicyOverridesTable;
   search_capacity_grants: capacity.SearchCapacityGrantsTable;
@@ -174,9 +159,7 @@ export interface Database {
   lead_usage_reservations: capacity.LeadUsageReservationsTable;
   lead_usage_commits: capacity.LeadUsageCommitsTable;
   capacity_requests: capacity.CapacityRequestsTable;
-  products: platform.ProductsTable;
   interaction_logs: crm.InteractionLogsTable;
-  inventory_items: platform.InventoryItemsTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;
@@ -195,17 +178,18 @@ export interface Database {
   webauthn_challenges: auth.WebauthnChallengesTable;
   user_oauth_accounts: auth.UserOAuthAccountsTable;
   password_reset_tokens: auth.PasswordResetTokensTable;
-  pipeline_leads: workflow.PipelineLeadsTable;
-  pipeline_lead_commercial_inputs: workflow.PipelineLeadCommercialInputsTable;
-  pipeline_quotations: workflow.PipelineQuotationsTable;
-  pipeline_sales: workflow.PipelineSalesTable;
-  pipeline_lead_assignments: workflow.PipelineLeadAssignmentsTable;
-  pipeline_history_events: workflow.PipelineHistoryEventsTable;
+  workflow_leads: workflow.PipelineLeadsTable;
+  workflow_lead_commercial_inputs: workflow.PipelineLeadCommercialInputsTable;
+  workflow_quotations: workflow.PipelineQuotationsTable;
+  workflow_sales: workflow.PipelineSalesTable;
+  workflow_lead_assignments: workflow.PipelineLeadAssignmentsTable;
+  workflow_history_events: workflow.PipelineHistoryEventsTable;
+  workflow_audit_logs: workflow.WorkflowAuditLogsTable;
   lead_sourcing_policies: workflow.LeadSourcingPoliciesTable;
-  pipeline_integration_jobs: integration.PipelineIntegrationJobsTable;
-  pipeline_integration_import_rows: integration.PipelineIntegrationImportRowsTable;
-  pipeline_integration_outbox_needs_executive_input: integration.PipelineIntegrationOutboxNeedsExecutiveInputTable;
-  pipeline_integration_outbox_ready_for_quotation: integration.PipelineIntegrationOutboxReadyForQuotationTable;
+  workflow_integration_jobs: integration.PipelineIntegrationJobsTable;
+  workflow_integration_import_rows: integration.PipelineIntegrationImportRowsTable;
+  workflow_integration_outbox_needs_executive_input: integration.PipelineIntegrationOutboxNeedsExecutiveInputTable;
+  workflow_integration_outbox_ready_for_quotation: integration.PipelineIntegrationOutboxReadyForQuotationTable;
   workflow_artifacts: workflowFiles.WorkflowArtifactsTable;
   file_assets: workflowFiles.FileAssetsTable;
   artifact_file_bindings: workflowFiles.ArtifactFileBindingsTable;

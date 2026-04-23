@@ -1,12 +1,8 @@
 import { createSessionService } from "~/server/auth/application/session-service";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
-import { createFileStorage } from "~/server/files/storage";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createPipelineRuntime } from "~/server/runtime/pipeline-runtime";
-import { createSalesExportService } from "~/server/sales/export-service";
-import { createReportExportRepo } from "~/server/sales/repos-report-exports";
-import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 
 import {
   cleanupTestDb,
@@ -29,10 +25,6 @@ export interface TestRuntime {
     sessionService: ReturnType<typeof createSessionService>;
   };
   pipeline: ReturnType<typeof createPipelineRuntime>;
-  sales: {
-    salesExportBlobStore: ReturnType<typeof createFileStorage>;
-    salesExportService: ReturnType<typeof createSalesExportService>;
-  };
   integrations: ReturnType<typeof createIntegrationRuntime>;
   dispose(): Promise<void>;
 }
@@ -65,14 +57,6 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     now: now.get,
     logger,
   });
-  const salesExportBlobStore = createFileStorage(ctx.storageRoot);
-  const salesExportService = createSalesExportService(
-    {
-      reportExportJobs: createReportExportRepo(ctx.db),
-      salesRecords: createSalesRecordsRepo(ctx.db),
-    },
-    salesExportBlobStore,
-  );
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
@@ -80,10 +64,6 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     now,
     auth,
     pipeline,
-    sales: {
-      salesExportBlobStore,
-      salesExportService,
-    },
     integrations,
     async dispose() {
       await cleanupTestDb(ctx);

@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -13,9 +14,10 @@ export async function enqueueReadyForQuotationOutboxEvents(
   if (events.length < 1) return;
 
   await executor
-    .insertInto("pipeline_integration_outbox_ready_for_quotation")
+    .insertInto("workflow_integration_outbox_ready_for_quotation")
     .values(
       events.map((event) => ({
+        id: randomUUIDv7("hex", now),
         lead_id: event.leadId,
         ruc: event.ruc,
         branch_id: event.branchId,
@@ -36,7 +38,7 @@ export async function enqueueReadyForQuotationOutboxEvents(
 export function createReadyForQuotationOutboxRepo(executor: DatabaseExecutor) {
   const stateRepo = createOutboxStateRepo(
     executor,
-    "pipeline_integration_outbox_ready_for_quotation",
+    "workflow_integration_outbox_ready_for_quotation",
   );
   return {
     async claimPending(workerId: string, limit: number, leaseMs: number) {
@@ -44,7 +46,7 @@ export function createReadyForQuotationOutboxRepo(executor: DatabaseExecutor) {
       const leaseUntil = now + leaseMs;
 
       const candidates = await executor
-        .selectFrom("pipeline_integration_outbox_ready_for_quotation")
+        .selectFrom("workflow_integration_outbox_ready_for_quotation")
         .select("id")
         .where("status", "=", "pending")
         .where("available_at", "<=", now)
@@ -61,7 +63,7 @@ export function createReadyForQuotationOutboxRepo(executor: DatabaseExecutor) {
 
       const ids = candidates.map((row) => row.id);
       await executor
-        .updateTable("pipeline_integration_outbox_ready_for_quotation")
+        .updateTable("workflow_integration_outbox_ready_for_quotation")
         .set({
           status: "processing",
           lease_owner: workerId,
@@ -73,19 +75,19 @@ export function createReadyForQuotationOutboxRepo(executor: DatabaseExecutor) {
         .execute();
 
       return executor
-        .selectFrom("pipeline_integration_outbox_ready_for_quotation")
+        .selectFrom("workflow_integration_outbox_ready_for_quotation")
         .selectAll()
         .where("id", "in", ids)
         .where("status", "=", "processing")
         .where("lease_owner", "=", workerId)
         .execute();
     },
-    extendLease: (id: number, workerId: string, leaseMs: number) =>
+    extendLease: (id: string, workerId: string, leaseMs: number) =>
       stateRepo.extendLease(id, workerId, leaseMs),
-    markCompleted: (id: number) => stateRepo.markCompleted(id),
-    scheduleRetry: (id: number, availableAt: number) =>
+    markCompleted: (id: string) => stateRepo.markCompleted(id),
+    scheduleRetry: (id: string, availableAt: number) =>
       stateRepo.scheduleRetry(id, availableAt),
-    markFailed: (id: number, reason: string) =>
+    markFailed: (id: string, reason: string) =>
       stateRepo.markFailed(id, reason),
   };
 }

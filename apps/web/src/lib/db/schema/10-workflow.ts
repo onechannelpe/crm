@@ -2,8 +2,8 @@ import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
-    .createTable("pipeline_leads")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .createTable("workflow_leads")
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("ruc", "varchar(11)", (col) => col.notNull().unique())
     .addColumn("razon_social", "varchar(255)")
     .addColumn("address", "text")
@@ -24,35 +24,35 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_leads_ruc")
-    .on("pipeline_leads")
+    .createIndex("idx_workflow_leads_ruc")
+    .on("workflow_leads")
     .column("ruc")
     .execute();
   await db.schema
-    .createIndex("idx_pipeline_leads_executive")
-    .on("pipeline_leads")
+    .createIndex("idx_workflow_leads_executive")
+    .on("workflow_leads")
     .column("executive_id")
     .execute();
   await db.schema
-    .createIndex("idx_pipeline_leads_status")
-    .on("pipeline_leads")
+    .createIndex("idx_workflow_leads_status")
+    .on("workflow_leads")
     .column("status")
     .execute();
   await db.schema
-    .createIndex("idx_pipeline_leads_prioridad")
-    .on("pipeline_leads")
+    .createIndex("idx_workflow_leads_prioridad")
+    .on("workflow_leads")
     .column("prioridad")
     .execute();
   await db.schema
-    .createIndex("idx_pipeline_leads_stage")
-    .on("pipeline_leads")
+    .createIndex("idx_workflow_leads_stage")
+    .on("workflow_leads")
     .column("stage")
     .execute();
 
   await db.schema
-    .createTable("pipeline_lead_commercial_inputs")
-    .addColumn("lead_id", "integer", (col) =>
-      col.primaryKey().references("pipeline_leads.id").onDelete("cascade"),
+    .createTable("workflow_lead_commercial_inputs")
+    .addColumn("lead_id", "text", (col) =>
+      col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("proveedor_actual", "varchar(255)")
     .addColumn("tasa_actual", "real")
@@ -67,10 +67,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("pipeline_quotations")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("pipeline_leads.id").onDelete("cascade"),
+    .createTable("workflow_quotations")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("payback_pricing", "real", (col) => col.notNull())
     .addColumn("tarifa_debito", "real", (col) => col.notNull())
@@ -86,16 +86,16 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_quotations_lead")
-    .on("pipeline_quotations")
+    .createIndex("idx_workflow_quotations_lead")
+    .on("workflow_quotations")
     .columns(["lead_id", "version"])
     .execute();
 
   await db.schema
-    .createTable("pipeline_sales")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("pipeline_leads.id"),
+    .createTable("workflow_sales")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id"),
     )
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -113,21 +113,21 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_sales_lead")
-    .on("pipeline_sales")
+    .createIndex("idx_workflow_sales_lead")
+    .on("workflow_sales")
     .column("lead_id")
     .execute();
   await db.schema
-    .createIndex("idx_pipeline_sales_executive")
-    .on("pipeline_sales")
+    .createIndex("idx_workflow_sales_executive")
+    .on("workflow_sales")
     .column("executive_id")
     .execute();
 
   await db.schema
-    .createTable("pipeline_lead_assignments")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("pipeline_leads.id"),
+    .createTable("workflow_lead_assignments")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id"),
     )
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -140,24 +140,24 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_lead_assignments_lead")
-    .on("pipeline_lead_assignments")
+    .createIndex("idx_workflow_lead_assignments_lead")
+    .on("workflow_lead_assignments")
     .columns(["lead_id", "is_active"])
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_lead_assignments_active_unique")
-    .on("pipeline_lead_assignments")
+    .createIndex("idx_workflow_lead_assignments_active_unique")
+    .on("workflow_lead_assignments")
     .columns(["lead_id", "is_active"])
     .unique()
     .where("is_active", "=", 1)
     .execute();
 
   await db.schema
-    .createTable("pipeline_history_events")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("pipeline_leads.id").onDelete("cascade"),
+    .createTable("workflow_history_events")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("event_type", "varchar(40)", (col) => col.notNull())
     .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
@@ -169,9 +169,28 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_history_events_lead")
-    .on("pipeline_history_events")
+    .createIndex("idx_workflow_history_events_lead")
+    .on("workflow_history_events")
     .columns(["lead_id", "occurred_at"])
+    .execute();
+
+  await db.schema
+    .createTable("workflow_audit_logs")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("action", "varchar(255)", (col) => col.notNull())
+    .addColumn("entity_type", "varchar(100)", (col) => col.notNull())
+    .addColumn("entity_id", "text", (col) => col.notNull())
+    .addColumn("changes", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_audit_entity_created")
+    .on("workflow_audit_logs")
+    .columns(["entity_type", "entity_id", "created_at"])
     .execute();
 
   await db.schema
@@ -189,8 +208,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("pipeline_integration_jobs")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .createTable("workflow_integration_jobs")
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("type", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("requested_by_user_id", "integer", (col) =>
@@ -212,8 +231,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_integration_jobs_status")
-    .on("pipeline_integration_jobs")
+    .createIndex("idx_workflow_integration_jobs_status")
+    .on("workflow_integration_jobs")
     .columns(["status", "available_at", "lease_until"])
     .execute();
 }

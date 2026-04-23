@@ -23,7 +23,7 @@ export async function querySales(filters: {
   });
 }
 
-export async function querySaleDetail(saleId: number): Promise<SaleView> {
+export async function querySaleDetail(saleId: string): Promise<SaleView> {
   return runAction({
     actionName: "pipeline.get_sale_detail",
     access: { kind: "auth" },

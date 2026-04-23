@@ -18,7 +18,7 @@ type BootstrapPreview = {
 };
 
 type CreateLeadResult = {
-  leadId: number;
+  leadId: string;
 };
 
 type CreateLeadControllerInput = {
@@ -27,7 +27,7 @@ type CreateLeadControllerInput = {
   currentUser: Accessor<CurrentUserView>;
   latestBootstrapPreview: Accessor<BootstrapPreview | null>;
   createLead: (input: { ruc: string }) => Promise<CreateLeadResult>;
-  onLeadCreated: (input: { leadId: number; ruc: string }) => void;
+  onLeadCreated: (input: { leadId: string; ruc: string }) => void;
   setActiveTab: (tab: LeadRecordTabId) => void;
 };
 

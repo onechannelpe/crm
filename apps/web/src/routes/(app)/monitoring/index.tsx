@@ -18,7 +18,7 @@ import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/s
 import { observabilitySnapshotQuery } from "~/lib/queries/audit";
 
 type MonitoringStatus = "all" | "ok" | "error";
-type MonitoringRow = ObservabilitySnapshot["summary"][number] & { id: number };
+type MonitoringRow = ObservabilitySnapshot["summary"][number] & { id: string };
 
 const MONITORING_COLUMNS = [
   {
@@ -108,7 +108,7 @@ export default function MonitoringPage() {
   const rows = createMemo<MonitoringRow[]>(() =>
     (latestSnapshot()?.summary ?? []).map((row, index) =>
       Object.assign({}, row, {
-        id: index + 1,
+        id: `monitoring:${row.actionName}:${index}`,
       }),
     ),
   );

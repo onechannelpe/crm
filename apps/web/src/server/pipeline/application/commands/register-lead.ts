@@ -29,7 +29,7 @@ export async function registerLead(input: {
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
-}): Promise<Result<{ leadId: number }, DomainError>> {
+}): Promise<Result<{ leadId: string }, DomainError>> {
   const canRegister = requirePipelineActionAccess(
     input.actorRole,
     canRegisterLead,

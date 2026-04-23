@@ -17,7 +17,7 @@ export async function listAssignableExecutives(
     actorUserId: number;
     actorRole: Role;
     actorBranchId: number;
-    leadId: number;
+    leadId: string;
     search?: string;
     limit?: number;
   },

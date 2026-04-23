@@ -50,7 +50,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/leads": {},
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
-  "/dashboard": { permission: "sales:review", landingPriority: 1 },
+  "/dashboard": { permission: "lead:work", landingPriority: 1 },
   "/audit": { permission: "audit:read", landingPriority: 8 },
   "/audit/auth": { permission: "audit:read" },
   "/audit/log": { permission: "audit:read" },
@@ -60,7 +60,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 };
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
-  { pattern: /^\/leads\/\d+$/ },
+  { pattern: /^\/leads\/[^/]+$/ },
   {
     pattern: /^\/team\/members\/[^/]+\/capacity$/,
     permission: "capacity:manage",

@@ -3,7 +3,6 @@ import type { Kysely } from "kysely";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { Result } from "~/server/shared/result";
 
 import type {
@@ -20,6 +19,7 @@ import { createAssignmentRepo } from "../assignment-repo";
 import {
   createPipelineAuditLogRepo,
   createPipelineAuditService,
+  createWorkflowAuditLogsRepo,
 } from "../audit-log";
 import { createHistoryRepo } from "../history-repo";
 import { createLeadRepo } from "../lead-repo";
@@ -53,7 +53,9 @@ function createMutationDeps(executor: DatabaseExecutor) {
   const leadHistory = createHistoryRepo(executor);
   const leadAssignments = createAssignmentRepo(executor);
   const auditService = createPipelineAuditService({
-    auditLogs: createPipelineAuditLogRepo(createAuditLogsRepo(executor)),
+    auditLogs: createPipelineAuditLogRepo(
+      createWorkflowAuditLogsRepo(executor),
+    ),
   });
 
   return {

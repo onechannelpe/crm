@@ -50,7 +50,7 @@ export function toQuotationEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const quotationId = requireNumber(payload, "quotationId", row);
+  const quotationId = requireString(payload, "quotationId", row);
   if (!quotationId.ok) return quotationId;
 
   const version = requireNumber(payload, "version", row);
@@ -74,7 +74,7 @@ export function toSaleEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const saleId = requireNumber(payload, "saleId", row);
+  const saleId = requireString(payload, "saleId", row);
   if (!saleId.ok) return saleId;
 
   return Ok({

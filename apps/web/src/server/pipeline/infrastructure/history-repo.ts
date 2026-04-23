@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -11,14 +12,16 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { toHistoryEntry } from "./history-entry-parser";
 
-type NewHistoryEventRow = Insertable<Database["pipeline_history_events"]>;
+type NewHistoryEventRow = Insertable<Database["workflow_history_events"]>;
 
 export function createHistoryRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: LeadHistoryEventDraft): Promise<number> {
-      const result = await db
-        .insertInto("pipeline_history_events")
+    async insert(values: LeadHistoryEventDraft): Promise<string> {
+      const id = randomUUIDv7();
+      await db
+        .insertInto("workflow_history_events")
         .values({
+          id,
           lead_id: values.leadId,
           event_type: values.eventType,
           actor_user_id: values.actorUserId,
@@ -28,14 +31,14 @@ export function createHistoryRepo(db: DatabaseExecutor) {
         } satisfies NewHistoryEventRow)
         .executeTakeFirstOrThrow();
 
-      return Number(result.insertId);
+      return id;
     },
 
     async listByLeadId(
-      leadId: number,
+      leadId: string,
     ): Promise<Result<LeadHistoryEntry[], DomainError>> {
       const rows = await db
-        .selectFrom("pipeline_history_events as event")
+        .selectFrom("workflow_history_events as event")
         .leftJoin("users as actor", "actor.id", "event.actor_user_id")
         .leftJoin("users as subject", "subject.id", "event.subject_user_id")
         .select([

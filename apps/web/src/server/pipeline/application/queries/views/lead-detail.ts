@@ -20,7 +20,7 @@ export type LeadTimelineItem = {
 };
 
 export type LeadDetailLeadView = {
-  id: number;
+  id: string;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
@@ -41,7 +41,7 @@ export type LeadDetailLeadView = {
 };
 
 export type LeadDetailCommercialInputView = {
-  leadId: number;
+  leadId: string;
   proveedorActual: string | null;
   tasaActual: number | null;
   gpv: number | null;
@@ -53,8 +53,8 @@ export type LeadDetailCommercialInputView = {
 };
 
 export type LeadDetailQuotationView = {
-  id: number;
-  leadId: number;
+  id: string;
+  leadId: string;
   version: number;
   moneda: Moneda;
   fee: number;
@@ -67,8 +67,8 @@ export type LeadDetailQuotationView = {
 };
 
 export type LeadDetailSaleView = {
-  id: number;
-  leadId: number;
+  id: string;
+  leadId: string;
   executiveId: number;
   proveedorActual: string;
   tasaActual: number;

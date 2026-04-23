@@ -1,11 +1,12 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { LeadQuotation } from "~/server/pipeline/application/ports/quotation-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export type QuotationRow = Selectable<Database["pipeline_quotations"]>;
-export type NewQuotationRow = Insertable<Database["pipeline_quotations"]>;
+export type QuotationRow = Selectable<Database["workflow_quotations"]>;
+export type NewQuotationRow = Insertable<Database["workflow_quotations"]>;
 
 function toLeadQuotation(row: QuotationRow): LeadQuotation {
   return {
@@ -25,10 +26,12 @@ function toLeadQuotation(row: QuotationRow): LeadQuotation {
 
 export function createQuotationRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: Omit<LeadQuotation, "id">): Promise<number> {
-      const result = await db
-        .insertInto("pipeline_quotations")
+    async insert(values: Omit<LeadQuotation, "id">): Promise<string> {
+      const id = randomUUIDv7();
+      await db
+        .insertInto("workflow_quotations")
         .values({
+          id,
           lead_id: values.leadId,
           payback_pricing: values.paybackPricing,
           tarifa_debito: values.tarifaDebito,
@@ -42,12 +45,12 @@ export function createQuotationRepo(db: DatabaseExecutor) {
         } satisfies NewQuotationRow)
         .executeTakeFirstOrThrow();
 
-      return Number(result.insertId);
+      return id;
     },
 
-    async listByLeadId(leadId: number): Promise<LeadQuotation[]> {
+    async listByLeadId(leadId: string): Promise<LeadQuotation[]> {
       const rows = await db
-        .selectFrom("pipeline_quotations")
+        .selectFrom("workflow_quotations")
         .selectAll()
         .where("lead_id", "=", leadId)
         .orderBy("version", "desc")
@@ -56,9 +59,9 @@ export function createQuotationRepo(db: DatabaseExecutor) {
       return rows.map(toLeadQuotation);
     },
 
-    async nextVersion(leadId: number): Promise<number> {
+    async nextVersion(leadId: string): Promise<number> {
       const row = await db
-        .selectFrom("pipeline_quotations")
+        .selectFrom("workflow_quotations")
         .select("version")
         .where("lead_id", "=", leadId)
         .orderBy("version", "desc")

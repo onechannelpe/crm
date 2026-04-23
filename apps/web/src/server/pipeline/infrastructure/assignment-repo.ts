@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -7,8 +8,8 @@ import type {
 } from "~/server/pipeline/application/ports/assignment-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-type AssignmentRow = Selectable<Database["pipeline_lead_assignments"]>;
-type NewAssignmentRow = Insertable<Database["pipeline_lead_assignments"]>;
+type AssignmentRow = Selectable<Database["workflow_lead_assignments"]>;
+type NewAssignmentRow = Insertable<Database["workflow_lead_assignments"]>;
 
 function toLeadAssignment(row: AssignmentRow): LeadAssignment {
   return {
@@ -23,10 +24,12 @@ function toLeadAssignment(row: AssignmentRow): LeadAssignment {
 
 export function createAssignmentRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: LeadAssignmentDraft): Promise<number> {
-      const result = await db
-        .insertInto("pipeline_lead_assignments")
+    async insert(values: LeadAssignmentDraft): Promise<string> {
+      const id = randomUUIDv7();
+      await db
+        .insertInto("workflow_lead_assignments")
         .values({
+          id,
           lead_id: values.leadId,
           executive_id: values.executiveId,
           assigned_by: values.assignedBy,
@@ -35,21 +38,21 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
         } satisfies NewAssignmentRow)
         .executeTakeFirstOrThrow();
 
-      return Number(result.insertId);
+      return id;
     },
 
-    deactivateActiveForLead(leadId: number) {
+    deactivateActiveForLead(leadId: string) {
       return db
-        .updateTable("pipeline_lead_assignments")
+        .updateTable("workflow_lead_assignments")
         .set({ is_active: 0 })
         .where("lead_id", "=", leadId)
         .where("is_active", "=", 1)
         .execute();
     },
 
-    async findActiveByLead(leadId: number) {
+    async findActiveByLead(leadId: string) {
       const row = await db
-        .selectFrom("pipeline_lead_assignments")
+        .selectFrom("workflow_lead_assignments")
         .selectAll()
         .where("lead_id", "=", leadId)
         .where("is_active", "=", 1)

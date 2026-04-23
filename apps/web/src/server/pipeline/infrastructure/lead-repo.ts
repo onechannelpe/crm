@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -8,9 +9,9 @@ import type {
 } from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export type LeadRow = Selectable<Database["pipeline_leads"]>;
-export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
-export type LeadRowPatch = Updateable<Database["pipeline_leads"]>;
+export type LeadRow = Selectable<Database["workflow_leads"]>;
+export type NewLeadRow = Insertable<Database["workflow_leads"]>;
+export type LeadRowPatch = Updateable<Database["workflow_leads"]>;
 
 function toLead(row: LeadRow): LeadRecord {
   return {
@@ -66,18 +67,19 @@ export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
 
 export function createLeadRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: LeadDraft): Promise<number> {
-      const result = await db
-        .insertInto("pipeline_leads")
-        .values(toNewLeadRow(values))
+    async insert(values: LeadDraft): Promise<string> {
+      const id = randomUUIDv7();
+      await db
+        .insertInto("workflow_leads")
+        .values({ ...toNewLeadRow(values), id })
         .executeTakeFirstOrThrow();
 
-      return Number(result.insertId);
+      return id;
     },
 
-    async findById(id: number) {
+    async findById(id: string) {
       const row = await db
-        .selectFrom("pipeline_leads")
+        .selectFrom("workflow_leads")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
@@ -86,7 +88,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
 
     async findByRuc(ruc: string) {
       const row = await db
-        .selectFrom("pipeline_leads")
+        .selectFrom("workflow_leads")
         .selectAll()
         .where("ruc", "=", ruc)
         .executeTakeFirst();
@@ -99,16 +101,16 @@ export function createLeadRepo(db: DatabaseExecutor) {
       }
 
       const rows = await db
-        .selectFrom("pipeline_leads")
+        .selectFrom("workflow_leads")
         .selectAll()
         .where("ruc", "in", rucs)
         .execute();
       return rows.map(toLead);
     },
 
-    updateById(id: number, values: LeadPatch) {
+    updateById(id: string, values: LeadPatch) {
       return db
-        .updateTable("pipeline_leads")
+        .updateTable("workflow_leads")
         .set(toLeadPatchRow(values))
         .where("id", "=", id)
         .execute();
@@ -116,7 +118,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
 
     updateByRuc(ruc: string, values: LeadPatch) {
       return db
-        .updateTable("pipeline_leads")
+        .updateTable("workflow_leads")
         .set(toLeadPatchRow(values))
         .where("ruc", "=", ruc)
         .execute();

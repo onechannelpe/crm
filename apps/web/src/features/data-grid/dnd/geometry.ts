@@ -80,15 +80,15 @@ export function createSelectionBox(
 export function getSelectableRowIdsInBox(
   container: HTMLElement,
   selectionBox: DataGridSelectionBox,
-): number[] {
+): string[] {
   const containerRect = container.getBoundingClientRect();
-  const selectedRowIds: number[] = [];
+  const selectedRowIds: string[] = [];
 
   for (const rowElement of container.querySelectorAll<HTMLElement>(
     "[data-selectable-id]",
   )) {
-    const rowId = Number(rowElement.dataset.selectableId);
-    if (Number.isNaN(rowId)) {
+    const rowId = rowElement.dataset.selectableId;
+    if (!rowId) {
       continue;
     }
 

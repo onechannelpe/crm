@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { sql } from "kysely";
 
 import type {
@@ -9,17 +10,18 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export function createIntegrationJobRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: NewIntegrationJob): Promise<number> {
-      const result = await db
-        .insertInto("pipeline_integration_jobs")
-        .values(values)
+    async insert(values: NewIntegrationJob): Promise<string> {
+      const id = randomUUIDv7();
+      await db
+        .insertInto("workflow_integration_jobs")
+        .values({ ...values, id })
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return id;
     },
 
-    findById(id: number) {
+    findById(id: string) {
       return db
-        .selectFrom("pipeline_integration_jobs")
+        .selectFrom("workflow_integration_jobs")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
@@ -27,7 +29,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
 
     list(limit: number, offset: number) {
       return db
-        .selectFrom("pipeline_integration_jobs")
+        .selectFrom("workflow_integration_jobs")
         .selectAll()
         .orderBy("created_at", "desc")
         .limit(limit)
@@ -45,7 +47,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       const leaseUntil = now + leaseMs;
 
       let query = db
-        .selectFrom("pipeline_integration_jobs")
+        .selectFrom("workflow_integration_jobs")
         .select(["id", "status", "lease_until"])
         .where((eb) =>
           eb.and([
@@ -71,7 +73,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
 
       const ids = candidates.map((row) => row.id);
       let updateQuery = db
-        .updateTable("pipeline_integration_jobs")
+        .updateTable("workflow_integration_jobs")
         .set({
           status: "PROCESSING",
           lease_owner: workerId,
@@ -98,7 +100,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
 
       return db
 
-        .selectFrom("pipeline_integration_jobs")
+        .selectFrom("workflow_integration_jobs")
         .selectAll()
         .where("id", "in", ids)
         .where("status", "=", "PROCESSING")
@@ -107,7 +109,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
     },
 
     markCompleted(
-      id: number,
+      id: string,
       result: {
         rowsTotal: number;
         rowsApplied: number;
@@ -116,7 +118,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       },
     ) {
       return db
-        .updateTable("pipeline_integration_jobs")
+        .updateTable("workflow_integration_jobs")
         .set({
           status: "COMPLETED",
           rows_total: result.rowsTotal,
@@ -132,7 +134,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
     },
 
     updateProgress(
-      id: number,
+      id: string,
       progress: {
         rowsTotal?: number;
         rowsApplied?: number;
@@ -159,20 +161,20 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       }
 
       return db
-        .updateTable("pipeline_integration_jobs")
+        .updateTable("workflow_integration_jobs")
         .set(values)
         .where("id", "=", id)
         .execute();
     },
 
     async extendLease(
-      id: number,
+      id: string,
       workerId: string,
       leaseMs: number,
     ): Promise<boolean> {
       const now = Date.now();
       const result = await db
-        .updateTable("pipeline_integration_jobs")
+        .updateTable("workflow_integration_jobs")
         .set({ lease_until: now + leaseMs })
         .where("id", "=", id)
         .where("lease_owner", "=", workerId)
@@ -182,9 +184,9 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    scheduleRetry(id: number, availableAt: number) {
+    scheduleRetry(id: string, availableAt: number) {
       return db
-        .updateTable("pipeline_integration_jobs")
+        .updateTable("workflow_integration_jobs")
         .set({
           status: "PENDING",
           available_at: availableAt,
@@ -195,9 +197,9 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    markFailed(id: number, errorMessage: string) {
+    markFailed(id: string, errorMessage: string) {
       return db
-        .updateTable("pipeline_integration_jobs")
+        .updateTable("workflow_integration_jobs")
         .set({
           status: "FAILED",
           error_message: errorMessage,
@@ -209,9 +211,9 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    setFilePath(id: number, filePath: string) {
+    setFilePath(id: string, filePath: string) {
       return db
-        .updateTable("pipeline_integration_jobs")
+        .updateTable("workflow_integration_jobs")
         .set({ file_path: filePath })
         .where("id", "=", id)
         .execute();

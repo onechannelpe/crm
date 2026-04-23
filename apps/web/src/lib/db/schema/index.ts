@@ -13,7 +13,6 @@ import * as s00 from "./00-core";
 import * as s01 from "./01-auth";
 import * as s02 from "./02-crm";
 import * as s03 from "./03-capacity";
-import * as s04 from "./04-sales";
 import * as s05 from "./05-notifications";
 import * as s06 from "./06-extensions";
 import * as s07 from "./07-search";
@@ -28,7 +27,6 @@ export const SCHEMA_MODULES: SchemaModule[] = [
   s01,
   s02,
   s03,
-  s04,
   s05,
   s06,
   s07,

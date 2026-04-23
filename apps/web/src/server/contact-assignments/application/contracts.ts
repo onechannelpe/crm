@@ -20,9 +20,7 @@ export interface AssignContactsResult {
   assigned: number;
 }
 
-export type CompleteContactAssignmentCallResult = ActionSuccess & {
-  draftRecordId: number | null;
-};
+export type CompleteContactAssignmentCallResult = ActionSuccess;
 
 export type CompleteContactAssignmentCallCommand = {
   actorUserId: UserId;

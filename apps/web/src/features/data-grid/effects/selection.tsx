@@ -6,7 +6,7 @@ import { useDataGridInstance } from "../context/instance-context";
 import { useDataGridTable } from "../context/table-context";
 
 export function DataGridSelectionEffects(props: {
-  rows: Array<{ id: number }>;
+  rows: Array<{ id: string }>;
 }) {
   const interaction = useDataGridInstance();
   const table = useDataGridTable();

@@ -23,10 +23,10 @@ describe("integration import pipeline concurrency", () => {
     const now = Date.now();
 
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values([
         {
-          id: 901,
+          id: "lead-901",
           ruc: "20900000001",
           razon_social: "Org One",
           address: "Addr 1",
@@ -41,7 +41,7 @@ describe("integration import pipeline concurrency", () => {
           updated_at: now,
         },
         {
-          id: 902,
+          id: "lead-902",
           ruc: "20900000002",
           razon_social: "Org Two",
           address: "Addr 2",
@@ -59,9 +59,9 @@ describe("integration import pipeline concurrency", () => {
       .execute();
 
     await runtime.ctx.db
-      .insertInto("pipeline_integration_jobs")
+      .insertInto("workflow_integration_jobs")
       .values({
-        id: 5001,
+        id: "job-5001",
         type: "import_status",
         status: "PROCESSING",
         requested_by_user_id: 5,
@@ -90,7 +90,7 @@ describe("integration import pipeline concurrency", () => {
 
     const applyPromise = applyImportRows(
       {
-        jobId: 5001,
+        jobId: "job-5001",
         actorId: 5,
         validRows: [
           {
@@ -117,12 +117,12 @@ describe("integration import pipeline concurrency", () => {
     expect(applied.failed).toBe(0);
 
     const pendingNeedsExec = await runtime.ctx.db
-      .selectFrom("pipeline_integration_outbox_needs_executive_input")
+      .selectFrom("workflow_integration_outbox_needs_executive_input")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "pending")
       .executeTakeFirstOrThrow();
     const pendingReadyForQuote = await runtime.ctx.db
-      .selectFrom("pipeline_integration_outbox_ready_for_quotation")
+      .selectFrom("workflow_integration_outbox_ready_for_quotation")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "pending")
       .executeTakeFirstOrThrow();
@@ -153,22 +153,22 @@ describe("integration import pipeline concurrency", () => {
       {
         user_id: 1,
         event_type: "lead.needs_executive_input",
-        dedupe_key: "lead_nei_901",
+        dedupe_key: "lead_nei_lead-901",
       },
       {
         user_id: 4,
         event_type: "lead.ready_for_quotation",
-        dedupe_key: "lead_rfq_902",
+        dedupe_key: "lead_rfq_lead-902",
       },
     ]);
 
     const completedNeedsExec = await runtime.ctx.db
-      .selectFrom("pipeline_integration_outbox_needs_executive_input")
+      .selectFrom("workflow_integration_outbox_needs_executive_input")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "completed")
       .executeTakeFirstOrThrow();
     const completedReadyForQuote = await runtime.ctx.db
-      .selectFrom("pipeline_integration_outbox_ready_for_quotation")
+      .selectFrom("workflow_integration_outbox_ready_for_quotation")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "completed")
       .executeTakeFirstOrThrow();

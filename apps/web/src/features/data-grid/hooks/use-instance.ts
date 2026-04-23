@@ -12,58 +12,58 @@ import type { DataGridRowOpenMode } from "../model/row-open";
 import type { DataGridSelectionModel } from "./use-selection";
 
 export type DataGridInteractionModel = {
-  isRowActive: (id: number) => boolean;
-  isRowDragged: (id: number) => boolean;
-  isRowDropTarget: (id: number) => boolean;
-  isRowFocused: (id: number) => boolean;
-  isSelected: (id: number) => boolean;
-  selectedIds: Accessor<number[]>;
+  isRowActive: (id: string) => boolean;
+  isRowDragged: (id: string) => boolean;
+  isRowDropTarget: (id: string) => boolean;
+  isRowFocused: (id: string) => boolean;
+  isSelected: (id: string) => boolean;
+  selectedIds: Accessor<string[]>;
   hasActiveRow: Accessor<boolean>;
   hasPendingRowOpenSuppression: Accessor<boolean>;
   hasReorder: Accessor<boolean>;
   isReordering: Accessor<boolean>;
-  activateRow: (id: number) => void;
-  beginRowReorder: (rowId: number, rowIndex: number, clientY: number) => void;
+  activateRow: (id: string) => void;
+  beginRowReorder: (rowId: string, rowIndex: number, clientY: number) => void;
   completeRowReorder: () => void;
   clearActiveRow: () => void;
   clearSelection: () => void;
   hasFocusedCell: Accessor<boolean>;
   clearPendingRowOpenSuppression: () => void;
   clearFocus: () => void;
-  getCellTabIndex: (rowId: number, columnIndex: number) => number;
-  focusCell: (rowId: number, columnIndex: number) => void;
+  getCellTabIndex: (rowId: string, columnIndex: number) => number;
+  focusCell: (rowId: string, columnIndex: number) => void;
   registerCellElement: (
-    rowId: number,
+    rowId: string,
     columnIndex: number,
     element: HTMLButtonElement | undefined,
   ) => void;
   handleCellKeyDown: (
     event: KeyboardEvent,
-    rowId: number,
+    rowId: string,
     columnIndex: number,
   ) => void;
   markRowOpenSuppressed: () => void;
   setReorderTargetIndex: (index: number | undefined) => void;
   setReorderDragging: (dragging: boolean) => void;
-  setSelected?: (id: number, checked: boolean) => void;
+  setSelected?: (id: string, checked: boolean) => void;
   toggleAll?: (checked: boolean) => void;
   allSelected?: Accessor<boolean>;
   reorderState: {
-    activeRowId: Accessor<number | undefined>;
+    activeRowId: Accessor<string | undefined>;
     sourceIndex: Accessor<number | undefined>;
     targetIndex: Accessor<number | undefined>;
     pointerStartY: Accessor<number | undefined>;
   };
 };
 
-export function createDataGridInteraction<T extends { id: number }>(options: {
+export function createDataGridInteraction<T extends { id: string }>(options: {
   rows: Accessor<T[]>;
   rowOpenMode: Accessor<DataGridRowOpenMode>;
   columnCount: Accessor<number>;
   reorder?: DataGridReorderConfig<T>;
   selection?: DataGridSelectionModel;
 }) {
-  const [activeRowId, setActiveRowId] = createSignal<number | undefined>();
+  const [activeRowId, setActiveRowId] = createSignal<string | undefined>();
   const [pendingRowOpenSuppression, setPendingRowOpenSuppression] =
     createSignal(false);
   const [focusedCell, setFocusedCell] = createSignal(
@@ -74,7 +74,7 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
     ),
   );
   const [reorderActiveRowId, setReorderActiveRowId] = createSignal<
-    number | undefined
+    string | undefined
   >();
   const [reorderSourceIndex, setReorderSourceIndex] = createSignal<
     number | undefined
@@ -149,22 +149,22 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
     }
   });
 
-  function focusRegisteredCell(rowId: number, columnIndex: number) {
+  function focusRegisteredCell(rowId: string, columnIndex: number) {
     cellElements.get(getCellKey(rowId, columnIndex))?.focus();
   }
 
-  function isSelected(id: number) {
+  function isSelected(id: string) {
     return options.selection?.selectedIds().includes(id) ?? false;
   }
 
   return {
-    isRowActive(id: number) {
+    isRowActive(id: string) {
       return activeRowId() === id;
     },
-    isRowDragged(id: number) {
+    isRowDragged(id: string) {
       return reorderActiveRowId() === id && reordering();
     },
-    isRowDropTarget(id: number) {
+    isRowDropTarget(id: string) {
       const targetIndex = reorderTargetIndex();
       if (targetIndex === undefined) {
         return false;
@@ -172,7 +172,7 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
 
       return options.rows()[targetIndex]?.id === id;
     },
-    isRowFocused(id: number) {
+    isRowFocused(id: string) {
       return focusedCell()?.rowId === id;
     },
     isSelected,
@@ -181,10 +181,10 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
     hasPendingRowOpenSuppression: pendingRowOpenSuppression,
     hasReorder: createMemo(() => options.reorder !== undefined),
     isReordering: reordering,
-    activateRow(id: number) {
+    activateRow(id: string) {
       setActiveRowId(id);
     },
-    beginRowReorder(rowId: number, rowIndex: number, clientY: number) {
+    beginRowReorder(rowId: string, rowIndex: number, clientY: number) {
       if (!options.reorder) {
         return;
       }
@@ -241,7 +241,7 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
     clearFocus() {
       setFocusedCell(undefined);
     },
-    getCellTabIndex(rowId: number, columnIndex: number) {
+    getCellTabIndex(rowId: string, columnIndex: number) {
       if (options.rowOpenMode() === "none") {
         return -1;
       }
@@ -256,14 +256,14 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
         ? 0
         : -1;
     },
-    focusCell(rowId: number, columnIndex: number) {
+    focusCell(rowId: string, columnIndex: number) {
       if (options.rowOpenMode() === "none") {
         return;
       }
 
       setFocusedCell({ rowId, columnIndex });
     },
-    registerCellElement(rowId: number, columnIndex: number, element) {
+    registerCellElement(rowId: string, columnIndex: number, element) {
       const key = getCellKey(rowId, columnIndex);
 
       if (!element) {
@@ -328,10 +328,10 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
 }
 
 function getInitialFocusedCell(
-  rows: Array<{ id: number }>,
+  rows: Array<{ id: string }>,
   rowOpenMode: DataGridRowOpenMode,
   columnCount: number,
-): { rowId: number; columnIndex: number } | undefined {
+): { rowId: string; columnIndex: number } | undefined {
   if (rowOpenMode === "none" || rows.length === 0 || columnCount === 0) {
     return undefined;
   }
@@ -342,6 +342,6 @@ function getInitialFocusedCell(
   };
 }
 
-function getCellKey(rowId: number, columnIndex: number) {
+function getCellKey(rowId: string, columnIndex: number) {
   return `${rowId}:${columnIndex}`;
 }

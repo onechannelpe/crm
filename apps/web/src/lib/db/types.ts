@@ -243,82 +243,6 @@ export interface LeadAssignmentsTable {
   status: "active" | "completed" | "expired";
 }
 
-export interface SalesRecordsTable {
-  id: Generated<number>;
-  source: "lead_assignment" | "manual";
-  status:
-    | "draft"
-    | "submitted_for_confirmation"
-    | "confirmed"
-    | "rejected"
-    | "cancelled";
-  executive_user_id: number;
-  lead_assignment_id: number | null;
-  branch_id: number;
-  submitted_at: number | null;
-  confirmed_at: number | null;
-  rejected_at: number | null;
-  cancelled_at: number | null;
-  created_at: number;
-  updated_at: number;
-}
-
-export interface SalesRecordClientTable {
-  sales_record_id: number;
-  ruc: string | null;
-  company_name: string | null;
-  contact_name: string | null;
-  dni: string | null;
-  phones_json: string;
-  engine_match_id: string | null;
-  completeness_score: number;
-  created_at: number;
-  updated_at: number;
-}
-
-export interface SalesRecordAddressesTable {
-  id: Generated<number>;
-  sales_record_id: number;
-  address_type: "installation" | "billing" | "reference";
-  full_text: string;
-  department: string | null;
-  province: string | null;
-  district: string | null;
-  ubigeo: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  is_primary: number;
-  created_at: number;
-  updated_at: number;
-}
-
-export interface SalesRecordProductsTable {
-  id: Generated<number>;
-  sales_record_id: number;
-  product_id: number;
-  product_name_snapshot: string;
-  category_snapshot: string;
-  subtype_snapshot: string | null;
-  quantity: number;
-  unit_price_snapshot: number | null;
-  created_at: number;
-}
-
-export interface SalesRecordAttemptsTable {
-  id: Generated<number>;
-  sales_record_id: number;
-  reviewer_user_id: number;
-  outcome:
-    | "no_answer"
-    | "callback_scheduled"
-    | "validated"
-    | "invalid_data"
-    | "rejected";
-  notes: string | null;
-  next_attempt_at: number | null;
-  created_at: number;
-}
-
 export interface LeadPolicyDefaultsTable {
   id: Generated<number>;
   scope_type: "branch" | "team";
@@ -406,15 +330,6 @@ export interface CapacityRequestsTable {
   decided_at: number | null;
 }
 
-export interface ProductsTable {
-  id: Generated<number>;
-  name: string;
-  category: string;
-  subtype: string | null;
-  price: number;
-  is_active: number;
-}
-
 export interface InteractionLogsTable {
   id: Generated<number>;
   contact_id: number;
@@ -422,14 +337,6 @@ export interface InteractionLogsTable {
   outcome: string;
   notes: string | null;
   duration_seconds: number | null;
-  created_at: number;
-}
-
-export interface InventoryItemsTable {
-  id: Generated<number>;
-  product_id: number;
-  serial_number: string;
-  status: "available" | "reserved" | "sold";
   created_at: number;
 }
 
@@ -796,7 +703,7 @@ export function isExecutiveCategoryValue(
 }
 
 export interface PipelineLeadsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   ruc: string;
   razon_social: string | null;
   address: string | null;
@@ -820,7 +727,7 @@ export interface PipelineLeadsTable {
 }
 
 export interface PipelineLeadCommercialInputsTable {
-  lead_id: number;
+  lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
   gpv: number | null;
@@ -832,8 +739,8 @@ export interface PipelineLeadCommercialInputsTable {
 }
 
 export interface PipelineQuotationsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   payback_pricing: number;
   tarifa_debito: number;
   tarifa_credito: number;
@@ -846,8 +753,8 @@ export interface PipelineQuotationsTable {
 }
 
 export interface PipelineSalesTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   executive_id: number;
   proveedor_actual: string;
   tasa_actual: number;
@@ -862,8 +769,8 @@ export interface PipelineSalesTable {
 }
 
 export interface PipelineLeadAssignmentsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   executive_id: number;
   assigned_by: number;
   is_active: number;
@@ -871,8 +778,8 @@ export interface PipelineLeadAssignmentsTable {
 }
 
 export interface PipelineHistoryEventsTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   event_type:
     | "lead_registered"
     | "lead_status_updated"
@@ -900,8 +807,18 @@ export interface LeadSourcingPoliciesTable {
   updated_by_user_id: number;
 }
 
+export interface WorkflowAuditLogsTable {
+  id: Generated<string>;
+  user_id: number;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  changes: string | null;
+  created_at: number;
+}
+
 export interface PipelineIntegrationJobsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
   requested_by_user_id: number;
@@ -921,23 +838,23 @@ export interface PipelineIntegrationJobsTable {
 }
 
 export interface PipelineIntegrationImportRowsTable {
-  id: Generated<number>;
-  integration_job_id: number;
+  id: Generated<string>;
+  integration_job_id: string;
   row_number: number;
   type: "import_status" | "import_prioridad";
   ruc: string;
   status_value: string | null;
   prioridad_value: string | null;
   state: "staged" | "applied" | "failed";
-  lead_id: number | null;
+  lead_id: string | null;
   failure_reason: string | null;
   created_at: number;
   applied_at: number | null;
 }
 
 export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   ruc: string;
   executive_id: number;
   status: "pending" | "processing" | "completed" | "failed";
@@ -952,8 +869,8 @@ export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
 }
 
 export interface PipelineIntegrationOutboxReadyForQuotationTable {
-  id: Generated<number>;
-  lead_id: number;
+  id: Generated<string>;
+  lead_id: string;
   ruc: string;
   branch_id: number;
   status: "pending" | "processing" | "completed" | "failed";
@@ -993,11 +910,6 @@ export interface Database {
   organizations: OrganizationsTable;
   contacts: ContactsTable;
   lead_assignments: LeadAssignmentsTable;
-  sales_records: SalesRecordsTable;
-  sales_record_client: SalesRecordClientTable;
-  sales_record_addresses: SalesRecordAddressesTable;
-  sales_record_products: SalesRecordProductsTable;
-  sales_record_attempts: SalesRecordAttemptsTable;
   lead_policy_defaults: LeadPolicyDefaultsTable;
   lead_policy_overrides: LeadPolicyOverridesTable;
   search_capacity_grants: SearchCapacityGrantsTable;
@@ -1007,9 +919,7 @@ export interface Database {
   lead_usage_reservations: LeadUsageReservationsTable;
   lead_usage_commits: LeadUsageCommitsTable;
   capacity_requests: CapacityRequestsTable;
-  products: ProductsTable;
   interaction_logs: InteractionLogsTable;
-  inventory_items: InventoryItemsTable;
   extension_handoffs: ExtensionHandoffsTable;
   extension_installation_sessions: ExtensionInstallationSessionsTable;
   extension_runtime_events: ExtensionRuntimeEventsTable;
@@ -1028,17 +938,18 @@ export interface Database {
   webauthn_challenges: WebauthnChallengesTable;
   user_oauth_accounts: UserOAuthAccountsTable;
   password_reset_tokens: PasswordResetTokensTable;
-  pipeline_leads: PipelineLeadsTable;
-  pipeline_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
-  pipeline_quotations: PipelineQuotationsTable;
-  pipeline_sales: PipelineSalesTable;
-  pipeline_lead_assignments: PipelineLeadAssignmentsTable;
-  pipeline_history_events: PipelineHistoryEventsTable;
+  workflow_leads: PipelineLeadsTable;
+  workflow_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
+  workflow_quotations: PipelineQuotationsTable;
+  workflow_sales: PipelineSalesTable;
+  workflow_lead_assignments: PipelineLeadAssignmentsTable;
+  workflow_history_events: PipelineHistoryEventsTable;
+  workflow_audit_logs: WorkflowAuditLogsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;
-  pipeline_integration_jobs: PipelineIntegrationJobsTable;
-  pipeline_integration_import_rows: PipelineIntegrationImportRowsTable;
-  pipeline_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
-  pipeline_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
+  workflow_integration_jobs: PipelineIntegrationJobsTable;
+  workflow_integration_import_rows: PipelineIntegrationImportRowsTable;
+  workflow_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
+  workflow_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
   workflow_artifacts: WorkflowArtifactsTable;
   file_assets: FileAssetsTable;
   artifact_file_bindings: ArtifactFileBindingsTable;
@@ -1048,7 +959,7 @@ export interface Database {
 
 export interface WorkflowArtifactsTable {
   id: Generated<number>;
-  artifact_type: "leads_export" | "integration_import" | "sales_export";
+  artifact_type: "leads_export" | "integration_import";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
   status:

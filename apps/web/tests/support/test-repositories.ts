@@ -31,16 +31,12 @@ import { createContactsRepo } from "../../src/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "../../src/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "../../src/server/extension/repos";
 import { createIntegrationJobRepo } from "../../src/server/integrations/infrastructure/integration-job-repo";
-import { createInventoryRepo } from "../../src/server/inventory/repos";
-import { createProductsRepo } from "../../src/server/inventory/repos-products";
 import { createAppNotificationRepo } from "../../src/server/notifications/repos/app-notification";
 import { createNotificationCampaignRepo } from "../../src/server/notifications/repos/campaign";
 import { createNotificationContactRepo } from "../../src/server/notifications/repos/contact";
 import { createNotificationPreferenceRepo } from "../../src/server/notifications/repos/preference";
 import { createActionObservationsRepo } from "../../src/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "../../src/server/observability/repos-auth-funnel-events";
-import { createReportExportRepo } from "../../src/server/sales/repos-report-exports";
-import { createSalesRecordsRepo } from "../../src/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "../../src/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "../../src/server/security/repos-request-sessions";
 import { createSessionRepository } from "../../src/server/sessions/repos-sessions";
@@ -82,17 +78,13 @@ export function createTestRepositories(db: Kysely<Database>) {
     leadUsageReservations: createLeadUsageReservationsRepo(db),
     leadUsageCommits: createLeadUsageCommitsRepo(db),
     capacityRequests: createCapacityRequestsRepo(db),
-    reportExportJobs: createReportExportRepo(db),
-    salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
-    products: createProductsRepo(db),
     notificationCampaigns: createNotificationCampaignRepo(db),
     notificationContacts: createNotificationContactRepo(db),
     notificationPreferences: createNotificationPreferenceRepo(db),
     appNotifications: createAppNotificationRepo(db),
     actionObservations: createActionObservationsRepo(db),
     authFunnelEvents: createAuthFunnelEventsRepo(db),
-    inventory: createInventoryRepo(db),
     extensionRuntime: createExtensionRuntimeRepo(db),
     auditLogs: createAuditLogsRepo(db),
     auditActionPolicies: createAuditActionPoliciesRepo(db),

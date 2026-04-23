@@ -6,7 +6,7 @@ export type IntegrationJobType = PipelineIntegrationJobsTable["type"];
 export type IntegrationJobStatus = PipelineIntegrationJobsTable["status"];
 
 export interface IntegrationJobRow extends QueueJobBase {
-  id: number;
+  id: string;
   type: IntegrationJobType;
   status: IntegrationJobStatus;
   created_at: number;
@@ -40,8 +40,8 @@ export interface IntegrationJobCompletion {
 }
 
 export interface IntegrationJobsPort {
-  insert(values: NewIntegrationJob): Promise<number>;
-  findById(id: number): Promise<IntegrationJobRow | undefined>;
+  insert(values: NewIntegrationJob): Promise<string>;
+  findById(id: string): Promise<IntegrationJobRow | undefined>;
   list(limit: number, offset: number): Promise<IntegrationJobRow[]>;
   claimPending(
     leaseMs: number,
@@ -49,15 +49,15 @@ export interface IntegrationJobsPort {
     batchSize: number,
     types?: IntegrationJobType[],
   ): Promise<IntegrationJobRow[]>;
-  markCompleted(id: number, result: IntegrationJobCompletion): Promise<unknown>;
+  markCompleted(id: string, result: IntegrationJobCompletion): Promise<unknown>;
   updateProgress(
-    id: number,
+    id: string,
     progress: { rowsTotal?: number; rowsApplied?: number; rowsFailed?: number },
   ): Promise<unknown>;
-  extendLease(id: number, workerId: string, leaseMs: number): Promise<boolean>;
-  scheduleRetry(id: number, availableAt: number): Promise<unknown>;
-  markFailed(id: number, errorMessage: string): Promise<unknown>;
-  setFilePath(id: number, filePath: string): Promise<unknown>;
+  extendLease(id: string, workerId: string, leaseMs: number): Promise<boolean>;
+  scheduleRetry(id: string, availableAt: number): Promise<unknown>;
+  markFailed(id: string, errorMessage: string): Promise<unknown>;
+  setFilePath(id: string, filePath: string): Promise<unknown>;
 }
 
 export interface IntegrationRuntime {
@@ -66,7 +66,7 @@ export interface IntegrationRuntime {
   leadExportQuery: {
     export(filters: { executiveId?: number }): Promise<
       Array<{
-        id: number;
+        id: string;
         ruc: string;
         razonSocial: string | null;
         address: string | null;
@@ -82,7 +82,7 @@ export interface IntegrationRuntime {
   leads: {
     findByRucMany(
       rucs: string[],
-    ): Promise<Array<{ id: number; ruc: string; executiveId: number }>>;
+    ): Promise<Array<{ id: string; ruc: string; executiveId: number }>>;
   };
   users: {
     findById(id: number): Promise<{ branch_id: number } | undefined>;

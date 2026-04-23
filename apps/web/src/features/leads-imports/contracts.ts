@@ -8,7 +8,7 @@ export type LeadImportJobStatus =
 
 export interface LeadImportProgressEvent {
   type: "job_progress";
-  jobId: number;
+  jobId: string;
   importType: LeadImportType;
   status: LeadImportJobStatus;
   rowsApplied: number;
@@ -23,22 +23,21 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-export function leadImportTopic(jobId: number): string {
+export function leadImportTopic(jobId: string): string {
   return `${LEAD_IMPORT_TOPIC_PREFIX}.${jobId}`;
 }
 
-export function parseLeadImportTopic(topic: string): number | null {
+export function parseLeadImportTopic(topic: string): string | null {
   if (!topic.startsWith(`${LEAD_IMPORT_TOPIC_PREFIX}.`)) {
     return null;
   }
 
   const rawJobId = topic.slice(`${LEAD_IMPORT_TOPIC_PREFIX}.`.length);
-  const jobId = Number(rawJobId);
-  if (!Number.isFinite(jobId) || jobId <= 0) {
+  if (rawJobId.trim().length < 1) {
     return null;
   }
 
-  return Math.trunc(jobId);
+  return rawJobId;
 }
 
 export function isLeadImportProgressEvent(
@@ -50,7 +49,7 @@ export function isLeadImportProgressEvent(
 
   return (
     value.type === "job_progress" &&
-    typeof value.jobId === "number" &&
+    typeof value.jobId === "string" &&
     (value.importType === "import_status" ||
       value.importType === "import_prioridad") &&
     (value.status === "PENDING" ||

@@ -23,7 +23,7 @@ import { completeCommercialInputMutation } from "../data/mutations";
 import styles from "./commercial-input-section.module.css";
 
 export function CommercialInputSection(props: {
-  leadId: number;
+  leadId: string;
   initialValues?: LeadDetailCommercialInputView;
 }) {
   const complete = useAction(completeCommercialInputMutation);

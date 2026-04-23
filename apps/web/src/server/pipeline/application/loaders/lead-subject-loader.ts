@@ -34,7 +34,7 @@ function invalidStage(): Result<never, DomainError> {
 
 async function loadLeadById(
   leads: LeadRepository,
-  leadId: number,
+  leadId: string,
 ): Promise<Result<LeadRecord, DomainError>> {
   const lead = await leads.findById(leadId);
   if (!lead) {
@@ -46,7 +46,7 @@ async function loadLeadById(
 
 export async function loadPendingReviewLead(
   leads: LeadRepository,
-  leadId: number,
+  leadId: string,
 ): Promise<Result<PendingReviewLeadSubject, DomainError>> {
   const lead = await loadLeadById(leads, leadId);
   if (!lead.ok) {
@@ -60,7 +60,7 @@ export async function loadPendingReviewLead(
 
 export async function loadNeedsExecutiveInputLead(
   leads: LeadRepository,
-  leadId: number,
+  leadId: string,
 ): Promise<Result<NeedsExecutiveInputLeadSubject, DomainError>> {
   const lead = await loadLeadById(leads, leadId);
   if (!lead.ok) {
@@ -74,7 +74,7 @@ export async function loadNeedsExecutiveInputLead(
 
 export async function loadReadyForQuotationLead(
   leads: LeadRepository,
-  leadId: number,
+  leadId: string,
 ): Promise<Result<ReadyForQuotationLeadSubject, DomainError>> {
   const lead = await loadLeadById(leads, leadId);
   if (!lead.ok) {
@@ -88,7 +88,7 @@ export async function loadReadyForQuotationLead(
 
 export async function loadQuotedLead(
   leads: LeadRepository,
-  leadId: number,
+  leadId: string,
 ): Promise<Result<QuotedLeadSubject, DomainError>> {
   const lead = await loadLeadById(leads, leadId);
   if (!lead.ok) {
@@ -102,7 +102,7 @@ export async function loadQuotedLead(
 
 export async function loadReadyForSaleLead(
   leads: LeadRepository,
-  leadId: number,
+  leadId: string,
 ): Promise<Result<ReadyForSaleLeadSubject, DomainError>> {
   const lead = await loadLeadById(leads, leadId);
   if (!lead.ok) {

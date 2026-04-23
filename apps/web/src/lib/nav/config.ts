@@ -3,12 +3,9 @@ export type RouteIcon =
   | "settings"
   | "team"
   | "inventory"
-  | "sales"
   | "leads"
   | "rate-simulator"
   | "dashboard"
-  | "new-sale"
-  | "confirmed"
   | "audit"
   | "capacity"
   | "profile"
@@ -53,12 +50,8 @@ export interface PageHeaderRule {
 export const PAGE_HEADERS: PageHeaderRule[] = [
   // Dynamic patterns first
   {
-    match: /^\/leads\/\d+$/,
+    match: /^\/leads\/[^/]+$/,
     header: { label: "Prospectos", icon: "leads" },
-  },
-  {
-    match: /^\/sales\/[0-9]+$/,
-    header: { label: "Detalle de venta", icon: "sales" },
   },
   {
     match: /^\/team\/members\/[^/]+\/capacity$/,

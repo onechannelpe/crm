@@ -23,7 +23,7 @@ export type ImportRowInput =
     };
 
 export type LoadedLead = {
-  id: number;
+  id: string;
   ruc: string;
   executive_id: number;
   created_by: number;
@@ -36,7 +36,7 @@ export type LoadedLead = {
 
 export type LeadMutationOutcome = {
   row: ImportRowInput;
-  leadId: number;
+  leadId: string;
   ruc: string;
   executiveId: number;
   previousStatus: LeadStatus | null;
@@ -61,13 +61,13 @@ export type LeadMutationResult =
     };
 
 export type NeedsExecutiveOutboxEvent = {
-  leadId: number;
+  leadId: string;
   ruc: string;
   executiveId: number;
 };
 
 export type ReadyForQuotationOutboxEvent = {
-  leadId: number;
+  leadId: string;
   ruc: string;
   executiveId: number;
   branchId: number;

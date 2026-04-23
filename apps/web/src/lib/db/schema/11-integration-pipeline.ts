@@ -2,12 +2,12 @@ import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
-    .createTable("pipeline_integration_import_rows")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("integration_job_id", "integer", (col) =>
+    .createTable("workflow_integration_import_rows")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("integration_job_id", "text", (col) =>
       col
         .notNull()
-        .references("pipeline_integration_jobs.id")
+        .references("workflow_integration_jobs.id")
         .onDelete("cascade"),
     )
     .addColumn("row_number", "integer", (col) => col.notNull())
@@ -16,32 +16,30 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("status_value", "varchar(40)")
     .addColumn("prioridad_value", "varchar(40)")
     .addColumn("state", "varchar(20)", (col) => col.notNull())
-    .addColumn("lead_id", "integer", (col) =>
-      col.references("pipeline_leads.id"),
-    )
+    .addColumn("lead_id", "text", (col) => col.references("workflow_leads.id"))
     .addColumn("failure_reason", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("applied_at", "integer")
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_import_rows_job_state")
-    .on("pipeline_integration_import_rows")
+    .createIndex("idx_workflow_import_rows_job_state")
+    .on("workflow_integration_import_rows")
     .columns(["integration_job_id", "state", "row_number"])
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_import_rows_job_row")
-    .on("pipeline_integration_import_rows")
+    .createIndex("idx_workflow_import_rows_job_row")
+    .on("workflow_integration_import_rows")
     .columns(["integration_job_id", "row_number"])
     .unique()
     .execute();
 
   await db.schema
-    .createTable("pipeline_integration_outbox_needs_executive_input")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("pipeline_leads.id"),
+    .createTable("workflow_integration_outbox_needs_executive_input")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id"),
     )
     .addColumn("ruc", "varchar(20)", (col) => col.notNull())
     .addColumn("executive_id", "integer", (col) =>
@@ -59,16 +57,16 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_outbox_needs_exec_status")
-    .on("pipeline_integration_outbox_needs_executive_input")
+    .createIndex("idx_workflow_outbox_needs_exec_status")
+    .on("workflow_integration_outbox_needs_executive_input")
     .columns(["status", "available_at", "lease_until"])
     .execute();
 
   await db.schema
-    .createTable("pipeline_integration_outbox_ready_for_quotation")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("pipeline_leads.id"),
+    .createTable("workflow_integration_outbox_ready_for_quotation")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id"),
     )
     .addColumn("ruc", "varchar(20)", (col) => col.notNull())
     .addColumn("branch_id", "integer", (col) =>
@@ -86,8 +84,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_outbox_ready_quote_status")
-    .on("pipeline_integration_outbox_ready_for_quotation")
+    .createIndex("idx_workflow_outbox_ready_quote_status")
+    .on("workflow_integration_outbox_ready_for_quotation")
     .columns(["status", "available_at", "lease_until"])
     .execute();
 }

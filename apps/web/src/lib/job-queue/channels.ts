@@ -10,7 +10,6 @@ export const JOB_CHANNELS = {
     "job:integration-outbox-needs-executive-input",
   INTEGRATION_OUTBOX_READY_FOR_QUOTATION:
     "job:integration-outbox-ready-for-quotation",
-  SALES_EXPORT: "job:sales-export",
   ENRICHMENT: "job:enrichment",
   ENRICHMENT_WRITEBACK: "job:enrichment-writeback",
   NOTIFICATIONS_EMAIL: "job:notifications-email",

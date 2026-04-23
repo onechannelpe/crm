@@ -39,14 +39,11 @@ describe("schema baseline", () => {
       `.execute(db);
       const tableNames = new Set(tables.rows.map((row) => row.name));
       expect(tableNames.has("users")).toBe(true);
-      expect(tableNames.has("inventory_items")).toBe(true);
       expect(tableNames.has("audit_logs")).toBe(true);
       expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
       expect(tableNames.has("action_observations")).toBe(true);
       expect(tableNames.has("report_export_jobs")).toBe(true);
-      expect(tableNames.has("sales_records")).toBe(true);
-      expect(tableNames.has("sales_record_attempts")).toBe(true);
       expect(tableNames.has("login_flows")).toBe(true);
 
       const indexes = await sql<{ name: string }>`
@@ -61,10 +58,6 @@ describe("schema baseline", () => {
       expect(indexNames.has("idx_audit_user_created")).toBe(true);
       expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
       expect(indexNames.has("idx_report_export_jobs_branch_time")).toBe(true);
-      expect(indexNames.has("idx_sales_records_branch_status_time")).toBe(true);
-      expect(indexNames.has("idx_sales_record_attempts_record_time")).toBe(
-        true,
-      );
     } finally {
       await db.destroy();
     }

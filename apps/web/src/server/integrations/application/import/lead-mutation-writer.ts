@@ -41,14 +41,14 @@ function nextStageFor(
 
 async function markImportRowFailed(input: {
   executor: DatabaseExecutor;
-  jobId: number;
+  jobId: string;
   rowNumber: number;
   reason: string;
-  leadId: number | null;
+  leadId: string | null;
   changedAt: number;
 }) {
   await input.executor
-    .updateTable("pipeline_integration_import_rows")
+    .updateTable("workflow_integration_import_rows")
     .set({
       state: "failed",
       failure_reason: input.reason,
@@ -62,13 +62,13 @@ async function markImportRowFailed(input: {
 
 async function markImportRowApplied(input: {
   executor: DatabaseExecutor;
-  jobId: number;
+  jobId: string;
   rowNumber: number;
-  leadId: number;
+  leadId: string;
   changedAt: number;
 }) {
   await input.executor
-    .updateTable("pipeline_integration_import_rows")
+    .updateTable("workflow_integration_import_rows")
     .set({
       state: "applied",
       failure_reason: null,
@@ -82,12 +82,12 @@ async function markImportRowApplied(input: {
 
 export async function applyLeadMutation(input: {
   executor: DatabaseExecutor;
-  jobId: number;
+  jobId: string;
   actorId: number;
   row: ImportRowInput;
 }): Promise<LeadMutationResult> {
   const lead = (await input.executor
-    .selectFrom("pipeline_leads")
+    .selectFrom("workflow_leads")
     .select([
       "id",
       "ruc",
@@ -145,7 +145,7 @@ export async function applyLeadMutation(input: {
   const stageChanged = nextStage !== lead.stage;
 
   const updateResult = await input.executor
-    .updateTable("pipeline_leads")
+    .updateTable("workflow_leads")
     .set({
       status: nextStatus,
       prioridad: nextPrioridad,

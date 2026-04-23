@@ -16,7 +16,7 @@ import { reviewLeadMutation } from "../data/mutations";
 import styles from "./lead-actions-widget.module.css";
 
 export function ReviewLeadModal(props: {
-  leadId: number;
+  leadId: string;
   onClose: () => void;
 }) {
   const review = useAction(reviewLeadMutation);

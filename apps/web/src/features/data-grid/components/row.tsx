@@ -12,7 +12,7 @@ import { DataGridCell } from "./cell";
 
 import styles from "../styles/data-grid.module.css";
 
-export function DataGridRow<T extends { id: number }>(props: {
+export function DataGridRow<T extends { id: string }>(props: {
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
   reorderable: boolean;

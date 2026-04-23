@@ -76,7 +76,7 @@ export function useLeadsImport() {
   const { showToast, updateToast, removeToast } = useToast();
 
   let fileInputRef: HTMLInputElement | undefined;
-  let activeJobId: number | null = null;
+  let activeJobId: string | null = null;
   let activeImportType: LeadImportType | null = null;
   let progressToastId: string | null = null;
   let socket: WebSocket | null = null;
@@ -276,7 +276,7 @@ export function useLeadsImport() {
     }
   }
 
-  function scheduleWebsocketReconnect(jobId: number) {
+  function scheduleWebsocketReconnect(jobId: string) {
     if (activeJobId !== jobId || wsReconnectTimer !== null) {
       return;
     }
@@ -292,7 +292,7 @@ export function useLeadsImport() {
     }, delay);
   }
 
-  function connectWebsocket(jobId: number) {
+  function connectWebsocket(jobId: string) {
     closeSocket();
     clearWebsocketReconnect();
 

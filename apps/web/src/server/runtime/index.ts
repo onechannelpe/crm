@@ -7,13 +7,10 @@ import { createExtensionRuntime } from "./extension-runtime";
 import { createFilesRuntime } from "./files-runtime";
 import { createServerInfra } from "./infra";
 import { createIntegrationsRuntime } from "./integrations-runtime";
-import { createInventoryRuntime } from "./inventory-runtime";
 import { createNotificationsRuntime } from "./notifications-runtime";
 import { createObservabilityRuntime } from "./observability-runtime";
 import { createPipelineRuntime } from "./pipeline-runtime";
 import { createProfilePictureRuntime } from "./profile-picture-runtime";
-import { createSalesRecordsRuntime } from "./sales-records-runtime";
-import { createSalesRuntime } from "./sales-runtime";
 import { createSearchRuntime } from "./search-runtime";
 import { createSecurityRuntime } from "./security-runtime";
 import { createTeamRuntime } from "./team-runtime";
@@ -33,14 +30,11 @@ export function createServerRuntime() {
     contactAssignments: createContactAssignmentsRuntime(infra),
     extension: createExtensionRuntime(infra),
     integrations: createIntegrationsRuntime(infra),
-    inventory: createInventoryRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),
     pipeline: createPipelineRuntime(infra),
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
-    sales: createSalesRuntime(infra),
-    salesRecords: createSalesRecordsRuntime(infra),
     search: createSearchRuntime(infra),
     team: createTeamRuntime(infra),
     users: createUsersRuntime(infra),

@@ -8,7 +8,7 @@ export async function writeLeadEvents(input: {
   auditRepository: LeadAuditRepository;
   actorUserId: number;
   auditAction: string;
-  entityId: number;
+  entityId: string;
   auditChanges?: Record<string, unknown>;
 }) {
   const historyIds = await input.eventRepository.append(input.events);

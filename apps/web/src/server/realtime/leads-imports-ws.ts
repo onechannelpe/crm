@@ -13,7 +13,7 @@ import { getServerRuntime } from "~/server/runtime";
 
 import { createTopicSubscriptionWsHandler } from "./core/ws-handler-factory";
 
-export default createTopicSubscriptionWsHandler<number>({
+export default createTopicSubscriptionWsHandler<string>({
   hub: getLeadImportsTopicHub(),
   canOpen: (session) =>
     session.sessionClass === "app" &&

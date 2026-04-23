@@ -3,11 +3,8 @@ import type { Component } from "solid-js";
 import Activity from "~/components/icons/activity";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
-import CircleCheckBig from "~/components/icons/circle-check-big";
 import House from "~/components/icons/house";
-import Inbox from "~/components/icons/inbox";
 import Info from "~/components/icons/info";
-import Mail from "~/components/icons/mail";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Search from "~/components/icons/search";
@@ -25,12 +22,9 @@ export const ICON_BY_ROUTE: Record<
   settings: Settings,
   team: Users,
   inventory: Package,
-  sales: Inbox,
   leads: User,
   "rate-simulator": Moneybag,
   dashboard: House,
-  "new-sale": Mail,
-  confirmed: CircleCheckBig,
   audit: Info,
   capacity: Building2,
   profile: UserRound,

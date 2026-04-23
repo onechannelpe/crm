@@ -5,10 +5,10 @@ import type { LeadCommercialInput } from "~/server/pipeline/application/ports/co
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type CommercialInputRow = Selectable<
-  Database["pipeline_lead_commercial_inputs"]
+  Database["workflow_lead_commercial_inputs"]
 >;
 export type NewCommercialInputRow = Insertable<
-  Database["pipeline_lead_commercial_inputs"]
+  Database["workflow_lead_commercial_inputs"]
 >;
 
 function toLeadCommercialInput(row: CommercialInputRow): LeadCommercialInput {
@@ -28,10 +28,10 @@ function toLeadCommercialInput(row: CommercialInputRow): LeadCommercialInput {
 export function createCommercialInputRepo(db: DatabaseExecutor) {
   return {
     async findByLeadId(
-      leadId: number,
+      leadId: string,
     ): Promise<LeadCommercialInput | undefined> {
       const row = await db
-        .selectFrom("pipeline_lead_commercial_inputs")
+        .selectFrom("workflow_lead_commercial_inputs")
         .selectAll()
         .where("lead_id", "=", leadId)
         .executeTakeFirst();
@@ -41,7 +41,7 @@ export function createCommercialInputRepo(db: DatabaseExecutor) {
 
     upsert(values: LeadCommercialInput) {
       return db
-        .insertInto("pipeline_lead_commercial_inputs")
+        .insertInto("workflow_lead_commercial_inputs")
         .values({
           lead_id: values.leadId,
           proveedor_actual: values.proveedorActual,

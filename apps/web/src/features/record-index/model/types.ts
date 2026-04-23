@@ -55,7 +55,7 @@ export type RecordIndexOption<TValue extends string = string> = {
 export type RecordIndexMenu = "filter" | "sort" | "options" | "views" | null;
 
 export type RecordIndexAdapter<
-  T extends { id: number },
+  T extends { id: string },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 > = {
@@ -171,7 +171,7 @@ export type RecordIndexScreenColumnsState<T> = RecordIndexColumnsState<T> & {
 };
 
 export type RecordIndexScreenModel<
-  T extends { id: number },
+  T extends { id: string },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 > = {

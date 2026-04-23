@@ -23,7 +23,7 @@ import { formatDateTime } from "~/lib/utils";
 import type { AuditReaderSnapshot } from "~/server/audit-reader/contracts";
 
 type AuditLogEvent = AuditReaderSnapshot["events"][number];
-type AuditLogGridRow = AuditLogEvent & { id: number };
+type AuditLogGridRow = AuditLogEvent & { id: string };
 
 const AUDIT_LOG_COLUMNS = [
   {
@@ -127,7 +127,7 @@ export default function AuditLogPage() {
   const rows = createMemo<AuditLogGridRow[]>(() =>
     (latestSnapshot()?.events ?? []).map((event, index) =>
       Object.assign({}, event, {
-        id: index + 1,
+        id: `audit:${event.createdAt}:${index}`,
       }),
     ),
   );
@@ -158,7 +158,7 @@ export default function AuditLogPage() {
             label="Acción"
             value={actionFilter()}
             onInput={(e) => setActionFilter(e.currentTarget.value)}
-            placeholder="sales_record_confirmed"
+            placeholder="lead_refill_granted"
           />
         </div>
         <div style={{ width: "11rem" }}>
@@ -166,7 +166,7 @@ export default function AuditLogPage() {
             label="Entidad"
             value={entityTypeFilter()}
             onInput={(e) => setEntityTypeFilter(e.currentTarget.value)}
-            placeholder="sales_record"
+            placeholder="lead_policy"
           />
         </div>
         <div style={{ width: "7rem" }}>

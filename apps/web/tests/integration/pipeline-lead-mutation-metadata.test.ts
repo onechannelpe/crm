@@ -21,9 +21,9 @@ describe("pipeline lead mutation metadata", () => {
 
   it("updates lead.updatedBy when a note is added", async () => {
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values({
-        id: 501,
+        id: "lead-501",
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -56,16 +56,16 @@ describe("pipeline lead mutation metadata", () => {
         role: "executive",
         branchId: 1,
       },
-      leadId: 501,
+      leadId: "lead-501",
       body: "Test note",
     });
 
     expect(result.ok).toBe(true);
 
     const lead = await runtime.ctx.db
-      .selectFrom("pipeline_leads")
+      .selectFrom("workflow_leads")
       .select(["updated_by", "updated_at"])
-      .where("id", "=", 501)
+      .where("id", "=", "lead-501")
       .executeTakeFirstOrThrow();
 
     expect(lead.updated_by).toBe(1);
@@ -113,9 +113,9 @@ describe("pipeline lead mutation metadata", () => {
       .execute();
 
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values({
-        id: 502,
+        id: "lead-502",
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -148,16 +148,16 @@ describe("pipeline lead mutation metadata", () => {
         role: "supervisor",
         branchId: 1,
       },
-      leadId: 502,
+      leadId: "lead-502",
       toExecutiveId: 12,
     });
 
     expect(reassignResult.ok).toBe(true);
 
     const lead = await runtime.ctx.db
-      .selectFrom("pipeline_leads")
+      .selectFrom("workflow_leads")
       .select(["executive_id", "updated_by"])
-      .where("id", "=", 502)
+      .where("id", "=", "lead-502")
       .executeTakeFirstOrThrow();
     expect(lead.executive_id).toBe(12);
     expect(lead.updated_by).toBe(11);
@@ -167,7 +167,7 @@ describe("pipeline lead mutation metadata", () => {
       {
         actorUserId: 1,
         actorRole: "executive",
-        leadId: 502,
+        leadId: "lead-502",
       },
     );
     expect(previousExecutiveAccess.ok).toBe(false);
@@ -177,7 +177,7 @@ describe("pipeline lead mutation metadata", () => {
       {
         actorUserId: 12,
         actorRole: "executive",
-        leadId: 502,
+        leadId: "lead-502",
       },
     );
     expect(newExecutiveAccess.ok).toBe(true);
@@ -186,9 +186,9 @@ describe("pipeline lead mutation metadata", () => {
   it("updates lead.updatedBy for import mutations", async () => {
     const now = Date.now();
     await runtime.ctx.db
-      .insertInto("pipeline_leads")
+      .insertInto("workflow_leads")
       .values({
-        id: 503,
+        id: "lead-503",
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -204,9 +204,9 @@ describe("pipeline lead mutation metadata", () => {
       .execute();
 
     await runtime.ctx.db
-      .insertInto("pipeline_integration_jobs")
+      .insertInto("workflow_integration_jobs")
       .values({
-        id: 9001,
+        id: "job-9001",
         type: "import_status",
         status: "PROCESSING",
         requested_by_user_id: 2,
@@ -228,7 +228,7 @@ describe("pipeline lead mutation metadata", () => {
 
     const result = await applyImportRows(
       {
-        jobId: 9001,
+        jobId: "job-9001",
         actorId: 2,
         validRows: [
           {
@@ -247,9 +247,9 @@ describe("pipeline lead mutation metadata", () => {
     expect(result.failed).toBe(0);
 
     const lead = await runtime.ctx.db
-      .selectFrom("pipeline_leads")
+      .selectFrom("workflow_leads")
       .select(["updated_by", "status"])
-      .where("id", "=", 503)
+      .where("id", "=", "lead-503")
       .executeTakeFirstOrThrow();
     expect(lead.updated_by).toBe(2);
     expect(lead.status).toBe("DISPONIBLE");

@@ -2,7 +2,7 @@ export type LeadAuditRepository = {
   append(input: {
     actorUserId: number;
     action: string;
-    entityId: number;
+    entityId: string;
     changes?: Record<string, unknown>;
   }): Promise<void>;
 };
