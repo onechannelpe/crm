@@ -427,29 +427,43 @@
   display: flex;
   font: inherit;
   justify-content: flex-start;
+  line-height: inherit;
   min-height: 100%;
   min-width: 0;
+  overflow: hidden;
   padding: 0;
   text-align: left;
   width: 100%;
 }
 
 .rowButton:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--foreground) 20%, transparent);
-  outline-offset: -2px;
+  outline: 1px solid var(--t-border-color-medium);
+  outline-offset: -1px;
 }
 
 .rowButtonContent {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  height: 100%;
   justify-content: space-between;
   min-width: 0;
+  overflow: hidden;
+  padding: 0 8px;
   width: 100%;
 }
 
 .rowButtonLabel {
+  align-items: center;
   display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rowButtonLabel > * {
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -463,7 +477,9 @@
   display: inline-flex;
   height: 24px;
   justify-content: center;
+  opacity: 0.38;
   padding: 0;
+  transition: opacity 120ms ease;
   width: 24px;
 }
 
@@ -520,7 +536,9 @@
   justify-content: flex-start;
   min-height: 100%;
   min-width: 0;
-  padding: 0 12px;
+  overflow: hidden;
+  padding: 0 8px;
+  white-space: nowrap;
   width: 100%;
 }
 
@@ -545,11 +563,24 @@
 
 .bodyRow:hover .bodyCell,
 .actionRow:hover .actionCell {
-  background: color-mix(in srgb, var(--accent) 56%, var(--background));
+  background: var(--t-background-transparent-light);
+}
+
+.bodyRow:hover .bodyCell {
+  border-bottom-color: var(--t-border-color-medium);
+  border-right-color: var(--t-border-color-medium);
 }
 
 .bodyRow {
   transition: background-color 140ms ease;
+}
+
+.bodyRow:hover .reorderHandle,
+.reorderCell:hover .reorderHandle,
+.bodyRow[data-focused="true"] .reorderHandle,
+.bodyRow[data-active="true"] .reorderHandle,
+.bodyRow[data-dragged="true"] .reorderHandle {
+  opacity: 1;
 }
 
 .bodyRow:hover .rowOpenHint,

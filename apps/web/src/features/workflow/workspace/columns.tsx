@@ -7,7 +7,10 @@ import Target from "~/components/icons/target";
 import TimelineEvent from "~/components/icons/timeline-event";
 import User from "~/components/icons/user";
 import { Badge } from "~/components/ui/display/badge";
-import { RecordChip } from "~/components/ui/record-chip/record-chip";
+import {
+  RecordChip,
+  RecordLinkChip,
+} from "~/components/ui/record-chip/record-chip";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   leadNextStepLabel,
@@ -28,7 +31,14 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     icon: CircleQuestionMark,
     width: 196,
     sticky: true,
-    renderCell: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
+    renderCell: (lead) => (
+      <RecordLinkChip
+        href={`/records/${lead.id}`}
+        name={lead.ruc}
+        shape="square"
+        showAvatar={false}
+      />
+    ),
   },
   {
     key: "razonSocial",
@@ -37,12 +47,11 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     minWidth: 240,
     maxWidth: 420,
     renderCell: (lead) => (
-      <div class={styles.fieldWithIcon}>
-        <span class={styles.fieldIcon}>
-          <Building2 size={14} />
-        </span>
-        <span class={styles.cellText}>{lead.razonSocial ?? ""}</span>
-      </div>
+      <RecordLinkChip
+        href={`/records/${lead.id}`}
+        name={lead.razonSocial ?? lead.ruc}
+        shape="square"
+      />
     ),
   },
   {

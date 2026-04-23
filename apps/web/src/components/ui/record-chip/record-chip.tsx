@@ -1,4 +1,5 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
+import { A } from "@solidjs/router";
 
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 
@@ -22,43 +23,80 @@ interface RecordChipProps {
   name: string;
   shape?: ChipShape;
   avatarUrl?: string | null;
+  showAvatar?: boolean;
 }
 
 export function RecordChip(props: RecordChipProps) {
   const hue = createMemo(() => nameToHue(props.name));
   const shape = () => props.shape ?? "square";
+  const showAvatar = () => props.showAvatar ?? true;
   const avatarShapeClass = () =>
     shape() === "round" ? styles.avatarRound : styles.avatarSquare;
   const [imgError, setImgError] = createSignal(false);
 
-  const showImage = () => Boolean(props.avatarUrl) && !imgError();
+  const showImage = () =>
+    showAvatar() && Boolean(props.avatarUrl) && !imgError();
 
   return (
     <span class={styles.chip}>
-      <Show
-        when={showImage()}
-        fallback={
-          <span
-            class={`${styles.avatar} ${avatarShapeClass()}`}
-            style={{
-              "background-color": `hsl(${hue()} 60% 88%)`,
-              color: `hsl(${hue()} 50% 32%)`,
-            }}
+      <Show when={showAvatar()}>
+        <Show
+          when={showImage()}
+          fallback={
+            <span
+              class={`${styles.avatar} ${avatarShapeClass()}`}
+              style={{
+                "background-color": `hsl(${hue()} 60% 88%)`,
+                color: `hsl(${hue()} 50% 32%)`,
+              }}
+              aria-hidden="true"
+            >
+              {initial(props.name)}
+            </span>
+          }
+        >
+          <img
+            src={props.avatarUrl ?? undefined}
+            alt=""
+            class={`${styles.avatar} ${avatarShapeClass()} ${styles.avatarImage}`}
+            onError={() => setImgError(true)}
             aria-hidden="true"
-          >
-            {initial(props.name)}
-          </span>
-        }
-      >
-        <img
-          src={props.avatarUrl ?? undefined}
-          alt=""
-          class={`${styles.avatar} ${avatarShapeClass()} ${styles.avatarImage}`}
-          onError={() => setImgError(true)}
-          aria-hidden="true"
-        />
+          />
+        </Show>
       </Show>
       <OverflowingText class={styles.label} text={props.name} />
+    </span>
+  );
+}
+
+interface RecordLinkChipProps extends RecordChipProps {
+  href: string;
+  target?: "_self" | "_blank";
+}
+
+export function RecordLinkChip(props: RecordLinkChipProps) {
+  return (
+    <span class={styles.linkChipWrap}>
+      <A
+        class={styles.linkChip}
+        href={props.href}
+        target={props.target}
+        rel={props.target === "_blank" ? "noopener noreferrer" : undefined}
+        data-click-outside-id="link-chip-click-outside-id"
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+        }}
+      >
+        <RecordChip
+          name={props.name}
+          shape={props.shape}
+          avatarUrl={props.avatarUrl}
+          showAvatar={props.showAvatar}
+        />
+      </A>
     </span>
   );
 }

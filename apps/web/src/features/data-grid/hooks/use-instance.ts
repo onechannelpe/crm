@@ -35,7 +35,7 @@ export type DataGridInteractionModel = {
   registerCellElement: (
     rowId: string,
     columnIndex: number,
-    element: HTMLButtonElement | undefined,
+    element: HTMLElement | undefined,
   ) => void;
   handleCellKeyDown: (
     event: KeyboardEvent,
@@ -86,7 +86,7 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
     number | undefined
   >();
   const [reordering, setReordering] = createSignal(false);
-  const cellElements = new Map<string, HTMLButtonElement>();
+  const cellElements = new Map<string, HTMLElement>();
 
   const rowIds = createMemo(() => options.rows().map((row) => row.id));
 

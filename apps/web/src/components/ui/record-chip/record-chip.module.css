@@ -12,6 +12,20 @@
   vertical-align: middle;
 }
 
+.linkChipWrap {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.linkChip {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  text-decoration: none;
+}
+
 .chip:hover {
   background: var(--bg-translucent-medium);
 }

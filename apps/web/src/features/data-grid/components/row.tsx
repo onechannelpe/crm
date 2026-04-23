@@ -118,7 +118,7 @@ export function DataGridRow<T extends { id: string }>(props: {
                 {column.renderCell(props.row)}
               </div>
             ) : (
-              <button
+              <div
                 ref={(element) =>
                   interaction.registerCellElement(
                     props.row.id,
@@ -126,12 +126,16 @@ export function DataGridRow<T extends { id: string }>(props: {
                     element,
                   )
                 }
-                type="button"
                 class={styles.rowButton}
                 data-grid-focusable-cell={`${props.row.id}:${index()}`}
                 data-open-mode={props.rowOpen.mode}
-                disabled={!isInteractive()}
+                role="button"
+                aria-disabled={isInteractive() ? undefined : "true"}
                 onClick={() => {
+                  if (!isInteractive()) {
+                    return;
+                  }
+
                   if (interaction.hasPendingRowOpenSuppression()) {
                     interaction.clearPendingRowOpenSuppression();
                     return;
@@ -141,9 +145,25 @@ export function DataGridRow<T extends { id: string }>(props: {
                   props.rowOpen.open(props.row);
                 }}
                 onFocus={() => interaction.focusCell(props.row.id, index())}
-                onKeyDown={(event) =>
-                  interaction.handleCellKeyDown(event, props.row.id, index())
-                }
+                onKeyDown={(event) => {
+                  interaction.handleCellKeyDown(event, props.row.id, index());
+
+                  if (!isInteractive()) {
+                    return;
+                  }
+
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+
+                    if (interaction.hasPendingRowOpenSuppression()) {
+                      interaction.clearPendingRowOpenSuppression();
+                      return;
+                    }
+
+                    interaction.activateRow(props.row.id);
+                    props.rowOpen.open(props.row);
+                  }
+                }}
                 tabIndex={
                   isInteractive()
                     ? interaction.getCellTabIndex(props.row.id, index())
@@ -158,7 +178,7 @@ export function DataGridRow<T extends { id: string }>(props: {
                     <DataGridRowOpenHint mode={props.rowOpen.mode} />
                   ) : null}
                 </span>
-              </button>
+              </div>
             )}
           </DataGridCell>
         )}
