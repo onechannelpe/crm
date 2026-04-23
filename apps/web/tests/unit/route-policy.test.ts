@@ -38,7 +38,7 @@ describe("route permissions", () => {
   });
 
   it("returns a role-safe default path", () => {
-    expect(getDefaultAppPath("executive")).toBe("/leads");
+    expect(getDefaultAppPath("executive")).toBe("/records");
     expect(getDefaultAppPath("logistics")).toBe("/inventory");
     expect(getDefaultAppPath("hr")).toBe("/team");
     expect(getDefaultAppPath("admin")).toBe("/dashboard");
