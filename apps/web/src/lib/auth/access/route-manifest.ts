@@ -60,14 +60,9 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 };
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
-  { pattern: /^\/sales\/[0-9]+$/, permission: "lead:sale:create" },
-  { pattern: /^\/sales\/records\/[^/]+\/edit$/, permission: "sales:create" },
+  { pattern: /^\/leads\/\d+$/ },
   {
     pattern: /^\/team\/members\/[^/]+\/capacity$/,
     permission: "capacity:manage",
-  },
-  {
-    pattern: /^\/sales\/reports\/exports\/[^/]+$/,
-    permission: "sales:review",
   },
 ];
