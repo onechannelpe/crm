@@ -14,7 +14,7 @@ export type AppPath =
   | "/team/invite"
   | "/team/import"
   | "/inventory"
-  | "/leads"
+  | "/records"
   | "/rate-simulator"
   | "/dashboard"
   | "/audit"
@@ -48,7 +48,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/invite": { permission: "team:manage" },
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
-  "/leads": {},
+  "/records": {},
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
   "/dashboard": { permission: "lead:work", landingPriority: 1 },
   "/audit": { permission: "audit:read", landingPriority: 8 },
@@ -60,7 +60,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 };
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
-  { pattern: /^\/leads\/[^/]+$/ },
+  { pattern: /^\/records\/[^/]+$/ },
   {
     pattern: /^\/team\/members\/[^/]+\/capacity$/,
     permission: "capacity:manage",

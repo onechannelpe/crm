@@ -89,7 +89,7 @@ export function SaleSection(props: SaleSectionProps) {
         nroCuenta: nroCuenta(),
         cci: normalizedCci,
       });
-      navigate("/leads");
+      navigate("/records");
     } catch (err) {
       setError(toAppError(err, "Error al registrar venta").publicMessage);
     } finally {

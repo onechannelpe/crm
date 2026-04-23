@@ -10,7 +10,7 @@ export async function notifyExecutiveInputRequired(input: {
     type: "lead.needs_executive_input",
     title: "Accion requerida",
     bodyText: `El prospecto RUC ${input.ruc} requiere tu informacion comercial`,
-    actionUrl: "/leads",
+    actionUrl: "/records",
     priority: "high",
     dedupeKey: `lead_nei_${input.leadId}`,
   });
@@ -26,7 +26,7 @@ export async function notifyReadyForQuotation(input: {
     type: "lead.ready_for_quotation",
     title: "Prospecto listo para cotizacion",
     bodyText: `El prospecto RUC ${input.ruc} esta listo para cotizar`,
-    actionUrl: `/leads/${input.leadId}`,
+    actionUrl: `/records/${input.leadId}`,
     priority: "normal",
     dedupeKey: `lead_rfq_${input.leadId}`,
   });
@@ -42,7 +42,7 @@ export async function notifyReadyForSale(input: {
     type: "lead.ready_for_sale",
     title: "Prospecto listo para venta",
     bodyText: `El prospecto RUC ${input.ruc} fue aprobado. Puedes registrar la venta.`,
-    actionUrl: `/leads/${input.leadId}`,
+    actionUrl: `/records/${input.leadId}`,
     priority: "high",
     dedupeKey: `lead_rfs_${input.leadId}`,
   });

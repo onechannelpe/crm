@@ -50,8 +50,8 @@ export interface PageHeaderRule {
 export const PAGE_HEADERS: PageHeaderRule[] = [
   // Dynamic patterns first
   {
-    match: /^\/leads\/[^/]+$/,
-    header: { label: "Prospectos", icon: "leads" },
+    match: /^\/records\/[^/]+$/,
+    header: { label: "Registros", icon: "leads" },
   },
   {
     match: /^\/team\/members\/[^/]+\/capacity$/,
@@ -61,7 +61,7 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   // Exact paths
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
-  { match: "/leads", header: { label: "Prospectos", icon: "leads" } },
+  { match: "/records", header: { label: "Registros", icon: "leads" } },
   {
     match: "/rate-simulator",
     header: { label: "Simulador de tasas", icon: "rate-simulator" },
@@ -122,11 +122,11 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
 
   // Secondary › Comercial
   {
-    id: "leads",
-    href: "/leads",
-    activePrefixes: ["/leads"],
-    label: "Prospectos",
-    navLabel: "Prospectos",
+    id: "records",
+    href: "/records",
+    activePrefixes: ["/records"],
+    label: "Registros",
+    navLabel: "Registros",
     icon: "leads",
     section: "secondary",
     order: 1,

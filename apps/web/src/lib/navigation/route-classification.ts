@@ -3,5 +3,5 @@ export function isSettingsRoutePath(pathname: string): boolean {
 }
 
 export function isRecordShowPath(pathname: string): boolean {
-  return /^\/leads\/\d+$/.test(pathname);
+  return /^\/records\/[^/]+$/.test(pathname);
 }

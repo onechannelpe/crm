@@ -76,7 +76,7 @@ export function RecordPage() {
 
       <Show when={detailData()}>
         {(detail) => (
-          <Footer onOpen={() => navigate(`/leads/${detail().lead.id}`)} />
+          <Footer onOpen={() => navigate(`/records/${detail().lead.id}`)} />
         )}
       </Show>
     </div>
