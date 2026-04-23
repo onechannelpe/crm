@@ -26,7 +26,7 @@ export function Footer(props: FooterProps) {
         <FooterIcon>
           <BrowserMaximize size={14} />
         </FooterIcon>
-        <FooterLabel>Open</FooterLabel>
+        <FooterLabel>Abrir</FooterLabel>
         <FooterShortcut>Mod ⏎</FooterShortcut>
       </FooterButtonPrimary>
     </PanelFooter>
