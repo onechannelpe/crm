@@ -89,7 +89,7 @@ export function RecordIndexViewPicker() {
       {isOpen() ? (
         <Portal>
           <div
-            ref={menu}
+            ref={(element) => (menu = element)}
             class={`${sharedStyles.menu} ${sharedStyles.menuFloating} ${sharedStyles.menuLeft}`}
             id={`${setup.id}-view-picker`}
             role="menu"

@@ -13,7 +13,6 @@ import Target from "~/components/icons/target";
 import User from "~/components/icons/user";
 import X from "~/components/icons/x";
 import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
-import type { DataGridIcon } from "~/features/data-grid/model/types";
 
 import { useRecordIndexModelContext } from "../context/model-context";
 import { useRecordIndexSetup } from "../context/setup-context";

@@ -80,7 +80,7 @@ export function DataGridToolbarMenu(props: {
   return (
     <div class={styles.menuWrap} ref={(element) => (container = element)}>
       <button
-        ref={trigger}
+        ref={(element) => (trigger = element)}
         type="button"
         class={styles.toolbarButton}
         aria-controls={props.menuId}
@@ -95,7 +95,7 @@ export function DataGridToolbarMenu(props: {
       {props.open ? (
         <Portal>
           <div
-            ref={menu}
+            ref={(element) => (menu = element)}
             class={`${styles.menu} ${styles.menuFloating}`}
             id={props.menuId}
             role="menu"
