@@ -114,7 +114,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       let response: Response;
       try {
         response = await post(
-          engineApiPath(ENGINE_ENDPOINTS.leadCandidates),
+          engineApiPath(ENGINE_ENDPOINTS.recordCandidates),
           body,
           requestId,
         );

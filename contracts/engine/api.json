@@ -2,7 +2,8 @@
   "version": "v1",
   "endpoints": {
     "search": "/search",
-    "leadCandidates": "/lead-candidates",
+    "recordCandidates": "/records/candidates",
+    "recordImports": "/records/imports",
     "health": "/health"
   }
 }

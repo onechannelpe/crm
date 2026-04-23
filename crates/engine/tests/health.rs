@@ -42,10 +42,10 @@ async fn unauthorized_errors_include_request_id_header_and_body() {
 }
 
 #[tokio::test]
-async fn lead_candidates_endpoint_exists_and_requires_auth() {
+async fn record_candidates_endpoint_exists_and_requires_auth() {
     let (server, _db) = common::make_test_server();
     let response = server
-        .post("/v1/lead-candidates")
+        .post("/v1/records/candidates")
         .json(&serde_json::json!({"branch_id":1,"user_id":1}))
         .await;
     response.assert_status_unauthorized();
@@ -55,7 +55,7 @@ async fn lead_candidates_endpoint_exists_and_requires_auth() {
 async fn import_endpoint_exists_and_requires_auth() {
     let (server, _db) = common::make_test_server();
     let response = server
-        .post("/v1/leads/import")
+        .post("/v1/records/imports")
         .json(&serde_json::json!({"rows":[],"source":"test"}))
         .await;
     response.assert_status_unauthorized();
