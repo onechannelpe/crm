@@ -13,6 +13,7 @@
 
 .tabPane {
   animation: tab-fade-in var(--motion-fast) var(--ease-standard, ease);
+  height: 100%;
 }
 
 @keyframes tab-fade-in {
