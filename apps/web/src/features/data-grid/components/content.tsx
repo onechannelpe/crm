@@ -24,6 +24,19 @@ export function DataGridContent<T extends { id: string }>(props: {
   setContainer: (element: HTMLElement) => void;
   setScrollWrapper: (element: HTMLElement) => void;
   gridTemplateColumns: string;
+  onAddColumn?: () => void;
+  pagination?: {
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    onNextPage: () => void;
+    onPreviousPage: () => void;
+  };
+  onColumnResizeStart: (
+    key: string,
+    clientX: number,
+    currentWidth: number,
+  ) => void;
   rowOpen: DataGridRowOpen<T>;
   source: DataGridSource<T>;
   selectable: boolean;
@@ -34,9 +47,25 @@ export function DataGridContent<T extends { id: string }>(props: {
   const stickyLeft = () =>
     selectionLeft() + (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
   const rows = () => props.source.rows;
+  const totalCount = () => props.source.totalCount;
   const isLoading = () => props.source.status === "pending";
   const isError = () => props.source.status === "error";
   const errorState = () => props.errorState ?? <>No se pudo cargar la tabla.</>;
+  const paginationStart = () =>
+    (props.pagination?.currentPage ?? 0) * (props.pagination?.pageSize ?? 0) +
+    1;
+  const paginationEnd = () =>
+    Math.min(
+      (props.pagination?.currentPage ?? 0) * (props.pagination?.pageSize ?? 0) +
+        rows().length,
+      props.pagination?.totalCount ?? rows().length,
+    );
+  const hasPreviousPage = () => (props.pagination?.currentPage ?? 0) > 0;
+  const hasNextPage = () =>
+    props.pagination !== undefined &&
+    paginationEnd() < props.pagination.totalCount;
+  const shouldShowPagination = () =>
+    props.pagination !== undefined && rows().length > 0;
 
   return (
     <div class={styles.indexContainer}>
@@ -52,7 +81,7 @@ export function DataGridContent<T extends { id: string }>(props: {
               (props.reorderable ? 1 : 0)
             }
             aria-multiselectable={props.selectable ? "true" : undefined}
-            aria-rowcount={rows().length + 1}
+            aria-rowcount={(totalCount() ?? rows().length) + 1}
             role="grid"
           >
             <DataGridHeader
@@ -64,6 +93,8 @@ export function DataGridContent<T extends { id: string }>(props: {
               allSelected={props.selection?.allSelected()}
               stickyColumnIndex={props.stickyColumnIndex}
               stickyLeft={stickyLeft()}
+              onAddColumn={props.onAddColumn}
+              onColumnResizeStart={props.onColumnResizeStart}
               onToggleAll={props.selection?.toggleAll}
             />
 
@@ -99,6 +130,32 @@ export function DataGridContent<T extends { id: string }>(props: {
             </Show>
           </section>
         </div>
+        <Show when={shouldShowPagination()}>
+          <div class={styles.paginationBar}>
+            <span class={styles.paginationMeta}>
+              {paginationStart()}-{paginationEnd()} de{" "}
+              {props.pagination?.totalCount ?? rows().length}
+            </span>
+            <div class={styles.paginationControls}>
+              <button
+                type="button"
+                class={styles.paginationButton}
+                disabled={!hasPreviousPage()}
+                onClick={() => props.pagination?.onPreviousPage()}
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                class={styles.paginationButton}
+                disabled={!hasNextPage()}
+                onClick={() => props.pagination?.onNextPage()}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </Show>
       </div>
     </div>
   );

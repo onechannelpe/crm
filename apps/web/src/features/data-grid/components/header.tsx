@@ -1,5 +1,6 @@
 import { For } from "solid-js";
 
+import Plus from "~/components/icons/plus";
 import { Checkbox } from "~/components/ui/input/checkbox";
 
 import { useDataGridInteractionReady } from "../context/interaction-context";
@@ -16,6 +17,12 @@ export function DataGridHeader<T>(props: {
   allSelected?: boolean;
   stickyColumnIndex: number;
   stickyLeft: number;
+  onAddColumn?: () => void;
+  onColumnResizeStart: (
+    key: string,
+    clientX: number,
+    currentWidth: number,
+  ) => void;
   onToggleAll?: (checked: boolean) => void;
 }) {
   const isInteractive = useDataGridInteractionReady();
@@ -56,17 +63,14 @@ export function DataGridHeader<T>(props: {
           const Icon = column.icon;
           const colIndex = () =>
             index() + (props.selectable ? 2 : 1) + (props.reorderable ? 1 : 0);
+          const isSticky = () => index() === props.stickyColumnIndex;
 
           return (
             <div
-              class={`${styles.headerCell} ${index() === props.stickyColumnIndex ? styles.stickyCell : ""}`}
+              class={`${styles.headerCell}${isSticky() ? ` ${styles.stickyCell}` : ""}`}
               role="columnheader"
               aria-colindex={colIndex()}
-              style={
-                index() === props.stickyColumnIndex
-                  ? { left: `${props.stickyLeft}px` }
-                  : undefined
-              }
+              style={isSticky() ? { left: `${props.stickyLeft}px` } : undefined}
             >
               <span class={styles.headerCellContent}>
                 <span class={styles.headerIcon}>
@@ -74,10 +78,38 @@ export function DataGridHeader<T>(props: {
                 </span>
                 <span>{column.label}</span>
               </span>
+              <div
+                class={styles.resizeHandle}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const cell = e.currentTarget.parentElement;
+                  props.onColumnResizeStart(
+                    column.key,
+                    e.clientX,
+                    cell?.offsetWidth ?? 150,
+                  );
+                }}
+              />
             </div>
           );
         }}
       </For>
+      {props.onAddColumn ? (
+        <div
+          class={`${styles.headerCell} ${styles.addColumnCell}`}
+          role="columnheader"
+        >
+          <button
+            type="button"
+            class={styles.addColumnButton}
+            onClick={props.onAddColumn}
+            aria-label="Agregar columna"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

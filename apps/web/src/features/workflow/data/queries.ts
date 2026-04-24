@@ -17,6 +17,10 @@ function normalizeLeadListFilters(filters: LeadListFilters): LeadListFilters {
     status: filters.status,
     prioridad: filters.prioridad,
     executiveId: filters.executiveId,
+    updatedSinceMs: filters.updatedSinceMs,
+    updatedUntilMs: filters.updatedUntilMs,
+    sortBy: filters.sortBy,
+    sortDirection: filters.sortDirection,
     limit: filters.limit,
     offset: filters.offset,
   };

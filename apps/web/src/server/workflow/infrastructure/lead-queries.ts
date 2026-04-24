@@ -114,9 +114,28 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       if (filters.prioridad !== undefined) {
         query = query.where("lead.prioridad", "=", filters.prioridad);
       }
+      if (filters.updatedSinceMs !== undefined) {
+        query = query.where("lead.updated_at", ">=", filters.updatedSinceMs);
+      }
+      if (filters.updatedUntilMs !== undefined) {
+        query = query.where("lead.updated_at", "<", filters.updatedUntilMs);
+      }
+
+      if (filters.sortBy === "createdAt") {
+        query = query.orderBy("lead.created_at", filters.sortDirection);
+      } else if (filters.sortBy === "updatedAt") {
+        query = query.orderBy("lead.updated_at", filters.sortDirection);
+      } else if (filters.sortBy === "registeredBy") {
+        query = query.orderBy(
+          sql<string>`creator.names || ' ' || creator.first_surname`,
+          filters.sortDirection,
+        );
+      } else {
+        query = query.orderBy("lead.ruc", filters.sortDirection);
+      }
 
       const rows = await query
-        .orderBy("lead.created_at", "desc")
+        .orderBy("lead.id", "desc")
         .limit(filters.limit)
         .offset(filters.offset)
         .execute();
@@ -140,6 +159,12 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       }
       if (filters.prioridad !== undefined) {
         query = query.where("lead.prioridad", "=", filters.prioridad);
+      }
+      if (filters.updatedSinceMs !== undefined) {
+        query = query.where("lead.updated_at", ">=", filters.updatedSinceMs);
+      }
+      if (filters.updatedUntilMs !== undefined) {
+        query = query.where("lead.updated_at", "<", filters.updatedUntilMs);
       }
 
       const row = await query.executeTakeFirstOrThrow();
