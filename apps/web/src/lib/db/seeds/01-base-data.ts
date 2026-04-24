@@ -830,6 +830,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         updated_at: now,
       },
     ])
+    .onConflict((oc) => oc.doNothing())
     .execute();
 
   // Notification system
