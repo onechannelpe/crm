@@ -9,6 +9,7 @@ function RequestMeta() {
   const event = getRequestEvent();
   const csrfToken = event?.locals?.requestContext?.csrfToken;
 
+  // eslint-disable-next-line solid/components-return-once
   return csrfToken ? (
     <meta name={CSRF_CONFIG.META_NAME} content={csrfToken} />
   ) : null;

@@ -65,7 +65,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
           keyed
           fallback={
             <NavigationDrawerActionItem
-              className={props.className}
+              class={props.class}
               label={props.label}
               secondaryLabel={props.secondaryLabel}
               indentationLevel={indentationLevel()}
@@ -88,7 +88,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
           {(href) => (
             <NavigationDrawerExternalItem
               href={href}
-              className={props.className}
+              class={props.class}
               label={props.label}
               secondaryLabel={props.secondaryLabel}
               indentationLevel={indentationLevel()}
@@ -113,7 +113,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
       {(href) => (
         <NavigationDrawerRouteItem
           href={href}
-          className={props.className}
+          class={props.class}
           label={props.label}
           secondaryLabel={props.secondaryLabel}
           indentationLevel={indentationLevel()}

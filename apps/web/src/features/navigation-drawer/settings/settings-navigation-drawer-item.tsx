@@ -19,10 +19,6 @@ export function SettingsNavigationDrawerItem(
 ) {
   const location = useLocation();
 
-  if (props.item.isHidden) {
-    return null;
-  }
-
   const isActive = () =>
     settingsItemMatchesPath(
       location.pathname,
@@ -47,8 +43,10 @@ export function SettingsNavigationDrawerItem(
   );
 
   return (
-    <Show when={props.item.isAdvanced} fallback={content}>
-      <AdvancedSettingsWrapper>{content}</AdvancedSettingsWrapper>
+    <Show when={!props.item.isHidden}>
+      <Show when={props.item.isAdvanced} fallback={content}>
+        <AdvancedSettingsWrapper>{content}</AdvancedSettingsWrapper>
+      </Show>
     </Show>
   );
 }

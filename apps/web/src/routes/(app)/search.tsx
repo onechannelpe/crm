@@ -97,7 +97,7 @@ export default function SearchPage() {
           </div>
         }
         title={<span class={pageStyles.headerTitle}>Search</span>}
-      ></PageHeader>
+      />
 
       <div class="space-y-6">
         <SearchLayout

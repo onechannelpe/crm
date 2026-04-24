@@ -1,4 +1,4 @@
-import { For, createEffect, createSignal, onCleanup } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import { Portal } from "solid-js/web";
 
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
@@ -12,8 +12,6 @@ export function RecordIndexViewPicker() {
   const setup = useRecordIndexSetup();
   const model = useRecordIndexModelContext();
   const views = setup.views;
-
-  if (!views) return null;
 
   let container: HTMLDivElement | undefined;
   let menu: HTMLDivElement | undefined;
@@ -85,43 +83,47 @@ export function RecordIndexViewPicker() {
   });
 
   return (
-    <div ref={(el) => (container = el)}>
-      {isOpen() ? (
-        <Portal>
-          <div
-            ref={(element) => (menu = element)}
-            class={`${sharedStyles.menu} ${sharedStyles.menuFloating} ${sharedStyles.menuLeft}`}
-            id={`${setup.id}-view-picker`}
-            role="menu"
-            style={{
-              left: `${menuPosition().left}px`,
-              top: `${menuPosition().top}px`,
-            }}
-          >
-            <div class={sharedStyles.menuSectionLabel}>Vista</div>
-            <For each={views.available}>
-              {(view) => {
-                const isActive = () => views.active().id === view.id;
-                return (
-                  <button
-                    type="button"
-                    class={sharedStyles.menuItem}
-                    role="menuitemradio"
-                    aria-checked={isActive() ? "true" : "false"}
-                    data-active={isActive() ? "true" : "false"}
-                    onClick={() => {
-                      views.onSelect(view.id);
-                      model.columns.setOpenMenu(null);
-                    }}
-                  >
-                    {view.label}
-                  </button>
-                );
-              }}
-            </For>
-          </div>
-        </Portal>
-      ) : null}
-    </div>
+    <Show when={views}>
+      {(safeViews) => (
+        <div ref={(el) => (container = el)}>
+          {isOpen() ? (
+            <Portal>
+              <div
+                ref={(element) => (menu = element)}
+                class={`${sharedStyles.menu} ${sharedStyles.menuFloating} ${sharedStyles.menuLeft}`}
+                id={`${setup.id}-view-picker`}
+                role="menu"
+                style={{
+                  left: `${menuPosition().left}px`,
+                  top: `${menuPosition().top}px`,
+                }}
+              >
+                <div class={sharedStyles.menuSectionLabel}>Vista</div>
+                <For each={safeViews().available}>
+                  {(view) => {
+                    const isActive = () => safeViews().active().id === view.id;
+                    return (
+                      <button
+                        type="button"
+                        class={sharedStyles.menuItem}
+                        role="menuitemradio"
+                        aria-checked={isActive() ? "true" : "false"}
+                        data-active={isActive() ? "true" : "false"}
+                        onClick={() => {
+                          safeViews().onSelect(view.id);
+                          model.columns.setOpenMenu(null);
+                        }}
+                      >
+                        {view.label}
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+            </Portal>
+          ) : null}
+        </div>
+      )}
+    </Show>
   );
 }

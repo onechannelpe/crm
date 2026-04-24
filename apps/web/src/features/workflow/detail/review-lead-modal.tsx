@@ -1,5 +1,5 @@
 import { useAction } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { For, createSignal } from "solid-js";
 import { Portal } from "solid-js/web";
 
 import { Button } from "~/components/ui/input/button";
@@ -66,9 +66,9 @@ export function ReviewLeadModal(props: {
               onChange={(e) => setStatus(e.currentTarget.value)}
               required
             >
-              {LEAD_STATUSES.map((s) => (
-                <option value={s}>{s}</option>
-              ))}
+              <For each={LEAD_STATUSES}>
+                {(s) => <option value={s}>{s}</option>}
+              </For>
             </Select>
             <Select
               label="Prioridad"
@@ -76,9 +76,9 @@ export function ReviewLeadModal(props: {
               onChange={(e) => setPrioridad(e.currentTarget.value)}
               required
             >
-              {LEAD_PRIORITIES.map((p) => (
-                <option value={p}>{p}</option>
-              ))}
+              <For each={LEAD_PRIORITIES}>
+                {(p) => <option value={p}>{p}</option>}
+              </For>
             </Select>
             <Textarea
               label="Motivo"

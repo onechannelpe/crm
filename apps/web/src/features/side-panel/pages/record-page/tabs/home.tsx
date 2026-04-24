@@ -15,24 +15,29 @@ import type { TabContentProps } from "./content-props";
 import styles from "./home.module.css";
 
 export function HomeTab(props: TabContentProps) {
-  if (props.mode === "create") {
-    return (
-      <div class={styles.homeContent}>
-        <CreateContent
-          razonSocial={props.razonSocial}
-          address={props.address}
-          engineStatus={props.engineStatus}
-          submitting={props.submitting}
-          onSubmit={props.onSubmit}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div class={styles.homeContent}>
-      <DetailContent data={props.data} />
-    </div>
+    <Switch>
+      <Match when={props.mode === "view" ? props : undefined}>
+        {(viewProps) => (
+          <div class={styles.homeContent}>
+            <DetailContent data={viewProps().data} />
+          </div>
+        )}
+      </Match>
+      <Match when={props.mode === "create" ? props : undefined}>
+        {(createProps) => (
+          <div class={styles.homeContent}>
+            <CreateContent
+              razonSocial={createProps().razonSocial}
+              address={createProps().address}
+              engineStatus={createProps().engineStatus}
+              submitting={createProps().submitting}
+              onSubmit={createProps().onSubmit}
+            />
+          </div>
+        )}
+      </Match>
+    </Switch>
   );
 }
 

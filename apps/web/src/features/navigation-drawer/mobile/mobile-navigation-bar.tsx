@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@solidjs/router";
-import { createMemo } from "solid-js";
+import { createMemo, Show } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import Search from "~/components/icons/search";
@@ -37,64 +37,62 @@ export function MobileNavigationBar() {
     return currentMobileDrawer();
   });
 
-  if (!isMobile()) {
-    return null;
-  }
-
   return (
-    <nav class={styles.mobileBar}>
-      <button
-        type="button"
-        class={cn(
-          styles.mobileBarItem,
-          activeItemName() === "main" && styles.mobileBarItemActive,
-        )}
-        onClick={() => {
-          setCurrentMobileDrawer("main");
-          setExpanded((previous) => activeItemName() !== "main" || !previous);
+    <Show when={isMobile()}>
+      <nav class={styles.mobileBar}>
+        <button
+          type="button"
+          class={cn(
+            styles.mobileBarItem,
+            activeItemName() === "main" && styles.mobileBarItemActive,
+          )}
+          onClick={() => {
+            setCurrentMobileDrawer("main");
+            setExpanded((previous) => activeItemName() !== "main" || !previous);
 
-          if (isSettingsPage()) {
-            navigate(getDefaultAppPath(currentUser().role));
-          }
-        }}
-        aria-label="Abrir navegacion"
-      >
-        <ChevronRight size={16} style={{ transform: "rotate(180deg)" }} />
-      </button>
+            if (isSettingsPage()) {
+              navigate(getDefaultAppPath(currentUser().role));
+            }
+          }}
+          aria-label="Abrir navegacion"
+        >
+          <ChevronRight size={16} style={{ transform: "rotate(180deg)" }} />
+        </button>
 
-      <button
-        type="button"
-        class={styles.mobileBarItem}
-        onClick={() => {
-          setExpanded(false);
-          navigate("/search");
-        }}
-        aria-label="Buscar"
-      >
-        <Search size={16} />
-      </button>
+        <button
+          type="button"
+          class={styles.mobileBarItem}
+          onClick={() => {
+            setExpanded(false);
+            navigate("/search");
+          }}
+          aria-label="Buscar"
+        >
+          <Search size={16} />
+        </button>
 
-      <button
-        type="button"
-        class={cn(
-          styles.mobileBarItem,
-          activeItemName() === "settings" && styles.mobileBarItemActive,
-        )}
-        onClick={() => {
-          memorizeNavigationState(
-            location.pathname + location.search,
-            expanded(),
-          );
-          openSettingsMenu();
+        <button
+          type="button"
+          class={cn(
+            styles.mobileBarItem,
+            activeItemName() === "settings" && styles.mobileBarItemActive,
+          )}
+          onClick={() => {
+            memorizeNavigationState(
+              location.pathname + location.search,
+              expanded(),
+            );
+            openSettingsMenu();
 
-          if (!isSettingsPage()) {
-            navigate("/settings/profile");
-          }
-        }}
-        aria-label="Abrir ajustes"
-      >
-        <Settings size={16} />
-      </button>
-    </nav>
+            if (!isSettingsPage()) {
+              navigate("/settings/profile");
+            }
+          }}
+          aria-label="Abrir ajustes"
+        >
+          <Settings size={16} />
+        </button>
+      </nav>
+    </Show>
   );
 }

@@ -18,7 +18,7 @@ export function NavigationDrawerActionItem(
 ) {
   return (
     <NavigationDrawerItemFrame
-      className={props.className}
+      class={props.class}
       label={props.label}
       secondaryLabel={props.secondaryLabel}
       indentationLevel={props.indentationLevel}
@@ -36,7 +36,7 @@ export function NavigationDrawerActionItem(
       render={(frame) => (
         <button
           type="button"
-          class={frame.className()}
+          class={frame.class()}
           onClick={props.onClick}
           disabled={props.unavailable}
           aria-expanded={props.showChevron ? props.chevronExpanded : undefined}
