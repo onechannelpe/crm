@@ -21,6 +21,121 @@ export async function run(db: Kysely<Database>): Promise<void> {
   const passwordHash = await hashPassword("placeholder");
   const realPasswordHash = await hashPassword("infinitypay");
 
+  // Policy defaults
+  await db
+    .insertInto("search_policy_defaults")
+    .values([
+      {
+        scope_type: "branch",
+        scope_id: 1,
+        period_type: "month",
+        search_limit: 250,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "branch",
+        scope_id: 2,
+        period_type: "month",
+        search_limit: 220,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "branch",
+        scope_id: 3,
+        period_type: "month",
+        search_limit: 200,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "branch",
+        scope_id: 4,
+        period_type: "month",
+        search_limit: 500,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("lead_policy_defaults")
+    .values([
+      {
+        scope_type: "branch",
+        scope_id: 1,
+        active_buffer_target: 10,
+        daily_refill_limit: 25,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "branch",
+        scope_id: 2,
+        active_buffer_target: 8,
+        daily_refill_limit: 20,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "branch",
+        scope_id: 4,
+        active_buffer_target: 20,
+        daily_refill_limit: 50,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  // Audit policies
+  await db
+    .insertInto("audit_action_policies")
+    .values([
+      {
+        action: "all_sessions_revoked",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "session_revoked_by_admin",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "search_allowance_granted",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "lead_refill_granted",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
   // Demo users (IDs 1-20)
   await db
     .insertInto("users")
@@ -715,6 +830,290 @@ export async function run(db: Kysely<Database>): Promise<void> {
         updated_at: now,
       },
     ])
+    .execute();
+
+  // Notification system
+  await db
+    .insertInto("notification_contacts")
+    .values([
+      {
+        id: 1,
+        user_id: 1,
+        channel: "email",
+        address: "valeria.paredes@onechannel.pe",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 10,
+        created_at: now - oneDay * 10,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 2,
+        user_id: 1,
+        channel: "whatsapp",
+        address: "+51911000001",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 10,
+        created_at: now - oneDay * 10,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 3,
+        user_id: 12,
+        channel: "email",
+        address: "mario.aguirre@onechannel.pe",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 8,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 4,
+        user_id: 12,
+        channel: "whatsapp",
+        address: "+51911000012",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 8,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_preferences")
+    .values([
+      {
+        id: 1,
+        user_id: 1,
+        event_type: "security.privileged_login",
+        channel: "email",
+        is_enabled: 1,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 2,
+        user_id: 1,
+        event_type: "security.privileged_login",
+        channel: "whatsapp",
+        is_enabled: 1,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 3,
+        user_id: 12,
+        event_type: "broadcast.general",
+        channel: "email",
+        is_enabled: 1,
+        created_at: now - oneDay * 6,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 4,
+        user_id: 12,
+        event_type: "broadcast.general",
+        channel: "whatsapp",
+        is_enabled: 0,
+        created_at: now - oneDay * 6,
+        updated_at: now - oneDay,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_campaigns")
+    .values([
+      {
+        id: 1,
+        type: "security_event",
+        event_type: "security.privileged_login",
+        audience_type: "user",
+        audience_ref: "1",
+        title: "Security alert: privileged login (admin)",
+        body_text: "Admin login from a new location was detected.",
+        created_by_user_id: null,
+        status: "completed",
+        scheduled_at: null,
+        created_at: now - oneDay,
+        processed_at: now - oneDay + 15_000,
+      },
+      {
+        id: 2,
+        type: "broadcast",
+        event_type: "broadcast.general",
+        audience_type: "role",
+        audience_ref: "supervisor",
+        title: "Cambio en guion comercial",
+        body_text: "Revisar guion actualizado para campaña fibra.",
+        created_by_user_id: 12,
+        status: "completed",
+        scheduled_at: now - oneDay / 2,
+        created_at: now - oneDay / 2,
+        processed_at: now - oneDay / 2 + 20_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_recipients")
+    .values([
+      {
+        id: 1,
+        campaign_id: 1,
+        user_id: 1,
+        channel: "email",
+        address: "valeria.paredes@onechannel.pe",
+        status: "sent",
+        status_reason: null,
+        created_at: now - oneDay,
+        sent_at: now - oneDay + 30_000,
+        failed_at: null,
+      },
+      {
+        id: 2,
+        campaign_id: 1,
+        user_id: 1,
+        channel: "whatsapp",
+        address: "+51911000001",
+        status: "sent",
+        status_reason: null,
+        created_at: now - oneDay,
+        sent_at: now - oneDay + 35_000,
+        failed_at: null,
+      },
+      {
+        id: 3,
+        campaign_id: 2,
+        user_id: 2,
+        channel: "email",
+        address: "diego.ramirez@onechannel.pe",
+        status: "sent",
+        status_reason: null,
+        created_at: now - oneDay / 2,
+        sent_at: now - oneDay / 2 + 40_000,
+        failed_at: null,
+      },
+      {
+        id: 4,
+        campaign_id: 2,
+        user_id: 8,
+        channel: "email",
+        address: "nicolas.torres@onechannel.pe",
+        status: "failed",
+        status_reason: "mailbox_unreachable",
+        created_at: now - oneDay / 2,
+        sent_at: null,
+        failed_at: now - oneDay / 2 + 50_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_jobs")
+    .values([
+      {
+        id: 1,
+        recipient_id: 1,
+        status: "sent",
+        attempt_count: 1,
+        max_attempts: 5,
+        available_at: now - oneDay,
+        lease_owner: null,
+        lease_until: null,
+        last_error: null,
+        created_at: now - oneDay,
+        updated_at: now - oneDay + 30_000,
+      },
+      {
+        id: 2,
+        recipient_id: 2,
+        status: "sent",
+        attempt_count: 1,
+        max_attempts: 5,
+        available_at: now - oneDay,
+        lease_owner: null,
+        lease_until: null,
+        last_error: null,
+        created_at: now - oneDay,
+        updated_at: now - oneDay + 35_000,
+      },
+      {
+        id: 3,
+        recipient_id: 3,
+        status: "sent",
+        attempt_count: 1,
+        max_attempts: 5,
+        available_at: now - oneDay / 2,
+        lease_owner: null,
+        lease_until: null,
+        last_error: null,
+        created_at: now - oneDay / 2,
+        updated_at: now - oneDay / 2 + 40_000,
+      },
+      {
+        id: 4,
+        recipient_id: 4,
+        status: "failed",
+        attempt_count: 5,
+        max_attempts: 5,
+        available_at: now - oneDay / 2,
+        lease_owner: null,
+        lease_until: null,
+        last_error: "mailbox_unreachable",
+        created_at: now - oneDay / 2,
+        updated_at: now - oneDay / 2 + 50_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_deliveries")
+    .values([
+      {
+        id: 1,
+        recipient_id: 1,
+        provider: "resend",
+        provider_message_id: "seed-msg-resend-1",
+        status: "sent",
+        error_code: null,
+        error_message: null,
+        latency_ms: 420,
+        created_at: now - oneDay + 30_000,
+      },
+      {
+        id: 2,
+        recipient_id: 2,
+        provider: "whatsapp_cloud",
+        provider_message_id: "seed-msg-wa-1",
+        status: "sent",
+        error_code: null,
+        error_message: null,
+        latency_ms: 690,
+        created_at: now - oneDay + 35_000,
+      },
+      {
+        id: 3,
+        recipient_id: 4,
+        provider: "resend",
+        provider_message_id: null,
+        status: "failed",
+        error_code: "mailbox_unreachable",
+        error_message: "Mailbox does not exist",
+        latency_ms: 510,
+        created_at: now - oneDay / 2 + 50_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
     .execute();
 }
 
