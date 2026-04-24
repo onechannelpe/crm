@@ -55,9 +55,15 @@ export function PreviewModal(props: PreviewModalProps) {
                 class={styles.previewDialog}
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby={`preview-title-${state().file.id}`}
               >
                 <header class={styles.previewHeader}>
-                  <h3 class={styles.previewTitle}>{state().file.filename}</h3>
+                  <h3
+                    id={`preview-title-${state().file.id}`}
+                    class={styles.previewTitle}
+                  >
+                    {state().file.filename}
+                  </h3>
                   <div class={styles.previewActions}>
                     <Button
                       type="button"

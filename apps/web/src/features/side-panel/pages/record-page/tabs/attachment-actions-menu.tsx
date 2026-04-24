@@ -2,6 +2,7 @@ import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 
 import type { LeadSaleProofFileView } from "~/actions/workflow/files";
+import { Button } from "~/components/ui/input/button";
 
 import styles from "./files.module.css";
 
@@ -58,11 +59,14 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
 
   return (
     <div class={styles.actionsMenuRoot} ref={(el) => (rootRef = el)}>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         class={styles.actionsMenuTrigger}
         aria-haspopup="menu"
         aria-expanded={isOpen()}
+        aria-label="Acciones de archivo"
         ref={(el) => (triggerRef = el)}
         onClick={() => {
           const next = !isOpen();
@@ -73,7 +77,7 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
         }}
       >
         ...
-      </button>
+      </Button>
       <Show when={isOpen()}>
         <Portal>
           <div

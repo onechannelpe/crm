@@ -128,14 +128,13 @@ export async function uploadLeadSaleProofFile(
         return Err(domainError("forbidden", "forbidden", "Access denied"));
       }
 
-      if (lead.executiveId !== ctx.actor.userId) {
-        return Err(
-          domainError(
-            "forbidden",
-            "not_owner",
-            "Only the assigned executive can upload sale proofs",
-          ),
-        );
+      const canAccess = requireLeadAccess({
+        actorUserId: ctx.actor.userId,
+        actorRole: ctx.actor.role,
+        executiveId: lead.executiveId,
+      });
+      if (isErr(canAccess)) {
+        return canAccess;
       }
 
       if (lead.stage !== "CONVERTED") {
