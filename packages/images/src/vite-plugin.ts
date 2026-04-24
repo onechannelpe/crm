@@ -87,30 +87,40 @@ export function responsiveImagesPlugin(): Plugin {
       const baseName = path.basename(cleanId, ext);
 
       const formats = ["avif", "webp", "png"] as const;
+
+      const formatResults = await Promise.all(
+        formats.map(async (format) => {
+          try {
+            let outputBuffer: Buffer;
+            if (format === "avif") {
+              outputBuffer = await sharp(sourceBuffer).avif().toBuffer();
+            } else if (format === "webp") {
+              outputBuffer = await sharp(sourceBuffer).webp().toBuffer();
+            } else {
+              outputBuffer = await sharp(sourceBuffer).png().toBuffer();
+            }
+
+            const referenceId = this.emitFile({
+              type: "asset",
+              name: `${baseName}.${format}`,
+              source: outputBuffer,
+            });
+
+            return [format, referenceId] as const;
+          } catch (e) {
+            console.warn(`Failed to generate ${format} for ${cleanId}:`, e);
+            return null;
+          }
+        }),
+      );
+
       const emittedAssets: Record<string, string> = {};
 
-      for (const format of formats) {
-        let outputBuffer: Buffer;
-        try {
-          if (format === "avif") {
-            outputBuffer = await sharp(sourceBuffer).avif().toBuffer();
-          } else if (format === "webp") {
-            outputBuffer = await sharp(sourceBuffer).webp().toBuffer();
-          } else {
-            outputBuffer = await sharp(sourceBuffer).png().toBuffer();
-          }
-
-          const referenceId = this.emitFile({
-            type: "asset",
-            name: `${baseName}.${format}`,
-            source: outputBuffer,
-          });
-
-          emittedAssets[format] = referenceId;
-        } catch (e) {
-          console.warn(`Failed to generate ${format} for ${cleanId}:`, e);
+      formatResults.forEach((result) => {
+        if (result) {
+          emittedAssets[result[0]] = result[1];
         }
-      }
+      });
 
       // Special handling for ICO (static fallback)
       const icoPath = cleanId.replace(ext, ".ico");

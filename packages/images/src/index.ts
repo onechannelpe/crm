@@ -1,2 +1,2 @@
-/// <reference path="./ambient.d.ts" />
+import "./ambient.d.ts";
 export * from "./components/responsive-image";

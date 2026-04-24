@@ -50,6 +50,7 @@ export function ResponsiveImage(props: ResponsiveImageProps) {
         <source srcset={local.sources.jpg} type="image/jpeg" />
       )}
       <img
+        alt={others.alt || ""}
         src={local.sources.fallback}
         loading="lazy"
         decoding="async"
