@@ -106,17 +106,11 @@ export function Footer(props: FooterProps) {
 
     updateOptionsMenuPosition();
 
-    const rafA = window.requestAnimationFrame(() => {
-      updateOptionsMenuPosition();
-      window.requestAnimationFrame(updateOptionsMenuPosition);
-    });
-
     const handleViewportChange = () => updateOptionsMenuPosition();
     window.addEventListener("resize", handleViewportChange);
     window.addEventListener("scroll", handleViewportChange, true);
 
     onCleanup(() => {
-      window.cancelAnimationFrame(rafA);
       window.removeEventListener("resize", handleViewportChange);
       window.removeEventListener("scroll", handleViewportChange, true);
     });
@@ -159,7 +153,10 @@ export function Footer(props: FooterProps) {
           <div
             class={styles.optionsMenu}
             role="menu"
-            ref={(el) => (optionsMenuRef = el)}
+            ref={(el) => {
+              optionsMenuRef = el;
+              updateOptionsMenuPosition();
+            }}
             style={{
               left: `${menuPosition().left}px`,
               top: `${menuPosition().top}px`,
