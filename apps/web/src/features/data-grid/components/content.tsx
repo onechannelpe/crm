@@ -64,6 +64,8 @@ export function DataGridContent<T extends { id: string }>(props: {
   const hasNextPage = () =>
     props.pagination !== undefined &&
     paginationEnd() < props.pagination.totalCount;
+  const shouldShowPagination = () =>
+    props.pagination !== undefined && rows().length > 0;
 
   return (
     <div class={styles.indexContainer}>
@@ -128,33 +130,33 @@ export function DataGridContent<T extends { id: string }>(props: {
             </Show>
           </section>
         </div>
-      </div>
-      <Show when={props.pagination && rows().length > 0}>
-        <div class={styles.paginationBar}>
-          <span class={styles.paginationMeta}>
-            {paginationStart()}-{paginationEnd()} de{" "}
-            {props.pagination?.totalCount ?? rows().length}
-          </span>
-          <div class={styles.paginationControls}>
-            <button
-              type="button"
-              class={styles.paginationButton}
-              disabled={!hasPreviousPage()}
-              onClick={() => props.pagination?.onPreviousPage()}
-            >
-              Anterior
-            </button>
-            <button
-              type="button"
-              class={styles.paginationButton}
-              disabled={!hasNextPage()}
-              onClick={() => props.pagination?.onNextPage()}
-            >
-              Siguiente
-            </button>
+        <Show when={shouldShowPagination()}>
+          <div class={styles.paginationBar}>
+            <span class={styles.paginationMeta}>
+              {paginationStart()}-{paginationEnd()} de{" "}
+              {props.pagination?.totalCount ?? rows().length}
+            </span>
+            <div class={styles.paginationControls}>
+              <button
+                type="button"
+                class={styles.paginationButton}
+                disabled={!hasPreviousPage()}
+                onClick={() => props.pagination?.onPreviousPage()}
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                class={styles.paginationButton}
+                disabled={!hasNextPage()}
+                onClick={() => props.pagination?.onNextPage()}
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
-        </div>
-      </Show>
+        </Show>
+      </div>
     </div>
   );
 }

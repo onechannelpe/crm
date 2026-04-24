@@ -118,6 +118,8 @@ export function LeadsWorkspace() {
     pickerIcon: List,
     columns: workspaceColumnsForRole(user.role),
     source,
+    serverManagedFiltering: true,
+    serverManagedSorting: true,
     onFilterValueChange: setSelectedFilter,
     onSortValueChange: setSelectedSort,
     pagination: {

@@ -74,6 +74,8 @@ export type RecordIndexAdapter<
   pickerIcon?: DataGridIcon;
   columns: ReadonlyArray<DataGridColumn<T>>;
   source: () => RecordIndexSource<T>;
+  serverManagedFiltering?: boolean;
+  serverManagedSorting?: boolean;
   reorder?: DataGridFeatures<T>["reorder"];
   selectable?: boolean;
   rowOpen: DataGridRowOpen<T>;

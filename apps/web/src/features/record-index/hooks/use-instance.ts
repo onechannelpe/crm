@@ -48,11 +48,11 @@ export function useRecordIndexModel<
   );
 
   const filteredRows = createMemo(() => {
-    return applyRecordIndexFilter(
-      source().rows,
-      adapter.filter,
-      viewState.filterValue(),
-    );
+    if (adapter.serverManagedFiltering) {
+      return source().rows;
+    }
+
+    return applyRecordIndexFilter(source().rows, adapter.filter, viewState.filterValue());
   });
 
   const filterIsActive = createMemo(() => {
@@ -60,11 +60,11 @@ export function useRecordIndexModel<
   });
 
   const sortedRows = createMemo(() => {
-    return applyRecordIndexSort(
-      filteredRows(),
-      adapter.sort,
-      viewState.sortValue(),
-    );
+    if (adapter.serverManagedSorting) {
+      return filteredRows();
+    }
+
+    return applyRecordIndexSort(filteredRows(), adapter.sort, viewState.sortValue());
   });
 
   const sortIsActive = createMemo(() => {

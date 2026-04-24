@@ -264,6 +264,7 @@
 
 .tableContainer {
   display: flex;
+  flex-direction: column;
   flex: 1;
   margin-left: 8px;
   min-height: 0;
@@ -634,7 +635,6 @@
   font-size: 12px;
   gap: 12px;
   justify-content: space-between;
-  margin-left: 8px;
   min-height: 36px;
   padding: 0 8px;
 }
