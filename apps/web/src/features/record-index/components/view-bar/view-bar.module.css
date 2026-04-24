@@ -1,0 +1,9 @@
+.columnLabel {
+  flex: 1;
+}
+
+.visibleCount {
+  color: var(--t-font-color-tertiary);
+  font-size: 12px;
+  margin-right: 4px;
+}
