@@ -175,7 +175,10 @@ export function DataGridRow<T extends { id: string }>(props: {
                   <span class={styles.rowButtonLabel}>
                     {column.renderCell(props.row)}
                   </span>
-                  {index() === props.columns.length - 1 ? (
+                  {index() ===
+                  (props.stickyColumnIndex >= 0
+                    ? props.stickyColumnIndex
+                    : 0) ? (
                     <DataGridRowOpenHint mode={props.rowOpen.mode} />
                   ) : null}
                 </span>
@@ -193,12 +196,12 @@ function DataGridRowOpenHint(props: { mode: DataGridRowOpenMode }) {
     <Switch>
       <Match when={props.mode === "panel"}>
         <span class={styles.rowOpenHint} aria-hidden="true">
-          <LayoutSidebarRightCollapse size={14} />
+          <LayoutSidebarRightCollapse size={12} />
         </span>
       </Match>
       <Match when={props.mode === "route" || props.mode === "inline"}>
         <span class={styles.rowOpenHint} aria-hidden="true">
-          <ChevronRight size={14} />
+          <ChevronRight size={12} />
         </span>
       </Match>
     </Switch>

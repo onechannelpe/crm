@@ -12,6 +12,14 @@ import type { DataGridRowOpenMode } from "../model/row-open";
 import type { DataGridSelectionModel } from "./use-selection";
 
 export type DataGridInteractionModel = {
+  columnWidthOverrides: Accessor<Record<string, number>>;
+  beginColumnResize: (
+    key: string,
+    clientX: number,
+    currentWidth: number,
+  ) => void;
+  updateColumnResize: (clientX: number) => void;
+  endColumnResize: () => void;
   isRowActive: (id: string) => boolean;
   isRowDragged: (id: string) => boolean;
   isRowDropTarget: (id: string) => boolean;
@@ -153,11 +161,44 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
     cellElements.get(getCellKey(rowId, columnIndex))?.focus();
   }
 
+  const [columnWidthOverrides, setColumnWidthOverrides] = createSignal<
+    Record<string, number>
+  >({});
+  const [columnResizeState, setColumnResizeState] = createSignal<
+    { key: string; startX: number; startWidth: number } | undefined
+  >();
+
   function isSelected(id: string) {
     return options.selection?.selectedIds().includes(id) ?? false;
   }
 
   return {
+    columnWidthOverrides,
+    beginColumnResize(key: string, clientX: number, currentWidth: number) {
+      setColumnResizeState({ key, startX: clientX, startWidth: currentWidth });
+    },
+    updateColumnResize(clientX: number) {
+      const resizeState = columnResizeState();
+      if (!resizeState) {
+        return;
+      }
+
+      const newWidth = Math.max(
+        80,
+        resizeState.startWidth + (clientX - resizeState.startX),
+      );
+      setColumnWidthOverrides((prev) => ({
+        ...prev,
+        [resizeState.key]: newWidth,
+      }));
+    },
+    endColumnResize() {
+      if (!columnResizeState()) {
+        return;
+      }
+
+      setColumnResizeState(undefined);
+    },
     isRowActive(id: string) {
       return activeRowId() === id;
     },

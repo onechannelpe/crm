@@ -1,4 +1,4 @@
-import { createMemo, type JSX } from "solid-js";
+import { createMemo, createSignal, type JSX } from "solid-js";
 
 import {
   buildDataGridTemplateColumns,
@@ -22,27 +22,28 @@ export function DataGrid<T extends { id: string }>(props: {
   columns: DataGridColumn<T>[];
   emptyState: JSX.Element;
   errorState?: JSX.Element;
+  onAddColumn?: () => void;
+  pagination?: {
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    onNextPage: () => void;
+    onPreviousPage: () => void;
+  };
   reorder?: DataGridFeatures<T>["reorder"];
   rowOpen: DataGridRowOpen<T>;
   source: DataGridSource<T>;
   selection?: DataGridSelectionModel;
   suspendEscapeSelectionClear?: boolean;
 }) {
-  let tableRef: HTMLElement | undefined;
-  let scrollWrapperRef: HTMLElement | undefined;
+  const [tableRef, setTableRef] = createSignal<HTMLElement | undefined>();
+  const [scrollWrapperRef, setScrollWrapperRef] = createSignal<
+    HTMLElement | undefined
+  >();
 
   const selectable = createMemo(() => props.selection !== undefined);
   const reorderable = createMemo(() => props.reorder !== undefined);
   const rows = createMemo(() => props.source.rows);
-  const gridTemplateColumns = createMemo(() =>
-    buildDataGridTemplateColumns(props.columns, {
-      reorderable: reorderable(),
-      selectable: selectable(),
-    }),
-  );
-  const stickyColumnIndex = createMemo(() =>
-    getStickyDataGridColumnIndex(props.columns),
-  );
   const interaction = createDataGridInteraction({
     rows,
     rowOpenMode: () => props.rowOpen.mode,
@@ -50,11 +51,21 @@ export function DataGrid<T extends { id: string }>(props: {
     reorder: props.reorder,
     selection: props.selection,
   });
+  const gridTemplateColumns = createMemo(() =>
+    buildDataGridTemplateColumns(props.columns, {
+      reorderable: reorderable(),
+      selectable: selectable(),
+      columnWidths: interaction.columnWidthOverrides(),
+    }),
+  );
+  const stickyColumnIndex = createMemo(() =>
+    getStickyDataGridColumnIndex(props.columns),
+  );
 
   return (
     <DataGridWrappers
-      getContainer={() => tableRef}
-      getScrollWrapper={() => scrollWrapperRef}
+      getContainer={tableRef}
+      getScrollWrapper={scrollWrapperRef}
       interaction={interaction}
       rows={rows()}
       suspendEscapeSelectionClear={props.suspendEscapeSelectionClear ?? false}
@@ -66,13 +77,14 @@ export function DataGrid<T extends { id: string }>(props: {
         emptyState={props.emptyState}
         errorState={props.errorState}
         reorderable={reorderable()}
-        setContainer={(element) => {
-          tableRef = element;
-        }}
-        setScrollWrapper={(element) => {
-          scrollWrapperRef = element;
-        }}
+        setContainer={(el) => setTableRef(el)}
+        setScrollWrapper={(el) => setScrollWrapperRef(el)}
         gridTemplateColumns={gridTemplateColumns()}
+        onAddColumn={props.onAddColumn}
+        pagination={props.pagination}
+        onColumnResizeStart={(key, clientX, width) =>
+          interaction.beginColumnResize(key, clientX, width)
+        }
         rowOpen={props.rowOpen}
         source={props.source}
         selectable={selectable()}

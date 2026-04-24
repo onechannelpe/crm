@@ -1,5 +1,6 @@
 import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
 import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import type { LeadListFilters } from "../data/types";
 
 export type LeadSortKey =
   | "createdAt_desc"
@@ -23,55 +24,32 @@ export const LEAD_WORKSPACE_SORTS = [
 ] as const satisfies ReadonlyArray<{ label: string; value: LeadSortKey }>;
 
 export function sortLeadRows(leads: LeadListRowView[], sortKey: LeadSortKey) {
-  const items = [...leads];
+  void sortKey;
+  return leads;
+}
 
-  items.sort((left, right) => {
-    switch (sortKey) {
-      case "createdAt_desc":
-        return right.createdAt - left.createdAt;
-      case "createdAt_asc":
-        return left.createdAt - right.createdAt;
-      case "updatedAt_desc":
-        return right.updatedAt - left.updatedAt;
-      case "updatedAt_asc":
-        return left.updatedAt - right.updatedAt;
-      case "registeredBy_asc": {
-        const byName = left.createdByName.localeCompare(
-          right.createdByName,
-          "es",
-          {
-            sensitivity: "base",
-          },
-        );
-        if (byName !== 0) {
-          return byName;
-        }
-        return right.createdAt - left.createdAt;
-      }
-      case "registeredBy_desc": {
-        const byName = right.createdByName.localeCompare(
-          left.createdByName,
-          "es",
-          {
-            sensitivity: "base",
-          },
-        );
-        if (byName !== 0) {
-          return byName;
-        }
-        return right.createdAt - left.createdAt;
-      }
-      case "ruc_asc":
-        return left.ruc.localeCompare(right.ruc);
-      case "ruc_desc":
-        return right.ruc.localeCompare(left.ruc);
-      default:
-        sortKey satisfies never;
-        return 0;
-    }
-  });
-
-  return items;
+export function resolveLeadWorkspaceSortQuery(
+  value: string | undefined,
+): Pick<LeadListFilters, "sortBy" | "sortDirection"> {
+  switch (value) {
+    case "createdAt_asc":
+      return { sortBy: "createdAt", sortDirection: "asc" };
+    case "updatedAt_desc":
+      return { sortBy: "updatedAt", sortDirection: "desc" };
+    case "updatedAt_asc":
+      return { sortBy: "updatedAt", sortDirection: "asc" };
+    case "registeredBy_asc":
+      return { sortBy: "registeredBy", sortDirection: "asc" };
+    case "registeredBy_desc":
+      return { sortBy: "registeredBy", sortDirection: "desc" };
+    case "ruc_asc":
+      return { sortBy: "ruc", sortDirection: "asc" };
+    case "ruc_desc":
+      return { sortBy: "ruc", sortDirection: "desc" };
+    case "createdAt_desc":
+    default:
+      return { sortBy: "createdAt", sortDirection: "desc" };
+  }
 }
 
 export const LEAD_WORKSPACE_SORT: RecordIndexSortDefinition<

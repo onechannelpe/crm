@@ -34,6 +34,15 @@ export function RecordIndexTableContainer<
     columns: props.model.columns.visibleColumns(),
     emptyState: <></>,
     source: gridSource(),
+    pagination: props.model.adapter.pagination
+      ? {
+          currentPage: props.model.adapter.pagination.currentPage(),
+          pageSize: props.model.adapter.pagination.pageSize,
+          totalCount: props.model.adapter.pagination.totalCount(),
+          onNextPage: props.model.adapter.pagination.onNextPage,
+          onPreviousPage: props.model.adapter.pagination.onPreviousPage,
+        }
+      : undefined,
     reorder: props.model.adapter.reorder,
     rowOpen: props.model.adapter.rowOpen,
     selection: props.model.selection,

@@ -4,6 +4,7 @@ import {
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
 import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import type { LeadListFilters } from "../data/types";
 
 export const LEAD_WORKSPACE_FILTERS = [
   { value: "all", label: "Todos" },
@@ -36,41 +37,43 @@ export const LEAD_WORKSPACE_FILTERS = [
 export type LeadWorkspaceFilterValue =
   (typeof LEAD_WORKSPACE_FILTERS)[number]["value"];
 
-function isTimestampFromToday(timestamp: number): boolean {
-  const now = new Date();
-  const start = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  ).getTime();
-  const end = start + 24 * 60 * 60 * 1000;
-
-  return timestamp >= start && timestamp < end;
-}
-
 export function applyLeadWorkspaceFilter(
   rows: LeadListRowView[],
   filterValue: LeadWorkspaceFilterValue,
 ) {
-  if (filterValue === "all") {
-    return rows;
+  switch (filterValue) {
+    case "all":
+    case "updated_today":
+      return rows;
+    default:
+      return rows;
+  }
+}
+
+export function resolveLeadWorkspaceFilterQuery(
+  value: string | undefined,
+): Pick<LeadListFilters, "stage" | "status" | "updatedSinceMs" | "updatedUntilMs"> {
+  if (value === "updated_today") {
+    const now = new Date();
+    const start = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    ).getTime();
+    const end = start + 24 * 60 * 60 * 1000;
+
+    return { updatedSinceMs: start, updatedUntilMs: end };
   }
 
-  if (filterValue === "updated_today") {
-    return rows.filter((row) => isTimestampFromToday(row.updatedAt));
+  if (value?.startsWith("stage:")) {
+    return { stage: value.slice("stage:".length) as LeadListFilters["stage"] };
   }
 
-  if (filterValue.startsWith("stage:")) {
-    const stage = filterValue.slice("stage:".length);
-    return rows.filter((row) => row.stage === stage);
+  if (value?.startsWith("status:")) {
+    return { status: value.slice("status:".length) as LeadListFilters["status"] };
   }
 
-  if (filterValue.startsWith("status:")) {
-    const status = filterValue.slice("status:".length);
-    return rows.filter((row) => row.status === status);
-  }
-
-  return rows;
+  return {};
 }
 
 export const LEAD_WORKSPACE_FILTER: RecordIndexFilterDefinition<

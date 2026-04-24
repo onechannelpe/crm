@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { createEffect, createMemo } from "solid-js";
 
 import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
 
@@ -69,6 +69,14 @@ export function useRecordIndexModel<
 
   const sortIsActive = createMemo(() => {
     return isRecordIndexSortActive(adapter.sort, viewState.sortValue());
+  });
+
+  createEffect(() => {
+    adapter.onFilterValueChange?.(viewState.filterValue());
+  });
+
+  createEffect(() => {
+    adapter.onSortValueChange?.(viewState.sortValue());
   });
 
   const selection = adapter.selectable
@@ -151,6 +159,7 @@ export function useRecordIndexModel<
       grid: createMemo(() => ({
         status: source().status,
         rows: sortedRows(),
+        totalCount: source().totalCount,
         error: source().error,
       })),
       recordIndex: source,

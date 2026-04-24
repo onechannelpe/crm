@@ -14,7 +14,6 @@ import ChevronDown from "~/components/icons/chevron-down";
 
 import styles from "./styles.module.css";
 
-// Matches Twenty's TAB_LIST_GAP = 4
 const TAB_GAP = 4;
 
 export type TabIconComponent = (props: {
@@ -47,8 +46,6 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
     createSignal<HTMLDivElement>();
   const [overflowWrapRef, setOverflowWrapRef] = createSignal<HTMLDivElement>();
 
-  // Mirrors Twenty's calculateVisibleTabCount (without TAB_LIST_LEFT_PADDING
-  // since we have no internal left padding on the container)
   const visibleTabCount = createMemo(() => {
     const widths = tabWidths;
     const cw = containerWidth();

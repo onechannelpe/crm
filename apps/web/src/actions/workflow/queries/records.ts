@@ -15,6 +15,10 @@ export async function queryLeadList(filters: {
   status?: string;
   prioridad?: string;
   executiveId?: number;
+  updatedSinceMs?: number;
+  updatedUntilMs?: number;
+  sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
+  sortDirection?: "asc" | "desc";
   limit?: number;
   offset?: number;
 }): Promise<LeadListView> {

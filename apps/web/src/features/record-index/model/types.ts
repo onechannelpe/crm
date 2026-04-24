@@ -37,6 +37,14 @@ export type RecordIndexViews = {
   readonly onSelect: (id: string) => void;
 };
 
+export type RecordIndexPagination = {
+  readonly currentPage: Accessor<number>;
+  readonly pageSize: number;
+  readonly totalCount: Accessor<number>;
+  readonly onNextPage: () => void;
+  readonly onPreviousPage: () => void;
+};
+
 export type RecordIndexSource<T> = DataGridSource<T> & {
   totalCount?: number;
 };
@@ -71,6 +79,9 @@ export type RecordIndexAdapter<
   rowOpen: DataGridRowOpen<T>;
   emptyState: RecordIndexEmptyState;
   createAction?: RecordIndexCreateAction;
+  pagination?: RecordIndexPagination;
+  onFilterValueChange?: (value: string | undefined) => void;
+  onSortValueChange?: (value: string | undefined) => void;
   views?: RecordIndexViews;
   actions?: ReadonlyArray<RecordIndexToolbarAction>;
   filter?: RecordIndexFilterDefinition<T, TFilterValue>;
