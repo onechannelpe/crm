@@ -83,7 +83,7 @@ describe("rbac boundaries", () => {
     expect(supervisorPerms.has("lead:workflow")).toBe(false);
     expect(executivePerms.has("lead:register")).toBe(true);
     expect(supervisorPerms.has("lead:register")).toBe(false);
-    expect(supervisorPerms.has("lead:reassign")).toBe(true);
+    expect(supervisorPerms.has("lead:reassign")).toBe(false);
   });
 
   it("keeps workflow permissions scoped to the intended roles", () => {
@@ -105,8 +105,8 @@ describe("rbac boundaries", () => {
     expect(hasPermission("admin", "quotation:manage")).toBe(true);
     expect(hasPermission("admin", "integration:manage")).toBe(true);
 
-    expect(hasPermission("supervisor", "lead:reassign")).toBe(true);
-    expect(hasPermission("sales_manager", "lead:reassign")).toBe(true);
+    expect(hasPermission("supervisor", "lead:reassign")).toBe(false);
+    expect(hasPermission("sales_manager", "lead:reassign")).toBe(false);
 
     expect(hasPermission("superuser", "lead:workflow")).toBe(false);
     expect(hasPermission("superuser", "lead:register")).toBe(true);

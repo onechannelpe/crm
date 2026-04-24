@@ -72,7 +72,7 @@ describe("workflow lead mutation metadata", () => {
     expect(lead.updated_at).toBeGreaterThan(10);
   });
 
-  it("allows supervisors to reassign and removes access from previous executive", async () => {
+  it("allows admins to reassign and removes access from previous executive", async () => {
     const now = Date.now();
     await runtime.ctx.db
       .insertInto("users")
@@ -81,15 +81,15 @@ describe("workflow lead mutation metadata", () => {
           id: 11,
           branch_id: 1,
           team_id: null,
-          username: "supervisor.one",
-          email: "supervisor1@test.local",
+          username: "admin.one",
+          email: "admin1@test.local",
           password_hash: "hash",
-          names: "Supervisor",
+          names: "Admin",
           first_surname: "One",
           second_surname: "Alpha",
           phone_e164: "+51990000111",
           onboarding_completed_at: now,
-          role: "supervisor",
+          role: "admin",
           is_active: 1,
           created_at: now,
         },
@@ -145,7 +145,7 @@ describe("workflow lead mutation metadata", () => {
     const reassignResult = await commandApi.reassignLead({
       actor: {
         userId: 11,
-        role: "supervisor",
+        role: "admin",
         branchId: 1,
       },
       leadId: "lead-502",
