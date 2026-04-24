@@ -691,6 +691,7 @@
   top: 0;
   transition: background 80ms;
   width: 4px;
+  touch-action: none;
 }
 
 .resizeHandle:hover,

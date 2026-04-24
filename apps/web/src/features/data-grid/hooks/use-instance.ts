@@ -187,10 +187,15 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
         80,
         resizeState.startWidth + (clientX - resizeState.startX),
       );
-      setColumnWidthOverrides((prev) => ({
-        ...prev,
-        [resizeState.key]: newWidth,
-      }));
+      setColumnWidthOverrides((prev) => {
+        if (prev[resizeState.key] === newWidth) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [resizeState.key]: newWidth,
+        };
+      });
     },
     endColumnResize() {
       if (!columnResizeState()) {
