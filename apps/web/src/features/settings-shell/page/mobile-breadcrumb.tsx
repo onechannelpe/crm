@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import { Show } from "solid-js";
+import { Match, Show, Switch, createMemo } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
@@ -21,6 +21,13 @@ export function MobileBackControl(props: MobileBackControlProps) {
     setCurrentMobileDrawer("settings");
   };
 
+  const openSettingsAction = createMemo(() =>
+    props.action.kind === "open-settings-drawer" ? props.action : null,
+  );
+  const linkAction = createMemo(() =>
+    props.action.kind === "link" ? props.action : null,
+  );
+
   return (
     <Show when={props.action.kind !== "none"}>
       <nav
@@ -28,26 +35,26 @@ export function MobileBackControl(props: MobileBackControlProps) {
         aria-label="Breadcrumb"
       >
         <ChevronLeft size={16} />
-        {props.action.kind === "open-settings-drawer" ? (
-          <button
-            type="button"
-            class={styles.mobileBack}
-            onClick={openSettingsDrawer}
-          >
-            {props.action.label}
-          </button>
-        ) : (
-          <Show
-            when={props.action.kind === "link" ? props.action : undefined}
-            keyed
-          >
+        <Switch>
+          <Match when={openSettingsAction()}>
+            {(action) => (
+              <button
+                type="button"
+                class={styles.mobileBack}
+                onClick={openSettingsDrawer}
+              >
+                {action().label}
+              </button>
+            )}
+          </Match>
+          <Match when={linkAction()} keyed>
             {(action) => (
               <A class={styles.link} href={action.href} title={action.label}>
                 {action.label}
               </A>
             )}
-          </Show>
-        )}
+          </Match>
+        </Switch>
       </nav>
     </Show>
   );

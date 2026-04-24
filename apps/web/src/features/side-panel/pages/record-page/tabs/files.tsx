@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, createMemo } from "solid-js";
 
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { ActivityTabContainer } from "~/features/side-panel/components/activity-tabs/primitives";
@@ -7,9 +7,11 @@ import type { TabContentProps } from "./content-props";
 import { FilesCard } from "./files-card";
 
 export function FilesTab(props: TabContentProps) {
+  const viewProps = createMemo(() => (props.mode === "view" ? props : null));
+
   return (
     <Show
-      when={props.mode === "view" ? props : undefined}
+      when={viewProps()}
       fallback={
         <ActivityTabContainer>
           <ActivityTabEmptyState
@@ -20,10 +22,10 @@ export function FilesTab(props: TabContentProps) {
         </ActivityTabContainer>
       }
     >
-      {(viewProps) => (
+      {(view) => (
         <FilesCard
-          leadId={viewProps().data.lead.id}
-          canUpload={viewProps().data.lead.stage === "CONVERTED"}
+          leadId={view().data.lead.id}
+          canUpload={view().data.lead.stage === "CONVERTED"}
         />
       )}
     </Show>

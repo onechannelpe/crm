@@ -86,7 +86,7 @@ export function RecordIndexViewPicker() {
     <Show when={views}>
       {(safeViews) => (
         <div ref={(el) => (container = el)}>
-          {isOpen() ? (
+          <Show when={isOpen()}>
             <Portal>
               <div
                 ref={(element) => (menu = element)}
@@ -121,7 +121,7 @@ export function RecordIndexViewPicker() {
                 </For>
               </div>
             </Portal>
-          ) : null}
+          </Show>
         </div>
       )}
     </Show>
