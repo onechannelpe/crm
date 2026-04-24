@@ -4,6 +4,7 @@ import {
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
 import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import { isLeadStage, isLeadStatus } from "~/workflow/contracts/lead-schema";
 
 import type { LeadListFilters } from "../data/types";
 
@@ -70,13 +71,17 @@ export function resolveLeadWorkspaceFilterQuery(
   }
 
   if (value?.startsWith("stage:")) {
-    return { stage: value.slice("stage:".length) as LeadListFilters["stage"] };
+    const stage = value.slice("stage:".length);
+    if (isLeadStage(stage)) {
+      return { stage };
+    }
   }
 
   if (value?.startsWith("status:")) {
-    return {
-      status: value.slice("status:".length) as LeadListFilters["status"],
-    };
+    const status = value.slice("status:".length);
+    if (isLeadStatus(status)) {
+      return { status };
+    }
   }
 
   return {};

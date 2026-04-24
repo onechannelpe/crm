@@ -1,5 +1,5 @@
 import { createAsync } from "@solidjs/router";
-import { createEffect, createMemo, createSignal } from "solid-js";
+import { createEffect, createMemo, createSignal, on } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
@@ -55,12 +55,11 @@ export function LeadsWorkspace() {
     LEAD_WORKSPACE_SORT.defaultValue,
   );
 
-  createEffect(() => {
-    activeView().id;
-    selectedFilter();
-    selectedSort();
-    setPageIndex(0);
-  });
+  createEffect(
+    on([activeView, selectedFilter, selectedSort], () => {
+      setPageIndex(0);
+    }),
+  );
 
   const queryFilters = createMemo(() => ({
     ...activeView().filters(user.id),
