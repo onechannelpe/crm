@@ -2,7 +2,11 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
-import type { ArtifactRepos } from "../repo";
+import type { createArtifactsRepo } from "../repo/artifacts";
+import type { createAssetsRepo } from "../repo/assets";
+import type { createEventsRepo } from "../repo/events";
+import type { createSalesRepo } from "../repo/sales";
+import type { createTokensRepo } from "../repo/tokens";
 import type { FileStorage } from "../storage";
 import type {
   ArtifactExecutionMode,
@@ -11,6 +15,15 @@ import type {
   DownloadReady,
   WorkflowArtifact,
 } from "../types";
+
+export interface ArtifactRepos {
+  artifacts: ReturnType<typeof createArtifactsRepo>;
+  assets: ReturnType<typeof createAssetsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
+  tokens: ReturnType<typeof createTokensRepo>;
+  sales: ReturnType<typeof createSalesRepo>;
+}
+
 
 export interface SyncExecutor {
   run(
