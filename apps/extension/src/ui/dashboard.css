@@ -1,7 +1,7 @@
 :root {
   --font-sans: "DM Sans", "Segoe UI", sans-serif;
   --background: color(display-p3 0.985 0.97 0.935);
-  --foreground: color(display-p3 0.17 0.17 0.16);
+  --foreground: color(display-p3 0.4 0.4 0.4);
   --border: color(display-p3 0.86 0.81 0.74);
   --muted: color(display-p3 0.97 0.94 0.88);
   --muted-foreground: color(display-p3 0.42 0.37 0.31);

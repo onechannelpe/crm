@@ -1,7 +1,15 @@
-import { createAsync, revalidate, useNavigate } from "@solidjs/router";
-import { Show } from "solid-js";
+import {
+  createAsync,
+  revalidate,
+  useAction,
+  useNavigate,
+} from "@solidjs/router";
+import { Show, createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
+import { useToast } from "~/components/feedback/toast/provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { addLeadToFavoritesMutation } from "~/features/workflow/data/mutations";
 import {
   leadDetailQuery,
   leadListQuery,
@@ -27,7 +35,11 @@ const POLL_TIMEOUT_MS = 60_000;
 
 export function RecordPage() {
   const navigate = useNavigate();
+  const addToFavorites = useAction(addLeadToFavoritesMutation);
+  const { showToast } = useToast();
+  const { currentUser } = useAuthenticatedSession();
   const { leadId, activeTab, setActiveTab } = useLeadRecordPageState();
+  const canDeleteCompany = createMemo(() => currentUser().role === "superuser");
 
   const detailData = createAsync(async () => {
     return leadDetailQuery(leadId());
@@ -76,7 +88,42 @@ export function RecordPage() {
 
       <Show when={detailData()}>
         {(detail) => (
-          <Footer onOpen={() => navigate(`/records/${detail().lead.id}`)} />
+          <Footer
+            onOpen={() => navigate(`/records/${detail().lead.id}`)}
+            options={{
+              showDeleteCompany: canDeleteCompany(),
+              addToFavoritesDisabled: detail().lead.isFavorite,
+              onAddToFavorites: () => {
+                void addToFavorites({ leadId: detail().lead.id })
+                  .then(() => {
+                    showToast("success", "Empresa agregada a favoritos");
+                  })
+                  .catch(() => {
+                    showToast("error", "No se pudo agregar a favoritos");
+                  });
+              },
+              onExportCompany: () => {
+                const payload = {
+                  empresa: detail().lead,
+                  exportadoEn: new Date().toISOString(),
+                };
+                const json = JSON.stringify(payload, null, 2);
+                const blob = new Blob([json], {
+                  type: "application/json;charset=utf-8",
+                });
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = url;
+                anchor.download = `empresa-${detail().lead.id}.json`;
+                anchor.click();
+                URL.revokeObjectURL(url);
+                showToast("success", "Empresa exportada");
+              },
+              onDeleteCompany: () => {
+                showToast("info", "Eliminar empresa estará disponible pronto");
+              },
+            }}
+          />
         )}
       </Show>
     </div>

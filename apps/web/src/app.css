@@ -93,7 +93,7 @@
 
   /* semantic aliases for translucent fills */
   --background-transparent-lighter: var(--bg-translucent-subtle);
-  --background-transparent-light: var(--bg-translucent);
+  --background-transparent-light: color(display-p3 1 1 1 / 0.5);
   --background-transparent-medium: var(--bg-translucent-medium);
 
   --t-spacing-0: 0px;
