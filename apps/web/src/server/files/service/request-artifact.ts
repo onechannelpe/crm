@@ -30,6 +30,7 @@ const DIRECTION_MAP: Record<
 > = {
   records_export: "download",
   integration_import: "upload",
+  sale_proof: "upload",
 };
 
 async function runSyncExport(
@@ -104,7 +105,7 @@ async function runSyncExport(
   );
   const stored = await storage.putBytes(storageKey, bytes);
 
-  const fileAssetId = await repo.insertFileAsset({
+  const fileAssetId = await repo.assets.insert({
     storageKey,
     originalFilename: result.filename,
     safeDisplayFilename: metadata.safeDisplayFilename,
@@ -117,7 +118,7 @@ async function runSyncExport(
     now,
   });
 
-  await repo.insertFileBinding({
+  await repo.artifacts.insertFileBinding({
     artifactId,
     fileAssetId,
     bindingRole: "export_output",
@@ -125,7 +126,7 @@ async function runSyncExport(
     now,
   });
 
-  await repo.updateArtifactStatus(artifactId, "ready", now);
+  await repo.artifacts.updateStatus(artifactId, "ready", now);
   await emitEvent(repo, artifactId, "artifact.ready", ctx, {
     fileAssetId,
     sha256Hex: stored.sha256,
@@ -140,7 +141,12 @@ export async function requestArtifact(
   deps: RequestArtifactDeps,
 ): Promise<Result<ArtifactWithAsset, DomainError>> {
   const actor = actorFromCtx(ctx);
-  const policyResult = checkArtifactPolicy(actor, null, "artifact.request");
+  const policyResult = checkArtifactPolicy(
+    actor,
+    null,
+    "artifact.request",
+    input.artifactType,
+  );
   if (isErr(policyResult)) return policyResult;
 
   const { repo, storage, syncExecutor } = deps;
@@ -149,7 +155,7 @@ export async function requestArtifact(
   const scopeBranchId =
     ctx.actor.role === "superuser" ? null : ctx.actor.branchId;
 
-  const artifactId = await repo.insertArtifact({
+  const artifactId = await repo.artifacts.insert({
     artifactType: input.artifactType,
     direction,
     executionMode: input.executionMode,
@@ -179,7 +185,7 @@ export async function requestArtifact(
       syncExecutor,
     );
     if (isErr(syncResult)) {
-      await repo.updateArtifactStatus(artifactId, "failed", ctx.now(), {
+      await repo.artifacts.updateStatus(artifactId, "failed", ctx.now(), {
         code: syncResult.error.code,
         message: syncResult.error.message,
       });
@@ -191,7 +197,7 @@ export async function requestArtifact(
     }
   }
 
-  const artifact = await repo.findArtifactById(artifactId);
+  const artifact = await repo.artifacts.findById(artifactId);
   if (!artifact) {
     return Err(
       domainError(
@@ -204,7 +210,10 @@ export async function requestArtifact(
 
   const fileAsset =
     direction === "download"
-      ? await repo.findFileAssetForArtifact(artifactId, "export_output")
+      ? await repo.artifacts.findFileAssetForArtifact(
+          artifactId,
+          "export_output",
+        )
       : null;
 
   return Ok({ artifact, fileAsset });

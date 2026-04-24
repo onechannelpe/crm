@@ -76,17 +76,30 @@ function createDownloadTokenDeps(input: {
 }): DownloadTokenDeps {
   return {
     repo: {
-      findArtifactById: async (artifactId) => {
-        if (artifactId !== input.artifact.id) {
-          return null;
-        }
-        return input.artifact;
+      artifacts: {
+        findById: async (artifactId) => {
+          if (artifactId !== input.artifact.id) {
+            return null;
+          }
+          return input.artifact;
+        },
+        findFileAssetForArtifact: async () => input.fileAsset ?? null,
+        insert: async () => "unused",
+        updateStatus: async () => {},
+        insertFileBinding: async () => {},
+        list: async () => [],
       },
-      findFileAssetForArtifact: async () => input.fileAsset ?? null,
-      insertDownloadToken: async () => {
-        input.onInsertToken?.();
+      tokens: {
+        insert: async () => {
+          input.onInsertToken?.();
+        },
+        findByHash: async () => null,
+        markUsed: async () => false,
       },
-      insertEvent: async () => {},
+      events: {
+        insert: async () => {},
+        list: async () => [],
+      },
     },
   };
 }

@@ -76,6 +76,37 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("workflow_sale_proof_files")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id").onDelete("cascade"),
+    )
+    .addColumn("sale_id", "text", (col) =>
+      col.notNull().references("workflow_sales.id").onDelete("cascade"),
+    )
+    .addColumn("artifact_id", "text", (col) =>
+      col
+        .notNull()
+        .unique()
+        .references("workflow_artifacts.id")
+        .onDelete("cascade"),
+    )
+    .addColumn("file_asset_id", "integer", (col) =>
+      col.notNull().references("file_assets.id"),
+    )
+    .addColumn("uploaded_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_sale_proof_files_lead")
+    .on("workflow_sale_proof_files")
+    .columns(["lead_id", "created_at"])
+    .execute();
+
+  await db.schema
     .createTable("artifact_events")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("artifact_id", "text", (col) =>

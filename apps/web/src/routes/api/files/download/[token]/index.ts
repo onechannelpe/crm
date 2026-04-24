@@ -5,7 +5,9 @@ import { executeDownload } from "~/server/files/service/execute-download";
 import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
-export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
+export async function GET(
+  event: Pick<APIEvent, "params" | "request">,
+): Promise<Response> {
   try {
     const token = event.params.token;
     if (!token || typeof token !== "string" || token.length < 16) {
@@ -25,9 +27,12 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
     }
 
     const { fileAsset, body } = result.value;
+    const requestUrl = new URL(event.request.url);
+    const isInline = requestUrl.searchParams.get("inline") === "1";
     const headers = buildFileDownloadHeaders(
       fileAsset.detectedMime,
       fileAsset.safeDisplayFilename,
+      { disposition: isInline ? "inline" : "attachment" },
     );
 
     return new Response(body, { status: 200, headers });

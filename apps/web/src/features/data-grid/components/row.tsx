@@ -129,6 +129,7 @@ export function DataGridRow<T extends { id: string }>(props: {
                 class={styles.rowButton}
                 data-grid-focusable-cell={`${props.row.id}:${index()}`}
                 data-open-mode={props.rowOpen.mode}
+                // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
                 role="button"
                 aria-disabled={isInteractive() ? undefined : "true"}
                 onClick={() => {

@@ -61,6 +61,10 @@ export function canCreateSale(role: Role) {
   return hasPermission(role, "lead:sale:create");
 }
 
+export function canUploadSaleProof(role: Role) {
+  return hasPermission(role, "lead:sale:upload-proof");
+}
+
 export function canReviewLead(role: Role) {
   return hasPermission(role, "lead:review");
 }

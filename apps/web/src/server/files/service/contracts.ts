@@ -2,7 +2,11 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
-import type { ArtifactRepo } from "../repo";
+import type { createArtifactsRepo } from "../repo/artifacts";
+import type { createAssetsRepo } from "../repo/assets";
+import type { createEventsRepo } from "../repo/events";
+import type { createSalesRepo } from "../repo/sales";
+import type { createTokensRepo } from "../repo/tokens";
 import type { FileStorage } from "../storage";
 import type {
   ArtifactExecutionMode,
@@ -11,6 +15,14 @@ import type {
   DownloadReady,
   WorkflowArtifact,
 } from "../types";
+
+export interface ArtifactRepos {
+  artifacts: ReturnType<typeof createArtifactsRepo>;
+  assets: ReturnType<typeof createAssetsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
+  tokens: ReturnType<typeof createTokensRepo>;
+  sales: ReturnType<typeof createSalesRepo>;
+}
 
 export interface SyncExecutor {
   run(
@@ -22,7 +34,7 @@ export interface SyncExecutor {
   }>;
 }
 
-export type ArtifactEventRepo = Pick<ArtifactRepo, "insertEvent">;
+export type ArtifactEventRepo = Pick<ArtifactRepos, "events">;
 
 export interface RequestArtifactInput {
   artifactType: ArtifactType;
@@ -31,48 +43,28 @@ export interface RequestArtifactInput {
 }
 
 export type RequestArtifactRepo = Pick<
-  ArtifactRepo,
-  | "insertArtifact"
-  | "updateArtifactStatus"
-  | "findArtifactById"
-  | "findFileAssetForArtifact"
-  | "insertFileAsset"
-  | "insertFileBinding"
-  | "insertEvent"
+  ArtifactRepos,
+  "artifacts" | "assets" | "events"
 >;
 
 export type UploadArtifactRepo = Pick<
-  ArtifactRepo,
-  | "findArtifactById"
-  | "updateArtifactStatus"
-  | "insertFileAsset"
-  | "insertFileBinding"
-  | "insertEvent"
+  ArtifactRepos,
+  "artifacts" | "assets" | "events"
 >;
 
 export type DownloadTokenRepo = Pick<
-  ArtifactRepo,
-  | "findArtifactById"
-  | "findFileAssetForArtifact"
-  | "insertDownloadToken"
-  | "insertEvent"
+  ArtifactRepos,
+  "artifacts" | "tokens" | "events"
 >;
 
 export type ExecuteDownloadRepo = Pick<
-  ArtifactRepo,
-  | "findDownloadToken"
-  | "findArtifactById"
-  | "findFileAssetById"
-  | "markDownloadTokenUsed"
-  | "insertEvent"
+  ArtifactRepos,
+  "tokens" | "artifacts" | "assets" | "events"
 >;
 
-export type GetArtifactRepo = Pick<
-  ArtifactRepo,
-  "findArtifactById" | "findFileAssetForArtifact"
->;
+export type GetArtifactRepo = Pick<ArtifactRepos, "artifacts">;
 
-export type ListArtifactsRepo = Pick<ArtifactRepo, "listArtifacts">;
+export type ListArtifactsRepo = Pick<ArtifactRepos, "artifacts">;
 
 export interface RequestArtifactDeps {
   repo: RequestArtifactRepo;

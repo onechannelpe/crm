@@ -21,7 +21,7 @@ export async function listArtifacts(
   if (isErr(auditResult)) return auditResult;
 
   const scopeBranchId = actor.role === "superuser" ? undefined : actor.branchId;
-  const artifacts = await deps.repo.listArtifacts({
+  const artifacts = await deps.repo.artifacts.list({
     artifactType: filters.artifactType,
     scopeBranchId,
     limit: Math.min(filters.limit ?? 50, 200),

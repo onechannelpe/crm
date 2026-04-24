@@ -36,6 +36,7 @@ export type Permission =
   | "lead:register"
   | "lead:commercial-input:complete"
   | "lead:sale:create"
+  | "lead:sale:upload-proof"
   | "lead:view:all"
   | "lead:review"
   | "lead:reassign"
@@ -70,6 +71,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:register",
     "lead:commercial-input:complete",
     "lead:sale:create",
+    "lead:sale:upload-proof",
   ],
   supervisor: [
     "lead:rate:simulate",
@@ -78,6 +80,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "sales:submit",
     "sales:review",
     "sales:approve",
+    "lead:sale:upload-proof",
     "search:use",
     "capacity:read:self",
     "capacity:request:self",
@@ -103,12 +106,14 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "file:artifact:request",
     "file:artifact:upload",
     "file:artifact:read",
+    "lead:sale:upload-proof",
   ],
   sales_manager: [
     "lead:rate:simulate",
     "lead:work",
     "sales:review",
     "sales:approve",
+    "lead:sale:upload-proof",
     "search:use",
     "capacity:read:self",
     "capacity:request:self",
@@ -137,6 +142,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:register",
     "lead:commercial-input:complete",
     "lead:sale:create",
+    "lead:sale:upload-proof",
     "lead:view:all",
     "lead:review",
     "lead:reassign",
@@ -173,6 +179,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:register",
     "lead:commercial-input:complete",
     "lead:sale:create",
+    "lead:sale:upload-proof",
     "lead:view:all",
     "lead:review",
     "lead:reassign",
