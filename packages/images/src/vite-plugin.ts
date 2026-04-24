@@ -40,11 +40,15 @@ export function responsiveImagesPlugin(): Plugin {
                 );
                 if (existsSync(icoPath)) {
                   outputBuffer = await fs.readFile(icoPath);
+                  contentType = "image/x-icon";
                 } else {
                   outputBuffer = await sharp(sourceBuffer).png().toBuffer();
                   contentType = "image/png";
                 }
-                contentType = "image/x-icon";
+              } else if (format === "png") {
+                outputBuffer = await sharp(sourceBuffer).png().toBuffer();
+              } else if (format === "jpg" || format === "jpeg") {
+                outputBuffer = await sharp(sourceBuffer).jpeg().toBuffer();
               } else {
                 outputBuffer = await sharp(sourceBuffer).png().toBuffer();
               }
@@ -96,6 +100,10 @@ export function responsiveImagesPlugin(): Plugin {
               outputBuffer = await sharp(sourceBuffer).avif().toBuffer();
             } else if (format === "webp") {
               outputBuffer = await sharp(sourceBuffer).webp().toBuffer();
+            } else if (format === "png") {
+              outputBuffer = await sharp(sourceBuffer).png().toBuffer();
+            } else if (format === "jpg" || format === "jpeg") {
+              outputBuffer = await sharp(sourceBuffer).jpeg().toBuffer();
             } else {
               outputBuffer = await sharp(sourceBuffer).png().toBuffer();
             }
@@ -132,6 +140,9 @@ export function responsiveImagesPlugin(): Plugin {
           source: icoBuffer,
         });
         emittedAssets["fallback"] = referenceId;
+      } else if (emittedAssets["png"]) {
+        // Default fallback to PNG if no .ico found
+        emittedAssets["fallback"] = emittedAssets["png"];
       }
 
       const moduleOutput = Object.entries(emittedAssets)
