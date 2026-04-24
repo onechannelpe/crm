@@ -31,12 +31,10 @@ export function RecordRightPanel(props: RecordRightPanelProps) {
 
   return (
     <div class={styles.panel}>
-      <TabStrip<RecordRightPanelTab, RecordRightPanelTab>
+      <TabStrip
         tabs={RIGHT_PANEL_TABS}
-        hiddenTabs={[]}
         activeTab={activeTab()}
         onTabSelect={setActiveTab}
-        onHiddenTabSelect={setActiveTab}
       />
       <div class={styles.tabContent}>
         <Show when={activeTab()} keyed>

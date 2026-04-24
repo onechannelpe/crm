@@ -34,6 +34,7 @@
     "@oslojs/encoding": "^1.1.0",
     "@oslojs/otp": "^1.1.0",
     "@simplewebauthn/server": "^13.3.0",
+    "@solid-primitives/resize-observer": "^2.1.5",
     "@solidjs/router": "^0.16.1",
     "@solidjs/start": "2.0.0-alpha.2",
     "@solidjs/vite-plugin-nitro-2": "^0.2.0",

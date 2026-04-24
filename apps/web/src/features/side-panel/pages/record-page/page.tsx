@@ -17,12 +17,7 @@ import {
 
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";
-import {
-  HIDDEN_TAB_ITEMS,
-  TAB_ITEMS,
-  type ExtendedTabId,
-  type TabId,
-} from "./constants";
+import { ALL_TAB_ITEMS } from "./constants";
 import { createRecordPageController } from "./controller";
 import { Footer } from "./footer";
 import { useLeadRecordPageState } from "./state";
@@ -61,12 +56,10 @@ export function RecordPage() {
     <div class={styles.pageShell}>
       <PanelList>
         <div class={styles.page}>
-          <TabStrip<ExtendedTabId, TabId>
-            tabs={TAB_ITEMS}
-            hiddenTabs={HIDDEN_TAB_ITEMS}
+          <TabStrip
+            tabs={ALL_TAB_ITEMS}
             activeTab={activeTab()}
             onTabSelect={setActiveTab}
-            onHiddenTabSelect={setActiveTab}
           />
 
           <Show
