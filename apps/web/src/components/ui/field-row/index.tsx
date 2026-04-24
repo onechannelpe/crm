@@ -10,6 +10,7 @@ import {
   FieldLabelText,
   FieldRow,
   FieldValue,
+  FieldValueDisplay,
 } from "~/features/side-panel/components/field-table";
 
 import styles from "./styles.module.css";
@@ -38,7 +39,9 @@ export function RecordInlineCell(
           <OverflowingText text={props.label} style={{ width: "100%" }} />
         </FieldLabelText>
       </FieldLabel>
-      <FieldValue>{props.children}</FieldValue>
+      <FieldValue>
+        <FieldValueDisplay>{props.children}</FieldValueDisplay>
+      </FieldValue>
     </FieldRow>
   );
 }
@@ -48,6 +51,7 @@ export interface RelationFieldRowProps {
   icon: (props: { size?: number }) => JSX.Element;
   value: string;
   isEditable?: boolean;
+  renderValue?: () => JSX.Element;
   renderPicker?: (onClose: () => void) => JSX.Element;
   onUpdate?: () => void;
 }
@@ -76,7 +80,13 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
         </FieldLabelText>
       </FieldLabel>
       <FieldValue>
-        <span>{props.value || "—"}</span>
+        <FieldValueDisplay>
+          {props.renderValue ? (
+            props.renderValue()
+          ) : (
+            <span>{props.value || "—"}</span>
+          )}
+        </FieldValueDisplay>
         <Show when={props.isEditable}>
           <div class={styles.editWrapper}>
             <EditButtonWrapper visible={isHovered()}>

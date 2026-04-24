@@ -8,7 +8,6 @@ import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
-import { RelationFieldRow } from "~/components/ui/field-row";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import {
   FieldIcon,
@@ -18,17 +17,20 @@ import {
   FieldTable,
   FieldTextValue,
   FieldValue,
+  FieldValueDisplay,
 } from "~/features/side-panel/components/field-table";
 import {
-  WidgetBody,
   Widget,
+  WidgetBody,
   WidgetHeader,
   WidgetSectionChevron,
   WidgetSectionHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import { ExecutivePicker } from "~/features/workflow/detail/executive-picker";
-import { FieldsWidget } from "~/features/workflow/fields/fields-widget";
+import {
+  LEAD_DETAIL_FIELD_GROUPS,
+  type FieldGroup,
+} from "~/features/workflow/fields/lead-field-layout";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
@@ -111,13 +113,15 @@ export function CreateFieldsWidget(props: {
                 </FieldLabelText>
               </FieldLabel>
               <FieldValue>
-                <FieldTextValue>
-                  {field.key === "razonSocial"
-                    ? (props.razonSocial ?? "")
-                    : field.key === "address"
-                      ? (props.address ?? "")
-                      : (field.value ?? "")}
-                </FieldTextValue>
+                <FieldValueDisplay>
+                  <FieldTextValue>
+                    {field.key === "razonSocial"
+                      ? (props.razonSocial ?? "")
+                      : field.key === "address"
+                        ? (props.address ?? "")
+                        : (field.value ?? "")}
+                  </FieldTextValue>
+                </FieldValueDisplay>
               </FieldValue>
             </FieldRow>
           )}
@@ -127,34 +131,39 @@ export function CreateFieldsWidget(props: {
   );
 }
 
-export function DetailFieldsWidget(props: { data: LeadDetailView }) {
-  const canEditExecutive = () =>
-    props.data.availableActions.includes("reassign-lead");
+function FieldGroupSection(props: { group: FieldGroup; data: LeadDetailView }) {
+  const [isExpanded, setIsExpanded] = createSignal(true);
 
   return (
-    <WidgetFrame>
-      <FieldsWidget data={props.data} />
-      <FieldTable>
-        <RelationFieldRow
-          label="Administrado por"
-          icon={User}
-          value={props.data.lead.executiveName}
-          isEditable={canEditExecutive()}
-          renderPicker={(onClose) => (
-            <ExecutivePicker
-              leadId={props.data.lead.id}
-              currentUserId={props.data.lead.executiveId}
-              onSelect={onClose}
-              onClose={onClose}
-            />
-          )}
-        />
-        <RelationFieldRow
-          label="Actualizado por"
-          icon={User}
-          value={props.data.lead.updatedByName ?? "—"}
-        />
-      </FieldTable>
-    </WidgetFrame>
+    <>
+      <WidgetSectionHeader onClick={() => setIsExpanded((v) => !v)}>
+        <span>{props.group.label}</span>
+        <WidgetSectionChevron isExpanded={isExpanded()}>
+          <ChevronDown size={14} />
+        </WidgetSectionChevron>
+      </WidgetSectionHeader>
+      <AnimatedExpandableContainer isExpanded={isExpanded()}>
+        <FieldTable>
+          <For each={props.group.fields}>
+            {(field) => field.renderCell(props.data)}
+          </For>
+        </FieldTable>
+      </AnimatedExpandableContainer>
+    </>
+  );
+}
+
+export function DetailFieldsWidget(props: { data: LeadDetailView }) {
+  return (
+    <Widget>
+      <WidgetHeader>
+        <WidgetTitle text="Campos" />
+      </WidgetHeader>
+      <WidgetBody>
+        <For each={LEAD_DETAIL_FIELD_GROUPS}>
+          {(group) => <FieldGroupSection group={group} data={props.data} />}
+        </For>
+      </WidgetBody>
+    </Widget>
   );
 }

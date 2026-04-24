@@ -42,11 +42,11 @@ export function FieldLabelText(props: ParentProps) {
 }
 
 export function FieldValue(props: ParentProps) {
-  return (
-    <div class={styles.fieldValue}>
-      <div class={styles.fieldValueDisplay}>{props.children}</div>
-    </div>
-  );
+  return <div class={styles.fieldValue}>{props.children}</div>;
+}
+
+export function FieldValueDisplay(props: ParentProps) {
+  return <div class={styles.fieldValueDisplay}>{props.children}</div>;
 }
 
 export function FieldTextValue(props: ParentProps) {

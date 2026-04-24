@@ -8,7 +8,6 @@ import {
   canCompleteCommercialInput,
   canCreateQuotation,
   canCreateSale,
-  canReassignLead,
   canReviewLead,
 } from "./access";
 
@@ -53,7 +52,7 @@ export function resolveAvailableActions(input: {
   if (canApproveForSale(input.actorRole) && input.stage === "QUOTED") {
     actions.push("approve-for-sale");
   }
-  if (canReassignLead(input.actorRole)) {
+  if (input.actorRole === "admin" || input.actorRole === "superuser") {
     actions.push("reassign-lead");
   }
 

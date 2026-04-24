@@ -61,19 +61,26 @@
   color: var(--foreground);
   cursor: default;
   display: flex;
-  height: 16px;
+  height: auto;
   min-height: 16px;
+  min-width: 0;
+  outline: 1px solid transparent;
   overflow: hidden;
   padding-inline: var(--spacing-1);
-  width: 100%;
 }
 
 .fieldRowHovered.fieldRowReadonly .fieldValueDisplay {
-  outline: 1px solid var(--border);
+  outline: 1px solid var(--t-border-color-medium);
 }
 
 .fieldRowHovered:not(.fieldRowReadonly) .fieldValueDisplay {
-  background: var(--background-transparent-light);
+  background: var(--bg-translucent);
+  cursor: pointer;
+}
+
+.fieldEmptyValue {
+  color: var(--foreground-light);
+  font-size: inherit;
 }
 
 .fieldInputControl {
