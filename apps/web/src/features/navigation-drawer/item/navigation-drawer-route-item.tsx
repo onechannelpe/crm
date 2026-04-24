@@ -20,7 +20,7 @@ export function NavigationDrawerRouteItem(
 ) {
   return (
     <NavigationDrawerItemFrame
-      className={props.className}
+      class={props.class}
       label={props.label}
       secondaryLabel={props.secondaryLabel}
       indentationLevel={props.indentationLevel}
@@ -38,7 +38,7 @@ export function NavigationDrawerRouteItem(
       render={(frame) => (
         <A
           href={props.href}
-          class={frame.className()}
+          class={frame.class()}
           onClick={props.onClick}
           draggable={false}
           aria-disabled={props.unavailable ? "true" : undefined}

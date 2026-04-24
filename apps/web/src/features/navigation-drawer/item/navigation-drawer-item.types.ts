@@ -22,7 +22,7 @@ export type NavigationDrawerIcon = (
 ) => JSX.Element;
 
 export interface NavigationDrawerItemProps {
-  className?: string;
+  class?: string;
   label: string;
   secondaryLabel?: string;
   indentationLevel?: 1 | 2;
@@ -42,7 +42,7 @@ export interface NavigationDrawerItemProps {
 }
 
 export interface NavigationDrawerItemFrameBaseProps {
-  className?: string;
+  class?: string;
   label: string;
   secondaryLabel?: string;
   indentationLevel: 1 | 2;

@@ -1,4 +1,4 @@
-import { Match, Show, Switch } from "solid-js";
+import { Match, Show, Switch, createMemo } from "solid-js";
 
 import { CommercialInputSection } from "~/features/workflow/detail/commercial-input-section";
 import { LeadActionsWidget } from "~/features/workflow/detail/lead-actions-widget";
@@ -15,24 +15,34 @@ import type { TabContentProps } from "./content-props";
 import styles from "./home.module.css";
 
 export function HomeTab(props: TabContentProps) {
-  if (props.mode === "create") {
-    return (
-      <div class={styles.homeContent}>
-        <CreateContent
-          razonSocial={props.razonSocial}
-          address={props.address}
-          engineStatus={props.engineStatus}
-          submitting={props.submitting}
-          onSubmit={props.onSubmit}
-        />
-      </div>
-    );
-  }
+  const viewProps = createMemo(() => (props.mode === "view" ? props : null));
+  const createProps = createMemo(() =>
+    props.mode === "create" ? props : null,
+  );
 
   return (
-    <div class={styles.homeContent}>
-      <DetailContent data={props.data} />
-    </div>
+    <Switch>
+      <Match when={viewProps()}>
+        {(view) => (
+          <div class={styles.homeContent}>
+            <DetailContent data={view().data} />
+          </div>
+        )}
+      </Match>
+      <Match when={createProps()}>
+        {(create) => (
+          <div class={styles.homeContent}>
+            <CreateContent
+              razonSocial={create().razonSocial}
+              address={create().address}
+              engineStatus={create().engineStatus}
+              submitting={create().submitting}
+              onSubmit={create().onSubmit}
+            />
+          </div>
+        )}
+      </Match>
+    </Switch>
   );
 }
 

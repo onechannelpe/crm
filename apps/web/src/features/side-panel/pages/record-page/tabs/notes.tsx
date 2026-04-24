@@ -42,7 +42,7 @@ export function NotesTab(props: TabContentProps) {
                   footer={
                     <span class={styles.noteFooter}>
                       <span>{note.actorDisplayName}</span>
-                      <span class={styles.noteFooterDot}></span>
+                      <span class={styles.noteFooterDot} />
                       <span>{formatDateTime(note.occurredAt)}</span>
                     </span>
                   }

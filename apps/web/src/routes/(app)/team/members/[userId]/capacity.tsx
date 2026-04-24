@@ -1,5 +1,5 @@
 import { createAsync, useAction, useParams } from "@solidjs/router";
-import { createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createSignal, Show, For } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
@@ -223,19 +223,21 @@ export default function TeamMemberCapacityPage() {
                 }
               >
                 <div class="space-y-2">
-                  {snapshot.requests.map((request) => (
-                    <div class="rounded border p-3">
-                      <div class="font-medium">
-                        {request.kind === "search_extra"
-                          ? "Más búsquedas"
-                          : "Más refills"}{" "}
-                        request.requestedAmount
+                  <For each={snapshot.requests}>
+                    {(request) => (
+                      <div class="rounded border p-3">
+                        <div class="font-medium">
+                          {request.kind === "search_extra"
+                            ? "Más búsquedas"
+                            : "Más refills"}{" "}
+                          {request.requestedAmount}
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                          {request.status} · {request.reason}
+                        </div>
                       </div>
-                      <div class="text-sm text-muted-foreground">
-                        {request.status} · {request.reason}
-                      </div>
-                    </div>
-                  ))}
+                    )}
+                  </For>
                 </div>
               </Show>
             </section>

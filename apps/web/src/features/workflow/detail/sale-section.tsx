@@ -1,5 +1,5 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { Show, createSignal, createUniqueId } from "solid-js";
+import { Show, For, createSignal, createUniqueId } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import Link from "~/components/icons/link";
@@ -222,18 +222,20 @@ export function SaleSection(props: SaleSectionProps) {
             </FieldLabel>
             <FieldInputValue>
               <div class={styles.bankKindGroup}>
-                {SALE_BANK_KINDS.map((kind) => (
-                  <label class={styles.bankKindOption}>
-                    <input
-                      type="radio"
-                      name={bankKindRadioName}
-                      value={kind}
-                      checked={bankChoice() === kind}
-                      onChange={() => handleBankKindChange(kind)}
-                    />
-                    <span>{kind === "BCP" ? "BCP" : "Otro banco"}</span>
-                  </label>
-                ))}
+                <For each={SALE_BANK_KINDS}>
+                  {(kind) => (
+                    <label class={styles.bankKindOption}>
+                      <input
+                        type="radio"
+                        name={bankKindRadioName}
+                        value={kind}
+                        checked={bankChoice() === kind}
+                        onChange={() => handleBankKindChange(kind)}
+                      />
+                      <span>{kind === "BCP" ? "BCP" : "Otro banco"}</span>
+                    </label>
+                  )}
+                </For>
               </div>
             </FieldInputValue>
           </FieldRow>

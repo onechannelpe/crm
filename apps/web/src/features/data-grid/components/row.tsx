@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { For, Match, Switch } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
@@ -189,21 +189,18 @@ export function DataGridRow<T extends { id: string }>(props: {
 }
 
 function DataGridRowOpenHint(props: { mode: DataGridRowOpenMode }) {
-  if (props.mode === "panel") {
-    return (
-      <span class={styles.rowOpenHint} aria-hidden="true">
-        <LayoutSidebarRightCollapse size={14} />
-      </span>
-    );
-  }
-
-  if (props.mode === "route" || props.mode === "inline") {
-    return (
-      <span class={styles.rowOpenHint} aria-hidden="true">
-        <ChevronRight size={14} />
-      </span>
-    );
-  }
-
-  return null;
+  return (
+    <Switch>
+      <Match when={props.mode === "panel"}>
+        <span class={styles.rowOpenHint} aria-hidden="true">
+          <LayoutSidebarRightCollapse size={14} />
+        </span>
+      </Match>
+      <Match when={props.mode === "route" || props.mode === "inline"}>
+        <span class={styles.rowOpenHint} aria-hidden="true">
+          <ChevronRight size={14} />
+        </span>
+      </Match>
+    </Switch>
+  );
 }

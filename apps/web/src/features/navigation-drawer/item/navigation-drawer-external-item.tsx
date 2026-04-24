@@ -19,7 +19,7 @@ export function NavigationDrawerExternalItem(
 ) {
   return (
     <NavigationDrawerItemFrame
-      className={props.className}
+      class={props.class}
       label={props.label}
       secondaryLabel={props.secondaryLabel}
       indentationLevel={props.indentationLevel}
@@ -37,7 +37,7 @@ export function NavigationDrawerExternalItem(
       render={(frame) => (
         <a
           href={props.href}
-          class={frame.className()}
+          class={frame.class()}
           onClick={props.onClick}
           draggable={false}
           target="_blank"

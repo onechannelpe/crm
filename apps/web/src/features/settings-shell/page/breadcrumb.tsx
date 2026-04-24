@@ -14,39 +14,46 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb(props: BreadcrumbProps) {
-  if (props.isMobile) {
-    return (
-      <MobileBackControl action={props.mobileBackAction} class={props.class} />
-    );
-  }
-
   return (
-    <nav class={`${styles.root} ${props.class ?? ""}`} aria-label="Breadcrumb">
-      <For each={props.items}>
-        {(item, index) => (
-          <span class={styles.segment}>
-            <Show
-              when={item.href}
-              fallback={
-                <span class={styles.text} title={item.label}>
-                  {item.label}
-                </span>
-              }
-            >
-              {(href) => (
-                <span class={styles.linkContainer}>
-                  <A href={href()} class={styles.link} title={item.label}>
+    <Show
+      when={!props.isMobile}
+      fallback={
+        <MobileBackControl
+          action={props.mobileBackAction}
+          class={props.class}
+        />
+      }
+    >
+      <nav
+        class={`${styles.root} ${props.class ?? ""}`}
+        aria-label="Breadcrumb"
+      >
+        <For each={props.items}>
+          {(item, index) => (
+            <span class={styles.segment}>
+              <Show
+                when={item.href}
+                fallback={
+                  <span class={styles.text} title={item.label}>
                     {item.label}
-                  </A>
-                </span>
-              )}
-            </Show>
-            <Show when={index() < props.items.length - 1}>
-              <span class={styles.divider}>/</span>
-            </Show>
-          </span>
-        )}
-      </For>
-    </nav>
+                  </span>
+                }
+              >
+                {(href) => (
+                  <span class={styles.linkContainer}>
+                    <A href={href()} class={styles.link} title={item.label}>
+                      {item.label}
+                    </A>
+                  </span>
+                )}
+              </Show>
+              <Show when={index() < props.items.length - 1}>
+                <span class={styles.divider}>/</span>
+              </Show>
+            </span>
+          )}
+        </For>
+      </nav>
+    </Show>
   );
 }

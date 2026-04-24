@@ -10,7 +10,7 @@ import type { NavigationDrawerItemFrameBaseProps } from "./navigation-drawer-ite
 import styles from "./navigation-drawer-item.module.css";
 
 export interface NavigationDrawerItemFrameRenderProps {
-  className: Accessor<string>;
+  class: Accessor<string>;
   content: JSX.Element;
   style: Accessor<JSX.CSSProperties>;
   title: Accessor<string | undefined>;
@@ -31,11 +31,11 @@ export function NavigationDrawerItemFrame(
   const shouldShowRightOptions = () =>
     props.isMobile || Boolean(props.alwaysShowRightOptions);
 
-  const className = () =>
+  const classProp = () =>
     cn(
       "navigation-drawer-item",
       styles.item,
-      props.className,
+      props.class,
       props.active && styles.itemActive,
       props.indentationLevel === 2 && styles.itemIndented,
       props.variant === "tertiary" && styles.itemTertiary,
@@ -115,7 +115,7 @@ export function NavigationDrawerItemFrame(
   const title = () => (props.collapsedMain ? props.label : undefined);
 
   return props.render({
-    className,
+    class: classProp,
     content,
     style,
     title,

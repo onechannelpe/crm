@@ -1,5 +1,5 @@
 import { useAction } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { For, createSignal } from "solid-js";
 
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
@@ -193,9 +193,9 @@ export function QuotationSection(props: QuotationSectionProps) {
                   }
                 }}
               >
-                {MONEDAS.map((m) => (
-                  <option value={m}>{m}</option>
-                ))}
+                <For each={MONEDAS}>
+                  {(m) => <option value={m}>{m}</option>}
+                </For>
               </select>
             </FieldInputValue>
           </FieldRow>
