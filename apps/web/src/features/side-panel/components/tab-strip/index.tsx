@@ -1,3 +1,4 @@
+import { createResizeObserver } from "@solid-primitives/resize-observer";
 import {
   For,
   Show,
@@ -6,9 +7,8 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import { createStore } from "solid-js/store";
-import { createResizeObserver } from "@solid-primitives/resize-observer";
 import type { JSX } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import ChevronDown from "~/components/icons/chevron-down";
 
@@ -35,7 +35,9 @@ type TabStripProps<TId extends string> = {
 };
 
 export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
-  const [tabWidths, setTabWidths] = createStore<Record<string, number | undefined>>({});
+  const [tabWidths, setTabWidths] = createStore<
+    Record<string, number | undefined>
+  >({});
   const [containerWidth, setContainerWidth] = createSignal(0);
   const [moreButtonWidth, setMoreButtonWidth] = createSignal(0);
   const [isOverflowOpen, setIsOverflowOpen] = createSignal(false);
@@ -106,7 +108,9 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
         <For each={props.tabs}>
           {(tab) => {
             const [el, setEl] = createSignal<HTMLDivElement>();
-            createResizeObserver(el, ({ width }) => setTabWidths(tab.id, width));
+            createResizeObserver(el, ({ width }) =>
+              setTabWidths(tab.id, width),
+            );
 
             onCleanup(() => setTabWidths(tab.id, undefined));
 
@@ -121,10 +125,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             );
           }}
         </For>
-        <div
-          ref={(el) => (moreButtonMeasureRef = el)}
-          class={styles.moreTab}
-        >
+        <div ref={(el) => (moreButtonMeasureRef = el)} class={styles.moreTab}>
           <span class={styles.moreTabContent}>
             <span>+99 más</span>
             <ChevronDown size={16} />
