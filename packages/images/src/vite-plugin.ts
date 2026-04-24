@@ -148,7 +148,7 @@ export function responsiveImagesPlugin(): Plugin {
       const moduleOutput = Object.entries(emittedAssets)
         .map(
           ([key, refId]) =>
-            `${key === "fallback" ? "fallback" : key}: new URL(import.meta.ROLLUP_FILE_URL_${refId}, import.meta.url).href`,
+            `"${key === "fallback" ? "fallback" : key}": "__VITE_ASSET__${refId}__"`,
         )
         .join(",\n  ");
 
