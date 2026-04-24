@@ -88,7 +88,7 @@ export async function listLeadSaleProofFiles(
         return canAccess;
       }
 
-      const records = await files.repo.listSaleProofFilesByLead(leadId);
+      const records = await files.repo.sales.listByLead(leadId);
       return Ok(records.map(mapSaleProofFile));
     },
   });
@@ -191,7 +191,7 @@ export async function uploadLeadSaleProofFile(
         return uploadResult;
       }
 
-      const fileAsset = await files.repo.findFileAssetForArtifact(
+      const fileAsset = await files.repo.artifacts.findFileAssetForArtifact(
         artifactId,
         "source_upload",
       );
@@ -206,7 +206,7 @@ export async function uploadLeadSaleProofFile(
       }
 
       const createdAt = ctx.now();
-      const id = await files.repo.insertSaleProofFile({
+      const id = await files.repo.sales.insert({
         leadId,
         saleId: sale.id,
         artifactId,
@@ -264,7 +264,7 @@ export async function requestLeadSaleProofDownloadToken(input: {
         return canAccess;
       }
 
-      const saleProof = await files.repo.findSaleProofFileByArtifactId(
+      const saleProof = await files.repo.sales.findByArtifactId(
         input.artifactId,
       );
       if (!saleProof || saleProof.leadId !== input.leadId) {

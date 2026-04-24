@@ -29,7 +29,7 @@ export async function uploadArtifactFile(
   const { repo, storage } = deps;
   const now = ctx.now();
 
-  const artifact = await repo.findArtifactById(artifactId);
+  const artifact = await repo.artifacts.findById(artifactId);
   if (!artifact) {
     return Err(
       domainError("not_found", "artifact_not_found", "Artifact not found"),
@@ -43,13 +43,13 @@ export async function uploadArtifactFile(
 
   async function transitionTo(nextStatus: ArtifactStatus): Promise<void> {
     assertValidTransition(currentStatus, nextStatus);
-    await repo.updateArtifactStatus(artifactId, nextStatus, now);
+    await repo.artifacts.updateStatus(artifactId, nextStatus, now);
     currentStatus = nextStatus;
   }
 
   async function failArtifact(code: string, message: string): Promise<void> {
     if (!isValidTransition(currentStatus, "failed")) return;
-    await repo.updateArtifactStatus(artifactId, "failed", now, {
+    await repo.artifacts.updateStatus(artifactId, "failed", now, {
       code,
       message,
     });
@@ -116,7 +116,7 @@ export async function uploadArtifactFile(
         streamValidation,
       );
 
-      const fileAssetId = await repo.insertFileAsset({
+      const fileAssetId = await repo.assets.insert({
         storageKey,
         originalFilename: file.name,
         safeDisplayFilename: metadata.safeDisplayFilename,
@@ -129,7 +129,7 @@ export async function uploadArtifactFile(
         now,
       });
 
-      await repo.insertFileBinding({
+      await repo.artifacts.insertFileBinding({
         artifactId,
         fileAssetId,
         bindingRole: "source_upload",

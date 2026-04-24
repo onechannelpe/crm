@@ -13,7 +13,7 @@ export async function executeDownload(
   const { repo, storage } = deps;
   const tokenHash = hashToken(tokenRaw);
 
-  const tokenRow = await repo.findDownloadToken(tokenHash);
+  const tokenRow = await repo.tokens.findByHash(tokenHash);
   if (!tokenRow) {
     return Err(
       domainError("not_found", "token_not_found", "Download token not found"),
@@ -36,14 +36,14 @@ export async function executeDownload(
     );
   }
 
-  const artifact = await repo.findArtifactById(tokenRow.artifactId);
+  const artifact = await repo.artifacts.findById(tokenRow.artifactId);
   if (!artifact) {
     return Err(
       domainError("not_found", "artifact_not_found", "Artifact not found"),
     );
   }
 
-  const fileAsset = await repo.findFileAssetById(tokenRow.fileAssetId);
+  const fileAsset = await repo.assets.findById(tokenRow.fileAssetId);
   if (!fileAsset) {
     return Err(
       domainError("not_found", "file_asset_not_found", "File asset not found"),
@@ -63,7 +63,7 @@ export async function executeDownload(
     );
   }
 
-  const tokenConsumed = await repo.markDownloadTokenUsed(tokenHash, now);
+  const tokenConsumed = await repo.tokens.markUsed(tokenHash, now);
   if (!tokenConsumed) {
     return Err(
       domainError(
@@ -74,7 +74,7 @@ export async function executeDownload(
     );
   }
 
-  await repo.insertEvent({
+  await repo.events.insert({
     artifactId: artifact.id,
     eventType: "artifact.downloaded",
     actorUserId: tokenRow.requestedByUserId,

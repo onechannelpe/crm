@@ -20,7 +20,7 @@ export async function requestDownloadToken(
   const { repo } = deps;
   const now = ctx.now();
 
-  const artifact = await repo.findArtifactById(artifactId);
+  const artifact = await repo.artifacts.findById(artifactId);
   if (!artifact) {
     return Err(
       domainError("not_found", "artifact_not_found", "Artifact not found"),
@@ -42,7 +42,7 @@ export async function requestDownloadToken(
 
   const bindingRole =
     artifact.direction === "upload" ? "source_upload" : "export_output";
-  const fileAsset = await repo.findFileAssetForArtifact(
+  const fileAsset = await repo.artifacts.findFileAssetForArtifact(
     artifactId,
     bindingRole,
   );
@@ -59,7 +59,7 @@ export async function requestDownloadToken(
   const rawToken = generateDownloadToken();
   const tokenHash = hashToken(rawToken);
 
-  await repo.insertDownloadToken({
+  await repo.tokens.insert({
     artifactId,
     fileAssetId: fileAsset.id,
     tokenHash,

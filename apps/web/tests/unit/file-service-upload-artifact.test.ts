@@ -71,13 +71,24 @@ describe("uploadArtifactFile", () => {
 
     const deps: UploadArtifactDeps = {
       repo: {
-        findArtifactById: async () => makeArtifact(),
-        updateArtifactStatus: async (_id, status, now, error) => {
-          updates.push({ status, now, error });
+        artifacts: {
+          findById: async () => makeArtifact(),
+          updateStatus: async (_id, status, now, error) => {
+            updates.push({ status, now, error });
+          },
+          insert: async () => "unused",
+          findFileAssetForArtifact: async () => null,
+          insertFileBinding: async () => {},
+          list: async () => [],
         },
-        insertFileAsset: async () => 1,
-        insertFileBinding: async () => {},
-        insertEvent: async () => {},
+        assets: {
+          insert: async () => 1,
+          findById: async () => null,
+        },
+        events: {
+          insert: async () => {},
+          list: async () => [],
+        },
       },
       storage: {
         putFromWebStream: async () => {
@@ -119,13 +130,24 @@ describe("uploadArtifactFile", () => {
 
     const deps: UploadArtifactDeps = {
       repo: {
-        findArtifactById: async () => makeArtifact({ status: "requested" }),
-        updateArtifactStatus: async (_id, _status, now) => {
-          updateTimes.push(now);
+        artifacts: {
+          findById: async () => makeArtifact({ status: "requested" }),
+          updateStatus: async (_id, _status, now) => {
+            updateTimes.push(now);
+          },
+          insert: async () => "unused",
+          findFileAssetForArtifact: async () => null,
+          insertFileBinding: async () => {},
+          list: async () => [],
         },
-        insertFileAsset: async () => 9,
-        insertFileBinding: async () => {},
-        insertEvent: async () => {},
+        assets: {
+          insert: async () => 9,
+          findById: async () => null,
+        },
+        events: {
+          insert: async () => {},
+          list: async () => [],
+        },
       },
       storage: {
         putFromWebStream: async () => ({

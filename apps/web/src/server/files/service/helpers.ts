@@ -33,7 +33,7 @@ export async function emitEvent(
   ctx: AppContext,
   details: Record<string, unknown> = {},
 ): Promise<void> {
-  await repo.insertEvent({
+  await repo.events.insert({
     artifactId,
     eventType,
     actorUserId: ctx.actor.userId,

@@ -109,7 +109,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         return uploadResult;
       }
 
-      const fileAsset = await repo.findFileAssetForArtifact(
+      const fileAsset = await repo.artifacts.findFileAssetForArtifact(
         artifactId,
         "source_upload",
       );

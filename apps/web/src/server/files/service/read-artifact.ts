@@ -15,7 +15,7 @@ export async function getArtifact(
   const actor = actorFromCtx(ctx);
   const { repo } = deps;
 
-  const artifact = await repo.findArtifactById(artifactId);
+  const artifact = await repo.artifacts.findById(artifactId);
   if (!artifact) {
     return Err(
       domainError("not_found", "artifact_not_found", "Artifact not found"),
@@ -27,7 +27,7 @@ export async function getArtifact(
 
   const bindingRole =
     artifact.direction === "upload" ? "source_upload" : "export_output";
-  const fileAsset = await repo.findFileAssetForArtifact(
+  const fileAsset = await repo.artifacts.findFileAssetForArtifact(
     artifactId,
     bindingRole,
   );

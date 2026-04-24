@@ -42,53 +42,63 @@ describe("requestArtifact sync export metadata", () => {
 
     const deps: RequestArtifactDeps = {
       repo: {
-        insertArtifact: async () => "artifact-42",
-        updateArtifactStatus: async () => {},
-        findArtifactById: async (id) => ({
-          id,
-          artifactType: "records_export",
-          direction: "download",
-          executionMode: "sync",
-          status: "ready",
-          requestedByUserId: 10,
-          scopeBranchId: 1,
-          scopeTeamId: null,
-          policySnapshotJson: "{}",
-          workflowContextJson: "{}",
-          errorCode: null,
-          errorMessage: null,
-          expiresAt: null,
-          createdAt: 1,
-          updatedAt: 1,
-        }),
-        findFileAssetForArtifact: async () => ({
-          id: 9,
-          storageKey: "records_export-42-1700000000000.csv",
-          originalFilename: "records-export.csv",
-          safeDisplayFilename: "records-export.csv",
-          detectedMime: "text/csv; charset=utf-8",
-          extension: "csv",
-          sizeBytes: CSV_BYTES.length,
-          sha256Hex: "hash",
-          signatureKind: "csv",
-          scanStatus: "clean",
-          scanEngine: null,
-          scanReference: null,
-          createdAt: 1,
-        }),
-        insertFileAsset: async (input) => {
-          insertedAssets.push({
-            extension: input.extension,
-            detectedMime: input.detectedMime,
-            signatureKind: input.signatureKind,
-            safeDisplayFilename: input.safeDisplayFilename,
-            storageKey: input.storageKey,
-          });
-          return 9;
+        artifacts: {
+          insert: async () => "artifact-42",
+          updateStatus: async () => {},
+          findById: async (id) => ({
+            id,
+            artifactType: "records_export",
+            direction: "download",
+            executionMode: "sync",
+            status: "ready",
+            requestedByUserId: 10,
+            scopeBranchId: 1,
+            scopeTeamId: null,
+            policySnapshotJson: "{}",
+            workflowContextJson: "{}",
+            errorCode: null,
+            errorMessage: null,
+            expiresAt: null,
+            createdAt: 1,
+            updatedAt: 1,
+          }),
+          findFileAssetForArtifact: async () => ({
+            id: 9,
+            storageKey: "records_export-42-1700000000000.csv",
+            originalFilename: "records-export.csv",
+            safeDisplayFilename: "records-export.csv",
+            detectedMime: "text/csv; charset=utf-8",
+            extension: "csv",
+            sizeBytes: CSV_BYTES.length,
+            sha256Hex: "hash",
+            signatureKind: "csv",
+            scanStatus: "clean",
+            scanEngine: null,
+            scanReference: null,
+            createdAt: 1,
+          }),
+          insertFileBinding: async () => {},
+          list: async () => [],
         },
-        insertFileBinding: async () => {},
-        insertEvent: async () => {},
+        assets: {
+          insert: async (input) => {
+            insertedAssets.push({
+              extension: input.extension,
+              detectedMime: input.detectedMime,
+              signatureKind: input.signatureKind,
+              safeDisplayFilename: input.safeDisplayFilename,
+              storageKey: input.storageKey,
+            });
+            return 9;
+          },
+          findById: async () => null,
+        },
+        events: {
+          insert: async () => {},
+          list: async () => [],
+        },
       },
+
       storage: {
         putFromWebStream: async () => ({
           sha256: "unused",
