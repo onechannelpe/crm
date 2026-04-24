@@ -6,7 +6,7 @@ import type { Database } from "../types";
 export async function run(db: Kysely<Database>): Promise<void> {
   const now = Date.now();
 
-  // --- 1. Branches ---
+  // Branches
   await db
     .insertInto("branches")
     .values([
@@ -21,7 +21,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
   const passwordHash = await hashPassword("placeholder");
   const realPasswordHash = await hashPassword("infinitypay");
 
-  // --- 2. Users (Fake - IDs 1-20) ---
+  // Demo users (IDs 1-20)
   await db
     .insertInto("users")
     .values([
@@ -309,7 +309,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // --- 3. Users (Real - IDs 21-39) ---
+  // Exp. users (IDs 21-39)
   await db
     .insertInto("users")
     .values([
@@ -583,7 +583,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // --- 4. Teams ---
+  // Teams
   await db
     .insertInto("teams")
     .values([
@@ -612,7 +612,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // --- 5. Team Assignments (Fake) ---
+  // Demo team assignments
   await db
     .updateTable("users")
     .set({ team_id: 1 })
@@ -634,25 +634,24 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .where("id", "in", [20])
     .execute();
 
-  // --- 6. Team Assignments (Real) ---
-  // Lima Executives (Team 5)
+  // Real team assignments
+  // Lima executives (team 5)
   await db
     .updateTable("users")
     .set({ team_id: 5 })
     .where("id", "in", [21, 22, 24, 25, 26, 27, 28, 31, 37, 39])
     .execute();
 
-  // Chiclayo Executives (Team 6)
+  // Chiclayo executives (team 6)
   await db
     .updateTable("users")
     .set({ team_id: 6 })
     .where("id", "in", [32, 33, 34, 35, 36, 38])
     .execute();
 
-  // Note: Luis Fernando (23), Victor (29), Jose (30) remain with team_id: null (branch-scoped).
+  // Note: (23), (29), (30) remain with team_id: null (branch-scoped).
 
-  // --- 7. Activity Logs ---
-  // These reference IDs 1-20, which are stable.
+  // Activity logs for demo users
   await db
     .insertInto("agent_status_logs")
     .values([
