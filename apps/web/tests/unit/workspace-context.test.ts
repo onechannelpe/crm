@@ -42,7 +42,7 @@ describe("workspace context resolver", () => {
     ).toThrow(/misconfigured/i);
   });
 
-  it("returns managed team context for supervisor", () => {
+  it("returns branch context for supervisor", () => {
     const context = resolveWorkspaceContext({
       role: "supervisor",
       userId: 4,
@@ -50,11 +50,11 @@ describe("workspace context resolver", () => {
       branchName: "Lima",
       userTeamId: null,
       assignedTeam: null,
-      managedTeam: { id: 3, name: "Alpha", branch_id: 1 },
+      managedTeam: null,
     });
 
-    expect(context.scopeType).toBe("team");
-    expect(context.team?.id).toBe(3);
+    expect(context.scopeType).toBe("branch");
+    expect(context.branch?.name).toBe("Lima");
     expect(context.supervisor).toBeNull();
   });
 

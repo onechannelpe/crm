@@ -54,7 +54,6 @@ export function makeMockRepos(
       ...overrides.users,
     },
     teams: {
-      findBySupervisorId: async () => undefined,
       findByIdWithSupervisor: async () => undefined,
       ...overrides.teams,
     },

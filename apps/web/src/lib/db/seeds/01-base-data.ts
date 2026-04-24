@@ -702,6 +702,20 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
     ])
     .execute();
+
+  await db
+    .insertInto("user_totp_factors")
+    .values([
+      {
+        user_id: 12,
+        secret_encrypted: "seed_dummy_secret",
+        is_enabled: 1,
+        enabled_at: now,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .execute();
 }
 
 const oneMinute = 60 * 1000;

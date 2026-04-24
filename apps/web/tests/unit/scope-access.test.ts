@@ -97,32 +97,25 @@ describe("canManageExecutive", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("supervisor can manage executive on their team in same branch", async () => {
+  it("supervisor can manage executive in same branch regardless of team", async () => {
     const actor = makeActor({ role: "supervisor", branchId: 1 });
     const target: TargetUser = { role: "executive", branchId: 1, teamId: 5 };
     const repos = makeMockRepos({
       users: { findById: async () => target },
-      teams: {
-        findBySupervisorId: async () => ({ id: 5 }),
-        findByIdWithSupervisor: async () => undefined,
-      },
     });
     const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(true);
-  });
 
-  it("supervisor cannot manage executive on a different team in same branch", async () => {
-    const actor = makeActor({ role: "supervisor", branchId: 1 });
-    const target: TargetUser = { role: "executive", branchId: 1, teamId: 7 };
-    const repos = makeMockRepos({
-      users: { findById: async () => target },
-      teams: {
-        findBySupervisorId: async () => ({ id: 5 }), // Actor is supervisor of Team 5
-        findByIdWithSupervisor: async () => undefined,
-      },
+    const targetOtherTeam: TargetUser = {
+      role: "executive",
+      branchId: 1,
+      teamId: 7,
+    };
+    const reposOther = makeMockRepos({
+      users: { findById: async () => targetOtherTeam },
     });
-    const result = await canManageExecutive(actor, 1, repos);
-    expect(result.ok).toBe(false);
+    const resultOther = await canManageExecutive(actor, 1, reposOther);
+    expect(resultOther.ok).toBe(true);
   });
 
   it("supervisor cannot manage executive on their team but in a different branch", async () => {
@@ -130,10 +123,6 @@ describe("canManageExecutive", () => {
     const target: TargetUser = { role: "executive", branchId: 2, teamId: 5 };
     const repos = makeMockRepos({
       users: { findById: async () => target },
-      teams: {
-        findBySupervisorId: async () => ({ id: 5 }),
-        findByIdWithSupervisor: async () => undefined,
-      },
     });
     const result = await canManageExecutive(actor, 1, repos);
     // Even if it's "their team id", branch boundaries usually take precedence or
