@@ -1,4 +1,4 @@
-import { type ParentProps } from "solid-js";
+import { splitProps, type JSX, type ParentProps } from "solid-js";
 
 import styles from "./styles.module.css";
 
@@ -7,30 +7,33 @@ export function PanelFooter(props: ParentProps) {
 }
 
 export function FooterButtonSecondary(
-  props: ParentProps & { onClick?: () => void },
+  props: ParentProps & JSX.ButtonHTMLAttributes<HTMLButtonElement>,
 ) {
+  const [local, buttonProps] = splitProps(props, ["children", "class"]);
+
   return (
     <button
       type="button"
-      class={styles.footerButtonSecondary}
-      onClick={props.onClick}
+      class={`${styles.footerButtonSecondary}${local.class ? ` ${local.class}` : ""}`}
+      {...buttonProps}
     >
-      {props.children}
+      {local.children}
     </button>
   );
 }
 
 export function FooterButtonPrimary(
-  props: ParentProps & { onClick?: () => void; disabled?: boolean },
+  props: ParentProps & JSX.ButtonHTMLAttributes<HTMLButtonElement>,
 ) {
+  const [local, buttonProps] = splitProps(props, ["children", "class"]);
+
   return (
     <button
       type="button"
-      class={styles.footerButtonPrimary}
-      onClick={props.onClick}
-      disabled={props.disabled}
+      class={`${styles.footerButtonPrimary}${local.class ? ` ${local.class}` : ""}`}
+      {...buttonProps}
     >
-      {props.children}
+      {local.children}
     </button>
   );
 }
