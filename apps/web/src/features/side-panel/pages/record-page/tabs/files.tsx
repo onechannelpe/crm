@@ -12,6 +12,7 @@ export function FilesTab(props: TabContentProps) {
   return (
     <Show
       when={viewProps()}
+      keyed
       fallback={
         <ActivityTabContainer>
           <ActivityTabEmptyState
@@ -24,8 +25,8 @@ export function FilesTab(props: TabContentProps) {
     >
       {(view) => (
         <FilesCard
-          leadId={view().data.lead.id}
-          canUpload={view().data.lead.stage === "CONVERTED"}
+          leadId={view.data.lead.id}
+          canUpload={view.data.lead.stage === "CONVERTED"}
         />
       )}
     </Show>

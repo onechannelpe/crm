@@ -36,14 +36,14 @@ export function MobileBackControl(props: MobileBackControlProps) {
       >
         <ChevronLeft size={16} />
         <Switch>
-          <Match when={openSettingsAction()}>
+          <Match when={openSettingsAction()} keyed>
             {(action) => (
               <button
                 type="button"
                 class={styles.mobileBack}
                 onClick={openSettingsDrawer}
               >
-                {action().label}
+                {action.label}
               </button>
             )}
           </Match>

@@ -11,7 +11,6 @@ import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 export function RecordIndexViewPicker() {
   const setup = useRecordIndexSetup();
   const model = useRecordIndexModelContext();
-  const views = setup.views;
 
   let container: HTMLDivElement | undefined;
   let menu: HTMLDivElement | undefined;
@@ -67,29 +66,27 @@ export function RecordIndexViewPicker() {
     }
 
     updateMenuPosition();
-    const rafA = window.requestAnimationFrame(() => {
-      updateMenuPosition();
-      window.requestAnimationFrame(updateMenuPosition);
-    });
 
     const handleViewportChange = () => updateMenuPosition();
     window.addEventListener("resize", handleViewportChange);
     window.addEventListener("scroll", handleViewportChange, true);
     onCleanup(() => {
-      window.cancelAnimationFrame(rafA);
       window.removeEventListener("resize", handleViewportChange);
       window.removeEventListener("scroll", handleViewportChange, true);
     });
   });
 
   return (
-    <Show when={views}>
+    <Show when={setup.views}>
       {(safeViews) => (
         <div ref={(el) => (container = el)}>
           <Show when={isOpen()}>
             <Portal>
               <div
-                ref={(element) => (menu = element)}
+                ref={(element) => {
+                  menu = element;
+                  updateMenuPosition();
+                }}
                 class={`${sharedStyles.menu} ${sharedStyles.menuFloating} ${sharedStyles.menuLeft}`}
                 id={`${setup.id}-view-picker`}
                 role="menu"
