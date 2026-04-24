@@ -93,14 +93,13 @@ export function RecordPage() {
             options={{
               showDeleteCompany: canDeleteCompany(),
               addToFavoritesDisabled: detail().lead.isFavorite,
-              onAddToFavorites: () => {
-                void addToFavorites({ leadId: detail().lead.id })
-                  .then(() => {
-                    showToast("success", "Empresa agregada a favoritos");
-                  })
-                  .catch(() => {
-                    showToast("error", "No se pudo agregar a favoritos");
-                  });
+              onAddToFavorites: async () => {
+                try {
+                  await addToFavorites({ leadId: detail().lead.id });
+                  showToast("success", "Empresa agregada a favoritos");
+                } catch {
+                  showToast("error", "No se pudo agregar a favoritos");
+                }
               },
               onExportCompany: () => {
                 const payload = {
