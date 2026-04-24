@@ -3,14 +3,14 @@ import { For } from "solid-js";
 import { FieldTable } from "~/features/side-panel/components/field-table";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
-import { LEAD_DETAIL_FIELD_LAYOUT } from "./lead-field-layout";
+import { LEAD_DETAIL_FIELD_GROUPS } from "./lead-field-layout";
+
+const ALL_FIELDS = LEAD_DETAIL_FIELD_GROUPS.flatMap((g) => g.fields);
 
 export function FieldsWidget(props: { data: LeadDetailView }) {
   return (
     <FieldTable>
-      <For each={LEAD_DETAIL_FIELD_LAYOUT}>
-        {(config) => config.renderCell(props.data)}
-      </For>
+      <For each={ALL_FIELDS}>{(config) => config.renderCell(props.data)}</For>
     </FieldTable>
   );
 }
