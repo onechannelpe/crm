@@ -11,10 +11,9 @@ import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 export function RecordIndexViewPicker() {
   const setup = useRecordIndexSetup();
   const model = useRecordIndexModelContext();
-  const views = setup.views;
 
-  let container: HTMLDivElement | undefined;
-  let menu: HTMLDivElement | undefined;
+  const [containerRef, setContainerRef] = createSignal<HTMLDivElement>();
+  const [menuRef, setMenuRef] = createSignal<HTMLDivElement>();
   const [menuPosition, setMenuPosition] = createSignal({ left: 0, top: 0 });
 
   const MENU_GUTTER = 8;
@@ -24,7 +23,7 @@ export function RecordIndexViewPicker() {
   const isOpen = () => model.columns.openMenu() === "views";
 
   function resolveTrigger() {
-    const parent = container?.parentElement;
+    const parent = containerRef()?.parentElement;
     if (!parent) {
       return undefined;
     }
@@ -37,6 +36,7 @@ export function RecordIndexViewPicker() {
     if (!trigger) {
       return;
     }
+    const menu = menuRef();
 
     const rect = trigger.getBoundingClientRect();
     const menuWidth = menu?.offsetWidth ?? FALLBACK_MENU_WIDTH;
@@ -57,8 +57,8 @@ export function RecordIndexViewPicker() {
   useDismissibleLayer({
     enabled: isOpen,
     onDismiss: () => model.columns.setOpenMenu(null),
-    getContainer: () => container?.parentElement ?? container,
-    getAdditionalContainers: () => [menu],
+    getContainer: () => containerRef()?.parentElement ?? containerRef(),
+    getAdditionalContainers: () => [menuRef()],
   });
 
   createEffect(() => {
@@ -67,29 +67,27 @@ export function RecordIndexViewPicker() {
     }
 
     updateMenuPosition();
-    const rafA = window.requestAnimationFrame(() => {
-      updateMenuPosition();
-      window.requestAnimationFrame(updateMenuPosition);
-    });
 
     const handleViewportChange = () => updateMenuPosition();
     window.addEventListener("resize", handleViewportChange);
     window.addEventListener("scroll", handleViewportChange, true);
     onCleanup(() => {
-      window.cancelAnimationFrame(rafA);
       window.removeEventListener("resize", handleViewportChange);
       window.removeEventListener("scroll", handleViewportChange, true);
     });
   });
 
   return (
-    <Show when={views}>
+    <Show when={setup.views}>
       {(safeViews) => (
-        <div ref={(el) => (container = el)}>
+        <div ref={setContainerRef}>
           <Show when={isOpen()}>
             <Portal>
               <div
-                ref={(element) => (menu = element)}
+                ref={(element) => {
+                  setMenuRef(element);
+                  updateMenuPosition();
+                }}
                 class={`${sharedStyles.menu} ${sharedStyles.menuFloating} ${sharedStyles.menuLeft}`}
                 id={`${setup.id}-view-picker`}
                 role="menu"

@@ -44,9 +44,9 @@ export function Footer(props: FooterProps) {
   const [isOptionsOpen, setIsOptionsOpen] = createSignal(false);
   const [isMac, setIsMac] = createSignal(false);
   const [menuPosition, setMenuPosition] = createSignal({ left: 0, top: 0 });
-  let optionsRootRef: HTMLDivElement | undefined;
-  let optionsTriggerRef: HTMLButtonElement | undefined;
-  let optionsMenuRef: HTMLDivElement | undefined;
+  const [rootRef, setRootRef] = createSignal<HTMLDivElement>();
+  const [triggerRef, setTriggerRef] = createSignal<HTMLButtonElement>();
+  const [menuRef, setMenuRef] = createSignal<HTMLDivElement>();
 
   const modKeyLabel = createMemo(() => (isMac() ? "⌘" : "Ctrl"));
   const hasOptionsMenu = createMemo(() => props.options !== undefined);
@@ -66,15 +66,16 @@ export function Footer(props: FooterProps) {
   };
 
   const updateOptionsMenuPosition = () => {
-    const trigger = optionsTriggerRef;
+    const trigger = triggerRef();
     if (!trigger) return;
 
     const MENU_GUTTER = 8;
     const MENU_OFFSET = 8;
     const FALLBACK_MENU_WIDTH = 232;
     const rect = trigger.getBoundingClientRect();
-    const menuWidth = optionsMenuRef?.offsetWidth ?? FALLBACK_MENU_WIDTH;
-    const menuHeight = optionsMenuRef?.offsetHeight ?? 0;
+    const menu = menuRef();
+    const menuWidth = menu?.offsetWidth ?? FALLBACK_MENU_WIDTH;
+    const menuHeight = menu?.offsetHeight ?? 0;
     const maxLeft = Math.max(
       MENU_GUTTER,
       window.innerWidth - menuWidth - MENU_GUTTER,
@@ -93,8 +94,8 @@ export function Footer(props: FooterProps) {
   useDismissibleLayer({
     enabled: isOptionsOpen,
     onDismiss: closeOptionsMenu,
-    getContainer: () => optionsRootRef,
-    getAdditionalContainers: () => [optionsMenuRef],
+    getContainer: () => rootRef(),
+    getAdditionalContainers: () => [menuRef()],
   });
 
   onMount(() => {
@@ -134,13 +135,13 @@ export function Footer(props: FooterProps) {
           </FooterButtonSecondary>
         }
       >
-        <div class={styles.optionsRoot} ref={(el) => (optionsRootRef = el)}>
+        <div class={styles.optionsRoot} ref={setRootRef}>
           <FooterButtonSecondary
             onClick={toggleOptionsMenu}
             aria-haspopup="menu"
             aria-expanded={isOptionsOpen()}
             class={styles.optionsTrigger}
-            ref={(el) => (optionsTriggerRef = el)}
+            ref={setTriggerRef}
           >
             <FooterLabel>Opciones</FooterLabel>
             <FooterDots />
@@ -154,7 +155,7 @@ export function Footer(props: FooterProps) {
             class={styles.optionsMenu}
             role="menu"
             ref={(el) => {
-              optionsMenuRef = el;
+              setMenuRef(el);
               updateOptionsMenuPosition();
             }}
             style={{

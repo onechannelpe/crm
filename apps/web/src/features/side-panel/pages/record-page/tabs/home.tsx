@@ -22,22 +22,22 @@ export function HomeTab(props: TabContentProps) {
 
   return (
     <Switch>
-      <Match when={viewProps()}>
+      <Match when={viewProps()} keyed>
         {(view) => (
           <div class={styles.homeContent}>
-            <DetailContent data={view().data} />
+            <DetailContent data={view.data} />
           </div>
         )}
       </Match>
-      <Match when={createProps()}>
+      <Match when={createProps()} keyed>
         {(create) => (
           <div class={styles.homeContent}>
             <CreateContent
-              razonSocial={create().razonSocial}
-              address={create().address}
-              engineStatus={create().engineStatus}
-              submitting={create().submitting}
-              onSubmit={create().onSubmit}
+              razonSocial={create.razonSocial}
+              address={create.address}
+              engineStatus={create.engineStatus}
+              submitting={create.submitting}
+              onSubmit={create.onSubmit}
             />
           </div>
         )}
