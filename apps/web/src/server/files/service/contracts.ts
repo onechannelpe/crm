@@ -24,7 +24,6 @@ export interface ArtifactRepos {
   sales: ReturnType<typeof createSalesRepo>;
 }
 
-
 export interface SyncExecutor {
   run(
     artifactType: ArtifactType,
