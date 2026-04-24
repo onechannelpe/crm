@@ -4,14 +4,14 @@ import { useToast } from "~/components/feedback/toast/provider";
 import ChevronRight from "~/components/icons/chevron-right";
 import Link from "~/components/icons/link";
 import List from "~/components/icons/list";
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 import { useRecordIndexModelContext } from "../../context/model-context";
 import { useRecordIndexSetup } from "../../context/setup-context";
-
 import { DropdownMenuHeader } from "./menu-primitives";
 import type { OptionsContentId } from "./types";
+
 import styles from "./view-bar.module.css";
+import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 export function OptionsDropdown(props: { onClose: () => void }) {
   const model = useRecordIndexModelContext();

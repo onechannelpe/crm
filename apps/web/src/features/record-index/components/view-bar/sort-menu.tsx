@@ -7,13 +7,13 @@ import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
 import User from "~/components/icons/user";
 import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 import { useRecordIndexModelContext } from "../../context/model-context";
 import { useRecordIndexSetup } from "../../context/setup-context";
-
 import { DropdownMenuHeader, parseSortDirection } from "./menu-primitives";
 import type { SortDirection, SortFieldPrefix } from "./types";
+
+import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 type SortMenuProps = {
   isOpen: boolean;

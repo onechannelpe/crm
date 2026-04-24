@@ -6,13 +6,13 @@ import List from "~/components/icons/list";
 import Search from "~/components/icons/search";
 import Target from "~/components/icons/target";
 import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 import { useRecordIndexModelContext } from "../../context/model-context";
 import { useRecordIndexSetup } from "../../context/setup-context";
-
 import { DropdownMenuHeader } from "./menu-primitives";
 import type { FilterFieldId, MenuOption } from "./types";
+
+import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 type FilterMenuProps = {
   isOpen: boolean;
@@ -25,7 +25,9 @@ export function FilterMenu(props: FilterMenuProps) {
   const setup = useRecordIndexSetup();
 
   const [filterSearch, setFilterSearch] = createSignal("");
-  const [filterField, setFilterField] = createSignal<FilterFieldId | null>(null);
+  const [filterField, setFilterField] = createSignal<FilterFieldId | null>(
+    null,
+  );
 
   const normalizedFilterSearch = createMemo(() =>
     filterSearch().trim().toLocaleLowerCase(),

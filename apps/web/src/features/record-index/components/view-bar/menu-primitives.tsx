@@ -2,6 +2,7 @@ import { Show } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import X from "~/components/icons/x";
+
 import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 export function DropdownMenuHeader(props: {
