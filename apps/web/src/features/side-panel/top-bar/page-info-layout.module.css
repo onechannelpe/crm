@@ -27,7 +27,7 @@
 
 .titleWrapper {
   color: var(--foreground);
-  font-size: var(--font-size-body);
+  font-size: var(--t-font-size-md);
   font-weight: var(--font-weight-semibold);
   max-width: 150px;
   min-width: 0;
@@ -40,6 +40,6 @@
 .label {
   color: var(--foreground-tertiary);
   flex-shrink: 0;
-  font-size: var(--font-size-sm);
+  font-size: var(--t-font-size-sm);
   white-space: nowrap;
 }

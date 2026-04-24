@@ -13,13 +13,9 @@ import { TabStrip } from "../../components/tab-strip";
 import { useScopedHotkey } from "../../core/hotkeys/create-scoped-hotkey";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadRecordDetailSidePanelPage } from "../../types/side-panel-page";
-import {
-  HIDDEN_TAB_ITEMS,
-  TAB_ITEMS,
-  type ExtendedTabId,
-  type TabId,
-} from "../record-page/constants";
+import { ALL_TAB_ITEMS } from "../record-page/constants";
 import { Footer } from "../record-page/footer";
+import type { LeadRecordTabId } from "../record-page/model";
 import type {
   CreateTabContentProps,
   TabContentProps,
@@ -35,7 +31,7 @@ import { useCreateLeadPageState } from "./state";
 import styles from "../record-page/page.module.css";
 
 const TAB_COMPONENTS: Record<
-  ExtendedTabId,
+  LeadRecordTabId,
   (props: TabContentProps) => JSX.Element
 > = {
   home: HomeTab,
@@ -121,12 +117,10 @@ export function CreateLeadPage() {
     <div class={styles.pageShell}>
       <PanelList>
         <div class={styles.page}>
-          <TabStrip<ExtendedTabId, TabId>
-            tabs={TAB_ITEMS}
-            hiddenTabs={HIDDEN_TAB_ITEMS}
+          <TabStrip
+            tabs={ALL_TAB_ITEMS}
             activeTab={activeTab()}
             onTabSelect={setActiveTab}
-            onHiddenTabSelect={setActiveTab}
           />
 
           <Dynamic
