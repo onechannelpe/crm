@@ -13,5 +13,4 @@
 
 .scrollBody {
   overflow-y: auto;
-  padding: var(--spacing-3) var(--spacing-3) var(--spacing-6);
 }
