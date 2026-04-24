@@ -185,6 +185,9 @@ export interface ArtifactRepo {
     now: number;
   }): Promise<number>;
   listSaleProofFilesByLead(leadId: string): Promise<SaleProofFileRecord[]>;
+  findSaleProofFileByArtifactId(
+    artifactId: string,
+  ): Promise<SaleProofFileRecord | null>;
 }
 
 export function createArtifactRepo(db: DB): ArtifactRepo {
@@ -483,6 +486,52 @@ export function createArtifactRepo(db: DB): ArtifactRepo {
         detectedMime: row.detectedMime,
         sizeBytes: row.sizeBytes,
       }));
+    },
+
+    async findSaleProofFileByArtifactId(artifactId) {
+      const row = await db
+        .selectFrom("workflow_sale_proof_files")
+        .innerJoin(
+          "workflow_artifacts",
+          "workflow_artifacts.id",
+          "workflow_sale_proof_files.artifact_id",
+        )
+        .innerJoin(
+          "file_assets",
+          "file_assets.id",
+          "workflow_sale_proof_files.file_asset_id",
+        )
+        .select([
+          "workflow_sale_proof_files.id as id",
+          "workflow_sale_proof_files.lead_id as leadId",
+          "workflow_sale_proof_files.sale_id as saleId",
+          "workflow_sale_proof_files.artifact_id as artifactId",
+          "workflow_sale_proof_files.file_asset_id as fileAssetId",
+          "workflow_sale_proof_files.uploaded_by_user_id as uploadedByUserId",
+          "workflow_sale_proof_files.created_at as createdAt",
+          "workflow_artifacts.status as artifactStatus",
+          "file_assets.safe_display_filename as safeDisplayFilename",
+          "file_assets.detected_mime as detectedMime",
+          "file_assets.size_bytes as sizeBytes",
+        ])
+        .where("workflow_sale_proof_files.artifact_id", "=", artifactId)
+        .executeTakeFirst();
+
+      if (!row) return null;
+
+      return {
+        id: row.id,
+        leadId: row.leadId,
+        saleId: row.saleId,
+        artifactId: row.artifactId,
+        fileAssetId: row.fileAssetId,
+        uploadedByUserId: row.uploadedByUserId,
+        createdAt: row.createdAt,
+        artifactStatus: row.artifactStatus,
+        safeDisplayFilename: row.safeDisplayFilename,
+        detectedMime: row.detectedMime,
+        sizeBytes: row.sizeBytes,
+      };
     },
   };
 }

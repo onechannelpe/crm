@@ -36,14 +36,11 @@ export function FilesCard(props: FilesCardProps) {
     file: LeadSaleProofFileView;
     previewUrl: string;
   } | null>(null);
-  const fileInputId = `lead-sale-proof-upload-input-${props.leadId}`;
+  const [fileInputRef, setFileInputRef] = createSignal<HTMLInputElement>();
 
   const { attachments, refetch } = useAttachments(() => props.leadId);
   const { uploading, uploadAttachmentFile } = useUploadAttachmentFile({
     leadId: () => props.leadId,
-    onUploaded: async () => {
-      await refetch();
-    },
   });
 
   async function uploadFiles(files: File[]) {
@@ -54,6 +51,7 @@ export function FilesCard(props: FilesCardProps) {
     setError(null);
     try {
       await Promise.all(files.map((file) => uploadAttachmentFile(file)));
+      await refetch();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo subir el archivo",
@@ -102,7 +100,7 @@ export function FilesCard(props: FilesCardProps) {
         action={
           <>
             <input
-              id={fileInputId}
+              ref={setFileInputRef}
               type="file"
               accept=".pdf,.png,.jpg,.jpeg"
               class={styles.fileInput}
@@ -120,12 +118,7 @@ export function FilesCard(props: FilesCardProps) {
               class={styles.addFileButton}
               disabled={!props.canUpload || uploading()}
               loading={uploading()}
-              onClick={() => {
-                const input = window.document.getElementById(fileInputId);
-                if (input instanceof HTMLInputElement) {
-                  input.click();
-                }
-              }}
+              onClick={() => fileInputRef()?.click()}
             >
               <Plus size={14} />
               Agregar archivo

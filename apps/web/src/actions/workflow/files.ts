@@ -264,10 +264,10 @@ export async function requestLeadSaleProofDownloadToken(input: {
         return canAccess;
       }
 
-      const saleProofs = await files.repo.listSaleProofFilesByLead(
-        input.leadId,
+      const saleProof = await files.repo.findSaleProofFileByArtifactId(
+        input.artifactId,
       );
-      if (!saleProofs.some((proof) => proof.artifactId === input.artifactId)) {
+      if (!saleProof || saleProof.leadId !== input.leadId) {
         return Err(
           domainError(
             "not_found",

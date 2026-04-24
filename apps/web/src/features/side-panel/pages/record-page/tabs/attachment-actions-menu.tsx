@@ -92,6 +92,7 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
             <button
               type="button"
               class={styles.actionsMenuItem}
+              role="menuitem"
               disabled={!props.onPreview}
               onClick={() => {
                 if (!props.onPreview) return;
@@ -104,6 +105,7 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
             <button
               type="button"
               class={styles.actionsMenuItem}
+              role="menuitem"
               disabled={props.file.status !== "ready"}
               onClick={() => {
                 void props.onDownload(props.file.artifactId);
