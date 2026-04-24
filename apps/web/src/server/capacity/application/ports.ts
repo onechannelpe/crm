@@ -26,9 +26,6 @@ export interface CapacityApprovalTxPort {
   findManagedUserById(
     userId: number,
   ): Promise<ManageableCapacityUser | undefined>;
-  findSupervisedTeamBySupervisorId(
-    supervisorId: number,
-  ): Promise<{ id: number } | undefined>;
   findManagedTeamById(teamId: number): Promise<CapacityTeam | undefined>;
   grantSearchCapacity(input: {
     userId: number;

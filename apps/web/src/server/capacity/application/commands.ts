@@ -38,8 +38,6 @@ function toManagedScopeRepos(tx: CapacityApprovalTxPort) {
       },
     },
     teams: {
-      findBySupervisorId: (supervisorId: number) =>
-        tx.findSupervisedTeamBySupervisorId(supervisorId),
       findByIdWithSupervisor: async (teamId: number) => {
         const team = await tx.findManagedTeamById(teamId);
         return team ?? undefined;
