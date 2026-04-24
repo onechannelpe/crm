@@ -1,5 +1,7 @@
+import { ResponsiveImage } from "@crm/images";
 import { onMount, type JSX } from "solid-js";
 
+import logo from "~/assets/images/logo/logo.webp?responsive";
 import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
 
 import styles from "./auth-flow-shell.module.css";
@@ -25,8 +27,8 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
         ) : null}
         <div class={styles.content}>
           <div class={styles.logo}>
-            <img
-              src="/favicon.ico"
+            <ResponsiveImage
+              sources={logo}
               alt="CRM"
               width="40"
               height="40"

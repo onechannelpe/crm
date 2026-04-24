@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 
+import { responsiveImagesPlugin } from "@crm/images/vite";
 import mdx from "@mdx-js/rollup";
 import { solidStart } from "@solidjs/start/config";
 import { nitroV2Plugin } from "@solidjs/vite-plugin-nitro-2";
@@ -59,6 +60,7 @@ export default defineConfig({
       preset: "bun",
     }),
     visualizer(),
+    responsiveImagesPlugin(),
   ],
   esbuild: {
     target: "es2022",
