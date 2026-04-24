@@ -20,12 +20,9 @@ export async function getCurrentUser(
 
   const strongAuthStatus = await getStrongAuthStatus(userId, deps.repos);
 
-  const [branch, assignedTeam, managedTeam] = await Promise.all([
+  const [branch, assignedTeam] = await Promise.all([
     deps.repos.branches.findById(user.branch_id),
     user.team_id ? deps.repos.teams.findByIdWithSupervisor(user.team_id) : null,
-    role === "supervisor"
-      ? deps.repos.teams.findBySupervisorId(user.id)
-      : Promise.resolve(null),
   ]);
 
   const workspace = resolveWorkspaceContext({
@@ -46,13 +43,7 @@ export async function getCurrentUser(
           supervisor_branch_id: assignedTeam.supervisor_branch_id,
         }
       : null,
-    managedTeam: managedTeam
-      ? {
-          id: managedTeam.id,
-          name: managedTeam.name,
-          branch_id: managedTeam.branch_id,
-        }
-      : null,
+    managedTeam: null,
   });
 
   return Ok({

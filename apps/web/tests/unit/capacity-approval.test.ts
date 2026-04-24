@@ -65,7 +65,6 @@ function makeContext(role: Role = "admin"): AppContext {
 function makeHarness(input: {
   request: RequestRow | undefined;
   targetUser?: ManagedUser | undefined;
-  supervisedTeamId?: number | undefined;
   failMarkApproved?: boolean;
 }) {
   let request = input.request ? { ...input.request } : undefined;
@@ -113,10 +112,6 @@ function makeHarness(input: {
         },
         findManagedUserById: async (userId: number) =>
           userId === input.request?.userId ? input.targetUser : undefined,
-        findSupervisedTeamBySupervisorId: async (userId: number) =>
-          userId === ACTOR_USER_ID && input.supervisedTeamId
-            ? { id: input.supervisedTeamId }
-            : undefined,
         findManagedTeamById: async () => undefined,
         grantSearchCapacity: async (values: GrantRow) => {
           draftSearchGrants.push(values);

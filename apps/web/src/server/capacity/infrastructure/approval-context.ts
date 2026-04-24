@@ -57,9 +57,6 @@ export function createCapacityApprovalContext(
             }
             return user;
           },
-          findSupervisedTeamBySupervisorId(supervisorId) {
-            return repos.teams.findBySupervisorId(supervisorId);
-          },
           async findManagedTeamById(teamId) {
             const team = await repos.teams.findByIdWithSupervisor(teamId);
             if (!team) {

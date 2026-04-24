@@ -81,15 +81,6 @@ export function resolveWorkspaceContext(
     };
   }
 
-  if (input.role === "supervisor") {
-    return {
-      scopeType,
-      team: createTeam(input.managedTeam),
-      supervisor: null,
-      branch,
-    };
-  }
-
   return {
     scopeType,
     team: null,

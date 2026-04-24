@@ -15,7 +15,6 @@ interface ScopeRepos<
     findById(id: number): Promise<T | undefined>;
   };
   teams: {
-    findBySupervisorId(id: number): Promise<{ id: number } | undefined>;
     findByIdWithSupervisor(id: number): Promise<CapacityTeam | undefined>;
   };
 }
@@ -23,14 +22,13 @@ interface ScopeRepos<
 function canManageExecutiveRecord(
   actor: AuthSession,
   target: ManageableCapacityUser,
-  supervisedTeamId: number | null,
 ): boolean {
   if (target.role !== "executive") return false;
   if (actor.role === "superuser") return true;
   if (target.branchId !== actor.branchId) return false;
   if (actor.role === "admin") return true;
-  if (actor.role !== "supervisor" || supervisedTeamId == null) return false;
-  return target.teamId === supervisedTeamId;
+  if (actor.role === "supervisor") return true;
+  return false;
 }
 
 export async function canManageExecutive<T extends ManageableCapacityUser>(
@@ -41,12 +39,7 @@ export async function canManageExecutive<T extends ManageableCapacityUser>(
   const target = await repos.users.findById(targetUserId);
   if (!target) return { ok: false, target: null };
 
-  const supervisedTeamId =
-    actor.role === "supervisor"
-      ? ((await repos.teams.findBySupervisorId(actor.userId))?.id ?? null)
-      : null;
-
-  if (!canManageExecutiveRecord(actor, target, supervisedTeamId)) {
+  if (!canManageExecutiveRecord(actor, target)) {
     return { ok: false, target };
   }
   return { ok: true, target };

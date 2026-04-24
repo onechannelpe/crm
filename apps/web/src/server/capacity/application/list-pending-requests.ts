@@ -32,16 +32,7 @@ export async function listPendingRequests(
       teamId: request.team_id,
       branchId: request.branch_id,
     }));
-    if (ctx.actor.role !== "supervisor") return Ok(scopedPending);
-
-    const supervisedTeam = await deps.repos.teams.findBySupervisorId(
-      ctx.actor.userId,
-    );
-    if (!supervisedTeam) return Ok([]);
-
-    return Ok(
-      scopedPending.filter((request) => request.teamId === supervisedTeam.id),
-    );
+    return Ok(scopedPending);
   } catch (error) {
     return Err(
       domainError(

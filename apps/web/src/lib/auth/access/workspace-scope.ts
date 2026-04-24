@@ -2,13 +2,14 @@ import type { Role } from "./rbac";
 
 export type WorkspaceScopeType = "team" | "branch" | "global";
 
-const TEAM_SCOPED_ROLES = new Set<Role>(["executive", "supervisor"]);
+const TEAM_SCOPED_ROLES = new Set<Role>(["executive"]);
 const BRANCH_SCOPED_ROLES = new Set<Role>([
   "back_office",
   "sales_manager",
   "logistics",
   "hr",
   "admin",
+  "supervisor",
 ]);
 
 export function getWorkspaceScopeForRole(role: Role): WorkspaceScopeType {

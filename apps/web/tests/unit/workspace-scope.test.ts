@@ -5,10 +5,10 @@ import { getWorkspaceScopeForRole } from "../../src/lib/auth/access/workspace-sc
 describe("workspace scope policy", () => {
   it("maps team-scoped roles", () => {
     expect(getWorkspaceScopeForRole("executive")).toBe("team");
-    expect(getWorkspaceScopeForRole("supervisor")).toBe("team");
   });
 
   it("maps branch-scoped roles", () => {
+    expect(getWorkspaceScopeForRole("supervisor")).toBe("branch");
     expect(getWorkspaceScopeForRole("admin")).toBe("branch");
     expect(getWorkspaceScopeForRole("hr")).toBe("branch");
     expect(getWorkspaceScopeForRole("logistics")).toBe("branch");
