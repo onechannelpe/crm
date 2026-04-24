@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@crm/email-composer": "workspace:*",
+    "@crm/images": "workspace:*",
     "@crm/message-channels": "workspace:*",
     "@libsql/client": "^0.17.2",
     "@mdx-js/rollup": "^3.1.1",

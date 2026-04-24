@@ -3,6 +3,8 @@ import type { DocumentComponentProps } from "@solidjs/start/server";
 import { createHandler, StartServer } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 
+import favicon from "~/assets/images/logo/logo.ico";
+
 import { CSRF_CONFIG } from "./lib/security/csrf-config";
 
 function RequestMeta() {
@@ -29,6 +31,7 @@ export default createHandler(
               />
               <RequestMeta />
               <title>Culqi360</title>
+              <link rel="icon" type="image/x-icon" href={favicon} />
               {assets}
             </head>
             <body>
