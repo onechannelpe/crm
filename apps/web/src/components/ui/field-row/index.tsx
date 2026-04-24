@@ -9,6 +9,7 @@ import {
   FieldLabel,
   FieldLabelText,
   FieldRow,
+  FieldTextValue,
   FieldValue,
   FieldValueDisplay,
 } from "~/features/side-panel/components/field-table";
@@ -84,7 +85,7 @@ export function RelationFieldRow(props: RelationFieldRowProps) {
           {props.renderValue ? (
             props.renderValue()
           ) : (
-            <span>{props.value || "—"}</span>
+            <FieldTextValue>{props.value || "—"}</FieldTextValue>
           )}
         </FieldValueDisplay>
         <Show when={props.isEditable}>
