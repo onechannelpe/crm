@@ -53,7 +53,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
     const mbw = moreButtonWidth();
     const allTabs = props.tabs;
 
-    if (Object.keys(widths).length < allTabs.length || cw === 0) {
+    if (cw === 0) {
       return allTabs.length;
     }
 
@@ -72,6 +72,27 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
 
   const hiddenTabs = createMemo(() => props.tabs.slice(visibleTabCount()));
 
+  const { observe, unobserve } = makeResizeObserver((entries) => {
+    let tabsChanged = false;
+    for (const entry of entries) {
+      const w = Math.round(entry.contentRect.width);
+      if (entry.target === containerRef) {
+        setContainerWidth(w);
+      } else if (entry.target === moreButtonMeasureRef) {
+        setMoreButtonWidth(w);
+      } else {
+        const id = elToTabId.get(entry.target);
+        if (id !== undefined && tabWidthsCache[id] !== w) {
+          tabWidthsCache[id] = w;
+          tabsChanged = true;
+        }
+      }
+    }
+    if (tabsChanged) {
+      setTabWidths({ ...tabWidthsCache });
+    }
+  });
+
   onMount(() => {
     const handleDocumentPointerDown = (event: PointerEvent) => {
       if (!isOverflowOpen()) return;
@@ -84,42 +105,38 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
     onCleanup(() =>
       document.removeEventListener("pointerdown", handleDocumentPointerDown),
     );
-
-    const { observe } = makeResizeObserver((entries) => {
-      let tabsChanged = false;
-      for (const entry of entries) {
-        const w = Math.round(entry.contentRect.width);
-        if (entry.target === containerRef) {
-          setContainerWidth(w);
-        } else if (entry.target === moreButtonMeasureRef) {
-          setMoreButtonWidth(w);
-        } else {
-          const id = elToTabId.get(entry.target);
-          if (id !== undefined && tabWidthsCache[id] !== w) {
-            tabWidthsCache[id] = w;
-            tabsChanged = true;
-          }
-        }
-      }
-      if (tabsChanged) {
-        setTabWidths({ ...tabWidthsCache });
-      }
-    });
-
-    if (containerRef) observe(containerRef);
-    if (moreButtonMeasureRef) observe(moreButtonMeasureRef);
-    elToTabId.forEach((_tabId, el) => observe(el));
   });
 
   return (
-    <div class={styles.tabs} ref={(el) => (containerRef = el)}>
+    <div
+      class={styles.tabs}
+      ref={(el) => {
+        containerRef = el;
+        if (el) observe(el);
+      }}
+    >
       {/* Off-screen: render all tabs to measure their natural widths */}
       <div class={styles.hiddenMeasure}>
         <For each={props.tabs}>
           {(tab) => {
+            let el: HTMLDivElement | undefined;
+            onCleanup(() => {
+              if (el) {
+                unobserve(el);
+                elToTabId.delete(el);
+              }
+            });
+
             const Icon = tab.icon;
             return (
-              <div ref={(el) => elToTabId.set(el, tab.id)} class={styles.tab}>
+              <div
+                ref={(_el) => {
+                  el = _el;
+                  elToTabId.set(_el, tab.id);
+                  observe(_el);
+                }}
+                class={styles.tab}
+              >
                 <span class={styles.tabContent}>
                   {Icon && <Icon size={16} />}
                   <span>{tab.label}</span>
@@ -128,9 +145,15 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             );
           }}
         </For>
-        <div ref={(el) => (moreButtonMeasureRef = el)} class={styles.moreTab}>
+        <div
+          ref={(el) => {
+            moreButtonMeasureRef = el;
+            if (el) observe(el);
+          }}
+          class={styles.moreTab}
+        >
           <span class={styles.moreTabContent}>
-            <span>+1 más</span>
+            <span>+99 más</span>
             <ChevronDown size={16} />
           </span>
         </div>
