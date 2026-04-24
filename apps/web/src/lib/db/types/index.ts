@@ -123,6 +123,7 @@ export {
   type ArtifactFileBindingsTable,
   type ArtifactEventsTable,
   type ArtifactDownloadTokensTable,
+  type WorkflowSaleProofFilesTable,
 } from "./12-workflow-files";
 
 export interface Database {
@@ -197,4 +198,5 @@ export interface Database {
   artifact_file_bindings: workflowFiles.ArtifactFileBindingsTable;
   artifact_events: workflowFiles.ArtifactEventsTable;
   artifact_download_tokens: workflowFiles.ArtifactDownloadTokensTable;
+  workflow_sale_proof_files: workflowFiles.WorkflowSaleProofFilesTable;
 }

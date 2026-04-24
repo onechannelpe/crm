@@ -42,7 +42,7 @@ const TAB_COMPONENTS: Record<
   timeline: TimelineTab,
   tasks: TasksTab,
   notes: NotesTab,
-  files: () => <FilesTab />,
+  files: FilesTab,
   emails: () => <HiddenTabContent title="Correos" />,
   calendar: () => <HiddenTabContent title="Calendario" />,
 };

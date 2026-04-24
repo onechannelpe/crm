@@ -2,7 +2,7 @@ import type { Generated } from "kysely";
 
 export interface WorkflowArtifactsTable {
   id: string;
-  artifact_type: "records_export" | "integration_import";
+  artifact_type: "records_export" | "integration_import" | "sale_proof";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
   status:
@@ -78,10 +78,21 @@ export interface ArtifactDownloadTokensTable {
   created_at: number;
 }
 
+export interface WorkflowSaleProofFilesTable {
+  id: Generated<number>;
+  lead_id: string;
+  sale_id: string;
+  artifact_id: string;
+  file_asset_id: number;
+  uploaded_by_user_id: number;
+  created_at: number;
+}
+
 export type Db = {
   workflow_artifacts: WorkflowArtifactsTable;
   file_assets: FileAssetsTable;
   artifact_file_bindings: ArtifactFileBindingsTable;
   artifact_events: ArtifactEventsTable;
   artifact_download_tokens: ArtifactDownloadTokensTable;
+  workflow_sale_proof_files: WorkflowSaleProofFilesTable;
 };

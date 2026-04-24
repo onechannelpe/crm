@@ -30,6 +30,7 @@ const DIRECTION_MAP: Record<
 > = {
   records_export: "download",
   integration_import: "upload",
+  sale_proof: "upload",
 };
 
 async function runSyncExport(
@@ -140,7 +141,12 @@ export async function requestArtifact(
   deps: RequestArtifactDeps,
 ): Promise<Result<ArtifactWithAsset, DomainError>> {
   const actor = actorFromCtx(ctx);
-  const policyResult = checkArtifactPolicy(actor, null, "artifact.request");
+  const policyResult = checkArtifactPolicy(
+    actor,
+    null,
+    "artifact.request",
+    input.artifactType,
+  );
   if (isErr(policyResult)) return policyResult;
 
   const { repo, storage, syncExecutor } = deps;

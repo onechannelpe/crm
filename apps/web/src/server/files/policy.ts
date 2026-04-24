@@ -23,6 +23,7 @@ const ARTIFACT_DIRECTIONS: Record<
 > = {
   records_export: "download",
   integration_import: "upload",
+  sale_proof: "upload",
 };
 
 function deny(code: string, message: string): Result<void, DomainError> {
@@ -37,6 +38,10 @@ function canRequest(
   actor: PolicyActor,
   artifactType: ArtifactType,
 ): Result<void, DomainError> {
+  if (artifactType === "sale_proof" && actor.role === "executive") {
+    return allow();
+  }
+
   if (!hasPermission(actor.role, "file:artifact:request")) {
     return deny(
       "artifact_request_forbidden",
@@ -58,11 +63,13 @@ function canUpload(
   actor: PolicyActor,
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
-  if (!hasPermission(actor.role, "file:artifact:upload")) {
-    return deny(
-      "artifact_upload_forbidden",
-      "Not authorized to upload artifacts",
-    );
+  if (artifact.artifactType !== "sale_proof" || actor.role !== "executive") {
+    if (!hasPermission(actor.role, "file:artifact:upload")) {
+      return deny(
+        "artifact_upload_forbidden",
+        "Not authorized to upload artifacts",
+      );
+    }
   }
 
   const dir = ARTIFACT_DIRECTIONS[artifact.artifactType];
@@ -98,7 +105,10 @@ function canRead(
   actor: PolicyActor,
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
-  if (!hasPermission(actor.role, "file:artifact:read")) {
+  if (
+    (artifact.artifactType !== "sale_proof" || actor.role !== "executive") &&
+    !hasPermission(actor.role, "file:artifact:read")
+  ) {
     return deny("artifact_read_forbidden", "Not authorized to read artifacts");
   }
 
@@ -164,10 +174,14 @@ export function checkArtifactPolicy(
   actor: PolicyActor,
   artifact: WorkflowArtifact | null,
   action: PolicyAction,
+  requestArtifactType?: ArtifactType,
 ): Result<void, DomainError> {
   switch (action) {
     case "artifact.request":
-      return canRequest(actor, artifact?.artifactType ?? "records_export");
+      return canRequest(
+        actor,
+        requestArtifactType ?? artifact?.artifactType ?? "records_export",
+      );
     case "artifact.upload":
       if (!artifact) {
         return deny("artifact_not_found", "Artifact not found");

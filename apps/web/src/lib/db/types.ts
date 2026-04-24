@@ -962,11 +962,12 @@ export interface Database {
   artifact_file_bindings: ArtifactFileBindingsTable;
   artifact_events: ArtifactEventsTable;
   artifact_download_tokens: ArtifactDownloadTokensTable;
+  workflow_sale_proof_files: WorkflowSaleProofFilesTable;
 }
 
 export interface WorkflowArtifactsTable {
   id: string;
-  artifact_type: "records_export" | "integration_import";
+  artifact_type: "records_export" | "integration_import" | "sale_proof";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
   status:
@@ -1039,5 +1040,15 @@ export interface ArtifactDownloadTokensTable {
   requested_by_user_id: number;
   expires_at: number;
   used_at: number | null;
+  created_at: number;
+}
+
+export interface WorkflowSaleProofFilesTable {
+  id: Generated<number>;
+  lead_id: string;
+  sale_id: string;
+  artifact_id: string;
+  file_asset_id: number;
+  uploaded_by_user_id: number;
   created_at: number;
 }

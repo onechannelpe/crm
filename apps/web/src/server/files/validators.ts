@@ -9,6 +9,7 @@ const PATH_SEGMENT_RE = /[/\\]/;
 const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
   records_export: ["csv"],
   integration_import: ["csv"],
+  sale_proof: ["pdf", "png", "jpg", "jpeg"],
 };
 
 const MAX_SIZE_OVERRIDES: Partial<Record<ArtifactType, number>> = {};
@@ -20,6 +21,10 @@ export const ABSOLUTE_MAX_UPLOAD_BYTES = Math.max(
 const MIME_BY_EXTENSION: Record<string, string> = {
   csv: "text/csv; charset=utf-8",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
 };
 
 const XLSX_MAGIC = [0x50, 0x4b, 0x03, 0x04];
