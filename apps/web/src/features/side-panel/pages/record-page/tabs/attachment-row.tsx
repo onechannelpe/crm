@@ -1,3 +1,5 @@
+import { createMemo } from "solid-js";
+
 import type { LeadSaleProofFileView } from "~/actions/workflow/files";
 import CalendarDays from "~/components/icons/calendar-days";
 import {
@@ -26,11 +28,13 @@ type AttachmentRowProps = {
 };
 
 export function AttachmentRow(props: AttachmentRowProps) {
-  const extension = () => getFileExtension(props.file.filename);
-  const category = () =>
-    getFileCategoryFromExtension(extension()) === "other"
+  const extension = createMemo(() => getFileExtension(props.file.filename));
+  const category = createMemo(() => {
+    const extCategory = getFileCategoryFromExtension(extension());
+    return extCategory === "other"
       ? getFileCategoryFromMime(props.file.detectedMime)
-      : getFileCategoryFromExtension(extension());
+      : extCategory;
+  });
 
   return (
     <ActivityListRow>

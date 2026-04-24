@@ -6,13 +6,15 @@ import { requestDownloadToken } from "~/server/files/service/request-download-to
 import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-import { domainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok } from "~/server/shared/result";
+import { runAction, type AppContext } from "~/server/shared/action-runtime";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
   canCreateSale,
   requireLeadAccess,
 } from "~/server/workflow/application/policies/access";
+import type { LeadSale } from "~/server/workflow/application/ports/sale-repository";
+import type { LeadRecord } from "~/server/workflow/domain/lead-record";
 
 export type LeadSaleProofFileView = {
   id: number;
@@ -26,14 +28,8 @@ export type LeadSaleProofFileView = {
 };
 
 function toSaleProofStatus(status: string): LeadSaleProofFileView["status"] {
-  if (status === "failed") {
-    return "failed";
-  }
-
-  if (status === "ready" || status === "completed") {
-    return "ready";
-  }
-
+  if (status === "failed") return "failed";
+  if (status === "ready" || status === "completed") return "ready";
   return "processing";
 }
 
@@ -59,6 +55,58 @@ function mapSaleProofFile(record: {
   };
 }
 
+async function requireLeadWithAccess(
+  ctx: AppContext,
+  leadId: string,
+): Promise<Result<LeadRecord, DomainError>> {
+  const { workflow } = getServerRuntime();
+  const lead = await workflow.deps.leadDetail.leads.findById(leadId);
+  if (!lead) {
+    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+  }
+
+  const access = requireLeadAccess({
+    actorUserId: ctx.actor.userId,
+    actorRole: ctx.actor.role,
+    executiveId: lead.executiveId,
+  });
+
+  if (isErr(access)) {
+    return access;
+  }
+
+  return Ok(lead);
+}
+
+async function requireLeadSaleContext(
+  ctx: AppContext,
+  leadId: string,
+): Promise<Result<{ lead: LeadRecord; sale: LeadSale }, DomainError>> {
+  const leadResult = await requireLeadWithAccess(ctx, leadId);
+  if (isErr(leadResult)) return leadResult;
+
+  const lead = leadResult.value;
+  if (lead.stage !== "CONVERTED") {
+    return Err(
+      domainError(
+        "conflict",
+        "lead_not_converted",
+        "Sale proof uploads are only allowed when the lead is converted",
+      ),
+    );
+  }
+
+  const { workflow } = getServerRuntime();
+  const sale = await workflow.deps.leadDetail.leadSales.findByLeadId(leadId);
+  if (!sale) {
+    return Err(
+      domainError("conflict", "sale_not_found", "Sale not found for this lead"),
+    );
+  }
+
+  return Ok({ lead, sale });
+}
+
 export async function listLeadSaleProofFiles(
   leadId: string,
 ): Promise<LeadSaleProofFileView[]> {
@@ -71,22 +119,9 @@ export async function listLeadSaleProofFiles(
     access: { kind: "auth" },
     input: { leadId },
     execute: async (ctx) => {
-      const { workflow, files } = getServerRuntime();
-      const lead = await workflow.deps.leadDetail.leads.findById(leadId);
-      if (!lead) {
-        return Err(
-          domainError("not_found", "lead_not_found", "Lead not found"),
-        );
-      }
-
-      const canAccess = requireLeadAccess({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        executiveId: lead.executiveId,
-      });
-      if (isErr(canAccess)) {
-        return canAccess;
-      }
+      const { files } = getServerRuntime();
+      const leadResult = await requireLeadWithAccess(ctx, leadId);
+      if (isErr(leadResult)) return leadResult;
 
       const records = await files.repo.sales.listByLead(leadId);
       return Ok(records.map(mapSaleProofFile));
@@ -108,55 +143,19 @@ export async function uploadLeadSaleProofFile(
     input: { leadId },
     execute: async (ctx) => {
       const file = formData.get("file");
-      if (!(file instanceof File)) {
-        throw validationError("file is required");
-      }
-
+      if (!(file instanceof File)) throw validationError("file is required");
       if (file.size > maxUploadBytesForArtifactType("sale_proof")) {
         throw validationError("file_too_large");
       }
 
-      const { workflow, files } = getServerRuntime();
-      const lead = await workflow.deps.leadDetail.leads.findById(leadId);
-      if (!lead) {
-        return Err(
-          domainError("not_found", "lead_not_found", "Lead not found"),
-        );
-      }
+      const { files } = getServerRuntime();
+      const contextResult = await requireLeadSaleContext(ctx, leadId);
+      if (isErr(contextResult)) return contextResult;
+
+      const { sale } = contextResult.value;
 
       if (!canCreateSale(ctx.actor.role)) {
         return Err(domainError("forbidden", "forbidden", "Access denied"));
-      }
-
-      const canAccess = requireLeadAccess({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        executiveId: lead.executiveId,
-      });
-      if (isErr(canAccess)) {
-        return canAccess;
-      }
-
-      if (lead.stage !== "CONVERTED") {
-        return Err(
-          domainError(
-            "conflict",
-            "lead_not_converted",
-            "Sale proof uploads are only allowed when the lead is converted",
-          ),
-        );
-      }
-
-      const sale =
-        await workflow.deps.leadDetail.leadSales.findByLeadId(leadId);
-      if (!sale) {
-        return Err(
-          domainError(
-            "conflict",
-            "sale_not_found",
-            "Sale not found for this lead",
-          ),
-        );
       }
 
       const requestResult = await requestArtifact(
@@ -247,22 +246,9 @@ export async function requestLeadSaleProofDownloadToken(input: {
     access: { kind: "auth" },
     input,
     execute: async (ctx) => {
-      const { workflow, files } = getServerRuntime();
-      const lead = await workflow.deps.leadDetail.leads.findById(input.leadId);
-      if (!lead) {
-        return Err(
-          domainError("not_found", "lead_not_found", "Lead not found"),
-        );
-      }
-
-      const canAccess = requireLeadAccess({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        executiveId: lead.executiveId,
-      });
-      if (isErr(canAccess)) {
-        return canAccess;
-      }
+      const { files } = getServerRuntime();
+      const leadResult = await requireLeadWithAccess(ctx, input.leadId);
+      if (isErr(leadResult)) return leadResult;
 
       const saleProof = await files.repo.sales.findByArtifactId(
         input.artifactId,
