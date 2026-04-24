@@ -4,6 +4,7 @@ import {
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
 import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+
 import type { LeadListFilters } from "../data/types";
 
 export const LEAD_WORKSPACE_FILTERS = [
@@ -52,7 +53,10 @@ export function applyLeadWorkspaceFilter(
 
 export function resolveLeadWorkspaceFilterQuery(
   value: string | undefined,
-): Pick<LeadListFilters, "stage" | "status" | "updatedSinceMs" | "updatedUntilMs"> {
+): Pick<
+  LeadListFilters,
+  "stage" | "status" | "updatedSinceMs" | "updatedUntilMs"
+> {
   if (value === "updated_today") {
     const now = new Date();
     const start = new Date(
@@ -70,7 +74,9 @@ export function resolveLeadWorkspaceFilterQuery(
   }
 
   if (value?.startsWith("status:")) {
-    return { status: value.slice("status:".length) as LeadListFilters["status"] };
+    return {
+      status: value.slice("status:".length) as LeadListFilters["status"],
+    };
   }
 
   return {};

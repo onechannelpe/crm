@@ -1,5 +1,6 @@
 import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
 import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+
 import type { LeadListFilters } from "../data/types";
 
 export type LeadSortKey =

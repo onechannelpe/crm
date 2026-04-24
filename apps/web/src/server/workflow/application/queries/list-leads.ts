@@ -36,11 +36,7 @@ function parseLeadSortField(
   const parsed = LEAD_SORT_FIELDS.find((option) => option === value);
   if (!parsed) {
     return Err(
-      domainError(
-        "validation",
-        "invalid_sort_by",
-        "Invalid sort field",
-      ),
+      domainError("validation", "invalid_sort_by", "Invalid sort field"),
     );
   }
 

@@ -52,7 +52,8 @@ export function DataGridContent<T extends { id: string }>(props: {
   const isError = () => props.source.status === "error";
   const errorState = () => props.errorState ?? <>No se pudo cargar la tabla.</>;
   const paginationStart = () =>
-    (props.pagination?.currentPage ?? 0) * (props.pagination?.pageSize ?? 0) + 1;
+    (props.pagination?.currentPage ?? 0) * (props.pagination?.pageSize ?? 0) +
+    1;
   const paginationEnd = () =>
     Math.min(
       (props.pagination?.currentPage ?? 0) * (props.pagination?.pageSize ?? 0) +
