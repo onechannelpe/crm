@@ -42,9 +42,10 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
   const [moreButtonWidth, setMoreButtonWidth] = createSignal(0);
   const [isOverflowOpen, setIsOverflowOpen] = createSignal(false);
 
-  let containerRef: HTMLDivElement | undefined;
-  let moreButtonMeasureRef: HTMLDivElement | undefined;
-  let overflowWrapRef: HTMLDivElement | undefined;
+  const [containerRef, setContainerRef] = createSignal<HTMLDivElement>();
+  const [moreButtonMeasureRef, setMoreButtonMeasureRef] =
+    createSignal<HTMLDivElement>();
+  const [overflowWrapRef, setOverflowWrapRef] = createSignal<HTMLDivElement>();
 
   // Mirrors Twenty's calculateVisibleTabCount (without TAB_LIST_LEFT_PADDING
   // since we have no internal left padding on the container)
@@ -73,21 +74,18 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
 
   const hiddenTabs = createMemo(() => props.tabs.slice(visibleTabCount()));
 
-  createResizeObserver(
-    () => containerRef,
-    ({ width }) => setContainerWidth(width),
-  );
-  createResizeObserver(
-    () => moreButtonMeasureRef,
-    ({ width }) => setMoreButtonWidth(width),
+  createResizeObserver(containerRef, ({ width }) => setContainerWidth(width));
+  createResizeObserver(moreButtonMeasureRef, ({ width }) =>
+    setMoreButtonWidth(width),
   );
 
   onMount(() => {
     const handleDocumentPointerDown = (event: PointerEvent) => {
       if (!isOverflowOpen()) return;
       const target = event.target;
-      if (!(target instanceof Node) || !overflowWrapRef) return;
-      if (overflowWrapRef.contains(target)) return;
+      const wrap = overflowWrapRef();
+      if (!(target instanceof Node) || !wrap) return;
+      if (wrap.contains(target)) return;
       setIsOverflowOpen(false);
     };
     document.addEventListener("pointerdown", handleDocumentPointerDown);
@@ -97,12 +95,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
   });
 
   return (
-    <div
-      class={styles.tabs}
-      ref={(el) => {
-        containerRef = el;
-      }}
-    >
+    <div class={styles.tabs} ref={setContainerRef}>
       {/* Off-screen: render all tabs to measure their natural widths */}
       <div class={styles.hiddenMeasure}>
         <For each={props.tabs}>
@@ -125,7 +118,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             );
           }}
         </For>
-        <div ref={(el) => (moreButtonMeasureRef = el)} class={styles.moreTab}>
+        <div ref={setMoreButtonMeasureRef} class={styles.moreTab}>
           <span class={styles.moreTabContent}>
             <span>+99 más</span>
             <ChevronDown size={16} />
@@ -158,7 +151,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
       </div>
 
       <Show when={hiddenTabs().length > 0}>
-        <div class={styles.moreTabWrap} ref={(el) => (overflowWrapRef = el)}>
+        <div class={styles.moreTabWrap} ref={setOverflowWrapRef}>
           <button
             type="button"
             data-testid="tab-tab-more-button"
