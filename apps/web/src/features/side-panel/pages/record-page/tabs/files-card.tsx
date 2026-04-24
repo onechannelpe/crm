@@ -38,6 +38,8 @@ export function FilesCard(props: FilesCardProps) {
   } | null>(null);
   const [fileInputRef, setFileInputRef] = createSignal<HTMLInputElement>();
 
+  let dragEnterCount = 0;
+
   const { attachments, refetch } = useAttachments(() => props.leadId);
   const { uploading, uploadAttachmentFile } = useUploadAttachmentFile({
     leadId: () => props.leadId,
@@ -131,6 +133,7 @@ export function FilesCard(props: FilesCardProps) {
           onDragEnter={(event) => {
             if (props.canUpload && hasDraggedFiles(event)) {
               event.preventDefault();
+              dragEnterCount++;
               setIsDraggingFile(true);
             }
           }}
@@ -139,15 +142,22 @@ export function FilesCard(props: FilesCardProps) {
               event.preventDefault();
             }
           }}
+          onDragLeave={(_event) => {
+            dragEnterCount--;
+            if (dragEnterCount === 0) {
+              setIsDraggingFile(false);
+            }
+          }}
           onDrop={(event) => {
             event.preventDefault();
+            dragEnterCount = 0;
+            setIsDraggingFile(false);
           }}
         >
           <AttachmentList
             attachments={attachments() ?? []}
             canUpload={props.canUpload}
             isDraggingFile={isDraggingFile()}
-            setIsDraggingFile={setIsDraggingFile}
             onUploadFiles={uploadFiles}
             onDownload={handleDownload}
             onPreview={handlePreview}

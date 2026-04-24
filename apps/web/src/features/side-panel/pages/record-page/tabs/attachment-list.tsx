@@ -13,7 +13,6 @@ type AttachmentListProps = {
   attachments: LeadSaleProofFileView[];
   canUpload: boolean;
   isDraggingFile: boolean;
-  setIsDraggingFile: (value: boolean) => void;
   onUploadFiles: (files: File[]) => Promise<void> | void;
   onDownload: (artifactId: string) => Promise<void> | void;
   onPreview?: (file: LeadSaleProofFileView) => Promise<void> | void;
@@ -55,10 +54,7 @@ export function AttachmentList(props: AttachmentListProps) {
           </Show>
         }
       >
-        <DropZone
-          setIsDraggingFile={props.setIsDraggingFile}
-          onUploadFiles={props.onUploadFiles}
-        />
+        <DropZone onUploadFiles={props.onUploadFiles} />
       </Show>
     </div>
   );

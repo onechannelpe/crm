@@ -95,8 +95,7 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
               role="menuitem"
               disabled={!props.onPreview}
               onClick={() => {
-                if (!props.onPreview) return;
-                void props.onPreview(props.file);
+                void props.onPreview?.(props.file);
                 setIsOpen(false);
               }}
             >

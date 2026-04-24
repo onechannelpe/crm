@@ -10,7 +10,7 @@ import { runAction, type AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
-  canCreateSale,
+  canUploadSaleProof,
   requireLeadAccess,
 } from "~/server/workflow/application/policies/access";
 import type { LeadSale } from "~/server/workflow/application/ports/sale-repository";
@@ -154,7 +154,7 @@ export async function uploadLeadSaleProofFile(
 
       const { sale } = contextResult.value;
 
-      if (!canCreateSale(ctx.actor.role)) {
+      if (!canUploadSaleProof(ctx.actor.role)) {
         return Err(domainError("forbidden", "forbidden", "Access denied"));
       }
 
