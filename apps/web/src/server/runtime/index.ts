@@ -1,3 +1,5 @@
+import { createDefaultEngineClient } from "~/server/shared/engine/client";
+
 import { createAdminRuntime } from "./admin-runtime";
 import { createAuthRuntime } from "./auth-runtime";
 import { createCapacityRuntime } from "./capacity-runtime";
@@ -18,21 +20,23 @@ import { createWorkflowRuntime } from "./workflow-runtime";
 
 export function createServerRuntime() {
   const infra = createServerInfra();
+  const engine = createDefaultEngineClient();
   const notifications = createNotificationsRuntime(infra);
 
   return {
     infra,
+    engine,
     admin: createAdminRuntime(infra),
     files: createFilesRuntime(infra),
     auth: createAuthRuntime(infra, notifications),
     capacity: createCapacityRuntime(infra),
     clientSearch: createClientSearchRuntime(infra),
-    contactAssignments: createContactAssignmentsRuntime(infra),
+    contactAssignments: createContactAssignmentsRuntime(infra, engine),
     extension: createExtensionRuntime(infra),
     integrations: createIntegrationsRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),
-    workflow: createWorkflowRuntime(infra),
+    workflow: createWorkflowRuntime(infra, engine),
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
     search: createSearchRuntime(infra),

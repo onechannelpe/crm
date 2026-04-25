@@ -25,7 +25,7 @@ export async function searchDirect(
   const result = await runDirectSearch(
     cmdResult.value,
     repos,
-    getServerRuntime().infra.engine,
+    getServerRuntime().engine,
   );
   if (isErr(result)) mapSearchError(result.error);
 

@@ -62,7 +62,7 @@ function createWorkflowCommandRuntime(
 export async function runWorkflowCommand<TResult>(
   operation: (runtime: WorkflowCommandRuntime) => Promise<TResult>,
 ): Promise<TResult> {
-  const { engine } = getServerRuntime().infra;
+  const { engine } = getServerRuntime();
   return runInWorkflowTransaction(async ({ executor }) =>
     operation(createWorkflowCommandRuntime(executor, engine)),
   );

@@ -2,7 +2,10 @@ import { createSessionService } from "~/server/auth/application/session-service"
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
+import type { ServerInfra } from "~/server/runtime/infra";
 import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
+import type { EngineClient } from "~/server/shared/engine/client";
+import { Ok } from "~/server/shared/result";
 
 import {
   cleanupTestDb,
@@ -52,11 +55,23 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
       logger,
     }),
   };
-  const workflow = createWorkflowRuntime({
+
+  const engine: EngineClient = {
+    async search() {
+      return Ok([]);
+    },
+    async requestCandidates() {
+      return Ok([]);
+    },
+  };
+
+  const infra: ServerInfra = {
     db: ctx.db,
     now: now.get,
     logger,
-  });
+  };
+
+  const workflow = createWorkflowRuntime(infra, engine);
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
