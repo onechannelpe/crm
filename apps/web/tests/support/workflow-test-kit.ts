@@ -1,4 +1,10 @@
-import { createWorkflowCommandApi } from "~/server/workflow/application/command-api";
+import type { Transaction } from "kysely";
+
+import type { Database } from "~/lib/db/types";
+import {
+  createWorkflowCommandApi,
+  type WorkflowCommandApi,
+} from "~/server/workflow/application/command-api";
 import type { WorkflowAuditService } from "~/server/workflow/application/ports/audit-service";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
@@ -7,6 +13,7 @@ import { systemLeadClock } from "~/server/workflow/application/services/lead-clo
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
 import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos/lead-read-repo";
 import { createLeadUserScopeRepository } from "~/server/workflow/infrastructure/repos/lead-user-scope-repo";
+import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
 import type { TestRuntime } from "./runtime/create-test-runtime";
 
@@ -27,20 +34,22 @@ const NO_OP_ENRICHMENT_QUEUE: LeadEnrichmentQueue = {
   enqueueRucVerification: async () => {},
 };
 
-export function createTestCommandApi(
-  runtime: TestRuntime,
-  overrides?: {
-    engineGateway?: WorkflowEngineGateway;
-    auditService?: WorkflowAuditService;
-    notificationCenter?: WorkflowNotificationCenter;
-    leadEnrichmentQueue?: LeadEnrichmentQueue;
-  },
-) {
-  const { repos } = runtime.workflow;
+export type TestCommandOverrides = {
+  engineGateway?: WorkflowEngineGateway;
+  auditService?: WorkflowAuditService;
+  notificationCenter?: WorkflowNotificationCenter;
+  leadEnrichmentQueue?: LeadEnrichmentQueue;
+};
+
+function buildCommandApi(
+  executor: Transaction<Database>,
+  overrides?: TestCommandOverrides,
+): WorkflowCommandApi {
+  const repos = createWorkflowRepos(executor);
   return createWorkflowCommandApi({
     leadReader: createLeadReadRepository(repos.leads),
     leadFavorites: repos.leadFavorites,
-    mutationUow: createLeadMutationUow(runtime.ctx.db),
+    mutationUow: createLeadMutationUow(executor),
     users: createLeadUserScopeRepository(repos.users),
     clock: systemLeadClock,
     registerLead: {
@@ -58,4 +67,14 @@ export function createTestCommandApi(
     leadEnrichmentQueue:
       overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE,
   });
+}
+
+export function runTestWorkflowCommand<T>(
+  runtime: TestRuntime,
+  operation: (commandApi: WorkflowCommandApi) => Promise<T>,
+  overrides?: TestCommandOverrides,
+): Promise<T> {
+  return runtime.ctx.db
+    .transaction()
+    .execute((trx) => operation(buildCommandApi(trx, overrides)));
 }

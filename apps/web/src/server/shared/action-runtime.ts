@@ -1,6 +1,15 @@
+import {
+  AppError,
+  conflictError,
+  forbiddenError,
+  internalError,
+  notFoundError,
+  rateLimitError,
+  toAppError,
+  validationError,
+} from "~/lib/app-errors";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, type Result } from "~/server/shared/result";
-import { throwDomainError } from "~/server/shared/throw-domain-error";
 
 import {
   type ActionAccess,
@@ -45,29 +54,61 @@ async function createActionTelemetry(
   };
 }
 
-async function executeActionResult<T, E extends DomainError>(
-  ctx: AppContext,
-  execute: (ctx: AppContext) => Promise<Result<T, E>>,
-): Promise<T> {
-  const result = await execute(ctx);
-  if (isErr(result)) {
-    throwDomainError(result.error);
+function domainToAppError(error: DomainError): AppError {
+  switch (error.kind) {
+    case "validation":
+      return validationError(error.message);
+    case "forbidden":
+      return forbiddenError(error.message);
+    case "not_found":
+      return notFoundError(error.message);
+    case "conflict":
+      return conflictError(error.message);
+    case "rate_limited":
+      return rateLimitError(error.message);
+    case "external":
+    case "unexpected":
+      return internalError("An unexpected error occurred");
   }
 
-  return result.value;
+  const unreachable: never = error.kind;
+  return internalError(String(unreachable));
+}
+
+function sanitize(error: AppError): AppError {
+  const safe = new AppError({
+    code: error.code,
+    publicMessage: error.publicMessage,
+    retryAfterSeconds: error.retryAfterSeconds ?? undefined,
+  });
+  delete safe.stack;
+  return safe;
 }
 
 export async function runAction<T, E extends DomainError>(
   params: RunActionParams<T, E>,
 ): Promise<T> {
-  const telemetry = await createActionTelemetry(params);
+  let telemetry!: ActionTelemetryInput;
   try {
-    const value = await executeActionResult(telemetry.ctx, params.execute);
-    recordActionSuccess(telemetry);
-    return value;
+    telemetry = await createActionTelemetry(params);
+  } catch (error) {
+    throw sanitize(toAppError(error, "An unexpected error occurred"));
+  }
+
+  let result: Result<T, E>;
+  try {
+    result = await params.execute(telemetry.ctx);
   } catch (error) {
     recordActionError(telemetry, toTelemetryError(error));
-
-    throw error;
+    throw sanitize(internalError("An unexpected error occurred"));
   }
+
+  if (isErr(result)) {
+    const appError = domainToAppError(result.error);
+    recordActionError(telemetry, toTelemetryError(appError));
+    throw sanitize(appError);
+  }
+
+  recordActionSuccess(telemetry);
+  return result.value;
 }

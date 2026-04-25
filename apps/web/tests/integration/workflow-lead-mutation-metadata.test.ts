@@ -5,7 +5,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
-import { createTestCommandApi } from "../support/workflow-test-kit";
+import { runTestWorkflowCommand } from "../support/workflow-test-kit";
 
 describe("workflow lead mutation metadata", () => {
   let runtime: TestRuntime;
@@ -37,11 +37,13 @@ describe("workflow lead mutation metadata", () => {
       })
       .execute();
 
-    const result = await createTestCommandApi(runtime).addLeadNote({
-      actor: { userId: 1, role: "executive", branchId: 1 },
-      leadId: "lead-501",
-      body: "Test note",
-    });
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.addLeadNote({
+        actor: { userId: 1, role: "executive", branchId: 1 },
+        leadId: "lead-501",
+        body: "Test note",
+      }),
+    );
 
     expect(result.ok).toBe(true);
 
@@ -113,13 +115,13 @@ describe("workflow lead mutation metadata", () => {
       })
       .execute();
 
-    const commandApi = createTestCommandApi(runtime);
-
-    const reassignResult = await commandApi.reassignLead({
-      actor: { userId: 11, role: "admin", branchId: 1 },
-      leadId: "lead-502",
-      toExecutiveId: 12,
-    });
+    const reassignResult = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.reassignLead({
+        actor: { userId: 11, role: "admin", branchId: 1 },
+        leadId: "lead-502",
+        toExecutiveId: 12,
+      }),
+    );
 
     expect(reassignResult.ok).toBe(true);
 
