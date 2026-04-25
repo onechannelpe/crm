@@ -1,5 +1,4 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { EngineClient } from "~/server/shared/engine/client";
 import type {
   AssignableExecutivesDeps,
   LeadBootstrapPreviewDeps,
@@ -10,7 +9,6 @@ import type { RegisterLeadDeps } from "~/server/workflow/application/deps/regist
 import type { SourcingPolicyDeps } from "~/server/workflow/application/deps/sourcing-policy";
 import { createAssignmentRepo } from "~/server/workflow/infrastructure/assignment-repo";
 import { createCommercialInputRepo } from "~/server/workflow/infrastructure/commercial-input-repo";
-import { createEngineGateway } from "~/server/workflow/infrastructure/engine-gateway";
 import { createHistoryRepo } from "~/server/workflow/infrastructure/history-repo";
 import { createLeadFavoriteRepo } from "~/server/workflow/infrastructure/lead-favorite-repo";
 import { createLeadQueries } from "~/server/workflow/infrastructure/lead-queries";
@@ -33,7 +31,6 @@ export type WorkflowDeps = {
 
 export function createWorkflowFeatureDeps(
   executor: DatabaseExecutor,
-  engine: EngineClient,
 ): WorkflowDeps {
   const leads = createLeadRepo(executor);
   const leadQueries = createLeadQueries(executor);
@@ -46,7 +43,6 @@ export function createWorkflowFeatureDeps(
   const sourceStatuses = createSourceStatusRepo(executor);
   const sourcingPolicies = createSourcingPolicyRepo(executor);
   const users = createWorkflowUsersRepo(executor);
-  const engineGateway = createEngineGateway(engine);
 
   return {
     registerLead: { leads, leadAssignments, leadHistory, users },
@@ -62,7 +58,7 @@ export function createWorkflowFeatureDeps(
       sourceStatuses,
       users,
     },
-    leadBootstrapPreview: { leads, engineGateway },
+    leadBootstrapPreview: { leads },
     assignableExecutives: { leads, users },
     sourcingPolicy: { sourcingPolicies },
   };

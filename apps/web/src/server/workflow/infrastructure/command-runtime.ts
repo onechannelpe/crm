@@ -5,7 +5,6 @@ import {
   type WorkflowDeps,
 } from "~/server/features/workflow/application/workflow-deps";
 import { getServerRuntime } from "~/server/runtime";
-import type { EngineClient } from "~/server/shared/engine/client";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { runInWorkflowTransaction } from "../../shared/workflow-transaction";
@@ -18,7 +17,6 @@ import {
   createWorkflowAuditService,
   createWorkflowAuditLogsRepo,
 } from "./audit-log";
-import { createEngineGateway } from "./engine-gateway";
 import { createWorkflowNotificationCenter } from "./notifications";
 
 export type WorkflowCommandRuntime = {
@@ -40,16 +38,16 @@ function createWorkflowAuditServiceRuntime(executor: DatabaseExecutor) {
 
 function createWorkflowCommandRuntime(
   executor: DatabaseExecutor,
-  engine: EngineClient,
+  engineGateway: WorkflowEngineGateway,
 ): WorkflowCommandRuntime {
   const enrichmentRepo = createSearchEnrichmentRepo(executor);
   const enrichmentCommand = createEnrichmentCommand(enrichmentRepo);
 
   return {
     executor,
-    deps: createWorkflowFeatureDeps(executor, engine),
+    deps: createWorkflowFeatureDeps(executor),
     auditService: createWorkflowAuditServiceRuntime(executor),
-    engineGateway: createEngineGateway(engine),
+    engineGateway,
     leadEnrichmentQueue: {
       async enqueueRucVerification(ruc, requestedByUserId) {
         await enrichmentCommand.enqueueRequest("ruc", ruc, requestedByUserId);
@@ -62,8 +60,8 @@ function createWorkflowCommandRuntime(
 export async function runWorkflowCommand<TResult>(
   operation: (runtime: WorkflowCommandRuntime) => Promise<TResult>,
 ): Promise<TResult> {
-  const { engine } = getServerRuntime();
+  const { workflow } = getServerRuntime();
   return runInWorkflowTransaction(async ({ executor }) =>
-    operation(createWorkflowCommandRuntime(executor, engine)),
+    operation(createWorkflowCommandRuntime(executor, workflow.engineGateway)),
   );
 }

@@ -4,8 +4,7 @@ import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import type { ServerInfra } from "~/server/runtime/infra";
 import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { Ok } from "~/server/shared/result";
+import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 
 import {
   cleanupTestDb,
@@ -56,12 +55,9 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     }),
   };
 
-  const engine: EngineClient = {
-    async search() {
-      return Ok([]);
-    },
-    async requestCandidates() {
-      return Ok([]);
+  const engineGateway: WorkflowEngineGateway = {
+    async enrichByRuc() {
+      return null;
     },
   };
 
@@ -71,7 +67,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     logger,
   };
 
-  const workflow = createWorkflowRuntime(infra, engine);
+  const workflow = createWorkflowRuntime(infra, engineGateway);
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {

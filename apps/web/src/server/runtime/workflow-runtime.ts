@@ -1,15 +1,16 @@
 import { createWorkflowFeatureDeps } from "~/server/features/workflow/application/workflow-deps";
-import type { EngineClient } from "~/server/shared/engine/client";
+import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sunat-enrichment-writeback-queue";
 
 import type { ServerInfra } from "./infra";
 
 export function createWorkflowRuntime(
   infra: ServerInfra,
-  engine: EngineClient,
+  engineGateway: WorkflowEngineGateway,
 ) {
   return {
-    deps: createWorkflowFeatureDeps(infra.db, engine),
+    deps: createWorkflowFeatureDeps(infra.db),
+    engineGateway,
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {
         executor: infra.db,

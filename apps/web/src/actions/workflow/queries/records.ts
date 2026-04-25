@@ -66,9 +66,8 @@ export async function queryLeadBootstrapPreview(
     execute: () =>
       getLeadBootstrapPreview(
         getServerRuntime().workflow.deps.leadBootstrapPreview,
-        {
-          ruc,
-        },
+        getServerRuntime().workflow.engineGateway,
+        { ruc },
       ),
   });
 }
