@@ -136,5 +136,33 @@ describe("engine client config", () => {
         engineTimeoutMs: "-100",
       }),
     ).toThrow("ENGINE_TIMEOUT_MS must be a positive integer");
+
+    expect(() =>
+      buildEngineClientConfig({
+        ...VALID_HMAC,
+        engineConnectMode: "local",
+        engineUrl: "http://127.0.0.1:3001",
+        engineTimeoutMs: "5000ms",
+      }),
+    ).toThrow("ENGINE_TIMEOUT_MS must be a positive integer");
+
+    expect(() =>
+      buildEngineClientConfig({
+        ...VALID_HMAC,
+        engineConnectMode: "local",
+        engineUrl: "http://127.0.0.1:3001",
+        engineTimeoutMs: "5.5",
+      }),
+    ).toThrow("ENGINE_TIMEOUT_MS must be a positive integer");
+
+    // Number() handles whitespace gracefully, which is good for env vars
+    expect(() =>
+      buildEngineClientConfig({
+        ...VALID_HMAC,
+        engineConnectMode: "local",
+        engineUrl: "http://127.0.0.1:3001",
+        engineTimeoutMs: " 5000 ",
+      }),
+    ).not.toThrow();
   });
 });
