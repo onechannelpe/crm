@@ -8,7 +8,6 @@ import {
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import { createWorkflowCommandApiRuntime } from "~/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 
 export async function requestLeadCreation(input: {
   ruc: string;
@@ -25,8 +24,8 @@ export async function requestLeadCreation(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).registerLead({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.registerLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -63,8 +62,8 @@ export async function requestLeadReview(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).reviewLead({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.reviewLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -97,8 +96,8 @@ export async function requestLeadCommercialInputCompletion(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).completeCommercialInput({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.completeCommercialInput({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -119,8 +118,8 @@ export async function requestLeadReassignment(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).reassignLead({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.reassignLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -139,8 +138,8 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).addToFavorites({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.addToFavorites({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -160,8 +159,8 @@ export async function requestRemoveLeadFromFavorites(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).removeFromFavorites({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.removeFromFavorites({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -179,12 +178,12 @@ export async function requestLeadSunatRefresh(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ deps, auditService, leadEnrichmentQueue }) =>
+      runWorkflowCommand(({ repos, auditService, leadEnrichmentQueue }) =>
         requestSunatRefresh({
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           leadId: input.leadId,
-          leadRepo: deps.leadDetail.leads,
+          leadRepo: repos.leads,
           enrichmentQueue: leadEnrichmentQueue,
           auditService,
         }),

@@ -60,7 +60,7 @@ async function requireLeadWithAccess(
   leadId: string,
 ): Promise<Result<LeadRecord, DomainError>> {
   const { workflow } = getServerRuntime();
-  const lead = await workflow.deps.leadDetail.leads.findById(leadId);
+  const lead = await workflow.repos.leads.findById(leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
@@ -97,7 +97,7 @@ async function requireLeadSaleContext(
   }
 
   const { workflow } = getServerRuntime();
-  const sale = await workflow.deps.leadDetail.leadSales.findByLeadId(leadId);
+  const sale = await workflow.repos.leadSales.findByLeadId(leadId);
   if (!sale) {
     return Err(
       domainError("conflict", "sale_not_found", "Sale not found for this lead"),

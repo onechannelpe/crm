@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createWorkflowCommandApiRuntime } from "../../src/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
+import { createTestCommandApi } from "../support/workflow-test-kit";
 
 describe("register lead", () => {
   let runtime: TestRuntime;
@@ -20,20 +20,13 @@ describe("register lead", () => {
   it("fills legal name and address from engine enrichment and writes history events", async () => {
     const auditLog = vi.fn<() => Promise<void>>(async () => undefined);
 
-    const commandApi = createWorkflowCommandApiRuntime({
-      deps: runtime.workflow.deps,
-      executor: runtime.ctx.db,
-      notificationCenter: {
-        notifyUsers: async () => {},
-        notifyBranchRoles: async () => {},
-      },
+    const commandApi = createTestCommandApi(runtime, {
       engineGateway: {
         enrichByRuc: async () => ({
           razonSocial: "Acme SAC",
           address: "Av. Lima 123",
         }),
       },
-      leadEnrichmentQueue: { enqueueRucVerification: async () => undefined },
       auditService: { log: auditLog },
     });
 
@@ -68,17 +61,7 @@ describe("register lead", () => {
   });
 
   it("keeps registration working when enrichment is unavailable", async () => {
-    const commandApi = createWorkflowCommandApiRuntime({
-      deps: runtime.workflow.deps,
-      executor: runtime.ctx.db,
-      notificationCenter: {
-        notifyUsers: async () => {},
-        notifyBranchRoles: async () => {},
-      },
-      auditService: { log: async () => {} },
-      engineGateway: { enrichByRuc: async () => null },
-      leadEnrichmentQueue: { enqueueRucVerification: async () => undefined },
-    });
+    const commandApi = createTestCommandApi(runtime);
 
     const result = await commandApi.registerLead({
       actor: { userId: 1, role: "admin", branchId: 1 },

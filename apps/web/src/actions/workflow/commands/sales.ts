@@ -3,7 +3,6 @@
 import { validationError } from "~/lib/app-errors";
 import { runAction } from "~/server/shared/action-runtime";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import { createWorkflowCommandApiRuntime } from "~/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 
 export async function requestSaleCreation(input: {
   leadId: string;
@@ -32,8 +31,8 @@ export async function requestSaleCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).createSale({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.createSale({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

@@ -8,7 +8,6 @@ import type { AssignableExecutiveView } from "~/server/workflow/application/quer
 import type { LeadBootstrapPreviewView } from "~/server/workflow/application/queries/views/lead-bootstrap-preview";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/workflow/application/queries/views/lead-list";
-import { createWorkflowQueryApiRuntime } from "~/server/workflow/infrastructure/runtime/workflow-query-api-factory";
 
 export async function queryLeadList(filters: {
   stage?: string;
@@ -27,11 +26,10 @@ export async function queryLeadList(filters: {
     access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
-      listLeads(getServerRuntime().workflow.deps.leadList, {
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        filters,
-      }),
+      listLeads(
+        { leads: getServerRuntime().workflow.repos.leadQueries },
+        { actorUserId: ctx.actor.userId, actorRole: ctx.actor.role, filters },
+      ),
   });
 }
 
@@ -40,19 +38,15 @@ export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
     actionName: "workflow.get_lead_detail",
     access: { kind: "auth" },
     input: { leadId },
-    execute: (ctx) => {
-      const queryApi = createWorkflowQueryApiRuntime(
-        getServerRuntime().workflow.deps,
-      );
-      return queryApi.getLeadDetail({
+    execute: (ctx) =>
+      getServerRuntime().workflow.queryApi.getLeadDetail({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,
           branchId: ctx.actor.branchId,
         },
         leadId,
-      });
-    },
+      }),
   });
 }
 
@@ -63,12 +57,14 @@ export async function queryLeadBootstrapPreview(
     actionName: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
     input: { ruc },
-    execute: () =>
-      getLeadBootstrapPreview(
-        getServerRuntime().workflow.deps.leadBootstrapPreview,
-        getServerRuntime().workflow.engineGateway,
+    execute: () => {
+      const { workflow } = getServerRuntime();
+      return getLeadBootstrapPreview(
+        { leads: workflow.repos.leads },
+        workflow.engineGateway,
         { ruc },
-      ),
+      );
+    },
   });
 }
 
@@ -81,11 +77,8 @@ export async function queryAssignableExecutives(input: {
     actionName: "workflow.list_assignable_executives",
     access: { kind: "auth" },
     input,
-    execute: (ctx) => {
-      const queryApi = createWorkflowQueryApiRuntime(
-        getServerRuntime().workflow.deps,
-      );
-      return queryApi.listAssignableExecutives({
+    execute: (ctx) =>
+      getServerRuntime().workflow.queryApi.listAssignableExecutives({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,
@@ -94,7 +87,6 @@ export async function queryAssignableExecutives(input: {
         leadId: input.leadId,
         search: input.search,
         limit: input.limit,
-      });
-    },
+      }),
   });
 }
