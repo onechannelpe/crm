@@ -22,7 +22,11 @@ export async function searchDirect(
   const cmdResult = parseSearchCommand(session.userId, type, value, limit);
   if (isErr(cmdResult)) mapSearchError(cmdResult.error);
 
-  const result = await runDirectSearch(cmdResult.value, repos);
+  const result = await runDirectSearch(
+    cmdResult.value,
+    repos,
+    getServerRuntime().engine,
+  );
   if (isErr(result)) mapSearchError(result.error);
 
   return result.value;

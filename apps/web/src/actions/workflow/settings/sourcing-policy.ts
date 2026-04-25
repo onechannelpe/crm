@@ -12,10 +12,12 @@ export async function querySourcingPolicy(branchId: number) {
     access: { kind: "auth" },
     input: { branchId },
     execute: (ctx) =>
-      getSourcingPolicy(getServerRuntime().workflow.deps.sourcingPolicy, {
-        actorRole: ctx.actor.role,
-        branchId,
-      }),
+      getSourcingPolicy(
+        {
+          sourcingPolicies: getServerRuntime().workflow.repos.sourcingPolicies,
+        },
+        { actorRole: ctx.actor.role, branchId },
+      ),
   });
 }
 
@@ -28,13 +30,16 @@ export async function saveSourcingPolicy(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ deps }) =>
-        updateSourcingPolicy(deps.sourcingPolicy, {
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          branchId: input.branchId,
-          engineAssignmentEnabled: input.engineAssignmentEnabled,
-        }),
+      runWorkflowCommand(({ repos }) =>
+        updateSourcingPolicy(
+          { sourcingPolicies: repos.sourcingPolicies },
+          {
+            actorUserId: ctx.actor.userId,
+            actorRole: ctx.actor.role,
+            branchId: input.branchId,
+            engineAssignmentEnabled: input.engineAssignmentEnabled,
+          },
+        ),
       ),
   });
 }

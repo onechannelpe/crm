@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
-import { getLeadDetail } from "../../src/server/workflow/application/queries/get-lead-detail";
-import { createWorkflowCommandApiRuntime } from "../../src/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
+import { createTestCommandApi } from "../support/workflow-test-kit";
 
 describe("workflow lead mutation metadata", () => {
   let runtime: TestRuntime;
@@ -38,24 +37,8 @@ describe("workflow lead mutation metadata", () => {
       })
       .execute();
 
-    const commandApi = createWorkflowCommandApiRuntime({
-      deps: runtime.workflow.deps,
-      executor: runtime.ctx.db,
-      notificationCenter: {
-        notifyUsers: async () => {},
-        notifyBranchRoles: async () => {},
-      },
-      auditService: { log: async () => {} },
-      engineGateway: { enrichByRuc: async () => null },
-      leadEnrichmentQueue: { enqueueRucVerification: async () => {} },
-    });
-
-    const result = await commandApi.addLeadNote({
-      actor: {
-        userId: 1,
-        role: "executive",
-        branchId: 1,
-      },
+    const result = await createTestCommandApi(runtime).addLeadNote({
+      actor: { userId: 1, role: "executive", branchId: 1 },
       leadId: "lead-501",
       body: "Test note",
     });
@@ -130,24 +113,10 @@ describe("workflow lead mutation metadata", () => {
       })
       .execute();
 
-    const commandApi = createWorkflowCommandApiRuntime({
-      deps: runtime.workflow.deps,
-      executor: runtime.ctx.db,
-      notificationCenter: {
-        notifyUsers: async () => {},
-        notifyBranchRoles: async () => {},
-      },
-      auditService: { log: async () => {} },
-      engineGateway: { enrichByRuc: async () => null },
-      leadEnrichmentQueue: { enqueueRucVerification: async () => {} },
-    });
+    const commandApi = createTestCommandApi(runtime);
 
     const reassignResult = await commandApi.reassignLead({
-      actor: {
-        userId: 11,
-        role: "admin",
-        branchId: 1,
-      },
+      actor: { userId: 11, role: "admin", branchId: 1 },
       leadId: "lead-502",
       toExecutiveId: 12,
     });
@@ -162,25 +131,17 @@ describe("workflow lead mutation metadata", () => {
     expect(lead.executive_id).toBe(12);
     expect(lead.updated_by).toBe(11);
 
-    const previousExecutiveAccess = await getLeadDetail(
-      runtime.workflow.deps.leadDetail,
-      {
-        actorUserId: 1,
-        actorRole: "executive",
-        leadId: "lead-502",
-      },
-    );
-    expect(previousExecutiveAccess.ok).toBe(false);
+    const previousAccess = await runtime.workflow.queryApi.getLeadDetail({
+      actor: { userId: 1, role: "executive", branchId: 1 },
+      leadId: "lead-502",
+    });
+    expect(previousAccess.ok).toBe(false);
 
-    const newExecutiveAccess = await getLeadDetail(
-      runtime.workflow.deps.leadDetail,
-      {
-        actorUserId: 12,
-        actorRole: "executive",
-        leadId: "lead-502",
-      },
-    );
-    expect(newExecutiveAccess.ok).toBe(true);
+    const newAccess = await runtime.workflow.queryApi.getLeadDetail({
+      actor: { userId: 12, role: "executive", branchId: 1 },
+      leadId: "lead-502",
+    });
+    expect(newAccess.ok).toBe(true);
   });
 
   it("updates lead.updatedBy for import mutations", async () => {

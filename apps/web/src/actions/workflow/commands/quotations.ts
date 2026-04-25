@@ -2,7 +2,6 @@
 
 import { runAction } from "~/server/shared/action-runtime";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import { createWorkflowCommandApiRuntime } from "~/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 import type { Moneda } from "~/workflow/contracts/lead-schema";
 
 export async function requestQuotationCreation(input: {
@@ -19,8 +18,8 @@ export async function requestQuotationCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).createQuotation({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.createQuotation({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -38,8 +37,8 @@ export async function requestSaleApproval(leadId: string) {
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).approveForSale({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.approveForSale({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

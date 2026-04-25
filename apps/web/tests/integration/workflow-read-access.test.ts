@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getLeadDetail } from "../../src/server/workflow/application/queries/get-lead-detail";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -35,10 +34,9 @@ describe("workflow read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(runtime.workflow.deps.leadDetail, {
+    const result = await runtime.workflow.queryApi.getLeadDetail({
+      actor: { userId: 2, role: "back_office", branchId: 1 },
       leadId: "lead-11",
-      actorUserId: 2,
-      actorRole: "back_office",
     });
 
     expect(result.ok).toBe(true);
@@ -66,10 +64,9 @@ describe("workflow read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(runtime.workflow.deps.leadDetail, {
+    const result = await runtime.workflow.queryApi.getLeadDetail({
+      actor: { userId: 3, role: "executive", branchId: 1 },
       leadId: "lead-12",
-      actorUserId: 3,
-      actorRole: "executive",
     });
 
     expect(result.ok).toBe(false);

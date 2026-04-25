@@ -2,7 +2,9 @@ import { createSessionService } from "~/server/auth/application/session-service"
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
+import type { ServerInfra } from "~/server/runtime/infra";
 import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
+import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 
 import {
   cleanupTestDb,
@@ -52,11 +54,20 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
       logger,
     }),
   };
-  const workflow = createWorkflowRuntime({
+
+  const engineGateway: WorkflowEngineGateway = {
+    async enrichByRuc() {
+      return null;
+    },
+  };
+
+  const infra: ServerInfra = {
     db: ctx.db,
     now: now.get,
     logger,
-  });
+  };
+
+  const workflow = createWorkflowRuntime(infra, engineGateway);
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {

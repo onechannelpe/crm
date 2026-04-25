@@ -2,10 +2,12 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { LeadBootstrapPreviewDeps } from "../deps/lead-queries";
+import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadBootstrapPreviewView } from "./views/lead-bootstrap-preview";
 
 export async function getLeadBootstrapPreview(
   deps: LeadBootstrapPreviewDeps,
+  engineGateway: WorkflowEngineGateway,
   input: { ruc: string },
 ): Promise<Result<LeadBootstrapPreviewView, DomainError>> {
   const existingLead = await deps.leads.findByRuc(input.ruc);
@@ -17,8 +19,7 @@ export async function getLeadBootstrapPreview(
     });
   }
 
-  // Fallback to engine gateway for new RUCs or if no cached data
-  const preview = await deps.engineGateway.enrichByRuc(input.ruc);
+  const preview = await engineGateway.enrichByRuc(input.ruc);
 
   if (!preview) {
     return Ok({

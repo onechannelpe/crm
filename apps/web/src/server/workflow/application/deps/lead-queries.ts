@@ -1,5 +1,4 @@
 import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
-import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadHistoryRepository } from "../ports/history-repository";
 import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
 import type { LeadQueries } from "../ports/lead-queries";
@@ -26,7 +25,6 @@ export type LeadDetailDeps = {
 
 export type LeadBootstrapPreviewDeps = {
   leads: LeadRepository;
-  engineGateway: WorkflowEngineGateway;
 };
 
 export type AssignableExecutivesDeps = {

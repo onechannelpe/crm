@@ -1,9 +1,13 @@
-import { engineClient } from "~/server/shared/composition-root";
+import type { EngineClient } from "~/server/shared/engine/client";
 
-export function createEngineGateway() {
+import type { WorkflowEngineGateway } from "../application/ports/engine-gateway";
+
+export function createEngineGateway(
+  engine: EngineClient,
+): WorkflowEngineGateway {
   return {
     async enrichByRuc(ruc: string) {
-      const result = await engineClient.search("ruc", ruc, 1);
+      const result = await engine.search("ruc", ruc, 1);
       if (!result.ok) {
         return null;
       }

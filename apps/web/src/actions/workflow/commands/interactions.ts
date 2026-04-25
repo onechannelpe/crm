@@ -1,7 +1,6 @@
 "use server";
 import { runAction } from "~/server/shared/action-runtime";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import { createWorkflowCommandApiRuntime } from "~/server/workflow/infrastructure/runtime/workflow-command-api-factory";
 import type { LeadCallOutcome } from "~/workflow/contracts/lead-schema";
 
 export async function recordLeadCall(input: {
@@ -14,8 +13,8 @@ export async function recordLeadCall(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).logLeadCall({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.logLeadCall({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -35,8 +34,8 @@ export async function addLeadNote(input: { leadId: string; body: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand((runtime) =>
-        createWorkflowCommandApiRuntime(runtime).addLeadNote({
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.addLeadNote({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
