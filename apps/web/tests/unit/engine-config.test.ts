@@ -5,6 +5,7 @@ import { buildEngineClientConfig } from "~/server/shared/engine/config";
 const VALID_HMAC = {
   engineHmacKeyId: "web",
   engineHmacSecret: "k7vB9pL2mN5qR4xT1yZ8wS3uJ6hA0gC9",
+  engineTimeoutMs: "5000",
 } as const;
 
 describe("engine client config", () => {
@@ -106,5 +107,34 @@ describe("engine client config", () => {
         ...VALID_HMAC,
       }),
     ).toThrow("ENGINE_URL must not include query params or fragments");
+  });
+
+  it("rejects invalid timeout values", () => {
+    expect(() =>
+      buildEngineClientConfig({
+        ...VALID_HMAC,
+        engineConnectMode: "local",
+        engineUrl: "http://127.0.0.1:3001",
+        engineTimeoutMs: "not-a-number",
+      }),
+    ).toThrow("ENGINE_TIMEOUT_MS must be a positive integer");
+
+    expect(() =>
+      buildEngineClientConfig({
+        ...VALID_HMAC,
+        engineConnectMode: "local",
+        engineUrl: "http://127.0.0.1:3001",
+        engineTimeoutMs: "0",
+      }),
+    ).toThrow("ENGINE_TIMEOUT_MS must be a positive integer");
+
+    expect(() =>
+      buildEngineClientConfig({
+        ...VALID_HMAC,
+        engineConnectMode: "local",
+        engineUrl: "http://127.0.0.1:3001",
+        engineTimeoutMs: "-100",
+      }),
+    ).toThrow("ENGINE_TIMEOUT_MS must be a positive integer");
   });
 });

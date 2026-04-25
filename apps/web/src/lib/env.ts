@@ -117,6 +117,7 @@ function parseEngineEnv(source: EnvSource) {
     engineUrl: optional(source, "ENGINE_URL", "http://127.0.0.1:3001"),
     engineHmacKeyId: required(source, "ENGINE_HMAC_KEY_ID"),
     engineHmacSecret: required(source, "ENGINE_HMAC_SECRET", true),
+    engineTimeoutMs: optional(source, "ENGINE_TIMEOUT_MS", "5000"),
   } as const;
 }
 

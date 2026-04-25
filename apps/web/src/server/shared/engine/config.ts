@@ -14,6 +14,7 @@ export function buildEngineClientConfig(input: {
   engineUrl: string;
   engineHmacKeyId: string;
   engineHmacSecret: string;
+  engineTimeoutMs: string;
 }): EngineClientConfig {
   const url = new URL(input.engineUrl);
   const normalizedHostname = url.hostname.replace(/^\[/, "").replace(/\]$/, "");
@@ -48,10 +49,15 @@ export function buildEngineClientConfig(input: {
     }
   }
 
+  const timeoutMs = parseInt(input.engineTimeoutMs, 10);
+  if (Number.isNaN(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("ENGINE_TIMEOUT_MS must be a positive integer");
+  }
+
   return {
     baseUrl: url.toString().replace(/\/$/, ""),
     keyId: input.engineHmacKeyId,
     hmacSecret: input.engineHmacSecret,
-    timeoutMs: 2000,
+    timeoutMs,
   };
 }

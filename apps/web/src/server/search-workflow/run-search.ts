@@ -14,7 +14,6 @@ import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
-import { engineClient } from "~/server/shared/composition-root";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { UserId } from "~/server/shared/ids";
@@ -44,7 +43,7 @@ interface SearchRepos {
 export async function runDirectSearch(
   command: RunDirectSearchCommand,
   repos: SearchRepos,
-  engine: Pick<EngineClient, "search"> = engineClient,
+  engine: Pick<EngineClient, "search">,
 ): Promise<Result<SearchResult_, DomainError>> {
   const snapshotResult = await getSearchCapacitySnapshot(
     command.actorUserId,

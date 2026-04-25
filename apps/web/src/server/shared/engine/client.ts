@@ -1,4 +1,7 @@
+import { getEnvFor } from "~/lib/env";
+import { createEngineAdapter } from "~/server/adapters/engine/client";
 import type { DomainError } from "~/server/shared/domain-error";
+import { buildEngineClientConfig } from "~/server/shared/engine/config";
 import type {
   RecordCandidate,
   SearchResult,
@@ -24,4 +27,9 @@ export interface EngineClient {
   requestCandidates(
     input: RecordCandidatesRequest,
   ): Promise<Result<RecordCandidate[], DomainError>>;
+}
+
+export function createDefaultEngineClient(): EngineClient {
+  const engineConfig = buildEngineClientConfig(getEnvFor("engine"));
+  return createEngineAdapter(engineConfig);
 }

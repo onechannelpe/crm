@@ -1,4 +1,5 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { EngineClient } from "~/server/shared/engine/client";
 import type {
   AssignableExecutivesDeps,
   LeadBootstrapPreviewDeps,
@@ -32,6 +33,7 @@ export type WorkflowDeps = {
 
 export function createWorkflowFeatureDeps(
   executor: DatabaseExecutor,
+  engine: EngineClient,
 ): WorkflowDeps {
   const leads = createLeadRepo(executor);
   const leadQueries = createLeadQueries(executor);
@@ -44,7 +46,7 @@ export function createWorkflowFeatureDeps(
   const sourceStatuses = createSourceStatusRepo(executor);
   const sourcingPolicies = createSourcingPolicyRepo(executor);
   const users = createWorkflowUsersRepo(executor);
-  const engineGateway = createEngineGateway();
+  const engineGateway = createEngineGateway(engine);
 
   return {
     registerLead: { leads, leadAssignments, leadHistory, users },
