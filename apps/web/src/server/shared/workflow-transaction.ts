@@ -1,11 +1,12 @@
-import { getServerRuntime } from "~/server/runtime";
+import type { Transaction } from "kysely";
 
-import type { DatabaseExecutor } from "./db-executor";
+import type { Database } from "~/lib/db/types";
+import { getServerRuntime } from "~/server/runtime";
 
 export type AfterCommitEffect = () => Promise<void>;
 
 export interface WorkflowTransaction {
-  executor: DatabaseExecutor;
+  executor: Transaction<Database>;
   afterCommit: (effect: AfterCommitEffect) => void;
 }
 

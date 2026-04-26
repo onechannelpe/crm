@@ -1,7 +1,6 @@
-import type { Kysely } from "kysely";
+import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
@@ -31,24 +30,7 @@ import {
   createLeadWriteRepository,
 } from "./lead-write-repo";
 
-function isRootExecutor(
-  executor: DatabaseExecutor,
-): executor is Kysely<Database> {
-  return "transaction" in executor;
-}
-
-async function inAtomicScope<T>(
-  executor: DatabaseExecutor,
-  operation: (tx: DatabaseExecutor) => Promise<T>,
-): Promise<T> {
-  if (!isRootExecutor(executor)) {
-    return operation(executor);
-  }
-
-  return executor.transaction().execute((trx) => operation(trx));
-}
-
-function createMutationDeps(executor: DatabaseExecutor) {
+function createMutationDeps(executor: Transaction<Database>) {
   const leads = createLeadRepo(executor);
   const leadHistory = createHistoryRepo(executor);
   const leadAssignments = createAssignmentRepo(executor);
@@ -68,7 +50,7 @@ function createMutationDeps(executor: DatabaseExecutor) {
 }
 
 export function createLeadMutationUow(
-  executor: DatabaseExecutor,
+  executor: Transaction<Database>,
 ): LeadMutationUow {
   return {
     derivePatch(input) {
@@ -76,51 +58,47 @@ export function createLeadMutationUow(
     },
 
     async commit(input): Promise<Result<LeadMutationOutcome, DomainError>> {
-      return inAtomicScope(executor, async (tx) => {
-        const deps = createMutationDeps(tx);
+      const deps = createMutationDeps(executor);
 
-        if (input.assignment) {
-          await deps.leadAssignments.replaceActiveAssignment({
-            leadId: input.assignment.leadId,
-            toExecutiveId: input.assignment.toExecutiveId,
-            assignedBy: input.assignment.assignedBy,
-            assignedAt: input.assignment.assignedAt,
-          });
-        }
-
-        return executeLeadMutation({
-          deps: {
-            leadWriter: deps.leadWriter,
-            checkedLeadWriter: deps.checkedLeadWriter,
-            eventRepository: deps.eventRepository,
-            auditRepository: deps.auditRepository,
-          },
-          lead: input.lead,
-          actorUserId: input.actorUserId,
-          now: input.now,
-          intent: input.intent,
+      if (input.assignment) {
+        await deps.leadAssignments.replaceActiveAssignment({
+          leadId: input.assignment.leadId,
+          toExecutiveId: input.assignment.toExecutiveId,
+          assignedBy: input.assignment.assignedBy,
+          assignedAt: input.assignment.assignedAt,
         });
+      }
+
+      return executeLeadMutation({
+        deps: {
+          leadWriter: deps.leadWriter,
+          checkedLeadWriter: deps.checkedLeadWriter,
+          eventRepository: deps.eventRepository,
+          auditRepository: deps.auditRepository,
+        },
+        lead: input.lead,
+        actorUserId: input.actorUserId,
+        now: input.now,
+        intent: input.intent,
       });
     },
 
     async commitChecked(
       input,
     ): Promise<Result<CheckedLeadMutationOutcome, DomainError>> {
-      return inAtomicScope(executor, async (tx) => {
-        const deps = createMutationDeps(tx);
-        return executeCheckedLeadMutation({
-          deps: {
-            leadWriter: deps.leadWriter,
-            checkedLeadWriter: deps.checkedLeadWriter,
-            eventRepository: deps.eventRepository,
-            auditRepository: deps.auditRepository,
-          },
-          lead: input.lead,
-          actorUserId: input.actorUserId,
-          now: input.now,
-          expectedUpdatedAt: input.expectedUpdatedAt,
-          intent: input.intent,
-        });
+      const deps = createMutationDeps(executor);
+      return executeCheckedLeadMutation({
+        deps: {
+          leadWriter: deps.leadWriter,
+          checkedLeadWriter: deps.checkedLeadWriter,
+          eventRepository: deps.eventRepository,
+          auditRepository: deps.auditRepository,
+        },
+        lead: input.lead,
+        actorUserId: input.actorUserId,
+        now: input.now,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+        intent: input.intent,
       });
     },
   };

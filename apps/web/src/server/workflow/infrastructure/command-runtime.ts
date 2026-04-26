@@ -1,8 +1,10 @@
+import type { Transaction } from "kysely";
+
+import type { Database } from "~/lib/db/types";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { getServerRuntime } from "~/server/runtime";
 
-import type { DatabaseExecutor } from "../../shared/db-executor";
 import { runInWorkflowTransaction } from "../../shared/workflow-transaction";
 import {
   createWorkflowCommandApi,
@@ -31,7 +33,7 @@ export type WorkflowCommandRuntime = {
 };
 
 function createWorkflowCommandRuntime(
-  executor: DatabaseExecutor,
+  executor: Transaction<Database>,
   engineGateway: WorkflowEngineGateway,
 ): WorkflowCommandRuntime {
   const repos = createWorkflowRepos(executor);
