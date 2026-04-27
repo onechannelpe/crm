@@ -1,4 +1,5 @@
 // @refresh reload
+import "~/instrument.server";
 import type { DocumentComponentProps } from "@solidjs/start/server";
 import { createHandler, StartServer } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";

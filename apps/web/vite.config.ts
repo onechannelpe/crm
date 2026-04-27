@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 
 import { responsiveImagesPlugin } from "@crm/images/vite";
 import mdx from "@mdx-js/rollup";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { solidStart } from "@solidjs/start/config";
 import { nitroV2Plugin } from "@solidjs/vite-plugin-nitro-2";
 import remarkFrontmatter from "remark-frontmatter";
@@ -61,6 +62,10 @@ export default defineConfig({
     }),
     visualizer(),
     responsiveImagesPlugin(),
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+    }),
   ],
   esbuild: {
     target: "es2022",

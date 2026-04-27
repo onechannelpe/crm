@@ -50,11 +50,7 @@ export async function finishPasskeyOnboarding(
 
   const user = await repos.users.findById(input.session.userId);
   if (!user) {
-    return Err({
-      kind: "unexpected",
-      code: "user_not_found",
-      message: "No se pudo configurar la clave de acceso",
-    });
+    throw new Error("No se pudo configurar la clave de acceso");
   }
 
   const issued = await issueSessionTransition({

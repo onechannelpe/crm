@@ -1,4 +1,6 @@
 // @refresh reload
+import { init, replayIntegration } from "@sentry/solid";
+import { solidRouterBrowserTracingIntegration } from "@sentry/solid/solidrouter";
 import { mount, StartClient } from "@solidjs/start/client";
 
 import {
@@ -7,6 +9,21 @@ import {
 } from "./lib/observability/diagnostics/client";
 import { isHydrationMismatchError } from "./lib/observability/diagnostics/core";
 import { setupCsrfInterceptor } from "./lib/security/csrf-client";
+
+init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  integrations: [solidRouterBrowserTracingIntegration(), replayIntegration()],
+  tracesSampleRate: Number(
+    import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
+  ),
+  replaysSessionSampleRate: Number(
+    import.meta.env.VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE ?? "0.05",
+  ),
+  replaysOnErrorSampleRate: Number(
+    import.meta.env.VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE ?? "1.0",
+  ),
+  sendDefaultPii: false,
+});
 
 setupCsrfInterceptor();
 

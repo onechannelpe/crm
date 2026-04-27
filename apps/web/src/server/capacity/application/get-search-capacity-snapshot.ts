@@ -7,9 +7,9 @@ import {
   buildSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
 } from "~/server/capacity/domain/snapshot";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/server/shared/result";
 import { currentMonthlyPeriod } from "~/server/shared/time";
 
 import type { ActorScope } from "./actor-scope";
@@ -34,50 +34,38 @@ export async function getSearchCapacitySnapshot(
   userId: UserId,
   repos: SnapshotRepos,
 ): Promise<Result<SearchCapacitySnapshot, DomainError>> {
-  try {
-    const policyResult = await getEffectiveSearchPolicy(userId, repos);
-    if (!policyResult.ok) return policyResult;
+  const policyResult = await getEffectiveSearchPolicy(userId, repos);
+  if (!policyResult.ok) return policyResult;
 
-    const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
-    const [grants, reservations, commits] = await Promise.all([
-      repos.searchCapacityGrants.findByUserAndPeriod(
-        userId,
-        periodStart,
-        periodEnd,
-      ),
-      repos.searchUsageReservations.findByUserAndPeriod(
-        userId,
-        periodStart,
-        periodEnd,
-      ),
-      repos.searchUsageCommits.findByUserAndPeriod(
-        userId,
-        periodStart,
-        periodEnd,
-      ),
-    ]);
+  const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
+  const [grants, reservations, commits] = await Promise.all([
+    repos.searchCapacityGrants.findByUserAndPeriod(
+      userId,
+      periodStart,
+      periodEnd,
+    ),
+    repos.searchUsageReservations.findByUserAndPeriod(
+      userId,
+      periodStart,
+      periodEnd,
+    ),
+    repos.searchUsageCommits.findByUserAndPeriod(
+      userId,
+      periodStart,
+      periodEnd,
+    ),
+  ]);
 
-    return Ok(
-      buildSearchCapacitySnapshot({
-        policy: policyResult.value,
-        grants,
-        reservations,
-        commits,
-        periodStart,
-        periodEnd,
-      }),
-    );
-  } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to get search capacity snapshot",
-      ),
-    );
-  }
+  return Ok(
+    buildSearchCapacitySnapshot({
+      policy: policyResult.value,
+      grants,
+      reservations,
+      commits,
+      periodStart,
+      periodEnd,
+    }),
+  );
 }
 
 export type { SearchCapacitySnapshot };

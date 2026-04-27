@@ -41,52 +41,44 @@ export async function completeAccountOnboardingWithRepos(
 ): Promise<Result<void, CompleteOnboardingError>> {
   const now = deps.now ?? Date.now;
 
-  try {
-    const user = await repos.users.findById(input.userId);
-    if (!user) {
-      return Err({
-        kind: "not_found",
-        code: "user_not_found",
-        message: "User not found",
-      });
-    }
-
-    if (user.onboarding_completed_at !== null) {
-      return Ok(undefined);
-    }
-
-    const strongAuthStatus = await getStrongAuthStatus(input.userId, repos);
-    if (
-      requiresStrongAuthRole(user.role) &&
-      !strongAuthStatus.hasVerifiedStrongAuth
-    ) {
-      return Err({
-        kind: "conflict",
-        code: "strong_auth_required",
-        message: "Strong authentication setup required",
-      });
-    }
-
-    const completedAt = now();
-    await repos.users.completeOnboarding(user.id, {
-      phone_e164: input.phoneE164,
-      completedAt,
-    });
-    await bootstrapUserNotifications(
-      {
-        userId: user.id,
-        email: user.email,
-        phoneE164: input.phoneE164,
-        now: completedAt,
-      },
-      repos,
-    );
-    return Ok(undefined);
-  } catch {
+  const user = await repos.users.findById(input.userId);
+  if (!user) {
     return Err({
-      kind: "unexpected",
-      code: "unexpected",
-      message: "Unexpected onboarding completion failure",
+      kind: "not_found",
+      code: "user_not_found",
+      message: "User not found",
     });
   }
+
+  if (user.onboarding_completed_at !== null) {
+    return Ok(undefined);
+  }
+
+  const strongAuthStatus = await getStrongAuthStatus(input.userId, repos);
+  if (
+    requiresStrongAuthRole(user.role) &&
+    !strongAuthStatus.hasVerifiedStrongAuth
+  ) {
+    return Err({
+      kind: "conflict",
+      code: "strong_auth_required",
+      message: "Strong authentication setup required",
+    });
+  }
+
+  const completedAt = now();
+  await repos.users.completeOnboarding(user.id, {
+    phone_e164: input.phoneE164,
+    completedAt,
+  });
+  await bootstrapUserNotifications(
+    {
+      userId: user.id,
+      email: user.email,
+      phoneE164: input.phoneE164,
+      now: completedAt,
+    },
+    repos,
+  );
+  return Ok(undefined);
 }

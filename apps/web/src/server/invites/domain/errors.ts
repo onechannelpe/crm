@@ -17,6 +17,6 @@ export function inviteError(code: string, message: string): DomainError {
     case "invite_not_found":
       return domainError("not_found", code, message);
     default:
-      return domainError("unexpected", "unexpected", message);
+      throw new Error(message);
   }
 }

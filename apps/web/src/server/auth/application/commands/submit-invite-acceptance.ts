@@ -3,7 +3,7 @@ import type { InviteService } from "~/server/invites/application/types";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 import type { createUsersRepo } from "~/server/users/repos-users";
 
 export async function submitInviteAcceptance(
@@ -31,11 +31,7 @@ export async function submitInviteAcceptance(
 
   const user = await deps.repos.users.findById(accepted.value.userId);
   if (!user) {
-    return Err({
-      kind: "unexpected",
-      code: "user_not_found",
-      message: "No se pudo activar la cuenta",
-    });
+    throw new Error("No se pudo activar la cuenta");
   }
 
   const issued = await issueSessionTransition({

@@ -17,10 +17,10 @@ type ActionTelemetryError = {
 };
 
 export function toTelemetryError(error: unknown): ActionTelemetryError {
-  return {
-    code: isAppError(error) ? error.code : null,
-    message: getErrorMessage(error, "Unknown error"),
-  };
+  if (isAppError(error)) {
+    return { code: error.code, message: error.publicMessage };
+  }
+  return { code: null, message: getErrorMessage(error, "Unknown error") };
 }
 
 export function recordActionSuccess(input: ActionTelemetryInput) {

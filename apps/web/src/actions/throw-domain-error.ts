@@ -22,8 +22,6 @@ export function throwDomainError(domainError: DomainError): never {
       throw rateLimitError(domainError.message);
     case "external":
       throw internalError(domainError.message);
-    case "unexpected":
-      throw internalError(domainError.message);
   }
 
   const unreachable: never = domainError.kind;

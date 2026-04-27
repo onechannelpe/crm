@@ -77,7 +77,7 @@ describe("getInviteManagement", () => {
       listTeamsByBranch: async () => [{ id: 11, name: "Operaciones" }],
       listPendingInvites: async () =>
         Err({
-          kind: "unexpected",
+          kind: "external" as const,
           code: "invite_read_failed",
           message: "Invite service unavailable",
         }),

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createPasskeyEnrollmentAuthService } from "../../src/server/auth/passkey/service";
-import { Err, isErr } from "../../src/server/shared/result";
+import { isErr } from "../../src/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
 import {
   cleanupTestDb,
@@ -84,7 +84,9 @@ describe("passkey onboarding flow", () => {
         ipAddress: "198.51.100.10",
       });
       if (isErr(passkeyResult)) {
-        return Err(passkeyResult.error);
+        throw new Error(
+          `Passkey enrollment failed: ${passkeyResult.error.message}`,
+        );
       }
 
       return completeAccountOnboardingWithRepos(transactionRepos, {

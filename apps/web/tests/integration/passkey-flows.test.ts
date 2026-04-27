@@ -181,35 +181,31 @@ describe("passkey flows", () => {
     expect(result.error.code).toBe("invalid_request");
   });
 
-  it("returns unexpected when passkey enrollment options fail", async () => {
-    const result = await createPasskeyEnrollmentAuthService(ctx.repos, {
-      createWebauthnProvider: () => ({
-        async getRegistrationOptions() {
-          throw new Error("boom");
-        },
-        async verifyRegistration() {
-          throw new Error("not used in this test");
-        },
-        async getAuthenticationOptions() {
-          throw new Error("not used in this test");
-        },
-        async getAuthenticationOptionsForChallenge() {
-          throw new Error("not used in this test");
-        },
-        async verifyAuthentication() {
-          throw new Error("not used in this test");
-        },
+  it("propagates error when passkey enrollment options fail", async () => {
+    await expect(
+      createPasskeyEnrollmentAuthService(ctx.repos, {
+        createWebauthnProvider: () => ({
+          async getRegistrationOptions() {
+            throw new Error("boom");
+          },
+          async verifyRegistration() {
+            throw new Error("not used in this test");
+          },
+          async getAuthenticationOptions() {
+            throw new Error("not used in this test");
+          },
+          async getAuthenticationOptionsForChallenge() {
+            throw new Error("not used in this test");
+          },
+          async verifyAuthentication() {
+            throw new Error("not used in this test");
+          },
+        }),
+      }).beginEnrollment({
+        userId: 1,
+        ipAddress,
       }),
-    }).beginEnrollment({
-      userId: 1,
-      ipAddress,
-    });
-
-    expect(isErr(result)).toBe(true);
-    if (!isErr(result)) {
-      throw new Error("expected failed passkey enrollment start");
-    }
-    expect(result.error.code).toBe("unexpected");
+    ).rejects.toThrow("boom");
   });
 
   it("finish passkey registration rejects challenge ownership mismatch", async () => {
@@ -301,7 +297,7 @@ describe("passkey flows", () => {
     expect(result.error.code).toBe("invalid_request");
   });
 
-  it("returns unexpected when passkey enrollment persistence fails after verification", async () => {
+  it("propagates error when passkey enrollment verification throws a non-request error", async () => {
     const challengeId = await ctx.repos.webauthnChallenges.create({
       user_id: 1,
       type: "registration",
@@ -309,45 +305,41 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyEnrollmentAuthService(ctx.repos, {
-      createWebauthnProvider: () => ({
-        async getRegistrationOptions() {
-          throw new Error("not used in this test");
-        },
-        async verifyRegistration() {
-          throw new Error("boom");
-        },
-        async getAuthenticationOptions() {
-          throw new Error("not used in this test");
-        },
-        async getAuthenticationOptionsForChallenge() {
-          throw new Error("not used in this test");
-        },
-        async verifyAuthentication() {
-          throw new Error("not used in this test");
-        },
-      }),
-    }).finishEnrollment({
-      userId: 1,
-      challengeId,
-      response: {
-        id: "cred-r3",
-        rawId: "cred-r3",
-        type: "public-key",
+    await expect(
+      createPasskeyEnrollmentAuthService(ctx.repos, {
+        createWebauthnProvider: () => ({
+          async getRegistrationOptions() {
+            throw new Error("not used in this test");
+          },
+          async verifyRegistration() {
+            throw new Error("boom");
+          },
+          async getAuthenticationOptions() {
+            throw new Error("not used in this test");
+          },
+          async getAuthenticationOptionsForChallenge() {
+            throw new Error("not used in this test");
+          },
+          async verifyAuthentication() {
+            throw new Error("not used in this test");
+          },
+        }),
+      }).finishEnrollment({
+        userId: 1,
+        challengeId,
         response: {
-          clientDataJSON: "a",
-          attestationObject: "b",
+          id: "cred-r3",
+          rawId: "cred-r3",
+          type: "public-key",
+          response: {
+            clientDataJSON: "a",
+            attestationObject: "b",
+          },
+          clientExtensionResults: {},
         },
-        clientExtensionResults: {},
-      },
-      ipAddress,
-    });
-
-    expect(isErr(result)).toBe(true);
-    if (!isErr(result)) {
-      throw new Error("expected unexpected passkey verification failure");
-    }
-    expect(result.error.code).toBe("unexpected");
+        ipAddress,
+      }),
+    ).rejects.toThrow("boom");
   });
 
   it("finish passkey login issues a session through the workflow service", async () => {

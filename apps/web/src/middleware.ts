@@ -2,8 +2,11 @@ import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 
 import { enforceAuthRequest } from "~/lib/auth/access/request-auth";
+import { getEnvFor } from "~/lib/env";
 import { buildRequestContext } from "~/lib/http/request-context";
 import { generateRequestId, generateTraceId } from "~/lib/observability/ids";
+
+const { sentryIngestHost } = getEnvFor("sentry");
 
 export default createMiddleware({
   onRequest: async (event) => {
@@ -29,12 +32,16 @@ export default createMiddleware({
     // Nonce-based strict CSP per https://docs.solidjs.com/solid-start/guides/security
     // 'unsafe-eval' is required for SolidStart SSR hydration.
     // 'unsafe-inline' in style-src is required — first-party style={{}} props compile to inline styles.
+    const sentryConnectSrc = sentryIngestHost
+      ? ` https://${sentryIngestHost}`
+      : "";
     const csp = `
       default-src 'self';
       script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval';
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: https:;
       font-src 'self' data:;
+      connect-src 'self'${sentryConnectSrc};
       object-src 'none';
       frame-ancestors 'none';
       form-action 'self';

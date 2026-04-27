@@ -170,6 +170,6 @@ export async function uploadArtifactFile(
       // best effort: keep original error as the returned failure.
     }
 
-    return Err(domainError("unexpected", code, message));
+    throw err;
   }
 }
