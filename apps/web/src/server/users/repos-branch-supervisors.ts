@@ -34,6 +34,7 @@ export function createBranchSupervisorsRepo(db: Kysely<Database>) {
           user_id: userId,
           created_at: Math.floor(Date.now() / 1000),
         })
+        .onConflict((oc) => oc.doNothing())
         .execute();
     },
 

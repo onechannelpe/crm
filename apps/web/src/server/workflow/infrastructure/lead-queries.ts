@@ -75,6 +75,47 @@ function toExportRow(row: RecordExportSource): RecordExportRow {
   };
 }
 
+function applyVisibility(
+  query: any,
+  filters: LeadListFilters | RecordExportFilters,
+  options: { joinedExecutive: boolean },
+) {
+  let q = query;
+
+  const rolesNeedingJoin = [
+    "supervisor",
+    "back_office",
+    "sales_manager",
+    "admin",
+  ];
+  if (
+    !options.joinedExecutive &&
+    rolesNeedingJoin.includes(filters.actorRole)
+  ) {
+    q = q.innerJoin("users as executive", "executive.id", "lead.executive_id");
+  }
+
+  if (filters.actorRole === "supervisor") {
+    q = q.where("executive.branch_id", "in", (eb: any) =>
+      eb
+        .selectFrom("branch_supervisors")
+        .select("branch_id")
+        .where("user_id", "=", filters.actorUserId),
+    );
+  } else if (filters.actorRole === "back_office") {
+    q = q.where("executive.team_id", "in", (eb: any) =>
+      eb
+        .selectFrom("back_office_assignments")
+        .select("team_id")
+        .where("back_office_user_id", "=", filters.actorUserId),
+    );
+  } else if (["sales_manager", "admin"].includes(filters.actorRole)) {
+    q = q.where("executive.branch_id", "=", filters.actorBranchId);
+  }
+
+  return q;
+}
+
 export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
   return {
     async list(filters: LeadListFilters): Promise<LeadListRow[]> {
@@ -102,30 +143,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.updated_at",
         ]);
 
-      // supervisor: branch-scoped via branch_supervisors
-      if (filters.actorRole === "supervisor") {
-        query = query.where("executive.branch_id", "in", (eb) =>
-          eb
-            .selectFrom("branch_supervisors")
-            .select("branch_id")
-            .where("user_id", "=", filters.actorUserId),
-        );
-      }
-
-      // back_office: team-scoped via back_office_assignments
-      if (filters.actorRole === "back_office") {
-        query = query.where("executive.team_id", "in", (eb) =>
-          eb
-            .selectFrom("back_office_assignments")
-            .select("team_id")
-            .where("back_office_user_id", "=", filters.actorUserId),
-        );
-      }
-
-      // branch-scoped roles (sales_manager, admin): filter by branch_id
-      if (["sales_manager", "admin"].includes(filters.actorRole)) {
-        query = query.where("executive.branch_id", "=", filters.actorBranchId);
-      }
+      query = applyVisibility(query, filters, { joinedExecutive: true });
 
       if (filters.executiveId !== undefined) {
         query = query.where("lead.executive_id", "=", filters.executiveId);
@@ -171,33 +189,9 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
     async count(filters: LeadListFilters): Promise<number> {
       let query = db
         .selectFrom("workflow_leads as lead")
-        .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select((eb) => eb.fn.countAll<number>().as("count"));
 
-      // supervisor: branch-scoped via branch_supervisors
-      if (filters.actorRole === "supervisor") {
-        query = query.where("executive.branch_id", "in", (eb) =>
-          eb
-            .selectFrom("branch_supervisors")
-            .select("branch_id")
-            .where("user_id", "=", filters.actorUserId),
-        );
-      }
-
-      // back_office: team-scoped via back_office_assignments
-      if (filters.actorRole === "back_office") {
-        query = query.where("executive.team_id", "in", (eb) =>
-          eb
-            .selectFrom("back_office_assignments")
-            .select("team_id")
-            .where("back_office_user_id", "=", filters.actorUserId),
-        );
-      }
-
-      // branch-scoped roles (sales_manager, admin): filter by branch_id
-      if (["sales_manager", "admin"].includes(filters.actorRole)) {
-        query = query.where("executive.branch_id", "=", filters.actorBranchId);
-      }
+      query = applyVisibility(query, filters, { joinedExecutive: false });
 
       if (filters.executiveId !== undefined) {
         query = query.where("lead.executive_id", "=", filters.executiveId);
@@ -241,30 +235,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.created_at",
         ]);
 
-      // supervisor: branch-scoped via branch_supervisors
-      if (filters.actorRole === "supervisor") {
-        query = query.where("executive.branch_id", "in", (eb) =>
-          eb
-            .selectFrom("branch_supervisors")
-            .select("branch_id")
-            .where("user_id", "=", filters.actorUserId),
-        );
-      }
-
-      // back_office: team-scoped via back_office_assignments
-      if (filters.actorRole === "back_office") {
-        query = query.where("executive.team_id", "in", (eb) =>
-          eb
-            .selectFrom("back_office_assignments")
-            .select("team_id")
-            .where("back_office_user_id", "=", filters.actorUserId),
-        );
-      }
-
-      // branch-scoped roles (sales_manager, admin): filter by branch_id
-      if (["sales_manager", "admin"].includes(filters.actorRole)) {
-        query = query.where("executive.branch_id", "=", filters.actorBranchId);
-      }
+      query = applyVisibility(query, filters, { joinedExecutive: true });
 
       if (filters.executiveId !== undefined) {
         query = query.where("lead.executive_id", "=", filters.executiveId);

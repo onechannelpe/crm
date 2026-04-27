@@ -22,6 +22,7 @@ export function createBackOfficeAssignmentsRepo(db: Kysely<Database>) {
           team_id: teamId,
           assigned_at: Math.floor(Date.now() / 1000),
         })
+        .onConflict((oc) => oc.doNothing())
         .execute();
     },
   };

@@ -57,7 +57,7 @@ export function resolveWorkspaceContext(
     }
 
     const supervisor =
-      input.branchSupervisors.length === 1
+      input.branchSupervisors.length > 0
         ? {
             id: input.branchSupervisors[0].user_id,
             names: input.branchSupervisors[0].names,
