@@ -30,7 +30,7 @@ import {
   approveForSaleMutation,
   requestRateNegotiationMutation,
 } from "../data/mutations";
-import { formatAmount, formatRate } from "./format";
+import { formatAmount, formatRate } from "~/features/side-panel/pages/record-page/widgets/workflow/format";
 
 import styles from "./quoted-section.module.css";
 
