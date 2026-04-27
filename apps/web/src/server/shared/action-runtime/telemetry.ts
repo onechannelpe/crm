@@ -32,7 +32,6 @@ export function toTelemetryError(error: unknown): ActionTelemetryError {
     return { code: error.code, message: error.publicMessage };
   }
   if (isDomainError(error)) {
-    // Preserve the original domain error message rather than the sanitized public one
     return { code: null, message: error.message };
   }
   return { code: null, message: getErrorMessage(error, "Unknown error") };
