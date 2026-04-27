@@ -104,7 +104,13 @@ export async function uploadLeadNegotiationFile(
         "source_upload",
       );
       if (!fileAsset) {
-        throw new Error("File asset not found after upload");
+        return Err(
+          domainError(
+            "external",
+            "file_asset_not_found",
+            "File asset not found after upload",
+          ),
+        );
       }
 
       return Ok({
