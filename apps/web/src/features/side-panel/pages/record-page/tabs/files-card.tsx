@@ -110,16 +110,15 @@ export function FilesCard(props: FilesCardProps) {
 
   async function handleNegotiationDownload(leadId: string, artifactId: string) {
     setError(null);
-    try {
-      const token = await requestNegotiationFileDownloadToken({
-        leadId,
-        artifactId,
-      });
-      window.location.href = `/api/files/download/${token.token}`;
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo descargar el archivo",
-      );
+    const result = await requestNegotiationFileDownloadToken({
+      leadId,
+      artifactId,
+    });
+
+    if (result.ok) {
+      window.location.href = `/api/files/download/${result.value.token}`;
+    } else {
+      setError(result.error.publicMessage);
     }
   }
 

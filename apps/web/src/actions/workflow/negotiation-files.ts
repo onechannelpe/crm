@@ -1,12 +1,12 @@
 "use server";
 
-import { validationError } from "~/lib/app-errors";
+import { AppError, validationError } from "~/lib/app-errors";
 import { requestArtifact } from "~/server/files/service/request-artifact";
 import { requestDownloadToken } from "~/server/files/service/request-download-token";
 import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runActionResult } from "~/server/shared/action-runtime";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -41,10 +41,10 @@ async function requireLeadWithAccess(
 export async function uploadLeadNegotiationFile(
   leadId: string,
   formData: FormData,
-): Promise<LeadNegotiationFileView> {
+): Promise<Result<LeadNegotiationFileView, AppError>> {
   if (!leadId.trim()) throw validationError("leadId is required");
 
-  return runAction({
+  return runActionResult({
     actionName: "workflow.negotiation_file.upload",
     access: { kind: "auth" },
     input: { leadId },
@@ -120,11 +120,11 @@ export async function uploadLeadNegotiationFile(
 export async function requestNegotiationFileDownloadToken(input: {
   leadId: string;
   artifactId: string;
-}): Promise<{ token: string }> {
+}): Promise<Result<{ token: string }, AppError>> {
   if (!input.leadId.trim()) throw validationError("leadId is required");
   if (!input.artifactId.trim()) throw validationError("artifactId is required");
 
-  return runAction({
+  return runActionResult({
     actionName: "workflow.negotiation_file.download_token",
     access: { kind: "auth" },
     input,

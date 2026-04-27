@@ -1,14 +1,17 @@
 "use server";
 
-import { runAction } from "~/server/shared/action-runtime";
+import { AppError } from "~/lib/app-errors";
+import { runActionResult } from "~/server/shared/action-runtime";
+import type { Result } from "~/server/shared/result";
+import type { LeadCommandResult } from "~/server/workflow/application/contracts/command-results";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
 
 export async function requestRateNegotiation(input: {
   leadId: string;
   justification: string;
   artifactIds: string[];
-}) {
-  return runAction({
+}): Promise<Result<LeadCommandResult, AppError>> {
+  return runActionResult({
     actionName: "workflow.request_rate_negotiation",
     access: { kind: "auth" },
     input: { leadId: input.leadId },

@@ -121,7 +121,10 @@ export const requestRateNegotiationMutation = action(
     justification: string;
     artifactIds: string[];
   }) => {
-    await requestRateNegotiation(input);
+    const result = await requestRateNegotiation(input);
+    if (!result.ok) {
+      throw result.error;
+    }
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },

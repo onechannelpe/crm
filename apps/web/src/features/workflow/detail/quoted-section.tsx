@@ -99,14 +99,31 @@ export function QuotedSection(props: QuotedSectionProps) {
           return uploadLeadNegotiationFile(props.leadId, formData);
         }),
       );
-      setStagedFiles((prev) => [
-        ...prev,
-        ...results.map((result) => ({
-          artifactId: result.artifactId,
-          filename: result.filename,
-          sizeBytes: result.sizeBytes,
-        })),
-      ]);
+
+      const successes = results
+        .filter((r) => r.ok)
+        .map((r) => r.value as StagedFile);
+      const failures = results.filter((r) => !r.ok);
+
+      if (failures.length > 0) {
+        setError(
+          failures.length === 1
+            ? (failures[0] as { error: { publicMessage: string } }).error
+                .publicMessage
+            : "Algunos archivos no se pudieron subir",
+        );
+      }
+
+      if (successes.length > 0) {
+        setStagedFiles((prev) => [
+          ...prev,
+          ...successes.map((s) => ({
+            artifactId: s.artifactId,
+            filename: s.filename,
+            sizeBytes: s.sizeBytes,
+          })),
+        ]);
+      }
     } catch (err) {
       setError(toAppError(err, "Error al subir archivo").publicMessage);
     } finally {
