@@ -272,16 +272,13 @@ describe("capacity approval commands", () => {
       failMarkApproved: true,
     });
 
-    const result = await approveCapacityRequest(makeContext(), harness.port, {
-      requestId: REQUEST_ID,
-      note: null,
-    });
+    await expect(
+      approveCapacityRequest(makeContext(), harness.port, {
+        requestId: REQUEST_ID,
+        note: null,
+      }),
+    ).rejects.toThrow("db connection lost");
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected unexpected error result");
-    }
-    expect(result.error.code).toBe("unexpected");
     expect(harness.request?.status).toBe("pending");
     expect(harness.searchGrants).toEqual([]);
     expect(harness.transactionCalls).toBe(1);

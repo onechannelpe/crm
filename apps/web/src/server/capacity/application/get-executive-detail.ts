@@ -64,14 +64,6 @@ export async function getExecutiveDetail(
       })),
     });
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to get executive capacity detail",
-      ),
-    );
+    throw error;
   }
 }

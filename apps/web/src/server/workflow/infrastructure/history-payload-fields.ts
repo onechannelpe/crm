@@ -1,6 +1,6 @@
 import { isPlainRecord } from "~/lib/type-guards";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStage,
@@ -17,10 +17,8 @@ import type {
 
 import type { HistoryEventRow } from "./history-event-row";
 
-function invalidPayload(row: HistoryEventRow, key?: string): DomainError {
-  return domainError(
-    "unexpected",
-    "invalid_history_payload",
+function invalidPayload(row: HistoryEventRow, key?: string): never {
+  throw new Error(
     key
       ? `Invalid history payload field "${key}" for event ${row.id} (${row.event_type})`
       : `Invalid history payload for event ${row.id} (${row.event_type})`,
@@ -41,7 +39,7 @@ export function parsePayload(
     }
   } catch {}
 
-  return Err(invalidPayload(row));
+  invalidPayload(row);
 }
 
 export function requireString(
@@ -54,7 +52,7 @@ export function requireString(
     return Ok(value);
   }
 
-  return Err(invalidPayload(row, key));
+  invalidPayload(row, key);
 }
 
 export function optionalString(
@@ -70,7 +68,7 @@ export function optionalString(
     return Ok(value);
   }
 
-  return Err(invalidPayload(row, key));
+  invalidPayload(row, key);
 }
 
 export function nullableString(
@@ -86,7 +84,7 @@ export function nullableString(
     return Ok(value);
   }
 
-  return Err(invalidPayload(row, key));
+  invalidPayload(row, key);
 }
 
 export function requireNumber(
@@ -99,7 +97,7 @@ export function requireNumber(
     return Ok(value);
   }
 
-  return Err(invalidPayload(row, key));
+  invalidPayload(row, key);
 }
 
 export function requireLeadStage(
@@ -146,7 +144,7 @@ export function optionalLeadStatus(
     return Ok(null);
   }
   if (typeof value !== "string") {
-    return Err(invalidPayload(row, key));
+    invalidPayload(row, key);
   }
 
   const parsed = parseRequiredLeadStatus(value);
@@ -183,7 +181,7 @@ export function optionalLeadPriority(
     return Ok(null);
   }
   if (typeof value !== "string") {
-    return Err(invalidPayload(row, key));
+    invalidPayload(row, key);
   }
 
   const parsed = parseRequiredLeadPriority(value);
@@ -207,7 +205,7 @@ export function requireCallOutcome(
     case "disqualified":
       return Ok(value);
     default:
-      return Err(invalidPayload(row, "outcome"));
+      invalidPayload(row, "outcome");
   }
 }
 

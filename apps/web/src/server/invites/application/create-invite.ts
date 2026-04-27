@@ -96,16 +96,11 @@ export async function createInvite(
             }),
           );
           user = await transactionRepos.users.findById(createdUserId);
-        } catch {
+        } catch (raceError) {
           const racedUser =
             await transactionRepos.users.findByEmail(normalizedEmail);
           if (!racedUser) {
-            return Err(
-              inviteError(
-                "unexpected",
-                "Unexpected invite target creation failure",
-              ),
-            );
+            throw raceError;
           }
           if (racedUser.is_active === 1) {
             return Err(
@@ -157,9 +152,7 @@ export async function createInvite(
 
       return Ok(issued);
     });
-  } catch {
-    return Err(
-      inviteError("unexpected", "Unexpected invite provisioning failure"),
-    );
+  } catch (error) {
+    throw error;
   }
 }

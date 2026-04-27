@@ -66,13 +66,7 @@ export async function requestCapacity(
     });
     return Ok({ success: true });
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error ? error.message : "Request creation failed",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -145,15 +139,7 @@ export async function approveCapacityRequest(
             reason: note ?? request.reason,
           });
         } catch (error) {
-          rollback(
-            domainError(
-              "unexpected",
-              "unexpected",
-              error instanceof Error
-                ? error.message
-                : "Failed to grant search capacity",
-            ),
-          );
+          throw error;
         }
       } else {
         try {
@@ -164,15 +150,7 @@ export async function approveCapacityRequest(
             reason: note ?? request.reason,
           });
         } catch (error) {
-          rollback(
-            domainError(
-              "unexpected",
-              "unexpected",
-              error instanceof Error
-                ? error.message
-                : "Failed to grant lead capacity",
-            ),
-          );
+          throw error;
         }
       }
 
@@ -182,13 +160,7 @@ export async function approveCapacityRequest(
     return Ok(result);
   } catch (error) {
     if (error instanceof RollbackError) return Err(error.domainErr);
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error ? error.message : "Approval failed",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -268,13 +240,7 @@ export async function rejectCapacityRequest(
     return Ok(result);
   } catch (error) {
     if (error instanceof RollbackError) return Err(error.domainErr);
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error ? error.message : "Rejection failed",
-      ),
-    );
+    throw error;
   }
 }
 

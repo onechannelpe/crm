@@ -7,9 +7,9 @@ import {
   buildSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
 } from "~/server/capacity/domain/snapshot";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/server/shared/result";
 import { currentMonthlyPeriod } from "~/server/shared/time";
 
 import type { ActorScope } from "./actor-scope";
@@ -68,15 +68,7 @@ export async function getSearchCapacitySnapshot(
       }),
     );
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to get search capacity snapshot",
-      ),
-    );
+    throw error;
   }
 }
 

@@ -195,13 +195,7 @@ export async function uploadLeadSaleProofFile(
         "source_upload",
       );
       if (!fileAsset) {
-        return Err(
-          domainError(
-            "unexpected",
-            "artifact_file_not_found",
-            "File not found for this artifact",
-          ),
-        );
+        throw new Error("File not found for this artifact");
       }
 
       const createdAt = ctx.now();

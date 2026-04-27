@@ -1,6 +1,6 @@
 import type { AppContext } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityReadContext } from "../infrastructure/read-context";
 import type { CapacityPolicyDefaultsView } from "./contracts";
@@ -45,14 +45,6 @@ export async function getPolicyDefaults(
       })),
     });
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to get policy defaults",
-      ),
-    );
+    throw error;
   }
 }

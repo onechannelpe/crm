@@ -1,6 +1,6 @@
 import type { AppContext } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
 import type { CapacityReadContext } from "../infrastructure/read-context";
@@ -34,14 +34,6 @@ export async function listPendingRequests(
     }));
     return Ok(scopedPending);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to list pending requests",
-      ),
-    );
+    throw error;
   }
 }

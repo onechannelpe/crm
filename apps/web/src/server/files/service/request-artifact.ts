@@ -49,8 +49,7 @@ async function runSyncExport(
   try {
     result = await syncExecutor.run(artifactType, workflowContext);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Export failed";
-    return Err(domainError("unexpected", "sync_executor_failed", msg));
+    throw err;
   }
 
   const bytes = result.bytes;
@@ -61,7 +60,7 @@ async function runSyncExport(
   if (!staticValidation.ok) {
     return Err(
       domainError(
-        "unexpected",
+        "external",
         "sync_executor_invalid_output",
         `Sync executor output failed validation: ${staticValidation.reason}`,
       ),
@@ -75,7 +74,7 @@ async function runSyncExport(
   if (streamError) {
     return Err(
       domainError(
-        "unexpected",
+        "external",
         "sync_executor_invalid_output",
         `Sync executor output failed validation: ${streamError.reason}`,
       ),
@@ -85,7 +84,7 @@ async function runSyncExport(
   if (!streamValidation.ok) {
     return Err(
       domainError(
-        "unexpected",
+        "external",
         "sync_executor_invalid_output",
         `Sync executor output failed validation: ${streamValidation.reason}`,
       ),
@@ -199,13 +198,7 @@ export async function requestArtifact(
 
   const artifact = await repo.artifacts.findById(artifactId);
   if (!artifact) {
-    return Err(
-      domainError(
-        "unexpected",
-        "artifact_missing_after_insert",
-        "Artifact not found after creation",
-      ),
-    );
+    throw new Error("Artifact not found after creation");
   }
 
   const fileAsset =

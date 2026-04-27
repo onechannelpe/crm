@@ -81,7 +81,7 @@ export async function resendInvite(
 
       return Ok(issued);
     });
-  } catch {
-    return Err(inviteError("unexpected", "Unexpected invite resend failure"));
+  } catch (error) {
+    throw error;
   }
 }

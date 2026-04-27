@@ -76,7 +76,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       } catch {
         return Err(
           domainError(
-            "unexpected",
+            "external",
             "engine_response_parse_failed",
             "Failed to parse Engine response JSON",
             { request_id: requestId },
@@ -91,7 +91,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       } catch (err) {
         return Err(
           domainError(
-            "unexpected",
+            "external",
             "engine_response_invalid",
             err instanceof Error ? err.message : "Invalid response shape",
             { request_id: requestId },
@@ -133,7 +133,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       } catch {
         return Err(
           domainError(
-            "unexpected",
+            "external",
             "engine_response_parse_failed",
             "Failed to parse Engine response JSON",
             { request_id: requestId },
@@ -147,7 +147,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       } catch (err) {
         return Err(
           domainError(
-            "unexpected",
+            "external",
             "engine_response_invalid",
             err instanceof Error ? err.message : "Invalid response shape",
             { request_id: requestId },

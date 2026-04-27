@@ -70,7 +70,7 @@ export async function revokeInvite(
 
       return Ok(undefined);
     });
-  } catch {
-    return Err(inviteError("unexpected", "Unexpected invite revoke failure"));
+  } catch (error) {
+    throw error;
   }
 }

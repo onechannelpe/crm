@@ -4,8 +4,7 @@ export type DomainErrorKind =
   | "not_found"
   | "conflict"
   | "rate_limited"
-  | "external"
-  | "unexpected";
+  | "external";
 
 export interface DomainError {
   kind: DomainErrorKind;

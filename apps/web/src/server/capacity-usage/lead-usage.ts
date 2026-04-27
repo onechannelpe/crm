@@ -59,13 +59,7 @@ export async function reserveLeadUsage(
     });
     return Ok(asLeadReservationId(row.id));
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error ? error.message : "Failed to reserve lead usage",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -97,13 +91,7 @@ export async function commitLeadUsage(
     );
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error ? error.message : "Failed to commit lead usage",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -130,13 +118,7 @@ export async function cancelLeadUsage(
     );
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error ? error.message : "Failed to cancel lead usage",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -153,14 +135,6 @@ export async function grantLeadCapacity(
     });
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to grant lead capacity",
-      ),
-    );
+    throw error;
   }
 }

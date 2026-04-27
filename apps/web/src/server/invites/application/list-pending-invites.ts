@@ -1,8 +1,7 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import type { BranchId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/server/shared/result";
 
-import { inviteError } from "../domain/errors";
 import type { InviteDeps, InviteRuntime, PendingBranchInvite } from "./types";
 
 export async function listPendingInvites(
@@ -34,9 +33,7 @@ export async function listPendingInvites(
         sentAt: row.invite_sent_at,
       })),
     );
-  } catch {
-    return Err(
-      inviteError("unexpected", "Unexpected pending invites read failure"),
-    );
+  } catch (error) {
+    throw error;
   }
 }

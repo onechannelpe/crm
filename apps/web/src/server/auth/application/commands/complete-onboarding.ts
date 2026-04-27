@@ -4,7 +4,7 @@ import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
   type CompleteOnboardingError,
@@ -40,11 +40,7 @@ export async function completeOnboarding(
 
   const user = await deps.repos.users.findById(input.session.userId);
   if (!user) {
-    return Err({
-      kind: "unexpected",
-      code: "unexpected",
-      message: "No se pudo completar el registro",
-    });
+    throw new Error("No se pudo completar el registro");
   }
 
   const strongAuthMethod = input.session.strongAuthMethod;

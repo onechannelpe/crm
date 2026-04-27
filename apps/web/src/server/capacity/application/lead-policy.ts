@@ -64,15 +64,7 @@ export async function getEffectiveLeadPolicy(
 
     return Ok(resolveLeadPolicy({ userOverride, teamDefault, branchDefault }));
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to resolve lead policy",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -89,15 +81,7 @@ export async function setLeadScopeDefault(
     });
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to set lead scope default",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -116,14 +100,6 @@ export async function setLeadUserOverride(
     });
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to set lead user override",
-      ),
-    );
+    throw error;
   }
 }

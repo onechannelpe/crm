@@ -82,11 +82,7 @@ export async function completeAccountOnboardingWithRepos(
       repos,
     );
     return Ok(undefined);
-  } catch {
-    return Err({
-      kind: "unexpected",
-      code: "unexpected",
-      message: "Unexpected onboarding completion failure",
-    });
+  } catch (error) {
+    throw error;
   }
 }

@@ -55,15 +55,7 @@ export async function getEffectiveSearchPolicy(
       resolveSearchPolicy({ userOverride, teamDefault, branchDefault }),
     );
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to resolve search policy",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -80,15 +72,7 @@ export async function setSearchScopeDefault(
     });
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to set search scope default",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -106,14 +90,6 @@ export async function setSearchUserOverride(
     });
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to set search user override",
-      ),
-    );
+    throw error;
   }
 }

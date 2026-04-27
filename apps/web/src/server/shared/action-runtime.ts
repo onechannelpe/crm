@@ -69,7 +69,6 @@ function domainToAppError(error: DomainError): AppError {
     case "rate_limited":
       return rateLimitError(error.message);
     case "external":
-    case "unexpected":
       return internalError("An unexpected error occurred");
   }
 
@@ -108,10 +107,7 @@ export async function runAction<T, E extends DomainError>(
 
   if (isErr(result)) {
     const appError = domainToAppError(result.error);
-    if (
-      result.error.kind === "unexpected" ||
-      result.error.kind === "external"
-    ) {
+    if (result.error.kind === "external") {
       captureException(result.error);
     }
     recordActionError(telemetry, toTelemetryError(result.error));

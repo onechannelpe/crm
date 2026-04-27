@@ -9,10 +9,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
-import {
-  INVALID_PASSKEY_REQUEST,
-  UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-} from "./shared";
+import { INVALID_PASSKEY_REQUEST } from "./shared";
 import type { PasskeyEnrollmentChallenge } from "./types";
 
 interface PasskeyEnrollmentServiceDeps {
@@ -61,39 +58,18 @@ export function createPasskeyEnrollmentService(
         );
       }
 
-      let options: PasskeyEnrollmentChallenge["options"];
-      try {
-        options = await deps.webauthnService.getRegistrationOptions(
-          input.userId,
-        );
-      } catch {
-        return Err(
-          domainError(
-            "unexpected",
-            "unexpected",
-            UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-          ),
-        );
-      }
+      const options = await deps.webauthnService.getRegistrationOptions(
+        input.userId,
+      );
 
-      try {
-        const challengeId = await repos.webauthnChallenges.create({
-          user_id: input.userId,
-          type: "registration",
-          challenge: options.challenge,
-          expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
-        });
+      const challengeId = await repos.webauthnChallenges.create({
+        user_id: input.userId,
+        type: "registration",
+        challenge: options.challenge,
+        expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
+      });
 
-        return Ok({ challengeId, options });
-      } catch {
-        return Err(
-          domainError(
-            "unexpected",
-            "unexpected",
-            UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-          ),
-        );
-      }
+      return Ok({ challengeId, options });
     },
 
     async finishEnrollment(
@@ -110,108 +86,92 @@ export function createPasskeyEnrollmentService(
         );
       }
 
-      try {
-        const throttle = await throttleService.checkPasskeyVerifyThrottle(
-          identifier,
-          input.ipAddress,
-        );
-        if (!throttle.allowed) {
-          return Err(
-            domainError(
-              "validation",
-              "invalid_request",
-              INVALID_PASSKEY_REQUEST,
-            ),
-          );
-        }
-
-        const challenge =
-          await repos.webauthnChallenges.findById(safeChallengeId);
-        if (
-          !challenge ||
-          challenge.type !== "registration" ||
-          challenge.user_id !== input.userId
-        ) {
-          await throttleService.recordPasskeyVerifyFailure(
-            identifier,
-            input.ipAddress,
-          );
-          return Err(
-            domainError(
-              "validation",
-              "invalid_request",
-              INVALID_PASSKEY_REQUEST,
-            ),
-          );
-        }
-
-        await repos.webauthnChallenges.delete(challenge.id);
-        if (challenge.expires_at < Date.now()) {
-          await throttleService.recordPasskeyVerifyFailure(
-            identifier,
-            input.ipAddress,
-          );
-          return Err(
-            domainError(
-              "validation",
-              "invalid_request",
-              INVALID_PASSKEY_REQUEST,
-            ),
-          );
-        }
-
-        try {
-          await deps.webauthnService.verifyRegistration(
-            input.userId,
-            input.response,
-            challenge.challenge,
-          );
-        } catch (error: unknown) {
-          if (!isPasskeyRequestError(error)) {
-            return Err(
-              domainError(
-                "unexpected",
-                "unexpected",
-                UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-              ),
-            );
-          }
-
-          await throttleService.recordPasskeyVerifyFailure(
-            identifier,
-            input.ipAddress,
-          );
-          return Err(
-            domainError(
-              "validation",
-              "invalid_request",
-              INVALID_PASSKEY_REQUEST,
-            ),
-          );
-        }
-
-        await throttleService.clearPasskeyVerifyFailureState(
-          identifier,
-          input.ipAddress,
-        );
-        await repos.auditLogs.create({
-          user_id: input.userId,
-          action: "passkey_registered",
-          entity_type: "passkey",
-          entity_id: input.userId,
-          changes: null,
-          created_at: Date.now(),
-        });
-        return Ok(undefined);
-      } catch {
+      const throttle = await throttleService.checkPasskeyVerifyThrottle(
+        identifier,
+        input.ipAddress,
+      );
+      if (!throttle.allowed) {
         return Err(
           domainError(
-            "unexpected",
-            "unexpected",
-            UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
+            "validation",
+            "invalid_request",
+            INVALID_PASSKEY_REQUEST,
           ),
         );
       }
+
+      const challenge =
+        await repos.webauthnChallenges.findById(safeChallengeId);
+      if (
+        !challenge ||
+        challenge.type !== "registration" ||
+        challenge.user_id !== input.userId
+      ) {
+        await throttleService.recordPasskeyVerifyFailure(
+          identifier,
+          input.ipAddress,
+        );
+        return Err(
+          domainError(
+            "validation",
+            "invalid_request",
+            INVALID_PASSKEY_REQUEST,
+          ),
+        );
+      }
+
+      await repos.webauthnChallenges.delete(challenge.id);
+      if (challenge.expires_at < Date.now()) {
+        await throttleService.recordPasskeyVerifyFailure(
+          identifier,
+          input.ipAddress,
+        );
+        return Err(
+          domainError(
+            "validation",
+            "invalid_request",
+            INVALID_PASSKEY_REQUEST,
+          ),
+        );
+      }
+
+      try {
+        await deps.webauthnService.verifyRegistration(
+          input.userId,
+          input.response,
+          challenge.challenge,
+        );
+      } catch (error: unknown) {
+        if (!isPasskeyRequestError(error)) {
+          throw error;
+        }
+
+        await throttleService.recordPasskeyVerifyFailure(
+          identifier,
+          input.ipAddress,
+        );
+        return Err(
+          domainError(
+            "validation",
+            "invalid_request",
+            INVALID_PASSKEY_REQUEST,
+          ),
+        );
+      }
+
+      await throttleService.clearPasskeyVerifyFailureState(
+        identifier,
+        input.ipAddress,
+      );
+      await repos.auditLogs.create({
+        user_id: input.userId,
+        action: "passkey_registered",
+        entity_type: "passkey",
+        entity_id: input.userId,
+        changes: null,
+        created_at: Date.now(),
+      });
+      return Ok(undefined);
     },
   };
 }

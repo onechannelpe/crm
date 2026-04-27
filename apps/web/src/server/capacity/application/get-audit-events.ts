@@ -1,8 +1,8 @@
 import { isPlainRecord } from "~/lib/type-guards";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
 import type { AppContext } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityReadContext } from "../infrastructure/read-context";
 import type { CapacityAuditEvent, AuditChangeValue } from "./contracts";
@@ -105,12 +105,6 @@ export async function getAuditEvents(
 
     return Ok(filtered);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error ? error.message : "Failed to list audit events",
-      ),
-    );
+    throw error;
   }
 }

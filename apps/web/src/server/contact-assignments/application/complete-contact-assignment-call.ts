@@ -11,13 +11,9 @@ import type {
   CompleteContactAssignmentCallResult,
 } from "./contracts";
 
-function rejectMismatchedAssignment(): Result<never, DomainError> {
-  return Err(
-    domainError(
-      "unexpected",
-      "unexpected",
-      "Contact assignment is not active or does not match the contact",
-    ),
+function rejectMismatchedAssignment(): never {
+  throw new Error(
+    "Contact assignment is not active or does not match the contact",
   );
 }
 

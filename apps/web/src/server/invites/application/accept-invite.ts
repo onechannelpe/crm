@@ -71,9 +71,7 @@ export async function acceptInvite(
 
       return Ok(mapAcceptedInviteResult(invite));
     });
-  } catch {
-    return Err(
-      inviteError("unexpected", "Unexpected invite acceptance failure"),
-    );
+  } catch (error) {
+    throw error;
   }
 }

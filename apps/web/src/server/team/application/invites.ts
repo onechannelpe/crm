@@ -41,11 +41,7 @@ export async function getInviteInfo(input: {
       email: invite.user_email,
     });
   } catch (error) {
-    return Err({
-      kind: "unexpected",
-      code: "unexpected",
-      message: error instanceof Error ? error.message : "Invite read failed",
-    });
+    throw error;
   }
 }
 

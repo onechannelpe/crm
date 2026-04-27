@@ -59,15 +59,7 @@ export async function reserveSearchUsage(
     });
     return Ok(asSearchReservationId(row.id));
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to reserve search usage",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -98,15 +90,7 @@ export async function commitSearchUsage(
     );
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to commit search usage",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -133,15 +117,7 @@ export async function cancelSearchUsage(
     );
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to cancel search usage",
-      ),
-    );
+    throw error;
   }
 }
 
@@ -158,14 +134,6 @@ export async function grantSearchCapacity(
     });
     return Ok(undefined);
   } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to grant search capacity",
-      ),
-    );
+    throw error;
   }
 }

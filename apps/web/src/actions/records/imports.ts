@@ -114,14 +114,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         "source_upload",
       );
       if (!fileAsset) {
-        return {
-          ok: false as const,
-          error: {
-            kind: "unexpected" as const,
-            code: "file_asset_missing",
-            message: "File asset missing after upload",
-          },
-        };
+        throw new Error("File asset missing after upload");
       }
 
       const jobId = await integration.jobs.insert({
