@@ -159,7 +159,7 @@ function sentryIngestHostFromDsn(dsn: string): string {
 }
 
 function parseSentryEnv(source: EnvSource) {
-  const sentryDsn = optional(source, "SENTRY_DSN", "");
+  const sentryDsn = optional(source, "VITE_SENTRY_DSN", "");
   return {
     sentryDsn,
     sentryIngestHost: sentryDsn ? sentryIngestHostFromDsn(sentryDsn) : "",
