@@ -50,10 +50,7 @@ export async function getAuditEvents(
   deps: CapacityReadContext,
   input: { limit?: number },
 ): Promise<Result<CapacityAuditEvent[], DomainError>> {
-  const effectiveLimit = Math.max(
-    1,
-    input.limit ?? AUDIT_READER_DEFAULT_LIMIT,
-  );
+  const effectiveLimit = Math.max(1, input.limit ?? AUDIT_READER_DEFAULT_LIMIT);
   const now = Date.now();
   const [recent, branchUsers, branchTeams] = await Promise.all([
     deps.repos.auditLogs.listRecent({

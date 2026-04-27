@@ -20,9 +20,7 @@ export async function resendInvite(
     const currentTime = runtime.now();
     await transactionRepos.userInvites.expirePendingBefore(currentTime);
 
-    const invite = await transactionRepos.userInvites.findById(
-      input.inviteId,
-    );
+    const invite = await transactionRepos.userInvites.findById(input.inviteId);
     if (!invite) {
       return Err(inviteError("invite_not_found", "Invite not found"));
     }
@@ -36,10 +34,7 @@ export async function resendInvite(
     }
     if (invite.status !== "pending") {
       return Err(
-        inviteError(
-          "invite_not_pending",
-          "Only pending invites can be resent",
-        ),
+        inviteError("invite_not_pending", "Only pending invites can be resent"),
       );
     }
 

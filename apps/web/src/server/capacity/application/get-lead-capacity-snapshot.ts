@@ -39,13 +39,12 @@ export async function getLeadCapacitySnapshot(
   if (!policyResult.ok) return policyResult;
 
   const { date } = currentDailyPeriod(new Date());
-  const [grants, reservations, commits, activeAssignments] =
-    await Promise.all([
-      repos.leadCapacityGrants.findByUserAndDate(userId, date),
-      repos.leadUsageReservations.findByUserAndDate(userId, date),
-      repos.leadUsageCommits.findByUserAndDate(userId, date),
-      repos.contactAssignments.countActiveByUser(userId),
-    ]);
+  const [grants, reservations, commits, activeAssignments] = await Promise.all([
+    repos.leadCapacityGrants.findByUserAndDate(userId, date),
+    repos.leadUsageReservations.findByUserAndDate(userId, date),
+    repos.leadUsageCommits.findByUserAndDate(userId, date),
+    repos.contactAssignments.countActiveByUser(userId),
+  ]);
 
   return Ok(
     buildLeadCapacitySnapshot({

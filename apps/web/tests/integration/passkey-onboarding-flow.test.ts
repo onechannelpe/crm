@@ -84,7 +84,9 @@ describe("passkey onboarding flow", () => {
         ipAddress: "198.51.100.10",
       });
       if (isErr(passkeyResult)) {
-        throw new Error(`Passkey enrollment failed: ${passkeyResult.error.message}`);
+        throw new Error(
+          `Passkey enrollment failed: ${passkeyResult.error.message}`,
+        );
       }
 
       return completeAccountOnboardingWithRepos(transactionRepos, {

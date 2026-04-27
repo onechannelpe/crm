@@ -20,11 +20,7 @@ export async function listManagedExecutives(
 
   const summaries = await Promise.all(
     users.map(async (user) => {
-      const managed = await canManageExecutive(
-        ctx.actor,
-        user.id,
-        deps.repos,
-      );
+      const managed = await canManageExecutive(ctx.actor, user.id, deps.repos);
       if (!managed.ok) return null;
 
       const [searchStatus, leadStatus] = await Promise.all([

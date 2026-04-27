@@ -50,9 +50,7 @@ export async function getEffectiveSearchPolicy(
     user.branchId,
   );
 
-  return Ok(
-    resolveSearchPolicy({ userOverride, teamDefault, branchDefault }),
-  );
+  return Ok(resolveSearchPolicy({ userOverride, teamDefault, branchDefault }));
 }
 
 export async function setSearchScopeDefault(

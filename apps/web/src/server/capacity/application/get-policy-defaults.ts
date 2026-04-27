@@ -11,10 +11,7 @@ export async function getPolicyDefaults(
 ): Promise<Result<CapacityPolicyDefaultsView, DomainError>> {
   const [teams, branchSearch, branchLead] = await Promise.all([
     deps.repos.teams.findByBranch(ctx.actor.branchId),
-    deps.repos.searchPolicyDefaults.findForScope(
-      "branch",
-      ctx.actor.branchId,
-    ),
+    deps.repos.searchPolicyDefaults.findForScope("branch", ctx.actor.branchId),
     deps.repos.leadPolicyDefaults.findForScope("branch", ctx.actor.branchId),
   ]);
   const teamIds = teams.map((team) => team.id);

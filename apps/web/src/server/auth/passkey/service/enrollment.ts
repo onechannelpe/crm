@@ -92,11 +92,7 @@ export function createPasskeyEnrollmentService(
       );
       if (!throttle.allowed) {
         return Err(
-          domainError(
-            "validation",
-            "invalid_request",
-            INVALID_PASSKEY_REQUEST,
-          ),
+          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
         );
       }
 
@@ -112,11 +108,7 @@ export function createPasskeyEnrollmentService(
           input.ipAddress,
         );
         return Err(
-          domainError(
-            "validation",
-            "invalid_request",
-            INVALID_PASSKEY_REQUEST,
-          ),
+          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
         );
       }
 
@@ -127,11 +119,7 @@ export function createPasskeyEnrollmentService(
           input.ipAddress,
         );
         return Err(
-          domainError(
-            "validation",
-            "invalid_request",
-            INVALID_PASSKEY_REQUEST,
-          ),
+          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
         );
       }
 
@@ -151,11 +139,7 @@ export function createPasskeyEnrollmentService(
           input.ipAddress,
         );
         return Err(
-          domainError(
-            "validation",
-            "invalid_request",
-            INVALID_PASSKEY_REQUEST,
-          ),
+          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
         );
       }
 

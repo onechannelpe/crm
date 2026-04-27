@@ -1,5 +1,5 @@
-import { Ok, type Result } from "~/server/shared/result";
 import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 
 export function requireFirstHistoryId(
   historyIds: string[],
@@ -7,7 +7,9 @@ export function requireFirstHistoryId(
 ): Result<string, DomainError> {
   const historyId = historyIds[0];
   if (historyId == null) {
-    throw new Error("Expected a persisted history event id for interaction command");
+    throw new Error(
+      "Expected a persisted history event id for interaction command",
+    );
   }
   return Ok(historyId);
 }

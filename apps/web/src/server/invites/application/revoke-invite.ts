@@ -12,9 +12,7 @@ export async function revokeInvite(
   input: RevokeInviteInput,
 ): Promise<Result<void, DomainError>> {
   return runtime.runInTransaction(async (transactionRepos) => {
-    const invite = await transactionRepos.userInvites.findById(
-      input.inviteId,
-    );
+    const invite = await transactionRepos.userInvites.findById(input.inviteId);
     if (!invite) {
       return Err(inviteError("invite_not_found", "Invite not found"));
     }
