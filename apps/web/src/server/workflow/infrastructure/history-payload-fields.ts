@@ -205,7 +205,7 @@ export function requireCallOutcome(
     case "disqualified":
       return Ok(value);
     default:
-      invalidPayload(row, "outcome");
+      return invalidPayload(row, "outcome");
   }
 }
 
