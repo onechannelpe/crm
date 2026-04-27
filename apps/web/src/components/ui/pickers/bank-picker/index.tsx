@@ -1,6 +1,7 @@
-import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
+import { createMemo, createSignal, For } from "solid-js";
 
 import Search from "~/components/icons/search";
+import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { ABONO_BANKS, type AbonoBank } from "~/workflow/contracts/lead-schema";
 
 import styles from "./styles.module.css";
@@ -20,21 +21,10 @@ export function BankPicker(props: BankPickerProps) {
     return ABONO_BANKS.filter((bank) => bank.toLowerCase().includes(term));
   });
 
-  onMount(() => {
-    function handleClickOutside(e: MouseEvent) {
-      const target = e.target;
-      if (
-        containerRef &&
-        target instanceof Node &&
-        !containerRef.contains(target)
-      ) {
-        props.onClose();
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    onCleanup(() =>
-      document.removeEventListener("mousedown", handleClickOutside),
-    );
+  useDismissibleLayer({
+    enabled: () => true,
+    onDismiss: () => props.onClose(),
+    getContainer: () => containerRef,
   });
 
   function handleSelect(bank: AbonoBank) {
