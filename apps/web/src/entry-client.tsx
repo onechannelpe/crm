@@ -16,8 +16,12 @@ init({
   tracesSampleRate: Number(
     import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
   ),
-  replaysSessionSampleRate: 0.05,
-  replaysOnErrorSampleRate: 1.0,
+  replaysSessionSampleRate: Number(
+    import.meta.env.VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE ?? "0.05",
+  ),
+  replaysOnErrorSampleRate: Number(
+    import.meta.env.VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE ?? "1.0",
+  ),
   sendDefaultPii: false,
 });
 
