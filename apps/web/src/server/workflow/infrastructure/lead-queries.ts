@@ -1,7 +1,5 @@
 import { sql } from "kysely";
-import type { Selectable, SelectQueryBuilder, ExpressionBuilder } from "kysely";
-
-import type { Database } from "~/lib/db/types";
+import type { Selectable, SelectQueryBuilder } from "kysely";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
@@ -13,7 +11,7 @@ import type {
 } from "../application/ports/lead-queries";
 import type { LeadQueryDatabase } from "./lead-query-types";
 
-type LeadCols = Selectable<Database["workflow_leads"]>;
+type LeadCols = Selectable<LeadQueryDatabase["workflow_leads"]>;
 
 type LeadListSource = Pick<
   LeadCols,
@@ -76,56 +74,47 @@ function toExportRow(row: RecordExportSource): RecordExportRow {
   };
 }
 
-function applyVisibility<
-  DB extends LeadQueryDatabase,
-  TB extends keyof DB & string,
-  O,
->(
-  query: SelectQueryBuilder<DB, TB, O>,
+function applyVisibility<O>(
+  query: SelectQueryBuilder<LeadQueryDatabase, "lead" | "executive", O>,
   filters: LeadListFilters | RecordExportFilters,
-): SelectQueryBuilder<DB, TB, O> {
+): SelectQueryBuilder<LeadQueryDatabase, "lead" | "executive", O> {
   if (filters.actorRole === "superuser") {
     return query;
   }
 
   if (filters.actorRole === "supervisor") {
-    return query.where(
-      sql`executive.branch_id`,
-      "in",
-      (eb: ExpressionBuilder<Database, any>) =>
-        eb
-          .selectFrom("branch_supervisors")
-          .select("branch_id")
-          .where("user_id", "=", filters.actorUserId),
+    return query.where("executive.branch_id", "in", (eb) =>
+      eb
+        .selectFrom("branch_supervisors")
+        .select("branch_id")
+        .where("user_id", "=", filters.actorUserId),
     );
   }
 
   if (filters.actorRole === "back_office") {
-    return query.where(
-      sql`executive.team_id`,
-      "in",
-      (eb: ExpressionBuilder<Database, any>) =>
-        eb
-          .selectFrom("back_office_assignments")
-          .select("team_id")
-          .where("back_office_user_id", "=", filters.actorUserId),
+    return query.where("executive.team_id", "in", (eb) =>
+      eb
+        .selectFrom("back_office_assignments")
+        .select("team_id")
+        .where("back_office_user_id", "=", filters.actorUserId),
     );
   }
 
   if (filters.actorRole === "executive") {
-    return query.where(sql`lead.executive_id`, "=", filters.actorUserId);
+    return query.where("lead.executive_id", "=", filters.actorUserId);
   }
 
-  // Default restriction for all other roles (admin, sales_manager, logistics, hr, etc.)
-  return query.where(sql`executive.branch_id`, "=", filters.actorBranchId);
+  return query.where("executive.branch_id", "=", filters.actorBranchId);
 }
 
 export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
   return {
     async list(filters: LeadListFilters): Promise<LeadListRow[]> {
-      const query = db
+      const base = db
         .selectFrom("workflow_leads as lead")
-        .innerJoin("users as executive", "executive.id", "lead.executive_id")
+        .innerJoin("users as executive", "executive.id", "lead.executive_id");
+
+      let q = applyVisibility(base, filters)
         .innerJoin("users as creator", "creator.id", "lead.created_by")
         .select([
           "lead.id",
@@ -146,8 +135,6 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.created_at",
           "lead.updated_at",
         ]);
-
-      let q = applyVisibility(query, filters);
 
       if (filters.executiveId !== undefined) {
         q = q.where("lead.executive_id", "=", filters.executiveId);
