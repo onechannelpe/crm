@@ -464,6 +464,23 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .execute();
 
   await db
+    .insertInto("workflow_lead_commercial_inputs")
+    .values([
+      {
+        lead_id: idConverted,
+        proveedor_actual: "BBVA",
+        tasa_actual: 2.8,
+        gpv: 85_000.0,
+        ticket: 245.5,
+        abono: "BCP",
+        cantidad_pos: 3,
+        updated_at: now - 29 * day,
+        updated_by: BO1,
+      },
+    ])
+    .execute();
+
+  await db
     .insertInto("workflow_history_events")
     .values([
       // Lead: PENDING_EXTERNAL_REVIEW
