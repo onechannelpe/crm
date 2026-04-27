@@ -1,5 +1,5 @@
 import { useAction } from "@solidjs/router";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, createUniqueId, For, Show } from "solid-js";
 
 import { uploadLeadNegotiationFile } from "~/actions/workflow/negotiation-files";
 import Moneybag from "~/components/icons/moneybag";
@@ -63,6 +63,8 @@ export function QuotedSection(props: QuotedSectionProps) {
   const [submitting, setSubmitting] = createSignal(false);
   const [isDragging, setIsDragging] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  const justificationId = createUniqueId();
+  const fileInputId = createUniqueId();
 
   const currentRound = () => props.negotiationRequests.length;
   const isRenegotiation = () => currentRound() > 0;
@@ -84,19 +86,21 @@ export function QuotedSection(props: QuotedSectionProps) {
     setError(null);
     setUploading(true);
     try {
-      for (const file of files) {
-        const formData = new FormData();
-        formData.set("file", file);
-        const result = await uploadLeadNegotiationFile(props.leadId, formData);
-        setStagedFiles((prev) => [
-          ...prev,
-          {
-            artifactId: result.artifactId,
-            filename: result.filename,
-            sizeBytes: result.sizeBytes,
-          },
-        ]);
-      }
+      const results = await Promise.all(
+        files.map((file) => {
+          const formData = new FormData();
+          formData.set("file", file);
+          return uploadLeadNegotiationFile(props.leadId, formData);
+        }),
+      );
+      setStagedFiles((prev) => [
+        ...prev,
+        ...results.map((result) => ({
+          artifactId: result.artifactId,
+          filename: result.filename,
+          sizeBytes: result.sizeBytes,
+        })),
+      ]);
     } catch (err) {
       setError(toAppError(err, "Error al subir archivo").publicMessage);
     } finally {
@@ -127,12 +131,6 @@ export function QuotedSection(props: QuotedSectionProps) {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  function formatBytes(bytes: number) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   let dragCount = 0;
@@ -244,33 +242,24 @@ export function QuotedSection(props: QuotedSectionProps) {
             Solicitud de revision de tasa
           </p>
           <form onSubmit={(e) => void handleSubmitNegotiation(e)}>
-            <label class={styles.justificationLabel}>Fundamento</label>
-            <textarea
-              class={styles.justificationTextarea}
-              value={justification()}
-              onInput={(e) => setJustification(e.currentTarget.value)}
-              placeholder="Describe el motivo de la solicitud..."
-              required
-            />
+            <label class={styles.justificationLabel}>
+              Fundamento
+              <textarea
+                id={justificationId}
+                class={styles.justificationTextarea}
+                value={justification()}
+                onInput={(e) => setJustification(e.currentTarget.value)}
+                placeholder="Describe el motivo de la solicitud..."
+                required
+              />
+            </label>
 
             <div class={styles.fileSection}>
               <span class={styles.fileSectionLabel}>
                 Documentos de soporte (opcional)
               </span>
-              <input
-                type="file"
-                class={styles.fileInput}
-                id={`neg-file-input-${props.leadId}`}
-                accept=".xlsx,.xls,.png,.jpg,.jpeg"
-                multiple
-                onChange={(e) => {
-                  const files = Array.from(e.currentTarget.files ?? []);
-                  void handleUploadFiles(files);
-                  e.currentTarget.value = "";
-                }}
-              />
               <label
-                for={`neg-file-input-${props.leadId}`}
+                for={fileInputId}
                 class={`${styles.dropZone} ${isDragging() ? styles.dropZoneDragging : ""}`}
                 onDragEnter={(e) => {
                   e.preventDefault();
@@ -290,6 +279,18 @@ export function QuotedSection(props: QuotedSectionProps) {
                   void handleUploadFiles(files);
                 }}
               >
+                <input
+                  type="file"
+                  class={styles.fileInput}
+                  id={fileInputId}
+                  accept=".xlsx,.xls,.png,.jpg,.jpeg"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.currentTarget.files ?? []);
+                    void handleUploadFiles(files);
+                    e.currentTarget.value = "";
+                  }}
+                />
                 <Paperclip size={14} />
                 {uploading()
                   ? "Subiendo..."
@@ -356,6 +357,12 @@ export function QuotedSection(props: QuotedSectionProps) {
       </Show>
     </section>
   );
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 type PreviousNegotiationsProps = {

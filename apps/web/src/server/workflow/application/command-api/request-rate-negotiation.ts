@@ -71,27 +71,45 @@ export async function requestRateNegotiationCommand(
     requestedAt: now,
   });
 
-  for (const artifactId of input.artifactIds) {
-    const fileAssetId =
-      await deps.negotiationRequests.findFileAssetIdForArtifact(artifactId);
-    if (!fileAssetId) {
+  const artifacts = await Promise.all(
+    input.artifactIds.map(async (artifactId) => {
+      const fileAssetId =
+        await deps.negotiationRequests.findFileAssetIdForArtifact(artifactId);
+      return { artifactId, fileAssetId };
+    }),
+  );
+
+  const validatedArtifacts: Array<{ artifactId: string; fileAssetId: number }> =
+    [];
+
+  for (const art of artifacts) {
+    if (!art.fileAssetId) {
       return Err(
         domainError(
           "conflict",
           "artifact_not_found",
-          `Artifact ${artifactId} not found or not ready`,
+          `Artifact ${art.artifactId} not found or not ready`,
         ),
       );
     }
-    await deps.negotiationRequests.insertFile({
-      leadId: lead.id,
-      negotiationRequestId,
-      artifactId,
-      fileAssetId,
-      uploadedByUserId: input.actor.userId,
-      createdAt: now,
+    validatedArtifacts.push({
+      artifactId: art.artifactId,
+      fileAssetId: art.fileAssetId,
     });
   }
+
+  await Promise.all(
+    validatedArtifacts.map((art) =>
+      deps.negotiationRequests.insertFile({
+        leadId: lead.id,
+        negotiationRequestId,
+        artifactId: art.artifactId,
+        fileAssetId: art.fileAssetId,
+        uploadedByUserId: input.actor.userId,
+        createdAt: now,
+      }),
+    ),
+  );
 
   const outcome = await deps.mutationUow.commit({
     lead,

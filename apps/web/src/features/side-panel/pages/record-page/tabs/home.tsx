@@ -97,7 +97,7 @@ function DetailContent(props: { data: LeadDetailView }) {
             <Match when={props.data.lead.stage === "QUOTED"}>
               <QuotedSection
                 leadId={leadId}
-                quotation={props.data.quotations[0]!}
+                quotation={props.data.quotations[0]}
                 negotiationRequests={props.data.negotiationRequests}
                 canApprove={props.data.availableActions.includes(
                   "approve-for-sale",

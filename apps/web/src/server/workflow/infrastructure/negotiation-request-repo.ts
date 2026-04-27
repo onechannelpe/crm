@@ -62,7 +62,7 @@ export function createNegotiationRequestRepo(
         .select((eb) => eb.fn.countAll<number>().as("count"))
         .where("lead_id", "=", leadId)
         .executeTakeFirstOrThrow();
-      return Number(row.count);
+      return row.count;
     },
 
     async listByLeadId(leadId: string): Promise<LeadNegotiationRequest[]> {
