@@ -1,7 +1,8 @@
 import { createAsync } from "@solidjs/router";
-import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createSignal, For, onCleanup, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
+import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 
 import styles from "./styles.module.css";
 
@@ -35,21 +36,10 @@ export function UserPicker(props: UserPickerProps) {
 
   onCleanup(() => clearTimeout(debounceTimer));
 
-  onMount(() => {
-    function handleClickOutside(e: MouseEvent) {
-      const target = e.target;
-      if (
-        containerRef &&
-        target instanceof Node &&
-        !containerRef.contains(target)
-      ) {
-        props.onClose();
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    onCleanup(() =>
-      document.removeEventListener("mousedown", handleClickOutside),
-    );
+  useDismissibleLayer({
+    enabled: () => true,
+    onDismiss: () => props.onClose(),
+    getContainer: () => containerRef,
   });
 
   async function handleSelect(userId: number) {

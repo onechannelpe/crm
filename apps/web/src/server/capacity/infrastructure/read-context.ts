@@ -18,12 +18,14 @@ import {
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
 export function createCapacityReadContext(executor: DatabaseExecutor) {
   return {
     repos: {
       users: createCapacityUsersRepo(executor),
       teams: createCapacityTeamsRepo(executor),
+      branchSupervisors: createBranchSupervisorsRepo(executor),
       auditLogs: createAuditLogsRepo(executor),
       capacityRequests: createCapacityRequestsRepo(executor),
       searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),

@@ -12,6 +12,7 @@ import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
+import type { LeadListFilters } from "../ports/lead-queries";
 import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
 import type { LeadListView } from "./views/lead-list";
@@ -69,6 +70,7 @@ export async function listLeads(
   input: {
     actorUserId: number;
     actorRole: Role;
+    actorBranchId: number;
     filters: {
       stage?: string;
       status?: string;
@@ -118,7 +120,10 @@ export async function listLeads(
     return sortDirection;
   }
 
-  const filters = {
+  const filters: LeadListFilters = {
+    actorUserId: input.actorUserId,
+    actorRole: input.actorRole,
+    actorBranchId: input.actorBranchId,
     executiveId: resolveLeadListExecutiveScope({
       actorUserId: input.actorUserId,
       actorRole: input.actorRole,

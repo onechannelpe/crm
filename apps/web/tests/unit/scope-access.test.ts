@@ -98,10 +98,13 @@ describe("canManageExecutive", () => {
   });
 
   it("supervisor can manage executive in same branch regardless of team", async () => {
-    const actor = makeActor({ role: "supervisor", branchId: 1 });
+    const actor = makeActor({ role: "supervisor", branchId: 1, userId: 100 });
     const target: TargetUser = { role: "executive", branchId: 1, teamId: 5 };
     const repos = makeMockRepos({
       users: { findById: async () => target },
+      branchSupervisors: {
+        findByBranch: async () => [{ user_id: 100 }],
+      },
     });
     const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(true);
@@ -113,6 +116,9 @@ describe("canManageExecutive", () => {
     };
     const reposOther = makeMockRepos({
       users: { findById: async () => targetOtherTeam },
+      branchSupervisors: {
+        findByBranch: async () => [{ user_id: 100 }],
+      },
     });
     const resultOther = await canManageExecutive(actor, 1, reposOther);
     expect(resultOther.ok).toBe(true);

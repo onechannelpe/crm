@@ -15,7 +15,10 @@ interface ScopeRepos<
     findById(id: number): Promise<T | undefined>;
   };
   teams: {
-    findByIdWithSupervisor(id: number): Promise<CapacityTeam | undefined>;
+    findById(id: number): Promise<CapacityTeam | undefined>;
+  };
+  branchSupervisors: {
+    isSupervisor(branchId: number, userId: number): Promise<boolean>;
   };
 }
 
@@ -72,21 +75,29 @@ export async function canManageScope(
     return Ok(undefined);
   }
 
-  const team = await repos.teams.findByIdWithSupervisor(scope.scopeId);
+  const team = await repos.teams.findById(scope.scopeId);
   if (!team || team.branchId !== actor.branchId) {
     return Err(domainError("not_found", "team_not_found", "Team not found"));
   }
   if (actor.role === "superuser" || actor.role === "admin") {
     return Ok(undefined);
   }
-  if (actor.role !== "supervisor" || team.supervisorId !== actor.userId) {
-    return Err(
-      domainError(
-        "forbidden",
-        "forbidden",
-        "Cannot manage defaults for this team",
-      ),
+
+  if (actor.role === "supervisor") {
+    const isSupervisor = await repos.branchSupervisors.isSupervisor(
+      team.branchId,
+      actor.userId,
     );
+    if (isSupervisor) {
+      return Ok(undefined);
+    }
   }
-  return Ok(undefined);
+
+  return Err(
+    domainError(
+      "forbidden",
+      "forbidden",
+      "Cannot manage defaults for this team",
+    ),
+  );
 }

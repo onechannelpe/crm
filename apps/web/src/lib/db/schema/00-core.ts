@@ -15,8 +15,39 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("branches.id"),
     )
     .addColumn("name", "varchar(255)", (col) => col.notNull())
-    .addColumn("supervisor_id", "integer", (col) => col.references("users.id"))
     .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("branch_supervisors")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("branch_id", "integer", (col) =>
+      col.notNull().references("branches.id"),
+    )
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addUniqueConstraint("idx_branch_supervisors_unique", [
+      "branch_id",
+      "user_id",
+    ])
+    .execute();
+
+  await db.schema
+    .createTable("back_office_assignments")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("back_office_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("team_id", "integer", (col) =>
+      col.notNull().references("teams.id"),
+    )
+    .addColumn("assigned_at", "integer", (col) => col.notNull())
+    .addUniqueConstraint("idx_back_office_assignments_unique", [
+      "back_office_user_id",
+      "team_id",
+    ])
     .execute();
 
   await db.schema

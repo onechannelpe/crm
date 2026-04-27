@@ -23,5 +23,4 @@ export type CapacityTeam = {
   id: number;
   name: string;
   branchId: number;
-  supervisorId: number | null;
 };

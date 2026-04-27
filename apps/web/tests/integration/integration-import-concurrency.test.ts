@@ -84,7 +84,11 @@ describe("integration import workflow concurrency", () => {
     const recordExportQuery = runtime.integrations.recordExportQuery;
     const concurrentExportReads = (async () => {
       for (let i = 0; i < 40; i++) {
-        await recordExportQuery.export({});
+        await recordExportQuery.export({
+          actorUserId: 5,
+          actorRole: "superuser",
+          actorBranchId: 1,
+        });
       }
     })();
 

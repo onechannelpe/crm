@@ -28,7 +28,12 @@ export async function queryLeadList(filters: {
     execute: (ctx) =>
       listLeads(
         { leads: getServerRuntime().workflow.repos.leadQueries },
-        { actorUserId: ctx.actor.userId, actorRole: ctx.actor.role, filters },
+        {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          actorBranchId: ctx.actor.branchId,
+          filters,
+        },
       ),
   });
 }

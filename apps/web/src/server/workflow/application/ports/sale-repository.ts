@@ -1,3 +1,5 @@
+import type { AbonoBank } from "~/workflow/contracts/lead-schema";
+
 export type LeadSale = {
   id: string;
   leadId: string;
@@ -6,7 +8,7 @@ export type LeadSale = {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: number;
+  abono: AbonoBank;
   cantidadPos: number;
   banco: string;
   nroCuenta: string;

@@ -453,12 +453,29 @@ export async function run(db: Kysely<Database>): Promise<void> {
         tasa_actual: 2.8,
         gpv: 85_000.0,
         ticket: 245.5,
-        abono: 18_000.0,
+        abono: "BCP",
         cantidad_pos: 3,
         banco: "BCP",
         nro_cuenta: "194-12345678-0-21",
         cci: "00219400123456780210",
         created_at: now - 20 * day,
+      },
+    ])
+    .execute();
+
+  await db
+    .insertInto("workflow_lead_commercial_inputs")
+    .values([
+      {
+        lead_id: idConverted,
+        proveedor_actual: "BBVA",
+        tasa_actual: 2.8,
+        gpv: 85_000.0,
+        ticket: 245.5,
+        abono: "BCP",
+        cantidad_pos: 3,
+        updated_at: now - 29 * day,
+        updated_by: BO1,
       },
     ])
     .execute();

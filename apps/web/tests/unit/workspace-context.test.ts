@@ -14,12 +14,8 @@ describe("workspace context resolver", () => {
         id: 3,
         name: "Alpha",
         branch_id: 1,
-        supervisor_id: 4,
-        supervisor_names: "Diego",
-        supervisor_first_surname: "Ramirez",
-        supervisor_role: "supervisor",
-        supervisor_branch_id: 1,
       },
+      branchSupervisors: [{ id: 1, user_id: 4, names: "Diego" }],
       managedTeam: null,
     });
 
@@ -37,6 +33,7 @@ describe("workspace context resolver", () => {
         branchName: "Lima",
         userTeamId: null,
         assignedTeam: null,
+        branchSupervisors: [],
         managedTeam: null,
       }),
     ).toThrow(/misconfigured/i);
@@ -50,6 +47,7 @@ describe("workspace context resolver", () => {
       branchName: "Lima",
       userTeamId: null,
       assignedTeam: null,
+      branchSupervisors: [],
       managedTeam: null,
     });
 
@@ -66,6 +64,7 @@ describe("workspace context resolver", () => {
       branchName: "Norte",
       userTeamId: null,
       assignedTeam: null,
+      branchSupervisors: [],
       managedTeam: null,
     });
 
@@ -82,6 +81,7 @@ describe("workspace context resolver", () => {
       branchName: "Lima",
       userTeamId: null,
       assignedTeam: null,
+      branchSupervisors: [],
       managedTeam: null,
     });
 

@@ -1,6 +1,7 @@
 import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { LeadQueries } from "~/server/workflow/application/ports/lead-queries";
 
 export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
 export type IntegrationJobStatus = WorkflowIntegrationJobsTable["status"];
@@ -63,22 +64,7 @@ export interface IntegrationJobsPort {
 export interface IntegrationRuntime {
   executor: DatabaseExecutor;
   jobs: IntegrationJobsPort;
-  recordExportQuery: {
-    export(filters: { executiveId?: number }): Promise<
-      Array<{
-        id: string;
-        ruc: string;
-        razonSocial: string | null;
-        address: string | null;
-        stage: string;
-        status: string | null;
-        prioridad: string | null;
-        createdAt: number;
-        executiveId: number;
-        executiveName: string;
-      }>
-    >;
-  };
+  recordExportQuery: LeadQueries;
   leads: {
     findByRucMany(
       rucs: string[],

@@ -43,8 +43,10 @@ export function makeMockRepos(
   overrides: {
     users?: { findById: (id: number) => Promise<any> };
     teams?: {
-      findBySupervisorId: (id: number) => Promise<any>;
-      findByIdWithSupervisor: (id: number) => Promise<any>;
+      findById: (id: number) => Promise<any>;
+    };
+    branchSupervisors?: {
+      findByBranch: (id: number) => Promise<any>;
     };
   } = {},
 ) {
@@ -54,8 +56,13 @@ export function makeMockRepos(
       ...overrides.users,
     },
     teams: {
-      findByIdWithSupervisor: async () => undefined,
+      findById: async () => undefined,
       ...overrides.teams,
+    },
+    branchSupervisors: {
+      findByBranch: async () => [],
+      isSupervisor: async () => false,
+      ...overrides.branchSupervisors,
     },
   };
 }

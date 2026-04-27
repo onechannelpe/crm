@@ -19,11 +19,13 @@ import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignment
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
 function createCapacityRepos(executor: DatabaseExecutor) {
   return {
     users: createCapacityUsersRepo(executor),
     teams: createCapacityTeamsRepo(executor),
+    branchSupervisors: createBranchSupervisorsRepo(executor),
     auditLogs: createAuditLogsRepo(executor),
     capacityRequests: createCapacityRequestsRepo(executor),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),

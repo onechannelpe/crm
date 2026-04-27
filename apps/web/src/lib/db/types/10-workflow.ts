@@ -1,5 +1,7 @@
 import type { Generated } from "kysely";
 
+import type { AbonoBank } from "../../../workflow/contracts/lead-schema";
+
 export type WorkflowStageValue =
   | "PENDING_EXTERNAL_REVIEW"
   | "REJECTED_BY_STATUS"
@@ -32,7 +34,7 @@ export interface WorkflowLeadCommercialInputsTable {
   tasa_actual: number | null;
   gpv: number | null;
   ticket: number | null;
-  abono: number | null;
+  abono: AbonoBank | null;
   cantidad_pos: number | null;
   updated_at: number;
   updated_by: number;
@@ -60,7 +62,7 @@ export interface WorkflowSalesTable {
   tasa_actual: number;
   gpv: number;
   ticket: number;
-  abono: number;
+  abono: AbonoBank;
   cantidad_pos: number;
   banco: string;
   nro_cuenta: string;

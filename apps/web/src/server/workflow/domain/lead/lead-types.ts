@@ -4,6 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
+  AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "../lead-record";
@@ -65,7 +66,7 @@ export type LeadMutationIntent =
       tasaActual: number;
       gpv: number;
       ticket: number;
-      abono: number;
+      abono: AbonoBank;
       cantidadPos: number;
     }
   | { kind: "create_sale"; saleId: string };

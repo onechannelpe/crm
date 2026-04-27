@@ -1,3 +1,4 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type {
   LeadPriority,
   LeadStage,
@@ -5,6 +6,9 @@ import type {
 } from "~/workflow/contracts/lead-schema";
 
 export type LeadListFilters = {
+  actorUserId: number;
+  actorRole: Role;
+  actorBranchId: number;
   executiveId?: number;
   stage?: LeadStage;
   status?: LeadStatus;
@@ -18,6 +22,9 @@ export type LeadListFilters = {
 };
 
 export type RecordExportFilters = {
+  actorUserId: number;
+  actorRole: Role;
+  actorBranchId: number;
   executiveId?: number;
 };
 
