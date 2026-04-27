@@ -100,21 +100,18 @@ describe("uploadArtifactFile", () => {
       },
     };
 
-    const result = await uploadArtifactFile(
-      makeContext(),
-      "artifact-42",
-      {
-        name: "import.csv",
-        sizeBytes: CSV_BYTES.length,
-        stream: streamFromBytes(CSV_BYTES),
-      },
-      deps,
-    );
-
-    expect(isErr(result)).toBe(true);
-    expect(isErr(result) && result.error.code).toBe(
-      "artifact_upload_unexpected_error",
-    );
+    await expect(
+      uploadArtifactFile(
+        makeContext(),
+        "artifact-42",
+        {
+          name: "import.csv",
+          sizeBytes: CSV_BYTES.length,
+          stream: streamFromBytes(CSV_BYTES),
+        },
+        deps,
+      ),
+    ).rejects.toThrow("storage unavailable");
     expect(updates.map((u) => u.status)).toEqual([
       "receiving",
       "validating",
