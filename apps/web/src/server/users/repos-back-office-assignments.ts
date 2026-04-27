@@ -14,13 +14,13 @@ export function createBackOfficeAssignmentsRepo(db: Kysely<Database>) {
       return rows.map((r) => r.team_id);
     },
 
-    async assign(backOfficeUserId: number, teamId: number) {
+    async assign(backOfficeUserId: number, teamId: number, now: number) {
       await db
         .insertInto("back_office_assignments")
         .values({
           back_office_user_id: backOfficeUserId,
           team_id: teamId,
-          assigned_at: Math.floor(Date.now() / 1000),
+          assigned_at: now,
         })
         .onConflict((oc) => oc.doNothing())
         .execute();
