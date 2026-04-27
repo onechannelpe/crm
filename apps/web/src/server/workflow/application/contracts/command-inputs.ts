@@ -3,6 +3,7 @@ import type {
   LeadPriority,
   LeadStatus,
   Moneda,
+  AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
 import type { ActorContext } from "./actor-context";
@@ -82,7 +83,7 @@ export type CompleteCommercialInputInput = {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: number;
+  abono: AbonoBank;
   cantidadPos: number;
 };
 
@@ -93,7 +94,7 @@ export type CreateSaleInput = {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: number;
+  abono: AbonoBank;
   cantidadPos: number;
   banco: string;
   nroCuenta: string;

@@ -6,6 +6,7 @@ import {
   parseRequiredLeadStage,
   parseRequiredLeadStatus,
   parseRequiredMoneda,
+  parseRequiredAbonoBank,
 } from "~/server/workflow/domain/lead-schema-parser";
 import type {
   LeadCallOutcome,
@@ -13,6 +14,7 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
+  AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
 import type { HistoryEventRow } from "./history-event-row";
@@ -216,4 +218,14 @@ export function requireMoneda(
   const value = requireString(payload, "moneda", row);
   if (!value.ok) return value;
   return parseRequiredMoneda(value.value);
+}
+
+export function requireAbonoBank(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<AbonoBank, DomainError> {
+  const value = requireString(payload, key, row);
+  if (!value.ok) return value;
+  return parseRequiredAbonoBank(value.value);
 }

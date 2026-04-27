@@ -3,6 +3,7 @@
 import { validationError } from "~/lib/app-errors";
 import { runAction } from "~/server/shared/action-runtime";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import type { AbonoBank } from "~/workflow/contracts/lead-schema";
 
 export async function requestSaleCreation(input: {
   leadId: string;
@@ -10,7 +11,7 @@ export async function requestSaleCreation(input: {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: number;
+  abono: AbonoBank;
   cantidadPos: number;
   banco: string;
   nroCuenta: string;

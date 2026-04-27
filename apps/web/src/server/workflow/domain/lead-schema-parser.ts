@@ -5,10 +5,12 @@ import {
   LEAD_STAGES,
   LEAD_STATUSES,
   MONEDAS,
+  ABONO_BANKS,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
   type Moneda,
+  type AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
 function fail(code: string, message: string): Result<never, DomainError> {
@@ -136,5 +138,16 @@ export function parseRequiredMoneda(
     MONEDAS,
     "invalid_moneda",
     "Invalid moneda",
+  );
+}
+
+export function parseRequiredAbonoBank(
+  value: string,
+): Result<AbonoBank, DomainError> {
+  return parseRequiredLeadValue(
+    value,
+    ABONO_BANKS,
+    "invalid_abono",
+    "Invalid abono bank",
   );
 }

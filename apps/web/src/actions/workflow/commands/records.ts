@@ -8,6 +8,7 @@ import {
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import type { AbonoBank } from "~/workflow/contracts/lead-schema";
 
 export async function requestLeadCreation(input: {
   ruc: string;
@@ -84,7 +85,7 @@ export async function requestLeadCommercialInputCompletion(input: {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: number;
+  abono: AbonoBank;
   cantidadPos: number;
 }) {
   if (!input.proveedorActual?.trim()) {

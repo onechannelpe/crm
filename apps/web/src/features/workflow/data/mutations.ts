@@ -13,7 +13,7 @@ import {
   requestRemoveLeadFromFavorites,
 } from "~/actions/workflow/commands/records";
 import { requestSaleCreation } from "~/actions/workflow/commands/sales";
-import type { Moneda } from "~/workflow/contracts/lead-schema";
+import type { Moneda, AbonoBank } from "~/workflow/contracts/lead-schema";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 
@@ -61,7 +61,7 @@ export const completeCommercialInputMutation = action(
     tasaActual: number;
     gpv: number;
     ticket: number;
-    abono: number;
+    abono: AbonoBank;
     cantidadPos: number;
   }) => {
     await requestLeadCommercialInputCompletion(input);
@@ -99,7 +99,7 @@ export const createSaleMutation = action(
     tasaActual: number;
     gpv: number;
     ticket: number;
-    abono: number;
+    abono: AbonoBank;
     cantidadPos: number;
     banco: string;
     nroCuenta: string;

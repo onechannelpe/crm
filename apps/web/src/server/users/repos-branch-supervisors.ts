@@ -26,13 +26,13 @@ export function createBranchSupervisorsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async assign(branchId: number, userId: number) {
+    async assign(branchId: number, userId: number, now: number) {
       await db
         .insertInto("branch_supervisors")
         .values({
           branch_id: branchId,
           user_id: userId,
-          created_at: Math.floor(Date.now() / 1000),
+          created_at: now,
         })
         .onConflict((oc) => oc.doNothing())
         .execute();
