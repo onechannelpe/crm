@@ -100,6 +100,7 @@ export async function runAction<T, E extends DomainError>(
   try {
     result = await params.execute(telemetry.ctx);
   } catch (error) {
+    if (error instanceof Response) throw error;
     captureException(error);
     recordActionError(telemetry, toTelemetryError(error));
     throw sanitize(internalError("An unexpected error occurred"));
@@ -108,9 +109,14 @@ export async function runAction<T, E extends DomainError>(
   if (isErr(result)) {
     const appError = domainToAppError(result.error);
     if (result.error.kind === "external") {
-      captureException(result.error);
+      captureException(appError, {
+        extra: {
+          domainCode: result.error.code,
+          domainDetails: result.error.details,
+        },
+      });
     }
-    recordActionError(telemetry, toTelemetryError(result.error));
+    recordActionError(telemetry, toTelemetryError(appError));
     throw sanitize(appError);
   }
 
