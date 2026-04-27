@@ -33,12 +33,6 @@
   color: var(--foreground-tertiary);
 }
 
-.error {
-  color: var(--destructive);
-  font-size: var(--font-size-xs);
-  padding: var(--spacing-1) var(--spacing-2);
-}
-
 .list {
   list-style: none;
   max-height: 200px;
@@ -69,18 +63,6 @@
 .item:disabled {
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.current {
-  color: var(--foreground-tertiary);
-}
-
-.currentBadge {
-  background: var(--background-secondary);
-  border-radius: var(--radius-sm);
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-xs);
-  padding: 0 var(--spacing-1);
 }
 
 .loadingHint {

@@ -1,5 +1,7 @@
 import { sql, type Kysely } from "kysely";
 
+import { ABONO_BANKS } from "~/workflow/contracts/lead-schema";
+
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_leads")
@@ -60,7 +62,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("ticket", "real")
     .addColumn("abono", "varchar(50)", (col) =>
       col.check(
-        sql`abono IN ('BCP', 'BBVA', 'SCOTIABANK', 'INTERBANK', 'NACION', 'BANBIF', 'MI BANCO')`,
+        sql`abono IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`,
       ),
     )
     .addColumn("cantidad_pos", "integer")
@@ -111,9 +113,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("abono", "varchar(50)", (col) =>
       col
         .notNull()
-        .check(
-          sql`abono IN ('BCP', 'BBVA', 'SCOTIABANK', 'INTERBANK', 'NACION', 'BANBIF', 'MI BANCO')`,
-        ),
+        .check(sql`abono IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`),
     )
     .addColumn("cantidad_pos", "integer", (col) => col.notNull())
     .addColumn("banco", "varchar(100)", (col) => col.notNull())
