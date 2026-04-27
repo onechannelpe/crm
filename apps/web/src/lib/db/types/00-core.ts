@@ -10,8 +10,21 @@ export interface TeamsTable {
   id: Generated<number>;
   branch_id: number;
   name: string;
-  supervisor_id: number | null;
   created_at: number;
+}
+
+export interface BranchSupervisorsTable {
+  id: Generated<number>;
+  branch_id: number;
+  user_id: number;
+  created_at: number;
+}
+
+export interface BackOfficeAssignmentsTable {
+  id: Generated<number>;
+  back_office_user_id: number;
+  team_id: number;
+  assigned_at: number;
 }
 
 export interface OrganizationsTable {
@@ -28,4 +41,6 @@ export type Db = {
   branches: BranchesTable;
   teams: TeamsTable;
   organizations: OrganizationsTable;
+  branch_supervisors: BranchSupervisorsTable;
+  back_office_assignments: BackOfficeAssignmentsTable;
 };

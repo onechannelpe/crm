@@ -338,7 +338,12 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       return db
         .selectFrom("extension_executive_statuses")
         .$call(withExecutiveStatusJoinsAndSelect)
-        .where("teams.supervisor_id", "=", supervisorUserId)
+        .innerJoin(
+          "branch_supervisors",
+          "branch_supervisors.branch_id",
+          "extension_executive_statuses.branch_id",
+        )
+        .where("branch_supervisors.user_id", "=", supervisorUserId)
         .orderBy("users.names", "asc")
         .execute();
     },

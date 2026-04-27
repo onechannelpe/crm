@@ -112,7 +112,8 @@ function makeHarness(input: {
         },
         findManagedUserById: async (userId: number) =>
           userId === input.request?.userId ? input.targetUser : undefined,
-        findManagedTeamById: async () => undefined,
+        findManagedTeamById: async (_teamId: number) => undefined,
+        findBranchSupervisors: async (_branchId: number) => [],
         grantSearchCapacity: async (values: GrantRow) => {
           draftSearchGrants.push(values);
         },

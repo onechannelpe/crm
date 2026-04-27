@@ -58,11 +58,14 @@ export function createCapacityApprovalContext(
             return user;
           },
           async findManagedTeamById(teamId) {
-            const team = await repos.teams.findByIdWithSupervisor(teamId);
+            const team = await repos.teams.findById(teamId);
             if (!team) {
               return undefined;
             }
             return team;
+          },
+          async findBranchSupervisors(branchId) {
+            return repos.branchSupervisors.findByBranch(branchId);
           },
           async grantSearchCapacity(input) {
             await repos.searchCapacityGrants.insert({

@@ -40,9 +40,7 @@ export async function createInvite(
 
   return runtime.runInTransaction(async (transactionRepos) => {
     if (input.teamId !== null) {
-      const team = await transactionRepos.teams.findByIdWithSupervisor(
-        input.teamId,
-      );
+      const team = await transactionRepos.teams.findById(input.teamId);
       if (!team || team.branch_id !== input.branchId) {
         return Err(
           inviteError("invalid_team", "Invalid team for the selected branch"),

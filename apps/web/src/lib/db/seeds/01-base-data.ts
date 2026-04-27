@@ -702,27 +702,48 @@ export async function run(db: Kysely<Database>): Promise<void> {
   await db
     .insertInto("teams")
     .values([
-      { branch_id: 1, name: "Team Alpha", supervisor_id: 2, created_at: now }, // id: 1
-      { branch_id: 1, name: "Team Bravo", supervisor_id: 2, created_at: now }, // id: 2
-      { branch_id: 2, name: "Team Norte", supervisor_id: 8, created_at: now }, // id: 3
+      { branch_id: 1, name: "Team Alpha", created_at: now }, // id: 1
+      { branch_id: 1, name: "Team Bravo", created_at: now }, // id: 2
+      { branch_id: 2, name: "Team Norte", created_at: now }, // id: 3
       {
         branch_id: 2,
         name: "Team Norte B",
-        supervisor_id: 19,
         created_at: now,
       }, // id: 4
       {
         branch_id: 4,
         name: "Infinity Lima",
-        supervisor_id: 23,
         created_at: now,
       }, // id: 5
       {
         branch_id: 4,
         name: "Infinity Chiclayo",
-        supervisor_id: null,
         created_at: now,
       }, // id: 6
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  // Branch Supervisors
+  await db
+    .insertInto("branch_supervisors")
+    .values([
+      { branch_id: 1, user_id: 2, created_at: now }, // Diego Ramirez @ branch 1
+      { branch_id: 2, user_id: 8, created_at: now }, // Nicolas Torres @ branch 2
+      { branch_id: 2, user_id: 19, created_at: now }, // Mariana Velasquez @ branch 2
+      { branch_id: 4, user_id: 23, created_at: now }, // Luis Betalleluz @ branch 4
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  // Back Office Assignments
+  await db
+    .insertInto("back_office_assignments")
+    .values([
+      { back_office_user_id: 4, team_id: 1, assigned_at: now }, // Josefina Salazar @ team 1
+      { back_office_user_id: 4, team_id: 2, assigned_at: now }, // Josefina Salazar @ team 2
+      { back_office_user_id: 30, team_id: 5, assigned_at: now }, // Jose Mendoza @ team 5
+      { back_office_user_id: 30, team_id: 6, assigned_at: now }, // Jose Mendoza @ team 6
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();

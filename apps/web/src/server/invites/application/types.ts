@@ -71,7 +71,7 @@ export interface InviteUsersPort {
 }
 
 export interface InviteTeamsPort {
-  findByIdWithSupervisor(id: number): Promise<
+  findById(id: number): Promise<
     | {
         id: number;
         branch_id: number;

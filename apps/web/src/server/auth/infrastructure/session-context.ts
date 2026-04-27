@@ -3,6 +3,7 @@ import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -22,6 +23,7 @@ export function createAuthSessionReadContext(deps: AuthSessionRuntimeDeps) {
       users: createUsersRepo(executor),
       branches: createBranchesRepo(executor),
       teams: createTeamsRepo(executor),
+      branchSupervisors: createBranchSupervisorsRepo(executor),
       passkeys: createPasskeysRepo(executor),
       userTotpFactors: createUserTotpFactorsRepo(executor),
     },

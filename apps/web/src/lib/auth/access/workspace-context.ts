@@ -9,11 +9,6 @@ interface TeamRecord {
   id: number;
   name: string;
   branch_id: number;
-  supervisor_id: number | null;
-  supervisor_names: string | null;
-  supervisor_first_surname: string | null;
-  supervisor_role: Role | null;
-  supervisor_branch_id: number | null;
 }
 
 interface ManagedTeamRecord {
@@ -37,6 +32,7 @@ interface ResolveWorkspaceContextInput {
   userTeamId: number | null;
   assignedTeam: TeamRecord | null;
   managedTeam: ManagedTeamRecord | null;
+  branchSupervisors: Array<{ id: number; user_id: number; names: string }>;
 }
 
 function createTeam(team: { id: number; name: string } | null) {
@@ -59,24 +55,19 @@ export function resolveWorkspaceContext(
     if (input.assignedTeam.branch_id !== input.branchId) {
       throw new Error("User hierarchy misconfigured: team branch mismatch");
     }
-    if (
-      !input.assignedTeam.supervisor_id ||
-      input.assignedTeam.supervisor_role !== "supervisor" ||
-      input.assignedTeam.supervisor_branch_id !== input.branchId ||
-      !input.assignedTeam.supervisor_names
-    ) {
-      throw new Error(
-        "User hierarchy misconfigured: team supervisor is invalid",
-      );
-    }
+
+    const supervisor =
+      input.branchSupervisors.length === 1
+        ? {
+            id: input.branchSupervisors[0].user_id,
+            names: input.branchSupervisors[0].names,
+          }
+        : null;
 
     return {
       scopeType,
       team: createTeam(input.assignedTeam),
-      supervisor: {
-        id: input.assignedTeam.supervisor_id,
-        names: input.assignedTeam.supervisor_names,
-      },
+      supervisor,
       branch,
     };
   }
