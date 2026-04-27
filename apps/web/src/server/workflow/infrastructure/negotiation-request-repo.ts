@@ -41,17 +41,34 @@ export function createNegotiationRequestRepo(
           uploaded_by_user_id: values.uploadedByUserId,
           created_at: values.createdAt,
         })
+        .onConflict((oc) => oc.column("artifact_id").doNothing())
         .executeTakeFirstOrThrow();
     },
 
     async findFileAssetIdForArtifact(
       artifactId: string,
+      leadId: string,
     ): Promise<number | null> {
       const row = await db
         .selectFrom("artifact_file_bindings")
-        .select("file_asset_id")
-        .where("artifact_id", "=", artifactId)
-        .where("binding_role", "=", "source_upload")
+        .innerJoin(
+          "workflow_artifacts",
+          "workflow_artifacts.id",
+          "artifact_file_bindings.artifact_id",
+        )
+        .select("artifact_file_bindings.file_asset_id")
+        .where("artifact_file_bindings.artifact_id", "=", artifactId)
+        .where("artifact_file_bindings.binding_role", "=", "source_upload")
+        .where("workflow_artifacts.artifact_type", "=", "negotiation_file")
+        .where(
+          (eb) =>
+            eb.fn("json_extract", [
+              eb.ref("workflow_artifacts.workflow_context_json"),
+              eb.val("$.leadId"),
+            ]),
+          "=",
+          leadId,
+        )
         .executeTakeFirst();
       return row?.file_asset_id ?? null;
     },

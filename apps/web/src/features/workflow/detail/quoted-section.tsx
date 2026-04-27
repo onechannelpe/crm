@@ -88,7 +88,7 @@ export function QuotedSection(props: QuotedSectionProps) {
   }
 
   async function handleUploadFiles(files: File[]) {
-    if (files.length === 0) return;
+    if (files.length === 0 || uploading()) return;
     setError(null);
     setUploading(true);
     try {
@@ -120,6 +120,7 @@ export function QuotedSection(props: QuotedSectionProps) {
 
   async function handleSubmitNegotiation(e: SubmitEvent) {
     e.preventDefault();
+    if (submitting()) return;
     if (!justification().trim()) {
       setError("El fundamento es requerido");
       return;

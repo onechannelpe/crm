@@ -18,7 +18,10 @@ export type LeadNegotiationFile = {
 export type NegotiationRequestRepository = {
   insert(values: Omit<LeadNegotiationRequest, "id">): Promise<string>;
   insertFile(values: LeadNegotiationFile & { leadId: string }): Promise<void>;
-  findFileAssetIdForArtifact(artifactId: string): Promise<number | null>;
+  findFileAssetIdForArtifact(
+    artifactId: string,
+    leadId: string,
+  ): Promise<number | null>;
   countByLeadId(leadId: string): Promise<number>;
   listByLeadId(leadId: string): Promise<LeadNegotiationRequest[]>;
 };

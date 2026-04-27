@@ -74,7 +74,10 @@ export async function requestRateNegotiationCommand(
   const artifacts = await Promise.all(
     input.artifactIds.map(async (artifactId) => {
       const fileAssetId =
-        await deps.negotiationRequests.findFileAssetIdForArtifact(artifactId);
+        await deps.negotiationRequests.findFileAssetIdForArtifact(
+          artifactId,
+          lead.id,
+        );
       return { artifactId, fileAssetId };
     }),
   );
