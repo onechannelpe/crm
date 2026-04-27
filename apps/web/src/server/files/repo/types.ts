@@ -68,3 +68,17 @@ export interface SaleProofFileRecord {
   detectedMime: string;
   sizeBytes: number;
 }
+
+export interface NegotiationFileRecord {
+  id: number;
+  leadId: string;
+  negotiationRequestId: string;
+  artifactId: string;
+  fileAssetId: number;
+  uploadedByUserId: number;
+  createdAt: number;
+  artifactStatus: ArtifactStatus;
+  safeDisplayFilename: string;
+  detectedMime: string;
+  sizeBytes: number;
+}

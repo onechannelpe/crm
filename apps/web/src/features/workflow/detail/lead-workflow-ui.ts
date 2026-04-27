@@ -44,12 +44,12 @@ export function mapLeadActionsToUi(
 
   for (const action of actions) {
     switch (action) {
-      // create-sale and create-quotation are rendered as inline form sections, not action links.
+      // create-sale, create-quotation, approve-for-sale, and request-rate-negotiation
+      // are rendered as inline sections, not generic action buttons.
       case "create-sale":
       case "create-quotation":
-        break;
       case "approve-for-sale":
-        items.push({ id: action, label: "Aprobar para venta", kind: "button" });
+      case "request-rate-negotiation":
         break;
       case "review-lead":
         items.push({

@@ -97,11 +97,28 @@ export type LeadDetailSourceStatusView = {
   };
 };
 
+export type LeadDetailNegotiationFileView = {
+  artifactId: string;
+  filename: string;
+  detectedMime: string;
+  sizeBytes: number;
+};
+
+export type LeadDetailNegotiationRequestView = {
+  id: string;
+  round: number;
+  justification: string;
+  requestedBy: number;
+  requestedAt: number;
+  files: LeadDetailNegotiationFileView[];
+};
+
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
   commercialInput: LeadDetailCommercialInputView | undefined;
   quotations: LeadDetailQuotationView[];
   sale: LeadDetailSaleView | undefined;
+  negotiationRequests: LeadDetailNegotiationRequestView[];
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];

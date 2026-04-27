@@ -10,6 +10,7 @@ const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
   records_export: ["csv"],
   integration_import: ["csv"],
   sale_proof: ["pdf", "png", "jpg", "jpeg"],
+  negotiation_file: ["xlsx", "xls", "png", "jpg", "jpeg"],
 };
 
 const MAX_SIZE_OVERRIDES: Partial<Record<ArtifactType, number>> = {};
@@ -21,6 +22,7 @@ export const ABSOLUTE_MAX_UPLOAD_BYTES = Math.max(
 const MIME_BY_EXTENSION: Record<string, string> = {
   csv: "text/csv; charset=utf-8",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  xls: "application/vnd.ms-excel",
   pdf: "application/pdf",
   png: "image/png",
   jpg: "image/jpeg",

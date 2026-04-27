@@ -6,4 +6,5 @@ export type LeadAvailableAction =
   | "review-lead"
   | "create-quotation"
   | "approve-for-sale"
+  | "request-rate-negotiation"
   | "reassign-lead";

@@ -2,12 +2,18 @@ import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";
 import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
+import type {
+  LeadNegotiationRequest,
+  LeadNegotiationFile,
+} from "../ports/negotiation-request-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";
 import type { LeadSourceStatus } from "../ports/source-status-repository";
 import type {
   LeadDetailCommercialInputView,
   LeadDetailLeadView,
+  LeadDetailNegotiationFileView,
+  LeadDetailNegotiationRequestView,
   LeadDetailQuotationView,
   LeadDetailSaleView,
   LeadDetailSourceStatusView,
@@ -19,6 +25,17 @@ import {
 } from "./lead-progress";
 import { presentTimeline } from "./timeline";
 
+export type NegotiationRequestWithFiles = {
+  request: LeadNegotiationRequest;
+  files: Array<
+    LeadNegotiationFile & {
+      safeDisplayFilename: string;
+      detectedMime: string;
+      sizeBytes: number;
+    }
+  >;
+};
+
 export type LeadDetailSource = {
   lead: LeadRecord;
   isFavorite: boolean;
@@ -28,6 +45,7 @@ export type LeadDetailSource = {
   commercialInput: LeadCommercialInput | undefined;
   quotations: LeadQuotation[];
   sale: LeadSale | undefined;
+  negotiationRequests: NegotiationRequestWithFiles[];
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
   availableActions: LeadAvailableAction[];
@@ -134,6 +152,34 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
   };
 }
 
+function toNegotiationFileView(
+  file: LeadNegotiationFile & {
+    safeDisplayFilename: string;
+    detectedMime: string;
+    sizeBytes: number;
+  },
+): LeadDetailNegotiationFileView {
+  return {
+    artifactId: file.artifactId,
+    filename: file.safeDisplayFilename,
+    detectedMime: file.detectedMime,
+    sizeBytes: file.sizeBytes,
+  };
+}
+
+function toNegotiationRequestView(
+  item: NegotiationRequestWithFiles,
+): LeadDetailNegotiationRequestView {
+  return {
+    id: item.request.id,
+    round: item.request.round,
+    justification: item.request.justification,
+    requestedBy: item.request.requestedBy,
+    requestedAt: item.request.requestedAt,
+    files: item.files.map(toNegotiationFileView),
+  };
+}
+
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
     lead: toLeadDetailLead(
@@ -149,6 +195,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
     sale: source.sale ? toLeadDetailSale(source.sale) : undefined,
+    negotiationRequests: source.negotiationRequests.map(
+      toNegotiationRequestView,
+    ),
     timeline: presentTimeline(source.history, source.canRevealFullTimeline),
     availableActions: source.availableActions,
     blockingFields: presentLeadBlockingFields({

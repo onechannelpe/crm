@@ -66,6 +66,8 @@ export function deriveLeadPatchFromIntent(input: {
   if (intent.kind === "complete_commercial_input")
     return Ok({ stage: "READY_FOR_QUOTATION" });
   if (intent.kind === "create_sale") return Ok({ stage: "CONVERTED" });
+  if (intent.kind === "request_rate_negotiation")
+    return Ok({ stage: "READY_FOR_QUOTATION" });
 
   return Ok({});
 }

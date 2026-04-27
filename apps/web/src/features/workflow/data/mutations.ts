@@ -1,5 +1,6 @@
 import { action, json } from "@solidjs/router";
 
+import { requestRateNegotiation } from "~/actions/workflow/commands/negotiation";
 import {
   requestQuotationCreation,
   requestSaleApproval,
@@ -112,6 +113,24 @@ export const createSaleMutation = action(
     );
   },
   "workflow.createSale",
+);
+
+export const requestRateNegotiationMutation = action(
+  async (input: {
+    leadId: string;
+    justification: string;
+    artifactIds: string[];
+  }) => {
+    const result = await requestRateNegotiation(input);
+    if (!result.ok) {
+      throw result.error;
+    }
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.requestRateNegotiation",
 );
 
 export const reassignLeadMutation = action(

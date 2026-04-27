@@ -1,0 +1,163 @@
+.roundBadge {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-label);
+  padding: 2px var(--spacing-2);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding-top: var(--spacing-3);
+}
+
+.negotiationForm {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: var(--spacing-3);
+  padding: var(--spacing-3);
+}
+
+.negotiationFormTitle {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  margin-bottom: var(--spacing-3);
+}
+
+.justificationLabel {
+  color: var(--foreground-secondary);
+  display: block;
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-1);
+}
+
+.justificationTextarea {
+  background: var(--background-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  height: 80px;
+  outline: none;
+  padding: var(--spacing-2);
+  resize: vertical;
+  width: 100%;
+}
+
+.justificationTextarea:focus {
+  border-color: var(--color-blue);
+}
+
+.fileSection {
+  margin-top: var(--spacing-3);
+}
+
+.fileSectionLabel {
+  color: var(--foreground-secondary);
+  display: block;
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-1);
+}
+
+.fileInput {
+  display: none;
+}
+
+.dropZone {
+  align-items: center;
+  background: var(--background-primary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-size-sm);
+  gap: var(--spacing-2);
+  justify-content: center;
+  padding: var(--spacing-3);
+  transition: border-color 0.15s;
+}
+
+.dropZone:hover {
+  border-color: var(--border-hover);
+  color: var(--foreground-secondary);
+}
+
+.dropZoneDragging {
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+.stagedFiles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-2);
+}
+
+.stagedFile {
+  align-items: center;
+  background: var(--background-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  font-size: var(--font-size-sm);
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-1) var(--spacing-2);
+}
+
+.stagedFileName {
+  color: var(--foreground);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stagedFileSize {
+  color: var(--foreground-tertiary);
+  flex-shrink: 0;
+}
+
+.removeFileButton {
+  background: none;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.removeFileButton:hover {
+  color: var(--destructive);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: flex-end;
+  margin-top: var(--spacing-3);
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-2);
+  text-align: right;
+}
+
+.limitNote {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-2);
+  text-align: center;
+}

@@ -15,6 +15,7 @@ import type {
   ReassignLeadInput,
   RegisterLeadInput,
   RemoveLeadFromFavoritesInput,
+  RequestRateNegotiationInput,
   ReviewLeadInput,
 } from "../contracts/command-inputs";
 import type {
@@ -30,6 +31,7 @@ import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
 import type { WorkflowNotificationCenter } from "../ports/notification-center";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
 import type { LeadSaleRepository } from "../ports/sale-repository";
@@ -45,6 +47,7 @@ import { logLeadCallCommand } from "./log-call";
 import { reassignLeadCommand } from "./reassign-lead";
 import { registerLeadCommand } from "./register-lead";
 import { removeFromFavoritesCommand } from "./remove-from-favorites";
+import { requestRateNegotiationCommand } from "./request-rate-negotiation";
 import { reviewLeadCommand } from "./review-lead";
 
 export type WorkflowCommandApiDeps = {
@@ -61,6 +64,7 @@ export type WorkflowCommandApiDeps = {
   leadQuotations: LeadQuotationRepository;
   leadCommercialInputs: LeadCommercialInputRepository;
   leadSales: LeadSaleRepository;
+  negotiationRequests: NegotiationRequestRepository;
 };
 
 export type WorkflowCommandApi = {
@@ -100,6 +104,9 @@ export type WorkflowCommandApi = {
   createSale(
     input: CreateSaleInput,
   ): Promise<Result<LeadSaleResult, DomainError>>;
+  requestRateNegotiation(
+    input: RequestRateNegotiationInput,
+  ): Promise<Result<LeadCommandResult, DomainError>>;
 };
 
 export function createWorkflowCommandApi(
@@ -175,6 +182,16 @@ export function createWorkflowCommandApi(
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
           leadSales: deps.leadSales,
+          clock: deps.clock,
+        },
+        input,
+      ),
+    requestRateNegotiation: (input) =>
+      requestRateNegotiationCommand(
+        {
+          leadReader: deps.leadReader,
+          mutationUow: deps.mutationUow,
+          negotiationRequests: deps.negotiationRequests,
           clock: deps.clock,
         },
         input,

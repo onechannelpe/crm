@@ -27,6 +27,7 @@ export function FilesTab(props: TabContentProps) {
         <FilesCard
           leadId={view.data.lead.id}
           canUpload={view.data.lead.stage === "CONVERTED"}
+          negotiationRequests={view.data.negotiationRequests}
         />
       )}
     </Show>

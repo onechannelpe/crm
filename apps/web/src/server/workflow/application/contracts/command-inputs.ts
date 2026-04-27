@@ -87,6 +87,13 @@ export type CompleteCommercialInputInput = {
   cantidadPos: number;
 };
 
+export type RequestRateNegotiationInput = {
+  actor: ActorContext;
+  leadId: string;
+  justification: string;
+  artifactIds: string[];
+};
+
 export type CreateSaleInput = {
   actor: ActorContext;
   leadId: string;

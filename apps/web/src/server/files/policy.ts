@@ -24,6 +24,7 @@ const ARTIFACT_DIRECTIONS: Record<
   records_export: "download",
   integration_import: "upload",
   sale_proof: "upload",
+  negotiation_file: "upload",
 };
 
 function deny(code: string, message: string): Result<void, DomainError> {
@@ -38,7 +39,10 @@ function canRequest(
   actor: PolicyActor,
   artifactType: ArtifactType,
 ): Result<void, DomainError> {
-  if (artifactType === "sale_proof" && actor.role === "executive") {
+  if (
+    (artifactType === "sale_proof" || artifactType === "negotiation_file") &&
+    actor.role === "executive"
+  ) {
     return allow();
   }
 
@@ -63,7 +67,11 @@ function canUpload(
   actor: PolicyActor,
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
-  if (artifact.artifactType !== "sale_proof" || actor.role !== "executive") {
+  const isExecutiveOwnedUpload =
+    (artifact.artifactType === "sale_proof" ||
+      artifact.artifactType === "negotiation_file") &&
+    actor.role === "executive";
+  if (!isExecutiveOwnedUpload) {
     if (!hasPermission(actor.role, "file:artifact:upload")) {
       return deny(
         "artifact_upload_forbidden",
@@ -105,8 +113,12 @@ function canRead(
   actor: PolicyActor,
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
+  const isExecutiveReadable =
+    (artifact.artifactType === "sale_proof" ||
+      artifact.artifactType === "negotiation_file") &&
+    actor.role === "executive";
   if (
-    (artifact.artifactType !== "sale_proof" || actor.role !== "executive") &&
+    !isExecutiveReadable &&
     !hasPermission(actor.role, "file:artifact:read")
   ) {
     return deny("artifact_read_forbidden", "Not authorized to read artifacts");

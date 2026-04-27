@@ -11,7 +11,7 @@ import {
   validationError,
 } from "~/lib/app-errors";
 import type { DomainError } from "~/server/shared/domain-error";
-import { isErr, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
   type ActionAccess,
@@ -89,11 +89,21 @@ function sanitize(error: AppError): AppError {
 export async function runAction<T, E extends DomainError>(
   params: RunActionParams<T, E>,
 ): Promise<T> {
+  const result = await runActionResult(params);
+  if (isErr(result)) {
+    throw result.error;
+  }
+  return result.value;
+}
+
+export async function runActionResult<T, E extends DomainError>(
+  params: RunActionParams<T, E>,
+): Promise<Result<T, AppError>> {
   let telemetry!: ActionTelemetryInput;
   try {
     telemetry = await createActionTelemetry(params);
   } catch (error) {
-    throw sanitize(toAppError(error, "An unexpected error occurred"));
+    return Err(sanitize(toAppError(error, "An unexpected error occurred")));
   }
 
   let result: Result<T, E>;
@@ -103,7 +113,7 @@ export async function runAction<T, E extends DomainError>(
     if (error instanceof Response) throw error;
     captureException(error);
     recordActionError(telemetry, toTelemetryError(error));
-    throw sanitize(internalError("An unexpected error occurred"));
+    return Err(sanitize(internalError("An unexpected error occurred")));
   }
 
   if (isErr(result)) {
@@ -117,9 +127,9 @@ export async function runAction<T, E extends DomainError>(
       });
     }
     recordActionError(telemetry, toTelemetryError(appError));
-    throw sanitize(appError);
+    return Err(sanitize(appError));
   }
 
   recordActionSuccess(telemetry);
-  return result.value;
+  return Ok(result.value);
 }

@@ -3,6 +3,7 @@ import { Match, Show, Switch, createMemo } from "solid-js";
 import { CommercialInputSection } from "~/features/workflow/detail/commercial-input-section";
 import { LeadActionsWidget } from "~/features/workflow/detail/lead-actions-widget";
 import { QuotationSection } from "~/features/workflow/detail/quotation-section";
+import { QuotedSection } from "~/features/workflow/detail/quoted-section";
 import { SaleSection } from "~/features/workflow/detail/sale-section";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
@@ -90,6 +91,20 @@ function DetailContent(props: { data: LeadDetailView }) {
                 existingQuotation={
                   props.data.quotations[props.data.quotations.length - 1]
                 }
+              />
+            </Match>
+
+            <Match when={props.data.lead.stage === "QUOTED"}>
+              <QuotedSection
+                leadId={leadId}
+                quotation={props.data.quotations[0]}
+                negotiationRequests={props.data.negotiationRequests}
+                canApprove={props.data.availableActions.includes(
+                  "approve-for-sale",
+                )}
+                canRequestNegotiation={props.data.availableActions.includes(
+                  "request-rate-negotiation",
+                )}
               />
             </Match>
 

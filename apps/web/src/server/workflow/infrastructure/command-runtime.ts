@@ -71,6 +71,7 @@ function createWorkflowCommandRuntime(
     leadQuotations: repos.leadQuotations,
     leadCommercialInputs: repos.leadCommercialInputs,
     leadSales: repos.leadSales,
+    negotiationRequests: repos.leadNegotiationRequests,
   });
 
   return { repos, auditService, leadEnrichmentQueue, commandApi };

@@ -17,10 +17,12 @@ import type { LeadDetailView } from "~/server/workflow/application/queries/views
 import { formatAmount, formatRate } from "./format";
 
 export function WorkflowWidget(props: { data: LeadDetailView }) {
+  const negotiationCount = () => props.data.negotiationRequests.length;
+
   return (
     <Widget>
       <WidgetHeader>
-        <WidgetTitle text="Flujo de trabajo" />
+        <WidgetTitle text="Progreso comercial" />
       </WidgetHeader>
       <WidgetBody>
         <RelationList>
@@ -45,6 +47,12 @@ export function WorkflowWidget(props: { data: LeadDetailView }) {
                 : `${props.data.quotations.length} registradas`}
             </RelationMeta>
           </RelationRow>
+          <Show when={negotiationCount() > 0}>
+            <RelationRow>
+              <span>Revisiones de tasa</span>
+              <RelationMeta>Ronda {negotiationCount()} de 3</RelationMeta>
+            </RelationRow>
+          </Show>
           <Show when={props.data.commercialInput}>
             {(input) => (
               <>
