@@ -51,90 +51,74 @@ export async function reserveLeadUsage(
       domainError("conflict", "lead_exhausted", "Lead capacity exhausted"),
     );
   }
-  try {
-    const row = await repos.leadUsageReservations.insert({
-      user_id: command.actorUserId,
-      amount: command.amount,
-      reason: command.reason,
-    });
-    return Ok(asLeadReservationId(row.id));
-  } catch (error) {
-    throw error;
-  }
+  const row = await repos.leadUsageReservations.insert({
+    user_id: command.actorUserId,
+    amount: command.amount,
+    reason: command.reason,
+  });
+  return Ok(asLeadReservationId(row.id));
 }
 
 export async function commitLeadUsage(
   command: CommitLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations" | "leadUsageCommits">,
 ): Promise<Result<void, DomainError>> {
-  try {
-    const reservation = await repos.leadUsageReservations.findById(
-      command.reservationId.value,
+  const reservation = await repos.leadUsageReservations.findById(
+    command.reservationId.value,
+  );
+  if (!reservation) {
+    return Err(
+      domainError(
+        "not_found",
+        "reservation_not_found",
+        "Reservation not found",
+      ),
     );
-    if (!reservation) {
-      return Err(
-        domainError(
-          "not_found",
-          "reservation_not_found",
-          "Reservation not found",
-        ),
-      );
-    }
-    await repos.leadUsageCommits.insert({
-      reservation_id: command.reservationId.value,
-      amount: command.amount,
-    });
-    await repos.leadUsageReservations.updateAmountAndStatus(
-      command.reservationId.value,
-      command.amount,
-      "committed",
-    );
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
   }
+  await repos.leadUsageCommits.insert({
+    reservation_id: command.reservationId.value,
+    amount: command.amount,
+  });
+  await repos.leadUsageReservations.updateAmountAndStatus(
+    command.reservationId.value,
+    command.amount,
+    "committed",
+  );
+  return Ok(undefined);
 }
 
 export async function cancelLeadUsage(
   command: CancelLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<void, DomainError>> {
-  try {
-    const reservation = await repos.leadUsageReservations.findById(
-      command.reservationId.value,
+  const reservation = await repos.leadUsageReservations.findById(
+    command.reservationId.value,
+  );
+  if (!reservation) {
+    return Err(
+      domainError(
+        "not_found",
+        "reservation_not_found",
+        "Reservation not found",
+      ),
     );
-    if (!reservation) {
-      return Err(
-        domainError(
-          "not_found",
-          "reservation_not_found",
-          "Reservation not found",
-        ),
-      );
-    }
-    await repos.leadUsageReservations.updateStatus(
-      command.reservationId.value,
-      "cancelled",
-    );
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
   }
+  await repos.leadUsageReservations.updateStatus(
+    command.reservationId.value,
+    "cancelled",
+  );
+  return Ok(undefined);
 }
 
 export async function grantLeadCapacity(
   command: GrantLeadCapacityCommand,
   repos: Pick<UsageRepos, "leadCapacityGrants">,
 ): Promise<Result<void, DomainError>> {
-  try {
-    await repos.leadCapacityGrants.insert({
-      user_id: command.targetUserId,
-      amount: command.amount,
-      reason: command.reason,
-      actor_user_id: command.actorUserId,
-    });
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
-  }
+  await repos.leadCapacityGrants.insert({
+    user_id: command.targetUserId,
+    amount: command.amount,
+    reason: command.reason,
+    actor_user_id: command.actorUserId,
+  });
+  return Ok(undefined);
 }

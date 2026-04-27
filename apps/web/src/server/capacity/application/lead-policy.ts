@@ -43,63 +43,51 @@ export async function getEffectiveLeadPolicy(
   userId: UserId,
   repos: PolicyRepos,
 ): Promise<Result<LeadPolicy, DomainError>> {
-  try {
-    const user = await repos.users.findById(userId);
-    if (!user) {
-      return Err(domainError("not_found", "user_not_found", "User not found"));
-    }
-
-    const now = Date.now();
-    const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
-      userId,
-      now,
-    );
-    const teamDefault = user.teamId
-      ? await repos.leadPolicyDefaults.findForScope("team", user.teamId)
-      : null;
-    const branchDefault = await repos.leadPolicyDefaults.findForScope(
-      "branch",
-      user.branchId,
-    );
-
-    return Ok(resolveLeadPolicy({ userOverride, teamDefault, branchDefault }));
-  } catch (error) {
-    throw error;
+  const user = await repos.users.findById(userId);
+  if (!user) {
+    return Err(domainError("not_found", "user_not_found", "User not found"));
   }
+
+  const now = Date.now();
+  const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
+    userId,
+    now,
+  );
+  const teamDefault = user.teamId
+    ? await repos.leadPolicyDefaults.findForScope("team", user.teamId)
+    : null;
+  const branchDefault = await repos.leadPolicyDefaults.findForScope(
+    "branch",
+    user.branchId,
+  );
+
+  return Ok(resolveLeadPolicy({ userOverride, teamDefault, branchDefault }));
 }
 
 export async function setLeadScopeDefault(
   command: SetLeadScopeDefaultCommand,
   repos: Pick<PolicyRepos, "leadPolicyDefaults">,
 ): Promise<Result<void, DomainError>> {
-  try {
-    await repos.leadPolicyDefaults.upsert({
-      scope_type: command.scopeType,
-      scope_id: command.scopeId,
-      active_buffer_target: command.bufferTarget,
-      daily_refill_limit: command.dailyLimit,
-    });
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
-  }
+  await repos.leadPolicyDefaults.upsert({
+    scope_type: command.scopeType,
+    scope_id: command.scopeId,
+    active_buffer_target: command.bufferTarget,
+    daily_refill_limit: command.dailyLimit,
+  });
+  return Ok(undefined);
 }
 
 export async function setLeadUserOverride(
   command: SetLeadUserOverrideCommand,
   repos: Pick<PolicyRepos, "leadPolicyOverrides">,
 ): Promise<Result<void, DomainError>> {
-  try {
-    await repos.leadPolicyOverrides.replaceForUser({
-      user_id: command.targetUserId,
-      active_buffer_target: command.bufferTarget,
-      daily_refill_limit: command.dailyLimit,
-      effective_from: Date.now(),
-      expires_at: command.expiresAt,
-      set_by_user_id: command.actorUserId,
-    });
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
-  }
+  await repos.leadPolicyOverrides.replaceForUser({
+    user_id: command.targetUserId,
+    active_buffer_target: command.bufferTarget,
+    daily_refill_limit: command.dailyLimit,
+    effective_from: Date.now(),
+    expires_at: command.expiresAt,
+    set_by_user_id: command.actorUserId,
+  });
+  return Ok(undefined);
 }

@@ -35,31 +35,27 @@ export async function getLeadCapacitySnapshot(
   userId: UserId,
   repos: SnapshotRepos,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
-  try {
-    const policyResult = await getEffectiveLeadPolicy(userId, repos);
-    if (!policyResult.ok) return policyResult;
+  const policyResult = await getEffectiveLeadPolicy(userId, repos);
+  if (!policyResult.ok) return policyResult;
 
-    const { date } = currentDailyPeriod(new Date());
-    const [grants, reservations, commits, activeAssignments] =
-      await Promise.all([
-        repos.leadCapacityGrants.findByUserAndDate(userId, date),
-        repos.leadUsageReservations.findByUserAndDate(userId, date),
-        repos.leadUsageCommits.findByUserAndDate(userId, date),
-        repos.contactAssignments.countActiveByUser(userId),
-      ]);
+  const { date } = currentDailyPeriod(new Date());
+  const [grants, reservations, commits, activeAssignments] =
+    await Promise.all([
+      repos.leadCapacityGrants.findByUserAndDate(userId, date),
+      repos.leadUsageReservations.findByUserAndDate(userId, date),
+      repos.leadUsageCommits.findByUserAndDate(userId, date),
+      repos.contactAssignments.countActiveByUser(userId),
+    ]);
 
-    return Ok(
-      buildLeadCapacitySnapshot({
-        policy: policyResult.value,
-        grants,
-        reservations,
-        commits,
-        activeAssignments,
-      }),
-    );
-  } catch (error) {
-    throw error;
-  }
+  return Ok(
+    buildLeadCapacitySnapshot({
+      policy: policyResult.value,
+      grants,
+      reservations,
+      commits,
+      activeAssignments,
+    }),
+  );
 }
 
 export type { LeadCapacitySnapshot };

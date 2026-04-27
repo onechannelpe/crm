@@ -50,61 +50,57 @@ export async function getAuditEvents(
   deps: CapacityReadContext,
   input: { limit?: number },
 ): Promise<Result<CapacityAuditEvent[], DomainError>> {
-  try {
-    const effectiveLimit = Math.max(
-      1,
-      input.limit ?? AUDIT_READER_DEFAULT_LIMIT,
-    );
-    const now = Date.now();
-    const [recent, branchUsers, branchTeams] = await Promise.all([
-      deps.repos.auditLogs.listRecent({
-        fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
-        toInclusive: now,
-        limit: effectiveLimit,
-      }),
-      ctx.actor.role === "admin"
-        ? deps.repos.users.findByBranchIncludingInactive(ctx.actor.branchId)
-        : Promise.resolve([]),
-      ctx.actor.role === "admin"
-        ? deps.repos.teams.findByBranch(ctx.actor.branchId)
-        : Promise.resolve([]),
-    ]);
-    const branchUserIds = new Set(branchUsers.map((user) => user.id));
-    const branchTeamIds = new Set(branchTeams.map((team) => team.id));
+  const effectiveLimit = Math.max(
+    1,
+    input.limit ?? AUDIT_READER_DEFAULT_LIMIT,
+  );
+  const now = Date.now();
+  const [recent, branchUsers, branchTeams] = await Promise.all([
+    deps.repos.auditLogs.listRecent({
+      fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
+      toInclusive: now,
+      limit: effectiveLimit,
+    }),
+    ctx.actor.role === "admin"
+      ? deps.repos.users.findByBranchIncludingInactive(ctx.actor.branchId)
+      : Promise.resolve([]),
+    ctx.actor.role === "admin"
+      ? deps.repos.teams.findByBranch(ctx.actor.branchId)
+      : Promise.resolve([]),
+  ]);
+  const branchUserIds = new Set(branchUsers.map((user) => user.id));
+  const branchTeamIds = new Set(branchTeams.map((team) => team.id));
 
-    const filtered = recent
-      .filter(
-        (event) =>
-          event.action.startsWith("search_") ||
-          event.action.startsWith("lead_") ||
-          event.action.startsWith("capacity_"),
-      )
-      .filter((event) => {
-        if (ctx.actor.role === "superuser") return true;
-        if (ctx.actor.role !== "admin") return false;
-        if (event.entity_type === "branch") {
-          return event.entity_id === ctx.actor.branchId;
-        }
-        if (event.entity_type === "team") {
-          return event.entity_id != null && branchTeamIds.has(event.entity_id);
-        }
-        if (event.entity_type === "user") {
-          return event.entity_id != null && branchUserIds.has(event.entity_id);
-        }
-        return false;
-      })
-      .map((event) => ({
-        id: event.id,
-        createdAt: event.created_at,
-        userId: event.user_id,
-        action: event.action,
-        entityType: event.entity_type,
-        entityId: event.entity_id,
-        changes: parseAuditChanges(event.changes),
-      }));
+  const filtered = recent
+    .filter(
+      (event) =>
+        event.action.startsWith("search_") ||
+        event.action.startsWith("lead_") ||
+        event.action.startsWith("capacity_"),
+    )
+    .filter((event) => {
+      if (ctx.actor.role === "superuser") return true;
+      if (ctx.actor.role !== "admin") return false;
+      if (event.entity_type === "branch") {
+        return event.entity_id === ctx.actor.branchId;
+      }
+      if (event.entity_type === "team") {
+        return event.entity_id != null && branchTeamIds.has(event.entity_id);
+      }
+      if (event.entity_type === "user") {
+        return event.entity_id != null && branchUserIds.has(event.entity_id);
+      }
+      return false;
+    })
+    .map((event) => ({
+      id: event.id,
+      createdAt: event.created_at,
+      userId: event.user_id,
+      action: event.action,
+      entityType: event.entity_type,
+      entityId: event.entity_id,
+      changes: parseAuditChanges(event.changes),
+    }));
 
-    return Ok(filtered);
-  } catch (error) {
-    throw error;
-  }
+  return Ok(filtered);
 }

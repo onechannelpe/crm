@@ -56,18 +56,14 @@ export async function requestCapacity(
     ctx.actor.userId,
     deps.rateLimitDeps,
   );
-  try {
-    await deps.repos.capacityRequests.create({
-      user_id: ctx.actor.userId,
-      kind: toDbCapacityRequestKind(input.kind),
-      status: "pending",
-      requested_amount: input.amount,
-      reason: input.reason,
-    });
-    return Ok({ success: true });
-  } catch (error) {
-    throw error;
-  }
+  await deps.repos.capacityRequests.create({
+    user_id: ctx.actor.userId,
+    kind: toDbCapacityRequestKind(input.kind),
+    status: "pending",
+    requested_amount: input.amount,
+    reason: input.reason,
+  });
+  return Ok({ success: true });
 }
 
 export async function approveCapacityRequest(
@@ -131,27 +127,19 @@ export async function approveCapacityRequest(
       }
 
       if (request.kind === "search_extra") {
-        try {
-          await tx.grantSearchCapacity({
-            actorUserId: ctx.actor.userId,
-            userId: request.userId,
-            amount: request.requestedAmount,
-            reason: note ?? request.reason,
-          });
-        } catch (error) {
-          throw error;
-        }
+        await tx.grantSearchCapacity({
+          actorUserId: ctx.actor.userId,
+          userId: request.userId,
+          amount: request.requestedAmount,
+          reason: note ?? request.reason,
+        });
       } else {
-        try {
-          await tx.grantLeadCapacity({
-            actorUserId: ctx.actor.userId,
-            userId: request.userId,
-            amount: request.requestedAmount,
-            reason: note ?? request.reason,
-          });
-        } catch (error) {
-          throw error;
-        }
+        await tx.grantLeadCapacity({
+          actorUserId: ctx.actor.userId,
+          userId: request.userId,
+          amount: request.requestedAmount,
+          reason: note ?? request.reason,
+        });
       }
 
       return { success: true as const };

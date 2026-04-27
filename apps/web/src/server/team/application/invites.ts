@@ -27,22 +27,18 @@ export async function getInviteInfo(input: {
   token: string;
   repos: TeamInviteRepos;
 }): Promise<Result<InviteInfo | null, DomainError>> {
-  try {
-    const invite = await input.repos.userInvites.findPendingByTokenHash(
-      hashInviteToken(input.token),
-      Date.now(),
-    );
-    if (!invite) {
-      return Ok(null);
-    }
-    return Ok({
-      fullName: `${invite.user_names} ${invite.user_first_surname} ${invite.user_second_surname}`,
-      username: invite.user_username,
-      email: invite.user_email,
-    });
-  } catch (error) {
-    throw error;
+  const invite = await input.repos.userInvites.findPendingByTokenHash(
+    hashInviteToken(input.token),
+    Date.now(),
+  );
+  if (!invite) {
+    return Ok(null);
   }
+  return Ok({
+    fullName: `${invite.user_names} ${invite.user_first_surname} ${invite.user_second_surname}`,
+    username: invite.user_username,
+    email: invite.user_email,
+  });
 }
 
 export async function getInviteManagement(

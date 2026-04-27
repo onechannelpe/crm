@@ -32,64 +32,52 @@ export async function getEffectiveSearchPolicy(
   userId: UserId,
   repos: PolicyRepos,
 ): Promise<Result<SearchPolicy, DomainError>> {
-  try {
-    const user = await repos.users.findById(userId);
-    if (!user) {
-      return Err(domainError("not_found", "user_not_found", "User not found"));
-    }
-
-    const now = Date.now();
-    const userOverride = await repos.searchPolicyOverrides.findActiveForUser(
-      userId,
-      now,
-    );
-    const teamDefault = user.teamId
-      ? await repos.searchPolicyDefaults.findForScope("team", user.teamId)
-      : null;
-    const branchDefault = await repos.searchPolicyDefaults.findForScope(
-      "branch",
-      user.branchId,
-    );
-
-    return Ok(
-      resolveSearchPolicy({ userOverride, teamDefault, branchDefault }),
-    );
-  } catch (error) {
-    throw error;
+  const user = await repos.users.findById(userId);
+  if (!user) {
+    return Err(domainError("not_found", "user_not_found", "User not found"));
   }
+
+  const now = Date.now();
+  const userOverride = await repos.searchPolicyOverrides.findActiveForUser(
+    userId,
+    now,
+  );
+  const teamDefault = user.teamId
+    ? await repos.searchPolicyDefaults.findForScope("team", user.teamId)
+    : null;
+  const branchDefault = await repos.searchPolicyDefaults.findForScope(
+    "branch",
+    user.branchId,
+  );
+
+  return Ok(
+    resolveSearchPolicy({ userOverride, teamDefault, branchDefault }),
+  );
 }
 
 export async function setSearchScopeDefault(
   command: SetSearchScopeDefaultCommand,
   repos: Pick<PolicyRepos, "searchPolicyDefaults">,
 ): Promise<Result<void, DomainError>> {
-  try {
-    await repos.searchPolicyDefaults.upsert({
-      scope_type: command.scopeType,
-      scope_id: command.scopeId,
-      period_type: "month",
-      search_limit: command.monthlyLimit,
-    });
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
-  }
+  await repos.searchPolicyDefaults.upsert({
+    scope_type: command.scopeType,
+    scope_id: command.scopeId,
+    period_type: "month",
+    search_limit: command.monthlyLimit,
+  });
+  return Ok(undefined);
 }
 
 export async function setSearchUserOverride(
   command: SetSearchUserOverrideCommand,
   repos: Pick<PolicyRepos, "searchPolicyOverrides">,
 ): Promise<Result<void, DomainError>> {
-  try {
-    await repos.searchPolicyOverrides.replaceForUser({
-      user_id: command.targetUserId,
-      search_limit: command.monthlyLimit,
-      effective_from: Date.now(),
-      expires_at: command.expiresAt,
-      set_by_user_id: command.actorUserId,
-    });
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
-  }
+  await repos.searchPolicyOverrides.replaceForUser({
+    user_id: command.targetUserId,
+    search_limit: command.monthlyLimit,
+    effective_from: Date.now(),
+    expires_at: command.expiresAt,
+    set_by_user_id: command.actorUserId,
+  });
+  return Ok(undefined);
 }

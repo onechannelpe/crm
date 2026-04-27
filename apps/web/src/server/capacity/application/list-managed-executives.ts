@@ -13,45 +13,41 @@ export async function listManagedExecutives(
   ctx: AppContext,
   deps: CapacityReadContext,
 ): Promise<Result<ManagedExecutiveView[], DomainError>> {
-  try {
-    const users =
-      ctx.actor.role === "superuser"
-        ? await deps.repos.users.findAllActive()
-        : await deps.repos.users.findByBranch(ctx.actor.branchId);
+  const users =
+    ctx.actor.role === "superuser"
+      ? await deps.repos.users.findAllActive()
+      : await deps.repos.users.findByBranch(ctx.actor.branchId);
 
-    const summaries = await Promise.all(
-      users.map(async (user) => {
-        const managed = await canManageExecutive(
-          ctx.actor,
-          user.id,
-          deps.repos,
-        );
-        if (!managed.ok) return null;
+  const summaries = await Promise.all(
+    users.map(async (user) => {
+      const managed = await canManageExecutive(
+        ctx.actor,
+        user.id,
+        deps.repos,
+      );
+      if (!managed.ok) return null;
 
-        const [searchStatus, leadStatus] = await Promise.all([
-          getSearchCapacitySnapshot(user.id, deps.repos),
-          getLeadCapacitySnapshot(user.id, deps.repos),
-        ]);
-        if (isErr(searchStatus) || isErr(leadStatus)) return null;
+      const [searchStatus, leadStatus] = await Promise.all([
+        getSearchCapacitySnapshot(user.id, deps.repos),
+        getLeadCapacitySnapshot(user.id, deps.repos),
+      ]);
+      if (isErr(searchStatus) || isErr(leadStatus)) return null;
 
-        return {
-          id: user.id,
-          fullName: longName(user),
-          email: user.email,
-          teamId: user.teamId,
-          executiveCategory: user.executiveCategory,
-          searchStatus: searchStatus.value,
-          leadStatus: leadStatus.value,
-        };
-      }),
-    );
+      return {
+        id: user.id,
+        fullName: longName(user),
+        email: user.email,
+        teamId: user.teamId,
+        executiveCategory: user.executiveCategory,
+        searchStatus: searchStatus.value,
+        leadStatus: leadStatus.value,
+      };
+    }),
+  );
 
-    return Ok(
-      summaries
-        .filter((value): value is ManagedExecutiveView => value !== null)
-        .toSorted((a, b) => a.fullName.localeCompare(b.fullName)),
-    );
-  } catch (error) {
-    throw error;
-  }
+  return Ok(
+    summaries
+      .filter((value): value is ManagedExecutiveView => value !== null)
+      .toSorted((a, b) => a.fullName.localeCompare(b.fullName)),
+  );
 }

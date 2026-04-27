@@ -45,13 +45,7 @@ async function runSyncExport(
   const now = ctx.now();
   assertValidTransition("requested", "ready");
 
-  let result: { bytes: Uint8Array; filename: string };
-  try {
-    result = await syncExecutor.run(artifactType, workflowContext);
-  } catch (err) {
-    throw err;
-  }
-
+  const result = await syncExecutor.run(artifactType, workflowContext);
   const bytes = result.bytes;
   const staticValidation = validateUploadMetadata(
     artifactType,

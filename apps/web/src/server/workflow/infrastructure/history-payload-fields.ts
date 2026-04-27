@@ -39,7 +39,7 @@ export function parsePayload(
     }
   } catch {}
 
-  invalidPayload(row);
+  return invalidPayload(row);
 }
 
 export function requireString(
@@ -52,7 +52,7 @@ export function requireString(
     return Ok(value);
   }
 
-  invalidPayload(row, key);
+  return invalidPayload(row, key);
 }
 
 export function optionalString(
@@ -68,7 +68,7 @@ export function optionalString(
     return Ok(value);
   }
 
-  invalidPayload(row, key);
+  return invalidPayload(row, key);
 }
 
 export function nullableString(
@@ -84,7 +84,7 @@ export function nullableString(
     return Ok(value);
   }
 
-  invalidPayload(row, key);
+  return invalidPayload(row, key);
 }
 
 export function requireNumber(
@@ -97,7 +97,7 @@ export function requireNumber(
     return Ok(value);
   }
 
-  invalidPayload(row, key);
+  return invalidPayload(row, key);
 }
 
 export function requireLeadStage(

@@ -15,55 +15,51 @@ export async function getExecutiveDetail(
   deps: CapacityReadContext,
   input: { userId: number },
 ): Promise<Result<ExecutiveCapacityDetailView, DomainError>> {
-  try {
-    const managed = await canManageExecutive(
-      ctx.actor,
-      input.userId,
-      deps.repos,
+  const managed = await canManageExecutive(
+    ctx.actor,
+    input.userId,
+    deps.repos,
+  );
+  if (!managed.target) {
+    return Err(
+      domainError("not_found", "executive_not_found", "Executive not found"),
     );
-    if (!managed.target) {
-      return Err(
-        domainError("not_found", "executive_not_found", "Executive not found"),
-      );
-    }
-    if (!managed.ok) {
-      return Err(domainError("forbidden", "forbidden", "Forbidden"));
-    }
-
-    const [searchStatus, leadStatus, requests] = await Promise.all([
-      getSearchCapacitySnapshot(input.userId, deps.repos),
-      getLeadCapacitySnapshot(input.userId, deps.repos),
-      deps.repos.capacityRequests.listByUser(input.userId),
-    ]);
-
-    if (isErr(searchStatus)) return searchStatus;
-    if (isErr(leadStatus)) return leadStatus;
-
-    return Ok({
-      executive: {
-        id: input.userId,
-        fullName: longName(managed.target),
-        email: managed.target.email,
-        teamId: managed.target.teamId,
-        executiveCategory: managed.target.executiveCategory,
-      },
-      searchStatus: searchStatus.value,
-      leadStatus: leadStatus.value,
-      requests: requests.map((request) => ({
-        id: request.id,
-        userId: request.user_id,
-        kind: fromDbCapacityRequestKind(request.kind),
-        status: request.status,
-        requestedAmount: request.requested_amount,
-        reason: request.reason,
-        decisionNote: request.decision_note,
-        reviewerUserId: request.reviewer_user_id,
-        createdAt: request.created_at,
-        updatedAt: request.updated_at,
-        decidedAt: request.decided_at,
-      })),
-    });
-  } catch (error) {
-    throw error;
   }
+  if (!managed.ok) {
+    return Err(domainError("forbidden", "forbidden", "Forbidden"));
+  }
+
+  const [searchStatus, leadStatus, requests] = await Promise.all([
+    getSearchCapacitySnapshot(input.userId, deps.repos),
+    getLeadCapacitySnapshot(input.userId, deps.repos),
+    deps.repos.capacityRequests.listByUser(input.userId),
+  ]);
+
+  if (isErr(searchStatus)) return searchStatus;
+  if (isErr(leadStatus)) return leadStatus;
+
+  return Ok({
+    executive: {
+      id: input.userId,
+      fullName: longName(managed.target),
+      email: managed.target.email,
+      teamId: managed.target.teamId,
+      executiveCategory: managed.target.executiveCategory,
+    },
+    searchStatus: searchStatus.value,
+    leadStatus: leadStatus.value,
+    requests: requests.map((request) => ({
+      id: request.id,
+      userId: request.user_id,
+      kind: fromDbCapacityRequestKind(request.kind),
+      status: request.status,
+      requestedAmount: request.requested_amount,
+      reason: request.reason,
+      decisionNote: request.decision_note,
+      reviewerUserId: request.reviewer_user_id,
+      createdAt: request.created_at,
+      updatedAt: request.updated_at,
+      decidedAt: request.decided_at,
+    })),
+  });
 }

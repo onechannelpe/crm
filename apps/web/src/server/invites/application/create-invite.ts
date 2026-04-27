@@ -38,8 +38,7 @@ export async function createInvite(
 
   const normalizedEmail = normalizeInviteEmail(input.email);
 
-  try {
-    return await runtime.runInTransaction(async (transactionRepos) => {
+  return runtime.runInTransaction(async (transactionRepos) => {
       if (input.teamId !== null) {
         const team = await transactionRepos.teams.findByIdWithSupervisor(
           input.teamId,
@@ -152,7 +151,4 @@ export async function createInvite(
 
       return Ok(issued);
     });
-  } catch (error) {
-    throw error;
-  }
 }

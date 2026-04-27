@@ -8,12 +8,8 @@ export async function markInviteDelivered(
   runtime: InviteRuntime,
   inviteId: number,
 ): Promise<Result<void, DomainError>> {
-  try {
-    await runtime.runInTransaction(async (transactionRepos) => {
-      await transactionRepos.userInvites.markSent(inviteId, runtime.now());
-    });
-    return Ok(undefined);
-  } catch (error) {
-    throw error;
-  }
+  await runtime.runInTransaction(async (transactionRepos) => {
+    await transactionRepos.userInvites.markSent(inviteId, runtime.now());
+  });
+  return Ok(undefined);
 }
