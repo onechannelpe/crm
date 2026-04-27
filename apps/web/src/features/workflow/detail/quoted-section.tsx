@@ -21,6 +21,12 @@ import {
   RelationRow,
 } from "~/features/side-panel/components/relation-list";
 import {
+  Widget,
+  WidgetBody,
+  WidgetHeader,
+  WidgetTitle,
+} from "~/features/side-panel/components/widget-card";
+import {
   formatAmount,
   formatRate,
 } from "~/features/side-panel/pages/record-page/widgets/workflow/format";
@@ -136,226 +142,226 @@ export function QuotedSection(props: QuotedSectionProps) {
   let dragCount = 0;
 
   return (
-    <section class={styles.section}>
-      <p class={styles.eyebrow}>
-        Propuesta recibida
+    <Widget>
+      <WidgetHeader>
+        <WidgetTitle text="Propuesta recibida" />
         <Show when={isRenegotiation()}>
-          {" "}
           <span class={styles.roundBadge}>Ronda {currentRound() + 1}</span>
         </Show>
-      </p>
+      </WidgetHeader>
+      <WidgetBody>
+        <FieldTable>
+          <FieldRow>
+            <FieldLabel>
+              <FieldIcon>
+                <Moneybag size={16} />
+              </FieldIcon>
+              <FieldLabelText>Payback</FieldLabelText>
+            </FieldLabel>
+            <RelationMeta>
+              {formatAmount(props.quotation.paybackPricing)}
+            </RelationMeta>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldIcon>
+                <Target size={16} />
+              </FieldIcon>
+              <FieldLabelText>T. debito</FieldLabelText>
+            </FieldLabel>
+            <RelationMeta>
+              {formatRate(props.quotation.tarifaDebito)}
+            </RelationMeta>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldIcon>
+                <Target size={16} />
+              </FieldIcon>
+              <FieldLabelText>T. credito</FieldLabelText>
+            </FieldLabel>
+            <RelationMeta>
+              {formatRate(props.quotation.tarifaCredito)}
+            </RelationMeta>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldIcon>
+                <Target size={16} />
+              </FieldIcon>
+              <FieldLabelText>T. foraneo</FieldLabelText>
+            </FieldLabel>
+            <RelationMeta>
+              {formatRate(props.quotation.tarifaForaneo)}
+            </RelationMeta>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldIcon>
+                <Moneybag size={16} />
+              </FieldIcon>
+              <FieldLabelText>Fee</FieldLabelText>
+            </FieldLabel>
+            <RelationMeta>{formatAmount(props.quotation.fee)}</RelationMeta>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldIcon>
+                <Package size={16} />
+              </FieldIcon>
+              <FieldLabelText>Moneda</FieldLabelText>
+            </FieldLabel>
+            <RelationMeta>{props.quotation.moneda}</RelationMeta>
+          </FieldRow>
+        </FieldTable>
 
-      <FieldTable>
-        <FieldRow>
-          <FieldLabel>
-            <FieldIcon>
-              <Moneybag size={16} />
-            </FieldIcon>
-            <FieldLabelText>Payback</FieldLabelText>
-          </FieldLabel>
-          <RelationMeta>
-            {formatAmount(props.quotation.paybackPricing)}
-          </RelationMeta>
-        </FieldRow>
-        <FieldRow>
-          <FieldLabel>
-            <FieldIcon>
-              <Target size={16} />
-            </FieldIcon>
-            <FieldLabelText>T. debito</FieldLabelText>
-          </FieldLabel>
-          <RelationMeta>
-            {formatRate(props.quotation.tarifaDebito)}
-          </RelationMeta>
-        </FieldRow>
-        <FieldRow>
-          <FieldLabel>
-            <FieldIcon>
-              <Target size={16} />
-            </FieldIcon>
-            <FieldLabelText>T. credito</FieldLabelText>
-          </FieldLabel>
-          <RelationMeta>
-            {formatRate(props.quotation.tarifaCredito)}
-          </RelationMeta>
-        </FieldRow>
-        <FieldRow>
-          <FieldLabel>
-            <FieldIcon>
-              <Target size={16} />
-            </FieldIcon>
-            <FieldLabelText>T. foraneo</FieldLabelText>
-          </FieldLabel>
-          <RelationMeta>
-            {formatRate(props.quotation.tarifaForaneo)}
-          </RelationMeta>
-        </FieldRow>
-        <FieldRow>
-          <FieldLabel>
-            <FieldIcon>
-              <Moneybag size={16} />
-            </FieldIcon>
-            <FieldLabelText>Fee</FieldLabelText>
-          </FieldLabel>
-          <RelationMeta>{formatAmount(props.quotation.fee)}</RelationMeta>
-        </FieldRow>
-        <FieldRow>
-          <FieldLabel>
-            <FieldIcon>
-              <Package size={16} />
-            </FieldIcon>
-            <FieldLabelText>Moneda</FieldLabelText>
-          </FieldLabel>
-          <RelationMeta>{props.quotation.moneda}</RelationMeta>
-        </FieldRow>
-      </FieldTable>
-
-      <Show when={!showNegotiationForm()}>
-        <div class={styles.actions}>
-          <Show when={props.canApprove}>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              loading={approving()}
-              onClick={() => void handleApprove()}
-            >
-              Aprobar para venta
-            </Button>
-          </Show>
-          <Show when={props.canRequestNegotiation}>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowNegotiationForm(true)}
-            >
-              Solicitar revision de tasa
-            </Button>
-          </Show>
-        </div>
-      </Show>
-
-      <Show when={showNegotiationForm()}>
-        <div class={styles.negotiationForm}>
-          <p class={styles.negotiationFormTitle}>
-            Solicitud de revision de tasa
-          </p>
-          <form onSubmit={(e) => void handleSubmitNegotiation(e)}>
-            <label class={styles.justificationLabel}>
-              Fundamento
-              <textarea
-                id={justificationId}
-                class={styles.justificationTextarea}
-                value={justification()}
-                onInput={(e) => setJustification(e.currentTarget.value)}
-                placeholder="Describe el motivo de la solicitud..."
-                required
-              />
-            </label>
-
-            <div class={styles.fileSection}>
-              <span class={styles.fileSectionLabel}>
-                Documentos de soporte (opcional)
-              </span>
-              <label
-                for={fileInputId}
-                class={`${styles.dropZone} ${isDragging() ? styles.dropZoneDragging : ""}`}
-                onDragEnter={(e) => {
-                  e.preventDefault();
-                  dragCount++;
-                  setIsDragging(true);
-                }}
-                onDragOver={(e) => e.preventDefault()}
-                onDragLeave={() => {
-                  dragCount--;
-                  if (dragCount === 0) setIsDragging(false);
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  dragCount = 0;
-                  setIsDragging(false);
-                  const files = Array.from(e.dataTransfer?.files ?? []);
-                  void handleUploadFiles(files);
-                }}
+        <Show when={!showNegotiationForm()}>
+          <div class={styles.actions}>
+            <Show when={props.canApprove}>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                loading={approving()}
+                onClick={() => void handleApprove()}
               >
-                <input
-                  type="file"
-                  class={styles.fileInput}
-                  id={fileInputId}
-                  accept=".xlsx,.xls,.png,.jpg,.jpeg"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.currentTarget.files ?? []);
-                    void handleUploadFiles(files);
-                    e.currentTarget.value = "";
-                  }}
-                />
-                <Paperclip size={14} />
-                {uploading()
-                  ? "Subiendo..."
-                  : "Adjuntar archivos o arrastrar aqui"}
-              </label>
-
-              <Show when={stagedFiles().length > 0}>
-                <div class={styles.stagedFiles}>
-                  <For each={stagedFiles()}>
-                    {(file) => (
-                      <div class={styles.stagedFile}>
-                        <span class={styles.stagedFileName}>
-                          {file.filename}
-                        </span>
-                        <span class={styles.stagedFileSize}>
-                          {formatBytes(file.sizeBytes)}
-                        </span>
-                        <button
-                          type="button"
-                          class={styles.removeFileButton}
-                          onClick={() => removeStagedFile(file.artifactId)}
-                        >
-                          <Trash size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </For>
-                </div>
-              </Show>
-            </div>
-
-            {error() && <p class={styles.error}>{error()}</p>}
-
-            <div class={styles.formActions}>
+                Aprobar para venta
+              </Button>
+            </Show>
+            <Show when={props.canRequestNegotiation}>
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => {
-                  setShowNegotiationForm(false);
-                  setStagedFiles([]);
-                  setJustification("");
-                  setError(null);
-                }}
+                onClick={() => setShowNegotiationForm(true)}
               >
-                Cancelar
+                Solicitar revision de tasa
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                loading={submitting()}
-                disabled={uploading()}
-              >
-                Enviar solicitud
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Show>
+            </Show>
+          </div>
+        </Show>
 
-      <Show when={error() && !showNegotiationForm()}>
-        {(message) => <p class={styles.error}>{message()}</p>}
-      </Show>
-    </section>
+        <Show when={showNegotiationForm()}>
+          <div class={styles.negotiationForm}>
+            <p class={styles.negotiationFormTitle}>
+              Solicitud de revision de tasa
+            </p>
+            <form onSubmit={(e) => void handleSubmitNegotiation(e)}>
+              <label class={styles.justificationLabel}>
+                Fundamento
+                <textarea
+                  id={justificationId}
+                  class={styles.justificationTextarea}
+                  value={justification()}
+                  onInput={(e) => setJustification(e.currentTarget.value)}
+                  placeholder="Describe el motivo de la solicitud..."
+                  required
+                />
+              </label>
+
+              <div class={styles.fileSection}>
+                <span class={styles.fileSectionLabel}>
+                  Documentos de soporte (opcional)
+                </span>
+                <label
+                  for={fileInputId}
+                  class={`${styles.dropZone} ${isDragging() ? styles.dropZoneDragging : ""}`}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    dragCount++;
+                    setIsDragging(true);
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDragLeave={() => {
+                    dragCount--;
+                    if (dragCount === 0) setIsDragging(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    dragCount = 0;
+                    setIsDragging(false);
+                    const files = Array.from(e.dataTransfer?.files ?? []);
+                    void handleUploadFiles(files);
+                  }}
+                >
+                  <input
+                    type="file"
+                    class={styles.fileInput}
+                    id={fileInputId}
+                    accept=".xlsx,.xls,.png,.jpg,.jpeg"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.currentTarget.files ?? []);
+                      void handleUploadFiles(files);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  <Paperclip size={14} />
+                  {uploading()
+                    ? "Subiendo..."
+                    : "Adjuntar archivos o arrastrar aqui"}
+                </label>
+
+                <Show when={stagedFiles().length > 0}>
+                  <div class={styles.stagedFiles}>
+                    <For each={stagedFiles()}>
+                      {(file) => (
+                        <div class={styles.stagedFile}>
+                          <span class={styles.stagedFileName}>
+                            {file.filename}
+                          </span>
+                          <span class={styles.stagedFileSize}>
+                            {formatBytes(file.sizeBytes)}
+                          </span>
+                          <button
+                            type="button"
+                            class={styles.removeFileButton}
+                            onClick={() => removeStagedFile(file.artifactId)}
+                          >
+                            <Trash size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </For>
+                  </div>
+                </Show>
+              </div>
+
+              {error() && <p class={styles.error}>{error()}</p>}
+
+              <div class={styles.formActions}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setShowNegotiationForm(false);
+                    setStagedFiles([]);
+                    setJustification("");
+                    setError(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  loading={submitting()}
+                  disabled={uploading()}
+                >
+                  Enviar solicitud
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Show>
+
+        <Show when={error() && !showNegotiationForm()}>
+          {(message) => <p class={styles.error}>{message()}</p>}
+        </Show>
+      </WidgetBody>
+    </Widget>
   );
 }
 

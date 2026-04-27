@@ -13,6 +13,12 @@ import {
   FieldRow,
   FieldTable,
 } from "~/features/side-panel/components/field-table";
+import {
+  Widget,
+  WidgetBody,
+  WidgetHeader,
+  WidgetTitle,
+} from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailQuotationView } from "~/server/workflow/application/queries/views/lead-detail";
 import {
@@ -76,142 +82,146 @@ export function QuotationSection(props: QuotationSectionProps) {
   }
 
   return (
-    <section class={styles.section}>
-      <p class={styles.eyebrow}>Cotizacion</p>
-      <form onSubmit={(e) => void handleSubmit(e)}>
-        <FieldTable>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Payback</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={paybackPricing()}
-                onChange={setPaybackPricing}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. debito</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={tarifaDebito()}
-                onChange={setTarifaDebito}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. credito</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={tarifaCredito()}
-                onChange={setTarifaCredito}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. foraneo</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={tarifaForaneo()}
-                onChange={setTarifaForaneo}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Fee</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={fee()}
-                onChange={setFee}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Package size={16} />
-              </FieldIcon>
-              <FieldLabelText>Moneda</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <select
-                class={styles.select}
-                value={moneda()}
-                onChange={(e) => {
-                  const val = e.currentTarget.value;
-                  if (isMoneda(val)) {
-                    setMoneda(val);
-                  }
-                }}
-              >
-                <For each={MONEDAS}>
-                  {(m) => <option value={m}>{m}</option>}
-                </For>
-              </select>
-            </FieldInputValue>
-          </FieldRow>
-        </FieldTable>
-        {error() && <p class={styles.error}>{error()}</p>}
-        <div class={styles.actions}>
-          <Button
-            type="submit"
-            variant="primary"
-            size="sm"
-            loading={submitting()}
-          >
-            Crear cotizacion
-          </Button>
-        </div>
-      </form>
-    </section>
+    <Widget>
+      <WidgetHeader>
+        <WidgetTitle text="Cotizacion" />
+      </WidgetHeader>
+      <WidgetBody>
+        <form onSubmit={(e) => void handleSubmit(e)}>
+          <FieldTable>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>Payback</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={paybackPricing()}
+                  onChange={setPaybackPricing}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>T. debito</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={tarifaDebito()}
+                  onChange={setTarifaDebito}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>T. credito</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={tarifaCredito()}
+                  onChange={setTarifaCredito}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>T. foraneo</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={tarifaForaneo()}
+                  onChange={setTarifaForaneo}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>Fee</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={fee()}
+                  onChange={setFee}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Package size={16} />
+                </FieldIcon>
+                <FieldLabelText>Moneda</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <select
+                  class={styles.select}
+                  value={moneda()}
+                  onChange={(e) => {
+                    const val = e.currentTarget.value;
+                    if (isMoneda(val)) {
+                      setMoneda(val);
+                    }
+                  }}
+                >
+                  <For each={MONEDAS}>
+                    {(m) => <option value={m}>{m}</option>}
+                  </For>
+                </select>
+              </FieldInputValue>
+            </FieldRow>
+          </FieldTable>
+          {error() && <p class={styles.error}>{error()}</p>}
+          <div class={styles.actions}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              loading={submitting()}
+            >
+              Crear cotizacion
+            </Button>
+          </div>
+        </form>
+      </WidgetBody>
+    </Widget>
   );
 }

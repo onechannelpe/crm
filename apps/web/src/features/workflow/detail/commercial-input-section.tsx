@@ -16,6 +16,12 @@ import {
   FieldRow,
   FieldTable,
 } from "~/features/side-panel/components/field-table";
+import {
+  Widget,
+  WidgetBody,
+  WidgetHeader,
+  WidgetTitle,
+} from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailCommercialInputView } from "~/server/workflow/application/queries/views/lead-detail";
 import type { AbonoBank } from "~/workflow/contracts/lead-schema";
@@ -80,141 +86,145 @@ export function CommercialInputSection(props: {
   }
 
   return (
-    <section class={styles.section}>
-      <p class={styles.eyebrow}>Datos comerciales</p>
-      <form onSubmit={(e) => void handleSubmit(e)}>
-        <FieldTable>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Building2 size={16} />
-              </FieldIcon>
-              <FieldLabelText>Proveedor</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                value={proveedorActual()}
-                onChange={setProveedorActual}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>Tasa actual</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={tasaActual()}
-                onChange={setTasaActual}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>GPV</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={gpv()}
-                onChange={setGpv}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Ticket</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={ticket()}
-                onChange={setTicket}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Abono</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <div class={styles.pickerWrapper}>
-                <button
-                  type="button"
-                  class={styles.pickerTrigger}
-                  onClick={() => setShowAbonoPicker(!showAbonoPicker())}
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  {abono() || "Seleccionar banco..."}
-                </button>
-                <Show when={showAbonoPicker()}>
-                  <BankPicker
-                    onSelect={setAbono}
-                    onClose={() => setShowAbonoPicker(false)}
-                  />
-                </Show>
-              </div>
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Package size={16} />
-              </FieldIcon>
-              <FieldLabelText>Cantidad POS</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="1"
-                min="0"
-                value={cantidadPos()}
-                onChange={setCantidadPos}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-        </FieldTable>
-        {error() && <p class={styles.error}>{error()}</p>}
-        <div class={styles.actions}>
-          <Button
-            type="submit"
-            variant="primary"
-            size="sm"
-            loading={submitting()}
-          >
-            Guardar datos comerciales
-          </Button>
-        </div>
-      </form>
-    </section>
+    <Widget>
+      <WidgetHeader>
+        <WidgetTitle text="Datos comerciales" />
+      </WidgetHeader>
+      <WidgetBody>
+        <form onSubmit={(e) => void handleSubmit(e)}>
+          <FieldTable>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Building2 size={16} />
+                </FieldIcon>
+                <FieldLabelText>Proveedor</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  value={proveedorActual()}
+                  onChange={setProveedorActual}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Target size={16} />
+                </FieldIcon>
+                <FieldLabelText>Tasa actual</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={tasaActual()}
+                  onChange={setTasaActual}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>GPV</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={gpv()}
+                  onChange={setGpv}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>Ticket</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={ticket()}
+                  onChange={setTicket}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>Abono</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <div class={styles.pickerWrapper}>
+                  <button
+                    type="button"
+                    class={styles.pickerTrigger}
+                    onClick={() => setShowAbonoPicker(!showAbonoPicker())}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    {abono() || "Seleccionar banco..."}
+                  </button>
+                  <Show when={showAbonoPicker()}>
+                    <BankPicker
+                      onSelect={setAbono}
+                      onClose={() => setShowAbonoPicker(false)}
+                    />
+                  </Show>
+                </div>
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Package size={16} />
+                </FieldIcon>
+                <FieldLabelText>Cantidad POS</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={cantidadPos()}
+                  onChange={setCantidadPos}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+          </FieldTable>
+          {error() && <p class={styles.error}>{error()}</p>}
+          <div class={styles.actions}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              loading={submitting()}
+            >
+              Guardar datos comerciales
+            </Button>
+          </div>
+        </form>
+      </WidgetBody>
+    </Widget>
   );
 }

@@ -1,13 +1,3 @@
-.section {
-  padding: var(--spacing-1) 0;
-}
-
-.eyebrow {
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-label);
-  padding: var(--spacing-3) 0 var(--spacing-2);
-}
-
 .actions {
   display: flex;
   justify-content: flex-end;

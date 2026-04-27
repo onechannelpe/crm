@@ -18,6 +18,12 @@ import {
   FieldRow,
   FieldTable,
 } from "~/features/side-panel/components/field-table";
+import {
+  Widget,
+  WidgetBody,
+  WidgetHeader,
+  WidgetTitle,
+} from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 import {
   SALE_BANK_KINDS,
@@ -106,214 +112,218 @@ export function SaleSection(props: SaleSectionProps) {
   }
 
   return (
-    <section class={styles.section}>
-      <p class={styles.eyebrow}>Venta</p>
-      <form onSubmit={(e) => void handleSubmit(e)}>
-        <FieldTable>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Building2 size={16} />
-              </FieldIcon>
-              <FieldLabelText>Proveedor</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                value={proveedorActual()}
-                onChange={setProveedorActual}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>Tasa actual</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={tasaActual()}
-                onChange={setTasaActual}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>GPV</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={gpv()}
-                onChange={setGpv}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Ticket</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={ticket()}
-                onChange={setTicket}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Abono</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <div class={styles.pickerWrapper}>
-                <button
-                  type="button"
-                  class={styles.pickerTrigger}
-                  onClick={() => setShowAbonoPicker(!showAbonoPicker())}
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  {abono() || "Seleccionar banco..."}
-                </button>
-                <Show when={showAbonoPicker()}>
-                  <BankPicker
-                    onSelect={setAbono}
-                    onClose={() => setShowAbonoPicker(false)}
-                  />
-                </Show>
-              </div>
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Package size={16} />
-              </FieldIcon>
-              <FieldLabelText>Cantidad POS</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="1"
-                min="0"
-                value={cantidadPos()}
-                onChange={setCantidadPos}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Building2 size={16} />
-              </FieldIcon>
-              <FieldLabelText>Tipo banco</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <div class={styles.bankKindGroup}>
-                <For each={SALE_BANK_KINDS}>
-                  {(kind) => (
-                    <label class={styles.bankKindOption}>
-                      <input
-                        type="radio"
-                        name={bankKindRadioName}
-                        value={kind}
-                        checked={bankChoice() === kind}
-                        onChange={() => handleBankKindChange(kind)}
-                      />
-                      <span>{kind === "BCP" ? "BCP" : "Otro banco"}</span>
-                    </label>
-                  )}
-                </For>
-              </div>
-            </FieldInputValue>
-          </FieldRow>
-          <Show when={bankChoice() === "OTRO"}>
+    <Widget>
+      <WidgetHeader>
+        <WidgetTitle text="Venta" />
+      </WidgetHeader>
+      <WidgetBody>
+        <form onSubmit={(e) => void handleSubmit(e)}>
+          <FieldTable>
             <FieldRow>
               <FieldLabel>
                 <FieldIcon>
                   <Building2 size={16} />
                 </FieldIcon>
-                <FieldLabelText>Otro banco</FieldLabelText>
+                <FieldLabelText>Proveedor</FieldLabelText>
               </FieldLabel>
               <FieldInputValue>
                 <TextInput
                   sizeVariant="sm"
-                  value={otherBank()}
-                  onChange={setOtherBank}
+                  value={proveedorActual()}
+                  onChange={setProveedorActual}
                   required
                 />
               </FieldInputValue>
             </FieldRow>
-          </Show>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Link size={16} />
-              </FieldIcon>
-              <FieldLabelText>Nro. cuenta</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                value={nroCuenta()}
-                onChange={setNroCuenta}
-                required
-              />
-            </FieldInputValue>
-          </FieldRow>
-          <Show when={bankChoice() === "OTRO"}>
             <FieldRow>
               <FieldLabel>
                 <FieldIcon>
-                  <Lock size={16} />
+                  <Target size={16} />
                 </FieldIcon>
-                <FieldLabelText>CCI</FieldLabelText>
+                <FieldLabelText>Tasa actual</FieldLabelText>
               </FieldLabel>
               <FieldInputValue>
-                <TextInput sizeVariant="sm" value={cci()} onChange={setCci} />
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={tasaActual()}
+                  onChange={setTasaActual}
+                  required
+                />
               </FieldInputValue>
             </FieldRow>
-          </Show>
-        </FieldTable>
-        {error() && <p class={styles.error}>{error()}</p>}
-        <div class={styles.actions}>
-          <Button
-            type="submit"
-            variant="primary"
-            size="sm"
-            loading={submitting()}
-          >
-            Registrar venta
-          </Button>
-        </div>
-      </form>
-    </section>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>GPV</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={gpv()}
+                  onChange={setGpv}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>Ticket</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={ticket()}
+                  onChange={setTicket}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Moneybag size={16} />
+                </FieldIcon>
+                <FieldLabelText>Abono</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <div class={styles.pickerWrapper}>
+                  <button
+                    type="button"
+                    class={styles.pickerTrigger}
+                    onClick={() => setShowAbonoPicker(!showAbonoPicker())}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    {abono() || "Seleccionar banco..."}
+                  </button>
+                  <Show when={showAbonoPicker()}>
+                    <BankPicker
+                      onSelect={setAbono}
+                      onClose={() => setShowAbonoPicker(false)}
+                    />
+                  </Show>
+                </div>
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Package size={16} />
+                </FieldIcon>
+                <FieldLabelText>Cantidad POS</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={cantidadPos()}
+                  onChange={setCantidadPos}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Building2 size={16} />
+                </FieldIcon>
+                <FieldLabelText>Tipo banco</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <div class={styles.bankKindGroup}>
+                  <For each={SALE_BANK_KINDS}>
+                    {(kind) => (
+                      <label class={styles.bankKindOption}>
+                        <input
+                          type="radio"
+                          name={bankKindRadioName}
+                          value={kind}
+                          checked={bankChoice() === kind}
+                          onChange={() => handleBankKindChange(kind)}
+                        />
+                        <span>{kind === "BCP" ? "BCP" : "Otro banco"}</span>
+                      </label>
+                    )}
+                  </For>
+                </div>
+              </FieldInputValue>
+            </FieldRow>
+            <Show when={bankChoice() === "OTRO"}>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldIcon>
+                    <Building2 size={16} />
+                  </FieldIcon>
+                  <FieldLabelText>Otro banco</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  <TextInput
+                    sizeVariant="sm"
+                    value={otherBank()}
+                    onChange={setOtherBank}
+                    required
+                  />
+                </FieldInputValue>
+              </FieldRow>
+            </Show>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Link size={16} />
+                </FieldIcon>
+                <FieldLabelText>Nro. cuenta</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  value={nroCuenta()}
+                  onChange={setNroCuenta}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <Show when={bankChoice() === "OTRO"}>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldIcon>
+                    <Lock size={16} />
+                  </FieldIcon>
+                  <FieldLabelText>CCI</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  <TextInput sizeVariant="sm" value={cci()} onChange={setCci} />
+                </FieldInputValue>
+              </FieldRow>
+            </Show>
+          </FieldTable>
+          {error() && <p class={styles.error}>{error()}</p>}
+          <div class={styles.actions}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              loading={submitting()}
+            >
+              Registrar venta
+            </Button>
+          </div>
+        </form>
+      </WidgetBody>
+    </Widget>
   );
 }
