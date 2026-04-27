@@ -49,6 +49,8 @@ type StagedFile = {
   sizeBytes: number;
 };
 
+const MAX_NEGOTIATION_FILES = 3;
+
 type QuotedSectionProps = {
   leadId: string;
   quotation: LeadDetailQuotationView;
@@ -90,6 +92,14 @@ export function QuotedSection(props: QuotedSectionProps) {
   async function handleUploadFiles(files: File[]) {
     if (files.length === 0 || uploading()) return;
     setError(null);
+
+    if (stagedFiles().length + files.length > MAX_NEGOTIATION_FILES) {
+      setError(
+        `Solo se pueden adjuntar hasta ${MAX_NEGOTIATION_FILES} archivos por solicitud`,
+      );
+      return;
+    }
+
     setUploading(true);
     try {
       const results = await Promise.all(
@@ -100,29 +110,31 @@ export function QuotedSection(props: QuotedSectionProps) {
         }),
       );
 
-      const successes = results
-        .filter((r) => r.ok)
-        .map((r) => r.value as StagedFile);
-      const failures = results.filter((r) => !r.ok);
+      const successes: StagedFile[] = [];
+      const failures: string[] = [];
+
+      results.forEach((result) => {
+        if (result.ok) {
+          successes.push({
+            artifactId: result.value.artifactId,
+            filename: result.value.filename,
+            sizeBytes: result.value.sizeBytes,
+          });
+        } else {
+          failures.push(result.error.publicMessage);
+        }
+      });
 
       if (failures.length > 0) {
         setError(
           failures.length === 1
-            ? (failures[0] as { error: { publicMessage: string } }).error
-                .publicMessage
+            ? failures[0]
             : "Algunos archivos no se pudieron subir",
         );
       }
 
       if (successes.length > 0) {
-        setStagedFiles((prev) => [
-          ...prev,
-          ...successes.map((s) => ({
-            artifactId: s.artifactId,
-            filename: s.filename,
-            sizeBytes: s.sizeBytes,
-          })),
-        ]);
+        setStagedFiles((prev) => [...prev, ...successes]);
       }
     } catch (err) {
       setError(toAppError(err, "Error al subir archivo").publicMessage);
