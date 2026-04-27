@@ -1,3 +1,5 @@
+import { captureException } from "@sentry/bun";
+
 import {
   AppError,
   conflictError,
@@ -99,13 +101,20 @@ export async function runAction<T, E extends DomainError>(
   try {
     result = await params.execute(telemetry.ctx);
   } catch (error) {
+    captureException(error);
     recordActionError(telemetry, toTelemetryError(error));
     throw sanitize(internalError("An unexpected error occurred"));
   }
 
   if (isErr(result)) {
     const appError = domainToAppError(result.error);
-    recordActionError(telemetry, toTelemetryError(appError));
+    if (
+      result.error.kind === "unexpected" ||
+      result.error.kind === "external"
+    ) {
+      captureException(result.error);
+    }
+    recordActionError(telemetry, toTelemetryError(result.error));
     throw sanitize(appError);
   }
 
