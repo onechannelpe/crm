@@ -14,6 +14,8 @@ import {
 import { blockingFieldLabel } from "~/features/workflow/detail/lead-workflow-ui";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
+import { formatAmount, formatRate } from "./format";
+
 export function WorkflowWidget(props: { data: LeadDetailView }) {
   return (
     <Widget>
@@ -43,6 +45,24 @@ export function WorkflowWidget(props: { data: LeadDetailView }) {
                 : `${props.data.quotations.length} registradas`}
             </RelationMeta>
           </RelationRow>
+          <Show when={props.data.commercialInput}>
+            {(input) => (
+              <>
+                <RelationRow>
+                  <span>GPV</span>
+                  <RelationMeta>{formatAmount(input().gpv)}</RelationMeta>
+                </RelationRow>
+                <RelationRow>
+                  <span>Ticket</span>
+                  <RelationMeta>{formatAmount(input().ticket)}</RelationMeta>
+                </RelationRow>
+                <RelationRow>
+                  <span>Tasa actual</span>
+                  <RelationMeta>{formatRate(input().tasaActual)}</RelationMeta>
+                </RelationRow>
+              </>
+            )}
+          </Show>
           <RelationRow>
             <span>Venta</span>
             <RelationMeta>
