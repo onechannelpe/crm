@@ -4,6 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
+  AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
 export type LeadHistoryEventType =
@@ -61,7 +62,7 @@ export type LeadHistoryPayloadByEvent = {
     tasaActual: number;
     gpv: number;
     ticket: number;
-    abono: number;
+    abono: AbonoBank;
     cantidadPos: number;
   };
   quotation_created: {

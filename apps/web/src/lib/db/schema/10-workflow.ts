@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -58,7 +58,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("tasa_actual", "real")
     .addColumn("gpv", "real")
     .addColumn("ticket", "real")
-    .addColumn("abono", "real")
+    .addColumn("abono", "varchar(50)", (col) =>
+      col.check(
+        sql`abono IN ('BCP', 'BBVA', 'SCOTIABANK', 'INTERBANK', 'NACION', 'BANBIF', 'MI BANCO')`,
+      ),
+    )
     .addColumn("cantidad_pos", "integer")
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
@@ -104,7 +108,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("tasa_actual", "real", (col) => col.notNull())
     .addColumn("gpv", "real", (col) => col.notNull())
     .addColumn("ticket", "real", (col) => col.notNull())
-    .addColumn("abono", "real", (col) => col.notNull())
+    .addColumn("abono", "varchar(50)", (col) =>
+      col
+        .notNull()
+        .check(
+          sql`abono IN ('BCP', 'BBVA', 'SCOTIABANK', 'INTERBANK', 'NACION', 'BANBIF', 'MI BANCO')`,
+        ),
+    )
     .addColumn("cantidad_pos", "integer", (col) => col.notNull())
     .addColumn("banco", "varchar(100)", (col) => col.notNull())
     .addColumn("nro_cuenta", "varchar(50)", (col) => col.notNull())

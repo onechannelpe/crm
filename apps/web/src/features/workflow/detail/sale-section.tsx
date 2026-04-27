@@ -9,6 +9,7 @@ import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import { BankPicker } from "~/components/ui/pickers/bank-picker";
 import {
   FieldIcon,
   FieldInputValue,
@@ -21,6 +22,7 @@ import { toAppError } from "~/lib/app-errors";
 import {
   SALE_BANK_KINDS,
   type SaleBankKind,
+  type AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
 import { createSaleMutation } from "../data/mutations";
@@ -40,7 +42,8 @@ export function SaleSection(props: SaleSectionProps) {
   const [tasaActual, setTasaActual] = createSignal("");
   const [gpv, setGpv] = createSignal("");
   const [ticket, setTicket] = createSignal("");
-  const [abono, setAbono] = createSignal("");
+  const [abono, setAbono] = createSignal<AbonoBank | "">("");
+  const [showAbonoPicker, setShowAbonoPicker] = createSignal(false);
   const [cantidadPos, setCantidadPos] = createSignal("");
   const [bankChoice, setBankChoice] = createSignal<SaleBankKind | "">("");
   const [otherBank, setOtherBank] = createSignal("");
@@ -63,6 +66,11 @@ export function SaleSection(props: SaleSectionProps) {
       setError("Selecciona un tipo de banco");
       return;
     }
+    const currentAbono = abono();
+    if (!currentAbono) {
+      setError("Selecciona un banco de abono");
+      return;
+    }
     const requiresCci = bankChoice() === "OTRO";
     if (requiresCci && !otherBank().trim()) {
       setError("Ingresa el nombre del banco");
@@ -83,7 +91,7 @@ export function SaleSection(props: SaleSectionProps) {
         tasaActual: Number(tasaActual()),
         gpv: Number(gpv()),
         ticket: Number(ticket()),
-        abono: Number(abono()),
+        abono: currentAbono,
         cantidadPos: Number(cantidadPos()),
         banco,
         nroCuenta: nroCuenta(),
@@ -183,15 +191,23 @@ export function SaleSection(props: SaleSectionProps) {
               <FieldLabelText>Abono</FieldLabelText>
             </FieldLabel>
             <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={abono()}
-                onChange={setAbono}
-                required
-              />
+              <div class={styles.pickerWrapper}>
+                <button
+                  type="button"
+                  class={styles.pickerTrigger}
+                  onClick={() => setShowAbonoPicker(!showAbonoPicker())}
+                >
+                  {abono() || "Seleccionar banco..."}
+                </button>
+                <Show when={showAbonoPicker()}>
+                  <div class={styles.pickerPopover}>
+                    <BankPicker
+                      onSelect={setAbono}
+                      onClose={() => setShowAbonoPicker(false)}
+                    />
+                  </div>
+                </Show>
+              </div>
             </FieldInputValue>
           </FieldRow>
           <FieldRow>

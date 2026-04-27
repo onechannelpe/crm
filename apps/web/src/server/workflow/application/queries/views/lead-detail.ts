@@ -4,6 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
+  AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
@@ -47,7 +48,7 @@ export type LeadDetailCommercialInputView = {
   tasaActual: number | null;
   gpv: number | null;
   ticket: number | null;
-  abono: number | null;
+  abono: AbonoBank | null;
   cantidadPos: number | null;
   updatedAt: number;
   updatedBy: number;
@@ -75,7 +76,7 @@ export type LeadDetailSaleView = {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: number;
+  abono: AbonoBank;
   cantidadPos: number;
   banco: string;
   nroCuenta: string;

@@ -8,6 +8,7 @@ import {
   requireMoneda,
   requireNumber,
   requireString,
+  requireAbonoBank,
 } from "./history-payload-fields";
 
 export function toCommercialInputEntry(
@@ -26,7 +27,7 @@ export function toCommercialInputEntry(
   const ticket = requireNumber(payload, "ticket", row);
   if (!ticket.ok) return ticket;
 
-  const abono = requireNumber(payload, "abono", row);
+  const abono = requireAbonoBank(payload, "abono", row);
   if (!abono.ok) return abono;
 
   const cantidadPos = requireNumber(payload, "cantidadPos", row);

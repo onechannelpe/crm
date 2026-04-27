@@ -1,5 +1,5 @@
 import { useAction } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import Moneybag from "~/components/icons/moneybag";
@@ -7,6 +7,7 @@ import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import { BankPicker } from "~/components/ui/pickers/bank-picker";
 import {
   FieldIcon,
   FieldInputValue,
@@ -17,6 +18,7 @@ import {
 } from "~/features/side-panel/components/field-table";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailCommercialInputView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { AbonoBank } from "~/workflow/contracts/lead-schema";
 
 import { completeCommercialInputMutation } from "../data/mutations";
 
@@ -40,9 +42,10 @@ export function CommercialInputSection(props: {
   const [ticket, setTicket] = createSignal(
     props.initialValues?.ticket?.toString() ?? "",
   );
-  const [abono, setAbono] = createSignal(
-    props.initialValues?.abono?.toString() ?? "",
+  const [abono, setAbono] = createSignal<AbonoBank | "">(
+    props.initialValues?.abono ?? "",
   );
+  const [showAbonoPicker, setShowAbonoPicker] = createSignal(false);
   const [cantidadPos, setCantidadPos] = createSignal(
     props.initialValues?.cantidadPos?.toString() ?? "",
   );
@@ -52,6 +55,11 @@ export function CommercialInputSection(props: {
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     if (!proveedorActual().trim()) return;
+    const currentAbono = abono();
+    if (!currentAbono) {
+      setError("Selecciona un banco de abono");
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
@@ -61,7 +69,7 @@ export function CommercialInputSection(props: {
         tasaActual: Number(tasaActual()),
         gpv: Number(gpv()),
         ticket: Number(ticket()),
-        abono: Number(abono()),
+        abono: currentAbono,
         cantidadPos: Number(cantidadPos()),
       });
     } catch (err) {
@@ -157,15 +165,23 @@ export function CommercialInputSection(props: {
               <FieldLabelText>Abono</FieldLabelText>
             </FieldLabel>
             <FieldInputValue>
-              <TextInput
-                sizeVariant="sm"
-                type="number"
-                step="0.01"
-                min="0"
-                value={abono()}
-                onChange={setAbono}
-                required
-              />
+              <div class={styles.pickerWrapper}>
+                <button
+                  type="button"
+                  class={styles.pickerTrigger}
+                  onClick={() => setShowAbonoPicker(!showAbonoPicker())}
+                >
+                  {abono() || "Seleccionar banco..."}
+                </button>
+                <Show when={showAbonoPicker()}>
+                  <div class={styles.pickerPopover}>
+                    <BankPicker
+                      onSelect={setAbono}
+                      onClose={() => setShowAbonoPicker(false)}
+                    />
+                  </div>
+                </Show>
+              </div>
             </FieldInputValue>
           </FieldRow>
           <FieldRow>

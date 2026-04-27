@@ -20,3 +20,40 @@
   padding-top: var(--spacing-2);
   text-align: right;
 }
+
+.pickerWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pickerTrigger {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  height: 24px;
+  padding: 0 var(--spacing-2);
+  text-align: left;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.pickerTrigger:hover {
+  background: var(--background-secondary-hover);
+  border-color: var(--border-hover);
+}
+
+.pickerPopover {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  left: 0;
+  margin-top: 4px;
+  position: absolute;
+  top: 100%;
+  width: 100%;
+  z-index: 100;
+}
