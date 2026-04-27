@@ -20,6 +20,10 @@ import {
   RelationMeta,
   RelationRow,
 } from "~/features/side-panel/components/relation-list";
+import {
+  formatAmount,
+  formatRate,
+} from "~/features/side-panel/pages/record-page/widgets/workflow/format";
 import { toAppError } from "~/lib/app-errors";
 import type {
   LeadDetailNegotiationRequestView,
@@ -30,7 +34,6 @@ import {
   approveForSaleMutation,
   requestRateNegotiationMutation,
 } from "../data/mutations";
-import { formatAmount, formatRate } from "~/features/side-panel/pages/record-page/widgets/workflow/format";
 
 import styles from "./quoted-section.module.css";
 
