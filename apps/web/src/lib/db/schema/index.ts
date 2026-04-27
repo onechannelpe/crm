@@ -21,6 +21,7 @@ import * as s09 from "./09-observability";
 import * as s10 from "./10-workflow";
 import * as s11 from "./11-integration-workflow";
 import * as s12 from "./12-workflow-files";
+import * as s13 from "./13-negotiation";
 
 export const SCHEMA_MODULES: SchemaModule[] = [
   s00,
@@ -35,6 +36,7 @@ export const SCHEMA_MODULES: SchemaModule[] = [
   s10,
   s11,
   s12,
+  s13,
 ];
 
 export const SEED_MODULES: SeedModule[] = [seed00];

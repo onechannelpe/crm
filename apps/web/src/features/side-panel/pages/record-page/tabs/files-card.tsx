@@ -1,13 +1,20 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 
 import { requestLeadSaleProofDownloadToken } from "~/actions/workflow/files";
 import type { LeadSaleProofFileView } from "~/actions/workflow/files";
+import { requestNegotiationFileDownloadToken } from "~/actions/workflow/negotiation-files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import {
   ActivitySection,
+  ActivityListCard,
+  ActivityListRow,
+  ActivityRowBody,
+  ActivityRowTitle,
+  ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
+import type { LeadDetailNegotiationRequestView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal } from "./preview-modal";
@@ -19,6 +26,7 @@ import styles from "./files.module.css";
 type FilesCardProps = {
   leadId: string;
   canUpload: boolean;
+  negotiationRequests?: LeadDetailNegotiationRequestView[];
 };
 
 function hasDraggedFiles(event: DragEvent): boolean {
@@ -94,8 +102,63 @@ export function FilesCard(props: FilesCardProps) {
     }
   }
 
+  const negotiationRequests = () => props.negotiationRequests ?? [];
+  const allNegotiationFiles = () =>
+    negotiationRequests().flatMap((req) =>
+      req.files.map((f) => ({ ...f, round: req.round, requestId: req.id })),
+    );
+
+  async function handleNegotiationDownload(leadId: string, artifactId: string) {
+    setError(null);
+    try {
+      const token = await requestNegotiationFileDownloadToken({
+        leadId,
+        artifactId,
+      });
+      window.location.href = `/api/files/download/${token.token}`;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo descargar el archivo",
+      );
+    }
+  }
+
   return (
     <ActivityTabContainer>
+      <Show when={allNegotiationFiles().length > 0}>
+        <ActivitySection
+          title="Revisiones de tasa"
+          count={allNegotiationFiles().length}
+        >
+          <ActivityListCard>
+            <For each={negotiationRequests()}>
+              {(req) => (
+                <For each={req.files}>
+                  {(file) => (
+                    <ActivityListRow
+                      onClick={() =>
+                        void handleNegotiationDownload(
+                          props.leadId,
+                          file.artifactId,
+                        )
+                      }
+                    >
+                      <ActivityRowBody>
+                        <ActivityRowTitle>{file.filename}</ActivityRowTitle>
+                        <ActivityRowMeta>Ronda {req.round}</ActivityRowMeta>
+                      </ActivityRowBody>
+                    </ActivityListRow>
+                  )}
+                </For>
+              )}
+            </For>
+          </ActivityListCard>
+          <Show when={error()}>
+            {(message) => <p class={styles.error}>{message()}</p>}
+          </Show>
+        </ActivitySection>
+      </Show>
+
       <ActivitySection
         title="Comprobantes"
         count={attachments()?.length}

@@ -35,6 +35,7 @@ export async function getLeadDetail(
     commercialInput,
     quotations,
     sale,
+    negotiationRequestRows,
     historyResult,
     sourceStatus,
     userRows,
@@ -46,6 +47,7 @@ export async function getLeadDetail(
     deps.leadCommercialInputs.findByLeadId(input.leadId),
     deps.leadQuotations.listByLeadId(input.leadId),
     deps.leadSales.findByLeadId(input.leadId),
+    deps.leadNegotiationRequests.listByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
     deps.sourceStatuses.findByRuc(lead.ruc),
     deps.users.findByIds([
@@ -58,6 +60,13 @@ export async function getLeadDetail(
   if (!historyResult.ok) {
     return historyResult;
   }
+
+  const negotiationRequests = await Promise.all(
+    negotiationRequestRows.map(async (req) => ({
+      request: req,
+      files: await deps.negotiationFiles.listByNegotiationRequestId(req.id),
+    })),
+  );
 
   const userMap = new Map(userRows.map((u) => [u.id, u.fullName]));
   const executiveName = userMap.get(lead.executiveId) ?? "Desconocido";
@@ -84,6 +93,7 @@ export async function getLeadDetail(
       commercialInput,
       quotations,
       sale,
+      negotiationRequests,
       history: historyResult.value,
       canRevealFullTimeline: canRevealTimeline,
       availableActions,

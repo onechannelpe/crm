@@ -3,6 +3,7 @@ import { createRecordsExportExecutor } from "~/server/files/records-export-execu
 import { createArtifactsRepo } from "~/server/files/repo/artifacts";
 import { createAssetsRepo } from "~/server/files/repo/assets";
 import { createEventsRepo } from "~/server/files/repo/events";
+import { createNegotiationFilesRepo } from "~/server/files/repo/negotiation";
 import { createSalesRepo } from "~/server/files/repo/sales";
 import { createTokensRepo } from "~/server/files/repo/tokens";
 import { createFileStorage } from "~/server/files/storage";
@@ -17,6 +18,7 @@ export function createFilesRuntime(infra: ServerInfra) {
     events: createEventsRepo(infra.db),
     tokens: createTokensRepo(infra.db),
     sales: createSalesRepo(infra.db),
+    negotiation: createNegotiationFilesRepo(infra.db),
   };
   const storage = createFileStorage(config.uploads.storageRoot);
   const syncExecutor = createRecordsExportExecutor(createLeadQueries(infra.db));

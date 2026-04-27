@@ -69,7 +69,12 @@ export type LeadMutationIntent =
       abono: AbonoBank;
       cantidadPos: number;
     }
-  | { kind: "create_sale"; saleId: string };
+  | { kind: "create_sale"; saleId: string }
+  | {
+      kind: "request_rate_negotiation";
+      negotiationRequestId: string;
+      round: number;
+    };
 
 export type LeadMutationPatch = {
   executiveId?: number;

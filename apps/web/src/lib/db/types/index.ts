@@ -10,6 +10,7 @@ import * as observability from "./09-observability";
 import * as workflow from "./10-workflow";
 import * as integration from "./11-integration";
 import * as workflowFiles from "./12-workflow-files";
+import * as negotiation from "./13-negotiation";
 
 export type {
   BranchesTable,
@@ -128,6 +129,11 @@ export {
   type WorkflowSaleProofFilesTable,
 } from "./12-workflow-files";
 
+export {
+  type WorkflowNegotiationRequestsTable,
+  type WorkflowNegotiationFilesTable,
+} from "./13-negotiation";
+
 export interface Database {
   // 00-core
   branches: core.BranchesTable;
@@ -226,4 +232,8 @@ export interface Database {
   artifact_events: workflowFiles.ArtifactEventsTable;
   artifact_download_tokens: workflowFiles.ArtifactDownloadTokensTable;
   workflow_sale_proof_files: workflowFiles.WorkflowSaleProofFilesTable;
+
+  // 13-negotiation
+  workflow_negotiation_requests: negotiation.WorkflowNegotiationRequestsTable;
+  workflow_negotiation_files: negotiation.WorkflowNegotiationFilesTable;
 }

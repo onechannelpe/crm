@@ -74,7 +74,14 @@ export function canCreateQuotation(role: Role) {
 }
 
 export function canApproveForSale(role: Role) {
-  return hasPermission(role, "quotation:manage");
+  return (
+    hasPermission(role, "quotation:manage") ||
+    hasPermission(role, "lead:commercial-input:complete")
+  );
+}
+
+export function canRequestRateNegotiation(role: Role) {
+  return hasPermission(role, "lead:commercial-input:complete");
 }
 
 export function canReassignLead(role: Role) {
