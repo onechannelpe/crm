@@ -1,10 +1,4 @@
-import {
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-} from "solid-js";
+import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { ABONO_BANKS, type AbonoBank } from "~/workflow/contracts/lead-schema";

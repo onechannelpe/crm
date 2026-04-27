@@ -1,5 +1,5 @@
 import { sql } from "kysely";
-import type { Selectable } from "kysely";
+import type { Selectable, SelectQueryBuilder, ExpressionBuilder } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
@@ -11,6 +11,7 @@ import type {
   LeadListRow,
   LeadQueries,
 } from "../application/ports/lead-queries";
+import type { LeadQueryDatabase } from "./lead-query-types";
 
 type LeadCols = Selectable<Database["workflow_leads"]>;
 
@@ -75,51 +76,54 @@ function toExportRow(row: RecordExportSource): RecordExportRow {
   };
 }
 
-function applyVisibility(
-  query: any,
+function applyVisibility<
+  DB extends LeadQueryDatabase,
+  TB extends keyof DB & string,
+  O,
+>(
+  query: SelectQueryBuilder<DB, TB, O>,
   filters: LeadListFilters | RecordExportFilters,
-  options: { joinedExecutive: boolean },
-) {
-  let q = query;
-
-  const rolesNeedingJoin = [
-    "supervisor",
-    "back_office",
-    "sales_manager",
-    "admin",
-  ];
-  if (
-    !options.joinedExecutive &&
-    rolesNeedingJoin.includes(filters.actorRole)
-  ) {
-    q = q.innerJoin("users as executive", "executive.id", "lead.executive_id");
+): SelectQueryBuilder<DB, TB, O> {
+  if (filters.actorRole === "superuser") {
+    return query;
   }
 
   if (filters.actorRole === "supervisor") {
-    q = q.where("executive.branch_id", "in", (eb: any) =>
-      eb
-        .selectFrom("branch_supervisors")
-        .select("branch_id")
-        .where("user_id", "=", filters.actorUserId),
+    return query.where(
+      sql`executive.branch_id`,
+      "in",
+      (eb: ExpressionBuilder<Database, any>) =>
+        eb
+          .selectFrom("branch_supervisors")
+          .select("branch_id")
+          .where("user_id", "=", filters.actorUserId),
     );
-  } else if (filters.actorRole === "back_office") {
-    q = q.where("executive.team_id", "in", (eb: any) =>
-      eb
-        .selectFrom("back_office_assignments")
-        .select("team_id")
-        .where("back_office_user_id", "=", filters.actorUserId),
-    );
-  } else if (["sales_manager", "admin"].includes(filters.actorRole)) {
-    q = q.where("executive.branch_id", "=", filters.actorBranchId);
   }
 
-  return q;
+  if (filters.actorRole === "back_office") {
+    return query.where(
+      sql`executive.team_id`,
+      "in",
+      (eb: ExpressionBuilder<Database, any>) =>
+        eb
+          .selectFrom("back_office_assignments")
+          .select("team_id")
+          .where("back_office_user_id", "=", filters.actorUserId),
+    );
+  }
+
+  if (filters.actorRole === "executive") {
+    return query.where(sql`lead.executive_id`, "=", filters.actorUserId);
+  }
+
+  // Default restriction for all other roles (admin, sales_manager, logistics, hr, etc.)
+  return query.where(sql`executive.branch_id`, "=", filters.actorBranchId);
 }
 
 export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
   return {
     async list(filters: LeadListFilters): Promise<LeadListRow[]> {
-      let query = db
+      const query = db
         .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .innerJoin("users as creator", "creator.id", "lead.created_by")
@@ -143,41 +147,41 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.updated_at",
         ]);
 
-      query = applyVisibility(query, filters, { joinedExecutive: true });
+      let q = applyVisibility(query, filters);
 
       if (filters.executiveId !== undefined) {
-        query = query.where("lead.executive_id", "=", filters.executiveId);
+        q = q.where("lead.executive_id", "=", filters.executiveId);
       }
       if (filters.stage !== undefined) {
-        query = query.where("lead.stage", "=", filters.stage);
+        q = q.where("lead.stage", "=", filters.stage);
       }
       if (filters.status !== undefined) {
-        query = query.where("lead.status", "=", filters.status);
+        q = q.where("lead.status", "=", filters.status);
       }
       if (filters.prioridad !== undefined) {
-        query = query.where("lead.prioridad", "=", filters.prioridad);
+        q = q.where("lead.prioridad", "=", filters.prioridad);
       }
       if (filters.updatedSinceMs !== undefined) {
-        query = query.where("lead.updated_at", ">=", filters.updatedSinceMs);
+        q = q.where("lead.updated_at", ">=", filters.updatedSinceMs);
       }
       if (filters.updatedUntilMs !== undefined) {
-        query = query.where("lead.updated_at", "<", filters.updatedUntilMs);
+        q = q.where("lead.updated_at", "<", filters.updatedUntilMs);
       }
 
       if (filters.sortBy === "createdAt") {
-        query = query.orderBy("lead.created_at", filters.sortDirection);
+        q = q.orderBy("lead.created_at", filters.sortDirection);
       } else if (filters.sortBy === "updatedAt") {
-        query = query.orderBy("lead.updated_at", filters.sortDirection);
+        q = q.orderBy("lead.updated_at", filters.sortDirection);
       } else if (filters.sortBy === "registeredBy") {
-        query = query.orderBy(
+        q = q.orderBy(
           sql<string>`creator.names || ' ' || creator.first_surname`,
           filters.sortDirection,
         );
       } else {
-        query = query.orderBy("lead.ruc", filters.sortDirection);
+        q = q.orderBy("lead.ruc", filters.sortDirection);
       }
 
-      const rows = await query
+      const rows = await q
         .orderBy("lead.id", "desc")
         .limit(filters.limit)
         .offset(filters.offset)
@@ -187,37 +191,38 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
     },
 
     async count(filters: LeadListFilters): Promise<number> {
-      let query = db
+      const query = db
         .selectFrom("workflow_leads as lead")
+        .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select((eb) => eb.fn.countAll<number>().as("count"));
 
-      query = applyVisibility(query, filters, { joinedExecutive: false });
+      let q = applyVisibility(query, filters);
 
       if (filters.executiveId !== undefined) {
-        query = query.where("lead.executive_id", "=", filters.executiveId);
+        q = q.where("lead.executive_id", "=", filters.executiveId);
       }
       if (filters.stage !== undefined) {
-        query = query.where("lead.stage", "=", filters.stage);
+        q = q.where("lead.stage", "=", filters.stage);
       }
       if (filters.status !== undefined) {
-        query = query.where("lead.status", "=", filters.status);
+        q = q.where("lead.status", "=", filters.status);
       }
       if (filters.prioridad !== undefined) {
-        query = query.where("lead.prioridad", "=", filters.prioridad);
+        q = q.where("lead.prioridad", "=", filters.prioridad);
       }
       if (filters.updatedSinceMs !== undefined) {
-        query = query.where("lead.updated_at", ">=", filters.updatedSinceMs);
+        q = q.where("lead.updated_at", ">=", filters.updatedSinceMs);
       }
       if (filters.updatedUntilMs !== undefined) {
-        query = query.where("lead.updated_at", "<", filters.updatedUntilMs);
+        q = q.where("lead.updated_at", "<", filters.updatedUntilMs);
       }
 
-      const row = await query.executeTakeFirstOrThrow();
+      const row = await q.executeTakeFirstOrThrow();
       return row.count;
     },
 
     async export(filters: RecordExportFilters): Promise<RecordExportRow[]> {
-      let query = db
+      const query = db
         .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select([
@@ -235,13 +240,13 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.created_at",
         ]);
 
-      query = applyVisibility(query, filters, { joinedExecutive: true });
+      let q = applyVisibility(query, filters);
 
       if (filters.executiveId !== undefined) {
-        query = query.where("lead.executive_id", "=", filters.executiveId);
+        q = q.where("lead.executive_id", "=", filters.executiveId);
       }
 
-      const rows = await query.orderBy("lead.created_at", "desc").execute();
+      const rows = await q.orderBy("lead.created_at", "desc").execute();
       return rows.map(toExportRow);
     },
   };
