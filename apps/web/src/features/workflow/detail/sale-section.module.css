@@ -57,16 +57,3 @@
   background: var(--background-secondary-hover);
   border-color: var(--border-hover);
 }
-
-.pickerPopover {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  left: 0;
-  margin-top: 4px;
-  position: absolute;
-  top: 100%;
-  width: 100%;
-  z-index: 100;
-}

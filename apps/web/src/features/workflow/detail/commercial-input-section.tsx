@@ -170,16 +170,15 @@ export function CommercialInputSection(props: {
                   type="button"
                   class={styles.pickerTrigger}
                   onClick={() => setShowAbonoPicker(!showAbonoPicker())}
+                  onMouseDown={(e) => e.stopPropagation()}
                 >
                   {abono() || "Seleccionar banco..."}
                 </button>
                 <Show when={showAbonoPicker()}>
-                  <div class={styles.pickerPopover}>
-                    <BankPicker
-                      onSelect={setAbono}
-                      onClose={() => setShowAbonoPicker(false)}
-                    />
-                  </div>
+                  <BankPicker
+                    onSelect={setAbono}
+                    onClose={() => setShowAbonoPicker(false)}
+                  />
                 </Show>
               </div>
             </FieldInputValue>
