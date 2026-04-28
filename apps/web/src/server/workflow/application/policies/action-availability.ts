@@ -67,6 +67,7 @@ export function resolveAvailableActions(input: {
       actorRole: input.actorRole,
       lead: input.lead,
       negotiationRequestCount: input.negotiationRequestCount,
+      artifactCount: 0,
     }).ok
   ) {
     actions.push("request-rate-negotiation");

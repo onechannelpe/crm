@@ -14,17 +14,21 @@ import {
 export const MAX_NEGOTIATION_FILES = 3;
 export const MAX_NEGOTIATION_ROUNDS = 3;
 
-type LeadActionPolicyInput = {
-  action: Extract<
-    LeadAvailableAction,
-    "approve-for-sale" | "request-rate-negotiation"
-  >;
+type LeadActionPolicyBaseInput = {
   actorUserId: number;
   actorRole: Role;
   lead: LeadRecord;
-  negotiationRequestCount?: number;
-  artifactCount?: number;
 };
+
+type LeadActionPolicyInput =
+  | (LeadActionPolicyBaseInput & {
+      action: Extract<LeadAvailableAction, "approve-for-sale">;
+    })
+  | (LeadActionPolicyBaseInput & {
+      action: Extract<LeadAvailableAction, "request-rate-negotiation">;
+      negotiationRequestCount: number;
+      artifactCount: number;
+    });
 
 export function requireLeadActionAccess(
   input: LeadActionPolicyInput,
@@ -52,10 +56,7 @@ export function requireLeadActionAccess(
 
   if (input.action === "approve-for-sale") return canRunAction;
 
-  if (
-    input.negotiationRequestCount !== undefined &&
-    input.negotiationRequestCount >= MAX_NEGOTIATION_ROUNDS
-  ) {
+  if (input.negotiationRequestCount >= MAX_NEGOTIATION_ROUNDS) {
     return Err(
       domainError(
         "conflict",
@@ -65,10 +66,7 @@ export function requireLeadActionAccess(
     );
   }
 
-  if (
-    input.artifactCount !== undefined &&
-    input.artifactCount > MAX_NEGOTIATION_FILES
-  ) {
+  if (input.artifactCount > MAX_NEGOTIATION_FILES) {
     return Err(
       domainError(
         "validation",
