@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { domainError } from "~/server/shared/domain-error";
-import { Err, Ok } from "~/server/shared/result";
+import { Err } from "~/server/shared/result";
 import { approveForSaleCommand } from "~/server/workflow/application/command-api/approve-for-sale";
 import { requestRateNegotiationCommand } from "~/server/workflow/application/command-api/request-rate-negotiation";
 import { resolveAvailableActions } from "~/server/workflow/application/policies/action-availability";
@@ -10,74 +10,19 @@ import {
   MAX_NEGOTIATION_ROUNDS,
   requireLeadActionAccess,
 } from "~/server/workflow/application/policies/lead-action-policy";
-import type {
-  LeadMutationOutcome,
-  LeadMutationUow,
-} from "~/server/workflow/application/ports/lead-mutation-uow";
-import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/negotiation-request-repository";
-import type { LeadRecord } from "~/server/workflow/domain/lead-record";
-import type { LeadReadRepository } from "~/server/workflow/ports/lead-read-repository";
+import type { LeadMutationUow } from "~/server/workflow/application/ports/lead-mutation-uow";
 
-function makeLead(overrides: Partial<LeadRecord> = {}): LeadRecord {
-  return {
-    id: "lead-1",
-    ruc: "20100000001",
-    razonSocial: "Org Test",
-    address: null,
-    district: null,
-    department: null,
-    executiveId: 1,
-    createdBy: 1,
-    updatedBy: null,
-    stage: "QUOTED",
-    status: null,
-    prioridad: null,
-    createdAt: 10,
-    updatedAt: 10,
-    ...overrides,
-  };
-}
-
-function makeLeadReader(lead: LeadRecord): LeadReadRepository {
-  return {
-    findById: async () => lead,
-  };
-}
-
-function makeMutationUow(commit?: LeadMutationUow["commit"]): LeadMutationUow {
-  const defaultCommit: LeadMutationUow["commit"] = vi.fn(async () =>
-    Ok({
-      events: {
-        history: [],
-        audit: { action: "test", entityId: "lead-1", changes: {} },
-      },
-      historyIds: [],
-    } satisfies LeadMutationOutcome),
-  );
-
-  return {
-    commit: commit ?? defaultCommit,
-    commitChecked: vi.fn(),
-    derivePatch: vi.fn(),
-  } as unknown as LeadMutationUow;
-}
-
-function makeNegotiationRequests(
-  overrides: Partial<NegotiationRequestRepository> = {},
-): NegotiationRequestRepository {
-  return {
-    insert: vi.fn(),
-    insertFile: vi.fn(),
-    findFileAssetIdForArtifact: vi.fn(async () => 10),
-    countByLeadId: vi.fn(async () => 0),
-    listByLeadId: vi.fn(),
-    ...overrides,
-  };
-}
+import {
+  makeLeadReader,
+  makeMutationUow,
+  makeNegotiationRequests,
+  makeNotificationCenter,
+  makeWorkflowLead,
+} from "../support/workflow-command-fakes";
 
 describe("lead action policy", () => {
   it("allows supervisors and sales managers to access leads assigned to others", () => {
-    const lead = makeLead({ executiveId: 1 });
+    const lead = makeWorkflowLead({ executiveId: 1 });
 
     expect(
       requireLeadActionAccess({
@@ -107,7 +52,7 @@ describe("lead action policy", () => {
       action: "approve-for-sale",
       actorUserId: 2,
       actorRole: "executive",
-      lead: makeLead({ executiveId: 1 }),
+      lead: makeWorkflowLead({ executiveId: 1 }),
     });
 
     expect(result.ok).toBe(false);
@@ -116,7 +61,7 @@ describe("lead action policy", () => {
   });
 
   it("enforces negotiation round and file limits", () => {
-    const lead = makeLead();
+    const lead = makeWorkflowLead();
 
     const maxRounds = requireLeadActionAccess({
       action: "request-rate-negotiation",
@@ -147,7 +92,7 @@ describe("lead action policy", () => {
     const actions = resolveAvailableActions({
       actorUserId: 1,
       actorRole: "executive",
-      lead: makeLead(),
+      lead: makeWorkflowLead(),
       negotiationRequestCount: MAX_NEGOTIATION_ROUNDS,
     });
 
@@ -158,14 +103,12 @@ describe("lead action policy", () => {
 describe("workflow action commands", () => {
   it("blocks approve-for-sale for executives on leads assigned to others", async () => {
     const mutationUow = makeMutationUow();
+    const notificationCenter = makeNotificationCenter();
     const result = await approveForSaleCommand(
       {
-        leadReader: makeLeadReader(makeLead({ executiveId: 1 })),
-        mutationUow,
-        notificationCenter: {
-          notifyUsers: vi.fn(),
-          notifyBranchRoles: vi.fn(),
-        },
+        leadReader: makeLeadReader(makeWorkflowLead({ executiveId: 1 })),
+        mutationUow: mutationUow.uow,
+        notificationCenter: notificationCenter.center,
         clock: { now: () => 100 },
       },
       {
@@ -184,9 +127,9 @@ describe("workflow action commands", () => {
 
     const result = await requestRateNegotiationCommand(
       {
-        leadReader: makeLeadReader(makeLead()),
-        mutationUow,
-        negotiationRequests,
+        leadReader: makeLeadReader(makeWorkflowLead()),
+        mutationUow: mutationUow.uow,
+        negotiationRequests: negotiationRequests.repo,
         clock: { now: () => 100 },
       },
       {
@@ -208,16 +151,16 @@ describe("workflow action commands", () => {
   it("does not persist negotiation records when lead mutation fails", async () => {
     const negotiationRequests = makeNegotiationRequests();
     const mutationUow = makeMutationUow(
-      vi.fn(async () =>
+      vi.fn<LeadMutationUow["commit"]>(async () =>
         Err(domainError("conflict", "mutation_failed", "Mutation failed")),
       ),
     );
 
     const result = await requestRateNegotiationCommand(
       {
-        leadReader: makeLeadReader(makeLead()),
-        mutationUow,
-        negotiationRequests,
+        leadReader: makeLeadReader(makeWorkflowLead()),
+        mutationUow: mutationUow.uow,
+        negotiationRequests: negotiationRequests.repo,
         clock: { now: () => 100 },
       },
       {
