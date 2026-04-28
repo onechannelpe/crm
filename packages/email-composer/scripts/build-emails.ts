@@ -26,8 +26,8 @@ import {
   parseTextChunks,
 } from "../src/build/parse-chunks";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const templatesDir = join(__dirname, "../src/templates");
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const templatesDir = join(scriptDir, "../src/templates");
 const outDir = join(templatesDir, "compiled");
 
 mkdirSync(outDir, { recursive: true });
