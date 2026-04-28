@@ -45,7 +45,9 @@ export function requireLeadActionAccess(
   if (!leadAccess.ok) return leadAccess;
 
   if (input.lead.stage !== "QUOTED") {
-    return Err(domainError("conflict", "invalid_lead_stage", "Invalid lead stage"));
+    return Err(
+      domainError("conflict", "invalid_lead_stage", "Invalid lead stage"),
+    );
   }
 
   if (input.action === "approve-for-sale") return canRunAction;
