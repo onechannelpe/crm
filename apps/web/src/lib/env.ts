@@ -199,6 +199,10 @@ let envCache: {
   [K in EnvCapability]?: EnvByCapability[K];
 } = {};
 
+function shouldCacheEnv(): boolean {
+  return process.env.NODE_ENV !== "test";
+}
+
 export function parseEnvFor<C extends EnvCapability>(
   capability: C,
   source: EnvSource,
@@ -209,6 +213,10 @@ export function parseEnvFor<C extends EnvCapability>(
 export function getEnvFor<C extends EnvCapability>(
   capability: C,
 ): EnvByCapability[C] {
+  if (!shouldCacheEnv()) {
+    return parseEnvFor(capability, process.env);
+  }
+
   const cached = envCache[capability];
   if (cached) {
     return cached;
@@ -217,9 +225,4 @@ export function getEnvFor<C extends EnvCapability>(
   const parsed = parseEnvFor(capability, process.env);
   envCache[capability] = parsed;
   return parsed;
-}
-
-/** @internal - Only for testing */
-export function _resetEnvCache() {
-  envCache = {};
 }
