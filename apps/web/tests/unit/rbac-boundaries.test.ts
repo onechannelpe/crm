@@ -78,6 +78,7 @@ describe("rbac boundaries", () => {
     expect(executivePerms.has("sales:approve")).toBe(false);
     expect(executivePerms.has("lead:rate:simulate")).toBe(true);
     expect(supervisorPerms.has("team:manage")).toBe(true);
+    expect(supervisorPerms.has("lead:view:all")).toBe(true);
     expect(executivePerms.has("team:manage")).toBe(false);
     expect(executivePerms.has("lead:workflow")).toBe(true);
     expect(supervisorPerms.has("lead:workflow")).toBe(false);
@@ -106,7 +107,9 @@ describe("rbac boundaries", () => {
     expect(hasPermission("admin", "integration:manage")).toBe(true);
 
     expect(hasPermission("supervisor", "lead:reassign")).toBe(false);
+    expect(hasPermission("supervisor", "lead:view:all")).toBe(true);
     expect(hasPermission("sales_manager", "lead:reassign")).toBe(false);
+    expect(hasPermission("sales_manager", "lead:view:all")).toBe(true);
 
     expect(hasPermission("superuser", "lead:workflow")).toBe(false);
     expect(hasPermission("superuser", "lead:register")).toBe(true);

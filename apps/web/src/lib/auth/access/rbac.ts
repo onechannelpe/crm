@@ -76,6 +76,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   supervisor: [
     "lead:rate:simulate",
     "lead:work",
+    "lead:view:all",
     "sales:create",
     "sales:submit",
     "sales:review",
@@ -110,6 +111,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   sales_manager: [
     "lead:rate:simulate",
     "lead:work",
+    "lead:view:all",
     "sales:review",
     "sales:approve",
     "lead:sale:upload-proof",

@@ -79,8 +79,8 @@ export async function getLeadDetail(
   const availableActions = resolveAvailableActions({
     actorUserId: input.actorUserId,
     actorRole: input.actorRole,
-    executiveId: lead.executiveId,
-    stage: lead.stage,
+    lead,
+    negotiationRequestCount: negotiationRequestRows.length,
   });
 
   return Ok(

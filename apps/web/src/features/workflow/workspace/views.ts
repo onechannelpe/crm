@@ -37,6 +37,8 @@ export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
 ];
 
 const DEFAULT_VIEW_BY_ROLE: Partial<Record<string, string>> = {
+  supervisor: "all",
+  sales_manager: "all",
   back_office: "review",
   admin: "all",
   superuser: "all",

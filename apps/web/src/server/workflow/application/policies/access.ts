@@ -9,10 +9,12 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { AssignableExecutivesScope } from "../../ports/lead-user-scope-repository";
 
 const LEAD_READ_PERMISSIONS: Permission[] = [
+  "lead:work",
   "lead:workflow",
   "lead:register",
   "lead:commercial-input:complete",
   "lead:sale:create",
+  "lead:view:all",
   "lead:review",
   "quotation:manage",
   "lead:reassign",
@@ -81,7 +83,10 @@ export function canApproveForSale(role: Role) {
 }
 
 export function canRequestRateNegotiation(role: Role) {
-  return hasPermission(role, "lead:commercial-input:complete");
+  return (
+    hasPermission(role, "lead:commercial-input:complete") ||
+    (hasPermission(role, "lead:work") && hasPermission(role, "lead:view:all"))
+  );
 }
 
 export function canReassignLead(role: Role) {
