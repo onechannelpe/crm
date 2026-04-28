@@ -212,8 +212,8 @@ export function checkArtifactPolicy(
     case "artifact.audit.read":
       return canReadAudit(actor);
     default: {
-      const _unreachable: never = action;
-      return deny("unknown_action", `Unknown action: ${String(_unreachable)}`);
+      action satisfies never;
+      return deny("unknown_action", `Unknown action: ${String(action)}`);
     }
   }
 }

@@ -1,21 +1,8 @@
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { resolveWebauthnRelyingParty } from "../../src/lib/auth/providers/passkey-provider";
-import { _resetEnvCache } from "../../src/lib/env";
 
 describe("passkey relying party resolution", () => {
-  beforeEach(() => {
-    _resetEnvCache();
-  });
-
   afterEach(() => {
     vi.unstubAllEnvs();
   });

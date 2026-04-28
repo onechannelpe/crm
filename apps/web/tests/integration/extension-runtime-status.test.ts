@@ -2,7 +2,6 @@ import { generateKeyPairSync } from "node:crypto";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { _resetEnvCache } from "../../src/lib/env";
 import { createExtensionService } from "../../src/server/extension/service";
 import {
   cleanupTestDb,
@@ -24,7 +23,6 @@ describe("extension runtime status invariants", () => {
   let ctx: TestDbContext;
 
   beforeEach(async () => {
-    _resetEnvCache();
     const { privateKey } = generateKeyPairSync("ed25519");
     vi.stubEnv(
       "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
