@@ -7,10 +7,7 @@ import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { ApproveForSaleInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import { notifyReadyForSale } from "../notifications";
-import {
-  canApproveForSale,
-  requirePipelineActionAccess,
-} from "../policies/access";
+import { requireLeadActionAccess } from "../policies/lead-action-policy";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { WorkflowNotificationCenter } from "../ports/notification-center";
 import type { LeadClock } from "../services/lead-clock";
@@ -26,15 +23,17 @@ export async function approveForSaleCommand(
   deps: ApproveForSaleCommandDeps,
   input: ApproveForSaleInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
-  const canApprove = requirePipelineActionAccess(
-    input.actor.role,
-    canApproveForSale,
-  );
-  if (!canApprove.ok) return canApprove;
-
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
   if (!isQuotedLeadSubject(lead)) return invalidLeadStage();
+
+  const canApprove = requireLeadActionAccess({
+    action: "approve-for-sale",
+    actorUserId: input.actor.userId,
+    actorRole: input.actor.role,
+    lead,
+  });
+  if (!canApprove.ok) return canApprove;
 
   const now = deps.clock.now();
   const outcome = await deps.mutationUow.commit({

@@ -16,7 +16,7 @@ export type LeadNegotiationFile = {
 };
 
 export type NegotiationRequestRepository = {
-  insert(values: Omit<LeadNegotiationRequest, "id">): Promise<string>;
+  insert(values: LeadNegotiationRequest): Promise<void>;
   insertFile(values: LeadNegotiationFile & { leadId: string }): Promise<void>;
   findFileAssetIdForArtifact(
     artifactId: string,

@@ -1,26 +1,25 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { LeadStage } from "~/workflow/contracts/lead-schema";
 
+import type { LeadRecord } from "../../domain/lead-record";
 import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import {
   canAddLeadInteraction,
-  canApproveForSale,
   canCompleteCommercialInput,
   canCreateQuotation,
   canCreateSale,
   canReassignLead,
-  canRequestRateNegotiation,
   canReviewLead,
 } from "./access";
+import { requireLeadActionAccess } from "./lead-action-policy";
 
 export function resolveAvailableActions(input: {
   actorUserId: number;
   actorRole: Role;
-  executiveId: number;
-  stage: LeadStage;
+  lead: LeadRecord;
+  negotiationRequestCount: number;
 }): LeadAvailableAction[] {
   const actions: LeadAvailableAction[] = [];
-  const ownsLead = input.executiveId === input.actorUserId;
+  const ownsLead = input.lead.executiveId === input.actorUserId;
 
   if (canAddLeadInteraction(input.actorRole)) {
     actions.push("log-call", "add-note");
@@ -28,36 +27,48 @@ export function resolveAvailableActions(input: {
   if (
     canCompleteCommercialInput(input.actorRole) &&
     ownsLead &&
-    input.stage === "NEEDS_EXECUTIVE_INPUT"
+    input.lead.stage === "NEEDS_EXECUTIVE_INPUT"
   ) {
     actions.push("complete-commercial-input");
   }
   if (
     canCreateSale(input.actorRole) &&
     ownsLead &&
-    input.stage === "READY_FOR_SALE"
+    input.lead.stage === "READY_FOR_SALE"
   ) {
     actions.push("create-sale");
   }
   if (
     canReviewLead(input.actorRole) &&
-    input.stage === "PENDING_EXTERNAL_REVIEW"
+    input.lead.stage === "PENDING_EXTERNAL_REVIEW"
   ) {
     actions.push("review-lead");
   }
   if (
     canCreateQuotation(input.actorRole) &&
-    input.stage === "READY_FOR_QUOTATION"
+    input.lead.stage === "READY_FOR_QUOTATION"
   ) {
     actions.push("create-quotation");
   }
-  if (canApproveForSale(input.actorRole) && input.stage === "QUOTED") {
+  if (
+    requireLeadActionAccess({
+      action: "approve-for-sale",
+      actorUserId: input.actorUserId,
+      actorRole: input.actorRole,
+      lead: input.lead,
+    }).ok
+  ) {
     actions.push("approve-for-sale");
   }
   if (
-    canRequestRateNegotiation(input.actorRole) &&
-    ownsLead &&
-    input.stage === "QUOTED"
+    requireLeadActionAccess({
+      action: "request-rate-negotiation",
+      actorUserId: input.actorUserId,
+      actorRole: input.actorRole,
+      lead: input.lead,
+      negotiationRequestCount: input.negotiationRequestCount,
+      artifactCount: 0,
+    }).ok
   ) {
     actions.push("request-rate-negotiation");
   }

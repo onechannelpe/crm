@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type {
@@ -12,12 +10,11 @@ export function createNegotiationRequestRepo(
   db: DatabaseExecutor,
 ): NegotiationRequestRepository {
   return {
-    async insert(values: Omit<LeadNegotiationRequest, "id">): Promise<string> {
-      const id = randomUUIDv7();
+    async insert(values: LeadNegotiationRequest): Promise<void> {
       await db
         .insertInto("workflow_negotiation_requests")
         .values({
-          id,
+          id: values.id,
           lead_id: values.leadId,
           round: values.round,
           justification: values.justification,
@@ -25,7 +22,6 @@ export function createNegotiationRequestRepo(
           requested_at: values.requestedAt,
         })
         .executeTakeFirstOrThrow();
-      return id;
     },
 
     async insertFile(

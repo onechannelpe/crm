@@ -46,6 +46,38 @@ describe("workflow read access", () => {
     expect(result.value.timeline).toEqual([]);
   });
 
+  it.each(["supervisor", "sales_manager"] as const)(
+    "lets %s read record detail even when they are not the assigned executive",
+    async (role) => {
+      await runtime.ctx.db
+        .insertInto("workflow_leads")
+        .values({
+          id: `lead-${role}`,
+          executive_id: 1,
+          stage: "QUOTED",
+          status: null,
+          prioridad: null,
+          ruc: role === "supervisor" ? "20100000013" : "20100000014",
+          razon_social: "Org Test",
+          address: null,
+          created_by: 1,
+          created_at: 10,
+          updated_at: 10,
+        })
+        .execute();
+
+      const result = await runtime.workflow.queryApi.getLeadDetail({
+        actor: { userId: 2, role, branchId: 1 },
+        leadId: `lead-${role}`,
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      expect(result.value.lead.id).toBe(`lead-${role}`);
+    },
+  );
+
   it("blocks executives from reading another executive's record detail", async () => {
     await runtime.ctx.db
       .insertInto("workflow_leads")
