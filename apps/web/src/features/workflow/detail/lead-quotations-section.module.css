@@ -1,0 +1,17 @@
+.quoteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quoteRow {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.metaText {
+  color: var(--foreground-secondary);
+  font-size: 12px;
+}

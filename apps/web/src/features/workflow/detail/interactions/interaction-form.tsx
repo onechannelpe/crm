@@ -11,7 +11,7 @@ import {
 } from "./availability";
 import { isInteractionMode, type InteractionState } from "./state";
 
-import styles from "../lead-detail-overview.module.css";
+import styles from "./interaction-form.module.css";
 
 const CALL_OUTCOME_OPTIONS = [
   { value: "answered", label: "Contestada" },

@@ -8,7 +8,8 @@ import Phone from "~/components/icons/phone";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadTimelineItem } from "~/server/workflow/application/queries/views/lead-detail";
 
-import styles from "./lead-detail-overview.module.css";
+import sectionStyles from "./section-shell.module.css";
+import styles from "./lead-timeline-section.module.css";
 
 function timelineIcon(kind: LeadTimelineItem["kind"]) {
   if (kind === "call") return <Phone size={14} />;
@@ -19,8 +20,8 @@ function timelineIcon(kind: LeadTimelineItem["kind"]) {
 
 export function LeadTimelineSection(props: { timeline: LeadTimelineItem[] }) {
   return (
-    <section class={styles.section}>
-      <div class={styles.sectionTitle}>Línea de tiempo</div>
+    <section class={sectionStyles.section}>
+      <div class={sectionStyles.sectionTitle}>Línea de tiempo</div>
       <div class={styles.timeline}>
         <For each={props.timeline}>
           {(item) => (

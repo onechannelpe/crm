@@ -3,7 +3,8 @@ import { Badge } from "~/components/ui/display/badge";
 import { FieldsWidget } from "~/features/workflow/fields/fields-widget";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
-import styles from "./lead-detail-overview.module.css";
+import sectionStyles from "./section-shell.module.css";
+import styles from "./lead-summary-section.module.css";
 
 function stageVariant(stage: string) {
   if (stage === "READY_FOR_SALE") return "success" as const;
@@ -29,8 +30,8 @@ export function LeadSummarySection(props: { data: LeadDetailView }) {
         </Badge>
       </section>
 
-      <section class={styles.section}>
-        <div class={styles.sectionTitle}>Campos</div>
+      <section class={sectionStyles.section}>
+        <div class={sectionStyles.sectionTitle}>Campos</div>
         <FieldsWidget data={props.data} />
       </section>
     </>

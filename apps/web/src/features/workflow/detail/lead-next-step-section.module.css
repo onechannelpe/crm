@@ -1,0 +1,25 @@
+.fieldGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 0;
+}
+
+.fieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  color: var(--foreground-tertiary);
+  font-size: 12px;
+}
+
+.fieldValue {
+  color: var(--foreground);
+  font-size: 13px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}

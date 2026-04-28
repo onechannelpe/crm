@@ -1,0 +1,13 @@
+.section {
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.sectionTitle {
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+}

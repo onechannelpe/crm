@@ -13,7 +13,7 @@ import {
 import { InteractionForm } from "./interaction-form";
 import { createInteractionState } from "./state";
 
-import styles from "../lead-detail-overview.module.css";
+import sectionStyles from "../section-shell.module.css";
 
 export function InteractionsPanel(props: {
   leadId: string;
@@ -65,8 +65,8 @@ export function InteractionsPanel(props: {
 
   return (
     <Show when={availability().visibleModes.length > 0}>
-      <section class={styles.section}>
-        <div class={styles.sectionTitle}>Registrar interaccion</div>
+      <section class={sectionStyles.section}>
+        <div class={sectionStyles.sectionTitle}>Registrar interaccion</div>
         <InteractionForm
           availability={availability()}
           state={state}

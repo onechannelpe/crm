@@ -5,12 +5,13 @@ import type { LeadDetailView } from "~/server/workflow/application/queries/views
 
 import { blockingFieldLabel } from "./lead-workflow-ui";
 
-import styles from "./lead-detail-overview.module.css";
+import sectionStyles from "./section-shell.module.css";
+import styles from "./lead-next-step-section.module.css";
 
 export function LeadNextStepSection(props: { data: LeadDetailView }) {
   return (
-    <section class={styles.section}>
-      <div class={styles.sectionTitle}>Siguiente paso</div>
+    <section class={sectionStyles.section}>
+      <div class={sectionStyles.sectionTitle}>Siguiente paso</div>
       <div class={styles.fieldGrid}>
         <div class={styles.fieldRow}>
           <dt class={styles.fieldLabel}>Paso</dt>
