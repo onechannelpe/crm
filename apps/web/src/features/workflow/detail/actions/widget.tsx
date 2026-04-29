@@ -26,10 +26,10 @@ import { toAppError } from "~/lib/app-errors";
 import type { LeadAvailableAction } from "~/server/workflow/application/contracts/lead-available-action";
 
 import { approveForSaleMutation } from "../../data/mutations";
-import { mapLeadActionsToUi } from "./lead-workflow-ui";
-import { ReviewLeadModal } from "./review-lead-modal";
+import { mapLeadActionsToUi } from "./workflow-ui";
+import { ReviewLeadModal } from "./review-modal";
 
-import widgetStyles from "./lead-actions-widget.module.css";
+import widgetStyles from "./widget.module.css";
 
 type OpenModal = "review-lead" | null;
 

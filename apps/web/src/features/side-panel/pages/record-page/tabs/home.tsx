@@ -1,10 +1,10 @@
 import { Match, Show, Switch, createMemo } from "solid-js";
 
-import { LeadActionsWidget } from "~/features/workflow/detail/actions/lead-actions-widget";
-import { CommercialInputSection } from "~/features/workflow/detail/forms/commercial-input-section";
-import { QuotationSection } from "~/features/workflow/detail/forms/quotation-section";
-import { QuotedSection } from "~/features/workflow/detail/forms/quoted-section";
-import { SaleSection } from "~/features/workflow/detail/forms/sale-section";
+import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
+import { CommercialInputSection } from "~/features/workflow/detail/forms/commercial-input";
+import { QuotationSection } from "~/features/workflow/detail/forms/quotation";
+import { QuotedSection } from "~/features/workflow/detail/forms/quoted";
+import { SaleSection } from "~/features/workflow/detail/forms/sale";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { BootstrapWidget } from "../widgets/bootstrap";
