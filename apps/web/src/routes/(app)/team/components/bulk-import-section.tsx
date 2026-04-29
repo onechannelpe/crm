@@ -23,6 +23,7 @@ import {
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
 import { readFileText } from "~/lib/file/read-file-text";
+import { APP_LOCALE } from "~/lib/locale";
 import { bulkImportSetupQuery } from "~/lib/queries/team";
 
 import styles from "../team-page.module.css";
@@ -185,7 +186,7 @@ export function BulkImportSection() {
                             <TableCell>
                               {row.expiresAt
                                 ? new Date(row.expiresAt).toLocaleDateString(
-                                    "es-MX",
+                                    APP_LOCALE,
                                     {
                                       year: "numeric",
                                       month: "short",

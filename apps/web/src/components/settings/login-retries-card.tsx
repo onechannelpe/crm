@@ -17,11 +17,12 @@ import {
 } from "~/components/ui/layout/table";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { getErrorMessage } from "~/lib/errors";
+import { APP_LOCALE } from "~/lib/locale";
 
 import styles from "./login-retries-card.module.css";
 
 function formatDate(value: number): string {
-  return new Date(value).toLocaleString("es-PE");
+  return new Date(value).toLocaleString(APP_LOCALE);
 }
 
 function labelFor(stage: string): string {

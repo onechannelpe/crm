@@ -4,6 +4,7 @@ import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { config } from "~/lib/config";
+import { APP_LOCALE } from "~/lib/locale";
 import { getServerRuntime } from "~/server/runtime";
 
 export function buildInviteUrl(token: string): string {
@@ -30,7 +31,7 @@ export async function sendInviteEmail(params: {
         fullName: params.fullName,
         role: params.role,
         inviteUrl: params.inviteUrl,
-        expiresAt: new Date(params.expiresAt).toLocaleDateString("es-MX", {
+        expiresAt: new Date(params.expiresAt).toLocaleDateString(APP_LOCALE, {
           year: "numeric",
           month: "long",
           day: "numeric",

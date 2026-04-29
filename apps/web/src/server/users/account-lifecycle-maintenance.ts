@@ -1,4 +1,5 @@
 import { config } from "~/lib/config";
+import { APP_LOCALE } from "~/lib/locale";
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
@@ -56,11 +57,14 @@ async function runExpiryNotificationTick(
           params: {
             fullName: shortName(user),
             username: user.username,
-            expiresAt: new Date(user.expires_at).toLocaleDateString("es-MX", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }),
+            expiresAt: new Date(user.expires_at).toLocaleDateString(
+              APP_LOCALE,
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              },
+            ),
             platformName: config.branding.platformName,
           },
         });

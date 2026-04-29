@@ -1,3 +1,5 @@
+import { APP_LOCALE } from "~/lib/locale";
+
 export const DAY_NAMES = ["L", "M", "X", "J", "V", "S", "D"] as const;
 const CALENDAR_START_DAY = 1;
 
@@ -81,7 +83,7 @@ export function getMonthOptions(visibleMonth: VisibleMonth): Array<{
   label: string;
   value: number;
 }> {
-  const formatter = new Intl.DateTimeFormat("es-PE", { month: "long" });
+  const formatter = new Intl.DateTimeFormat(APP_LOCALE, { month: "long" });
 
   return Array.from({ length: 12 }, (_, monthIndex) => {
     const label = formatter.format(new Date(visibleMonth.year, monthIndex, 1));

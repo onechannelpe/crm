@@ -1,5 +1,7 @@
 import { For } from "solid-js";
 
+import { APP_LOCALE } from "~/lib/locale";
+
 import type { Group } from "../../model/group";
 import { EventGroup } from "../event-group";
 
@@ -21,7 +23,7 @@ export function EventList(props: EventListProps) {
           {(group, index) => {
             const monthLabel = new Date(
               group.items[0]?.createdAt ?? Date.now(),
-            ).toLocaleString("es-PE", { month: "long" });
+            ).toLocaleString(APP_LOCALE, { month: "long" });
 
             const showYear =
               index() === 0 || props.groups[index() - 1].year !== group.year;

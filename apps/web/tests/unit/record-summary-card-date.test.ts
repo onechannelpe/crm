@@ -29,6 +29,9 @@ describe("formatRelativeDate", () => {
     expect(formatRelativeDate(new Date(2026, 3, 21, 12).getTime(), now)).toBe(
       "hace 7 días",
     );
+    expect(formatRelativeDate(new Date(2026, 2, 29, 12).getTime(), now)).toBe(
+      "hace 30 días",
+    );
     expect(formatRelativeDate(new Date(2026, 2, 28, 12).getTime(), now)).toBe(
       "el mes pasado",
     );
