@@ -80,9 +80,9 @@ export function CommercialInputSection(props: {
   const [urlCliente, setUrlCliente] = createSignal(
     props.initialValues?.urlCliente ?? "",
   );
-  const [modalidadCobro, setModalidadCobro] = createSignal<
-    ModalidadCobro | ""
-  >(props.initialValues?.modalidadCobro ?? "");
+  const [modalidadCobro, setModalidadCobro] = createSignal<ModalidadCobro | "">(
+    props.initialValues?.modalidadCobro ?? "",
+  );
 
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -129,7 +129,10 @@ export function CommercialInputSection(props: {
       return;
     }
 
-    if ((product === "CULQI_LINK" || product === "CULQI_ONLINE") && !modalidad) {
+    if (
+      (product === "CULQI_LINK" || product === "CULQI_ONLINE") &&
+      !modalidad
+    ) {
       setError("Modalidad de cobro es requerida para este tipo de producto");
       return;
     }
@@ -366,7 +369,13 @@ export function CommercialInputSection(props: {
                   <FieldLabelText>Producto</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
-                  <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      "flex-direction": "column",
+                      gap: "8px",
+                    }}
+                  >
                     <label>
                       <input
                         type="radio"
@@ -401,7 +410,12 @@ export function CommercialInputSection(props: {
                 </FieldInputValue>
               </FieldRow>
 
-              <Show when={tipoProducto() === "CULQI_LINK" || tipoProducto() === "CULQI_ONLINE"}>
+              <Show
+                when={
+                  tipoProducto() === "CULQI_LINK" ||
+                  tipoProducto() === "CULQI_ONLINE"
+                }
+              >
                 <FieldRow>
                   <FieldLabel>
                     <FieldLabelText>URL del Cliente</FieldLabelText>
@@ -422,7 +436,13 @@ export function CommercialInputSection(props: {
                     <FieldLabelText>Modalidad de Cobro</FieldLabelText>
                   </FieldLabel>
                   <FieldInputValue>
-                    <div style={{ display: "flex", "flex-direction": "column", gap: "8px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        "flex-direction": "column",
+                        gap: "8px",
+                      }}
+                    >
                       <label>
                         <input
                           type="radio"

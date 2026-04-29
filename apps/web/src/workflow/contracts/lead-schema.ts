@@ -86,9 +86,7 @@ export function isBcpBank(value: string | null | undefined): boolean {
   return (value ?? "").trim().toUpperCase() === "BCP";
 }
 
-export function isCulqiProductKind(
-  value: string,
-): value is CulqiProductKind {
+export function isCulqiProductKind(value: string): value is CulqiProductKind {
   return (CULQI_PRODUCT_KINDS as readonly string[]).includes(value);
 }
 

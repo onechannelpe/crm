@@ -36,9 +36,7 @@ function toLeadSaleVenue(row: SaleVenueRow): LeadSaleVenue {
 
 export function createSaleVenueRepo(db: DatabaseExecutor) {
   return {
-    async insert(
-      values: Omit<LeadSaleVenue, "id">,
-    ): Promise<string> {
+    async insert(values: Omit<LeadSaleVenue, "id">): Promise<string> {
       const id = randomUUIDv7();
       await db
         .insertInto("workflow_sale_venues")

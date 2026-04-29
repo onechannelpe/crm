@@ -135,9 +135,7 @@ export {
   type WorkflowNegotiationFilesTable,
 } from "./13-negotiation";
 
-export {
-  type WorkflowSaleVenuesTable,
-} from "./14-sale-venues";
+export { type WorkflowSaleVenuesTable } from "./14-sale-venues";
 
 export interface Database {
   // 00-core

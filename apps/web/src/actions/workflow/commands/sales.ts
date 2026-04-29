@@ -3,11 +3,12 @@
 import { validationError } from "~/lib/app-errors";
 import { runAction } from "~/server/shared/action-runtime";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import type { AbonoBank, AccountTypeKind } from "~/workflow/contracts/lead-schema";
+import type {
+  AbonoBank,
+  AccountTypeKind,
+} from "~/workflow/contracts/lead-schema";
 
-export async function requestSaleCreation(input: {
-  leadId: string;
-}) {
+export async function requestSaleCreation(input: { leadId: string }) {
   return runAction({
     actionName: "workflow.create_sale",
     access: { kind: "auth" },
@@ -67,14 +68,14 @@ export async function requestSaleVenueCreation(input: {
 
   const hasAnyUsdField = Boolean(
     input.bancoDolares ||
-      input.tipoCuentaDolares ||
-      input.nroCuentaDolares?.trim() ||
-      input.cciDolares?.trim(),
+    input.tipoCuentaDolares ||
+    input.nroCuentaDolares?.trim() ||
+    input.cciDolares?.trim(),
   );
   const hasAllUsdFields = Boolean(
     input.bancoDolares &&
-      input.tipoCuentaDolares &&
-      input.nroCuentaDolares?.trim(),
+    input.tipoCuentaDolares &&
+    input.nroCuentaDolares?.trim(),
   );
   if (hasAnyUsdField && !hasAllUsdFields) {
     throw validationError("dollar account fields must be complete");

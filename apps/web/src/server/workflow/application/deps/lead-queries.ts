@@ -5,7 +5,10 @@ import type { LeadQueries } from "../ports/lead-queries";
 import type { LeadRepository } from "../ports/lead-repository";
 import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
-import type { LeadSaleRepository, LeadSaleVenueRepository } from "../ports/sale-repository";
+import type {
+  LeadSaleRepository,
+  LeadSaleVenueRepository,
+} from "../ports/sale-repository";
 import type { SourceStatusRepository } from "../ports/source-status-repository";
 import type { WorkflowUserRepository } from "../ports/user-repository";
 

@@ -7,9 +7,9 @@ import type { TabContentProps } from "./content-props";
 import { FilesTab } from "./files";
 import { HomeTab } from "./home";
 import { NotesTab } from "./notes";
+import { SedesTab } from "./sedes";
 import { TasksTab } from "./tasks";
 import { TimelineTab } from "./timeline";
-import { SedesTab } from "./sedes";
 
 export const TAB_COMPONENTS: Record<
   LeadRecordTabId,

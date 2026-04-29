@@ -11,7 +11,10 @@ import type { CreateSaleVenueInput } from "../contracts/command-inputs";
 import type { LeadSaleResult } from "../contracts/command-results";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadSaleRepository, LeadSaleVenueRepository } from "../ports/sale-repository";
+import type {
+  LeadSaleRepository,
+  LeadSaleVenueRepository,
+} from "../ports/sale-repository";
 import type { LeadClock } from "../services/lead-clock";
 
 type CreateSaleVenueCommandDeps = {

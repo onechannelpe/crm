@@ -153,9 +153,7 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
   };
 }
 
-function toLeadDetailSaleVenue(
-  venue: LeadSaleVenue,
-): LeadDetailSaleVenueView {
+function toLeadDetailSaleVenue(venue: LeadSaleVenue): LeadDetailSaleVenueView {
   return {
     id: venue.id,
     saleId: venue.saleId,

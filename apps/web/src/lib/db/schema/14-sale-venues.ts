@@ -22,7 +22,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("banco_soles", "varchar(50)", (col) =>
       col
         .notNull()
-        .check(sql`banco_soles IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`),
+        .check(
+          sql`banco_soles IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`,
+        ),
     )
     .addColumn("tipo_cuenta_soles", "varchar(20)", (col) =>
       col.notNull().check(sql`tipo_cuenta_soles IN ('AHORROS','CORRIENTE')`),

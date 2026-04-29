@@ -110,16 +110,13 @@ export const createQuotationMutation = action(
   "workflow.createQuotation",
 );
 
-export const createSaleMutation = action(
-  async (input: { leadId: string }) => {
-    await requestSaleCreation(input);
-    return json(
-      {},
-      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
-    );
-  },
-  "workflow.createSale",
-);
+export const createSaleMutation = action(async (input: { leadId: string }) => {
+  await requestSaleCreation(input);
+  return json(
+    {},
+    { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+  );
+}, "workflow.createSale");
 
 export const createSaleVenueMutation = action(
   async (input: {
