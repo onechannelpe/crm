@@ -6,11 +6,9 @@ const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   tasaActual: "Tasa actual",
   gpv: "GPV",
   ticket: "Ticket",
-  abono: "Abono",
-  cantidadPos: "Cantidad POS",
-  banco: "Banco",
-  nroCuenta: "Nro. cuenta",
-  cci: "CCI",
+  tipoProducto: "Tipo de producto",
+  giroNegocio: "Giro de negocio",
+  venues: "Sedes",
 };
 
 const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
@@ -18,11 +16,9 @@ const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
   tasaActual: "Completar tasa actual",
   gpv: "Completar GPV",
   ticket: "Completar ticket",
-  abono: "Completar abono",
-  cantidadPos: "Completar cantidad POS",
-  banco: "Definir banco",
-  nroCuenta: "Registrar numero de cuenta",
-  cci: "Registrar CCI",
+  tipoProducto: "Seleccionar tipo de producto",
+  giroNegocio: "Completar giro de negocio",
+  venues: "Registrar al menos una sede",
 };
 
 export type LeadActionUiItem =

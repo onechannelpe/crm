@@ -5,6 +5,7 @@ export const LEAD_RECORD_SECONDARY_TABS = [
   "files",
   "emails",
   "calendar",
+  "sedes",
 ] as const;
 
 export type LeadRecordPrimaryTabId = (typeof LEAD_RECORD_PRIMARY_TABS)[number];

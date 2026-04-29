@@ -4,7 +4,6 @@ import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
 import { CommercialInputSection } from "~/features/workflow/detail/forms/commercial-input";
 import { QuotationSection } from "~/features/workflow/detail/forms/quotation";
 import { QuotedSection } from "~/features/workflow/detail/forms/quoted";
-import { SaleSection } from "~/features/workflow/detail/forms/sale";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { BootstrapWidget } from "../widgets/bootstrap";
@@ -106,10 +105,6 @@ function DetailContent(props: { data: LeadDetailView }) {
                   "request-rate-negotiation",
                 )}
               />
-            </Match>
-
-            <Match when={props.data.lead.stage === "READY_FOR_SALE"}>
-              <SaleSection leadId={leadId} />
             </Match>
           </Switch>
         )}

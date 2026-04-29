@@ -73,6 +73,8 @@ export async function createSaleVenueCommand(
   }
 
   const now = deps.clock.now();
+  const existingVenues = await deps.leadSaleVenues.listBySaleId(input.saleId);
+  const isFirstVenue = existingVenues.length === 0;
   const venueId = await deps.leadSaleVenues.insert({
     saleId: input.saleId,
     leadId: input.leadId,
@@ -120,7 +122,7 @@ export async function createSaleVenueCommand(
       nroCuentaDolares: input.nroCuentaDolares,
       cciDolares: input.cciDolares,
       abono: input.abono,
-      isFirstVenue: input.leadId ? false : true,
+      isFirstVenue,
     },
   });
   if (!outcome.ok) return outcome;

@@ -21,4 +21,5 @@ export const ALL_TAB_ITEMS: ReadonlyArray<TabItem<LeadRecordTabId>> = [
   { id: LEAD_RECORD_SECONDARY_TABS[1], label: "Archivos" },
   { id: LEAD_RECORD_SECONDARY_TABS[2], label: "Correos" },
   { id: LEAD_RECORD_SECONDARY_TABS[3], label: "Calendario" },
+  { id: LEAD_RECORD_SECONDARY_TABS[4], label: "Sedes" },
 ];

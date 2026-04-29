@@ -13,8 +13,17 @@ import {
   requestLeadReview,
   requestRemoveLeadFromFavorites,
 } from "~/actions/workflow/commands/records";
-import { requestSaleCreation } from "~/actions/workflow/commands/sales";
-import type { Moneda, AbonoBank } from "~/workflow/contracts/lead-schema";
+import {
+  requestSaleCreation,
+  requestSaleVenueCreation,
+} from "~/actions/workflow/commands/sales";
+import type {
+  Moneda,
+  AbonoBank,
+  AccountTypeKind,
+  CulqiProductKind,
+  ModalidadCobro,
+} from "~/workflow/contracts/lead-schema";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 
@@ -62,8 +71,16 @@ export const completeCommercialInputMutation = action(
     tasaActual: number;
     gpv: number;
     ticket: number;
-    abono: AbonoBank;
-    cantidadPos: number;
+    giroNegocio: string;
+    tipoProducto: CulqiProductKind;
+    urlCliente: string | null;
+    modalidadCobro: ModalidadCobro | null;
+    repLegalNombres: string;
+    repLegalApellidoPaterno: string;
+    repLegalApellidoMaterno: string;
+    repLegalDni: string;
+    repLegalTelefono: string;
+    repLegalEmail: string;
   }) => {
     await requestLeadCommercialInputCompletion(input);
     return json(
@@ -94,18 +111,7 @@ export const createQuotationMutation = action(
 );
 
 export const createSaleMutation = action(
-  async (input: {
-    leadId: string;
-    proveedorActual: string;
-    tasaActual: number;
-    gpv: number;
-    ticket: number;
-    abono: AbonoBank;
-    cantidadPos: number;
-    banco: string;
-    nroCuenta: string;
-    cci: string | null;
-  }) => {
+  async (input: { leadId: string }) => {
     await requestSaleCreation(input);
     return json(
       {},
@@ -113,6 +119,36 @@ export const createSaleMutation = action(
     );
   },
   "workflow.createSale",
+);
+
+export const createSaleVenueMutation = action(
+  async (input: {
+    leadId: string;
+    saleId: string;
+    nombreComercial: string;
+    cantidadPos: number;
+    direccion: string;
+    referencia: string | null;
+    distrito: string;
+    provincia: string;
+    departamento: string;
+    bancoSoles: AbonoBank;
+    tipoCuentaSoles: AccountTypeKind;
+    nroCuentaSoles: string;
+    cciSoles: string | null;
+    bancoDolares: AbonoBank | null;
+    tipoCuentaDolares: AccountTypeKind | null;
+    nroCuentaDolares: string | null;
+    cciDolares: string | null;
+    abono: AbonoBank;
+  }) => {
+    await requestSaleVenueCreation(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.createSaleVenue",
 );
 
 export const requestRateNegotiationMutation = action(

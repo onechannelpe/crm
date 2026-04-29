@@ -9,6 +9,7 @@ import { HomeTab } from "./home";
 import { NotesTab } from "./notes";
 import { TasksTab } from "./tasks";
 import { TimelineTab } from "./timeline";
+import { SedesTab } from "./sedes";
 
 export const TAB_COMPONENTS: Record<
   LeadRecordTabId,
@@ -21,4 +22,5 @@ export const TAB_COMPONENTS: Record<
   files: FilesTab,
   emails: () => <HiddenTabContent title="Correos" />,
   calendar: () => <HiddenTabContent title="Calendario" />,
+  sedes: SedesTab,
 };
