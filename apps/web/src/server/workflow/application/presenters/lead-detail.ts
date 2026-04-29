@@ -7,7 +7,7 @@ import type {
   LeadNegotiationFile,
 } from "../ports/negotiation-request-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
-import type { LeadSale } from "../ports/sale-repository";
+import type { LeadSale, LeadSaleVenue } from "../ports/sale-repository";
 import type { LeadSourceStatus } from "../ports/source-status-repository";
 import type {
   LeadDetailCommercialInputView,
@@ -16,6 +16,7 @@ import type {
   LeadDetailNegotiationRequestView,
   LeadDetailQuotationView,
   LeadDetailSaleView,
+  LeadDetailSaleVenueView,
   LeadDetailSourceStatusView,
   LeadDetailView,
 } from "../queries/views/lead-detail";
@@ -45,6 +46,7 @@ export type LeadDetailSource = {
   commercialInput: LeadCommercialInput | undefined;
   quotations: LeadQuotation[];
   sale: LeadSale | undefined;
+  venues: LeadSaleVenue[];
   negotiationRequests: NegotiationRequestWithFiles[];
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
@@ -109,8 +111,16 @@ function toLeadDetailCommercialInput(
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
-    abono: input.abono,
-    cantidadPos: input.cantidadPos,
+    giroNegocio: input.giroNegocio,
+    tipoProducto: input.tipoProducto,
+    urlCliente: input.urlCliente,
+    modalidadCobro: input.modalidadCobro,
+    repLegalNombres: input.repLegalNombres,
+    repLegalApellidoPaterno: input.repLegalApellidoPaterno,
+    repLegalApellidoMaterno: input.repLegalApellidoMaterno,
+    repLegalDni: input.repLegalDni,
+    repLegalTelefono: input.repLegalTelefono,
+    repLegalEmail: input.repLegalEmail,
     updatedAt: input.updatedAt,
     updatedBy: input.updatedBy,
   };
@@ -139,16 +149,35 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
     id: sale.id,
     leadId: sale.leadId,
     executiveId: sale.executiveId,
-    proveedorActual: sale.proveedorActual,
-    tasaActual: sale.tasaActual,
-    gpv: sale.gpv,
-    ticket: sale.ticket,
-    abono: sale.abono,
-    cantidadPos: sale.cantidadPos,
-    banco: sale.banco,
-    nroCuenta: sale.nroCuenta,
-    cci: sale.cci,
     createdAt: sale.createdAt,
+  };
+}
+
+function toLeadDetailSaleVenue(
+  venue: LeadSaleVenue,
+): LeadDetailSaleVenueView {
+  return {
+    id: venue.id,
+    saleId: venue.saleId,
+    leadId: venue.leadId,
+    nombreComercial: venue.nombreComercial,
+    cantidadPos: venue.cantidadPos,
+    direccion: venue.direccion,
+    referencia: venue.referencia,
+    distrito: venue.distrito,
+    provincia: venue.provincia,
+    departamento: venue.departamento,
+    bancoSoles: venue.bancoSoles,
+    tipoCuentaSoles: venue.tipoCuentaSoles,
+    nroCuentaSoles: venue.nroCuentaSoles,
+    cciSoles: venue.cciSoles,
+    bancoDolares: venue.bancoDolares,
+    tipoCuentaDolares: venue.tipoCuentaDolares,
+    nroCuentaDolares: venue.nroCuentaDolares,
+    cciDolares: venue.cciDolares,
+    abono: venue.abono,
+    createdAt: venue.createdAt,
+    createdBy: venue.createdBy,
   };
 }
 
@@ -195,6 +224,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
     sale: source.sale ? toLeadDetailSale(source.sale) : undefined,
+    venues: source.venues.map(toLeadDetailSaleVenue),
     negotiationRequests: source.negotiationRequests.map(
       toNegotiationRequestView,
     ),
@@ -202,7 +232,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     availableActions: source.availableActions,
     blockingFields: presentLeadBlockingFields({
       lead: source.lead,
-      sale: source.sale,
+      venueCount: source.venues.length,
     }),
     sourceStatus: toLeadSourceStatus(source.sourceStatus),
   };

@@ -51,8 +51,16 @@ export type LeadDetailCommercialInputView = {
   tasaActual: number | null;
   gpv: number | null;
   ticket: number | null;
-  abono: AbonoBank | null;
-  cantidadPos: number | null;
+  giroNegocio: string | null;
+  tipoProducto: CulqiProductKind | null;
+  urlCliente: string | null;
+  modalidadCobro: ModalidadCobro | null;
+  repLegalNombres: string | null;
+  repLegalApellidoPaterno: string | null;
+  repLegalApellidoMaterno: string | null;
+  repLegalDni: string | null;
+  repLegalTelefono: string | null;
+  repLegalEmail: string | null;
   updatedAt: number;
   updatedBy: number;
 };
@@ -75,16 +83,31 @@ export type LeadDetailSaleView = {
   id: string;
   leadId: string;
   executiveId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: AbonoBank;
-  cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
   createdAt: number;
+};
+
+export type LeadDetailSaleVenueView = {
+  id: string;
+  saleId: string;
+  leadId: string;
+  nombreComercial: string;
+  cantidadPos: number;
+  direccion: string;
+  referencia: string | null;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+  bancoSoles: AbonoBank;
+  tipoCuentaSoles: AccountTypeKind;
+  nroCuentaSoles: string;
+  cciSoles: string | null;
+  bancoDolares: AbonoBank | null;
+  tipoCuentaDolares: AccountTypeKind | null;
+  nroCuentaDolares: string | null;
+  cciDolares: string | null;
+  abono: AbonoBank;
+  createdAt: number;
+  createdBy: number;
 };
 
 export type LeadDetailSourceStatusView = {
@@ -121,6 +144,7 @@ export type LeadDetailView = {
   commercialInput: LeadDetailCommercialInputView | undefined;
   quotations: LeadDetailQuotationView[];
   sale: LeadDetailSaleView | undefined;
+  venues: LeadDetailSaleVenueView[];
   negotiationRequests: LeadDetailNegotiationRequestView[];
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
