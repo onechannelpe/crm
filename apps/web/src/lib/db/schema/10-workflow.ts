@@ -1,7 +1,5 @@
 import { sql, type Kysely } from "kysely";
 
-import { ABONO_BANKS } from "~/workflow/contracts/lead-schema";
-
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_leads")

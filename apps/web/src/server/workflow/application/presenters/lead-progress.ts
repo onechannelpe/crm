@@ -4,10 +4,11 @@ import type { LeadRecord } from "../../domain/lead-record";
 
 export function presentLeadNextStep(input: {
   lead: Pick<LeadRecord, "stage">;
-  sale: any | undefined;
+  venueCount?: number;
 }): string {
   return resolveLeadProgress({
     lead: input.lead,
+    venueCount: input.venueCount,
   }).nextStep;
 }
 

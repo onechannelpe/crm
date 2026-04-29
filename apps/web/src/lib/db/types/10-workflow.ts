@@ -1,10 +1,8 @@
 import type { Generated } from "kysely";
 
 import type {
-  AbonoBank,
   CulqiProductKind,
   ModalidadCobro,
-  AccountTypeKind,
 } from "../../../workflow/contracts/lead-schema";
 
 export type WorkflowStageValue =

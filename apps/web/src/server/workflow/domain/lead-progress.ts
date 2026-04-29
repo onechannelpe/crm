@@ -1,5 +1,4 @@
 import type { LeadStage } from "~/workflow/contracts/lead-schema";
-import { isBcpBank } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "./lead-record";
 
@@ -61,8 +60,8 @@ export function resolveLeadBlockingFields(input: {
         "giroNegocio",
       ];
     case "READY_FOR_SALE": {
-      const venueCount_ = input.venueCount ?? 0;
-      return venueCount_ === 0 ? ["venues"] : [];
+      const venueCount = input.venueCount ?? 0;
+      return venueCount === 0 ? ["venues"] : [];
     }
     default: {
       const exhaustive: never = input.stage;

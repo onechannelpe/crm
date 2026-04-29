@@ -31,6 +31,127 @@ import {
 
 import type { TabContentProps } from "./content-props";
 
+function VenueCard(props: {
+  venue: NonNullable<
+    Extract<TabContentProps, { mode: "view" }>["data"]["venues"][number]
+  >;
+}) {
+  const venue = () => props.venue;
+  return (
+    <Widget>
+      <WidgetHeader>
+        <WidgetTitle text={venue().nombreComercial} />
+      </WidgetHeader>
+      <WidgetBody>
+        <FieldTable>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Cantidad POS</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().cantidadPos}</FieldInputValue>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Direccion</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().direccion}</FieldInputValue>
+          </FieldRow>
+          <Show when={venue().referencia}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldLabelText>Referencia</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>{venue().referencia}</FieldInputValue>
+            </FieldRow>
+          </Show>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Distrito</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().distrito}</FieldInputValue>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Provincia</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().provincia}</FieldInputValue>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Departamento</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().departamento}</FieldInputValue>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Banco SOLES</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().bancoSoles}</FieldInputValue>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().tipoCuentaSoles}</FieldInputValue>
+          </FieldRow>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().nroCuentaSoles}</FieldInputValue>
+          </FieldRow>
+          <Show when={venue().cciSoles}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldLabelText>CCI SOLES</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>{venue().cciSoles}</FieldInputValue>
+            </FieldRow>
+          </Show>
+          <Show when={venue().bancoDolares}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldLabelText>Banco USD</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>{venue().bancoDolares}</FieldInputValue>
+            </FieldRow>
+          </Show>
+          <Show when={venue().tipoCuentaDolares}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldLabelText>Tipo cuenta USD</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>{venue().tipoCuentaDolares}</FieldInputValue>
+            </FieldRow>
+          </Show>
+          <Show when={venue().nroCuentaDolares}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldLabelText>Nro cuenta USD</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>{venue().nroCuentaDolares}</FieldInputValue>
+            </FieldRow>
+          </Show>
+          <Show when={venue().cciDolares}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldLabelText>CCI USD</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>{venue().cciDolares}</FieldInputValue>
+            </FieldRow>
+          </Show>
+          <FieldRow>
+            <FieldLabel>
+              <FieldLabelText>Banco de abono</FieldLabelText>
+            </FieldLabel>
+            <FieldInputValue>{venue().abono}</FieldInputValue>
+          </FieldRow>
+        </FieldTable>
+      </WidgetBody>
+    </Widget>
+  );
+}
+
 export function SedesTab(props: TabContentProps) {
   const createSale = useAction(createSaleMutation);
   const createSaleVenue = useAction(createSaleVenueMutation);
@@ -201,130 +322,14 @@ export function SedesTab(props: TabContentProps) {
     }
   }
 
-  function renderVenueCard(
-    venue: NonNullable<ReturnType<typeof viewProps>>["venues"][number],
-  ) {
-    return (
-      <Widget>
-        <WidgetHeader>
-          <WidgetTitle text={venue.nombreComercial} />
-        </WidgetHeader>
-        <WidgetBody>
-          <FieldTable>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Cantidad POS</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.cantidadPos}</FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Direccion</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.direccion}</FieldInputValue>
-            </FieldRow>
-            <Show when={venue.referencia}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Referencia</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>{venue.referencia}</FieldInputValue>
-              </FieldRow>
-            </Show>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Distrito</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.distrito}</FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Provincia</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.provincia}</FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Departamento</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.departamento}</FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Banco SOLES</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.bancoSoles}</FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.tipoCuentaSoles}</FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.nroCuentaSoles}</FieldInputValue>
-            </FieldRow>
-            <Show when={venue.cciSoles}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>CCI SOLES</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>{venue.cciSoles}</FieldInputValue>
-              </FieldRow>
-            </Show>
-            <Show when={venue.bancoDolares}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Banco USD</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>{venue.bancoDolares}</FieldInputValue>
-              </FieldRow>
-            </Show>
-            <Show when={venue.tipoCuentaDolares}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Tipo cuenta USD</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>{venue.tipoCuentaDolares}</FieldInputValue>
-              </FieldRow>
-            </Show>
-            <Show when={venue.nroCuentaDolares}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Nro cuenta USD</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>{venue.nroCuentaDolares}</FieldInputValue>
-              </FieldRow>
-            </Show>
-            <Show when={venue.cciDolares}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>CCI USD</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>{venue.cciDolares}</FieldInputValue>
-              </FieldRow>
-            </Show>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Banco de abono</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue.abono}</FieldInputValue>
-            </FieldRow>
-          </FieldTable>
-        </WidgetBody>
-      </Widget>
-    );
-  }
-
   return (
     <Show when={viewProps()} keyed>
       {(data) => (
         <div>
           <Show when={data.venues.length > 0}>
-            <For each={data.venues}>{(venue) => renderVenueCard(venue)}</For>
+            <For each={data.venues}>
+              {(venue) => <VenueCard venue={venue} />}
+            </For>
           </Show>
 
           <Show
@@ -475,17 +480,19 @@ export function SedesTab(props: TabContentProps) {
                       </FieldLabel>
                       <FieldInputValue>
                         <div>
-                          {ACCOUNT_TYPE_KINDS.map((kind) => (
-                            <label>
-                              <input
-                                type="radio"
-                                name="tipoCuentaSoles"
-                                checked={tipoCuentaSoles() === kind}
-                                onChange={() => setTipoCuentaSoles(kind)}
-                              />
-                              {kind}
-                            </label>
-                          ))}
+                          <For each={ACCOUNT_TYPE_KINDS}>
+                            {(kind) => (
+                              <label>
+                                <input
+                                  type="radio"
+                                  name="tipoCuentaSoles"
+                                  checked={tipoCuentaSoles() === kind}
+                                  onChange={() => setTipoCuentaSoles(kind)}
+                                />
+                                {kind}
+                              </label>
+                            )}
+                          </For>
                         </div>
                       </FieldInputValue>
                     </FieldRow>
@@ -565,17 +572,19 @@ export function SedesTab(props: TabContentProps) {
                         </FieldLabel>
                         <FieldInputValue>
                           <div>
-                            {ACCOUNT_TYPE_KINDS.map((kind) => (
-                              <label>
-                                <input
-                                  type="radio"
-                                  name="tipoCuentaDolares"
-                                  checked={tipoCuentaDolares() === kind}
-                                  onChange={() => setTipoCuentaDolares(kind)}
-                                />
-                                {kind}
-                              </label>
-                            ))}
+                            <For each={ACCOUNT_TYPE_KINDS}>
+                              {(kind) => (
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name="tipoCuentaDolares"
+                                    checked={tipoCuentaDolares() === kind}
+                                    onChange={() => setTipoCuentaDolares(kind)}
+                                  />
+                                  {kind}
+                                </label>
+                              )}
+                            </For>
                           </div>
                         </FieldInputValue>
                       </FieldRow>

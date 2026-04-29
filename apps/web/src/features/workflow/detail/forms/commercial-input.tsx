@@ -7,7 +7,6 @@ import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
-import { BankPicker } from "~/components/ui/pickers/bank-picker";
 import {
   FieldIcon,
   FieldInputValue,

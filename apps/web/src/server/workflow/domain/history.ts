@@ -4,10 +4,8 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-  AbonoBank,
   CulqiProductKind,
   ModalidadCobro,
-  AccountTypeKind,
 } from "~/workflow/contracts/lead-schema";
 
 export type LeadHistoryEventType =

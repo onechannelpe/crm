@@ -96,7 +96,7 @@ function toLeadDetailLead(
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
-    nextStep: presentLeadNextStep({ lead, sale }),
+    nextStep: presentLeadNextStep({ lead, venueCount: venues.length }),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
