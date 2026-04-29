@@ -53,8 +53,8 @@ export async function createSaleVenueCommand(
     );
   }
 
-  const isBcpSoles = isBcpBank(input.bancoSoles);
-  const cciSoles = isBcpSoles ? null : input.cciSoles?.trim() || null;
+  const isBcpSoles = isBcpBank(input.solesAccount.banco);
+  const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
   if (!isBcpSoles && !cciSoles) {
     return Err(
       domainError(
@@ -115,9 +115,9 @@ export async function createSaleVenueCommand(
     distrito: input.distrito,
     provincia: input.provincia,
     departamento: input.departamento,
-    bancoSoles: input.bancoSoles,
-    tipoCuentaSoles: input.tipoCuentaSoles,
-    nroCuentaSoles: input.nroCuentaSoles,
+    bancoSoles: input.solesAccount.banco,
+    tipoCuentaSoles: input.solesAccount.tipoCuenta,
+    nroCuentaSoles: input.solesAccount.nroCuenta,
     cciSoles,
     bancoDolares,
     tipoCuentaDolares,
@@ -143,10 +143,7 @@ export async function createSaleVenueCommand(
       distrito: input.distrito,
       provincia: input.provincia,
       departamento: input.departamento,
-      bancoSoles: input.bancoSoles,
-      tipoCuentaSoles: input.tipoCuentaSoles,
-      nroCuentaSoles: input.nroCuentaSoles,
-      cciSoles,
+      solesAccount: input.solesAccount,
       dollarAccount: input.dollarAccount,
       abono: input.abono,
       isFirstVenue,

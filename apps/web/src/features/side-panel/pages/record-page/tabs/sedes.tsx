@@ -257,6 +257,13 @@ export function SedesTab(props: TabContentProps) {
       return;
     }
 
+    const solesAccount = {
+      banco: currentBancoSoles,
+      tipoCuenta: currentTipoCuentaSoles,
+      nroCuenta: nroCuentaSoles().trim(),
+      ...(cciSoles().trim() ? { cci: cciSoles().trim() } : {}),
+    };
+
     let dollarAccount:
       | {
           banco: AbonoBank;
@@ -309,10 +316,7 @@ export function SedesTab(props: TabContentProps) {
         distrito: distrito().trim(),
         provincia: provincia().trim(),
         departamento: departamento().trim(),
-        bancoSoles: currentBancoSoles,
-        tipoCuentaSoles: currentTipoCuentaSoles,
-        nroCuentaSoles: nroCuentaSoles().trim(),
-        cciSoles: cciSoles().trim() || null,
+        solesAccount,
         dollarAccount,
         abono: currentAbono,
       });

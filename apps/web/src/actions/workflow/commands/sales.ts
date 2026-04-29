@@ -37,10 +37,12 @@ export async function requestSaleVenueCreation(input: {
   distrito: string;
   provincia: string;
   departamento: string;
-  bancoSoles: AbonoBank;
-  tipoCuentaSoles: AccountTypeKind;
-  nroCuentaSoles: string;
-  cciSoles: string | null;
+  solesAccount: {
+    banco: AbonoBank;
+    tipoCuenta: AccountTypeKind;
+    nroCuenta: string;
+    cci?: string;
+  };
   dollarAccount?:
     | {
         banco: AbonoBank;
@@ -66,8 +68,8 @@ export async function requestSaleVenueCreation(input: {
   if (!input.departamento.trim()) {
     throw validationError("departamento is required");
   }
-  if (!input.nroCuentaSoles.trim()) {
-    throw validationError("nroCuentaSoles is required");
+  if (!input.solesAccount.nroCuenta.trim()) {
+    throw validationError("soles account number is required");
   }
 
   if (input.dollarAccount && !input.dollarAccount.nroCuenta.trim()) {

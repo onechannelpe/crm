@@ -128,10 +128,12 @@ export const createSaleVenueMutation = action(
     distrito: string;
     provincia: string;
     departamento: string;
-    bancoSoles: AbonoBank;
-    tipoCuentaSoles: AccountTypeKind;
-    nroCuentaSoles: string;
-    cciSoles: string | null;
+    solesAccount: {
+      banco: AbonoBank;
+      tipoCuenta: AccountTypeKind;
+      nroCuenta: string;
+      cci?: string;
+    };
     dollarAccount?:
       | {
           banco: AbonoBank;
