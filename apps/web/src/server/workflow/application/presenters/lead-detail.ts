@@ -77,7 +77,7 @@ function toLeadDetailLead(
   executiveName: string,
   createdByName: string,
   updatedByName: string | null,
-  sale: LeadSale | undefined,
+  venueCount: number,
 ): LeadDetailLeadView {
   return {
     id: lead.id,
@@ -96,7 +96,7 @@ function toLeadDetailLead(
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
-    nextStep: presentLeadNextStep({ lead, venueCount: venues.length }),
+    nextStep: presentLeadNextStep({ lead, venueCount }),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
@@ -215,7 +215,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       source.executiveName,
       source.createdByName,
       source.updatedByName,
-      source.sale,
+      source.venues.length,
     ),
     commercialInput: source.commercialInput
       ? toLeadDetailCommercialInput(source.commercialInput)
