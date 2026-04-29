@@ -3,28 +3,17 @@ import { createMemo, Show } from "solid-js";
 import Building2 from "~/components/icons/building-2";
 import type { LeadDetailLeadView } from "~/server/workflow/application/queries/views/lead-detail";
 
+import { formatPastRelativeDate } from "./format-relative-date";
+
 import styles from "./record-summary-card.module.css";
 
 type RecordSummaryCardProps = {
   lead: LeadDetailLeadView;
 };
 
-function formatRelativeDate(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "hoy";
-  if (days === 1) return "ayer";
-  if (days < 30) return `hace ${days} días`;
-  const months = Math.floor(days / 30);
-  if (months === 1) return "hace 1 mes";
-  if (months < 12) return `hace ${months} meses`;
-  const years = Math.floor(months / 12);
-  return years === 1 ? "hace 1 año" : `hace ${years} años`;
-}
-
 export function RecordSummaryCard(props: RecordSummaryCardProps) {
   const relativeDate = createMemo(() =>
-    formatRelativeDate(props.lead.createdAt),
+    formatPastRelativeDate(props.lead.createdAt),
   );
 
   return (

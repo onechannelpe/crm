@@ -5,6 +5,7 @@ import Bell from "~/components/icons/bell";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
+import { APP_LOCALE } from "~/lib/locale";
 import {
   markAllNotificationsReadMutation,
   markNotificationReadMutation,
@@ -16,7 +17,7 @@ import { cn } from "~/lib/utils";
 import styles from "./header-notifications-panel.module.css";
 
 function formatTimestamp(value: number): string {
-  return new Date(value).toLocaleString("en-US", {
+  return new Date(value).toLocaleString(APP_LOCALE, {
     month: "short",
     day: "2-digit",
     hour: "2-digit",

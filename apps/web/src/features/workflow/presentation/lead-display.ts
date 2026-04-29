@@ -1,3 +1,4 @@
+import { APP_LOCALE } from "~/lib/locale";
 import type {
   LeadPriority,
   LeadStage,
@@ -49,6 +50,6 @@ function capitalizeFirstLetter(value: string): string {
   if (value.length === 0) {
     return value;
   }
-  const normalized = value.toLocaleLowerCase("es-PE");
-  return normalized[0].toLocaleUpperCase("es-PE") + normalized.slice(1);
+  const normalized = value.toLocaleLowerCase(APP_LOCALE);
+  return normalized[0].toLocaleUpperCase(APP_LOCALE) + normalized.slice(1);
 }

@@ -2,6 +2,7 @@ import type { Component } from "solid-js";
 import { For } from "solid-js";
 
 import { releases, type ReleaseEntry } from "~/features/releases/registry";
+import { APP_LOCALE } from "~/lib/locale";
 
 import styles from "./releases.module.css";
 import proseStyles from "~/components/layout/prose.module.css";
@@ -19,7 +20,7 @@ function getContent(version: string): Component | undefined {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("es-PE", {
+  return new Date(iso).toLocaleDateString(APP_LOCALE, {
     year: "numeric",
     month: "long",
     day: "numeric",
