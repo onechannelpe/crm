@@ -3,7 +3,7 @@ import { createMemo, Show } from "solid-js";
 import Building2 from "~/components/icons/building-2";
 import type { LeadDetailLeadView } from "~/server/workflow/application/queries/views/lead-detail";
 
-import { formatRelativeDate } from "./format-relative-date";
+import { formatPastRelativeDate } from "./format-relative-date";
 
 import styles from "./record-summary-card.module.css";
 
@@ -13,7 +13,7 @@ type RecordSummaryCardProps = {
 
 export function RecordSummaryCard(props: RecordSummaryCardProps) {
   const relativeDate = createMemo(() =>
-    formatRelativeDate(props.lead.createdAt),
+    formatPastRelativeDate(props.lead.createdAt),
   );
 
   return (

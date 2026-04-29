@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { formatRelativeDate } from "~/features/record-show/summary-card/format-relative-date";
+import {
+  formatPastRelativeDate,
+  formatRelativeDate,
+} from "~/features/record-show/summary-card/format-relative-date";
 
 describe("formatRelativeDate", () => {
   it("shows today for same-day timestamps", () => {
@@ -10,10 +13,21 @@ describe("formatRelativeDate", () => {
     expect(formatRelativeDate(sameDay, now)).toBe("hoy");
   });
 
-  it("shows today for future timestamps caused by clock skew", () => {
+  it("formats future timestamps for reminder-style use cases", () => {
     const now = new Date(2026, 3, 28, 12).getTime();
 
-    expect(formatRelativeDate(now + 60 * 60 * 1000, now)).toBe("hoy");
+    expect(formatRelativeDate(new Date(2026, 3, 29, 12).getTime(), now)).toBe(
+      "mañana",
+    );
+    expect(formatRelativeDate(new Date(2026, 4, 28, 12).getTime(), now)).toBe(
+      "el próximo mes",
+    );
+  });
+
+  it("shows today for future timestamps in past-only contexts", () => {
+    const now = new Date(2026, 3, 28, 12).getTime();
+
+    expect(formatPastRelativeDate(now + 60 * 60 * 1000, now)).toBe("hoy");
   });
 
   it("uses calendar days for yesterday", () => {
