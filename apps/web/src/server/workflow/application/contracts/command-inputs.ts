@@ -125,9 +125,11 @@ export type CreateSaleVenueInput = {
   tipoCuentaSoles: AccountTypeKind;
   nroCuentaSoles: string;
   cciSoles: string | null;
-  bancoDolares: AbonoBank | null;
-  tipoCuentaDolares: AccountTypeKind | null;
-  nroCuentaDolares: string | null;
-  cciDolares: string | null;
+  dollarAccount?: {
+    banco: AbonoBank;
+    tipoCuenta: AccountTypeKind;
+    nroCuenta: string;
+    cci?: string;
+  };
   abono: AbonoBank;
 };

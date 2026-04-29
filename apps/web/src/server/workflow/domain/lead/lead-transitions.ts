@@ -65,7 +65,7 @@ export function deriveLeadPatchFromIntent(input: {
   if (intent.kind === "create_quotation") return Ok({ stage: "QUOTED" });
   if (intent.kind === "complete_commercial_input")
     return Ok({ stage: "READY_FOR_QUOTATION" });
-  if (intent.kind === "create_sale") return Ok({ stage: "CONVERTED" });
+  if (intent.kind === "create_sale") return Ok({});
   if (intent.kind === "create_sale_venue") {
     return intent.isFirstVenue ? Ok({ stage: "CONVERTED" }) : Ok({});
   }

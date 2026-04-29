@@ -44,6 +44,17 @@ export async function createSaleCommand(
     );
   }
 
+  const existingSale = await deps.leadSales.findByLeadId(input.leadId);
+  if (existingSale) {
+    return Err(
+      domainError(
+        "conflict",
+        "sale_already_exists",
+        "A sale already exists for this lead",
+      ),
+    );
+  }
+
   const now = deps.clock.now();
   const saleId = await deps.leadSales.insert({
     leadId: lead.id,

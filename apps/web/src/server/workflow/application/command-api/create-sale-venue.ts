@@ -2,7 +2,11 @@ import { randomUUIDv7 } from "bun";
 
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { isBcpBank } from "~/workflow/contracts/lead-schema";
+import {
+  isBcpBank,
+  type AbonoBank,
+  type AccountTypeKind,
+} from "~/workflow/contracts/lead-schema";
 
 import { isReadyForSaleLeadSubject } from "../../domain/lead-subjects";
 import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
@@ -61,10 +65,29 @@ export async function createSaleVenueCommand(
     );
   }
 
-  if (input.bancoDolares) {
-    const isBcpDolares = isBcpBank(input.bancoDolares);
-    const cciDolares = isBcpDolares ? null : input.cciDolares?.trim() || null;
-    if (!isBcpDolares && !cciDolares) {
+  const sale = await deps.leadSales.findById(input.saleId);
+  if (!sale) return leadNotFound();
+  if (sale.leadId !== input.leadId) {
+    return Err(
+      domainError(
+        "validation",
+        "sale_lead_mismatch",
+        "Sale does not belong to the specified lead",
+      ),
+    );
+  }
+
+  let bancoDolares: AbonoBank | null = null;
+  let tipoCuentaDolares: AccountTypeKind | null = null;
+  let nroCuentaDolares: string | null = null;
+  let cciDolares: string | null = null;
+
+  if (input.dollarAccount) {
+    const isBcpDolares = isBcpBank(input.dollarAccount.banco);
+    const normalizedCciDolares = isBcpDolares
+      ? null
+      : input.dollarAccount.cci?.trim() || null;
+    if (!isBcpDolares && !normalizedCciDolares) {
       return Err(
         domainError(
           "validation",
@@ -73,6 +96,10 @@ export async function createSaleVenueCommand(
         ),
       );
     }
+    bancoDolares = input.dollarAccount.banco;
+    tipoCuentaDolares = input.dollarAccount.tipoCuenta;
+    nroCuentaDolares = input.dollarAccount.nroCuenta;
+    cciDolares = normalizedCciDolares;
   }
 
   const now = deps.clock.now();
@@ -92,10 +119,10 @@ export async function createSaleVenueCommand(
     tipoCuentaSoles: input.tipoCuentaSoles,
     nroCuentaSoles: input.nroCuentaSoles,
     cciSoles,
-    bancoDolares: input.bancoDolares,
-    tipoCuentaDolares: input.tipoCuentaDolares,
-    nroCuentaDolares: input.nroCuentaDolares,
-    cciDolares: input.cciDolares,
+    bancoDolares,
+    tipoCuentaDolares,
+    nroCuentaDolares,
+    cciDolares,
     abono: input.abono,
     createdAt: now,
     createdBy: input.actor.userId,
@@ -120,18 +147,12 @@ export async function createSaleVenueCommand(
       tipoCuentaSoles: input.tipoCuentaSoles,
       nroCuentaSoles: input.nroCuentaSoles,
       cciSoles,
-      bancoDolares: input.bancoDolares,
-      tipoCuentaDolares: input.tipoCuentaDolares,
-      nroCuentaDolares: input.nroCuentaDolares,
-      cciDolares: input.cciDolares,
+      dollarAccount: input.dollarAccount,
       abono: input.abono,
       isFirstVenue,
     },
   });
   if (!outcome.ok) return outcome;
-
-  const sale = await deps.leadSales.findById(input.saleId);
-  if (!sale) return leadNotFound();
 
   return Ok({
     leadId: input.leadId,

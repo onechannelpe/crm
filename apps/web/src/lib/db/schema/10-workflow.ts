@@ -123,6 +123,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_workflow_sales_lead")
     .on("workflow_sales")
     .column("lead_id")
+    .unique()
     .execute();
   await db.schema
     .createIndex("idx_workflow_sales_executive")

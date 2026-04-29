@@ -96,10 +96,14 @@ export type LeadMutationIntent =
       tipoCuentaSoles: AccountTypeKind;
       nroCuentaSoles: string;
       cciSoles: string | null;
-      bancoDolares: AbonoBank | null;
-      tipoCuentaDolares: AccountTypeKind | null;
-      nroCuentaDolares: string | null;
-      cciDolares: string | null;
+      dollarAccount?:
+        | {
+            banco: AbonoBank;
+            tipoCuenta: AccountTypeKind;
+            nroCuenta: string;
+            cci?: string;
+          }
+        | undefined;
       abono: AbonoBank;
       isFirstVenue: boolean;
     }

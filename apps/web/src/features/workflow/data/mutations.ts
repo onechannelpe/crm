@@ -132,10 +132,14 @@ export const createSaleVenueMutation = action(
     tipoCuentaSoles: AccountTypeKind;
     nroCuentaSoles: string;
     cciSoles: string | null;
-    bancoDolares: AbonoBank | null;
-    tipoCuentaDolares: AccountTypeKind | null;
-    nroCuentaDolares: string | null;
-    cciDolares: string | null;
+    dollarAccount?:
+      | {
+          banco: AbonoBank;
+          tipoCuenta: AccountTypeKind;
+          nroCuenta: string;
+          cci?: string;
+        }
+      | undefined;
     abono: AbonoBank;
   }) => {
     await requestSaleVenueCreation(input);

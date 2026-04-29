@@ -41,10 +41,14 @@ export async function requestSaleVenueCreation(input: {
   tipoCuentaSoles: AccountTypeKind;
   nroCuentaSoles: string;
   cciSoles: string | null;
-  bancoDolares: AbonoBank | null;
-  tipoCuentaDolares: AccountTypeKind | null;
-  nroCuentaDolares: string | null;
-  cciDolares: string | null;
+  dollarAccount?:
+    | {
+        banco: AbonoBank;
+        tipoCuenta: AccountTypeKind;
+        nroCuenta: string;
+        cci?: string;
+      }
+    | undefined;
   abono: AbonoBank;
 }) {
   if (!input.nombreComercial.trim()) {
@@ -66,19 +70,8 @@ export async function requestSaleVenueCreation(input: {
     throw validationError("nroCuentaSoles is required");
   }
 
-  const hasAnyUsdField = Boolean(
-    input.bancoDolares ||
-    input.tipoCuentaDolares ||
-    input.nroCuentaDolares?.trim() ||
-    input.cciDolares?.trim(),
-  );
-  const hasAllUsdFields = Boolean(
-    input.bancoDolares &&
-    input.tipoCuentaDolares &&
-    input.nroCuentaDolares?.trim(),
-  );
-  if (hasAnyUsdField && !hasAllUsdFields) {
-    throw validationError("dollar account fields must be complete");
+  if (input.dollarAccount && !input.dollarAccount.nroCuenta.trim()) {
+    throw validationError("dollar account number is required");
   }
 
   return runAction({

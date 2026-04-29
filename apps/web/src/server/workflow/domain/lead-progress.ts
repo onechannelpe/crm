@@ -29,7 +29,7 @@ export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
     case "QUOTED":
       return "Approve for sale";
     case "READY_FOR_SALE":
-      return "Create sale";
+      return "Register venue";
     case "CONVERTED":
       return "No further action";
     default: {

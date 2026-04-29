@@ -5,7 +5,6 @@ import { WorkflowWidget } from "~/features/side-panel/pages/record-page/widgets/
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
 import { CommercialInputSection } from "~/features/workflow/detail/forms/commercial-input";
 import { QuotationSection } from "~/features/workflow/detail/forms/quotation";
-import { SaleSection } from "~/features/workflow/detail/forms/sale";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { RecordSummaryCard } from "../summary-card/record-summary-card";
@@ -40,10 +39,6 @@ export function RecordLeftPanel(props: RecordLeftPanelProps) {
             leadId={props.data.lead.id}
             existingQuotation={lastQuotation()}
           />
-        </Show>
-
-        <Show when={stage() === "READY_FOR_SALE"}>
-          <SaleSection leadId={props.data.lead.id} />
         </Show>
 
         <WorkflowWidget data={props.data} />

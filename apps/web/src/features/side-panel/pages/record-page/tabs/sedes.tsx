@@ -257,10 +257,14 @@ export function SedesTab(props: TabContentProps) {
       return;
     }
 
-    let normalizedBancoDolares: AbonoBank | null = null;
-    let normalizedTipoCuentaDolares: AccountTypeKind | null = null;
-    let normalizedNroCuentaDolares: string | null = null;
-    let normalizedCciDolares: string | null = null;
+    let dollarAccount:
+      | {
+          banco: AbonoBank;
+          tipoCuenta: AccountTypeKind;
+          nroCuenta: string;
+          cci?: string;
+        }
+      | undefined;
 
     if (usarDolares()) {
       const currentBancoDolares = bancoDolares();
@@ -277,10 +281,12 @@ export function SedesTab(props: TabContentProps) {
         setError("CCI en dolares es obligatorio cuando el banco no es BCP");
         return;
       }
-      normalizedBancoDolares = currentBancoDolares;
-      normalizedTipoCuentaDolares = currentTipoCuentaDolares;
-      normalizedNroCuentaDolares = nroCuentaDolares().trim();
-      normalizedCciDolares = cciDolares().trim() || null;
+      dollarAccount = {
+        banco: currentBancoDolares,
+        tipoCuenta: currentTipoCuentaDolares,
+        nroCuenta: nroCuentaDolares().trim(),
+        ...(cciDolares().trim() ? { cci: cciDolares().trim() } : {}),
+      };
     }
 
     setSubmitting(true);
@@ -307,10 +313,7 @@ export function SedesTab(props: TabContentProps) {
         tipoCuentaSoles: currentTipoCuentaSoles,
         nroCuentaSoles: nroCuentaSoles().trim(),
         cciSoles: cciSoles().trim() || null,
-        bancoDolares: normalizedBancoDolares,
-        tipoCuentaDolares: normalizedTipoCuentaDolares,
-        nroCuentaDolares: normalizedNroCuentaDolares,
-        cciDolares: normalizedCciDolares,
+        dollarAccount,
         abono: currentAbono,
       });
 

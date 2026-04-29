@@ -295,18 +295,11 @@ export function deriveLeadMutationEvents(input: {
           payload: { saleId: intent.saleId },
           occurredAt: now,
         }),
-        createHistoryEvent({
-          leadId: lead.id,
-          eventType: "workflow_stage_changed",
-          actorUserId,
-          payload: { from: lead.stage, to: "CONVERTED" },
-          occurredAt: now,
-        }),
       ],
       audit: {
         action: "sale_created",
         entityId: lead.id,
-        changes: { saleId: intent.saleId, to: "CONVERTED" },
+        changes: { saleId: intent.saleId },
       },
     });
   }

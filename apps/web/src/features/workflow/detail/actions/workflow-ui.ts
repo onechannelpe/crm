@@ -40,9 +40,8 @@ export function mapLeadActionsToUi(
 
   for (const action of actions) {
     switch (action) {
-      // create-sale, create-quotation, approve-for-sale, and request-rate-negotiation
+      // create-quotation, approve-for-sale, and request-rate-negotiation
       // are rendered as inline sections, not generic action buttons.
-      case "create-sale":
       case "create-quotation":
       case "approve-for-sale":
       case "request-rate-negotiation":
