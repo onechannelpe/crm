@@ -26,8 +26,8 @@ import { toAppError } from "~/lib/app-errors";
 import type { LeadAvailableAction } from "~/server/workflow/application/contracts/lead-available-action";
 
 import { approveForSaleMutation } from "../../data/mutations";
-import { mapLeadActionsToUi } from "./workflow-ui";
 import { ReviewLeadModal } from "./review-modal";
+import { mapLeadActionsToUi } from "./workflow-ui";
 
 import widgetStyles from "./widget.module.css";
 
