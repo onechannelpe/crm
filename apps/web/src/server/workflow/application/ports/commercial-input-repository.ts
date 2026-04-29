@@ -1,4 +1,7 @@
-import type { AbonoBank } from "~/workflow/contracts/lead-schema";
+import type {
+  CulqiProductKind,
+  ModalidadCobro,
+} from "~/workflow/contracts/lead-schema";
 
 export type LeadCommercialInput = {
   leadId: string;
@@ -6,8 +9,16 @@ export type LeadCommercialInput = {
   tasaActual: number | null;
   gpv: number | null;
   ticket: number | null;
-  abono: AbonoBank | null;
-  cantidadPos: number | null;
+  giroNegocio: string | null;
+  tipoProducto: CulqiProductKind | null;
+  urlCliente: string | null;
+  modalidadCobro: ModalidadCobro | null;
+  repLegalNombres: string | null;
+  repLegalApellidoPaterno: string | null;
+  repLegalApellidoMaterno: string | null;
+  repLegalDni: string | null;
+  repLegalTelefono: string | null;
+  repLegalEmail: string | null;
   updatedAt: number;
   updatedBy: number;
 };

@@ -84,6 +84,9 @@ export function validateLeadIntent(
   if (intent.kind === "create_sale" && currentStage !== "READY_FOR_SALE") {
     return invalidLeadStage();
   }
+  if (intent.kind === "create_sale_venue" && currentStage !== "READY_FOR_SALE") {
+    return invalidLeadStage();
+  }
 
   return Ok(undefined);
 }

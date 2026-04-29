@@ -5,6 +5,9 @@ import type {
   LeadStatus,
   Moneda,
   AbonoBank,
+  CulqiProductKind,
+  ModalidadCobro,
+  AccountTypeKind,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";

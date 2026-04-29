@@ -10,6 +10,7 @@ import { createLeadRepo } from "./lead-repo";
 import { createNegotiationRequestRepo } from "./negotiation-request-repo";
 import { createQuotationRepo } from "./quotation-repo";
 import { createSaleRepo } from "./sale-repo";
+import { createSaleVenueRepo } from "./sale-venue-repo";
 import { createSourceStatusRepo } from "./source-status-repo";
 import { createSourcingPolicyRepo } from "./sourcing-policy-repo";
 import { createWorkflowUsersRepo } from "./users-repo";
@@ -24,6 +25,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leadHistory: createHistoryRepo(executor),
     leadQuotations: createQuotationRepo(executor),
     leadSales: createSaleRepo(executor),
+    leadSaleVenues: createSaleVenueRepo(executor),
     leadNegotiationRequests: createNegotiationRequestRepo(executor),
     negotiationFiles: createNegotiationFilesRepo(executor),
     sourceStatuses: createSourceStatusRepo(executor),
