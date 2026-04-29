@@ -11,7 +11,7 @@ import {
   LEAD_STATUSES,
 } from "~/workflow/contracts/lead-schema";
 
-import { reviewLeadMutation } from "../data/mutations";
+import { reviewLeadMutation } from "../../data/mutations";
 
 import styles from "./lead-actions-widget.module.css";
 

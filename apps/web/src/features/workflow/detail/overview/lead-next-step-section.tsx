@@ -3,7 +3,7 @@ import { For, Show } from "solid-js";
 import { leadNextStepLabel } from "~/features/workflow/presentation/lead-display";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
-import { blockingFieldLabel } from "./lead-workflow-ui";
+import { blockingFieldLabel } from "../actions/lead-workflow-ui";
 
 import sectionStyles from "./section-shell.module.css";
 import styles from "./lead-next-step-section.module.css";

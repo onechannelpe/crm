@@ -27,7 +27,7 @@ import {
   type Moneda,
 } from "~/workflow/contracts/lead-schema";
 
-import { createQuotationMutation } from "../data/mutations";
+import { createQuotationMutation } from "../../data/mutations";
 
 import styles from "./quotation-section.module.css";
 

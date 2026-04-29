@@ -3,8 +3,8 @@ import { useAction } from "@solidjs/router";
 import { UserPicker } from "~/components/ui/pickers/user-picker";
 import { toAppError } from "~/lib/app-errors";
 
-import { reassignLeadMutation } from "../data/mutations";
-import { assignableExecutivesQuery } from "../data/queries";
+import { reassignLeadMutation } from "../../data/mutations";
+import { assignableExecutivesQuery } from "../../data/queries";
 
 export interface ExecutivePickerProps {
   leadId: string;

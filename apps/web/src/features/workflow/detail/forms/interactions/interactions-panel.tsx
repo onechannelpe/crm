@@ -13,7 +13,7 @@ import {
 import { InteractionForm } from "./interaction-form";
 import { createInteractionState } from "./state";
 
-import sectionStyles from "../section-shell.module.css";
+import sectionStyles from "../../overview/section-shell.module.css";
 
 export function InteractionsPanel(props: {
   leadId: string;

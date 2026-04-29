@@ -26,7 +26,7 @@ import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailCommercialInputView } from "~/server/workflow/application/queries/views/lead-detail";
 import type { AbonoBank } from "~/workflow/contracts/lead-schema";
 
-import { completeCommercialInputMutation } from "../data/mutations";
+import { completeCommercialInputMutation } from "../../data/mutations";
 
 import styles from "./commercial-input-section.module.css";
 
