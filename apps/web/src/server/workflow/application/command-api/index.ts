@@ -11,6 +11,7 @@ import type {
   CompleteCommercialInputInput,
   CreateQuotationInput,
   CreateSaleInput,
+  CreateSaleVenueInput,
   LogLeadCallInput,
   ReassignLeadInput,
   RegisterLeadInput,
@@ -34,7 +35,10 @@ import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
 import type { WorkflowNotificationCenter } from "../ports/notification-center";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
-import type { LeadSaleRepository } from "../ports/sale-repository";
+import type {
+  LeadSaleRepository,
+  LeadSaleVenueRepository,
+} from "../ports/sale-repository";
 import type { LeadClock } from "../services/lead-clock";
 import { addLeadNoteCommand } from "./add-note";
 import { addToFavoritesCommand } from "./add-to-favorites";
@@ -43,6 +47,7 @@ import { approveForSaleCommand } from "./approve-for-sale";
 import { completeCommercialInputCommand } from "./complete-commercial-input";
 import { createQuotationCommand } from "./create-quotation";
 import { createSaleCommand } from "./create-sale";
+import { createSaleVenueCommand } from "./create-sale-venue";
 import { logLeadCallCommand } from "./log-call";
 import { reassignLeadCommand } from "./reassign-lead";
 import { registerLeadCommand } from "./register-lead";
@@ -64,6 +69,7 @@ export type WorkflowCommandApiDeps = {
   leadQuotations: LeadQuotationRepository;
   leadCommercialInputs: LeadCommercialInputRepository;
   leadSales: LeadSaleRepository;
+  leadSaleVenues: LeadSaleVenueRepository;
   negotiationRequests: NegotiationRequestRepository;
 };
 
@@ -103,6 +109,9 @@ export type WorkflowCommandApi = {
   ): Promise<Result<LeadCommandResult, DomainError>>;
   createSale(
     input: CreateSaleInput,
+  ): Promise<Result<LeadSaleResult, DomainError>>;
+  createSaleVenue(
+    input: CreateSaleVenueInput,
   ): Promise<Result<LeadSaleResult, DomainError>>;
   requestRateNegotiation(
     input: RequestRateNegotiationInput,
@@ -182,6 +191,17 @@ export function createWorkflowCommandApi(
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
           leadSales: deps.leadSales,
+          clock: deps.clock,
+        },
+        input,
+      ),
+    createSaleVenue: (input) =>
+      createSaleVenueCommand(
+        {
+          leadReader: deps.leadReader,
+          mutationUow: deps.mutationUow,
+          leadSales: deps.leadSales,
+          leadSaleVenues: deps.leadSaleVenues,
           clock: deps.clock,
         },
         input,
