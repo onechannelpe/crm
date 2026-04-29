@@ -13,6 +13,7 @@ const LABEL_BY_TAB: Record<LeadRecordTabId, string> = {
   files: "Archivos",
   emails: "Correos",
   calendar: "Calendario",
+  sedes: "Sedes",
 };
 
 export function useCreateLeadPageState() {

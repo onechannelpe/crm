@@ -137,6 +137,15 @@ export function presentTimelineItem(
           : `Creada por ${actorDisplayName}.`,
         actorDisplayName,
       };
+    case "venue_added":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Sede agregada",
+        description: `${event.payload.nombreComercial} registrada por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
     case "call_logged":
       return {
         id: `history:${event.id}`,

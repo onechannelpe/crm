@@ -111,11 +111,10 @@ export const createQuotationMutation = action(
 );
 
 export const createSaleMutation = action(async (input: { leadId: string }) => {
-  await requestSaleCreation(input);
-  return json(
-    {},
-    { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
-  );
+  const result = await requestSaleCreation(input);
+  return json(result, {
+    revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key],
+  });
 }, "workflow.createSale");
 
 export const createSaleVenueMutation = action(

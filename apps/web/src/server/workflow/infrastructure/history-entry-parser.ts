@@ -6,6 +6,7 @@ import {
   toCommercialInputEntry,
   toQuotationEntry,
   toSaleEntry,
+  toVenueAddedEntry,
 } from "./history-commercial-parser";
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
@@ -56,6 +57,8 @@ export function toHistoryEntry(
       });
     case "sale_created":
       return toSaleEntry(row, payload.value);
+    case "venue_added":
+      return toVenueAddedEntry(row, payload.value);
     case "call_logged":
       return toCallEntry(row, payload.value);
     case "note_added":

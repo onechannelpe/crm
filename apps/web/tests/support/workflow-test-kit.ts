@@ -61,6 +61,7 @@ function buildCommandApi(
     leadQuotations: repos.leadQuotations,
     leadCommercialInputs: repos.leadCommercialInputs,
     leadSales: repos.leadSales,
+    leadSaleVenues: repos.leadSaleVenues,
     negotiationRequests: repos.leadNegotiationRequests,
     notificationCenter: overrides?.notificationCenter ?? NO_OP_NOTIFICATIONS,
     auditService: overrides?.auditService ?? NO_OP_AUDIT,

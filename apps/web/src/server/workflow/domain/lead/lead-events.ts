@@ -260,8 +260,12 @@ export function deriveLeadMutationEvents(input: {
             tasaActual: intent.tasaActual,
             gpv: intent.gpv,
             ticket: intent.ticket,
-            abono: intent.abono,
-            cantidadPos: intent.cantidadPos,
+            giroNegocio: intent.giroNegocio,
+            tipoProducto: intent.tipoProducto,
+            urlCliente: intent.urlCliente,
+            modalidadCobro: intent.modalidadCobro,
+            repLegalNombres: intent.repLegalNombres,
+            repLegalDni: intent.repLegalDni,
           },
           occurredAt: now,
         }),
@@ -303,6 +307,48 @@ export function deriveLeadMutationEvents(input: {
         action: "sale_created",
         entityId: lead.id,
         changes: { saleId: intent.saleId, to: "CONVERTED" },
+      },
+    });
+  }
+
+  if (intent.kind === "create_sale_venue") {
+    const history: LeadHistoryEventDraft[] = [
+      createHistoryEvent({
+        leadId: lead.id,
+        eventType: "venue_added",
+        actorUserId,
+        payload: {
+          venueId: intent.venueId,
+          saleId: intent.saleId,
+          nombreComercial: intent.nombreComercial,
+          isFirstVenue: intent.isFirstVenue,
+        },
+        occurredAt: now,
+      }),
+    ];
+
+    if (intent.isFirstVenue) {
+      history.push(
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "workflow_stage_changed",
+          actorUserId,
+          payload: { from: lead.stage, to: "CONVERTED" },
+          occurredAt: now,
+        }),
+      );
+    }
+
+    return Ok({
+      history,
+      audit: {
+        action: "venue_added",
+        entityId: lead.id,
+        changes: {
+          venueId: intent.venueId,
+          saleId: intent.saleId,
+          isFirstVenue: intent.isFirstVenue,
+        },
       },
     });
   }

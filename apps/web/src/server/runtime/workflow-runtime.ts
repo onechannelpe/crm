@@ -19,6 +19,7 @@ export function createWorkflowRuntime(
       leadHistory: repos.leadHistory,
       leadQuotations: repos.leadQuotations,
       leadSales: repos.leadSales,
+      leadSaleVenues: repos.leadSaleVenues,
       leadNegotiationRequests: repos.leadNegotiationRequests,
       negotiationFiles: repos.negotiationFiles,
       sourceStatuses: repos.sourceStatuses,

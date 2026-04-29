@@ -71,6 +71,7 @@ function createWorkflowCommandRuntime(
     leadQuotations: repos.leadQuotations,
     leadCommercialInputs: repos.leadCommercialInputs,
     leadSales: repos.leadSales,
+    leadSaleVenues: repos.leadSaleVenues,
     negotiationRequests: repos.leadNegotiationRequests,
   });
 
