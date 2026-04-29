@@ -10,7 +10,7 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 
-import { createSaleMutation } from "../../data/mutations";
+import { createSaleContainerMutation } from "../../data/mutations";
 
 import styles from "./sale.module.css";
 
@@ -20,7 +20,7 @@ type SaleSectionProps = {
 
 export function SaleSection(props: SaleSectionProps) {
   const navigate = useNavigate();
-  const create = useAction(createSaleMutation);
+  const create = useAction(createSaleContainerMutation);
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 

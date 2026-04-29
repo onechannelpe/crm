@@ -7,9 +7,25 @@ import type { LeadSaleVenue } from "~/server/workflow/application/ports/sale-rep
 
 export type SaleVenueRow = Selectable<Database["workflow_sale_venues"]>;
 export type NewSaleVenueRow = Insertable<Database["workflow_sale_venues"]>;
+export type SaleVenueAccountRow = Selectable<
+  Database["workflow_sale_venue_accounts"]
+>;
+export type NewSaleVenueAccountRow = Insertable<
+  Database["workflow_sale_venue_accounts"]
+>;
 
-function toLeadSaleVenue(row: SaleVenueRow): LeadSaleVenue {
-  return {
+function toLeadSaleVenue(
+  row: SaleVenueRow,
+  accountRows: SaleVenueAccountRow[],
+): LeadSaleVenue {
+  const pen = accountRows.find((account) => account.currency === "PEN");
+  if (!pen) {
+    throw new Error(`Missing PEN account for sale venue ${row.id}`);
+  }
+
+  const usd = accountRows.find((account) => account.currency === "USD");
+
+  const venue: LeadSaleVenue = {
     id: row.id,
     saleId: row.sale_id,
     leadId: row.lead_id,
@@ -20,18 +36,55 @@ function toLeadSaleVenue(row: SaleVenueRow): LeadSaleVenue {
     distrito: row.distrito,
     provincia: row.provincia,
     departamento: row.departamento,
-    bancoSoles: row.banco_soles,
-    tipoCuentaSoles: row.tipo_cuenta_soles,
-    nroCuentaSoles: row.nro_cuenta_soles,
-    cciSoles: row.cci_soles,
-    bancoDolares: row.banco_dolares,
-    tipoCuentaDolares: row.tipo_cuenta_dolares,
-    nroCuentaDolares: row.nro_cuenta_dolares,
-    cciDolares: row.cci_dolares,
-    abono: row.abono,
+    solesAccount: {
+      banco: pen.bank,
+      tipoCuenta: pen.account_type,
+      nroCuenta: pen.account_number,
+      cci: pen.cci ?? undefined,
+      isSettlement: pen.is_settlement === 1,
+    },
     createdAt: row.created_at,
     createdBy: row.created_by,
   };
+
+  if (usd) {
+    venue.dollarAccount = {
+      banco: usd.bank,
+      tipoCuenta: usd.account_type,
+      nroCuenta: usd.account_number,
+      cci: usd.cci ?? undefined,
+      isSettlement: usd.is_settlement === 1,
+    };
+  }
+
+  return venue;
+}
+
+async function listAccountsByVenueIds(
+  db: DatabaseExecutor,
+  venueIds: string[],
+): Promise<Map<string, SaleVenueAccountRow[]>> {
+  if (venueIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .selectFrom("workflow_sale_venue_accounts")
+    .selectAll()
+    .where("venue_id", "in", venueIds)
+    .execute();
+
+  const map = new Map<string, SaleVenueAccountRow[]>();
+  for (const row of rows) {
+    const bucket = map.get(row.venue_id);
+    if (bucket) {
+      bucket.push(row);
+      continue;
+    }
+    map.set(row.venue_id, [row]);
+  }
+
+  return map;
 }
 
 export function createSaleVenueRepo(db: DatabaseExecutor) {
@@ -51,19 +104,41 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
           distrito: values.distrito,
           provincia: values.provincia,
           departamento: values.departamento,
-          banco_soles: values.bancoSoles,
-          tipo_cuenta_soles: values.tipoCuentaSoles,
-          nro_cuenta_soles: values.nroCuentaSoles,
-          cci_soles: values.cciSoles,
-          banco_dolares: values.bancoDolares,
-          tipo_cuenta_dolares: values.tipoCuentaDolares,
-          nro_cuenta_dolares: values.nroCuentaDolares,
-          cci_dolares: values.cciDolares,
-          abono: values.abono,
           created_at: values.createdAt,
           created_by: values.createdBy,
         } satisfies NewSaleVenueRow)
         .executeTakeFirstOrThrow();
+
+      const accountRows: NewSaleVenueAccountRow[] = [
+        {
+          id: randomUUIDv7(),
+          venue_id: id,
+          currency: "PEN",
+          bank: values.solesAccount.banco,
+          account_type: values.solesAccount.tipoCuenta,
+          account_number: values.solesAccount.nroCuenta,
+          cci: values.solesAccount.cci ?? null,
+          is_settlement: values.solesAccount.isSettlement ? 1 : 0,
+        },
+      ];
+
+      if (values.dollarAccount) {
+        accountRows.push({
+          id: randomUUIDv7(),
+          venue_id: id,
+          currency: "USD",
+          bank: values.dollarAccount.banco,
+          account_type: values.dollarAccount.tipoCuenta,
+          account_number: values.dollarAccount.nroCuenta,
+          cci: values.dollarAccount.cci ?? null,
+          is_settlement: values.dollarAccount.isSettlement ? 1 : 0,
+        });
+      }
+
+      await db
+        .insertInto("workflow_sale_venue_accounts")
+        .values(accountRows)
+        .execute();
 
       return id;
     },
@@ -75,7 +150,15 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
         .where("id", "=", id)
         .executeTakeFirst();
 
-      return row ? toLeadSaleVenue(row) : undefined;
+      if (!row) return undefined;
+
+      const accountRows = await db
+        .selectFrom("workflow_sale_venue_accounts")
+        .selectAll()
+        .where("venue_id", "=", row.id)
+        .execute();
+
+      return toLeadSaleVenue(row, accountRows);
     },
 
     async listBySaleId(saleId: string): Promise<LeadSaleVenue[]> {
@@ -86,7 +169,14 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
         .orderBy("created_at", "asc")
         .execute();
 
-      return rows.map(toLeadSaleVenue);
+      const byVenueId = await listAccountsByVenueIds(
+        db,
+        rows.map((row) => row.id),
+      );
+
+      return rows.map((row) =>
+        toLeadSaleVenue(row, byVenueId.get(row.id) ?? []),
+      );
     },
 
     async listByLeadId(leadId: string): Promise<LeadSaleVenue[]> {
@@ -97,7 +187,14 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
         .orderBy("created_at", "asc")
         .execute();
 
-      return rows.map(toLeadSaleVenue);
+      const byVenueId = await listAccountsByVenueIds(
+        db,
+        rows.map((row) => row.id),
+      );
+
+      return rows.map((row) =>
+        toLeadSaleVenue(row, byVenueId.get(row.id) ?? []),
+      );
     },
   };
 }

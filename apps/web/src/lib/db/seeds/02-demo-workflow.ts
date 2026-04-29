@@ -42,6 +42,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
   const qidForSale = crypto.randomUUID();
   const qidConverted = crypto.randomUUID();
   const sidConverted = crypto.randomUUID();
+  const vidConverted = crypto.randomUUID();
 
   await db
     .insertInto("workflow_leads")
@@ -458,7 +459,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .insertInto("workflow_sale_venues")
     .values([
       {
-        id: crypto.randomUUID(),
+        id: vidConverted,
         sale_id: sidConverted,
         lead_id: idConverted,
         nombre_comercial: "Andes Miraflores",
@@ -468,17 +469,34 @@ export async function run(db: Kysely<Database>): Promise<void> {
         distrito: "MIRAFLORES",
         provincia: "LIMA",
         departamento: "LIMA",
-        banco_soles: "BCP",
-        tipo_cuenta_soles: "CORRIENTE",
-        nro_cuenta_soles: "194-12345678-0-21",
-        cci_soles: null,
-        banco_dolares: "BBVA",
-        tipo_cuenta_dolares: "AHORROS",
-        nro_cuenta_dolares: "0011-0245-9988776655",
-        cci_dolares: "01124500998877665522",
-        abono: "BCP",
         created_at: now - 20 * day,
         created_by: EXEC_DANIELA,
+      },
+    ])
+    .execute();
+
+  await db
+    .insertInto("workflow_sale_venue_accounts")
+    .values([
+      {
+        id: crypto.randomUUID(),
+        venue_id: vidConverted,
+        currency: "PEN",
+        bank: "BCP",
+        account_type: "CORRIENTE",
+        account_number: "194-12345678-0-21",
+        cci: null,
+        is_settlement: 1,
+      },
+      {
+        id: crypto.randomUUID(),
+        venue_id: vidConverted,
+        currency: "USD",
+        bank: "BBVA",
+        account_type: "AHORROS",
+        account_number: "0011-0245-9988776655",
+        cci: "01124500998877665522",
+        is_settlement: 0,
       },
     ])
     .execute();
@@ -908,10 +926,15 @@ export async function run(db: Kysely<Database>): Promise<void> {
       {
         id: crypto.randomUUID(),
         lead_id: idConverted,
-        event_type: "sale_created",
+        event_type: "venue_added",
         actor_user_id: EXEC_DANIELA,
         subject_user_id: null,
-        payload_json: JSON.stringify({ saleId: sidConverted }),
+        payload_json: JSON.stringify({
+          venueId: vidConverted,
+          saleId: sidConverted,
+          nombreComercial: "Andes Miraflores",
+          isFirstVenue: true,
+        }),
         occurred_at: now - 20 * day,
       },
       {

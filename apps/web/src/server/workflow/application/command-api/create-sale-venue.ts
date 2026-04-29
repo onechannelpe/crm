@@ -2,11 +2,7 @@ import { randomUUIDv7 } from "bun";
 
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import {
-  isBcpBank,
-  type AbonoBank,
-  type AccountTypeKind,
-} from "~/workflow/contracts/lead-schema";
+import { isBcpBank } from "~/workflow/contracts/lead-schema";
 
 import { isReadyForSaleLeadSubject } from "../../domain/lead-subjects";
 import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
@@ -65,6 +61,19 @@ export async function createSaleVenueCommand(
     );
   }
 
+  const settlementCount =
+    (input.solesAccount.isSettlement ? 1 : 0) +
+    (input.dollarAccount?.isSettlement ? 1 : 0);
+  if (settlementCount !== 1) {
+    return Err(
+      domainError(
+        "validation",
+        "invalid_settlement_account",
+        "Exactly one settlement account must be selected",
+      ),
+    );
+  }
+
   const sale = await deps.leadSales.findById(input.saleId);
   if (!sale) return leadNotFound();
   if (sale.leadId !== input.leadId) {
@@ -77,10 +86,7 @@ export async function createSaleVenueCommand(
     );
   }
 
-  let bancoDolares: AbonoBank | null = null;
-  let tipoCuentaDolares: AccountTypeKind | null = null;
-  let nroCuentaDolares: string | null = null;
-  let cciDolares: string | null = null;
+  let cciDolares: string | undefined;
 
   if (input.dollarAccount) {
     const isBcpDolares = isBcpBank(input.dollarAccount.banco);
@@ -96,10 +102,7 @@ export async function createSaleVenueCommand(
         ),
       );
     }
-    bancoDolares = input.dollarAccount.banco;
-    tipoCuentaDolares = input.dollarAccount.tipoCuenta;
-    nroCuentaDolares = input.dollarAccount.nroCuenta;
-    cciDolares = normalizedCciDolares;
+    cciDolares = normalizedCciDolares ?? undefined;
   }
 
   const now = deps.clock.now();
@@ -115,15 +118,24 @@ export async function createSaleVenueCommand(
     distrito: input.distrito,
     provincia: input.provincia,
     departamento: input.departamento,
-    bancoSoles: input.solesAccount.banco,
-    tipoCuentaSoles: input.solesAccount.tipoCuenta,
-    nroCuentaSoles: input.solesAccount.nroCuenta,
-    cciSoles,
-    bancoDolares,
-    tipoCuentaDolares,
-    nroCuentaDolares,
-    cciDolares,
-    abono: input.abono,
+    ...(input.dollarAccount
+      ? {
+          dollarAccount: {
+            banco: input.dollarAccount.banco,
+            tipoCuenta: input.dollarAccount.tipoCuenta,
+            nroCuenta: input.dollarAccount.nroCuenta,
+            ...(cciDolares ? { cci: cciDolares } : {}),
+            isSettlement: input.dollarAccount.isSettlement,
+          },
+        }
+      : {}),
+    solesAccount: {
+      banco: input.solesAccount.banco,
+      tipoCuenta: input.solesAccount.tipoCuenta,
+      nroCuenta: input.solesAccount.nroCuenta,
+      ...(cciSoles ? { cci: cciSoles } : {}),
+      isSettlement: input.solesAccount.isSettlement,
+    },
     createdAt: now,
     createdBy: input.actor.userId,
   });
@@ -145,7 +157,6 @@ export async function createSaleVenueCommand(
       departamento: input.departamento,
       solesAccount: input.solesAccount,
       dollarAccount: input.dollarAccount,
-      abono: input.abono,
       isFirstVenue,
     },
   });

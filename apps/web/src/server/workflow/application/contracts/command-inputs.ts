@@ -117,7 +117,7 @@ export type CreateSaleVenueInput = {
   nombreComercial: string;
   cantidadPos: number;
   direccion: string;
-  referencia: string | null;
+  referencia: string;
   distrito: string;
   provincia: string;
   departamento: string;
@@ -126,12 +126,13 @@ export type CreateSaleVenueInput = {
     tipoCuenta: AccountTypeKind;
     nroCuenta: string;
     cci?: string;
+    isSettlement: boolean;
   };
   dollarAccount?: {
     banco: AbonoBank;
     tipoCuenta: AccountTypeKind;
     nroCuenta: string;
     cci?: string;
+    isSettlement: boolean;
   };
-  abono: AbonoBank;
 };

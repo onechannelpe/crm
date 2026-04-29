@@ -18,7 +18,7 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import {
-  createSaleMutation,
+  createSaleContainerMutation,
   createSaleVenueMutation,
 } from "~/features/workflow/data/mutations";
 import { toAppError } from "~/lib/app-errors";
@@ -86,65 +86,73 @@ function VenueCard(props: {
             <FieldLabel>
               <FieldLabelText>Banco SOLES</FieldLabelText>
             </FieldLabel>
-            <FieldInputValue>{venue().bancoSoles}</FieldInputValue>
+            <FieldInputValue>{venue().solesAccount.banco}</FieldInputValue>
           </FieldRow>
           <FieldRow>
             <FieldLabel>
               <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
             </FieldLabel>
-            <FieldInputValue>{venue().tipoCuentaSoles}</FieldInputValue>
+            <FieldInputValue>{venue().solesAccount.tipoCuenta}</FieldInputValue>
           </FieldRow>
           <FieldRow>
             <FieldLabel>
               <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
             </FieldLabel>
-            <FieldInputValue>{venue().nroCuentaSoles}</FieldInputValue>
+            <FieldInputValue>{venue().solesAccount.nroCuenta}</FieldInputValue>
           </FieldRow>
-          <Show when={venue().cciSoles}>
+          <Show when={venue().solesAccount.cci}>
             <FieldRow>
               <FieldLabel>
                 <FieldLabelText>CCI SOLES</FieldLabelText>
               </FieldLabel>
-              <FieldInputValue>{venue().cciSoles}</FieldInputValue>
+              <FieldInputValue>{venue().solesAccount.cci}</FieldInputValue>
             </FieldRow>
           </Show>
-          <Show when={venue().bancoDolares}>
+          <Show when={venue().dollarAccount}>
             <FieldRow>
               <FieldLabel>
                 <FieldLabelText>Banco USD</FieldLabelText>
               </FieldLabel>
-              <FieldInputValue>{venue().bancoDolares}</FieldInputValue>
+              <FieldInputValue>{venue().dollarAccount?.banco}</FieldInputValue>
             </FieldRow>
           </Show>
-          <Show when={venue().tipoCuentaDolares}>
+          <Show when={venue().dollarAccount}>
             <FieldRow>
               <FieldLabel>
                 <FieldLabelText>Tipo cuenta USD</FieldLabelText>
               </FieldLabel>
-              <FieldInputValue>{venue().tipoCuentaDolares}</FieldInputValue>
+              <FieldInputValue>
+                {venue().dollarAccount?.tipoCuenta}
+              </FieldInputValue>
             </FieldRow>
           </Show>
-          <Show when={venue().nroCuentaDolares}>
+          <Show when={venue().dollarAccount}>
             <FieldRow>
               <FieldLabel>
                 <FieldLabelText>Nro cuenta USD</FieldLabelText>
               </FieldLabel>
-              <FieldInputValue>{venue().nroCuentaDolares}</FieldInputValue>
+              <FieldInputValue>
+                {venue().dollarAccount?.nroCuenta}
+              </FieldInputValue>
             </FieldRow>
           </Show>
-          <Show when={venue().cciDolares}>
+          <Show when={venue().dollarAccount?.cci}>
             <FieldRow>
               <FieldLabel>
                 <FieldLabelText>CCI USD</FieldLabelText>
               </FieldLabel>
-              <FieldInputValue>{venue().cciDolares}</FieldInputValue>
+              <FieldInputValue>{venue().dollarAccount?.cci}</FieldInputValue>
             </FieldRow>
           </Show>
           <FieldRow>
             <FieldLabel>
-              <FieldLabelText>Banco de abono</FieldLabelText>
+              <FieldLabelText>Cuenta de abono</FieldLabelText>
             </FieldLabel>
-            <FieldInputValue>{venue().abono}</FieldInputValue>
+            <FieldInputValue>
+              {venue().solesAccount.isSettlement
+                ? `SOLES (${venue().solesAccount.banco})`
+                : `USD (${venue().dollarAccount?.banco ?? "N/A"})`}
+            </FieldInputValue>
           </FieldRow>
         </FieldTable>
       </WidgetBody>
@@ -153,7 +161,7 @@ function VenueCard(props: {
 }
 
 export function SedesTab(props: TabContentProps) {
-  const createSale = useAction(createSaleMutation);
+  const createSale = useAction(createSaleContainerMutation);
   const createSaleVenue = useAction(createSaleVenueMutation);
 
   const [nombreComercial, setNombreComercial] = createSignal("");
@@ -182,8 +190,9 @@ export function SedesTab(props: TabContentProps) {
   const [nroCuentaDolares, setNroCuentaDolares] = createSignal("");
   const [cciDolares, setCciDolares] = createSignal("");
 
-  const [abono, setAbono] = createSignal<AbonoBank | "">("");
-  const [showAbonoPicker, setShowAbonoPicker] = createSignal(false);
+  const [settlementCurrency, setSettlementCurrency] = createSignal<
+    "PEN" | "USD"
+  >("PEN");
 
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -215,7 +224,7 @@ export function SedesTab(props: TabContentProps) {
     setTipoCuentaDolares("");
     setNroCuentaDolares("");
     setCciDolares("");
-    setAbono("");
+    setSettlementCurrency("PEN");
   }
 
   async function handleSubmit(e: SubmitEvent) {
@@ -225,11 +234,14 @@ export function SedesTab(props: TabContentProps) {
 
     const currentBancoSoles = bancoSoles();
     const currentTipoCuentaSoles = tipoCuentaSoles();
-    const currentAbono = abono();
     const cantidadPosValue = Number(cantidadPos());
 
     if (!nombreComercial().trim() || !direccion().trim()) {
       setError("Nombre comercial y direccion son obligatorios");
+      return;
+    }
+    if (!referencia().trim()) {
+      setError("Referencia es obligatoria");
       return;
     }
     if (!distrito().trim() || !provincia().trim() || !departamento().trim()) {
@@ -252,16 +264,12 @@ export function SedesTab(props: TabContentProps) {
       setError("CCI en soles es obligatorio cuando el banco no es BCP");
       return;
     }
-    if (!currentAbono) {
-      setError("Selecciona banco de abono");
-      return;
-    }
-
     const solesAccount = {
       banco: currentBancoSoles,
       tipoCuenta: currentTipoCuentaSoles,
       nroCuenta: nroCuentaSoles().trim(),
       ...(cciSoles().trim() ? { cci: cciSoles().trim() } : {}),
+      isSettlement: settlementCurrency() === "PEN",
     };
 
     let dollarAccount:
@@ -270,6 +278,7 @@ export function SedesTab(props: TabContentProps) {
           tipoCuenta: AccountTypeKind;
           nroCuenta: string;
           cci?: string;
+          isSettlement: boolean;
         }
       | undefined;
 
@@ -293,6 +302,7 @@ export function SedesTab(props: TabContentProps) {
         tipoCuenta: currentTipoCuentaDolares,
         nroCuenta: nroCuentaDolares().trim(),
         ...(cciDolares().trim() ? { cci: cciDolares().trim() } : {}),
+        isSettlement: settlementCurrency() === "USD",
       };
     }
 
@@ -312,13 +322,12 @@ export function SedesTab(props: TabContentProps) {
         nombreComercial: nombreComercial().trim(),
         cantidadPos: cantidadPosValue,
         direccion: direccion().trim(),
-        referencia: referencia().trim() || null,
+        referencia: referencia().trim(),
         distrito: distrito().trim(),
         provincia: provincia().trim(),
         departamento: departamento().trim(),
         solesAccount,
         dollarAccount,
-        abono: currentAbono,
       });
 
       resetForm();
@@ -417,6 +426,7 @@ export function SedesTab(props: TabContentProps) {
                           sizeVariant="sm"
                           value={referencia()}
                           onChange={setReferencia}
+                          required
                         />
                       </FieldInputValue>
                     </FieldRow>
@@ -541,9 +551,13 @@ export function SedesTab(props: TabContentProps) {
                           <input
                             type="checkbox"
                             checked={usarDolares()}
-                            onChange={(event) =>
-                              setUsarDolares(event.currentTarget.checked)
-                            }
+                            onChange={(event) => {
+                              const checked = event.currentTarget.checked;
+                              setUsarDolares(checked);
+                              if (!checked) {
+                                setSettlementCurrency("PEN");
+                              }
+                            }}
                           />
                           Agregar cuenta USD
                         </label>
@@ -627,20 +641,28 @@ export function SedesTab(props: TabContentProps) {
 
                     <FieldRow>
                       <FieldLabel>
-                        <FieldLabelText>Banco de abono</FieldLabelText>
+                        <FieldLabelText>Cuenta de abono</FieldLabelText>
                       </FieldLabel>
                       <FieldInputValue>
-                        <button
-                          type="button"
-                          onClick={() => setShowAbonoPicker(!showAbonoPicker())}
-                        >
-                          {abono() || "Seleccionar"}
-                        </button>
-                        <Show when={showAbonoPicker()}>
-                          <BankPicker
-                            onSelect={setAbono}
-                            onClose={() => setShowAbonoPicker(false)}
+                        <label>
+                          <input
+                            type="radio"
+                            name="settlementCurrency"
+                            checked={settlementCurrency() === "PEN"}
+                            onChange={() => setSettlementCurrency("PEN")}
                           />
+                          SOLES
+                        </label>
+                        <Show when={usarDolares()}>
+                          <label>
+                            <input
+                              type="radio"
+                              name="settlementCurrency"
+                              checked={settlementCurrency() === "USD"}
+                              onChange={() => setSettlementCurrency("USD")}
+                            />
+                            USD
+                          </label>
                         </Show>
                       </FieldInputValue>
                     </FieldRow>

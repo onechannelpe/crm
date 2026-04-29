@@ -15,35 +15,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("nombre_comercial", "varchar(255)", (col) => col.notNull())
     .addColumn("cantidad_pos", "integer", (col) => col.notNull())
     .addColumn("direccion", "text", (col) => col.notNull())
-    .addColumn("referencia", "text")
+    .addColumn("referencia", "text", (col) => col.notNull())
     .addColumn("distrito", "varchar(100)", (col) => col.notNull())
     .addColumn("provincia", "varchar(100)", (col) => col.notNull())
     .addColumn("departamento", "varchar(100)", (col) => col.notNull())
-    .addColumn("banco_soles", "varchar(50)", (col) =>
-      col
-        .notNull()
-        .check(
-          sql`banco_soles IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`,
-        ),
-    )
-    .addColumn("tipo_cuenta_soles", "varchar(20)", (col) =>
-      col.notNull().check(sql`tipo_cuenta_soles IN ('AHORROS','CORRIENTE')`),
-    )
-    .addColumn("nro_cuenta_soles", "varchar(50)", (col) => col.notNull())
-    .addColumn("cci_soles", "varchar(50)")
-    .addColumn("banco_dolares", "varchar(50)", (col) =>
-      col.check(
-        sql`banco_dolares IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))}) OR banco_dolares IS NULL`,
-      ),
-    )
-    .addColumn("tipo_cuenta_dolares", "varchar(20)")
-    .addColumn("nro_cuenta_dolares", "varchar(50)")
-    .addColumn("cci_dolares", "varchar(50)")
-    .addColumn("abono", "varchar(50)", (col) =>
-      col
-        .notNull()
-        .check(sql`abono IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`),
-    )
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("created_by", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -59,5 +34,39 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_workflow_sale_venues_lead")
     .on("workflow_sale_venues")
     .column("lead_id")
+    .execute();
+
+  await db.schema
+    .createTable("workflow_sale_venue_accounts")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("venue_id", "text", (col) =>
+      col.notNull().references("workflow_sale_venues.id").onDelete("cascade"),
+    )
+    .addColumn("currency", "varchar(3)", (col) =>
+      col.notNull().check(sql`currency IN ('PEN','USD')`),
+    )
+    .addColumn("bank", "varchar(50)", (col) =>
+      col
+        .notNull()
+        .check(sql`bank IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`),
+    )
+    .addColumn("account_type", "varchar(20)", (col) =>
+      col.notNull().check(sql`account_type IN ('AHORROS','CORRIENTE')`),
+    )
+    .addColumn("account_number", "varchar(50)", (col) => col.notNull())
+    .addColumn("cci", "varchar(50)")
+    .addColumn("is_settlement", "integer", (col) => col.notNull().defaultTo(0))
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_sale_venue_accounts_venue")
+    .on("workflow_sale_venue_accounts")
+    .column("venue_id")
+    .execute();
+  await db.schema
+    .createIndex("idx_workflow_sale_venue_accounts_venue_currency_unique")
+    .on("workflow_sale_venue_accounts")
+    .columns(["venue_id", "currency"])
+    .unique()
     .execute();
 }

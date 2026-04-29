@@ -88,7 +88,7 @@ export type LeadMutationIntent =
       nombreComercial: string;
       cantidadPos: number;
       direccion: string;
-      referencia: string | null;
+      referencia: string;
       distrito: string;
       provincia: string;
       departamento: string;
@@ -97,6 +97,7 @@ export type LeadMutationIntent =
         tipoCuenta: AccountTypeKind;
         nroCuenta: string;
         cci?: string;
+        isSettlement: boolean;
       };
       dollarAccount?:
         | {
@@ -104,9 +105,9 @@ export type LeadMutationIntent =
             tipoCuenta: AccountTypeKind;
             nroCuenta: string;
             cci?: string;
+            isSettlement: boolean;
           }
         | undefined;
-      abono: AbonoBank;
       isFirstVenue: boolean;
     }
   | {

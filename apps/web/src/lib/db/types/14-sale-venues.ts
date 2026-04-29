@@ -12,19 +12,21 @@ export interface WorkflowSaleVenuesTable {
   nombre_comercial: string;
   cantidad_pos: number;
   direccion: string;
-  referencia: string | null;
+  referencia: string;
   distrito: string;
   provincia: string;
   departamento: string;
-  banco_soles: AbonoBank;
-  tipo_cuenta_soles: AccountTypeKind;
-  nro_cuenta_soles: string;
-  cci_soles: string | null;
-  banco_dolares: AbonoBank | null;
-  tipo_cuenta_dolares: AccountTypeKind | null;
-  nro_cuenta_dolares: string | null;
-  cci_dolares: string | null;
-  abono: AbonoBank;
   created_at: number;
   created_by: number;
+}
+
+export interface WorkflowSaleVenueAccountsTable {
+  id: Generated<string>;
+  venue_id: string;
+  currency: "PEN" | "USD";
+  bank: AbonoBank;
+  account_type: AccountTypeKind;
+  account_number: string;
+  cci: string | null;
+  is_settlement: 0 | 1;
 }

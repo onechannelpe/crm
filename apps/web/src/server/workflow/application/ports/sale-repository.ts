@@ -29,19 +29,24 @@ export type LeadSaleVenue = {
   nombreComercial: string;
   cantidadPos: number;
   direccion: string;
-  referencia: string | null;
+  referencia: string;
   distrito: string;
   provincia: string;
   departamento: string;
-  bancoSoles: AbonoBank;
-  tipoCuentaSoles: AccountTypeKind;
-  nroCuentaSoles: string;
-  cciSoles: string | null;
-  bancoDolares: AbonoBank | null;
-  tipoCuentaDolares: AccountTypeKind | null;
-  nroCuentaDolares: string | null;
-  cciDolares: string | null;
-  abono: AbonoBank;
+  solesAccount: {
+    banco: AbonoBank;
+    tipoCuenta: AccountTypeKind;
+    nroCuenta: string;
+    cci?: string;
+    isSettlement: boolean;
+  };
+  dollarAccount?: {
+    banco: AbonoBank;
+    tipoCuenta: AccountTypeKind;
+    nroCuenta: string;
+    cci?: string;
+    isSettlement: boolean;
+  };
   createdAt: number;
   createdBy: number;
 };

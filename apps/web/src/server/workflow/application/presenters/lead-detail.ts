@@ -154,7 +154,7 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
 }
 
 function toLeadDetailSaleVenue(venue: LeadSaleVenue): LeadDetailSaleVenueView {
-  return {
+  const result: LeadDetailSaleVenueView = {
     id: venue.id,
     saleId: venue.saleId,
     leadId: venue.leadId,
@@ -165,18 +165,16 @@ function toLeadDetailSaleVenue(venue: LeadSaleVenue): LeadDetailSaleVenueView {
     distrito: venue.distrito,
     provincia: venue.provincia,
     departamento: venue.departamento,
-    bancoSoles: venue.bancoSoles,
-    tipoCuentaSoles: venue.tipoCuentaSoles,
-    nroCuentaSoles: venue.nroCuentaSoles,
-    cciSoles: venue.cciSoles,
-    bancoDolares: venue.bancoDolares,
-    tipoCuentaDolares: venue.tipoCuentaDolares,
-    nroCuentaDolares: venue.nroCuentaDolares,
-    cciDolares: venue.cciDolares,
-    abono: venue.abono,
+    solesAccount: venue.solesAccount,
     createdAt: venue.createdAt,
     createdBy: venue.createdBy,
   };
+
+  if (venue.dollarAccount) {
+    result.dollarAccount = venue.dollarAccount;
+  }
+
+  return result;
 }
 
 function toNegotiationFileView(

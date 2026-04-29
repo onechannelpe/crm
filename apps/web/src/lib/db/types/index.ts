@@ -242,4 +242,5 @@ export interface Database {
 
   // 14-sale-venues
   workflow_sale_venues: saleVenues.WorkflowSaleVenuesTable;
+  workflow_sale_venue_accounts: saleVenues.WorkflowSaleVenueAccountsTable;
 }

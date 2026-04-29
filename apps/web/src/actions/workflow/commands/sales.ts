@@ -8,9 +8,9 @@ import type {
   AccountTypeKind,
 } from "~/workflow/contracts/lead-schema";
 
-export async function requestSaleCreation(input: { leadId: string }) {
+export async function requestSaleContainerCreation(input: { leadId: string }) {
   return runAction({
-    actionName: "workflow.create_sale",
+    actionName: "workflow.create_sale_container",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
@@ -27,13 +27,15 @@ export async function requestSaleCreation(input: { leadId: string }) {
   });
 }
 
+export const requestSaleCreation = requestSaleContainerCreation;
+
 export async function requestSaleVenueCreation(input: {
   leadId: string;
   saleId: string;
   nombreComercial: string;
   cantidadPos: number;
   direccion: string;
-  referencia: string | null;
+  referencia: string;
   distrito: string;
   provincia: string;
   departamento: string;
@@ -42,6 +44,7 @@ export async function requestSaleVenueCreation(input: {
     tipoCuenta: AccountTypeKind;
     nroCuenta: string;
     cci?: string;
+    isSettlement: boolean;
   };
   dollarAccount?:
     | {
@@ -49,9 +52,9 @@ export async function requestSaleVenueCreation(input: {
         tipoCuenta: AccountTypeKind;
         nroCuenta: string;
         cci?: string;
+        isSettlement: boolean;
       }
     | undefined;
-  abono: AbonoBank;
 }) {
   if (!input.nombreComercial.trim()) {
     throw validationError("nombreComercial is required");
@@ -68,12 +71,23 @@ export async function requestSaleVenueCreation(input: {
   if (!input.departamento.trim()) {
     throw validationError("departamento is required");
   }
+  if (!input.referencia.trim()) {
+    throw validationError("referencia is required");
+  }
+
   if (!input.solesAccount.nroCuenta.trim()) {
     throw validationError("soles account number is required");
   }
 
   if (input.dollarAccount && !input.dollarAccount.nroCuenta.trim()) {
     throw validationError("dollar account number is required");
+  }
+
+  const settlementCount =
+    (input.solesAccount.isSettlement ? 1 : 0) +
+    (input.dollarAccount?.isSettlement ? 1 : 0);
+  if (settlementCount !== 1) {
+    throw validationError("exactly one settlement account must be selected");
   }
 
   return runAction({

@@ -14,7 +14,7 @@ import {
   requestRemoveLeadFromFavorites,
 } from "~/actions/workflow/commands/records";
 import {
-  requestSaleCreation,
+  requestSaleContainerCreation,
   requestSaleVenueCreation,
 } from "~/actions/workflow/commands/sales";
 import type {
@@ -110,12 +110,17 @@ export const createQuotationMutation = action(
   "workflow.createQuotation",
 );
 
-export const createSaleMutation = action(async (input: { leadId: string }) => {
-  const result = await requestSaleCreation(input);
-  return json(result, {
-    revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key],
-  });
-}, "workflow.createSale");
+export const createSaleContainerMutation = action(
+  async (input: { leadId: string }) => {
+    const result = await requestSaleContainerCreation(input);
+    return json(result, {
+      revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key],
+    });
+  },
+  "workflow.createSaleContainer",
+);
+
+export const createSaleMutation = createSaleContainerMutation;
 
 export const createSaleVenueMutation = action(
   async (input: {
@@ -124,7 +129,7 @@ export const createSaleVenueMutation = action(
     nombreComercial: string;
     cantidadPos: number;
     direccion: string;
-    referencia: string | null;
+    referencia: string;
     distrito: string;
     provincia: string;
     departamento: string;
@@ -133,6 +138,7 @@ export const createSaleVenueMutation = action(
       tipoCuenta: AccountTypeKind;
       nroCuenta: string;
       cci?: string;
+      isSettlement: boolean;
     };
     dollarAccount?:
       | {
@@ -140,9 +146,9 @@ export const createSaleVenueMutation = action(
           tipoCuenta: AccountTypeKind;
           nroCuenta: string;
           cci?: string;
+          isSettlement: boolean;
         }
       | undefined;
-    abono: AbonoBank;
   }) => {
     await requestSaleVenueCreation(input);
     return json(
