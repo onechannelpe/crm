@@ -67,7 +67,7 @@ export type LeadHistoryPayloadByEvent = {
     giroNegocio: string;
     tipoProducto: CulqiProductKind;
     urlCliente: string | null;
-    modalidadCobro: ModalidadCobro | null;
+    modalidadCobro: ModalidadCobro;
     repLegalNombres: string;
     repLegalDni: string;
   };

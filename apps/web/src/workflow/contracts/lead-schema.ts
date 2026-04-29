@@ -63,6 +63,14 @@ export type AbonoBank = (typeof ABONO_BANKS)[number];
 export type CulqiProductKind = (typeof CULQI_PRODUCT_KINDS)[number];
 export type ModalidadCobro = (typeof MODALIDAD_COBRO_KINDS)[number];
 export type AccountTypeKind = (typeof ACCOUNT_TYPE_KINDS)[number];
+export type SaleVenueAccount = {
+  currency: Moneda;
+  banco: AbonoBank;
+  tipoCuenta: AccountTypeKind;
+  nroCuenta: string;
+  cci?: string;
+  isSettlement: boolean;
+};
 
 export function isMoneda(value: string): value is Moneda {
   return (MONEDAS as readonly string[]).includes(value);

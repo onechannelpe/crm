@@ -12,7 +12,7 @@ export type LeadCommercialInput = {
   giroNegocio: string | null;
   tipoProducto: CulqiProductKind | null;
   urlCliente: string | null;
-  modalidadCobro: ModalidadCobro | null;
+  modalidadCobro: ModalidadCobro;
   repLegalNombres: string | null;
   repLegalApellidoPaterno: string | null;
   repLegalApellidoMaterno: string | null;

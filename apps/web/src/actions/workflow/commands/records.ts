@@ -91,7 +91,7 @@ export async function requestLeadCommercialInputCompletion(input: {
   giroNegocio: string;
   tipoProducto: CulqiProductKind;
   urlCliente: string | null;
-  modalidadCobro: ModalidadCobro | null;
+  modalidadCobro: ModalidadCobro;
   repLegalNombres: string;
   repLegalApellidoPaterno: string;
   repLegalApellidoMaterno: string;

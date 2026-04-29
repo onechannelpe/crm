@@ -13,3 +13,9 @@ target/
 *.log
 *.ps1
 *.sqld
+*.md
+*.html
+.codex
+*.txt
+*.csv
+.fallow

@@ -128,11 +128,8 @@ export function CommercialInputSection(props: {
       return;
     }
 
-    if (
-      (product === "CULQI_LINK" || product === "CULQI_ONLINE") &&
-      !modalidad
-    ) {
-      setError("Modalidad de cobro es requerida para este tipo de producto");
+    if (!modalidad) {
+      setError("Modalidad de cobro es obligatoria");
       return;
     }
 
@@ -154,7 +151,7 @@ export function CommercialInputSection(props: {
         ticket: ticketVal,
         tipoProducto: product,
         urlCliente: url || null,
-        modalidadCobro: modalidad || null,
+        modalidadCobro: modalidad,
       });
     } catch (err) {
       setError(toAppError(err, "Error al guardar").publicMessage);
@@ -429,53 +426,52 @@ export function CommercialInputSection(props: {
                     />
                   </FieldInputValue>
                 </FieldRow>
-
-                <FieldRow>
-                  <FieldLabel>
-                    <FieldLabelText>Modalidad de Cobro</FieldLabelText>
-                  </FieldLabel>
-                  <FieldInputValue>
-                    <div
-                      style={{
-                        display: "flex",
-                        "flex-direction": "column",
-                        gap: "8px",
-                      }}
-                    >
-                      <label>
-                        <input
-                          type="radio"
-                          name="modalidadCobro"
-                          value="SUSCRIPCIONES"
-                          checked={modalidadCobro() === "SUSCRIPCIONES"}
-                          onChange={() => setModalidadCobro("SUSCRIPCIONES")}
-                        />
-                        Suscripciones
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="modalidadCobro"
-                          value="ONE_CLIC"
-                          checked={modalidadCobro() === "ONE_CLIC"}
-                          onChange={() => setModalidadCobro("ONE_CLIC")}
-                        />
-                        One Click
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="modalidadCobro"
-                          value="CARGO_UNICO"
-                          checked={modalidadCobro() === "CARGO_UNICO"}
-                          onChange={() => setModalidadCobro("CARGO_UNICO")}
-                        />
-                        Cargo Único
-                      </label>
-                    </div>
-                  </FieldInputValue>
-                </FieldRow>
               </Show>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>Modalidad de Cobro</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  <div
+                    style={{
+                      display: "flex",
+                      "flex-direction": "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <label>
+                      <input
+                        type="radio"
+                        name="modalidadCobro"
+                        value="SUSCRIPCIONES"
+                        checked={modalidadCobro() === "SUSCRIPCIONES"}
+                        onChange={() => setModalidadCobro("SUSCRIPCIONES")}
+                      />
+                      Suscripciones
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="modalidadCobro"
+                        value="ONE_CLIC"
+                        checked={modalidadCobro() === "ONE_CLIC"}
+                        onChange={() => setModalidadCobro("ONE_CLIC")}
+                      />
+                      One Click
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="modalidadCobro"
+                        value="CARGO_UNICO"
+                        checked={modalidadCobro() === "CARGO_UNICO"}
+                        onChange={() => setModalidadCobro("CARGO_UNICO")}
+                      />
+                      Cargo Único
+                    </label>
+                  </div>
+                </FieldInputValue>
+              </FieldRow>
             </FieldTable>
           </div>
 

@@ -3,10 +3,9 @@ import type {
   LeadPriority,
   LeadStatus,
   Moneda,
-  AbonoBank,
   CulqiProductKind,
   ModalidadCobro,
-  AccountTypeKind,
+  SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
 import type { ActorContext } from "./actor-context";
@@ -89,7 +88,7 @@ export type CompleteCommercialInputInput = {
   giroNegocio: string;
   tipoProducto: CulqiProductKind;
   urlCliente: string | null;
-  modalidadCobro: ModalidadCobro | null;
+  modalidadCobro: ModalidadCobro;
   repLegalNombres: string;
   repLegalApellidoPaterno: string;
   repLegalApellidoMaterno: string;
@@ -121,18 +120,6 @@ export type CreateSaleVenueInput = {
   distrito: string;
   provincia: string;
   departamento: string;
-  solesAccount: {
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
-  dollarAccount?: {
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
 };

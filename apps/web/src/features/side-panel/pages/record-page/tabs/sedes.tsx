@@ -265,6 +265,7 @@ export function SedesTab(props: TabContentProps) {
       return;
     }
     const solesAccount = {
+      currency: "PEN" as const,
       banco: currentBancoSoles,
       tipoCuenta: currentTipoCuentaSoles,
       nroCuenta: nroCuentaSoles().trim(),
@@ -274,6 +275,7 @@ export function SedesTab(props: TabContentProps) {
 
     let dollarAccount:
       | {
+          currency: "USD";
           banco: AbonoBank;
           tipoCuenta: AccountTypeKind;
           nroCuenta: string;
@@ -298,6 +300,7 @@ export function SedesTab(props: TabContentProps) {
         return;
       }
       dollarAccount = {
+        currency: "USD" as const,
         banco: currentBancoDolares,
         tipoCuenta: currentTipoCuentaDolares,
         nroCuenta: nroCuentaDolares().trim(),

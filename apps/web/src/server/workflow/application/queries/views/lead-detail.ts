@@ -4,10 +4,9 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-  AbonoBank,
   CulqiProductKind,
   ModalidadCobro,
-  AccountTypeKind,
+  SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
@@ -54,7 +53,7 @@ export type LeadDetailCommercialInputView = {
   giroNegocio: string | null;
   tipoProducto: CulqiProductKind | null;
   urlCliente: string | null;
-  modalidadCobro: ModalidadCobro | null;
+  modalidadCobro: ModalidadCobro;
   repLegalNombres: string | null;
   repLegalApellidoPaterno: string | null;
   repLegalApellidoMaterno: string | null;
@@ -97,20 +96,8 @@ export type LeadDetailSaleVenueView = {
   distrito: string;
   provincia: string;
   departamento: string;
-  solesAccount: {
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
-  dollarAccount?: {
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
   createdBy: number;
 };

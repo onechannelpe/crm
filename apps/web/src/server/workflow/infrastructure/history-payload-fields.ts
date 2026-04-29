@@ -249,15 +249,12 @@ export function requireCulqiProductKind(
   return Ok(value.value);
 }
 
-export function nullableModalidadCobro(
+export function requireModalidadCobro(
   payload: Record<string, unknown> | null,
   key: string,
   row: HistoryEventRow,
-): Result<ModalidadCobro | null, DomainError> {
+): Result<ModalidadCobro, DomainError> {
   const value = payload?.[key];
-  if (value === null || value === undefined) {
-    return Ok(null);
-  }
   if (typeof value !== "string" || !isModalidadCobro(value)) {
     return invalidPayload(row, key);
   }

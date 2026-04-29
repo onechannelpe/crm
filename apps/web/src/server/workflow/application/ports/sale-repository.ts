@@ -1,7 +1,4 @@
-import type {
-  AbonoBank,
-  AccountTypeKind,
-} from "~/workflow/contracts/lead-schema";
+import type { SaleVenueAccount } from "~/workflow/contracts/lead-schema";
 
 export type LeadSale = {
   id: string;
@@ -33,20 +30,8 @@ export type LeadSaleVenue = {
   distrito: string;
   provincia: string;
   departamento: string;
-  solesAccount: {
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
-  dollarAccount?: {
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
   createdBy: number;
 };

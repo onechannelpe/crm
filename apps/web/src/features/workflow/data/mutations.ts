@@ -74,7 +74,7 @@ export const completeCommercialInputMutation = action(
     giroNegocio: string;
     tipoProducto: CulqiProductKind;
     urlCliente: string | null;
-    modalidadCobro: ModalidadCobro | null;
+    modalidadCobro: ModalidadCobro;
     repLegalNombres: string;
     repLegalApellidoPaterno: string;
     repLegalApellidoMaterno: string;
@@ -134,6 +134,7 @@ export const createSaleVenueMutation = action(
     provincia: string;
     departamento: string;
     solesAccount: {
+      currency: "PEN";
       banco: AbonoBank;
       tipoCuenta: AccountTypeKind;
       nroCuenta: string;
@@ -142,6 +143,7 @@ export const createSaleVenueMutation = action(
     };
     dollarAccount?:
       | {
+          currency: "USD";
           banco: AbonoBank;
           tipoCuenta: AccountTypeKind;
           nroCuenta: string;

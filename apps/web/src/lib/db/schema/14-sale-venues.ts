@@ -55,7 +55,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("account_number", "varchar(50)", (col) => col.notNull())
     .addColumn("cci", "varchar(50)")
-    .addColumn("is_settlement", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("is_settlement", "integer", (col) =>
+      col
+        .notNull()
+        .defaultTo(0)
+        .check(sql`is_settlement IN (0,1)`),
+    )
     .execute();
 
   await db.schema
@@ -68,5 +73,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("workflow_sale_venue_accounts")
     .columns(["venue_id", "currency"])
     .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_workflow_sale_venue_accounts_settlement_unique")
+    .on("workflow_sale_venue_accounts")
+    .columns(["venue_id"])
+    .unique()
+    .where(sql<boolean>`is_settlement = 1`)
     .execute();
 }

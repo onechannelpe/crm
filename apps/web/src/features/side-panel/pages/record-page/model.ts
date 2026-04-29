@@ -1,11 +1,11 @@
 export const LEAD_RECORD_PRIMARY_TABS = ["home", "timeline", "tasks"] as const;
 
 export const LEAD_RECORD_SECONDARY_TABS = [
+  "sedes",
   "notes",
   "files",
   "emails",
   "calendar",
-  "sedes",
 ] as const;
 
 export type LeadRecordPrimaryTabId = (typeof LEAD_RECORD_PRIMARY_TABS)[number];

@@ -4,10 +4,9 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-  AbonoBank,
   CulqiProductKind,
   ModalidadCobro,
-  AccountTypeKind,
+  SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "../lead-record";
@@ -72,7 +71,7 @@ export type LeadMutationIntent =
       giroNegocio: string;
       tipoProducto: CulqiProductKind;
       urlCliente: string | null;
-      modalidadCobro: ModalidadCobro | null;
+      modalidadCobro: ModalidadCobro;
       repLegalNombres: string;
       repLegalApellidoPaterno: string;
       repLegalApellidoMaterno: string;
@@ -92,22 +91,8 @@ export type LeadMutationIntent =
       distrito: string;
       provincia: string;
       departamento: string;
-      solesAccount: {
-        banco: AbonoBank;
-        tipoCuenta: AccountTypeKind;
-        nroCuenta: string;
-        cci?: string;
-        isSettlement: boolean;
-      };
-      dollarAccount?:
-        | {
-            banco: AbonoBank;
-            tipoCuenta: AccountTypeKind;
-            nroCuenta: string;
-            cci?: string;
-            isSettlement: boolean;
-          }
-        | undefined;
+      solesAccount: SaleVenueAccount & { currency: "PEN" };
+      dollarAccount?: (SaleVenueAccount & { currency: "USD" }) | undefined;
       isFirstVenue: boolean;
     }
   | {

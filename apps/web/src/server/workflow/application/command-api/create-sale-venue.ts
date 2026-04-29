@@ -50,6 +50,15 @@ export async function createSaleVenueCommand(
   }
 
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
+  if (input.solesAccount.currency !== "PEN") {
+    return Err(
+      domainError(
+        "validation",
+        "invalid_soles_currency",
+        "Soles account must use PEN currency",
+      ),
+    );
+  }
   const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
   if (!isBcpSoles && !cciSoles) {
     return Err(
@@ -89,6 +98,15 @@ export async function createSaleVenueCommand(
   let cciDolares: string | undefined;
 
   if (input.dollarAccount) {
+    if (input.dollarAccount.currency !== "USD") {
+      return Err(
+        domainError(
+          "validation",
+          "invalid_dollar_currency",
+          "Dollar account must use USD currency",
+        ),
+      );
+    }
     const isBcpDolares = isBcpBank(input.dollarAccount.banco);
     const normalizedCciDolares = isBcpDolares
       ? null
@@ -121,6 +139,7 @@ export async function createSaleVenueCommand(
     ...(input.dollarAccount
       ? {
           dollarAccount: {
+            currency: "USD",
             banco: input.dollarAccount.banco,
             tipoCuenta: input.dollarAccount.tipoCuenta,
             nroCuenta: input.dollarAccount.nroCuenta,
@@ -130,6 +149,7 @@ export async function createSaleVenueCommand(
         }
       : {}),
     solesAccount: {
+      currency: "PEN",
       banco: input.solesAccount.banco,
       tipoCuenta: input.solesAccount.tipoCuenta,
       nroCuenta: input.solesAccount.nroCuenta,

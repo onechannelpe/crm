@@ -513,7 +513,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         giro_negocio: "Construccion de edificios residenciales",
         tipo_producto: "CULQI_FULL",
         url_cliente: null,
-        modalidad_cobro: null,
+        modalidad_cobro: "CARGO_UNICO",
         rep_legal_nombres: "Daniel",
         rep_legal_apellido_paterno: "Gutierrez",
         rep_legal_apellido_materno: "Paredes",

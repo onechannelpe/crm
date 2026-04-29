@@ -5,7 +5,7 @@ import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
 import {
-  nullableModalidadCobro,
+  requireModalidadCobro,
   nullableString,
   requireCulqiProductKind,
   requireMoneda,
@@ -35,7 +35,7 @@ export function toCommercialInputEntry(
   if (!tipoProducto.ok) return tipoProducto;
   const urlCliente = nullableString(payload, "urlCliente", row);
   if (!urlCliente.ok) return urlCliente;
-  const modalidadCobro = nullableModalidadCobro(payload, "modalidadCobro", row);
+  const modalidadCobro = requireModalidadCobro(payload, "modalidadCobro", row);
   if (!modalidadCobro.ok) return modalidadCobro;
   const repLegalNombres = requireString(payload, "repLegalNombres", row);
   if (!repLegalNombres.ok) return repLegalNombres;

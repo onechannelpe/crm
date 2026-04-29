@@ -37,6 +37,7 @@ function toLeadSaleVenue(
     provincia: row.provincia,
     departamento: row.departamento,
     solesAccount: {
+      currency: "PEN",
       banco: pen.bank,
       tipoCuenta: pen.account_type,
       nroCuenta: pen.account_number,
@@ -49,6 +50,7 @@ function toLeadSaleVenue(
 
   if (usd) {
     venue.dollarAccount = {
+      currency: "USD",
       banco: usd.bank,
       tipoCuenta: usd.account_type,
       nroCuenta: usd.account_number,

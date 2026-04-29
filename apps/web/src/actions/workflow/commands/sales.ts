@@ -40,6 +40,7 @@ export async function requestSaleVenueCreation(input: {
   provincia: string;
   departamento: string;
   solesAccount: {
+    currency: "PEN";
     banco: AbonoBank;
     tipoCuenta: AccountTypeKind;
     nroCuenta: string;
@@ -48,6 +49,7 @@ export async function requestSaleVenueCreation(input: {
   };
   dollarAccount?:
     | {
+        currency: "USD";
         banco: AbonoBank;
         tipoCuenta: AccountTypeKind;
         nroCuenta: string;

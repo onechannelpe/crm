@@ -40,7 +40,7 @@ export interface WorkflowLeadCommercialInputsTable {
   giro_negocio: string | null;
   tipo_producto: CulqiProductKind | null;
   url_cliente: string | null;
-  modalidad_cobro: ModalidadCobro | null;
+  modalidad_cobro: ModalidadCobro;
   rep_legal_nombres: string | null;
   rep_legal_apellido_paterno: string | null;
   rep_legal_apellido_materno: string | null;

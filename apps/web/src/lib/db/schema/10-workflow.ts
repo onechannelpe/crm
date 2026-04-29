@@ -66,9 +66,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("url_cliente", "text")
     .addColumn("modalidad_cobro", "varchar(20)", (col) =>
-      col.check(
-        sql`modalidad_cobro IN ('SUSCRIPCIONES','ONE_CLIC','CARGO_UNICO')`,
-      ),
+      col
+        .notNull()
+        .check(
+          sql`modalidad_cobro IN ('SUSCRIPCIONES','ONE_CLIC','CARGO_UNICO')`,
+        ),
     )
     .addColumn("rep_legal_nombres", "varchar(255)")
     .addColumn("rep_legal_apellido_paterno", "varchar(255)")
