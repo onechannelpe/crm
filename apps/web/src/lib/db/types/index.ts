@@ -11,6 +11,7 @@ import * as workflow from "./10-workflow";
 import * as integration from "./11-integration";
 import * as workflowFiles from "./12-workflow-files";
 import * as negotiation from "./13-negotiation";
+import * as saleVenues from "./14-sale-venues";
 
 export type {
   BranchesTable,
@@ -134,6 +135,10 @@ export {
   type WorkflowNegotiationFilesTable,
 } from "./13-negotiation";
 
+export {
+  type WorkflowSaleVenuesTable,
+} from "./14-sale-venues";
+
 export interface Database {
   // 00-core
   branches: core.BranchesTable;
@@ -236,4 +241,7 @@ export interface Database {
   // 13-negotiation
   workflow_negotiation_requests: negotiation.WorkflowNegotiationRequestsTable;
   workflow_negotiation_files: negotiation.WorkflowNegotiationFilesTable;
+
+  // 14-sale-venues
+  workflow_sale_venues: saleVenues.WorkflowSaleVenuesTable;
 }

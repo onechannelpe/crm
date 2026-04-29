@@ -1,6 +1,11 @@
 import type { Generated } from "kysely";
 
-import type { AbonoBank } from "../../../workflow/contracts/lead-schema";
+import type {
+  AbonoBank,
+  CulqiProductKind,
+  ModalidadCobro,
+  AccountTypeKind,
+} from "../../../workflow/contracts/lead-schema";
 
 export type WorkflowStageValue =
   | "PENDING_EXTERNAL_REVIEW"
@@ -34,8 +39,16 @@ export interface WorkflowLeadCommercialInputsTable {
   tasa_actual: number | null;
   gpv: number | null;
   ticket: number | null;
-  abono: AbonoBank | null;
-  cantidad_pos: number | null;
+  giro_negocio: string | null;
+  tipo_producto: CulqiProductKind | null;
+  url_cliente: string | null;
+  modalidad_cobro: ModalidadCobro | null;
+  rep_legal_nombres: string | null;
+  rep_legal_apellido_paterno: string | null;
+  rep_legal_apellido_materno: string | null;
+  rep_legal_dni: string | null;
+  rep_legal_telefono: string | null;
+  rep_legal_email: string | null;
   updated_at: number;
   updated_by: number;
 }
@@ -58,15 +71,6 @@ export interface WorkflowSalesTable {
   id: Generated<string>;
   lead_id: string;
   executive_id: number;
-  proveedor_actual: string;
-  tasa_actual: number;
-  gpv: number;
-  ticket: number;
-  abono: AbonoBank;
-  cantidad_pos: number;
-  banco: string;
-  nro_cuenta: string;
-  cci: string | null;
   created_at: number;
 }
 
@@ -100,6 +104,7 @@ export interface WorkflowHistoryEventsTable {
     | "quotation_created"
     | "sale_approved"
     | "sale_created"
+    | "venue_added"
     | "call_logged"
     | "note_added";
   actor_user_id: number | null;

@@ -60,12 +60,24 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("tasa_actual", "real")
     .addColumn("gpv", "real")
     .addColumn("ticket", "real")
-    .addColumn("abono", "varchar(50)", (col) =>
+    .addColumn("giro_negocio", "text")
+    .addColumn("tipo_producto", "varchar(20)", (col) =>
       col.check(
-        sql`abono IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`,
+        sql`tipo_producto IN ('CULQI_FULL','CULQI_LINK','CULQI_ONLINE')`,
       ),
     )
-    .addColumn("cantidad_pos", "integer")
+    .addColumn("url_cliente", "text")
+    .addColumn("modalidad_cobro", "varchar(20)", (col) =>
+      col.check(
+        sql`modalidad_cobro IN ('SUSCRIPCIONES','ONE_CLIC','CARGO_UNICO')`,
+      ),
+    )
+    .addColumn("rep_legal_nombres", "varchar(255)")
+    .addColumn("rep_legal_apellido_paterno", "varchar(255)")
+    .addColumn("rep_legal_apellido_materno", "varchar(255)")
+    .addColumn("rep_legal_dni", "varchar(8)")
+    .addColumn("rep_legal_telefono", "varchar(20)")
+    .addColumn("rep_legal_email", "varchar(255)")
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -101,24 +113,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("workflow_sales")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>
-      col.notNull().references("workflow_leads.id"),
+      col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("proveedor_actual", "varchar(255)", (col) => col.notNull())
-    .addColumn("tasa_actual", "real", (col) => col.notNull())
-    .addColumn("gpv", "real", (col) => col.notNull())
-    .addColumn("ticket", "real", (col) => col.notNull())
-    .addColumn("abono", "varchar(50)", (col) =>
-      col
-        .notNull()
-        .check(sql`abono IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`),
-    )
-    .addColumn("cantidad_pos", "integer", (col) => col.notNull())
-    .addColumn("banco", "varchar(100)", (col) => col.notNull())
-    .addColumn("nro_cuenta", "varchar(50)", (col) => col.notNull())
-    .addColumn("cci", "varchar(50)")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 

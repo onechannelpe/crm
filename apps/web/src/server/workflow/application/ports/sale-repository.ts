@@ -1,18 +1,12 @@
-import type { AbonoBank } from "~/workflow/contracts/lead-schema";
+import type {
+  AbonoBank,
+  AccountTypeKind,
+} from "~/workflow/contracts/lead-schema";
 
 export type LeadSale = {
   id: string;
   leadId: string;
   executiveId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: AbonoBank;
-  cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
   createdAt: number;
 };
 
@@ -26,4 +20,35 @@ export type LeadSaleRepository = {
     limit: number,
     offset: number,
   ): Promise<LeadSale[]>;
+};
+
+export type LeadSaleVenue = {
+  id: string;
+  saleId: string;
+  leadId: string;
+  nombreComercial: string;
+  cantidadPos: number;
+  direccion: string;
+  referencia: string | null;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+  bancoSoles: AbonoBank;
+  tipoCuentaSoles: AccountTypeKind;
+  nroCuentaSoles: string;
+  cciSoles: string | null;
+  bancoDolares: AbonoBank | null;
+  tipoCuentaDolares: AccountTypeKind | null;
+  nroCuentaDolares: string | null;
+  cciDolares: string | null;
+  abono: AbonoBank;
+  createdAt: number;
+  createdBy: number;
+};
+
+export type LeadSaleVenueRepository = {
+  insert(values: Omit<LeadSaleVenue, "id">): Promise<string>;
+  findById(id: string): Promise<LeadSaleVenue | undefined>;
+  listBySaleId(saleId: string): Promise<LeadSaleVenue[]>;
+  listByLeadId(leadId: string): Promise<LeadSaleVenue[]>;
 };

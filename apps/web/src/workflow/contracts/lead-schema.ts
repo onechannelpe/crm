@@ -38,6 +38,20 @@ export const ABONO_BANKS = [
   "MI BANCO",
 ] as const;
 
+export const CULQI_PRODUCT_KINDS = [
+  "CULQI_FULL",
+  "CULQI_LINK",
+  "CULQI_ONLINE",
+] as const;
+
+export const MODALIDAD_COBRO_KINDS = [
+  "SUSCRIPCIONES",
+  "ONE_CLIC",
+  "CARGO_UNICO",
+] as const;
+
+export const ACCOUNT_TYPE_KINDS = ["AHORROS", "CORRIENTE"] as const;
+
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
@@ -45,6 +59,10 @@ export type LeadCallOutcome = (typeof LEAD_CALL_OUTCOMES)[number];
 export type Moneda = (typeof MONEDAS)[number];
 export type SaleBankKind = (typeof SALE_BANK_KINDS)[number];
 export type AbonoBank = (typeof ABONO_BANKS)[number];
+
+export type CulqiProductKind = (typeof CULQI_PRODUCT_KINDS)[number];
+export type ModalidadCobro = (typeof MODALIDAD_COBRO_KINDS)[number];
+export type AccountTypeKind = (typeof ACCOUNT_TYPE_KINDS)[number];
 
 export function isMoneda(value: string): value is Moneda {
   return (MONEDAS as readonly string[]).includes(value);
@@ -66,4 +84,18 @@ export function isLeadStatus(value: string): value is LeadStatus {
 
 export function isBcpBank(value: string | null | undefined): boolean {
   return (value ?? "").trim().toUpperCase() === "BCP";
+}
+
+export function isCulqiProductKind(
+  value: string,
+): value is CulqiProductKind {
+  return (CULQI_PRODUCT_KINDS as readonly string[]).includes(value);
+}
+
+export function isModalidadCobro(value: string): value is ModalidadCobro {
+  return (MODALIDAD_COBRO_KINDS as readonly string[]).includes(value);
+}
+
+export function isAccountTypeKind(value: string): value is AccountTypeKind {
+  return (ACCOUNT_TYPE_KINDS as readonly string[]).includes(value);
 }
