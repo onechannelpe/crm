@@ -39,9 +39,9 @@ import type {
 import {
   approveForSaleMutation,
   requestRateNegotiationMutation,
-} from "../data/mutations";
+} from "../../data/mutations";
 
-import styles from "./quoted-section.module.css";
+import styles from "./quoted.module.css";
 
 type StagedFile = {
   artifactId: string;

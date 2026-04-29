@@ -11,7 +11,7 @@ import { RecordInlineCell, RelationFieldRow } from "~/components/ui/field-row";
 import { RecordChip } from "~/components/ui/record-chip/record-chip";
 import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import { FieldTextValue } from "~/features/side-panel/components/field-table";
-import { ExecutivePicker } from "~/features/workflow/detail/executive-picker";
+import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import {
   leadNextStepLabel,
   leadPriorityLabel,

@@ -31,9 +31,9 @@ import {
   type AbonoBank,
 } from "~/workflow/contracts/lead-schema";
 
-import { createSaleMutation } from "../data/mutations";
+import { createSaleMutation } from "../../data/mutations";
 
-import styles from "./sale-section.module.css";
+import styles from "./sale.module.css";
 
 type SaleSectionProps = {
   leadId: string;
