@@ -11,7 +11,7 @@ import {
   WidgetHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import { blockingFieldLabel } from "~/features/workflow/detail/lead-workflow-ui";
+import { blockingFieldLabel } from "~/features/workflow/detail/actions/workflow-ui";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { formatAmount, formatRate } from "./format";

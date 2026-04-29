@@ -1,10 +1,13 @@
 import { useAction } from "@solidjs/router";
-import { For, createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 
+import Building2 from "~/components/icons/building-2";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
+import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import { BankPicker } from "~/components/ui/pickers/bank-picker";
 import {
   FieldIcon,
   FieldInputValue,
@@ -20,62 +23,63 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailQuotationView } from "~/server/workflow/application/queries/views/lead-detail";
-import {
-  isMoneda,
-  MONEDAS,
-  type Moneda,
-} from "~/workflow/contracts/lead-schema";
+import type { LeadDetailCommercialInputView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { AbonoBank } from "~/workflow/contracts/lead-schema";
 
-import { createQuotationMutation } from "../data/mutations";
+import { completeCommercialInputMutation } from "../../data/mutations";
 
-import styles from "./quotation-section.module.css";
+import styles from "./commercial-input.module.css";
 
-type QuotationSectionProps = {
+export function CommercialInputSection(props: {
   leadId: string;
-  existingQuotation?: LeadDetailQuotationView;
-};
+  initialValues?: LeadDetailCommercialInputView;
+}) {
+  const complete = useAction(completeCommercialInputMutation);
 
-export function QuotationSection(props: QuotationSectionProps) {
-  const create = useAction(createQuotationMutation);
-
-  const [paybackPricing, setPaybackPricing] = createSignal(
-    props.existingQuotation?.paybackPricing?.toString() ?? "",
+  const [proveedorActual, setProveedorActual] = createSignal(
+    props.initialValues?.proveedorActual ?? "",
   );
-  const [tarifaDebito, setTarifaDebito] = createSignal(
-    props.existingQuotation?.tarifaDebito?.toString() ?? "",
+  const [tasaActual, setTasaActual] = createSignal(
+    props.initialValues?.tasaActual?.toString() ?? "",
   );
-  const [tarifaCredito, setTarifaCredito] = createSignal(
-    props.existingQuotation?.tarifaCredito?.toString() ?? "",
+  const [gpv, setGpv] = createSignal(
+    props.initialValues?.gpv?.toString() ?? "",
   );
-  const [tarifaForaneo, setTarifaForaneo] = createSignal(
-    props.existingQuotation?.tarifaForaneo?.toString() ?? "",
+  const [ticket, setTicket] = createSignal(
+    props.initialValues?.ticket?.toString() ?? "",
   );
-  const [fee, setFee] = createSignal(
-    props.existingQuotation?.fee?.toString() ?? "",
+  const [abono, setAbono] = createSignal<AbonoBank | "">(
+    props.initialValues?.abono ?? "",
   );
-  const [moneda, setMoneda] = createSignal<Moneda>(
-    props.existingQuotation?.moneda ?? "PEN",
+  const [showAbonoPicker, setShowAbonoPicker] = createSignal(false);
+  const [cantidadPos, setCantidadPos] = createSignal(
+    props.initialValues?.cantidadPos?.toString() ?? "",
   );
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
+    if (!proveedorActual().trim()) return;
+    const currentAbono = abono();
+    if (!currentAbono) {
+      setError("Selecciona un banco de abono");
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
-      await create({
+      await complete({
         leadId: props.leadId,
-        paybackPricing: Number(paybackPricing()),
-        tarifaDebito: Number(tarifaDebito()),
-        tarifaCredito: Number(tarifaCredito()),
-        tarifaForaneo: Number(tarifaForaneo()),
-        fee: Number(fee()),
-        moneda: moneda(),
+        proveedorActual: proveedorActual(),
+        tasaActual: Number(tasaActual()),
+        gpv: Number(gpv()),
+        ticket: Number(ticket()),
+        abono: currentAbono,
+        cantidadPos: Number(cantidadPos()),
       });
     } catch (err) {
-      setError(toAppError(err, "Error al crear cotizacion").publicMessage);
+      setError(toAppError(err, "Error al guardar").publicMessage);
     } finally {
       setSubmitting(false);
     }
@@ -84,7 +88,7 @@ export function QuotationSection(props: QuotationSectionProps) {
   return (
     <Widget>
       <WidgetHeader>
-        <WidgetTitle text="Cotizacion" />
+        <WidgetTitle text="Datos comerciales" />
       </WidgetHeader>
       <WidgetBody>
         <form onSubmit={(e) => void handleSubmit(e)}>
@@ -92,9 +96,25 @@ export function QuotationSection(props: QuotationSectionProps) {
             <FieldRow>
               <FieldLabel>
                 <FieldIcon>
-                  <Moneybag size={16} />
+                  <Building2 size={16} />
                 </FieldIcon>
-                <FieldLabelText>Payback</FieldLabelText>
+                <FieldLabelText>Proveedor</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>
+                <TextInput
+                  sizeVariant="sm"
+                  value={proveedorActual()}
+                  onChange={setProveedorActual}
+                  required
+                />
+              </FieldInputValue>
+            </FieldRow>
+            <FieldRow>
+              <FieldLabel>
+                <FieldIcon>
+                  <Target size={16} />
+                </FieldIcon>
+                <FieldLabelText>Tasa actual</FieldLabelText>
               </FieldLabel>
               <FieldInputValue>
                 <TextInput
@@ -102,8 +122,8 @@ export function QuotationSection(props: QuotationSectionProps) {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={paybackPricing()}
-                  onChange={setPaybackPricing}
+                  value={tasaActual()}
+                  onChange={setTasaActual}
                   required
                 />
               </FieldInputValue>
@@ -113,7 +133,7 @@ export function QuotationSection(props: QuotationSectionProps) {
                 <FieldIcon>
                   <Moneybag size={16} />
                 </FieldIcon>
-                <FieldLabelText>T. debito</FieldLabelText>
+                <FieldLabelText>GPV</FieldLabelText>
               </FieldLabel>
               <FieldInputValue>
                 <TextInput
@@ -121,8 +141,8 @@ export function QuotationSection(props: QuotationSectionProps) {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={tarifaDebito()}
-                  onChange={setTarifaDebito}
+                  value={gpv()}
+                  onChange={setGpv}
                   required
                 />
               </FieldInputValue>
@@ -132,7 +152,7 @@ export function QuotationSection(props: QuotationSectionProps) {
                 <FieldIcon>
                   <Moneybag size={16} />
                 </FieldIcon>
-                <FieldLabelText>T. credito</FieldLabelText>
+                <FieldLabelText>Ticket</FieldLabelText>
               </FieldLabel>
               <FieldInputValue>
                 <TextInput
@@ -140,8 +160,8 @@ export function QuotationSection(props: QuotationSectionProps) {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={tarifaCredito()}
-                  onChange={setTarifaCredito}
+                  value={ticket()}
+                  onChange={setTicket}
                   required
                 />
               </FieldInputValue>
@@ -151,37 +171,25 @@ export function QuotationSection(props: QuotationSectionProps) {
                 <FieldIcon>
                   <Moneybag size={16} />
                 </FieldIcon>
-                <FieldLabelText>T. foraneo</FieldLabelText>
+                <FieldLabelText>Abono</FieldLabelText>
               </FieldLabel>
               <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={tarifaForaneo()}
-                  onChange={setTarifaForaneo}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <Moneybag size={16} />
-                </FieldIcon>
-                <FieldLabelText>Fee</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={fee()}
-                  onChange={setFee}
-                  required
-                />
+                <div class={styles.pickerWrapper}>
+                  <button
+                    type="button"
+                    class={styles.pickerTrigger}
+                    onClick={() => setShowAbonoPicker(!showAbonoPicker())}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    {abono() || "Seleccionar banco..."}
+                  </button>
+                  <Show when={showAbonoPicker()}>
+                    <BankPicker
+                      onSelect={setAbono}
+                      onClose={() => setShowAbonoPicker(false)}
+                    />
+                  </Show>
+                </div>
               </FieldInputValue>
             </FieldRow>
             <FieldRow>
@@ -189,23 +197,18 @@ export function QuotationSection(props: QuotationSectionProps) {
                 <FieldIcon>
                   <Package size={16} />
                 </FieldIcon>
-                <FieldLabelText>Moneda</FieldLabelText>
+                <FieldLabelText>Cantidad POS</FieldLabelText>
               </FieldLabel>
               <FieldInputValue>
-                <select
-                  class={styles.select}
-                  value={moneda()}
-                  onChange={(e) => {
-                    const val = e.currentTarget.value;
-                    if (isMoneda(val)) {
-                      setMoneda(val);
-                    }
-                  }}
-                >
-                  <For each={MONEDAS}>
-                    {(m) => <option value={m}>{m}</option>}
-                  </For>
-                </select>
+                <TextInput
+                  sizeVariant="sm"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={cantidadPos()}
+                  onChange={setCantidadPos}
+                  required
+                />
               </FieldInputValue>
             </FieldRow>
           </FieldTable>
@@ -217,7 +220,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               size="sm"
               loading={submitting()}
             >
-              Crear cotizacion
+              Guardar datos comerciales
             </Button>
           </div>
         </form>
