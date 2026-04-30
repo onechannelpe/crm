@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "../../types";
@@ -29,20 +30,20 @@ export async function run(db: Kysely<Database>): Promise<void> {
   const overlayTtl = 7 * day;
 
   // Lead IDs
-  const idPending = crypto.randomUUID(); // PENDING_EXTERNAL_REVIEW
-  const idNeeds = crypto.randomUUID(); // NEEDS_EXECUTIVE_INPUT
-  const idReady = crypto.randomUUID(); // READY_FOR_QUOTATION
-  const idQuoted = crypto.randomUUID(); // QUOTED
-  const idForSale = crypto.randomUUID(); // READY_FOR_SALE
-  const idConverted = crypto.randomUUID(); // CONVERTED
-  const idRejected = crypto.randomUUID(); // REJECTED_BY_STATUS
+  const idPending = randomUUIDv7(); // PENDING_EXTERNAL_REVIEW
+  const idNeeds = randomUUIDv7(); // NEEDS_EXECUTIVE_INPUT
+  const idReady = randomUUIDv7(); // READY_FOR_QUOTATION
+  const idQuoted = randomUUIDv7(); // QUOTED
+  const idForSale = randomUUIDv7(); // READY_FOR_SALE
+  const idConverted = randomUUIDv7(); // CONVERTED
+  const idRejected = randomUUIDv7(); // REJECTED_BY_STATUS
 
   // Quotation and sale IDs
-  const qidQuoted = crypto.randomUUID();
-  const qidForSale = crypto.randomUUID();
-  const qidConverted = crypto.randomUUID();
-  const sidConverted = crypto.randomUUID();
-  const vidConverted = crypto.randomUUID();
+  const qidQuoted = randomUUIDv7();
+  const qidForSale = randomUUIDv7();
+  const qidConverted = randomUUIDv7();
+  const sidConverted = randomUUIDv7();
+  const vidConverted = randomUUIDv7();
 
   const organizationRows = [
     {
@@ -98,7 +99,13 @@ export async function run(db: Kysely<Database>): Promise<void> {
 
   await db
     .insertInto("organizations")
-    .values(organizationRows.map((row) => ({ ...row, created_at: now })))
+    .values(
+      organizationRows.map((row) => ({
+        id: randomUUIDv7(),
+        ...row,
+        created_at: now,
+      })),
+    )
     .onConflict((oc) => oc.column("ruc").doNothing())
     .execute();
 
@@ -112,13 +119,20 @@ export async function run(db: Kysely<Database>): Promise<void> {
     )
     .execute();
   const orgIdByRuc = new Map(organizations.map((row) => [row.ruc, row.id]));
+  const requireOrgId = (ruc: string): string => {
+    const organizationId = orgIdByRuc.get(ruc);
+    if (!organizationId) {
+      throw new Error(`missing_seed_organization:${ruc}`);
+    }
+    return organizationId;
+  };
 
   await db
     .insertInto("workflow_leads")
     .values([
       {
         id: idPending,
-        organization_id: orgIdByRuc.get("20103615080") ?? 0,
+        organization_id: requireOrgId("20103615080"),
         executive_id: EXEC_CAMILA,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -130,7 +144,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idNeeds,
-        organization_id: orgIdByRuc.get("20103176060") ?? 0,
+        organization_id: requireOrgId("20103176060"),
         executive_id: EXEC_PATRICIA,
         stage: "NEEDS_EXECUTIVE_INPUT",
         status: "DISPONIBLE",
@@ -142,7 +156,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idReady,
-        organization_id: orgIdByRuc.get("20538856674") ?? 0,
+        organization_id: requireOrgId("20538856674"),
         executive_id: EXEC_ROBERTO,
         stage: "READY_FOR_QUOTATION",
         status: "DISPONIBLE",
@@ -154,7 +168,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idQuoted,
-        organization_id: orgIdByRuc.get("20542245671") ?? 0,
+        organization_id: requireOrgId("20542245671"),
         executive_id: EXEC_ANDREA,
         stage: "QUOTED",
         status: "DISPONIBLE",
@@ -166,7 +180,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idForSale,
-        organization_id: orgIdByRuc.get("20394809218") ?? 0,
+        organization_id: requireOrgId("20394809218"),
         executive_id: EXEC_RENATO,
         stage: "READY_FOR_SALE",
         status: "DISPONIBLE",
@@ -178,7 +192,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idConverted,
-        organization_id: orgIdByRuc.get("20219523468") ?? 0,
+        organization_id: requireOrgId("20219523468"),
         executive_id: EXEC_DANIELA,
         stage: "CONVERTED",
         status: "DISPONIBLE",
@@ -190,7 +204,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idRejected,
-        organization_id: orgIdByRuc.get("20353745400") ?? 0,
+        organization_id: requireOrgId("20353745400"),
         executive_id: EXEC_GABRIEL,
         stage: "REJECTED_BY_STATUS",
         status: "CARTERIZADO",
@@ -207,7 +221,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .insertInto("workflow_lead_assignments")
     .values([
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idPending,
         executive_id: EXEC_CAMILA,
         assigned_by: SUP1,
@@ -215,7 +229,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         assigned_at: now - day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idNeeds,
         executive_id: EXEC_PATRICIA,
         assigned_by: SUP1,
@@ -223,7 +237,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         assigned_at: now - 4 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idReady,
         executive_id: EXEC_ROBERTO,
         assigned_by: SUP1,
@@ -231,7 +245,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         assigned_at: now - 7 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idQuoted,
         executive_id: EXEC_ANDREA,
         assigned_by: SUP2,
@@ -239,7 +253,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         assigned_at: now - 14 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         executive_id: EXEC_RENATO,
         assigned_by: SUP1,
@@ -247,7 +261,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         assigned_at: now - 21 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         executive_id: EXEC_DANIELA,
         assigned_by: SUP1,
@@ -255,7 +269,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         assigned_at: now - 30 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idRejected,
         executive_id: EXEC_GABRIEL,
         assigned_by: SUP2,
@@ -520,7 +534,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .insertInto("workflow_sale_venue_accounts")
     .values([
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         venue_id: vidConverted,
         currency: "PEN",
         bank: "BCP",
@@ -530,7 +544,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         is_settlement: 1,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         venue_id: vidConverted,
         currency: "USD",
         bank: "BBVA",
@@ -560,7 +574,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     ])
     .execute();
 
-  const convertedOrgId = orgIdByRuc.get("20219523468") ?? 0;
+  const convertedOrgId = requireOrgId("20219523468");
   await db
     .updateTable("organizations")
     .set({ giro_negocio: "Construccion de edificios residenciales" })
@@ -605,7 +619,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
     .values([
       // Lead: PENDING_EXTERNAL_REVIEW
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idPending,
         event_type: "lead_registered",
         actor_user_id: SUP1,
@@ -617,7 +631,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idPending,
         event_type: "lead_assigned",
         actor_user_id: SUP1,
@@ -628,7 +642,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
 
       // Lead: NEEDS_EXECUTIVE_INPUT
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idNeeds,
         event_type: "lead_registered",
         actor_user_id: SUP1,
@@ -640,7 +654,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 4 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idNeeds,
         event_type: "lead_assigned",
         actor_user_id: SUP1,
@@ -649,7 +663,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 4 * day + 1_000,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idNeeds,
         event_type: "lead_reviewed",
         actor_user_id: BO1,
@@ -665,7 +679,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 3 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idNeeds,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -679,7 +693,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
 
       // Lead: READY_FOR_QUOTATION
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idReady,
         event_type: "lead_registered",
         actor_user_id: SUP1,
@@ -691,7 +705,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 7 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idReady,
         event_type: "lead_assigned",
         actor_user_id: SUP1,
@@ -700,7 +714,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 7 * day + 1_000,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idReady,
         event_type: "lead_reviewed",
         actor_user_id: BO1,
@@ -716,7 +730,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 6 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idReady,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -730,7 +744,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
 
       // Lead: QUOTED
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idQuoted,
         event_type: "lead_registered",
         actor_user_id: SUP2,
@@ -742,7 +756,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 14 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idQuoted,
         event_type: "lead_assigned",
         actor_user_id: SUP2,
@@ -751,7 +765,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 14 * day + 1_000,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idQuoted,
         event_type: "lead_reviewed",
         actor_user_id: BO2,
@@ -767,7 +781,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 13 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idQuoted,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -779,7 +793,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 13 * day + 100,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idQuoted,
         event_type: "quotation_created",
         actor_user_id: BO2,
@@ -792,7 +806,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 10 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idQuoted,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -806,7 +820,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
 
       // Lead: READY_FOR_SALE
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "lead_registered",
         actor_user_id: SUP1,
@@ -818,7 +832,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 21 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "lead_assigned",
         actor_user_id: SUP1,
@@ -827,7 +841,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 21 * day + 1_000,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "lead_reviewed",
         actor_user_id: BO1,
@@ -843,7 +857,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 20 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -855,7 +869,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 20 * day + 100,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "quotation_created",
         actor_user_id: BO1,
@@ -868,7 +882,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 18 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -880,7 +894,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 18 * day + 100,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "sale_approved",
         actor_user_id: BO1,
@@ -889,7 +903,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 15 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idForSale,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -903,7 +917,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
 
       // Lead: CONVERTED
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "lead_registered",
         actor_user_id: SUP1,
@@ -915,7 +929,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 30 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "lead_assigned",
         actor_user_id: SUP1,
@@ -924,7 +938,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 30 * day + 1_000,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "lead_reviewed",
         actor_user_id: BO1,
@@ -940,7 +954,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 29 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -952,7 +966,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 29 * day + 100,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "quotation_created",
         actor_user_id: BO1,
@@ -965,7 +979,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 27 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -977,7 +991,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 27 * day + 100,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "sale_approved",
         actor_user_id: BO1,
@@ -986,7 +1000,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 25 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -998,7 +1012,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 25 * day + 100,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "venue_added",
         actor_user_id: EXEC_DANIELA,
@@ -1012,7 +1026,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 20 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idConverted,
         event_type: "workflow_stage_changed",
         actor_user_id: null,
@@ -1026,7 +1040,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
 
       // Lead: REJECTED_BY_STATUS
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idRejected,
         event_type: "lead_registered",
         actor_user_id: SUP2,
@@ -1038,7 +1052,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 3 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idRejected,
         event_type: "lead_assigned",
         actor_user_id: SUP2,
@@ -1047,7 +1061,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 3 * day + 1_000,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idRejected,
         event_type: "lead_reviewed",
         actor_user_id: BO2,
@@ -1063,7 +1077,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
         occurred_at: now - 2 * day,
       },
       {
-        id: crypto.randomUUID(),
+        id: randomUUIDv7(),
         lead_id: idRejected,
         event_type: "workflow_stage_changed",
         actor_user_id: null,

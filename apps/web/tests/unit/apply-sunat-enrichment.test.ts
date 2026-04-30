@@ -6,7 +6,7 @@ import type { PartyRepository } from "~/server/workflow/application/ports/party-
 function createPartyRepositoryDouble() {
   const findOrganizationByRuc = vi.fn<PartyRepository["findOrganizationByRuc"]>(
     async () => ({
-      id: 10,
+      id: "01974fd5-f261-7a7d-93f5-2f3d0f963010",
       ruc: "20123456789",
       name: "Acme",
       giroNegocio: null,
@@ -97,7 +97,7 @@ describe("applySunatEnrichment", () => {
     });
 
     expect(updateOrganizationFromEnrichment).toHaveBeenCalledWith({
-      organizationId: 10,
+      organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963010",
       name: "Acme SAC",
       address: "Av. Lima 123",
       district: "Miraflores",

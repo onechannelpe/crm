@@ -4,7 +4,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_leads")
     .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("organization_id", "integer", (col) =>
+    .addColumn("organization_id", "text", (col) =>
       col.notNull().references("organizations.id"),
     )
     .addColumn("executive_id", "integer", (col) =>

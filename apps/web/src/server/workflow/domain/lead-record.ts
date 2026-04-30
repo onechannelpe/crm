@@ -1,4 +1,5 @@
 import type { DomainError } from "~/server/shared/domain-error";
+import type { OrganizationId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import { Ok } from "~/server/shared/result";
 import type {
@@ -11,7 +12,7 @@ import { normalizeLeadRuc } from "./lead-schema-parser";
 
 export type LeadRecord = {
   id: string;
-  organizationId: number;
+  organizationId: OrganizationId;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
@@ -46,7 +47,7 @@ export type LeadPatch = Partial<
 >;
 
 export function createLeadDraft(input: {
-  organizationId: number;
+  organizationId: OrganizationId;
   ruc: string;
   razonSocial: string | null;
   address: string | null;

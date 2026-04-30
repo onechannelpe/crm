@@ -1,6 +1,6 @@
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { LeadReservationId } from "~/server/shared/ids";
+import type { LeadReservationId, OrganizationId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -28,7 +28,7 @@ type AssignContactsRepos = AssignmentPlanRepos &
     };
     contacts: {
       findOrCreate(
-        organizationId: number,
+        organizationId: OrganizationId,
         dni: string,
         name: string,
         phone: string,

@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { OrganizationId } from "~/server/shared/ids";
 
 export function createContactsRepo(db: Kysely<Database>) {
   return {
@@ -21,7 +22,7 @@ export function createContactsRepo(db: Kysely<Database>) {
     },
 
     async findOrCreate(
-      orgId: number,
+      orgId: OrganizationId,
       dni: string,
       name: string,
       phonePrimary: string | null,

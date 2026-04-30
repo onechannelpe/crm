@@ -19,6 +19,7 @@ describe("organization branch locking", () => {
 
   it("findUnlockedOrLockedToBranch isolates organizations by lock owner", async () => {
     const now = Date.now();
+    const { lima, norte } = ctx.fixtures.organizations;
 
     await ctx.db
       .updateTable("organizations")
@@ -27,7 +28,7 @@ describe("organization branch locking", () => {
         locked_at: now,
         locked_by_user_id: 1,
       })
-      .where("id", "=", 1)
+      .where("id", "=", lima.id)
       .execute();
 
     await ctx.db
@@ -37,7 +38,7 @@ describe("organization branch locking", () => {
         locked_at: now,
         locked_by_user_id: 3,
       })
-      .where("id", "=", 2)
+      .where("id", "=", norte.id)
       .execute();
 
     const branch1Visible =
@@ -45,15 +46,17 @@ describe("organization branch locking", () => {
     const branch2Visible =
       await ctx.repos.organizations.findUnlockedOrLockedToBranch(2, 50);
 
-    expect(branch1Visible.map((x) => x.id)).toContain(1);
-    expect(branch1Visible.map((x) => x.id)).not.toContain(2);
-    expect(branch2Visible.map((x) => x.id)).toContain(2);
-    expect(branch2Visible.map((x) => x.id)).not.toContain(1);
+    expect(branch1Visible.map((x) => x.id)).toContain(lima.id);
+    expect(branch1Visible.map((x) => x.id)).not.toContain(norte.id);
+    expect(branch2Visible.map((x) => x.id)).toContain(norte.id);
+    expect(branch2Visible.map((x) => x.id)).not.toContain(lima.id);
   });
 
   it("lockToBranch persists lock metadata", async () => {
-    await ctx.repos.organizations.lockToBranch(1, 2, 3);
-    const org = await ctx.repos.organizations.findById(1);
+    const { lima } = ctx.fixtures.organizations;
+
+    await ctx.repos.organizations.lockToBranch(lima.id, 2, 3);
+    const org = await ctx.repos.organizations.findById(lima.id);
 
     expect(org?.locked_branch_id).toBe(2);
     expect(org?.locked_by_user_id).toBe(3);

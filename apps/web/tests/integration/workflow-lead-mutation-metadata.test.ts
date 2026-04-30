@@ -28,13 +28,13 @@ describe("workflow lead mutation metadata", () => {
 
   it("updates lead.updatedBy when a note is added", async () => {
     await seedOrganization(runtime, {
-      id: 501,
+      id: "01974fd5-f261-7a7d-93f5-2f3d0f963501",
       ruc: "20900000501",
       name: "Org Note",
     });
     await seedLead(runtime, {
       id: "lead-501",
-      organizationId: 501,
+      organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963501",
       executiveId: 1,
       stage: "PENDING_EXTERNAL_REVIEW",
       status: null,
@@ -85,13 +85,13 @@ describe("workflow lead mutation metadata", () => {
       phoneE164: "+51990000112",
     });
     await seedOrganization(runtime, {
-      id: 502,
+      id: "01974fd5-f261-7a7d-93f5-2f3d0f963502",
       ruc: "20900000502",
       name: "Org Reassign",
     });
     await seedLead(runtime, {
       id: "lead-502",
-      organizationId: 502,
+      organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963502",
       executiveId: 1,
       stage: "PENDING_EXTERNAL_REVIEW",
       status: null,
@@ -133,13 +133,13 @@ describe("workflow lead mutation metadata", () => {
 
   it("updates lead.updatedBy for import mutations", async () => {
     await seedOrganization(runtime, {
-      id: 503,
+      id: "01974fd5-f261-7a7d-93f5-2f3d0f963503",
       ruc: "20900000503",
       name: "Org Import",
     });
     await seedLead(runtime, {
       id: "lead-503",
-      organizationId: 503,
+      organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963503",
       executiveId: 1,
       stage: "PENDING_EXTERNAL_REVIEW",
       status: null,

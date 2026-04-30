@@ -3,7 +3,7 @@ import { runTestWorkflowCommand } from "./workflow-test-kit";
 
 export type RegisteredLeadSnapshot = {
   id: string;
-  organizationId: number;
+  organizationId: string;
   organizationRuc: string;
   organizationName: string;
   organizationAddress: string | null;

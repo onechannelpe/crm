@@ -28,7 +28,7 @@ export interface BackOfficeAssignmentsTable {
 }
 
 export interface OrganizationsTable {
-  id: Generated<number>;
+  id: string;
   ruc: string;
   name: string;
   giro_negocio: string | null;

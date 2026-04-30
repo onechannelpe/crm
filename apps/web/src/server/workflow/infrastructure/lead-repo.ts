@@ -3,6 +3,7 @@ import type { Insertable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { OrganizationId } from "~/server/shared/ids";
 import type {
   LeadDraft,
   LeadPatch,
@@ -16,7 +17,7 @@ import type {
 
 export type LeadRow = {
   id: string;
-  organization_id: number;
+  organization_id: OrganizationId;
   executive_id: number;
   created_by: number;
   updated_by: number | null;

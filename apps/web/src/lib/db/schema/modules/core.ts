@@ -52,7 +52,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("organizations")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("ruc", "varchar(20)", (col) => col.notNull().unique())
     .addColumn("name", "varchar(255)", (col) => col.notNull())
     .addColumn("giro_negocio", "text")

@@ -1,8 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
-
-export type UserId = number;
-export type BranchId = number;
+import type { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 
 type AssignmentStatus = "active" | "completed" | "expired";
 
@@ -50,5 +48,5 @@ export type ActiveContactAssignmentView = {
   name: string;
   dni: string;
   phonePrimary: string | null;
-  organizationId: number;
+  organizationId: OrganizationId;
 };

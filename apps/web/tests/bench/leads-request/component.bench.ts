@@ -23,7 +23,7 @@ describe("lead assignment component benchmark", () => {
     () => {
       const contact = {
         id: 1,
-        organization_id: 1,
+        organization_id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
         dni: "70000001",
         name: "Bench",
         phone_primary: "+51911111111",

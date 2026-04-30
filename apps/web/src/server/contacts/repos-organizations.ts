@@ -1,10 +1,12 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { OrganizationId } from "~/server/shared/ids";
 
 export function createOrganizationsRepo(db: Kysely<Database>) {
   return {
-    findById(id: number) {
+    findById(id: OrganizationId) {
       return db
         .selectFrom("organizations")
         .selectAll()
@@ -24,19 +26,20 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
       const existing = await this.findByRuc(ruc);
       if (existing) return existing;
 
-      const result = await db
+      const id = randomUUIDv7();
+      await db
         .insertInto("organizations")
-        .values({ ruc, name, created_at: Date.now() })
+        .values({ id, ruc, name, created_at: Date.now() })
         .executeTakeFirstOrThrow();
 
-      const created = await this.findById(Number(result.insertId));
+      const created = await this.findById(id);
       if (!created) {
         throw new Error("Failed to load organization after creation");
       }
       return created;
     },
 
-    lockToBranch(orgId: number, branchId: number, userId: number) {
+    lockToBranch(orgId: OrganizationId, branchId: number, userId: number) {
       return db
         .updateTable("organizations")
         .set({

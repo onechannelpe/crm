@@ -43,11 +43,13 @@ function makeRepos(activeAssignments = 0) {
       createMany: async () => undefined,
     },
     organizations: {
-      findOrCreate: async (_ruc: string, _name: string) => ({ id: 1 }),
+      findOrCreate: async (_ruc: string, _name: string) => ({
+        id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+      }),
     },
     contacts: {
       findOrCreate: async (
-        _orgId: number,
+        _orgId: string,
         _dni: string,
         _name: string,
         _phone: string,

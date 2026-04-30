@@ -1,7 +1,9 @@
+import { randomUUIDv7 } from "bun";
+
 import type { TestRuntime } from "./runtime/create-test-runtime";
 
 type OrganizationSeed = {
-  id?: number;
+  id?: string;
   ruc: string;
   name: string;
   createdAt?: number;
@@ -9,7 +11,7 @@ type OrganizationSeed = {
 
 type LeadSeed = {
   id: string;
-  organizationId: number;
+  organizationId: string;
   executiveId: number;
   stage:
     | "PENDING_EXTERNAL_REVIEW"
@@ -43,28 +45,20 @@ type UserSeed = {
 export async function seedOrganization(
   runtime: TestRuntime,
   input: OrganizationSeed,
-): Promise<number> {
+): Promise<string> {
   const createdAt = input.createdAt ?? runtime.now.get();
+  const id = input.id ?? randomUUIDv7();
   await runtime.ctx.db
     .insertInto("organizations")
     .values({
-      id: input.id,
+      id,
       ruc: input.ruc,
       name: input.name,
       created_at: createdAt,
     })
     .execute();
 
-  if (input.id !== undefined) {
-    return input.id;
-  }
-
-  const created = await runtime.ctx.db
-    .selectFrom("organizations")
-    .select("id")
-    .where("ruc", "=", input.ruc)
-    .executeTakeFirstOrThrow();
-  return created.id;
+  return id;
 }
 
 export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
