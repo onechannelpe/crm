@@ -9,12 +9,12 @@ import type { Database } from "./types";
 const logger = createLogger("db-seed");
 
 export async function seedIfEmpty(db: Kysely<Database>) {
-  const userCount = await db
-    .selectFrom("users")
+  const branchCount = await db
+    .selectFrom("branches")
     .select(db.fn.countAll().as("count"))
     .executeTakeFirst();
 
-  if (userCount && Number(userCount.count) > 0) {
+  if (branchCount && Number(branchCount.count) > 0) {
     logger.info("seed_skipped_already_initialized");
     return;
   }

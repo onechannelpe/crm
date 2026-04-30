@@ -2,9 +2,11 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "../../types";
 import { compileWorkflowScenario } from "./compiler";
-import { persistDemoSeed } from "./persist";
+import { persistDemoIdentities, persistDemoSeed } from "./persist";
 
 export async function runDemoSeeds(db: Kysely<Database>): Promise<void> {
+  await persistDemoIdentities(db);
+
   const existing = await db
     .selectFrom("workflow_leads")
     .select(db.fn.countAll().as("count"))
