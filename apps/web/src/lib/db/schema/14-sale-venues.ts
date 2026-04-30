@@ -1,6 +1,4 @@
-import { sql, type Kysely } from "kysely";
-
-import { ABONO_BANKS } from "~/workflow/contracts/lead-schema";
+import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -37,30 +35,38 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("workflow_currency_kinds")
+    .addColumn("value", "varchar(3)", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
+    .createTable("workflow_account_type_kinds")
+    .addColumn("value", "varchar(20)", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
+    .createTable("workflow_abono_banks")
+    .addColumn("value", "varchar(50)", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
     .createTable("workflow_sale_venue_accounts")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("venue_id", "text", (col) =>
       col.notNull().references("workflow_sale_venues.id").onDelete("cascade"),
     )
     .addColumn("currency", "varchar(3)", (col) =>
-      col.notNull().check(sql`currency IN ('PEN','USD')`),
+      col.notNull().references("workflow_currency_kinds.value"),
     )
     .addColumn("bank", "varchar(50)", (col) =>
-      col
-        .notNull()
-        .check(sql`bank IN (${sql.join(ABONO_BANKS.map((b) => sql.lit(b)))})`),
+      col.notNull().references("workflow_abono_banks.value"),
     )
     .addColumn("account_type", "varchar(20)", (col) =>
-      col.notNull().check(sql`account_type IN ('AHORROS','CORRIENTE')`),
+      col.notNull().references("workflow_account_type_kinds.value"),
     )
     .addColumn("account_number", "varchar(50)", (col) => col.notNull())
     .addColumn("cci", "varchar(50)")
-    .addColumn("is_settlement", "integer", (col) =>
-      col
-        .notNull()
-        .defaultTo(0)
-        .check(sql`is_settlement IN (0,1)`),
-    )
+    .addColumn("is_settlement", "integer", (col) => col.notNull().defaultTo(0))
     .execute();
 
   await db.schema

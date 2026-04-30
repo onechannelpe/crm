@@ -1,6 +1,14 @@
 import type { Kysely } from "kysely";
 
-import { hashPassword } from "../../auth/password/password";
+import { hashPassword } from "~/lib/auth/password/password";
+import {
+  ABONO_BANKS,
+  ACCOUNT_TYPE_KINDS,
+  CULQI_PRODUCT_KINDS,
+  MODALIDAD_COBRO_KINDS,
+  MONEDAS,
+} from "~/workflow/contracts/lead-schema";
+
 import type { Database } from "../types";
 
 export async function run(db: Kysely<Database>): Promise<void> {
@@ -89,6 +97,36 @@ export async function run(db: Kysely<Database>): Promise<void> {
         updated_at: now,
       },
     ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("workflow_tipo_producto_kinds")
+    .values(CULQI_PRODUCT_KINDS.map((value) => ({ value })))
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("workflow_modalidad_cobro_kinds")
+    .values(MODALIDAD_COBRO_KINDS.map((value) => ({ value })))
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("workflow_currency_kinds")
+    .values(MONEDAS.map((value) => ({ value })))
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("workflow_account_type_kinds")
+    .values(ACCOUNT_TYPE_KINDS.map((value) => ({ value })))
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("workflow_abono_banks")
+    .values(ABONO_BANKS.map((value) => ({ value })))
     .onConflict((oc) => oc.doNothing())
     .execute();
 

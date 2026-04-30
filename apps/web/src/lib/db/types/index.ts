@@ -104,6 +104,8 @@ export {
 
 export {
   type WorkflowLeadsTable,
+  type WorkflowTipoProductoKindsTable,
+  type WorkflowModalidadCobroKindsTable,
   type WorkflowLeadCommercialInputsTable,
   type WorkflowQuotationsTable,
   type WorkflowSalesTable,
@@ -135,7 +137,13 @@ export {
   type WorkflowNegotiationFilesTable,
 } from "./13-negotiation";
 
-export { type WorkflowSaleVenuesTable } from "./14-sale-venues";
+export {
+  type WorkflowSaleVenuesTable,
+  type WorkflowSaleVenueAccountsTable,
+  type WorkflowCurrencyKindsTable,
+  type WorkflowAccountTypeKindsTable,
+  type WorkflowAbonoBanksTable,
+} from "./14-sale-venues";
 
 export interface Database {
   // 00-core
@@ -213,6 +221,8 @@ export interface Database {
 
   // 10-workflow
   workflow_leads: workflow.WorkflowLeadsTable;
+  workflow_tipo_producto_kinds: workflow.WorkflowTipoProductoKindsTable;
+  workflow_modalidad_cobro_kinds: workflow.WorkflowModalidadCobroKindsTable;
   workflow_lead_commercial_inputs: workflow.WorkflowLeadCommercialInputsTable;
   workflow_quotations: workflow.WorkflowQuotationsTable;
   workflow_sales: workflow.WorkflowSalesTable;
@@ -243,4 +253,7 @@ export interface Database {
   // 14-sale-venues
   workflow_sale_venues: saleVenues.WorkflowSaleVenuesTable;
   workflow_sale_venue_accounts: saleVenues.WorkflowSaleVenueAccountsTable;
+  workflow_currency_kinds: saleVenues.WorkflowCurrencyKindsTable;
+  workflow_account_type_kinds: saleVenues.WorkflowAccountTypeKindsTable;
+  workflow_abono_banks: saleVenues.WorkflowAbonoBanksTable;
 }

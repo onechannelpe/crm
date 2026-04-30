@@ -30,3 +30,15 @@ export interface WorkflowSaleVenueAccountsTable {
   cci: string | null;
   is_settlement: 0 | 1;
 }
+
+export interface WorkflowCurrencyKindsTable {
+  value: "PEN" | "USD";
+}
+
+export interface WorkflowAccountTypeKindsTable {
+  value: AccountTypeKind;
+}
+
+export interface WorkflowAbonoBanksTable {
+  value: AbonoBank;
+}

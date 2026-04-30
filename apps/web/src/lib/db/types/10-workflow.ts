@@ -51,6 +51,14 @@ export interface WorkflowLeadCommercialInputsTable {
   updated_by: number;
 }
 
+export interface WorkflowTipoProductoKindsTable {
+  value: CulqiProductKind;
+}
+
+export interface WorkflowModalidadCobroKindsTable {
+  value: ModalidadCobro;
+}
+
 export interface WorkflowQuotationsTable {
   id: Generated<string>;
   lead_id: string;
@@ -130,6 +138,8 @@ export interface WorkflowAuditLogsTable {
 
 export type Db = {
   workflow_leads: WorkflowLeadsTable;
+  workflow_tipo_producto_kinds: WorkflowTipoProductoKindsTable;
+  workflow_modalidad_cobro_kinds: WorkflowModalidadCobroKindsTable;
   workflow_lead_commercial_inputs: WorkflowLeadCommercialInputsTable;
   workflow_quotations: WorkflowQuotationsTable;
   workflow_sales: WorkflowSalesTable;

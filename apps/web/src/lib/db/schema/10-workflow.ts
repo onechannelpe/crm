@@ -1,4 +1,4 @@
-import { sql, type Kysely } from "kysely";
+import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -50,6 +50,16 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("workflow_tipo_producto_kinds")
+    .addColumn("value", "varchar(20)", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
+    .createTable("workflow_modalidad_cobro_kinds")
+    .addColumn("value", "varchar(20)", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
     .createTable("workflow_lead_commercial_inputs")
     .addColumn("lead_id", "text", (col) =>
       col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
@@ -60,17 +70,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("ticket", "real")
     .addColumn("giro_negocio", "text")
     .addColumn("tipo_producto", "varchar(20)", (col) =>
-      col.check(
-        sql`tipo_producto IN ('CULQI_FULL','CULQI_LINK','CULQI_ONLINE')`,
-      ),
+      col.references("workflow_tipo_producto_kinds.value"),
     )
     .addColumn("url_cliente", "text")
     .addColumn("modalidad_cobro", "varchar(20)", (col) =>
-      col
-        .notNull()
-        .check(
-          sql`modalidad_cobro IN ('SUSCRIPCIONES','ONE_CLIC','CARGO_UNICO')`,
-        ),
+      col.notNull().references("workflow_modalidad_cobro_kinds.value"),
     )
     .addColumn("rep_legal_nombres", "varchar(255)")
     .addColumn("rep_legal_apellido_paterno", "varchar(255)")
