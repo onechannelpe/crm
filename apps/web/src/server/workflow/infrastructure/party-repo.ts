@@ -88,16 +88,6 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
         })
         .where("id", "=", values.organizationId)
         .execute();
-      await db
-        .updateTable("workflow_leads")
-        .set({
-          razon_social: values.name,
-          address: values.address,
-          district: values.district,
-          department: values.department,
-        })
-        .where("organization_id", "=", values.organizationId)
-        .execute();
     },
     async upsertPrimaryLegalRepresentative(values: LegalRepresentative) {
       const now = Date.now();

@@ -43,9 +43,10 @@ describe("register lead", () => {
     if (!result.ok) return;
 
     const record = await runtime.ctx.db
-      .selectFrom("workflow_leads")
-      .selectAll()
-      .where("id", "=", result.value.leadId)
+      .selectFrom("workflow_leads as lead")
+      .innerJoin("organizations as org", "org.id", "lead.organization_id")
+      .select(["org.name as razon_social", "org.address"])
+      .where("lead.id", "=", result.value.leadId)
       .executeTakeFirstOrThrow();
     const history = await runtime.ctx.db
       .selectFrom("workflow_history_events")
@@ -76,12 +77,13 @@ describe("register lead", () => {
     if (!result.ok) return;
 
     const record = await runtime.ctx.db
-      .selectFrom("workflow_leads")
-      .select(["razon_social", "address"])
-      .where("id", "=", result.value.leadId)
+      .selectFrom("workflow_leads as lead")
+      .innerJoin("organizations as org", "org.id", "lead.organization_id")
+      .select(["org.name as razon_social", "org.address"])
+      .where("lead.id", "=", result.value.leadId)
       .executeTakeFirstOrThrow();
 
-    expect(record.razon_social).toBeNull();
+    expect(record.razon_social).toBe("20100000002");
     expect(record.address).toBeNull();
   });
 });

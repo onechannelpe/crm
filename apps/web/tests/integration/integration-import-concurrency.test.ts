@@ -36,11 +36,6 @@ describe("integration import workflow concurrency", () => {
         {
           id: "lead-901",
           organization_id: 901,
-          ruc: "20900000001",
-          razon_social: "Org One",
-          address: "Addr 1",
-          district: null,
-          department: null,
           executive_id: 1,
           stage: "PENDING_EXTERNAL_REVIEW",
           status: "DISPONIBLE",
@@ -52,11 +47,6 @@ describe("integration import workflow concurrency", () => {
         {
           id: "lead-902",
           organization_id: 902,
-          ruc: "20900000002",
-          razon_social: "Org Two",
-          address: "Addr 2",
-          district: null,
-          department: null,
           executive_id: 3,
           stage: "PENDING_EXTERNAL_REVIEW",
           status: "SIN RESULTADO",

@@ -4,11 +4,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_leads")
     .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("ruc", "varchar(11)", (col) => col.notNull().unique())
-    .addColumn("razon_social", "varchar(255)")
-    .addColumn("address", "text")
-    .addColumn("district", "varchar(100)")
-    .addColumn("department", "varchar(100)")
     .addColumn("organization_id", "integer", (col) =>
       col.notNull().references("organizations.id"),
     )
@@ -31,11 +26,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("workflow_leads")
     .column("organization_id")
     .unique()
-    .execute();
-  await db.schema
-    .createIndex("idx_workflow_leads_ruc")
-    .on("workflow_leads")
-    .column("ruc")
     .execute();
   await db.schema
     .createIndex("idx_workflow_leads_executive")

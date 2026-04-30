@@ -16,11 +16,6 @@ export type WorkflowStageValue =
 
 export interface WorkflowLeadsTable {
   id: Generated<string>;
-  ruc: string;
-  razon_social: string | null;
-  address: string | null;
-  district: string | null;
-  department: string | null;
   organization_id: number;
   executive_id: number;
   stage: WorkflowStageValue;
