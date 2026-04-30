@@ -1,4 +1,5 @@
 import { randomUUIDv7 } from "bun";
+
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   LegalRepresentative,
