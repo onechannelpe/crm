@@ -1,3 +1,5 @@
+import type { DomainError } from "~/server/shared/domain-error";
+import type { Result } from "~/server/shared/result";
 import type { SaleVenueAccount } from "~/workflow/contracts/lead-schema";
 
 export type LeadSale = {
@@ -38,7 +40,7 @@ export type LeadSaleVenue = {
 
 export type LeadSaleVenueRepository = {
   insert(values: Omit<LeadSaleVenue, "id">): Promise<string>;
-  findById(id: string): Promise<LeadSaleVenue | undefined>;
-  listBySaleId(saleId: string): Promise<LeadSaleVenue[]>;
-  listByLeadId(leadId: string): Promise<LeadSaleVenue[]>;
+  findById(id: string): Promise<Result<LeadSaleVenue | undefined, DomainError>>;
+  listBySaleId(saleId: string): Promise<Result<LeadSaleVenue[], DomainError>>;
+  listByLeadId(leadId: string): Promise<Result<LeadSaleVenue[], DomainError>>;
 };

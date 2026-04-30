@@ -84,7 +84,11 @@ export async function createSaleVenueCommand(
   }
 
   const sale = await deps.leadSales.findById(input.saleId);
-  if (!sale) return leadNotFound();
+  if (!sale) {
+    return Err(
+      domainError("not_found", "sale_not_found", "Sale record not found"),
+    );
+  }
   if (sale.leadId !== input.leadId) {
     return Err(
       domainError(
@@ -125,7 +129,8 @@ export async function createSaleVenueCommand(
 
   const now = deps.clock.now();
   const existingVenues = await deps.leadSaleVenues.listBySaleId(input.saleId);
-  const isFirstVenue = existingVenues.length === 0;
+  if (!existingVenues.ok) return existingVenues;
+  const isFirstVenue = existingVenues.value.length === 0;
   const venueId = await deps.leadSaleVenues.insert({
     saleId: input.saleId,
     leadId: input.leadId,

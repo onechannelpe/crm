@@ -1,6 +1,7 @@
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStage,
@@ -25,12 +26,11 @@ import {
 
 import type { HistoryEventRow } from "./history-event-row";
 
-function invalidPayload(row: HistoryEventRow, key?: string): never {
-  throw new Error(
-    key
-      ? `Invalid history payload field "${key}" for event ${row.id} (${row.event_type})`
-      : `Invalid history payload for event ${row.id} (${row.event_type})`,
-  );
+function invalidPayload(
+  row: HistoryEventRow,
+  key?: string,
+): Result<never, DomainError> {
+  return invalidHistoryPayload({ id: row.id, eventType: row.event_type }, key);
 }
 
 export function parsePayload(
@@ -152,7 +152,7 @@ export function optionalLeadStatus(
     return Ok(null);
   }
   if (typeof value !== "string") {
-    invalidPayload(row, key);
+    return invalidPayload(row, key);
   }
 
   const parsed = parseRequiredLeadStatus(value);
@@ -189,7 +189,7 @@ export function optionalLeadPriority(
     return Ok(null);
   }
   if (typeof value !== "string") {
-    invalidPayload(row, key);
+    return invalidPayload(row, key);
   }
 
   const parsed = parseRequiredLeadPriority(value);

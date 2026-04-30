@@ -1,6 +1,7 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
+import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
 
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
@@ -111,8 +112,9 @@ export function toVenueAddedEntry(
 
   const isFirstVenue = payload?.isFirstVenue;
   if (typeof isFirstVenue !== "boolean") {
-    throw new Error(
-      `Invalid history payload field "isFirstVenue" for event ${row.id} (${row.event_type})`,
+    return invalidHistoryPayload(
+      { id: row.id, eventType: row.event_type },
+      "isFirstVenue",
     );
   }
 

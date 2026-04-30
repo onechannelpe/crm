@@ -3,7 +3,10 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import type { LeadSaleVenue } from "~/server/workflow/application/ports/sale-repository";
+import { missingSaleVenuePenAccount } from "~/server/workflow/domain/integrity-errors";
 
 export type SaleVenueRow = Selectable<Database["workflow_sale_venues"]>;
 export type NewSaleVenueRow = Insertable<Database["workflow_sale_venues"]>;
@@ -17,10 +20,10 @@ export type NewSaleVenueAccountRow = Insertable<
 function toLeadSaleVenue(
   row: SaleVenueRow,
   accountRows: SaleVenueAccountRow[],
-): LeadSaleVenue {
+): Result<LeadSaleVenue, DomainError> {
   const pen = accountRows.find((account) => account.currency === "PEN");
   if (!pen) {
-    throw new Error(`Missing PEN account for sale venue ${row.id}`);
+    return missingSaleVenuePenAccount(row.id);
   }
 
   const usd = accountRows.find((account) => account.currency === "USD");
@@ -59,7 +62,7 @@ function toLeadSaleVenue(
     };
   }
 
-  return venue;
+  return Ok(venue);
 }
 
 async function listAccountsByVenueIds(
@@ -145,14 +148,16 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
       return id;
     },
 
-    async findById(id: string): Promise<LeadSaleVenue | undefined> {
+    async findById(
+      id: string,
+    ): Promise<Result<LeadSaleVenue | undefined, DomainError>> {
       const row = await db
         .selectFrom("workflow_sale_venues")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
 
-      if (!row) return undefined;
+      if (!row) return Ok(undefined);
 
       const accountRows = await db
         .selectFrom("workflow_sale_venue_accounts")
@@ -163,7 +168,9 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
       return toLeadSaleVenue(row, accountRows);
     },
 
-    async listBySaleId(saleId: string): Promise<LeadSaleVenue[]> {
+    async listBySaleId(
+      saleId: string,
+    ): Promise<Result<LeadSaleVenue[], DomainError>> {
       const rows = await db
         .selectFrom("workflow_sale_venues")
         .selectAll()
@@ -176,12 +183,18 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
         rows.map((row) => row.id),
       );
 
-      return rows.map((row) =>
-        toLeadSaleVenue(row, byVenueId.get(row.id) ?? []),
-      );
+      const venues: LeadSaleVenue[] = [];
+      for (const row of rows) {
+        const venue = toLeadSaleVenue(row, byVenueId.get(row.id) ?? []);
+        if (!venue.ok) return Err(venue.error);
+        venues.push(venue.value);
+      }
+      return Ok(venues);
     },
 
-    async listByLeadId(leadId: string): Promise<LeadSaleVenue[]> {
+    async listByLeadId(
+      leadId: string,
+    ): Promise<Result<LeadSaleVenue[], DomainError>> {
       const rows = await db
         .selectFrom("workflow_sale_venues")
         .selectAll()
@@ -194,9 +207,13 @@ export function createSaleVenueRepo(db: DatabaseExecutor) {
         rows.map((row) => row.id),
       );
 
-      return rows.map((row) =>
-        toLeadSaleVenue(row, byVenueId.get(row.id) ?? []),
-      );
+      const venues: LeadSaleVenue[] = [];
+      for (const row of rows) {
+        const venue = toLeadSaleVenue(row, byVenueId.get(row.id) ?? []);
+        if (!venue.ok) return Err(venue.error);
+        venues.push(venue.value);
+      }
+      return Ok(venues);
     },
   };
 }
