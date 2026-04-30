@@ -3,13 +3,14 @@ import type { Kysely } from "kysely";
 import { hashPassword } from "~/lib/auth/password/password";
 
 import type { Database } from "../../../types";
+import { resolveSeedPassword } from "../../shared/seed-password";
 
 export async function persistDemoIdentities(
   db: Kysely<Database>,
   generatedAtMs: number,
 ): Promise<void> {
   const now = generatedAtMs;
-  const passwordHash = await hashPassword("placeholder");
+  const passwordHash = await hashPassword(resolveSeedPassword());
 
   await db
     .insertInto("branches")

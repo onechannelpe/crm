@@ -3,6 +3,7 @@ import type { Kysely } from "kysely";
 import { hashPassword } from "~/lib/auth/password/password";
 
 import type { Database } from "../../../types";
+import { resolveSeedPassword } from "../../shared/seed-password";
 import type { CompiledBaseDataScenario } from "../compiler";
 import { persistAuditActionPolicies } from "./audit-policies";
 import { persistBranchesAndPolicies } from "./branches-policies";
@@ -14,19 +15,11 @@ export async function persistBaseData(
   compiled: CompiledBaseDataScenario,
 ): Promise<void> {
   const now = compiled.generatedAtMs;
-  const realPassword = resolveBootstrapPassword();
+  const realPassword = resolveSeedPassword();
   const realPasswordHash = await hashPassword(realPassword);
 
   await persistBranchesAndPolicies(db, now);
   await persistUsersAndTeams(db, now, realPasswordHash);
   await persistWorkflowKinds(db);
   await persistAuditActionPolicies(db, now);
-}
-
-function resolveBootstrapPassword(): string {
-  const envPassword = process.env.SEED_PASSWORD?.trim();
-  if (envPassword && envPassword.length > 0) {
-    return envPassword;
-  }
-  throw new Error("missing_seed_password");
 }
