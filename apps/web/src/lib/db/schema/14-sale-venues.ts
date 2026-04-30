@@ -77,8 +77,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_workflow_sale_venue_accounts_settlement_unique")
     .on("workflow_sale_venue_accounts")
-    .columns(["venue_id"])
+    .columns(["venue_id", "is_settlement"])
     .unique()
-    .where(sql<boolean>`is_settlement = 1`)
+    .where("is_settlement", "=", 1)
     .execute();
 }
