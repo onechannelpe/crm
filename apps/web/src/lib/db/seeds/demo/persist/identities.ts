@@ -13,9 +13,9 @@ export async function persistDemoIdentities(
   await db
     .insertInto("branches")
     .values([
-      { id: 1, name: "Lima Centro", created_at: now },
-      { id: 2, name: "Lima Norte", created_at: now },
-      { id: 3, name: "Arequipa", created_at: now },
+      { id: 1, name: "Demo Branch 1", created_at: now },
+      { id: 2, name: "Demo Branch 2", created_at: now },
+      { id: 3, name: "Demo Branch 3", created_at: now },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
@@ -25,6 +25,7 @@ export async function persistDemoIdentities(
     .insertInto("users")
     .values([
       {
+        id: 1,
         branch_id: 1,
         username: "valeria.paredes",
         email: "valeria.paredes@onechannel.pe",
@@ -39,6 +40,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 2,
         branch_id: 1,
         username: "diego.ramirez",
         email: "diego.ramirez@onechannel.pe",
@@ -53,6 +55,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 3,
         branch_id: 1,
         username: "camila.rojas",
         email: "camila.rojas@onechannel.pe",
@@ -67,6 +70,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 4,
         branch_id: 1,
         username: "josefina.salazar",
         email: "josefina.salazar@onechannel.pe",
@@ -81,6 +85,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 5,
         branch_id: 1,
         username: "matias.castillo",
         email: "matias.castillo@onechannel.pe",
@@ -95,6 +100,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 6,
         branch_id: 1,
         username: "lucia.mendoza",
         email: "lucia.mendoza@onechannel.pe",
@@ -109,6 +115,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 7,
         branch_id: 1,
         username: "andres.huaman",
         email: "andres.huaman@onechannel.pe",
@@ -123,6 +130,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 8,
         branch_id: 2,
         username: "nicolas.torres",
         email: "nicolas.torres@onechannel.pe",
@@ -137,6 +145,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 9,
         branch_id: 2,
         username: "sofia.espinoza",
         email: "sofia.espinoza@onechannel.pe",
@@ -151,6 +160,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 10,
         branch_id: 2,
         username: "gabriel.vargas",
         email: "gabriel.vargas@onechannel.pe",
@@ -165,6 +175,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 11,
         branch_id: 2,
         username: "elena.gomez",
         email: "elena.gomez@onechannel.pe",
@@ -179,6 +190,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 12,
         branch_id: 3,
         username: "roberto.quispe",
         email: "roberto.quispe@onechannel.pe",
@@ -193,6 +205,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 13,
         branch_id: 3,
         username: "isabella.silva",
         email: "isabella.silva@onechannel.pe",
@@ -207,6 +220,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 14,
         branch_id: 3,
         username: "manuel.suarez",
         email: "manuel.suarez@onechannel.pe",
@@ -221,6 +235,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 15,
         branch_id: 3,
         username: "fernanda.ruiz",
         email: "fernanda.ruiz@onechannel.pe",
@@ -235,6 +250,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 16,
         branch_id: 1,
         username: "claudia.vasquez",
         email: "claudia.vasquez@onechannel.pe",
@@ -249,6 +265,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 17,
         branch_id: 1,
         username: "pablo.flores",
         email: "pablo.flores@onechannel.pe",
@@ -263,6 +280,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 18,
         branch_id: 1,
         username: "marina.guillen",
         email: "marina.guillen@onechannel.pe",
@@ -277,6 +295,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 19,
         branch_id: 2,
         username: "mariana.velasquez",
         email: "mariana.velasquez@onechannel.pe",
@@ -291,6 +310,7 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
+        id: 20,
         branch_id: 2,
         username: "jose.torres",
         email: "jose.torres@onechannel.pe",
@@ -312,24 +332,15 @@ export async function persistDemoIdentities(
   await db
     .insertInto("teams")
     .values([
-      { branch_id: 1, name: "Team Alpha", created_at: now }, // id: 1
-      { branch_id: 1, name: "Team Bravo", created_at: now }, // id: 2
-      { branch_id: 2, name: "Team Norte", created_at: now }, // id: 3
+      { id: 1, branch_id: 1, name: "Team Alpha", created_at: now },
+      { id: 2, branch_id: 1, name: "Team Bravo", created_at: now },
+      { id: 3, branch_id: 2, name: "Team Norte", created_at: now },
       {
+        id: 4,
         branch_id: 2,
         name: "Team Norte B",
         created_at: now,
-      }, // id: 4
-      {
-        branch_id: 4,
-        name: "Infinity Lima",
-        created_at: now,
-      }, // id: 5
-      {
-        branch_id: 4,
-        name: "Infinity Chiclayo",
-        created_at: now,
-      }, // id: 6
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
@@ -341,7 +352,6 @@ export async function persistDemoIdentities(
       { branch_id: 1, user_id: 2, created_at: now }, // Diego Ramirez @ branch 1
       { branch_id: 2, user_id: 8, created_at: now }, // Nicolas Torres @ branch 2
       { branch_id: 2, user_id: 19, created_at: now }, // Mariana Velasquez @ branch 2
-      { branch_id: 4, user_id: 23, created_at: now }, // Luis Betalleluz @ branch 4
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
@@ -352,8 +362,6 @@ export async function persistDemoIdentities(
     .values([
       { back_office_user_id: 4, team_id: 1, assigned_at: now }, // Josefina Salazar @ team 1
       { back_office_user_id: 4, team_id: 2, assigned_at: now }, // Josefina Salazar @ team 2
-      { back_office_user_id: 30, team_id: 5, assigned_at: now }, // Jose Mendoza @ team 5
-      { back_office_user_id: 30, team_id: 6, assigned_at: now }, // Jose Mendoza @ team 6
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();

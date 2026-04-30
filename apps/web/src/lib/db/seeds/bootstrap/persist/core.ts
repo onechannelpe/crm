@@ -62,6 +62,7 @@ export async function persistBaseData(
     .insertInto("users")
     .values([
       {
+        id: 21,
         branch_id: 4,
         username: "jorge.quezada",
         email: "jorge.quezada@infinitycorp.pe",
@@ -76,6 +77,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 22,
         branch_id: 4,
         username: "karina.yalta",
         email: "karina.yalta@infinitycorp.pe",
@@ -90,6 +92,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 23,
         branch_id: 4,
         username: "luis.betalleluz",
         email: "luis.betalleluz@infinitycorp.pe",
@@ -104,6 +107,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 24,
         branch_id: 4,
         username: "sebastian.salazar",
         email: "sebastian.salazar@infinitycorp.pe",
@@ -118,6 +122,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 25,
         branch_id: 4,
         username: "giancarlo.aranguri",
         email: "giancarlo.aranguri@infinitycorp.pe",
@@ -132,6 +137,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 26,
         branch_id: 4,
         username: "paola.lozano",
         email: "paola.lozano@infinitycorp.pe",
@@ -146,6 +152,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 27,
         branch_id: 4,
         username: "veronica.banquez",
         email: "veronica.banquez@infinitycorp.pe",
@@ -160,6 +167,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 28,
         branch_id: 4,
         username: "wendy.sarmiento",
         email: "wendy.sarmiento@infinitycorp.pe",
@@ -174,6 +182,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 29,
         branch_id: 4,
         username: "victor.franco",
         email: "victor.franco@infinitycorp.pe",
@@ -188,6 +197,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 30,
         branch_id: 4,
         username: "jose.mendoza",
         email: "jose.mendoza@infinitycorp.pe",
@@ -202,6 +212,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 31,
         branch_id: 4,
         username: "renato.santacruz",
         email: "renato.santacruz@infinitycorp.pe",
@@ -216,6 +227,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 32,
         branch_id: 4,
         username: "francisco.suyon",
         email: "francisco.suyon@infinitycorp.pe",
@@ -230,6 +242,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 33,
         branch_id: 4,
         username: "franco.fernandez",
         email: "franco.fernandez@infinitycorp.pe",
@@ -244,6 +257,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 34,
         branch_id: 4,
         username: "eber.montalvo",
         email: "eber.montalvo@infinitycorp.pe",
@@ -258,6 +272,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 35,
         branch_id: 4,
         username: "pool.ortega",
         email: "pool.ortega@infinitycorp.pe",
@@ -272,6 +287,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 36,
         branch_id: 4,
         username: "jesus.avalos",
         email: "jesus.avalos@infinitycorp.pe",
@@ -286,6 +302,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 37,
         branch_id: 4,
         username: "joyce.llanos",
         email: "joyce.llanos@infinitycorp.pe",
@@ -300,6 +317,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 38,
         branch_id: 4,
         username: "junior.cardozo",
         email: "junior.cardozo@infinitycorp.pe",
@@ -314,6 +332,7 @@ export async function persistBaseData(
         created_at: now,
       },
       {
+        id: 39,
         branch_id: 4,
         username: "ricardo.nurena",
         email: "ricardo.nurena@infinitycorp.pe",
@@ -329,6 +348,42 @@ export async function persistBaseData(
       },
     ])
     .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("teams")
+    .values([
+      { id: 5, branch_id: 4, name: "Infinity Lima", created_at: now },
+      { id: 6, branch_id: 4, name: "Infinity Chiclayo", created_at: now },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("branch_supervisors")
+    .values([{ branch_id: 4, user_id: 23, created_at: now }])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("back_office_assignments")
+    .values([
+      { back_office_user_id: 30, team_id: 5, assigned_at: now },
+      { back_office_user_id: 30, team_id: 6, assigned_at: now },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .updateTable("users")
+    .set({ team_id: 5 })
+    .where("id", "in", [21, 22, 24, 25, 26, 27, 28, 31, 37, 39])
+    .execute();
+
+  await db
+    .updateTable("users")
+    .set({ team_id: 6 })
+    .where("id", "in", [32, 33, 34, 35, 36, 38])
     .execute();
 
   await db
