@@ -14,12 +14,9 @@ import {
 import type { Database } from "./types";
 
 const logger = createLogger("db-seed");
-const SEED_ID_ALGO_VERSION = "v1";
 const SEED_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
-const DEFAULT_SEED_MODE = "demo";
 
 type SeedStatus = "running" | "completed" | "failed";
-type SeedRunResult = SeedStatus | "skipped";
 type SeedStage = {
   seedName: string;
   sourceFiles: readonly string[];
@@ -29,8 +26,10 @@ type SeedStage = {
 export async function seedIfEmpty(db: Kysely<Database>) {
   logger.info("seed_started");
   const nowMs = Date.now();
-  const seedMode = process.env.SEED_MODE ?? DEFAULT_SEED_MODE;
-  const stages = buildSeedStages(seedMode);
+  const stages: SeedStage[] = [BOOTSTRAP_STAGE];
+  if ((process.env.SEED_MODE ?? "demo") === "demo") {
+    stages.push(DEMO_IDENTITIES_STAGE, DEMO_WORKFLOW_STAGE);
+  }
 
   for (const stage of stages) {
     // eslint-disable-next-line no-await-in-loop
@@ -47,71 +46,59 @@ export async function seedIfEmpty(db: Kysely<Database>) {
   logger.info("seed_completed");
 }
 
-function buildSeedStages(seedMode: string): SeedStage[] {
-  const stages: SeedStage[] = [BOOTSTRAP_STAGE];
-  if (seedMode === "demo") {
-    stages.push(DEMO_IDENTITIES_STAGE, DEMO_WORKFLOW_STAGE);
-  }
-  return stages;
-}
-
 async function executeStage(
   db: Kysely<Database>,
   stage: SeedStage,
   seedId: string,
   nowMs: number,
-): Promise<SeedRunResult> {
-  return db.transaction().execute(async (trx) => {
-    if (await isCompletedSeedRun(trx, stage.seedName, seedId)) {
-      return "skipped";
-    }
-
-    await upsertSeedRunStatus(
-      trx,
-      stage.seedName,
-      seedId,
-      "running",
-      nowMs,
-      null,
-    );
-
-    try {
-      await stage.run(trx, nowMs);
-      await upsertSeedRunStatus(
-        trx,
-        stage.seedName,
-        seedId,
-        "completed",
-        nowMs,
-        null,
-      );
-      return "completed";
-    } catch (error) {
-      await upsertSeedRunStatus(
-        trx,
-        stage.seedName,
-        seedId,
-        "failed",
-        nowMs,
-        errorToMessage(error),
-      );
-      throw error;
-    }
-  });
-}
-
-async function isCompletedSeedRun(
-  db: Kysely<Database>,
-  seedName: string,
-  seedId: string,
-): Promise<boolean> {
+): Promise<SeedStatus | "skipped"> {
   const current = await db
     .selectFrom("seed_runs")
     .select(["status"])
-    .where("seed_name", "=", seedName)
+    .where("seed_name", "=", stage.seedName)
     .where("seed_id", "=", seedId)
     .executeTakeFirst();
-  return current?.status === "completed";
+  if (current?.status === "completed") {
+    return "skipped";
+  }
+
+  const startedAtMs = Date.now();
+  await upsertSeedRunStatus(
+    db,
+    stage.seedName,
+    seedId,
+    "running",
+    startedAtMs,
+    null,
+    null,
+  );
+
+  try {
+    await db.transaction().execute(async (trx) => {
+      await stage.run(trx, nowMs);
+    });
+    await upsertSeedRunStatus(
+      db,
+      stage.seedName,
+      seedId,
+      "completed",
+      startedAtMs,
+      Date.now(),
+      null,
+    );
+    return "completed";
+  } catch (error) {
+    await upsertSeedRunStatus(
+      db,
+      stage.seedName,
+      seedId,
+      "failed",
+      startedAtMs,
+      Date.now(),
+      error instanceof Error ? error.message : String(error),
+    );
+    throw error;
+  }
 }
 
 async function upsertSeedRunStatus(
@@ -119,25 +106,25 @@ async function upsertSeedRunStatus(
   seedName: string,
   seedId: string,
   status: SeedStatus,
-  nowMs: number,
+  startedAtMs: number,
+  completedAtMs: number | null,
   errorMessage: string | null,
 ): Promise<void> {
-  const completedAt = status === "running" ? null : nowMs;
   await db
     .insertInto("seed_runs")
     .values({
       seed_name: seedName,
       seed_id: seedId,
       status,
-      started_at: nowMs,
-      completed_at: completedAt,
+      started_at: startedAtMs,
+      completed_at: completedAtMs,
       error_message: errorMessage,
     })
     .onConflict((oc) =>
       oc.columns(["seed_name", "seed_id"]).doUpdateSet({
         status,
-        started_at: nowMs,
-        completed_at: completedAt,
+        started_at: startedAtMs,
+        completed_at: completedAtMs,
         error_message: errorMessage,
       }),
     )
@@ -146,27 +133,18 @@ async function upsertSeedRunStatus(
 
 async function computeSeedId(stage: SeedStage): Promise<string> {
   const hash = new Bun.CryptoHasher("sha256");
-  hash.update(SEED_ID_ALGO_VERSION);
-  hash.update("\n");
   hash.update(stage.seedName);
   hash.update("\n");
   for (const relativePath of stage.sourceFiles) {
     const path = resolve(SEED_DIR, relativePath);
     // eslint-disable-next-line no-await-in-loop
     const content = await readFile(path, "utf8");
-    hash.update(path);
+    hash.update(relativePath);
     hash.update("\n");
     hash.update(content);
     hash.update("\n");
   }
   return hash.digest("hex");
-}
-
-function errorToMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
 }
 
 const BOOTSTRAP_STAGE: SeedStage = {
