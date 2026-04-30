@@ -174,6 +174,10 @@ const BOOTSTRAP_STAGE: SeedStage = {
   sourceFiles: [
     "./seeds/bootstrap/index.ts",
     "./seeds/bootstrap/persist/core.ts",
+    "./seeds/bootstrap/persist/branches-policies.ts",
+    "./seeds/bootstrap/persist/users-teams.ts",
+    "./seeds/bootstrap/persist/workflow-kinds.ts",
+    "./seeds/bootstrap/persist/audit-policies.ts",
   ],
   run: runBootstrapSeedStage,
 };
@@ -191,6 +195,11 @@ const DEMO_WORKFLOW_STAGE: SeedStage = {
     "./seeds/demo/scenario.ts",
     "./seeds/demo/compiler.ts",
     "./seeds/demo/persist/core.ts",
+    "./seeds/demo/persist/organizations.ts",
+    "./seeds/demo/persist/workflow-leads.ts",
+    "./seeds/demo/persist/search-overlays.ts",
+    "./seeds/demo/persist/workflow-commercial.ts",
+    "./seeds/demo/persist/history-events.ts",
   ],
   run: runDemoWorkflowSeedStage,
 };
