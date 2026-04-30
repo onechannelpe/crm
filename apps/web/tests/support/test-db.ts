@@ -24,6 +24,13 @@ const TEMPLATE_DB_NAME = "__template-seeded.db";
 const TEST_ORG_ID_LIMA = "01974fd5-f261-7a7d-93f5-2f3d0f963001";
 const TEST_ORG_ID_NORTE = "01974fd5-f261-7a7d-93f5-2f3d0f963002";
 
+export const TEST_FIXTURES = {
+  organizations: {
+    lima: { id: TEST_ORG_ID_LIMA, ruc: "20100000001" },
+    norte: { id: TEST_ORG_ID_NORTE, ruc: "20100000002" },
+  },
+} as const;
+
 let templateDbPathPromise: Promise<string> | null = null;
 
 async function seedTemplate(db: Kysely<Database>) {
@@ -208,6 +215,7 @@ export interface TestDbContext {
   storageRoot: string;
   db: Kysely<Database>;
   repos: TestRepositories;
+  fixtures: typeof TEST_FIXTURES;
 }
 
 async function buildSeededTemplateDb(templateDbPath: string): Promise<void> {
@@ -276,6 +284,7 @@ export async function createIsolatedTestDb(
     storageRoot,
     db,
     repos,
+    fixtures: TEST_FIXTURES,
   };
 }
 
