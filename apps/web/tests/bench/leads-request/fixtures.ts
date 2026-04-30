@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import type { DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type {
@@ -44,17 +42,12 @@ export async function seedLeadsRequestFixtures(
   await ctx.db.insertInto("users").values(users).execute();
   const userIds = users.map((user) => user.id);
 
-  const organizations = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: randomUUIDv7(),
-    ruc: `2099${String(index).padStart(8, "0")}`,
-    name: `Bench Org ${index}`,
-    created_at: BENCH_NOW,
-    locked_branch_id: null,
-    locked_at: null,
-    locked_by_user_id: null,
-  }));
-
-  await ctx.db.insertInto("organizations").values(organizations).execute();
+  for (let index = 0; index < USER_POOL_SIZE; index += 1) {
+    await ctx.repos.organizations.findOrCreate(
+      `2099${String(index).padStart(8, "0")}`,
+      `Bench Org ${index}`,
+    );
+  }
 
   // Seed lead capacity grants so each user can complete one refill.
   // bufferTarget defaults to system default; grant 5 units per user to cover it.
