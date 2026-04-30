@@ -14,10 +14,19 @@ export async function persistBaseData(
   compiled: CompiledBaseDataScenario,
 ): Promise<void> {
   const now = compiled.generatedAtMs;
-  const realPasswordHash = await hashPassword("infinitypay");
+  const realPassword = resolveBootstrapPassword();
+  const realPasswordHash = await hashPassword(realPassword);
 
   await persistBranchesAndPolicies(db, now);
   await persistUsersAndTeams(db, now, realPasswordHash);
   await persistWorkflowKinds(db);
   await persistAuditActionPolicies(db, now);
+}
+
+function resolveBootstrapPassword(): string {
+  const envPassword = process.env.SEED_PASSWORD?.trim();
+  if (envPassword && envPassword.length > 0) {
+    return envPassword;
+  }
+  throw new Error("missing_seed_password");
 }
