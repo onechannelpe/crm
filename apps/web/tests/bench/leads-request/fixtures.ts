@@ -1,3 +1,5 @@
+import { randomUUIDv7 } from "bun";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type {
@@ -43,7 +45,7 @@ export async function seedLeadsRequestFixtures(
   const userIds = users.map((user) => user.id);
 
   const organizations = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: `01974fd5-f261-7a7d-93f5-2f3d0f96${String(index + 3000).padStart(4, "0")}`,
+    id: randomUUIDv7(),
     ruc: `2099${String(index).padStart(8, "0")}`,
     name: `Bench Org ${index}`,
     created_at: BENCH_NOW,
