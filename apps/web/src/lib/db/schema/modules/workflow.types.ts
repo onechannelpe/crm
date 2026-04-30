@@ -3,7 +3,7 @@ import type { Generated } from "kysely";
 import type {
   CulqiProductKind,
   ModalidadCobro,
-} from "../../../../workflow/contracts/lead-schema";
+} from "~/workflow/contracts/lead-schema";
 
 export type WorkflowStageValue =
   | "PENDING_EXTERNAL_REVIEW"
