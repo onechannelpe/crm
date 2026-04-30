@@ -9,13 +9,13 @@ import {
   createPasskeyLoginStartAuthService,
 } from "~/server/auth/passkey/service";
 import { isErr } from "~/server/shared/result";
+
 import {
   createAuthFlow,
   createRegistrationChallenge,
   createWebauthnProvider,
   invalidRegistrationProvider,
-} from "~/tests/support/passkey-test-kit";
-
+} from "../support/passkey-test-kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -27,7 +27,6 @@ const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 describe("passkey flows", () => {
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.66";
-  const fixedNow = 1_700_000_000_000;
 
   beforeEach(async () => {
     ctx = await createIsolatedTestDb("passkey-flows");
@@ -89,7 +88,6 @@ describe("passkey flows", () => {
       ctx,
       userId: 1,
       challenge: "challenge-1",
-      nowMs: fixedNow,
     });
 
     const result = await createPasskeyLoginFinishAuthService(
@@ -212,7 +210,6 @@ describe("passkey flows", () => {
       ctx,
       userId: 1,
       challenge: "challenge-r1",
-      nowMs: fixedNow,
     });
 
     const result = await createPasskeyEnrollmentAuthService(
@@ -252,7 +249,6 @@ describe("passkey flows", () => {
       ctx,
       userId: 1,
       challenge: "challenge-r2",
-      nowMs: fixedNow,
     });
 
     const result = await createPasskeyEnrollmentAuthService(ctx.repos, {
@@ -285,7 +281,6 @@ describe("passkey flows", () => {
       ctx,
       userId: 1,
       challenge: "challenge-r3",
-      nowMs: fixedNow,
     });
 
     await expect(
@@ -319,7 +314,6 @@ describe("passkey flows", () => {
       ctx,
       userId: 1,
       challenge: "challenge-workflow-1",
-      nowMs: fixedNow,
     });
 
     const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
@@ -437,7 +431,6 @@ describe("passkey flows", () => {
       ctx,
       userId: 1,
       challenge: "challenge-mismatch-1",
-      nowMs: fixedNow,
     });
 
     const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
@@ -477,7 +470,6 @@ describe("passkey flows", () => {
       ctx,
       userId: 1,
       challenge: "challenge-workflow-2",
-      nowMs: fixedNow,
     });
 
     const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
