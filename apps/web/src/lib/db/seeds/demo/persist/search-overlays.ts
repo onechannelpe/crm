@@ -179,6 +179,21 @@ export async function persistSearchOverlays(
         }),
       },
     ])
-    .onConflict((oc) => oc.doNothing())
+    .onConflict((oc) =>
+      oc.columns(["document_type", "document_value"]).doUpdateSet((eb) => ({
+        full_name: eb.ref("excluded.full_name"),
+        legal_name: eb.ref("excluded.legal_name"),
+        address: eb.ref("excluded.address"),
+        district: eb.ref("excluded.district"),
+        department: eb.ref("excluded.department"),
+        contributor_status: eb.ref("excluded.contributor_status"),
+        contributor_condition: eb.ref("excluded.contributor_condition"),
+        economic_activities_json: eb.ref("excluded.economic_activities_json"),
+        source: eb.ref("excluded.source"),
+        fetched_at: eb.ref("excluded.fetched_at"),
+        expires_at: eb.ref("excluded.expires_at"),
+        payload_json: eb.ref("excluded.payload_json"),
+      })),
+    )
     .execute();
 }

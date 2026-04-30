@@ -81,7 +81,6 @@ export interface Database {
   search_enrichment_completion_outbox: search.SearchEnrichmentCompletionOutboxTable;
   audit_logs: platform.AuditLogsTable;
   audit_action_policies: platform.AuditActionPoliciesTable;
-  seed_runs: platform.SeedRunsTable;
   report_export_jobs: platform.ReportExportJobsTable;
   report_export_downloads: platform.ReportExportDownloadsTable;
   action_observations: observability.ActionObservationsTable;

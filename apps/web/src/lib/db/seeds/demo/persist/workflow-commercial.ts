@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { OrganizationId } from "~/server/shared/ids";
@@ -61,6 +60,20 @@ export async function persistWorkflowCommercialData(
         created_by: BO1,
       },
     ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        lead_id: eb.ref("excluded.lead_id"),
+        payback_pricing: eb.ref("excluded.payback_pricing"),
+        tarifa_debito: eb.ref("excluded.tarifa_debito"),
+        tarifa_credito: eb.ref("excluded.tarifa_credito"),
+        tarifa_foraneo: eb.ref("excluded.tarifa_foraneo"),
+        fee: eb.ref("excluded.fee"),
+        moneda: eb.ref("excluded.moneda"),
+        version: eb.ref("excluded.version"),
+        created_at: eb.ref("excluded.created_at"),
+        created_by: eb.ref("excluded.created_by"),
+      })),
+    )
     .execute();
 
   await db
@@ -73,6 +86,13 @@ export async function persistWorkflowCommercialData(
         created_at: now - 20 * day,
       },
     ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        lead_id: eb.ref("excluded.lead_id"),
+        executive_id: eb.ref("excluded.executive_id"),
+        created_at: eb.ref("excluded.created_at"),
+      })),
+    )
     .execute();
 
   await db
@@ -93,13 +113,28 @@ export async function persistWorkflowCommercialData(
         created_by: EXEC_DANIELA,
       },
     ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        sale_id: eb.ref("excluded.sale_id"),
+        lead_id: eb.ref("excluded.lead_id"),
+        nombre_comercial: eb.ref("excluded.nombre_comercial"),
+        cantidad_pos: eb.ref("excluded.cantidad_pos"),
+        direccion: eb.ref("excluded.direccion"),
+        referencia: eb.ref("excluded.referencia"),
+        distrito: eb.ref("excluded.distrito"),
+        provincia: eb.ref("excluded.provincia"),
+        departamento: eb.ref("excluded.departamento"),
+        created_at: eb.ref("excluded.created_at"),
+        created_by: eb.ref("excluded.created_by"),
+      })),
+    )
     .execute();
 
   await db
     .insertInto("workflow_sale_venue_accounts")
     .values([
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-venue-account-pen",
         venue_id: vidConverted,
         currency: "PEN",
         bank: "BCP",
@@ -109,7 +144,7 @@ export async function persistWorkflowCommercialData(
         is_settlement: 1,
       },
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-venue-account-usd",
         venue_id: vidConverted,
         currency: "USD",
         bank: "BBVA",
@@ -119,6 +154,17 @@ export async function persistWorkflowCommercialData(
         is_settlement: 0,
       },
     ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        venue_id: eb.ref("excluded.venue_id"),
+        currency: eb.ref("excluded.currency"),
+        bank: eb.ref("excluded.bank"),
+        account_type: eb.ref("excluded.account_type"),
+        account_number: eb.ref("excluded.account_number"),
+        cci: eb.ref("excluded.cci"),
+        is_settlement: eb.ref("excluded.is_settlement"),
+      })),
+    )
     .execute();
 
   await db
@@ -137,6 +183,19 @@ export async function persistWorkflowCommercialData(
         updated_by: BO1,
       },
     ])
+    .onConflict((oc) =>
+      oc.column("lead_id").doUpdateSet((eb) => ({
+        proveedor_actual: eb.ref("excluded.proveedor_actual"),
+        tasa_actual: eb.ref("excluded.tasa_actual"),
+        gpv: eb.ref("excluded.gpv"),
+        ticket: eb.ref("excluded.ticket"),
+        tipo_producto: eb.ref("excluded.tipo_producto"),
+        url_cliente: eb.ref("excluded.url_cliente"),
+        modalidad_cobro: eb.ref("excluded.modalidad_cobro"),
+        updated_at: eb.ref("excluded.updated_at"),
+        updated_by: eb.ref("excluded.updated_by"),
+      })),
+    )
     .execute();
 
   const convertedOrgId = getOrganizationId("converted");
@@ -159,6 +218,16 @@ export async function persistWorkflowCommercialData(
       created_at: now - 29 * day,
       updated_at: now - 29 * day,
     })
+    .onConflict((oc) =>
+      oc.columns(["organization_id", "dni"]).doUpdateSet((eb) => ({
+        nombres: eb.ref("excluded.nombres"),
+        apellido_paterno: eb.ref("excluded.apellido_paterno"),
+        apellido_materno: eb.ref("excluded.apellido_materno"),
+        telefono: eb.ref("excluded.telefono"),
+        email: eb.ref("excluded.email"),
+        updated_at: eb.ref("excluded.updated_at"),
+      })),
+    )
     .execute();
 
   const legalRep = await db
@@ -168,14 +237,23 @@ export async function persistWorkflowCommercialData(
     .where("dni", "=", "42715983")
     .executeTakeFirstOrThrow();
 
-  await db
-    .insertInto("organization_person_roles")
-    .values({
-      organization_person_id: legalRep.id,
-      role: "LEGAL_REPRESENTATIVE",
-      is_primary: 1,
-      effective_from: now - 29 * day,
-      effective_to: null,
-    })
-    .execute();
+  const existingLegalRepRole = await db
+    .selectFrom("organization_person_roles")
+    .select("id")
+    .where("organization_person_id", "=", legalRep.id)
+    .where("role", "=", "LEGAL_REPRESENTATIVE")
+    .where("effective_to", "is", null)
+    .executeTakeFirst();
+  if (!existingLegalRepRole) {
+    await db
+      .insertInto("organization_person_roles")
+      .values({
+        organization_person_id: legalRep.id,
+        role: "LEGAL_REPRESENTATIVE",
+        is_primary: 1,
+        effective_from: now - 29 * day,
+        effective_to: null,
+      })
+      .execute();
+  }
 }

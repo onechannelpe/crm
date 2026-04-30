@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { OrganizationId } from "~/server/shared/ids";
@@ -124,13 +123,26 @@ export async function persistWorkflowLeadsAndAssignments(
         updated_at: now - 2 * day,
       },
     ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        organization_id: eb.ref("excluded.organization_id"),
+        executive_id: eb.ref("excluded.executive_id"),
+        stage: eb.ref("excluded.stage"),
+        status: eb.ref("excluded.status"),
+        prioridad: eb.ref("excluded.prioridad"),
+        created_by: eb.ref("excluded.created_by"),
+        updated_by: eb.ref("excluded.updated_by"),
+        created_at: eb.ref("excluded.created_at"),
+        updated_at: eb.ref("excluded.updated_at"),
+      })),
+    )
     .execute();
 
   await db
     .insertInto("workflow_lead_assignments")
     .values([
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-assignment-pending",
         lead_id: idPending,
         executive_id: EXEC_CAMILA,
         assigned_by: SUP1,
@@ -138,7 +150,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: now - day,
       },
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-assignment-needs",
         lead_id: idNeeds,
         executive_id: EXEC_PATRICIA,
         assigned_by: SUP1,
@@ -146,7 +158,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: now - 4 * day,
       },
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-assignment-ready",
         lead_id: idReady,
         executive_id: EXEC_ROBERTO,
         assigned_by: SUP1,
@@ -154,7 +166,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: now - 7 * day,
       },
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-assignment-quoted",
         lead_id: idQuoted,
         executive_id: EXEC_ANDREA,
         assigned_by: SUP2,
@@ -162,7 +174,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: now - 14 * day,
       },
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-assignment-for-sale",
         lead_id: idForSale,
         executive_id: EXEC_RENATO,
         assigned_by: SUP1,
@@ -170,7 +182,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: now - 21 * day,
       },
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-assignment-converted",
         lead_id: idConverted,
         executive_id: EXEC_DANIELA,
         assigned_by: SUP1,
@@ -178,7 +190,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: now - 30 * day,
       },
       {
-        id: randomUUIDv7(),
+        id: "demo-workflow-assignment-rejected",
         lead_id: idRejected,
         executive_id: EXEC_GABRIEL,
         assigned_by: SUP2,
@@ -186,5 +198,14 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: now - 3 * day,
       },
     ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        lead_id: eb.ref("excluded.lead_id"),
+        executive_id: eb.ref("excluded.executive_id"),
+        assigned_by: eb.ref("excluded.assigned_by"),
+        is_active: eb.ref("excluded.is_active"),
+        assigned_at: eb.ref("excluded.assigned_at"),
+      })),
+    )
     .execute();
 }

@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "../../../types";
@@ -66,10 +65,10 @@ function buildLeadIds(compiled: CompiledWorkflowScenario): WorkflowLeadIds {
 
 function buildWorkflowArtifactIds(): WorkflowArtifactIds {
   return {
-    qidQuoted: randomUUIDv7(),
-    qidForSale: randomUUIDv7(),
-    qidConverted: randomUUIDv7(),
-    sidConverted: randomUUIDv7(),
-    vidConverted: randomUUIDv7(),
+    qidQuoted: "demo-workflow-quotation-quoted",
+    qidForSale: "demo-workflow-quotation-for-sale",
+    qidConverted: "demo-workflow-quotation-converted",
+    sidConverted: "demo-workflow-sale-converted",
+    vidConverted: "demo-workflow-venue-converted",
   };
 }

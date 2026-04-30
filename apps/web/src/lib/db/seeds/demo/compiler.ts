@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import {
   LEADS,
   ORGANIZATION_KEYS,
@@ -31,7 +29,7 @@ export function compileWorkflowScenario(
 
   const leadIdsByKey = new Map<LeadSeedKey, string>();
   for (const lead of LEADS) {
-    leadIdsByKey.set(lead.key, randomUUIDv7());
+    leadIdsByKey.set(lead.key, `demo-workflow-lead-${lead.key}`);
   }
 
   return {

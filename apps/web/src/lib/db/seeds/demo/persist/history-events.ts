@@ -53,6 +53,18 @@ export async function persistWorkflowHistoryEvents(
   const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } =
     artifacts;
   await db
+    .deleteFrom("workflow_history_events")
+    .where("lead_id", "in", [
+      idPending,
+      idNeeds,
+      idReady,
+      idQuoted,
+      idForSale,
+      idConverted,
+      idRejected,
+    ])
+    .execute();
+  await db
     .insertInto("workflow_history_events")
     .values([
       // Lead: PENDING_EXTERNAL_REVIEW
