@@ -28,18 +28,18 @@ describe("integration import workflow concurrency", () => {
 
   it("applies import while export reads run concurrently and dispatches both outboxes", async () => {
     await seedOrganization(runtime, {
-      id: 901,
+      id: "01974fd5-f261-7a7d-93f5-2f3d0f963901",
       ruc: "20900000001",
       name: "Org One",
     });
     await seedOrganization(runtime, {
-      id: 902,
+      id: "01974fd5-f261-7a7d-93f5-2f3d0f963902",
       ruc: "20900000002",
       name: "Org Two",
     });
     await seedLead(runtime, {
       id: "lead-901",
-      organizationId: 901,
+      organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963901",
       executiveId: 1,
       stage: "PENDING_EXTERNAL_REVIEW",
       status: "DISPONIBLE",
@@ -47,7 +47,7 @@ describe("integration import workflow concurrency", () => {
     });
     await seedLead(runtime, {
       id: "lead-902",
-      organizationId: 902,
+      organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963902",
       executiveId: 3,
       stage: "PENDING_EXTERNAL_REVIEW",
       status: "SIN RESULTADO",

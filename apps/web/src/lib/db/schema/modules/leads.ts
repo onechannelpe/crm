@@ -4,7 +4,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("organization_people")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("organization_id", "integer", (col) =>
+    .addColumn("organization_id", "text", (col) =>
       col.notNull().references("organizations.id").onDelete("cascade"),
     )
     .addColumn("dni", "varchar(20)", (col) => col.notNull())
@@ -41,7 +41,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("contacts")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("organization_id", "integer", (col) =>
+    .addColumn("organization_id", "text", (col) =>
       col.notNull().references("organizations.id"),
     )
     .addColumn("dni", "varchar(20)", (col) => col.notNull())

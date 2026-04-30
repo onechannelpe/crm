@@ -75,7 +75,7 @@ export async function createContactWithoutPhone(input: {
   const result = await input.ctx.db
     .insertInto("contacts")
     .values({
-      organization_id: 1,
+      organization_id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
       dni: `7999${input.sequence.toString().padStart(4, "0")}`,
       name: "Contacto sin telefono",
       phone_primary: null,

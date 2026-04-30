@@ -2,7 +2,7 @@ import type { Generated } from "kysely";
 
 export interface OrganizationPeopleTable {
   id: Generated<number>;
-  organization_id: number;
+  organization_id: string;
   dni: string;
   nombres: string;
   apellido_paterno: string;
@@ -24,7 +24,7 @@ export interface OrganizationPersonRolesTable {
 
 export interface ContactsTable {
   id: Generated<number>;
-  organization_id: number;
+  organization_id: string;
   dni: string;
   name: string;
   phone_primary: string | null;

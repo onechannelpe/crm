@@ -16,7 +16,7 @@ export type WorkflowStageValue =
 
 export interface WorkflowLeadsTable {
   id: Generated<string>;
-  organization_id: number;
+  organization_id: string;
   executive_id: number;
   stage: WorkflowStageValue;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;

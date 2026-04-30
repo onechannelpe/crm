@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   LegalRepresentative,
@@ -6,7 +7,7 @@ import type {
 } from "~/server/workflow/application/ports/party-repository";
 
 function toOrganizationProfile(row: {
-  id: number;
+  id: string;
   ruc: string;
   name: string;
   giro_negocio: string | null;
@@ -50,9 +51,11 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
       return row ? toOrganizationProfile(row) : undefined;
     },
     async createOrganization(values) {
+      const id = randomUUIDv7();
       await db
         .insertInto("organizations")
         .values({
+          id,
           ruc: values.ruc,
           name: values.name,
           address: values.address,
@@ -64,7 +67,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
       const created = await db
         .selectFrom("organizations")
         .selectAll()
-        .where("ruc", "=", values.ruc)
+        .where("id", "=", id)
         .executeTakeFirstOrThrow();
       return toOrganizationProfile(created);
     },

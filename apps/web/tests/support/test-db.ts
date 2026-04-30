@@ -21,6 +21,8 @@ import {
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 const TEMPLATE_DB_NAME = "__template-seeded.db";
+const TEST_ORG_ID_LIMA = "01974fd5-f261-7a7d-93f5-2f3d0f963001";
+const TEST_ORG_ID_NORTE = "01974fd5-f261-7a7d-93f5-2f3d0f963002";
 
 let templateDbPathPromise: Promise<string> | null = null;
 
@@ -125,7 +127,7 @@ async function seedTemplate(db: Kysely<Database>) {
     .insertInto("organizations")
     .values([
       {
-        id: 1,
+        id: TEST_ORG_ID_LIMA,
         ruc: "20100000001",
         name: "Org Lima",
         created_at: now,
@@ -134,7 +136,7 @@ async function seedTemplate(db: Kysely<Database>) {
         locked_by_user_id: null,
       },
       {
-        id: 2,
+        id: TEST_ORG_ID_NORTE,
         ruc: "20100000002",
         name: "Org Norte",
         created_at: now,
@@ -150,7 +152,7 @@ async function seedTemplate(db: Kysely<Database>) {
     .values([
       {
         id: 1,
-        organization_id: 1,
+        organization_id: TEST_ORG_ID_LIMA,
         dni: "70000001",
         name: "Contacto Lima",
         phone_primary: "+51999999111",
@@ -162,7 +164,7 @@ async function seedTemplate(db: Kysely<Database>) {
       },
       {
         id: 2,
-        organization_id: 2,
+        organization_id: TEST_ORG_ID_NORTE,
         dni: "70000002",
         name: "Contacto Norte",
         phone_primary: "+51999999222",

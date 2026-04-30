@@ -15,7 +15,7 @@ export function makeWorkflowLead(
 ): LeadRecord {
   return {
     id: "lead-1",
-    organizationId: 1,
+    organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963121",
     ruc: "20100000001",
     razonSocial: "Org Test",
     address: null,

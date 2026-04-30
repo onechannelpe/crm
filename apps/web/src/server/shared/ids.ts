@@ -1,6 +1,7 @@
 export type UserId = number;
 export type TeamId = number;
 export type BranchId = number;
+export type OrganizationId = string;
 export type AssignmentId = number;
 export type CapacityRequestId = number;
 export interface SearchReservationId {

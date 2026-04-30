@@ -1,5 +1,5 @@
 export type OrganizationProfile = {
-  id: number;
+  id: string;
   ruc: string;
   name: string;
   giroNegocio: string | null;
@@ -12,7 +12,7 @@ export type OrganizationProfile = {
 };
 
 export type LegalRepresentative = {
-  organizationId: number;
+  organizationId: string;
   nombres: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
@@ -23,7 +23,7 @@ export type LegalRepresentative = {
 
 export type PartyRepository = {
   findOrganizationByRuc(ruc: string): Promise<OrganizationProfile | undefined>;
-  findOrganizationById(id: number): Promise<OrganizationProfile | undefined>;
+  findOrganizationById(id: string): Promise<OrganizationProfile | undefined>;
   createOrganization(values: {
     ruc: string;
     name: string;
@@ -32,11 +32,11 @@ export type PartyRepository = {
     department: string | null;
   }): Promise<OrganizationProfile>;
   updateOrganizationCommercial(values: {
-    organizationId: number;
+    organizationId: string;
     giroNegocio: string;
   }): Promise<void>;
   updateOrganizationFromEnrichment(values: {
-    organizationId: number;
+    organizationId: string;
     name?: string;
     address?: string;
     district?: string;
@@ -44,6 +44,6 @@ export type PartyRepository = {
   }): Promise<void>;
   upsertPrimaryLegalRepresentative(values: LegalRepresentative): Promise<void>;
   findPrimaryLegalRepresentative(
-    organizationId: number,
+    organizationId: string,
   ): Promise<LegalRepresentative | undefined>;
 };

@@ -21,7 +21,7 @@ export function createContactsRepo(db: Kysely<Database>) {
     },
 
     async findOrCreate(
-      orgId: number,
+      orgId: string,
       dni: string,
       name: string,
       phonePrimary: string | null,

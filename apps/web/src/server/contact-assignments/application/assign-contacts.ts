@@ -28,7 +28,7 @@ type AssignContactsRepos = AssignmentPlanRepos &
     };
     contacts: {
       findOrCreate(
-        organizationId: number,
+        organizationId: string,
         dni: string,
         name: string,
         phone: string,

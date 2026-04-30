@@ -50,5 +50,5 @@ export type ActiveContactAssignmentView = {
   name: string;
   dni: string;
   phonePrimary: string | null;
-  organizationId: number;
+  organizationId: string;
 };

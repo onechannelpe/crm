@@ -16,7 +16,7 @@ import type {
 
 export type LeadRow = {
   id: string;
-  organization_id: number;
+  organization_id: string;
   executive_id: number;
   created_by: number;
   updated_by: number | null;

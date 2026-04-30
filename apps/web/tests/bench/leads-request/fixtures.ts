@@ -12,7 +12,6 @@ import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 80;
 const USER_ID_START = 90_000;
-const ORG_ID_START = 80_000;
 
 interface LeadsRequestSeed {
   userIds: number[];
@@ -44,7 +43,7 @@ export async function seedLeadsRequestFixtures(
   const userIds = users.map((user) => user.id);
 
   const organizations = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: ORG_ID_START + index,
+    id: `01974fd5-f261-7a7d-93f5-2f3d0f96${String(index + 3000).padStart(4, "0")}`,
     ruc: `2099${String(index).padStart(8, "0")}`,
     name: `Bench Org ${index}`,
     created_at: BENCH_NOW,
