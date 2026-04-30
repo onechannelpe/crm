@@ -9,7 +9,7 @@ import {
   MONEDAS,
 } from "~/workflow/contracts/lead-schema";
 
-import type { Database } from "../types";
+import type { Database } from "../../types";
 
 export async function run(db: Kysely<Database>): Promise<void> {
   const now = Date.now();

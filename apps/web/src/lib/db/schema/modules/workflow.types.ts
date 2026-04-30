@@ -3,7 +3,7 @@ import type { Generated } from "kysely";
 import type {
   CulqiProductKind,
   ModalidadCobro,
-} from "../../../workflow/contracts/lead-schema";
+} from "../../../../workflow/contracts/lead-schema";
 
 export type WorkflowStageValue =
   | "PENDING_EXTERNAL_REVIEW"
@@ -135,17 +135,3 @@ export interface WorkflowAuditLogsTable {
   changes: string | null;
   created_at: number;
 }
-
-export type Db = {
-  workflow_leads: WorkflowLeadsTable;
-  workflow_tipo_producto_kinds: WorkflowTipoProductoKindsTable;
-  workflow_modalidad_cobro_kinds: WorkflowModalidadCobroKindsTable;
-  workflow_lead_commercial_inputs: WorkflowLeadCommercialInputsTable;
-  workflow_quotations: WorkflowQuotationsTable;
-  workflow_sales: WorkflowSalesTable;
-  workflow_lead_assignments: WorkflowLeadAssignmentsTable;
-  workflow_lead_favorites: WorkflowLeadFavoritesTable;
-  workflow_history_events: WorkflowHistoryEventsTable;
-  workflow_audit_logs: WorkflowAuditLogsTable;
-  lead_sourcing_policies: LeadSourcingPoliciesTable;
-};

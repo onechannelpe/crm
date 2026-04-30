@@ -72,10 +72,3 @@ export interface InteractionLogsTable {
   duration_seconds: number | null;
   created_at: number;
 }
-
-export type Db = {
-  users: UsersTable;
-  contacts: ContactsTable;
-  lead_assignments: LeadAssignmentsTable;
-  interaction_logs: InteractionLogsTable;
-};

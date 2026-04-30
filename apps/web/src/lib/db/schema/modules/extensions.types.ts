@@ -66,10 +66,3 @@ export interface ExtensionExecutiveStatusesTable {
   source_event_id: string | null;
   source_event_sequence: number | null;
 }
-
-export type Db = {
-  extension_handoffs: ExtensionHandoffsTable;
-  extension_installation_sessions: ExtensionInstallationSessionsTable;
-  extension_runtime_events: ExtensionRuntimeEventsTable;
-  extension_executive_statuses: ExtensionExecutiveStatusesTable;
-};

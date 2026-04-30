@@ -18,8 +18,3 @@ export interface WorkflowNegotiationFilesTable {
   uploaded_by_user_id: number;
   created_at: number;
 }
-
-export type Db = {
-  workflow_negotiation_requests: WorkflowNegotiationRequestsTable;
-  workflow_negotiation_files: WorkflowNegotiationFilesTable;
-};

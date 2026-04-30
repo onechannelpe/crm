@@ -3,7 +3,7 @@ import type { Generated } from "kysely";
 import type {
   AbonoBank,
   AccountTypeKind,
-} from "../../../workflow/contracts/lead-schema";
+} from "../../../../workflow/contracts/lead-schema";
 
 export interface WorkflowSaleVenuesTable {
   id: Generated<string>;

@@ -89,13 +89,3 @@ export interface AppNotificationsTable {
   created_at: number;
   read_at: number | null;
 }
-
-export type Db = {
-  notification_contacts: NotificationContactsTable;
-  notification_preferences: NotificationPreferencesTable;
-  notification_campaigns: NotificationCampaignsTable;
-  notification_recipients: NotificationRecipientsTable;
-  notification_jobs: NotificationJobsTable;
-  notification_deliveries: NotificationDeliveriesTable;
-  app_notifications: AppNotificationsTable;
-};

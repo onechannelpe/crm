@@ -4,8 +4,8 @@ import type { Kysely } from "kysely";
 import type { SchemaModule, SeedModule } from "./schema";
 
 export async function computeHash(
-  schemas: SchemaModule[],
-  seeds: SeedModule[],
+  schemas: readonly SchemaModule[],
+  seeds: readonly SeedModule[],
 ): Promise<string> {
   const input = [
     ...schemas.map((m) => m.createTables.toString()),

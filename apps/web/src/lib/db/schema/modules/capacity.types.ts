@@ -106,17 +106,3 @@ export interface SearchPolicyOverridesTable {
   set_by_user_id: number;
   created_at: number;
 }
-
-export type Db = {
-  search_capacity_grants: SearchCapacityGrantsTable;
-  search_usage_reservations: SearchUsageReservationsTable;
-  search_usage_commits: SearchUsageCommitsTable;
-  lead_capacity_grants: LeadCapacityGrantsTable;
-  lead_usage_reservations: LeadUsageReservationsTable;
-  lead_usage_commits: LeadUsageCommitsTable;
-  capacity_requests: CapacityRequestsTable;
-  lead_policy_defaults: LeadPolicyDefaultsTable;
-  lead_policy_overrides: LeadPolicyOverridesTable;
-  search_policy_defaults: SearchPolicyDefaultsTable;
-  search_policy_overrides: SearchPolicyOverridesTable;
-};

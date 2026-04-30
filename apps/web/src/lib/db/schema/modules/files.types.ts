@@ -91,12 +91,3 @@ export interface WorkflowSaleProofFilesTable {
   uploaded_by_user_id: number;
   created_at: number;
 }
-
-export type Db = {
-  workflow_artifacts: WorkflowArtifactsTable;
-  file_assets: FileAssetsTable;
-  artifact_file_bindings: ArtifactFileBindingsTable;
-  artifact_events: ArtifactEventsTable;
-  artifact_download_tokens: ArtifactDownloadTokensTable;
-  workflow_sale_proof_files: WorkflowSaleProofFilesTable;
-};

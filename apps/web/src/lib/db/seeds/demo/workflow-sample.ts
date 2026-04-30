@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "../types";
+import type { Database } from "../../types";
 
 // Actor IDs from base seed
 const SUP1 = 2; // diego.ramirez, supervisor, branch 1

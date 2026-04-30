@@ -70,10 +70,3 @@ export interface SearchEnrichmentCompletionOutboxTable {
   created_at: number;
   processed_at: number | null;
 }
-
-export type Db = {
-  client_search_views: ClientSearchViewsTable;
-  search_enrichment_jobs: SearchEnrichmentJobsTable;
-  search_enrichment_overlays: SearchEnrichmentOverlaysTable;
-  search_enrichment_completion_outbox: SearchEnrichmentCompletionOutboxTable;
-};

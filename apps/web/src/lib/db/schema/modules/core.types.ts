@@ -36,11 +36,3 @@ export interface OrganizationsTable {
   locked_by_user_id: number | null;
   created_at: number;
 }
-
-export type Db = {
-  branches: BranchesTable;
-  teams: TeamsTable;
-  organizations: OrganizationsTable;
-  branch_supervisors: BranchSupervisorsTable;
-  back_office_assignments: BackOfficeAssignmentsTable;
-};

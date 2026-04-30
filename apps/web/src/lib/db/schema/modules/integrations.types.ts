@@ -66,10 +66,3 @@ export interface WorkflowIntegrationOutboxReadyForQuotationTable {
   created_at: number;
   processed_at: number | null;
 }
-
-export type Db = {
-  workflow_integration_jobs: WorkflowIntegrationJobsTable;
-  workflow_integration_import_rows: WorkflowIntegrationImportRowsTable;
-  workflow_integration_outbox_needs_executive_input: WorkflowIntegrationOutboxNeedsExecutiveInputTable;
-  workflow_integration_outbox_ready_for_quotation: WorkflowIntegrationOutboxReadyForQuotationTable;
-};

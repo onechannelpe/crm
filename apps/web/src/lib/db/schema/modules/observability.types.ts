@@ -1,6 +1,6 @@
 import type { Generated } from "kysely";
 
-import type { UserRoleValue } from "./02-crm";
+import type { UserRoleValue } from "./crm.types";
 
 export interface ActionObservationsTable {
   id: Generated<number>;
@@ -74,11 +74,3 @@ export interface AuthEventsTable {
   ip_hash: string;
   created_at: number;
 }
-
-export type Db = {
-  action_observations: ActionObservationsTable;
-  agent_status_logs: AgentStatusLogsTable;
-  action_rate_limit_counters: ActionRateLimitCountersTable;
-  auth_throttle_counters: AuthThrottleCountersTable;
-  auth_events: AuthEventsTable;
-};

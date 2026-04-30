@@ -1,10 +1,10 @@
 import type { Kysely } from "kysely";
 
 import { computeHash, readStoredHash, writeStoredHash } from "./migration-hash";
-import { SCHEMA_MODULES, SEED_MODULES } from "./schema";
+import { BOOTSTRAP_SEED_MODULES, SCHEMA_MODULES } from "./schema";
 
 export async function migrateToLatest(db: Kysely<any>) {
-  const hash = await computeHash(SCHEMA_MODULES, SEED_MODULES);
+  const hash = await computeHash(SCHEMA_MODULES, BOOTSTRAP_SEED_MODULES);
   const stored = await readStoredHash(db);
 
   if (stored === hash) return;
@@ -19,7 +19,7 @@ export async function migrateToLatest(db: Kysely<any>) {
       // eslint-disable-next-line no-await-in-loop
       await module.createTables(trx);
     }
-    for (const module of SEED_MODULES) {
+    for (const module of BOOTSTRAP_SEED_MODULES) {
       // eslint-disable-next-line no-await-in-loop
       await module.run(trx);
     }

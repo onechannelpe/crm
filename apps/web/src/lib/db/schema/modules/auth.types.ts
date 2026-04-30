@@ -1,6 +1,6 @@
 import type { Generated } from "kysely";
 
-import type { UserRoleValue } from "./02-crm";
+import type { UserRoleValue } from "./crm.types";
 
 export type AuthFunnelSourceValue = "client" | "server";
 export type AuthFunnelEventNameValue =
@@ -151,17 +151,3 @@ export interface AuthFunnelEventsTable {
   code: string | null;
   created_at: number;
 }
-
-export type Db = {
-  login_flows: LoginFlowsTable;
-  passkeys: PasskeysTable;
-  webauthn_challenges: WebauthnChallengesTable;
-  user_oauth_accounts: UserOAuthAccountsTable;
-  password_reset_tokens: PasswordResetTokensTable;
-  user_sessions: UserSessionsTable;
-  request_sessions: RequestSessionsTable;
-  user_totp_factors: UserTotpFactorsTable;
-  user_totp_recovery_codes: UserTotpRecoveryCodesTable;
-  user_invites: UserInvitesTable;
-  auth_funnel_events: AuthFunnelEventsTable;
-};

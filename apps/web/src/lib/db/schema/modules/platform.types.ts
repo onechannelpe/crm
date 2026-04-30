@@ -49,10 +49,3 @@ export interface ReportExportDownloadsTable {
   ip_hash: string | null;
   user_agent_hash: string | null;
 }
-
-export type Db = {
-  audit_logs: AuditLogsTable;
-  audit_action_policies: AuditActionPoliciesTable;
-  report_export_jobs: ReportExportJobsTable;
-  report_export_downloads: ReportExportDownloadsTable;
-};
