@@ -17,7 +17,6 @@ import {
 
 describe("extension runtime status invariants", () => {
   let ctx: TestDbContext;
-  const fixedNow = 1_700_000_000_000;
 
   beforeEach(async () => {
     const { privateKey } = generateKeyPairSync("ed25519");
