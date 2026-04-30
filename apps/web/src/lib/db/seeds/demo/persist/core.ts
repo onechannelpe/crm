@@ -26,7 +26,7 @@ export async function persistWorkflowSample(
   db: Kysely<Database>,
   compiled: CompiledWorkflowScenario,
 ): Promise<void> {
-  const now = Date.now();
+  const now = compiled.generatedAtMs;
   const day = compiled.dayMs;
   const overlayTtl = compiled.overlayTtlMs;
   const getLeadId = (key: LeadSeedKey): string => {

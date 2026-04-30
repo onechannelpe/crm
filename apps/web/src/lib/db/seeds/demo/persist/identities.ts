@@ -6,8 +6,9 @@ import type { Database } from "../../../types";
 
 export async function persistDemoIdentities(
   db: Kysely<Database>,
+  generatedAtMs: number,
 ): Promise<void> {
-  const now = Date.now();
+  const now = generatedAtMs;
   const passwordHash = await hashPassword("placeholder");
 
   await db

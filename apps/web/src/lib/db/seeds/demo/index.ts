@@ -5,15 +5,17 @@ import { compileWorkflowScenario } from "./compiler";
 import { persistWorkflowSample as persistDemoSeed } from "./persist/core";
 import { persistDemoIdentities } from "./persist/identities";
 
-export async function runDemoSeeds(db: Kysely<Database>): Promise<void> {
-  await persistDemoIdentities(db);
+export async function runDemoIdentitiesSeedStage(
+  db: Kysely<Database>,
+  nowMs: number,
+): Promise<void> {
+  await persistDemoIdentities(db, nowMs);
+}
 
-  const existing = await db
-    .selectFrom("workflow_leads")
-    .select(db.fn.countAll().as("count"))
-    .executeTakeFirst();
-  if (existing && Number(existing.count) > 0) return;
-
-  const compiled = compileWorkflowScenario();
+export async function runDemoWorkflowSeedStage(
+  db: Kysely<Database>,
+  nowMs: number,
+): Promise<void> {
+  const compiled = compileWorkflowScenario(nowMs);
   await persistDemoSeed(db, compiled);
 }

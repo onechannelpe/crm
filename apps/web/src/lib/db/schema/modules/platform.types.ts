@@ -49,3 +49,13 @@ export interface ReportExportDownloadsTable {
   ip_hash: string | null;
   user_agent_hash: string | null;
 }
+
+export interface SeedRunsTable {
+  id: Generated<number>;
+  seed_name: string;
+  seed_id: string;
+  status: "running" | "completed" | "failed";
+  started_at: number;
+  completed_at: number | null;
+  error_message: string | null;
+}

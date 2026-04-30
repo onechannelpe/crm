@@ -1,33 +1,199 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import type { Kysely } from "kysely";
 
 import { createLogger } from "../observability/logger";
 import { db as globalDb } from "./db";
-import { runBootstrapSeeds } from "./seeds/bootstrap";
-import { runDemoSeeds } from "./seeds/demo";
+import { runBootstrapSeedStage } from "./seeds/bootstrap";
+import {
+  runDemoIdentitiesSeedStage,
+  runDemoWorkflowSeedStage,
+} from "./seeds/demo";
 import type { Database } from "./types";
 
 const logger = createLogger("db-seed");
+const SEED_ID_ALGO_VERSION = "v1";
+const SEED_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
+const DEFAULT_SEED_MODE = "demo";
+
+type SeedStatus = "running" | "completed" | "failed";
+type SeedRunResult = SeedStatus | "skipped";
+type SeedStage = {
+  seedName: string;
+  sourceFiles: readonly string[];
+  run: (db: Kysely<Database>, nowMs: number) => Promise<void>;
+};
 
 export async function seedIfEmpty(db: Kysely<Database>) {
-  const branchCount = await db
-    .selectFrom("branches")
-    .select(db.fn.countAll().as("count"))
-    .executeTakeFirst();
-
-  if (branchCount && Number(branchCount.count) > 0) {
-    logger.info("seed_skipped_already_initialized");
-    return;
-  }
-
   logger.info("seed_started");
-  await runBootstrapSeeds(db);
+  const nowMs = Date.now();
+  const seedMode = process.env.SEED_MODE ?? DEFAULT_SEED_MODE;
+  const stages = buildSeedStages(seedMode);
 
-  const seedMode = process.env.SEED_MODE ?? "demo";
-  if (seedMode === "demo") {
-    await runDemoSeeds(db);
+  for (const stage of stages) {
+    // eslint-disable-next-line no-await-in-loop
+    const seedId = await computeSeedId(stage);
+    // eslint-disable-next-line no-await-in-loop
+    const status = await executeStage(db, stage, seedId, nowMs);
+    logger.info("seed_stage_finished", {
+      seed_name: stage.seedName,
+      seed_id: seedId,
+      status,
+    });
   }
+
   logger.info("seed_completed");
 }
+
+function buildSeedStages(seedMode: string): SeedStage[] {
+  const stages: SeedStage[] = [BOOTSTRAP_STAGE];
+  if (seedMode === "demo") {
+    stages.push(DEMO_IDENTITIES_STAGE, DEMO_WORKFLOW_STAGE);
+  }
+  return stages;
+}
+
+async function executeStage(
+  db: Kysely<Database>,
+  stage: SeedStage,
+  seedId: string,
+  nowMs: number,
+): Promise<SeedRunResult> {
+  return db.transaction().execute(async (trx) => {
+    if (await isCompletedSeedRun(trx, stage.seedName, seedId)) {
+      return "skipped";
+    }
+
+    await upsertSeedRunStatus(
+      trx,
+      stage.seedName,
+      seedId,
+      "running",
+      nowMs,
+      null,
+    );
+
+    try {
+      await stage.run(trx, nowMs);
+      await upsertSeedRunStatus(
+        trx,
+        stage.seedName,
+        seedId,
+        "completed",
+        nowMs,
+        null,
+      );
+      return "completed";
+    } catch (error) {
+      await upsertSeedRunStatus(
+        trx,
+        stage.seedName,
+        seedId,
+        "failed",
+        nowMs,
+        errorToMessage(error),
+      );
+      throw error;
+    }
+  });
+}
+
+async function isCompletedSeedRun(
+  db: Kysely<Database>,
+  seedName: string,
+  seedId: string,
+): Promise<boolean> {
+  const current = await db
+    .selectFrom("seed_runs")
+    .select(["status"])
+    .where("seed_name", "=", seedName)
+    .where("seed_id", "=", seedId)
+    .executeTakeFirst();
+  return current?.status === "completed";
+}
+
+async function upsertSeedRunStatus(
+  db: Kysely<Database>,
+  seedName: string,
+  seedId: string,
+  status: SeedStatus,
+  nowMs: number,
+  errorMessage: string | null,
+): Promise<void> {
+  const completedAt = status === "running" ? null : nowMs;
+  await db
+    .insertInto("seed_runs")
+    .values({
+      seed_name: seedName,
+      seed_id: seedId,
+      status,
+      started_at: nowMs,
+      completed_at: completedAt,
+      error_message: errorMessage,
+    })
+    .onConflict((oc) =>
+      oc.columns(["seed_name", "seed_id"]).doUpdateSet({
+        status,
+        started_at: nowMs,
+        completed_at: completedAt,
+        error_message: errorMessage,
+      }),
+    )
+    .execute();
+}
+
+async function computeSeedId(stage: SeedStage): Promise<string> {
+  const hash = new Bun.CryptoHasher("sha256");
+  hash.update(SEED_ID_ALGO_VERSION);
+  hash.update("\n");
+  hash.update(stage.seedName);
+  hash.update("\n");
+  for (const relativePath of stage.sourceFiles) {
+    const path = resolve(SEED_DIR, relativePath);
+    // eslint-disable-next-line no-await-in-loop
+    const content = await readFile(path, "utf8");
+    hash.update(path);
+    hash.update("\n");
+    hash.update(content);
+    hash.update("\n");
+  }
+  return hash.digest("hex");
+}
+
+function errorToMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+const BOOTSTRAP_STAGE: SeedStage = {
+  seedName: "bootstrap",
+  sourceFiles: [
+    "./seeds/bootstrap/index.ts",
+    "./seeds/bootstrap/persist/core.ts",
+  ],
+  run: runBootstrapSeedStage,
+};
+
+const DEMO_IDENTITIES_STAGE: SeedStage = {
+  seedName: "demo-identities",
+  sourceFiles: ["./seeds/demo/index.ts", "./seeds/demo/persist/identities.ts"],
+  run: runDemoIdentitiesSeedStage,
+};
+
+const DEMO_WORKFLOW_STAGE: SeedStage = {
+  seedName: "demo-workflow",
+  sourceFiles: [
+    "./seeds/demo/index.ts",
+    "./seeds/demo/scenario.ts",
+    "./seeds/demo/compiler.ts",
+    "./seeds/demo/persist/core.ts",
+  ],
+  run: runDemoWorkflowSeedStage,
+};
 
 async function seed() {
   try {

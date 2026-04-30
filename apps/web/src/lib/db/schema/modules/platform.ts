@@ -64,4 +64,19 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("action_rate_limit_counters")
     .column("updated_at")
     .execute();
+
+  await db.schema
+    .createTable("seed_runs")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("seed_name", "varchar(120)", (col) => col.notNull())
+    .addColumn("seed_id", "varchar(64)", (col) => col.notNull())
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("started_at", "integer", (col) => col.notNull())
+    .addColumn("completed_at", "integer")
+    .addColumn("error_message", "text")
+    .addUniqueConstraint("idx_seed_runs_name_seed_id_unique", [
+      "seed_name",
+      "seed_id",
+    ])
+    .execute();
 }
