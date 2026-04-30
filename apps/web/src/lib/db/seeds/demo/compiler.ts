@@ -2,22 +2,21 @@ import { randomUUIDv7 } from "bun";
 
 import {
   LEADS,
-  ORGANIZATIONS,
+  ORGANIZATION_KEYS,
   type LeadSeedKey,
   type OrganizationSeedKey,
 } from "./scenario";
 
 export type CompiledWorkflowScenario = {
-  leadIdByKey: Record<LeadSeedKey, string>;
-  organizationKeys: OrganizationSeedKey[];
-  leadKeys: LeadSeedKey[];
+  leadIdsByKey: Map<LeadSeedKey, string>;
+  organizationKeys: readonly OrganizationSeedKey[];
+  leadKeys: readonly LeadSeedKey[];
   dayMs: number;
   overlayTtlMs: number;
 };
 
 export function compileWorkflowScenario(): CompiledWorkflowScenario {
-  const organizationKeys = Object.keys(ORGANIZATIONS) as OrganizationSeedKey[];
-  const organizationKeySet = new Set(organizationKeys);
+  const organizationKeySet = new Set<OrganizationSeedKey>(ORGANIZATION_KEYS);
 
   for (const lead of LEADS) {
     if (!organizationKeySet.has(lead.organizationKey)) {
@@ -27,14 +26,14 @@ export function compileWorkflowScenario(): CompiledWorkflowScenario {
     }
   }
 
-  const leadIdByKey = {} as Record<LeadSeedKey, string>;
+  const leadIdsByKey = new Map<LeadSeedKey, string>();
   for (const lead of LEADS) {
-    leadIdByKey[lead.key] = randomUUIDv7();
+    leadIdsByKey.set(lead.key, randomUUIDv7());
   }
 
   return {
-    leadIdByKey,
-    organizationKeys,
+    leadIdsByKey,
+    organizationKeys: ORGANIZATION_KEYS,
     leadKeys: LEADS.map((lead) => lead.key),
     dayMs: 86_400_000,
     overlayTtlMs: 7 * 86_400_000,

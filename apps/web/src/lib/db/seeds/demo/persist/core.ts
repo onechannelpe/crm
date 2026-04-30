@@ -18,6 +18,7 @@ import {
   ORGANIZATIONS,
   SUP1,
   SUP2,
+  type LeadSeedKey,
   type OrganizationSeedKey,
 } from "../scenario";
 
@@ -28,13 +29,20 @@ export async function persistWorkflowSample(
   const now = Date.now();
   const day = compiled.dayMs;
   const overlayTtl = compiled.overlayTtlMs;
-  const idPending = compiled.leadIdByKey.pending;
-  const idNeeds = compiled.leadIdByKey.needs;
-  const idReady = compiled.leadIdByKey.ready;
-  const idQuoted = compiled.leadIdByKey.quoted;
-  const idForSale = compiled.leadIdByKey.forSale;
-  const idConverted = compiled.leadIdByKey.converted;
-  const idRejected = compiled.leadIdByKey.rejected;
+  const getLeadId = (key: LeadSeedKey): string => {
+    const leadId = compiled.leadIdsByKey.get(key);
+    if (!leadId) {
+      throw new Error(`missing_seed_lead_id:${key}`);
+    }
+    return leadId;
+  };
+  const idPending = getLeadId("pending");
+  const idNeeds = getLeadId("needs");
+  const idReady = getLeadId("ready");
+  const idQuoted = getLeadId("quoted");
+  const idForSale = getLeadId("forSale");
+  const idConverted = getLeadId("converted");
+  const idRejected = getLeadId("rejected");
 
   // Quotation and sale IDs
   const qidQuoted = randomUUIDv7();
@@ -54,9 +62,9 @@ export async function persistWorkflowSample(
     )
     .execute();
   const existingIdByRuc = new Map(
-    existingOrganizations.map((row) => [row.ruc, row.id as OrganizationId]),
+    existingOrganizations.map((row) => [row.ruc, row.id]),
   );
-  const organizationIdByKey = {} as Record<OrganizationSeedKey, OrganizationId>;
+  const organizationIdByKey = new Map<OrganizationSeedKey, OrganizationId>();
   const organizationsToInsert: Array<{
     id: OrganizationId;
     ruc: string;
@@ -71,7 +79,7 @@ export async function persistWorkflowSample(
     const organization = ORGANIZATIONS[key];
     const existingId = existingIdByRuc.get(organization.ruc);
     const id = existingId ?? randomUUIDv7();
-    organizationIdByKey[key] = id;
+    organizationIdByKey.set(key, id);
     if (existingId) {
       continue;
     }
@@ -89,12 +97,20 @@ export async function persistWorkflowSample(
       .execute();
   }
 
+  const getOrganizationId = (key: OrganizationSeedKey): OrganizationId => {
+    const organizationId = organizationIdByKey.get(key);
+    if (!organizationId) {
+      throw new Error(`missing_seed_organization_id:${key}`);
+    }
+    return organizationId;
+  };
+
   await db
     .insertInto("workflow_leads")
     .values([
       {
         id: idPending,
-        organization_id: organizationIdByKey.pending,
+        organization_id: getOrganizationId("pending"),
         executive_id: EXEC_CAMILA,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -106,7 +122,7 @@ export async function persistWorkflowSample(
       },
       {
         id: idNeeds,
-        organization_id: organizationIdByKey.needs,
+        organization_id: getOrganizationId("needs"),
         executive_id: EXEC_PATRICIA,
         stage: "NEEDS_EXECUTIVE_INPUT",
         status: "DISPONIBLE",
@@ -118,7 +134,7 @@ export async function persistWorkflowSample(
       },
       {
         id: idReady,
-        organization_id: organizationIdByKey.ready,
+        organization_id: getOrganizationId("ready"),
         executive_id: EXEC_ROBERTO,
         stage: "READY_FOR_QUOTATION",
         status: "DISPONIBLE",
@@ -130,7 +146,7 @@ export async function persistWorkflowSample(
       },
       {
         id: idQuoted,
-        organization_id: organizationIdByKey.quoted,
+        organization_id: getOrganizationId("quoted"),
         executive_id: EXEC_ANDREA,
         stage: "QUOTED",
         status: "DISPONIBLE",
@@ -142,7 +158,7 @@ export async function persistWorkflowSample(
       },
       {
         id: idForSale,
-        organization_id: organizationIdByKey.forSale,
+        organization_id: getOrganizationId("forSale"),
         executive_id: EXEC_RENATO,
         stage: "READY_FOR_SALE",
         status: "DISPONIBLE",
@@ -154,7 +170,7 @@ export async function persistWorkflowSample(
       },
       {
         id: idConverted,
-        organization_id: organizationIdByKey.converted,
+        organization_id: getOrganizationId("converted"),
         executive_id: EXEC_DANIELA,
         stage: "CONVERTED",
         status: "DISPONIBLE",
@@ -166,7 +182,7 @@ export async function persistWorkflowSample(
       },
       {
         id: idRejected,
-        organization_id: organizationIdByKey.rejected,
+        organization_id: getOrganizationId("rejected"),
         executive_id: EXEC_GABRIEL,
         stage: "REJECTED_BY_STATUS",
         status: "CARTERIZADO",
@@ -536,7 +552,7 @@ export async function persistWorkflowSample(
     ])
     .execute();
 
-  const convertedOrgId = organizationIdByKey.converted;
+  const convertedOrgId = getOrganizationId("converted");
   await db
     .updateTable("organizations")
     .set({ giro_negocio: "Construccion de edificios residenciales" })

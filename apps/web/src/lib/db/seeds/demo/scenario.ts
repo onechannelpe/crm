@@ -63,6 +63,16 @@ export const ORGANIZATIONS = {
   },
 } as const;
 
+export const ORGANIZATION_KEYS = [
+  "pending",
+  "needs",
+  "ready",
+  "quoted",
+  "forSale",
+  "converted",
+  "rejected",
+] as const;
+
 export type OrganizationSeedKey = keyof typeof ORGANIZATIONS;
 
 export const LEADS = [
