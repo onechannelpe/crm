@@ -8,11 +8,21 @@ export async function persistUsersAndTeams(
   realPasswordHash: string,
 ): Promise<void> {
   await db
+    .insertInto("teams")
+    .values([
+      { id: 5, branch_id: 4, name: "Infinity Lima", created_at: now },
+      { id: 6, branch_id: 4, name: "Infinity Chiclayo", created_at: now },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
     .insertInto("users")
     .values([
       {
         id: 21,
         branch_id: 4,
+        team_id: 5,
         username: "jorge.quezada",
         email: "jorge.quezada@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -28,6 +38,7 @@ export async function persistUsersAndTeams(
       {
         id: 22,
         branch_id: 4,
+        team_id: 5,
         username: "karina.yalta",
         email: "karina.yalta@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -43,6 +54,7 @@ export async function persistUsersAndTeams(
       {
         id: 23,
         branch_id: 4,
+        team_id: null,
         username: "luis.betalleluz",
         email: "luis.betalleluz@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -58,6 +70,7 @@ export async function persistUsersAndTeams(
       {
         id: 24,
         branch_id: 4,
+        team_id: 5,
         username: "sebastian.salazar",
         email: "sebastian.salazar@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -73,6 +86,7 @@ export async function persistUsersAndTeams(
       {
         id: 25,
         branch_id: 4,
+        team_id: 5,
         username: "giancarlo.aranguri",
         email: "giancarlo.aranguri@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -88,6 +102,7 @@ export async function persistUsersAndTeams(
       {
         id: 26,
         branch_id: 4,
+        team_id: 5,
         username: "paola.lozano",
         email: "paola.lozano@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -103,6 +118,7 @@ export async function persistUsersAndTeams(
       {
         id: 27,
         branch_id: 4,
+        team_id: 5,
         username: "veronica.banquez",
         email: "veronica.banquez@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -118,6 +134,7 @@ export async function persistUsersAndTeams(
       {
         id: 28,
         branch_id: 4,
+        team_id: 5,
         username: "wendy.sarmiento",
         email: "wendy.sarmiento@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -133,6 +150,7 @@ export async function persistUsersAndTeams(
       {
         id: 29,
         branch_id: 4,
+        team_id: null,
         username: "victor.franco",
         email: "victor.franco@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -148,6 +166,7 @@ export async function persistUsersAndTeams(
       {
         id: 30,
         branch_id: 4,
+        team_id: null,
         username: "jose.mendoza",
         email: "jose.mendoza@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -163,6 +182,7 @@ export async function persistUsersAndTeams(
       {
         id: 31,
         branch_id: 4,
+        team_id: 5,
         username: "renato.santacruz",
         email: "renato.santacruz@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -178,6 +198,7 @@ export async function persistUsersAndTeams(
       {
         id: 32,
         branch_id: 4,
+        team_id: 6,
         username: "francisco.suyon",
         email: "francisco.suyon@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -193,6 +214,7 @@ export async function persistUsersAndTeams(
       {
         id: 33,
         branch_id: 4,
+        team_id: 6,
         username: "franco.fernandez",
         email: "franco.fernandez@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -208,6 +230,7 @@ export async function persistUsersAndTeams(
       {
         id: 34,
         branch_id: 4,
+        team_id: 6,
         username: "eber.montalvo",
         email: "eber.montalvo@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -223,6 +246,7 @@ export async function persistUsersAndTeams(
       {
         id: 35,
         branch_id: 4,
+        team_id: 6,
         username: "pool.ortega",
         email: "pool.ortega@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -238,6 +262,7 @@ export async function persistUsersAndTeams(
       {
         id: 36,
         branch_id: 4,
+        team_id: 6,
         username: "jesus.avalos",
         email: "jesus.avalos@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -253,6 +278,7 @@ export async function persistUsersAndTeams(
       {
         id: 37,
         branch_id: 4,
+        team_id: 5,
         username: "joyce.llanos",
         email: "joyce.llanos@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -268,6 +294,7 @@ export async function persistUsersAndTeams(
       {
         id: 38,
         branch_id: 4,
+        team_id: 6,
         username: "junior.cardozo",
         email: "junior.cardozo@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -283,6 +310,7 @@ export async function persistUsersAndTeams(
       {
         id: 39,
         branch_id: 4,
+        team_id: 5,
         username: "ricardo.nurena",
         email: "ricardo.nurena@infinitycorp.pe",
         password_hash: realPasswordHash,
@@ -300,15 +328,6 @@ export async function persistUsersAndTeams(
     .execute();
 
   await db
-    .insertInto("teams")
-    .values([
-      { id: 5, branch_id: 4, name: "Infinity Lima", created_at: now },
-      { id: 6, branch_id: 4, name: "Infinity Chiclayo", created_at: now },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
     .insertInto("branch_supervisors")
     .values([{ branch_id: 4, user_id: 23, created_at: now }])
     .onConflict((oc) => oc.doNothing())
@@ -321,17 +340,5 @@ export async function persistUsersAndTeams(
       { back_office_user_id: 30, team_id: 6, assigned_at: now },
     ])
     .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
-    .updateTable("users")
-    .set({ team_id: 5 })
-    .where("id", "in", [21, 22, 24, 25, 26, 27, 28, 31, 37, 39])
-    .execute();
-
-  await db
-    .updateTable("users")
-    .set({ team_id: 6 })
-    .where("id", "in", [32, 33, 34, 35, 36, 38])
     .execute();
 }

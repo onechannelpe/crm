@@ -3,7 +3,7 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
-import { BO1, BO2, EXEC_DANIELA } from "../scenario";
+import { BO1, BO2, EXEC_DANIELA, type OrganizationSeedKey } from "../scenario";
 import type { WorkflowArtifactIds, WorkflowLeadIds } from "./history-events";
 
 export async function persistWorkflowCommercialData(
@@ -12,7 +12,7 @@ export async function persistWorkflowCommercialData(
   day: number,
   leadIds: WorkflowLeadIds,
   artifacts: WorkflowArtifactIds,
-  getOrganizationId: (key: "converted") => OrganizationId,
+  getOrganizationId: (key: OrganizationSeedKey) => OrganizationId,
 ): Promise<void> {
   const { idQuoted, idForSale, idConverted } = leadIds;
   const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } =

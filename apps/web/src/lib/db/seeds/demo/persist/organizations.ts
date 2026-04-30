@@ -15,19 +15,6 @@ export async function persistOrganizations(
   organizationKeys: readonly OrganizationSeedKey[],
   now: number,
 ): Promise<OrganizationLookup> {
-  const existingOrganizations = await db
-    .selectFrom("organizations")
-    .select(["id", "ruc"])
-    .where(
-      "ruc",
-      "in",
-      organizationKeys.map((key) => ORGANIZATIONS[key].ruc),
-    )
-    .execute();
-  const existingIdByRuc = new Map(
-    existingOrganizations.map((row) => [row.ruc, row.id]),
-  );
-  const organizationIdByKey = new Map<OrganizationSeedKey, OrganizationId>();
   const organizationsToInsert: Array<{
     id: OrganizationId;
     ruc: string;
@@ -40,28 +27,34 @@ export async function persistOrganizations(
 
   for (const key of organizationKeys) {
     const organization = ORGANIZATIONS[key];
-    const existingId = existingIdByRuc.get(organization.ruc);
-    const id = existingId ?? randomUUIDv7();
-    organizationIdByKey.set(key, id);
-    if (existingId) {
-      continue;
-    }
     organizationsToInsert.push({
-      id,
+      id: randomUUIDv7(),
       ...organization,
       created_at: now,
     });
   }
 
-  if (organizationsToInsert.length > 0) {
-    await db
-      .insertInto("organizations")
-      .values(organizationsToInsert)
-      .execute();
-  }
+  await db
+    .insertInto("organizations")
+    .values(organizationsToInsert)
+    .onConflict((oc) => oc.column("ruc").doNothing())
+    .execute();
+
+  const organizationsInDb = await db
+    .selectFrom("organizations")
+    .select(["id", "ruc"])
+    .where(
+      "ruc",
+      "in",
+      organizationKeys.map((key) => ORGANIZATIONS[key].ruc),
+    )
+    .execute();
+  const organizationIdByRuc = new Map(
+    organizationsInDb.map((row) => [row.ruc, row.id]),
+  );
 
   const getOrganizationId = (key: OrganizationSeedKey): OrganizationId => {
-    const organizationId = organizationIdByKey.get(key);
+    const organizationId = organizationIdByRuc.get(ORGANIZATIONS[key].ruc);
     if (!organizationId) {
       throw new Error(`missing_seed_organization_id:${key}`);
     }
