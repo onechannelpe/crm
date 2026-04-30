@@ -1,0 +1,259 @@
+import type { Kysely } from "kysely";
+
+import type { OrganizationId } from "~/server/shared/ids";
+
+import type { Database } from "../../../types";
+import { BO1, BO2, EXEC_DANIELA, type OrganizationSeedKey } from "../scenario";
+import type { WorkflowArtifactIds, WorkflowLeadIds } from "./history-events";
+
+export async function persistWorkflowCommercialData(
+  db: Kysely<Database>,
+  now: number,
+  day: number,
+  leadIds: WorkflowLeadIds,
+  artifacts: WorkflowArtifactIds,
+  getOrganizationId: (key: OrganizationSeedKey) => OrganizationId,
+): Promise<void> {
+  const { idQuoted, idForSale, idConverted } = leadIds;
+  const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } =
+    artifacts;
+  await db
+    .insertInto("workflow_quotations")
+    .values([
+      {
+        id: qidQuoted,
+        lead_id: idQuoted,
+        payback_pricing: 1.2,
+        tarifa_debito: 0.9,
+        tarifa_credito: 2.3,
+        tarifa_foraneo: 1.7,
+        fee: 18.0,
+        moneda: "PEN",
+        version: 1,
+        created_at: now - 10 * day,
+        created_by: BO2,
+      },
+      {
+        id: qidForSale,
+        lead_id: idForSale,
+        payback_pricing: 1.15,
+        tarifa_debito: 0.85,
+        tarifa_credito: 2.2,
+        tarifa_foraneo: 1.6,
+        fee: 20.0,
+        moneda: "PEN",
+        version: 1,
+        created_at: now - 18 * day,
+        created_by: BO1,
+      },
+      {
+        id: qidConverted,
+        lead_id: idConverted,
+        payback_pricing: 1.25,
+        tarifa_debito: 0.95,
+        tarifa_credito: 2.5,
+        tarifa_foraneo: 1.8,
+        fee: 15.0,
+        moneda: "PEN",
+        version: 1,
+        created_at: now - 27 * day,
+        created_by: BO1,
+      },
+    ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        lead_id: eb.ref("excluded.lead_id"),
+        payback_pricing: eb.ref("excluded.payback_pricing"),
+        tarifa_debito: eb.ref("excluded.tarifa_debito"),
+        tarifa_credito: eb.ref("excluded.tarifa_credito"),
+        tarifa_foraneo: eb.ref("excluded.tarifa_foraneo"),
+        fee: eb.ref("excluded.fee"),
+        moneda: eb.ref("excluded.moneda"),
+        version: eb.ref("excluded.version"),
+        created_at: eb.ref("excluded.created_at"),
+        created_by: eb.ref("excluded.created_by"),
+      })),
+    )
+    .execute();
+
+  await db
+    .insertInto("workflow_sales")
+    .values([
+      {
+        id: sidConverted,
+        lead_id: idConverted,
+        executive_id: EXEC_DANIELA,
+        created_at: now - 20 * day,
+      },
+    ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        lead_id: eb.ref("excluded.lead_id"),
+        executive_id: eb.ref("excluded.executive_id"),
+        created_at: eb.ref("excluded.created_at"),
+      })),
+    )
+    .execute();
+
+  await db
+    .insertInto("workflow_sale_venues")
+    .values([
+      {
+        id: vidConverted,
+        sale_id: sidConverted,
+        lead_id: idConverted,
+        nombre_comercial: "Andes Miraflores",
+        cantidad_pos: 3,
+        direccion: "AV. BENAVIDES NRO. 1855",
+        referencia: "Frente al parque central",
+        distrito: "MIRAFLORES",
+        provincia: "LIMA",
+        departamento: "LIMA",
+        created_at: now - 20 * day,
+        created_by: EXEC_DANIELA,
+      },
+    ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        sale_id: eb.ref("excluded.sale_id"),
+        lead_id: eb.ref("excluded.lead_id"),
+        nombre_comercial: eb.ref("excluded.nombre_comercial"),
+        cantidad_pos: eb.ref("excluded.cantidad_pos"),
+        direccion: eb.ref("excluded.direccion"),
+        referencia: eb.ref("excluded.referencia"),
+        distrito: eb.ref("excluded.distrito"),
+        provincia: eb.ref("excluded.provincia"),
+        departamento: eb.ref("excluded.departamento"),
+        created_at: eb.ref("excluded.created_at"),
+        created_by: eb.ref("excluded.created_by"),
+      })),
+    )
+    .execute();
+
+  await db
+    .insertInto("workflow_sale_venue_accounts")
+    .values([
+      {
+        id: "demo-workflow-venue-account-pen",
+        venue_id: vidConverted,
+        currency: "PEN",
+        bank: "BCP",
+        account_type: "CORRIENTE",
+        account_number: "194-12345678-0-21",
+        cci: null,
+        is_settlement: 1,
+      },
+      {
+        id: "demo-workflow-venue-account-usd",
+        venue_id: vidConverted,
+        currency: "USD",
+        bank: "BBVA",
+        account_type: "AHORROS",
+        account_number: "0011-0245-9988776655",
+        cci: "01124500998877665522",
+        is_settlement: 0,
+      },
+    ])
+    .onConflict((oc) =>
+      oc.column("id").doUpdateSet((eb) => ({
+        venue_id: eb.ref("excluded.venue_id"),
+        currency: eb.ref("excluded.currency"),
+        bank: eb.ref("excluded.bank"),
+        account_type: eb.ref("excluded.account_type"),
+        account_number: eb.ref("excluded.account_number"),
+        cci: eb.ref("excluded.cci"),
+        is_settlement: eb.ref("excluded.is_settlement"),
+      })),
+    )
+    .execute();
+
+  await db
+    .insertInto("workflow_lead_commercial_inputs")
+    .values([
+      {
+        lead_id: idConverted,
+        proveedor_actual: "BBVA",
+        tasa_actual: 2.8,
+        gpv: 85_000.0,
+        ticket: 245.5,
+        tipo_producto: "CULQI_FULL",
+        url_cliente: null,
+        modalidad_cobro: "CARGO_UNICO",
+        updated_at: now - 29 * day,
+        updated_by: BO1,
+      },
+    ])
+    .onConflict((oc) =>
+      oc.column("lead_id").doUpdateSet((eb) => ({
+        proveedor_actual: eb.ref("excluded.proveedor_actual"),
+        tasa_actual: eb.ref("excluded.tasa_actual"),
+        gpv: eb.ref("excluded.gpv"),
+        ticket: eb.ref("excluded.ticket"),
+        tipo_producto: eb.ref("excluded.tipo_producto"),
+        url_cliente: eb.ref("excluded.url_cliente"),
+        modalidad_cobro: eb.ref("excluded.modalidad_cobro"),
+        updated_at: eb.ref("excluded.updated_at"),
+        updated_by: eb.ref("excluded.updated_by"),
+      })),
+    )
+    .execute();
+
+  const convertedOrgId = getOrganizationId("converted");
+  await db
+    .updateTable("organizations")
+    .set({ giro_negocio: "Construccion de edificios residenciales" })
+    .where("id", "=", convertedOrgId)
+    .execute();
+
+  await db
+    .insertInto("organization_people")
+    .values({
+      organization_id: convertedOrgId,
+      dni: "42715983",
+      nombres: "Daniel",
+      apellido_paterno: "Gutierrez",
+      apellido_materno: "Paredes",
+      telefono: "987654321",
+      email: "daniel.gutierrez@andes.pe",
+      created_at: now - 29 * day,
+      updated_at: now - 29 * day,
+    })
+    .onConflict((oc) =>
+      oc.columns(["organization_id", "dni"]).doUpdateSet((eb) => ({
+        nombres: eb.ref("excluded.nombres"),
+        apellido_paterno: eb.ref("excluded.apellido_paterno"),
+        apellido_materno: eb.ref("excluded.apellido_materno"),
+        telefono: eb.ref("excluded.telefono"),
+        email: eb.ref("excluded.email"),
+        updated_at: eb.ref("excluded.updated_at"),
+      })),
+    )
+    .execute();
+
+  const legalRep = await db
+    .selectFrom("organization_people")
+    .select("id")
+    .where("organization_id", "=", convertedOrgId)
+    .where("dni", "=", "42715983")
+    .executeTakeFirstOrThrow();
+
+  const existingLegalRepRole = await db
+    .selectFrom("organization_person_roles")
+    .select("id")
+    .where("organization_person_id", "=", legalRep.id)
+    .where("role", "=", "LEGAL_REPRESENTATIVE")
+    .where("effective_to", "is", null)
+    .executeTakeFirst();
+  if (!existingLegalRepRole) {
+    await db
+      .insertInto("organization_person_roles")
+      .values({
+        organization_person_id: legalRep.id,
+        role: "LEGAL_REPRESENTATIVE",
+        is_primary: 1,
+        effective_from: now - 29 * day,
+        effective_to: null,
+      })
+      .execute();
+  }
+}
