@@ -2,10 +2,11 @@ import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { OrganizationId } from "~/server/shared/ids";
 
 export function createOrganizationsRepo(db: Kysely<Database>) {
   return {
-    findById(id: string) {
+    findById(id: OrganizationId) {
       return db
         .selectFrom("organizations")
         .selectAll()
@@ -38,7 +39,7 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
       return created;
     },
 
-    lockToBranch(orgId: string, branchId: number, userId: number) {
+    lockToBranch(orgId: OrganizationId, branchId: number, userId: number) {
       return db
         .updateTable("organizations")
         .set({

@@ -1,5 +1,7 @@
+import type { OrganizationId } from "~/server/shared/ids";
+
 export type OrganizationProfile = {
-  id: string;
+  id: OrganizationId;
   ruc: string;
   name: string;
   giroNegocio: string | null;
@@ -12,7 +14,7 @@ export type OrganizationProfile = {
 };
 
 export type LegalRepresentative = {
-  organizationId: string;
+  organizationId: OrganizationId;
   nombres: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
@@ -23,7 +25,9 @@ export type LegalRepresentative = {
 
 export type PartyRepository = {
   findOrganizationByRuc(ruc: string): Promise<OrganizationProfile | undefined>;
-  findOrganizationById(id: string): Promise<OrganizationProfile | undefined>;
+  findOrganizationById(
+    id: OrganizationId,
+  ): Promise<OrganizationProfile | undefined>;
   createOrganization(values: {
     ruc: string;
     name: string;
@@ -32,11 +36,11 @@ export type PartyRepository = {
     department: string | null;
   }): Promise<OrganizationProfile>;
   updateOrganizationCommercial(values: {
-    organizationId: string;
+    organizationId: OrganizationId;
     giroNegocio: string;
   }): Promise<void>;
   updateOrganizationFromEnrichment(values: {
-    organizationId: string;
+    organizationId: OrganizationId;
     name?: string;
     address?: string;
     district?: string;
@@ -44,6 +48,6 @@ export type PartyRepository = {
   }): Promise<void>;
   upsertPrimaryLegalRepresentative(values: LegalRepresentative): Promise<void>;
   findPrimaryLegalRepresentative(
-    organizationId: string,
+    organizationId: OrganizationId,
   ): Promise<LegalRepresentative | undefined>;
 };
