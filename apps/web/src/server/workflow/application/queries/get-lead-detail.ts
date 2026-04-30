@@ -57,6 +57,8 @@ export async function getLeadDetail(
     historyResult,
     sourceStatus,
     userRows,
+    organization,
+    legalRepresentative,
   ] = await Promise.all([
     deps.leadFavorites.isFavoriteForUser({
       leadId: input.leadId,
@@ -74,6 +76,8 @@ export async function getLeadDetail(
       lead.createdBy,
       ...(lead.updatedBy ? [lead.updatedBy] : []),
     ]),
+    deps.party.findOrganizationById(lead.organizationId),
+    deps.party.findPrimaryLegalRepresentative(lead.organizationId),
   ]);
 
   if (!historyResult.ok && !isRecoverableSectionError(historyResult.error)) {
@@ -130,6 +134,8 @@ export async function getLeadDetail(
       canRevealFullTimeline: canRevealTimeline,
       availableActions,
       sourceStatus,
+      organization,
+      legalRepresentative,
     }),
   );
 }

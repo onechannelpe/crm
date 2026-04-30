@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import type { Insertable, Selectable, Updateable } from "kysely";
+import type { Insertable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -9,13 +9,30 @@ import type {
   LeadRecord,
 } from "~/server/workflow/domain/lead-record";
 
-export type LeadRow = Selectable<Database["workflow_leads"]>;
+export type LeadRow = {
+  id: string;
+  ruc: string;
+  razon_social: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  organization_id: number;
+  executive_id: number;
+  created_by: number;
+  updated_by: number | null;
+  stage: Database["workflow_leads"]["stage"];
+  status: Database["workflow_leads"]["status"];
+  prioridad: Database["workflow_leads"]["prioridad"];
+  created_at: number;
+  updated_at: number;
+};
 export type NewLeadRow = Insertable<Database["workflow_leads"]>;
 export type LeadRowPatch = Updateable<Database["workflow_leads"]>;
 
 function toLead(row: LeadRow): LeadRecord {
   return {
     id: row.id,
+    organizationId: row.organization_id,
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
@@ -34,6 +51,7 @@ function toLead(row: LeadRow): LeadRecord {
 
 function toNewLeadRow(values: LeadDraft): NewLeadRow {
   return {
+    organization_id: values.organizationId,
     ruc: values.ruc,
     razon_social: values.razonSocial,
     address: values.address,

@@ -21,6 +21,7 @@ export interface WorkflowLeadsTable {
   address: string | null;
   district: string | null;
   department: string | null;
+  organization_id: number;
   executive_id: number;
   stage: WorkflowStageValue;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
@@ -37,16 +38,9 @@ export interface WorkflowLeadCommercialInputsTable {
   tasa_actual: number | null;
   gpv: number | null;
   ticket: number | null;
-  giro_negocio: string | null;
   tipo_producto: CulqiProductKind | null;
   url_cliente: string | null;
   modalidad_cobro: ModalidadCobro;
-  rep_legal_nombres: string | null;
-  rep_legal_apellido_paterno: string | null;
-  rep_legal_apellido_materno: string | null;
-  rep_legal_dni: string | null;
-  rep_legal_telefono: string | null;
-  rep_legal_email: string | null;
   updated_at: number;
   updated_by: number;
 }

@@ -84,10 +84,20 @@ export async function registerLead(input: {
   }
 
   const enrichment = await input.engineGateway.enrichByRuc(ruc.value);
+  const organization =
+    (await input.deps.party.findOrganizationByRuc(ruc.value)) ??
+    (await input.deps.party.createOrganization({
+      ruc: ruc.value,
+      name: enrichment?.razonSocial ?? ruc.value,
+      address: enrichment?.address ?? null,
+      district: null,
+      department: null,
+    }));
   const draft = createLeadDraft({
+    organizationId: organization.id,
     ruc: ruc.value,
-    razonSocial: enrichment?.razonSocial ?? null,
-    address: enrichment?.address ?? null,
+    razonSocial: organization.name,
+    address: organization.address,
     executiveId: input.executiveId,
     createdBy: input.actorUserId,
     now,

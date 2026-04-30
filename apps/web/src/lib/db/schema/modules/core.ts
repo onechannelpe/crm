@@ -55,6 +55,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("ruc", "varchar(20)", (col) => col.notNull().unique())
     .addColumn("name", "varchar(255)", (col) => col.notNull())
+    .addColumn("giro_negocio", "text")
+    .addColumn("address", "text")
+    .addColumn("district", "varchar(100)")
+    .addColumn("province", "varchar(100)")
+    .addColumn("department", "varchar(100)")
+    .addColumn("phone", "varchar(20)")
+    .addColumn("email", "varchar(255)")
     .addColumn("locked_branch_id", "integer", (col) =>
       col.references("branches.id"),
     )

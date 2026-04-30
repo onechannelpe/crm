@@ -8,6 +8,7 @@ import { createLeadFavoriteRepo } from "./lead-favorite-repo";
 import { createLeadQueries } from "./lead-queries";
 import { createLeadRepo } from "./lead-repo";
 import { createNegotiationRequestRepo } from "./negotiation-request-repo";
+import { createPartyRepo } from "./party-repo";
 import { createQuotationRepo } from "./quotation-repo";
 import { createSaleRepo } from "./sale-repo";
 import { createSaleVenueRepo } from "./sale-venue-repo";
@@ -31,6 +32,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     sourceStatuses: createSourceStatusRepo(executor),
     sourcingPolicies: createSourcingPolicyRepo(executor),
     users: createWorkflowUsersRepo(executor),
+    party: createPartyRepo(executor),
   };
 }
 

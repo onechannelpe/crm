@@ -22,12 +22,20 @@ describe("integration import workflow concurrency", () => {
 
   it("applies import while export reads run concurrently and dispatches both outboxes", async () => {
     const now = Date.now();
+    await runtime.ctx.db
+      .insertInto("organizations")
+      .values([
+        { id: 901, ruc: "20900000001", name: "Org One", created_at: now },
+        { id: 902, ruc: "20900000002", name: "Org Two", created_at: now },
+      ])
+      .execute();
 
     await runtime.ctx.db
       .insertInto("workflow_leads")
       .values([
         {
           id: "lead-901",
+          organization_id: 901,
           ruc: "20900000001",
           razon_social: "Org One",
           address: "Addr 1",
@@ -43,6 +51,7 @@ describe("integration import workflow concurrency", () => {
         },
         {
           id: "lead-902",
+          organization_id: 902,
           ruc: "20900000002",
           razon_social: "Org Two",
           address: "Addr 2",

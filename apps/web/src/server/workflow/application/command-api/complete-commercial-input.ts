@@ -14,12 +14,14 @@ import {
 import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { WorkflowNotificationCenter } from "../ports/notification-center";
+import type { PartyRepository } from "../ports/party-repository";
 import type { LeadClock } from "../services/lead-clock";
 
 type CompleteCommercialInputCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
   leadCommercialInputs: LeadCommercialInputRepository;
+  party: PartyRepository;
   notificationCenter: WorkflowNotificationCenter;
   clock: LeadClock;
 };
@@ -55,18 +57,25 @@ export async function completeCommercialInputCommand(
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
-    giroNegocio: input.giroNegocio,
     tipoProducto: input.tipoProducto,
     urlCliente: input.urlCliente,
     modalidadCobro: input.modalidadCobro,
-    repLegalNombres: input.repLegalNombres,
-    repLegalApellidoPaterno: input.repLegalApellidoPaterno,
-    repLegalApellidoMaterno: input.repLegalApellidoMaterno,
-    repLegalDni: input.repLegalDni,
-    repLegalTelefono: input.repLegalTelefono,
-    repLegalEmail: input.repLegalEmail,
     updatedAt: now,
     updatedBy: input.actor.userId,
+  });
+
+  await deps.party.updateOrganizationCommercial({
+    organizationId: lead.organizationId,
+    giroNegocio: input.giroNegocio,
+  });
+  await deps.party.upsertPrimaryLegalRepresentative({
+    organizationId: lead.organizationId,
+    nombres: input.repLegalNombres,
+    apellidoPaterno: input.repLegalApellidoPaterno,
+    apellidoMaterno: input.repLegalApellidoMaterno,
+    dni: input.repLegalDni,
+    telefono: input.repLegalTelefono,
+    email: input.repLegalEmail,
   });
 
   const outcome = await deps.mutationUow.commit({

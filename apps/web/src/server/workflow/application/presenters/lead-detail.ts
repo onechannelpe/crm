@@ -6,6 +6,10 @@ import type {
   LeadNegotiationRequest,
   LeadNegotiationFile,
 } from "../ports/negotiation-request-repository";
+import type {
+  LegalRepresentative,
+  OrganizationProfile,
+} from "../ports/party-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale, LeadSaleVenue } from "../ports/sale-repository";
 import type { LeadSourceStatus } from "../ports/source-status-repository";
@@ -52,6 +56,8 @@ export type LeadDetailSource = {
   canRevealFullTimeline: boolean;
   availableActions: LeadAvailableAction[];
   sourceStatus: LeadSourceStatus;
+  organization: OrganizationProfile | undefined;
+  legalRepresentative: LegalRepresentative | undefined;
 };
 
 function toLeadSourceStatus(
@@ -104,6 +110,8 @@ function toLeadDetailLead(
 
 function toLeadDetailCommercialInput(
   input: LeadCommercialInput,
+  organization: OrganizationProfile | undefined,
+  legalRepresentative: LegalRepresentative | undefined,
 ): LeadDetailCommercialInputView {
   return {
     leadId: input.leadId,
@@ -111,16 +119,16 @@ function toLeadDetailCommercialInput(
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
-    giroNegocio: input.giroNegocio,
+    giroNegocio: organization?.giroNegocio ?? null,
     tipoProducto: input.tipoProducto,
     urlCliente: input.urlCliente,
     modalidadCobro: input.modalidadCobro,
-    repLegalNombres: input.repLegalNombres,
-    repLegalApellidoPaterno: input.repLegalApellidoPaterno,
-    repLegalApellidoMaterno: input.repLegalApellidoMaterno,
-    repLegalDni: input.repLegalDni,
-    repLegalTelefono: input.repLegalTelefono,
-    repLegalEmail: input.repLegalEmail,
+    repLegalNombres: legalRepresentative?.nombres ?? null,
+    repLegalApellidoPaterno: legalRepresentative?.apellidoPaterno ?? null,
+    repLegalApellidoMaterno: legalRepresentative?.apellidoMaterno ?? null,
+    repLegalDni: legalRepresentative?.dni ?? null,
+    repLegalTelefono: legalRepresentative?.telefono ?? null,
+    repLegalEmail: legalRepresentative?.email ?? null,
     updatedAt: input.updatedAt,
     updatedBy: input.updatedBy,
   };
@@ -216,7 +224,11 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       source.venues.length,
     ),
     commercialInput: source.commercialInput
-      ? toLeadDetailCommercialInput(source.commercialInput)
+      ? toLeadDetailCommercialInput(
+          source.commercialInput,
+          source.organization,
+          source.legalRepresentative,
+        )
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
     sale: source.sale ? toLeadDetailSale(source.sale) : undefined,

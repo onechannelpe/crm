@@ -5,6 +5,7 @@ import { resolveReviewTransition } from "~/server/workflow/domain/workflow";
 
 const pendingReviewLead: PendingReviewLeadSubject = {
   id: "lead-1",
+  organizationId: 1,
   ruc: "20123456789",
   razonSocial: "Acme SAC",
   address: "Lima",

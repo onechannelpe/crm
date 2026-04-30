@@ -34,6 +34,7 @@ import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
 import type { WorkflowNotificationCenter } from "../ports/notification-center";
+import type { PartyRepository } from "../ports/party-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
 import type {
   LeadSaleRepository,
@@ -68,6 +69,7 @@ export type WorkflowCommandApiDeps = {
   leadEnrichmentQueue: LeadEnrichmentQueue;
   leadQuotations: LeadQuotationRepository;
   leadCommercialInputs: LeadCommercialInputRepository;
+  party: PartyRepository;
   leadSales: LeadSaleRepository;
   leadSaleVenues: LeadSaleVenueRepository;
   negotiationRequests: NegotiationRequestRepository;
@@ -180,6 +182,7 @@ export function createWorkflowCommandApi(
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
           leadCommercialInputs: deps.leadCommercialInputs,
+          party: deps.party,
           notificationCenter: deps.notificationCenter,
           clock: deps.clock,
         },

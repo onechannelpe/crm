@@ -1,21 +1,40 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { applySunatEnrichment } from "~/server/workflow/application/commands/apply-sunat-enrichment";
-import type { LeadRepository } from "~/server/workflow/application/ports/lead-repository";
+import type { PartyRepository } from "~/server/workflow/application/ports/party-repository";
 
-function createLeadRepositoryDouble() {
-  const updateByRuc = vi.fn<LeadRepository["updateByRuc"]>(async () => []);
+function createPartyRepositoryDouble() {
+  const findOrganizationByRuc = vi.fn<PartyRepository["findOrganizationByRuc"]>(
+    async () => ({
+      id: 10,
+      ruc: "20123456789",
+      name: "Acme",
+      giroNegocio: null,
+      address: null,
+      district: null,
+      province: null,
+      department: null,
+      phone: null,
+      email: null,
+    }),
+  );
+  const updateOrganizationFromEnrichment = vi.fn<
+    PartyRepository["updateOrganizationFromEnrichment"]
+  >(async () => {});
 
   const repo = {
-    insert: async () => "lead-1",
-    findById: async () => undefined,
-    findByRuc: async () => undefined,
-    findByRucMany: async () => [],
-    updateById: async () => [],
-    updateByRuc,
-  } satisfies LeadRepository;
+    findOrganizationByRuc,
+    updateOrganizationFromEnrichment,
+    findOrganizationById: async () => undefined,
+    createOrganization: async () => {
+      throw new Error("not used in test");
+    },
+    updateOrganizationCommercial: async () => {},
+    upsertPrimaryLegalRepresentative: async () => {},
+    findPrimaryLegalRepresentative: async () => undefined,
+  } satisfies PartyRepository;
 
-  return repo;
+  return { repo, findOrganizationByRuc, updateOrganizationFromEnrichment };
 }
 
 describe("applySunatEnrichment", () => {
@@ -24,7 +43,8 @@ describe("applySunatEnrichment", () => {
   });
 
   it("ignores overlays for non-ruc documents", async () => {
-    const leads = createLeadRepositoryDouble();
+    const { repo, updateOrganizationFromEnrichment } =
+      createPartyRepositoryDouble();
 
     await applySunatEnrichment({
       overlay: {
@@ -35,15 +55,15 @@ describe("applySunatEnrichment", () => {
         district: "Lima",
         department: "Lima",
       },
-      leads,
-      now: 100,
+      party: repo,
     });
 
-    expect(leads.updateByRuc).not.toHaveBeenCalled();
+    expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
   });
 
   it("skips writes when overlay has only empty values", async () => {
-    const leads = createLeadRepositoryDouble();
+    const { repo, updateOrganizationFromEnrichment } =
+      createPartyRepositoryDouble();
 
     await applySunatEnrichment({
       overlay: {
@@ -54,15 +74,15 @@ describe("applySunatEnrichment", () => {
         district: "",
         department: " ",
       },
-      leads,
-      now: 123,
+      party: repo,
     });
 
-    expect(leads.updateByRuc).not.toHaveBeenCalled();
+    expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
   });
 
-  it("writes normalized values through updateByRuc", async () => {
-    const leads = createLeadRepositoryDouble();
+  it("writes normalized values through party repository", async () => {
+    const { repo, updateOrganizationFromEnrichment } =
+      createPartyRepositoryDouble();
 
     await applySunatEnrichment({
       overlay: {
@@ -73,22 +93,22 @@ describe("applySunatEnrichment", () => {
         district: "  Miraflores ",
         department: " Lima ",
       },
-      leads,
-      now: 999,
+      party: repo,
     });
 
-    expect(leads.updateByRuc).toHaveBeenCalledWith("20123456789", {
-      razonSocial: "Acme SAC",
+    expect(updateOrganizationFromEnrichment).toHaveBeenCalledWith({
+      organizationId: 10,
+      name: "Acme SAC",
       address: "Av. Lima 123",
       district: "Miraflores",
       department: "Lima",
-      updatedAt: 999,
     });
   });
 
-  it("uses Date.now when now is not provided", async () => {
-    const leads = createLeadRepositoryDouble();
-    vi.spyOn(Date, "now").mockReturnValue(456);
+  it("skips writes when organization does not exist", async () => {
+    const { repo, findOrganizationByRuc, updateOrganizationFromEnrichment } =
+      createPartyRepositoryDouble();
+    findOrganizationByRuc.mockResolvedValueOnce(undefined);
 
     await applySunatEnrichment({
       overlay: {
@@ -99,12 +119,9 @@ describe("applySunatEnrichment", () => {
         district: null,
         department: null,
       },
-      leads,
+      party: repo,
     });
 
-    expect(leads.updateByRuc).toHaveBeenCalledWith("20123456789", {
-      razonSocial: "Acme SAC",
-      updatedAt: 456,
-    });
+    expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
   });
 });

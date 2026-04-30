@@ -24,6 +24,7 @@ export type ImportRowInput =
 
 export type LoadedLead = {
   id: string;
+  organization_id: number;
   ruc: string;
   executive_id: number;
   created_by: number;

@@ -4,6 +4,7 @@ import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
 import type { LeadQueries } from "../ports/lead-queries";
 import type { LeadRepository } from "../ports/lead-repository";
 import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
+import type { PartyRepository } from "../ports/party-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
 import type {
   LeadSaleRepository,
@@ -43,6 +44,7 @@ export type LeadDetailDeps = {
   negotiationFiles: NegotiationFilesQuery;
   sourceStatuses: SourceStatusRepository;
   users: WorkflowUserRepository;
+  party: PartyRepository;
 };
 
 export type LeadBootstrapPreviewDeps = {

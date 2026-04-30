@@ -24,6 +24,7 @@ export function createWorkflowRuntime(
       negotiationFiles: repos.negotiationFiles,
       sourceStatuses: repos.sourceStatuses,
       users: repos.users,
+      party: repos.party,
     },
     assignableExecutives: {
       leads: repos.leads,

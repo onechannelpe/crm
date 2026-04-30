@@ -11,6 +11,7 @@ import { normalizeLeadRuc } from "./lead-schema-parser";
 
 export type LeadRecord = {
   id: string;
+  organizationId: number;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
@@ -45,6 +46,7 @@ export type LeadPatch = Partial<
 >;
 
 export function createLeadDraft(input: {
+  organizationId: number;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
@@ -58,6 +60,7 @@ export function createLeadDraft(input: {
   }
 
   return Ok({
+    organizationId: input.organizationId,
     ruc: ruc.value,
     razonSocial: input.razonSocial,
     address: input.address,

@@ -1,5 +1,27 @@
 import type { Generated } from "kysely";
 
+export interface OrganizationPeopleTable {
+  id: Generated<number>;
+  organization_id: number;
+  dni: string;
+  nombres: string;
+  apellido_paterno: string;
+  apellido_materno: string;
+  telefono: string | null;
+  email: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface OrganizationPersonRolesTable {
+  id: Generated<number>;
+  organization_person_id: number;
+  role: string;
+  is_primary: 0 | 1;
+  effective_from: number;
+  effective_to: number | null;
+}
+
 export interface ContactsTable {
   id: Generated<number>;
   organization_id: number;

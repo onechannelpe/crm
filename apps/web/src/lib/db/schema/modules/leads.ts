@@ -2,6 +2,43 @@ import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
+    .createTable("organization_people")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("organization_id", "integer", (col) =>
+      col.notNull().references("organizations.id").onDelete("cascade"),
+    )
+    .addColumn("dni", "varchar(20)", (col) => col.notNull())
+    .addColumn("nombres", "varchar(255)", (col) => col.notNull())
+    .addColumn("apellido_paterno", "varchar(255)", (col) => col.notNull())
+    .addColumn("apellido_materno", "varchar(255)", (col) => col.notNull())
+    .addColumn("telefono", "varchar(20)")
+    .addColumn("email", "varchar(255)")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addUniqueConstraint("idx_organization_people_org_dni_unique", [
+      "organization_id",
+      "dni",
+    ])
+    .execute();
+
+  await db.schema
+    .createTable("organization_person_roles")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("organization_person_id", "integer", (col) =>
+      col.notNull().references("organization_people.id").onDelete("cascade"),
+    )
+    .addColumn("role", "varchar(40)", (col) => col.notNull())
+    .addColumn("is_primary", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("effective_from", "integer", (col) => col.notNull())
+    .addColumn("effective_to", "integer")
+    .addUniqueConstraint("idx_org_person_role_unique", [
+      "organization_person_id",
+      "role",
+      "effective_to",
+    ])
+    .execute();
+
+  await db.schema
     .createTable("contacts")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("organization_id", "integer", (col) =>

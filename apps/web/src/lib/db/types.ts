@@ -48,6 +48,8 @@ export interface Database {
   user_invites: auth.UserInvitesTable;
   auth_funnel_events: auth.AuthFunnelEventsTable;
   users: identity.UsersTable;
+  organization_people: leads.OrganizationPeopleTable;
+  organization_person_roles: leads.OrganizationPersonRolesTable;
   contacts: leads.ContactsTable;
   lead_assignments: leads.LeadAssignmentsTable;
   interaction_logs: leads.InteractionLogsTable;

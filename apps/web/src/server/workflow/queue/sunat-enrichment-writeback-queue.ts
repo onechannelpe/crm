@@ -1,7 +1,7 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { applySunatEnrichment } from "~/server/workflow/application/commands/apply-sunat-enrichment";
-import { createLeadRepo } from "~/server/workflow/infrastructure/lead-repo";
+import { createPartyRepo } from "~/server/workflow/infrastructure/party-repo";
 import {
   createSunatEnrichmentWritebackOutboxRepo,
   type SunatEnrichmentWritebackOutboxRepo,
@@ -31,7 +31,7 @@ export function createSunatEnrichmentWritebackQueue(
   const batchSize = 50;
   const repo =
     deps.repo ?? createSunatEnrichmentWritebackOutboxRepo(deps.executor);
-  const leads = createLeadRepo(deps.executor);
+  const party = createPartyRepo(deps.executor);
 
   return createJobQueue<SunatEnrichmentWritebackJob, void>({
     name: "sunat-enrichment-writeback",
@@ -40,8 +40,7 @@ export function createSunatEnrichmentWritebackQueue(
     poll: (limit: number) => repo.claimQueued(workerId, limit, leaseMs),
     handle: async (job, _signal) => {
       await applySunatEnrichment({
-        leads,
-        now: Date.now(),
+        party,
         overlay: {
           documentType: job.document_type,
           documentValue: job.document_value,

@@ -20,6 +20,7 @@ function nextStageFor(
   return resolveReviewTransition({
     lead: {
       id: current.id,
+      organizationId: current.organization_id,
       ruc: current.ruc,
       razonSocial: null,
       address: null,
@@ -90,6 +91,7 @@ export async function applyLeadMutation(input: {
     .selectFrom("workflow_leads")
     .select([
       "id",
+      "organization_id",
       "ruc",
       "executive_id",
       "created_by",

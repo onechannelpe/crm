@@ -9,16 +9,9 @@ export type LeadCommercialInput = {
   tasaActual: number | null;
   gpv: number | null;
   ticket: number | null;
-  giroNegocio: string | null;
   tipoProducto: CulqiProductKind | null;
   urlCliente: string | null;
   modalidadCobro: ModalidadCobro;
-  repLegalNombres: string | null;
-  repLegalApellidoPaterno: string | null;
-  repLegalApellidoMaterno: string | null;
-  repLegalDni: string | null;
-  repLegalTelefono: string | null;
-  repLegalEmail: string | null;
   updatedAt: number;
   updatedBy: number;
 };

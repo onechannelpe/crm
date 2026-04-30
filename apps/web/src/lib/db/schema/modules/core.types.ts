@@ -31,6 +31,13 @@ export interface OrganizationsTable {
   id: Generated<number>;
   ruc: string;
   name: string;
+  giro_negocio: string | null;
+  address: string | null;
+  district: string | null;
+  province: string | null;
+  department: string | null;
+  phone: string | null;
+  email: string | null;
   locked_branch_id: number | null;
   locked_at: number | null;
   locked_by_user_id: number | null;

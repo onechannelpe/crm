@@ -44,11 +44,81 @@ export async function run(db: Kysely<Database>): Promise<void> {
   const sidConverted = crypto.randomUUID();
   const vidConverted = crypto.randomUUID();
 
+  const organizationRows = [
+    {
+      ruc: "20103615080",
+      name: "SERVICIOS GENERALES ANDINA SAC",
+      address: "CAL. LOS NEGOCIOS NRO. 431 URB. RESIDENCIAL SAN ISIDRO",
+      district: "SAN ISIDRO",
+      department: "LIMA",
+    },
+    {
+      ruc: "20103176060",
+      name: "COMERCIAL ANDINA EIRL",
+      address: "AV. INDUSTRIAL NRO. 620 URB. PERU",
+      district: "LIMA",
+      department: "LIMA",
+    },
+    {
+      ruc: "20538856674",
+      name: "DISTRIBUIDORA NORTE PERU SAC",
+      address: "CAL. JOSE DE LA RIVA AGUERO NRO. 1023",
+      district: "LOS OLIVOS",
+      department: "LIMA",
+    },
+    {
+      ruc: "20542245671",
+      name: "INVERSIONES PACIFICO SRL",
+      address: "AV. EL SOL NRO. 123 PISO 3",
+      district: "CUSCO",
+      department: "CUSCO",
+    },
+    {
+      ruc: "20394809218",
+      name: "LOGISTICA CENTRAL SA",
+      address: "AV. NICOLAS ARRIOLA NRO. 2815",
+      district: "LA VICTORIA",
+      department: "LIMA",
+    },
+    {
+      ruc: "20219523468",
+      name: "CONSTRUCTORA ANDES SA",
+      address: "AV. BENAVIDES NRO. 1855",
+      district: "MIRAFLORES",
+      department: "LIMA",
+    },
+    {
+      ruc: "20353745400",
+      name: "TRANSPORTES LIMA NORTE EIRL",
+      address: "AV. TUPAC AMARU KM. 14.5",
+      district: "COMAS",
+      department: "LIMA",
+    },
+  ] as const;
+
+  await db
+    .insertInto("organizations")
+    .values(organizationRows.map((row) => ({ ...row, created_at: now })))
+    .onConflict((oc) => oc.column("ruc").doNothing())
+    .execute();
+
+  const organizations = await db
+    .selectFrom("organizations")
+    .select(["id", "ruc"])
+    .where(
+      "ruc",
+      "in",
+      organizationRows.map((row) => row.ruc),
+    )
+    .execute();
+  const orgIdByRuc = new Map(organizations.map((row) => [row.ruc, row.id]));
+
   await db
     .insertInto("workflow_leads")
     .values([
       {
         id: idPending,
+        organization_id: orgIdByRuc.get("20103615080") ?? 0,
         ruc: "20103615080",
         razon_social: "SERVICIOS GENERALES ANDINA SAC",
         address: "CAL. LOS NEGOCIOS NRO. 431 URB. RESIDENCIAL SAN ISIDRO",
@@ -65,6 +135,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idNeeds,
+        organization_id: orgIdByRuc.get("20103176060") ?? 0,
         ruc: "20103176060",
         razon_social: "COMERCIAL ANDINA EIRL",
         address: "AV. INDUSTRIAL NRO. 620 URB. PERU",
@@ -81,6 +152,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idReady,
+        organization_id: orgIdByRuc.get("20538856674") ?? 0,
         ruc: "20538856674",
         razon_social: "DISTRIBUIDORA NORTE PERU SAC",
         address: "CAL. JOSE DE LA RIVA AGUERO NRO. 1023",
@@ -97,6 +169,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idQuoted,
+        organization_id: orgIdByRuc.get("20542245671") ?? 0,
         ruc: "20542245671",
         razon_social: "INVERSIONES PACIFICO SRL",
         address: "AV. EL SOL NRO. 123 PISO 3",
@@ -113,6 +186,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idForSale,
+        organization_id: orgIdByRuc.get("20394809218") ?? 0,
         ruc: "20394809218",
         razon_social: "LOGISTICA CENTRAL SA",
         address: "AV. NICOLAS ARRIOLA NRO. 2815",
@@ -129,6 +203,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idConverted,
+        organization_id: orgIdByRuc.get("20219523468") ?? 0,
         ruc: "20219523468",
         razon_social: "CONSTRUCTORA ANDES SA",
         address: "AV. BENAVIDES NRO. 1855",
@@ -145,6 +220,7 @@ export async function run(db: Kysely<Database>): Promise<void> {
       },
       {
         id: idRejected,
+        organization_id: orgIdByRuc.get("20353745400") ?? 0,
         ruc: "20353745400",
         razon_social: "TRANSPORTES LIMA NORTE EIRL",
         address: "AV. TUPAC AMARU KM. 14.5",
@@ -510,20 +586,53 @@ export async function run(db: Kysely<Database>): Promise<void> {
         tasa_actual: 2.8,
         gpv: 85_000.0,
         ticket: 245.5,
-        giro_negocio: "Construccion de edificios residenciales",
         tipo_producto: "CULQI_FULL",
         url_cliente: null,
         modalidad_cobro: "CARGO_UNICO",
-        rep_legal_nombres: "Daniel",
-        rep_legal_apellido_paterno: "Gutierrez",
-        rep_legal_apellido_materno: "Paredes",
-        rep_legal_dni: "42715983",
-        rep_legal_telefono: "987654321",
-        rep_legal_email: "daniel.gutierrez@andes.pe",
         updated_at: now - 29 * day,
         updated_by: BO1,
       },
     ])
+    .execute();
+
+  const convertedOrgId = orgIdByRuc.get("20219523468") ?? 0;
+  await db
+    .updateTable("organizations")
+    .set({ giro_negocio: "Construccion de edificios residenciales" })
+    .where("id", "=", convertedOrgId)
+    .execute();
+
+  await db
+    .insertInto("organization_people")
+    .values({
+      organization_id: convertedOrgId,
+      dni: "42715983",
+      nombres: "Daniel",
+      apellido_paterno: "Gutierrez",
+      apellido_materno: "Paredes",
+      telefono: "987654321",
+      email: "daniel.gutierrez@andes.pe",
+      created_at: now - 29 * day,
+      updated_at: now - 29 * day,
+    })
+    .execute();
+
+  const legalRep = await db
+    .selectFrom("organization_people")
+    .select("id")
+    .where("organization_id", "=", convertedOrgId)
+    .where("dni", "=", "42715983")
+    .executeTakeFirstOrThrow();
+
+  await db
+    .insertInto("organization_person_roles")
+    .values({
+      organization_person_id: legalRep.id,
+      role: "LEGAL_REPRESENTATIVE",
+      is_primary: 1,
+      effective_from: now - 29 * day,
+      effective_to: null,
+    })
     .execute();
 
   await db

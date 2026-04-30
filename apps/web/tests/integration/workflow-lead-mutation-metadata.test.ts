@@ -21,9 +21,19 @@ describe("workflow lead mutation metadata", () => {
 
   it("updates lead.updatedBy when a note is added", async () => {
     await runtime.ctx.db
+      .insertInto("organizations")
+      .values({
+        id: 501,
+        ruc: "20900000501",
+        name: "Org Note",
+        created_at: 10,
+      })
+      .execute();
+    await runtime.ctx.db
       .insertInto("workflow_leads")
       .values({
         id: "lead-501",
+        organization_id: 501,
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -99,9 +109,20 @@ describe("workflow lead mutation metadata", () => {
       .execute();
 
     await runtime.ctx.db
+      .insertInto("organizations")
+      .values({
+        id: 502,
+        ruc: "20900000502",
+        name: "Org Reassign",
+        created_at: now,
+      })
+      .execute();
+
+    await runtime.ctx.db
       .insertInto("workflow_leads")
       .values({
         id: "lead-502",
+        organization_id: 502,
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,
@@ -150,9 +171,19 @@ describe("workflow lead mutation metadata", () => {
   it("updates lead.updatedBy for import mutations", async () => {
     const now = Date.now();
     await runtime.ctx.db
+      .insertInto("organizations")
+      .values({
+        id: 503,
+        ruc: "20900000503",
+        name: "Org Import",
+        created_at: now,
+      })
+      .execute();
+    await runtime.ctx.db
       .insertInto("workflow_leads")
       .values({
         id: "lead-503",
+        organization_id: 503,
         executive_id: 1,
         stage: "PENDING_EXTERNAL_REVIEW",
         status: null,

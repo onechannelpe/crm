@@ -9,6 +9,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("address", "text")
     .addColumn("district", "varchar(100)")
     .addColumn("department", "varchar(100)")
+    .addColumn("organization_id", "integer", (col) =>
+      col.notNull().references("organizations.id"),
+    )
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
@@ -23,6 +26,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();
 
+  await db.schema
+    .createIndex("idx_workflow_leads_organization")
+    .on("workflow_leads")
+    .column("organization_id")
+    .unique()
+    .execute();
   await db.schema
     .createIndex("idx_workflow_leads_ruc")
     .on("workflow_leads")
@@ -68,7 +77,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("tasa_actual", "real")
     .addColumn("gpv", "real")
     .addColumn("ticket", "real")
-    .addColumn("giro_negocio", "text")
     .addColumn("tipo_producto", "varchar(20)", (col) =>
       col.references("workflow_tipo_producto_kinds.value"),
     )
@@ -76,12 +84,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("modalidad_cobro", "varchar(20)", (col) =>
       col.notNull().references("workflow_modalidad_cobro_kinds.value"),
     )
-    .addColumn("rep_legal_nombres", "varchar(255)")
-    .addColumn("rep_legal_apellido_paterno", "varchar(255)")
-    .addColumn("rep_legal_apellido_materno", "varchar(255)")
-    .addColumn("rep_legal_dni", "varchar(8)")
-    .addColumn("rep_legal_telefono", "varchar(20)")
-    .addColumn("rep_legal_email", "varchar(255)")
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
       col.notNull().references("users.id"),
