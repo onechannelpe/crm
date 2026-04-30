@@ -4,7 +4,8 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-  AbonoBank,
+  CulqiProductKind,
+  ModalidadCobro,
 } from "~/workflow/contracts/lead-schema";
 
 export type LeadHistoryEventType =
@@ -19,6 +20,7 @@ export type LeadHistoryEventType =
   | "quotation_created"
   | "sale_approved"
   | "sale_created"
+  | "venue_added"
   | "call_logged"
   | "note_added";
 
@@ -62,8 +64,12 @@ export type LeadHistoryPayloadByEvent = {
     tasaActual: number;
     gpv: number;
     ticket: number;
-    abono: AbonoBank;
-    cantidadPos: number;
+    giroNegocio: string;
+    tipoProducto: CulqiProductKind;
+    urlCliente: string | null;
+    modalidadCobro: ModalidadCobro;
+    repLegalNombres: string;
+    repLegalDni: string;
   };
   quotation_created: {
     quotationId: string;
@@ -73,6 +79,12 @@ export type LeadHistoryPayloadByEvent = {
   sale_approved: null;
   sale_created: {
     saleId: string;
+  };
+  venue_added: {
+    venueId: string;
+    saleId: string;
+    nombreComercial: string;
+    isFirstVenue: boolean;
   };
   call_logged: {
     outcome: LeadCallOutcome;

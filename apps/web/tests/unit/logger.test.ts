@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createLogger } from "../../src/lib/observability/logger";
+import { createLogger } from "~/lib/observability/logger";
 
 describe("createLogger", () => {
   const ORIGINAL_ENV = { ...process.env };

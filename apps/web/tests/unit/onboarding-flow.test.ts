@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { getDefaultAppPath } from "../../src/lib/auth/access/route-policy";
-import { deriveOnboardingRequirements } from "../../src/server/auth/policy/engine";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { deriveOnboardingRequirements } from "~/server/auth/policy/engine";
 
 type OnboardingUser = Parameters<typeof deriveOnboardingRequirements>[0];
 

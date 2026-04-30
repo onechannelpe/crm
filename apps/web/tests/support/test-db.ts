@@ -3,9 +3,17 @@ import { join } from "node:path";
 
 import { sql, type Kysely } from "kysely";
 
-import { createDb } from "../../src/lib/db/client";
-import { migrateToLatest } from "../../src/lib/db/migrate";
-import type { Database } from "../../src/lib/db/types";
+import { createDb } from "~/lib/db/client";
+import { migrateToLatest } from "~/lib/db/migrate";
+import type { Database } from "~/lib/db/types";
+import {
+  ABONO_BANKS,
+  ACCOUNT_TYPE_KINDS,
+  CULQI_PRODUCT_KINDS,
+  MODALIDAD_COBRO_KINDS,
+  MONEDAS,
+} from "~/workflow/contracts/lead-schema";
+
 import {
   createTestRepositories,
   type TestRepositories,
@@ -165,6 +173,31 @@ async function seedTemplate(db: Kysely<Database>) {
         created_at: now,
       },
     ])
+    .execute();
+
+  await db
+    .insertInto("workflow_tipo_producto_kinds")
+    .values(CULQI_PRODUCT_KINDS.map((value) => ({ value })))
+    .execute();
+
+  await db
+    .insertInto("workflow_modalidad_cobro_kinds")
+    .values(MODALIDAD_COBRO_KINDS.map((value) => ({ value })))
+    .execute();
+
+  await db
+    .insertInto("workflow_currency_kinds")
+    .values(MONEDAS.map((value) => ({ value })))
+    .execute();
+
+  await db
+    .insertInto("workflow_account_type_kinds")
+    .values(ACCOUNT_TYPE_KINDS.map((value) => ({ value })))
+    .execute();
+
+  await db
+    .insertInto("workflow_abono_banks")
+    .values(ABONO_BANKS.map((value) => ({ value })))
     .execute();
 }
 

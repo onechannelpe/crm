@@ -3,7 +3,9 @@ import type {
   LeadPriority,
   LeadStatus,
   Moneda,
-  AbonoBank,
+  CulqiProductKind,
+  ModalidadCobro,
+  SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
 import type { ActorContext } from "./actor-context";
@@ -83,8 +85,16 @@ export type CompleteCommercialInputInput = {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: AbonoBank;
-  cantidadPos: number;
+  giroNegocio: string;
+  tipoProducto: CulqiProductKind;
+  urlCliente: string | null;
+  modalidadCobro: ModalidadCobro;
+  repLegalNombres: string;
+  repLegalApellidoPaterno: string;
+  repLegalApellidoMaterno: string;
+  repLegalDni: string;
+  repLegalTelefono: string;
+  repLegalEmail: string;
 };
 
 export type RequestRateNegotiationInput = {
@@ -97,13 +107,19 @@ export type RequestRateNegotiationInput = {
 export type CreateSaleInput = {
   actor: ActorContext;
   leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: AbonoBank;
+};
+
+export type CreateSaleVenueInput = {
+  actor: ActorContext;
+  leadId: string;
+  saleId: string;
+  nombreComercial: string;
   cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
+  direccion: string;
+  referencia: string;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
 };

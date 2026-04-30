@@ -13,15 +13,6 @@ function toLeadSale(row: SaleRow): LeadSale {
     id: row.id,
     leadId: row.lead_id,
     executiveId: row.executive_id,
-    proveedorActual: row.proveedor_actual,
-    tasaActual: row.tasa_actual,
-    gpv: row.gpv,
-    ticket: row.ticket,
-    abono: row.abono,
-    cantidadPos: row.cantidad_pos,
-    banco: row.banco,
-    nroCuenta: row.nro_cuenta,
-    cci: row.cci,
     createdAt: row.created_at,
   };
 }
@@ -36,15 +27,6 @@ export function createSaleRepo(db: DatabaseExecutor) {
           id,
           lead_id: values.leadId,
           executive_id: values.executiveId,
-          proveedor_actual: values.proveedorActual,
-          tasa_actual: values.tasaActual,
-          gpv: values.gpv,
-          ticket: values.ticket,
-          abono: values.abono,
-          cantidad_pos: values.cantidadPos,
-          banco: values.banco,
-          nro_cuenta: values.nroCuenta,
-          cci: values.cci,
           created_at: values.createdAt,
         } satisfies NewSaleRow)
         .executeTakeFirstOrThrow();

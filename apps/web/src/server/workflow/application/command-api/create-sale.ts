@@ -1,6 +1,7 @@
+import { randomUUIDv7 } from "bun";
+
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { isBcpBank } from "~/workflow/contracts/lead-schema";
 
 import { isReadyForSaleLeadSubject } from "../../domain/lead-subjects";
 import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
@@ -42,15 +43,14 @@ export async function createSaleCommand(
       ),
     );
   }
-  const banco = input.banco.trim();
-  const isBcp = isBcpBank(banco);
-  const cci = isBcp ? null : input.cci?.trim() || null;
-  if (!isBcp && !cci) {
+
+  const existingSale = await deps.leadSales.findByLeadId(input.leadId);
+  if (existingSale) {
     return Err(
       domainError(
-        "validation",
-        "missing_cci",
-        "CCI is required when the selected bank is not BCP",
+        "conflict",
+        "sale_already_exists",
+        "A sale already exists for this lead",
       ),
     );
   }
@@ -59,15 +59,6 @@ export async function createSaleCommand(
   const saleId = await deps.leadSales.insert({
     leadId: lead.id,
     executiveId: input.actor.userId,
-    proveedorActual: input.proveedorActual,
-    tasaActual: input.tasaActual,
-    gpv: input.gpv,
-    ticket: input.ticket,
-    abono: input.abono,
-    cantidadPos: input.cantidadPos,
-    banco,
-    nroCuenta: input.nroCuenta,
-    cci,
     createdAt: now,
   });
 
@@ -79,5 +70,9 @@ export async function createSaleCommand(
   });
   if (!outcome.ok) return outcome;
 
-  return Ok({ id: saleId });
+  return Ok({
+    leadId: input.leadId,
+    saleId,
+    transactionId: randomUUIDv7(),
+  });
 }

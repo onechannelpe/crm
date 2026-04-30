@@ -6,10 +6,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
-} from "../../src/lib/auth/security/strong-auth-status";
-import { createDb } from "../../src/lib/db/client";
-import { migrateToLatest } from "../../src/lib/db/migrate";
-import { seedIfEmpty } from "../../src/lib/db/seed";
+} from "~/lib/auth/security/strong-auth-status";
+import { createDb } from "~/lib/db/client";
+import { migrateToLatest } from "~/lib/db/migrate";
+import { seedIfEmpty } from "~/lib/db/seed";
+
 import { createTestRepositories } from "../support/test-repositories";
 
 describe("seed invariants", () => {

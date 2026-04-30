@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseEnvFor, validateSecret } from "../../src/lib/env";
+import { parseEnvFor, validateSecret } from "~/lib/env";
 
 describe("env validation", () => {
   const baseEnv = {

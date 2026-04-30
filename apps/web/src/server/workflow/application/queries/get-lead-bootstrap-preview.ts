@@ -10,11 +10,13 @@ export async function getLeadBootstrapPreview(
   engineGateway: WorkflowEngineGateway,
   input: { ruc: string },
 ): Promise<Result<LeadBootstrapPreviewView, DomainError>> {
-  const existingLead = await deps.leads.findByRuc(input.ruc);
-  if (existingLead && existingLead.razonSocial) {
+  const existingOrganization = await deps.party.findOrganizationByRuc(
+    input.ruc,
+  );
+  if (existingOrganization) {
     return Ok({
-      razonSocial: existingLead.razonSocial,
-      address: existingLead.address,
+      razonSocial: existingOrganization.name,
+      address: existingOrganization.address,
       engineStatus: "available",
     });
   }

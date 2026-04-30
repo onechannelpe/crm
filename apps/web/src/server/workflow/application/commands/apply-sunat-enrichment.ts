@@ -1,6 +1,4 @@
-import type { LeadPatch } from "~/server/workflow/domain/lead-record";
-
-import type { LeadRepository } from "../ports/lead-repository";
+import type { PartyRepository } from "../ports/party-repository";
 
 export type SunatLeadOverlay = {
   documentType: "dni" | "ruc";
@@ -19,17 +17,22 @@ function normalizeOverlayValue(value: string | null): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
-function toLeadPatchFromSunatOverlay(
-  overlay: SunatLeadOverlay,
-): Pick<LeadPatch, "razonSocial" | "address" | "district" | "department"> {
-  const patch: Pick<
-    LeadPatch,
-    "razonSocial" | "address" | "district" | "department"
-  > = {};
+function toOrganizationPatchFromSunatOverlay(overlay: SunatLeadOverlay): {
+  name?: string;
+  address?: string;
+  district?: string;
+  department?: string;
+} {
+  const patch: {
+    name?: string;
+    address?: string;
+    district?: string;
+    department?: string;
+  } = {};
 
   const razonSocial = normalizeOverlayValue(overlay.legalName);
   if (razonSocial !== null) {
-    patch.razonSocial = razonSocial;
+    patch.name = razonSocial;
   }
 
   const address = normalizeOverlayValue(overlay.address);
@@ -52,20 +55,24 @@ function toLeadPatchFromSunatOverlay(
 
 export async function applySunatEnrichment(input: {
   overlay: SunatLeadOverlay;
-  leads: LeadRepository;
-  now?: number;
+  party: PartyRepository;
 }): Promise<void> {
   if (input.overlay.documentType !== "ruc") {
     return;
   }
 
-  const patch: LeadPatch = toLeadPatchFromSunatOverlay(input.overlay);
+  const patch = toOrganizationPatchFromSunatOverlay(input.overlay);
   if (Object.keys(patch).length < 1) {
     return;
   }
 
-  await input.leads.updateByRuc(input.overlay.documentValue, {
+  const organization = await input.party.findOrganizationByRuc(
+    input.overlay.documentValue,
+  );
+  if (!organization) return;
+
+  await input.party.updateOrganizationFromEnrichment({
+    organizationId: organization.id,
     ...patch,
-    updatedAt: input.now ?? Date.now(),
   });
 }

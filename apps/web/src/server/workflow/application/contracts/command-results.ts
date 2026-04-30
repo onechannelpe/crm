@@ -11,5 +11,7 @@ export type LeadQuotationResult = {
 };
 
 export type LeadSaleResult = {
-  id: string;
+  leadId: string;
+  saleId: string;
+  transactionId: string;
 };

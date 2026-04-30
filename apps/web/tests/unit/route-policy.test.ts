@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { ROUTE_MANIFEST } from "../../src/lib/auth/access/route-manifest";
+import { ROUTE_MANIFEST } from "~/lib/auth/access/route-manifest";
 import {
   canAccessPath,
   getDefaultAppPath,
   getRoutePermission,
-} from "../../src/lib/auth/access/route-policy";
-import { SIDEBAR_ENTRIES } from "../../src/lib/nav/config";
-import { getHeaderRoute } from "../../src/lib/nav/policy";
+} from "~/lib/auth/access/route-policy";
+import { SIDEBAR_ENTRIES } from "~/lib/nav/config";
+import { getHeaderRoute } from "~/lib/nav/policy";
 
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {

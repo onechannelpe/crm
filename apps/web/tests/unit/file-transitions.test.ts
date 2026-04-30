@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   assertValidTransition,
   isValidTransition,
-} from "../../src/server/files/transitions";
-import type { ArtifactStatus } from "../../src/server/files/types";
+} from "~/server/files/transitions";
+import type { ArtifactStatus } from "~/server/files/types";
 
 const ALL_STATUSES: ArtifactStatus[] = [
   "requested",

@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Err, Ok } from "../../src/server/shared/result";
+import { Err, Ok } from "~/server/shared/result";
 
 const mocks = vi.hoisted(() => ({
   completeGoogleOAuthCallback: vi.fn<() => Promise<unknown>>(),
@@ -22,7 +22,7 @@ vi.mock("~/server/runtime", () => ({
   }),
 }));
 
-import { GET } from "../../src/routes/api/auth/google/callback";
+import { GET } from "~/routes/api/auth/google/callback";
 
 function createApiEvent(request: Request): APIEvent {
   const event = {

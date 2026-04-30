@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { completeGoogleOAuthCallback } from "../../src/lib/auth/google/google-callback-login";
-import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
-import { Err, Ok, isErr } from "../../src/server/shared/result";
+import { completeGoogleOAuthCallback } from "~/lib/auth/google/google-callback-login";
+import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { Err, Ok, isErr } from "~/server/shared/result";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -17,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   authenticateGoogleAuthorizationCode: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("../../src/lib/auth/google/google-oauth", () => ({
+vi.mock("~/lib/auth/google/google-oauth", () => ({
   authenticateGoogleAuthorizationCode:
     mocks.authenticateGoogleAuthorizationCode,
 }));

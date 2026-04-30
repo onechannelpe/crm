@@ -20,6 +20,7 @@ function nextStageFor(
   return resolveReviewTransition({
     lead: {
       id: current.id,
+      organizationId: current.organization_id,
       ruc: current.ruc,
       razonSocial: null,
       address: null,
@@ -88,18 +89,24 @@ export async function applyLeadMutation(input: {
 }): Promise<LeadMutationResult> {
   const lead = (await input.executor
     .selectFrom("workflow_leads")
+    .innerJoin(
+      "organizations",
+      "organizations.id",
+      "workflow_leads.organization_id",
+    )
     .select([
-      "id",
-      "ruc",
-      "executive_id",
-      "created_by",
-      "updated_by",
-      "updated_at",
-      "status",
-      "prioridad",
-      "stage",
+      "workflow_leads.id",
+      "workflow_leads.organization_id",
+      "organizations.ruc",
+      "workflow_leads.executive_id",
+      "workflow_leads.created_by",
+      "workflow_leads.updated_by",
+      "workflow_leads.updated_at",
+      "workflow_leads.status",
+      "workflow_leads.prioridad",
+      "workflow_leads.stage",
     ])
-    .where("ruc", "=", input.row.ruc)
+    .where("organizations.ruc", "=", input.row.ruc)
     .executeTakeFirst()) as LoadedLead | undefined;
   if (!lead) {
     const changedAt = Date.now();

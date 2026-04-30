@@ -8,7 +8,10 @@ import {
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import type { AbonoBank } from "~/workflow/contracts/lead-schema";
+import type {
+  CulqiProductKind,
+  ModalidadCobro,
+} from "~/workflow/contracts/lead-schema";
 
 export async function requestLeadCreation(input: {
   ruc: string;
@@ -85,11 +88,22 @@ export async function requestLeadCommercialInputCompletion(input: {
   tasaActual: number;
   gpv: number;
   ticket: number;
-  abono: AbonoBank;
-  cantidadPos: number;
+  giroNegocio: string;
+  tipoProducto: CulqiProductKind;
+  urlCliente: string | null;
+  modalidadCobro: ModalidadCobro;
+  repLegalNombres: string;
+  repLegalApellidoPaterno: string;
+  repLegalApellidoMaterno: string;
+  repLegalDni: string;
+  repLegalTelefono: string;
+  repLegalEmail: string;
 }) {
   if (!input.proveedorActual?.trim()) {
     throw validationError("proveedorActual is required");
+  }
+  if (!input.giroNegocio?.trim()) {
+    throw validationError("giroNegocio is required");
   }
 
   return runAction({

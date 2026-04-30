@@ -260,8 +260,12 @@ export function deriveLeadMutationEvents(input: {
             tasaActual: intent.tasaActual,
             gpv: intent.gpv,
             ticket: intent.ticket,
-            abono: intent.abono,
-            cantidadPos: intent.cantidadPos,
+            giroNegocio: intent.giroNegocio,
+            tipoProducto: intent.tipoProducto,
+            urlCliente: intent.urlCliente,
+            modalidadCobro: intent.modalidadCobro,
+            repLegalNombres: intent.repLegalNombres,
+            repLegalDni: intent.repLegalDni,
           },
           occurredAt: now,
         }),
@@ -291,6 +295,33 @@ export function deriveLeadMutationEvents(input: {
           payload: { saleId: intent.saleId },
           occurredAt: now,
         }),
+      ],
+      audit: {
+        action: "sale_created",
+        entityId: lead.id,
+        changes: { saleId: intent.saleId },
+      },
+    });
+  }
+
+  if (intent.kind === "create_sale_venue") {
+    const history: LeadHistoryEventDraft[] = [
+      createHistoryEvent({
+        leadId: lead.id,
+        eventType: "venue_added",
+        actorUserId,
+        payload: {
+          venueId: intent.venueId,
+          saleId: intent.saleId,
+          nombreComercial: intent.nombreComercial,
+          isFirstVenue: intent.isFirstVenue,
+        },
+        occurredAt: now,
+      }),
+    ];
+
+    if (intent.isFirstVenue) {
+      history.push(
         createHistoryEvent({
           leadId: lead.id,
           eventType: "workflow_stage_changed",
@@ -298,11 +329,19 @@ export function deriveLeadMutationEvents(input: {
           payload: { from: lead.stage, to: "CONVERTED" },
           occurredAt: now,
         }),
-      ],
+      );
+    }
+
+    return Ok({
+      history,
       audit: {
-        action: "sale_created",
+        action: "venue_added",
         entityId: lead.id,
-        changes: { saleId: intent.saleId, to: "CONVERTED" },
+        changes: {
+          venueId: intent.venueId,
+          saleId: intent.saleId,
+          isFirstVenue: intent.isFirstVenue,
+        },
       },
     });
   }

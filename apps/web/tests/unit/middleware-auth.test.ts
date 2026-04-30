@@ -5,9 +5,10 @@ import {
   enforceAuthRequest,
   getTargetOrigin,
   isPublicPath,
-} from "../../src/lib/auth/access/request-auth";
-import type { AuthSession } from "../../src/lib/auth/access/session-types";
-import type { RequestContext } from "../../src/lib/http/request-context";
+} from "~/lib/auth/access/request-auth";
+import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { RequestContext } from "~/lib/http/request-context";
+
 import { makeAuthSession } from "../support/unit-factories";
 
 function createRequestContext(

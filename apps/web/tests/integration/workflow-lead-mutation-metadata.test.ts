@@ -1,10 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
+import { applyImportRows } from "~/server/integrations/application/import/apply-service";
+
 import {
   createTestRuntime,
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
+import {
+  seedImportJob,
+  seedLead,
+  seedOrganization,
+  seedUser,
+} from "../support/workflow-fixtures";
 import { runTestWorkflowCommand } from "../support/workflow-test-kit";
 
 describe("workflow lead mutation metadata", () => {
@@ -12,6 +19,7 @@ describe("workflow lead mutation metadata", () => {
 
   beforeEach(async () => {
     runtime = await createTestRuntime("workflow-lead-mutation-metadata");
+    runtime.now.set(1_000);
   });
 
   afterEach(async () => {
@@ -19,23 +27,21 @@ describe("workflow lead mutation metadata", () => {
   });
 
   it("updates lead.updatedBy when a note is added", async () => {
-    await runtime.ctx.db
-      .insertInto("workflow_leads")
-      .values({
-        id: "lead-501",
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20900000501",
-        razon_social: "Org Note",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_by: null,
-        updated_at: 10,
-      })
-      .execute();
+    await seedOrganization(runtime, {
+      id: 501,
+      ruc: "20900000501",
+      name: "Org Note",
+    });
+    await seedLead(runtime, {
+      id: "lead-501",
+      organizationId: 501,
+      executiveId: 1,
+      stage: "PENDING_EXTERNAL_REVIEW",
+      status: null,
+      prioridad: null,
+      createdAt: 10,
+      updatedAt: 10,
+    });
 
     const result = await runTestWorkflowCommand(runtime, (commandApi) =>
       commandApi.addLeadNote({
@@ -58,62 +64,41 @@ describe("workflow lead mutation metadata", () => {
   });
 
   it("allows admins to reassign and removes access from previous executive", async () => {
-    const now = Date.now();
-    await runtime.ctx.db
-      .insertInto("users")
-      .values([
-        {
-          id: 11,
-          branch_id: 1,
-          team_id: null,
-          username: "admin.one",
-          email: "admin1@test.local",
-          password_hash: "hash",
-          names: "Admin",
-          first_surname: "One",
-          second_surname: "Alpha",
-          phone_e164: "+51990000111",
-          onboarding_completed_at: now,
-          role: "admin",
-          is_active: 1,
-          created_at: now,
-        },
-        {
-          id: 12,
-          branch_id: 1,
-          team_id: null,
-          username: "exec.new",
-          email: "execnew@test.local",
-          password_hash: "hash",
-          names: "Exec",
-          first_surname: "New",
-          second_surname: "Alpha",
-          phone_e164: "+51990000112",
-          onboarding_completed_at: now,
-          role: "executive",
-          is_active: 1,
-          created_at: now,
-        },
-      ])
-      .execute();
-
-    await runtime.ctx.db
-      .insertInto("workflow_leads")
-      .values({
-        id: "lead-502",
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20900000502",
-        razon_social: "Org Reassign",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_by: null,
-        updated_at: 10,
-      })
-      .execute();
+    await seedUser(runtime, {
+      id: 11,
+      username: "admin.one",
+      email: "admin1@test.local",
+      names: "Admin",
+      firstSurname: "One",
+      secondSurname: "Alpha",
+      role: "admin",
+      phoneE164: "+51990000111",
+    });
+    await seedUser(runtime, {
+      id: 12,
+      username: "exec.new",
+      email: "execnew@test.local",
+      names: "Exec",
+      firstSurname: "New",
+      secondSurname: "Alpha",
+      role: "executive",
+      phoneE164: "+51990000112",
+    });
+    await seedOrganization(runtime, {
+      id: 502,
+      ruc: "20900000502",
+      name: "Org Reassign",
+    });
+    await seedLead(runtime, {
+      id: "lead-502",
+      organizationId: 502,
+      executiveId: 1,
+      stage: "PENDING_EXTERNAL_REVIEW",
+      status: null,
+      prioridad: null,
+      createdAt: 10,
+      updatedAt: 10,
+    });
 
     const reassignResult = await runTestWorkflowCommand(runtime, (commandApi) =>
       commandApi.reassignLead({
@@ -147,47 +132,20 @@ describe("workflow lead mutation metadata", () => {
   });
 
   it("updates lead.updatedBy for import mutations", async () => {
-    const now = Date.now();
-    await runtime.ctx.db
-      .insertInto("workflow_leads")
-      .values({
-        id: "lead-503",
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20900000503",
-        razon_social: "Org Import",
-        address: null,
-        created_by: 1,
-        created_at: now,
-        updated_by: null,
-        updated_at: now,
-      })
-      .execute();
-
-    await runtime.ctx.db
-      .insertInto("workflow_integration_jobs")
-      .values({
-        id: "job-9001",
-        type: "import_status",
-        status: "PROCESSING",
-        requested_by_user_id: 2,
-        file_path: "inline",
-        error_message: null,
-        rows_total: null,
-        rows_applied: null,
-        rows_failed: null,
-        results_json: null,
-        lease_owner: "test-worker",
-        lease_until: now + 30_000,
-        attempt_count: 1,
-        max_attempts: 3,
-        available_at: null,
-        created_at: now,
-        completed_at: null,
-      })
-      .execute();
+    await seedOrganization(runtime, {
+      id: 503,
+      ruc: "20900000503",
+      name: "Org Import",
+    });
+    await seedLead(runtime, {
+      id: "lead-503",
+      organizationId: 503,
+      executiveId: 1,
+      stage: "PENDING_EXTERNAL_REVIEW",
+      status: null,
+      prioridad: null,
+    });
+    await seedImportJob(runtime, { id: "job-9001" });
 
     const result = await applyImportRows(
       {

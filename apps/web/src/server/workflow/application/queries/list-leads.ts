@@ -148,7 +148,7 @@ export async function listLeads(
   return Ok({
     rows: rows.map((row) =>
       Object.assign({}, row, {
-        nextStep: presentLeadNextStep({ lead: row, sale: undefined }),
+        nextStep: presentLeadNextStep({ lead: row }),
       }),
     ),
     totalCount,

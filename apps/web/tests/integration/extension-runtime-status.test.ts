@@ -2,22 +2,18 @@ import { generateKeyPairSync } from "node:crypto";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createExtensionService } from "../../src/server/extension/service";
+import {
+  claimSession,
+  createAssignment,
+  createContactWithoutPhone,
+  createServiceSession,
+  createTestExtensionService,
+} from "../support/extension-test-kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
-import { createTestRepositories } from "../support/test-repositories";
-
-function createTransactionRunner(ctx: TestDbContext) {
-  return <T>(
-    operation: (transactionRepos: TestDbContext["repos"]) => Promise<T>,
-  ) =>
-    ctx.db.transaction().execute((transactionDb) => {
-      return operation(createTestRepositories(transactionDb));
-    });
-}
 
 describe("extension runtime status invariants", () => {
   let ctx: TestDbContext;
@@ -40,99 +36,6 @@ describe("extension runtime status invariants", () => {
   afterEach(async () => {
     await cleanupTestDb(ctx);
   });
-
-  async function createServiceSession(userId = 1, branchId = 1) {
-    const now = Date.now();
-    const authSessionId = crypto.randomUUID();
-    await ctx.repos.sessions.create({
-      id: authSessionId,
-      user_id: userId,
-      branch_id: branchId,
-      role: "executive",
-      session_class: "app",
-      primary_auth_method: "password",
-      strong_auth_method: null,
-      strong_auth_at: null,
-      ip_address: "127.0.0.1",
-      user_agent: "vitest",
-      created_at: now,
-      last_activity: now,
-      expires_at: now + 60 * 60_000,
-    });
-    return authSessionId;
-  }
-
-  async function createAssignment(userId = 1, contactId = 1) {
-    const now = Date.now();
-    const result = await ctx.db
-      .insertInto("lead_assignments")
-      .values({
-        user_id: userId,
-        contact_id: contactId,
-        assigned_at: now,
-        expires_at: now + 60 * 60_000,
-        status: "active",
-      })
-      .executeTakeFirstOrThrow();
-
-    return Number(result.insertId);
-  }
-
-  async function createContactWithoutPhone() {
-    const now = Date.now();
-    const result = await ctx.db
-      .insertInto("contacts")
-      .values({
-        organization_id: 1,
-        dni: `7000${Math.floor(Math.random() * 100000)
-          .toString()
-          .padStart(5, "0")}`,
-        name: "Contacto sin telefono",
-        phone_primary: null,
-        phone_secondary: null,
-        last_contacted_at: null,
-        last_contacted_by_user_id: null,
-        cooldown_until: null,
-        created_at: now,
-      })
-      .executeTakeFirstOrThrow();
-
-    return Number(result.insertId);
-  }
-
-  async function claimSession(installationId: string) {
-    const authSessionId = await createServiceSession();
-    const assignmentId = await createAssignment();
-    const service = createExtensionService(ctx.repos, {
-      runInTransaction: createTransactionRunner(ctx),
-    });
-
-    const handoffResult = await service.createHandoffToken({
-      userId: 1,
-      authSessionId,
-      branchId: 1,
-      assignmentId,
-      origin: "http://localhost:3000",
-    });
-    if (!handoffResult.ok) {
-      throw new Error(handoffResult.error.message);
-    }
-
-    const claimResult = await service.claimInstallationSession({
-      handoffToken: handoffResult.value.handoffToken,
-      installationId,
-    });
-    if (!claimResult.ok) {
-      throw new Error(claimResult.error.message);
-    }
-
-    return {
-      service,
-      authSessionId,
-      assignmentId,
-      sessionToken: claimResult.value.sessionToken,
-    };
-  }
 
   it("keeps the newest presence projection regardless of write order", async () => {
     await ctx.repos.extensionRuntime.upsertExecutivePresence({
@@ -216,9 +119,7 @@ describe("extension runtime status invariants", () => {
       })
       .execute();
 
-    const service = createExtensionService(ctx.repos, {
-      now: () => fixedNow,
-    });
+    const service = createTestExtensionService(ctx, () => fixedNow);
     const result = await service.listTeamExecutiveStatuses({
       role: "sales_manager",
       userId: 2,
@@ -253,9 +154,7 @@ describe("extension runtime status invariants", () => {
       })
       .execute();
 
-    const service = createExtensionService(ctx.repos, {
-      now: () => fixedNow,
-    });
+    const service = createTestExtensionService(ctx, () => fixedNow);
     const result = await service.listTeamExecutiveStatuses({
       role: "sales_manager",
       userId: 2,
@@ -272,9 +171,7 @@ describe("extension runtime status invariants", () => {
   });
 
   it("classifies malformed handoff tokens as handoff_invalid", async () => {
-    const service = createExtensionService(ctx.repos, {
-      runInTransaction: createTransactionRunner(ctx),
-    });
+    const service = createTestExtensionService(ctx);
 
     const result = await service.claimInstallationSession({
       handoffToken: "not-a-jwt",
@@ -289,12 +186,20 @@ describe("extension runtime status invariants", () => {
   });
 
   it("rejects handoff creation when the assigned contact has no primary phone", async () => {
-    const authSessionId = await createServiceSession();
-    const contactId = await createContactWithoutPhone();
-    const assignmentId = await createAssignment(1, contactId);
-    const service = createExtensionService(ctx.repos, {
-      runInTransaction: createTransactionRunner(ctx),
+    const nowMs = Date.now();
+    const authSessionId = await createServiceSession({ ctx, nowMs });
+    const contactId = await createContactWithoutPhone({
+      ctx,
+      nowMs,
+      sequence: 1,
     });
+    const assignmentId = await createAssignment({
+      ctx,
+      nowMs,
+      userId: 1,
+      contactId,
+    });
+    const service = createTestExtensionService(ctx);
 
     const result = await service.createHandoffToken({
       userId: 1,
@@ -319,9 +224,7 @@ describe("extension runtime status invariants", () => {
   });
 
   it("classifies malformed session tokens as session_invalid", async () => {
-    const service = createExtensionService(ctx.repos, {
-      runInTransaction: createTransactionRunner(ctx),
-    });
+    const service = createTestExtensionService(ctx);
 
     const result = await service.ingestRuntimeEvent({
       sessionToken: "not-a-jwt",
@@ -342,9 +245,12 @@ describe("extension runtime status invariants", () => {
   });
 
   it("accepts duplicate event delivery without creating a second runtime event", async () => {
-    const { service, sessionToken, assignmentId } = await claimSession(
-      "11111111-1111-4111-8111-111111111111",
-    );
+    const nowMs = Date.now();
+    const { service, sessionToken, assignmentId } = await claimSession({
+      ctx,
+      nowMs,
+      installationId: "11111111-1111-4111-8111-111111111111",
+    });
     const event = {
       id: "evt-duplicate",
       sequence: 1,
@@ -380,11 +286,10 @@ describe("extension runtime status invariants", () => {
   });
 
   it("revokes older installations when a new installation claims the user session", async () => {
-    const authSessionId = await createServiceSession();
-    const assignmentId = await createAssignment();
-    const service = createExtensionService(ctx.repos, {
-      runInTransaction: createTransactionRunner(ctx),
-    });
+    const nowMs = Date.now();
+    const authSessionId = await createServiceSession({ ctx, nowMs });
+    const assignmentId = await createAssignment({ ctx, nowMs });
+    const service = createTestExtensionService(ctx);
 
     const firstHandoff = await service.createHandoffToken({
       userId: 1,

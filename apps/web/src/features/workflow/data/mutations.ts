@@ -13,8 +13,17 @@ import {
   requestLeadReview,
   requestRemoveLeadFromFavorites,
 } from "~/actions/workflow/commands/records";
-import { requestSaleCreation } from "~/actions/workflow/commands/sales";
-import type { Moneda, AbonoBank } from "~/workflow/contracts/lead-schema";
+import {
+  requestSaleContainerCreation,
+  requestSaleVenueCreation,
+} from "~/actions/workflow/commands/sales";
+import type {
+  Moneda,
+  AbonoBank,
+  AccountTypeKind,
+  CulqiProductKind,
+  ModalidadCobro,
+} from "~/workflow/contracts/lead-schema";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 
@@ -62,8 +71,16 @@ export const completeCommercialInputMutation = action(
     tasaActual: number;
     gpv: number;
     ticket: number;
-    abono: AbonoBank;
-    cantidadPos: number;
+    giroNegocio: string;
+    tipoProducto: CulqiProductKind;
+    urlCliente: string | null;
+    modalidadCobro: ModalidadCobro;
+    repLegalNombres: string;
+    repLegalApellidoPaterno: string;
+    repLegalApellidoMaterno: string;
+    repLegalDni: string;
+    repLegalTelefono: string;
+    repLegalEmail: string;
   }) => {
     await requestLeadCommercialInputCompletion(input);
     return json(
@@ -93,26 +110,55 @@ export const createQuotationMutation = action(
   "workflow.createQuotation",
 );
 
-export const createSaleMutation = action(
+export const createSaleContainerMutation = action(
+  async (input: { leadId: string }) => {
+    const result = await requestSaleContainerCreation(input);
+    return json(result, {
+      revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key],
+    });
+  },
+  "workflow.createSaleContainer",
+);
+
+export const createSaleMutation = createSaleContainerMutation;
+
+export const createSaleVenueMutation = action(
   async (input: {
     leadId: string;
-    proveedorActual: string;
-    tasaActual: number;
-    gpv: number;
-    ticket: number;
-    abono: AbonoBank;
+    saleId: string;
+    nombreComercial: string;
     cantidadPos: number;
-    banco: string;
-    nroCuenta: string;
-    cci: string | null;
+    direccion: string;
+    referencia: string;
+    distrito: string;
+    provincia: string;
+    departamento: string;
+    solesAccount: {
+      currency: "PEN";
+      banco: AbonoBank;
+      tipoCuenta: AccountTypeKind;
+      nroCuenta: string;
+      cci?: string;
+      isSettlement: boolean;
+    };
+    dollarAccount?:
+      | {
+          currency: "USD";
+          banco: AbonoBank;
+          tipoCuenta: AccountTypeKind;
+          nroCuenta: string;
+          cci?: string;
+          isSettlement: boolean;
+        }
+      | undefined;
   }) => {
-    await requestSaleCreation(input);
+    await requestSaleVenueCreation(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
     );
   },
-  "workflow.createSale",
+  "workflow.createSaleVenue",
 );
 
 export const requestRateNegotiationMutation = action(

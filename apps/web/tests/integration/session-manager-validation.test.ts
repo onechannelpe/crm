@@ -1,11 +1,12 @@
 import { sql } from "kysely";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { sessionCache } from "../../src/lib/auth/session/session-cache";
+import { sessionCache } from "~/lib/auth/session/session-cache";
 import {
   generateSessionToken,
   hashSessionToken,
-} from "../../src/lib/auth/session/tokens";
+} from "~/lib/auth/session/tokens";
+
 import {
   createTestRuntime,
   type TestRuntime,

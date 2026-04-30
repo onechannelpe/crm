@@ -6,7 +6,7 @@ import {
   INVITE_EXPIRY_ERROR_TEXT,
   INVALID_INVITE_EXPIRY_ERROR_TEXT,
   parseInviteExpiryDate,
-} from "../../src/routes/(app)/team/components/team-invite-expiry";
+} from "~/routes/(app)/team/components/team-invite-expiry";
 
 describe("team invite expiry helpers", () => {
   const fixedNow = new Date(2026, 2, 24, 12, 0, 0, 0).getTime();

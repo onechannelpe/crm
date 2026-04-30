@@ -6,7 +6,6 @@ import {
   canAddLeadInteraction,
   canCompleteCommercialInput,
   canCreateQuotation,
-  canCreateSale,
   canReassignLead,
   canReviewLead,
 } from "./access";
@@ -30,13 +29,6 @@ export function resolveAvailableActions(input: {
     input.lead.stage === "NEEDS_EXECUTIVE_INPUT"
   ) {
     actions.push("complete-commercial-input");
-  }
-  if (
-    canCreateSale(input.actorRole) &&
-    ownsLead &&
-    input.lead.stage === "READY_FOR_SALE"
-  ) {
-    actions.push("create-sale");
   }
   if (
     canReviewLead(input.actorRole) &&

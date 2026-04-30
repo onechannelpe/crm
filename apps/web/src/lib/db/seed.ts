@@ -2,8 +2,8 @@ import type { Kysely } from "kysely";
 
 import { createLogger } from "../observability/logger";
 import { db as globalDb } from "./db";
-import { run as runBaseData } from "./seeds/01-base-data";
-import { run as runDemoWorkflow } from "./seeds/02-demo-workflow";
+import { run as runBaseData } from "./seeds/demo/base-data";
+import { run as runDemoWorkflow } from "./seeds/demo/workflow-sample";
 import type { Database } from "./types";
 
 const logger = createLogger("db-seed");

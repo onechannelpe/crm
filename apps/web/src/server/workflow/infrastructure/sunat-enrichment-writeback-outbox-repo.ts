@@ -1,5 +1,3 @@
-import { sql } from "kysely";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export function createSunatEnrichmentWritebackOutboxRepo(
@@ -29,12 +27,12 @@ export function createSunatEnrichmentWritebackOutboxRepo(
       const ids = candidates.map((row) => row.id);
       await executor
         .updateTable("search_enrichment_completion_outbox")
-        .set({
+        .set((eb) => ({
           status: "running",
           lease_owner: workerId,
           lease_until: leaseUntil,
-          attempt_count: sql<number>`attempt_count + 1`,
-        })
+          attempt_count: eb("attempt_count", "+", 1),
+        }))
         .where("id", "in", ids)
         .where("status", "=", "queued")
         .where("available_at", "<=", now)

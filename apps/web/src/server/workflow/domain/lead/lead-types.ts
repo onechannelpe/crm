@@ -4,7 +4,9 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-  AbonoBank,
+  CulqiProductKind,
+  ModalidadCobro,
+  SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "../lead-record";
@@ -66,10 +68,33 @@ export type LeadMutationIntent =
       tasaActual: number;
       gpv: number;
       ticket: number;
-      abono: AbonoBank;
-      cantidadPos: number;
+      giroNegocio: string;
+      tipoProducto: CulqiProductKind;
+      urlCliente: string | null;
+      modalidadCobro: ModalidadCobro;
+      repLegalNombres: string;
+      repLegalApellidoPaterno: string;
+      repLegalApellidoMaterno: string;
+      repLegalDni: string;
+      repLegalTelefono: string;
+      repLegalEmail: string;
     }
   | { kind: "create_sale"; saleId: string }
+  | {
+      kind: "create_sale_venue";
+      venueId: string;
+      saleId: string;
+      nombreComercial: string;
+      cantidadPos: number;
+      direccion: string;
+      referencia: string;
+      distrito: string;
+      provincia: string;
+      departamento: string;
+      solesAccount: SaleVenueAccount & { currency: "PEN" };
+      dollarAccount?: (SaleVenueAccount & { currency: "USD" }) | undefined;
+      isFirstVenue: boolean;
+    }
   | {
       kind: "request_rate_negotiation";
       negotiationRequestId: string;

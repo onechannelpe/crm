@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getStrongAuthStatus } from "../../src/lib/auth/security/strong-auth-status";
+import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,

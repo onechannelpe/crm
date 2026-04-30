@@ -1,6 +1,7 @@
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStage,
@@ -15,16 +16,21 @@ import type {
   LeadStatus,
   Moneda,
   AbonoBank,
+  CulqiProductKind,
+  ModalidadCobro,
+} from "~/workflow/contracts/lead-schema";
+import {
+  isCulqiProductKind,
+  isModalidadCobro,
 } from "~/workflow/contracts/lead-schema";
 
 import type { HistoryEventRow } from "./history-event-row";
 
-function invalidPayload(row: HistoryEventRow, key?: string): never {
-  throw new Error(
-    key
-      ? `Invalid history payload field "${key}" for event ${row.id} (${row.event_type})`
-      : `Invalid history payload for event ${row.id} (${row.event_type})`,
-  );
+function invalidPayload(
+  row: HistoryEventRow,
+  key?: string,
+): Result<never, DomainError> {
+  return invalidHistoryPayload({ id: row.id, eventType: row.event_type }, key);
 }
 
 export function parsePayload(
@@ -146,7 +152,7 @@ export function optionalLeadStatus(
     return Ok(null);
   }
   if (typeof value !== "string") {
-    invalidPayload(row, key);
+    return invalidPayload(row, key);
   }
 
   const parsed = parseRequiredLeadStatus(value);
@@ -183,7 +189,7 @@ export function optionalLeadPriority(
     return Ok(null);
   }
   if (typeof value !== "string") {
-    invalidPayload(row, key);
+    return invalidPayload(row, key);
   }
 
   const parsed = parseRequiredLeadPriority(value);
@@ -228,4 +234,29 @@ export function requireAbonoBank(
   const value = requireString(payload, key, row);
   if (!value.ok) return value;
   return parseRequiredAbonoBank(value.value);
+}
+
+export function requireCulqiProductKind(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<CulqiProductKind, DomainError> {
+  const value = requireString(payload, key, row);
+  if (!value.ok) return value;
+  if (!isCulqiProductKind(value.value)) {
+    return invalidPayload(row, key);
+  }
+  return Ok(value.value);
+}
+
+export function requireModalidadCobro(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<ModalidadCobro, DomainError> {
+  const value = payload?.[key];
+  if (typeof value !== "string" || !isModalidadCobro(value)) {
+    return invalidPayload(row, key);
+  }
+  return Ok(value);
 }

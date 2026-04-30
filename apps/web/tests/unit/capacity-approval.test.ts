@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
-
 import {
   approveCapacityRequest,
   rejectCapacityRequest,
-} from "../../src/server/capacity/application/commands";
+} from "~/server/capacity/application/commands";
 import type {
   CapacityApprovalPort,
   CapacityApprovalTxPort,
-} from "../../src/server/capacity/application/ports";
-import type { AppContext } from "../../src/server/shared/action-runtime";
+} from "~/server/capacity/application/ports";
+import type { AppContext } from "~/server/shared/action-runtime";
 
 const ACTOR_USER_ID = 99;
 const TARGET_USER_ID = 1;

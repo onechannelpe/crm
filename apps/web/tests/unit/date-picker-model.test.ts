@@ -6,7 +6,7 @@ import {
   getVisibleMonth,
   getYearOptions,
   isPreviousMonthDisabled,
-} from "../../src/components/ui/date-picker/date-picker-model";
+} from "~/components/ui/date-picker/date-picker-model";
 
 describe("date picker model", () => {
   it("disables previous-month navigation at the minimum month", () => {

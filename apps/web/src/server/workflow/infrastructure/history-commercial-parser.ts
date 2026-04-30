@@ -1,14 +1,17 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
+import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
 
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
 import {
+  requireModalidadCobro,
+  nullableString,
+  requireCulqiProductKind,
   requireMoneda,
   requireNumber,
   requireString,
-  requireAbonoBank,
 } from "./history-payload-fields";
 
 export function toCommercialInputEntry(
@@ -27,11 +30,18 @@ export function toCommercialInputEntry(
   const ticket = requireNumber(payload, "ticket", row);
   if (!ticket.ok) return ticket;
 
-  const abono = requireAbonoBank(payload, "abono", row);
-  if (!abono.ok) return abono;
-
-  const cantidadPos = requireNumber(payload, "cantidadPos", row);
-  if (!cantidadPos.ok) return cantidadPos;
+  const giroNegocio = requireString(payload, "giroNegocio", row);
+  if (!giroNegocio.ok) return giroNegocio;
+  const tipoProducto = requireCulqiProductKind(payload, "tipoProducto", row);
+  if (!tipoProducto.ok) return tipoProducto;
+  const urlCliente = nullableString(payload, "urlCliente", row);
+  if (!urlCliente.ok) return urlCliente;
+  const modalidadCobro = requireModalidadCobro(payload, "modalidadCobro", row);
+  if (!modalidadCobro.ok) return modalidadCobro;
+  const repLegalNombres = requireString(payload, "repLegalNombres", row);
+  if (!repLegalNombres.ok) return repLegalNombres;
+  const repLegalDni = requireString(payload, "repLegalDni", row);
+  if (!repLegalDni.ok) return repLegalDni;
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -41,8 +51,12 @@ export function toCommercialInputEntry(
       tasaActual: tasaActual.value,
       gpv: gpv.value,
       ticket: ticket.value,
-      abono: abono.value,
-      cantidadPos: cantidadPos.value,
+      giroNegocio: giroNegocio.value,
+      tipoProducto: tipoProducto.value,
+      urlCliente: urlCliente.value,
+      modalidadCobro: modalidadCobro.value,
+      repLegalNombres: repLegalNombres.value,
+      repLegalDni: repLegalDni.value,
     },
   });
 }
@@ -82,5 +96,36 @@ export function toSaleEntry(
     ...toHistoryEntryBase(row),
     eventType: "sale_created",
     payload: { saleId: saleId.value },
+  });
+}
+
+export function toVenueAddedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const venueId = requireString(payload, "venueId", row);
+  if (!venueId.ok) return venueId;
+  const saleId = requireString(payload, "saleId", row);
+  if (!saleId.ok) return saleId;
+  const nombreComercial = requireString(payload, "nombreComercial", row);
+  if (!nombreComercial.ok) return nombreComercial;
+
+  const isFirstVenue = payload?.isFirstVenue;
+  if (typeof isFirstVenue !== "boolean") {
+    return invalidHistoryPayload(
+      { id: row.id, eventType: row.event_type },
+      "isFirstVenue",
+    );
+  }
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "venue_added",
+    payload: {
+      venueId: venueId.value,
+      saleId: saleId.value,
+      nombreComercial: nombreComercial.value,
+      isFirstVenue,
+    },
   });
 }

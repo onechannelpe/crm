@@ -1,5 +1,4 @@
 import type { LeadStage } from "~/workflow/contracts/lead-schema";
-import { isBcpBank } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "./lead-record";
 
@@ -8,11 +7,9 @@ export type LeadBlockingField =
   | "tasaActual"
   | "gpv"
   | "ticket"
-  | "abono"
-  | "cantidadPos"
-  | "banco"
-  | "nroCuenta"
-  | "cci";
+  | "tipoProducto"
+  | "giroNegocio"
+  | "venues";
 
 export type LeadProgress = {
   nextStep: string;
@@ -32,7 +29,7 @@ export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
     case "QUOTED":
       return "Approve for sale";
     case "READY_FOR_SALE":
-      return "Create sale";
+      return "Register venue";
     case "CONVERTED":
       return "No further action";
     default: {
@@ -44,7 +41,7 @@ export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
 
 export function resolveLeadBlockingFields(input: {
   stage: LeadStage;
-  bank?: string | null;
+  venueCount?: number;
 }): LeadBlockingField[] {
   switch (input.stage) {
     case "PENDING_EXTERNAL_REVIEW":
@@ -59,15 +56,12 @@ export function resolveLeadBlockingFields(input: {
         "tasaActual",
         "gpv",
         "ticket",
-        "abono",
-        "cantidadPos",
+        "tipoProducto",
+        "giroNegocio",
       ];
     case "READY_FOR_SALE": {
-      const fields: LeadBlockingField[] = ["banco", "nroCuenta"];
-      if (!isBcpBank(input.bank)) {
-        fields.push("cci");
-      }
-      return fields;
+      const venueCount = input.venueCount ?? 0;
+      return venueCount === 0 ? ["venues"] : [];
     }
     default: {
       const exhaustive: never = input.stage;
@@ -78,13 +72,13 @@ export function resolveLeadBlockingFields(input: {
 
 export function resolveLeadProgress(input: {
   lead: Pick<LeadRecord, "stage">;
-  bank?: string | null;
+  venueCount?: number;
 }): LeadProgress {
   return {
     nextStep: resolveLeadNextStep(input.lead),
     blockingFields: resolveLeadBlockingFields({
       stage: input.lead.stage,
-      bank: input.bank,
+      venueCount: input.venueCount,
     }),
   };
 }

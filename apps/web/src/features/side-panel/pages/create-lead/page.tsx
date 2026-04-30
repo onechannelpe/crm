@@ -41,6 +41,7 @@ const TAB_COMPONENTS: Record<
   files: FilesTab,
   emails: () => <HiddenTabContent title="Correos" />,
   calendar: () => <HiddenTabContent title="Calendario" />,
+  sedes: () => <HiddenTabContent title="Sedes" />,
 };
 
 export function CreateLeadPage() {

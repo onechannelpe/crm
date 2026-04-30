@@ -4,7 +4,7 @@ import {
   type AudiencePageLoader,
   type BatchProvisioner,
   enqueueCampaignAudience,
-} from "../../src/server/notifications/application/enqueue-due-campaigns";
+} from "~/server/notifications/application/enqueue-due-campaigns";
 
 describe("enqueueCampaignAudience", () => {
   it("iterates through all pages and provisions each batch", async () => {

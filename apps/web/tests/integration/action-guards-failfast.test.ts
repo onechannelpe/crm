@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { getUserLoginRetryReport } from "../../src/actions/admin/auth-security";
-import { listUserSessions } from "../../src/actions/admin/sessions/read";
-import { revokeUserSession } from "../../src/actions/admin/sessions/revoke";
-import { acceptTeamInvite } from "../../src/actions/team/acceptance";
+import { getUserLoginRetryReport } from "~/actions/admin/auth-security";
+import { listUserSessions } from "~/actions/admin/sessions/read";
+import { revokeUserSession } from "~/actions/admin/sessions/revoke";
+import { acceptTeamInvite } from "~/actions/team/acceptance";
 import {
   createTeamInvite,
   resendTeamInvite,
   revokeTeamInvite,
-} from "../../src/actions/team/invites";
+} from "~/actions/team/invites";
 
 describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {

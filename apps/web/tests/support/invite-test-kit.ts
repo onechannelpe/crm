@@ -1,5 +1,6 @@
-import { createInviteService } from "../../src/server/invites/application/invite-service";
-import type { InviteService } from "../../src/server/invites/application/types";
+import { createInviteService } from "~/server/invites/application/invite-service";
+import type { InviteService } from "~/server/invites/application/types";
+
 import type { TestDbContext } from "./test-db";
 
 export function createInviteTestKit(

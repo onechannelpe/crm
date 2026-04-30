@@ -131,10 +131,19 @@ export function presentTimelineItem(
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "system",
-        title: "Venta creada",
+        title: "Registro de venta creado",
         description: event.payload
-          ? `Venta #${event.payload.saleId} creada por ${actorDisplayName}.`
+          ? `Registro #${event.payload.saleId} creado por ${actorDisplayName}.`
           : `Creada por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "venue_added":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Sede agregada",
+        description: `${event.payload.nombreComercial} registrada por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "call_logged":

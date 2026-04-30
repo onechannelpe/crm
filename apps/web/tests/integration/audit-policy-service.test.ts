@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createAuditPolicyService } from "../../src/server/audit-reader/policy-service";
+import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
+
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 describe("audit policy service", () => {

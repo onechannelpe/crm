@@ -6,8 +6,12 @@ import type {
   LeadNegotiationRequest,
   LeadNegotiationFile,
 } from "../ports/negotiation-request-repository";
+import type {
+  LegalRepresentative,
+  OrganizationProfile,
+} from "../ports/party-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
-import type { LeadSale } from "../ports/sale-repository";
+import type { LeadSale, LeadSaleVenue } from "../ports/sale-repository";
 import type { LeadSourceStatus } from "../ports/source-status-repository";
 import type {
   LeadDetailCommercialInputView,
@@ -16,6 +20,7 @@ import type {
   LeadDetailNegotiationRequestView,
   LeadDetailQuotationView,
   LeadDetailSaleView,
+  LeadDetailSaleVenueView,
   LeadDetailSourceStatusView,
   LeadDetailView,
 } from "../queries/views/lead-detail";
@@ -45,11 +50,14 @@ export type LeadDetailSource = {
   commercialInput: LeadCommercialInput | undefined;
   quotations: LeadQuotation[];
   sale: LeadSale | undefined;
+  venues: LeadSaleVenue[];
   negotiationRequests: NegotiationRequestWithFiles[];
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
   availableActions: LeadAvailableAction[];
   sourceStatus: LeadSourceStatus;
+  organization: OrganizationProfile;
+  legalRepresentative: LegalRepresentative | undefined;
 };
 
 function toLeadSourceStatus(
@@ -71,20 +79,21 @@ function toLeadSourceStatus(
 
 function toLeadDetailLead(
   lead: LeadRecord,
+  organization: OrganizationProfile,
   isFavorite: boolean,
   executiveName: string,
   createdByName: string,
   updatedByName: string | null,
-  sale: LeadSale | undefined,
+  venueCount: number,
 ): LeadDetailLeadView {
   return {
     id: lead.id,
-    ruc: lead.ruc,
+    ruc: organization.ruc,
     isFavorite,
-    razonSocial: lead.razonSocial,
-    address: lead.address,
-    district: lead.district,
-    department: lead.department,
+    razonSocial: organization.name,
+    address: organization.address,
+    district: organization.district,
+    department: organization.department,
     executiveId: lead.executiveId,
     executiveName,
     createdBy: lead.createdBy,
@@ -94,7 +103,7 @@ function toLeadDetailLead(
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
-    nextStep: presentLeadNextStep({ lead, sale }),
+    nextStep: presentLeadNextStep({ lead, venueCount }),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
@@ -102,6 +111,8 @@ function toLeadDetailLead(
 
 function toLeadDetailCommercialInput(
   input: LeadCommercialInput,
+  organization: OrganizationProfile | undefined,
+  legalRepresentative: LegalRepresentative | undefined,
 ): LeadDetailCommercialInputView {
   return {
     leadId: input.leadId,
@@ -109,8 +120,16 @@ function toLeadDetailCommercialInput(
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
-    abono: input.abono,
-    cantidadPos: input.cantidadPos,
+    giroNegocio: organization?.giroNegocio ?? null,
+    tipoProducto: input.tipoProducto,
+    urlCliente: input.urlCliente,
+    modalidadCobro: input.modalidadCobro,
+    repLegalNombres: legalRepresentative?.nombres ?? null,
+    repLegalApellidoPaterno: legalRepresentative?.apellidoPaterno ?? null,
+    repLegalApellidoMaterno: legalRepresentative?.apellidoMaterno ?? null,
+    repLegalDni: legalRepresentative?.dni ?? null,
+    repLegalTelefono: legalRepresentative?.telefono ?? null,
+    repLegalEmail: legalRepresentative?.email ?? null,
     updatedAt: input.updatedAt,
     updatedBy: input.updatedBy,
   };
@@ -139,17 +158,32 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
     id: sale.id,
     leadId: sale.leadId,
     executiveId: sale.executiveId,
-    proveedorActual: sale.proveedorActual,
-    tasaActual: sale.tasaActual,
-    gpv: sale.gpv,
-    ticket: sale.ticket,
-    abono: sale.abono,
-    cantidadPos: sale.cantidadPos,
-    banco: sale.banco,
-    nroCuenta: sale.nroCuenta,
-    cci: sale.cci,
     createdAt: sale.createdAt,
   };
+}
+
+function toLeadDetailSaleVenue(venue: LeadSaleVenue): LeadDetailSaleVenueView {
+  const result: LeadDetailSaleVenueView = {
+    id: venue.id,
+    saleId: venue.saleId,
+    leadId: venue.leadId,
+    nombreComercial: venue.nombreComercial,
+    cantidadPos: venue.cantidadPos,
+    direccion: venue.direccion,
+    referencia: venue.referencia,
+    distrito: venue.distrito,
+    provincia: venue.provincia,
+    departamento: venue.departamento,
+    solesAccount: venue.solesAccount,
+    createdAt: venue.createdAt,
+    createdBy: venue.createdBy,
+  };
+
+  if (venue.dollarAccount) {
+    result.dollarAccount = venue.dollarAccount;
+  }
+
+  return result;
 }
 
 function toNegotiationFileView(
@@ -184,17 +218,23 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
     lead: toLeadDetailLead(
       source.lead,
+      source.organization,
       source.isFavorite,
       source.executiveName,
       source.createdByName,
       source.updatedByName,
-      source.sale,
+      source.venues.length,
     ),
     commercialInput: source.commercialInput
-      ? toLeadDetailCommercialInput(source.commercialInput)
+      ? toLeadDetailCommercialInput(
+          source.commercialInput,
+          source.organization,
+          source.legalRepresentative,
+        )
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
     sale: source.sale ? toLeadDetailSale(source.sale) : undefined,
+    venues: source.venues.map(toLeadDetailSaleVenue),
     negotiationRequests: source.negotiationRequests.map(
       toNegotiationRequestView,
     ),
@@ -202,7 +242,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     availableActions: source.availableActions,
     blockingFields: presentLeadBlockingFields({
       lead: source.lead,
-      sale: source.sale,
+      venueCount: source.venues.length,
     }),
     sourceStatus: toLeadSourceStatus(source.sourceStatus),
   };

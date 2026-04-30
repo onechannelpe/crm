@@ -1,5 +1,4 @@
 import { randomUUIDv7 } from "bun";
-import { sql } from "kysely";
 
 import type {
   IntegrationJobRow,
@@ -74,12 +73,12 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       const ids = candidates.map((row) => row.id);
       let updateQuery = db
         .updateTable("workflow_integration_jobs")
-        .set({
+        .set((eb) => ({
           status: "PROCESSING",
           lease_owner: workerId,
           lease_until: leaseUntil,
-          attempt_count: sql<number>`attempt_count + 1`,
-        })
+          attempt_count: eb("attempt_count", "+", 1),
+        }))
         .where("id", "in", ids)
         .where((eb) =>
           eb.and([

@@ -1,5 +1,4 @@
 import type { Insertable, Kysely } from "kysely";
-import { sql } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/contracts";
@@ -67,7 +66,10 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
 
       const rows = await db
         .selectFrom("lead_assignments")
-        .select(["user_id as userId", sql<number>`count(*)`.as("activeCount")])
+        .select((eb) => [
+          "user_id as userId",
+          eb.fn.count<number>("id").as("activeCount"),
+        ])
         .where("user_id", "in", userIds)
         .where("status", "=", "active")
         .where("expires_at", ">", Date.now())

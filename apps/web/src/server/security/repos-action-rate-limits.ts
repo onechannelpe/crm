@@ -1,4 +1,4 @@
-import { sql, type Kysely } from "kysely";
+import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
@@ -14,19 +14,42 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
       now: number,
       windowMs: number,
     ): Promise<CounterSnapshot> {
-      const rows = await sql<CounterSnapshot>`
-        INSERT INTO action_rate_limit_counters (key_hash, window_started_at, request_count, updated_at)
-        VALUES (${keyHash}, ${now}, 1, ${now})
-        ON CONFLICT (key_hash) DO UPDATE SET
-          window_started_at = CASE WHEN (${now} - window_started_at) >= ${windowMs}
-                                   THEN ${now} ELSE window_started_at END,
-          request_count     = CASE WHEN (${now} - window_started_at) >= ${windowMs}
-                                   THEN 1 ELSE request_count + 1 END,
-          updated_at        = ${now}
-        RETURNING request_count, window_started_at
-      `.execute(db);
-      const row = rows.rows[0];
-      if (!row) throw new Error("Rate limit counter write returned no row");
+      const row = await db
+        .insertInto("action_rate_limit_counters")
+        .values({
+          key_hash: keyHash,
+          window_started_at: now,
+          request_count: 1,
+          updated_at: now,
+        })
+        .onConflict((oc) =>
+          oc.column("key_hash").doUpdateSet((eb) => ({
+            window_started_at: eb
+              .case()
+              .when(
+                "action_rate_limit_counters.window_started_at",
+                "<=",
+                now - windowMs,
+              )
+              .then(now)
+              .else(eb.ref("action_rate_limit_counters.window_started_at"))
+              .end(),
+            request_count: eb
+              .case()
+              .when(
+                "action_rate_limit_counters.window_started_at",
+                "<=",
+                now - windowMs,
+              )
+              .then(1)
+              .else(eb("action_rate_limit_counters.request_count", "+", 1))
+              .end(),
+            updated_at: now,
+          })),
+        )
+        .returning(["request_count", "window_started_at"])
+        .executeTakeFirstOrThrow();
+
       return row;
     },
 

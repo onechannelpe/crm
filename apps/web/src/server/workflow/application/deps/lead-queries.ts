@@ -4,8 +4,12 @@ import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
 import type { LeadQueries } from "../ports/lead-queries";
 import type { LeadRepository } from "../ports/lead-repository";
 import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
+import type { PartyRepository } from "../ports/party-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
-import type { LeadSaleRepository } from "../ports/sale-repository";
+import type {
+  LeadSaleRepository,
+  LeadSaleVenueRepository,
+} from "../ports/sale-repository";
 import type { SourceStatusRepository } from "../ports/source-status-repository";
 import type { WorkflowUserRepository } from "../ports/user-repository";
 
@@ -35,14 +39,16 @@ export type LeadDetailDeps = {
   leadHistory: LeadHistoryRepository;
   leadQuotations: LeadQuotationRepository;
   leadSales: LeadSaleRepository;
+  leadSaleVenues: LeadSaleVenueRepository;
   leadNegotiationRequests: NegotiationRequestRepository;
   negotiationFiles: NegotiationFilesQuery;
   sourceStatuses: SourceStatusRepository;
   users: WorkflowUserRepository;
+  party: PartyRepository;
 };
 
 export type LeadBootstrapPreviewDeps = {
-  leads: LeadRepository;
+  party: PartyRepository;
 };
 
 export type AssignableExecutivesDeps = {

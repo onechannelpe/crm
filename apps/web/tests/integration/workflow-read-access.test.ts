@@ -4,12 +4,14 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
+import { seedLead, seedOrganization } from "../support/workflow-fixtures";
 
 describe("workflow read access", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
     runtime = await createTestRuntime("workflow-read-access");
+    runtime.now.set(10);
   });
 
   afterEach(async () => {
@@ -17,22 +19,19 @@ describe("workflow read access", () => {
   });
 
   it("lets review users read record detail even when they are not the assigned executive", async () => {
-    await runtime.ctx.db
-      .insertInto("workflow_leads")
-      .values({
-        id: "lead-11",
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20100000011",
-        razon_social: "Org Test",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_at: 10,
-      })
-      .execute();
+    await seedOrganization(runtime, {
+      id: 11,
+      ruc: "20100000011",
+      name: "Org Test",
+    });
+    await seedLead(runtime, {
+      id: "lead-11",
+      organizationId: 11,
+      executiveId: 1,
+      stage: "PENDING_EXTERNAL_REVIEW",
+      status: null,
+      prioridad: null,
+    });
 
     const result = await runtime.workflow.queryApi.getLeadDetail({
       actor: { userId: 2, role: "back_office", branchId: 1 },
@@ -49,22 +48,20 @@ describe("workflow read access", () => {
   it.each(["supervisor", "sales_manager"] as const)(
     "lets %s read record detail even when they are not the assigned executive",
     async (role) => {
-      await runtime.ctx.db
-        .insertInto("workflow_leads")
-        .values({
-          id: `lead-${role}`,
-          executive_id: 1,
-          stage: "QUOTED",
-          status: null,
-          prioridad: null,
-          ruc: role === "supervisor" ? "20100000013" : "20100000014",
-          razon_social: "Org Test",
-          address: null,
-          created_by: 1,
-          created_at: 10,
-          updated_at: 10,
-        })
-        .execute();
+      const organizationId = role === "supervisor" ? 13 : 14;
+      await seedOrganization(runtime, {
+        id: organizationId,
+        ruc: role === "supervisor" ? "20100000013" : "20100000014",
+        name: "Org Test",
+      });
+      await seedLead(runtime, {
+        id: `lead-${role}`,
+        organizationId,
+        executiveId: 1,
+        stage: "QUOTED",
+        status: null,
+        prioridad: null,
+      });
 
       const result = await runtime.workflow.queryApi.getLeadDetail({
         actor: { userId: 2, role, branchId: 1 },
@@ -79,22 +76,19 @@ describe("workflow read access", () => {
   );
 
   it("blocks executives from reading another executive's record detail", async () => {
-    await runtime.ctx.db
-      .insertInto("workflow_leads")
-      .values({
-        id: "lead-12",
-        executive_id: 1,
-        stage: "PENDING_EXTERNAL_REVIEW",
-        status: null,
-        prioridad: null,
-        ruc: "20100000012",
-        razon_social: "Org Test",
-        address: null,
-        created_by: 1,
-        created_at: 10,
-        updated_at: 10,
-      })
-      .execute();
+    await seedOrganization(runtime, {
+      id: 12,
+      ruc: "20100000012",
+      name: "Org Test",
+    });
+    await seedLead(runtime, {
+      id: "lead-12",
+      organizationId: 12,
+      executiveId: 1,
+      stage: "PENDING_EXTERNAL_REVIEW",
+      status: null,
+      prioridad: null,
+    });
 
     const result = await runtime.workflow.queryApi.getLeadDetail({
       actor: { userId: 3, role: "executive", branchId: 1 },

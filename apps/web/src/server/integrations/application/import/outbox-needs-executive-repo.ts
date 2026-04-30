@@ -1,5 +1,4 @@
 import { randomUUIDv7 } from "bun";
-import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
@@ -64,12 +63,12 @@ export function createNeedsExecutiveOutboxRepo(executor: DatabaseExecutor) {
       const ids = candidates.map((row) => row.id);
       await executor
         .updateTable("workflow_integration_outbox_needs_executive_input")
-        .set({
+        .set((eb) => ({
           status: "processing",
           lease_owner: workerId,
           lease_until: leaseUntil,
-          attempt_count: sql<number>`attempt_count + 1`,
-        })
+          attempt_count: eb("attempt_count", "+", 1),
+        }))
         .where("id", "in", ids)
         .where("status", "=", "pending")
         .execute();

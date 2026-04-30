@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import { createLogger } from "~/lib/observability/logger";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -7,6 +8,22 @@ import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
 import { resolveAvailableActions } from "../policies/action-availability";
 import { presentLeadDetail } from "../presenters/lead-detail";
 import type { LeadDetailView } from "./views/lead-detail";
+
+const logger = createLogger("workflow-get-lead-detail");
+
+function isRecoverableSectionError(error: DomainError): boolean {
+  return error.kind === "external";
+}
+
+function reportSectionDegradation(section: string, error: DomainError): void {
+  logger.error("workflow_lead_detail_degraded_section", {
+    section,
+    domainKind: error.kind,
+    domainCode: error.code,
+    domainMessage: error.message,
+    domainDetails: error.details,
+  });
+}
 
 export async function getLeadDetail(
   deps: LeadDetailDeps,
@@ -35,10 +52,13 @@ export async function getLeadDetail(
     commercialInput,
     quotations,
     sale,
+    venuesResult,
     negotiationRequestRows,
     historyResult,
     sourceStatus,
     userRows,
+    organization,
+    legalRepresentative,
   ] = await Promise.all([
     deps.leadFavorites.isFavoriteForUser({
       leadId: input.leadId,
@@ -47,6 +67,7 @@ export async function getLeadDetail(
     deps.leadCommercialInputs.findByLeadId(input.leadId),
     deps.leadQuotations.listByLeadId(input.leadId),
     deps.leadSales.findByLeadId(input.leadId),
+    deps.leadSaleVenues.listByLeadId(input.leadId),
     deps.leadNegotiationRequests.listByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
     deps.sourceStatuses.findByRuc(lead.ruc),
@@ -55,10 +76,37 @@ export async function getLeadDetail(
       lead.createdBy,
       ...(lead.updatedBy ? [lead.updatedBy] : []),
     ]),
+    deps.party.findOrganizationById(lead.organizationId),
+    deps.party.findPrimaryLegalRepresentative(lead.organizationId),
   ]);
 
-  if (!historyResult.ok) {
+  if (!historyResult.ok && !isRecoverableSectionError(historyResult.error)) {
     return historyResult;
+  }
+  if (!venuesResult.ok && !isRecoverableSectionError(venuesResult.error)) {
+    return venuesResult;
+  }
+  if (!organization) {
+    return Err(
+      domainError(
+        "not_found",
+        "lead_organization_not_found",
+        "Lead organization not found",
+        {
+          leadId: lead.id,
+          organizationId: lead.organizationId,
+        },
+      ),
+    );
+  }
+
+  const history = historyResult.ok ? historyResult.value : [];
+  const venues = venuesResult.ok ? venuesResult.value : [];
+  if (!historyResult.ok) {
+    reportSectionDegradation("history", historyResult.error);
+  }
+  if (!venuesResult.ok) {
+    reportSectionDegradation("sale_venues", venuesResult.error);
   }
 
   const negotiationRequests = await Promise.all(
@@ -93,11 +141,14 @@ export async function getLeadDetail(
       commercialInput,
       quotations,
       sale,
+      venues,
       negotiationRequests,
-      history: historyResult.value,
+      history,
       canRevealFullTimeline: canRevealTimeline,
       availableActions,
       sourceStatus,
+      organization,
+      legalRepresentative,
     }),
   );
 }

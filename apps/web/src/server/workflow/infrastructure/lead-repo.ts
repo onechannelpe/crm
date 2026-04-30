@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import type { Insertable, Selectable, Updateable } from "kysely";
+import type { Insertable, Updateable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -8,14 +8,39 @@ import type {
   LeadPatch,
   LeadRecord,
 } from "~/server/workflow/domain/lead-record";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/workflow/contracts/lead-schema";
 
-export type LeadRow = Selectable<Database["workflow_leads"]>;
+export type LeadRow = {
+  id: string;
+  organization_id: number;
+  executive_id: number;
+  created_by: number;
+  updated_by: number | null;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  prioridad: LeadPriority | null;
+  created_at: number;
+  updated_at: number;
+};
+
+type LeadWithOrganizationRow = LeadRow & {
+  ruc: string;
+  razon_social: string;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+};
 export type NewLeadRow = Insertable<Database["workflow_leads"]>;
 export type LeadRowPatch = Updateable<Database["workflow_leads"]>;
 
-function toLead(row: LeadRow): LeadRecord {
+function toLead(row: LeadWithOrganizationRow): LeadRecord {
   return {
     id: row.id,
+    organizationId: row.organization_id,
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
@@ -34,11 +59,7 @@ function toLead(row: LeadRow): LeadRecord {
 
 function toNewLeadRow(values: LeadDraft): NewLeadRow {
   return {
-    ruc: values.ruc,
-    razon_social: values.razonSocial,
-    address: values.address,
-    district: values.district,
-    department: values.department,
+    organization_id: values.organizationId,
     executive_id: values.executiveId,
     created_by: values.createdBy,
     updated_by: values.updatedBy ?? undefined,
@@ -52,10 +73,6 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
 
 export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
   return {
-    razon_social: values.razonSocial,
-    address: values.address,
-    district: values.district,
-    department: values.department,
     executive_id: values.executiveId,
     updated_by: values.updatedBy,
     stage: values.stage,
@@ -66,6 +83,27 @@ export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
 }
 
 export function createLeadRepo(db: DatabaseExecutor) {
+  const selectLeadWithOrganization = db
+    .selectFrom("workflow_leads as lead")
+    .innerJoin("organizations as org", "org.id", "lead.organization_id")
+    .select([
+      "lead.id",
+      "lead.organization_id",
+      "lead.executive_id",
+      "lead.created_by",
+      "lead.updated_by",
+      "lead.stage",
+      "lead.status",
+      "lead.prioridad",
+      "lead.created_at",
+      "lead.updated_at",
+      "org.ruc",
+      "org.name as razon_social",
+      "org.address",
+      "org.district",
+      "org.department",
+    ]);
+
   return {
     async insert(values: LeadDraft): Promise<string> {
       const id = randomUUIDv7();
@@ -78,21 +116,17 @@ export function createLeadRepo(db: DatabaseExecutor) {
     },
 
     async findById(id: string) {
-      const row = await db
-        .selectFrom("workflow_leads")
-        .selectAll()
-        .where("id", "=", id)
+      const row = await selectLeadWithOrganization
+        .where("lead.id", "=", id)
         .executeTakeFirst();
-      return row ? toLead(row) : undefined;
+      return row ? toLead(row as LeadWithOrganizationRow) : undefined;
     },
 
     async findByRuc(ruc: string) {
-      const row = await db
-        .selectFrom("workflow_leads")
-        .selectAll()
-        .where("ruc", "=", ruc)
+      const row = await selectLeadWithOrganization
+        .where("org.ruc", "=", ruc)
         .executeTakeFirst();
-      return row ? toLead(row) : undefined;
+      return row ? toLead(row as LeadWithOrganizationRow) : undefined;
     },
 
     async findByRucMany(rucs: string[]) {
@@ -100,12 +134,10 @@ export function createLeadRepo(db: DatabaseExecutor) {
         return [];
       }
 
-      const rows = await db
-        .selectFrom("workflow_leads")
-        .selectAll()
-        .where("ruc", "in", rucs)
+      const rows = await selectLeadWithOrganization
+        .where("org.ruc", "in", rucs)
         .execute();
-      return rows.map(toLead);
+      return rows.map((row) => toLead(row as LeadWithOrganizationRow));
     },
 
     updateById(id: string, values: LeadPatch) {
@@ -120,7 +152,11 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return db
         .updateTable("workflow_leads")
         .set(toLeadPatchRow(values))
-        .where("ruc", "=", ruc)
+        .where(
+          "organization_id",
+          "=",
+          db.selectFrom("organizations").select("id").where("ruc", "=", ruc),
+        )
         .execute();
     },
   };

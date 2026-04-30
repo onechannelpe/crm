@@ -1,18 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
-import { createNeedsExecutiveOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-needs-executive-queue";
-import { createReadyForQuotationOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+import { applyImportRows } from "~/server/integrations/application/import/apply-service";
+import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
+import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+
 import {
   createTestRuntime,
   type TestRuntime,
 } from "../support/runtime/create-test-runtime";
+import {
+  seedImportJob,
+  seedLead,
+  seedOrganization,
+} from "../support/workflow-fixtures";
 
 describe("integration import workflow concurrency", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
     runtime = await createTestRuntime("integration-import-concurrency");
+    runtime.now.set(2_000);
   });
 
   afterEach(async () => {
@@ -20,66 +27,33 @@ describe("integration import workflow concurrency", () => {
   });
 
   it("applies import while export reads run concurrently and dispatches both outboxes", async () => {
-    const now = Date.now();
-
-    await runtime.ctx.db
-      .insertInto("workflow_leads")
-      .values([
-        {
-          id: "lead-901",
-          ruc: "20900000001",
-          razon_social: "Org One",
-          address: "Addr 1",
-          district: null,
-          department: null,
-          executive_id: 1,
-          stage: "PENDING_EXTERNAL_REVIEW",
-          status: "DISPONIBLE",
-          prioridad: "P1",
-          created_by: 1,
-          created_at: now,
-          updated_at: now,
-        },
-        {
-          id: "lead-902",
-          ruc: "20900000002",
-          razon_social: "Org Two",
-          address: "Addr 2",
-          district: null,
-          department: null,
-          executive_id: 3,
-          stage: "PENDING_EXTERNAL_REVIEW",
-          status: "SIN RESULTADO",
-          prioridad: "P1",
-          created_by: 1,
-          created_at: now,
-          updated_at: now,
-        },
-      ])
-      .execute();
-
-    await runtime.ctx.db
-      .insertInto("workflow_integration_jobs")
-      .values({
-        id: "job-5001",
-        type: "import_status",
-        status: "PROCESSING",
-        requested_by_user_id: 5,
-        file_path: "inline",
-        error_message: null,
-        rows_total: null,
-        rows_applied: null,
-        rows_failed: null,
-        results_json: null,
-        lease_owner: "test-worker",
-        lease_until: now + 30_000,
-        attempt_count: 1,
-        max_attempts: 3,
-        available_at: null,
-        created_at: now,
-        completed_at: null,
-      })
-      .execute();
+    await seedOrganization(runtime, {
+      id: 901,
+      ruc: "20900000001",
+      name: "Org One",
+    });
+    await seedOrganization(runtime, {
+      id: 902,
+      ruc: "20900000002",
+      name: "Org Two",
+    });
+    await seedLead(runtime, {
+      id: "lead-901",
+      organizationId: 901,
+      executiveId: 1,
+      stage: "PENDING_EXTERNAL_REVIEW",
+      status: "DISPONIBLE",
+      prioridad: "P1",
+    });
+    await seedLead(runtime, {
+      id: "lead-902",
+      organizationId: 902,
+      executiveId: 3,
+      stage: "PENDING_EXTERNAL_REVIEW",
+      status: "SIN RESULTADO",
+      prioridad: "P1",
+    });
+    await seedImportJob(runtime, { id: "job-5001" });
 
     const recordExportQuery = runtime.integrations.recordExportQuery;
     const concurrentExportReads = (async () => {
