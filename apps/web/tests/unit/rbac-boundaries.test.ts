@@ -4,7 +4,7 @@ import {
   getPermissions,
   hasPermission,
   type Permission,
-} from "../../src/lib/auth/access/rbac";
+} from "~/lib/auth/access/rbac";
 
 const ALL_PERMISSIONS: Permission[] = [
   "lead:rate:simulate",

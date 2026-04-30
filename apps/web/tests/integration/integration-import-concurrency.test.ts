@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
-import { createNeedsExecutiveOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-needs-executive-queue";
-import { createReadyForQuotationOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+import { applyImportRows } from "~/server/integrations/application/import/apply-service";
+import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
+import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+
 import {
   createTestRuntime,
   type TestRuntime,

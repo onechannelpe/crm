@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   asSummaryTable,
   calculateRates,
-} from "../../src/features/rate-simulator/model/calculator";
+} from "~/features/rate-simulator/model/calculator";
 
 describe("rate simulator calculator", () => {
   it("matches the validated spreadsheet sample", () => {

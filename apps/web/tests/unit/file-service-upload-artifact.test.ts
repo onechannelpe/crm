@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { UploadArtifactDeps } from "../../src/server/files/service/contracts";
-import { uploadArtifactFile } from "../../src/server/files/service/upload-artifact";
-import type { WorkflowArtifact } from "../../src/server/files/types";
-import type { AppContext } from "../../src/server/shared/action-runtime";
-import { isErr } from "../../src/server/shared/result";
+import type { UploadArtifactDeps } from "~/server/files/service/contracts";
+import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
+import type { WorkflowArtifact } from "~/server/files/types";
+import type { AppContext } from "~/server/shared/action-runtime";
+import { isErr } from "~/server/shared/result";
 
 function makeContext(overrides?: Partial<AppContext>): AppContext {
   return {

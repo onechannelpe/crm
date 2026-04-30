@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { PendingReviewLeadSubject } from "../../src/server/workflow/domain/lead-subjects";
-import { resolveReviewTransition } from "../../src/server/workflow/domain/workflow";
+import type { PendingReviewLeadSubject } from "~/server/workflow/domain/lead-subjects";
+import { resolveReviewTransition } from "~/server/workflow/domain/workflow";
 
 const pendingReviewLead: PendingReviewLeadSubject = {
   id: "lead-1",

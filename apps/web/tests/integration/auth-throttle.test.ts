@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buildThrottleKeys } from "../../src/lib/auth/password/throttle-keys";
+import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
 import {
   AUTH_THROTTLE_POLICY,
   type AuthThrottleEndpoint,
-} from "../../src/lib/auth/password/throttle-policy";
-import { createAuthThrottleService } from "../../src/server/auth/application/throttle-service";
-import type { AuthThrottleScope } from "../../src/server/auth/repos-auth-throttle";
+} from "~/lib/auth/password/throttle-policy";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import type { AuthThrottleScope } from "~/server/auth/repos-auth-throttle";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,

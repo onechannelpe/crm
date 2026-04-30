@@ -5,11 +5,11 @@ const { getSessionMock, getMock } = vi.hoisted(() => ({
   getMock: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("../../src/lib/auth/access/session", () => ({
+vi.mock("~/lib/auth/access/session", () => ({
   getSession: getSessionMock,
 }));
 
-vi.mock("../../src/server/runtime", () => ({
+vi.mock("~/server/runtime", () => ({
   getServerRuntime: () => ({
     profilePicture: {
       profilePictureService: {
@@ -19,7 +19,7 @@ vi.mock("../../src/server/runtime", () => ({
   }),
 }));
 
-import { GET } from "../../src/routes/api/me/avatar";
+import { GET } from "~/routes/api/me/avatar";
 
 describe("GET /api/me/avatar", () => {
   beforeEach(() => {

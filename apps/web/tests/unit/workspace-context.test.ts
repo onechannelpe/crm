@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveWorkspaceContext } from "../../src/lib/auth/access/workspace-context";
+import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
 
 describe("workspace context resolver", () => {
   it("builds executive context from team and supervisor", () => {

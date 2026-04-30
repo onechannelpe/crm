@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { sql } from "kysely";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createDb } from "../../src/lib/db/client";
-import { migrateToLatest } from "../../src/lib/db/migrate";
+import { createDb } from "~/lib/db/client";
+import { migrateToLatest } from "~/lib/db/migrate";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 

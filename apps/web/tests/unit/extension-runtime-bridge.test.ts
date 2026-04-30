@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { handoffLeadToExtension } from "../../src/lib/extension/runtime";
+import { handoffLeadToExtension } from "~/lib/extension/runtime";
 
 describe("extension runtime bridge", () => {
   beforeEach(() => {

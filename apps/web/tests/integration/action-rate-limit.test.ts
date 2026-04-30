@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppError } from "../../src/lib/app-errors";
+import { AppError } from "~/lib/app-errors";
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
-} from "../../src/lib/security/action-rate-limit";
+} from "~/lib/security/action-rate-limit";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,

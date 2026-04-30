@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createObservabilityService } from "../../src/server/observability/service";
+import { createObservabilityService } from "~/server/observability/service";
+
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 describe("action observability repository", () => {

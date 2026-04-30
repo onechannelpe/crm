@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  checkArtifactPolicy,
-  type PolicyActor,
-} from "../../src/server/files/policy";
-import type { WorkflowArtifact } from "../../src/server/files/types";
+import { checkArtifactPolicy, type PolicyActor } from "~/server/files/policy";
+import type { WorkflowArtifact } from "~/server/files/types";
 
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {

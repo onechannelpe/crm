@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { ExecuteDownloadDeps } from "../../src/server/files/service/contracts";
-import { executeDownload } from "../../src/server/files/service/execute-download";
-import { isErr } from "../../src/server/shared/result";
+import type { ExecuteDownloadDeps } from "~/server/files/service/contracts";
+import { executeDownload } from "~/server/files/service/execute-download";
+import { isErr } from "~/server/shared/result";
 
 describe("executeDownload", () => {
   it("returns conflict when token is consumed concurrently", async () => {

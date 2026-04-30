@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateLoginPolicy,
   type LoginPolicyInput,
-} from "../../src/server/auth/policy/engine";
+} from "~/server/auth/policy/engine";
 
 function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];

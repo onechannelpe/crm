@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { ProfilePictureBlobStore } from "../../src/server/users/profile-picture-blob-store";
+import type { ProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
 import {
   createProfilePictureService,
   type AvatarUsersRepository,
-} from "../../src/server/users/profile-picture-service";
+} from "~/server/users/profile-picture-service";
 
 type FindAvatarMetaById = AvatarUsersRepository["findAvatarMetaById"];
 type UpdateAvatar = AvatarUsersRepository["updateAvatar"];

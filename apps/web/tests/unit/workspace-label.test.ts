@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getWorkspaceLabel } from "../../src/lib/auth/access/workspace-label";
+import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
 
 describe("workspace label policy", () => {
   it("renders executive label with supervisor first name", () => {

@@ -1,7 +1,8 @@
-import { hashPassword } from "../../src/lib/auth/password/password";
-import { encryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
-import { generateTotpSecret } from "../../src/lib/auth/totp/totp";
-import { createSessionService } from "../../src/server/auth/application/session-service";
+import { hashPassword } from "~/lib/auth/password/password";
+import { encryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
+import { generateTotpSecret } from "~/lib/auth/totp/totp";
+import { createSessionService } from "~/server/auth/application/session-service";
+
 import {
   getSeededIdentity,
   type SeededIdentityName,

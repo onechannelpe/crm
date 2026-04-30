@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { RequestArtifactDeps } from "../../src/server/files/service/contracts";
-import { requestArtifact } from "../../src/server/files/service/request-artifact";
-import type { AppContext } from "../../src/server/shared/action-runtime";
-import { isErr } from "../../src/server/shared/result";
+import type { RequestArtifactDeps } from "~/server/files/service/contracts";
+import { requestArtifact } from "~/server/files/service/request-artifact";
+import type { AppContext } from "~/server/shared/action-runtime";
+import { isErr } from "~/server/shared/result";
 
 function makeContext(overrides?: Partial<AppContext>): AppContext {
   return {

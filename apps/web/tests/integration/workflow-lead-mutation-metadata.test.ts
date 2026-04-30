@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
+import { applyImportRows } from "~/server/integrations/application/import/apply-service";
+
 import {
   createTestRuntime,
   type TestRuntime,

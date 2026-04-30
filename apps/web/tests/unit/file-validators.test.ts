@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { validateUploadFile } from "../../src/server/files/validators";
+import { validateUploadFile } from "~/server/files/validators";
 
 const CSV_BYTES = new TextEncoder().encode(
   "ruc,nombre\n12345678901,Empresa SA",

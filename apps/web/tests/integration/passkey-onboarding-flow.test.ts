@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createPasskeyEnrollmentAuthService } from "../../src/server/auth/passkey/service";
-import { isErr } from "../../src/server/shared/result";
-import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
+import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
+import { isErr } from "~/server/shared/result";
+import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,

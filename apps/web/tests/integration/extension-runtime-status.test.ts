@@ -2,7 +2,8 @@ import { generateKeyPairSync } from "node:crypto";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createExtensionService } from "../../src/server/extension/service";
+import { createExtensionService } from "~/server/extension/service";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,
