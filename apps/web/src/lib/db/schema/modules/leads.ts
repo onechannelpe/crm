@@ -59,18 +59,4 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("duration_seconds", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
-
-  await db.schema
-    .createTable("agent_status_logs")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("latitude", "real", (col) => col.notNull())
-    .addColumn("longitude", "real", (col) => col.notNull())
-    .addColumn("comment", "text")
-    .addColumn("started_at", "integer", (col) => col.notNull())
-    .addColumn("ended_at", "integer")
-    .execute();
 }

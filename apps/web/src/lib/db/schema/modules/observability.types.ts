@@ -1,6 +1,6 @@
 import type { Generated } from "kysely";
 
-import type { UserRoleValue } from "./crm.types";
+import type { UserRoleValue } from "./identity.types";
 
 export interface ActionObservationsTable {
   id: Generated<number>;

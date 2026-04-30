@@ -102,6 +102,20 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("agent_status_logs")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("latitude", "real", (col) => col.notNull())
+    .addColumn("longitude", "real", (col) => col.notNull())
+    .addColumn("comment", "text")
+    .addColumn("started_at", "integer", (col) => col.notNull())
+    .addColumn("ended_at", "integer")
+    .execute();
+
+  await db.schema
     .createTable("auth_funnel_events")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("trace_id", "varchar(64)", (col) => col.notNull())
