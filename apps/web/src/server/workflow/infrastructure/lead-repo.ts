@@ -8,6 +8,11 @@ import type {
   LeadPatch,
   LeadRecord,
 } from "~/server/workflow/domain/lead-record";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/workflow/contracts/lead-schema";
 
 export type LeadRow = {
   id: string;
@@ -20,9 +25,9 @@ export type LeadRow = {
   executive_id: number;
   created_by: number;
   updated_by: number | null;
-  stage: Database["workflow_leads"]["stage"];
-  status: Database["workflow_leads"]["status"];
-  prioridad: Database["workflow_leads"]["prioridad"];
+  stage: LeadStage;
+  status: LeadStatus | null;
+  prioridad: LeadPriority | null;
   created_at: number;
   updated_at: number;
 };

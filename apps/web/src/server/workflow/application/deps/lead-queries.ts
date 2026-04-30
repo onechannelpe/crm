@@ -48,7 +48,7 @@ export type LeadDetailDeps = {
 };
 
 export type LeadBootstrapPreviewDeps = {
-  leads: LeadRepository;
+  party: PartyRepository;
 };
 
 export type AssignableExecutivesDeps = {

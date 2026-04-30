@@ -65,7 +65,7 @@ export async function queryLeadBootstrapPreview(
     execute: () => {
       const { workflow } = getServerRuntime();
       return getLeadBootstrapPreview(
-        { leads: workflow.repos.leads },
+        { party: workflow.repos.party },
         workflow.engineGateway,
         { ruc },
       );

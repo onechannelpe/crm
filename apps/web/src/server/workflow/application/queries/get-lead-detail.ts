@@ -86,6 +86,19 @@ export async function getLeadDetail(
   if (!venuesResult.ok && !isRecoverableSectionError(venuesResult.error)) {
     return venuesResult;
   }
+  if (!organization) {
+    return Err(
+      domainError(
+        "not_found",
+        "lead_organization_not_found",
+        "Lead organization not found",
+        {
+          leadId: lead.id,
+          organizationId: lead.organizationId,
+        },
+      ),
+    );
+  }
 
   const history = historyResult.ok ? historyResult.value : [];
   const venues = venuesResult.ok ? venuesResult.value : [];

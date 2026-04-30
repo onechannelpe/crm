@@ -56,7 +56,7 @@ export type LeadDetailSource = {
   canRevealFullTimeline: boolean;
   availableActions: LeadAvailableAction[];
   sourceStatus: LeadSourceStatus;
-  organization: OrganizationProfile | undefined;
+  organization: OrganizationProfile;
   legalRepresentative: LegalRepresentative | undefined;
 };
 
@@ -79,6 +79,7 @@ function toLeadSourceStatus(
 
 function toLeadDetailLead(
   lead: LeadRecord,
+  organization: OrganizationProfile,
   isFavorite: boolean,
   executiveName: string,
   createdByName: string,
@@ -87,12 +88,12 @@ function toLeadDetailLead(
 ): LeadDetailLeadView {
   return {
     id: lead.id,
-    ruc: lead.ruc,
+    ruc: organization.ruc,
     isFavorite,
-    razonSocial: lead.razonSocial,
-    address: lead.address,
-    district: lead.district,
-    department: lead.department,
+    razonSocial: organization.name,
+    address: organization.address,
+    district: organization.district,
+    department: organization.department,
     executiveId: lead.executiveId,
     executiveName,
     createdBy: lead.createdBy,
@@ -217,6 +218,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
     lead: toLeadDetailLead(
       source.lead,
+      source.organization,
       source.isFavorite,
       source.executiveName,
       source.createdByName,
