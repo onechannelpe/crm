@@ -2,7 +2,8 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "../../types";
 import { compileWorkflowScenario } from "./compiler";
-import { persistDemoIdentities, persistDemoSeed } from "./persist";
+import { persistWorkflowSample as persistDemoSeed } from "./persist/core";
+import { persistDemoIdentities } from "./persist/identities";
 
 export async function runDemoSeeds(db: Kysely<Database>): Promise<void> {
   await persistDemoIdentities(db);
