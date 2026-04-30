@@ -9,10 +9,14 @@ import {
   MONEDAS,
 } from "~/workflow/contracts/lead-schema";
 
-import type { Database } from "../../types";
+import type { Database } from "../../../types";
+import type { CompiledBaseDataScenario } from "../compiler";
 
-export async function run(db: Kysely<Database>): Promise<void> {
-  const now = Date.now();
+export async function persistBaseData(
+  db: Kysely<Database>,
+  compiled: CompiledBaseDataScenario,
+): Promise<void> {
+  const now = compiled.generatedAtMs;
 
   // Branches
   await db

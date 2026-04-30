@@ -2,8 +2,8 @@ import type { Kysely } from "kysely";
 
 import { createLogger } from "../observability/logger";
 import { db as globalDb } from "./db";
-import { run as runBaseData } from "./seeds/demo/base-data";
-import { run as runDemoWorkflow } from "./seeds/demo/workflow-sample";
+import { runBootstrapSeeds } from "./seeds/bootstrap";
+import { runDemoSeeds } from "./seeds/demo";
 import type { Database } from "./types";
 
 const logger = createLogger("db-seed");
@@ -20,8 +20,12 @@ export async function seedIfEmpty(db: Kysely<Database>) {
   }
 
   logger.info("seed_started");
-  await runBaseData(db);
-  await runDemoWorkflow(db);
+  await runBootstrapSeeds(db);
+
+  const seedMode = process.env.SEED_MODE ?? "demo";
+  if (seedMode === "demo") {
+    await runDemoSeeds(db);
+  }
   logger.info("seed_completed");
 }
 

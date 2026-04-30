@@ -4,7 +4,7 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
-import type { CompiledWorkflowScenario } from "./compiler";
+import type { CompiledWorkflowScenario } from "../compiler";
 import {
   BO1,
   BO2,
@@ -19,7 +19,7 @@ import {
   SUP1,
   SUP2,
   type OrganizationSeedKey,
-} from "./scenario";
+} from "../scenario";
 
 export async function persistWorkflowSample(
   db: Kysely<Database>,
