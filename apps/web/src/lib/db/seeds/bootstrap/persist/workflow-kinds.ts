@@ -10,7 +10,9 @@ import {
 
 import type { Database } from "../../../types";
 
-export async function persistWorkflowKinds(db: Kysely<Database>): Promise<void> {
+export async function persistWorkflowKinds(
+  db: Kysely<Database>,
+): Promise<void> {
   await db
     .insertInto("workflow_tipo_producto_kinds")
     .values(CULQI_PRODUCT_KINDS.map((value) => ({ value })))

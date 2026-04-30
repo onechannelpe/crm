@@ -16,7 +16,8 @@ export async function persistWorkflowCommercialData(
   getOrganizationId: (key: "converted") => OrganizationId,
 ): Promise<void> {
   const { idQuoted, idForSale, idConverted } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } = artifacts;
+  const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } =
+    artifacts;
   await db
     .insertInto("workflow_quotations")
     .values([
@@ -177,5 +178,4 @@ export async function persistWorkflowCommercialData(
       effective_to: null,
     })
     .execute();
-
 }

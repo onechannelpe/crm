@@ -50,7 +50,8 @@ export async function persistWorkflowHistoryEvents(
     idConverted,
     idRejected,
   } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } = artifacts;
+  const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } =
+    artifacts;
   await db
     .insertInto("workflow_history_events")
     .values([

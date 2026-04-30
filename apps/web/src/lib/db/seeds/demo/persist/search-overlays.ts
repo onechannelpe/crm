@@ -181,5 +181,4 @@ export async function persistSearchOverlays(
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-
 }

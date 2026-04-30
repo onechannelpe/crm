@@ -24,7 +24,11 @@ export async function persistWorkflowSample(
 
   const leadIds = buildLeadIds(compiled);
   const artifacts = buildWorkflowArtifactIds();
-  const organizations = await persistOrganizations(db, compiled.organizationKeys, now);
+  const organizations = await persistOrganizations(
+    db,
+    compiled.organizationKeys,
+    now,
+  );
 
   await persistWorkflowLeadsAndAssignments(
     db,
@@ -34,13 +38,8 @@ export async function persistWorkflowSample(
     leadIds,
   );
   await persistSearchOverlays(db, now, day, overlayTtl);
-  await persistWorkflowCommercialData(
-    db,
-    now,
-    day,
-    leadIds,
-    artifacts,
-    (key) => organizations.getOrganizationId(key),
+  await persistWorkflowCommercialData(db, now, day, leadIds, artifacts, (key) =>
+    organizations.getOrganizationId(key),
   );
   await persistWorkflowHistoryEvents(db, now, day, leadIds, artifacts);
 }

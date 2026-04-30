@@ -334,5 +334,4 @@ export async function persistUsersAndTeams(
     .set({ team_id: 6 })
     .where("id", "in", [32, 33, 34, 35, 36, 38])
     .execute();
-
 }

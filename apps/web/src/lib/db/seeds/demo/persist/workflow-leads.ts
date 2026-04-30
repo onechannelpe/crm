@@ -187,5 +187,4 @@ export async function persistWorkflowLeadsAndAssignments(
       },
     ])
     .execute();
-
 }
