@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
-import { requiresStrongAuthRole } from "../../src/lib/auth/security/strong-auth-status";
-import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
-import { generateCurrentTotpCode } from "../../src/lib/auth/totp/totp";
-import { submitPasswordLogin } from "../../src/server/auth/application/commands/submit-password-login";
-import { submitTotpForLoginFlow } from "../../src/server/auth/application/commands/submit-totp-login";
-import { getLoginFlowState } from "../../src/server/auth/application/queries/get-login-flow-state";
-import { isErr } from "../../src/server/shared/result";
+import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
+import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
+import { generateCurrentTotpCode } from "~/lib/auth/totp/totp";
+import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
+import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
+import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
+import { isErr } from "~/server/shared/result";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,

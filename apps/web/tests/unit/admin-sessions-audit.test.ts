@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { revokeAllUserSessions } from "../../src/server/auth/application/commands/revoke-all-user-sessions";
-import { revokeUserSession } from "../../src/server/auth/application/commands/revoke-user-session";
-import type { AdminSessionRevocationPort } from "../../src/server/auth/application/ports";
+import { revokeAllUserSessions } from "~/server/auth/application/commands/revoke-all-user-sessions";
+import { revokeUserSession } from "~/server/auth/application/commands/revoke-user-session";
+import type { AdminSessionRevocationPort } from "~/server/auth/application/ports";
 
 type AuditPayload = {
   userId: number;
@@ -13,7 +13,8 @@ type AuditPayload = {
   createdAt: number;
 };
 
-import type { UserId } from "../../src/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
+
 import { makeActor, makeAppContext } from "../support/unit-factories";
 
 function makeTestContext() {

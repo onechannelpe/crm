@@ -10,11 +10,11 @@ const mocks = vi.hoisted(() => ({
   createHandoffToken: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("../../src/lib/auth/access/session", () => ({
+vi.mock("~/lib/auth/access/session", () => ({
   requirePermission: mocks.requirePermission,
 }));
 
-vi.mock("../../src/server/runtime", () => ({
+vi.mock("~/server/runtime", () => ({
   getServerRuntime: () => ({
     extension: {
       extensionService: {
@@ -27,10 +27,10 @@ vi.mock("../../src/server/runtime", () => ({
   }),
 }));
 
-import { POST as postEvents } from "../../src/routes/api/extension/events";
-import { POST as postHandoffToken } from "../../src/routes/api/extension/handoff-token";
-import { POST as postClaim } from "../../src/routes/api/extension/session/claim";
-import { POST as postRefresh } from "../../src/routes/api/extension/session/refresh";
+import { POST as postEvents } from "~/routes/api/extension/events";
+import { POST as postHandoffToken } from "~/routes/api/extension/handoff-token";
+import { POST as postClaim } from "~/routes/api/extension/session/claim";
+import { POST as postRefresh } from "~/routes/api/extension/session/refresh";
 
 function invalidJsonRequest(url: string): Request {
   return new Request(url, {
