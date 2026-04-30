@@ -1,4 +1,3 @@
-import { sql } from "kysely";
 import type { Selectable, SelectQueryBuilder } from "kysely";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
@@ -40,6 +39,10 @@ type RecordExportSource = Pick<
   | "prioridad"
   | "created_at"
 > & { executive_name: string };
+
+function toFullName(names: string, firstSurname: string): string {
+  return `${names} ${firstSurname}`;
+}
 
 function toListRow(row: LeadListSource): LeadListRow {
   return {
@@ -122,13 +125,11 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.razon_social",
           "lead.address",
           "lead.executive_id",
-          sql<string>`executive.names || ' ' || executive.first_surname`.as(
-            "executive_name",
-          ),
+          "executive.names as executive_names",
+          "executive.first_surname as executive_first_surname",
           "lead.created_by",
-          sql<string>`creator.names || ' ' || creator.first_surname`.as(
-            "created_by_name",
-          ),
+          "creator.names as creator_names",
+          "creator.first_surname as creator_first_surname",
           "lead.stage",
           "lead.status",
           "lead.prioridad",
@@ -160,10 +161,9 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       } else if (filters.sortBy === "updatedAt") {
         q = q.orderBy("lead.updated_at", filters.sortDirection);
       } else if (filters.sortBy === "registeredBy") {
-        q = q.orderBy(
-          sql<string>`creator.names || ' ' || creator.first_surname`,
-          filters.sortDirection,
-        );
+        q = q
+          .orderBy("creator.names", filters.sortDirection)
+          .orderBy("creator.first_surname", filters.sortDirection);
       } else {
         q = q.orderBy("lead.ruc", filters.sortDirection);
       }
@@ -174,7 +174,19 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .offset(filters.offset)
         .execute();
 
-      return rows.map(toListRow);
+      return rows.map((row) =>
+        toListRow({
+          ...row,
+          executive_name: toFullName(
+            row.executive_names,
+            row.executive_first_surname,
+          ),
+          created_by_name: toFullName(
+            row.creator_names,
+            row.creator_first_surname,
+          ),
+        }),
+      );
     },
 
     async count(filters: LeadListFilters): Promise<number> {
@@ -218,9 +230,8 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.razon_social",
           "lead.address",
           "lead.executive_id",
-          sql<string>`executive.names || ' ' || executive.first_surname`.as(
-            "executive_name",
-          ),
+          "executive.names as executive_names",
+          "executive.first_surname as executive_first_surname",
           "lead.stage",
           "lead.status",
           "lead.prioridad",
@@ -234,7 +245,15 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       }
 
       const rows = await q.orderBy("lead.created_at", "desc").execute();
-      return rows.map(toExportRow);
+      return rows.map((row) =>
+        toExportRow({
+          ...row,
+          executive_name: toFullName(
+            row.executive_names,
+            row.executive_first_surname,
+          ),
+        }),
+      );
     },
   };
 }

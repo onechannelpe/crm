@@ -1,4 +1,4 @@
-import { sql, type Insertable, type Kysely, type Selectable } from "kysely";
+import type { Insertable, Kysely, Selectable } from "kysely";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import type { Database } from "~/lib/db/types";
@@ -102,7 +102,8 @@ export function createSessionRepository(db: Kysely<Database>) {
           "user_sessions.id",
           "user_sessions.user_id",
           "users.email as userEmail",
-          sql<string>`users.names || ' ' || users.first_surname`.as("userName"),
+          "users.names as userNames",
+          "users.first_surname as userFirstSurname",
           "user_sessions.role",
           "branches.name as branchName",
           "user_sessions.ip_address as ipAddress",
@@ -119,7 +120,7 @@ export function createSessionRepository(db: Kysely<Database>) {
         id: session.id,
         userId: session.user_id,
         userEmail: session.userEmail,
-        userName: session.userName,
+        userName: `${session.userNames} ${session.userFirstSurname}`,
         role: session.role,
         branchName: session.branchName,
         ipAddress: session.ipAddress,
