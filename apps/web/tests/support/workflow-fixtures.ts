@@ -3,15 +3,23 @@ import { randomUUIDv7 } from "bun";
 import type { TestRuntime } from "./runtime/create-test-runtime";
 
 type OrganizationSeed = {
+  key?: string;
   id?: string;
+  ruc?: string;
+  name?: string;
+  createdAt?: number;
+};
+
+export type SeededOrganizationRef = {
+  id: string;
   ruc: string;
   name: string;
-  createdAt?: number;
 };
 
 type LeadSeed = {
   id: string;
-  organizationId: string;
+  organizationId?: string;
+  organization?: SeededOrganizationRef;
   executiveId: number;
   stage:
     | "PENDING_EXTERNAL_REVIEW"
@@ -45,30 +53,34 @@ type UserSeed = {
 export async function seedOrganization(
   runtime: TestRuntime,
   input: OrganizationSeed,
-): Promise<string> {
+): Promise<SeededOrganizationRef> {
   const createdAt = input.createdAt ?? runtime.now.get();
   const id = input.id ?? randomUUIDv7();
+  const key = input.key?.trim();
+  const ruc = input.ruc ?? buildDefaultRuc(key);
+  const name = input.name ?? buildDefaultOrganizationName(key);
   await runtime.ctx.db
     .insertInto("organizations")
     .values({
       id,
-      ruc: input.ruc,
-      name: input.name,
+      ruc,
+      name,
       created_at: createdAt,
     })
     .execute();
 
-  return id;
+  return { id, ruc, name };
 }
 
 export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
   const createdAt = input.createdAt ?? runtime.now.get();
   const updatedAt = input.updatedAt ?? createdAt;
+  const organizationId = resolveLeadOrganizationId(input);
   await runtime.ctx.db
     .insertInto("workflow_leads")
     .values({
       id: input.id,
-      organization_id: input.organizationId,
+      organization_id: organizationId,
       executive_id: input.executiveId,
       stage: input.stage,
       status: input.status,
@@ -79,6 +91,28 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       updated_at: updatedAt,
     })
     .execute();
+}
+
+function resolveLeadOrganizationId(input: LeadSeed): string {
+  if (input.organization) {
+    return input.organization.id;
+  }
+  if (input.organizationId) {
+    return input.organizationId;
+  }
+  throw new Error("missing_seed_lead_organization");
+}
+
+function buildDefaultRuc(key: string | undefined): string {
+  if (!key) {
+    throw new Error("missing_seed_organization_ruc");
+  }
+  const digits = key.replaceAll(/[^0-9]/g, "").slice(0, 9).padEnd(9, "0");
+  return `20${digits}`;
+}
+
+function buildDefaultOrganizationName(key: string | undefined): string {
+  return key ? `Org ${key}` : "Org Test";
 }
 
 export async function seedUser(runtime: TestRuntime, input: UserSeed) {
