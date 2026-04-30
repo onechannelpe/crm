@@ -27,7 +27,7 @@ export async function seedIfEmpty(db: Kysely<Database>) {
   logger.info("seed_started");
   const nowMs = Date.now();
   const stages: SeedStage[] = [BOOTSTRAP_STAGE];
-  if ((process.env.SEED_MODE ?? "demo") === "demo") {
+  if (process.env.NODE_ENV !== "production") {
     stages.push(DEMO_IDENTITIES_STAGE, DEMO_WORKFLOW_STAGE);
   }
 
