@@ -61,10 +61,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .columns(["document_type", "document_value", "requested_at"])
     .execute();
 
-  await sql`
-    CREATE UNIQUE INDEX idx_search_enrichment_jobs_document_unique
-    ON search_enrichment_jobs (document_type, document_value)
-  `.execute(db);
+  await db.schema
+    .createIndex("idx_search_enrichment_jobs_document_unique")
+    .on("search_enrichment_jobs")
+    .columns(["document_type", "document_value"])
+    .unique()
+    .execute();
 
   await db.schema
     .createTable("search_enrichment_overlays")
