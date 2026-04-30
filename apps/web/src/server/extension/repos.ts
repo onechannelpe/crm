@@ -1,4 +1,4 @@
-import { sql, type Kysely, type SelectQueryBuilder } from "kysely";
+import type { Kysely, SelectQueryBuilder } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
@@ -235,50 +235,69 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       source_event_id: string | null;
       source_event_sequence: number;
     }) {
-      return sql`
-        INSERT INTO extension_executive_statuses (
-          user_id,
-          branch_id,
-          assignment_id,
-          contact_id,
-          call_session_id,
-          presence_status,
-          presence_updated_at,
-          sync_health,
-          sync_updated_at,
-          source_event_id,
-          source_event_sequence
+      return db
+        .insertInto("extension_executive_statuses")
+        .values({
+          user_id: values.user_id,
+          branch_id: values.branch_id,
+          assignment_id: values.assignment_id,
+          contact_id: values.contact_id,
+          call_session_id: values.call_session_id,
+          presence_status: values.presence_status,
+          presence_updated_at: values.presence_updated_at,
+          sync_health: "stale",
+          sync_updated_at: null,
+          source_event_id: values.source_event_id,
+          source_event_sequence: values.source_event_sequence,
+        })
+        .onConflict((oc) =>
+          oc
+            .column("user_id")
+            .doUpdateSet((eb) => ({
+              branch_id: eb.ref("excluded.branch_id"),
+              assignment_id: eb.ref("excluded.assignment_id"),
+              contact_id: eb.ref("excluded.contact_id"),
+              call_session_id: eb.ref("excluded.call_session_id"),
+              presence_status: eb.ref("excluded.presence_status"),
+              presence_updated_at: eb.ref("excluded.presence_updated_at"),
+              source_event_id: eb.ref("excluded.source_event_id"),
+              source_event_sequence: eb.ref("excluded.source_event_sequence"),
+            }))
+            .where((eb) =>
+              eb.or([
+                eb(
+                  "extension_executive_statuses.presence_updated_at",
+                  "is",
+                  null,
+                ),
+                eb(
+                  "extension_executive_statuses.presence_updated_at",
+                  "<",
+                  eb.ref("excluded.presence_updated_at"),
+                ),
+                eb.and([
+                  eb(
+                    "extension_executive_statuses.presence_updated_at",
+                    "=",
+                    eb.ref("excluded.presence_updated_at"),
+                  ),
+                  eb.or([
+                    eb(
+                      "extension_executive_statuses.source_event_sequence",
+                      "is",
+                      null,
+                    ),
+                    eb(
+                      "extension_executive_statuses.source_event_sequence",
+                      "<",
+                      eb.ref("excluded.source_event_sequence"),
+                    ),
+                  ]),
+                ]),
+              ]),
+            ),
         )
-        VALUES (
-          ${values.user_id},
-          ${values.branch_id},
-          ${values.assignment_id},
-          ${values.contact_id},
-          ${values.call_session_id},
-          ${values.presence_status},
-          ${values.presence_updated_at},
-          ${"stale"},
-          ${null},
-          ${values.source_event_id},
-          ${values.source_event_sequence}
-        )
-        ON CONFLICT (user_id) DO UPDATE SET
-          branch_id = excluded.branch_id,
-          assignment_id = excluded.assignment_id,
-          contact_id = excluded.contact_id,
-          call_session_id = excluded.call_session_id,
-          presence_status = excluded.presence_status,
-          presence_updated_at = excluded.presence_updated_at,
-          source_event_id = excluded.source_event_id,
-          source_event_sequence = excluded.source_event_sequence
-        WHERE
-          extension_executive_statuses.presence_updated_at IS NULL
-          OR extension_executive_statuses.presence_updated_at < excluded.presence_updated_at
-          OR (
-            extension_executive_statuses.presence_updated_at = excluded.presence_updated_at
-            AND COALESCE(extension_executive_statuses.source_event_sequence, -1) < excluded.source_event_sequence
-          )
-      `.execute(db);
+        .executeTakeFirstOrThrow();
     },
 
     upsertExecutiveSyncHealth(values: {
