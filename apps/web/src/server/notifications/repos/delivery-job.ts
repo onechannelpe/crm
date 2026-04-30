@@ -1,4 +1,4 @@
-import { sql, type Kysely } from "kysely";
+import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
@@ -109,14 +109,14 @@ export function createNotificationDeliveryJobRepo(db: Kysely<Database>) {
 
         await trx
           .updateTable("notification_jobs")
-          .set({
+          .set((eb) => ({
             status: "leased",
             lease_owner: params.workerId,
             lease_until: leaseUntil,
             last_error: null,
-            attempt_count: sql<number>`attempt_count + 1`,
+            attempt_count: eb("attempt_count", "+", 1),
             updated_at: now,
-          })
+          }))
           .where("id", "in", candidateIds)
           .where("status", "=", "pending")
           .where((eb) =>

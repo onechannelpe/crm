@@ -1,5 +1,3 @@
-import { sql } from "kysely";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { EnrichmentRepositoryPort } from "./ports";
@@ -66,13 +64,13 @@ export function createSearchEnrichmentRepo(
         candidates.map(async ({ id }) => {
           const updated = await db
             .updateTable("search_enrichment_jobs")
-            .set({
+            .set((eb) => ({
               status: "running",
               lease_owner: leaseOwner,
               lease_until: leaseUntil,
               last_error: null,
-              attempt_count: sql<number>`attempt_count + 1`,
-            })
+              attempt_count: eb("attempt_count", "+", 1),
+            }))
             .where("id", "=", id)
             .where((eb) =>
               eb.and([
