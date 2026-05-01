@@ -1,5 +1,8 @@
 import type { TestRuntime } from "../runtime/app";
-import { runTestWorkflowCommand } from "./command";
+import {
+  runTestWorkflowCommand,
+  type TestCommandOverrides,
+} from "./command";
 
 export type RegisteredLeadSnapshot = {
   id: string;
@@ -9,29 +12,43 @@ export type RegisteredLeadSnapshot = {
   organizationAddress: string | null;
 };
 
-export async function registerLeadAndLoadSnapshot(input: {
+export type RegisterLeadResult = {
+  leadId: string;
+  snapshot: RegisteredLeadSnapshot;
+  historyEventTypes: string[];
+};
+
+export async function registerLead(input: {
   runtime: TestRuntime;
   ruc: string;
+  actor?: { userId: number; role: "admin" | "executive"; branchId: number };
+  executiveId?: number;
   enrichByRuc?: () => Promise<{
     razonSocial: string | null;
     address: string | null;
   } | null>;
-}): Promise<RegisteredLeadSnapshot> {
+  commandOverrides?: TestCommandOverrides;
+}): Promise<RegisterLeadResult> {
+  const actor = input.actor ?? { userId: 1, role: "admin", branchId: 1 };
+  const executiveId = input.executiveId ?? 1;
   const result = await runTestWorkflowCommand(
     input.runtime,
     (commandApi) =>
       commandApi.registerLead({
-        actor: { userId: 1, role: "admin", branchId: 1 },
+        actor,
         ruc: input.ruc,
-        executiveId: 1,
+        executiveId,
       }),
-    input.enrichByRuc
-      ? {
-          engineGateway: {
-            enrichByRuc: input.enrichByRuc,
-          },
-        }
-      : undefined,
+    {
+      ...(input.enrichByRuc
+        ? {
+            engineGateway: {
+              enrichByRuc: input.enrichByRuc,
+            },
+          }
+        : {}),
+      ...(input.commandOverrides ?? {}),
+    },
   );
 
   if (!result.ok) {
@@ -51,11 +68,34 @@ export async function registerLeadAndLoadSnapshot(input: {
     .where("lead.id", "=", result.value.leadId)
     .executeTakeFirstOrThrow();
 
+  const history = await input.runtime.ctx.db
+    .selectFrom("workflow_history_events")
+    .select(["event_type"])
+    .where("lead_id", "=", result.value.leadId)
+    .orderBy("occurred_at", "asc")
+    .execute();
+
   return {
-    id: row.id,
-    organizationId: row.organization_id,
-    organizationRuc: row.ruc,
-    organizationName: row.name,
-    organizationAddress: row.address,
+    leadId: result.value.leadId,
+    snapshot: {
+      id: row.id,
+      organizationId: row.organization_id,
+      organizationRuc: row.ruc,
+      organizationName: row.name,
+      organizationAddress: row.address,
+    },
+    historyEventTypes: history.map((event) => event.event_type),
   };
+}
+
+export async function registerLeadAndLoadSnapshot(input: {
+  runtime: TestRuntime;
+  ruc: string;
+  enrichByRuc?: () => Promise<{
+    razonSocial: string | null;
+    address: string | null;
+  } | null>;
+}): Promise<RegisteredLeadSnapshot> {
+  const registered = await registerLead(input);
+  return registered.snapshot;
 }

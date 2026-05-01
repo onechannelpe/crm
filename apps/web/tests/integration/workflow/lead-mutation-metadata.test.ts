@@ -62,7 +62,11 @@ describe("workflow lead mutation metadata", () => {
 
     const reassignResult = await runTestWorkflowCommand(runtime, (commandApi) =>
       commandApi.reassignLead({
-        actor: { userId: admin.id, role: "admin", branchId: 1 },
+        actor: scenario.actor.fromUser({
+          id: admin.id,
+          role: "admin",
+          branchId: 1,
+        }),
         leadId: lead.id,
         toExecutiveId: executive.id,
       }),
@@ -79,13 +83,17 @@ describe("workflow lead mutation metadata", () => {
     expect(leadRow.updated_by).toBe(admin.id);
 
     const previousAccess = await runtime.workflow.queryApi.getLeadDetail({
-      actor: { userId: 1, role: "executive", branchId: 1 },
+      actor: scenario.actor.by("execOne"),
       leadId: lead.id,
     });
     expect(previousAccess.ok).toBe(false);
 
     const newAccess = await runtime.workflow.queryApi.getLeadDetail({
-      actor: { userId: executive.id, role: "executive", branchId: 1 },
+      actor: scenario.actor.fromUser({
+        id: executive.id,
+        role: "executive",
+        branchId: 1,
+      }),
       leadId: lead.id,
     });
     expect(newAccess.ok).toBe(true);

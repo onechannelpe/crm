@@ -33,8 +33,6 @@ describe("integration import workflow concurrency", () => {
       status: "SIN RESULTADO",
       prioridad: "P1",
     });
-    const job = await scenario.job.importRun("5001");
-
     const recordExportQuery = runtime.integrations.recordExportQuery;
     const concurrentExportReads = (async () => {
       for (let i = 0; i < 40; i++) {
@@ -46,22 +44,11 @@ describe("integration import workflow concurrency", () => {
       }
     })();
 
-    const applyPromise = scenario.importer.apply({
-      jobId: job.id,
-      actorId: 5,
+    const applyPromise = scenario.importer.run({
+      actor: "superuser",
       rows: [
-        {
-          row: 1,
-          ruc: leadOne.organization.ruc,
-          type: "import_prioridad",
-          prioridad: "SIN RESULTADO",
-        },
-        {
-          row: 2,
-          ruc: leadTwo.organization.ruc,
-          type: "import_status",
-          status: "DISPONIBLE",
-        },
+        { type: "priority", lead: leadOne, prioridad: "SIN RESULTADO" },
+        { type: "status", lead: leadTwo, status: "DISPONIBLE" },
       ],
     });
 
