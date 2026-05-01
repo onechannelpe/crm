@@ -2,6 +2,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
+import { getSeededIdentity } from "@tests/support/identities/api";
 import { sql } from "kysely";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +14,7 @@ import {
 
 describe("session manager validation", () => {
   let runtime: TestRuntime;
+  const execOne = getSeededIdentity("execOne");
 
   beforeEach(async () => {
     runtime = await createTestRuntime("session-manager");
@@ -38,7 +40,7 @@ describe("session manager validation", () => {
     await sql`
       insert into user_sessions
       (id, user_id, branch_id, role, session_class, primary_auth_method, strong_auth_method, strong_auth_at, ip_address, user_agent, created_at, last_activity, expires_at)
-      values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${sessionClass}, ${primaryAuthMethod}, ${strongAuthMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${now}, ${now}, ${now + 60_000})
+      values (${sessionId}, ${execOne.userId}, ${execOne.branchId}, ${"invalid_role"}, ${sessionClass}, ${primaryAuthMethod}, ${strongAuthMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${now}, ${now}, ${now + 60_000})
     `.execute(runtime.ctx.db);
 
     const result =
@@ -49,9 +51,9 @@ describe("session manager validation", () => {
 
   it("returns cached session without reloading the user record", async () => {
     const token = await runtime.auth.sessionService.createSession({
-      userId: 1,
-      branchId: 1,
-      role: "executive",
+      userId: execOne.userId,
+      branchId: execOne.branchId,
+      role: execOne.role,
       sessionClass: "app",
       ipAddress: null,
       userAgent: null,
@@ -72,9 +74,9 @@ describe("session manager validation", () => {
 
   it("removes cached sessions after explicit invalidation", async () => {
     const token = await runtime.auth.sessionService.createSession({
-      userId: 1,
-      branchId: 1,
-      role: "executive",
+      userId: execOne.userId,
+      branchId: execOne.branchId,
+      role: execOne.role,
       sessionClass: "app",
       ipAddress: null,
       userAgent: null,
@@ -87,7 +89,7 @@ describe("session manager validation", () => {
     const first = await runtime.auth.sessionService.validateSessionToken(token);
     expect(first.session).not.toBeNull();
 
-    await runtime.auth.sessionService.invalidateUserSessions(1);
+    await runtime.auth.sessionService.invalidateUserSessions(execOne.userId);
 
     const second =
       await runtime.auth.sessionService.validateSessionToken(token);
@@ -97,9 +99,9 @@ describe("session manager validation", () => {
 
   it("derives onboarding completion from session class without user lookup", async () => {
     const token = await runtime.auth.sessionService.createSession({
-      userId: 1,
-      branchId: 1,
-      role: "executive",
+      userId: execOne.userId,
+      branchId: execOne.branchId,
+      role: execOne.role,
       sessionClass: "pre_auth",
       ipAddress: null,
       userAgent: null,

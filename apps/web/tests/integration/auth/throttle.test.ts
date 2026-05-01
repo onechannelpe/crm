@@ -1,9 +1,5 @@
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createAuthScenario } from "@tests/support/auth/scenario";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
 import {
@@ -14,22 +10,21 @@ import { createAuthThrottleService } from "~/server/auth/application/throttle-se
 import type { AuthThrottleScope } from "~/server/auth/repos-auth-throttle";
 
 describe("auth throttle", () => {
-  let ctx: TestDbContext;
+  const scenario = createAuthScenario("auth-throttle", {
+    freezeAtMs: 1_700_000_000_000,
+  });
 
   beforeEach(async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(1_700_000_000_000);
-    ctx = await createIsolatedTestDb("auth-throttle");
+    await scenario.setup();
   });
 
   afterEach(async () => {
-    vi.useRealTimers();
-    await cleanupTestDb(ctx);
+    await scenario.teardown();
   });
 
   function createService() {
     return createAuthThrottleService({
-      authThrottle: ctx.repos.authThrottle,
+      authThrottle: scenario.ctx.repos.authThrottle,
     });
   }
 
@@ -49,7 +44,7 @@ describe("auth throttle", () => {
       params.identifier,
       params.ipAddress,
     );
-    await ctx.repos.authThrottle.upsert({
+    await scenario.ctx.repos.authThrottle.upsert({
       scope: params.scope,
       key_hash: keys[params.scope],
       window_started_at: params.windowStartedAt ?? now,
@@ -70,7 +65,7 @@ describe("auth throttle", () => {
       params.identifier,
       params.ipAddress,
     );
-    return ctx.repos.authThrottle.findByScopeAndKey(
+    return scenario.ctx.repos.authThrottle.findByScopeAndKey(
       params.scope,
       keys[params.scope],
     );
@@ -299,7 +294,7 @@ describe("auth throttle", () => {
 
   it("cleans expired and stale throttle counters", async () => {
     const now = Date.now();
-    await ctx.repos.authThrottle.upsert({
+    await scenario.ctx.repos.authThrottle.upsert({
       scope: "ip",
       key_hash: "k-expired",
       window_started_at: now - 1000,
@@ -307,7 +302,7 @@ describe("auth throttle", () => {
       blocked_until: now - 1,
       updated_at: now - 1000,
     });
-    await ctx.repos.authThrottle.upsert({
+    await scenario.ctx.repos.authThrottle.upsert({
       scope: "account",
       key_hash: "k-stale",
       window_started_at: now - 1000,
@@ -317,8 +312,8 @@ describe("auth throttle", () => {
     });
 
     const deletedExpired =
-      await ctx.repos.authThrottle.deleteExpiredBlocks(now);
-    const deletedStale = await ctx.repos.authThrottle.deleteUpdatedBefore(
+      await scenario.ctx.repos.authThrottle.deleteExpiredBlocks(now);
+    const deletedStale = await scenario.ctx.repos.authThrottle.deleteUpdatedBefore(
       now - 7 * 24 * 60 * 60 * 1000,
     );
 
