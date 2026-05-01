@@ -1,8 +1,4 @@
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
+import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -11,103 +7,108 @@ import { isErr } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 
 describe("passkey onboarding flow", () => {
-  let ctx: TestDbContext;
+  const scenario = createAuthScenario("passkey-onboarding-flow");
+  const identity = "superuser" as const;
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("passkey-onboarding-flow");
-    await ctx.db
+    await scenario.setup();
+    await scenario.ctx.db
       .updateTable("users")
       .set({
         onboarding_completed_at: null,
         phone_e164: null,
         role: "admin",
       })
-      .where("id", "=", 5)
+      .where("id", "=", scenario.identity(identity).userId)
       .execute();
   });
 
   afterEach(async () => {
-    await cleanupTestDb(ctx);
+    await scenario.teardown();
   });
 
   it("registers the passkey and completes onboarding in one flow", async () => {
-    const challengeId = await ctx.repos.webauthnChallenges.create({
-      user_id: 5,
+    const userId = scenario.identity(identity).userId;
+    const challengeId = await scenario.ctx.repos.webauthnChallenges.create({
+      user_id: userId,
       type: "registration",
       challenge: "challenge-1",
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await ctx.db.transaction().execute(async (transactionDb) => {
-      const transactionRepos = createTestRepositories(transactionDb);
-      const passkeyResult = await createPasskeyEnrollmentAuthService(
-        transactionRepos,
-        {
-          createWebauthnProvider: (repos) => ({
-            async getRegistrationOptions() {
-              throw new Error("not used in this test");
-            },
-            async verifyRegistration(userId) {
-              await repos.passkeys.create({
-                id: "passkey-1",
-                user_id: userId,
-                public_key: Buffer.from("test-public-key").toString("base64"),
-                counter: 0,
-                transports: JSON.stringify(["internal"]),
-              });
-              return { verified: true };
-            },
-            async getAuthenticationOptions() {
-              throw new Error("not used in this test");
-            },
-            async getAuthenticationOptionsForChallenge() {
-              throw new Error("not used in this test");
-            },
-            async verifyAuthentication() {
-              throw new Error("not used in this test");
-            },
-          }),
-        },
-      ).finishEnrollment({
-        userId: 5,
-        challengeId,
-        response: {
-          id: "passkey-1",
-          rawId: "passkey-1",
-          type: "public-key",
-          response: {
-            clientDataJSON: "a",
-            attestationObject: "b",
+    const result = await scenario.ctx.db
+      .transaction()
+      .execute(async (transactionDb) => {
+        const transactionRepos = createTestRepositories(transactionDb);
+        const passkeyResult = await createPasskeyEnrollmentAuthService(
+          transactionRepos,
+          {
+            createWebauthnProvider: (repos) => ({
+              async getRegistrationOptions() {
+                throw new Error("not used in this test");
+              },
+              async verifyRegistration(userId) {
+                await repos.passkeys.create({
+                  id: "passkey-1",
+                  user_id: userId,
+                  public_key: Buffer.from("test-public-key").toString("base64"),
+                  counter: 0,
+                  transports: JSON.stringify(["internal"]),
+                });
+                return { verified: true };
+              },
+              async getAuthenticationOptions() {
+                throw new Error("not used in this test");
+              },
+              async getAuthenticationOptionsForChallenge() {
+                throw new Error("not used in this test");
+              },
+              async verifyAuthentication() {
+                throw new Error("not used in this test");
+              },
+            }),
           },
-          clientExtensionResults: {},
-        },
-        ipAddress: "198.51.100.10",
-      });
-      if (isErr(passkeyResult)) {
-        throw new Error(
-          `Passkey enrollment failed: ${passkeyResult.error.message}`,
-        );
-      }
+        ).finishEnrollment({
+          userId,
+          challengeId,
+          response: {
+            id: "passkey-1",
+            rawId: "passkey-1",
+            type: "public-key",
+            response: {
+              clientDataJSON: "a",
+              attestationObject: "b",
+            },
+            clientExtensionResults: {},
+          },
+          ipAddress: "198.51.100.10",
+        });
+        if (isErr(passkeyResult)) {
+          throw new Error(
+            `Passkey enrollment failed: ${passkeyResult.error.message}`,
+          );
+        }
 
-      return completeAccountOnboardingWithRepos(transactionRepos, {
-        userId: 5,
-        phoneE164: "+51999888777",
+        return completeAccountOnboardingWithRepos(transactionRepos, {
+          userId,
+          phoneE164: "+51999888777",
+        });
       });
-    });
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected successful passkey onboarding");
     }
 
-    const user = await ctx.repos.users.findById(5);
+    const user = await scenario.ctx.repos.users.findById(userId);
     expect(user?.onboarding_completed_at).not.toBeNull();
     expect(user?.phone_e164).toBe("+51999888777");
 
-    const passkeys = await ctx.repos.passkeys.findByUser(5);
+    const passkeys = await scenario.ctx.repos.passkeys.findByUser(userId);
     expect(passkeys).toHaveLength(1);
 
-    const challenge = await ctx.repos.webauthnChallenges.findById(challengeId);
+    const challenge =
+      await scenario.ctx.repos.webauthnChallenges.findById(challengeId);
     expect(challenge).toBeUndefined();
   });
 });

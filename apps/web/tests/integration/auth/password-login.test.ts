@@ -36,20 +36,31 @@ describe("password login service", () => {
       await scenario.loginPassword(identity, "wrong", requestMeta);
     });
 
-    const result = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) throw new Error("expected invalid credentials");
     expect(result.error.kind).toBe("invalid_credentials");
 
-    const retries = await scenario.ctx.repos.authEvents.findRecentLoginRetriesByUser(1, 20);
+    const retries =
+      await scenario.ctx.repos.authEvents.findRecentLoginRetriesByUser(1, 20);
     expect(retries).toHaveLength(7);
     expect(retries[0]?.outcome).toBe("throttled");
     expect(retries[0]?.reason).toBe("threshold_exceeded");
-    expect(retries.filter((event) => event.outcome === "failure")).toHaveLength(6);
+    expect(retries.filter((event) => event.outcome === "failure")).toHaveLength(
+      6,
+    );
   });
 
   it("creates session with request metadata on successful auth", async () => {
-    const result = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(false);
     if (isErr(result) || result.value.kind !== "complete") {
       throw new Error("expected completed password login");
@@ -85,7 +96,11 @@ describe("password login service", () => {
   it("marks login as not onboarded when onboarding is incomplete", async () => {
     await scenario.setOnboarding(identity, false);
 
-    const result = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(false);
     if (isErr(result) || result.value.kind !== "complete") {
       throw new Error("expected completed password login");

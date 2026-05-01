@@ -1,12 +1,4 @@
-import {
-  getSeededIdentity,
-  setIdentityOnboarding,
-} from "@tests/support/identities/api";
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
+import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { completeGoogleOAuthCallback } from "~/lib/auth/google/google-callback-login";
@@ -21,11 +13,12 @@ vi.mock("~/lib/auth/google/google-oauth", () => ({
   authenticateGoogleAuthorizationCode:
     mocks.authenticateGoogleAuthorizationCode,
 }));
-
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
 describe("google oauth callback login", () => {
-  let ctx: TestDbContext;
+  const scenario = createAuthScenario("google-oauth-callback-login", {
+    freezeAtMs: 1_700_000_000_000,
+  });
   const request = {
     code: "google-code-1",
     state: "expected-state",
@@ -36,26 +29,13 @@ describe("google oauth callback login", () => {
   };
 
   beforeEach(async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(1_700_000_000_000);
     vi.clearAllMocks();
-    ctx = await createIsolatedTestDb("google-oauth-callback-login");
+    await scenario.setup();
   });
 
   afterEach(async () => {
-    vi.useRealTimers();
-    await cleanupTestDb(ctx);
+    await scenario.teardown();
   });
-
-  async function linkGoogleAccount(userId: number, sub: string) {
-    await ctx.repos.oauthAccounts.create({
-      user_id: userId,
-      provider: "google",
-      provider_user_id: sub,
-      email: `${sub}@example.test`,
-      created_at: Date.now(),
-    });
-  }
 
   it("returns bad_request when callback state does not match", async () => {
     const result = await completeGoogleOAuthCallback(
@@ -63,7 +43,7 @@ describe("google oauth callback login", () => {
         ...request,
         state: "wrong-state",
       },
-      ctx.repos,
+      scenario.ctx.repos,
       sendPrivilegedLoginAlert,
     );
 
@@ -86,7 +66,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      ctx.repos,
+      scenario.ctx.repos,
       sendPrivilegedLoginAlert,
     );
 
@@ -101,8 +81,7 @@ describe("google oauth callback login", () => {
   });
 
   it("returns strong_auth_required for linked privileged users without strong auth", async () => {
-    const identity = getSeededIdentity("superuser");
-    await linkGoogleAccount(identity.userId, "google-sub-super-1");
+    await scenario.linkGoogleAccount("superuser", "google-sub-super-1");
 
     mocks.authenticateGoogleAuthorizationCode.mockResolvedValue(
       Ok({
@@ -114,7 +93,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      ctx.repos,
+      scenario.ctx.repos,
       sendPrivilegedLoginAlert,
     );
 
@@ -129,8 +108,8 @@ describe("google oauth callback login", () => {
   });
 
   it("issues an app session for linked non-privileged users", async () => {
-    const identity = getSeededIdentity("backOne");
-    await linkGoogleAccount(identity.userId, "google-sub-back-1");
+    const identity = scenario.identity("backOne");
+    await scenario.linkGoogleAccount("backOne", "google-sub-back-1");
 
     mocks.authenticateGoogleAuthorizationCode.mockResolvedValue(
       Ok({
@@ -142,7 +121,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      ctx.repos,
+      scenario.ctx.repos,
       sendPrivilegedLoginAlert,
     );
 
@@ -153,16 +132,18 @@ describe("google oauth callback login", () => {
     expect(result.value.redirectPath).toBe("/");
     expect(result.value.sessionToken).toBeTruthy();
 
-    const sessions = await ctx.repos.sessions.listForUser(identity.userId);
+    const sessions = await scenario.ctx.repos.sessions.listForUser(
+      identity.userId,
+    );
     expect(sessions[0]?.session_class).toBe("app");
     expect(sessions[0]?.ip_address).toBe(request.ipAddress);
     expect(sessions[0]?.user_agent).toBe(request.userAgent);
   });
 
   it("issues a pre-auth session and onboarding redirect when onboarding is incomplete", async () => {
-    const identity = getSeededIdentity("backOne");
-    await setIdentityOnboarding(ctx, identity, false);
-    await linkGoogleAccount(identity.userId, "google-sub-back-2");
+    const identity = scenario.identity("backOne");
+    await scenario.setOnboarding("backOne", false);
+    await scenario.linkGoogleAccount("backOne", "google-sub-back-2");
 
     mocks.authenticateGoogleAuthorizationCode.mockResolvedValue(
       Ok({
@@ -174,7 +155,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      ctx.repos,
+      scenario.ctx.repos,
       sendPrivilegedLoginAlert,
     );
 
@@ -185,7 +166,9 @@ describe("google oauth callback login", () => {
     expect(result.value.redirectPath).toBe("/onboarding");
     expect(result.value.sessionToken).toBeTruthy();
 
-    const sessions = await ctx.repos.sessions.listForUser(identity.userId);
+    const sessions = await scenario.ctx.repos.sessions.listForUser(
+      identity.userId,
+    );
     expect(sessions[0]?.session_class).toBe("pre_auth");
   });
 
@@ -196,7 +179,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      ctx.repos,
+      scenario.ctx.repos,
       sendPrivilegedLoginAlert,
     );
 

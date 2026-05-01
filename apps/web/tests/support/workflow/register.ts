@@ -1,8 +1,5 @@
 import type { TestRuntime } from "../runtime/app";
-import {
-  runTestWorkflowCommand,
-  type TestCommandOverrides,
-} from "./command";
+import { runTestWorkflowCommand, type TestCommandOverrides } from "./command";
 
 export type RegisteredLeadSnapshot = {
   id: string;

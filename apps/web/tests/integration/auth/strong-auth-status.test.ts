@@ -17,7 +17,10 @@ describe("strong auth status", () => {
   it("derives verified strong auth from a configured passkey", async () => {
     await scenario.enablePasskey("superuser", "pk-status-user-5");
 
-    const status = await getStrongAuthStatus(scenario.identity("superuser").userId, scenario.ctx.repos);
+    const status = await getStrongAuthStatus(
+      scenario.identity("superuser").userId,
+      scenario.ctx.repos,
+    );
 
     expect(status.hasPasskey).toBe(true);
     expect(status.passkeyCount).toBe(1);
@@ -28,7 +31,10 @@ describe("strong auth status", () => {
   it("derives verified strong auth from an enabled totp factor", async () => {
     await scenario.enableTotp("superuser");
 
-    const status = await getStrongAuthStatus(scenario.identity("superuser").userId, scenario.ctx.repos);
+    const status = await getStrongAuthStatus(
+      scenario.identity("superuser").userId,
+      scenario.ctx.repos,
+    );
 
     expect(status.hasTotp).toBe(true);
     expect(status.hasPasskey).toBe(false);
@@ -49,7 +55,10 @@ describe("strong auth status", () => {
       is_active: 1,
     });
 
-    const status = await getStrongAuthStatus(identity.userId, scenario.ctx.repos);
+    const status = await getStrongAuthStatus(
+      identity.userId,
+      scenario.ctx.repos,
+    );
 
     expect(status.hasTotp).toBe(true);
     expect(status.hasPasskey).toBe(true);

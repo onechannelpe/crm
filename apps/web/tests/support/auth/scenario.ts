@@ -66,9 +66,21 @@ export function createAuthScenario(
     async enablePasskey(name: SeededIdentityName, passkeyId?: string) {
       await enableIdentityPasskey(ctx, getSeededIdentity(name), passkeyId);
     },
+    async linkGoogleAccount(name: SeededIdentityName, sub: string) {
+      const identity = getSeededIdentity(name);
+      await ctx.repos.oauthAccounts.create({
+        user_id: identity.userId,
+        provider: "google",
+        provider_user_id: sub,
+        email: `${sub}@example.test`,
+        created_at: Date.now(),
+      });
+    },
     async currentTotpCode(name: SeededIdentityName): Promise<string> {
       const identity = getSeededIdentity(name);
-      const factor = await ctx.repos.userTotpFactors.findByUserId(identity.userId);
+      const factor = await ctx.repos.userTotpFactors.findByUserId(
+        identity.userId,
+      );
       if (factor == null) {
         throw new Error("totp factor not found");
       }

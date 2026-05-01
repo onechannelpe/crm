@@ -24,7 +24,11 @@ describe("privileged password login", () => {
   });
 
   it("rejects privileged login without strong auth after onboarding", async () => {
-    const result = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) throw new Error("expected strong auth requirement");
     expect(result.error.kind).toBe("strong_auth_required");
@@ -34,7 +38,11 @@ describe("privileged password login", () => {
     const user = scenario.identity(identity);
     await scenario.setOnboarding(identity, false);
 
-    const result = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(false);
     if (isErr(result) || result.value.kind !== "complete") {
       throw new Error("expected bootstrap password completion");
@@ -52,7 +60,11 @@ describe("privileged password login", () => {
   it("moves onboarded privileged login to a totp verification step", async () => {
     await scenario.enableTotp(identity);
 
-    const result = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(false);
     if (isErr(result) || result.value.kind !== "totp_required") {
       throw new Error("expected totp verification step");
@@ -62,13 +74,20 @@ describe("privileged password login", () => {
   it("moves privileged password login to a passkey verification step when passkey is the only strong factor", async () => {
     await scenario.enablePasskey(identity, "pk-only-super-user");
 
-    const result = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(false);
     if (isErr(result) || result.value.kind !== "passkey_required") {
       throw new Error("expected passkey requirement");
     }
 
-    const flow = await getLoginFlowState(result.value.flow.id, scenario.ctx.repos);
+    const flow = await getLoginFlowState(
+      result.value.flow.id,
+      scenario.ctx.repos,
+    );
     expect(flow?.state).toBe("passkey");
   });
 
@@ -77,13 +96,24 @@ describe("privileged password login", () => {
     await scenario.enableTotp(identity);
     const code = await scenario.currentTotpCode(identity);
 
-    const passwordResult = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const passwordResult = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(passwordResult)).toBe(false);
-    if (isErr(passwordResult) || passwordResult.value.kind !== "totp_required") {
+    if (
+      isErr(passwordResult) ||
+      passwordResult.value.kind !== "totp_required"
+    ) {
       throw new Error("expected totp verification step");
     }
 
-    const result = await scenario.loginTotp(passwordResult.value.flow.id, code, requestMeta);
+    const result = await scenario.loginTotp(
+      passwordResult.value.flow.id,
+      code,
+      requestMeta,
+    );
     expect(isErr(result)).toBe(false);
     if (isErr(result)) throw new Error("expected successful totp login");
 
@@ -97,13 +127,24 @@ describe("privileged password login", () => {
   it("rejects invalid totp code for privileged user", async () => {
     await scenario.enableTotp(identity);
 
-    const passwordResult = await scenario.loginPassword(identity, rightPassword, requestMeta);
+    const passwordResult = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
     expect(isErr(passwordResult)).toBe(false);
-    if (isErr(passwordResult) || passwordResult.value.kind !== "totp_required") {
+    if (
+      isErr(passwordResult) ||
+      passwordResult.value.kind !== "totp_required"
+    ) {
       throw new Error("expected totp verification step");
     }
 
-    const result = await scenario.loginTotp(passwordResult.value.flow.id, "000000", requestMeta);
+    const result = await scenario.loginTotp(
+      passwordResult.value.flow.id,
+      "000000",
+      requestMeta,
+    );
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) throw new Error("expected invalid totp");
     expect(result.error.kind).toBe("invalid_totp");
@@ -114,8 +155,11 @@ describe("privileged password login", () => {
     await scenario.enableTotp(identity);
     await scenario.enablePasskey(identity, "pk-downgrade-super-user");
 
-    const enrolledFactor = await scenario.ctx.repos.userTotpFactors.findByUserId(user.userId);
-    const enrolledPasskeys = await scenario.ctx.repos.passkeys.findByUser(user.userId);
+    const enrolledFactor =
+      await scenario.ctx.repos.userTotpFactors.findByUserId(user.userId);
+    const enrolledPasskeys = await scenario.ctx.repos.passkeys.findByUser(
+      user.userId,
+    );
     expect(enrolledFactor?.is_enabled).toBe(1);
     expect(enrolledPasskeys).toHaveLength(1);
 
@@ -129,9 +173,14 @@ describe("privileged password login", () => {
     });
 
     const downgradedUser = await scenario.ctx.repos.users.findById(user.userId);
-    const downgradedFactor = await scenario.ctx.repos.userTotpFactors.findByUserId(user.userId);
-    const downgradedPasskeys = await scenario.ctx.repos.passkeys.findByUser(user.userId);
-    expect(downgradedUser && requiresStrongAuthRole(downgradedUser.role)).toBe(false);
+    const downgradedFactor =
+      await scenario.ctx.repos.userTotpFactors.findByUserId(user.userId);
+    const downgradedPasskeys = await scenario.ctx.repos.passkeys.findByUser(
+      user.userId,
+    );
+    expect(downgradedUser && requiresStrongAuthRole(downgradedUser.role)).toBe(
+      false,
+    );
     expect(downgradedFactor?.is_enabled).toBe(1);
     expect(downgradedPasskeys).toHaveLength(1);
   });
