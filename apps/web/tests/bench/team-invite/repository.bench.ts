@@ -1,10 +1,10 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
-
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { afterAll, beforeAll, bench, describe } from "vitest";
+
 import { BENCH_NOW } from "../_shared/constants";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";

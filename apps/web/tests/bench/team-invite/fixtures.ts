@@ -1,6 +1,7 @@
+import type { TestDbContext } from "@tests/support/runtime/db";
+
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 
-import type { TestDbContext } from "@tests/support/runtime/db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const CREATE_POOL_SIZE = 80;

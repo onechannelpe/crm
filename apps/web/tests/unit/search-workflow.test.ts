@@ -1,16 +1,15 @@
-import { describe, expect, it } from "vitest";
-
-import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { SearchResult } from "~/server/shared/engine/types";
-import { Err, Ok, type Result } from "~/server/shared/result";
-
 import {
   makeNullSearchPolicyRepos,
   makeSearchCapacityGrantsRepo,
   makeSearchUsageCommitsRepo,
   makeSearchUsageReservationsRepo,
 } from "@tests/support/fakes/capacity";
+import { describe, expect, it } from "vitest";
+
+import { runDirectSearch } from "~/server/search-workflow/run-search";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { SearchResult } from "~/server/shared/engine/types";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 const USER_ID = 1;
 

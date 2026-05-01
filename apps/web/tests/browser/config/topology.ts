@@ -1,5 +1,4 @@
 import { devices } from "@playwright/test";
-
 import { resolveBrowserDbPathForProject } from "@tests/support/browser/runtime";
 
 export interface BrowserProjectDefinition {

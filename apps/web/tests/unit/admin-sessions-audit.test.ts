@@ -13,9 +13,9 @@ type AuditPayload = {
   createdAt: number;
 };
 
-import type { UserId } from "~/server/shared/ids";
-
 import { makeActor, makeAppContext } from "@tests/support/unit/factories";
+
+import type { UserId } from "~/server/shared/ids";
 
 function makeTestContext() {
   return makeAppContext({

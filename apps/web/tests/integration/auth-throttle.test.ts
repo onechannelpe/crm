@@ -1,3 +1,8 @@
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
@@ -7,12 +12,6 @@ import {
 } from "~/lib/auth/password/throttle-policy";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { AuthThrottleScope } from "~/server/auth/repos-auth-throttle";
-
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 
 describe("auth throttle", () => {
   let ctx: TestDbContext;

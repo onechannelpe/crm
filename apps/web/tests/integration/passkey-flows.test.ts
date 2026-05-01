@@ -1,15 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
-import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
-import {
-  createPasskeyEnrollmentAuthService,
-  createPasskeyLoginFinishAuthService,
-  createPasskeyLoginStartAuthService,
-} from "~/server/auth/passkey/service";
-import { isErr } from "~/server/shared/result";
-
 import {
   createAuthFlow,
   createRegistrationChallenge,
@@ -21,6 +9,17 @@ import {
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { hashAuthKey } from "~/lib/auth/password/key-hash";
+import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import {
+  createPasskeyEnrollmentAuthService,
+  createPasskeyLoginFinishAuthService,
+  createPasskeyLoginStartAuthService,
+} from "~/server/auth/passkey/service";
+import { isErr } from "~/server/shared/result";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 

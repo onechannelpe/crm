@@ -1,3 +1,15 @@
+import {
+  enableIdentityPasskey,
+  enableIdentityTotp,
+  getSeededIdentity,
+  setIdentityOnboarding,
+  setIdentityPassword,
+} from "@tests/support/identities/api";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
@@ -8,19 +20,6 @@ import { submitPasswordLogin } from "~/server/auth/application/commands/submit-p
 import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { isErr } from "~/server/shared/result";
-
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
-import {
-  enableIdentityPasskey,
-  enableIdentityTotp,
-  getSeededIdentity,
-  setIdentityOnboarding,
-  setIdentityPassword,
-} from "@tests/support/identities/api";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 

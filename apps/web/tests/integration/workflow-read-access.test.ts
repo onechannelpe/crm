@@ -1,10 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("workflow read access", () => {
   let runtime: TestRuntime;
@@ -20,26 +19,21 @@ describe("workflow read access", () => {
 
   it("lets review users read record detail even when they are not the assigned executive", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.givenLead({
+    const lead = await scenario.lead.assignedTo("execOne", {
       key: "read-access-back-office",
-      organization: {
-        key: "read-access-back-office",
-        ruc: "20100000011",
-        name: "Org Test",
-      },
-      executive: "execOne",
+      organization: { key: "read-access-back-office" },
       stage: "PENDING_EXTERNAL_REVIEW",
     });
 
     const result = await runtime.workflow.queryApi.getLeadDetail({
-      actor: scenario.actor("backOne"),
-      leadId: lead.leadId,
+      actor: scenario.actor.by("backOne"),
+      leadId: lead.id,
     });
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.lead.id).toBe(lead.leadId);
+    expect(result.value.lead.id).toBe(lead.id);
     expect(result.value.timeline).toEqual([]);
   });
 
@@ -47,45 +41,35 @@ describe("workflow read access", () => {
     "lets %s read record detail even when they are not the assigned executive",
     async (role) => {
       const scenario = createWorkflowScenario(runtime);
-      const lead = await scenario.givenLead({
+      const lead = await scenario.lead.assignedTo("execOne", {
         key: `read-access-${role}`,
-        organization: {
-          key: `read-access-${role}`,
-          ruc: role === "supervisor" ? "20100000013" : "20100000014",
-          name: "Org Test",
-        },
-        executive: "execOne",
+        organization: { key: `read-access-${role}` },
         stage: "QUOTED",
       });
 
       const result = await runtime.workflow.queryApi.getLeadDetail({
-        actor: { ...scenario.actor("backOne"), role },
-        leadId: lead.leadId,
+        actor: scenario.actor.withRole("backOne", role),
+        leadId: lead.id,
       });
 
       expect(result.ok).toBe(true);
       if (!result.ok) return;
 
-      expect(result.value.lead.id).toBe(lead.leadId);
+      expect(result.value.lead.id).toBe(lead.id);
     },
   );
 
   it("blocks executives from reading another executive's record detail", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.givenLead({
+    const lead = await scenario.lead.assignedTo("execOne", {
       key: "read-access-exec-blocked",
-      organization: {
-        key: "read-access-exec-blocked",
-        ruc: "20100000012",
-        name: "Org Test",
-      },
-      executive: "execOne",
+      organization: { key: "read-access-exec-blocked" },
       stage: "PENDING_EXTERNAL_REVIEW",
     });
 
     const result = await runtime.workflow.queryApi.getLeadDetail({
-      actor: scenario.actor("execTwo"),
-      leadId: lead.leadId,
+      actor: scenario.actor.by("execTwo"),
+      leadId: lead.id,
     });
 
     expect(result.ok).toBe(false);

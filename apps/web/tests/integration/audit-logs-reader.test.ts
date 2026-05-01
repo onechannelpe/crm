@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
-
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
+import { afterEach, describe, expect, it } from "vitest";
 
 describe("audit logs reader repository", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;

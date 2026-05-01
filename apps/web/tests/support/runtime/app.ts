@@ -6,11 +6,7 @@ import type { ServerInfra } from "~/server/runtime/infra";
 import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "./db";
+import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
 
 interface TestLogger {
   info(message: string, meta?: unknown): void;

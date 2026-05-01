@@ -1,5 +1,6 @@
 import { encryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { generateTotpSecret } from "~/lib/auth/totp/totp";
+
 import type { BrowserDbRuntime } from "../runtime";
 import type { BrowserIdentity } from "./types";
 

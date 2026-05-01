@@ -1,17 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 import {
   enableIdentityPasskey,
   enableIdentityTotp,
   getSeededIdentity,
 } from "@tests/support/identities/api";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 
 describe("strong auth status", () => {
   let ctx: TestDbContext;

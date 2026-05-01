@@ -1,13 +1,13 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
-
-import type { InviteService } from "~/server/invites/application/types";
-
 import { createInviteTestKit } from "@tests/support/invite/api";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { afterAll, beforeAll, bench, describe } from "vitest";
+
+import type { InviteService } from "~/server/invites/application/types";
+
 import { BENCH_NOW } from "../_shared/constants";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";

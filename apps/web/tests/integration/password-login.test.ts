@@ -1,19 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
-import { isErr } from "~/server/shared/result";
-
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 import {
   getSeededIdentity,
   setIdentityOnboarding,
   setIdentityPassword,
 } from "@tests/support/identities/api";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
+import { isErr } from "~/server/shared/result";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 

@@ -1,3 +1,8 @@
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppError } from "~/lib/app-errors";
@@ -5,12 +10,6 @@ import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "~/lib/security/action-rate-limit";
-
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 
 describe("action rate limit", () => {
   let ctx: TestDbContext;

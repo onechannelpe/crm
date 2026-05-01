@@ -1,3 +1,10 @@
+import {
+  makeLeadReader,
+  makeMutationUow,
+  makeNegotiationRequests,
+  makeNotificationCenter,
+  makeWorkflowLead,
+} from "@tests/support/fakes/workflow";
 import { describe, expect, it, vi } from "vitest";
 
 import { domainError } from "~/server/shared/domain-error";
@@ -11,14 +18,6 @@ import {
   requireLeadActionAccess,
 } from "~/server/workflow/application/policies/lead-action-policy";
 import type { LeadMutationUow } from "~/server/workflow/application/ports/lead-mutation-uow";
-
-import {
-  makeLeadReader,
-  makeMutationUow,
-  makeNegotiationRequests,
-  makeNotificationCenter,
-  makeWorkflowLead,
-} from "@tests/support/fakes/workflow";
 
 describe("lead action policy", () => {
   it("allows supervisors and sales managers to access leads assigned to others", () => {

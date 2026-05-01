@@ -1,8 +1,7 @@
+import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
-
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 
 describe("audit policy service", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;

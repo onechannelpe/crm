@@ -1,3 +1,9 @@
+import {
+  makeLeadCapacityGrantsRepo,
+  makeLeadUsageCommitsRepo,
+  makeLeadUsageReservationsRepo,
+  makeNullLeadPolicyRepos,
+} from "@tests/support/fakes/capacity";
 import { describe, expect, it } from "vitest";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
@@ -8,13 +14,6 @@ import type {
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
-
-import {
-  makeLeadCapacityGrantsRepo,
-  makeLeadUsageCommitsRepo,
-  makeLeadUsageReservationsRepo,
-  makeNullLeadPolicyRepos,
-} from "@tests/support/fakes/capacity";
 
 const USER_ID = 1;
 const BRANCH_ID = 1;

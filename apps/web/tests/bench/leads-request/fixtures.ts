@@ -1,3 +1,5 @@
+import type { TestDbContext } from "@tests/support/runtime/db";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type {
@@ -7,7 +9,6 @@ import type {
 import { Ok, type Result } from "~/server/shared/result";
 import type { SearchType } from "~/server/shared/workflow-types";
 
-import type { TestDbContext } from "@tests/support/runtime/db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 80;

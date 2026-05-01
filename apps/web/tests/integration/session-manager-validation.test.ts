@@ -1,3 +1,7 @@
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
 import { sql } from "kysely";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,11 +10,6 @@ import {
   generateSessionToken,
   hashSessionToken,
 } from "~/lib/auth/session/tokens";
-
-import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
 
 describe("session manager validation", () => {
   let runtime: TestRuntime;

@@ -1,10 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("lead assignment repository", () => {
   let ctx: TestDbContext;

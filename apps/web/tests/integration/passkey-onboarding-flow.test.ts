@@ -1,15 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
-import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
-import { isErr } from "~/server/shared/result";
-import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
-
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { createTestRepositories } from "@tests/support/runtime/repos";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
+import { isErr } from "~/server/shared/result";
+import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 
 describe("passkey onboarding flow", () => {
   let ctx: TestDbContext;

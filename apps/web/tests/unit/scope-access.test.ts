@@ -1,13 +1,12 @@
-import { describe, expect, it } from "vitest";
-
-import type { Role } from "~/lib/auth/access/rbac";
-import { canManageExecutive } from "~/server/capacity/domain/access-policy";
-
 import {
   makeActor,
   makeMockRepos,
   makeUserMockRepos,
 } from "@tests/support/unit/factories";
+import { describe, expect, it } from "vitest";
+
+import type { Role } from "~/lib/auth/access/rbac";
+import { canManageExecutive } from "~/server/capacity/domain/access-policy";
 
 type TargetUser = { role: Role; branchId: number; teamId: number | null };
 

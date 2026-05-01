@@ -1,7 +1,5 @@
 import { generateKeyPairSync } from "node:crypto";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   claimSession,
   createAssignment,
@@ -14,6 +12,7 @@ import {
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("extension runtime status invariants", () => {
   let ctx: TestDbContext;

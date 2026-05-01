@@ -1,3 +1,4 @@
+import { makeAuthSession } from "@tests/support/unit/factories";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
@@ -8,8 +9,6 @@ import {
 } from "~/lib/auth/access/request-auth";
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import type { RequestContext } from "~/lib/http/request-context";
-
-import { makeAuthSession } from "@tests/support/unit/factories";
 
 function createRequestContext(
   session: AuthSession | null,

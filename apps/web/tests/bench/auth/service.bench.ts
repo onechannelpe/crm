@@ -1,3 +1,8 @@
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
@@ -5,11 +10,6 @@ import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-lo
 import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
 import { isErr } from "~/server/shared/result";
 
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 import { BENCH_NOW } from "../_shared/constants";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";

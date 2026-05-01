@@ -124,7 +124,11 @@ function buildDefaultRuc(key: string | undefined): string {
   if (!key) {
     throw new Error("missing_seed_organization_ruc");
   }
-  const digits = key.replaceAll(/[^0-9]/g, "").slice(0, 9).padEnd(9, "0");
+  let hash = 0;
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 131 + key.charCodeAt(index)) % 1_000_000_000;
+  }
+  const digits = String(hash).padStart(9, "0");
   return `20${digits}`;
 }
 

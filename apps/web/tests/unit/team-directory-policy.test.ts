@@ -1,11 +1,10 @@
+import { makeActor, makeAppContext } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok } from "~/server/shared/result";
 import { getInviteManagement } from "~/server/team/application/invites";
 import type { InviteManagementQueryPort } from "~/server/team/application/ports";
-
-import { makeActor, makeAppContext } from "@tests/support/unit/factories";
 
 describe("getInviteManagement", () => {
   it("returns teams, pending invites, and assignable roles for the actor branch", async () => {
