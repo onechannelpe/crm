@@ -1,12 +1,6 @@
 import { generateKeyPairSync } from "node:crypto";
 
-import {
-  claimSession,
-  createAssignment,
-  createContactWithoutPhone,
-  createServiceSession,
-  createTestExtensionService,
-} from "@tests/support/extension/api";
+import { createExtensionScenario } from "@tests/support/extension/api";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -101,6 +95,7 @@ describe("extension runtime status invariants", () => {
 
   it("keeps shared sync ok when heartbeat freshness is recent", async () => {
     const fixedNow = 1_000_000;
+    const scenario = createExtensionScenario(ctx, () => fixedNow);
     await ctx.db
       .insertInto("extension_executive_statuses")
       .values({
@@ -118,8 +113,7 @@ describe("extension runtime status invariants", () => {
       })
       .execute();
 
-    const service = createTestExtensionService(ctx, () => fixedNow);
-    const result = await service.listTeamExecutiveStatuses({
+    const result = await scenario.service.listTeamExecutiveStatuses({
       role: "sales_manager",
       userId: 2,
       branchId: 1,
@@ -136,6 +130,7 @@ describe("extension runtime status invariants", () => {
 
   it("marks shared sync stale when heartbeat freshness expires", async () => {
     const fixedNow = 1_000_000;
+    const scenario = createExtensionScenario(ctx, () => fixedNow);
     await ctx.db
       .insertInto("extension_executive_statuses")
       .values({
@@ -153,8 +148,7 @@ describe("extension runtime status invariants", () => {
       })
       .execute();
 
-    const service = createTestExtensionService(ctx, () => fixedNow);
-    const result = await service.listTeamExecutiveStatuses({
+    const result = await scenario.service.listTeamExecutiveStatuses({
       role: "sales_manager",
       userId: 2,
       branchId: 1,
@@ -170,9 +164,9 @@ describe("extension runtime status invariants", () => {
   });
 
   it("classifies malformed handoff tokens as handoff_invalid", async () => {
-    const service = createTestExtensionService(ctx);
+    const scenario = createExtensionScenario(ctx);
 
-    const result = await service.claimInstallationSession({
+    const result = await scenario.service.claimInstallationSession({
       handoffToken: "not-a-jwt",
       installationId: "11111111-1111-4111-8111-111111111111",
     });
@@ -185,22 +179,12 @@ describe("extension runtime status invariants", () => {
   });
 
   it("rejects handoff creation when the assigned contact has no primary phone", async () => {
-    const nowMs = Date.now();
-    const authSessionId = await createServiceSession({ ctx, nowMs });
-    const contactId = await createContactWithoutPhone({
-      ctx,
-      nowMs,
-      sequence: 1,
-    });
-    const assignmentId = await createAssignment({
-      ctx,
-      nowMs,
-      userId: 1,
-      contactId,
-    });
-    const service = createTestExtensionService(ctx);
+    const scenario = createExtensionScenario(ctx);
+    const authSessionId = await scenario.session();
+    const contactId = await scenario.contactWithoutPhone(1);
+    const assignmentId = await scenario.assignment({ userId: 1, contactId });
 
-    const result = await service.createHandoffToken({
+    const result = await scenario.service.createHandoffToken({
       userId: 1,
       authSessionId,
       branchId: 1,
@@ -223,9 +207,9 @@ describe("extension runtime status invariants", () => {
   });
 
   it("classifies malformed session tokens as session_invalid", async () => {
-    const service = createTestExtensionService(ctx);
+    const scenario = createExtensionScenario(ctx);
 
-    const result = await service.ingestRuntimeEvent({
+    const result = await scenario.service.ingestRuntimeEvent({
       sessionToken: "not-a-jwt",
       event: {
         id: "evt-invalid-session",
@@ -244,12 +228,10 @@ describe("extension runtime status invariants", () => {
   });
 
   it("accepts duplicate event delivery without creating a second runtime event", async () => {
-    const nowMs = Date.now();
-    const { service, sessionToken, assignmentId } = await claimSession({
-      ctx,
-      nowMs,
-      installationId: "11111111-1111-4111-8111-111111111111",
-    });
+    const scenario = createExtensionScenario(ctx);
+    const { sessionToken, assignmentId } = await scenario.claim(
+      "11111111-1111-4111-8111-111111111111",
+    );
     const event = {
       id: "evt-duplicate",
       sequence: 1,
@@ -264,11 +246,11 @@ describe("extension runtime status invariants", () => {
       },
     };
 
-    const first = await service.ingestRuntimeEvent({
+    const first = await scenario.service.ingestRuntimeEvent({
       sessionToken,
       event,
     });
-    const second = await service.ingestRuntimeEvent({
+    const second = await scenario.service.ingestRuntimeEvent({
       sessionToken,
       event,
     });
@@ -285,12 +267,11 @@ describe("extension runtime status invariants", () => {
   });
 
   it("revokes older installations when a new installation claims the user session", async () => {
-    const nowMs = Date.now();
-    const authSessionId = await createServiceSession({ ctx, nowMs });
-    const assignmentId = await createAssignment({ ctx, nowMs });
-    const service = createTestExtensionService(ctx);
+    const scenario = createExtensionScenario(ctx);
+    const authSessionId = await scenario.session();
+    const assignmentId = await scenario.assignment();
 
-    const firstHandoff = await service.createHandoffToken({
+    const firstHandoff = await scenario.service.createHandoffToken({
       userId: 1,
       authSessionId,
       branchId: 1,
@@ -301,7 +282,7 @@ describe("extension runtime status invariants", () => {
       throw new Error(firstHandoff.error.message);
     }
 
-    const firstClaim = await service.claimInstallationSession({
+    const firstClaim = await scenario.service.claimInstallationSession({
       handoffToken: firstHandoff.value.handoffToken,
       installationId: "11111111-1111-4111-8111-111111111111",
     });
@@ -309,7 +290,7 @@ describe("extension runtime status invariants", () => {
       throw new Error(firstClaim.error.message);
     }
 
-    const secondHandoff = await service.createHandoffToken({
+    const secondHandoff = await scenario.service.createHandoffToken({
       userId: 1,
       authSessionId,
       branchId: 1,
@@ -320,7 +301,7 @@ describe("extension runtime status invariants", () => {
       throw new Error(secondHandoff.error.message);
     }
 
-    const secondClaim = await service.claimInstallationSession({
+    const secondClaim = await scenario.service.claimInstallationSession({
       handoffToken: secondHandoff.value.handoffToken,
       installationId: "22222222-2222-4222-8222-222222222222",
     });
@@ -328,7 +309,7 @@ describe("extension runtime status invariants", () => {
       throw new Error(secondClaim.error.message);
     }
 
-    const oldSessionResult = await service.ingestRuntimeEvent({
+    const oldSessionResult = await scenario.service.ingestRuntimeEvent({
       sessionToken: firstClaim.value.sessionToken,
       event: {
         id: "evt-old-installation",
@@ -338,7 +319,7 @@ describe("extension runtime status invariants", () => {
         payload: { occurredAt: 20_000 },
       },
     });
-    const newSessionResult = await service.ingestRuntimeEvent({
+    const newSessionResult = await scenario.service.ingestRuntimeEvent({
       sessionToken: secondClaim.value.sessionToken,
       event: {
         id: "evt-new-installation",

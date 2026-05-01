@@ -1,23 +1,23 @@
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
-import { afterEach, describe, expect, it } from "vitest";
+import { createAuthScenario } from "@tests/support/auth/scenario";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
 
 describe("auth funnel observability", () => {
-  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
+  const scenario = createAuthScenario("auth-funnel-observability");
+
+  beforeEach(async () => {
+    await scenario.setup();
+  });
 
   afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+    await scenario.teardown();
   });
 
   it("stores and summarizes auth funnel events separately from action observations", async () => {
-    ctx = await createIsolatedTestDb("auth-funnel-observability");
     const service = createObservabilityService({
-      actionObservations: ctx.repos.actionObservations,
-      authFunnelEvents: ctx.repos.authFunnelEvents,
+      actionObservations: scenario.ctx.repos.actionObservations,
+      authFunnelEvents: scenario.ctx.repos.authFunnelEvents,
     });
     const baseTime = 1_700_000_000_000;
 

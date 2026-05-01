@@ -1,3 +1,4 @@
+import { seedLeadAssignments } from "@tests/support/contacts/seed";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -18,32 +19,29 @@ describe("lead assignment repository", () => {
 
   it("returns only active and non-expired assignments", async () => {
     const now = Date.now();
-    await ctx.db
-      .insertInto("lead_assignments")
-      .values([
-        {
-          user_id: 1,
-          contact_id: 1,
-          assigned_at: now,
-          expires_at: now + 60_000,
-          status: "active",
-        },
-        {
-          user_id: 1,
-          contact_id: 2,
-          assigned_at: now,
-          expires_at: now - 1,
-          status: "active",
-        },
-        {
-          user_id: 1,
-          contact_id: 2,
-          assigned_at: now,
-          expires_at: now + 60_000,
-          status: "completed",
-        },
-      ])
-      .execute();
+    await seedLeadAssignments(ctx, [
+      {
+        userId: 1,
+        contactId: 1,
+        assignedAt: now,
+        expiresAt: now + 60_000,
+        status: "active",
+      },
+      {
+        userId: 1,
+        contactId: 2,
+        assignedAt: now,
+        expiresAt: now - 1,
+        status: "active",
+      },
+      {
+        userId: 1,
+        contactId: 2,
+        assignedAt: now,
+        expiresAt: now + 60_000,
+        status: "completed",
+      },
+    ]);
 
     const active = await ctx.repos.contactAssignments.findActiveByUser(1);
     expect(active).toHaveLength(1);
@@ -52,25 +50,22 @@ describe("lead assignment repository", () => {
 
   it("hasActiveForContact respects expiry and ownership", async () => {
     const now = Date.now();
-    await ctx.db
-      .insertInto("lead_assignments")
-      .values([
-        {
-          user_id: 1,
-          contact_id: 1,
-          assigned_at: now,
-          expires_at: now + 60_000,
-          status: "active",
-        },
-        {
-          user_id: 3,
-          contact_id: 2,
-          assigned_at: now,
-          expires_at: now + 60_000,
-          status: "active",
-        },
-      ])
-      .execute();
+    await seedLeadAssignments(ctx, [
+      {
+        userId: 1,
+        contactId: 1,
+        assignedAt: now,
+        expiresAt: now + 60_000,
+        status: "active",
+      },
+      {
+        userId: 3,
+        contactId: 2,
+        assignedAt: now,
+        expiresAt: now + 60_000,
+        status: "active",
+      },
+    ]);
 
     expect(await ctx.repos.contactAssignments.hasActiveForContact(1, 1)).toBe(
       true,

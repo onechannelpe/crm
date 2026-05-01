@@ -1,4 +1,9 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import {
+  buildRegistrationResponse,
+  createRegistrationChallenge,
+  createWebauthnProviderWithRegistration,
+} from "@tests/support/passkey/api";
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -29,11 +34,10 @@ describe("passkey onboarding flow", () => {
 
   it("registers the passkey and completes onboarding in one flow", async () => {
     const userId = scenario.identity(identity).userId;
-    const challengeId = await scenario.ctx.repos.webauthnChallenges.create({
-      user_id: userId,
-      type: "registration",
+    const challengeId = await createRegistrationChallenge({
+      ctx: scenario.ctx,
+      userId,
       challenge: "challenge-1",
-      expires_at: Date.now() + 60_000,
     });
 
     const result = await scenario.ctx.db
@@ -43,11 +47,8 @@ describe("passkey onboarding flow", () => {
         const passkeyResult = await createPasskeyEnrollmentAuthService(
           transactionRepos,
           {
-            createWebauthnProvider: (repos) => ({
-              async getRegistrationOptions() {
-                throw new Error("not used in this test");
-              },
-              async verifyRegistration(userId) {
+            createWebauthnProvider: (repos) =>
+              createWebauthnProviderWithRegistration(async (userId) => {
                 await repos.passkeys.create({
                   id: "passkey-1",
                   user_id: userId,
@@ -56,31 +57,12 @@ describe("passkey onboarding flow", () => {
                   transports: JSON.stringify(["internal"]),
                 });
                 return { verified: true };
-              },
-              async getAuthenticationOptions() {
-                throw new Error("not used in this test");
-              },
-              async getAuthenticationOptionsForChallenge() {
-                throw new Error("not used in this test");
-              },
-              async verifyAuthentication() {
-                throw new Error("not used in this test");
-              },
-            }),
+              }),
           },
         ).finishEnrollment({
           userId,
           challengeId,
-          response: {
-            id: "passkey-1",
-            rawId: "passkey-1",
-            type: "public-key",
-            response: {
-              clientDataJSON: "a",
-              attestationObject: "b",
-            },
-            clientExtensionResults: {},
-          },
+          response: buildRegistrationResponse("passkey-1"),
           ipAddress: "198.51.100.10",
         });
         if (isErr(passkeyResult)) {

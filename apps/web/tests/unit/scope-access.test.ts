@@ -1,8 +1,8 @@
+import { makeActor } from "@tests/support/unit/factories";
 import {
-  makeActor,
   makeMockRepos,
   makeUserMockRepos,
-} from "@tests/support/unit/factories";
+} from "@tests/support/unit/scope-access-fakes";
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";

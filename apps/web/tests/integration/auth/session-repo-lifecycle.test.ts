@@ -1,4 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { seedBulkSessions } from "@tests/support/auth/sessions";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("session repository lifecycle", () => {
@@ -96,28 +97,8 @@ describe("session repository lifecycle", () => {
   });
 
   it("bulk deletes sessions for user", async () => {
-    const now = Date.now();
     const identity = scenario.identity(user);
-    await scenario.ctx.db
-      .insertInto("user_sessions")
-      .values(
-        Array.from({ length: 200 }, (_, i) => ({
-          id: `bulk-${i}`,
-          user_id: identity.userId,
-          branch_id: identity.branchId,
-          role: identity.role,
-          session_class: "app" as const,
-          primary_auth_method: "password" as const,
-          strong_auth_method: null,
-          strong_auth_at: null,
-          ip_address: null,
-          user_agent: null,
-          created_at: now,
-          last_activity: now,
-          expires_at: now + 60_000,
-        })),
-      )
-      .execute();
+    await seedBulkSessions(scenario.ctx, user, 200);
 
     await scenario.ctx.repos.sessions.deleteAllForUser(identity.userId);
 

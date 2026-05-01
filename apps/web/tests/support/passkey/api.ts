@@ -100,6 +100,18 @@ export function createWebauthnProvider(overrides: WebauthnOverrides = {}) {
   };
 }
 
+export function createWebauthnProviderWithAuth(
+  verifyAuthentication: NonNullable<WebauthnOverrides["verifyAuthentication"]>,
+) {
+  return createWebauthnProvider({ verifyAuthentication });
+}
+
+export function createWebauthnProviderWithRegistration(
+  verifyRegistration: NonNullable<WebauthnOverrides["verifyRegistration"]>,
+) {
+  return createWebauthnProvider({ verifyRegistration });
+}
+
 export function buildAssertionResponse(
   credentialId = "passkey-1",
 ): PasskeyCredentialResponse & {

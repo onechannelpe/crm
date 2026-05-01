@@ -1,12 +1,37 @@
 import { hashPassword } from "~/lib/auth/password/password";
 
-import {
-  BROWSER_TEST_PASSWORD,
-  getSeededBrowserIdentityDefinition,
-  type SeededBrowserIdentityName,
-} from "../../identities/catalog";
+import { type TestIdentity } from "../../identities/catalog";
 import type { BrowserDbRuntime } from "../runtime";
 import type { BrowserIdentity, BrowserUserOptions } from "./types";
+
+interface BrowserSeededIdentity extends TestIdentity {
+  password: string;
+}
+
+const BROWSER_TEST_PASSWORD = "placeholder";
+
+const BROWSER_IDENTITIES = {
+  passkeyUser: {
+    userId: 1,
+    username: "valeria.paredes",
+    branchId: 1,
+    role: "admin",
+    password: BROWSER_TEST_PASSWORD,
+  },
+  strongAuthUser: {
+    userId: 12,
+    username: "mario.aguirre",
+    branchId: 1,
+    role: "sales_manager",
+    password: BROWSER_TEST_PASSWORD,
+  },
+} as const satisfies Record<string, BrowserSeededIdentity>;
+
+export type BrowserIdentityName = keyof typeof BROWSER_IDENTITIES;
+
+export function getBrowserIdentity(name: BrowserIdentityName) {
+  return BROWSER_IDENTITIES[name];
+}
 
 let generatedUserCount = 0;
 
@@ -53,9 +78,9 @@ export async function findBrowserIdentityByUsername(
 
 export async function getSeededBrowserIdentity(
   runtime: BrowserDbRuntime,
-  name: SeededBrowserIdentityName,
+  name: BrowserIdentityName,
 ): Promise<BrowserIdentity> {
-  const seeded = getSeededBrowserIdentityDefinition(name);
+  const seeded = getBrowserIdentity(name);
   return await findBrowserIdentityByUsername(
     runtime,
     seeded.username,

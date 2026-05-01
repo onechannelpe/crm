@@ -4,6 +4,7 @@ import {
   mockUnsupportedPasskey,
 } from "@tests/support/browser/auth/capabilities";
 import {
+  type BrowserIdentityName,
   ensureBrowserUser,
   getSeededBrowserIdentity,
 } from "@tests/support/browser/auth/identities";
@@ -26,10 +27,9 @@ import {
   resolveBrowserDbPathForProject,
   type BrowserDbRuntime,
 } from "@tests/support/browser/runtime";
-import type { SeededBrowserIdentityName } from "@tests/support/identities/catalog";
 
 interface BrowserAuthFixture {
-  seeded(name: SeededBrowserIdentityName): Promise<BrowserIdentity>;
+  seeded(name: BrowserIdentityName): Promise<BrowserIdentity>;
   user(options: BrowserUserOptions): Promise<BrowserIdentity>;
   loginAs(
     page: Parameters<typeof loginAs>[0],

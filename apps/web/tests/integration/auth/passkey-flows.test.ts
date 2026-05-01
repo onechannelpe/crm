@@ -1,17 +1,15 @@
+import { createAuthScenario } from "@tests/support/auth/scenario";
 import { getSeededIdentity } from "@tests/support/identities/api";
 import {
   buildAssertionResponse,
   buildRegistrationResponse,
   createAuthFlow,
   createRegistrationChallenge,
+  createWebauthnProviderWithAuth,
+  createWebauthnProviderWithRegistration,
   createWebauthnProvider,
   invalidRegistrationProvider,
 } from "@tests/support/passkey/api";
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
@@ -27,22 +25,22 @@ import { isErr } from "~/server/shared/result";
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
 describe("passkey flows", () => {
-  let ctx: TestDbContext;
+  const scenario = createAuthScenario("passkey-flows");
   const ipAddress = "198.51.100.66";
   const execOne = getSeededIdentity("execOne");
   const backOne = getSeededIdentity("backOne");
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("passkey-flows");
+    await scenario.setup();
   });
 
   afterEach(async () => {
-    await cleanupTestDb(ctx);
+    await scenario.teardown();
   });
 
   it("begin passkey login creates authentication challenge for active user", async () => {
     const result = await createPasskeyLoginStartAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).beginLogin({
       identifier: "exec.one",
       ipAddress,
@@ -54,9 +52,9 @@ describe("passkey flows", () => {
     }
 
     expect(result.value.mode).toBe("identified");
-    const flow = await ctx.repos.loginFlows.findById(result.value.id);
+    const flow = await scenario.ctx.repos.loginFlows.findById(result.value.id);
     const challenge = flow?.challenge_id
-      ? await ctx.repos.webauthnChallenges.findById(flow.challenge_id)
+      ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
     expect(challenge?.type).toBe("authentication");
     expect(challenge?.user_id).toBe(execOne.userId);
@@ -65,7 +63,7 @@ describe("passkey flows", () => {
 
   it("begin discoverable passkey login creates an unscoped authentication challenge", async () => {
     const result = await createPasskeyLoginStartAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).beginLogin({
       ipAddress,
       mode: "discoverable",
@@ -78,9 +76,9 @@ describe("passkey flows", () => {
     expect(result.value.mode).toBe("discoverable");
     expect(result.value.requestOptions.userVerification).toBe("required");
 
-    const flow = await ctx.repos.loginFlows.findById(result.value.id);
+    const flow = await scenario.ctx.repos.loginFlows.findById(result.value.id);
     const challenge = flow?.challenge_id
-      ? await ctx.repos.webauthnChallenges.findById(flow.challenge_id)
+      ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
     expect(flow?.user_id).toBeNull();
     expect(challenge?.user_id).toBeNull();
@@ -89,13 +87,13 @@ describe("passkey flows", () => {
 
   it("finish passkey login consumes challenge and records failure on invalid assertion", async () => {
     const { challengeId, flowId } = await createAuthFlow({
-      ctx,
+      ctx: scenario.ctx,
       userId: execOne.userId,
       challenge: "challenge-1",
     });
 
     const result = await createPasskeyLoginFinishAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).finishLogin({
       flowId,
       response: buildAssertionResponse("missing-passkey"),
@@ -109,20 +107,22 @@ describe("passkey flows", () => {
     }
     expect(result.error.kind).toBe("invalid_credentials");
 
-    const consumed = await ctx.repos.webauthnChallenges.findById(challengeId);
+    const consumed =
+      await scenario.ctx.repos.webauthnChallenges.findById(challengeId);
     expect(consumed).toBeUndefined();
 
     const key = hashAuthKey(`account:passkey_verify:user:${execOne.userId}`);
-    const counter = await ctx.repos.authThrottle.findByScopeAndKey(
+    const counter = await scenario.ctx.repos.authThrottle.findByScopeAndKey(
       "account",
       key,
     );
     expect(counter?.failure_count).toBe(1);
 
-    const retries = await ctx.repos.authEvents.findRecentLoginRetriesByUser(
-      execOne.userId,
-      5,
-    );
+    const retries =
+      await scenario.ctx.repos.authEvents.findRecentLoginRetriesByUser(
+        execOne.userId,
+        5,
+      );
     expect(retries[0]?.method).toBe("passkey");
     expect(retries[0]?.stage).toBe("verify");
     expect(retries[0]?.outcome).toBe("failure");
@@ -131,7 +131,7 @@ describe("passkey flows", () => {
 
   it("begin passkey registration creates registration challenge", async () => {
     const result = await createPasskeyEnrollmentAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).beginEnrollment({
       userId: execOne.userId,
       ipAddress,
@@ -142,7 +142,7 @@ describe("passkey flows", () => {
       throw new Error("expected successful passkey registration challenge");
     }
 
-    const challenge = await ctx.repos.webauthnChallenges.findById(
+    const challenge = await scenario.ctx.repos.webauthnChallenges.findById(
       result.value.challengeId,
     );
     expect(challenge?.type).toBe("registration");
@@ -152,7 +152,7 @@ describe("passkey flows", () => {
 
   it("returns invalid_request when passkey enrollment start is throttled", async () => {
     const throttleSvc = createAuthThrottleService({
-      authThrottle: ctx.repos.authThrottle,
+      authThrottle: scenario.ctx.repos.authThrottle,
     });
     for (let attempt = 0; attempt < 9; attempt += 1) {
       await throttleSvc.recordPasskeyChallengeFailure(
@@ -162,7 +162,7 @@ describe("passkey flows", () => {
     }
 
     const result = await createPasskeyEnrollmentAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).beginEnrollment({
       userId: execOne.userId,
       ipAddress,
@@ -177,7 +177,7 @@ describe("passkey flows", () => {
 
   it("propagates error when passkey enrollment options fail", async () => {
     await expect(
-      createPasskeyEnrollmentAuthService(ctx.repos, {
+      createPasskeyEnrollmentAuthService(scenario.ctx.repos, {
         createWebauthnProvider: () =>
           createWebauthnProvider({
             async getRegistrationOptions() {
@@ -193,13 +193,13 @@ describe("passkey flows", () => {
 
   it("finish passkey registration rejects challenge ownership mismatch", async () => {
     const challengeId = await createRegistrationChallenge({
-      ctx,
+      ctx: scenario.ctx,
       userId: execOne.userId,
       challenge: "challenge-r1",
     });
 
     const result = await createPasskeyEnrollmentAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).finishEnrollment({
       userId: backOne.userId,
       challengeId,
@@ -214,7 +214,7 @@ describe("passkey flows", () => {
     expect(result.error.code).toBe("invalid_request");
 
     const key = hashAuthKey(`account:passkey_verify:user:${backOne.userId}`);
-    const counter = await ctx.repos.authThrottle.findByScopeAndKey(
+    const counter = await scenario.ctx.repos.authThrottle.findByScopeAndKey(
       "account",
       key,
     );
@@ -223,14 +223,17 @@ describe("passkey flows", () => {
 
   it("returns invalid_request when passkey enrollment verification fails", async () => {
     const challengeId = await createRegistrationChallenge({
-      ctx,
+      ctx: scenario.ctx,
       userId: execOne.userId,
       challenge: "challenge-r2",
     });
 
-    const result = await createPasskeyEnrollmentAuthService(ctx.repos, {
-      createWebauthnProvider: invalidRegistrationProvider,
-    }).finishEnrollment({
+    const result = await createPasskeyEnrollmentAuthService(
+      scenario.ctx.repos,
+      {
+        createWebauthnProvider: invalidRegistrationProvider,
+      },
+    ).finishEnrollment({
       userId: execOne.userId,
       challengeId,
       response: buildRegistrationResponse("cred-r2"),
@@ -246,18 +249,16 @@ describe("passkey flows", () => {
 
   it("propagates error when passkey enrollment verification throws a non-request error", async () => {
     const challengeId = await createRegistrationChallenge({
-      ctx,
+      ctx: scenario.ctx,
       userId: execOne.userId,
       challenge: "challenge-r3",
     });
 
     await expect(
-      createPasskeyEnrollmentAuthService(ctx.repos, {
+      createPasskeyEnrollmentAuthService(scenario.ctx.repos, {
         createWebauthnProvider: () =>
-          createWebauthnProvider({
-            async verifyRegistration() {
-              throw new Error("boom");
-            },
+          createWebauthnProviderWithRegistration(async () => {
+            throw new Error("boom");
           }),
       }).finishEnrollment({
         userId: execOne.userId,
@@ -270,19 +271,21 @@ describe("passkey flows", () => {
 
   it("finish passkey login issues a session through the workflow service", async () => {
     const { flowId } = await createAuthFlow({
-      ctx,
+      ctx: scenario.ctx,
       userId: execOne.userId,
       challenge: "challenge-workflow-1",
     });
 
-    const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
-      createWebauthnProvider: () =>
-        createWebauthnProvider({
-          async verifyAuthentication() {
-            return { verified: true, userId: execOne.userId };
-          },
-        }),
-    }).finishLogin({
+    const result = await createPasskeyLoginFinishAuthService(
+      scenario.ctx.repos,
+      {
+        createWebauthnProvider: () =>
+          createWebauthnProviderWithAuth(async () => ({
+            verified: true,
+            userId: execOne.userId,
+          })),
+      },
+    ).finishLogin({
       flowId,
       response: buildAssertionResponse("passkey-1"),
       ipAddress,
@@ -295,7 +298,7 @@ describe("passkey flows", () => {
       throw new Error("expected successful passkey login result");
     }
 
-    const persisted = await ctx.repos.loginFlows.findById(flowId);
+    const persisted = await scenario.ctx.repos.loginFlows.findById(flowId);
     expect(persisted).toBeUndefined();
     expect(result.value.token).toBeTruthy();
     expect(result.value.role).toBe("executive");
@@ -303,7 +306,7 @@ describe("passkey flows", () => {
 
   it("returns invalid_credentials for an empty passkey login identifier", async () => {
     const result = await createPasskeyLoginStartAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).beginLogin({
       identifier: "   ",
       ipAddress,
@@ -318,7 +321,7 @@ describe("passkey flows", () => {
   });
 
   it("returns unexpected when passkey login flow persistence fails", async () => {
-    await ctx.repos.passkeys.create({
+    await scenario.ctx.repos.passkeys.create({
       id: "pk-login-failure",
       user_id: execOne.userId,
       public_key: "base64-public-key",
@@ -327,9 +330,9 @@ describe("passkey flows", () => {
     });
 
     const result = await createPasskeyLoginStartAuthService({
-      ...ctx.repos,
+      ...scenario.ctx.repos,
       loginFlows: {
-        ...ctx.repos.loginFlows,
+        ...scenario.ctx.repos.loginFlows,
         async create() {
           throw new Error("boom");
         },
@@ -349,7 +352,7 @@ describe("passkey flows", () => {
 
   it("returns flow_expired for an invalid passkey login flow id", async () => {
     const result = await createPasskeyLoginFinishAuthService(
-      ctx.repos,
+      scenario.ctx.repos,
     ).finishLogin({
       flowId: 0,
       response: buildAssertionResponse("passkey-1"),
@@ -367,19 +370,21 @@ describe("passkey flows", () => {
 
   it("returns invalid_credentials when an identified passkey flow verifies a different user", async () => {
     const { flowId } = await createAuthFlow({
-      ctx,
+      ctx: scenario.ctx,
       userId: execOne.userId,
       challenge: "challenge-mismatch-1",
     });
 
-    const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
-      createWebauthnProvider: () =>
-        createWebauthnProvider({
-          async verifyAuthentication() {
-            return { verified: true, userId: backOne.userId };
-          },
-        }),
-    }).finishLogin({
+    const result = await createPasskeyLoginFinishAuthService(
+      scenario.ctx.repos,
+      {
+        createWebauthnProvider: () =>
+          createWebauthnProviderWithAuth(async () => ({
+            verified: true,
+            userId: backOne.userId,
+          })),
+      },
+    ).finishLogin({
       flowId,
       response: buildAssertionResponse("passkey-1"),
       ipAddress,
@@ -396,22 +401,24 @@ describe("passkey flows", () => {
 
   it("returns unexpected when passkey session issuance fails", async () => {
     const { flowId } = await createAuthFlow({
-      ctx,
+      ctx: scenario.ctx,
       userId: execOne.userId,
       challenge: "challenge-workflow-2",
     });
 
-    const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
-      createWebauthnProvider: () =>
-        createWebauthnProvider({
-          async verifyAuthentication() {
-            return { verified: true, userId: execOne.userId };
-          },
-        }),
-      async issueLoginSession() {
-        throw new Error("boom");
+    const result = await createPasskeyLoginFinishAuthService(
+      scenario.ctx.repos,
+      {
+        createWebauthnProvider: () =>
+          createWebauthnProviderWithAuth(async () => ({
+            verified: true,
+            userId: execOne.userId,
+          })),
+        async issueLoginSession() {
+          throw new Error("boom");
+        },
       },
-    }).finishLogin({
+    ).finishLogin({
       flowId,
       response: buildAssertionResponse("passkey-1"),
       ipAddress,
