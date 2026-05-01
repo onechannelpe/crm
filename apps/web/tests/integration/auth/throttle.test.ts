@@ -313,9 +313,10 @@ describe("auth throttle", () => {
 
     const deletedExpired =
       await scenario.ctx.repos.authThrottle.deleteExpiredBlocks(now);
-    const deletedStale = await scenario.ctx.repos.authThrottle.deleteUpdatedBefore(
-      now - 7 * 24 * 60 * 60 * 1000,
-    );
+    const deletedStale =
+      await scenario.ctx.repos.authThrottle.deleteUpdatedBefore(
+        now - 7 * 24 * 60 * 60 * 1000,
+      );
 
     expect(deletedExpired).toBe(1);
     expect(deletedStale).toBe(1);

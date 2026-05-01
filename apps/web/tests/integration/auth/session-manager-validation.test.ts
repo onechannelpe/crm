@@ -1,8 +1,8 @@
+import { getSeededIdentity } from "@tests/support/identities/api";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { getSeededIdentity } from "@tests/support/identities/api";
 import { sql } from "kysely";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

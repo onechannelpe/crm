@@ -1,7 +1,6 @@
 import { hashPassword } from "~/lib/auth/password/password";
 import { encryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { generateTotpSecret } from "~/lib/auth/totp/totp";
-import { createSessionService } from "~/server/auth/application/session-service";
 
 import {
   getSeededIdentity,
@@ -63,32 +62,4 @@ export async function enableIdentityTotp(
     await encryptTotpSecret(generateTotpSecret()),
   );
   await ctx.repos.userTotpFactors.markEnabled(identity.userId);
-}
-
-export async function createIdentitySession(
-  ctx: TestDbContext,
-  identity: TestIdentity,
-  options?: {
-    sessionClass?: "pre_auth" | "app";
-    primaryAuthMethod?: "password" | "google" | "passkey";
-    strongAuthMethod?: "totp" | "passkey" | "federated" | null;
-    strongAuthAt?: number | null;
-    ipAddress?: string | null;
-    userAgent?: string | null;
-  },
-): Promise<string> {
-  return await createSessionService({
-    sessions: ctx.repos.sessions,
-    users: ctx.repos.users,
-  }).createSession({
-    userId: identity.userId,
-    branchId: identity.branchId,
-    role: identity.role,
-    sessionClass: options?.sessionClass ?? "app",
-    ipAddress: options?.ipAddress ?? "127.0.0.1",
-    userAgent: options?.userAgent ?? "vitest-agent",
-    primaryAuthMethod: options?.primaryAuthMethod ?? "password",
-    strongAuthMethod: options?.strongAuthMethod ?? null,
-    strongAuthAt: options?.strongAuthAt ?? null,
-  });
 }
