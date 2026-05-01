@@ -1,5 +1,7 @@
 import { getSeededIdentity } from "@tests/support/identities/api";
 import {
+  buildAssertionResponse,
+  buildRegistrationResponse,
   createAuthFlow,
   createRegistrationChallenge,
   createWebauthnProvider,
@@ -96,17 +98,7 @@ describe("passkey flows", () => {
       ctx.repos,
     ).finishLogin({
       flowId,
-      response: {
-        id: "missing-passkey",
-        rawId: "missing-passkey",
-        type: "public-key",
-        clientExtensionResults: {},
-        response: {
-          authenticatorData: "a",
-          clientDataJSON: "b",
-          signature: "c",
-        },
-      },
+      response: buildAssertionResponse("missing-passkey"),
       ipAddress,
       userAgent: "vitest-agent",
       sendPrivilegedLoginAlert,
@@ -186,23 +178,12 @@ describe("passkey flows", () => {
   it("propagates error when passkey enrollment options fail", async () => {
     await expect(
       createPasskeyEnrollmentAuthService(ctx.repos, {
-        createWebauthnProvider: () => ({
-          async getRegistrationOptions() {
-            throw new Error("boom");
-          },
-          async verifyRegistration() {
-            throw new Error("not used in this test");
-          },
-          async getAuthenticationOptions() {
-            throw new Error("not used in this test");
-          },
-          async getAuthenticationOptionsForChallenge() {
-            throw new Error("not used in this test");
-          },
-          async verifyAuthentication() {
-            throw new Error("not used in this test");
-          },
-        }),
+        createWebauthnProvider: () =>
+          createWebauthnProvider({
+            async getRegistrationOptions() {
+              throw new Error("boom");
+            },
+          }),
       }).beginEnrollment({
         userId: execOne.userId,
         ipAddress,
@@ -222,16 +203,7 @@ describe("passkey flows", () => {
     ).finishEnrollment({
       userId: backOne.userId,
       challengeId,
-      response: {
-        id: "cred-r1",
-        rawId: "cred-r1",
-        type: "public-key",
-        response: {
-          clientDataJSON: "a",
-          attestationObject: "b",
-        },
-        clientExtensionResults: {},
-      },
+      response: buildRegistrationResponse("cred-r1"),
       ipAddress,
     });
 
@@ -261,16 +233,7 @@ describe("passkey flows", () => {
     }).finishEnrollment({
       userId: execOne.userId,
       challengeId,
-      response: {
-        id: "cred-r2",
-        rawId: "cred-r2",
-        type: "public-key",
-        response: {
-          clientDataJSON: "a",
-          attestationObject: "b",
-        },
-        clientExtensionResults: {},
-      },
+      response: buildRegistrationResponse("cred-r2"),
       ipAddress,
     });
 
@@ -299,16 +262,7 @@ describe("passkey flows", () => {
       }).finishEnrollment({
         userId: execOne.userId,
         challengeId,
-        response: {
-          id: "cred-r3",
-          rawId: "cred-r3",
-          type: "public-key",
-          response: {
-            clientDataJSON: "a",
-            attestationObject: "b",
-          },
-          clientExtensionResults: {},
-        },
+        response: buildRegistrationResponse("cred-r3"),
         ipAddress,
       }),
     ).rejects.toThrow("boom");
@@ -330,17 +284,7 @@ describe("passkey flows", () => {
         }),
     }).finishLogin({
       flowId,
-      response: {
-        id: "passkey-1",
-        rawId: "passkey-1",
-        type: "public-key",
-        clientExtensionResults: {},
-        response: {
-          authenticatorData: "a",
-          clientDataJSON: "b",
-          signature: "c",
-        },
-      },
+      response: buildAssertionResponse("passkey-1"),
       ipAddress,
       userAgent: "vitest-agent",
       sendPrivilegedLoginAlert,
@@ -408,17 +352,7 @@ describe("passkey flows", () => {
       ctx.repos,
     ).finishLogin({
       flowId: 0,
-      response: {
-        id: "passkey-1",
-        rawId: "passkey-1",
-        type: "public-key",
-        clientExtensionResults: {},
-        response: {
-          authenticatorData: "a",
-          clientDataJSON: "b",
-          signature: "c",
-        },
-      },
+      response: buildAssertionResponse("passkey-1"),
       ipAddress,
       userAgent: "vitest-agent",
       sendPrivilegedLoginAlert,
@@ -447,17 +381,7 @@ describe("passkey flows", () => {
         }),
     }).finishLogin({
       flowId,
-      response: {
-        id: "passkey-1",
-        rawId: "passkey-1",
-        type: "public-key",
-        clientExtensionResults: {},
-        response: {
-          authenticatorData: "a",
-          clientDataJSON: "b",
-          signature: "c",
-        },
-      },
+      response: buildAssertionResponse("passkey-1"),
       ipAddress,
       userAgent: "vitest-agent",
       sendPrivilegedLoginAlert,
@@ -489,17 +413,7 @@ describe("passkey flows", () => {
       },
     }).finishLogin({
       flowId,
-      response: {
-        id: "passkey-1",
-        rawId: "passkey-1",
-        type: "public-key",
-        clientExtensionResults: {},
-        response: {
-          authenticatorData: "a",
-          clientDataJSON: "b",
-          signature: "c",
-        },
-      },
+      response: buildAssertionResponse("passkey-1"),
       ipAddress,
       userAgent: "vitest-agent",
       sendPrivilegedLoginAlert,

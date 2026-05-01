@@ -1,8 +1,13 @@
+import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/server";
+
 import { PasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 
 import type { TestDbContext } from "../runtime/db";
 
 type WebauthnOverrides = {
+  getRegistrationOptions?: (
+    userId: number,
+  ) => Promise<PublicKeyCredentialCreationOptionsJSON>;
   verifyRegistration?: (
     userId: number,
     response: unknown,
@@ -10,6 +15,13 @@ type WebauthnOverrides = {
   ) => Promise<{ verified: boolean }>;
   verifyAuthentication?: () => Promise<{ verified: boolean; userId: number }>;
 };
+
+interface PasskeyCredentialResponse {
+  id: string;
+  rawId: string;
+  type: "public-key";
+  clientExtensionResults: Record<string, never>;
+}
 
 export function expiresAtFromNow(nowMs: number): number {
   return nowMs + 60_000;
@@ -57,7 +69,10 @@ export async function createRegistrationChallenge(input: {
 
 export function createWebauthnProvider(overrides: WebauthnOverrides = {}) {
   return {
-    async getRegistrationOptions() {
+    async getRegistrationOptions(userId: number) {
+      if (overrides.getRegistrationOptions) {
+        return overrides.getRegistrationOptions(userId);
+      }
       throw new Error("not used in this test");
     },
     async verifyRegistration(
@@ -81,6 +96,48 @@ export function createWebauthnProvider(overrides: WebauthnOverrides = {}) {
         return overrides.verifyAuthentication();
       }
       return { verified: true, userId: 1 };
+    },
+  };
+}
+
+export function buildAssertionResponse(
+  credentialId = "passkey-1",
+): PasskeyCredentialResponse & {
+  response: {
+    authenticatorData: string;
+    clientDataJSON: string;
+    signature: string;
+  };
+} {
+  return {
+    id: credentialId,
+    rawId: credentialId,
+    type: "public-key",
+    clientExtensionResults: {},
+    response: {
+      authenticatorData: "a",
+      clientDataJSON: "b",
+      signature: "c",
+    },
+  };
+}
+
+export function buildRegistrationResponse(
+  credentialId = "cred-r1",
+): PasskeyCredentialResponse & {
+  response: {
+    clientDataJSON: string;
+    attestationObject: string;
+  };
+} {
+  return {
+    id: credentialId,
+    rawId: credentialId,
+    type: "public-key",
+    clientExtensionResults: {},
+    response: {
+      clientDataJSON: "a",
+      attestationObject: "b",
     },
   };
 }
