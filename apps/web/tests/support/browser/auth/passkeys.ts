@@ -1,8 +1,8 @@
-import { createPasskeyLoginStartAuthService } from "../../../src/server/auth/passkey/service";
-import type { PasskeyLoginFlowState } from "../../../src/server/auth/passkey/service";
-import { isErr } from "../../../src/server/shared/result";
-import type { BrowserDbRuntime } from "../db/browser-runtime";
-import type { BrowserIdentity } from "./browser-types";
+import { createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
+import type { PasskeyLoginFlowState } from "~/server/auth/passkey/service";
+import { isErr } from "~/server/shared/result";
+import type { BrowserDbRuntime } from "../runtime";
+import type { BrowserIdentity } from "./types";
 
 export async function ensurePasskey(
   runtime: BrowserDbRuntime,

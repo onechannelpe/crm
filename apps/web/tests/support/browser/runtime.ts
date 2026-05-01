@@ -2,12 +2,12 @@ import { resolve } from "node:path";
 
 import type { Kysely } from "kysely";
 
-import { createDb } from "../../../src/lib/db/client";
-import type { Database } from "../../../src/lib/db/types";
+import { createDb } from "~/lib/db/client";
+import type { Database } from "~/lib/db/types";
 import {
   createTestRepositories,
   type TestRepositories,
-} from "../test-repositories";
+} from "../runtime/repos";
 
 export interface BrowserDbRuntime {
   db: Kysely<Database>;

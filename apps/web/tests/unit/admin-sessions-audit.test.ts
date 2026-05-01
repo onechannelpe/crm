@@ -15,7 +15,7 @@ type AuditPayload = {
 
 import type { UserId } from "~/server/shared/ids";
 
-import { makeActor, makeAppContext } from "../support/unit-factories";
+import { makeActor, makeAppContext } from "@tests/support/unit/factories";
 
 function makeTestContext() {
   return makeAppContext({

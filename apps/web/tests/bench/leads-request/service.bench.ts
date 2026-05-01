@@ -8,8 +8,8 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../../support/test-db";
-import { createTestRepositories } from "../../support/test-repositories";
+} from "@tests/support/runtime/db";
+import { createTestRepositories } from "@tests/support/runtime/repos";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";

@@ -8,11 +8,11 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 import {
   getSeededIdentity,
   setIdentityOnboarding,
-} from "../support/test-identities";
+} from "@tests/support/identities/api";
 
 const mocks = vi.hoisted(() => ({
   authenticateGoogleAuthorizationCode: vi.fn<() => Promise<unknown>>(),

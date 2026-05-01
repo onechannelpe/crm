@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { TestDbContext } from "../support/test-db";
-import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
+import type { TestDbContext } from "@tests/support/runtime/db";
+import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 
 describe("app notifications repo", () => {
   let ctx: TestDbContext;

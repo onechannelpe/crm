@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createTestRuntime,
   type TestRuntime,
-} from "../support/runtime/create-test-runtime";
-import { registerLeadAndLoadSnapshot } from "../support/workflow-register-test-kit";
-import { runTestWorkflowCommand } from "../support/workflow-test-kit";
+} from "@tests/support/runtime/app";
+import { registerLeadAndLoadSnapshot } from "@tests/support/workflow/register";
+import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 
 describe("register lead", () => {
   let runtime: TestRuntime;

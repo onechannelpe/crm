@@ -7,7 +7,7 @@ import {
   makeActor,
   makeMockRepos,
   makeUserMockRepos,
-} from "../support/unit-factories";
+} from "@tests/support/unit/factories";
 
 type TargetUser = { role: Role; branchId: number; teamId: number | null };
 

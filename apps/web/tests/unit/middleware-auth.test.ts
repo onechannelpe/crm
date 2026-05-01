@@ -9,7 +9,7 @@ import {
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import type { RequestContext } from "~/lib/http/request-context";
 
-import { makeAuthSession } from "../support/unit-factories";
+import { makeAuthSession } from "@tests/support/unit/factories";
 
 function createRequestContext(
   session: AuthSession | null,

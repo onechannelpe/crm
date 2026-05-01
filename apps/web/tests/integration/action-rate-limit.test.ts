@@ -10,7 +10,7 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 
 describe("action rate limit", () => {
   let ctx: TestDbContext;

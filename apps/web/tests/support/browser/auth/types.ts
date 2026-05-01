@@ -1,4 +1,4 @@
-import type { Role } from "../../../src/lib/auth/access/rbac";
+import type { Role } from "~/lib/auth/access/rbac";
 
 export interface BrowserIdentity {
   userId: number;

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
 
-import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
+import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 
 describe("action observability repository", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;

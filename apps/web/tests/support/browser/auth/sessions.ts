@@ -3,9 +3,9 @@ import type { Page } from "@playwright/test";
 import {
   generateSessionToken,
   hashSessionToken,
-} from "../../../src/lib/auth/session/tokens";
-import type { BrowserDbRuntime } from "../db/browser-runtime";
-import type { BrowserIdentity } from "./browser-types";
+} from "~/lib/auth/session/tokens";
+import type { BrowserDbRuntime } from "../runtime";
+import type { BrowserIdentity } from "./types";
 
 export async function seedBrowserSession(
   runtime: BrowserDbRuntime,

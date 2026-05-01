@@ -3,31 +3,31 @@ import { test as base, expect } from "@playwright/test";
 import {
   mockCancelledPasskey,
   mockUnsupportedPasskey,
-} from "../../support/auth/browser-capabilities";
+} from "@tests/support/browser/auth/capabilities";
 import {
   ensureBrowserUser,
   getSeededBrowserIdentity,
-} from "../../support/auth/browser-identities";
+} from "@tests/support/browser/auth/identities";
 import {
   createPasskeyFlow,
   ensurePasskey,
-} from "../../support/auth/browser-passkeys";
+} from "@tests/support/browser/auth/passkeys";
 import {
   loginAs,
   seedBrowserSession,
-} from "../../support/auth/browser-sessions";
-import { ensureTotp } from "../../support/auth/browser-totp";
+} from "@tests/support/browser/auth/sessions";
+import { ensureTotp } from "@tests/support/browser/auth/totp";
 import type {
   BrowserIdentity,
   BrowserUserOptions,
-} from "../../support/auth/browser-types";
+} from "@tests/support/browser/auth/types";
 import {
   createBrowserDbRuntime,
   disposeBrowserDbRuntime,
   resolveBrowserDbPathForProject,
   type BrowserDbRuntime,
-} from "../../support/db/browser-runtime";
-import type { SeededBrowserIdentityName } from "../../support/identities/seeded-identities";
+} from "@tests/support/browser/runtime";
+import type { SeededBrowserIdentityName } from "@tests/support/identities/catalog";
 
 interface BrowserAuthFixture {
   seeded(name: SeededBrowserIdentityName): Promise<BrowserIdentity>;

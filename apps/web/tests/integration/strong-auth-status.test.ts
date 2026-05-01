@@ -6,12 +6,12 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 import {
   enableIdentityPasskey,
   enableIdentityTotp,
   getSeededIdentity,
-} from "../support/test-identities";
+} from "@tests/support/identities/api";
 
 describe("strong auth status", () => {
   let ctx: TestDbContext;

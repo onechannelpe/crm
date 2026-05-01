@@ -1,5 +1,5 @@
-import type { TestRuntime } from "./runtime/create-test-runtime";
-import { runTestWorkflowCommand } from "./workflow-test-kit";
+import type { TestRuntime } from "../runtime/app";
+import { runTestWorkflowCommand } from "./command";
 
 export type RegisteredLeadSnapshot = {
   id: string;

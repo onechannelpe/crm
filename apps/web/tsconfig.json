@@ -13,7 +13,8 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@tests/*": ["./tests/*"]
     },
     "types": ["@solidjs/start/env", "mdx"]
   }

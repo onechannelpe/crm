@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createInviteTestKit } from "../support/invite-test-kit";
-import type { TestDbContext } from "../support/test-db";
-import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
+import { createInviteTestKit } from "@tests/support/invite/api";
+import type { TestDbContext } from "@tests/support/runtime/db";
+import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 
 describe("user invite lifecycle", () => {
   let ctx: TestDbContext | null = null;

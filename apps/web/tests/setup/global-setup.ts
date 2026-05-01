@@ -1,7 +1,7 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 
-import { prepareTestDbTemplate } from "../support/test-db";
+import { prepareTestDbTemplate } from "@tests/support/runtime/db";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 

@@ -1,5 +1,5 @@
-import type { Role } from "../../../src/lib/auth/access/rbac";
-import type { BranchId, UserId } from "../../../src/server/shared/ids";
+import type { Role } from "~/lib/auth/access/rbac";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 export interface TestIdentity {
   userId: UserId;

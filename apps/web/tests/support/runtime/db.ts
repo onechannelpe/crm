@@ -17,7 +17,7 @@ import {
 import {
   createTestRepositories,
   type TestRepositories,
-} from "./test-repositories";
+} from "../runtime/repos";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 const TEMPLATE_DB_NAME = "__template-seeded.db";

@@ -18,7 +18,7 @@ import {
   makeNegotiationRequests,
   makeNotificationCenter,
   makeWorkflowLead,
-} from "../support/workflow-command-fakes";
+} from "@tests/support/fakes/workflow";
 
 describe("lead action policy", () => {
   it("allows supervisors and sales managers to access leads assigned to others", () => {

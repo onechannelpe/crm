@@ -5,14 +5,9 @@ import { applyImportRows } from "~/server/integrations/application/import/apply-
 import {
   createTestRuntime,
   type TestRuntime,
-} from "../support/runtime/create-test-runtime";
-import {
-  seedImportJob,
-  seedLead,
-  seedOrganization,
-  seedUser,
-} from "../support/workflow-fixtures";
-import { runTestWorkflowCommand } from "../support/workflow-test-kit";
+} from "@tests/support/runtime/app";
+import { createWorkflowScenario } from "@tests/support/workflow/scenario";
+import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 
 describe("workflow lead mutation metadata", () => {
   let runtime: TestRuntime;
@@ -27,44 +22,43 @@ describe("workflow lead mutation metadata", () => {
   });
 
   it("updates lead.updatedBy when a note is added", async () => {
-    const org = await seedOrganization(runtime, {
+    const scenario = createWorkflowScenario(runtime);
+    const lead = await scenario.givenLead({
       key: "metadata-note",
-      ruc: "20900000501",
-      name: "Org Note",
-    });
-    await seedLead(runtime, {
-      id: "lead-501",
-      organization: org,
-      executiveId: 1,
+      organization: {
+        key: "metadata-note",
+        ruc: "20900000501",
+        name: "Org Note",
+      },
+      executive: "execOne",
       stage: "PENDING_EXTERNAL_REVIEW",
-      status: null,
-      prioridad: null,
       createdAt: 10,
       updatedAt: 10,
     });
 
     const result = await runTestWorkflowCommand(runtime, (commandApi) =>
       commandApi.addLeadNote({
-        actor: { userId: 1, role: "executive", branchId: 1 },
-        leadId: "lead-501",
+        actor: scenario.actor("execOne"),
+        leadId: lead.leadId,
         body: "Test note",
       }),
     );
 
     expect(result.ok).toBe(true);
 
-    const lead = await runtime.ctx.db
+    const leadRow = await runtime.ctx.db
       .selectFrom("workflow_leads")
       .select(["updated_by", "updated_at"])
-      .where("id", "=", "lead-501")
+      .where("id", "=", lead.leadId)
       .executeTakeFirstOrThrow();
 
-    expect(lead.updated_by).toBe(1);
-    expect(lead.updated_at).toBeGreaterThan(10);
+    expect(leadRow.updated_by).toBe(1);
+    expect(leadRow.updated_at).toBeGreaterThan(10);
   });
 
   it("allows admins to reassign and removes access from previous executive", async () => {
-    await seedUser(runtime, {
+    const scenario = createWorkflowScenario(runtime);
+    await scenario.givenUser({
       id: 11,
       username: "admin.one",
       email: "admin1@test.local",
@@ -74,7 +68,7 @@ describe("workflow lead mutation metadata", () => {
       role: "admin",
       phoneE164: "+51990000111",
     });
-    await seedUser(runtime, {
+    await scenario.givenUser({
       id: 12,
       username: "exec.new",
       email: "execnew@test.local",
@@ -84,18 +78,15 @@ describe("workflow lead mutation metadata", () => {
       role: "executive",
       phoneE164: "+51990000112",
     });
-    const org = await seedOrganization(runtime, {
+    const lead = await scenario.givenLead({
       key: "metadata-reassign",
-      ruc: "20900000502",
-      name: "Org Reassign",
-    });
-    await seedLead(runtime, {
-      id: "lead-502",
-      organization: org,
-      executiveId: 1,
+      organization: {
+        key: "metadata-reassign",
+        ruc: "20900000502",
+        name: "Org Reassign",
+      },
+      executive: "execOne",
       stage: "PENDING_EXTERNAL_REVIEW",
-      status: null,
-      prioridad: null,
       createdAt: 10,
       updatedAt: 10,
     });
@@ -103,53 +94,51 @@ describe("workflow lead mutation metadata", () => {
     const reassignResult = await runTestWorkflowCommand(runtime, (commandApi) =>
       commandApi.reassignLead({
         actor: { userId: 11, role: "admin", branchId: 1 },
-        leadId: "lead-502",
+        leadId: lead.leadId,
         toExecutiveId: 12,
       }),
     );
 
     expect(reassignResult.ok).toBe(true);
 
-    const lead = await runtime.ctx.db
+    const leadRow = await runtime.ctx.db
       .selectFrom("workflow_leads")
       .select(["executive_id", "updated_by"])
-      .where("id", "=", "lead-502")
+      .where("id", "=", lead.leadId)
       .executeTakeFirstOrThrow();
-    expect(lead.executive_id).toBe(12);
-    expect(lead.updated_by).toBe(11);
+    expect(leadRow.executive_id).toBe(12);
+    expect(leadRow.updated_by).toBe(11);
 
     const previousAccess = await runtime.workflow.queryApi.getLeadDetail({
       actor: { userId: 1, role: "executive", branchId: 1 },
-      leadId: "lead-502",
+      leadId: lead.leadId,
     });
     expect(previousAccess.ok).toBe(false);
 
     const newAccess = await runtime.workflow.queryApi.getLeadDetail({
       actor: { userId: 12, role: "executive", branchId: 1 },
-      leadId: "lead-502",
+      leadId: lead.leadId,
     });
     expect(newAccess.ok).toBe(true);
   });
 
   it("updates lead.updatedBy for import mutations", async () => {
-    const org = await seedOrganization(runtime, {
+    const scenario = createWorkflowScenario(runtime);
+    const lead = await scenario.givenLead({
       key: "metadata-import",
-      ruc: "20900000503",
-      name: "Org Import",
-    });
-    await seedLead(runtime, {
-      id: "lead-503",
-      organization: org,
-      executiveId: 1,
+      organization: {
+        key: "metadata-import",
+        ruc: "20900000503",
+        name: "Org Import",
+      },
+      executive: "execOne",
       stage: "PENDING_EXTERNAL_REVIEW",
-      status: null,
-      prioridad: null,
     });
-    await seedImportJob(runtime, { id: "job-9001" });
+    const job = await scenario.givenImportJob("9001");
 
     const result = await applyImportRows(
       {
-        jobId: "job-9001",
+        jobId: job.jobId,
         actorId: 2,
         validRows: [
           {
@@ -167,12 +156,12 @@ describe("workflow lead mutation metadata", () => {
     expect(result.applied).toBe(1);
     expect(result.failed).toBe(0);
 
-    const lead = await runtime.ctx.db
+    const leadRow = await runtime.ctx.db
       .selectFrom("workflow_leads")
       .select(["updated_by", "status"])
-      .where("id", "=", "lead-503")
+      .where("id", "=", lead.leadId)
       .executeTakeFirstOrThrow();
-    expect(lead.updated_by).toBe(2);
-    expect(lead.status).toBe("DISPONIBLE");
+    expect(leadRow.updated_by).toBe(2);
+    expect(leadRow.status).toBe("DISPONIBLE");
   });
 });

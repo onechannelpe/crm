@@ -11,7 +11,7 @@ import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
 import { seedIfEmpty } from "~/lib/db/seed";
 
-import { createTestRepositories } from "../support/test-repositories";
+import { createTestRepositories } from "@tests/support/runtime/repos";
 
 describe("seed invariants", () => {
   const artifactDir = join(process.cwd(), ".vitest-db");

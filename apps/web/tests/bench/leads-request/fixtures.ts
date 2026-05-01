@@ -7,7 +7,7 @@ import type {
 import { Ok, type Result } from "~/server/shared/result";
 import type { SearchType } from "~/server/shared/workflow-types";
 
-import type { TestDbContext } from "../../support/test-db";
+import type { TestDbContext } from "@tests/support/runtime/db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 80;

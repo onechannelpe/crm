@@ -14,7 +14,7 @@ import {
   makeLeadUsageCommitsRepo,
   makeLeadUsageReservationsRepo,
   makeNullLeadPolicyRepos,
-} from "../support/capacity-fakes";
+} from "@tests/support/fakes/capacity";
 
 const USER_ID = 1;
 const BRANCH_ID = 1;

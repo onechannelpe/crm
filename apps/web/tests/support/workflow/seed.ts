@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 
-import type { TestRuntime } from "./runtime/create-test-runtime";
+import type { TestRuntime } from "../runtime/app";
 
 type OrganizationSeed = {
   key?: string;
@@ -35,6 +35,11 @@ type LeadSeed = {
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
+};
+
+type LeadScenarioSeed = {
+  organization: OrganizationSeed;
+  lead: Omit<LeadSeed, "organization" | "organizationId">;
 };
 
 type UserSeed = {
@@ -91,6 +96,18 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       updated_at: updatedAt,
     })
     .execute();
+}
+
+export async function seedLeadScenario(
+  runtime: TestRuntime,
+  input: LeadScenarioSeed,
+): Promise<{ organization: SeededOrganizationRef; leadId: string }> {
+  const organization = await seedOrganization(runtime, input.organization);
+  await seedLead(runtime, {
+    ...input.lead,
+    organization,
+  });
+  return { organization, leadId: input.lead.id };
 }
 
 function resolveLeadOrganizationId(input: LeadSeed): string {

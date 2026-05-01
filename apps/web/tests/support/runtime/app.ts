@@ -10,7 +10,7 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../test-db";
+} from "./db";
 
 interface TestLogger {
   info(message: string, meta?: unknown): void;

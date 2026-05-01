@@ -1,7 +1,7 @@
-import { encryptTotpSecret } from "../../../src/lib/auth/totp/secret-crypto";
-import { generateTotpSecret } from "../../../src/lib/auth/totp/totp";
-import type { BrowserDbRuntime } from "../db/browser-runtime";
-import type { BrowserIdentity } from "./browser-types";
+import { encryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
+import { generateTotpSecret } from "~/lib/auth/totp/totp";
+import type { BrowserDbRuntime } from "../runtime";
+import type { BrowserIdentity } from "./types";
 
 export async function ensureTotp(
   runtime: BrowserDbRuntime,

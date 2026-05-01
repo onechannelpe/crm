@@ -8,8 +8,8 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
-import { createTestRepositories } from "../support/test-repositories";
+} from "@tests/support/runtime/db";
+import { createTestRepositories } from "@tests/support/runtime/repos";
 
 describe("passkey onboarding flow", () => {
   let ctx: TestDbContext;

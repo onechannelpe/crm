@@ -7,12 +7,8 @@ import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/
 import {
   createTestRuntime,
   type TestRuntime,
-} from "../support/runtime/create-test-runtime";
-import {
-  seedImportJob,
-  seedLead,
-  seedOrganization,
-} from "../support/workflow-fixtures";
+} from "@tests/support/runtime/app";
+import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 
 describe("integration import workflow concurrency", () => {
   let runtime: TestRuntime;
@@ -27,33 +23,32 @@ describe("integration import workflow concurrency", () => {
   });
 
   it("applies import while export reads run concurrently and dispatches both outboxes", async () => {
-    const orgOne = await seedOrganization(runtime, {
+    const scenario = createWorkflowScenario(runtime);
+    const leadOne = await scenario.givenLead({
       key: "import-concurrency-one",
-      ruc: "20900000001",
-      name: "Org One",
-    });
-    const orgTwo = await seedOrganization(runtime, {
-      key: "import-concurrency-two",
-      ruc: "20900000002",
-      name: "Org Two",
-    });
-    await seedLead(runtime, {
-      id: "lead-901",
-      organization: orgOne,
-      executiveId: 1,
+      organization: {
+        key: "import-concurrency-one",
+        ruc: "20900000001",
+        name: "Org One",
+      },
+      executive: "execOne",
       stage: "PENDING_EXTERNAL_REVIEW",
       status: "DISPONIBLE",
       prioridad: "P1",
     });
-    await seedLead(runtime, {
-      id: "lead-902",
-      organization: orgTwo,
-      executiveId: 3,
+    const leadTwo = await scenario.givenLead({
+      key: "import-concurrency-two",
+      organization: {
+        key: "import-concurrency-two",
+        ruc: "20900000002",
+        name: "Org Two",
+      },
+      executive: "execTwo",
       stage: "PENDING_EXTERNAL_REVIEW",
       status: "SIN RESULTADO",
       prioridad: "P1",
     });
-    await seedImportJob(runtime, { id: "job-5001" });
+    const job = await scenario.givenImportJob("5001");
 
     const recordExportQuery = runtime.integrations.recordExportQuery;
     const concurrentExportReads = (async () => {
@@ -68,7 +63,7 @@ describe("integration import workflow concurrency", () => {
 
     const applyPromise = applyImportRows(
       {
-        jobId: "job-5001",
+        jobId: job.jobId,
         actorId: 5,
         validRows: [
           {
@@ -131,12 +126,12 @@ describe("integration import workflow concurrency", () => {
       {
         user_id: 1,
         event_type: "lead.needs_executive_input",
-        dedupe_key: "lead_nei_lead-901",
+        dedupe_key: `lead_nei_${leadOne.leadId}`,
       },
       {
         user_id: 4,
         event_type: "lead.ready_for_quotation",
-        dedupe_key: "lead_rfq_lead-902",
+        dedupe_key: `lead_rfq_${leadTwo.leadId}`,
       },
     ]);
 

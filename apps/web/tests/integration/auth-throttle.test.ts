@@ -12,7 +12,7 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 
 describe("auth throttle", () => {
   let ctx: TestDbContext;

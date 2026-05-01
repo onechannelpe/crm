@@ -15,7 +15,7 @@ import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos
 import { createLeadUserScopeRepository } from "~/server/workflow/infrastructure/repos/lead-user-scope-repo";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
-import type { TestRuntime } from "./runtime/create-test-runtime";
+import type { TestRuntime } from "../runtime/app";
 
 const NO_OP_NOTIFICATIONS: WorkflowNotificationCenter = {
   notifyUsers: async () => {},

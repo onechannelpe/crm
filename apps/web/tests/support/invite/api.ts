@@ -1,7 +1,7 @@
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
 
-import type { TestDbContext } from "./test-db";
+import type { TestDbContext } from "../runtime/db";
 
 export function createInviteTestKit(
   ctx: TestDbContext,

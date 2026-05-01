@@ -10,7 +10,7 @@ import {
   makeSearchCapacityGrantsRepo,
   makeSearchUsageCommitsRepo,
   makeSearchUsageReservationsRepo,
-} from "../support/capacity-fakes";
+} from "@tests/support/fakes/capacity";
 
 const USER_ID = 1;
 

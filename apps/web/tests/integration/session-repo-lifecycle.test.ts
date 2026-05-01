@@ -4,7 +4,7 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 
 describe("session repository lifecycle", () => {
   let ctx: TestDbContext;

@@ -13,14 +13,14 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 import {
   enableIdentityPasskey,
   enableIdentityTotp,
   getSeededIdentity,
   setIdentityOnboarding,
   setIdentityPassword,
-} from "../support/test-identities";
+} from "@tests/support/identities/api";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 

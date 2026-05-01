@@ -10,7 +10,7 @@ import {
 import {
   createTestRuntime,
   type TestRuntime,
-} from "../support/runtime/create-test-runtime";
+} from "@tests/support/runtime/app";
 
 describe("session manager validation", () => {
   let runtime: TestRuntime;

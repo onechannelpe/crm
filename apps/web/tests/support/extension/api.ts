@@ -1,7 +1,7 @@
 import { createExtensionService } from "~/server/extension/service";
 
-import type { TestDbContext } from "./test-db";
-import { createTestRepositories } from "./test-repositories";
+import type { TestDbContext } from "../runtime/db";
+import { createTestRepositories } from "../runtime/repos";
 
 export function createTransactionRunner(ctx: TestDbContext) {
   return <T>(

@@ -1,6 +1,6 @@
 import { PasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 
-import type { TestDbContext } from "./test-db";
+import type { TestDbContext } from "../runtime/db";
 
 type WebauthnOverrides = {
   verifyRegistration?: (

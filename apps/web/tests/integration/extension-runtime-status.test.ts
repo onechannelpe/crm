@@ -8,12 +8,12 @@ import {
   createContactWithoutPhone,
   createServiceSession,
   createTestExtensionService,
-} from "../support/extension-test-kit";
+} from "@tests/support/extension/api";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 
 describe("extension runtime status invariants", () => {
   let ctx: TestDbContext;

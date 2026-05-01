@@ -7,8 +7,8 @@ import {
   getSeededIdentity,
   type SeededIdentityName,
   type TestIdentity,
-} from "./identities/seeded-identities";
-import type { TestDbContext } from "./test-db";
+} from "../identities/catalog";
+import type { TestDbContext } from "../runtime/db";
 
 export { getSeededIdentity };
 export type { SeededIdentityName, TestIdentity };

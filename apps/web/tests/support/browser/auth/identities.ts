@@ -1,11 +1,11 @@
-import { hashPassword } from "../../../src/lib/auth/password/password";
-import type { BrowserDbRuntime } from "../db/browser-runtime";
+import { hashPassword } from "~/lib/auth/password/password";
+import type { BrowserDbRuntime } from "../runtime";
 import {
   BROWSER_TEST_PASSWORD,
   getSeededBrowserIdentityDefinition,
   type SeededBrowserIdentityName,
-} from "../identities/seeded-identities";
-import type { BrowserIdentity, BrowserUserOptions } from "./browser-types";
+} from "../../identities/catalog";
+import type { BrowserIdentity, BrowserUserOptions } from "./types";
 
 let generatedUserCount = 0;
 

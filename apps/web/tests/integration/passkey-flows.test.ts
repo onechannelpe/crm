@@ -15,12 +15,12 @@ import {
   createRegistrationChallenge,
   createWebauthnProvider,
   invalidRegistrationProvider,
-} from "../support/passkey-test-kit";
+} from "@tests/support/passkey/api";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
-} from "../support/test-db";
+} from "@tests/support/runtime/db";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
