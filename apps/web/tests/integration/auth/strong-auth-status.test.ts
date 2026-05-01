@@ -1,33 +1,23 @@
-import {
-  enableIdentityPasskey,
-  enableIdentityTotp,
-  getSeededIdentity,
-} from "@tests/support/identities/api";
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
+import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 
 describe("strong auth status", () => {
-  let ctx: TestDbContext;
-  const identity = getSeededIdentity("superuser");
+  const scenario = createAuthScenario("strong-auth-status");
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("strong-auth-status");
+    await scenario.setup();
   });
 
   afterEach(async () => {
-    await cleanupTestDb(ctx);
+    await scenario.teardown();
   });
 
   it("derives verified strong auth from a configured passkey", async () => {
-    await enableIdentityPasskey(ctx, identity, "pk-status-user-5");
+    await scenario.enablePasskey("superuser", "pk-status-user-5");
 
-    const status = await getStrongAuthStatus(identity.userId, ctx.repos);
+    const status = await getStrongAuthStatus(scenario.identity("superuser").userId, scenario.ctx.repos);
 
     expect(status.hasPasskey).toBe(true);
     expect(status.passkeyCount).toBe(1);
@@ -36,9 +26,9 @@ describe("strong auth status", () => {
   });
 
   it("derives verified strong auth from an enabled totp factor", async () => {
-    await enableIdentityTotp(ctx, identity);
+    await scenario.enableTotp("superuser");
 
-    const status = await getStrongAuthStatus(identity.userId, ctx.repos);
+    const status = await getStrongAuthStatus(scenario.identity("superuser").userId, scenario.ctx.repos);
 
     expect(status.hasTotp).toBe(true);
     expect(status.hasPasskey).toBe(false);
@@ -46,10 +36,11 @@ describe("strong auth status", () => {
   });
 
   it("does not lose strong factors when a user role is downgraded", async () => {
-    await enableIdentityTotp(ctx, identity);
-    await enableIdentityPasskey(ctx, identity, "pk-status-downgrade-user-5");
+    const identity = scenario.identity("superuser");
+    await scenario.enableTotp("superuser");
+    await scenario.enablePasskey("superuser", "pk-status-downgrade-user-5");
 
-    await ctx.repos.users.updateInviteProvisioning(identity.userId, {
+    await scenario.ctx.repos.users.updateInviteProvisioning(identity.userId, {
       team_id: null,
       names: "Super",
       first_surname: "User",
@@ -58,7 +49,7 @@ describe("strong auth status", () => {
       is_active: 1,
     });
 
-    const status = await getStrongAuthStatus(identity.userId, ctx.repos);
+    const status = await getStrongAuthStatus(identity.userId, scenario.ctx.repos);
 
     expect(status.hasTotp).toBe(true);
     expect(status.hasPasskey).toBe(true);
