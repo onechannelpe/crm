@@ -17,17 +17,15 @@ import {
 
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";
-import { ALL_TAB_ITEMS } from "./constants";
 import { createRecordPageController } from "./controller";
 import { Footer } from "./footer";
 import { useLeadRecordPageState } from "./state";
-import { TAB_COMPONENTS } from "./tabs/tab-components";
+import { VIEW_RECORD_TABS_BY_ID, VIEW_RECORD_TABS } from "./tabs/tab-registry";
 
 import styles from "./page.module.css";
 
 const POLL_INTERVAL_MS = 3_500;
 const POLL_TIMEOUT_MS = 60_000;
-
 export function RecordPage() {
   const navigate = useNavigate();
   const addToFavorites = useAction(addLeadToFavoritesMutation);
@@ -57,7 +55,7 @@ export function RecordPage() {
       <PanelList>
         <div class={styles.page}>
           <TabStrip
-            tabs={ALL_TAB_ITEMS}
+            tabs={VIEW_RECORD_TABS}
             activeTab={activeTab()}
             onTabSelect={setActiveTab}
           />
@@ -70,7 +68,7 @@ export function RecordPage() {
           >
             {(detail) => (
               <Dynamic
-                component={TAB_COMPONENTS[activeTab()]}
+                component={VIEW_RECORD_TABS_BY_ID[activeTab()].component}
                 mode="view"
                 data={detail()}
               />

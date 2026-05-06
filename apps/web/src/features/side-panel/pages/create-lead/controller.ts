@@ -10,7 +10,7 @@ import { shortName } from "~/lib/users/display-name";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";
-import type { LeadRecordTabId } from "../record-page/model";
+import type { CreateLeadTabId } from "../record-page/model";
 
 type BootstrapPreview = {
   razonSocial: string | null;
@@ -28,7 +28,7 @@ type CreateLeadControllerInput = {
   latestBootstrapPreview: Accessor<BootstrapPreview | null>;
   createLead: (input: { ruc: string }) => Promise<CreateLeadResult>;
   onLeadCreated: (input: { leadId: string; ruc: string }) => void;
-  setActiveTab: (tab: LeadRecordTabId) => void;
+  setActiveTab: (tab: CreateLeadTabId) => void;
 };
 
 export function createCreateLeadController(input: CreateLeadControllerInput) {
