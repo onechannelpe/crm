@@ -3,8 +3,8 @@ import {
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
+import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";

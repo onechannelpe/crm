@@ -1,5 +1,5 @@
-import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
+import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 type NotificationBootstrapRepos = {
@@ -28,10 +28,11 @@ async function registerChannelAddresses(params: {
     updated_at: now,
   });
 
-  const existingWhatsApp = await repos.userChannelAddresses.findByChannelAndAddress(
-    "whatsapp",
-    phoneE164,
-  );
+  const existingWhatsApp =
+    await repos.userChannelAddresses.findByChannelAndAddress(
+      "whatsapp",
+      phoneE164,
+    );
   if (existingWhatsApp && existingWhatsApp.user_id !== userId) {
     return Err({
       code: "address_already_claimed",
