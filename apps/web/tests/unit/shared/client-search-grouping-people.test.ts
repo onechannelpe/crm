@@ -1,8 +1,7 @@
+import { makeSearchRow } from "@tests/support/shared/search-row";
 import { describe, expect, it } from "vitest";
 
 import { groupPeopleByDni } from "~/features/search/model/grouping";
-
-import { makeSearchRow } from "@tests/support/shared/search-row";
 
 describe("client search grouping people", () => {
   it("groups people by dni and keeps first name as displayName", () => {
@@ -49,7 +48,9 @@ describe("client search grouping people", () => {
   });
 
   it("skips rows with blank dni", () => {
-    const groups = groupPeopleByDni([makeSearchRow({ dni: "", name: "GHOST" })]);
+    const groups = groupPeopleByDni([
+      makeSearchRow({ dni: "", name: "GHOST" }),
+    ]);
     expect(groups).toHaveLength(0);
   });
 

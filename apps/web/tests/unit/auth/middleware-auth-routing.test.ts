@@ -1,9 +1,11 @@
+import { createRequestContext } from "@tests/support/auth/request-context";
+import { makeAuthSession } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
-import { enforceAuthRequest, isPublicPath } from "~/lib/auth/access/request-auth";
-
-import { makeAuthSession } from "@tests/support/unit/factories";
-import { createRequestContext } from "@tests/support/auth/request-context";
+import {
+  enforceAuthRequest,
+  isPublicPath,
+} from "~/lib/auth/access/request-auth";
 
 describe("auth middleware routing", () => {
   it("redirects to /login when private route has no session", async () => {
@@ -25,9 +27,9 @@ describe("auth middleware routing", () => {
     const decision = await enforceAuthRequest(event);
 
     expect(decision.kind).toBe("allow");
-    await expect(event.locals.requestContext?.getAuthSession()).resolves.toEqual(
-      session,
-    );
+    await expect(
+      event.locals.requestContext?.getAuthSession(),
+    ).resolves.toEqual(session);
   });
 
   it("redirects to onboarding when session is not onboarded", async () => {
@@ -49,7 +51,9 @@ describe("auth middleware routing", () => {
       request: new Request("http://localhost:3000/onboarding"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(makeAuthSession({ role: "executive" })),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "executive" }),
+        ),
       },
     });
 
@@ -63,7 +67,9 @@ describe("auth middleware routing", () => {
       request: new Request("http://localhost:3000/audit"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(makeAuthSession({ role: "executive" })),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "executive" }),
+        ),
       },
     });
 
@@ -77,7 +83,9 @@ describe("auth middleware routing", () => {
       request: new Request("http://localhost:3000/"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(makeAuthSession({ role: "logistics" })),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "logistics" }),
+        ),
       },
     });
 
@@ -91,7 +99,9 @@ describe("auth middleware routing", () => {
       request: new Request("http://localhost:3000/settings/profile"),
       locals: {
         nonce: "nonce",
-        requestContext: createRequestContext(makeAuthSession({ role: "admin" })),
+        requestContext: createRequestContext(
+          makeAuthSession({ role: "admin" }),
+        ),
       },
     });
 

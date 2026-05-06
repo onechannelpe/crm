@@ -1,16 +1,15 @@
-import { describe, expect, it } from "vitest";
-
-import {
-  approveCapacityRequest,
-  rejectCapacityRequest,
-} from "~/server/capacity/application/commands";
-
 import {
   REQUEST_ID,
   TARGET_USER_ID,
   makeApprovalHarness,
   makeContext,
 } from "@tests/support/capacity/approval-harness";
+import { describe, expect, it } from "vitest";
+
+import {
+  approveCapacityRequest,
+  rejectCapacityRequest,
+} from "~/server/capacity/application/commands";
 
 describe("capacity approval failures", () => {
   it("returns request_not_found when request does not exist", async () => {
@@ -68,10 +67,14 @@ describe("capacity approval failures", () => {
       targetUser: { role: "executive", branchId: 2, teamId: null },
     });
 
-    const result = await approveCapacityRequest(makeContext("admin"), harness.port, {
-      requestId: REQUEST_ID,
-      note: null,
-    });
+    const result = await approveCapacityRequest(
+      makeContext("admin"),
+      harness.port,
+      {
+        requestId: REQUEST_ID,
+        note: null,
+      },
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");

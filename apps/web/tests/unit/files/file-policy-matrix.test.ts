@@ -1,9 +1,12 @@
+import {
+  makeActor,
+  makeArtifact,
+  type RolePolicyCase,
+} from "@tests/support/files/policy-fixtures";
 import { describe, expect, it } from "vitest";
 
 import { checkArtifactPolicy } from "~/server/files/policy";
 import type { ArtifactType } from "~/server/files/types";
-
-import { makeActor, makeArtifact, type RolePolicyCase } from "@tests/support/files/policy-fixtures";
 
 function runRoleMatrix(input: {
   action: "artifact.request" | "artifact.audit.read";
@@ -68,29 +71,53 @@ describe("checkArtifactPolicy role matrix", () => {
   });
 
   describe("artifact.upload", () => {
-    const uploadCases: Array<{ name: string; artifact: ReturnType<typeof makeArtifact>; actor: ReturnType<typeof makeActor>; ok: boolean; code?: string }> = [
+    const uploadCases: Array<{
+      name: string;
+      artifact: ReturnType<typeof makeArtifact>;
+      actor: ReturnType<typeof makeActor>;
+      ok: boolean;
+      code?: string;
+    }> = [
       {
         name: "allows back_office owner on integration_import requested",
-        artifact: makeArtifact({ artifactType: "integration_import", direction: "upload", status: "requested", requestedByUserId: 10 }),
+        artifact: makeArtifact({
+          artifactType: "integration_import",
+          direction: "upload",
+          status: "requested",
+          requestedByUserId: 10,
+        }),
         actor: makeActor({ role: "back_office", userId: 10 }),
         ok: true,
       },
       {
         name: "allows executive owner on sale_proof requested",
-        artifact: makeArtifact({ artifactType: "sale_proof", direction: "upload", status: "requested", requestedByUserId: 10 }),
+        artifact: makeArtifact({
+          artifactType: "sale_proof",
+          direction: "upload",
+          status: "requested",
+          requestedByUserId: 10,
+        }),
         actor: makeActor({ role: "executive", userId: 10 }),
         ok: true,
       },
       {
         name: "denies download-only types",
-        artifact: makeArtifact({ artifactType: "records_export", direction: "download", status: "requested" }),
+        artifact: makeArtifact({
+          artifactType: "records_export",
+          direction: "download",
+          status: "requested",
+        }),
         actor: makeActor({ role: "back_office" }),
         ok: false,
         code: "artifact_not_uploadable",
       },
       {
         name: "denies wrong status",
-        artifact: makeArtifact({ artifactType: "integration_import", direction: "upload", status: "ready" }),
+        artifact: makeArtifact({
+          artifactType: "integration_import",
+          direction: "upload",
+          status: "ready",
+        }),
         actor: makeActor({ role: "back_office" }),
         ok: false,
         code: "artifact_upload_wrong_status",

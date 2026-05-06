@@ -1,3 +1,4 @@
+import { createRequestContext } from "@tests/support/auth/request-context";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
@@ -6,8 +7,6 @@ import {
   getTargetOrigin,
   isPublicPath,
 } from "~/lib/auth/access/request-auth";
-
-import { createRequestContext } from "@tests/support/auth/request-context";
 
 describe("auth middleware csrf policy", () => {
   afterEach(() => {

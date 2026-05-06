@@ -1,8 +1,7 @@
+import { makeActor, makeArtifact } from "@tests/support/files/policy-fixtures";
 import { describe, expect, it } from "vitest";
 
 import { checkArtifactPolicy } from "~/server/files/policy";
-
-import { makeActor, makeArtifact } from "@tests/support/files/policy-fixtures";
 
 describe("checkArtifactPolicy artifact.revoke", () => {
   it("allows revoke for admin on non-terminal artifact", () => {

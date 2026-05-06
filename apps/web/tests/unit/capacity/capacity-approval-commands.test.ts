@@ -1,10 +1,3 @@
-import { describe, expect, it } from "vitest";
-
-import {
-  approveCapacityRequest,
-  rejectCapacityRequest,
-} from "~/server/capacity/application/commands";
-
 import {
   ACTOR_USER_ID,
   REQUEST_ID,
@@ -12,6 +5,12 @@ import {
   makeApprovalHarness,
   makeContext,
 } from "@tests/support/capacity/approval-harness";
+import { describe, expect, it } from "vitest";
+
+import {
+  approveCapacityRequest,
+  rejectCapacityRequest,
+} from "~/server/capacity/application/commands";
 
 describe("capacity approval commands", () => {
   it("approves a pending search request and grants search capacity", async () => {
