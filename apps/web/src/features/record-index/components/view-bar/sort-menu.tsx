@@ -117,7 +117,7 @@ export function SortMenu(props: SortMenuProps) {
             }}
           />
           <div class={sharedStyles.menuGroupLabel}>Direccion</div>
-          <div class={sharedStyles.menuListbox} role="listbox">
+          <div class={sharedStyles.menuListbox} role="menu">
             <button
               type="button"
               class={sharedStyles.menuItem}
@@ -154,7 +154,7 @@ export function SortMenu(props: SortMenuProps) {
           />
           <div class={sharedStyles.menuScrollable}>
             <div class={sharedStyles.menuGroupLabel}>Campos ordenables</div>
-            <div class={sharedStyles.menuListbox} role="listbox">
+            <div class={sharedStyles.menuListbox} role="menu">
               <For each={filteredSortFields()}>
                 {(fieldOption) => {
                   const FieldIcon = fieldOption.icon;
