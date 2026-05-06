@@ -89,6 +89,7 @@ export function OptionsDropdown(props: { onClose: () => void }) {
         <div class={sharedStyles.menuListbox} role="menu">
           <button
             type="button"
+            role="menuitem"
             class={sharedStyles.menuItem}
             onClick={() => setContentId("fields")}
           >
@@ -101,6 +102,7 @@ export function OptionsDropdown(props: { onClose: () => void }) {
           </button>
           <button
             type="button"
+            role="menuitem"
             class={sharedStyles.menuItem}
             onClick={() => {
               void copyViewLink();
@@ -122,6 +124,7 @@ export function OptionsDropdown(props: { onClose: () => void }) {
                 {(action) => (
                   <button
                     type="button"
+                    role="menuitem"
                     class={sharedStyles.menuItem}
                     onClick={() => {
                       props.onClose();

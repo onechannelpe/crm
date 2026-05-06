@@ -244,6 +244,7 @@ export function FilterMenu(props: FilterMenuProps) {
                     return (
                       <button
                         type="button"
+                        role="menuitem"
                         class={sharedStyles.menuItem}
                         onClick={() => setFilterField(fieldOption.id)}
                       >
@@ -265,6 +266,7 @@ export function FilterMenu(props: FilterMenuProps) {
               <div class={sharedStyles.menuListbox} role="menu">
                 <button
                   type="button"
+                  role="menuitem"
                   class={sharedStyles.menuItem}
                   onClick={() => {
                     model.filtering.setFilterValue("all");
@@ -277,7 +279,11 @@ export function FilterMenu(props: FilterMenuProps) {
                   </span>
                   <span>Quitar filtros</span>
                 </button>
-                <button type="button" class={sharedStyles.menuItem}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  class={sharedStyles.menuItem}
+                >
                   <span class={sharedStyles.menuItemIcon}>
                     <Search size={16} />
                   </span>
