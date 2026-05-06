@@ -1,4 +1,4 @@
-import { expectOk } from "@tests/support/_core/assertions";
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -85,7 +85,7 @@ describe("workflow lead mutation metadata", () => {
       actor: scenario.actor.by("execOne"),
       leadId: lead.id,
     });
-    expect(previousAccess.ok).toBe(false);
+    expectErr(previousAccess);
 
     const newAccess = await runtime.workflow.queryApi.getLeadDetail({
       actor: scenario.actor.fromUser({
@@ -95,7 +95,7 @@ describe("workflow lead mutation metadata", () => {
       }),
       leadId: lead.id,
     });
-    expect(newAccess.ok).toBe(true);
+    expectOk(newAccess);
   });
 
   it("updates lead.updatedBy for import mutations", async () => {

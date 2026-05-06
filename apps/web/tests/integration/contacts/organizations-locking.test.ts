@@ -46,12 +46,13 @@ describe("organization branch locking", () => {
 
   it("lockToBranch persists lock metadata", async () => {
     const { lima } = ctx.fixtures.organizations;
+    const contacts = createContactsTestKit(ctx);
 
     await ctx.repos.organizations.lockToBranch(lima.id, 2, 3);
-    const org = await ctx.repos.organizations.findById(lima.id);
+    const lock = await contacts.lockSnapshot(lima.id);
 
-    expect(org?.locked_branch_id).toBe(2);
-    expect(org?.locked_by_user_id).toBe(3);
-    expect((org?.locked_at ?? 0) > 0).toBe(true);
+    expect(lock.lockedBranchId).toBe(2);
+    expect(lock.lockedByUserId).toBe(3);
+    expect((lock.lockedAt ?? 0) > 0).toBe(true);
   });
 });

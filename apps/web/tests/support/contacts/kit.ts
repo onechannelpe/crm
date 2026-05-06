@@ -35,5 +35,33 @@ export function createContactsTestKit(ctx: TestDbContext) {
       );
       return rows.map((row) => row.id);
     },
+
+    async activeContactIdsForUser(userId: number): Promise<number[]> {
+      const rows = await ctx.repos.contactAssignments.findActiveByUser(userId);
+      return rows.map((row) => row.contact_id);
+    },
+
+    async hasActiveAssignment(
+      userId: number,
+      contactId: number,
+    ): Promise<boolean> {
+      return ctx.repos.contactAssignments.hasActiveForContact(
+        userId,
+        contactId,
+      );
+    },
+
+    async lockSnapshot(organizationId: string): Promise<{
+      lockedBranchId: number | null;
+      lockedByUserId: number | null;
+      lockedAt: number | null;
+    }> {
+      const org = await ctx.repos.organizations.findById(organizationId);
+      return {
+        lockedBranchId: org?.locked_branch_id ?? null,
+        lockedByUserId: org?.locked_by_user_id ?? null,
+        lockedAt: org?.locked_at ?? null,
+      };
+    },
   };
 }

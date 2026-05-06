@@ -17,7 +17,7 @@ describe("lead assignment repository", () => {
     await cleanupTestDb(ctx);
   });
 
-  it("returns only active and non expired assignments", async () => {
+  it("returns only active and non-expired assignments", async () => {
     const now = Date.now();
     const contacts = createContactsTestKit(ctx);
     await contacts.seedAssignments([
@@ -44,9 +44,8 @@ describe("lead assignment repository", () => {
       },
     ]);
 
-    const active = await ctx.repos.contactAssignments.findActiveByUser(1);
-    expect(active).toHaveLength(1);
-    expect(active[0].contact_id).toBe(1);
+    const activeContactIds = await contacts.activeContactIdsForUser(1);
+    expect(activeContactIds).toEqual([1]);
   });
 
   it("hasActiveForContact respects expiry and ownership", async () => {
@@ -69,14 +68,8 @@ describe("lead assignment repository", () => {
       },
     ]);
 
-    expect(await ctx.repos.contactAssignments.hasActiveForContact(1, 1)).toBe(
-      true,
-    );
-    expect(await ctx.repos.contactAssignments.hasActiveForContact(1, 2)).toBe(
-      false,
-    );
-    expect(await ctx.repos.contactAssignments.hasActiveForContact(3, 2)).toBe(
-      true,
-    );
+    expect(await contacts.hasActiveAssignment(1, 1)).toBe(true);
+    expect(await contacts.hasActiveAssignment(1, 2)).toBe(false);
+    expect(await contacts.hasActiveAssignment(3, 2)).toBe(true);
   });
 });

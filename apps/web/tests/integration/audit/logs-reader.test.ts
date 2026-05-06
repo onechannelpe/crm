@@ -12,7 +12,7 @@ describe("audit logs reader repository", () => {
     }
   });
 
-  it("filters recent entries and high risk actions", async () => {
+  it("filters recent entries and high-risk actions", async () => {
     ctx = await createIsolatedTestDb("audit-logs-reader");
     const baseTime = 1_700_000_000_000;
 

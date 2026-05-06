@@ -1,8 +1,6 @@
-import type { ActionObservationSeed } from "@tests/support/audit/builders";
+import { createAuditTestKit } from "@tests/support/audit/kit";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
-
-import { createObservabilityService } from "~/server/observability/service";
 
 describe("action observability repository", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
@@ -14,40 +12,12 @@ describe("action observability repository", () => {
     }
   });
 
-  async function recordAction(seed: ActionObservationSeed): Promise<void> {
-    if (!ctx) {
-      throw new Error("ctx must be initialized");
-    }
-    const service = createObservabilityService({
-      actionObservations: ctx.repos.actionObservations,
-      authFunnelEvents: ctx.repos.authFunnelEvents,
-    });
-    await service.recordAction({
-      traceId: seed.traceId,
-      requestId: seed.requestId,
-      routePath: seed.routePath,
-      httpMethod: "POST",
-      actionName: seed.actionName,
-      actorUserId: seed.actorUserId,
-      actorRole: seed.actorRole,
-      status: seed.status,
-      durationMs: seed.durationMs,
-      errorCode: seed.errorCode ?? null,
-      errorMessage: seed.errorMessage ?? null,
-      input: seed.input ?? {},
-      createdAt: seed.createdAt,
-    });
-  }
-
   it("stores action observations and summarizes outcomes", async () => {
     ctx = await createIsolatedTestDb("observability-repo");
-    const service = createObservabilityService({
-      actionObservations: ctx.repos.actionObservations,
-      authFunnelEvents: ctx.repos.authFunnelEvents,
-    });
+    const audit = createAuditTestKit(ctx);
     const baseTime = 1_700_000_000_000;
 
-    await recordAction({
+    await audit.recordAction({
       traceId: "trace-a",
       requestId: "req-a",
       routePath: "/records",
@@ -60,7 +30,7 @@ describe("action observability repository", () => {
       createdAt: baseTime,
     });
 
-    await recordAction({
+    await audit.recordAction({
       traceId: "trace-b",
       requestId: "req-b",
       routePath: "/records",
@@ -74,7 +44,7 @@ describe("action observability repository", () => {
       createdAt: baseTime + 1,
     });
 
-    const recent = await service.listRecent({
+    const recent = await audit.observability.listRecent({
       fromInclusive: baseTime - 1000,
       toInclusive: baseTime + 1000,
       limit: 10,
@@ -82,7 +52,7 @@ describe("action observability repository", () => {
     expect(recent).toHaveLength(2);
     expect(recent[0]?.status).toBe("error");
 
-    const summary = await service.summarizeByAction({
+    const summary = await audit.observability.summarizeByAction({
       fromInclusive: baseTime - 1000,
       toInclusive: baseTime + 1000,
     });
@@ -94,13 +64,10 @@ describe("action observability repository", () => {
 
   it("uses fixed validation error code and can delete old records", async () => {
     ctx = await createIsolatedTestDb("observability-retention");
-    const service = createObservabilityService({
-      actionObservations: ctx.repos.actionObservations,
-      authFunnelEvents: ctx.repos.authFunnelEvents,
-    });
+    const audit = createAuditTestKit(ctx);
     const baseTime = 1_700_000_000_000;
 
-    await recordAction({
+    await audit.recordAction({
       traceId: "trace-old",
       requestId: "req-old",
       routePath: "/team/invite",
@@ -115,7 +82,7 @@ describe("action observability repository", () => {
       createdAt: baseTime - 1_000,
     });
 
-    await recordAction({
+    await audit.recordAction({
       traceId: "trace-new",
       requestId: "req-new",
       routePath: "/team/invite",
@@ -130,7 +97,7 @@ describe("action observability repository", () => {
       createdAt: baseTime + 1_000,
     });
 
-    const beforeCleanup = await service.listRecent({
+    const beforeCleanup = await audit.observability.listRecent({
       fromInclusive: baseTime - 10_000,
       toInclusive: baseTime + 10_000,
       limit: 10,
@@ -143,7 +110,7 @@ describe("action observability repository", () => {
       await ctx.repos.actionObservations.deleteCreatedBefore(baseTime);
     expect(deleted).toBe(1);
 
-    const afterCleanup = await service.listRecent({
+    const afterCleanup = await audit.observability.listRecent({
       fromInclusive: baseTime - 10_000,
       toInclusive: baseTime + 10_000,
       limit: 10,
@@ -154,13 +121,10 @@ describe("action observability repository", () => {
 
   it("applies status and action filters consistently to summary", async () => {
     ctx = await createIsolatedTestDb("observability-summary-filters");
-    const service = createObservabilityService({
-      actionObservations: ctx.repos.actionObservations,
-      authFunnelEvents: ctx.repos.authFunnelEvents,
-    });
+    const audit = createAuditTestKit(ctx);
     const baseTime = 1_700_000_000_000;
 
-    await recordAction({
+    await audit.recordAction({
       traceId: "trace-1",
       requestId: "req-1",
       routePath: "/team/invite",
@@ -173,7 +137,7 @@ describe("action observability repository", () => {
       errorMessage: "invalid email",
       createdAt: baseTime,
     });
-    await recordAction({
+    await audit.recordAction({
       traceId: "trace-2",
       requestId: "req-2",
       routePath: "/team/invite",
@@ -184,7 +148,7 @@ describe("action observability repository", () => {
       durationMs: 11,
       createdAt: baseTime + 1,
     });
-    await recordAction({
+    await audit.recordAction({
       traceId: "trace-3",
       requestId: "req-3",
       routePath: "/records",
@@ -198,7 +162,7 @@ describe("action observability repository", () => {
       createdAt: baseTime + 2,
     });
 
-    const filteredSummary = await service.summarizeByAction({
+    const filteredSummary = await audit.observability.summarizeByAction({
       fromInclusive: baseTime - 1000,
       toInclusive: baseTime + 1000,
       actionName: "team.invite.create",
