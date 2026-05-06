@@ -1,4 +1,4 @@
-import type { APIEvent } from "@solidjs/start/server";
+import { createApiEvent } from "@tests/support/unit/api-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -42,23 +42,6 @@ function invalidJsonRequest(url: string): Request {
     },
     body: "{",
   });
-}
-
-function createApiEvent(request: Request): APIEvent {
-  const event = {
-    request,
-    params: {},
-    response: {
-      headers: new Headers(),
-    },
-    locals: {},
-    nativeEvent: {},
-  };
-
-  // The route handlers under test only read `request`; the rest of the API
-  // event is a minimal test stub.
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
-  return event as unknown as APIEvent;
 }
 
 describe("extension api routes", () => {

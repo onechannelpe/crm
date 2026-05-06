@@ -6,6 +6,19 @@ import { Err, Ok } from "~/server/shared/result";
 import { getInviteManagement } from "~/server/team/application/invites";
 import type { InviteManagementQueryPort } from "~/server/team/application/ports";
 
+const HR_USER_ID = 7 as UserId;
+const HR_BRANCH_ID = 3 as BranchId;
+
+function makeHrContext() {
+  return makeAppContext({
+    actor: makeActor({
+      userId: HR_USER_ID,
+      role: "hr",
+      branchId: HR_BRANCH_ID,
+    }),
+  });
+}
+
 describe("getInviteManagement", () => {
   it("returns teams, pending invites, and assignable roles for the actor branch", async () => {
     const teamBranchCalls: number[] = [];
@@ -37,16 +50,7 @@ describe("getInviteManagement", () => {
       },
     } satisfies InviteManagementQueryPort;
 
-    const result = await getInviteManagement(
-      makeAppContext({
-        actor: makeActor({
-          userId: 7 as UserId,
-          role: "hr",
-          branchId: 3 as BranchId,
-        }),
-      }),
-      port,
-    );
+    const result = await getInviteManagement(makeHrContext(), port);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("Expected success");
@@ -82,16 +86,7 @@ describe("getInviteManagement", () => {
         }),
     } satisfies InviteManagementQueryPort;
 
-    const result = await getInviteManagement(
-      makeAppContext({
-        actor: makeActor({
-          userId: 7 as UserId,
-          role: "hr",
-          branchId: 3 as BranchId,
-        }),
-      }),
-      port,
-    );
+    const result = await getInviteManagement(makeHrContext(), port);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");

@@ -1,4 +1,4 @@
-import type { APIEvent } from "@solidjs/start/server";
+import { createApiEvent } from "@tests/support/unit/api-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Err, Ok } from "~/server/shared/result";
@@ -23,19 +23,6 @@ vi.mock("~/server/runtime", () => ({
 }));
 
 import { GET } from "~/routes/api/auth/google/callback";
-
-function createApiEvent(request: Request): APIEvent {
-  const event = {
-    request,
-    params: {},
-    response: { headers: new Headers() },
-    locals: {},
-    nativeEvent: {},
-  };
-
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
-  return event as unknown as APIEvent;
-}
 
 describe("GET /api/auth/google/callback", () => {
   beforeEach(() => {
