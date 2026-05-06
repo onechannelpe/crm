@@ -71,15 +71,11 @@ describe("checkArtifactPolicy role matrix", () => {
   });
 
   describe("artifact.upload", () => {
-    const uploadCases: Array<{
-      name: string;
+    const uploadAllowedCases: Array<{
       artifact: ReturnType<typeof makeArtifact>;
       actor: ReturnType<typeof makeActor>;
-      ok: boolean;
-      code?: string;
     }> = [
       {
-        name: "allows back_office owner on integration_import requested",
         artifact: makeArtifact({
           artifactType: "integration_import",
           direction: "upload",
@@ -87,10 +83,8 @@ describe("checkArtifactPolicy role matrix", () => {
           requestedByUserId: 10,
         }),
         actor: makeActor({ role: "back_office", userId: 10 }),
-        ok: true,
       },
       {
-        name: "allows executive owner on sale_proof requested",
         artifact: makeArtifact({
           artifactType: "sale_proof",
           direction: "upload",
@@ -98,47 +92,51 @@ describe("checkArtifactPolicy role matrix", () => {
           requestedByUserId: 10,
         }),
         actor: makeActor({ role: "executive", userId: 10 }),
-        ok: true,
       },
+    ];
+
+    const uploadDeniedCases: Array<{
+      artifact: ReturnType<typeof makeArtifact>;
+      actor: ReturnType<typeof makeActor>;
+      code: string;
+    }> = [
       {
-        name: "denies download-only types",
         artifact: makeArtifact({
           artifactType: "records_export",
           direction: "download",
           status: "requested",
         }),
         actor: makeActor({ role: "back_office" }),
-        ok: false,
         code: "artifact_not_uploadable",
       },
       {
-        name: "denies wrong status",
         artifact: makeArtifact({
           artifactType: "integration_import",
           direction: "upload",
           status: "ready",
         }),
         actor: makeActor({ role: "back_office" }),
-        ok: false,
         code: "artifact_upload_wrong_status",
       },
     ];
 
-    for (const testCase of uploadCases) {
-      it(testCase.name, () => {
-        const result = checkArtifactPolicy(
-          testCase.actor,
-          testCase.artifact,
-          "artifact.upload",
-        );
+    it.each(uploadAllowedCases)(
+      "allows valid upload case",
+      ({ actor, artifact }) => {
+        const result = checkArtifactPolicy(actor, artifact, "artifact.upload");
+        expect(result.ok).toBe(true);
+      },
+    );
 
-        expect(result.ok).toBe(testCase.ok);
-        if (!testCase.ok && testCase.code) {
-          if (result.ok) throw new Error("Expected failure");
-          expect(result.error.code).toBe(testCase.code);
-        }
-      });
-    }
+    it.each(uploadDeniedCases)(
+      "denies invalid upload case",
+      ({ actor, artifact, code }) => {
+        const result = checkArtifactPolicy(actor, artifact, "artifact.upload");
+        expect(result.ok).toBe(false);
+        if (result.ok) throw new Error("Expected failure");
+        expect(result.error.code).toBe(code);
+      },
+    );
   });
 
   describe("artifact.read", () => {

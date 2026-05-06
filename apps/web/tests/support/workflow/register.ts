@@ -44,7 +44,7 @@ export async function registerLead(input: {
             },
           }
         : {}),
-      ...(input.commandOverrides ?? {}),
+      ...input.commandOverrides,
     },
   );
 

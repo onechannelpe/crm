@@ -48,10 +48,10 @@ describe("passkey onboarding flow", () => {
           transactionRepos,
           {
             createWebauthnProvider: (repos) =>
-              createWebauthnProviderWithRegistration(async (userId) => {
+              createWebauthnProviderWithRegistration(async (enrolledUserId) => {
                 await repos.passkeys.create({
                   id: "passkey-1",
-                  user_id: userId,
+                  user_id: enrolledUserId,
                   public_key: Buffer.from("test-public-key").toString("base64"),
                   counter: 0,
                   transports: JSON.stringify(["internal"]),
