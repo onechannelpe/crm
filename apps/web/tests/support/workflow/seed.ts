@@ -63,7 +63,7 @@ export async function seedOrganization(
   const id = input.id ?? randomUUIDv7();
   const key = input.key?.trim();
   if (!key) {
-    throw new Error("missing_seed_organization_ruc");
+    throw new Error("missing_seed_organization_key");
   }
   const ruc = input.ruc ?? buildDefaultRuc(key);
   const name = input.name ?? `Org ${key}`;
