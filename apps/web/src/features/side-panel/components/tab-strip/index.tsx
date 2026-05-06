@@ -2,12 +2,12 @@ import { createResizeObserver } from "@solid-primitives/resize-observer";
 import {
   For,
   Show,
+  createEffect,
   createMemo,
   createSignal,
   onCleanup,
   onMount,
 } from "solid-js";
-import type { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import ChevronDown from "~/components/icons/chevron-down";
@@ -15,15 +15,12 @@ import {
   TabButton,
   TabMeasure,
 } from "~/features/side-panel/components/tab-button";
+import type { TabIconComponent } from "~/features/side-panel/components/tab-strip/types";
 
 import styles from "./styles.module.css";
+export type { TabIconComponent } from "./types";
 
 const TAB_GAP = 4;
-
-export type TabIconComponent = (props: {
-  size?: number;
-  class?: string;
-}) => JSX.Element;
 
 export type TabItem<TId extends string = string> = {
   id: TId;
@@ -74,11 +71,22 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
   });
 
   const hiddenTabs = createMemo(() => props.tabs.slice(visibleTabCount()));
+  const hasHiddenTabs = createMemo(() => hiddenTabs().length > 0);
+  const hiddenTabCount = createMemo(() => hiddenTabs().length);
+  const isActiveTabHidden = createMemo(() =>
+    hiddenTabs().some((tab) => tab.id === props.activeTab),
+  );
 
   createResizeObserver(containerRef, ({ width }) => setContainerWidth(width));
   createResizeObserver(moreButtonMeasureRef, ({ width }) =>
     setMoreButtonWidth(width),
   );
+
+  createEffect(() => {
+    if (!hasHiddenTabs() && isOverflowOpen()) {
+      setIsOverflowOpen(false);
+    }
+  });
 
   onMount(() => {
     const handleDocumentPointerDown = (event: PointerEvent) => {
@@ -108,8 +116,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
 
             onCleanup(() => setTabWidths(tab.id, undefined));
 
-            const Icon = tab.icon;
-            return <TabMeasure ref={setEl} LeftIcon={Icon} title={tab.label} />;
+            return <TabMeasure ref={setEl} icon={tab.icon} title={tab.label} />;
           }}
         </For>
         <div ref={setMoreButtonMeasureRef} class={styles.moreTab}>
@@ -125,9 +132,8 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
           {(tab) => {
             return (
               <TabButton
-                id={tab.id}
                 dataTestId={`tab-${tab.id}`}
-                LeftIcon={tab.icon}
+                icon={tab.icon}
                 title={tab.label}
                 active={props.activeTab === tab.id}
                 onClick={() => props.onTabSelect(tab.id)}
@@ -137,21 +143,19 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
         </For>
       </div>
 
-      <Show when={hiddenTabs().length > 0}>
+      <Show when={hasHiddenTabs()}>
         <div class={styles.moreTabWrap} ref={setOverflowWrapRef}>
           <button
             type="button"
             data-testid="tab-tab-more-button"
             classList={{
               [styles.moreTab]: true,
-              [styles.moreTabActive]: hiddenTabs().some(
-                (tab) => tab.id === props.activeTab,
-              ),
+              [styles.moreTabActive]: isActiveTabHidden(),
             }}
             onClick={() => setIsOverflowOpen((v) => !v)}
           >
             <span class={styles.moreTabContent}>
-              <span>+{hiddenTabs().length} más</span>
+              <span>+{hiddenTabCount()} más</span>
               <ChevronDown size={16} />
             </span>
           </button>

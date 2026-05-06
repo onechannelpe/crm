@@ -1,26 +1,17 @@
-import type { JSX } from "solid-js";
-
+import type { TabIconComponent } from "~/features/side-panel/components/tab-strip/types";
 import { cn } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
-type TabIconComponent = (props: {
-  size?: number;
-  class?: string;
-}) => JSX.Element;
-
 type TabButtonProps = {
-  id: string;
   title: string;
-  LeftIcon?: TabIconComponent;
+  icon?: TabIconComponent;
   active?: boolean;
   onClick?: () => void;
   dataTestId?: string;
 };
 
 export function TabButton(props: TabButtonProps) {
-  const Icon = props.LeftIcon;
-
   return (
     <button
       type="button"
@@ -28,29 +19,37 @@ export function TabButton(props: TabButtonProps) {
       class={cn(styles.tabButton, props.active && styles.tabButtonActive)}
       onClick={props.onClick}
     >
-      <span class={styles.tabHover}>
-        {Icon && <Icon size={16} />}
-        <span>{props.title}</span>
-      </span>
+      <TabButtonContent title={props.title} icon={props.icon} />
     </button>
   );
 }
 
 type TabMeasureProps = {
   title: string;
-  LeftIcon?: TabIconComponent;
+  icon?: TabIconComponent;
   ref?: (el: HTMLDivElement) => void;
 };
 
 export function TabMeasure(props: TabMeasureProps) {
-  const Icon = props.LeftIcon;
-
   return (
     <div ref={props.ref} class={styles.tabMeasure}>
-      <span class={styles.tabHover}>
-        {Icon && <Icon size={16} />}
-        <span>{props.title}</span>
-      </span>
+      <TabButtonContent title={props.title} icon={props.icon} />
     </div>
+  );
+}
+
+type TabButtonContentProps = {
+  title: string;
+  icon?: TabIconComponent;
+};
+
+function TabButtonContent(props: TabButtonContentProps) {
+  const Icon = props.icon;
+
+  return (
+    <span class={styles.tabHover}>
+      {Icon && <Icon size={16} />}
+      <span>{props.title}</span>
+    </span>
   );
 }

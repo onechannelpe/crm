@@ -56,7 +56,6 @@
   transition: color var(--motion-fast) ease;
 }
 
-.tabContent,
 .moreTabContent {
   border-radius: var(--radius-sm);
   display: flex;
@@ -67,12 +66,10 @@
   white-space: nowrap;
 }
 
-.tabContent:hover,
 .moreTabContent:hover {
   background: var(--tertiary);
 }
 
-.tabContent:active,
 .moreTabContent:active {
   background: var(--background-transparent-medium);
 }

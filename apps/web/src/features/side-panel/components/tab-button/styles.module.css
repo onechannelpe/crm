@@ -5,7 +5,6 @@
   color: var(--foreground-secondary);
   cursor: pointer;
   display: flex;
-  gap: var(--spacing-1);
   justify-content: center;
   position: relative;
   text-decoration: none;
@@ -48,13 +47,11 @@
   background: var(--background-transparent-medium);
 }
 
-.tabButton:focus-visible,
-.tabMeasure:focus-visible {
+.tabButton:focus-visible {
   outline: none;
 }
 
-.tabButton:focus-visible .tabHover,
-.tabMeasure:focus-visible .tabHover {
+.tabButton:focus-visible .tabHover {
   box-shadow: var(--focus-ring-shadow);
 }
 
@@ -62,7 +59,6 @@
   align-items: center;
   color: var(--foreground-secondary);
   display: flex;
-  gap: var(--spacing-1);
   justify-content: center;
   position: relative;
 }
