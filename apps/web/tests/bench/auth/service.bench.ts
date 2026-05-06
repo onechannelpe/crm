@@ -1,8 +1,3 @@
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
@@ -11,6 +6,7 @@ import { submitPasswordLogin } from "~/server/auth/application/commands/submit-p
 import { isErr } from "~/server/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
+import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import {
@@ -23,12 +19,12 @@ import {
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
 describe("auth login service benchmark", () => {
-  let ctx!: TestDbContext;
+  const db = createBenchDbFixture("bench-auth-login-service");
   let fixtures: LoginFixture[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-auth-login-service");
+    const ctx = await db.setup();
     fixtures = await seedAuthLoginFixtures(ctx);
 
     await ctx.db
@@ -49,7 +45,7 @@ describe("auth login service benchmark", () => {
   });
 
   afterAll(async () => {
-    await cleanupTestDb(ctx);
+    await db.teardown();
   });
 
   bench(
@@ -60,6 +56,7 @@ describe("auth login service benchmark", () => {
         cursor,
         "auth-login pool exhausted before iterations completed",
       );
+      const ctx = db.ctx();
 
       const result = await submitPasswordLogin(
         {

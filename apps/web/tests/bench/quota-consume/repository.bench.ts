@@ -1,23 +1,19 @@
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { currentMonthlyPeriod } from "~/server/shared/time";
 
+import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
 describe("search capacity grant repository benchmark", () => {
-  let ctx!: TestDbContext;
+  const db = createBenchDbFixture("bench-quota-consume-repository");
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-quota-consume-repository");
+    const ctx = await db.setup();
     userIds = await seedQuotaUsers(ctx);
 
     for (const userId of userIds) {
@@ -31,7 +27,7 @@ describe("search capacity grant repository benchmark", () => {
   });
 
   afterAll(async () => {
-    await cleanupTestDb(ctx);
+    await db.teardown();
   });
 
   bench(
@@ -42,6 +38,7 @@ describe("search capacity grant repository benchmark", () => {
         cursor,
         "quota-consume repository pool exhausted before iterations completed",
       );
+      const ctx = db.ctx();
 
       const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
       const grants = await ctx.repos.searchCapacityGrants.findByUserAndPeriod(
