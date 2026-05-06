@@ -4,7 +4,6 @@ import {
   makeLeadUsageReservationsRepo,
   makeNullLeadPolicyRepos,
 } from "@tests/support/fakes/capacity";
-import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
@@ -30,6 +29,7 @@ function makeCandidate(n: number): RecordCandidate {
 }
 
 function makeRepos(activeAssignments = 0) {
+  let nextContactId = 1;
   return {
     users: {
       findById: async () => ({ teamId: null, branchId: BRANCH_ID }),
@@ -54,7 +54,7 @@ function makeRepos(activeAssignments = 0) {
         _name: string,
         _phone: string,
       ): Promise<{ id: number; cooldown_until: number | null }> => ({
-        id: Math.floor(Math.random() * 10000),
+        id: nextContactId++,
         cooldown_until: null,
       }),
     },
@@ -88,7 +88,9 @@ describe("assignContacts", () => {
       },
     );
 
-    const value = expectOk(result);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected success");
+    const value = result.value;
     expect(value.requested).toBe(0);
     expect(value.assigned).toBe(0);
     expect(repos.leadUsageReservations.rows).toHaveLength(0);
@@ -105,7 +107,7 @@ describe("assignContacts", () => {
     }> => {
       contactCallCount++;
       // First contact is contactable, rest are on cooldown
-      const cooldown_until = contactCallCount === 1 ? null : Date.now() + 99999;
+      const cooldown_until = contactCallCount === 1 ? null : 1_700_000_099_999;
       return { id: contactCallCount, cooldown_until };
     };
 
@@ -127,7 +129,9 @@ describe("assignContacts", () => {
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
-    const value = expectOk(result);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected success");
+    const value = result.value;
     expect(value.assigned).toBeLessThan(value.requested);
 
     const reservations = repos.leadUsageReservations.rows;
@@ -159,7 +163,8 @@ describe("assignContacts", () => {
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
-    expectOk(result);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected success");
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations[0].status).toBe("committed");
     // No cancelled reservations
@@ -195,7 +200,9 @@ describe("assignContacts", () => {
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
-    const error = expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
+    const error = result.error;
     expect(error.details).toMatchObject({
       status: 503,
       request_id: "req-leads-1",

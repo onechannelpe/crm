@@ -1,5 +1,4 @@
 import { makeActor, makeAppContext } from "@tests/support/unit/factories";
-import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import type { BranchId, UserId } from "~/server/shared/ids";
@@ -49,7 +48,9 @@ describe("getInviteManagement", () => {
       port,
     );
 
-    const value = expectOk(result);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected success");
+    const value = result.value;
 
     expect(teamBranchCalls).toEqual([3]);
     expect(inviteBranchCalls).toEqual([3]);
@@ -92,7 +93,9 @@ describe("getInviteManagement", () => {
       port,
     );
 
-    const error = expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
+    const error = result.error;
     expect(error.code).toBe("invite_read_failed");
   });
 });

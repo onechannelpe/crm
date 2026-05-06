@@ -5,7 +5,6 @@ import {
   makeNotificationCenter,
   makeWorkflowLead,
 } from "@tests/support/fakes/workflow";
-import { expectErr } from "@tests/support/_core/assertions";
 import { describe, expect, it, vi } from "vitest";
 
 import { domainError } from "~/server/shared/domain-error";
@@ -55,7 +54,9 @@ describe("lead action policy", () => {
       lead: makeWorkflowLead({ executiveId: 1 }),
     });
 
-    const error = expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
+    const error = result.error;
     expect(error.kind).toBe("forbidden");
   });
 
@@ -70,7 +71,9 @@ describe("lead action policy", () => {
       negotiationRequestCount: MAX_NEGOTIATION_ROUNDS,
       artifactCount: 0,
     });
-    const maxRoundsError = expectErr(maxRounds);
+    expect(maxRounds.ok).toBe(false);
+    if (maxRounds.ok) throw new Error("Expected failure");
+    const maxRoundsError = maxRounds.error;
     expect(maxRoundsError.code).toBe("max_negotiation_rounds_reached");
 
     const maxFiles = requireLeadActionAccess({
@@ -81,7 +84,9 @@ describe("lead action policy", () => {
       negotiationRequestCount: 0,
       artifactCount: MAX_NEGOTIATION_FILES + 1,
     });
-    const maxFilesError = expectErr(maxFiles);
+    expect(maxFiles.ok).toBe(false);
+    if (maxFiles.ok) throw new Error("Expected failure");
+    const maxFilesError = maxFiles.error;
     expect(maxFilesError.code).toBe("max_negotiation_files_exceeded");
   });
 
@@ -114,7 +119,8 @@ describe("workflow action commands", () => {
       },
     );
 
-    expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
     expect(mutationUow.commit).not.toHaveBeenCalled();
   });
 
@@ -137,7 +143,8 @@ describe("workflow action commands", () => {
       },
     );
 
-    expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
     expect(
       negotiationRequests.findFileAssetIdForArtifact,
     ).not.toHaveBeenCalled();
@@ -168,7 +175,8 @@ describe("workflow action commands", () => {
       },
     );
 
-    expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
     expect(mutationUow.commit).toHaveBeenCalledOnce();
     expect(negotiationRequests.insert).not.toHaveBeenCalled();
     expect(negotiationRequests.insertFile).not.toHaveBeenCalled();

@@ -4,7 +4,6 @@ import {
   makeSearchUsageCommitsRepo,
   makeSearchUsageReservationsRepo,
 } from "@tests/support/fakes/capacity";
-import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import { runDirectSearch } from "~/server/search-workflow/run-search";
@@ -74,7 +73,8 @@ describe("runDirectSearch", () => {
       successEngine,
     );
 
-    expectOk(result);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected success");
     expect(repos.searchUsageReservations.rows).toHaveLength(1);
     expect(repos.searchUsageReservations.rows[0].status).toBe("committed");
     expect(repos.searchUsageCommits.rows).toHaveLength(1);
@@ -88,7 +88,9 @@ describe("runDirectSearch", () => {
       failEngine,
     );
 
-    const error = expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
+    const error = result.error;
     expect(error.details).toMatchObject({
       status: 503,
       request_id: "req-search-1",
@@ -109,7 +111,7 @@ describe("runDirectSearch", () => {
       id: "pre-existing",
       reservation_id: "pre-res",
       amount: 999999,
-      created_at: Date.now(),
+      created_at: 1_700_000_000_000,
     });
     repos.searchUsageReservations.rows.push({
       id: "pre-res",
@@ -117,8 +119,8 @@ describe("runDirectSearch", () => {
       amount: 999999,
       reason: "direct_search",
       status: "committed",
-      created_at: Date.now(),
-      updated_at: Date.now(),
+      created_at: 1_700_000_000_000,
+      updated_at: 1_700_000_000_000,
     });
 
     let engineCalled = false;
@@ -135,7 +137,9 @@ describe("runDirectSearch", () => {
       trackingEngine,
     );
 
-    const error = expectErr(result);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected failure");
+    const error = result.error;
     expect(error.code).toBe("search_exhausted");
     expect(engineCalled).toBe(false);
   });
