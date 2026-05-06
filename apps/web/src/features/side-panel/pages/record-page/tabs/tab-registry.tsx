@@ -3,7 +3,7 @@ import type { JSX } from "solid-js";
 import Checkbox from "~/components/icons/checkbox";
 import HomeTabler from "~/components/icons/home-tabler";
 import TimelineEvent from "~/components/icons/timeline-event";
-import type { TabItem } from "~/features/side-panel/components/tab-strip";
+import type { TabIconComponent } from "~/features/side-panel/components/tab-strip";
 
 import type { CreateLeadTabId, ViewRecordTabId } from "../model";
 import type { TabContentProps } from "./content-props";
@@ -20,7 +20,7 @@ export type TabDefinition<TTabId extends string> = {
   id: TTabId;
   label: string;
   infoLabel?: string;
-  icon?: TabItem<TTabId>["icon"];
+  icon?: TabIconComponent;
   component: TabComponent;
 };
 
@@ -57,35 +57,44 @@ export const VIEW_RECORD_TABS = [
   { id: "files", label: "Archivos", component: FilesTab },
 ] as const satisfies ReadonlyArray<TabDefinition<ViewRecordTabId>>;
 
-export function toTabItems<TTabId extends string>(
-  tabs: ReadonlyArray<TabDefinition<TTabId>>,
-): ReadonlyArray<TabItem<TTabId>> {
-  return tabs.map(({ id, label, icon }) => ({ id, label, icon }));
+export const CREATE_LEAD_TABS_BY_ID: Record<
+  CreateLeadTabId,
+  TabDefinition<CreateLeadTabId>
+> = {
+  home: CREATE_LEAD_TABS[0],
+  timeline: CREATE_LEAD_TABS[1],
+  tasks: CREATE_LEAD_TABS[2],
+  notes: CREATE_LEAD_TABS[3],
+  files: CREATE_LEAD_TABS[4],
+};
+
+export const VIEW_RECORD_TABS_BY_ID: Record<
+  ViewRecordTabId,
+  TabDefinition<ViewRecordTabId>
+> = {
+  home: VIEW_RECORD_TABS[0],
+  timeline: VIEW_RECORD_TABS[1],
+  tasks: VIEW_RECORD_TABS[2],
+  sedes: VIEW_RECORD_TABS[3],
+  notes: VIEW_RECORD_TABS[4],
+  files: VIEW_RECORD_TABS[5],
+};
+
+function hasTabId<TTabId extends string>(
+  tabById: Record<TTabId, TabDefinition<TTabId>>,
+  tabId: string,
+): tabId is TTabId {
+  return Object.hasOwn(tabById, tabId);
 }
 
-export function getTabComponent<TTabId extends string>(
-  tabs: ReadonlyArray<TabDefinition<TTabId>>,
-  tabId: TTabId,
-): TabComponent {
-  return tabs.find((tab) => tab.id === tabId)?.component ?? tabs[0].component;
-}
-
-export function getTabInfoLabel<TTabId extends string>(
-  tabs: ReadonlyArray<TabDefinition<TTabId>>,
-  tabId: TTabId,
-): string {
-  const tab = tabs.find((entry) => entry.id === tabId);
-  return tab?.infoLabel ?? tab?.label ?? tabs[0].label;
-}
-
-export function getInitialActiveTabId<TTabId extends string>(params: {
+export function resolveActiveTabId<TTabId extends string>(params: {
   activeTabId: string;
-  tabs: ReadonlyArray<TabDefinition<TTabId>>;
+  tabById: Record<TTabId, TabDefinition<TTabId>>;
+  defaultTabId: TTabId;
 }): TTabId {
-  const { activeTabId, tabs } = params;
-  const activeTab = tabs.find((tab) => tab.id === activeTabId);
-  if (activeTab) {
-    return activeTab.id;
+  const { activeTabId, tabById, defaultTabId } = params;
+  if (hasTabId(tabById, activeTabId)) {
+    return activeTabId;
   }
-  return tabs[0].id;
+  return defaultTabId;
 }

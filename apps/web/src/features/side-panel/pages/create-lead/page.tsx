@@ -14,16 +14,13 @@ import { createLeadRecordDetailSidePanelPage } from "../../types/side-panel-page
 import { Footer } from "../record-page/footer";
 import type { CreateTabContentProps } from "../record-page/tabs/content-props";
 import {
+  CREATE_LEAD_TABS_BY_ID,
   CREATE_LEAD_TABS,
-  getTabComponent,
-  toTabItems,
 } from "../record-page/tabs/tab-registry";
 import { createCreateLeadController } from "./controller";
 import { useCreateLeadPageState } from "./state";
 
 import styles from "../record-page/page.module.css";
-
-const CREATE_LEAD_TAB_ITEMS = toTabItems(CREATE_LEAD_TABS);
 
 export function CreateLeadPage() {
   const { currentUser } = useAuthenticatedSession();
@@ -100,13 +97,13 @@ export function CreateLeadPage() {
       <PanelList>
         <div class={styles.page}>
           <TabStrip
-            tabs={CREATE_LEAD_TAB_ITEMS}
+            tabs={CREATE_LEAD_TABS}
             activeTab={activeTab()}
             onTabSelect={setActiveTab}
           />
 
           <Dynamic
-            component={getTabComponent(CREATE_LEAD_TABS, activeTab())}
+            component={CREATE_LEAD_TABS_BY_ID[activeTab()].component}
             {...createTabProps()}
           />
 
