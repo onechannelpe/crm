@@ -2,6 +2,9 @@ import type { JSX } from "solid-js";
 
 import Checkbox from "~/components/icons/checkbox";
 import HomeTabler from "~/components/icons/home-tabler";
+import Map from "~/components/icons/map";
+import Notes from "~/components/icons/notes";
+import Paperclip from "~/components/icons/paperclip";
 import TimelineEvent from "~/components/icons/timeline-event";
 import type { TabIconComponent } from "~/features/side-panel/components/tab-strip";
 
@@ -39,8 +42,8 @@ export const CREATE_LEAD_TABS = [
     component: TimelineTab,
   },
   { id: "tasks", icon: Checkbox, label: "Tareas", component: TasksTab },
-  { id: "notes", label: "Notas", component: NotesTab },
-  { id: "files", label: "Archivos", component: FilesTab },
+  { id: "notes", icon: Notes, label: "Notas", component: NotesTab },
+  { id: "files", icon: Paperclip, label: "Archivos", component: FilesTab },
 ] as const satisfies ReadonlyArray<TabDefinition<CreateLeadTabId>>;
 
 export const VIEW_RECORD_TABS = [
@@ -52,9 +55,9 @@ export const VIEW_RECORD_TABS = [
     component: TimelineTab,
   },
   { id: "tasks", icon: Checkbox, label: "Tareas", component: TasksTab },
-  { id: "sedes", label: "Sedes", component: SedesTab },
-  { id: "notes", label: "Notas", component: NotesTab },
-  { id: "files", label: "Archivos", component: FilesTab },
+  { id: "sedes", icon: Map, label: "Sedes", component: SedesTab },
+  { id: "notes", icon: Notes, label: "Notas", component: NotesTab },
+  { id: "files", icon: Paperclip, label: "Archivos", component: FilesTab },
 ] as const satisfies ReadonlyArray<TabDefinition<ViewRecordTabId>>;
 
 export const CREATE_LEAD_TABS_BY_ID: Record<
