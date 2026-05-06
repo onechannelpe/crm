@@ -12,7 +12,7 @@ import type {
 import {
   DEFAULT_LEAD_RECORD_DRAFT_STATE,
   type LeadRecordDraftState,
-  type LeadRecordTabId,
+  type ViewRecordTabId,
 } from "~/features/side-panel/pages/record-page/model";
 
 export type SidePanelIcon = Component<{
@@ -66,7 +66,7 @@ export type ViewRecordSidePanelPageState = {
   leadId: string;
   title: string;
   subtitle: string;
-  activeTab: LeadRecordTabId;
+  activeTab: ViewRecordTabId;
 };
 
 export type DataGridDetailSidePanelItem = {

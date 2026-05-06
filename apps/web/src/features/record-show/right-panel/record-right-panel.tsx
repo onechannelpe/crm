@@ -7,7 +7,10 @@ import Paperclip from "~/components/icons/paperclip";
 import TimelineEvent from "~/components/icons/timeline-event";
 import { TabStrip } from "~/features/side-panel/components/tab-strip";
 import type { TabItem } from "~/features/side-panel/components/tab-strip";
-import { TAB_COMPONENTS } from "~/features/side-panel/pages/record-page/tabs/tab-components";
+import { FilesTab } from "~/features/side-panel/pages/record-page/tabs/files";
+import { NotesTab } from "~/features/side-panel/pages/record-page/tabs/notes";
+import { TasksTab } from "~/features/side-panel/pages/record-page/tabs/tasks";
+import { TimelineTab } from "~/features/side-panel/pages/record-page/tabs/timeline";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import styles from "./record-right-panel.module.css";
@@ -25,6 +28,13 @@ const RIGHT_PANEL_TABS: ReadonlyArray<TabItem<RecordRightPanelTab>> = [
   { id: "files", icon: Paperclip, label: "Archivos" },
 ] as const;
 
+const RIGHT_PANEL_TAB_COMPONENTS = {
+  timeline: TimelineTab,
+  tasks: TasksTab,
+  notes: NotesTab,
+  files: FilesTab,
+} as const;
+
 export function RecordRightPanel(props: RecordRightPanelProps) {
   const [activeTab, setActiveTab] =
     createSignal<RecordRightPanelTab>("timeline");
@@ -41,7 +51,7 @@ export function RecordRightPanel(props: RecordRightPanelProps) {
           {(tab) => (
             <div class={styles.tabPane}>
               <Dynamic
-                component={TAB_COMPONENTS[tab]}
+                component={RIGHT_PANEL_TAB_COMPONENTS[tab]}
                 mode="view"
                 data={props.data}
               />

@@ -1,48 +1,29 @@
 import { useAction } from "@solidjs/router";
 import { createMemo, createResource, Show } from "solid-js";
-import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { createLeadMutation } from "~/features/workflow/data/mutations";
 
-import { HiddenTabContent } from "../../components/hidden-tab";
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";
 import { useScopedHotkey } from "../../core/hotkeys/create-scoped-hotkey";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadRecordDetailSidePanelPage } from "../../types/side-panel-page";
-import { ALL_TAB_ITEMS } from "../record-page/constants";
 import { Footer } from "../record-page/footer";
-import type { LeadRecordTabId } from "../record-page/model";
-import type {
-  CreateTabContentProps,
-  TabContentProps,
-} from "../record-page/tabs/content-props";
-import { FilesTab } from "../record-page/tabs/files";
-import { HomeTab } from "../record-page/tabs/home";
-import { NotesTab } from "../record-page/tabs/notes";
-import { TasksTab } from "../record-page/tabs/tasks";
-import { TimelineTab } from "../record-page/tabs/timeline";
+import type { CreateTabContentProps } from "../record-page/tabs/content-props";
+import {
+  CREATE_LEAD_TABS,
+  getTabComponent,
+  toTabItems,
+} from "../record-page/tabs/tab-registry";
 import { createCreateLeadController } from "./controller";
 import { useCreateLeadPageState } from "./state";
 
 import styles from "../record-page/page.module.css";
 
-const TAB_COMPONENTS: Record<
-  LeadRecordTabId,
-  (props: TabContentProps) => JSX.Element
-> = {
-  home: HomeTab,
-  timeline: TimelineTab,
-  tasks: TasksTab,
-  notes: NotesTab,
-  files: FilesTab,
-  emails: () => <HiddenTabContent title="Correos" />,
-  calendar: () => <HiddenTabContent title="Calendario" />,
-  sedes: () => <HiddenTabContent title="Sedes" />,
-};
+const CREATE_LEAD_TAB_ITEMS = toTabItems(CREATE_LEAD_TABS);
 
 export function CreateLeadPage() {
   const { currentUser } = useAuthenticatedSession();
@@ -119,13 +100,13 @@ export function CreateLeadPage() {
       <PanelList>
         <div class={styles.page}>
           <TabStrip
-            tabs={ALL_TAB_ITEMS}
+            tabs={CREATE_LEAD_TAB_ITEMS}
             activeTab={activeTab()}
             onTabSelect={setActiveTab}
           />
 
           <Dynamic
-            component={TAB_COMPONENTS[activeTab()]}
+            component={getTabComponent(CREATE_LEAD_TABS, activeTab())}
             {...createTabProps()}
           />
 
