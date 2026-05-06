@@ -1,3 +1,4 @@
+import { expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
 import {
   createExtensionFixture,
@@ -106,10 +107,9 @@ describe("extension runtime projection ordering", () => {
       branchId: 1,
     });
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error(result.error.message);
-    expect(result.value[0]?.presenceStatus).toBe("offline");
-    expect(result.value[0]?.syncHealth).toBe("ok");
+    const value = expectOk(result);
+    expect(value[0]?.presenceStatus).toBe("offline");
+    expect(value[0]?.syncHealth).toBe("ok");
   });
 
   it("marks shared sync stale when heartbeat freshness expires", async () => {
@@ -138,9 +138,8 @@ describe("extension runtime projection ordering", () => {
       branchId: 1,
     });
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error(result.error.message);
-    expect(result.value[0]?.presenceStatus).toBe("ready");
-    expect(result.value[0]?.syncHealth).toBe("stale");
+    const value = expectOk(result);
+    expect(value[0]?.presenceStatus).toBe("ready");
+    expect(value[0]?.syncHealth).toBe("stale");
   });
 });

@@ -1,3 +1,4 @@
+import { expectErr } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
 import {
   createExtensionFixture,
@@ -25,10 +26,8 @@ describe("extension runtime token validation", () => {
       installationId: "11111111-1111-4111-8111-111111111111",
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok)
-      throw new Error("malformed handoff token should be rejected");
-    expect(result.error.reason).toBe("handoff_invalid");
+    const error = expectErr(result);
+    expect(error.reason).toBe("handoff_invalid");
   });
 
   it("rejects handoff creation when assigned contact has no primary phone", async () => {
@@ -45,10 +44,8 @@ describe("extension runtime token validation", () => {
       origin: "http://localhost:3000",
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok)
-      throw new Error("handoff should be rejected for contacts without phone");
-    expect(result.error.reason).toBe("assignment_inactive");
+    const error = expectErr(result);
+    expect(error.reason).toBe("assignment_inactive");
 
     const handoffs = await ctx.db
       .selectFrom("extension_handoffs")
@@ -72,9 +69,7 @@ describe("extension runtime token validation", () => {
       },
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok)
-      throw new Error("malformed session token should be rejected");
-    expect(result.error.reason).toBe("session_invalid");
+    const error = expectErr(result);
+    expect(error.reason).toBe("session_invalid");
   });
 });
