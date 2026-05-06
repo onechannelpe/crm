@@ -31,12 +31,12 @@ describe("canManageExecutive", () => {
       };
       const repos = makeUserMockRepos(target);
       const result = await canManageExecutive(actor, 1, repos);
-      expect(result.ok).toBe(false);
+      expect(result).toMatchObject({ ok: false });
 
       // Also check different branch
       const actorDiff = makeActor({ role, branchId: 2 });
       const resultDiff = await canManageExecutive(actorDiff, 1, repos);
-      expect(resultDiff.ok).toBe(false);
+      expect(resultDiff).toMatchObject({ ok: false });
     },
   );
 
@@ -44,7 +44,7 @@ describe("canManageExecutive", () => {
     const actor = makeActor({ role: "superuser" });
     const repos = makeUserMockRepos(undefined);
     const result = await canManageExecutive(actor, 1, repos);
-    expect(result.ok).toBe(false);
+    expect(result).toMatchObject({ ok: false });
     expect(result.target).toBeNull();
   });
 
@@ -57,7 +57,7 @@ describe("canManageExecutive", () => {
     };
     const repos = makeUserMockRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
-    expect(result.ok).toBe(false);
+    expect(result).toMatchObject({ ok: false });
   });
 
   it("superuser can manage any executive in any branch", async () => {
@@ -69,7 +69,7 @@ describe("canManageExecutive", () => {
     };
     const repos = makeUserMockRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
-    expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ ok: true });
   });
 
   it("admin can manage executive in same branch", async () => {
@@ -81,7 +81,7 @@ describe("canManageExecutive", () => {
     };
     const repos = makeUserMockRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
-    expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ ok: true });
   });
 
   it("admin cannot manage executive in different branch", async () => {
@@ -93,7 +93,7 @@ describe("canManageExecutive", () => {
     };
     const repos = makeUserMockRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
-    expect(result.ok).toBe(false);
+    expect(result).toMatchObject({ ok: false });
   });
 
   it("supervisor can manage executive in same branch regardless of team", async () => {
@@ -106,7 +106,7 @@ describe("canManageExecutive", () => {
       },
     });
     const result = await canManageExecutive(actor, 1, repos);
-    expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ ok: true });
 
     const targetOtherTeam: TargetUser = {
       role: "executive",
@@ -120,7 +120,7 @@ describe("canManageExecutive", () => {
       },
     });
     const resultOther = await canManageExecutive(actor, 1, reposOther);
-    expect(resultOther.ok).toBe(true);
+    expect(resultOther).toMatchObject({ ok: true });
   });
 
   it("supervisor cannot manage executive on their team but in a different branch", async () => {
@@ -132,6 +132,6 @@ describe("canManageExecutive", () => {
     const result = await canManageExecutive(actor, 1, repos);
     // Even if it's "their team id", branch boundaries usually take precedence or
     // are checked as primary scope.
-    expect(result.ok).toBe(false);
+    expect(result).toMatchObject({ ok: false });
   });
 });

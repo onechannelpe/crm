@@ -25,8 +25,8 @@ describe("rate simulator calculator", () => {
       },
     });
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
+    expect(result).toHaveProperty("value");
+    if ("error" in result) {
       return;
     }
 
@@ -63,8 +63,8 @@ describe("rate simulator calculator", () => {
       },
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
+    expect(result).toHaveProperty("error");
+    if ("value" in result) {
       return;
     }
 
@@ -90,8 +90,8 @@ describe("rate simulator calculator", () => {
       },
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
+    expect(result).toHaveProperty("error");
+    if ("value" in result) {
       return;
     }
 

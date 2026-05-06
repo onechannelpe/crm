@@ -114,7 +114,7 @@ describe("workflow action commands", () => {
       },
     );
 
-    expect(result.ok).toBe(false);
+    expectErr(result);
     expect(mutationUow.commit).not.toHaveBeenCalled();
   });
 
@@ -137,7 +137,7 @@ describe("workflow action commands", () => {
       },
     );
 
-    expect(result.ok).toBe(false);
+    expectErr(result);
     expect(
       negotiationRequests.findFileAssetIdForArtifact,
     ).not.toHaveBeenCalled();
@@ -168,7 +168,7 @@ describe("workflow action commands", () => {
       },
     );
 
-    expect(result.ok).toBe(false);
+    expectErr(result);
     expect(mutationUow.commit).toHaveBeenCalledOnce();
     expect(negotiationRequests.insert).not.toHaveBeenCalled();
     expect(negotiationRequests.insertFile).not.toHaveBeenCalled();
