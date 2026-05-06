@@ -1,34 +1,35 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
+import { createContactAssignmentContext } from "~/server/contact-assignments/infrastructure/assignment-context";
 import type { EngineClient } from "~/server/shared/engine/client";
 
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../../support/test-db";
-import { createTestRepositories } from "../../support/test-repositories";
+import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
 
 describe("lead refill service benchmark", () => {
-  let ctx!: TestDbContext;
+  const db = createBenchDbFixture("bench-leads-request-service");
   let engine!: EngineClient;
   let userIds: number[] = [];
   const cursor = { value: 0 };
+  let assignmentContext!: ReturnType<typeof createContactAssignmentContext>;
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-leads-request-service");
+    const ctx = await db.setup();
     const fixtures = await seedLeadsRequestFixtures(ctx);
     userIds = fixtures.userIds;
     engine = fixtures.engineClient;
+
+    assignmentContext = createContactAssignmentContext({
+      executor: ctx.db,
+      engine,
+    });
   });
 
   afterAll(async () => {
-    await cleanupTestDb(ctx);
+    await db.teardown();
   });
 
   bench(
@@ -46,15 +47,9 @@ describe("lead refill service benchmark", () => {
           branchId: 1,
         },
         {
-          repos: {
-            ...ctx.repos,
-            users: createCapacityUsersRepo(ctx.db),
-          },
-          runInTransaction: (operation) =>
-            ctx.db
-              .transaction()
-              .execute((txDb) => operation(createTestRepositories(txDb))),
-          engine,
+          repos: assignmentContext.repos,
+          runInTransaction: assignmentContext.runInTransaction,
+          engine: assignmentContext.engine,
         },
       );
 

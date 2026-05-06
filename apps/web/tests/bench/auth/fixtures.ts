@@ -1,6 +1,7 @@
+import type { TestDbContext } from "@tests/support/runtime/db";
+
 import { hashPassword } from "~/lib/auth/password/password";
 
-import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const LOGIN_POOL_SIZE = 256;

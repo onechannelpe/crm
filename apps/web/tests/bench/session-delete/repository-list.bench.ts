@@ -1,10 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../../support/test-db";
+import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import {
@@ -14,12 +10,12 @@ import {
 } from "./fixtures";
 
 describe("session list repository benchmark", () => {
-  let ctx!: TestDbContext;
+  const db = createBenchDbFixture("bench-session-delete-repository");
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-session-delete-repository");
+    const ctx = await db.setup();
     const fixtures = await seedSessionDeleteFixtures(
       ctx,
       "bench-repository-session",
@@ -28,7 +24,7 @@ describe("session list repository benchmark", () => {
   });
 
   afterAll(async () => {
-    await cleanupTestDb(ctx);
+    await db.teardown();
   });
 
   bench(
@@ -39,6 +35,7 @@ describe("session list repository benchmark", () => {
         cursor,
         "session-delete repository pool exhausted before iterations completed",
       );
+      const ctx = db.ctx();
 
       const rows = await ctx.repos.sessions.listForUser(userId);
       if (rows.length !== expectedSessionsPerUser()) {

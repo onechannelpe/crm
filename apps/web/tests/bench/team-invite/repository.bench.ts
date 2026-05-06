@@ -1,28 +1,24 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
+import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { QUERY_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
 
 describe("team invite repository benchmark", () => {
-  let ctx!: TestDbContext;
+  const db = createBenchDbFixture("bench-team-invite-repository");
   let pendingInviteTokenHashes: string[] = [];
   const queryCursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-team-invite-repository");
+    const ctx = await db.setup();
     const fixtures = await seedTeamInviteFixtures(ctx);
     pendingInviteTokenHashes = fixtures.pendingInviteTokenHashes;
   });
 
   afterAll(async () => {
-    await cleanupTestDb(ctx);
+    await db.teardown();
   });
 
   bench(
@@ -33,6 +29,7 @@ describe("team invite repository benchmark", () => {
         queryCursor,
         "team-invite repository pool exhausted before iterations completed",
       );
+      const ctx = db.ctx();
 
       const row = await ctx.repos.userInvites.findPendingByTokenHash(
         tokenHash,

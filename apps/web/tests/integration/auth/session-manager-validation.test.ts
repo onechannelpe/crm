@@ -1,0 +1,116 @@
+import { getSeededIdentity } from "@tests/support/identities/api";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
+import { sql } from "kysely";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { sessionCache } from "~/lib/auth/session/session-cache";
+import {
+  generateSessionToken,
+  hashSessionToken,
+} from "~/lib/auth/session/tokens";
+
+describe("session manager validation", () => {
+  let runtime: TestRuntime;
+  const execOne = getSeededIdentity("execOne");
+
+  beforeEach(async () => {
+    runtime = await createTestRuntime("session-manager");
+    sessionCache.clear();
+  });
+
+  afterEach(async () => {
+    sessionCache.clear();
+    await runtime.dispose();
+  });
+
+  it("deletes session when persisted role is invalid", async () => {
+    const token = generateSessionToken();
+    const sessionId = hashSessionToken(token);
+    const now = Date.now();
+    const sessionClass = "app" as const;
+    const primaryAuthMethod = "password" as const;
+    const strongAuthMethod = null;
+    const strongAuthAt: number | null = null;
+    const ipAddress: string | null = null;
+    const userAgent: string | null = null;
+
+    await sql`
+      insert into user_sessions
+      (id, user_id, branch_id, role, session_class, primary_auth_method, strong_auth_method, strong_auth_at, ip_address, user_agent, created_at, last_activity, expires_at)
+      values (${sessionId}, ${execOne.userId}, ${execOne.branchId}, ${"invalid_role"}, ${sessionClass}, ${primaryAuthMethod}, ${strongAuthMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${now}, ${now}, ${now + 60_000})
+    `.execute(runtime.ctx.db);
+
+    const result =
+      await runtime.auth.sessionService.validateSessionToken(token);
+    expect(result.session).toBeNull();
+    expect(await runtime.ctx.repos.sessions.findById(sessionId)).toBeNull();
+  });
+
+  it("returns cached session without reloading the user record", async () => {
+    const token = await runtime.auth.sessionService.createSession({
+      userId: execOne.userId,
+      branchId: execOne.branchId,
+      role: execOne.role,
+      sessionClass: "app",
+      ipAddress: null,
+      userAgent: null,
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
+
+    const first = await runtime.auth.sessionService.validateSessionToken(token);
+    expect(first.session).not.toBeNull();
+
+    const userFindSpy = vi.spyOn(runtime.ctx.repos.users, "findById");
+    const second =
+      await runtime.auth.sessionService.validateSessionToken(token);
+    expect(second.session).not.toBeNull();
+    expect(userFindSpy).not.toHaveBeenCalled();
+  });
+
+  it("removes cached sessions after explicit invalidation", async () => {
+    const token = await runtime.auth.sessionService.createSession({
+      userId: execOne.userId,
+      branchId: execOne.branchId,
+      role: execOne.role,
+      sessionClass: "app",
+      ipAddress: null,
+      userAgent: null,
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
+    const sessionId = hashSessionToken(token);
+
+    const first = await runtime.auth.sessionService.validateSessionToken(token);
+    expect(first.session).not.toBeNull();
+
+    await runtime.auth.sessionService.invalidateUserSessions(execOne.userId);
+
+    const second =
+      await runtime.auth.sessionService.validateSessionToken(token);
+    expect(second.session).toBeNull();
+    expect(await runtime.ctx.repos.sessions.findById(sessionId)).toBeNull();
+  });
+
+  it("derives onboarding completion from session class without user lookup", async () => {
+    const token = await runtime.auth.sessionService.createSession({
+      userId: execOne.userId,
+      branchId: execOne.branchId,
+      role: execOne.role,
+      sessionClass: "pre_auth",
+      ipAddress: null,
+      userAgent: null,
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
+    const result =
+      await runtime.auth.sessionService.validateSessionToken(token);
+    expect(result.session?.onboardingCompleted).toBe(false);
+  });
+});

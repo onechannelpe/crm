@@ -1,14 +1,10 @@
+import { createInviteTestKit } from "@tests/support/invite/api";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
 
-import { createInviteTestKit } from "../../support/invite-test-kit";
-import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
+import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import {
@@ -18,13 +14,13 @@ import {
 } from "./fixtures";
 
 describe("team invite accept benchmark", () => {
-  let ctx!: TestDbContext;
+  const db = createBenchDbFixture("bench-team-invite-accept-service");
   let inviteAccept!: InviteService["acceptInvite"];
   let acceptFixtures: AcceptFixture[] = [];
   const acceptCursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-team-invite-accept-service");
+    const ctx = await db.setup();
     const kit = createInviteTestKit(ctx, {
       now: () => BENCH_NOW,
     });
@@ -35,11 +31,11 @@ describe("team invite accept benchmark", () => {
   });
 
   afterAll(async () => {
-    await cleanupTestDb(ctx);
+    await db.teardown();
   });
 
   bench(
-    "service path: accept invite (with password hash)",
+    "service path: accept invite",
     async () => {
       const fixture = takeFromPool(
         acceptFixtures,
