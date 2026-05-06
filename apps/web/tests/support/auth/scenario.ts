@@ -11,6 +11,7 @@ import {
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { vi } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
@@ -36,14 +37,12 @@ export function createAuthScenario(
     async setup() {
       ctx = await createIsolatedTestDb(dbName);
       if (options?.freezeAtMs != null) {
-        const { vi } = await import("vitest");
         vi.useFakeTimers({ toFake: ["Date"] });
         vi.setSystemTime(options.freezeAtMs);
       }
     },
     async teardown() {
       if (options?.freezeAtMs != null) {
-        const { vi } = await import("vitest");
         vi.useRealTimers();
       }
       await cleanupTestDb(ctx);
