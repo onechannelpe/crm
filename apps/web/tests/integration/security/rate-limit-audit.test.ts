@@ -5,8 +5,10 @@ import {
 } from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ACTION_RATE_LIMIT_POLICY, checkActionRateLimit } from "~/lib/security/action-rate-limit";
-
+import {
+  ACTION_RATE_LIMIT_POLICY,
+  checkActionRateLimit,
+} from "~/lib/security/action-rate-limit";
 
 describe("rate limit audit", () => {
   let ctx: TestDbContext;
@@ -26,11 +28,21 @@ describe("rate limit audit", () => {
     const userId = 1;
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let index = 0; index < limit; index += 1) {
-      await checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     try {
-      await checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        "198.51.100.1",
+      );
     } catch {
       // expected block
     }
@@ -47,7 +59,9 @@ describe("rate limit audit", () => {
 
   it("cleans up stale counters", async () => {
     await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
-    const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(Date.now() + 1);
+    const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(
+      Date.now() + 1,
+    );
     expect(deleted).toBeGreaterThanOrEqual(1);
   });
 });

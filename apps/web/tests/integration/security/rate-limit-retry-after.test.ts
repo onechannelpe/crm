@@ -1,9 +1,9 @@
-import { createSecurityTestKit } from "@tests/support/security/kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { createSecurityTestKit } from "@tests/support/security/kit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppError } from "~/lib/app-errors";
@@ -52,7 +52,12 @@ describe("rate limit retry after", () => {
 
     const getRetryAfter = async () => {
       try {
-        await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+        await checkActionRateLimit(
+          "leads.request",
+          1,
+          ctx.repos,
+          "198.51.100.1",
+        );
       } catch (error) {
         if (error instanceof AppError) return error.retryAfterSeconds ?? 0;
       }

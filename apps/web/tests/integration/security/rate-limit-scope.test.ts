@@ -1,9 +1,9 @@
-import { createSecurityTestKit } from "@tests/support/security/kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { createSecurityTestKit } from "@tests/support/security/kit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppError } from "~/lib/app-errors";

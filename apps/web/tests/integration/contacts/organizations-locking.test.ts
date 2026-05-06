@@ -1,3 +1,4 @@
+import { createContactsTestKit } from "@tests/support/contacts/kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -19,36 +20,28 @@ describe("organization branch locking", () => {
   it("findUnlockedOrLockedToBranch isolates organizations by lock owner", async () => {
     const now = Date.now();
     const { lima, norte } = ctx.fixtures.organizations;
+    const contacts = createContactsTestKit(ctx);
 
-    await ctx.db
-      .updateTable("organizations")
-      .set({
-        locked_branch_id: 1,
-        locked_at: now,
-        locked_by_user_id: 1,
-      })
-      .where("id", "=", lima.id)
-      .execute();
+    await contacts.lockOrganization({
+      organizationId: lima.id,
+      branchId: 1,
+      userId: 1,
+      now,
+    });
+    await contacts.lockOrganization({
+      organizationId: norte.id,
+      branchId: 2,
+      userId: 3,
+      now,
+    });
 
-    await ctx.db
-      .updateTable("organizations")
-      .set({
-        locked_branch_id: 2,
-        locked_at: now,
-        locked_by_user_id: 3,
-      })
-      .where("id", "=", norte.id)
-      .execute();
+    const branch1Visible = await contacts.visibleOrganizationIds(1);
+    const branch2Visible = await contacts.visibleOrganizationIds(2);
 
-    const branch1Visible =
-      await ctx.repos.organizations.findUnlockedOrLockedToBranch(1, 50);
-    const branch2Visible =
-      await ctx.repos.organizations.findUnlockedOrLockedToBranch(2, 50);
-
-    expect(branch1Visible.map((x) => x.id)).toContain(lima.id);
-    expect(branch1Visible.map((x) => x.id)).not.toContain(norte.id);
-    expect(branch2Visible.map((x) => x.id)).toContain(norte.id);
-    expect(branch2Visible.map((x) => x.id)).not.toContain(lima.id);
+    expect(branch1Visible).toContain(lima.id);
+    expect(branch1Visible).not.toContain(norte.id);
+    expect(branch2Visible).toContain(norte.id);
+    expect(branch2Visible).not.toContain(lima.id);
   });
 
   it("lockToBranch persists lock metadata", async () => {

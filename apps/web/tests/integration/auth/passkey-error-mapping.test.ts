@@ -1,6 +1,6 @@
+import { expectErr } from "@tests/support/_core/assertions";
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { getSeededIdentity } from "@tests/support/identities/api";
-import { expectErr } from "@tests/support/_core/assertions";
 import {
   buildAssertionResponse,
   createAuthFlow,
@@ -8,7 +8,10 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { createPasskeyLoginFinishAuthService, createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
+import {
+  createPasskeyLoginFinishAuthService,
+  createPasskeyLoginStartAuthService,
+} from "~/server/auth/passkey/service";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
@@ -77,13 +80,15 @@ describe("passkey error mapping", () => {
     const error = expectErr(result);
     expect(error.kind).toBe("invalid_credentials");
 
-    const consumed = await scenario.ctx.repos.webauthnChallenges.findById(challengeId);
+    const consumed =
+      await scenario.ctx.repos.webauthnChallenges.findById(challengeId);
     expect(consumed).toBeUndefined();
 
-    const retries = await scenario.ctx.repos.authEvents.findRecentLoginRetriesByUser(
-      execOne.userId,
-      5,
-    );
+    const retries =
+      await scenario.ctx.repos.authEvents.findRecentLoginRetriesByUser(
+        execOne.userId,
+        5,
+      );
     expect(retries[0]?.method).toBe("passkey");
     expect(retries[0]?.stage).toBe("verify");
     expect(retries[0]?.outcome).toBe("failure");

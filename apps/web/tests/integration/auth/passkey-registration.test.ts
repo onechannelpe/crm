@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { getSeededIdentity } from "@tests/support/identities/api";
-import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
   buildRegistrationResponse,
   createRegistrationChallenge,
@@ -86,9 +86,12 @@ describe("passkey registration", () => {
       challenge: "challenge-r2",
     });
 
-    const result = await createPasskeyEnrollmentAuthService(scenario.ctx.repos, {
-      createWebauthnProvider: invalidRegistrationProvider,
-    }).finishEnrollment({
+    const result = await createPasskeyEnrollmentAuthService(
+      scenario.ctx.repos,
+      {
+        createWebauthnProvider: invalidRegistrationProvider,
+      },
+    ).finishEnrollment({
       userId: execOne.userId,
       challengeId,
       response: buildRegistrationResponse("cred-r2"),

@@ -26,7 +26,8 @@ describe("extension runtime token validation", () => {
     });
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("malformed handoff token should be rejected");
+    if (result.ok)
+      throw new Error("malformed handoff token should be rejected");
     expect(result.error.reason).toBe("handoff_invalid");
   });
 
@@ -45,7 +46,8 @@ describe("extension runtime token validation", () => {
     });
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("handoff should be rejected for contacts without phone");
+    if (result.ok)
+      throw new Error("handoff should be rejected for contacts without phone");
     expect(result.error.reason).toBe("assignment_inactive");
 
     const handoffs = await ctx.db
@@ -71,7 +73,8 @@ describe("extension runtime token validation", () => {
     });
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("malformed session token should be rejected");
+    if (result.ok)
+      throw new Error("malformed session token should be rejected");
     expect(result.error.reason).toBe("session_invalid");
   });
 });

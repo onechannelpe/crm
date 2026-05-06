@@ -1,3 +1,4 @@
+import { expectOk } from "@tests/support/_core/assertions";
 import { createInviteTestKit } from "@tests/support/invite/api";
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
@@ -19,32 +20,30 @@ describe("user invite lifecycle", () => {
       now: () => 1_700_000_000_000,
     });
 
-    const created = await kit.commands.create({
-      actorUserId: 5,
-      actorRole: "superuser",
-      branchId: 2,
-      names: "Nueva",
-      firstSurname: "Ejecutiva",
-      secondSurname: "Garcia",
-      email: "nueva-ejecutiva@test.local",
-      role: "executive",
-      executiveCategory: "elite",
-      teamId: null,
-    });
-    expect(created.ok).toBe(true);
-    if (!created.ok) return;
-
-    const accepted = await kit.commands.accept({
-      token: created.value.token,
-      password: "StrongPass123",
-    });
-    expect(accepted.ok).toBe(true);
-    if (!accepted.ok) return;
-
-    expect(await kit.expect.userActive(accepted.value.userId)).toBe(1);
-    expect(await kit.expect.inviteStatus(created.value.inviteId)).toBe(
-      "accepted",
+    const created = expectOk(
+      await kit.commands.create({
+        actorUserId: 5,
+        actorRole: "superuser",
+        branchId: 2,
+        names: "Nueva",
+        firstSurname: "Ejecutiva",
+        secondSurname: "Garcia",
+        email: "nueva-ejecutiva@test.local",
+        role: "executive",
+        executiveCategory: "elite",
+        teamId: null,
+      }),
     );
+
+    const accepted = expectOk(
+      await kit.commands.accept({
+        token: created.token,
+        password: "StrongPass123",
+      }),
+    );
+
+    expect(await kit.expect.userActive(accepted.userId)).toBe(1);
+    expect(await kit.expect.inviteStatus(created.inviteId)).toBe("accepted");
   });
 
   it("can revoke a pending invite", async () => {
@@ -53,31 +52,30 @@ describe("user invite lifecycle", () => {
       now: () => 1_700_000_000_000,
     });
 
-    const created = await kit.commands.create({
-      actorUserId: 5,
-      actorRole: "superuser",
-      branchId: 2,
-      names: "Nuevo",
-      firstSurname: "Analista",
-      secondSurname: "Lopez",
-      email: "nuevo-analista@test.local",
-      role: "back_office",
-      teamId: null,
-    });
-    expect(created.ok).toBe(true);
-    if (!created.ok) return;
-
-    const revoked = await kit.commands.revoke({
-      actorUserId: 5,
-      actorRole: "superuser",
-      branchId: 2,
-      inviteId: created.value.inviteId,
-    });
-    expect(revoked.ok).toBe(true);
-
-    expect(await kit.expect.inviteStatus(created.value.inviteId)).toBe(
-      "revoked",
+    const created = expectOk(
+      await kit.commands.create({
+        actorUserId: 5,
+        actorRole: "superuser",
+        branchId: 2,
+        names: "Nuevo",
+        firstSurname: "Analista",
+        secondSurname: "Lopez",
+        email: "nuevo-analista@test.local",
+        role: "back_office",
+        teamId: null,
+      }),
     );
+
+    expectOk(
+      await kit.commands.revoke({
+        actorUserId: 5,
+        actorRole: "superuser",
+        branchId: 2,
+        inviteId: created.inviteId,
+      }),
+    );
+
+    expect(await kit.expect.inviteStatus(created.inviteId)).toBe("revoked");
   });
 
   it("handles raced user creation without escaping the Result contract", async () => {
@@ -121,20 +119,21 @@ describe("user invite lifecycle", () => {
       },
     ).service;
 
-    const created = await service.createInvite({
-      actorUserId: 5,
-      actorRole: "superuser",
-      branchId: 2,
-      names: "Race",
-      firstSurname: "User",
-      secondSurname: "Test",
-      email: "race-user@test.local",
-      role: "executive",
-      executiveCategory: "elite",
-      teamId: null,
-    });
+    expectOk(
+      await service.createInvite({
+        actorUserId: 5,
+        actorRole: "superuser",
+        branchId: 2,
+        names: "Race",
+        firstSurname: "User",
+        secondSurname: "Test",
+        email: "race-user@test.local",
+        role: "executive",
+        executiveCategory: "elite",
+        teamId: null,
+      }),
+    );
 
-    expect(created.ok).toBe(true);
     expect(shouldSimulateRace).toBe(false);
   });
 });

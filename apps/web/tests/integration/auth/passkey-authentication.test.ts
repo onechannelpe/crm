@@ -1,6 +1,6 @@
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { getSeededIdentity } from "@tests/support/identities/api";
-import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
   buildAssertionResponse,
   createAuthFlow,

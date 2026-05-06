@@ -1,3 +1,5 @@
 import { createAuthScenario } from "./scenario";
 
-export type ReturnTypeCreateAuthScenario = ReturnType<typeof createAuthScenario>;
+export type ReturnTypeCreateAuthScenario = ReturnType<
+  typeof createAuthScenario
+>;

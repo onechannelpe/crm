@@ -1,3 +1,4 @@
+import { seedAuditLog } from "@tests/support/audit/builders";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -11,33 +12,33 @@ describe("audit logs reader repository", () => {
     }
   });
 
-  it("filters recent entries and high-risk actions", async () => {
+  it("filters recent entries and high risk actions", async () => {
     ctx = await createIsolatedTestDb("audit-logs-reader");
     const baseTime = 1_700_000_000_000;
 
-    await ctx.repos.auditLogs.create({
-      user_id: 5,
+    await seedAuditLog(ctx, {
+      userId: 5,
       action: "product_updated",
-      entity_type: "product",
-      entity_id: 101,
+      entityType: "product",
+      entityId: 101,
       changes: '{"field":"price"}',
-      created_at: baseTime,
+      createdAt: baseTime,
     });
-    await ctx.repos.auditLogs.create({
-      user_id: 1,
+    await seedAuditLog(ctx, {
+      userId: 1,
       action: "leads_requested",
-      entity_type: "lead_assignment",
-      entity_id: 1,
+      entityType: "lead_assignment",
+      entityId: 1,
       changes: '{"requested":4,"assigned":4}',
-      created_at: baseTime + 1,
+      createdAt: baseTime + 1,
     });
-    await ctx.repos.auditLogs.create({
-      user_id: 5,
+    await seedAuditLog(ctx, {
+      userId: 5,
       action: "all_sessions_revoked",
-      entity_type: "user_session",
-      entity_id: 5,
+      entityType: "user_session",
+      entityId: 5,
       changes: '{"reason":"security"}',
-      created_at: baseTime + 2,
+      createdAt: baseTime + 2,
     });
 
     const highRiskDefault = await ctx.repos.auditLogs.listRecent({

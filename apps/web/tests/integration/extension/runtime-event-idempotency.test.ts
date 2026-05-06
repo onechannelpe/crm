@@ -36,8 +36,14 @@ describe("extension runtime event idempotency", () => {
       },
     };
 
-    const first = await scenario.service.ingestRuntimeEvent({ sessionToken, event });
-    const second = await scenario.service.ingestRuntimeEvent({ sessionToken, event });
+    const first = await scenario.service.ingestRuntimeEvent({
+      sessionToken,
+      event,
+    });
+    const second = await scenario.service.ingestRuntimeEvent({
+      sessionToken,
+      event,
+    });
 
     expect(first.ok).toBe(true);
     expect(second.ok).toBe(true);
@@ -107,7 +113,8 @@ describe("extension runtime event idempotency", () => {
     });
 
     expect(oldSessionResult.ok).toBe(false);
-    if (oldSessionResult.ok) throw new Error("old installation should have been revoked");
+    if (oldSessionResult.ok)
+      throw new Error("old installation should have been revoked");
     expect(oldSessionResult.error.reason).toBe("session_invalid");
     expect(newSessionResult.ok).toBe(true);
   });

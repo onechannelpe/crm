@@ -22,7 +22,10 @@ describe("auth throttle windowing", () => {
     const svc = createAuthThrottleService({
       authThrottle: scenario.ctx.repos.authThrottle,
     });
-    const status = await svc.checkLoginThrottle("exec1@test.local", "198.51.100.2");
+    const status = await svc.checkLoginThrottle(
+      "exec1@test.local",
+      "198.51.100.2",
+    );
     expect(status).toEqual({ allowed: true });
   });
 
@@ -42,7 +45,10 @@ describe("auth throttle windowing", () => {
       blockedUntil: now + 90_000,
     });
 
-    const status = await svc.checkLoginThrottle("exec1@test.local", "198.51.100.5");
+    const status = await svc.checkLoginThrottle(
+      "exec1@test.local",
+      "198.51.100.5",
+    );
     expect(status.allowed).toBe(false);
     if (status.allowed) throw new Error("expected blocked status");
     expect(status.retryAfterMs).toBe(90_000);
@@ -68,7 +74,9 @@ describe("auth throttle windowing", () => {
       windowStartedAt: now,
     });
 
-    expect((await svc.checkLoginThrottle("other@test.local", ipAddress)).allowed).toBe(true);
+    expect(
+      (await svc.checkLoginThrottle("other@test.local", ipAddress)).allowed,
+    ).toBe(true);
     await svc.recordLoginFailure(identifier, ipAddress);
 
     const status = await svc.checkLoginThrottle("other@test.local", ipAddress);
@@ -91,7 +99,8 @@ describe("auth throttle windowing", () => {
       ipAddress,
       failureCount: 99,
       blockedUntil: now + 60_000,
-      windowStartedAt: now - AUTH_THROTTLE_POLICY.password_login.account.windowMs - 1,
+      windowStartedAt:
+        now - AUTH_THROTTLE_POLICY.password_login.account.windowMs - 1,
     });
 
     await svc.recordLoginFailure(identifier, ipAddress);

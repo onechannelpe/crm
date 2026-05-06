@@ -1,18 +1,28 @@
 import { generateKeyPairSync } from "node:crypto";
 
-import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "@tests/support/runtime/db";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { vi } from "vitest";
 
-export async function createExtensionFixture(prefix: string): Promise<TestDbContext> {
+export async function createExtensionFixture(
+  prefix: string,
+): Promise<TestDbContext> {
   const { privateKey } = generateKeyPairSync("ed25519");
   vi.stubEnv(
     "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
-    Buffer.from(privateKey.export({ format: "der", type: "pkcs8" })).toString("base64"),
+    Buffer.from(privateKey.export({ format: "der", type: "pkcs8" })).toString(
+      "base64",
+    ),
   );
   vi.stubEnv("EXTENSION_EXPECTED_ORIGIN", "http://localhost:3000");
   return createIsolatedTestDb(prefix);
 }
 
-export async function disposeExtensionFixture(ctx: TestDbContext): Promise<void> {
+export async function disposeExtensionFixture(
+  ctx: TestDbContext,
+): Promise<void> {
   await cleanupTestDb(ctx);
 }

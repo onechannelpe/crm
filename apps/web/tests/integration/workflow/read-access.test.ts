@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -30,11 +31,9 @@ describe("workflow read access", () => {
       leadId: lead.id,
     });
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-
-    expect(result.value.lead.id).toBe(lead.id);
-    expect(result.value.timeline).toEqual([]);
+    const value = expectOk(result);
+    expect(value.lead.id).toBe(lead.id);
+    expect(value.timeline).toEqual([]);
   });
 
   it.each(["supervisor", "sales_manager"] as const)(
@@ -52,10 +51,8 @@ describe("workflow read access", () => {
         leadId: lead.id,
       });
 
-      expect(result.ok).toBe(true);
-      if (!result.ok) return;
-
-      expect(result.value.lead.id).toBe(lead.id);
+      const value = expectOk(result);
+      expect(value.lead.id).toBe(lead.id);
     },
   );
 
@@ -72,9 +69,7 @@ describe("workflow read access", () => {
       leadId: lead.id,
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-
-    expect(result.error.kind).toBe("forbidden");
+    const error = expectErr(result);
+    expect(error.kind).toBe("forbidden");
   });
 });

@@ -1,8 +1,14 @@
+import { expectOk } from "@tests/support/_core/assertions";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { runTestWorkflowCommand } from "@tests/support/workflow/command";
+import {
+  expectLeadAssignment,
+  expectLeadMetadata,
+  expectLeadStatus,
+} from "@tests/support/workflow/expect";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -36,16 +42,12 @@ describe("workflow lead mutation metadata", () => {
       }),
     );
 
-    expect(result.ok).toBe(true);
-
-    const leadRow = await runtime.ctx.db
-      .selectFrom("workflow_leads")
-      .select(["updated_by", "updated_at"])
-      .where("id", "=", lead.id)
-      .executeTakeFirstOrThrow();
-
-    expect(leadRow.updated_by).toBe(1);
-    expect(leadRow.updated_at).toBeGreaterThan(10);
+    expectOk(result);
+    await expectLeadMetadata(runtime, {
+      leadId: lead.id,
+      updatedBy: 1,
+      minUpdatedAt: 10,
+    });
   });
 
   it("allows admins to reassign and removes access from previous executive", async () => {
@@ -72,15 +74,12 @@ describe("workflow lead mutation metadata", () => {
       }),
     );
 
-    expect(reassignResult.ok).toBe(true);
-
-    const leadRow = await runtime.ctx.db
-      .selectFrom("workflow_leads")
-      .select(["executive_id", "updated_by"])
-      .where("id", "=", lead.id)
-      .executeTakeFirstOrThrow();
-    expect(leadRow.executive_id).toBe(executive.id);
-    expect(leadRow.updated_by).toBe(admin.id);
+    expectOk(reassignResult);
+    await expectLeadAssignment(runtime, {
+      leadId: lead.id,
+      executiveId: executive.id,
+      updatedBy: admin.id,
+    });
 
     const previousAccess = await runtime.workflow.queryApi.getLeadDetail({
       actor: scenario.actor.by("execOne"),
@@ -113,13 +112,10 @@ describe("workflow lead mutation metadata", () => {
 
     expect(result.applied).toBe(1);
     expect(result.failed).toBe(0);
-
-    const leadRow = await runtime.ctx.db
-      .selectFrom("workflow_leads")
-      .select(["updated_by", "status"])
-      .where("id", "=", lead.id)
-      .executeTakeFirstOrThrow();
-    expect(leadRow.updated_by).toBe(2);
-    expect(leadRow.status).toBe("DISPONIBLE");
+    await expectLeadStatus(runtime, {
+      leadId: lead.id,
+      updatedBy: 2,
+      status: "DISPONIBLE",
+    });
   });
 });

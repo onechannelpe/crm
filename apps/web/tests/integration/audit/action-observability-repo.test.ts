@@ -1,3 +1,4 @@
+import type { ActionObservationSeed } from "@tests/support/audit/builders";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -13,6 +14,31 @@ describe("action observability repository", () => {
     }
   });
 
+  async function recordAction(seed: ActionObservationSeed): Promise<void> {
+    if (!ctx) {
+      throw new Error("ctx must be initialized");
+    }
+    const service = createObservabilityService({
+      actionObservations: ctx.repos.actionObservations,
+      authFunnelEvents: ctx.repos.authFunnelEvents,
+    });
+    await service.recordAction({
+      traceId: seed.traceId,
+      requestId: seed.requestId,
+      routePath: seed.routePath,
+      httpMethod: "POST",
+      actionName: seed.actionName,
+      actorUserId: seed.actorUserId,
+      actorRole: seed.actorRole,
+      status: seed.status,
+      durationMs: seed.durationMs,
+      errorCode: seed.errorCode ?? null,
+      errorMessage: seed.errorMessage ?? null,
+      input: seed.input ?? {},
+      createdAt: seed.createdAt,
+    });
+  }
+
   it("stores action observations and summarizes outcomes", async () => {
     ctx = await createIsolatedTestDb("observability-repo");
     const service = createObservabilityService({
@@ -21,33 +47,28 @@ describe("action observability repository", () => {
     });
     const baseTime = 1_700_000_000_000;
 
-    await service.recordAction({
+    await recordAction({
       traceId: "trace-a",
       requestId: "req-a",
       routePath: "/records",
-      httpMethod: "POST",
       actionName: "leads.request",
       actorUserId: 1,
       actorRole: "executive",
       status: "ok",
       durationMs: 120,
-      errorCode: null,
-      errorMessage: null,
       input: { contactId: 1 },
       createdAt: baseTime,
     });
 
-    await service.recordAction({
+    await recordAction({
       traceId: "trace-b",
       requestId: "req-b",
       routePath: "/records",
-      httpMethod: "POST",
       actionName: "leads.request",
       actorUserId: 1,
       actorRole: "executive",
       status: "error",
       durationMs: 95,
-      errorCode: null,
       errorMessage: "Forbidden",
       input: { contactId: 2 },
       createdAt: baseTime + 1,
@@ -79,11 +100,10 @@ describe("action observability repository", () => {
     });
     const baseTime = 1_700_000_000_000;
 
-    await service.recordAction({
+    await recordAction({
       traceId: "trace-old",
       requestId: "req-old",
       routePath: "/team/invite",
-      httpMethod: "POST",
       actionName: "team.invite.create",
       actorUserId: 5,
       actorRole: "superuser",
@@ -95,11 +115,10 @@ describe("action observability repository", () => {
       createdAt: baseTime - 1_000,
     });
 
-    await service.recordAction({
+    await recordAction({
       traceId: "trace-new",
       requestId: "req-new",
       routePath: "/team/invite",
-      httpMethod: "POST",
       actionName: "team.invite.create",
       actorUserId: 5,
       actorRole: "superuser",
@@ -141,11 +160,10 @@ describe("action observability repository", () => {
     });
     const baseTime = 1_700_000_000_000;
 
-    await service.recordAction({
+    await recordAction({
       traceId: "trace-1",
       requestId: "req-1",
       routePath: "/team/invite",
-      httpMethod: "POST",
       actionName: "team.invite.create",
       actorUserId: 5,
       actorRole: "superuser",
@@ -153,29 +171,23 @@ describe("action observability repository", () => {
       durationMs: 10,
       errorCode: "validation",
       errorMessage: "invalid email",
-      input: {},
       createdAt: baseTime,
     });
-    await service.recordAction({
+    await recordAction({
       traceId: "trace-2",
       requestId: "req-2",
       routePath: "/team/invite",
-      httpMethod: "POST",
       actionName: "team.invite.create",
       actorUserId: 5,
       actorRole: "superuser",
       status: "ok",
       durationMs: 11,
-      errorCode: null,
-      errorMessage: null,
-      input: {},
       createdAt: baseTime + 1,
     });
-    await service.recordAction({
+    await recordAction({
       traceId: "trace-3",
       requestId: "req-3",
       routePath: "/records",
-      httpMethod: "POST",
       actionName: "leads.request",
       actorUserId: 1,
       actorRole: "executive",
@@ -183,7 +195,6 @@ describe("action observability repository", () => {
       durationMs: 12,
       errorCode: "forbidden",
       errorMessage: "forbidden",
-      input: {},
       createdAt: baseTime + 2,
     });
 

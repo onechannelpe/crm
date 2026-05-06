@@ -1,4 +1,4 @@
-import { seedLeadAssignments } from "@tests/support/contacts/seed";
+import { createContactsTestKit } from "@tests/support/contacts/kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -17,9 +17,10 @@ describe("lead assignment repository", () => {
     await cleanupTestDb(ctx);
   });
 
-  it("returns only active and non-expired assignments", async () => {
+  it("returns only active and non expired assignments", async () => {
     const now = Date.now();
-    await seedLeadAssignments(ctx, [
+    const contacts = createContactsTestKit(ctx);
+    await contacts.seedAssignments([
       {
         userId: 1,
         contactId: 1,
@@ -50,7 +51,8 @@ describe("lead assignment repository", () => {
 
   it("hasActiveForContact respects expiry and ownership", async () => {
     const now = Date.now();
-    await seedLeadAssignments(ctx, [
+    const contacts = createContactsTestKit(ctx);
+    await contacts.seedAssignments([
       {
         userId: 1,
         contactId: 1,
