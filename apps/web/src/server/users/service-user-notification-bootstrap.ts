@@ -8,35 +8,21 @@ type NotificationBootstrapRepos = {
 
 async function provisionNotificationContacts(params: {
   userId: number;
-  email: string;
   phoneE164: string;
   now: number;
   repos: Pick<NotificationBootstrapRepos, "notificationContacts">;
 }) {
-  const { userId, email, phoneE164, now, repos } = params;
+  const { userId, phoneE164, now, repos } = params;
 
-  await Promise.all([
-    repos.notificationContacts.upsertPrimary({
-      user_id: userId,
-      channel: "email",
-      address: email,
-      is_primary: 1,
-      is_verified: 1,
-      verified_at: now,
-      created_at: now,
-      updated_at: now,
-    }),
-    repos.notificationContacts.upsertPrimary({
-      user_id: userId,
-      channel: "whatsapp",
-      address: phoneE164,
-      is_primary: 1,
-      is_verified: 0,
-      verified_at: null,
-      created_at: now,
-      updated_at: now,
-    }),
-  ]);
+  await repos.notificationContacts.claim({
+    user_id: userId,
+    channel: "whatsapp",
+    address_normalized: phoneE164,
+    is_verified: 0,
+    verified_at: null,
+    created_at: now,
+    updated_at: now,
+  });
 }
 
 function enableDefaultNotificationPreferences(
@@ -83,7 +69,6 @@ function enableDefaultNotificationPreferences(
 export async function bootstrapUserNotifications(
   params: {
     userId: number;
-    email: string;
     phoneE164: string;
     now: number;
   },
@@ -91,7 +76,6 @@ export async function bootstrapUserNotifications(
 ) {
   await provisionNotificationContacts({
     userId: params.userId,
-    email: params.email,
     phoneE164: params.phoneE164,
     now: params.now,
     repos,

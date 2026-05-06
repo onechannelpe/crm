@@ -58,20 +58,11 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
                 .on("prefs.event_type", "=", params.eventType)
                 .on("prefs.channel", "=", "email"),
             )
-            .leftJoin("notification_contacts as contacts", (join) =>
-              join
-                .onRef("contacts.user_id", "=", "users.id")
-                .on("contacts.channel", "=", "email")
-                .on("contacts.is_primary", "=", 1)
-                .on("contacts.is_verified", "=", 1),
-            )
             .select((selectEb) => [
               selectEb.val(params.campaignId).as("campaign_id"),
               "users.id as user_id",
               selectEb.val("email").as("channel"),
-              selectEb.fn
-                .coalesce("contacts.address", "users.email")
-                .as("address"),
+              "users.email as address",
               selectEb.val("pending").as("status"),
               selectEb.val(null).as("status_reason"),
               selectEb.val(params.createdAt).as("created_at"),
@@ -123,18 +114,17 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
                 .on("prefs.event_type", "=", params.eventType)
                 .on("prefs.channel", "=", "whatsapp"),
             )
-            .innerJoin("notification_contacts as contacts", (join) =>
+            .innerJoin("notification_channel_owners as contacts", (join) =>
               join
                 .onRef("contacts.user_id", "=", "users.id")
                 .on("contacts.channel", "=", "whatsapp")
-                .on("contacts.is_primary", "=", 1)
                 .on("contacts.is_verified", "=", 1),
             )
             .select((selectEb) => [
               selectEb.val(params.campaignId).as("campaign_id"),
               "users.id as user_id",
               selectEb.val("whatsapp").as("channel"),
-              "contacts.address as address",
+              "contacts.address_normalized as address",
               selectEb.val("pending").as("status"),
               selectEb.val(null).as("status_reason"),
               selectEb.val(params.createdAt).as("created_at"),

@@ -23,6 +23,7 @@ type OnboardingRepos = {
 export type CompleteOnboardingError =
   | { kind: "not_found"; code: "user_not_found"; message: string }
   | { kind: "conflict"; code: "strong_auth_required"; message: string }
+  | { kind: "conflict"; code: "address_already_claimed"; message: string }
   | { kind: "unexpected"; code: "unexpected"; message: string };
 
 export interface CompleteOnboardingInput {
@@ -67,18 +68,36 @@ export async function completeAccountOnboardingWithRepos(
   }
 
   const completedAt = now();
-  await repos.users.completeOnboarding(user.id, {
-    phone_e164: input.phoneE164,
-    completedAt,
-  });
-  await bootstrapUserNotifications(
-    {
-      userId: user.id,
-      email: user.email,
-      phoneE164: input.phoneE164,
-      now: completedAt,
-    },
-    repos,
-  );
+  try {
+    await repos.users.completeOnboarding(user.id, {
+      phone_e164: input.phoneE164,
+      completedAt,
+    });
+    await bootstrapUserNotifications(
+      {
+        userId: user.id,
+        phoneE164: input.phoneE164,
+        now: completedAt,
+      },
+      repos,
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("UNIQUE constraint failed")
+    ) {
+      return Err({
+        kind: "conflict",
+        code: "address_already_claimed",
+        message: "Este número de WhatsApp ya está en uso",
+      });
+    }
+
+    return Err({
+      kind: "unexpected",
+      code: "unexpected",
+      message: "No se pudo completar el registro",
+    });
+  }
   return Ok(undefined);
 }

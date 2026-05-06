@@ -1,11 +1,10 @@
 import type { Generated } from "kysely";
 
-export interface NotificationContactsTable {
+export interface NotificationChannelOwnersTable {
   id: Generated<number>;
   user_id: number;
-  channel: "email" | "whatsapp";
-  address: string;
-  is_primary: number;
+  channel: "whatsapp";
+  address_normalized: string;
   is_verified: number;
   verified_at: number | null;
   created_at: number;
