@@ -88,7 +88,7 @@ describe("session repository lifecycle", () => {
     expect(countBefore).toBe(1);
 
     const deleted = await scenario.ctx.repos.sessions.deleteExpired();
-    expect(deleted).toBeGreaterThanOrEqual(1);
+    expect(deleted).toBe(1);
 
     const expired = await scenario.ctx.repos.sessions.findById("expired-1");
     const active = await scenario.ctx.repos.sessions.findById("active-1");
