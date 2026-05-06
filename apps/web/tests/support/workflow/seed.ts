@@ -61,12 +61,12 @@ export async function seedOrganization(
 ): Promise<SeededOrganizationRef> {
   const createdAt = input.createdAt ?? runtime.now.get();
   const id = input.id ?? randomUUIDv7();
-  const key = input.key.trim();
+  const key = input.key?.trim();
   if (!key) {
     throw new Error("missing_seed_organization_ruc");
   }
   const ruc = input.ruc ?? buildDefaultRuc(key);
-  const name = input.name ?? buildDefaultOrganizationName(key);
+  const name = input.name ?? `Org ${key}`;
   await runtime.ctx.db
     .insertInto("organizations")
     .values({
@@ -124,22 +124,12 @@ function resolveLeadOrganizationId(input: LeadSeed): string {
 }
 
 function buildDefaultRuc(key: string): string {
-  if (!key) {
-    throw new Error("missing_seed_organization_ruc");
-  }
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
     hash = (hash * 131 + key.charCodeAt(index)) % 1_000_000_000;
   }
   const digits = String(hash).padStart(9, "0");
   return `20${digits}`;
-}
-
-function buildDefaultOrganizationName(key: string): string {
-  if (!key) {
-    throw new Error("missing_seed_organization_ruc");
-  }
-  return `Org ${key}`;
 }
 
 export async function seedUser(runtime: TestRuntime, input: UserSeed) {
