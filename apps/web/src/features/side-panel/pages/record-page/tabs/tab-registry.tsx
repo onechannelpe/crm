@@ -27,61 +27,71 @@ export type TabDefinition<TTabId extends string> = {
   component: TabComponent;
 };
 
-export const CREATE_LEAD_TABS = [
-  {
+export const CREATE_LEAD_TABS_BY_ID: Record<
+  CreateLeadTabId,
+  TabDefinition<CreateLeadTabId>
+> = {
+  home: {
     id: "home",
     icon: HomeTabler,
     label: "Inicio",
     infoLabel: "Borrador",
     component: HomeTab,
   },
-  {
+  timeline: {
     id: "timeline",
     icon: TimelineEvent,
     label: "Línea de tiempo",
     component: TimelineTab,
   },
-  { id: "tasks", icon: Checkbox, label: "Tareas", component: TasksTab },
-  { id: "notes", icon: Notes, label: "Notas", component: NotesTab },
-  { id: "files", icon: Paperclip, label: "Archivos", component: FilesTab },
-] as const satisfies ReadonlyArray<TabDefinition<CreateLeadTabId>>;
-
-export const VIEW_RECORD_TABS = [
-  { id: "home", icon: HomeTabler, label: "Inicio", component: HomeTab },
-  {
-    id: "timeline",
-    icon: TimelineEvent,
-    label: "Línea de tiempo",
-    component: TimelineTab,
+  tasks: { id: "tasks", icon: Checkbox, label: "Tareas", component: TasksTab },
+  notes: { id: "notes", icon: Notes, label: "Notas", component: NotesTab },
+  files: {
+    id: "files",
+    icon: Paperclip,
+    label: "Archivos",
+    component: FilesTab,
   },
-  { id: "tasks", icon: Checkbox, label: "Tareas", component: TasksTab },
-  { id: "sedes", icon: Map, label: "Sedes", component: SedesTab },
-  { id: "notes", icon: Notes, label: "Notas", component: NotesTab },
-  { id: "files", icon: Paperclip, label: "Archivos", component: FilesTab },
-] as const satisfies ReadonlyArray<TabDefinition<ViewRecordTabId>>;
-
-export const CREATE_LEAD_TABS_BY_ID: Record<
-  CreateLeadTabId,
-  TabDefinition<CreateLeadTabId>
-> = {
-  home: CREATE_LEAD_TABS[0],
-  timeline: CREATE_LEAD_TABS[1],
-  tasks: CREATE_LEAD_TABS[2],
-  notes: CREATE_LEAD_TABS[3],
-  files: CREATE_LEAD_TABS[4],
 };
+
+export const CREATE_LEAD_TABS = [
+  CREATE_LEAD_TABS_BY_ID.home,
+  CREATE_LEAD_TABS_BY_ID.timeline,
+  CREATE_LEAD_TABS_BY_ID.tasks,
+  CREATE_LEAD_TABS_BY_ID.notes,
+  CREATE_LEAD_TABS_BY_ID.files,
+] as const satisfies ReadonlyArray<TabDefinition<CreateLeadTabId>>;
 
 export const VIEW_RECORD_TABS_BY_ID: Record<
   ViewRecordTabId,
   TabDefinition<ViewRecordTabId>
 > = {
-  home: VIEW_RECORD_TABS[0],
-  timeline: VIEW_RECORD_TABS[1],
-  tasks: VIEW_RECORD_TABS[2],
-  sedes: VIEW_RECORD_TABS[3],
-  notes: VIEW_RECORD_TABS[4],
-  files: VIEW_RECORD_TABS[5],
+  home: { id: "home", icon: HomeTabler, label: "Inicio", component: HomeTab },
+  timeline: {
+    id: "timeline",
+    icon: TimelineEvent,
+    label: "Línea de tiempo",
+    component: TimelineTab,
+  },
+  tasks: { id: "tasks", icon: Checkbox, label: "Tareas", component: TasksTab },
+  sedes: { id: "sedes", icon: Map, label: "Sedes", component: SedesTab },
+  notes: { id: "notes", icon: Notes, label: "Notas", component: NotesTab },
+  files: {
+    id: "files",
+    icon: Paperclip,
+    label: "Archivos",
+    component: FilesTab,
+  },
 };
+
+export const VIEW_RECORD_TABS = [
+  VIEW_RECORD_TABS_BY_ID.home,
+  VIEW_RECORD_TABS_BY_ID.timeline,
+  VIEW_RECORD_TABS_BY_ID.tasks,
+  VIEW_RECORD_TABS_BY_ID.sedes,
+  VIEW_RECORD_TABS_BY_ID.notes,
+  VIEW_RECORD_TABS_BY_ID.files,
+] as const satisfies ReadonlyArray<TabDefinition<ViewRecordTabId>>;
 
 function hasTabId<TTabId extends string>(
   tabById: Record<TTabId, TabDefinition<TTabId>>,

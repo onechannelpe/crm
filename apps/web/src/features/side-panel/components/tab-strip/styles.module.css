@@ -43,7 +43,6 @@
   position: relative;
 }
 
-.tab,
 .moreTab {
   all: unset;
   align-items: center;
@@ -78,33 +77,31 @@
   background: var(--background-transparent-medium);
 }
 
-.tabActive {
+.moreTabContent {
+  align-items: center;
+}
+
+.moreTab:focus-visible {
+  outline: none;
+}
+
+.moreTab:focus-visible .moreTabContent {
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.moreTabActive {
   color: var(--foreground);
 }
 
-.tabActive::after {
+.moreTabActive::after {
+  background: var(--border-inverted, var(--foreground));
   bottom: 0;
   content: "";
   height: 1px;
   left: 0;
   position: absolute;
   right: 0;
-  background: var(--border-inverted, var(--foreground));
   z-index: 1;
-}
-
-.moreTabContent {
-  align-items: center;
-}
-
-.moreTab:focus-visible,
-.tab:focus-visible {
-  outline: none;
-}
-
-.moreTab:focus-visible .moreTabContent,
-.tab:focus-visible .tabContent {
-  box-shadow: var(--focus-ring-shadow);
 }
 
 .moreMenu {

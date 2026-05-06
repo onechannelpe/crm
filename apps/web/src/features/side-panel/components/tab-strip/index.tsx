@@ -11,6 +11,10 @@ import type { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import ChevronDown from "~/components/icons/chevron-down";
+import {
+  TabButton,
+  TabMeasure,
+} from "~/features/side-panel/components/tab-button";
 
 import styles from "./styles.module.css";
 
@@ -105,14 +109,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             onCleanup(() => setTabWidths(tab.id, undefined));
 
             const Icon = tab.icon;
-            return (
-              <div ref={setEl} class={styles.tab}>
-                <span class={styles.tabContent}>
-                  {Icon && <Icon size={16} />}
-                  <span>{tab.label}</span>
-                </span>
-              </div>
-            );
+            return <TabMeasure ref={setEl} LeftIcon={Icon} title={tab.label} />;
           }}
         </For>
         <div ref={setMoreButtonMeasureRef} class={styles.moreTab}>
@@ -126,22 +123,15 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
       <div class={styles.tabContainer}>
         <For each={props.tabs.slice(0, visibleTabCount())}>
           {(tab) => {
-            const Icon = tab.icon;
             return (
-              <button
-                type="button"
-                data-testid={`tab-${tab.id}`}
-                classList={{
-                  [styles.tab]: true,
-                  [styles.tabActive]: props.activeTab === tab.id,
-                }}
+              <TabButton
+                id={tab.id}
+                dataTestId={`tab-${tab.id}`}
+                LeftIcon={tab.icon}
+                title={tab.label}
+                active={props.activeTab === tab.id}
                 onClick={() => props.onTabSelect(tab.id)}
-              >
-                <span class={styles.tabContent}>
-                  {Icon && <Icon size={16} />}
-                  <span>{tab.label}</span>
-                </span>
-              </button>
+              />
             );
           }}
         </For>
@@ -154,7 +144,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             data-testid="tab-tab-more-button"
             classList={{
               [styles.moreTab]: true,
-              [styles.tabActive]: hiddenTabs().some(
+              [styles.moreTabActive]: hiddenTabs().some(
                 (tab) => tab.id === props.activeTab,
               ),
             }}

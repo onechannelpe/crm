@@ -1,0 +1,68 @@
+.tabButton {
+  all: unset;
+  align-items: center;
+  background-color: transparent;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  gap: var(--spacing-1);
+  justify-content: center;
+  position: relative;
+  text-decoration: none;
+}
+
+.tabButtonActive {
+  color: var(--foreground);
+}
+
+.tabButton::after {
+  background-color: transparent;
+  bottom: 0;
+  content: "";
+  height: 1px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 1;
+}
+
+.tabButtonActive::after {
+  background-color: var(--border-inverted, var(--foreground));
+}
+
+.tabHover {
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  display: flex;
+  font-weight: var(--font-weight-medium);
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  white-space: nowrap;
+}
+
+.tabHover:hover {
+  background: var(--tertiary);
+}
+
+.tabHover:active {
+  background: var(--background-transparent-medium);
+}
+
+.tabButton:focus-visible,
+.tabMeasure:focus-visible {
+  outline: none;
+}
+
+.tabButton:focus-visible .tabHover,
+.tabMeasure:focus-visible .tabHover {
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.tabMeasure {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: flex;
+  gap: var(--spacing-1);
+  justify-content: center;
+  position: relative;
+}
