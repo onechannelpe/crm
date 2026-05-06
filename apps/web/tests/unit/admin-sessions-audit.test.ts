@@ -1,3 +1,4 @@
+import { expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import { revokeAllUserSessions } from "~/server/auth/application/commands/revoke-all-user-sessions";
@@ -85,7 +86,7 @@ describe("admin session revocation", () => {
       targetUserId: 42,
     });
 
-    expect(result.ok).toBe(true);
+    expectOk(result);
     expect(harness.invalidatedSessions).toEqual(["session-abc"]);
     expect(harness.authSessionRevocations).toEqual([
       { sessionId: "session-abc", now: 1_700_000_100_000 },
@@ -122,7 +123,7 @@ describe("admin session revocation", () => {
       },
     );
 
-    expect(result.ok).toBe(true);
+    expectOk(result);
     expect(harness.invalidatedUsers).toEqual([77]);
     expect(harness.userRevocations).toEqual([
       { userId: 77, now: 1_700_000_100_000 },

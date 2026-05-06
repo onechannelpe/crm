@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
@@ -175,7 +176,7 @@ describe("capacity approval commands", () => {
       note: null,
     });
 
-    expect(result.ok).toBe(true);
+    expectOk(result);
     expect(harness.request).toMatchObject({
       status: "approved",
       decidedByUserId: ACTOR_USER_ID,
@@ -210,7 +211,7 @@ describe("capacity approval commands", () => {
       note: "  approved for campaign week  ",
     });
 
-    expect(result.ok).toBe(true);
+    expectOk(result);
     expect(harness.request).toMatchObject({
       status: "approved",
       decisionNote: "approved for campaign week",
@@ -248,11 +249,8 @@ describe("capacity approval commands", () => {
       },
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected forbidden result");
-    }
-    expect(result.error.code).toBe("forbidden");
+    const error = expectErr(result);
+    expect(error.code).toBe("forbidden");
     expect(harness.request?.status).toBe("pending");
     expect(harness.searchGrants).toEqual([]);
     expect(harness.leadGrants).toEqual([]);
@@ -302,7 +300,7 @@ describe("capacity approval commands", () => {
       note: "  not justified  ",
     });
 
-    expect(result.ok).toBe(true);
+    expectOk(result);
     expect(harness.request).toMatchObject({
       status: "rejected",
       decidedByUserId: ACTOR_USER_ID,
@@ -328,11 +326,8 @@ describe("capacity approval commands", () => {
       note: "   ",
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected validation error");
-    }
-    expect(result.error.code).toBe("decision_note_required");
+    const error = expectErr(result);
+    expect(error.code).toBe("decision_note_required");
     expect(harness.transactionCalls).toBe(0);
     expect(harness.request?.status).toBe("pending");
   });

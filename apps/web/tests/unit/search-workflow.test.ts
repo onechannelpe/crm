@@ -4,6 +4,7 @@ import {
   makeSearchUsageCommitsRepo,
   makeSearchUsageReservationsRepo,
 } from "@tests/support/fakes/capacity";
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import { runDirectSearch } from "~/server/search-workflow/run-search";
@@ -73,7 +74,7 @@ describe("runDirectSearch", () => {
       successEngine,
     );
 
-    expect(result.ok).toBe(true);
+    expectOk(result);
     expect(repos.searchUsageReservations.rows).toHaveLength(1);
     expect(repos.searchUsageReservations.rows[0].status).toBe("committed");
     expect(repos.searchUsageCommits.rows).toHaveLength(1);
@@ -87,9 +88,8 @@ describe("runDirectSearch", () => {
       failEngine,
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
-    expect(result.error.details).toMatchObject({
+    const error = expectErr(result);
+    expect(error.details).toMatchObject({
       status: 503,
       request_id: "req-search-1",
       engine_error: "service unavailable",
@@ -135,9 +135,8 @@ describe("runDirectSearch", () => {
       trackingEngine,
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
-    expect(result.error.code).toBe("search_exhausted");
+    const error = expectErr(result);
+    expect(error.code).toBe("search_exhausted");
     expect(engineCalled).toBe(false);
   });
 });

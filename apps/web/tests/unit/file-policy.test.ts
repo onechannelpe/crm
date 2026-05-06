@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import { checkArtifactPolicy, type PolicyActor } from "~/server/files/policy";
@@ -40,7 +41,7 @@ describe("checkArtifactPolicy - artifact.request", () => {
       null,
       "artifact.request",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("allows admin to request any artifact", () => {
@@ -49,7 +50,7 @@ describe("checkArtifactPolicy - artifact.request", () => {
       null,
       "artifact.request",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("denies executive from requesting artifacts", () => {
@@ -58,8 +59,8 @@ describe("checkArtifactPolicy - artifact.request", () => {
       null,
       "artifact.request",
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.error.kind).toBe("forbidden");
+    const error = expectErr(result);
+    expect(error.kind).toBe("forbidden");
   });
 
   it("denies supervisor from requesting (no file:artifact:request permission)", () => {
@@ -68,7 +69,7 @@ describe("checkArtifactPolicy - artifact.request", () => {
       null,
       "artifact.request",
     );
-    expect(result.ok).toBe(false);
+    expectErr(result);
   });
 });
 
@@ -85,7 +86,7 @@ describe("checkArtifactPolicy - artifact.upload", () => {
       artifact,
       "artifact.upload",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("denies upload to download-only artifact type", () => {
@@ -99,8 +100,8 @@ describe("checkArtifactPolicy - artifact.upload", () => {
       artifact,
       "artifact.upload",
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.error.code).toBe("artifact_not_uploadable");
+    const error = expectErr(result);
+    expect(error.code).toBe("artifact_not_uploadable");
   });
 
   it("denies upload when artifact is not in requested state", () => {
@@ -114,7 +115,7 @@ describe("checkArtifactPolicy - artifact.upload", () => {
       artifact,
       "artifact.upload",
     );
-    expect(result.ok).toBe(false);
+    expectErr(result);
   });
 });
 
@@ -126,7 +127,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("denies back_office from reading artifact in different scope", () => {
@@ -136,8 +137,8 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.error.code).toBe("artifact_scope_mismatch");
+    const error = expectErr(result);
+    expect(error.code).toBe("artifact_scope_mismatch");
   });
 
   it("allows superuser to read any scope artifact", () => {
@@ -147,7 +148,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("allows owner to read null-scope artifact", () => {
@@ -160,7 +161,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("denies non-owner from reading null-scope artifact", () => {
@@ -173,8 +174,8 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.error.code).toBe("artifact_read_not_owner");
+    const error = expectErr(result);
+    expect(error.code).toBe("artifact_read_not_owner");
   });
 
   it("denies read on revoked artifact", () => {
@@ -184,8 +185,8 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.error.code).toBe("artifact_unavailable");
+    const error = expectErr(result);
+    expect(error.code).toBe("artifact_unavailable");
   });
 
   it("denies read on expired artifact", () => {
@@ -195,7 +196,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(false);
+    expectErr(result);
   });
 
   it("denies executive who lacks file:artifact:read", () => {
@@ -205,7 +206,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(false);
+    expectErr(result);
   });
 
   it("allows read while processing because download readiness is enforced in service", () => {
@@ -215,7 +216,7 @@ describe("checkArtifactPolicy - artifact.read", () => {
       artifact,
       "artifact.read",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 });
 
@@ -226,7 +227,7 @@ describe("checkArtifactPolicy - artifact.audit.read", () => {
       null,
       "artifact.audit.read",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("allows sales_manager to read audit", () => {
@@ -235,7 +236,7 @@ describe("checkArtifactPolicy - artifact.audit.read", () => {
       null,
       "artifact.audit.read",
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("denies back_office from audit (no audit permission)", () => {
@@ -244,7 +245,7 @@ describe("checkArtifactPolicy - artifact.audit.read", () => {
       null,
       "artifact.audit.read",
     );
-    expect(result.ok).toBe(false);
+    expectErr(result);
   });
 
   it("denies executive from audit", () => {
@@ -253,6 +254,6 @@ describe("checkArtifactPolicy - artifact.audit.read", () => {
       null,
       "artifact.audit.read",
     );
-    expect(result.ok).toBe(false);
+    expectErr(result);
   });
 });

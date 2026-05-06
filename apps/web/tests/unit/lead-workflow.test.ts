@@ -4,6 +4,7 @@ import {
   makeLeadUsageReservationsRepo,
   makeNullLeadPolicyRepos,
 } from "@tests/support/fakes/capacity";
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
@@ -87,10 +88,9 @@ describe("assignContacts", () => {
       },
     );
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected success");
-    expect(result.value.requested).toBe(0);
-    expect(result.value.assigned).toBe(0);
+    const value = expectOk(result);
+    expect(value.requested).toBe(0);
+    expect(value.assigned).toBe(0);
     expect(repos.leadUsageReservations.rows).toHaveLength(0);
   });
 
@@ -127,9 +127,8 @@ describe("assignContacts", () => {
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected success");
-    expect(result.value.assigned).toBeLessThan(result.value.requested);
+    const value = expectOk(result);
+    expect(value.assigned).toBeLessThan(value.requested);
 
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations).toHaveLength(1);
@@ -160,7 +159,7 @@ describe("assignContacts", () => {
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
-    expect(result.ok).toBe(true);
+    expectOk(result);
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations[0].status).toBe("committed");
     // No cancelled reservations
@@ -196,9 +195,8 @@ describe("assignContacts", () => {
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
-    expect(result.error.details).toMatchObject({
+    const error = expectErr(result);
+    expect(error.details).toMatchObject({
       status: 503,
       request_id: "req-leads-1",
       engine_error: "service unavailable",

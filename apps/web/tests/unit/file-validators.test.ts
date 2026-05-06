@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import { validateUploadFile } from "~/server/files/validators";
@@ -14,7 +15,7 @@ describe("validateUploadFile - extension checks", () => {
       "data.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("rejects xlsx for integration_import (not in allowlist)", () => {
@@ -23,8 +24,8 @@ describe("validateUploadFile - extension checks", () => {
       "data.xlsx",
       XLSX_MAGIC,
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("extension_not_allowed");
+    const error = expectErr(result);
+    expect(error.reason).toBe("extension_not_allowed");
   });
 
   it("accepts csv for records_export", () => {
@@ -33,13 +34,13 @@ describe("validateUploadFile - extension checks", () => {
       "export.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 
   it("rejects file without extension", () => {
     const result = validateUploadFile("integration_import", "noext", CSV_BYTES);
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("missing_extension");
+    const error = expectErr(result);
+    expect(error.reason).toBe("missing_extension");
   });
 });
 
@@ -50,8 +51,8 @@ describe("validateUploadFile - filename sanitization", () => {
       "../evil.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("filename_invalid");
+    const error = expectErr(result);
+    expect(error.reason).toBe("filename_invalid");
   });
 
   it("rejects filenames exceeding 120 chars", () => {
@@ -61,8 +62,8 @@ describe("validateUploadFile - filename sanitization", () => {
       longName,
       CSV_BYTES,
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("filename_invalid");
+    const error = expectErr(result);
+    expect(error.reason).toBe("filename_invalid");
   });
 
   it("sanitizes special chars in filename to underscores", () => {
@@ -71,9 +72,8 @@ describe("validateUploadFile - filename sanitization", () => {
       "mi archivo@datos.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected success");
-    expect(result.safeDisplayFilename).toBe("mi archivo_datos.csv");
+    const value = expectOk(result);
+    expect(value.safeDisplayFilename).toBe("mi archivo_datos.csv");
   });
 });
 
@@ -84,9 +84,8 @@ describe("validateUploadFile - signature checks", () => {
       "import.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected success");
-    expect(result.signatureKind).toBe("csv");
+    const value = expectOk(result);
+    expect(value.signatureKind).toBe("csv");
   });
 });
 
@@ -98,8 +97,8 @@ describe("validateUploadFile - size limits", () => {
       "big.csv",
       bigBytes,
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("file_too_large");
+    const error = expectErr(result);
+    expect(error.reason).toBe("file_too_large");
   });
 
   it("accepts files within the default limit", () => {
@@ -108,7 +107,7 @@ describe("validateUploadFile - size limits", () => {
       "ok.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(true);
+    expectOk(result);
   });
 });
 
@@ -119,8 +118,8 @@ describe("validateUploadFile - double extension", () => {
       "file.php.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(false);
-    expect(!result.ok && result.reason).toBe("double_extension_blocked");
+    const error = expectErr(result);
+    expect(error.reason).toBe("double_extension_blocked");
   });
 });
 
@@ -131,8 +130,7 @@ describe("validateUploadFile - MIME output", () => {
       "data.csv",
       CSV_BYTES,
     );
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("Expected success");
-    expect(result.detectedMime).toBe("text/csv; charset=utf-8");
+    const value = expectOk(result);
+    expect(value.detectedMime).toBe("text/csv; charset=utf-8");
   });
 });

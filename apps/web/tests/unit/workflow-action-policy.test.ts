@@ -5,6 +5,7 @@ import {
   makeNotificationCenter,
   makeWorkflowLead,
 } from "@tests/support/fakes/workflow";
+import { expectErr } from "@tests/support/_core/assertions";
 import { describe, expect, it, vi } from "vitest";
 
 import { domainError } from "~/server/shared/domain-error";
@@ -54,9 +55,8 @@ describe("lead action policy", () => {
       lead: makeWorkflowLead({ executiveId: 1 }),
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.kind).toBe("forbidden");
+    const error = expectErr(result);
+    expect(error.kind).toBe("forbidden");
   });
 
   it("enforces negotiation round and file limits", () => {
@@ -70,9 +70,8 @@ describe("lead action policy", () => {
       negotiationRequestCount: MAX_NEGOTIATION_ROUNDS,
       artifactCount: 0,
     });
-    expect(maxRounds.ok).toBe(false);
-    if (maxRounds.ok) return;
-    expect(maxRounds.error.code).toBe("max_negotiation_rounds_reached");
+    const maxRoundsError = expectErr(maxRounds);
+    expect(maxRoundsError.code).toBe("max_negotiation_rounds_reached");
 
     const maxFiles = requireLeadActionAccess({
       action: "request-rate-negotiation",
@@ -82,9 +81,8 @@ describe("lead action policy", () => {
       negotiationRequestCount: 0,
       artifactCount: MAX_NEGOTIATION_FILES + 1,
     });
-    expect(maxFiles.ok).toBe(false);
-    if (maxFiles.ok) return;
-    expect(maxFiles.error.code).toBe("max_negotiation_files_exceeded");
+    const maxFilesError = expectErr(maxFiles);
+    expect(maxFilesError.code).toBe("max_negotiation_files_exceeded");
   });
 
   it("hides request negotiation when the round limit is reached", () => {

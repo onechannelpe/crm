@@ -1,4 +1,5 @@
 import { makeActor, makeAppContext } from "@tests/support/unit/factories";
+import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { describe, expect, it } from "vitest";
 
 import type { BranchId, UserId } from "~/server/shared/ids";
@@ -48,21 +49,18 @@ describe("getInviteManagement", () => {
       port,
     );
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) {
-      throw new Error("expected invite management result");
-    }
+    const value = expectOk(result);
 
     expect(teamBranchCalls).toEqual([3]);
     expect(inviteBranchCalls).toEqual([3]);
-    expect(result.value.teams).toEqual([{ id: 11, name: "Operaciones" }]);
-    expect(result.value.pendingInvites).toEqual([
+    expect(value.teams).toEqual([{ id: 11, name: "Operaciones" }]);
+    expect(value.pendingInvites).toEqual([
       expect.objectContaining({
         inviteId: 1001,
         email: "pending@crm.local",
       }),
     ]);
-    expect(result.value.assignableRoles).toEqual([
+    expect(value.assignableRoles).toEqual([
       { value: "executive", label: "Ejecutivo" },
       { value: "supervisor", label: "Supervisor" },
       { value: "back_office", label: "Validación de ventas" },
@@ -94,10 +92,7 @@ describe("getInviteManagement", () => {
       port,
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected invite management error");
-    }
-    expect(result.error.code).toBe("invite_read_failed");
+    const error = expectErr(result);
+    expect(error.code).toBe("invite_read_failed");
   });
 });

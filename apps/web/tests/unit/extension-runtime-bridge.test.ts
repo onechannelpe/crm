@@ -42,10 +42,7 @@ describe("extension runtime bridge", () => {
 
     const result = await handoffLeadToExtension({ token: "handoff-token" });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("bridge should surface the domain rejection");
-    }
+    expect(result).toMatchObject({ ok: false });
     expect(result.executiveState?.presenceStatus).toBe("active");
     expect(result.executiveState?.assignmentId).toBe(42);
   });
