@@ -1,38 +1,31 @@
-import { expressionBuilder, type Kysely } from "kysely";
+import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
-    .createTable("notification_channel_owners")
+    .createTable("user_channel_addresses")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("channel", "varchar(20)", (col) => col.notNull())
-    .addColumn("address_normalized", "varchar(255)", (col) => col.notNull())
+    .addColumn("address", "varchar(255)", (col) => col.notNull())
     .addColumn("is_verified", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("verified_at", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addCheckConstraint(
-      "chk_notification_channel_owners_whatsapp_only",
-      expressionBuilder<
-        { notification_channel_owners: { channel: string } },
-        "notification_channel_owners"
-      >()("notification_channel_owners.channel", "=", "whatsapp"),
-    )
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_channel_owners_user_channel")
-    .on("notification_channel_owners")
+    .createIndex("idx_user_channel_addresses_user_channel")
+    .on("user_channel_addresses")
     .columns(["user_id", "channel"])
     .unique()
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_channel_owners_channel_address")
-    .on("notification_channel_owners")
-    .columns(["channel", "address_normalized"])
+    .createIndex("idx_user_channel_addresses_channel_address")
+    .on("user_channel_addresses")
+    .columns(["channel", "address"])
     .unique()
     .execute();
 

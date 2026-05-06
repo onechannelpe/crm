@@ -3,7 +3,7 @@ import {
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createNotificationChannelOwnerRepo } from "~/server/notifications/repos/channel-owner";
+import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -16,9 +16,7 @@ type OnboardingRepos = {
   users: ReturnType<typeof createUsersRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  notificationChannelOwners: ReturnType<
-    typeof createNotificationChannelOwnerRepo
-  >;
+  userChannelAddresses: ReturnType<typeof createUserChannelAddressRepo>;
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
@@ -73,6 +71,7 @@ export async function completeAccountOnboardingWithRepos(
   const bootstrapResult = await bootstrapUserNotifications(
     {
       userId: user.id,
+      email: user.email,
       phoneE164: input.phoneE164,
       now: completedAt,
     },
