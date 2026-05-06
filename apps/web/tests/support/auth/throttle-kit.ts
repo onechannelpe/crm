@@ -2,9 +2,9 @@ import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
 import type { AuthThrottleEndpoint } from "~/lib/auth/password/throttle-policy";
 import type { AuthThrottleScope } from "~/server/auth/repos-auth-throttle";
 
-import type { ReturnTypeCreateAuthScenario } from "./types";
+import { createAuthScenario } from "./scenario";
 
-type AuthScenario = ReturnTypeCreateAuthScenario;
+type AuthScenario = ReturnType<typeof createAuthScenario>;
 
 export function createAuthThrottleKit(scenario: AuthScenario) {
   return {
