@@ -41,11 +41,11 @@ export function createContactAssignmentContext(
   return {
     repos: createContactAssignmentRepos(executor),
     engine,
-    runInTransaction<T>(
+    runInTransaction: <T>(
       operation: (
         repos: ReturnType<typeof createContactAssignmentRepos>,
       ) => Promise<T>,
-    ) {
+    ) => {
       return executor
         .transaction()
         .execute((transactionDb) =>
