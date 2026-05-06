@@ -3,18 +3,12 @@ import { createMemo } from "solid-js";
 import { usePageInstanceId } from "../../router/page-instance-context";
 import { useSidePanelPageState } from "../../router/page-state";
 import { useSidePanel } from "../../state/use-side-panel";
-import type { LeadRecordTabId } from "../record-page/model";
-
-const LABEL_BY_TAB: Record<LeadRecordTabId, string> = {
-  home: "Borrador",
-  timeline: "Línea de tiempo",
-  tasks: "Tareas",
-  notes: "Notas",
-  files: "Archivos",
-  emails: "Correos",
-  calendar: "Calendario",
-  sedes: "Sedes",
-};
+import type { CreateLeadTabId } from "../record-page/model";
+import {
+  CREATE_LEAD_TABS_BY_ID,
+  CREATE_LEAD_TABS,
+  resolveActiveTabId,
+} from "../record-page/tabs/tab-registry";
 
 export function useCreateLeadPageState() {
   const pageId = usePageInstanceId();
@@ -28,7 +22,7 @@ export function useCreateLeadPageState() {
     });
   }
 
-  function setActiveTab(activeTab: LeadRecordTabId) {
+  function setActiveTab(activeTab: CreateLeadTabId) {
     updatePageState(pageId(), (state) => {
       if (state.page !== "create-lead") return state;
       return { ...state, draft: { ...state.draft, activeTab } };
@@ -36,8 +30,17 @@ export function useCreateLeadPageState() {
   }
 
   const draftRuc = createMemo(() => pageState().draft.ruc);
-  const activeTab = createMemo(() => pageState().draft.activeTab);
-  const label = createMemo(() => LABEL_BY_TAB[activeTab()]);
+  const activeTab = createMemo<CreateLeadTabId>(() => {
+    return resolveActiveTabId({
+      activeTabId: pageState().draft.activeTab,
+      tabById: CREATE_LEAD_TABS_BY_ID,
+      defaultTabId: CREATE_LEAD_TABS[0].id,
+    });
+  });
+  const label = createMemo(() => {
+    const tab = CREATE_LEAD_TABS_BY_ID[activeTab()];
+    return tab.infoLabel ?? tab.label;
+  });
 
   return { draftRuc, activeTab, label, setRuc, setActiveTab };
 }

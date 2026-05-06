@@ -1,13 +1,9 @@
 import { createSignal, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import Checkbox from "~/components/icons/checkbox";
-import MessageSquare from "~/components/icons/message-square";
-import Paperclip from "~/components/icons/paperclip";
-import TimelineEvent from "~/components/icons/timeline-event";
 import { TabStrip } from "~/features/side-panel/components/tab-strip";
 import type { TabItem } from "~/features/side-panel/components/tab-strip";
-import { TAB_COMPONENTS } from "~/features/side-panel/pages/record-page/tabs/tab-components";
+import { VIEW_RECORD_TABS_BY_ID } from "~/features/side-panel/pages/record-page/tabs/tab-registry";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import styles from "./record-right-panel.module.css";
@@ -19,10 +15,26 @@ type RecordRightPanelProps = {
 };
 
 const RIGHT_PANEL_TABS: ReadonlyArray<TabItem<RecordRightPanelTab>> = [
-  { id: "timeline", icon: TimelineEvent, label: "Línea de tiempo" },
-  { id: "tasks", icon: Checkbox, label: "Tareas" },
-  { id: "notes", icon: MessageSquare, label: "Notas" },
-  { id: "files", icon: Paperclip, label: "Archivos" },
+  {
+    id: "timeline",
+    icon: VIEW_RECORD_TABS_BY_ID.timeline.icon,
+    label: VIEW_RECORD_TABS_BY_ID.timeline.label,
+  },
+  {
+    id: "tasks",
+    icon: VIEW_RECORD_TABS_BY_ID.tasks.icon,
+    label: VIEW_RECORD_TABS_BY_ID.tasks.label,
+  },
+  {
+    id: "notes",
+    icon: VIEW_RECORD_TABS_BY_ID.notes.icon,
+    label: VIEW_RECORD_TABS_BY_ID.notes.label,
+  },
+  {
+    id: "files",
+    icon: VIEW_RECORD_TABS_BY_ID.files.icon,
+    label: VIEW_RECORD_TABS_BY_ID.files.label,
+  },
 ] as const;
 
 export function RecordRightPanel(props: RecordRightPanelProps) {
@@ -41,7 +53,7 @@ export function RecordRightPanel(props: RecordRightPanelProps) {
           {(tab) => (
             <div class={styles.tabPane}>
               <Dynamic
-                component={TAB_COMPONENTS[tab]}
+                component={VIEW_RECORD_TABS_BY_ID[tab].component}
                 mode="view"
                 data={props.data}
               />
