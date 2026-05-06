@@ -1,7 +1,9 @@
 import { expect } from "vitest";
 
-export function expectOk<T, E extends { kind?: string; message?: string }>(
-  result: { ok: boolean } & ({ ok: true; value: T } | { ok: false; error: E }),
+export function expectOk<T>(
+  result:
+    | { ok: true; value: T }
+    | { ok: false; error: { kind?: string; message?: string } },
 ): T {
   expect(result.ok).toBe(true);
   if (!result.ok) {
@@ -10,8 +12,8 @@ export function expectOk<T, E extends { kind?: string; message?: string }>(
   return result.value;
 }
 
-export function expectErr<T, E extends { kind?: string; message?: string }>(
-  result: { ok: boolean } & ({ ok: true; value: T } | { ok: false; error: E }),
+export function expectErr<E>(
+  result: { ok: true; value: unknown } | { ok: false; error: E },
 ): E {
   expect(result.ok).toBe(false);
   if (result.ok) {
