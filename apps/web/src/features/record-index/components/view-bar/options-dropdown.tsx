@@ -51,7 +51,7 @@ export function OptionsDropdown(props: { onClose: () => void }) {
           />
           <div class={sharedStyles.menuScrollable}>
             <div class={sharedStyles.menuGroupLabel}>Columnas de la tabla</div>
-            <div class={sharedStyles.menuListbox} role="listbox">
+            <div class={sharedStyles.menuListbox} role="menu">
               <For each={setup.columns}>
                 {(column) => {
                   const isVisible = createMemo(() =>
@@ -86,7 +86,7 @@ export function OptionsDropdown(props: { onClose: () => void }) {
     >
       <DropdownMenuHeader title="Opciones" onClose={props.onClose} />
       <div class={sharedStyles.menuScrollable}>
-        <div class={sharedStyles.menuListbox} role="listbox">
+        <div class={sharedStyles.menuListbox} role="menu">
           <button
             type="button"
             class={sharedStyles.menuItem}
@@ -117,7 +117,7 @@ export function OptionsDropdown(props: { onClose: () => void }) {
           <>
             <div class={sharedStyles.menuSeparator} />
             <div class={sharedStyles.menuGroupLabel}>Acciones</div>
-            <div class={sharedStyles.menuListbox} role="listbox">
+            <div class={sharedStyles.menuListbox} role="menu">
               <For each={optionActions()}>
                 {(action) => (
                   <button

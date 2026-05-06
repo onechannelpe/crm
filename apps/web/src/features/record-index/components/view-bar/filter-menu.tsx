@@ -77,7 +77,7 @@ export function FilterMenu(props: FilterMenuProps) {
       return (
         <>
           <div class={sharedStyles.menuGroupLabel}>Valores</div>
-          <div class={sharedStyles.menuListbox} role="listbox">
+          <div class={sharedStyles.menuListbox} role="menu">
             <For each={modifiedOptions}>
               {(option) => (
                 <button
@@ -116,7 +116,7 @@ export function FilterMenu(props: FilterMenuProps) {
       return (
         <>
           <div class={sharedStyles.menuGroupLabel}>Valores</div>
-          <div class={sharedStyles.menuListbox} role="listbox">
+          <div class={sharedStyles.menuListbox} role="menu">
             <For each={stageOptions()}>
               {(option) => (
                 <button
@@ -155,7 +155,7 @@ export function FilterMenu(props: FilterMenuProps) {
       return (
         <>
           <div class={sharedStyles.menuGroupLabel}>Valores</div>
-          <div class={sharedStyles.menuListbox} role="listbox">
+          <div class={sharedStyles.menuListbox} role="menu">
             <For each={statusOptions()}>
               {(option) => (
                 <button
@@ -237,7 +237,7 @@ export function FilterMenu(props: FilterMenuProps) {
             />
             <div class={sharedStyles.menuScrollable}>
               <div class={sharedStyles.menuGroupLabel}>Campos disponibles</div>
-              <div class={sharedStyles.menuListbox} role="listbox">
+              <div class={sharedStyles.menuListbox} role="menu">
                 <For each={filteredFilterFields()}>
                   {(fieldOption) => {
                     const FieldIcon = fieldOption.icon;
@@ -262,7 +262,7 @@ export function FilterMenu(props: FilterMenuProps) {
               </Show>
 
               <div class={sharedStyles.menuSeparator} />
-              <div class={sharedStyles.menuListbox} role="listbox">
+              <div class={sharedStyles.menuListbox} role="menu">
                 <button
                   type="button"
                   class={sharedStyles.menuItem}

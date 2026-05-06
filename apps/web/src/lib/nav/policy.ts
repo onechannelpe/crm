@@ -4,7 +4,6 @@ import {
   PAGE_HEADERS,
   SIDEBAR_ENTRIES,
   type HeaderDescriptor,
-  type RouteIcon,
   type SidebarChild,
   type SidebarEntry,
   type SidebarSection,
