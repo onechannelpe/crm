@@ -1,8 +1,11 @@
-import type { createNotificationContactRepo } from "~/server/notifications/repos/contact";
+import type { createNotificationChannelOwnerRepo } from "~/server/notifications/repos/channel-owner";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 type NotificationBootstrapRepos = {
-  notificationContacts: ReturnType<typeof createNotificationContactRepo>;
+  notificationChannelOwners: ReturnType<
+    typeof createNotificationChannelOwnerRepo
+  >;
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
@@ -10,11 +13,13 @@ async function provisionNotificationContacts(params: {
   userId: number;
   phoneE164: string;
   now: number;
-  repos: Pick<NotificationBootstrapRepos, "notificationContacts">;
-}) {
+  repos: Pick<NotificationBootstrapRepos, "notificationChannelOwners">;
+}): Promise<
+  Result<void, { code: "address_already_claimed"; ownerUserId: number }>
+> {
   const { userId, phoneE164, now, repos } = params;
 
-  await repos.notificationContacts.claim({
+  const result = await repos.notificationChannelOwners.claimWhatsAppOwnership({
     user_id: userId,
     channel: "whatsapp",
     address_normalized: phoneE164,
@@ -23,6 +28,14 @@ async function provisionNotificationContacts(params: {
     created_at: now,
     updated_at: now,
   });
+
+  if (result.kind === "already_claimed_by_other") {
+    return Err({
+      code: "address_already_claimed",
+      ownerUserId: result.ownerUserId,
+    });
+  }
+  return Ok(undefined);
 }
 
 function enableDefaultNotificationPreferences(
@@ -73,12 +86,20 @@ export async function bootstrapUserNotifications(
     now: number;
   },
   repos: NotificationBootstrapRepos,
-) {
-  await provisionNotificationContacts({
+): Promise<
+  Result<void, { code: "address_already_claimed"; ownerUserId: number }>
+> {
+  const contactsResult = await provisionNotificationContacts({
     userId: params.userId,
     phoneE164: params.phoneE164,
     now: params.now,
-    repos,
+    repos: {
+      notificationChannelOwners: repos.notificationChannelOwners,
+    },
   });
+  if (contactsResult.ok === false) {
+    return contactsResult;
+  }
   await enableDefaultNotificationPreferences(params.userId, params.now, repos);
+  return Ok(undefined);
 }

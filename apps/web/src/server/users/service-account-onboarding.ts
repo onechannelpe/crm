@@ -3,10 +3,10 @@ import {
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createNotificationContactRepo } from "~/server/notifications/repos/contact";
+import type { createNotificationChannelOwnerRepo } from "~/server/notifications/repos/channel-owner";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createUsersRepo } from "~/server/users/repos-users";
 
@@ -16,7 +16,9 @@ type OnboardingRepos = {
   users: ReturnType<typeof createUsersRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  notificationContacts: ReturnType<typeof createNotificationContactRepo>;
+  notificationChannelOwners: ReturnType<
+    typeof createNotificationChannelOwnerRepo
+  >;
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
@@ -68,36 +70,25 @@ export async function completeAccountOnboardingWithRepos(
   }
 
   const completedAt = now();
-  try {
-    await repos.users.completeOnboarding(user.id, {
-      phone_e164: input.phoneE164,
-      completedAt,
-    });
-    await bootstrapUserNotifications(
-      {
-        userId: user.id,
-        phoneE164: input.phoneE164,
-        now: completedAt,
-      },
-      repos,
-    );
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes("UNIQUE constraint failed")
-    ) {
-      return Err({
-        kind: "conflict",
-        code: "address_already_claimed",
-        message: "Este número de WhatsApp ya está en uso",
-      });
-    }
-
+  const bootstrapResult = await bootstrapUserNotifications(
+    {
+      userId: user.id,
+      phoneE164: input.phoneE164,
+      now: completedAt,
+    },
+    repos,
+  );
+  if (isErr(bootstrapResult)) {
     return Err({
-      kind: "unexpected",
-      code: "unexpected",
-      message: "No se pudo completar el registro",
+      kind: "conflict",
+      code: "address_already_claimed",
+      message: "Este número de WhatsApp ya está en uso",
     });
   }
+
+  await repos.users.completeOnboarding(user.id, {
+    phone_e164: input.phoneE164,
+    completedAt,
+  });
   return Ok(undefined);
 }

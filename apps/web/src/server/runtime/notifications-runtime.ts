@@ -10,7 +10,7 @@ import { createNotificationWhatsAppQueue } from "~/server/notifications/queue/wh
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createNotificationAudienceRepo } from "~/server/notifications/repos/audience";
 import { createNotificationCampaignRepo } from "~/server/notifications/repos/campaign";
-import { createNotificationContactRepo } from "~/server/notifications/repos/contact";
+import { createNotificationChannelOwnerRepo } from "~/server/notifications/repos/channel-owner";
 import { createNotificationDeliveryJobRepo } from "~/server/notifications/repos/delivery-job";
 import { createNotificationDeliveryLogRepo } from "~/server/notifications/repos/delivery-log";
 import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
@@ -33,7 +33,7 @@ export function createNotificationsRuntime(infra: ServerInfra) {
   const repos = {
     notificationCampaign: createNotificationCampaignRepo(infra.db),
     notificationAudience: createNotificationAudienceRepo(infra.db),
-    notificationContact: createNotificationContactRepo(infra.db),
+    notificationChannelOwners: createNotificationChannelOwnerRepo(infra.db),
     notificationPreference: createNotificationPreferenceRepo(infra.db),
     notificationDeliveryJob: createNotificationDeliveryJobRepo(infra.db),
     notificationDeliveryLog: createNotificationDeliveryLogRepo(infra.db),

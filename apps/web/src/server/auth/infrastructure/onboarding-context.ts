@@ -2,7 +2,7 @@ import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import { createNotificationContactRepo } from "~/server/notifications/repos/contact";
+import { createNotificationChannelOwnerRepo } from "~/server/notifications/repos/channel-owner";
 import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -22,7 +22,9 @@ export type AuthOnboardingRepos = {
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
   authEvents: ReturnType<typeof createAuthEventsRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  notificationContacts: ReturnType<typeof createNotificationContactRepo>;
+  notificationChannelOwners: ReturnType<
+    typeof createNotificationChannelOwnerRepo
+  >;
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
@@ -39,7 +41,7 @@ function createAuthOnboardingRepos(
     authThrottle: createAuthThrottleRepo(executor),
     authEvents: createAuthEventsRepo(executor),
     userTotpFactors: createUserTotpFactorsRepo(executor),
-    notificationContacts: createNotificationContactRepo(executor),
+    notificationChannelOwners: createNotificationChannelOwnerRepo(executor),
     notificationPreferences: createNotificationPreferenceRepo(executor),
   };
 }

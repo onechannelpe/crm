@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { expressionBuilder, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -13,6 +13,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("verified_at", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addCheckConstraint(
+      "chk_notification_channel_owners_whatsapp_only",
+      expressionBuilder<
+        { notification_channel_owners: { channel: string } },
+        "notification_channel_owners"
+      >()("notification_channel_owners.channel", "=", "whatsapp"),
+    )
     .execute();
 
   await db.schema
