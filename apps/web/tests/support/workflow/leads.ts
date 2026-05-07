@@ -154,7 +154,6 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
       secondSurname: string;
       role: "admin" | "executive";
       branchId?: number;
-      phoneE164?: string;
       createdAt?: number;
     }): Promise<{ id: number }> {
       await seedUser(runtime, input);

@@ -18,7 +18,10 @@ export async function getCurrentUser(
   const user = await deps.repos.users.findById(userId);
   if (!user) return Ok(null);
 
-  const strongAuthStatus = await getStrongAuthStatus(userId, deps.repos);
+  const [strongAuthStatus, whatsappAddr] = await Promise.all([
+    getStrongAuthStatus(userId, deps.repos),
+    deps.repos.userChannelAddresses.findByUserAndChannel(user.id, "whatsapp"),
+  ]);
 
   const [branch, assignedTeam, branchSupervisors] = await Promise.all([
     deps.repos.branches.findById(user.branch_id),
@@ -49,7 +52,7 @@ export async function getCurrentUser(
     names: user.names,
     firstSurname: user.first_surname,
     secondSurname: user.second_surname,
-    phoneE164: user.phone_e164,
+    phoneE164: whatsappAddr?.address ?? null,
     avatarUrl: user.avatar_storage_key
       ? `/api/me/avatar?v=${user.avatar_version}`
       : null,

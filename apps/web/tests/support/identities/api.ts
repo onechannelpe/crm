@@ -31,10 +31,7 @@ export async function setIdentityOnboarding(
 ): Promise<void> {
   await ctx.db
     .updateTable("users")
-    .set({
-      onboarding_completed_at: onboardingCompleted ? Date.now() : null,
-      phone_e164: onboardingCompleted ? `+5199000${identity.userId}` : null,
-    })
+    .set({ onboarding_completed_at: onboardingCompleted ? Date.now() : null })
     .where("id", "=", identity.userId)
     .execute();
 }

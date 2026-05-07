@@ -18,7 +18,6 @@ export async function seedQuotaUsers(ctx: TestDbContext): Promise<number[]> {
       names: `Bench Quota ${id}`,
       first_surname: "User",
       second_surname: "Bench",
-      phone_e164: `+5199011${String(index).padStart(4, "0")}`,
       onboarding_completed_at: BENCH_NOW,
       role: "executive" as const,
       executive_category: "elite" as const,

@@ -24,7 +24,6 @@ export async function seedSessionDeleteFixtures(
     names: `Bench Session ${USER_ID_START + index}`,
     first_surname: "User",
     second_surname: "Bench",
-    phone_e164: `+5199022${String(index).padStart(4, "0")}`,
     onboarding_completed_at: BENCH_NOW,
     role: "executive" as const,
     executive_category: "elite" as const,

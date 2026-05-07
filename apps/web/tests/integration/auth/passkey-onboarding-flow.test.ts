@@ -19,11 +19,7 @@ describe("passkey onboarding flow", () => {
     await scenario.setup();
     await scenario.ctx.db
       .updateTable("users")
-      .set({
-        onboarding_completed_at: null,
-        phone_e164: null,
-        role: "admin",
-      })
+      .set({ onboarding_completed_at: null, role: "admin" })
       .where("id", "=", scenario.identity(identity).userId)
       .execute();
   });
@@ -84,7 +80,13 @@ describe("passkey onboarding flow", () => {
 
     const user = await scenario.ctx.repos.users.findById(userId);
     expect(user?.onboarding_completed_at).not.toBeNull();
-    expect(user?.phone_e164).toBe("+51999888777");
+
+    const whatsappAddr =
+      await scenario.ctx.repos.userChannelAddresses.findByUserAndChannel(
+        userId,
+        "whatsapp",
+      );
+    expect(whatsappAddr?.address).toBe("+51999888777");
 
     const passkeys = await scenario.ctx.repos.passkeys.findByUser(userId);
     expect(passkeys).toHaveLength(1);

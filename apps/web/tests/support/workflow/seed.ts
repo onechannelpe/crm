@@ -51,7 +51,6 @@ type UserSeed = {
   secondSurname: string;
   role: "admin" | "executive";
   branchId?: number;
-  phoneE164?: string;
   createdAt?: number;
 };
 
@@ -146,7 +145,6 @@ export async function seedUser(runtime: TestRuntime, input: UserSeed) {
       names: input.names,
       first_surname: input.firstSurname,
       second_surname: input.secondSurname,
-      phone_e164: input.phoneE164 ?? "+51990000000",
       onboarding_completed_at: createdAt,
       role: input.role,
       is_active: 1,

@@ -31,7 +31,6 @@ export function buildPendingIdentity(input: {
     first_surname: input.firstSurname,
     second_surname: input.secondSurname,
     expires_at: null,
-    phone_e164: null,
     role: input.role,
     executive_category: input.executiveCategory ?? null,
     is_active: 0 as const,

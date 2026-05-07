@@ -50,7 +50,6 @@ export interface InviteUsersPort {
     first_surname: string;
     second_surname: string;
     expires_at?: number | null;
-    phone_e164?: string | null;
     role: Role;
     executive_category?: ExecutiveCategoryValue | null;
     is_active: number;
