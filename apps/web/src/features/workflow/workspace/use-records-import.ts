@@ -117,7 +117,11 @@ export function useRecordsImport() {
     }
 
     if (event.status === "FAILED") {
-      enqueueErrorSnackBar(event.errorMessage ?? "La importación falló");
+      updateSnackBar(s.toastId, {
+        message: event.errorMessage ?? "La importación falló",
+        variant: "error",
+        duration: IMPORT_COMPLETED_DURATION_MS,
+      });
       stopSession();
       return;
     }
@@ -244,6 +248,7 @@ export function useRecordsImport() {
         { duration: IMPORT_PROGRESS_DURATION_MS },
       );
 
+      stopSession();
       session = {
         jobId: result.jobId,
         toastId,
