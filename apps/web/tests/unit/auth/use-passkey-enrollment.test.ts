@@ -48,10 +48,8 @@ describe("usePasskeyEnrollment", () => {
   });
 
   it("shows the configured toast after registering a passkey", async () => {
-    const enqueueSuccessSnackBar =
-      vi.fn<(options: { message: string }) => void>();
-    const enqueueErrorSnackBar =
-      vi.fn<(options: { message: string }) => void>();
+    const enqueueSuccessSnackBar = vi.fn<(message: string) => void>();
+    const enqueueErrorSnackBar = vi.fn<(message: string) => void>();
     const refreshStatus = vi
       .fn<() => Promise<void>>()
       .mockResolvedValue(undefined);
@@ -74,16 +72,14 @@ describe("usePasskeyEnrollment", () => {
     expect(createRegistrationResponse).toHaveBeenCalledOnce();
     expect(finishPasskeyRegistration).toHaveBeenCalledOnce();
     expect(refreshStatus).toHaveBeenCalledOnce();
-    expect(enqueueSuccessSnackBar).toHaveBeenCalledWith({
-      message: "Clave de acceso añadida",
-    });
+    expect(enqueueSuccessSnackBar).toHaveBeenCalledWith(
+      "Clave de acceso añadida",
+    );
   });
 
   it("shows the registration failure message when setup fails", async () => {
-    const enqueueSuccessSnackBar =
-      vi.fn<(options: { message: string }) => void>();
-    const enqueueErrorSnackBar =
-      vi.fn<(options: { message: string }) => void>();
+    const enqueueSuccessSnackBar = vi.fn<(message: string) => void>();
+    const enqueueErrorSnackBar = vi.fn<(message: string) => void>();
     const refreshStatus = vi.fn<() => void>();
     finishPasskeyRegistration.mockRejectedValue(new Error("boom"));
 
@@ -101,8 +97,8 @@ describe("usePasskeyEnrollment", () => {
     await enrollment.registerPasskey();
     dispose();
 
-    expect(enqueueErrorSnackBar).toHaveBeenCalledWith({
-      message: "No se pudo añadir la clave de acceso",
-    });
+    expect(enqueueErrorSnackBar).toHaveBeenCalledWith(
+      "No se pudo añadir la clave de acceso",
+    );
   });
 });
