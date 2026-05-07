@@ -82,6 +82,17 @@ export const motion = {
       return definition;
     };
 
+    const hasTransformProps = (target: MotionTarget | undefined): boolean =>
+      Boolean(
+        target &&
+          (target.x !== undefined ||
+            target.y !== undefined ||
+            target.scale !== undefined ||
+            target.scaleX !== undefined ||
+            target.scaleY !== undefined ||
+            target.rotate !== undefined),
+      );
+
     const transitionToOptions = (transition: MotionTransition): KeyframeAnimationOptions => ({
       duration: Math.max(0, (transition.duration ?? 0.3) * 1000),
       easing: transition.ease ?? "cubic-bezier(0.22, 1, 0.36, 1)",
@@ -125,24 +136,48 @@ export const motion = {
       const toFrame = targetToFrame(toTarget);
       const fromFrame = targetToFrame(fromTarget);
       const fromComputed: Keyframe = {};
-      if (!fromFrame.opacity) fromComputed.opacity = getComputedStyle(el).opacity;
-      if (!fromFrame.transform) {
+      if (fromFrame.opacity === undefined) {
+        fromComputed.opacity = getComputedStyle(el).opacity;
+      }
+      if (fromFrame.transform === undefined) {
         const computedTransform = getComputedStyle(el).transform;
         fromComputed.transform = computedTransform === "none" ? "translateX(0px) translateY(0px)" : computedTransform;
       }
 
-      activeAnimation = el.animate(
-        [{ ...fromComputed, ...fromFrame }, toFrame],
-        transitionToOptions(local.transition),
-      );
-      activeAnimation.onfinish = () => {
-        applyTarget(toTarget);
-        onFinish?.();
+      const startAnimation = () => {
+        if (!el) return;
+        activeAnimation = el.animate(
+          [{ ...fromComputed, ...fromFrame }, toFrame],
+          transitionToOptions(local.transition),
+        );
+        activeAnimation.onfinish = () => {
+          applyTarget(toTarget);
+          onFinish?.();
+        };
       };
+
+      if (fromTarget) {
+        applyTarget(fromTarget);
+        requestAnimationFrame(startAnimation);
+        return;
+      }
+
+      startAnimation();
     };
 
     const runLayoutAnimation = () => {
       if (!el || !local.layout) return;
+      const animateTarget = resolveTarget(local.animate);
+      const initialTarget = resolveTarget(local.initial);
+      const exitTarget = resolveTarget(local.exit);
+      if (
+        hasTransformProps(animateTarget) ||
+        hasTransformProps(initialTarget) ||
+        hasTransformProps(exitTarget)
+      ) {
+        previousRect = el.getBoundingClientRect();
+        return;
+      }
       const nextRect = el.getBoundingClientRect();
       if (previousRect) {
         const dx = previousRect.left - nextRect.left;

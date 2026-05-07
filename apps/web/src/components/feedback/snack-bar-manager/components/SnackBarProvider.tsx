@@ -1,10 +1,8 @@
-import { type JSX } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createSignal, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 
 import { AnimatePresence } from "~/components/ui/animation/animate-presence";
 import { motion } from "~/components/ui/animation/motion";
-import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 
 import { SnackBarComponentInstanceContext } from "../contexts/SnackBarComponentInstanceContext";
 import { SnackBarContext } from "../hooks/useSnackBar";
@@ -12,7 +10,7 @@ import {
   type SnackBarOptions,
   enqueueWithDedupe,
   removeSnackBarById,
-  type SnackBarInternalState,
+  type SnackBarInternalItem,
 } from "../states/snackBarInternalComponentState";
 import { buildErrorAction } from "../utils/buildErrorAction";
 import { SnackBar } from "./SnackBar";
@@ -21,23 +19,27 @@ import styles from "./SnackBarProvider.module.css";
 
 const DEFAULT_DURATION_MS = 5000;
 const DEFAULT_MAX_QUEUE = 3;
-const SNACKBAR_MOTION_VARIANTS = {
-  out: { opacity: 0, y: 40 },
-  in: { opacity: 1, y: 0 },
-} as const;
+const MOBILE_VIEWPORT = 768;
+const SNACK_BAR_ROOT_Z_INDEX = 10002;
 
 export function SnackBarProvider(props: {
   children: JSX.Element;
   instanceId?: string;
 }) {
-  const [state, setState] = createStore<SnackBarInternalState>({
-    maxQueue: DEFAULT_MAX_QUEUE,
-    queue: [],
-  });
+  const isMobile =
+    typeof window !== "undefined"
+      ? window.matchMedia(`(max-width: ${MOBILE_VIEWPORT}px)`).matches
+      : false;
+  const snackBarMotionVariants = {
+    out: { opacity: 0, y: isMobile ? -40 : 40 },
+    in: { opacity: 1, y: 0 },
+  } as const;
+
+  const [queue, setQueue] = createSignal<SnackBarInternalItem[]>([]);
   let snackBarCounter = 0;
 
   const handleSnackBarClose = (id: string) => {
-    setState("queue", (queue) => removeSnackBarById(queue, id));
+    setQueue((currentQueue) => removeSnackBarById(currentQueue, id));
   };
 
   const enqueueSnackBar = (
@@ -55,9 +57,9 @@ export function SnackBarProvider(props: {
       message,
       detailedMessage: options?.detailedMessage,
       dedupeKey: options?.dedupeKey,
-      actionText: options?.actionText,
-      actionOnClick: options?.actionOnClick,
-      actionTo: options?.actionTo,
+      buttonLabel: options?.buttonLabel,
+      buttonOnClick: options?.buttonOnClick,
+      buttonTo: options?.buttonTo,
       onCancel: options?.onCancel,
       icon: options?.icon,
       progress: options?.progress,
@@ -65,8 +67,8 @@ export function SnackBarProvider(props: {
       duration,
     };
 
-    setState("queue", (queue) =>
-      enqueueWithDedupe(state.maxQueue, queue, item),
+    setQueue((currentQueue) =>
+      enqueueWithDedupe(DEFAULT_MAX_QUEUE, currentQueue, item),
     );
     return id;
   };
@@ -126,7 +128,7 @@ export function SnackBarProvider(props: {
     >
       <SnackBarContext.Provider
         value={{
-          snackBars: state.queue,
+          snackBars: queue(),
           handleSnackBarClose,
           enqueueSuccessSnackBar,
           enqueueErrorSnackBar,
@@ -136,21 +138,26 @@ export function SnackBarProvider(props: {
       >
         {props.children}
         <Portal>
-          <div class={styles.container} style={{ "z-index": DS_Z_INDEX.toast }}>
-            <AnimatePresence mode="popLayout">
-              {state.queue.map((snackBar) => (
+          <div
+            class={styles.container}
+            style={{ "z-index": String(SNACK_BAR_ROOT_Z_INDEX) }}
+          >
+            <AnimatePresence
+              each={queue()}
+              getKey={(snackBar) => snackBar.id}
+            >
+              {(snackBar) => (
                 <motion.div
                   key={snackBar.id}
-                  variants={SNACKBAR_MOTION_VARIANTS}
+                  variants={snackBarMotionVariants}
                   initial="out"
                   animate="in"
                   exit="out"
                   transition={{ duration: 0.5 }}
-                  layout
                 >
                   <SnackBar snackBar={snackBar} onClose={handleSnackBarClose} />
                 </motion.div>
-              ))}
+              )}
             </AnimatePresence>
           </div>
         </Portal>

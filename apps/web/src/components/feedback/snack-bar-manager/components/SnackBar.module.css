@@ -1,18 +1,14 @@
 .snackBar {
   pointer-events: auto;
   width: 296px;
-  max-width: calc(100vw - 24px);
-  border-radius: var(--radius-md);
-  background-color: var(--background-transparent-light);
+  border-radius: var(--t-border-radius-md);
+  background-color: var(--t-background-transparent-primary);
   backdrop-filter: var(--t-blur-medium);
   -webkit-backdrop-filter: var(--t-blur-medium);
-  box-shadow: var(--shadow-elevation-3);
-  padding: var(--spacing-2);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-2);
+  box-shadow: var(--t-box-shadow-strong);
+  box-sizing: border-box;
+  padding: var(--t-spacing-2) var(--t-spacing-2) var(--t-spacing-1);
   position: relative;
-  overflow: hidden;
 }
 
 .default {
@@ -56,88 +52,89 @@
   );
 }
 
+.header {
+  align-items: center;
+  color: var(--t-font-color-primary);
+  display: flex;
+  font-weight: var(--t-font-weight-medium);
+  gap: var(--t-spacing-2);
+  margin-bottom: var(--t-spacing-1);
+}
+
 .icon {
-  color: var(--snack-bar-icon-color);
+  color: var(--snack-bar-icon-color, var(--foreground-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.content {
-  flex: 1;
-  min-width: 0;
 }
 
 .message {
   margin: 0;
-  color: var(--foreground);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.4;
-  word-break: break-word;
+  color: var(--t-font-color-secondary);
+  font-size: var(--t-font-size-sm);
 }
 
 .details {
-  margin: var(--spacing-1) 0 0;
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-sm);
-  line-height: 1.4;
+  margin: 0;
+  color: var(--t-font-color-tertiary);
+  font-size: var(--t-font-size-sm);
+  overflow: hidden;
+  padding-left: var(--t-spacing-6);
+  text-overflow: ellipsis;
+  width: 200px;
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  margin-left: auto;
 }
 
 .action {
-  margin-top: var(--spacing-1);
-  margin-left: var(--spacing-6);
+  padding-left: 0;
 }
 
 .actionLink {
-  color: var(--foreground-tertiary);
-  display: block;
-  font-size: var(--font-size-sm);
-  margin-top: var(--spacing-1);
-  max-width: 200px;
-  overflow: hidden;
-  padding-left: var(--spacing-6);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--t-font-color-tertiary);
+  font-size: var(--t-font-size-sm);
 }
 
 .actionLink:hover {
-  color: var(--foreground-secondary);
+  color: var(--t-font-color-secondary);
 }
 
 .dismiss {
   width: 24px;
   height: 24px;
   color: var(--muted-foreground);
-  opacity: 0.6;
-  margin-top: -2px;
+  opacity: 1;
+  margin-top: 0;
   transition:
     opacity var(--motion-fast) linear,
     background-color var(--motion-fast) linear;
-  flex-shrink: 0;
   border-radius: var(--radius-sm);
 }
 
-.dismiss:hover {
-  opacity: 1;
-  background-color: var(--tertiary);
+.bottomActionContainer {
+  margin-top: var(--t-spacing-2);
 }
 
-.progressBar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 4px;
-  background-color: var(--snack-bar-progress-color);
-  pointer-events: none;
-  transition: width 0.1s linear;
-  border-bottom-left-radius: var(--radius-md);
+.separator {
+  border: 0;
+  border-top: 1px solid var(--t-border-color-light);
+  margin: 0;
 }
 
-@media (max-width: 640px) {
+.bottomAction {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--t-spacing-1);
+}
+
+@media (max-width: 768px) {
   .snackBar {
+    border-radius: 0;
     width: 100%;
   }
 }

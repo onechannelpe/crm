@@ -10,6 +10,7 @@ import { PopChild } from "./pop-child";
 import { PresenceContext, type PresenceContextValue } from "./presence-context";
 
 interface PresenceChildProps {
+  key?: string;
   children: JSX.Element;
   isPresent: boolean;
   onExitComplete?: () => void;

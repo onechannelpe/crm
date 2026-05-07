@@ -9,11 +9,9 @@ import {
 
 import { PresenceContext } from "./presence-context";
 
-type AlwaysPresent = [Accessor<boolean>, null];
-type Present = [Accessor<boolean>];
-type NotPresent = [Accessor<boolean>, () => void];
+type PresenceTuple = [Accessor<boolean>, (() => void) | null];
 
-export function usePresence(subscribe = true): AlwaysPresent | Present | NotPresent {
+export function usePresence(subscribe = true): PresenceTuple {
   const context = useContext(PresenceContext);
   if (context === null) return [() => true, null];
 
@@ -33,7 +31,7 @@ export function usePresence(subscribe = true): AlwaysPresent | Present | NotPres
     context.onExitComplete?.(id);
   };
 
-  return !isPresent() && context.onExitComplete ? [isPresent, safeToRemove] : [isPresent];
+  return [isPresent, subscribe ? safeToRemove : null];
 }
 
 export function useIsPresent(): boolean {

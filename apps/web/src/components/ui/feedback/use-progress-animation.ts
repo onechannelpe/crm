@@ -1,4 +1,4 @@
-import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
 interface UseProgressAnimationOptions {
   durationMs: number;
@@ -67,15 +67,7 @@ export function useProgressAnimation(
     lastTickTs = ts;
 
     if (delta > 0) {
-      setElapsedMs((prev) => {
-        const next = Math.min(durationMs, prev + delta);
-        if (next >= durationMs && durationMs > 0 && !completed) {
-          completed = true;
-          setIsPlaying(false);
-          options.onComplete?.();
-        }
-        return next;
-      });
+      setElapsedMs((prev) => Math.min(durationMs, prev + delta));
     }
 
     if (isPlaying()) {
@@ -123,6 +115,15 @@ export function useProgressAnimation(
     if (options.autoPlay ?? true) {
       ensureRunning();
     }
+  });
+
+  createEffect(() => {
+    if (durationMs <= 0) return;
+    if (completed) return;
+    if (elapsedMs() < durationMs) return;
+    completed = true;
+    setIsPlaying(false);
+    options.onComplete?.();
   });
 
   onCleanup(() => {

@@ -182,6 +182,7 @@
   --t-background-transparent-lighter: var(--background-transparent-lighter);
   --t-background-transparent-light: var(--background-transparent-light);
   --t-background-transparent-medium: var(--background-transparent-medium);
+  --t-background-transparent-primary: var(--background-transparent-light);
   --t-border-color-strong: color(display-p3 0.839 0.839 0.839);
   --t-border-color-medium: color(display-p3 0.922 0.922 0.922);
   --t-border-color-light: color(display-p3 0.945 0.945 0.945);
@@ -192,6 +193,7 @@
   --t-blur-light: blur(6px) saturate(200%) contrast(50%) brightness(130%);
   --t-blur-medium: blur(12px) saturate(200%) contrast(50%) brightness(130%);
   --t-blur-strong: blur(20px) saturate(200%) contrast(50%) brightness(130%);
+  --t-box-shadow-strong: var(--shadow-elevation-3);
 
   --shadow-elevation-1:
     0px 2px 4px 0px color(display-p3 0 0 0 / 0.039),
@@ -259,6 +261,7 @@
   --t-background-transparent-lighter: var(--background-transparent-lighter);
   --t-background-transparent-light: var(--background-transparent-light);
   --t-background-transparent-medium: var(--background-transparent-medium);
+  --t-background-transparent-primary: var(--background-transparent-light);
   --t-border-color-strong: color(display-p3 0.282 0.282 0.282);
   --t-border-color-medium: color(display-p3 0.133 0.133 0.133);
   --t-border-color-light: color(display-p3 0.114 0.114 0.114);
@@ -269,6 +272,7 @@
   --t-blur-light: blur(6px) saturate(200%) contrast(100%) brightness(130%);
   --t-blur-medium: blur(12px) saturate(200%) contrast(100%) brightness(130%);
   --t-blur-strong: blur(20px) saturate(200%) contrast(100%) brightness(130%);
+  --t-box-shadow-strong: var(--shadow-elevation-3);
 
   --shadow-elevation-1:
     0px 2px 4px 0px color(display-p3 0 0 0 / 0.04),

@@ -1,162 +1,125 @@
-import { children, createEffect, createSignal, type JSX } from "solid-js";
+import { createEffect, createMemo, createSignal, For, type JSX } from "solid-js";
 
 import { PresenceChild } from "./presence-child";
-import { usePresence } from "./use-presence";
 
-export interface AnimatePresenceProps {
-  children: JSX.Element;
+export interface AnimatePresenceProps<T> {
+  each: readonly T[];
+  getKey: (item: T) => string;
+  children: (item: T) => JSX.Element;
   initial?: boolean;
   custom?: any;
   onExitComplete?: () => void;
-  mode?: "sync" | "popLayout" | "wait";
-  root?: HTMLElement | ShadowRoot;
-  presenceAffectsLayout?: boolean;
-  propagate?: boolean;
-  anchorX?: "left" | "right";
-  anchorY?: "top" | "bottom";
+  mode?: "sync" | "wait";
 }
 
-interface TrackedChild {
-  element: JSX.Element;
+interface TrackedChild<T> {
+  item: T;
   key: string;
 }
 
-export function AnimatePresence(props: AnimatePresenceProps) {
-  const [isParentPresent, safeToRemove] = usePresence(props.propagate ?? false);
-  const resolvedChildren = children(() => props.children);
-
-  const [diffedChildren, setDiffedChildren] = createSignal<TrackedChild[]>([]);
-  const [renderedChildren, setRenderedChildren] = createSignal<TrackedChild[]>([]);
-  const pendingPresentChildren: { current: TrackedChild[] } = { current: [] };
+export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
+  const [renderedChildren, setRenderedChildren] = createSignal<TrackedChild<T>[]>([]);
+  const [presentChildren, setPresentChildren] = createSignal<TrackedChild<T>[]>([]);
   const exitComplete = new Map<string, boolean>();
-  const exitingComponents = new Set<string>();
+  const trackedByKey = new Map<string, TrackedChild<T>>();
+  let didMount = false;
+  const presentKeySet = createMemo(
+    () => new Set(presentChildren().map((child) => child.key)),
+  );
 
   createEffect(() => {
-    const presentChildren = onlyElements(resolvedChildren.toArray());
-    const presentKeys =
-      props.propagate && !isParentPresent()
-        ? []
-        : presentChildren.map((child) => child.key);
-
-    pendingPresentChildren.current = presentChildren;
-
-    renderedChildren().forEach((child) => {
-      if (!presentKeys.includes(child.key)) {
-        if (exitComplete.get(child.key) !== true) {
-          exitComplete.set(child.key, false);
-        }
-      } else {
-        exitComplete.delete(child.key);
-        exitingComponents.delete(child.key);
+    const nextPresentChildren = props.each.map((item) => {
+      const key = props.getKey(item);
+      const existing = trackedByKey.get(key);
+      if (existing) {
+        existing.item = item;
+        return existing;
       }
+      const trackedChild = { item, key };
+      trackedByKey.set(key, trackedChild);
+      return trackedChild;
     });
+    const nextPresentKeys = new Set(
+      nextPresentChildren.map((child) => child.key),
+    );
+    setPresentChildren(nextPresentChildren);
 
-    const currentDiffed = diffedChildren();
-    if (sameKeyOrder(presentChildren, currentDiffed)) return;
-
-    let nextChildren = [...presentChildren];
-    const exitingChildren: TrackedChild[] = [];
-
-    renderedChildren().forEach((child, index) => {
-      if (!presentKeys.includes(child.key)) {
-        nextChildren.splice(index, 0, child);
-        exitingChildren.push(child);
-      }
-    });
-
-    if ((props.mode ?? "sync") === "wait" && exitingChildren.length > 0) {
-      nextChildren = exitingChildren;
+    if (!didMount) {
+      didMount = true;
+      setRenderedChildren(nextPresentChildren);
+      return;
     }
 
-    setRenderedChildren(nextChildren);
-    setDiffedChildren(presentChildren);
+    setRenderedChildren((currentRenderedChildren) => {
+      const nextChildren = [...nextPresentChildren];
+      const exitingChildren: TrackedChild<T>[] = [];
+
+      currentRenderedChildren.forEach((child, index) => {
+        if (!nextPresentKeys.has(child.key)) {
+          exitComplete.set(child.key, false);
+          nextChildren.splice(index, 0, child);
+          exitingChildren.push(child);
+        } else {
+          exitComplete.delete(child.key);
+        }
+      });
+
+      if ((props.mode ?? "sync") === "wait" && exitingChildren.length > 0) {
+        return exitingChildren;
+      }
+
+      return nextChildren;
+    });
   });
 
-  const onChildExit = (key: string) => {
-    if (exitingComponents.has(key)) return;
+  const handleChildExitComplete = (key: string) => {
     if (!exitComplete.has(key)) return;
-
-    exitingComponents.add(key);
     exitComplete.set(key, true);
 
-    for (const isComplete of exitComplete.values()) {
-      if (!isComplete) return;
+    for (const complete of exitComplete.values()) {
+      if (!complete) return;
     }
 
-    setRenderedChildren(pendingPresentChildren.current);
-    if (props.propagate) safeToRemove?.();
+    const currentPresentKeys = new Set(
+      presentChildren().map((child) => child.key),
+    );
+    setRenderedChildren((currentRenderedChildren) =>
+      currentRenderedChildren.filter((child) =>
+        currentPresentKeys.has(child.key),
+      ),
+    );
+    Array.from(trackedByKey.keys()).forEach((key) => {
+      if (!currentPresentKeys.has(key)) {
+        trackedByKey.delete(key);
+      }
+    });
+    exitComplete.clear();
     props.onExitComplete?.();
   };
 
-  if (
-    import.meta.env.DEV &&
-    (props.mode ?? "sync") === "wait" &&
-    renderedChildren().length > 1
-  ) {
-    console.warn(
-      "AnimatePresence mode=\"wait\" with multiple children can lead to odd behavior.",
-    );
-  }
-
   return (
     <>
-      {renderedChildren().map((child) => {
-        const presentChildren = onlyElements(resolvedChildren.toArray());
-        const presentKeys =
-          props.propagate && !isParentPresent()
-            ? []
-            : presentChildren.map((item) => item.key);
+      <For each={renderedChildren()}>
+        {(child) => {
+          const isPresent = presentKeySet().has(child.key);
 
-        const isPresent =
-          sameKeyOrder(presentChildren, renderedChildren()) ||
-          presentKeys.includes(child.key);
-
-        return (
-          <PresenceChild
-            isPresent={isPresent}
-            initial={props.initial === false ? false : undefined}
-            custom={props.custom}
-            presenceAffectsLayout={props.presenceAffectsLayout ?? true}
-            mode={props.mode ?? "sync"}
-            root={props.root}
-            anchorX={props.anchorX}
-            anchorY={props.anchorY}
-            onExitComplete={isPresent ? undefined : () => onChildExit(child.key)}
-          >
-            {child.element}
-          </PresenceChild>
-        );
-      })}
+          return (
+            <PresenceChild
+              key={child.key}
+              isPresent={isPresent}
+              initial={props.initial === false ? false : undefined}
+              custom={props.custom}
+              presenceAffectsLayout
+              mode="sync"
+              onExitComplete={
+                isPresent ? undefined : () => handleChildExitComplete(child.key)
+              }
+            >
+              {props.children(child.item)}
+            </PresenceChild>
+          );
+        }}
+      </For>
     </>
   );
-}
-
-function onlyElements(values: unknown[]): TrackedChild[] {
-  const tracked: TrackedChild[] = [];
-  values.forEach((value, index) => {
-    if (value === null || value === undefined || value === false) return;
-    tracked.push({
-      element: value as JSX.Element,
-      key: childKey(value, index),
-    });
-  });
-  return tracked;
-}
-
-function childKey(child: unknown, index: number): string {
-  if (typeof child === "object" && child !== null) {
-    const maybeKey = (child as { key?: unknown }).key;
-    if (typeof maybeKey === "string" || typeof maybeKey === "number") {
-      return String(maybeKey);
-    }
-  }
-  return `__index_${index}`;
-}
-
-function sameKeyOrder(a: TrackedChild[], b: TrackedChild[]) {
-  if (a.length !== b.length) return false;
-  for (let index = 0; index < a.length; index += 1) {
-    if (a[index]?.key !== b[index]?.key) return false;
-  }
-  return true;
 }

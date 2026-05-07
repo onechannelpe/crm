@@ -16,7 +16,7 @@ import styles from "./SnackBar.module.css";
 
 interface SnackBarProps {
   snackBar: SnackBarInternalItem;
-  onClose: (id: string) => void;
+  onClose?: (id: string) => void;
 }
 
 export function SnackBar(props: SnackBarProps) {
@@ -27,9 +27,9 @@ export function SnackBar(props: SnackBarProps) {
       props.snackBar.progress === undefined,
     initialValue: props.snackBar.progress ?? 100,
     finalValue: 0,
-    onComplete: () => props.onClose(props.snackBar.id),
+    onComplete: () => props.onClose?.(props.snackBar.id),
   });
-  const progressValue =
+  const progressValue = () =>
     props.snackBar.duration <= 0 ? 100 : progress.value();
   const sanitizedMessage =
     sanitizeMessageToRenderInSnackbar(props.snackBar.message) ?? "";
@@ -38,6 +38,14 @@ export function SnackBar(props: SnackBarProps) {
   );
   const role = props.snackBar.role ?? "status";
   const ariaLive = role === "alert" ? "assertive" : "polite";
+  const titleByVariant = {
+    default: "Alert",
+    error: "Error",
+    info: "Info",
+    success: "Success",
+    warning: "Warning",
+  } as const;
+  const title = sanitizedMessage || titleByVariant[props.snackBar.variant];
 
   return (
     <div
@@ -57,71 +65,82 @@ export function SnackBar(props: SnackBarProps) {
       onMouseLeave={() => progress.play()}
       role={role}
       aria-live={ariaLive}
-      title={sanitizedMessage}
+      title={title}
+      data-globally-prevent-click-outside
     >
-      <ProgressBar value={progressValue} />
-      <div class={styles.icon}>
-        {props.snackBar.icon}
-        {!props.snackBar.icon && props.snackBar.variant === "success" && (
-          <CircleCheckBig size={16} />
-        )}
-        {!props.snackBar.icon && props.snackBar.variant === "error" && (
-          <CircleAlert size={16} />
-        )}
-        {!props.snackBar.icon && props.snackBar.variant === "info" && (
-          <Info size={16} />
-        )}
-        {!props.snackBar.icon && props.snackBar.variant === "warning" && (
-          <CircleAlert size={16} />
-        )}
-        {!props.snackBar.icon && props.snackBar.variant === "default" && (
-          <Info size={16} />
-        )}
-      </div>
-
-      <div class={styles.content}>
+      <ProgressBar value={progressValue()} />
+      <div class={styles.header}>
+        <div class={styles.icon}>
+          {props.snackBar.icon}
+          {!props.snackBar.icon && props.snackBar.variant === "success" && (
+            <CircleCheckBig size={16} />
+          )}
+          {!props.snackBar.icon && props.snackBar.variant === "error" && (
+            <CircleAlert size={16} />
+          )}
+          {!props.snackBar.icon && props.snackBar.variant === "info" && (
+            <Info size={16} />
+          )}
+          {!props.snackBar.icon && props.snackBar.variant === "warning" && (
+            <CircleAlert size={16} />
+          )}
+          {!props.snackBar.icon && props.snackBar.variant === "default" && (
+            <CircleAlert size={16} />
+          )}
+        </div>
         <p class={styles.message}>{sanitizedMessage}</p>
-        {sanitizedDetailedMessage && (
-          <p class={styles.details}>{sanitizedDetailedMessage}</p>
-        )}
-        {props.snackBar.actionText && props.snackBar.actionTo && (
-          <A href={props.snackBar.actionTo} class={styles.actionLink}>
-            {props.snackBar.actionText}
-          </A>
-        )}
-        {props.snackBar.actionText && props.snackBar.actionOnClick && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            class={styles.action}
-            onClick={props.snackBar.actionOnClick}
-          >
-            {props.snackBar.actionText}
-          </Button>
-        )}
-        {props.snackBar.onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            class={styles.action}
-            onClick={props.snackBar.onCancel}
-          >
-            Cancelar
-          </Button>
-        )}
+        <div class={styles.actions}>
+          {props.snackBar.onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              class={styles.cancel}
+              onClick={props.snackBar.onCancel}
+            >
+              Cancelar
+            </Button>
+          )}
+          {props.onClose && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => props.onClose?.(props.snackBar.id)}
+              class={styles.dismiss}
+            >
+              <X size={14} />
+            </Button>
+          )}
+        </div>
       </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => props.onClose(props.snackBar.id)}
-        class={styles.dismiss}
-      >
-        <X size={14} />
-      </Button>
+      {sanitizedDetailedMessage && (
+        <p class={styles.details}>{sanitizedDetailedMessage}</p>
+      )}
+      {props.snackBar.buttonLabel &&
+        (props.snackBar.buttonOnClick || props.snackBar.buttonTo) && (
+          <div class={styles.bottomActionContainer}>
+            <hr class={styles.separator} />
+            <div class={styles.bottomAction}>
+              {props.snackBar.buttonTo ? (
+                <A href={props.snackBar.buttonTo} class={styles.actionLink}>
+                  {props.snackBar.buttonLabel}
+                </A>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class={styles.action}
+                  onClick={props.snackBar.buttonOnClick}
+                >
+                  {props.snackBar.buttonLabel}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
     </div>
   );
 }

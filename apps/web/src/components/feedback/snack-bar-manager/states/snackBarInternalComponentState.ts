@@ -14,9 +14,9 @@ export interface SnackBarOptions {
   detailedMessage?: string;
   duration?: number;
   dedupeKey?: string;
-  actionText?: string;
-  actionOnClick?: () => void;
-  actionTo?: string;
+  buttonLabel?: string;
+  buttonOnClick?: () => void;
+  buttonTo?: string;
   onCancel?: () => void;
   icon?: JSX.Element;
   progress?: number;
