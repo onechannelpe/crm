@@ -4,9 +4,10 @@ import type { Database } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
 
-import { resolveChannelAddress, resolveRecipients } from "./audience-resolver";
-import { safeParseUnknown } from "./json";
-import type { Channel } from "./types";
+import {
+  resolveChannelAddress,
+  resolveRecipientsFromTargets,
+} from "./audience-resolver";
 
 const logger = createLogger("notifications-intent-processor");
 
@@ -25,16 +26,6 @@ function insertedRowCount(
     return result.numInsertedOrUpdatedRows;
   }
   return 0;
-}
-
-function parseChannels(payload: string): Channel[] {
-  const parsed = safeParseUnknown(payload);
-  if (!Array.isArray(parsed)) return ["in_app"];
-  const channels = parsed.filter(
-    (value): value is Channel =>
-      value === "in_app" || value === "email" || value === "whatsapp",
-  );
-  return channels.length > 0 ? channels : ["in_app"];
 }
 
 export function createNotificationIntentProcessor(
@@ -81,10 +72,9 @@ export function createNotificationIntentProcessor(
 
     for (const intent of intents) {
       try {
-        const recipients = await resolveRecipients(
+        const recipients = await resolveRecipientsFromTargets(
           db,
-          intent.audience_kind,
-          intent.audience_payload_json,
+          intent.intent_id,
         );
         logger.info("recipient_resolved", {
           source_event_id: intent.source_event_id,
@@ -94,7 +84,12 @@ export function createNotificationIntentProcessor(
           aggregate_id: intent.aggregate_id,
         });
 
-        const channels = parseChannels(intent.channel_set_json);
+        const channelsRows = await db
+          .selectFrom("notification_intent_channels")
+          .select("channel")
+          .where("intent_id", "=", intent.intent_id)
+          .execute();
+        const channels = channelsRows.map((row) => row.channel);
         if (channels.includes("in_app")) {
           const appInsert = await db
             .insertInto("app_notifications")

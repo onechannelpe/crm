@@ -2,80 +2,63 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
-import { safeParseObject } from "./json";
-
-export async function resolveRecipients(
+export async function resolveRecipientsFromTargets(
   db: Kysely<Database>,
-  audienceKind: string,
-  audiencePayloadJson: string,
+  intentId: string,
 ): Promise<number[]> {
-  const payload = safeParseObject(audiencePayloadJson);
-  if (!payload) {
-    return [];
-  }
+  const targets = await db
+    .selectFrom("notification_intent_targets")
+    .selectAll()
+    .where("intent_id", "=", intentId)
+    .execute();
 
-  if (audienceKind === "user_ids") {
-    return Array.isArray(payload.user_ids)
-      ? payload.user_ids.filter(
-          (value): value is number => typeof value === "number",
-        )
-      : [];
-  }
+  const recipientIds = new Set<number>();
 
-  if (audienceKind === "branch_roles") {
-    const branchId =
-      typeof payload.branch_id === "number" ? payload.branch_id : null;
-    const roles = Array.isArray(payload.branch_roles)
-      ? payload.branch_roles.filter(
-          (value): value is string => typeof value === "string",
-        )
-      : [];
-    if (branchId === null || roles.length < 1) {
-      return [];
+  for (const target of targets) {
+    if (target.target_kind === "user_id" && target.user_id !== null) {
+      recipientIds.add(target.user_id);
+      continue;
     }
-    const rows = await db
-      .selectFrom("users")
-      .select("id")
-      .where("branch_id", "=", branchId)
-      .where("role", "in", roles as Array<"back_office">)
-      .where("is_active", "=", 1)
-      .execute();
-    return rows.map((row) => row.id);
-  }
 
-  if (audienceKind === "global_roles") {
-    const roles = Array.isArray(payload.global_roles)
-      ? payload.global_roles.filter(
-          (value): value is string => typeof value === "string",
-        )
-      : [];
-    if (roles.length < 1) {
-      return [];
+    if (
+      target.target_kind === "branch_role" &&
+      target.branch_id !== null &&
+      target.role !== null
+    ) {
+      const rows = await db
+        .selectFrom("users")
+        .select("id")
+        .where("branch_id", "=", target.branch_id)
+        .where("role", "=", target.role as never)
+        .where("is_active", "=", 1)
+        .execute();
+      for (const row of rows) recipientIds.add(row.id);
+      continue;
     }
-    const rows = await db
-      .selectFrom("users")
-      .select("id")
-      .where("role", "in", roles as Array<"admin">)
-      .where("is_active", "=", 1)
-      .execute();
-    return rows.map((row) => row.id);
-  }
 
-  if (audienceKind === "team") {
-    const teamId = typeof payload.team_id === "number" ? payload.team_id : null;
-    if (teamId === null) {
-      return [];
+    if (target.target_kind === "global_role" && target.role !== null) {
+      const rows = await db
+        .selectFrom("users")
+        .select("id")
+        .where("role", "=", target.role as never)
+        .where("is_active", "=", 1)
+        .execute();
+      for (const row of rows) recipientIds.add(row.id);
+      continue;
     }
-    const rows = await db
-      .selectFrom("users")
-      .select("id")
-      .where("team_id", "=", teamId)
-      .where("is_active", "=", 1)
-      .execute();
-    return rows.map((row) => row.id);
+
+    if (target.target_kind === "team_id" && target.team_id !== null) {
+      const rows = await db
+        .selectFrom("users")
+        .select("id")
+        .where("team_id", "=", target.team_id)
+        .where("is_active", "=", 1)
+        .execute();
+      for (const row of rows) recipientIds.add(row.id);
+    }
   }
 
-  return [];
+  return [...recipientIds];
 }
 
 export async function resolveChannelAddress(

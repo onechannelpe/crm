@@ -19,10 +19,29 @@ export type NotificationIntent = {
   sourceEventId: string;
   eventType: string;
   audienceKind: AudienceKind;
-  audiencePayloadJson: string;
-  channelSetJson: string;
+  targets: NotificationIntentTarget[];
+  channels: Channel[];
   priority: "high" | "normal" | "low";
   title: string;
   bodyText: string;
   actionUrl: string | null;
 };
+
+export type NotificationIntentTarget =
+  | {
+      targetKind: "user_id";
+      userId: number;
+    }
+  | {
+      targetKind: "branch_role";
+      branchId: number;
+      role: string;
+    }
+  | {
+      targetKind: "global_role";
+      role: string;
+    }
+  | {
+      targetKind: "team_id";
+      teamId: number;
+    };

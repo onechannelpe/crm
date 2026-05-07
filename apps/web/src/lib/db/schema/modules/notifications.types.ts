@@ -78,8 +78,6 @@ export interface NotificationIntentsOutboxTable {
   event_type: string;
   aggregate_id: string;
   audience_kind: "user_ids" | "branch_roles" | "global_roles" | "team";
-  audience_payload_json: string;
-  channel_set_json: string;
   title: string;
   body_text: string;
   action_url: string | null;
@@ -93,4 +91,22 @@ export interface NotificationIntentsOutboxTable {
   error_message: string | null;
   created_at: number;
   processed_at: number | null;
+}
+
+export interface NotificationIntentChannelsTable {
+  id: Generated<number>;
+  intent_id: string;
+  channel: "in_app" | "email" | "whatsapp";
+  created_at: number;
+}
+
+export interface NotificationIntentTargetsTable {
+  id: Generated<number>;
+  intent_id: string;
+  target_kind: "user_id" | "branch_role" | "global_role" | "team_id";
+  user_id: number | null;
+  branch_id: number | null;
+  role: string | null;
+  team_id: number | null;
+  created_at: number;
 }

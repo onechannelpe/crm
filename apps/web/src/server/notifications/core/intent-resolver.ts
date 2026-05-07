@@ -1,5 +1,10 @@
 import { getNumber, getString, safeParseObject } from "./json";
-import type { Channel, DomainEvent, NotificationIntent } from "./types";
+import type {
+  Channel,
+  DomainEvent,
+  NotificationIntent,
+  NotificationIntentTarget,
+} from "./types";
 
 export function resolveNotificationIntents(
   event: DomainEvent,
@@ -28,8 +33,8 @@ export function resolveNotificationIntents(
     if (to === "NEEDS_EXECUTIVE_INPUT" && executiveId !== null) {
       pushIntent(0, {
         audienceKind: "user_ids",
-        audiencePayloadJson: JSON.stringify({ user_ids: [executiveId] }),
-        channelSetJson: JSON.stringify(["in_app"] satisfies Channel[]),
+        targets: [{ targetKind: "user_id", userId: executiveId }],
+        channels: ["in_app"] satisfies Channel[],
         eventType: "lead.needs_executive_input",
         priority: "high",
         title: "Accion requerida",
@@ -41,11 +46,14 @@ export function resolveNotificationIntents(
     if (to === "READY_FOR_QUOTATION" && branchId !== null) {
       pushIntent(0, {
         audienceKind: "branch_roles",
-        audiencePayloadJson: JSON.stringify({
-          branch_id: branchId,
-          branch_roles: ["back_office"],
-        }),
-        channelSetJson: JSON.stringify(["in_app"] satisfies Channel[]),
+        targets: [
+          {
+            targetKind: "branch_role",
+            branchId,
+            role: "back_office",
+          },
+        ] satisfies NotificationIntentTarget[],
+        channels: ["in_app"] satisfies Channel[],
         eventType: "lead.ready_for_quotation",
         priority: "normal",
         title: "Prospecto listo para cotizacion",
@@ -57,8 +65,8 @@ export function resolveNotificationIntents(
     if (to === "READY_FOR_SALE" && executiveId !== null) {
       pushIntent(0, {
         audienceKind: "user_ids",
-        audiencePayloadJson: JSON.stringify({ user_ids: [executiveId] }),
-        channelSetJson: JSON.stringify(["in_app"] satisfies Channel[]),
+        targets: [{ targetKind: "user_id", userId: executiveId }],
+        channels: ["in_app"] satisfies Channel[],
         eventType: "lead.ready_for_sale",
         priority: "high",
         title: "Prospecto listo para venta",
@@ -82,12 +90,8 @@ export function resolveNotificationIntents(
     if (userId !== null) {
       pushIntent(0, {
         audienceKind: "user_ids",
-        audiencePayloadJson: JSON.stringify({ user_ids: [userId] }),
-        channelSetJson: JSON.stringify([
-          "in_app",
-          "email",
-          "whatsapp",
-        ] satisfies Channel[]),
+        targets: [{ targetKind: "user_id", userId }],
+        channels: ["in_app", "email", "whatsapp"] satisfies Channel[],
         eventType: "security.privileged_login",
         priority: "high",
         title: getString(payload, "title") ?? "Security alert",
@@ -111,12 +115,8 @@ export function resolveNotificationIntents(
     ) {
       pushIntent(0, {
         audienceKind,
-        audiencePayloadJson: JSON.stringify(audience),
-        channelSetJson: JSON.stringify([
-          "in_app",
-          "email",
-          "whatsapp",
-        ] satisfies Channel[]),
+        targets: deriveTargetsFromAudience(audienceKind, audience),
+        channels: ["in_app", "email", "whatsapp"] satisfies Channel[],
         eventType: "broadcast.general",
         priority: "normal",
         title: getString(payload, "title") ?? "Broadcast",
@@ -127,4 +127,40 @@ export function resolveNotificationIntents(
   }
 
   return intents;
+}
+
+function deriveTargetsFromAudience(
+  audienceKind: "user_ids" | "branch_roles" | "global_roles" | "team",
+  audience: Record<string, unknown>,
+): NotificationIntentTarget[] {
+  if (audienceKind === "user_ids") {
+    const userIds = Array.isArray(audience.user_ids)
+      ? audience.user_ids.filter(
+          (value): value is number => typeof value === "number",
+        )
+      : [];
+    return userIds.map((userId) => ({ targetKind: "user_id", userId }));
+  }
+  if (audienceKind === "branch_roles") {
+    const branchId =
+      typeof audience.branch_id === "number" ? audience.branch_id : null;
+    const roles = Array.isArray(audience.branch_roles)
+      ? audience.branch_roles.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [];
+    if (branchId === null) return [];
+    return roles.map((role) => ({ targetKind: "branch_role", branchId, role }));
+  }
+  if (audienceKind === "global_roles") {
+    const roles = Array.isArray(audience.global_roles)
+      ? audience.global_roles.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [];
+    return roles.map((role) => ({ targetKind: "global_role", role }));
+  }
+  const teamId = typeof audience.team_id === "number" ? audience.team_id : null;
+  if (teamId === null) return [];
+  return [{ targetKind: "team_id", teamId }];
 }

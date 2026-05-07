@@ -156,8 +156,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("event_type", "varchar(64)", (col) => col.notNull())
     .addColumn("aggregate_id", "text", (col) => col.notNull())
     .addColumn("audience_kind", "varchar(24)", (col) => col.notNull())
-    .addColumn("audience_payload_json", "text", (col) => col.notNull())
-    .addColumn("channel_set_json", "text", (col) => col.notNull())
     .addColumn("title", "varchar(255)", (col) => col.notNull())
     .addColumn("body_text", "text", (col) => col.notNull())
     .addColumn("action_url", "varchar(255)")
@@ -177,5 +175,62 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_notification_intents_status")
     .on("notification_intents_outbox")
     .columns(["status", "available_at", "lease_until"])
+    .execute();
+
+  await db.schema
+    .createTable("notification_intent_channels")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("intent_id", "text", (col) =>
+      col
+        .notNull()
+        .references("notification_intents_outbox.intent_id")
+        .onDelete("cascade"),
+    )
+    .addColumn("channel", "varchar(20)", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_notification_intent_channels_unique")
+    .on("notification_intent_channels")
+    .columns(["intent_id", "channel"])
+    .unique()
+    .execute();
+
+  await db.schema
+    .createTable("notification_intent_targets")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("intent_id", "text", (col) =>
+      col
+        .notNull()
+        .references("notification_intents_outbox.intent_id")
+        .onDelete("cascade"),
+    )
+    .addColumn("target_kind", "varchar(24)", (col) => col.notNull())
+    .addColumn("user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("branch_id", "integer", (col) => col.references("branches.id"))
+    .addColumn("role", "varchar(32)")
+    .addColumn("team_id", "integer", (col) => col.references("teams.id"))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_notification_intent_targets_intent")
+    .on("notification_intent_targets")
+    .column("intent_id")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_notification_intent_targets_unique")
+    .on("notification_intent_targets")
+    .columns([
+      "intent_id",
+      "target_kind",
+      "user_id",
+      "branch_id",
+      "role",
+      "team_id",
+    ])
+    .unique()
     .execute();
 }

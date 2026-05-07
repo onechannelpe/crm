@@ -57,8 +57,6 @@ export async function projectDomainEvent(
         event_type: intent.eventType,
         aggregate_id: event.aggregate_id,
         audience_kind: intent.audienceKind,
-        audience_payload_json: intent.audiencePayloadJson,
-        channel_set_json: intent.channelSetJson,
         title: intent.title,
         body_text: intent.bodyText,
         action_url: intent.actionUrl,
@@ -75,6 +73,55 @@ export async function projectDomainEvent(
       })),
     )
     .onConflict((oc) => oc.column("intent_id").doNothing())
+    .execute();
+
+  const now = event.occurred_at;
+  await db
+    .insertInto("notification_intent_channels")
+    .values(
+      intents.flatMap((intent) =>
+        intent.channels.map((channel) => ({
+          intent_id: intent.intentId,
+          channel,
+          created_at: now,
+        })),
+      ),
+    )
+    .onConflict((oc) => oc.columns(["intent_id", "channel"]).doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_intent_targets")
+    .values(
+      intents.flatMap((intent) =>
+        intent.targets.map((target) => ({
+          intent_id: intent.intentId,
+          target_kind: target.targetKind,
+          user_id: target.targetKind === "user_id" ? target.userId : null,
+          branch_id:
+            target.targetKind === "branch_role" ? target.branchId : null,
+          role:
+            target.targetKind === "branch_role" ||
+            target.targetKind === "global_role"
+              ? target.role
+              : null,
+          team_id: target.targetKind === "team_id" ? target.teamId : null,
+          created_at: now,
+        })),
+      ),
+    )
+    .onConflict((oc) =>
+      oc
+        .columns([
+          "intent_id",
+          "target_kind",
+          "user_id",
+          "branch_id",
+          "role",
+          "team_id",
+        ])
+        .doNothing(),
+    )
     .execute();
 
   logger.info("intent_enqueued", {
