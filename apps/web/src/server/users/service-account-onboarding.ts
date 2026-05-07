@@ -3,10 +3,10 @@ import {
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createNotificationContactRepo } from "~/server/notifications/repos/contact";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
+import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createUsersRepo } from "~/server/users/repos-users";
 
@@ -16,13 +16,14 @@ type OnboardingRepos = {
   users: ReturnType<typeof createUsersRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  notificationContacts: ReturnType<typeof createNotificationContactRepo>;
+  userChannelAddresses: ReturnType<typeof createUserChannelAddressRepo>;
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
 export type CompleteOnboardingError =
   | { kind: "not_found"; code: "user_not_found"; message: string }
   | { kind: "conflict"; code: "strong_auth_required"; message: string }
+  | { kind: "conflict"; code: "address_already_claimed"; message: string }
   | { kind: "unexpected"; code: "unexpected"; message: string };
 
 export interface CompleteOnboardingInput {
@@ -67,11 +68,7 @@ export async function completeAccountOnboardingWithRepos(
   }
 
   const completedAt = now();
-  await repos.users.completeOnboarding(user.id, {
-    phone_e164: input.phoneE164,
-    completedAt,
-  });
-  await bootstrapUserNotifications(
+  const bootstrapResult = await bootstrapUserNotifications(
     {
       userId: user.id,
       email: user.email,
@@ -80,5 +77,17 @@ export async function completeAccountOnboardingWithRepos(
     },
     repos,
   );
+  if (isErr(bootstrapResult)) {
+    return Err({
+      kind: "conflict",
+      code: "address_already_claimed",
+      message: "Este número de WhatsApp ya está en uso",
+    });
+  }
+
+  await repos.users.completeOnboarding(user.id, {
+    phone_e164: input.phoneE164,
+    completedAt,
+  });
   return Ok(undefined);
 }

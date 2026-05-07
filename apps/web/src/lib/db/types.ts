@@ -64,7 +64,7 @@ export interface Database {
   lead_policy_overrides: capacity.LeadPolicyOverridesTable;
   search_policy_defaults: capacity.SearchPolicyDefaultsTable;
   search_policy_overrides: capacity.SearchPolicyOverridesTable;
-  notification_contacts: notifications.NotificationContactsTable;
+  user_channel_addresses: notifications.UserChannelAddressesTable;
   notification_preferences: notifications.NotificationPreferencesTable;
   notification_campaigns: notifications.NotificationCampaignsTable;
   notification_recipients: notifications.NotificationRecipientsTable;

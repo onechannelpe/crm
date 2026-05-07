@@ -32,6 +32,8 @@ function mapOnboardingError(error: { code: string; message: string }): never {
       throw internalError("No se pudo completar el registro");
     case "strong_auth_required":
       throw conflictError(error.message);
+    case "address_already_claimed":
+      throw conflictError(error.message);
     default:
       throw internalError(error.message);
   }

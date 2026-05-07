@@ -1,42 +1,46 @@
-import type { createNotificationContactRepo } from "~/server/notifications/repos/contact";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
+import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 type NotificationBootstrapRepos = {
-  notificationContacts: ReturnType<typeof createNotificationContactRepo>;
+  userChannelAddresses: ReturnType<typeof createUserChannelAddressRepo>;
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
-async function provisionNotificationContacts(params: {
+async function registerChannelAddresses(params: {
   userId: number;
   email: string;
   phoneE164: string;
   now: number;
-  repos: Pick<NotificationBootstrapRepos, "notificationContacts">;
-}) {
+  repos: Pick<NotificationBootstrapRepos, "userChannelAddresses">;
+}): Promise<
+  Result<void, { code: "address_already_claimed"; ownerUserId: number }>
+> {
   const { userId, email, phoneE164, now, repos } = params;
 
-  await Promise.all([
-    repos.notificationContacts.upsertPrimary({
-      user_id: userId,
-      channel: "email",
-      address: email,
-      is_primary: 1,
-      is_verified: 1,
-      verified_at: now,
-      created_at: now,
-      updated_at: now,
-    }),
-    repos.notificationContacts.upsertPrimary({
-      user_id: userId,
-      channel: "whatsapp",
-      address: phoneE164,
-      is_primary: 1,
-      is_verified: 0,
-      verified_at: null,
-      created_at: now,
-      updated_at: now,
-    }),
-  ]);
+  await repos.userChannelAddresses.upsert({
+    user_id: userId,
+    channel: "email",
+    address: email,
+    is_verified: 1,
+    verified_at: now,
+    created_at: now,
+    updated_at: now,
+  });
+
+  const claimResult = await repos.userChannelAddresses.claimWhatsAppAddress({
+    userId,
+    address: phoneE164,
+    now,
+  });
+  if (claimResult.kind === "already_claimed") {
+    return Err({
+      code: "address_already_claimed",
+      ownerUserId: claimResult.ownerUserId,
+    });
+  }
+
+  return Ok(undefined);
 }
 
 function enableDefaultNotificationPreferences(
@@ -88,13 +92,19 @@ export async function bootstrapUserNotifications(
     now: number;
   },
   repos: NotificationBootstrapRepos,
-) {
-  await provisionNotificationContacts({
+): Promise<
+  Result<void, { code: "address_already_claimed"; ownerUserId: number }>
+> {
+  const channelsResult = await registerChannelAddresses({
     userId: params.userId,
     email: params.email,
     phoneE164: params.phoneE164,
     now: params.now,
     repos,
   });
+  if (isErr(channelsResult)) {
+    return channelsResult;
+  }
   await enableDefaultNotificationPreferences(params.userId, params.now, repos);
+  return Ok(undefined);
 }

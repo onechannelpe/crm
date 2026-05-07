@@ -459,14 +459,13 @@ export async function persistDemoIdentities(
 
   // Notification system
   await db
-    .insertInto("notification_contacts")
+    .insertInto("user_channel_addresses")
     .values([
       {
         id: 1,
         user_id: 1,
         channel: "email",
         address: "valeria.paredes@onechannel.pe",
-        is_primary: 1,
         is_verified: 1,
         verified_at: now - oneDay * 10,
         created_at: now - oneDay * 10,
@@ -477,7 +476,6 @@ export async function persistDemoIdentities(
         user_id: 1,
         channel: "whatsapp",
         address: "+51911000001",
-        is_primary: 1,
         is_verified: 1,
         verified_at: now - oneDay * 10,
         created_at: now - oneDay * 10,
@@ -487,8 +485,7 @@ export async function persistDemoIdentities(
         id: 3,
         user_id: 12,
         channel: "email",
-        address: "mario.aguirre@onechannel.pe",
-        is_primary: 1,
+        address: "roberto.quispe@onechannel.pe",
         is_verified: 1,
         verified_at: now - oneDay * 8,
         created_at: now - oneDay * 8,
@@ -499,7 +496,6 @@ export async function persistDemoIdentities(
         user_id: 12,
         channel: "whatsapp",
         address: "+51911000012",
-        is_primary: 1,
         is_verified: 1,
         verified_at: now - oneDay * 8,
         created_at: now - oneDay * 8,

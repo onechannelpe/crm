@@ -2,14 +2,13 @@ import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
-    .createTable("notification_contacts")
+    .createTable("user_channel_addresses")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("channel", "varchar(20)", (col) => col.notNull())
     .addColumn("address", "varchar(255)", (col) => col.notNull())
-    .addColumn("is_primary", "integer", (col) => col.notNull().defaultTo(1))
     .addColumn("is_verified", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("verified_at", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -17,14 +16,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_contacts_user_channel")
-    .on("notification_contacts")
+    .createIndex("idx_user_channel_addresses_user_channel")
+    .on("user_channel_addresses")
     .columns(["user_id", "channel"])
+    .unique()
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_contacts_channel_address")
-    .on("notification_contacts")
+    .createIndex("idx_user_channel_addresses_channel_address")
+    .on("user_channel_addresses")
     .columns(["channel", "address"])
     .unique()
     .execute();
