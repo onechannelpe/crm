@@ -101,19 +101,15 @@ export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
     <>
       <For each={renderedChildren()}>
         {(child) => {
-          const isPresent = presentKeySet().has(child.key);
-
           return (
             <PresenceChild
               key={child.key}
-              isPresent={isPresent}
+              isPresent={presentKeySet().has(child.key)}
               initial={props.initial === false ? false : undefined}
               custom={props.custom}
               presenceAffectsLayout
               mode="sync"
-              onExitComplete={
-                isPresent ? undefined : () => handleChildExitComplete(child.key)
-              }
+              onExitComplete={() => handleChildExitComplete(child.key)}
             >
               {props.children(child.item)}
             </PresenceChild>
