@@ -26,7 +26,7 @@ export function isPublicPath(pathname: string): boolean {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_") ||
-    pathname.startsWith("/releases") ||
+    pathname.startsWith("/updates") ||
     pathname.startsWith("/docs") ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
