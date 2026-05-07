@@ -1,5 +1,7 @@
 "use server";
 
+import { randomUUIDv7 } from "bun";
+
 import { validationError } from "~/lib/app-errors";
 import { isRole } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
@@ -55,7 +57,7 @@ export async function sendBroadcastNotification(params: {
   await getServerRuntime().notifications.enqueue(
     [
       {
-        id: `broadcast:${now}:${session.userId}`,
+        id: `broadcast:${session.userId}:${randomUUIDv7()}`,
         eventType: "broadcast.general",
         audience,
         channels: ["in_app", "email", "whatsapp"],
