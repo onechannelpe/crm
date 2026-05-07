@@ -1,3 +1,4 @@
+// oxlint-disable vitest/require-mock-type-parameters
 import { describe, expect, it, vi } from "vitest";
 
 import { bootstrapUserNotifications } from "~/server/users/service-user-notification-bootstrap";
