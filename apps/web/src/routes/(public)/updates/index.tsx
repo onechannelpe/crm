@@ -1,5 +1,5 @@
 import { useSearchParams } from "@solidjs/router";
-import { For, Show } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 
 import {
   UpdateEntryCard,
@@ -25,9 +25,12 @@ export default function UpdatesPage() {
   }>();
 
   const updates = loadUpdates();
-  const activeFilter = (): UpdateFilter =>
-    parseUpdateFilter(searchParams.filter);
-  const visibleUpdates = () => queryUpdates(updates, activeFilter());
+  const activeFilter = createMemo<UpdateFilter>(() =>
+    parseUpdateFilter(searchParams.filter),
+  );
+  const visibleUpdates = createMemo(() =>
+    queryUpdates(updates, activeFilter()),
+  );
 
   return (
     <>

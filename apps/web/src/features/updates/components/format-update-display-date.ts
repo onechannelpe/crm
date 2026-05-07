@@ -1,3 +1,5 @@
+import { APP_LOCALE } from "~/lib/locale";
+
 export function formatUpdateDisplayDate(date: string): string {
   const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return date;
@@ -6,7 +8,7 @@ export function formatUpdateDisplayDate(date: string): string {
     Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
   );
 
-  return new Intl.DateTimeFormat("es-PE", {
+  return new Intl.DateTimeFormat(APP_LOCALE, {
     year: "numeric",
     month: "long",
     day: "numeric",
