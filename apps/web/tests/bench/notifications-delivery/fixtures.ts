@@ -34,6 +34,7 @@ export const PROCESSOR_SMOKE_RECIPIENTS = 12;
 export type PlannerScenarioName = (typeof PLANNER_SCENARIOS)[number]["name"];
 
 type PlannerScenario = (typeof PLANNER_SCENARIOS)[number];
+type PlannerScenarioResult<T> = Record<PlannerScenarioName, T>;
 
 function createUserIds(start: number, count: number): number[] {
   return Array.from({ length: count }, (_, index) => start + index);
@@ -104,12 +105,15 @@ function createAudiencePool(
     Math.round(recipientsPerIntent * (1 - overlapRatio)),
   );
 
-  return Array.from({ length: intentCount }, (_, intentIndex) => {
+  return Array.from({ length: intentCount }, (_outerIndex, intentIndex) => {
     const start = intentIndex * stride;
-    return Array.from({ length: recipientsPerIntent }, (_, recipientIndex) => {
-      const index = (start + recipientIndex) % userIds.length;
-      return userIds[index] as number;
-    });
+    return Array.from(
+      { length: recipientsPerIntent },
+      (_innerIndex, recipientIndex) => {
+        const index = (start + recipientIndex) % userIds.length;
+        return userIds[index];
+      },
+    );
   });
 }
 
@@ -155,14 +159,20 @@ async function seedPlannerScenario(
 
 export async function seedPlannerFixtures(
   ctx: TestDbContext,
-): Promise<Record<PlannerScenarioName, string[]>> {
-  const result = {} as Record<PlannerScenarioName, string[]>;
+): Promise<PlannerScenarioResult<string[]>> {
+  const [disjoint, partialOverlap, highOverlap] = PLANNER_SCENARIOS;
 
-  for (const [index, scenario] of PLANNER_SCENARIOS.entries()) {
-    result[scenario.name] = await seedPlannerScenario(ctx, scenario, index);
-  }
+  const [disjointIds, partialOverlapIds, highOverlapIds] = await Promise.all([
+    seedPlannerScenario(ctx, disjoint, 0),
+    seedPlannerScenario(ctx, partialOverlap, 1),
+    seedPlannerScenario(ctx, highOverlap, 2),
+  ]);
 
-  return result;
+  return {
+    disjoint: disjointIds,
+    "partial-overlap": partialOverlapIds,
+    "high-overlap": highOverlapIds,
+  };
 }
 
 export async function seedProcessorSmokeFixtures(

@@ -8,11 +8,7 @@ import {
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
-import {
-  PLANNER_SCENARIOS,
-  seedPlannerFixtures,
-  type PlannerScenarioName,
-} from "./fixtures";
+import { PLANNER_SCENARIOS, seedPlannerFixtures } from "./fixtures";
 
 type ScenarioState = {
   cursor: { value: number };
@@ -21,7 +17,15 @@ type ScenarioState = {
 
 describe("notifications delivery planner benchmark", () => {
   const db = createBenchDbFixture("bench-notifications-delivery-planner");
-  const scenarios = {} as Record<PlannerScenarioName, ScenarioState>;
+  const scenarios: {
+    disjoint: ScenarioState;
+    "partial-overlap": ScenarioState;
+    "high-overlap": ScenarioState;
+  } = {
+    disjoint: { cursor: { value: 0 }, entries: [] },
+    "partial-overlap": { cursor: { value: 0 }, entries: [] },
+    "high-overlap": { cursor: { value: 0 }, entries: [] },
+  };
 
   beforeAll(async () => {
     const ctx = await db.setup();
