@@ -9,41 +9,60 @@ import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import {
-  INTENT_POOL_SIZE,
-  seedNotificationsDeliveryFixtures,
+  PLANNER_SCENARIOS,
+  seedPlannerFixtures,
+  type PlannerScenarioName,
 } from "./fixtures";
+
+type ScenarioState = {
+  cursor: { value: number };
+  entries: NotificationOutboxEntry[];
+};
 
 describe("notifications delivery planner benchmark", () => {
   const db = createBenchDbFixture("bench-notifications-delivery-planner");
-  let entries: NotificationOutboxEntry[] = [];
-  const cursor = { value: 0 };
+  const scenarios = {} as Record<PlannerScenarioName, ScenarioState>;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const fixtures = await seedNotificationsDeliveryFixtures(ctx);
+    const intentIdsByScenario = await seedPlannerFixtures(ctx);
 
-    entries = await ctx.db
-      .selectFrom("notification_outbox")
-      .select(["id", "event_type", "audience_json", "channels_json"])
-      .where("id", "in", fixtures.intentIds)
-      .execute();
+    for (const scenario of PLANNER_SCENARIOS) {
+      const entries = await ctx.db
+        .selectFrom("notification_outbox")
+        .select(["id", "event_type", "audience_json", "channels_json"])
+        .where("id", "in", intentIdsByScenario[scenario.name])
+        .execute();
+
+      scenarios[scenario.name] = {
+        cursor: { value: 0 },
+        entries,
+      };
+    }
   });
 
   afterAll(async () => {
     await db.teardown();
   });
 
-  bench(
-    "service path: plan recipients and channel deliveries",
-    async () => {
-      const entry = takeFromPool(
-        entries,
-        cursor,
-        "notifications planner pool exhausted before iterations completed",
-      );
+  for (const scenario of PLANNER_SCENARIOS) {
+    bench(
+      `service path: plan deliveries (${scenario.name})`,
+      async () => {
+        const scenarioState = scenarios[scenario.name];
+        const entry = takeFromPool(
+          scenarioState.entries,
+          scenarioState.cursor,
+          `planner pool exhausted for scenario ${scenario.name}`,
+        );
 
-      await planDeliveries(db.ctx().db, entry);
-    },
-    fixedIterations(INTENT_POOL_SIZE),
-  );
+        await planDeliveries(db.ctx().db, entry);
+      },
+      {
+        ...fixedIterations(scenario.intentCount),
+        warmupTime: 0,
+        warmupIterations: 0,
+      },
+    );
+  }
 });
