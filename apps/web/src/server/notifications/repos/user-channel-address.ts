@@ -106,7 +106,9 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
         .executeTakeFirst();
 
       if (!owner) {
-        throw new Error("WhatsApp address claim did not resolve an owner");
+        throw new Error(
+          `WhatsApp claim resolved without owner: userId=${values.userId} address=${values.address}`,
+        );
       }
 
       if (owner.user_id !== values.userId) {
