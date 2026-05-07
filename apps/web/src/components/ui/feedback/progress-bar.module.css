@@ -1,0 +1,15 @@
+.root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  border-bottom-left-radius: var(--radius-md);
+  transition: width 0.1s linear;
+  background-color: var(--snack-bar-progress-color);
+}

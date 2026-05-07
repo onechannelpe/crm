@@ -1,10 +1,6 @@
 export type RecordImportType = "import_status" | "import_prioridad";
 
-export type RecordImportJobStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "COMPLETED"
-  | "FAILED";
+type RecordImportJobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export interface RecordImportProgressEvent {
   type: "job_progress";

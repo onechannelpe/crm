@@ -1,6 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import ChevronRight from "~/components/icons/chevron-right";
 import Link from "~/components/icons/link";
 import List from "~/components/icons/list";
@@ -21,21 +21,23 @@ export function OptionsDropdown(props: { onClose: () => void }) {
   const visibleFieldsCount = () => model.columns.visibleColumnKeys().size;
   const optionActions = () => setup.actions ?? [];
 
-  const { showToast } = useToast();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
 
   async function copyViewLink() {
     if (!navigator.clipboard) {
-      showToast("error", "El portapapeles no está disponible en este entorno");
+      enqueueErrorSnackBar(
+        "El portapapeles no está disponible en este entorno",
+      );
       return;
     }
 
     try {
       await navigator.clipboard.writeText(window.location.href);
-      showToast("success", "Enlace copiado al portapapeles");
+      enqueueSuccessSnackBar("Enlace copiado al portapapeles");
       props.onClose();
     } catch (err) {
       console.error("Failed to copy link", err);
-      showToast("error", "Error al copiar el enlace");
+      enqueueErrorSnackBar("Error al copiar el enlace");
     }
   }
 

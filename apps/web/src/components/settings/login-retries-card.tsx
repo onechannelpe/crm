@@ -4,7 +4,7 @@ import {
   getUserLoginRetryReport,
   type UserLoginRetryReport,
 } from "~/actions/admin/auth-security";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import {
@@ -34,15 +34,17 @@ function labelFor(stage: string): string {
 export function LoginRetriesCard() {
   const [email, setEmail] = createSignal("");
   const [report, setReport] = createSignal<UserLoginRetryReport | null>(null);
-  const { showToast } = useToast();
+  const { enqueueErrorSnackBar, enqueueInfoSnackBar } = useSnackBar();
 
   const [lookup, isLookingUp] = useAsyncAction(async () => {
     try {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
-      if (!next) showToast("info", "Usuario no encontrado");
+      if (!next) enqueueInfoSnackBar("Usuario no encontrado");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo cargar el reporte"));
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudo cargar el reporte"),
+      );
     }
   });
 

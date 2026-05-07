@@ -48,7 +48,8 @@ describe("usePasskeyEnrollment", () => {
   });
 
   it("shows the configured toast after registering a passkey", async () => {
-    const showToast = vi.fn<(kind: string, message: string) => void>();
+    const enqueueSuccessSnackBar = vi.fn<(message: string) => void>();
+    const enqueueErrorSnackBar = vi.fn<(message: string) => void>();
     const refreshStatus = vi
       .fn<() => Promise<void>>()
       .mockResolvedValue(undefined);
@@ -57,7 +58,8 @@ describe("usePasskeyEnrollment", () => {
     const enrollment = createRoot((rootDispose) => {
       dispose = rootDispose;
       return usePasskeyEnrollment({
-        showToast,
+        enqueueSuccessSnackBar,
+        enqueueErrorSnackBar,
         refreshStatus,
         successMessage: "Clave de acceso añadida",
       });
@@ -70,14 +72,14 @@ describe("usePasskeyEnrollment", () => {
     expect(createRegistrationResponse).toHaveBeenCalledOnce();
     expect(finishPasskeyRegistration).toHaveBeenCalledOnce();
     expect(refreshStatus).toHaveBeenCalledOnce();
-    expect(showToast).toHaveBeenCalledWith(
-      "success",
+    expect(enqueueSuccessSnackBar).toHaveBeenCalledWith(
       "Clave de acceso añadida",
     );
   });
 
   it("shows the registration failure message when setup fails", async () => {
-    const showToast = vi.fn<(kind: string, message: string) => void>();
+    const enqueueSuccessSnackBar = vi.fn<(message: string) => void>();
+    const enqueueErrorSnackBar = vi.fn<(message: string) => void>();
     const refreshStatus = vi.fn<() => void>();
     finishPasskeyRegistration.mockRejectedValue(new Error("boom"));
 
@@ -85,7 +87,8 @@ describe("usePasskeyEnrollment", () => {
     const enrollment = createRoot((rootDispose) => {
       dispose = rootDispose;
       return usePasskeyEnrollment({
-        showToast,
+        enqueueSuccessSnackBar,
+        enqueueErrorSnackBar,
         refreshStatus,
         failureMessage: "No se pudo añadir la clave de acceso",
       });
@@ -94,8 +97,7 @@ describe("usePasskeyEnrollment", () => {
     await enrollment.registerPasskey();
     dispose();
 
-    expect(showToast).toHaveBeenCalledWith(
-      "error",
+    expect(enqueueErrorSnackBar).toHaveBeenCalledWith(
       "No se pudo añadir la clave de acceso",
     );
   });

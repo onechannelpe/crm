@@ -9,7 +9,7 @@ import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recovery-codes-panel";
 import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
@@ -31,7 +31,8 @@ function getSetupKey(otpauthUri: string): string {
 }
 
 export default function SecurityPage() {
-  const { showToast } = useToast();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar, enqueueInfoSnackBar } =
+    useSnackBar();
   const { currentUser, refreshCurrentUser } = useAuthenticatedSession();
 
   const [currentPassword, setCurrentPassword] = createSignal("");
@@ -40,13 +41,16 @@ export default function SecurityPage() {
   const removePasskeysDialog = useConfirmDialog();
   const disableTotpDialog = useConfirmDialog();
   const passkeyEnrollment = usePasskeyEnrollment({
-    showToast,
+    enqueueSuccessSnackBar,
+    enqueueErrorSnackBar,
     refreshStatus: refreshCurrentUser,
     successMessage: "Clave de acceso añadida",
     failureMessage: "No se pudo añadir la clave de acceso",
   });
   const totpEnrollment = useTotpEnrollment({
-    showToast,
+    enqueueSuccessSnackBar,
+    enqueueErrorSnackBar,
+    enqueueInfoSnackBar,
     refreshStatus: refreshCurrentUser,
     verifySuccessMessage: "Autenticación en dos pasos activada",
   });
@@ -57,10 +61,9 @@ export default function SecurityPage() {
       await removeAllPasskeys();
       passkeyEnrollment.reset();
       await refreshCurrentUser();
-      showToast("success", "Claves de acceso eliminadas");
+      enqueueSuccessSnackBar("Claves de acceso eliminadas");
     } catch (err: unknown) {
-      showToast(
-        "error",
+      enqueueErrorSnackBar(
         getErrorMessage(err, "No se pudieron eliminar las claves de acceso"),
       );
     }
@@ -72,10 +75,9 @@ export default function SecurityPage() {
       await disableTotp();
       totpEnrollment.reset();
       await refreshCurrentUser();
-      showToast("success", "Aplicación de autenticación desactivada");
+      enqueueSuccessSnackBar("Aplicación de autenticación desactivada");
     } catch (err: unknown) {
-      showToast(
-        "error",
+      enqueueErrorSnackBar(
         getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
       );
     }
@@ -84,25 +86,24 @@ export default function SecurityPage() {
 
   const handleCopySetupKey = async (setupKey: string) => {
     await navigator.clipboard.writeText(setupKey);
-    showToast("success", "Clave de configuración copiada");
+    enqueueSuccessSnackBar("Clave de configuración copiada");
   };
 
   const [handleChangePassword, isChangingPassword] = useAsyncAction(
     async (e: Event) => {
       e.preventDefault();
       if (newPassword() !== confirmPassword()) {
-        showToast("error", "Las contraseñas no coinciden");
+        enqueueErrorSnackBar("Las contraseñas no coinciden");
         return;
       }
       try {
         await changePassword(currentPassword(), newPassword());
-        showToast("success", "Contraseña actualizada");
+        enqueueSuccessSnackBar("Contraseña actualizada");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       } catch (err: unknown) {
-        showToast(
-          "error",
+        enqueueErrorSnackBar(
           getErrorMessage(err, "No se pudo cambiar la contraseña"),
         );
       }

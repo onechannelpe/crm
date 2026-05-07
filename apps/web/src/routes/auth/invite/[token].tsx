@@ -3,7 +3,7 @@ import { Show, createSignal } from "solid-js";
 
 import { acceptTeamInvite } from "~/actions/team/acceptance";
 import { getInviteInfo } from "~/actions/team/invites";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
@@ -12,7 +12,7 @@ import styles from "../auth-shell.module.css";
 
 export default function AcceptInvitePage() {
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const params = useParams<{ token: string }>();
   const inviteInfo = createAsync(() => getInviteInfo(params.token));
   const [password, setPassword] = createSignal("");
@@ -22,7 +22,7 @@ export default function AcceptInvitePage() {
   async function handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
     if (password() !== confirmPassword()) {
-      showToast("error", "Las contraseñas no coinciden");
+      enqueueErrorSnackBar("Las contraseñas no coinciden");
       return;
     }
 
@@ -32,10 +32,12 @@ export default function AcceptInvitePage() {
         token: params.token,
         password: password(),
       });
-      showToast("success", "Cuenta activada");
+      enqueueSuccessSnackBar("Cuenta activada");
       navigate("/onboarding");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo activar la cuenta"));
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudo activar la cuenta"),
+      );
     } finally {
       setSubmitting(false);
     }

@@ -4,12 +4,12 @@ import {
   getRecordImportJob,
   uploadRecordImportFile,
 } from "~/actions/records/imports";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import {
-  recordImportTopic,
   parseRecordImportProgressMessage,
-  type RecordImportType,
+  recordImportTopic,
   type RecordImportProgressEvent,
+  type RecordImportType,
 } from "~/features/records-imports/contracts";
 import { getErrorMessage } from "~/lib/errors";
 import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
@@ -22,17 +22,24 @@ const WS_RECONNECT_BASE_MS = 1_000;
 const WS_RECONNECT_MAX_MS = 15_000;
 const RECONNECT_JITTER_MS = 300;
 
+type ImportSession = {
+  jobId: string;
+  toastId: string;
+  importType: RecordImportType;
+  socket: WebSocket | null;
+  pollTimer: number | null;
+  wsReconnectTimer: number | null;
+  pollFailureCount: number;
+  wsReconnectAttempt: number;
+};
+
 function importTypeLabel(type: RecordImportType): string {
-  if (type === "import_status") {
-    return "estados";
-  }
+  if (type === "import_status") return "estados";
   return "prioridades";
 }
 
 function importTypeUnit(type: RecordImportType, count: number): string {
-  if (type === "import_status") {
-    return count === 1 ? "estado" : "estados";
-  }
+  if (type === "import_status") return count === 1 ? "estado" : "estados";
   return count === 1 ? "prioridad" : "prioridades";
 }
 
@@ -45,7 +52,6 @@ function buildProgressMessage(event: {
   if (event.rowsTotal <= 0) {
     return `Procesando ${importTypeLabel(event.importType)}...`;
   }
-
   const processed = event.rowsApplied + event.rowsFailed;
   return `Procesando ${importTypeUnit(event.importType, event.rowsTotal)}: ${processed} de ${event.rowsTotal}`;
 }
@@ -72,268 +78,157 @@ function websocketUrl(): string {
   return `${protocol}//${window.location.host}/api/records/imports/ws`;
 }
 
+function withJitter(ms: number): number {
+  return ms + Math.floor(Math.random() * (RECONNECT_JITTER_MS + 1));
+}
+
 export function useRecordsImport() {
-  const { showToast, updateToast, removeToast } = useToast();
+  const { enqueueInfoSnackBar, enqueueErrorSnackBar, updateSnackBar } =
+    useSnackBar();
 
   let fileInputRef: HTMLInputElement | undefined;
-  let activeJobId: string | null = null;
-  let activeImportType: RecordImportType | null = null;
-  let progressToastId: string | null = null;
-  let socket: WebSocket | null = null;
-  let pollTimer: number | null = null;
-  let wsReconnectTimer: number | null = null;
-  let pollFailureCount = 0;
-  let wsReconnectAttempt = 0;
+  let session: ImportSession | null = null;
 
-  function withJitter(ms: number): number {
-    const delta = Math.floor(Math.random() * (RECONNECT_JITTER_MS + 1));
-    return ms + delta;
-  }
-
-  function pollDelayMs(): number {
-    const exponential = Math.min(
-      POLL_BASE_MS * 2 ** pollFailureCount,
-      POLL_MAX_MS,
-    );
-    return withJitter(exponential);
-  }
-
-  function wsReconnectDelayMs(): number {
-    const retryExponent = Math.max(0, wsReconnectAttempt - 1);
-    const exponential = Math.min(
-      WS_RECONNECT_BASE_MS * 2 ** retryExponent,
-      WS_RECONNECT_MAX_MS,
-    );
-    return withJitter(exponential);
-  }
-
-  function clearPolling() {
-    if (pollTimer !== null) {
-      window.clearTimeout(pollTimer);
-      pollTimer = null;
-    }
-  }
-
-  function clearWebsocketReconnect() {
-    if (wsReconnectTimer !== null) {
-      window.clearTimeout(wsReconnectTimer);
-      wsReconnectTimer = null;
-    }
-  }
-
-  function closeSocket() {
-    if (socket) {
-      try {
-        socket.close();
-      } catch {
-        // no-op
-      }
-      socket = null;
-    }
-  }
-
-  function finalizeProgressToast() {
-    if (progressToastId) {
-      removeToast(progressToastId);
-      progressToastId = null;
-    }
-  }
-
-  function completeProgressToast(event: {
-    importType: RecordImportType;
-    rowsApplied: number;
-    rowsFailed: number;
-    rowsTotal: number;
-  }) {
-    if (progressToastId) {
-      updateToast(progressToastId, {
-        type: event.rowsFailed > 0 ? "warning" : "success",
-        message: buildCompletedMessage(event),
-        duration: IMPORT_COMPLETED_DURATION_MS,
-        remaining: IMPORT_COMPLETED_DURATION_MS,
-      });
-      progressToastId = null;
-      return;
-    }
-
-    showToast(
-      event.rowsFailed > 0 ? "warning" : "success",
-      buildCompletedMessage(event),
-      IMPORT_COMPLETED_DURATION_MS,
-    );
-  }
-
-  function stopActiveTracking() {
-    clearPolling();
-    clearWebsocketReconnect();
-    activeJobId = null;
-    activeImportType = null;
-    closeSocket();
-    pollFailureCount = 0;
-    wsReconnectAttempt = 0;
-  }
-
-  async function pollJobProgress(): Promise<"ok" | "retry"> {
-    if (activeJobId === null || activeImportType === null) {
-      return "ok";
-    }
-
+  function stopSession(): void {
+    if (!session) return;
+    const s = session;
+    session = null;
+    if (s.pollTimer !== null) window.clearTimeout(s.pollTimer);
+    if (s.wsReconnectTimer !== null) window.clearTimeout(s.wsReconnectTimer);
     try {
-      const job = await getRecordImportJob(activeJobId);
-      const rowsApplied = job.rows_applied ?? 0;
-      const rowsFailed = job.rows_failed ?? 0;
-      const rowsTotal = job.rows_total ?? 0;
-
-      if (progressToastId) {
-        updateToast(progressToastId, {
-          message: buildProgressMessage({
-            importType: activeImportType,
-            rowsApplied,
-            rowsFailed,
-            rowsTotal,
-          }),
-        });
-      }
-
-      if (job.status === "COMPLETED") {
-        completeProgressToast({
-          importType: activeImportType,
-          rowsApplied,
-          rowsFailed,
-          rowsTotal,
-        });
-        stopActiveTracking();
-        return "ok";
-      }
-
-      if (job.status === "FAILED") {
-        finalizeProgressToast();
-        showToast("error", job.error_message ?? "La importación falló");
-        stopActiveTracking();
-        return "ok";
-      }
-      return "ok";
+      s.socket?.close();
     } catch {
-      // Keep polling. Transient failures should not break tracking.
-      return "retry";
+      // no-op
     }
   }
 
-  function schedulePolling(delayMs: number) {
-    clearPolling();
-    pollTimer = window.setTimeout(() => {
-      void (async () => {
-        if (activeJobId === null) {
-          return;
-        }
-
-        const result = await pollJobProgress();
-        if (activeJobId === null) {
-          return;
-        }
-
-        if (result === "retry") {
-          pollFailureCount++;
-        } else {
-          pollFailureCount = 0;
-        }
-
-        schedulePolling(pollDelayMs());
-      })();
-    }, delayMs);
-  }
-
-  function startPolling() {
-    schedulePolling(0);
-  }
-
-  function handleProgressEvent(event: RecordImportProgressEvent) {
-    if (event.jobId !== activeJobId) {
-      return;
-    }
-
-    if (progressToastId) {
-      updateToast(progressToastId, {
-        message: buildProgressMessage(event),
-      });
-    }
-
+  function handleJobEvent(
+    s: ImportSession,
+    event: RecordImportProgressEvent,
+  ): void {
     if (event.status === "COMPLETED") {
-      completeProgressToast({
-        importType: event.importType,
-        rowsApplied: event.rowsApplied,
-        rowsFailed: event.rowsFailed,
-        rowsTotal: event.rowsTotal,
+      updateSnackBar(s.toastId, {
+        message: buildCompletedMessage(event),
+        variant: event.rowsFailed > 0 ? "warning" : "success",
+        duration: IMPORT_COMPLETED_DURATION_MS,
       });
-      stopActiveTracking();
+      stopSession();
       return;
     }
 
     if (event.status === "FAILED") {
-      finalizeProgressToast();
-      showToast("error", event.errorMessage ?? "La importación falló");
-      stopActiveTracking();
-    }
-  }
-
-  function scheduleWebsocketReconnect(jobId: string) {
-    if (activeJobId !== jobId || wsReconnectTimer !== null) {
+      updateSnackBar(s.toastId, {
+        message: event.errorMessage ?? "La importación falló",
+        variant: "error",
+        duration: IMPORT_COMPLETED_DURATION_MS,
+      });
+      stopSession();
       return;
     }
 
-    wsReconnectAttempt++;
-    const delay = wsReconnectDelayMs();
-    wsReconnectTimer = window.setTimeout(() => {
-      wsReconnectTimer = null;
-      if (activeJobId !== jobId) {
-        return;
-      }
-      connectWebsocket(jobId);
+    updateSnackBar(s.toastId, { message: buildProgressMessage(event) });
+  }
+
+  async function pollOnce(s: ImportSession): Promise<"ok" | "retry"> {
+    try {
+      const job = await getRecordImportJob(s.jobId);
+      handleJobEvent(s, {
+        type: "job_progress",
+        jobId: s.jobId,
+        importType: s.importType,
+        status: job.status,
+        rowsApplied: job.rows_applied ?? 0,
+        rowsFailed: job.rows_failed ?? 0,
+        rowsTotal: job.rows_total ?? 0,
+        errorMessage: job.error_message ?? null,
+      });
+      return "ok";
+    } catch {
+      return "retry";
+    }
+  }
+
+  function schedulePolling(s: ImportSession, delayMs: number): void {
+    if (s.pollTimer !== null) window.clearTimeout(s.pollTimer);
+    s.pollTimer = window.setTimeout(() => {
+      void (async () => {
+        if (session !== s) return;
+        const result = await pollOnce(s);
+        if (session !== s) return;
+        if (result === "retry") {
+          s.pollFailureCount++;
+        } else {
+          s.pollFailureCount = 0;
+        }
+        const delay = withJitter(
+          Math.min(POLL_BASE_MS * 2 ** s.pollFailureCount, POLL_MAX_MS),
+        );
+        schedulePolling(s, delay);
+      })();
+    }, delayMs);
+  }
+
+  function scheduleWsReconnect(s: ImportSession): void {
+    if (s.wsReconnectTimer !== null) return;
+    s.wsReconnectAttempt++;
+    const retryExponent = Math.max(0, s.wsReconnectAttempt - 1);
+    const delay = withJitter(
+      Math.min(WS_RECONNECT_BASE_MS * 2 ** retryExponent, WS_RECONNECT_MAX_MS),
+    );
+    s.wsReconnectTimer = window.setTimeout(() => {
+      if (session !== s) return;
+      s.wsReconnectTimer = null;
+      connectWebsocket(s);
     }, delay);
   }
 
-  function connectWebsocket(jobId: string) {
-    closeSocket();
-    clearWebsocketReconnect();
+  function connectWebsocket(s: ImportSession): void {
+    try {
+      s.socket?.close();
+    } catch {
+      // no-op
+    }
+    s.socket = null;
 
-    socket = new WebSocket(websocketUrl());
+    const socket = new WebSocket(websocketUrl());
+    s.socket = socket;
+
     socket.addEventListener("open", () => {
-      wsReconnectAttempt = 0;
-      clearPolling();
-      socket?.send(
+      s.wsReconnectAttempt = 0;
+      if (s.pollTimer !== null) {
+        window.clearTimeout(s.pollTimer);
+        s.pollTimer = null;
+      }
+      socket.send(
         buildRealtimeSubscriptionMessage({
           type: "subscribe",
-          topic: recordImportTopic(jobId),
+          topic: recordImportTopic(s.jobId),
         }),
       );
     });
 
-    socket.addEventListener("message", (event) => {
-      const payload = parseRecordImportProgressMessage(String(event.data));
-      if (!payload) {
-        return;
-      }
-      handleProgressEvent(payload);
+    socket.addEventListener("message", (ev) => {
+      if (session !== s) return;
+      const payload = parseRecordImportProgressMessage(String(ev.data));
+      if (payload) handleJobEvent(s, payload);
     });
 
     socket.addEventListener("close", () => {
-      if (activeJobId !== null) {
-        startPolling();
-        scheduleWebsocketReconnect(jobId);
-      }
+      if (session !== s) return;
+      schedulePolling(s, 0);
+      scheduleWsReconnect(s);
     });
 
     socket.addEventListener("error", () => {
-      if (activeJobId !== null) {
-        startPolling();
-        scheduleWebsocketReconnect(jobId);
-      }
+      if (session !== s) return;
+      schedulePolling(s, 0);
+      scheduleWsReconnect(s);
     });
   }
 
   async function importFile(file: File): Promise<void> {
     if (!isCsvFile(file)) {
-      showToast("error", "Solo se permiten archivos .csv");
+      enqueueErrorSnackBar("Solo se permiten archivos .csv");
       return;
     }
 
@@ -343,26 +238,32 @@ export function useRecordsImport() {
     try {
       const result = await uploadRecordImportFile(formData);
 
-      activeJobId = result.jobId;
-      activeImportType = result.importType;
-
-      finalizeProgressToast();
-      progressToastId = showToast(
-        "info",
+      const toastId = enqueueInfoSnackBar(
         buildProgressMessage({
           importType: result.importType,
           rowsApplied: 0,
           rowsFailed: 0,
           rowsTotal: result.rowsTotal,
         }),
-        IMPORT_PROGRESS_DURATION_MS,
+        { duration: IMPORT_PROGRESS_DURATION_MS },
       );
 
-      startPolling();
-      connectWebsocket(result.jobId);
+      stopSession();
+      session = {
+        jobId: result.jobId,
+        toastId,
+        importType: result.importType,
+        socket: null,
+        pollTimer: null,
+        wsReconnectTimer: null,
+        pollFailureCount: 0,
+        wsReconnectAttempt: 0,
+      };
+
+      schedulePolling(session, 0);
+      connectWebsocket(session);
     } catch (error: unknown) {
-      showToast(
-        "error",
+      enqueueErrorSnackBar(
         getErrorMessage(error, "No se pudo importar el archivo"),
       );
     }
@@ -394,9 +295,7 @@ export function useRecordsImport() {
     target.value = "";
   }
 
-  onCleanup(() => {
-    stopActiveTracking();
-  });
+  onCleanup(stopSession);
 
   return {
     bindFileInput,

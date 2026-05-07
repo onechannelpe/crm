@@ -10,10 +10,9 @@ import {
 } from "~/lib/auth/passkey/registration-client";
 import { getErrorMessage } from "~/lib/errors";
 
-type ShowToast = (type: "success" | "error" | "info", message: string) => void;
-
 interface PasskeyEnrollmentOptions {
-  showToast: ShowToast;
+  enqueueSuccessSnackBar: (message: string) => void;
+  enqueueErrorSnackBar: (message: string) => void;
   refreshStatus: () => void | PromiseLike<unknown>;
   successMessage?: string;
   failureMessage?: string;
@@ -37,13 +36,11 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
         await createRegistrationResponse(registrationOptions),
       );
       await options.refreshStatus();
-      options.showToast(
-        "success",
+      options.enqueueSuccessSnackBar(
         options.successMessage ?? "Clave de acceso configurada",
       );
     } catch (error: unknown) {
-      options.showToast(
-        "error",
+      options.enqueueErrorSnackBar(
         getErrorMessage(
           error,
           options.failureMessage ?? "No se pudo configurar la clave de acceso",
