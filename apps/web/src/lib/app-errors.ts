@@ -51,8 +51,8 @@ function isSerializedAppError(error: unknown): error is AppErrorInit {
   return (
     APP_ERROR_CODES.some((value) => value === code) &&
     typeof publicMessage === "string" &&
-    (internalMessage === undefined || typeof internalMessage === "string") &&
-    (retryAfterSeconds === undefined || typeof retryAfterSeconds === "number")
+    (internalMessage == null || typeof internalMessage === "string") &&
+    (retryAfterSeconds == null || typeof retryAfterSeconds === "number")
   );
 }
 
