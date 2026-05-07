@@ -1,1 +1,5 @@
-export { buildUpdateListJsonLd, JsonLd, type JsonLdValue } from "./updates-json-ld";
+export {
+  buildUpdateListJsonLd,
+  JsonLd,
+  type JsonLdValue,
+} from "./updates-json-ld";

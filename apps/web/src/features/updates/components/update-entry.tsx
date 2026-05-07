@@ -11,7 +11,9 @@ export function UpdateEntryCard(props: { entry: UpdateEntry }) {
       <div class={styles.meta}>
         <span class={styles.kind}>{props.entry.kind}</span>
         <span class={styles.version}>{props.entry.cadence}</span>
-        <span class={styles.date}>{formatUpdateDisplayDate(props.entry.date)}</span>
+        <span class={styles.date}>
+          {formatUpdateDisplayDate(props.entry.date)}
+        </span>
       </div>
       <div class={styles.content}>
         <h2 class={styles.contentTitle}>{props.entry.title}</h2>

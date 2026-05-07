@@ -38,7 +38,10 @@ export default function UpdatesPage() {
             label: UPDATES_PAGE_COPY.filters.releaseNightly,
             value: "release-nightly",
           },
-          { label: UPDATES_PAGE_COPY.filters.releaseWeekly, value: "release-weekly" },
+          {
+            label: UPDATES_PAGE_COPY.filters.releaseWeekly,
+            value: "release-weekly",
+          },
         ]}
       />
 

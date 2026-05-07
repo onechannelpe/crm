@@ -71,7 +71,8 @@ function normalizeTags(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
 
   const tags = value.filter(
-    (entry): entry is string => typeof entry === "string" && entry.trim() !== "",
+    (entry): entry is string =>
+      typeof entry === "string" && entry.trim() !== "",
   );
 
   if (tags.length !== value.length || tags.length > 8) {
@@ -90,11 +91,19 @@ function slugify(input: string): string {
     .replace(/-+/g, "-");
 }
 
-function buildId(date: string, kind: UpdateKind, cadence: UpdateCadence, title: string) {
+function buildId(
+  date: string,
+  kind: UpdateKind,
+  cadence: UpdateCadence,
+  title: string,
+) {
   return `${date}:${kind}:${cadence}:${slugify(title)}`;
 }
 
-function parseUpdate(path: string, module: UpdateModule): {
+function parseUpdate(
+  path: string,
+  module: UpdateModule,
+): {
   entry: UpdateEntry | null;
   issues: ValidationIssue[];
 } {
@@ -112,9 +121,15 @@ function parseUpdate(path: string, module: UpdateModule): {
     issues.push({ path, field: "date", reason: "must be YYYY-MM-DD" });
   }
 
-  const kindValue = normalizeKind(getFrontmatterValue(module.frontmatter, "kind"));
+  const kindValue = normalizeKind(
+    getFrontmatterValue(module.frontmatter, "kind"),
+  );
   if (kindValue === null) {
-    issues.push({ path, field: "kind", reason: 'must be "release" or "technical"' });
+    issues.push({
+      path,
+      field: "kind",
+      reason: 'must be "release" or "technical"',
+    });
   }
 
   const cadenceValue = normalizeCadence(
@@ -135,7 +150,9 @@ function parseUpdate(path: string, module: UpdateModule): {
     issues.push({ path, field: "visibility", reason: 'must be "internal"' });
   }
 
-  const tagsValue = normalizeTags(getFrontmatterValue(module.frontmatter, "tags"));
+  const tagsValue = normalizeTags(
+    getFrontmatterValue(module.frontmatter, "tags"),
+  );
   if (tagsValue === null) {
     issues.push({
       path,
