@@ -9,7 +9,7 @@ import { For, Show, createEffect, createSignal, on } from "solid-js";
 import type { InviteManagement } from "~/actions/team/contracts";
 import { createTeamInvite } from "~/actions/team/invites";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
 import Mail from "~/components/icons/mail";
 import X from "~/components/icons/x";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
@@ -76,7 +76,7 @@ export function TeamInviteManagementSection() {
       setPendingRevokeId(null);
     }
   });
-  const { showToast } = useToast();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
 
   createEffect(
     on(inviteManagement, (im) => {
@@ -100,24 +100,22 @@ export function TeamInviteManagementSection() {
   async function handleResend(inviteId: number): Promise<void> {
     try {
       await resendInvite(inviteId);
-      showToast("success", "Invitación reenviada");
+      enqueueSuccessSnackBar({ message: "Invitación reenviada" });
     } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo reenviar la invitación"),
-      );
+      enqueueErrorSnackBar({
+        message: getErrorMessage(err, "No se pudo reenviar la invitación"),
+      });
     }
   }
 
   async function handleRevoke(inviteId: number): Promise<void> {
     try {
       await revokeInvite(inviteId);
-      showToast("success", "Invitación revocada");
+      enqueueSuccessSnackBar({ message: "Invitación revocada" });
     } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo revocar la invitación"),
-      );
+      enqueueErrorSnackBar({
+        message: getErrorMessage(err, "No se pudo revocar la invitación"),
+      });
     }
   }
 
@@ -152,7 +150,7 @@ export function TeamInviteManagementSection() {
         setExpiresAt("");
         setExpiresAtError(undefined);
         await revalidateQuery(inviteManagementQuery.key);
-        showToast("success", "Invitación enviada");
+        enqueueSuccessSnackBar({ message: "Invitación enviada" });
       } catch (err: unknown) {
         if (getErrorCode(err) === "validation") {
           const message = getErrorMessage(err, INVITE_EXPIRY_ERROR_TEXT);
@@ -161,10 +159,9 @@ export function TeamInviteManagementSection() {
             return;
           }
         }
-        showToast(
-          "error",
-          getErrorMessage(err, "No se pudo crear la invitación"),
-        );
+        enqueueErrorSnackBar({
+          message: getErrorMessage(err, "No se pudo crear la invitación"),
+        });
       }
     },
   );

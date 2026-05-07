@@ -2,7 +2,7 @@ import { useAction, useSubmissions } from "@solidjs/router";
 import { createSignal, onCleanup } from "solid-js";
 
 import { updateUserProfile } from "~/actions/settings/profile";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { ProfileImageInput } from "~/components/settings/ProfileImageInput";
@@ -24,7 +24,12 @@ function toMessage(error: unknown, fallback: string): string {
 
 export default function ProfilePage() {
   const { currentUser, updateCurrentUser } = useAuthenticatedSession();
-  const { showToast } = useToast();
+  const {
+    enqueueSuccessSnackBar,
+    enqueueErrorSnackBar,
+    enqueueInfoSnackBar,
+    enqueueWarningSnackBar,
+  } = useSnackBar();
   const user = () => currentUser();
 
   const [profilePhone, setProfilePhone] = createSignal(user().phoneE164 || "");
@@ -63,9 +68,11 @@ export default function ProfilePage() {
         ...existing,
         phoneE164: profilePhone(),
       }));
-      showToast("success", "Perfil actualizado");
+      enqueueSuccessSnackBar({ message: "Perfil actualizado" });
     } catch (err: unknown) {
-      showToast("error", toMessage(err, "No se pudo actualizar el perfil"));
+      enqueueErrorSnackBar({
+        message: toMessage(err, "No se pudo actualizar el perfil"),
+      });
     } finally {
       setSavingProfile(false);
     }
@@ -93,7 +100,7 @@ export default function ProfilePage() {
         avatarUrl: updated.avatarUrl,
         avatarVersion: updated.avatarVersion,
       }));
-      showToast("success", "Foto de perfil actualizada");
+      enqueueSuccessSnackBar({ message: "Foto de perfil actualizada" });
 
       URL.revokeObjectURL(optimisticPreview);
       setAvatarPreviewUrl(null);
@@ -103,7 +110,7 @@ export default function ProfilePage() {
 
       const message = toMessage(error, "No se pudo subir la foto de perfil");
       setAvatarError(message);
-      showToast("error", message);
+      enqueueErrorSnackBar({ message: message });
     }
   };
 
@@ -124,11 +131,11 @@ export default function ProfilePage() {
         avatarUrl: null,
         avatarVersion: updated.avatarVersion,
       }));
-      showToast("success", "Foto de perfil eliminada");
+      enqueueSuccessSnackBar({ message: "Foto de perfil eliminada" });
     } catch (error: unknown) {
       const message = toMessage(error, "No se pudo eliminar la foto de perfil");
       setAvatarError(message);
-      showToast("error", message);
+      enqueueErrorSnackBar({ message: message });
     }
   };
 

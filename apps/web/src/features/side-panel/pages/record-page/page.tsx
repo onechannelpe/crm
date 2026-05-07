@@ -7,7 +7,7 @@ import {
 import { Show, createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { addLeadToFavoritesMutation } from "~/features/workflow/data/mutations";
 import {
@@ -29,7 +29,12 @@ const POLL_TIMEOUT_MS = 60_000;
 export function RecordPage() {
   const navigate = useNavigate();
   const addToFavorites = useAction(addLeadToFavoritesMutation);
-  const { showToast } = useToast();
+  const {
+    enqueueSuccessSnackBar,
+    enqueueErrorSnackBar,
+    enqueueInfoSnackBar,
+    enqueueWarningSnackBar,
+  } = useSnackBar();
   const { currentUser } = useAuthenticatedSession();
   const { leadId, activeTab, setActiveTab } = useLeadRecordPageState();
   const canDeleteCompany = createMemo(() => currentUser().role === "superuser");
@@ -87,10 +92,14 @@ export function RecordPage() {
               onAddToFavorites: () => {
                 void addToFavorites({ leadId: detail().lead.id })
                   .then(() =>
-                    showToast("success", "Empresa agregada a favoritos"),
+                    enqueueSuccessSnackBar({
+                      message: "Empresa agregada a favoritos",
+                    }),
                   )
                   .catch(() =>
-                    showToast("error", "No se pudo agregar a favoritos"),
+                    enqueueErrorSnackBar({
+                      message: "No se pudo agregar a favoritos",
+                    }),
                   );
               },
               onExportCompany: () => {
@@ -108,10 +117,12 @@ export function RecordPage() {
                 anchor.download = `empresa-${detail().lead.id}.json`;
                 anchor.click();
                 URL.revokeObjectURL(url);
-                showToast("success", "Empresa exportada");
+                enqueueSuccessSnackBar({ message: "Empresa exportada" });
               },
               onDeleteCompany: () => {
-                showToast("info", "Eliminar empresa estará disponible pronto");
+                enqueueInfoSnackBar({
+                  message: "Eliminar empresa estará disponible pronto",
+                });
               },
             }}
           />

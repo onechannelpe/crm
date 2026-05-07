@@ -6,15 +6,15 @@ import {
 } from "~/actions/auth/security/totp";
 import { getErrorMessage } from "~/lib/errors";
 
-type ShowToast = (type: "success" | "error" | "info", message: string) => void;
-
 export interface TotpEnrollmentState {
   qrCodeDataUrl: string;
   otpauthUri: string;
 }
 
 interface TotpEnrollmentOptions {
-  showToast: ShowToast;
+  enqueueSuccessSnackBar: (options: { message: string }) => void;
+  enqueueErrorSnackBar: (options: { message: string }) => void;
+  enqueueInfoSnackBar: (options: { message: string }) => void;
   refreshStatus: () => void | PromiseLike<unknown>;
   beginInfoMessage?: string;
   beginFailureMessage?: string;
@@ -36,17 +36,16 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       const nextEnrollment = await beginTotpEnrollment();
       setEnrollment(nextEnrollment);
       if (options.beginInfoMessage) {
-        options.showToast("info", options.beginInfoMessage);
+        options.enqueueInfoSnackBar({ message: options.beginInfoMessage });
       }
     } catch (error: unknown) {
-      options.showToast(
-        "error",
-        getErrorMessage(
+      options.enqueueErrorSnackBar({
+        message: getErrorMessage(
           error,
           options.beginFailureMessage ??
             "No se pudo iniciar la configuración del 2FA",
         ),
-      );
+      });
     } finally {
       setLoading(false);
     }
@@ -60,19 +59,18 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       setEnrollment(null);
       setCode("");
       await options.refreshStatus();
-      options.showToast(
-        "success",
-        options.verifySuccessMessage ??
+      options.enqueueSuccessSnackBar({
+        message:
+          options.verifySuccessMessage ??
           "Aplicación de autenticación configurada",
-      );
+      });
     } catch (error: unknown) {
-      options.showToast(
-        "error",
-        getErrorMessage(
+      options.enqueueErrorSnackBar({
+        message: getErrorMessage(
           error,
           options.verifyFailureMessage ?? "Código de verificación inválido",
         ),
-      );
+      });
     } finally {
       setLoading(false);
     }

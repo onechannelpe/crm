@@ -1,0 +1,127 @@
+.snackBar {
+  pointer-events: auto;
+  width: 296px;
+  max-width: calc(100vw - 24px);
+  border-radius: var(--radius-md);
+  background-color: var(--background-transparent-light);
+  backdrop-filter: var(--t-blur-medium);
+  -webkit-backdrop-filter: var(--t-blur-medium);
+  box-shadow: var(--shadow-elevation-3);
+  padding: var(--spacing-2);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  position: relative;
+  overflow: hidden;
+}
+
+.default {
+  --snack-bar-icon-color: var(--foreground-secondary);
+  --snack-bar-progress-color: color-mix(
+    in oklab,
+    var(--foreground) 15%,
+    transparent
+  );
+}
+
+.success {
+  --snack-bar-icon-color: var(--success);
+  --snack-bar-progress-color: color-mix(
+    in oklab,
+    var(--success) 15%,
+    transparent
+  );
+}
+
+.error {
+  --snack-bar-icon-color: var(--destructive);
+  --snack-bar-progress-color: color-mix(
+    in oklab,
+    var(--destructive) 15%,
+    transparent
+  );
+}
+
+.info {
+  --snack-bar-icon-color: var(--info);
+  --snack-bar-progress-color: color-mix(in oklab, var(--info) 15%, transparent);
+}
+
+.warning {
+  --snack-bar-icon-color: var(--warning);
+  --snack-bar-progress-color: color-mix(
+    in oklab,
+    var(--warning) 15%,
+    transparent
+  );
+}
+
+.icon {
+  color: var(--snack-bar-icon-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message {
+  margin: 0;
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.details {
+  margin: var(--spacing-1) 0 0;
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.action {
+  margin-top: var(--spacing-1);
+  margin-left: var(--spacing-6);
+}
+
+.dismiss {
+  width: 24px;
+  height: 24px;
+  color: var(--muted-foreground);
+  opacity: 0.6;
+  margin-top: -2px;
+  transition:
+    opacity var(--motion-fast) linear,
+    background-color var(--motion-fast) linear;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.dismiss:hover {
+  opacity: 1;
+  background-color: var(--tertiary);
+}
+
+.progressBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background-color: var(--snack-bar-progress-color);
+  pointer-events: none;
+  transition: width 0.1s linear;
+  border-bottom-left-radius: var(--radius-md);
+}
+
+@media (max-width: 640px) {
+  .snackBar {
+    width: 100%;
+  }
+}

@@ -8,7 +8,7 @@ import {
 import { beginPasskeyRegistration } from "~/actions/auth/onboarding/passkey";
 import { getOnboardingRequirements } from "~/actions/auth/policy";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
 import { useSession } from "~/components/providers/session-provider";
 import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
 import {
@@ -23,7 +23,8 @@ export type PasskeyOnboardingPhase = "idle" | "device" | "server";
 
 export function useOnboardingFlow() {
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar, enqueueInfoSnackBar } =
+    useSnackBar();
   const { user, refreshCurrentUser } = useSession();
 
   const [step, setStep] = createSignal<OnboardingView>("profile");
@@ -46,7 +47,7 @@ export function useOnboardingFlow() {
     action: () => Promise<{ redirectTo: string }>,
   ) {
     const result = await action();
-    showToast("success", "Tu cuenta ya quedó configurada");
+    enqueueSuccessSnackBar({ message: "Tu cuenta ya quedó configurada" });
     navigate(result.redirectTo);
   }
 
@@ -62,7 +63,7 @@ export function useOnboardingFlow() {
     try {
       await completeOnboardingAndRedirect(action);
     } catch (error: unknown) {
-      showToast("error", getErrorMessage(error, failureMessage));
+      enqueueErrorSnackBar({ message: getErrorMessage(error, failureMessage) });
     } finally {
       setOnboardingSubmitting(false);
     }
@@ -79,7 +80,9 @@ export function useOnboardingFlow() {
   };
 
   const totpEnrollment = useTotpEnrollment({
-    showToast,
+    enqueueSuccessSnackBar,
+    enqueueErrorSnackBar,
+    enqueueInfoSnackBar,
     refreshStatus: refreshAuthState,
   });
 
@@ -189,7 +192,9 @@ export function useOnboardingFlow() {
 
   function handleProfileContinue() {
     if (!isValidOnboardingPhone(phone())) {
-      showToast("error", "Ingresa los 9 dígitos de tu WhatsApp corporativo");
+      enqueueErrorSnackBar({
+        message: "Ingresa los 9 dígitos de tu WhatsApp corporativo",
+      });
       return;
     }
     setStep("security-choice");
@@ -228,10 +233,12 @@ export function useOnboardingFlow() {
         completePasskeyOnboarding(phone(), challengeId, response),
       );
     } catch (error: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(error, "No se pudo configurar la clave de acceso"),
-      );
+      enqueueErrorSnackBar({
+        message: getErrorMessage(
+          error,
+          "No se pudo configurar la clave de acceso",
+        ),
+      });
     } finally {
       setPasskeyPhase("idle");
     }

@@ -8,7 +8,7 @@ import {
   type BulkPreviewResult,
 } from "~/actions/team/bulk-import";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
@@ -36,7 +36,7 @@ export function BulkImportSection() {
   const [result, setResult] = createSignal<BulkApplyResult | null>(null);
   const [isPreviewing, setIsPreviewing] = createSignal(false);
   const [isImporting, setIsImporting] = createSignal(false);
-  const { showToast } = useToast();
+  const { enqueueErrorSnackBar } = useSnackBar();
 
   createEffect(
     on(bulkImportSetup, (im) => {
@@ -58,7 +58,9 @@ export function BulkImportSection() {
       const data = await previewBulkCsv(csv, role());
       setPreview(data);
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al procesar el archivo"));
+      enqueueErrorSnackBar({
+        message: getErrorMessage(err, "Error al procesar el archivo"),
+      });
     } finally {
       setIsPreviewing(false);
     }
@@ -75,7 +77,9 @@ export function BulkImportSection() {
       setCsvFile(null);
       setPreview(null);
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al importar usuarios"));
+      enqueueErrorSnackBar({
+        message: getErrorMessage(err, "Error al importar usuarios"),
+      });
     } finally {
       setIsImporting(false);
     }

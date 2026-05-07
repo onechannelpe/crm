@@ -5,7 +5,7 @@ import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
-import { useToast } from "~/components/feedback/toast/provider";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
@@ -22,7 +22,12 @@ import linkStyles from "~/components/auth/flow/auth-links.module.css";
 export default function LoginVerifyPage() {
   useAuthPageView("login_verify");
   const [searchParams] = useSearchParams();
-  const { showToast } = useToast();
+  const {
+    enqueueSuccessSnackBar,
+    enqueueErrorSnackBar,
+    enqueueInfoSnackBar,
+    enqueueWarningSnackBar,
+  } = useSnackBar();
   const totpSubmission = useSubmission(totpLoginMutation);
   const [totpCode, setTotpCode] = createSignal("");
   const flowId = () => parseLoginFlowId(searchParams.flow);
@@ -40,7 +45,9 @@ export default function LoginVerifyPage() {
 
   onMount(() => {
     if (!flowId()) {
-      showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
+      enqueueErrorSnackBar({
+        message: "La sesión de inicio expiró. Intenta de nuevo.",
+      });
     }
   });
 
