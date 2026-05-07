@@ -46,14 +46,20 @@ export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
       return;
     }
 
-    const merged = mergeWithExitingEntries(nextPresentEntries, current, nextKeys);
+    const merged = mergeWithExitingEntries(
+      nextPresentEntries,
+      current,
+      nextKeys,
+    );
     setPending(null);
     setRendered(merged);
   });
 
   const safeToRemove = (key: string) => {
     const current = rendered();
-    const next = current.filter((entry) => !(entry.key === key && !entry.isPresent));
+    const next = current.filter(
+      (entry) => !(entry.key === key && !entry.isPresent),
+    );
 
     if (next.length !== current.length) {
       setRendered(next);

@@ -129,7 +129,10 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
         {props.children}
         <Portal>
           <div class={styles.container} style={{ "z-index": DS_Z_INDEX.toast }}>
-            <AnimatePresence each={state.queue} getKey={(snackBar) => snackBar.id}>
+            <AnimatePresence
+              each={state.queue}
+              getKey={(snackBar) => snackBar.id}
+            >
               {(snackBar, presence) => (
                 <SnackBar
                   snackBar={snackBar}
