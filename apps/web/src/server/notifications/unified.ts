@@ -397,7 +397,6 @@ export function createNotificationIntentProcessor(
             await db
               .insertInto("notification_deliveries")
               .values({
-                recipient_id: null,
                 intent_id: intent.intent_id,
                 recipient_channel: channel,
                 recipient_address: address,

@@ -21,9 +21,9 @@ export function createWorkflowOutbox(runtime: TestRuntime) {
           return {
             ok: true as const,
             value: {
-            channel: "email",
-            provider: "resend",
-            providerMessageId: "invite",
+              channel: "email",
+              provider: "resend",
+              providerMessageId: "invite",
             },
           };
         },
@@ -31,9 +31,9 @@ export function createWorkflowOutbox(runtime: TestRuntime) {
           return {
             ok: true as const,
             value: {
-            channel: "email",
-            provider: "resend",
-            providerMessageId: "password-reset",
+              channel: "email",
+              provider: "resend",
+              providerMessageId: "password-reset",
             },
           };
         },
@@ -41,9 +41,9 @@ export function createWorkflowOutbox(runtime: TestRuntime) {
           return {
             ok: true as const,
             value: {
-            channel: "email",
-            provider: "resend",
-            providerMessageId: "account-expiring",
+              channel: "email",
+              provider: "resend",
+              providerMessageId: "account-expiring",
             },
           };
         },
@@ -51,9 +51,9 @@ export function createWorkflowOutbox(runtime: TestRuntime) {
           return {
             ok: true as const,
             value: {
-            channel: "email",
-            provider: "resend",
-            providerMessageId: "campaign",
+              channel: "email",
+              provider: "resend",
+              providerMessageId: "campaign",
             },
           };
         },
@@ -61,9 +61,9 @@ export function createWorkflowOutbox(runtime: TestRuntime) {
           return {
             ok: true as const,
             value: {
-            channel: "whatsapp",
-            provider: "whatsapp_cloud",
-            providerMessageId: "whatsapp",
+              channel: "whatsapp",
+              provider: "whatsapp_cloud",
+              providerMessageId: "whatsapp",
             },
           };
         },
