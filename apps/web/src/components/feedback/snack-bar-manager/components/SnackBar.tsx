@@ -23,8 +23,7 @@ export function SnackBar(props: SnackBarProps) {
   const progress = useProgressAnimation({
     durationMs: props.snackBar.duration,
     autoPlay:
-      props.snackBar.duration > 0 &&
-      props.snackBar.progress === undefined,
+      props.snackBar.duration > 0 && props.snackBar.progress === undefined,
     initialValue: props.snackBar.progress ?? 100,
     finalValue: 0,
     onComplete: () => props.onClose?.(props.snackBar.id),

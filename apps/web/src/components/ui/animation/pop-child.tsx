@@ -1,9 +1,4 @@
-import {
-  createEffect,
-  createUniqueId,
-  onCleanup,
-  type JSX,
-} from "solid-js";
+import { createEffect, createUniqueId, onCleanup, type JSX } from "solid-js";
 
 interface PopChildProps {
   children: JSX.Element;
@@ -40,8 +35,10 @@ export function PopChild(props: PopChildProps) {
   const measure = (): Size | null => {
     if (!containerRef) return null;
     const parent = containerRef.offsetParent;
-    const parentWidth = parent instanceof HTMLElement ? parent.offsetWidth || 0 : 0;
-    const parentHeight = parent instanceof HTMLElement ? parent.offsetHeight || 0 : 0;
+    const parentWidth =
+      parent instanceof HTMLElement ? parent.offsetWidth || 0 : 0;
+    const parentHeight =
+      parent instanceof HTMLElement ? parent.offsetHeight || 0 : 0;
     const computedStyle = getComputedStyle(containerRef);
     const width = parseFloat(computedStyle.width);
     const height = parseFloat(computedStyle.height);

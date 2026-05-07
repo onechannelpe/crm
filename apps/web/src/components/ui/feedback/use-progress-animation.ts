@@ -1,4 +1,10 @@
-import { createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 
 interface UseProgressAnimationOptions {
   durationMs: number;

@@ -1,4 +1,10 @@
-import { createEffect, createMemo, createSignal, For, type JSX } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  type JSX,
+} from "solid-js";
 
 import { PresenceChild } from "./presence-child";
 
@@ -18,8 +24,12 @@ interface TrackedChild<T> {
 }
 
 export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
-  const [renderedChildren, setRenderedChildren] = createSignal<TrackedChild<T>[]>([]);
-  const [presentChildren, setPresentChildren] = createSignal<TrackedChild<T>[]>([]);
+  const [renderedChildren, setRenderedChildren] = createSignal<
+    TrackedChild<T>[]
+  >([]);
+  const [presentChildren, setPresentChildren] = createSignal<TrackedChild<T>[]>(
+    [],
+  );
   const exitComplete = new Map<string, boolean>();
   const trackedByKey = new Map<string, TrackedChild<T>>();
   let didMount = false;

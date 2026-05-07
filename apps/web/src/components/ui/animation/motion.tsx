@@ -30,7 +30,10 @@ interface MotionTransition {
   ease?: string;
 }
 
-interface MotionDivProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "children"> {
+interface MotionDivProps extends Omit<
+  JSX.HTMLAttributes<HTMLDivElement>,
+  "children"
+> {
   key?: string | number;
   children?: JSX.Element;
   variants?: MotionVariants;
@@ -85,15 +88,17 @@ export const motion = {
     const hasTransformProps = (target: MotionTarget | undefined): boolean =>
       Boolean(
         target &&
-          (target.x !== undefined ||
-            target.y !== undefined ||
-            target.scale !== undefined ||
-            target.scaleX !== undefined ||
-            target.scaleY !== undefined ||
-            target.rotate !== undefined),
+        (target.x !== undefined ||
+          target.y !== undefined ||
+          target.scale !== undefined ||
+          target.scaleX !== undefined ||
+          target.scaleY !== undefined ||
+          target.rotate !== undefined),
       );
 
-    const transitionToOptions = (transition: MotionTransition): KeyframeAnimationOptions => ({
+    const transitionToOptions = (
+      transition: MotionTransition,
+    ): KeyframeAnimationOptions => ({
       duration: Math.max(0, (transition.duration ?? 0.3) * 1000),
       easing: transition.ease ?? "cubic-bezier(0.22, 1, 0.36, 1)",
       fill: "forwards",
@@ -102,12 +107,17 @@ export const motion = {
     const targetToFrame = (target: MotionTarget | undefined): Keyframe => {
       if (!target) return {};
       const transforms: string[] = [];
-      if (target.x !== undefined) transforms.push(`translateX(${formatUnit(target.x)})`);
-      if (target.y !== undefined) transforms.push(`translateY(${formatUnit(target.y)})`);
+      if (target.x !== undefined)
+        transforms.push(`translateX(${formatUnit(target.x)})`);
+      if (target.y !== undefined)
+        transforms.push(`translateY(${formatUnit(target.y)})`);
       if (target.scale !== undefined) transforms.push(`scale(${target.scale})`);
-      if (target.scaleX !== undefined) transforms.push(`scaleX(${target.scaleX})`);
-      if (target.scaleY !== undefined) transforms.push(`scaleY(${target.scaleY})`);
-      if (target.rotate !== undefined) transforms.push(`rotate(${formatUnit(target.rotate, "deg")})`);
+      if (target.scaleX !== undefined)
+        transforms.push(`scaleX(${target.scaleX})`);
+      if (target.scaleY !== undefined)
+        transforms.push(`scaleY(${target.scaleY})`);
+      if (target.rotate !== undefined)
+        transforms.push(`rotate(${formatUnit(target.rotate, "deg")})`);
 
       const frame: Keyframe = {};
       if (target.opacity !== undefined) frame.opacity = String(target.opacity);
@@ -117,7 +127,8 @@ export const motion = {
 
     const applyTarget = (target: MotionTarget | undefined) => {
       if (!el || !target) return;
-      if (target.opacity !== undefined) el.style.opacity = String(target.opacity);
+      if (target.opacity !== undefined)
+        el.style.opacity = String(target.opacity);
       const frame = targetToFrame(target);
       if (frame.transform) el.style.transform = String(frame.transform);
     };
@@ -141,7 +152,10 @@ export const motion = {
       }
       if (fromFrame.transform === undefined) {
         const computedTransform = getComputedStyle(el).transform;
-        fromComputed.transform = computedTransform === "none" ? "translateX(0px) translateY(0px)" : computedTransform;
+        fromComputed.transform =
+          computedTransform === "none"
+            ? "translateX(0px) translateY(0px)"
+            : computedTransform;
       }
 
       const startAnimation = () => {

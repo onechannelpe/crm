@@ -142,10 +142,7 @@ export function SnackBarProvider(props: {
             class={styles.container}
             style={{ "z-index": String(SNACK_BAR_ROOT_Z_INDEX) }}
           >
-            <AnimatePresence
-              each={queue()}
-              getKey={(snackBar) => snackBar.id}
-            >
+            <AnimatePresence each={queue()} getKey={(snackBar) => snackBar.id}>
               {(snackBar) => (
                 <motion.div
                   key={snackBar.id}
