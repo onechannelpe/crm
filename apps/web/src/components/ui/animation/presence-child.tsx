@@ -66,15 +66,18 @@ export function PresenceChild(props: PresenceChildProps) {
 
   return (
     <PresenceContext.Provider value={context()}>
-      <PopChild
-        pop={props.mode === "popLayout"}
-        isPresent={props.isPresent}
-        anchorX={props.anchorX}
-        anchorY={props.anchorY}
-        root={props.root}
-      >
-        {props.children}
-      </PopChild>
+      {props.mode === "popLayout" ? (
+        <PopChild
+          isPresent={props.isPresent}
+          anchorX={props.anchorX}
+          anchorY={props.anchorY}
+          root={props.root}
+        >
+          {props.children}
+        </PopChild>
+      ) : (
+        props.children
+      )}
     </PresenceContext.Provider>
   );
 }
