@@ -4,10 +4,11 @@ import { createMessageChannels } from "@crm/message-channels";
 import { getEnvFor } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
-import { createNotificationIntentProcessor } from "~/server/notifications/core/intent-processor";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
+import { enqueueNotifications } from "~/server/notifications/outbox";
+import { createNotificationProcessor } from "~/server/notifications/processor";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
-import { createAppNotificationService } from "~/server/notifications/service";
+import type { NotificationIntent } from "~/server/notifications/types";
 
 import type { ServerInfra } from "./infra";
 
@@ -23,21 +24,23 @@ export function createNotificationsRuntime(infra: ServerInfra) {
   const composer = createEmailComposer();
   const messaging = createMessagingGateway({ channels, composer });
 
-  const runIntentProcessor = createNotificationIntentProcessor(
-    infra.db,
-    messaging,
-  );
+  const runProcessor = createNotificationProcessor(infra.db, messaging);
 
   return {
     messaging,
     createIntentQueue: (workerId: string) => ({
       name: "notifications-intents",
-      runOnce: () => runIntentProcessor(workerId, 50),
+      runOnce: () => runProcessor(workerId, 50),
     }),
     async dispatchPendingJobs(): Promise<void> {
       await publishJob(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
     },
-    service: createAppNotificationService(infra.db),
+    async enqueue(
+      intents: NotificationIntent[],
+      now = Date.now(),
+    ): Promise<void> {
+      await enqueueNotifications(infra.db, intents, now);
+    },
     appNotifications: createAppNotificationRepo(infra.db),
   };
 }

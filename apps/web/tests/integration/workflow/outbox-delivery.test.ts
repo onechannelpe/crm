@@ -58,7 +58,7 @@ describe("outbox delivery", () => {
       },
     ]);
 
-    const completed = await scenario.outbox.counts("completed");
+    const completed = await scenario.outbox.counts("done");
     expect(completed.notifications).toBe(2);
   });
 });

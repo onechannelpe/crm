@@ -1,3 +1,4 @@
+import type { NotificationIntent } from "~/server/notifications/types";
 import type {
   LeadPriority,
   LeadStage,
@@ -62,12 +63,5 @@ export type LeadMutationResult =
     };
 
 export type PlannedOutboxEvents = {
-  domainEvents: Array<{
-    id: string;
-    leadId: string;
-    toStage: LeadStage;
-    ruc: string;
-    executiveId: number;
-    branchId: number | null;
-  }>;
+  notificationIntents: NotificationIntent[];
 };

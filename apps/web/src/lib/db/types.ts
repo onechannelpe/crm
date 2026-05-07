@@ -66,13 +66,9 @@ export interface Database {
   search_policy_overrides: capacity.SearchPolicyOverridesTable;
   user_channel_addresses: notifications.UserChannelAddressesTable;
   notification_preferences: notifications.NotificationPreferencesTable;
-  notification_recipients: notifications.NotificationRecipientsTable;
   notification_deliveries: notifications.NotificationDeliveriesTable;
   app_notifications: notifications.AppNotificationsTable;
-  domain_events: notifications.DomainEventsTable;
-  notification_intents_outbox: notifications.NotificationIntentsOutboxTable;
-  notification_intent_channels: notifications.NotificationIntentChannelsTable;
-  notification_intent_targets: notifications.NotificationIntentTargetsTable;
+  notification_outbox: notifications.NotificationOutboxTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;

@@ -1,52 +1,20 @@
-import { createNotificationIntentProcessor } from "~/server/notifications/core/intent-processor";
+import { createNotificationProcessor } from "~/server/notifications/processor";
 
 import type { TestRuntime } from "../runtime/app";
 
 export function createWorkflowOutbox(runtime: TestRuntime) {
   const outbox = {
-    async counts(status: "pending" | "completed") {
-      const workflowNotifications = await runtime.ctx.db
-        .selectFrom("notification_intents_outbox")
-        .select((eb) => eb.fn.count<number>("intent_id").as("count"))
+    async counts(status: "pending" | "done") {
+      const count = await runtime.ctx.db
+        .selectFrom("notification_outbox")
+        .select((eb) => eb.fn.count<number>("id").as("count"))
         .where("status", "=", status)
         .executeTakeFirstOrThrow();
-      return {
-        notifications: workflowNotifications.count,
-      };
+      return { notifications: count.count };
     },
 
     async drainAll(workerId = "test-worker"): Promise<void> {
-      const runOnce = createNotificationIntentProcessor(runtime.ctx.db, {
-        async sendInviteEmail() {
-          return {
-            ok: true as const,
-            value: {
-              channel: "email",
-              provider: "resend",
-              providerMessageId: "invite",
-            },
-          };
-        },
-        async sendPasswordResetEmail() {
-          return {
-            ok: true as const,
-            value: {
-              channel: "email",
-              provider: "resend",
-              providerMessageId: "password-reset",
-            },
-          };
-        },
-        async sendAccountExpiringEmail() {
-          return {
-            ok: true as const,
-            value: {
-              channel: "email",
-              provider: "resend",
-              providerMessageId: "account-expiring",
-            },
-          };
-        },
+      const runOnce = createNotificationProcessor(runtime.ctx.db, {
         async sendCampaignEmail() {
           return {
             ok: true as const,
@@ -72,9 +40,7 @@ export function createWorkflowOutbox(runtime: TestRuntime) {
       for (let index = 0; index < 5; index += 1) {
         await runOnce(workerId, 50);
         const pending = await outbox.counts("pending");
-        if (pending.notifications === 0) {
-          return;
-        }
+        if (pending.notifications === 0) return;
       }
     },
   };

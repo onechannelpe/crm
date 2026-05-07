@@ -50,29 +50,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("notification_recipients")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("intent_id", "text", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) =>
-      col.references("users.id").onDelete("set null"),
-    )
-    .addColumn("channel", "varchar(20)", (col) => col.notNull())
-    .addColumn("address", "varchar(255)", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("status_reason", "varchar(128)")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("sent_at", "integer")
-    .addColumn("failed_at", "integer")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_recipients_intent_channel_address")
-    .on("notification_recipients")
-    .columns(["intent_id", "channel", "address"])
-    .unique()
-    .execute();
-
-  await db.schema
     .createTable("notification_deliveries")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("intent_id", "text", (col) => col.notNull())
@@ -99,7 +76,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("intent_id", "text")
     .addColumn("source_event_id", "text", (col) => col.notNull())
     .addColumn("event_type", "varchar(64)", (col) => col.notNull())
     .addColumn("priority", "varchar(16)", (col) => col.notNull())
@@ -125,112 +101,28 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_app_notifications_user_intent")
-    .on("app_notifications")
-    .columns(["user_id", "intent_id"])
-    .unique()
-    .execute();
-
-  await db.schema
-    .createTable("domain_events")
+    .createTable("notification_outbox")
     .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("aggregate_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("aggregate_id", "text", (col) => col.notNull())
     .addColumn("event_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("payload_json", "text", (col) => col.notNull())
-    .addColumn("occurred_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_domain_events_aggregate")
-    .on("domain_events")
-    .columns(["aggregate_type", "aggregate_id", "occurred_at"])
-    .execute();
-
-  await db.schema
-    .createTable("notification_intents_outbox")
-    .addColumn("intent_id", "text", (col) => col.primaryKey())
-    .addColumn("source_event_id", "text", (col) =>
-      col.notNull().references("domain_events.id").onDelete("cascade"),
-    )
-    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("aggregate_id", "text", (col) => col.notNull())
-    .addColumn("audience_kind", "varchar(24)", (col) => col.notNull())
+    .addColumn("audience_json", "text", (col) => col.notNull())
+    .addColumn("channels_json", "text", (col) => col.notNull())
     .addColumn("title", "varchar(255)", (col) => col.notNull())
     .addColumn("body_text", "text", (col) => col.notNull())
     .addColumn("action_url", "varchar(255)")
     .addColumn("priority", "varchar(16)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "integer", (col) => col.notNull())
     .addColumn("lease_owner", "varchar(100)")
     .addColumn("lease_until", "integer")
-    .addColumn("error_message", "text")
+    .addColumn("error", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("processed_at", "integer")
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_intents_status")
-    .on("notification_intents_outbox")
+    .createIndex("idx_notification_outbox_status")
+    .on("notification_outbox")
     .columns(["status", "available_at", "lease_until"])
-    .execute();
-
-  await db.schema
-    .createTable("notification_intent_channels")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("intent_id", "text", (col) =>
-      col
-        .notNull()
-        .references("notification_intents_outbox.intent_id")
-        .onDelete("cascade"),
-    )
-    .addColumn("channel", "varchar(20)", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_intent_channels_unique")
-    .on("notification_intent_channels")
-    .columns(["intent_id", "channel"])
-    .unique()
-    .execute();
-
-  await db.schema
-    .createTable("notification_intent_targets")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("intent_id", "text", (col) =>
-      col
-        .notNull()
-        .references("notification_intents_outbox.intent_id")
-        .onDelete("cascade"),
-    )
-    .addColumn("target_kind", "varchar(24)", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) => col.references("users.id"))
-    .addColumn("branch_id", "integer", (col) => col.references("branches.id"))
-    .addColumn("role", "varchar(32)")
-    .addColumn("team_id", "integer", (col) => col.references("teams.id"))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_intent_targets_intent")
-    .on("notification_intent_targets")
-    .column("intent_id")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_intent_targets_unique")
-    .on("notification_intent_targets")
-    .columns([
-      "intent_id",
-      "target_kind",
-      "user_id",
-      "branch_id",
-      "role",
-      "team_id",
-    ])
-    .unique()
     .execute();
 }

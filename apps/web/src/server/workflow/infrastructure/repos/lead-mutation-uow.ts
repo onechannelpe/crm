@@ -1,10 +1,11 @@
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { projectLeadStageChangedEvent } from "~/server/notifications/core/projector";
+import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
+import { deriveLeadStageNotifications } from "../../application/notification-policy";
 import type {
   LeadMutationUow,
   LeadMutationOutcome,
@@ -62,7 +63,7 @@ export function createLeadMutationUow(
     return row?.branch_id ?? null;
   }
 
-  async function enqueueWorkflowNotifications(input: {
+  async function enqueueLeadMutationNotifications(input: {
     leadId: string;
     ruc: string;
     executiveId: number;
@@ -71,25 +72,25 @@ export function createLeadMutationUow(
     now: number;
   }) {
     const branchId = await resolveExecutiveBranchId(input.executiveId);
+
+    /* eslint-disable no-await-in-loop */
     for (let index = 0; index < input.events.history.length; index += 1) {
       const event = input.events.history[index];
-      const sourceEventId = input.historyIds[index];
-      if (!sourceEventId) {
-        continue;
-      }
-      if (event.eventType !== "workflow_stage_changed") {
-        continue;
-      }
-      await projectLeadStageChangedEvent(executor, {
-        id: sourceEventId,
+      const eventId = input.historyIds[index];
+      if (!eventId) continue;
+      if (event.eventType !== "workflow_stage_changed") continue;
+
+      const intents = deriveLeadStageNotifications({
+        eventId,
         leadId: input.leadId,
         toStage: event.payload.to,
         ruc: input.ruc,
         executiveId: input.executiveId,
         branchId,
-        occurredAt: input.now,
       });
+      await enqueueNotifications(executor, intents, input.now);
     }
+    /* eslint-enable no-await-in-loop */
   }
 
   return {
@@ -123,7 +124,7 @@ export function createLeadMutationUow(
       });
       if (!result.ok) return result;
 
-      await enqueueWorkflowNotifications({
+      await enqueueLeadMutationNotifications({
         leadId: input.lead.id,
         ruc: input.lead.ruc,
         executiveId: input.lead.executiveId,
@@ -155,7 +156,7 @@ export function createLeadMutationUow(
       if (!result.ok || !result.value.applied) return result;
 
       if (result.value.events && result.value.historyIds) {
-        await enqueueWorkflowNotifications({
+        await enqueueLeadMutationNotifications({
           leadId: input.lead.id,
           ruc: input.lead.ruc,
           executiveId: input.lead.executiveId,

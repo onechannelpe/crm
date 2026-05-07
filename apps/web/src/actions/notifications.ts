@@ -1,9 +1,10 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { isRole, type Role } from "~/lib/auth/access/rbac";
+import { isRole } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import type { NotificationAudience } from "~/server/notifications/types";
 import { getServerRuntime } from "~/server/runtime";
 
 function assertAudienceType(
@@ -15,29 +16,29 @@ function assertAudienceType(
   throw validationError("Invalid audience type");
 }
 
-function assertAudienceRef(
+function parseAudience(
   audienceType: "user_ids" | "global_roles" | "team",
   value: string,
-): Record<string, unknown> {
+): NotificationAudience {
   const ref = assertNonEmptyString(value, "audienceRef");
   if (audienceType === "user_ids") {
     const userId = Number(ref);
     if (!Number.isInteger(userId) || userId <= 0) {
       throw validationError("Invalid user audience");
     }
-    return { user_ids: [userId] };
+    return { kind: "user_ids", userIds: [userId] };
   }
   if (audienceType === "team") {
     const teamId = Number(ref);
     if (!Number.isInteger(teamId) || teamId <= 0) {
       throw validationError("Invalid team audience");
     }
-    return { team_id: teamId };
+    return { kind: "team_id", teamId };
   }
   if (!isRole(ref)) {
     throw validationError("Invalid global role audience");
   }
-  return { global_roles: [ref as Role] };
+  return { kind: "global_role", role: ref };
 }
 
 export async function sendBroadcastNotification(params: {
@@ -48,15 +49,23 @@ export async function sendBroadcastNotification(params: {
 }): Promise<void> {
   const session = await requireRole("admin");
   const audienceType = assertAudienceType(params.audienceType);
-  const audienceRef = assertAudienceRef(audienceType, params.audienceRef);
+  const audience = parseAudience(audienceType, params.audienceRef);
+  const now = Date.now();
 
-  await getServerRuntime().notifications.service.publishCampaign({
-    eventType: "broadcast.general",
-    audienceKind: audienceType,
-    audience: audienceRef,
-    title: assertNonEmptyString(params.title, "title"),
-    bodyText: assertNonEmptyString(params.bodyText, "bodyText"),
-    createdByUserId: session.userId,
-  });
+  await getServerRuntime().notifications.enqueue(
+    [
+      {
+        id: `broadcast:${now}:${session.userId}`,
+        eventType: "broadcast.general",
+        audience,
+        channels: ["in_app", "email", "whatsapp"],
+        priority: "normal",
+        title: assertNonEmptyString(params.title, "title"),
+        bodyText: assertNonEmptyString(params.bodyText, "bodyText"),
+        actionUrl: null,
+      },
+    ],
+    now,
+  );
   await getServerRuntime().notifications.dispatchPendingJobs();
 }

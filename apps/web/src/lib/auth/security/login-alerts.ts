@@ -1,5 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
-import type { NotificationCampaignService } from "~/server/notifications/service";
+import type { NotificationIntent } from "~/server/notifications/types";
 
 import type {
   PrivilegedLoginAlertPayload,
@@ -8,7 +8,7 @@ import type {
 import { requiresStrongAuthRole } from "./strong-auth-status";
 
 interface AlertNotifications {
-  service: NotificationCampaignService;
+  enqueue(intents: NotificationIntent[], now: number): Promise<void>;
   dispatchPendingJobs(): Promise<void>;
 }
 
@@ -25,21 +25,28 @@ export function createPrivilegedLoginAlertSender(
     }
 
     try {
-      await notifications.service.publishCampaign({
-        eventType: "security.privileged_login",
-        audienceKind: "user_ids",
-        audience: { user_ids: [params.userId] },
-        title: `Security alert: privileged login (${params.role})`,
-        bodyText: [
-          "Privileged login detected.",
-          `User: ${params.fullName} <${params.email}>`,
-          `Role: ${params.role}`,
-          `Method: ${params.method}`,
-          `IP: ${params.ipAddress}`,
-          `Time: ${new Date(params.occurredAt).toISOString()}`,
-        ].join("\n"),
-        createdByUserId: null,
-      });
+      await notifications.enqueue(
+        [
+          {
+            id: `security:login:${params.userId}:${params.occurredAt}`,
+            eventType: "security.privileged_login",
+            audience: { kind: "user_ids", userIds: [params.userId] },
+            channels: ["in_app", "email", "whatsapp"],
+            priority: "high",
+            title: `Security alert: privileged login (${params.role})`,
+            bodyText: [
+              "Privileged login detected.",
+              `User: ${params.fullName} <${params.email}>`,
+              `Role: ${params.role}`,
+              `Method: ${params.method}`,
+              `IP: ${params.ipAddress}`,
+              `Time: ${new Date(params.occurredAt).toISOString()}`,
+            ].join("\n"),
+            actionUrl: null,
+          },
+        ],
+        params.occurredAt,
+      );
       await notifications.dispatchPendingJobs();
     } catch (error) {
       logger.error("privileged_login_alert_failed", { error });

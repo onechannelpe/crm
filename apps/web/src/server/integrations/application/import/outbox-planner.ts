@@ -1,12 +1,11 @@
-import { projectLeadStageChangedEvent } from "~/server/notifications/core/projector";
+import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
 
 import type { LeadMutationOutcome, PlannedOutboxEvents } from "./types";
 
 export function createEmptyOutboxPlan(): PlannedOutboxEvents {
-  return {
-    domainEvents: [],
-  };
+  return { notificationIntents: [] };
 }
 
 export async function planOutboxForMutation(input: {
@@ -15,13 +14,7 @@ export async function planOutboxForMutation(input: {
   outboxPlan: PlannedOutboxEvents;
 }) {
   const mutation = input.mutation;
-  if (!mutation.stageChanged) {
-    return;
-  }
-
-  if (mutation.executiveId <= 0) {
-    return;
-  }
+  if (!mutation.stageChanged || mutation.executiveId <= 0) return;
 
   let branchId: number | null = null;
   if (mutation.nextStage === "READY_FOR_QUOTATION") {
@@ -30,20 +23,21 @@ export async function planOutboxForMutation(input: {
       .select("branch_id")
       .where("id", "=", mutation.executiveId)
       .executeTakeFirst();
-    if (!user || user.branch_id <= 0) {
-      return;
-    }
+    if (!user || (user.branch_id ?? 0) <= 0) return;
     branchId = user.branch_id;
   }
 
-  input.outboxPlan.domainEvents.push({
-    id: `${mutation.row.type}:${mutation.row.row}:${mutation.leadId}:stage_changed`,
+  const eventId = `${mutation.row.type}:${mutation.row.row}:${mutation.leadId}:stage_changed`;
+  const intents = deriveLeadStageNotifications({
+    eventId,
     leadId: mutation.leadId,
     toStage: mutation.nextStage,
     ruc: mutation.ruc,
     executiveId: mutation.executiveId,
     branchId,
   });
+
+  input.outboxPlan.notificationIntents.push(...intents);
 }
 
 export async function persistOutboxPlan(input: {
@@ -51,15 +45,9 @@ export async function persistOutboxPlan(input: {
   outboxPlan: PlannedOutboxEvents;
   now: number;
 }) {
-  for (const event of input.outboxPlan.domainEvents) {
-    await projectLeadStageChangedEvent(input.executor, {
-      id: event.id,
-      leadId: event.leadId,
-      toStage: event.toStage,
-      ruc: event.ruc,
-      executiveId: event.executiveId,
-      branchId: event.branchId,
-      occurredAt: input.now,
-    });
-  }
+  await enqueueNotifications(
+    input.executor,
+    input.outboxPlan.notificationIntents,
+    input.now,
+  );
 }

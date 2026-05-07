@@ -15,7 +15,7 @@ import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
-import type { NotificationCampaignService } from "~/server/notifications/service";
+import type { NotificationIntent } from "~/server/notifications/types";
 
 import type { ServerInfra } from "./infra";
 
@@ -23,7 +23,7 @@ export function createAuthRuntime(
   infra: ServerInfra,
   notifications: {
     messaging: MessagingGateway;
-    service: NotificationCampaignService;
+    enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
     dispatchPendingJobs(): Promise<void>;
   },
 ) {
@@ -45,7 +45,7 @@ export function createAuthRuntime(
     authThrottleService,
     sessionService,
     login: createAuthLoginContext(infra.db, {
-      service: notifications.service,
+      enqueue: (intents, now) => notifications.enqueue(intents, now),
       dispatchPendingJobs: () => notifications.dispatchPendingJobs(),
     }),
     onboarding,
