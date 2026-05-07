@@ -30,7 +30,7 @@ export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
   const [presentChildren, setPresentChildren] = createSignal<TrackedChild<T>[]>(
     [],
   );
-  const exitComplete = new Map<string, boolean>();
+  const exitingKeys = new Set<string>();
   const trackedByKey = new Map<string, TrackedChild<T>>();
   let didMount = false;
   const presentKeySet = createMemo(
@@ -66,11 +66,11 @@ export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
 
       currentRenderedChildren.forEach((child, index) => {
         if (!nextPresentKeys.has(child.key)) {
-          exitComplete.set(child.key, false);
+          exitingKeys.add(child.key);
           nextChildren.splice(index, 0, child);
           exitingChildren.push(child);
         } else {
-          exitComplete.delete(child.key);
+          exitingKeys.delete(child.key);
         }
       });
 
@@ -83,28 +83,17 @@ export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
   });
 
   const handleChildExitComplete = (key: string) => {
-    if (!exitComplete.has(key)) return;
-    exitComplete.set(key, true);
+    if (!exitingKeys.has(key)) return;
+    exitingKeys.delete(key);
 
-    for (const complete of exitComplete.values()) {
-      if (!complete) return;
+    setRenderedChildren((current) =>
+      current.filter((child) => child.key !== key),
+    );
+    trackedByKey.delete(key);
+
+    if (exitingKeys.size === 0) {
+      props.onExitComplete?.();
     }
-
-    const currentPresentKeys = new Set(
-      presentChildren().map((child) => child.key),
-    );
-    setRenderedChildren((currentRenderedChildren) =>
-      currentRenderedChildren.filter((child) =>
-        currentPresentKeys.has(child.key),
-      ),
-    );
-    Array.from(trackedByKey.keys()).forEach((trackedKey) => {
-      if (!currentPresentKeys.has(trackedKey)) {
-        trackedByKey.delete(trackedKey);
-      }
-    });
-    exitComplete.clear();
-    props.onExitComplete?.();
   };
 
   return (

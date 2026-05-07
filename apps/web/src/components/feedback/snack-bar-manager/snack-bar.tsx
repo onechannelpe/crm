@@ -22,14 +22,6 @@ const variantStyles = {
   default: styles.default,
 } satisfies Record<SnackBarVariant, string>;
 
-const titleByVariant = {
-  success: "Success",
-  error: "Error",
-  info: "Info",
-  warning: "Warning",
-  default: "Alert",
-} satisfies Record<SnackBarVariant, string>;
-
 const iconByVariant = {
   success: (): JSX.Element => <CircleCheckBig size={16} />,
   info: (): JSX.Element => <Info size={16} />,
@@ -58,7 +50,6 @@ export function SnackBar(props: SnackBarProps) {
       onMouseLeave={props.onResume}
       role={props.item.role}
       aria-live={props.item.role === "alert" ? "assertive" : "polite"}
-      title={props.item.message || titleByVariant[props.item.variant]}
       data-globally-prevent-click-outside
     >
       <ProgressBar value={progressValue()} />

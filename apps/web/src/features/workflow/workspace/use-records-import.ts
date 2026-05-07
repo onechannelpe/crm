@@ -73,15 +73,12 @@ function websocketUrl(): string {
 }
 
 export function useRecordsImport() {
-  const {
-    enqueueInfoSnackBar,
-    enqueueSuccessSnackBar,
-    enqueueErrorSnackBar,
-    enqueueWarningSnackBar,
-  } = useSnackBar();
+  const { enqueueInfoSnackBar, enqueueErrorSnackBar, updateSnackBar } =
+    useSnackBar();
 
   let fileInputRef: HTMLInputElement | undefined;
   let activeJobId: string | null = null;
+  let activeToastId: string | null = null;
   let activeImportType: RecordImportType | null = null;
   let socket: WebSocket | null = null;
   let pollTimer: number | null = null;
@@ -142,14 +139,10 @@ export function useRecordsImport() {
     rowsFailed: number;
     rowsTotal: number;
   }) {
-    if (event.rowsFailed > 0) {
-      enqueueWarningSnackBar(buildCompletedMessage(event), {
-        duration: IMPORT_COMPLETED_DURATION_MS,
-      });
-      return;
-    }
-
-    enqueueSuccessSnackBar(buildCompletedMessage(event), {
+    if (activeToastId === null) return;
+    updateSnackBar(activeToastId, {
+      message: buildCompletedMessage(event),
+      variant: event.rowsFailed > 0 ? "warning" : "success",
       duration: IMPORT_COMPLETED_DURATION_MS,
     });
   }
@@ -158,6 +151,7 @@ export function useRecordsImport() {
     clearPolling();
     clearWebsocketReconnect();
     activeJobId = null;
+    activeToastId = null;
     activeImportType = null;
     closeSocket();
     pollFailureCount = 0;
@@ -190,6 +184,17 @@ export function useRecordsImport() {
         enqueueErrorSnackBar(job.error_message ?? "La importación falló");
         stopActiveTracking();
         return "ok";
+      }
+
+      if (activeToastId !== null && activeImportType !== null) {
+        updateSnackBar(activeToastId, {
+          message: buildProgressMessage({
+            importType: activeImportType,
+            rowsApplied,
+            rowsFailed,
+            rowsTotal,
+          }),
+        });
       }
       return "ok";
     } catch {
@@ -245,6 +250,18 @@ export function useRecordsImport() {
     if (event.status === "FAILED") {
       enqueueErrorSnackBar(event.errorMessage ?? "La importación falló");
       stopActiveTracking();
+      return;
+    }
+
+    if (activeToastId !== null) {
+      updateSnackBar(activeToastId, {
+        message: buildProgressMessage({
+          importType: event.importType,
+          rowsApplied: event.rowsApplied,
+          rowsFailed: event.rowsFailed,
+          rowsTotal: event.rowsTotal,
+        }),
+      });
     }
   }
 
@@ -318,7 +335,7 @@ export function useRecordsImport() {
       activeJobId = result.jobId;
       activeImportType = result.importType;
 
-      enqueueInfoSnackBar(
+      activeToastId = enqueueInfoSnackBar(
         buildProgressMessage({
           importType: result.importType,
           rowsApplied: 0,
