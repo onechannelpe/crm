@@ -1,9 +1,11 @@
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
+import { deriveLeadStageNotifications } from "../../application/notification-policy";
 import type {
   LeadMutationUow,
   LeadMutationOutcome,
@@ -52,6 +54,45 @@ function createMutationDeps(executor: Transaction<Database>) {
 export function createLeadMutationUow(
   executor: Transaction<Database>,
 ): LeadMutationUow {
+  async function resolveExecutiveBranchId(executiveId: number) {
+    const row = await executor
+      .selectFrom("users")
+      .select("branch_id")
+      .where("id", "=", executiveId)
+      .executeTakeFirst();
+    return row?.branch_id ?? null;
+  }
+
+  async function enqueueLeadMutationNotifications(input: {
+    leadId: string;
+    ruc: string;
+    executiveId: number;
+    events: LeadMutationOutcome["events"];
+    historyIds: string[];
+    now: number;
+  }) {
+    const branchId = await resolveExecutiveBranchId(input.executiveId);
+
+    /* eslint-disable no-await-in-loop */
+    for (let index = 0; index < input.events.history.length; index += 1) {
+      const event = input.events.history[index];
+      const eventId = input.historyIds[index];
+      if (!eventId) continue;
+      if (event.eventType !== "workflow_stage_changed") continue;
+
+      const intents = deriveLeadStageNotifications({
+        eventId,
+        leadId: input.leadId,
+        toStage: event.payload.to,
+        ruc: input.ruc,
+        executiveId: input.executiveId,
+        branchId,
+      });
+      await enqueueNotifications(executor, intents, input.now);
+    }
+    /* eslint-enable no-await-in-loop */
+  }
+
   return {
     derivePatch(input) {
       return deriveLeadPatchFromIntent(input);
@@ -69,7 +110,7 @@ export function createLeadMutationUow(
         });
       }
 
-      return executeLeadMutation({
+      const result = await executeLeadMutation({
         deps: {
           leadWriter: deps.leadWriter,
           checkedLeadWriter: deps.checkedLeadWriter,
@@ -81,13 +122,25 @@ export function createLeadMutationUow(
         now: input.now,
         intent: input.intent,
       });
+      if (!result.ok) return result;
+
+      await enqueueLeadMutationNotifications({
+        leadId: input.lead.id,
+        ruc: input.lead.ruc,
+        executiveId: input.lead.executiveId,
+        events: result.value.events,
+        historyIds: result.value.historyIds,
+        now: input.now,
+      });
+
+      return result;
     },
 
     async commitChecked(
       input,
     ): Promise<Result<CheckedLeadMutationOutcome, DomainError>> {
       const deps = createMutationDeps(executor);
-      return executeCheckedLeadMutation({
+      const result = await executeCheckedLeadMutation({
         deps: {
           leadWriter: deps.leadWriter,
           checkedLeadWriter: deps.checkedLeadWriter,
@@ -100,6 +153,19 @@ export function createLeadMutationUow(
         expectedUpdatedAt: input.expectedUpdatedAt,
         intent: input.intent,
       });
+      if (!result.ok || !result.value.applied) return result;
+
+      if (result.value.events && result.value.historyIds) {
+        await enqueueLeadMutationNotifications({
+          leadId: input.lead.id,
+          ruc: input.lead.ruc,
+          executiveId: input.lead.executiveId,
+          events: result.value.events,
+          historyIds: result.value.historyIds,
+          now: input.now,
+        });
+      }
+      return result;
     },
   };
 }

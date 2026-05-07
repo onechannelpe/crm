@@ -9,26 +9,14 @@ export async function startQueueDoorbellSubscriber(triggers: {
 }) {
   const channelEntries = [
     { key: "RECORDS_IMPORT", channel: JOB_CHANNELS.RECORDS_IMPORT },
-    {
-      key: "INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT",
-      channel: JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,
-    },
-    {
-      key: "INTEGRATION_OUTBOX_READY_FOR_QUOTATION",
-      channel: JOB_CHANNELS.INTEGRATION_OUTBOX_READY_FOR_QUOTATION,
-    },
     { key: "ENRICHMENT", channel: JOB_CHANNELS.ENRICHMENT },
     {
       key: "ENRICHMENT_WRITEBACK",
       channel: JOB_CHANNELS.ENRICHMENT_WRITEBACK,
     },
     {
-      key: "NOTIFICATIONS_EMAIL",
-      channel: JOB_CHANNELS.NOTIFICATIONS_EMAIL,
-    },
-    {
-      key: "NOTIFICATIONS_WHATSAPP",
-      channel: JOB_CHANNELS.NOTIFICATIONS_WHATSAPP,
+      key: "NOTIFICATIONS_INTENTS",
+      channel: JOB_CHANNELS.NOTIFICATIONS_INTENTS,
     },
   ] as const;
 

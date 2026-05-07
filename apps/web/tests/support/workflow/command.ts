@@ -8,7 +8,6 @@ import {
 import type { WorkflowAuditService } from "~/server/workflow/application/ports/audit-service";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
-import type { WorkflowNotificationCenter } from "~/server/workflow/application/ports/notification-center";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
 import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos/lead-read-repo";
@@ -16,11 +15,6 @@ import { createLeadUserScopeRepository } from "~/server/workflow/infrastructure/
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
 import type { TestRuntime } from "../runtime/app";
-
-const NO_OP_NOTIFICATIONS: WorkflowNotificationCenter = {
-  notifyUsers: async () => {},
-  notifyBranchRoles: async () => {},
-};
 
 const NO_OP_AUDIT: WorkflowAuditService = {
   log: async () => {},
@@ -37,7 +31,6 @@ const NO_OP_ENRICHMENT_QUEUE: LeadEnrichmentQueue = {
 export type TestCommandOverrides = {
   engineGateway?: WorkflowEngineGateway;
   auditService?: WorkflowAuditService;
-  notificationCenter?: WorkflowNotificationCenter;
   leadEnrichmentQueue?: LeadEnrichmentQueue;
 };
 
@@ -65,7 +58,6 @@ function buildCommandApi(
     leadSales: repos.leadSales,
     leadSaleVenues: repos.leadSaleVenues,
     negotiationRequests: repos.leadNegotiationRequests,
-    notificationCenter: overrides?.notificationCenter ?? NO_OP_NOTIFICATIONS,
     auditService: overrides?.auditService ?? NO_OP_AUDIT,
     engineGateway: overrides?.engineGateway ?? NO_OP_ENGINE_GATEWAY,
     leadEnrichmentQueue:

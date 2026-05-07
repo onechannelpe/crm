@@ -1,3 +1,4 @@
+import type { NotificationIntent } from "~/server/notifications/types";
 import type {
   LeadPriority,
   LeadStage,
@@ -61,20 +62,6 @@ export type LeadMutationResult =
       mutation: LeadMutationOutcome;
     };
 
-export type NeedsExecutiveOutboxEvent = {
-  leadId: string;
-  ruc: string;
-  executiveId: number;
-};
-
-export type ReadyForQuotationOutboxEvent = {
-  leadId: string;
-  ruc: string;
-  executiveId: number;
-  branchId: number;
-};
-
 export type PlannedOutboxEvents = {
-  needsExecutiveInput: NeedsExecutiveOutboxEvent[];
-  readyForQuotation: ReadyForQuotationOutboxEvent[];
+  notificationIntents: NotificationIntent[];
 };

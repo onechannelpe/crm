@@ -4,8 +4,6 @@ import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { openStoredFileStream } from "~/server/files/storage";
-import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
-import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import { getServerRuntime } from "~/server/runtime";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
@@ -23,31 +21,17 @@ export function startBackgroundJobs() {
     openFileStream: (filePath) =>
       openStoredFileStream(config.uploads.storageRoot, filePath),
   });
-  const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID, {
-    executor: integration.executor,
-  });
-  const readyForQuotationOutboxQueue = createReadyForQuotationOutboxQueue(
-    WORKER_ID,
-    {
-      executor: integration.executor,
-    },
-  );
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
   const sunatEnrichmentWritebackQueue =
     getServerRuntime().workflow.createSunatEnrichmentWritebackQueue(WORKER_ID);
-  const notificationsEmailQueue =
-    getServerRuntime().notifications.createEmailQueue(WORKER_ID);
-  const notificationsWhatsAppQueue =
-    getServerRuntime().notifications.createWhatsAppQueue(WORKER_ID);
+  const notificationsIntentQueue =
+    getServerRuntime().notifications.createIntentQueue(WORKER_ID);
   const queues: QueueRunner[] = [
     recordsImportQueue,
-    needsExecutiveOutboxQueue,
-    readyForQuotationOutboxQueue,
     enrichmentQueue,
     sunatEnrichmentWritebackQueue,
-    notificationsEmailQueue,
-    notificationsWhatsAppQueue,
+    notificationsIntentQueue,
   ];
   const runAllQueues = () => {
     for (const queue of queues) {
@@ -76,23 +60,14 @@ export function startBackgroundJobs() {
     RECORDS_IMPORT: () => {
       void recordsImportQueue.runOnce();
     },
-    INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT: () => {
-      void needsExecutiveOutboxQueue.runOnce();
-    },
-    INTEGRATION_OUTBOX_READY_FOR_QUOTATION: () => {
-      void readyForQuotationOutboxQueue.runOnce();
-    },
     ENRICHMENT: () => {
       void enrichmentQueue.runOnce();
     },
     ENRICHMENT_WRITEBACK: () => {
       void sunatEnrichmentWritebackQueue.runOnce();
     },
-    NOTIFICATIONS_EMAIL: () => {
-      void notificationsEmailQueue.runOnce();
-    },
-    NOTIFICATIONS_WHATSAPP: () => {
-      void notificationsWhatsAppQueue.runOnce();
+    NOTIFICATIONS_INTENTS: () => {
+      void notificationsIntentQueue.runOnce();
     },
   });
 

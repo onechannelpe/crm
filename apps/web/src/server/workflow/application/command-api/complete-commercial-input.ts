@@ -6,14 +6,12 @@ import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { CompleteCommercialInputInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
-import { notifyReadyForQuotation } from "../notifications";
 import {
   canCompleteCommercialInput,
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { WorkflowNotificationCenter } from "../ports/notification-center";
 import type { PartyRepository } from "../ports/party-repository";
 import type { LeadClock } from "../services/lead-clock";
 
@@ -22,7 +20,6 @@ type CompleteCommercialInputCommandDeps = {
   mutationUow: LeadMutationUow;
   leadCommercialInputs: LeadCommercialInputRepository;
   party: PartyRepository;
-  notificationCenter: WorkflowNotificationCenter;
   clock: LeadClock;
 };
 
@@ -101,13 +98,6 @@ export async function completeCommercialInputCommand(
     },
   });
   if (!outcome.ok) return outcome;
-
-  await notifyReadyForQuotation({
-    center: deps.notificationCenter,
-    branchId: input.actor.branchId,
-    leadId: lead.id,
-    ruc: lead.ruc,
-  });
 
   return Ok({ leadId: lead.id });
 }

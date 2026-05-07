@@ -19,7 +19,6 @@ import {
   createWorkflowAuditService,
   createWorkflowAuditLogsRepo,
 } from "./audit-log";
-import { createWorkflowNotificationCenter } from "./notifications";
 import { createLeadMutationUow } from "./repos/lead-mutation-uow";
 import { createLeadReadRepository } from "./repos/lead-read-repo";
 import { createLeadUserScopeRepository } from "./repos/lead-user-scope-repo";
@@ -42,7 +41,6 @@ function createWorkflowCommandRuntime(
       createWorkflowAuditLogsRepo(executor),
     ),
   });
-  const notificationCenter = createWorkflowNotificationCenter(executor);
   const enrichmentCommand = createEnrichmentCommand(
     createSearchEnrichmentRepo(executor),
   );
@@ -57,7 +55,6 @@ function createWorkflowCommandRuntime(
     leadFavorites: repos.leadFavorites,
     mutationUow: createLeadMutationUow(executor),
     users: createLeadUserScopeRepository(repos.users),
-    notificationCenter,
     clock: systemLeadClock,
     registerLead: {
       leads: repos.leads,

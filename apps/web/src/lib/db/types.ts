@@ -66,11 +66,9 @@ export interface Database {
   search_policy_overrides: capacity.SearchPolicyOverridesTable;
   user_channel_addresses: notifications.UserChannelAddressesTable;
   notification_preferences: notifications.NotificationPreferencesTable;
-  notification_campaigns: notifications.NotificationCampaignsTable;
-  notification_recipients: notifications.NotificationRecipientsTable;
-  notification_jobs: notifications.NotificationJobsTable;
   notification_deliveries: notifications.NotificationDeliveriesTable;
   app_notifications: notifications.AppNotificationsTable;
+  notification_outbox: notifications.NotificationOutboxTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;
@@ -101,8 +99,6 @@ export interface Database {
   lead_sourcing_policies: workflow.LeadSourcingPoliciesTable;
   workflow_integration_jobs: integrations.WorkflowIntegrationJobsTable;
   workflow_integration_import_rows: integrations.WorkflowIntegrationImportRowsTable;
-  workflow_integration_outbox_needs_executive_input: integrations.WorkflowIntegrationOutboxNeedsExecutiveInputTable;
-  workflow_integration_outbox_ready_for_quotation: integrations.WorkflowIntegrationOutboxReadyForQuotationTable;
   workflow_artifacts: files.WorkflowArtifactsTable;
   file_assets: files.FileAssetsTable;
   artifact_file_bindings: files.ArtifactFileBindingsTable;

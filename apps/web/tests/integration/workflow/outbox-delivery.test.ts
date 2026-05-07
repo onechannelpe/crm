@@ -49,17 +49,16 @@ describe("outbox delivery", () => {
       {
         user_id: 1,
         event_type: "lead.needs_executive_input",
-        dedupe_key: `lead_nei_${leadOne.id}`,
+        source_event_id: expect.stringContaining(`${leadOne.id}:stage_changed`),
       },
       {
         user_id: 4,
         event_type: "lead.ready_for_quotation",
-        dedupe_key: `lead_rfq_${leadTwo.id}`,
+        source_event_id: expect.stringContaining(`${leadTwo.id}:stage_changed`),
       },
     ]);
 
-    const completed = await scenario.outbox.counts("completed");
-    expect(completed.needsExecutive).toBe(1);
-    expect(completed.readyForQuotation).toBe(1);
+    const completed = await scenario.outbox.counts("done");
+    expect(completed.notifications).toBe(2);
   });
 });

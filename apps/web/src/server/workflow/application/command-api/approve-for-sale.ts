@@ -6,16 +6,13 @@ import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { ApproveForSaleInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
-import { notifyReadyForSale } from "../notifications";
 import { requireLeadActionAccess } from "../policies/lead-action-policy";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { WorkflowNotificationCenter } from "../ports/notification-center";
 import type { LeadClock } from "../services/lead-clock";
 
 type ApproveForSaleCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
-  notificationCenter: WorkflowNotificationCenter;
   clock: LeadClock;
 };
 
@@ -43,13 +40,6 @@ export async function approveForSaleCommand(
     intent: { kind: "approve_for_sale" },
   });
   if (!outcome.ok) return outcome;
-
-  await notifyReadyForSale({
-    center: deps.notificationCenter,
-    executiveId: lead.executiveId,
-    leadId: lead.id,
-    ruc: lead.ruc,
-  });
 
   return Ok({ leadId: lead.id });
 }

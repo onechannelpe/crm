@@ -1,43 +1,46 @@
-import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
-import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+import { createNotificationProcessor } from "~/server/notifications/processor";
 
 import type { TestRuntime } from "../runtime/app";
 
 export function createWorkflowOutbox(runtime: TestRuntime) {
   const outbox = {
-    async counts(status: "pending" | "completed") {
-      const needsExecutive = await runtime.ctx.db
-        .selectFrom("workflow_integration_outbox_needs_executive_input")
+    async counts(status: "pending" | "done") {
+      const count = await runtime.ctx.db
+        .selectFrom("notification_outbox")
         .select((eb) => eb.fn.count<number>("id").as("count"))
         .where("status", "=", status)
         .executeTakeFirstOrThrow();
-      const readyForQuotation = await runtime.ctx.db
-        .selectFrom("workflow_integration_outbox_ready_for_quotation")
-        .select((eb) => eb.fn.count<number>("id").as("count"))
-        .where("status", "=", status)
-        .executeTakeFirstOrThrow();
-      return {
-        needsExecutive: needsExecutive.count,
-        readyForQuotation: readyForQuotation.count,
-      };
+      return { notifications: count.count };
     },
 
     async drainAll(workerId = "test-worker"): Promise<void> {
-      const needsExecutiveQueue = createNeedsExecutiveOutboxQueue(workerId, {
-        executor: runtime.integrations.executor,
+      const runOnce = createNotificationProcessor(runtime.ctx.db, {
+        async sendCampaignEmail() {
+          return {
+            ok: true as const,
+            value: {
+              channel: "email",
+              provider: "resend",
+              providerMessageId: "campaign",
+            },
+          };
+        },
+        async sendWhatsAppText() {
+          return {
+            ok: true as const,
+            value: {
+              channel: "whatsapp",
+              provider: "whatsapp_cloud",
+              providerMessageId: "whatsapp",
+            },
+          };
+        },
       });
-      const readyForQuotationQueue = createReadyForQuotationOutboxQueue(
-        workerId,
-        { executor: runtime.integrations.executor },
-      );
 
       for (let index = 0; index < 5; index += 1) {
-        await needsExecutiveQueue.runOnce();
-        await readyForQuotationQueue.runOnce();
+        await runOnce(workerId, 50);
         const pending = await outbox.counts("pending");
-        if (pending.needsExecutive === 0 && pending.readyForQuotation === 0) {
-          return;
-        }
+        if (pending.notifications === 0) return;
       }
     },
   };

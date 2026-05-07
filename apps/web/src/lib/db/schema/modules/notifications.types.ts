@@ -21,51 +21,11 @@ export interface NotificationPreferencesTable {
   updated_at: number;
 }
 
-export interface NotificationCampaignsTable {
-  id: Generated<number>;
-  type: "security_event" | "broadcast";
-  event_type: string;
-  audience_type: "user" | "role" | "global";
-  audience_ref: string | null;
-  title: string | null;
-  body_text: string;
-  created_by_user_id: number | null;
-  status: "queued" | "processing" | "completed" | "failed";
-  scheduled_at: number | null;
-  created_at: number;
-  processed_at: number | null;
-}
-
-export interface NotificationRecipientsTable {
-  id: Generated<number>;
-  campaign_id: number;
-  user_id: number | null;
-  channel: "email" | "whatsapp";
-  address: string;
-  status: "pending" | "sent" | "failed" | "skipped";
-  status_reason: string | null;
-  created_at: number;
-  sent_at: number | null;
-  failed_at: number | null;
-}
-
-export interface NotificationJobsTable {
-  id: Generated<number>;
-  recipient_id: number;
-  status: "pending" | "leased" | "sent" | "failed";
-  attempt_count: number;
-  max_attempts: number;
-  available_at: number;
-  lease_owner: string | null;
-  lease_until: number | null;
-  last_error: string | null;
-  created_at: number;
-  updated_at: number;
-}
-
 export interface NotificationDeliveriesTable {
   id: Generated<number>;
-  recipient_id: number;
+  intent_id: string;
+  recipient_channel: "email" | "whatsapp";
+  recipient_address: string;
   provider: "resend" | "whatsapp_cloud";
   provider_message_id: string | null;
   status: "sent" | "failed";
@@ -78,13 +38,32 @@ export interface NotificationDeliveriesTable {
 export interface AppNotificationsTable {
   id: Generated<number>;
   user_id: number;
+  source_event_id: string;
   event_type: string;
   priority: "high" | "normal" | "low";
   title: string;
   body_text: string;
   action_url: string | null;
-  dedupe_key: string | null;
   metadata_json: string | null;
   created_at: number;
   read_at: number | null;
+}
+
+export interface NotificationOutboxTable {
+  id: string;
+  event_type: string;
+  audience_json: string;
+  channels_json: string;
+  title: string;
+  body_text: string;
+  action_url: string | null;
+  priority: "high" | "normal" | "low";
+  status: "pending" | "processing" | "done" | "failed";
+  attempt_count: number;
+  available_at: number;
+  lease_owner: string | null;
+  lease_until: number | null;
+  error: string | null;
+  created_at: number;
+  processed_at: number | null;
 }

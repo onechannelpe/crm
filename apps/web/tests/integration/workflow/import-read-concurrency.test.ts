@@ -58,7 +58,6 @@ describe("integration import workflow concurrency", () => {
     expect(applied.failed).toBe(0);
 
     const pending = await scenario.outbox.counts("pending");
-    expect(pending.needsExecutive).toBe(1);
-    expect(pending.readyForQuotation).toBe(1);
+    expect(pending.notifications).toBe(2);
   });
 });

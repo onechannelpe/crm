@@ -1,14 +1,11 @@
+import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
 
-import { enqueueNeedsExecutiveOutboxEvents } from "./outbox-needs-executive-repo";
-import { enqueueReadyForQuotationOutboxEvents } from "./outbox-ready-for-quotation-repo";
 import type { LeadMutationOutcome, PlannedOutboxEvents } from "./types";
 
 export function createEmptyOutboxPlan(): PlannedOutboxEvents {
-  return {
-    needsExecutiveInput: [],
-    readyForQuotation: [],
-  };
+  return { notificationIntents: [] };
 }
 
 export async function planOutboxForMutation(input: {
@@ -17,41 +14,30 @@ export async function planOutboxForMutation(input: {
   outboxPlan: PlannedOutboxEvents;
 }) {
   const mutation = input.mutation;
-  if (!mutation.stageChanged) {
-    return;
+  if (!mutation.stageChanged || mutation.executiveId <= 0) return;
+
+  let branchId: number | null = null;
+  if (mutation.nextStage === "READY_FOR_QUOTATION") {
+    const user = await input.executor
+      .selectFrom("users")
+      .select("branch_id")
+      .where("id", "=", mutation.executiveId)
+      .executeTakeFirst();
+    if (!user || (user.branch_id ?? 0) <= 0) return;
+    branchId = user.branch_id;
   }
 
-  if (
-    mutation.nextStage === "NEEDS_EXECUTIVE_INPUT" &&
-    mutation.executiveId > 0
-  ) {
-    input.outboxPlan.needsExecutiveInput.push({
-      leadId: mutation.leadId,
-      ruc: mutation.ruc,
-      executiveId: mutation.executiveId,
-    });
-    return;
-  }
-
-  if (mutation.nextStage !== "READY_FOR_QUOTATION") {
-    return;
-  }
-
-  const user = await input.executor
-    .selectFrom("users")
-    .select("branch_id")
-    .where("id", "=", mutation.executiveId)
-    .executeTakeFirst();
-  if (!user || user.branch_id <= 0) {
-    return;
-  }
-
-  input.outboxPlan.readyForQuotation.push({
+  const eventId = `${mutation.row.type}:${mutation.row.row}:${mutation.leadId}:stage_changed`;
+  const intents = deriveLeadStageNotifications({
+    eventId,
     leadId: mutation.leadId,
+    toStage: mutation.nextStage,
     ruc: mutation.ruc,
     executiveId: mutation.executiveId,
-    branchId: user.branch_id,
+    branchId,
   });
+
+  input.outboxPlan.notificationIntents.push(...intents);
 }
 
 export async function persistOutboxPlan(input: {
@@ -59,14 +45,9 @@ export async function persistOutboxPlan(input: {
   outboxPlan: PlannedOutboxEvents;
   now: number;
 }) {
-  await enqueueNeedsExecutiveOutboxEvents(
+  await enqueueNotifications(
     input.executor,
-    input.outboxPlan.needsExecutiveInput,
-    input.now,
-  );
-  await enqueueReadyForQuotationOutboxEvents(
-    input.executor,
-    input.outboxPlan.readyForQuotation,
+    input.outboxPlan.notificationIntents,
     input.now,
   );
 }

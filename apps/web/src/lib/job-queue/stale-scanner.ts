@@ -26,8 +26,8 @@ const JOB_TABLES = [
     resetStatus: "queued",
   },
   {
-    name: "notification_jobs",
-    staleStatuses: ["leased"],
+    name: "notification_outbox",
+    staleStatuses: ["processing"],
     resetStatus: "pending",
   },
 ] as const;

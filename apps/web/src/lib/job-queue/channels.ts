@@ -6,14 +6,9 @@ export const JOB_CHANNELS = {
   CRM_EXPORT: "job:crm-export",
   RECORDS_IMPORT: "job:records-import",
   RECORDS_IMPORT_PROGRESS: "job:records-import-progress",
-  INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT:
-    "job:integration-outbox-needs-executive-input",
-  INTEGRATION_OUTBOX_READY_FOR_QUOTATION:
-    "job:integration-outbox-ready-for-quotation",
   ENRICHMENT: "job:enrichment",
   ENRICHMENT_WRITEBACK: "job:enrichment-writeback",
-  NOTIFICATIONS_EMAIL: "job:notifications-email",
-  NOTIFICATIONS_WHATSAPP: "job:notifications-whatsapp",
+  NOTIFICATIONS_INTENTS: "job:notifications-intents",
 } as const;
 
 export type JobChannel = (typeof JOB_CHANNELS)[keyof typeof JOB_CHANNELS];
