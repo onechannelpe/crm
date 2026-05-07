@@ -44,6 +44,28 @@ interface AnimatedProps extends Omit<
   layout?: boolean;
 }
 
+function hasTransformProps(target: MotionTarget | undefined): boolean {
+  return Boolean(
+    target &&
+    (target.x !== undefined ||
+      target.y !== undefined ||
+      target.scale !== undefined ||
+      target.scaleX !== undefined ||
+      target.scaleY !== undefined ||
+      target.rotate !== undefined),
+  );
+}
+
+function transitionToOptions(
+  transition: MotionTransition,
+): KeyframeAnimationOptions {
+  return {
+    duration: Math.max(0, (transition.duration ?? 0.3) * 1000),
+    easing: transition.ease ?? "cubic-bezier(0.22, 1, 0.36, 1)",
+    fill: "forwards",
+  };
+}
+
 export function Animated(inputProps: AnimatedProps) {
   const props = mergeProps({ transition: {} }, inputProps);
   const [isPresent, safeToRemove] = usePresence();
@@ -83,25 +105,6 @@ export function Animated(inputProps: AnimatedProps) {
     }
     return definition;
   };
-
-  const hasTransformProps = (target: MotionTarget | undefined): boolean =>
-    Boolean(
-      target &&
-      (target.x !== undefined ||
-        target.y !== undefined ||
-        target.scale !== undefined ||
-        target.scaleX !== undefined ||
-        target.scaleY !== undefined ||
-        target.rotate !== undefined),
-    );
-
-  const transitionToOptions = (
-    transition: MotionTransition,
-  ): KeyframeAnimationOptions => ({
-    duration: Math.max(0, (transition.duration ?? 0.3) * 1000),
-    easing: transition.ease ?? "cubic-bezier(0.22, 1, 0.36, 1)",
-    fill: "forwards",
-  });
 
   const targetToFrame = (target: MotionTarget | undefined): Keyframe => {
     if (!target) return {};

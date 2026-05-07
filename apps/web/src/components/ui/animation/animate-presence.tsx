@@ -98,9 +98,9 @@ export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
         currentPresentKeys.has(child.key),
       ),
     );
-    Array.from(trackedByKey.keys()).forEach((key) => {
-      if (!currentPresentKeys.has(key)) {
-        trackedByKey.delete(key);
+    Array.from(trackedByKey.keys()).forEach((trackedKey) => {
+      if (!currentPresentKeys.has(trackedKey)) {
+        trackedByKey.delete(trackedKey);
       }
     });
     exitComplete.clear();
