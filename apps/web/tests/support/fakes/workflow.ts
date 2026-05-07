@@ -6,7 +6,6 @@ import type {
   LeadMutationUow,
 } from "~/server/workflow/application/ports/lead-mutation-uow";
 import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/negotiation-request-repository";
-import type { WorkflowNotificationCenter } from "~/server/workflow/application/ports/notification-center";
 import type { LeadRecord } from "~/server/workflow/domain/lead-record";
 import type { LeadReadRepository } from "~/server/workflow/ports/lead-read-repository";
 
@@ -96,20 +95,5 @@ export function makeNegotiationRequests(
     findFileAssetIdForArtifact,
     countByLeadId,
     listByLeadId,
-  };
-}
-
-export function makeNotificationCenter() {
-  const notifyUsers = vi.fn<WorkflowNotificationCenter["notifyUsers"]>();
-  const notifyBranchRoles =
-    vi.fn<WorkflowNotificationCenter["notifyBranchRoles"]>();
-
-  return {
-    center: {
-      notifyUsers,
-      notifyBranchRoles,
-    } satisfies WorkflowNotificationCenter,
-    notifyUsers,
-    notifyBranchRoles,
   };
 }

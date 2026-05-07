@@ -36,12 +36,12 @@ export function createAppNotificationCenter({ repos }: Deps) {
 
     const rows: NewAppNotificationRow[] = unique.map((userId) => ({
       user_id: userId,
+      source_event_id: event.dedupeKey ?? `${event.type}:${now}`,
       event_type: event.type,
       priority: event.priority,
       title: event.title,
       body_text: event.bodyText,
       action_url: event.actionUrl,
-      dedupe_key: event.dedupeKey,
       metadata_json: serializeMetadata(event.metadata),
       created_at: now,
       read_at: null,

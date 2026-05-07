@@ -10,12 +10,8 @@ export async function startQueueDoorbellSubscriber(triggers: {
   const channelEntries = [
     { key: "RECORDS_IMPORT", channel: JOB_CHANNELS.RECORDS_IMPORT },
     {
-      key: "INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT",
-      channel: JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,
-    },
-    {
-      key: "INTEGRATION_OUTBOX_READY_FOR_QUOTATION",
-      channel: JOB_CHANNELS.INTEGRATION_OUTBOX_READY_FOR_QUOTATION,
+      key: "WORKFLOW_NOTIFICATION_OUTBOX",
+      channel: JOB_CHANNELS.WORKFLOW_NOTIFICATION_OUTBOX,
     },
     { key: "ENRICHMENT", channel: JOB_CHANNELS.ENRICHMENT },
     {

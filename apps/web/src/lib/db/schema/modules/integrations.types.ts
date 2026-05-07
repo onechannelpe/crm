@@ -1,4 +1,4 @@
-import type { Generated, ColumnType } from "kysely";
+import type { ColumnType, Generated } from "kysely";
 
 export interface WorkflowIntegrationJobsTable {
   id: Generated<string>;
@@ -33,36 +33,4 @@ export interface WorkflowIntegrationImportRowsTable {
   failure_reason: string | null;
   created_at: number;
   applied_at: number | null;
-}
-
-export interface WorkflowIntegrationOutboxNeedsExecutiveInputTable {
-  id: Generated<string>;
-  lead_id: string;
-  ruc: string;
-  executive_id: number;
-  status: "pending" | "processing" | "completed" | "failed";
-  attempt_count: ColumnType<number, number | undefined, number>;
-  max_attempts: ColumnType<number, number | undefined, number>;
-  available_at: number;
-  lease_owner: string | null;
-  lease_until: number | null;
-  error_message: string | null;
-  created_at: number;
-  processed_at: number | null;
-}
-
-export interface WorkflowIntegrationOutboxReadyForQuotationTable {
-  id: Generated<string>;
-  lead_id: string;
-  ruc: string;
-  branch_id: number;
-  status: "pending" | "processing" | "completed" | "failed";
-  attempt_count: ColumnType<number, number | undefined, number>;
-  max_attempts: ColumnType<number, number | undefined, number>;
-  available_at: number;
-  lease_owner: string | null;
-  lease_until: number | null;
-  error_message: string | null;
-  created_at: number;
-  processed_at: number | null;
 }

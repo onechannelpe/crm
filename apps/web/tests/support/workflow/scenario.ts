@@ -22,7 +22,7 @@ export function createWorkflowScenario(runtime: TestRuntime) {
     async list() {
       return runtime.ctx.db
         .selectFrom("app_notifications")
-        .select(["user_id", "event_type", "dedupe_key"])
+        .select(["user_id", "event_type", "source_event_id"])
         .orderBy("id", "asc")
         .execute();
     },

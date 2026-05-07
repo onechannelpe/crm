@@ -13,6 +13,7 @@ import {
   executeCheckedLeadMutation,
   executeLeadMutation,
 } from "../../application/services/lead-mutation-orchestrator";
+import { deriveWorkflowNotificationIntents } from "../../application/workflow-notification-policy";
 import { deriveLeadPatchFromIntent } from "../../domain/lead/lead-transitions";
 import { createAssignmentRepo } from "../assignment-repo";
 import {
@@ -22,6 +23,7 @@ import {
 } from "../audit-log";
 import { createHistoryRepo } from "../history-repo";
 import { createLeadRepo } from "../lead-repo";
+import { enqueueWorkflowNotificationOutboxEvents } from "../workflow-notification-outbox-repo";
 import { createLeadAssignmentRepositoryPort } from "./lead-assignment-repo";
 import { createLeadAuditRepository } from "./lead-audit-repo";
 import { createLeadEventRepository } from "./lead-event-repo";
@@ -52,6 +54,39 @@ function createMutationDeps(executor: Transaction<Database>) {
 export function createLeadMutationUow(
   executor: Transaction<Database>,
 ): LeadMutationUow {
+  async function resolveExecutiveBranchId(executiveId: number) {
+    const row = await executor
+      .selectFrom("users")
+      .select("branch_id")
+      .where("id", "=", executiveId)
+      .executeTakeFirst();
+    return row?.branch_id ?? 0;
+  }
+
+  async function enqueueWorkflowNotifications(input: {
+    leadId: string;
+    ruc: string;
+    executiveId: number;
+    events: LeadMutationOutcome["events"];
+    historyIds: string[];
+    now: number;
+  }) {
+    const branchId = await resolveExecutiveBranchId(input.executiveId);
+    if (branchId <= 0) return;
+
+    const intents = deriveWorkflowNotificationIntents({
+      sourceEventIds: input.historyIds,
+      history: input.events.history,
+      leadId: input.leadId,
+      ruc: input.ruc,
+      executiveId: input.executiveId,
+      branchId,
+    });
+    if (intents.length < 1) return;
+
+    await enqueueWorkflowNotificationOutboxEvents(executor, intents, input.now);
+  }
+
   return {
     derivePatch(input) {
       return deriveLeadPatchFromIntent(input);
@@ -69,7 +104,7 @@ export function createLeadMutationUow(
         });
       }
 
-      return executeLeadMutation({
+      const result = await executeLeadMutation({
         deps: {
           leadWriter: deps.leadWriter,
           checkedLeadWriter: deps.checkedLeadWriter,
@@ -81,13 +116,25 @@ export function createLeadMutationUow(
         now: input.now,
         intent: input.intent,
       });
+      if (!result.ok) return result;
+
+      await enqueueWorkflowNotifications({
+        leadId: input.lead.id,
+        ruc: input.lead.ruc,
+        executiveId: input.lead.executiveId,
+        events: result.value.events,
+        historyIds: result.value.historyIds,
+        now: input.now,
+      });
+
+      return result;
     },
 
     async commitChecked(
       input,
     ): Promise<Result<CheckedLeadMutationOutcome, DomainError>> {
       const deps = createMutationDeps(executor);
-      return executeCheckedLeadMutation({
+      const result = await executeCheckedLeadMutation({
         deps: {
           leadWriter: deps.leadWriter,
           checkedLeadWriter: deps.checkedLeadWriter,
@@ -100,6 +147,19 @@ export function createLeadMutationUow(
         expectedUpdatedAt: input.expectedUpdatedAt,
         intent: input.intent,
       });
+      if (!result.ok || !result.value.applied) return result;
+
+      if (result.value.events && result.value.historyIds) {
+        await enqueueWorkflowNotifications({
+          leadId: input.lead.id,
+          ruc: input.lead.ruc,
+          executiveId: input.lead.executiveId,
+          events: result.value.events,
+          historyIds: result.value.historyIds,
+          now: input.now,
+        });
+      }
+      return result;
     },
   };
 }

@@ -78,13 +78,37 @@ export interface NotificationDeliveriesTable {
 export interface AppNotificationsTable {
   id: Generated<number>;
   user_id: number;
+  source_event_id: string;
   event_type: string;
   priority: "high" | "normal" | "low";
   title: string;
   body_text: string;
   action_url: string | null;
-  dedupe_key: string | null;
   metadata_json: string | null;
   created_at: number;
   read_at: number | null;
+}
+
+export interface WorkflowNotificationOutboxTable {
+  id: string;
+  source_event_id: string;
+  lead_id: string;
+  executive_id: number;
+  branch_id: number;
+  event_type: string;
+  priority: "high" | "normal" | "low";
+  title: string;
+  body_text: string;
+  action_url: string | null;
+  audience_kind: "executive" | "branch_role";
+  audience_roles_csv: string | null;
+  status: "pending" | "processing" | "completed" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: number;
+  lease_owner: string | null;
+  lease_until: number | null;
+  error_message: string | null;
+  created_at: number;
+  processed_at: number | null;
 }

@@ -52,7 +52,7 @@ describe("schema baseline", () => {
         WHERE type = 'index'
       `.execute(db);
       const indexNames = new Set(indexes.rows.map((row) => row.name));
-      expect(indexNames.has("idx_app_notifications_dedupe")).toBe(true);
+      expect(indexNames.has("idx_app_notifications_source_event")).toBe(true);
       expect(indexNames.has("idx_audit_created_at")).toBe(true);
       expect(indexNames.has("idx_audit_action_created")).toBe(true);
       expect(indexNames.has("idx_audit_user_created")).toBe(true);

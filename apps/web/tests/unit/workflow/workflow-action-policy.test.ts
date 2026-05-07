@@ -2,7 +2,6 @@ import {
   makeLeadReader,
   makeMutationUow,
   makeNegotiationRequests,
-  makeNotificationCenter,
   makeWorkflowLead,
 } from "@tests/support/fakes/workflow";
 import { describe, expect, it, vi } from "vitest";
@@ -105,12 +104,10 @@ describe("lead action policy", () => {
 describe("workflow action commands", () => {
   it("blocks approve-for-sale for executives on leads assigned to others", async () => {
     const mutationUow = makeMutationUow();
-    const notificationCenter = makeNotificationCenter();
     const result = await approveForSaleCommand(
       {
         leadReader: makeLeadReader(makeWorkflowLead({ executiveId: 1 })),
         mutationUow: mutationUow.uow,
-        notificationCenter: notificationCenter.center,
         clock: { now: () => 100 },
       },
       {

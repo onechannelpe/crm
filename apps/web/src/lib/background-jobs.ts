@@ -4,11 +4,10 @@ import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { openStoredFileStream } from "~/server/files/storage";
-import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
-import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import { getServerRuntime } from "~/server/runtime";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
+import { createWorkflowNotificationOutboxQueue } from "~/server/workflow/infrastructure/workflow-notification-outbox-queue";
 
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
@@ -23,14 +22,9 @@ export function startBackgroundJobs() {
     openFileStream: (filePath) =>
       openStoredFileStream(config.uploads.storageRoot, filePath),
   });
-  const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID, {
-    executor: integration.executor,
-  });
-  const readyForQuotationOutboxQueue = createReadyForQuotationOutboxQueue(
+  const workflowNotificationOutboxQueue = createWorkflowNotificationOutboxQueue(
     WORKER_ID,
-    {
-      executor: integration.executor,
-    },
+    { executor: integration.executor },
   );
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
@@ -42,8 +36,7 @@ export function startBackgroundJobs() {
     getServerRuntime().notifications.createWhatsAppQueue(WORKER_ID);
   const queues: QueueRunner[] = [
     recordsImportQueue,
-    needsExecutiveOutboxQueue,
-    readyForQuotationOutboxQueue,
+    workflowNotificationOutboxQueue,
     enrichmentQueue,
     sunatEnrichmentWritebackQueue,
     notificationsEmailQueue,
@@ -76,11 +69,8 @@ export function startBackgroundJobs() {
     RECORDS_IMPORT: () => {
       void recordsImportQueue.runOnce();
     },
-    INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT: () => {
-      void needsExecutiveOutboxQueue.runOnce();
-    },
-    INTEGRATION_OUTBOX_READY_FOR_QUOTATION: () => {
-      void readyForQuotationOutboxQueue.runOnce();
+    WORKFLOW_NOTIFICATION_OUTBOX: () => {
+      void workflowNotificationOutboxQueue.runOnce();
     },
     ENRICHMENT: () => {
       void enrichmentQueue.runOnce();

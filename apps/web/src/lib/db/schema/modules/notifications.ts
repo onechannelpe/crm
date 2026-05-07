@@ -166,12 +166,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
+    .addColumn("source_event_id", "text", (col) => col.notNull())
     .addColumn("event_type", "varchar(64)", (col) => col.notNull())
     .addColumn("priority", "varchar(16)", (col) => col.notNull())
     .addColumn("title", "varchar(255)", (col) => col.notNull())
     .addColumn("body_text", "text", (col) => col.notNull())
     .addColumn("action_url", "varchar(255)")
-    .addColumn("dedupe_key", "varchar(255)")
     .addColumn("metadata_json", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("read_at", "integer")
@@ -184,9 +184,53 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_app_notifications_dedupe")
+    .createIndex("idx_app_notifications_source_event")
     .on("app_notifications")
-    .columns(["user_id", "dedupe_key"])
+    .columns(["user_id", "source_event_id"])
+    .unique()
+    .execute();
+
+  await db.schema
+    .createTable("workflow_notification_outbox")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("source_event_id", "text", (col) => col.notNull())
+    .addColumn("lead_id", "text", (col) =>
+      col.notNull().references("workflow_leads.id"),
+    )
+    .addColumn("executive_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("branch_id", "integer", (col) =>
+      col.notNull().references("branches.id"),
+    )
+    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
+    .addColumn("priority", "varchar(16)", (col) => col.notNull())
+    .addColumn("title", "varchar(255)", (col) => col.notNull())
+    .addColumn("body_text", "text", (col) => col.notNull())
+    .addColumn("action_url", "varchar(255)")
+    .addColumn("audience_kind", "varchar(24)", (col) => col.notNull())
+    .addColumn("audience_roles_csv", "varchar(255)")
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_owner", "varchar(100)")
+    .addColumn("lease_until", "integer")
+    .addColumn("error_message", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("processed_at", "integer")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_notification_outbox_status")
+    .on("workflow_notification_outbox")
+    .columns(["status", "available_at", "lease_until"])
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_notification_outbox_source_event")
+    .on("workflow_notification_outbox")
+    .column("source_event_id")
     .unique()
     .execute();
 }

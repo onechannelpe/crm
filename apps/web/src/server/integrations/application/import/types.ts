@@ -62,19 +62,19 @@ export type LeadMutationResult =
     };
 
 export type NeedsExecutiveOutboxEvent = {
+  sourceEventId: string;
   leadId: string;
-  ruc: string;
-  executiveId: number;
-};
-
-export type ReadyForQuotationOutboxEvent = {
-  leadId: string;
-  ruc: string;
   executiveId: number;
   branchId: number;
+  eventType: string;
+  priority: "high" | "normal" | "low";
+  title: string;
+  bodyText: string;
+  actionUrl: string | null;
+  audienceKind: "executive" | "branch_role";
+  audienceRoles: string[];
 };
 
 export type PlannedOutboxEvents = {
-  needsExecutiveInput: NeedsExecutiveOutboxEvent[];
-  readyForQuotation: ReadyForQuotationOutboxEvent[];
+  notifications: NeedsExecutiveOutboxEvent[];
 };
