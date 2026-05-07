@@ -200,9 +200,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
-      col.notNull().references("branches.id"),
-    )
+    .addColumn("branch_id", "integer", (col) => col.references("branches.id"))
     .addColumn("event_type", "varchar(64)", (col) => col.notNull())
     .addColumn("priority", "varchar(16)", (col) => col.notNull())
     .addColumn("title", "varchar(255)", (col) => col.notNull())

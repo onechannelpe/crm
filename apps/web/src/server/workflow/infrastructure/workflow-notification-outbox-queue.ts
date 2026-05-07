@@ -24,7 +24,7 @@ type WorkflowNotificationOutboxJob = {
   audience_kind: "executive" | "branch_role";
   audience_roles_csv: string | null;
   executive_id: number;
-  branch_id: number;
+  branch_id: number | null;
 };
 
 export function createWorkflowNotificationOutboxQueue(
@@ -68,7 +68,7 @@ export function createWorkflowNotificationOutboxQueue(
         .split(",")
         .map((it) => it.trim())
         .filter((it) => it.length > 0);
-      if (roles.length < 1) {
+      if (roles.length < 1 || job.branch_id === null || job.branch_id <= 0) {
         return;
       }
 

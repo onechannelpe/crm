@@ -60,7 +60,7 @@ export function createLeadMutationUow(
       .select("branch_id")
       .where("id", "=", executiveId)
       .executeTakeFirst();
-    return row?.branch_id ?? 0;
+    return row?.branch_id ?? null;
   }
 
   async function enqueueWorkflowNotifications(input: {
@@ -72,7 +72,6 @@ export function createLeadMutationUow(
     now: number;
   }) {
     const branchId = await resolveExecutiveBranchId(input.executiveId);
-    if (branchId <= 0) return;
 
     const intents = deriveWorkflowNotificationIntents({
       sourceEventIds: input.historyIds,

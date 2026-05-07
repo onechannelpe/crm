@@ -1,12 +1,9 @@
 import type { LeadHistoryEventDraft } from "../domain/history";
 
-export type WorkflowNotificationIntent = {
+type WorkflowNotificationIntentBase = {
   sourceEventId: string;
   leadId: string;
   executiveId: number;
-  branchId: number;
-  audienceKind: "executive" | "branch_role";
-  audienceRoles: string[];
   eventType: string;
   priority: "high" | "normal" | "low";
   title: string;
@@ -14,13 +11,25 @@ export type WorkflowNotificationIntent = {
   actionUrl: string | null;
 };
 
+export type WorkflowNotificationIntent =
+  | (WorkflowNotificationIntentBase & {
+      audienceKind: "executive";
+      audienceRoles: [];
+      branchId: null;
+    })
+  | (WorkflowNotificationIntentBase & {
+      audienceKind: "branch_role";
+      audienceRoles: [string, ...string[]];
+      branchId: number;
+    });
+
 export function deriveWorkflowNotificationIntents(input: {
   sourceEventIds: string[];
   history: LeadHistoryEventDraft[];
   leadId: string;
   ruc: string;
   executiveId: number;
-  branchId: number;
+  branchId: number | null;
 }): WorkflowNotificationIntent[] {
   const intents: WorkflowNotificationIntent[] = [];
 
@@ -37,7 +46,7 @@ export function deriveWorkflowNotificationIntents(input: {
           sourceEventId,
           leadId: input.leadId,
           executiveId: input.executiveId,
-          branchId: input.branchId,
+          branchId: null,
           audienceKind: "executive",
           audienceRoles: [],
           eventType: "lead.needs_executive_input",
@@ -49,6 +58,9 @@ export function deriveWorkflowNotificationIntents(input: {
       }
 
       if (event.payload.to === "READY_FOR_QUOTATION") {
+        if (input.branchId === null || input.branchId <= 0) {
+          continue;
+        }
         intents.push({
           sourceEventId,
           leadId: input.leadId,
@@ -69,7 +81,7 @@ export function deriveWorkflowNotificationIntents(input: {
           sourceEventId,
           leadId: input.leadId,
           executiveId: input.executiveId,
-          branchId: input.branchId,
+          branchId: null,
           audienceKind: "executive",
           audienceRoles: [],
           eventType: "lead.ready_for_sale",
@@ -86,7 +98,7 @@ export function deriveWorkflowNotificationIntents(input: {
         sourceEventId,
         leadId: input.leadId,
         executiveId: input.executiveId,
-        branchId: input.branchId,
+        branchId: null,
         audienceKind: "executive",
         audienceRoles: [],
         eventType: "lead.quotation_created",

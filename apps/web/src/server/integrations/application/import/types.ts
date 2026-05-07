@@ -1,3 +1,4 @@
+import type { WorkflowNotificationIntent } from "~/server/workflow/application/workflow-notification-policy";
 import type {
   LeadPriority,
   LeadStage,
@@ -61,20 +62,6 @@ export type LeadMutationResult =
       mutation: LeadMutationOutcome;
     };
 
-export type NeedsExecutiveOutboxEvent = {
-  sourceEventId: string;
-  leadId: string;
-  executiveId: number;
-  branchId: number;
-  eventType: string;
-  priority: "high" | "normal" | "low";
-  title: string;
-  bodyText: string;
-  actionUrl: string | null;
-  audienceKind: "executive" | "branch_role";
-  audienceRoles: string[];
-};
-
 export type PlannedOutboxEvents = {
-  notifications: NeedsExecutiveOutboxEvent[];
+  notifications: WorkflowNotificationIntent[];
 };

@@ -27,7 +27,7 @@ export async function planOutboxForMutation(input: {
       sourceEventId: `${mutation.row.type}:${mutation.row.row}:${mutation.leadId}:needs_exec`,
       leadId: mutation.leadId,
       executiveId: mutation.executiveId,
-      branchId: 0,
+      branchId: null,
       audienceKind: "executive",
       audienceRoles: [],
       eventType: "lead.needs_executive_input",

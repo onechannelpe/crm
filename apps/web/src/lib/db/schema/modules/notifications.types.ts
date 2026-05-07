@@ -94,7 +94,7 @@ export interface WorkflowNotificationOutboxTable {
   source_event_id: string;
   lead_id: string;
   executive_id: number;
-  branch_id: number;
+  branch_id: number | null;
   event_type: string;
   priority: "high" | "normal" | "low";
   title: string;
