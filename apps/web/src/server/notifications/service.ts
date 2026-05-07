@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { projectDomainEvent } from "~/server/notifications/unified";
+import { projectDomainEvent } from "~/server/notifications/core/projector";
 
 export interface PublishCampaignInput {
   eventType: string;

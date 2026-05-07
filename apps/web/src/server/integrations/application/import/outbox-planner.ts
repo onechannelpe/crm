@@ -1,4 +1,4 @@
-import { projectLeadStageChangedEvent } from "~/server/notifications/unified";
+import { projectLeadStageChangedEvent } from "~/server/notifications/core/projector";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { LeadMutationOutcome, PlannedOutboxEvents } from "./types";

@@ -1,7 +1,7 @@
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { projectLeadStageChangedEvent } from "~/server/notifications/unified";
+import { projectLeadStageChangedEvent } from "~/server/notifications/core/projector";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 

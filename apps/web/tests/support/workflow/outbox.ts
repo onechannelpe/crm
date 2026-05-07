@@ -1,4 +1,4 @@
-import { createNotificationIntentProcessor } from "~/server/notifications/unified";
+import { createNotificationIntentProcessor } from "~/server/notifications/core/intent-processor";
 
 import type { TestRuntime } from "../runtime/app";
 

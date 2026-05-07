@@ -4,10 +4,10 @@ import { createMessageChannels } from "@crm/message-channels";
 import { getEnvFor } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
+import { createNotificationIntentProcessor } from "~/server/notifications/core/intent-processor";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createAppNotificationService } from "~/server/notifications/service";
-import { createNotificationIntentProcessor } from "~/server/notifications/unified";
 
 import type { ServerInfra } from "./infra";
 
