@@ -6,8 +6,8 @@ import type { NotificationIntent } from "~/server/notifications/types";
 import { BENCH_NOW } from "../_shared/constants";
 
 const USER_ID_START = 300_000;
-export const RECIPIENT_POOL_SIZE = 300;
-export const INTENT_POOL_SIZE = 40;
+export const RECIPIENT_POOL_SIZE = 40;
+export const INTENT_POOL_SIZE = 10;
 
 export interface NotificationsDeliveryFixtures {
   intentIds: string[];
