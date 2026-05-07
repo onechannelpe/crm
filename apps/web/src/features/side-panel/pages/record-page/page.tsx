@@ -112,7 +112,9 @@ export function RecordPage() {
                 enqueueSuccessSnackBar("Empresa exportada");
               },
               onDeleteCompany: () => {
-                enqueueInfoSnackBar("Eliminar empresa estará disponible pronto");
+                enqueueInfoSnackBar(
+                  "Eliminar empresa estará disponible pronto",
+                );
               },
             }}
           />

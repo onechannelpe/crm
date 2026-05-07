@@ -1,6 +1,11 @@
 import type { JSX } from "solid-js";
 
-export type SnackBarVariant = "default" | "error" | "success" | "info" | "warning";
+export type SnackBarVariant =
+  | "default"
+  | "error"
+  | "success"
+  | "info"
+  | "warning";
 
 export interface SnackBarSpec {
   variant: SnackBarVariant;

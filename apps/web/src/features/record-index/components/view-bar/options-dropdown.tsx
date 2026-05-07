@@ -25,7 +25,9 @@ export function OptionsDropdown(props: { onClose: () => void }) {
 
   async function copyViewLink() {
     if (!navigator.clipboard) {
-      enqueueErrorSnackBar("El portapapeles no está disponible en este entorno");
+      enqueueErrorSnackBar(
+        "El portapapeles no está disponible en este entorno",
+      );
       return;
     }
 

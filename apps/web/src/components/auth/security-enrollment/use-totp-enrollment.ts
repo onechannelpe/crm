@@ -60,7 +60,8 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       setCode("");
       await options.refreshStatus();
       options.enqueueSuccessSnackBar(
-        options.verifySuccessMessage ?? "Aplicación de autenticación configurada",
+        options.verifySuccessMessage ??
+          "Aplicación de autenticación configurada",
       );
     } catch (error: unknown) {
       options.enqueueErrorSnackBar(

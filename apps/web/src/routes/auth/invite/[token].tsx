@@ -35,7 +35,9 @@ export default function AcceptInvitePage() {
       enqueueSuccessSnackBar("Cuenta activada");
       navigate("/onboarding");
     } catch (err: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo activar la cuenta"));
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudo activar la cuenta"),
+      );
     } finally {
       setSubmitting(false);
     }

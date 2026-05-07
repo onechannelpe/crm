@@ -43,14 +43,20 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
         setItems(
           produce((draft) => {
             for (const item of draft) {
-              if (!item.paused && item.duration > 0 && item.elapsed < item.duration) {
+              if (
+                !item.paused &&
+                item.duration > 0 &&
+                item.elapsed < item.duration
+              ) {
                 item.elapsed = Math.min(item.duration, item.elapsed + TICK_MS);
               }
             }
           }),
         );
         setItems((current) =>
-          current.filter((item) => item.duration <= 0 || item.elapsed < item.duration),
+          current.filter(
+            (item) => item.duration <= 0 || item.elapsed < item.duration,
+          ),
         );
       });
     }, TICK_MS);
@@ -59,7 +65,9 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
 
   const enqueue = (spec: SnackBarSpec): string => {
     if (spec.dedupeKey) {
-      const isDuplicate = items.some((item) => item.dedupeKey === spec.dedupeKey);
+      const isDuplicate = items.some(
+        (item) => item.dedupeKey === spec.dedupeKey,
+      );
       if (isDuplicate) return "";
     }
 
@@ -98,7 +106,8 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
         const item = draft.find((i) => i.id === id);
         if (!item) return;
         if (patch.message !== undefined) item.message = patch.message;
-        if (patch.detailedMessage !== undefined) item.detailedMessage = patch.detailedMessage;
+        if (patch.detailedMessage !== undefined)
+          item.detailedMessage = patch.detailedMessage;
         if (patch.variant !== undefined) item.variant = patch.variant;
         if (patch.duration !== undefined) {
           item.duration = patch.duration;

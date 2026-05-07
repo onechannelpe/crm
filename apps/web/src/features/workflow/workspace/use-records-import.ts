@@ -331,7 +331,9 @@ export function useRecordsImport() {
       startPolling();
       connectWebsocket(result.jobId);
     } catch (error: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(error, "No se pudo importar el archivo"));
+      enqueueErrorSnackBar(
+        getErrorMessage(error, "No se pudo importar el archivo"),
+      );
     }
   }
 

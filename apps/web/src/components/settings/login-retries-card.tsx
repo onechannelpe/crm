@@ -42,7 +42,9 @@ export function LoginRetriesCard() {
       setReport(next);
       if (!next) enqueueInfoSnackBar("Usuario no encontrado");
     } catch (err: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo cargar el reporte"));
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudo cargar el reporte"),
+      );
     }
   });
 

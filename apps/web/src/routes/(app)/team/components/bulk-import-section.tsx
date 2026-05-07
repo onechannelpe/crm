@@ -58,7 +58,9 @@ export function BulkImportSection() {
       const data = await previewBulkCsv(csv, role());
       setPreview(data);
     } catch (err: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(err, "Error al procesar el archivo"));
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "Error al procesar el archivo"),
+      );
     } finally {
       setIsPreviewing(false);
     }

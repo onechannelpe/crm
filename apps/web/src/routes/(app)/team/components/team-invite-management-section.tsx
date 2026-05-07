@@ -102,7 +102,9 @@ export function TeamInviteManagementSection() {
       await resendInvite(inviteId);
       enqueueSuccessSnackBar("Invitación reenviada");
     } catch (err: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo reenviar la invitación"));
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudo reenviar la invitación"),
+      );
     }
   }
 
@@ -111,7 +113,9 @@ export function TeamInviteManagementSection() {
       await revokeInvite(inviteId);
       enqueueSuccessSnackBar("Invitación revocada");
     } catch (err: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo revocar la invitación"));
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudo revocar la invitación"),
+      );
     }
   }
 
@@ -155,7 +159,9 @@ export function TeamInviteManagementSection() {
             return;
           }
         }
-        enqueueErrorSnackBar(getErrorMessage(err, "No se pudo crear la invitación"));
+        enqueueErrorSnackBar(
+          getErrorMessage(err, "No se pudo crear la invitación"),
+        );
       }
     },
   );
