@@ -3,6 +3,7 @@ import { createStore } from "solid-js/store";
 import { Portal } from "solid-js/web";
 
 import { AnimatePresence } from "~/components/ui/animation/animate-presence";
+import { motion } from "~/components/ui/animation/motion";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 
 import { SnackBarComponentInstanceContext } from "../contexts/SnackBarComponentInstanceContext";
@@ -20,6 +21,10 @@ import styles from "./SnackBarProvider.module.css";
 
 const DEFAULT_DURATION_MS = 5000;
 const DEFAULT_MAX_QUEUE = 3;
+const SNACKBAR_MOTION_VARIANTS = {
+  out: { opacity: 0, y: 40 },
+  in: { opacity: 1, y: 0 },
+} as const;
 
 export function SnackBarProvider(props: {
   children: JSX.Element;
@@ -132,9 +137,19 @@ export function SnackBarProvider(props: {
         {props.children}
         <Portal>
           <div class={styles.container} style={{ "z-index": DS_Z_INDEX.toast }}>
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {state.queue.map((snackBar) => (
-                <SnackBar snackBar={snackBar} onClose={handleSnackBarClose} />
+                <motion.div
+                  key={snackBar.id}
+                  variants={SNACKBAR_MOTION_VARIANTS}
+                  initial="out"
+                  animate="in"
+                  exit="out"
+                  transition={{ duration: 0.5 }}
+                  layout
+                >
+                  <SnackBar snackBar={snackBar} onClose={handleSnackBarClose} />
+                </motion.div>
               ))}
             </AnimatePresence>
           </div>
