@@ -3,7 +3,7 @@ import { Show, createSignal } from "solid-js";
 
 import { acceptTeamInvite } from "~/actions/team/acceptance";
 import { getInviteInfo } from "~/actions/team/invites";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
@@ -22,7 +22,7 @@ export default function AcceptInvitePage() {
   async function handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
     if (password() !== confirmPassword()) {
-      enqueueErrorSnackBar({ message: "Las contraseñas no coinciden" });
+      enqueueErrorSnackBar("Las contraseñas no coinciden");
       return;
     }
 
@@ -32,12 +32,10 @@ export default function AcceptInvitePage() {
         token: params.token,
         password: password(),
       });
-      enqueueSuccessSnackBar({ message: "Cuenta activada" });
+      enqueueSuccessSnackBar("Cuenta activada");
       navigate("/onboarding");
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(err, "No se pudo activar la cuenta"),
-      });
+      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo activar la cuenta"));
     } finally {
       setSubmitting(false);
     }

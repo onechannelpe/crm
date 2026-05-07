@@ -8,7 +8,7 @@ import {
 import { beginPasskeyRegistration } from "~/actions/auth/onboarding/passkey";
 import { getOnboardingRequirements } from "~/actions/auth/policy";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useSession } from "~/components/providers/session-provider";
 import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
 import {
@@ -47,7 +47,7 @@ export function useOnboardingFlow() {
     action: () => Promise<{ redirectTo: string }>,
   ) {
     const result = await action();
-    enqueueSuccessSnackBar({ message: "Tu cuenta ya quedó configurada" });
+    enqueueSuccessSnackBar("Tu cuenta ya quedó configurada");
     navigate(result.redirectTo);
   }
 
@@ -63,7 +63,7 @@ export function useOnboardingFlow() {
     try {
       await completeOnboardingAndRedirect(action);
     } catch (error: unknown) {
-      enqueueErrorSnackBar({ message: getErrorMessage(error, failureMessage) });
+      enqueueErrorSnackBar(getErrorMessage(error, failureMessage));
     } finally {
       setOnboardingSubmitting(false);
     }
@@ -192,9 +192,7 @@ export function useOnboardingFlow() {
 
   function handleProfileContinue() {
     if (!isValidOnboardingPhone(phone())) {
-      enqueueErrorSnackBar({
-        message: "Ingresa los 9 dígitos de tu WhatsApp corporativo",
-      });
+      enqueueErrorSnackBar("Ingresa los 9 dígitos de tu WhatsApp corporativo");
       return;
     }
     setStep("security-choice");
@@ -233,12 +231,9 @@ export function useOnboardingFlow() {
         completePasskeyOnboarding(phone(), challengeId, response),
       );
     } catch (error: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(
-          error,
-          "No se pudo configurar la clave de acceso",
-        ),
-      });
+      enqueueErrorSnackBar(
+        getErrorMessage(error, "No se pudo configurar la clave de acceso"),
+      );
     } finally {
       setPasskeyPhase("idle");
     }

@@ -4,7 +4,7 @@ import { onMount, Show } from "solid-js";
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { LastUsedPill } from "~/components/auth/flow/last-used-pill";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Google from "~/components/icons/brands/google";
 import { Button } from "~/components/ui/input/button";
 import { ButtonLink } from "~/components/ui/input/button-link";
@@ -26,13 +26,12 @@ export default function LoginPage() {
 
   onMount(() => {
     if (searchParams.error === "google_not_linked") {
-      enqueueErrorSnackBar({ message: "Tu cuenta no tiene Google vinculado." });
+      enqueueErrorSnackBar("Tu cuenta no tiene Google vinculado.");
     }
     if (searchParams.error === "strong_auth_required") {
-      enqueueErrorSnackBar({
-        message:
-          "Tu cuenta requiere un factor adicional para completar el acceso.",
-      });
+      enqueueErrorSnackBar(
+        "Tu cuenta requiere un factor adicional para completar el acceso.",
+      );
     }
   });
 

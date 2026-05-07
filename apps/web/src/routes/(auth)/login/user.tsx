@@ -3,7 +3,7 @@ import { onMount } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { LoginCredentialsForm } from "~/components/auth/flow/login-credentials-form";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 
 export default function LoginUserPage() {
@@ -13,9 +13,7 @@ export default function LoginUserPage() {
 
   onMount(() => {
     if (searchParams.error === "flow_expired") {
-      enqueueErrorSnackBar({
-        message: "La sesión de inicio expiró. Intenta de nuevo.",
-      });
+      enqueueErrorSnackBar("La sesión de inicio expiró. Intenta de nuevo.");
     }
   });
 

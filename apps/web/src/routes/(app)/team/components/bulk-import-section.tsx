@@ -8,7 +8,7 @@ import {
   type BulkPreviewResult,
 } from "~/actions/team/bulk-import";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
@@ -58,9 +58,7 @@ export function BulkImportSection() {
       const data = await previewBulkCsv(csv, role());
       setPreview(data);
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(err, "Error al procesar el archivo"),
-      });
+      enqueueErrorSnackBar(getErrorMessage(err, "Error al procesar el archivo"));
     } finally {
       setIsPreviewing(false);
     }
@@ -77,9 +75,7 @@ export function BulkImportSection() {
       setCsvFile(null);
       setPreview(null);
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(err, "Error al importar usuarios"),
-      });
+      enqueueErrorSnackBar(getErrorMessage(err, "Error al importar usuarios"));
     } finally {
       setIsImporting(false);
     }

@@ -12,9 +12,9 @@ export interface TotpEnrollmentState {
 }
 
 interface TotpEnrollmentOptions {
-  enqueueSuccessSnackBar: (options: { message: string }) => void;
-  enqueueErrorSnackBar: (options: { message: string }) => void;
-  enqueueInfoSnackBar: (options: { message: string }) => void;
+  enqueueSuccessSnackBar: (message: string) => void;
+  enqueueErrorSnackBar: (message: string) => void;
+  enqueueInfoSnackBar: (message: string) => void;
   refreshStatus: () => void | PromiseLike<unknown>;
   beginInfoMessage?: string;
   beginFailureMessage?: string;
@@ -36,16 +36,16 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       const nextEnrollment = await beginTotpEnrollment();
       setEnrollment(nextEnrollment);
       if (options.beginInfoMessage) {
-        options.enqueueInfoSnackBar({ message: options.beginInfoMessage });
+        options.enqueueInfoSnackBar(options.beginInfoMessage);
       }
     } catch (error: unknown) {
-      options.enqueueErrorSnackBar({
-        message: getErrorMessage(
+      options.enqueueErrorSnackBar(
+        getErrorMessage(
           error,
           options.beginFailureMessage ??
             "No se pudo iniciar la configuración del 2FA",
         ),
-      });
+      );
     } finally {
       setLoading(false);
     }
@@ -59,18 +59,16 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       setEnrollment(null);
       setCode("");
       await options.refreshStatus();
-      options.enqueueSuccessSnackBar({
-        message:
-          options.verifySuccessMessage ??
-          "Aplicación de autenticación configurada",
-      });
+      options.enqueueSuccessSnackBar(
+        options.verifySuccessMessage ?? "Aplicación de autenticación configurada",
+      );
     } catch (error: unknown) {
-      options.enqueueErrorSnackBar({
-        message: getErrorMessage(
+      options.enqueueErrorSnackBar(
+        getErrorMessage(
           error,
           options.verifyFailureMessage ?? "Código de verificación inválido",
         ),
-      });
+      );
     } finally {
       setLoading(false);
     }

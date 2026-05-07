@@ -9,7 +9,7 @@ import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recovery-codes-panel";
 import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
@@ -61,14 +61,11 @@ export default function SecurityPage() {
       await removeAllPasskeys();
       passkeyEnrollment.reset();
       await refreshCurrentUser();
-      enqueueSuccessSnackBar({ message: "Claves de acceso eliminadas" });
+      enqueueSuccessSnackBar("Claves de acceso eliminadas");
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(
-          err,
-          "No se pudieron eliminar las claves de acceso",
-        ),
-      });
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudieron eliminar las claves de acceso"),
+      );
     }
     removePasskeysDialog.close();
   });
@@ -78,42 +75,37 @@ export default function SecurityPage() {
       await disableTotp();
       totpEnrollment.reset();
       await refreshCurrentUser();
-      enqueueSuccessSnackBar({
-        message: "Aplicación de autenticación desactivada",
-      });
+      enqueueSuccessSnackBar("Aplicación de autenticación desactivada");
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(
-          err,
-          "No se pudo desactivar la autenticación TOTP",
-        ),
-      });
+      enqueueErrorSnackBar(
+        getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
+      );
     }
     disableTotpDialog.close();
   });
 
   const handleCopySetupKey = async (setupKey: string) => {
     await navigator.clipboard.writeText(setupKey);
-    enqueueSuccessSnackBar({ message: "Clave de configuración copiada" });
+    enqueueSuccessSnackBar("Clave de configuración copiada");
   };
 
   const [handleChangePassword, isChangingPassword] = useAsyncAction(
     async (e: Event) => {
       e.preventDefault();
       if (newPassword() !== confirmPassword()) {
-        enqueueErrorSnackBar({ message: "Las contraseñas no coinciden" });
+        enqueueErrorSnackBar("Las contraseñas no coinciden");
         return;
       }
       try {
         await changePassword(currentPassword(), newPassword());
-        enqueueSuccessSnackBar({ message: "Contraseña actualizada" });
+        enqueueSuccessSnackBar("Contraseña actualizada");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       } catch (err: unknown) {
-        enqueueErrorSnackBar({
-          message: getErrorMessage(err, "No se pudo cambiar la contraseña"),
-        });
+        enqueueErrorSnackBar(
+          getErrorMessage(err, "No se pudo cambiar la contraseña"),
+        );
       }
     },
   );

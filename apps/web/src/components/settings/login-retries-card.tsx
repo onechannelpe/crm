@@ -4,7 +4,7 @@ import {
   getUserLoginRetryReport,
   type UserLoginRetryReport,
 } from "~/actions/admin/auth-security";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import {
@@ -40,11 +40,9 @@ export function LoginRetriesCard() {
     try {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
-      if (!next) enqueueInfoSnackBar({ message: "Usuario no encontrado" });
+      if (!next) enqueueInfoSnackBar("Usuario no encontrado");
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(err, "No se pudo cargar el reporte"),
-      });
+      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo cargar el reporte"));
     }
   });
 

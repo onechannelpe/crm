@@ -11,8 +11,8 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 
 interface PasskeyEnrollmentOptions {
-  enqueueSuccessSnackBar: (options: { message: string }) => void;
-  enqueueErrorSnackBar: (options: { message: string }) => void;
+  enqueueSuccessSnackBar: (message: string) => void;
+  enqueueErrorSnackBar: (message: string) => void;
   refreshStatus: () => void | PromiseLike<unknown>;
   successMessage?: string;
   failureMessage?: string;
@@ -36,16 +36,16 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
         await createRegistrationResponse(registrationOptions),
       );
       await options.refreshStatus();
-      options.enqueueSuccessSnackBar({
-        message: options.successMessage ?? "Clave de acceso configurada",
-      });
+      options.enqueueSuccessSnackBar(
+        options.successMessage ?? "Clave de acceso configurada",
+      );
     } catch (error: unknown) {
-      options.enqueueErrorSnackBar({
-        message: getErrorMessage(
+      options.enqueueErrorSnackBar(
+        getErrorMessage(
           error,
           options.failureMessage ?? "No se pudo configurar la clave de acceso",
         ),
-      });
+      );
     } finally {
       setLoading(false);
     }

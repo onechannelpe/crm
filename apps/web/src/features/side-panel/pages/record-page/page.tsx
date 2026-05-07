@@ -7,7 +7,7 @@ import {
 import { Show, createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { addLeadToFavoritesMutation } from "~/features/workflow/data/mutations";
 import {
@@ -88,14 +88,10 @@ export function RecordPage() {
               onAddToFavorites: () => {
                 void addToFavorites({ leadId: detail().lead.id })
                   .then(() =>
-                    enqueueSuccessSnackBar({
-                      message: "Empresa agregada a favoritos",
-                    }),
+                    enqueueSuccessSnackBar("Empresa agregada a favoritos"),
                   )
                   .catch(() =>
-                    enqueueErrorSnackBar({
-                      message: "No se pudo agregar a favoritos",
-                    }),
+                    enqueueErrorSnackBar("No se pudo agregar a favoritos"),
                   );
               },
               onExportCompany: () => {
@@ -113,12 +109,10 @@ export function RecordPage() {
                 anchor.download = `empresa-${detail().lead.id}.json`;
                 anchor.click();
                 URL.revokeObjectURL(url);
-                enqueueSuccessSnackBar({ message: "Empresa exportada" });
+                enqueueSuccessSnackBar("Empresa exportada");
               },
               onDeleteCompany: () => {
-                enqueueInfoSnackBar({
-                  message: "Eliminar empresa estará disponible pronto",
-                });
+                enqueueInfoSnackBar("Eliminar empresa estará disponible pronto");
               },
             }}
           />

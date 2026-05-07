@@ -9,7 +9,7 @@ import { For, Show, createEffect, createSignal, on } from "solid-js";
 import type { InviteManagement } from "~/actions/team/contracts";
 import { createTeamInvite } from "~/actions/team/invites";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Mail from "~/components/icons/mail";
 import X from "~/components/icons/x";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
@@ -100,22 +100,18 @@ export function TeamInviteManagementSection() {
   async function handleResend(inviteId: number): Promise<void> {
     try {
       await resendInvite(inviteId);
-      enqueueSuccessSnackBar({ message: "Invitación reenviada" });
+      enqueueSuccessSnackBar("Invitación reenviada");
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(err, "No se pudo reenviar la invitación"),
-      });
+      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo reenviar la invitación"));
     }
   }
 
   async function handleRevoke(inviteId: number): Promise<void> {
     try {
       await revokeInvite(inviteId);
-      enqueueSuccessSnackBar({ message: "Invitación revocada" });
+      enqueueSuccessSnackBar("Invitación revocada");
     } catch (err: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(err, "No se pudo revocar la invitación"),
-      });
+      enqueueErrorSnackBar(getErrorMessage(err, "No se pudo revocar la invitación"));
     }
   }
 
@@ -150,7 +146,7 @@ export function TeamInviteManagementSection() {
         setExpiresAt("");
         setExpiresAtError(undefined);
         await revalidateQuery(inviteManagementQuery.key);
-        enqueueSuccessSnackBar({ message: "Invitación enviada" });
+        enqueueSuccessSnackBar("Invitación enviada");
       } catch (err: unknown) {
         if (getErrorCode(err) === "validation") {
           const message = getErrorMessage(err, INVITE_EXPIRY_ERROR_TEXT);
@@ -159,9 +155,7 @@ export function TeamInviteManagementSection() {
             return;
           }
         }
-        enqueueErrorSnackBar({
-          message: getErrorMessage(err, "No se pudo crear la invitación"),
-        });
+        enqueueErrorSnackBar(getErrorMessage(err, "No se pudo crear la invitación"));
       }
     },
   );

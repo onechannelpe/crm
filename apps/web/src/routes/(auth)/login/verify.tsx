@@ -5,7 +5,7 @@ import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
@@ -40,9 +40,7 @@ export default function LoginVerifyPage() {
 
   onMount(() => {
     if (!flowId()) {
-      enqueueErrorSnackBar({
-        message: "La sesión de inicio expiró. Intenta de nuevo.",
-      });
+      enqueueErrorSnackBar("La sesión de inicio expiró. Intenta de nuevo.");
     }
   });
 

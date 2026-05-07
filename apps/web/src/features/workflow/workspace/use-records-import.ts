@@ -4,7 +4,7 @@ import {
   getRecordImportJob,
   uploadRecordImportFile,
 } from "~/actions/records/imports";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import {
   recordImportTopic,
   parseRecordImportProgressMessage,
@@ -143,16 +143,14 @@ export function useRecordsImport() {
     rowsTotal: number;
   }) {
     if (event.rowsFailed > 0) {
-      enqueueWarningSnackBar({
-        message: buildCompletedMessage(event),
-        options: { duration: IMPORT_COMPLETED_DURATION_MS },
+      enqueueWarningSnackBar(buildCompletedMessage(event), {
+        duration: IMPORT_COMPLETED_DURATION_MS,
       });
       return;
     }
 
-    enqueueSuccessSnackBar({
-      message: buildCompletedMessage(event),
-      options: { duration: IMPORT_COMPLETED_DURATION_MS },
+    enqueueSuccessSnackBar(buildCompletedMessage(event), {
+      duration: IMPORT_COMPLETED_DURATION_MS,
     });
   }
 
@@ -189,9 +187,7 @@ export function useRecordsImport() {
       }
 
       if (job.status === "FAILED") {
-        enqueueErrorSnackBar({
-          message: job.error_message ?? "La importación falló",
-        });
+        enqueueErrorSnackBar(job.error_message ?? "La importación falló");
         stopActiveTracking();
         return "ok";
       }
@@ -247,9 +243,7 @@ export function useRecordsImport() {
     }
 
     if (event.status === "FAILED") {
-      enqueueErrorSnackBar({
-        message: event.errorMessage ?? "La importación falló",
-      });
+      enqueueErrorSnackBar(event.errorMessage ?? "La importación falló");
       stopActiveTracking();
     }
   }
@@ -311,7 +305,7 @@ export function useRecordsImport() {
 
   async function importFile(file: File): Promise<void> {
     if (!isCsvFile(file)) {
-      enqueueErrorSnackBar({ message: "Solo se permiten archivos .csv" });
+      enqueueErrorSnackBar("Solo se permiten archivos .csv");
       return;
     }
 
@@ -324,22 +318,20 @@ export function useRecordsImport() {
       activeJobId = result.jobId;
       activeImportType = result.importType;
 
-      enqueueInfoSnackBar({
-        message: buildProgressMessage({
+      enqueueInfoSnackBar(
+        buildProgressMessage({
           importType: result.importType,
           rowsApplied: 0,
           rowsFailed: 0,
           rowsTotal: result.rowsTotal,
         }),
-        options: { duration: IMPORT_PROGRESS_DURATION_MS },
-      });
+        { duration: IMPORT_PROGRESS_DURATION_MS },
+      );
 
       startPolling();
       connectWebsocket(result.jobId);
     } catch (error: unknown) {
-      enqueueErrorSnackBar({
-        message: getErrorMessage(error, "No se pudo importar el archivo"),
-      });
+      enqueueErrorSnackBar(getErrorMessage(error, "No se pudo importar el archivo"));
     }
   }
 

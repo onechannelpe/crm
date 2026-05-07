@@ -1,6 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import ChevronRight from "~/components/icons/chevron-right";
 import Link from "~/components/icons/link";
 import List from "~/components/icons/list";
@@ -25,19 +25,17 @@ export function OptionsDropdown(props: { onClose: () => void }) {
 
   async function copyViewLink() {
     if (!navigator.clipboard) {
-      enqueueErrorSnackBar({
-        message: "El portapapeles no está disponible en este entorno",
-      });
+      enqueueErrorSnackBar("El portapapeles no está disponible en este entorno");
       return;
     }
 
     try {
       await navigator.clipboard.writeText(window.location.href);
-      enqueueSuccessSnackBar({ message: "Enlace copiado al portapapeles" });
+      enqueueSuccessSnackBar("Enlace copiado al portapapeles");
       props.onClose();
     } catch (err) {
       console.error("Failed to copy link", err);
-      enqueueErrorSnackBar({ message: "Error al copiar el enlace" });
+      enqueueErrorSnackBar("Error al copiar el enlace");
     }
   }
 
