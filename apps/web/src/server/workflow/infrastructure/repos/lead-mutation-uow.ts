@@ -1,6 +1,7 @@
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { projectLeadStageChangedEvent } from "~/server/notifications/unified";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
@@ -13,7 +14,6 @@ import {
   executeCheckedLeadMutation,
   executeLeadMutation,
 } from "../../application/services/lead-mutation-orchestrator";
-import { deriveWorkflowNotificationIntents } from "../../application/workflow-notification-policy";
 import { deriveLeadPatchFromIntent } from "../../domain/lead/lead-transitions";
 import { createAssignmentRepo } from "../assignment-repo";
 import {
@@ -23,7 +23,6 @@ import {
 } from "../audit-log";
 import { createHistoryRepo } from "../history-repo";
 import { createLeadRepo } from "../lead-repo";
-import { enqueueWorkflowNotificationOutboxEvents } from "../workflow-notification-outbox-repo";
 import { createLeadAssignmentRepositoryPort } from "./lead-assignment-repo";
 import { createLeadAuditRepository } from "./lead-audit-repo";
 import { createLeadEventRepository } from "./lead-event-repo";
@@ -72,18 +71,25 @@ export function createLeadMutationUow(
     now: number;
   }) {
     const branchId = await resolveExecutiveBranchId(input.executiveId);
-
-    const intents = deriveWorkflowNotificationIntents({
-      sourceEventIds: input.historyIds,
-      history: input.events.history,
-      leadId: input.leadId,
-      ruc: input.ruc,
-      executiveId: input.executiveId,
-      branchId,
-    });
-    if (intents.length < 1) return;
-
-    await enqueueWorkflowNotificationOutboxEvents(executor, intents, input.now);
+    for (let index = 0; index < input.events.history.length; index += 1) {
+      const event = input.events.history[index];
+      const sourceEventId = input.historyIds[index];
+      if (!sourceEventId) {
+        continue;
+      }
+      if (event.eventType !== "workflow_stage_changed") {
+        continue;
+      }
+      await projectLeadStageChangedEvent(executor, {
+        id: sourceEventId,
+        leadId: input.leadId,
+        toStage: event.payload.to,
+        ruc: input.ruc,
+        executiveId: input.executiveId,
+        branchId,
+        occurredAt: input.now,
+      });
+    }
   }
 
   return {

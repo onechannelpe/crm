@@ -529,46 +529,11 @@ export async function persistDemoIdentities(
     .execute();
 
   await db
-    .insertInto("notification_campaigns")
-    .values([
-      {
-        id: 1,
-        type: "security_event",
-        event_type: "security.privileged_login",
-        audience_type: "user",
-        audience_ref: "1",
-        title: "Security alert: privileged login (admin)",
-        body_text: "Admin login from a new location was detected.",
-        created_by_user_id: null,
-        status: "completed",
-        scheduled_at: null,
-        created_at: now - oneDay,
-        processed_at: now - oneDay + 15_000,
-      },
-      {
-        id: 2,
-        type: "broadcast",
-        event_type: "broadcast.general",
-        audience_type: "role",
-        audience_ref: "supervisor",
-        title: "Cambio en guion comercial",
-        body_text: "Revisar guion actualizado para campaña fibra.",
-        created_by_user_id: 12,
-        status: "completed",
-        scheduled_at: now - oneDay / 2,
-        created_at: now - oneDay / 2,
-        processed_at: now - oneDay / 2 + 20_000,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
     .insertInto("notification_recipients")
     .values([
       {
         id: 1,
-        campaign_id: 1,
+        intent_id: "seed:security-alert:1",
         user_id: 1,
         channel: "email",
         address: "valeria.paredes@onechannel.pe",
@@ -580,7 +545,7 @@ export async function persistDemoIdentities(
       },
       {
         id: 2,
-        campaign_id: 1,
+        intent_id: "seed:security-alert:1",
         user_id: 1,
         channel: "whatsapp",
         address: "+51911000001",
@@ -592,7 +557,7 @@ export async function persistDemoIdentities(
       },
       {
         id: 3,
-        campaign_id: 2,
+        intent_id: "seed:broadcast:2",
         user_id: 2,
         channel: "email",
         address: "diego.ramirez@onechannel.pe",
@@ -604,7 +569,7 @@ export async function persistDemoIdentities(
       },
       {
         id: 4,
-        campaign_id: 2,
+        intent_id: "seed:broadcast:2",
         user_id: 8,
         channel: "email",
         address: "nicolas.torres@onechannel.pe",
@@ -619,70 +584,13 @@ export async function persistDemoIdentities(
     .execute();
 
   await db
-    .insertInto("notification_jobs")
-    .values([
-      {
-        id: 1,
-        recipient_id: 1,
-        status: "sent",
-        attempt_count: 1,
-        max_attempts: 5,
-        available_at: now - oneDay,
-        lease_owner: null,
-        lease_until: null,
-        last_error: null,
-        created_at: now - oneDay,
-        updated_at: now - oneDay + 30_000,
-      },
-      {
-        id: 2,
-        recipient_id: 2,
-        status: "sent",
-        attempt_count: 1,
-        max_attempts: 5,
-        available_at: now - oneDay,
-        lease_owner: null,
-        lease_until: null,
-        last_error: null,
-        created_at: now - oneDay,
-        updated_at: now - oneDay + 35_000,
-      },
-      {
-        id: 3,
-        recipient_id: 3,
-        status: "sent",
-        attempt_count: 1,
-        max_attempts: 5,
-        available_at: now - oneDay / 2,
-        lease_owner: null,
-        lease_until: null,
-        last_error: null,
-        created_at: now - oneDay / 2,
-        updated_at: now - oneDay / 2 + 40_000,
-      },
-      {
-        id: 4,
-        recipient_id: 4,
-        status: "failed",
-        attempt_count: 5,
-        max_attempts: 5,
-        available_at: now - oneDay / 2,
-        lease_owner: null,
-        lease_until: null,
-        last_error: "mailbox_unreachable",
-        created_at: now - oneDay / 2,
-        updated_at: now - oneDay / 2 + 50_000,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
     .insertInto("notification_deliveries")
     .values([
       {
         id: 1,
-        recipient_id: 1,
+        intent_id: "seed:security-alert:1",
+        recipient_channel: "email",
+        recipient_address: "valeria.paredes@onechannel.pe",
         provider: "resend",
         provider_message_id: "seed-msg-resend-1",
         status: "sent",
@@ -693,7 +601,9 @@ export async function persistDemoIdentities(
       },
       {
         id: 2,
-        recipient_id: 2,
+        intent_id: "seed:security-alert:1",
+        recipient_channel: "whatsapp",
+        recipient_address: "+51911000001",
         provider: "whatsapp_cloud",
         provider_message_id: "seed-msg-wa-1",
         status: "sent",
@@ -704,7 +614,9 @@ export async function persistDemoIdentities(
       },
       {
         id: 3,
-        recipient_id: 4,
+        intent_id: "seed:broadcast:2",
+        recipient_channel: "email",
+        recipient_address: "nicolas.torres@onechannel.pe",
         provider: "resend",
         provider_message_id: null,
         status: "failed",

@@ -7,7 +7,6 @@ import { openStoredFileStream } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import { getServerRuntime } from "~/server/runtime";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
-import { createWorkflowNotificationOutboxQueue } from "~/server/workflow/infrastructure/workflow-notification-outbox-queue";
 
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
@@ -22,25 +21,17 @@ export function startBackgroundJobs() {
     openFileStream: (filePath) =>
       openStoredFileStream(config.uploads.storageRoot, filePath),
   });
-  const workflowNotificationOutboxQueue = createWorkflowNotificationOutboxQueue(
-    WORKER_ID,
-    { executor: integration.executor },
-  );
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
   const sunatEnrichmentWritebackQueue =
     getServerRuntime().workflow.createSunatEnrichmentWritebackQueue(WORKER_ID);
-  const notificationsEmailQueue =
-    getServerRuntime().notifications.createEmailQueue(WORKER_ID);
-  const notificationsWhatsAppQueue =
-    getServerRuntime().notifications.createWhatsAppQueue(WORKER_ID);
+  const notificationsIntentQueue =
+    getServerRuntime().notifications.createIntentQueue(WORKER_ID);
   const queues: QueueRunner[] = [
     recordsImportQueue,
-    workflowNotificationOutboxQueue,
     enrichmentQueue,
     sunatEnrichmentWritebackQueue,
-    notificationsEmailQueue,
-    notificationsWhatsAppQueue,
+    notificationsIntentQueue,
   ];
   const runAllQueues = () => {
     for (const queue of queues) {
@@ -69,20 +60,14 @@ export function startBackgroundJobs() {
     RECORDS_IMPORT: () => {
       void recordsImportQueue.runOnce();
     },
-    WORKFLOW_NOTIFICATION_OUTBOX: () => {
-      void workflowNotificationOutboxQueue.runOnce();
-    },
     ENRICHMENT: () => {
       void enrichmentQueue.runOnce();
     },
     ENRICHMENT_WRITEBACK: () => {
       void sunatEnrichmentWritebackQueue.runOnce();
     },
-    NOTIFICATIONS_EMAIL: () => {
-      void notificationsEmailQueue.runOnce();
-    },
-    NOTIFICATIONS_WHATSAPP: () => {
-      void notificationsWhatsAppQueue.runOnce();
+    NOTIFICATIONS_INTENTS: () => {
+      void notificationsIntentQueue.runOnce();
     },
   });
 

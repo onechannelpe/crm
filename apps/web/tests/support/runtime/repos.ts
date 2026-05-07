@@ -32,7 +32,6 @@ import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/integration-job-repo";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
-import { createNotificationCampaignRepo } from "~/server/notifications/repos/campaign";
 import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
@@ -79,7 +78,6 @@ export function createTestRepositories(db: Kysely<Database>) {
     leadUsageCommits: createLeadUsageCommitsRepo(db),
     capacityRequests: createCapacityRequestsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
-    notificationCampaigns: createNotificationCampaignRepo(db),
     userChannelAddresses: createUserChannelAddressRepo(db),
     notificationPreferences: createNotificationPreferenceRepo(db),
     appNotifications: createAppNotificationRepo(db),

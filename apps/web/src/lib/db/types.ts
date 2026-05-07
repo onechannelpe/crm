@@ -66,12 +66,11 @@ export interface Database {
   search_policy_overrides: capacity.SearchPolicyOverridesTable;
   user_channel_addresses: notifications.UserChannelAddressesTable;
   notification_preferences: notifications.NotificationPreferencesTable;
-  notification_campaigns: notifications.NotificationCampaignsTable;
   notification_recipients: notifications.NotificationRecipientsTable;
-  notification_jobs: notifications.NotificationJobsTable;
   notification_deliveries: notifications.NotificationDeliveriesTable;
   app_notifications: notifications.AppNotificationsTable;
-  workflow_notification_outbox: notifications.WorkflowNotificationOutboxTable;
+  domain_events: notifications.DomainEventsTable;
+  notification_intents_outbox: notifications.NotificationIntentsOutboxTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;

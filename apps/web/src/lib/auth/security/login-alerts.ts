@@ -26,10 +26,9 @@ export function createPrivilegedLoginAlertSender(
 
     try {
       await notifications.service.publishCampaign({
-        type: "security_event",
         eventType: "security.privileged_login",
-        audienceType: "user",
-        audienceRef: String(params.userId),
+        audienceKind: "user_ids",
+        audience: { user_ids: [params.userId] },
         title: `Security alert: privileged login (${params.role})`,
         bodyText: [
           "Privileged login detected.",
@@ -41,7 +40,6 @@ export function createPrivilegedLoginAlertSender(
         ].join("\n"),
         createdByUserId: null,
       });
-      await notifications.service.enqueueDueCampaigns(5);
       await notifications.dispatchPendingJobs();
     } catch (error) {
       logger.error("privileged_login_alert_failed", { error });
