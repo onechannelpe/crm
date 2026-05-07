@@ -25,11 +25,6 @@ const JOB_TABLES = [
     staleStatuses: ["running"],
     resetStatus: "queued",
   },
-  {
-    name: "notification_jobs",
-    staleStatuses: ["leased"],
-    resetStatus: "pending",
-  },
 ] as const;
 
 export async function resetStalledJobs(
