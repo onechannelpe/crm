@@ -20,6 +20,7 @@ export default defineConfig({
     {
       enforce: "pre",
       ...mdx({
+        include: /\.mdx?$/,
         jsx: true,
         jsxImportSource: "solid-js",
         providerImportSource: "solid-mdx",
@@ -28,7 +29,7 @@ export default defineConfig({
     },
     solidStart({
       middleware: "./src/middleware.ts",
-      extensions: ["mdx"],
+      extensions: ["md", "mdx"],
     }),
     nitroV2Plugin({
       alias: {

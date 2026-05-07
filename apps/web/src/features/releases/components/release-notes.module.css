@@ -1,25 +1,17 @@
-.page {
+.root {
   --sidebar-w: 148px;
   --sidebar-gap: 32px;
-
-  /* max-width = sidebar + gap + readable content column */
   max-width: calc(var(--sidebar-w) + var(--sidebar-gap) + 660px);
   margin-inline: auto;
   padding-inline: 24px;
   padding-bottom: 80px;
 }
 
-.pageTitle {
+.title {
   margin: 48px 0 40px calc(var(--sidebar-w) + var(--sidebar-gap));
   font-size: 1.8em;
   display: flex;
   flex-direction: column;
-
-  @media (max-width: 640px) {
-    margin-inline-start: 0;
-    text-align: center;
-    align-items: center;
-  }
 }
 
 .titleMuted {
@@ -34,47 +26,36 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.release {
+.entry {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   column-gap: var(--sidebar-gap);
-
-  @media (max-width: 640px) {
-    display: block;
-  }
 }
 
-.releaseLeft {
+.meta {
   padding-top: 48px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
-  @media (max-width: 640px) {
-    padding-top: 24px;
-    flex-direction: row;
-    align-items: baseline;
-    gap: 12px;
-  }
 }
 
-.releaseVersion {
+.version {
   font-size: 1rem;
   font-weight: var(--font-weight-medium);
   color: var(--foreground-tertiary);
   line-height: 1.4;
 }
 
-.releaseDate {
+.date {
   color: var(--foreground-secondary);
   font-weight: 400;
   font-size: var(--font-size-caption);
   white-space: nowrap;
   margin-top: 4px;
+}
 
-  @media (max-width: 640px) {
-    margin-top: 0;
-  }
+.content {
+  min-width: 0;
 }
 
 .divider {
@@ -82,13 +63,38 @@
   background: var(--border);
   margin-block: 40px;
   margin-inline-start: calc(var(--sidebar-w) + var(--sidebar-gap));
+}
 
-  @media (max-width: 640px) {
+.empty {
+  margin: 0;
+  color: var(--foreground-secondary);
+  line-height: 1.7;
+}
+
+@media (max-width: 640px) {
+  .title {
+    margin-inline-start: 0;
+    text-align: center;
+    align-items: center;
+  }
+
+  .entry {
+    display: block;
+  }
+
+  .meta {
+    padding-top: 24px;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .date {
+    margin-top: 0;
+  }
+
+  .divider {
     margin-inline-start: 0;
     margin-block: 24px;
   }
-}
-
-.releaseContent {
-  /* fills the 1fr grid column; prose styles applied via prose.module.css */
 }

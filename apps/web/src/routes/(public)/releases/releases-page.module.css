@@ -1,0 +1,36 @@
+.hero {
+  max-width: 920px;
+  margin: 32px auto 0;
+  padding: 0 24px 32px;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  line-height: 1.05;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.02em;
+}
+
+.heroBody {
+  margin: 16px 0 0;
+  max-width: 620px;
+  color: var(--foreground-secondary);
+  line-height: 1.65;
+}
+
+.heroCta {
+  margin-top: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    background: var(--accent);
+  }
+}
