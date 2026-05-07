@@ -19,12 +19,8 @@ export async function startQueueDoorbellSubscriber(triggers: {
       channel: JOB_CHANNELS.ENRICHMENT_WRITEBACK,
     },
     {
-      key: "NOTIFICATIONS_EMAIL",
-      channel: JOB_CHANNELS.NOTIFICATIONS_EMAIL,
-    },
-    {
-      key: "NOTIFICATIONS_WHATSAPP",
-      channel: JOB_CHANNELS.NOTIFICATIONS_WHATSAPP,
+      key: "NOTIFICATIONS_INTENTS",
+      channel: JOB_CHANNELS.NOTIFICATIONS_INTENTS,
     },
   ] as const;
 

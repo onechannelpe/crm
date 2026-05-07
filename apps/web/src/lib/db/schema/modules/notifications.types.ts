@@ -38,7 +38,8 @@ export interface NotificationCampaignsTable {
 
 export interface NotificationRecipientsTable {
   id: Generated<number>;
-  campaign_id: number;
+  campaign_id: number | null;
+  intent_id: string | null;
   user_id: number | null;
   channel: "email" | "whatsapp";
   address: string;
@@ -65,7 +66,10 @@ export interface NotificationJobsTable {
 
 export interface NotificationDeliveriesTable {
   id: Generated<number>;
-  recipient_id: number;
+  recipient_id: number | null;
+  intent_id: string | null;
+  recipient_channel: "email" | "whatsapp" | null;
+  recipient_address: string | null;
   provider: "resend" | "whatsapp_cloud";
   provider_message_id: string | null;
   status: "sent" | "failed";
@@ -78,6 +82,7 @@ export interface NotificationDeliveriesTable {
 export interface AppNotificationsTable {
   id: Generated<number>;
   user_id: number;
+  intent_id: Generated<string | null>;
   source_event_id: string;
   event_type: string;
   priority: "high" | "normal" | "low";
@@ -87,6 +92,38 @@ export interface AppNotificationsTable {
   metadata_json: string | null;
   created_at: number;
   read_at: number | null;
+}
+
+export interface DomainEventsTable {
+  id: string;
+  aggregate_type: string;
+  aggregate_id: string;
+  event_type: string;
+  payload_json: string;
+  occurred_at: number;
+}
+
+export interface NotificationIntentsOutboxTable {
+  intent_id: string;
+  source_event_id: string;
+  event_type: string;
+  aggregate_id: string;
+  audience_kind: "user_ids" | "branch_roles" | "global_roles" | "team";
+  audience_payload_json: string;
+  channel_set_json: string;
+  title: string;
+  body_text: string;
+  action_url: string | null;
+  priority: "high" | "normal" | "low";
+  status: "pending" | "processing" | "completed" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: number;
+  lease_owner: string | null;
+  lease_until: number | null;
+  error_message: string | null;
+  created_at: number;
+  processed_at: number | null;
 }
 
 export interface WorkflowNotificationOutboxTable {

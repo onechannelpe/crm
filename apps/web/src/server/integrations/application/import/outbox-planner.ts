@@ -1,11 +1,11 @@
+import { projectLeadStageChangedEvent } from "~/server/notifications/unified";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { enqueueWorkflowNotificationOutboxEvents } from "~/server/workflow/infrastructure/workflow-notification-outbox-repo";
 
 import type { LeadMutationOutcome, PlannedOutboxEvents } from "./types";
 
 export function createEmptyOutboxPlan(): PlannedOutboxEvents {
   return {
-    notifications: [],
+    domainEvents: [],
   };
 }
 
@@ -19,51 +19,30 @@ export async function planOutboxForMutation(input: {
     return;
   }
 
-  if (
-    mutation.nextStage === "NEEDS_EXECUTIVE_INPUT" &&
-    mutation.executiveId > 0
-  ) {
-    input.outboxPlan.notifications.push({
-      sourceEventId: `${mutation.row.type}:${mutation.row.row}:${mutation.leadId}:needs_exec`,
-      leadId: mutation.leadId,
-      executiveId: mutation.executiveId,
-      branchId: null,
-      audienceKind: "executive",
-      audienceRoles: [],
-      eventType: "lead.needs_executive_input",
-      title: "Accion requerida",
-      bodyText: `El prospecto RUC ${mutation.ruc} requiere tu informacion comercial`,
-      actionUrl: "/records",
-      priority: "high",
-    });
+  if (mutation.executiveId <= 0) {
     return;
   }
 
-  if (mutation.nextStage !== "READY_FOR_QUOTATION") {
-    return;
+  let branchId: number | null = null;
+  if (mutation.nextStage === "READY_FOR_QUOTATION") {
+    const user = await input.executor
+      .selectFrom("users")
+      .select("branch_id")
+      .where("id", "=", mutation.executiveId)
+      .executeTakeFirst();
+    if (!user || user.branch_id <= 0) {
+      return;
+    }
+    branchId = user.branch_id;
   }
 
-  const user = await input.executor
-    .selectFrom("users")
-    .select("branch_id")
-    .where("id", "=", mutation.executiveId)
-    .executeTakeFirst();
-  if (!user || user.branch_id <= 0) {
-    return;
-  }
-
-  input.outboxPlan.notifications.push({
-    sourceEventId: `${mutation.row.type}:${mutation.row.row}:${mutation.leadId}:rfq`,
+  input.outboxPlan.domainEvents.push({
+    id: `${mutation.row.type}:${mutation.row.row}:${mutation.leadId}:stage_changed`,
     leadId: mutation.leadId,
+    toStage: mutation.nextStage,
+    ruc: mutation.ruc,
     executiveId: mutation.executiveId,
-    branchId: user.branch_id,
-    audienceKind: "branch_role",
-    audienceRoles: ["back_office"],
-    eventType: "lead.ready_for_quotation",
-    title: "Prospecto listo para cotizacion",
-    bodyText: `El prospecto RUC ${mutation.ruc} esta listo para cotizar`,
-    actionUrl: `/records/${mutation.leadId}`,
-    priority: "normal",
+    branchId,
   });
 }
 
@@ -72,9 +51,15 @@ export async function persistOutboxPlan(input: {
   outboxPlan: PlannedOutboxEvents;
   now: number;
 }) {
-  await enqueueWorkflowNotificationOutboxEvents(
-    input.executor,
-    input.outboxPlan.notifications,
-    input.now,
-  );
+  for (const event of input.outboxPlan.domainEvents) {
+    await projectLeadStageChangedEvent(input.executor, {
+      id: event.id,
+      leadId: event.leadId,
+      toStage: event.toStage,
+      ruc: event.ruc,
+      executiveId: event.executiveId,
+      branchId: event.branchId,
+      occurredAt: input.now,
+    });
+  }
 }

@@ -72,6 +72,8 @@ export interface Database {
   notification_deliveries: notifications.NotificationDeliveriesTable;
   app_notifications: notifications.AppNotificationsTable;
   workflow_notification_outbox: notifications.WorkflowNotificationOutboxTable;
+  domain_events: notifications.DomainEventsTable;
+  notification_intents_outbox: notifications.NotificationIntentsOutboxTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;

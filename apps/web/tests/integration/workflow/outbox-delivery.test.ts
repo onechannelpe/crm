@@ -49,12 +49,16 @@ describe("outbox delivery", () => {
       {
         user_id: 1,
         event_type: "lead.needs_executive_input",
-        source_event_id: expect.stringContaining(`${leadOne.id}:needs_exec`),
+        source_event_id: expect.stringContaining(
+          `${leadOne.id}:stage_changed`,
+        ),
       },
       {
         user_id: 4,
         event_type: "lead.ready_for_quotation",
-        source_event_id: expect.stringContaining(`${leadTwo.id}:rfq`),
+        source_event_id: expect.stringContaining(
+          `${leadTwo.id}:stage_changed`,
+        ),
       },
     ]);
 

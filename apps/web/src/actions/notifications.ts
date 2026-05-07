@@ -6,47 +6,38 @@ import { requireRole } from "~/lib/auth/access/session";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { getServerRuntime } from "~/server/runtime";
 
-function assertAudienceType(value: string): "user" | "role" | "global" {
-  if (value === "user" || value === "role" || value === "global") {
+function assertAudienceType(
+  value: string,
+): "user_ids" | "global_roles" | "team" {
+  if (value === "user_ids" || value === "global_roles" || value === "team") {
     return value;
   }
   throw validationError("Invalid audience type");
 }
 
 function assertAudienceRef(
-  audienceType: "user" | "role" | "global",
+  audienceType: "user_ids" | "global_roles" | "team",
   value: string,
-): string | null {
-  if (audienceType === "global") {
-    return null;
-  }
-
+): Record<string, unknown> {
   const ref = assertNonEmptyString(value, "audienceRef");
-
-  if (audienceType === "role") {
-    const allowedRoles: Role[] = [
-      "executive",
-      "supervisor",
-      "back_office",
-      "sales_manager",
-      "logistics",
-      "hr",
-      "admin",
-      "superuser",
-    ];
-    if (!isRole(ref) || !allowedRoles.includes(ref)) {
-      throw validationError("Invalid role audience");
-    }
-  }
-
-  if (audienceType === "user") {
+  if (audienceType === "user_ids") {
     const userId = Number(ref);
     if (!Number.isInteger(userId) || userId <= 0) {
       throw validationError("Invalid user audience");
     }
+    return { user_ids: [userId] };
   }
-
-  return ref;
+  if (audienceType === "team") {
+    const teamId = Number(ref);
+    if (!Number.isInteger(teamId) || teamId <= 0) {
+      throw validationError("Invalid team audience");
+    }
+    return { team_id: teamId };
+  }
+  if (!isRole(ref)) {
+    throw validationError("Invalid global role audience");
+  }
+  return { global_roles: [ref as Role] };
 }
 
 export async function sendBroadcastNotification(params: {
@@ -60,15 +51,12 @@ export async function sendBroadcastNotification(params: {
   const audienceRef = assertAudienceRef(audienceType, params.audienceRef);
 
   await getServerRuntime().notifications.service.publishCampaign({
-    type: "broadcast",
     eventType: "broadcast.general",
-    audienceType,
-    audienceRef,
+    audienceKind: audienceType,
+    audience: audienceRef,
     title: assertNonEmptyString(params.title, "title"),
     bodyText: assertNonEmptyString(params.bodyText, "bodyText"),
     createdByUserId: session.userId,
   });
-
-  await getServerRuntime().notifications.service.enqueueDueCampaigns(10);
   await getServerRuntime().notifications.dispatchPendingJobs();
 }
