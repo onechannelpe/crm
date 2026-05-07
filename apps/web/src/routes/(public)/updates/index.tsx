@@ -1,4 +1,5 @@
-import { For, Show, createSignal } from "solid-js";
+import { useSearchParams } from "@solidjs/router";
+import { For, Show } from "solid-js";
 
 import {
   UpdateEntryCard,
@@ -6,19 +7,27 @@ import {
   UpdatesEmptyMessage,
   UpdatesFilters,
   UpdatesHero,
-  UpdatesRoot,
+  UpdatesList,
 } from "~/features/updates/components";
 import { buildUpdateListJsonLd, JsonLd } from "~/lib/seo";
-import { loadUpdates } from "~/lib/updates/load-updates";
-import { queryUpdates } from "~/lib/updates/query-updates";
-import type { UpdateFilter } from "~/lib/updates/types";
+import {
+  loadUpdates,
+  parseUpdateFilter,
+  queryUpdates,
+  type UpdateFilter,
+} from "~/lib/updates";
 
 import { UPDATES_PAGE_COPY } from "./updates-page.data";
 
 export default function UpdatesPage() {
-  const [filter, setFilter] = createSignal<UpdateFilter>("all");
+  const [searchParams, setSearchParams] = useSearchParams<{
+    filter?: string;
+  }>();
+
   const updates = loadUpdates();
-  const visibleUpdates = () => queryUpdates(updates, filter());
+  const activeFilter = (): UpdateFilter =>
+    parseUpdateFilter(searchParams.filter);
+  const visibleUpdates = () => queryUpdates(updates, activeFilter());
 
   return (
     <>
@@ -29,8 +38,16 @@ export default function UpdatesPage() {
       />
 
       <UpdatesFilters
-        active={filter()}
-        onChange={setFilter}
+        active={activeFilter()}
+        onChange={(value) =>
+          setSearchParams(
+            value === "all"
+              ? {}
+              : {
+                  filter: value,
+                },
+          )
+        }
         options={[
           { label: UPDATES_PAGE_COPY.filters.all, value: "all" },
           { label: UPDATES_PAGE_COPY.filters.technical, value: "technical" },
@@ -49,7 +66,7 @@ export default function UpdatesPage() {
         <JsonLd data={buildUpdateListJsonLd(visibleUpdates())} />
       </Show>
 
-      <UpdatesRoot
+      <UpdatesList
         titleBold={UPDATES_PAGE_COPY.titleBold}
         titleMuted={UPDATES_PAGE_COPY.titleMuted}
       >
@@ -72,7 +89,7 @@ export default function UpdatesPage() {
             )}
           </For>
         </Show>
-      </UpdatesRoot>
+      </UpdatesList>
     </>
   );
 }

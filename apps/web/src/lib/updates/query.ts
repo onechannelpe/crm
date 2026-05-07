@@ -8,13 +8,11 @@ export function queryUpdates(
   if (filter === "technical") {
     return updates.filter((entry) => entry.kind === "technical");
   }
-
   if (filter === "release-nightly") {
     return updates.filter(
       (entry) => entry.kind === "release" && entry.cadence === "nightly",
     );
   }
-
   if (filter === "release-weekly") {
     return updates.filter(
       (entry) => entry.kind === "release" && entry.cadence === "weekly",

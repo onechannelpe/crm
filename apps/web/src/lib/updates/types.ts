@@ -17,6 +17,15 @@ export const updateFilters = [
 ] as const;
 export type UpdateFilter = (typeof updateFilters)[number];
 
+export type UpdateFrontmatterInput = {
+  title?: unknown;
+  date?: unknown;
+  kind?: unknown;
+  cadence?: unknown;
+  visibility?: unknown;
+  tags?: unknown;
+};
+
 export type UpdateEntry = {
   id: string;
   slug: string;
@@ -27,4 +36,9 @@ export type UpdateEntry = {
   visibility: UpdateVisibility;
   tags: string[];
   content: Component;
+};
+
+export type UpdateFilterOption = {
+  label: string;
+  value: UpdateFilter;
 };

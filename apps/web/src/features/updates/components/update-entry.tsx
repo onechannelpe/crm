@@ -1,9 +1,9 @@
-import type { UpdateEntry } from "~/lib/updates/types";
+import type { UpdateEntry } from "~/lib/updates";
 
 import { formatUpdateDisplayDate } from "./format-update-display-date";
 import { UpdateMarkdown } from "./update-markdown";
 
-import styles from "./updates-page.module.css";
+import styles from "./styles/entry.module.css";
 
 export function UpdateEntryCard(props: { entry: UpdateEntry }) {
   return (

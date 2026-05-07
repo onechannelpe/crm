@@ -1,33 +1,32 @@
-import type { UpdateFilter } from "~/lib/updates/types";
+import { For } from "solid-js";
 
-import styles from "./updates-page.module.css";
+import type { UpdateFilter, UpdateFilterOption } from "~/lib/updates";
 
-type UpdatesFilterOption = {
-  label: string;
-  value: UpdateFilter;
-};
+import styles from "./styles/filters.module.css";
 
 type UpdatesFiltersProps = {
   active: UpdateFilter;
   onChange: (value: UpdateFilter) => void;
-  options: readonly UpdatesFilterOption[];
+  options: readonly UpdateFilterOption[];
 };
 
 export function UpdatesFilters(props: UpdatesFiltersProps) {
   return (
     <nav class={styles.filterBar} aria-label="Update categories">
-      {props.options.map((option) => (
-        <button
-          classList={{
-            [styles.filterButton]: true,
-            [styles.filterButtonActive]: props.active === option.value,
-          }}
-          onClick={() => props.onChange(option.value)}
-          type="button"
-        >
-          {option.label}
-        </button>
-      ))}
+      <For each={props.options}>
+        {(option) => (
+          <button
+            classList={{
+              [styles.filterButton]: true,
+              [styles.filterButtonActive]: props.active === option.value,
+            }}
+            onClick={() => props.onChange(option.value)}
+            type="button"
+          >
+            {option.label}
+          </button>
+        )}
+      </For>
     </nav>
   );
 }
