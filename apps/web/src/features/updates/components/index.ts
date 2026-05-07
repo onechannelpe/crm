@@ -1,5 +1,5 @@
-export { UpdateEntryCard } from "./update-entry";
-export { UpdatesDivider } from "./updates-divider";
-export { UpdatesFilters } from "./updates-filters";
-export { UpdatesHero } from "./updates-hero";
-export { UpdatesEmptyMessage, UpdatesList } from "./updates-list";
+export { UpdateEntryCard } from "./entry";
+export { UpdatesDivider } from "./divider";
+export { UpdatesFilters } from "./filters";
+export { UpdatesHero } from "./hero";
+export { UpdatesEmptyMessage, UpdatesList } from "./list";
