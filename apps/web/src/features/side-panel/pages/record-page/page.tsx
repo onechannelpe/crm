@@ -29,12 +29,8 @@ const POLL_TIMEOUT_MS = 60_000;
 export function RecordPage() {
   const navigate = useNavigate();
   const addToFavorites = useAction(addLeadToFavoritesMutation);
-  const {
-    enqueueSuccessSnackBar,
-    enqueueErrorSnackBar,
-    enqueueInfoSnackBar,
-    enqueueWarningSnackBar,
-  } = useSnackBar();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar, enqueueInfoSnackBar } =
+    useSnackBar();
   const { currentUser } = useAuthenticatedSession();
   const { leadId, activeTab, setActiveTab } = useLeadRecordPageState();
   const canDeleteCompany = createMemo(() => currentUser().role === "superuser");

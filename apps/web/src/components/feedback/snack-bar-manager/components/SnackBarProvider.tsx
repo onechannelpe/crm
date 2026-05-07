@@ -2,7 +2,7 @@ import { createSignal, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 
 import { AnimatePresence } from "~/components/ui/animation/animate-presence";
-import { motion } from "~/components/ui/animation/motion";
+import { Animated } from "~/components/ui/animation/animated";
 
 import { SnackBarComponentInstanceContext } from "../contexts/SnackBarComponentInstanceContext";
 import { SnackBarContext } from "../hooks/useSnackBar";
@@ -144,7 +144,7 @@ export function SnackBarProvider(props: {
           >
             <AnimatePresence each={queue()} getKey={(snackBar) => snackBar.id}>
               {(snackBar) => (
-                <motion.div
+                <Animated
                   key={snackBar.id}
                   variants={snackBarMotionVariants}
                   initial="out"
@@ -153,7 +153,7 @@ export function SnackBarProvider(props: {
                   transition={{ duration: 0.5 }}
                 >
                   <SnackBar snackBar={snackBar} onClose={handleSnackBarClose} />
-                </motion.div>
+                </Animated>
               )}
             </AnimatePresence>
           </div>

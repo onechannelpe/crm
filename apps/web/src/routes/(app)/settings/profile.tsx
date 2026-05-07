@@ -24,12 +24,7 @@ function toMessage(error: unknown, fallback: string): string {
 
 export default function ProfilePage() {
   const { currentUser, updateCurrentUser } = useAuthenticatedSession();
-  const {
-    enqueueSuccessSnackBar,
-    enqueueErrorSnackBar,
-    enqueueInfoSnackBar,
-    enqueueWarningSnackBar,
-  } = useSnackBar();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const user = () => currentUser();
 
   const [profilePhone, setProfilePhone] = createSignal(user().phoneE164 || "");

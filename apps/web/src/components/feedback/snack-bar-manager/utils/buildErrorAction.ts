@@ -62,10 +62,11 @@ function readRecordIdFromNode(node: Record<string, unknown>): string | null {
 function readRecordIdFromConflictNode(
   node: Record<string, unknown>,
 ): string | null {
-  const conflictNode = (node.conflict ??
+  const conflictNode =
+    node.conflict ??
     node.conflictingRecord ??
     node.conflicting_record ??
-    node.conflicting) as unknown;
+    node.conflicting;
 
   if (conflictNode && typeof conflictNode === "object") {
     const fromNested = readStringKey(conflictNode as Record<string, unknown>, [

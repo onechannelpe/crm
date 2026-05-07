@@ -22,12 +22,7 @@ import linkStyles from "~/components/auth/flow/auth-links.module.css";
 export default function LoginVerifyPage() {
   useAuthPageView("login_verify");
   const [searchParams] = useSearchParams();
-  const {
-    enqueueSuccessSnackBar,
-    enqueueErrorSnackBar,
-    enqueueInfoSnackBar,
-    enqueueWarningSnackBar,
-  } = useSnackBar();
+  const { enqueueErrorSnackBar } = useSnackBar();
   const totpSubmission = useSubmission(totpLoginMutation);
   const [totpCode, setTotpCode] = createSignal("");
   const flowId = () => parseLoginFlowId(searchParams.flow);
