@@ -28,27 +28,17 @@ async function registerChannelAddresses(params: {
     updated_at: now,
   });
 
-  const existingWhatsApp =
-    await repos.userChannelAddresses.findByChannelAndAddress(
-      "whatsapp",
-      phoneE164,
-    );
-  if (existingWhatsApp && existingWhatsApp.user_id !== userId) {
+  const claimResult = await repos.userChannelAddresses.claimWhatsAppAddress({
+    userId,
+    address: phoneE164,
+    now,
+  });
+  if (claimResult.kind === "already_claimed") {
     return Err({
       code: "address_already_claimed",
-      ownerUserId: existingWhatsApp.user_id,
+      ownerUserId: claimResult.ownerUserId,
     });
   }
-
-  await repos.userChannelAddresses.upsert({
-    user_id: userId,
-    channel: "whatsapp",
-    address: phoneE164,
-    is_verified: 0,
-    verified_at: null,
-    created_at: now,
-    updated_at: now,
-  });
 
   return Ok(undefined);
 }

@@ -47,6 +47,72 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
         )
         .execute();
     },
+
+    async claimWhatsAppAddress(values: {
+      userId: number;
+      address: string;
+      now: number;
+    }): Promise<
+      { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: number }
+    > {
+      const updateResult = await db
+        .updateTable("user_channel_addresses")
+        .set({
+          address: values.address,
+          is_verified: 0,
+          verified_at: null,
+          updated_at: values.now,
+        })
+        .where("user_id", "=", values.userId)
+        .where("channel", "=", "whatsapp")
+        .where(({ not, exists, selectFrom }) =>
+          not(
+            exists(
+              selectFrom("user_channel_addresses")
+                .select("id")
+                .where("channel", "=", "whatsapp")
+                .where("address", "=", values.address)
+                .where("user_id", "!=", values.userId),
+            ),
+          ),
+        )
+        .executeTakeFirst();
+
+      if (Number(updateResult.numUpdatedRows ?? 0) > 0) {
+        return { kind: "claimed" };
+      }
+
+      await db
+        .insertInto("user_channel_addresses")
+        .values({
+          user_id: values.userId,
+          channel: "whatsapp",
+          address: values.address,
+          is_verified: 0,
+          verified_at: null,
+          created_at: values.now,
+          updated_at: values.now,
+        })
+        .onConflict((oc) => oc.doNothing())
+        .execute();
+
+      const owner = await db
+        .selectFrom("user_channel_addresses")
+        .select("user_id")
+        .where("channel", "=", "whatsapp")
+        .where("address", "=", values.address)
+        .executeTakeFirst();
+
+      if (!owner) {
+        throw new Error("WhatsApp address claim did not resolve an owner");
+      }
+
+      if (owner.user_id !== values.userId) {
+        return { kind: "already_claimed", ownerUserId: owner.user_id };
+      }
+
+      return { kind: "claimed" };
+    },
   };
 }
 
