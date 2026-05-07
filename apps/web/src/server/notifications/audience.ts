@@ -1,6 +1,5 @@
 import type { Kysely } from "kysely";
 
-import type { UserRoleValue } from "~/lib/db/types";
 import type { Database } from "~/lib/db/types";
 
 import type { NotificationAudience } from "./types";
@@ -17,7 +16,7 @@ export async function resolveAudience(
       .selectFrom("users")
       .select("id")
       .where("branch_id", "=", audience.branchId)
-      .where("role", "=", audience.role as UserRoleValue)
+      .where("role", "=", audience.role)
       .where("is_active", "=", 1)
       .execute();
     return rows.map((r) => r.id);
@@ -26,7 +25,7 @@ export async function resolveAudience(
     const rows = await db
       .selectFrom("users")
       .select("id")
-      .where("role", "=", audience.role as UserRoleValue)
+      .where("role", "=", audience.role)
       .where("is_active", "=", 1)
       .execute();
     return rows.map((r) => r.id);

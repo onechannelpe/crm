@@ -1,7 +1,8 @@
 import type { ColumnType, Generated } from "kysely";
 
 export type ExecutiveCategoryValue = "elite" | "corporativa";
-export type UserRoleValue =
+
+export type Role =
   | "executive"
   | "supervisor"
   | "back_office"
@@ -34,7 +35,7 @@ export interface UsersTable {
   avatar_updated_at: number | null;
   avatar_version: ColumnType<number, number | undefined, number>;
   onboarding_completed_at: number | null;
-  role: UserRoleValue;
+  role: Role;
   executive_category: ExecutiveCategoryValue | null;
   is_active: number;
   created_at: number;

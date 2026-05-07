@@ -1,6 +1,6 @@
 import type { Generated } from "kysely";
 
-import type { UserRoleValue } from "./identity.types";
+import type { Role } from "./identity.types";
 
 export interface ActionObservationsTable {
   id: Generated<number>;
@@ -10,7 +10,7 @@ export interface ActionObservationsTable {
   http_method: string | null;
   action_name: string;
   actor_user_id: number | null;
-  actor_role: UserRoleValue | null;
+  actor_role: Role | null;
   status: "ok" | "error";
   duration_ms: number;
   error_code: string | null;
