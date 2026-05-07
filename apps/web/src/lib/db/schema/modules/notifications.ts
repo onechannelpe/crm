@@ -50,36 +50,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("notification_campaigns")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("type", "varchar(32)", (col) => col.notNull())
-    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("audience_type", "varchar(20)", (col) => col.notNull())
-    .addColumn("audience_ref", "varchar(64)")
-    .addColumn("title", "varchar(255)")
-    .addColumn("body_text", "text", (col) => col.notNull())
-    .addColumn("created_by_user_id", "integer", (col) =>
-      col.references("users.id").onDelete("set null"),
-    )
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("scheduled_at", "integer")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("processed_at", "integer")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_campaigns_status_scheduled")
-    .on("notification_campaigns")
-    .columns(["status", "scheduled_at"])
-    .execute();
-
-  await db.schema
     .createTable("notification_recipients")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("campaign_id", "integer", (col) =>
-      col.references("notification_campaigns.id").onDelete("cascade"),
-    )
-    .addColumn("intent_id", "text")
+    .addColumn("intent_id", "text", (col) => col.notNull())
     .addColumn("user_id", "integer", (col) =>
       col.references("users.id").onDelete("set null"),
     )
@@ -93,12 +66,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_recipients_campaign_status")
-    .on("notification_recipients")
-    .columns(["campaign_id", "status"])
-    .execute();
-
-  await db.schema
     .createIndex("idx_notification_recipients_intent_channel_address")
     .on("notification_recipients")
     .columns(["intent_id", "channel", "address"])
@@ -106,53 +73,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("notification_jobs")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("recipient_id", "integer", (col) =>
-      col.references("notification_recipients.id").onDelete("cascade"),
-    )
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer", (col) => col.notNull())
-    .addColumn("lease_owner", "varchar(64)")
-    .addColumn("lease_until", "integer")
-    .addColumn("last_error", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_jobs_status_available")
-    .on("notification_jobs")
-    .columns(["status", "available_at"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_jobs_lease_until")
-    .on("notification_jobs")
-    .column("lease_until")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_jobs_recipient")
-    .on("notification_jobs")
-    .column("recipient_id")
-    .unique()
-    .execute();
-
-  await db.schema
     .createTable("notification_deliveries")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("recipient_id", "integer", (col) =>
-      col
-        .notNull()
-        .references("notification_recipients.id")
-        .onDelete("cascade"),
-    )
-    .addColumn("intent_id", "text")
-    .addColumn("recipient_channel", "varchar(20)")
-    .addColumn("recipient_address", "varchar(255)")
+    .addColumn("intent_id", "text", (col) => col.notNull())
+    .addColumn("recipient_channel", "varchar(20)", (col) => col.notNull())
+    .addColumn("recipient_address", "varchar(255)", (col) => col.notNull())
     .addColumn("provider", "varchar(32)", (col) => col.notNull())
     .addColumn("provider_message_id", "varchar(255)")
     .addColumn("status", "varchar(20)", (col) => col.notNull())
@@ -163,9 +88,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_deliveries_recipient_created")
+    .createIndex("idx_notification_deliveries_intent_created")
     .on("notification_deliveries")
-    .columns(["recipient_id", "created_at"])
+    .columns(["intent_id", "created_at"])
     .execute();
 
   await db.schema
@@ -252,47 +177,5 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_notification_intents_status")
     .on("notification_intents_outbox")
     .columns(["status", "available_at", "lease_until"])
-    .execute();
-
-  await db.schema
-    .createTable("workflow_notification_outbox")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("source_event_id", "text", (col) => col.notNull())
-    .addColumn("lead_id", "text", (col) =>
-      col.notNull().references("workflow_leads.id"),
-    )
-    .addColumn("executive_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("branch_id", "integer", (col) => col.references("branches.id"))
-    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("priority", "varchar(16)", (col) => col.notNull())
-    .addColumn("title", "varchar(255)", (col) => col.notNull())
-    .addColumn("body_text", "text", (col) => col.notNull())
-    .addColumn("action_url", "varchar(255)")
-    .addColumn("audience_kind", "varchar(24)", (col) => col.notNull())
-    .addColumn("audience_roles_csv", "varchar(255)")
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer", (col) => col.notNull())
-    .addColumn("lease_owner", "varchar(100)")
-    .addColumn("lease_until", "integer")
-    .addColumn("error_message", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("processed_at", "integer")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_notification_outbox_status")
-    .on("workflow_notification_outbox")
-    .columns(["status", "available_at", "lease_until"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_notification_outbox_source_event")
-    .on("workflow_notification_outbox")
-    .column("source_event_id")
-    .unique()
     .execute();
 }
