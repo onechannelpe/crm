@@ -1,4 +1,6 @@
 import { A } from "@solidjs/router";
+import { Show } from "solid-js";
+import type { JSX } from "solid-js";
 
 import CircleAlert from "~/components/icons/circle-alert";
 import CircleCheckBig from "~/components/icons/circle-check-big";
@@ -21,12 +23,20 @@ const variantStyles = {
 } satisfies Record<SnackBarVariant, string>;
 
 const titleByVariant = {
-  default: "Alert",
+  success: "Success",
   error: "Error",
   info: "Info",
-  success: "Success",
   warning: "Warning",
+  default: "Alert",
 } satisfies Record<SnackBarVariant, string>;
+
+const iconByVariant = {
+  success: (): JSX.Element => <CircleCheckBig size={16} />,
+  info: (): JSX.Element => <Info size={16} />,
+  error: (): JSX.Element => <CircleAlert size={16} />,
+  warning: (): JSX.Element => <CircleAlert size={16} />,
+  default: (): JSX.Element => <CircleAlert size={16} />,
+} satisfies Record<SnackBarVariant, () => JSX.Element>;
 
 interface SnackBarProps {
   item: SnackBarItem;
@@ -41,20 +51,6 @@ export function SnackBar(props: SnackBarProps) {
       ? 100
       : Math.max(0, (1 - props.item.elapsed / props.item.duration) * 100);
 
-  const resolvedIcon = () => {
-    if (props.item.icon) return props.item.icon;
-    switch (props.item.variant) {
-      case "success":
-        return <CircleCheckBig size={16} />;
-      case "info":
-        return <Info size={16} />;
-      case "error":
-      case "warning":
-      case "default":
-        return <CircleAlert size={16} />;
-    }
-  };
-
   return (
     <div
       class={cn(styles.snackBar, variantStyles[props.item.variant])}
@@ -67,20 +63,24 @@ export function SnackBar(props: SnackBarProps) {
     >
       <ProgressBar value={progressValue()} />
       <div class={styles.header}>
-        <div class={styles.icon}>{resolvedIcon()}</div>
+        <div class={styles.icon}>
+          {props.item.icon ?? iconByVariant[props.item.variant]()}
+        </div>
         <p class={styles.message}>{props.item.message}</p>
         <div class={styles.actions}>
-          {props.item.onCancel && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              class={styles.cancel}
-              onClick={props.item.onCancel}
-            >
-              Cancelar
-            </Button>
-          )}
+          <Show when={props.item.onCancel}>
+            {(onCancel) => (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                class={styles.cancel}
+                onClick={onCancel()}
+              >
+                Cancelar
+              </Button>
+            )}
+          </Show>
           <Button
             type="button"
             variant="ghost"
@@ -93,20 +93,22 @@ export function SnackBar(props: SnackBarProps) {
         </div>
       </div>
 
-      {props.item.detailedMessage && (
-        <p class={styles.details}>{props.item.detailedMessage}</p>
-      )}
+      <Show when={props.item.detailedMessage}>
+        {(message) => <p class={styles.details}>{message()}</p>}
+      </Show>
 
-      {props.item.buttonLabel &&
-        (props.item.buttonOnClick || props.item.buttonTo) && (
-          <div class={styles.bottomActionContainer}>
-            <hr class={styles.separator} />
-            <div class={styles.bottomAction}>
-              {props.item.buttonTo ? (
-                <A href={props.item.buttonTo} class={styles.actionLink}>
-                  {props.item.buttonLabel}
-                </A>
-              ) : (
+      <Show
+        when={
+          props.item.buttonLabel &&
+          (props.item.buttonOnClick || props.item.buttonTo)
+        }
+      >
+        <div class={styles.bottomActionContainer}>
+          <hr class={styles.separator} />
+          <div class={styles.bottomAction}>
+            <Show
+              when={props.item.buttonTo}
+              fallback={
                 <Button
                   type="button"
                   variant="ghost"
@@ -116,10 +118,17 @@ export function SnackBar(props: SnackBarProps) {
                 >
                   {props.item.buttonLabel}
                 </Button>
+              }
+            >
+              {(href) => (
+                <A href={href()} class={styles.actionLink}>
+                  {props.item.buttonLabel}
+                </A>
               )}
-            </div>
+            </Show>
           </div>
-        )}
+        </div>
+      </Show>
     </div>
   );
 }
