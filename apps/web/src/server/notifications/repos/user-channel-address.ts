@@ -65,6 +65,7 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
         })
         .where("user_id", "=", values.userId)
         .where("channel", "=", "whatsapp")
+        .where("address", "!=", values.address)
         .where((eb) =>
           eb.not(
             eb.exists(
