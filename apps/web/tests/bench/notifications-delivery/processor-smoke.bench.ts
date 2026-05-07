@@ -18,6 +18,7 @@ describe("notifications delivery processor smoke benchmark", () => {
   const cursor = { value: 0 };
   let runOnce: ((workerId: string, limit?: number) => Promise<void>) | null =
     null;
+  const originalLogLevel = process.env.LOG_LEVEL;
 
   const messaging: Pick<
     MessagingGateway,
@@ -56,6 +57,7 @@ describe("notifications delivery processor smoke benchmark", () => {
   });
 
   afterAll(async () => {
+    process.env.LOG_LEVEL = originalLogLevel;
     await db.teardown();
   });
 
