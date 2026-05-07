@@ -85,9 +85,6 @@ export async function completeAccountOnboardingWithRepos(
     });
   }
 
-  await repos.users.completeOnboarding(user.id, {
-    phone_e164: input.phoneE164,
-    completedAt,
-  });
+  await repos.users.completeOnboarding(user.id, { completedAt });
   return Ok(undefined);
 }

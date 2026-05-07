@@ -32,7 +32,6 @@ export async function seedLeadsRequestFixtures(
     names: `Bench Leads ${USER_ID_START + index}`,
     first_surname: "User",
     second_surname: "Bench",
-    phone_e164: `+5199033${String(index).padStart(4, "0")}`,
     onboarding_completed_at: BENCH_NOW,
     role: "executive" as const,
     executive_category: "elite" as const,

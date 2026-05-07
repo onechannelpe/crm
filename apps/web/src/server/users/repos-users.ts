@@ -147,7 +147,6 @@ export function createUsersRepo(db: DatabaseExecutor) {
       first_surname: string;
       second_surname: string;
       expires_at?: number | null;
-      phone_e164?: string | null;
       role: UserRole;
       executive_category?: ExecutiveCategoryValue | null;
       is_active: number;
@@ -159,7 +158,6 @@ export function createUsersRepo(db: DatabaseExecutor) {
           expires_at: values.expires_at ?? null,
           expiry_notified_at: null,
           is_active: values.is_active,
-          phone_e164: values.phone_e164 ?? null,
           executive_category: values.executive_category ?? null,
           onboarding_completed_at: null,
           created_at: Date.now(),
@@ -203,24 +201,10 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    completeOnboarding(
-      id: number,
-      values: { phone_e164: string; completedAt: number },
-    ) {
+    completeOnboarding(id: number, values: { completedAt: number }) {
       return db
         .updateTable("users")
-        .set({
-          phone_e164: values.phone_e164,
-          onboarding_completed_at: values.completedAt,
-        })
-        .where("id", "=", id)
-        .execute();
-    },
-
-    updatePhone(id: number, phone: string) {
-      return db
-        .updateTable("users")
-        .set({ phone_e164: phone })
+        .set({ onboarding_completed_at: values.completedAt })
         .where("id", "=", id)
         .execute();
     },

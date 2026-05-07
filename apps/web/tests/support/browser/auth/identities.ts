@@ -124,14 +124,12 @@ export async function ensureBrowserUser(
     names: generated.names,
     first_surname: generated.firstSurname,
     second_surname: generated.secondSurname,
-    phone_e164: generated.phone,
     role: options.role,
     is_active: options.active === false ? 0 : 1,
   });
 
   if (options.onboardingCompleted !== false) {
     await runtime.repos.users.completeOnboarding(userId, {
-      phone_e164: generated.phone,
       completedAt: Date.now(),
     });
   }

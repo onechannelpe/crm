@@ -1,6 +1,7 @@
 import { deleteSessionCookie } from "~/lib/auth/session/cookies";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
+import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
@@ -26,6 +27,7 @@ export function createAuthSessionReadContext(deps: AuthSessionRuntimeDeps) {
       branchSupervisors: createBranchSupervisorsRepo(executor),
       passkeys: createPasskeysRepo(executor),
       userTotpFactors: createUserTotpFactorsRepo(executor),
+      userChannelAddresses: createUserChannelAddressRepo(executor),
     },
   };
 }

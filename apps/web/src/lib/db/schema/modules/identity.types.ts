@@ -29,7 +29,6 @@ export interface UsersTable {
   second_surname: string;
   expires_at: number | null;
   expiry_notified_at: number | null;
-  phone_e164: string | null;
   avatar_storage_key: string | null;
   avatar_mime_type: string | null;
   avatar_updated_at: number | null;

@@ -30,7 +30,6 @@ export async function seedAuthLoginFixtures(
       names: `Bench Auth ${id}`,
       first_surname: "User",
       second_surname: "Bench",
-      phone_e164: `+5199001${String(index).padStart(4, "0")}`,
       onboarding_completed_at: BENCH_NOW,
       role: "executive" as const,
       executive_category: "elite" as const,
