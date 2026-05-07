@@ -1,74 +1,100 @@
-import {
-  children,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type JSX,
-} from "solid-js";
+import { For, createEffect, createSignal, type JSX } from "solid-js";
 
-export interface AnimatePresenceProps {
-  children: JSX.Element;
-  mode?: "sync" | "wait";
-  exitDurationMs?: number;
-  onExitComplete?: () => void;
+interface PresenceEntry<T> {
+  key: string;
+  item: T;
+  isPresent: boolean;
 }
 
-export function AnimatePresence(props: AnimatePresenceProps) {
-  const resolvedChildren = children(() => props.children);
-  type PresenceChild = ReturnType<typeof resolvedChildren.toArray>[number];
+interface RenderPresenceState {
+  isPresent: boolean;
+  safeToRemove: () => void;
+}
 
-  const [renderedChildren, setRenderedChildren] = createSignal<PresenceChild[]>(
-    resolvedChildren.toArray(),
-  );
-  let exitTimer: ReturnType<typeof setTimeout> | undefined;
+export interface AnimatePresenceProps<T> {
+  each: readonly T[];
+  getKey: (item: T) => string;
+  mode?: "sync" | "wait";
+  onExitComplete?: () => void;
+  children: (item: T, presence: RenderPresenceState) => JSX.Element;
+}
+
+export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
+  const [rendered, setRendered] = createSignal<PresenceEntry<T>[]>([]);
+  const [pending, setPending] = createSignal<PresenceEntry<T>[] | null>(null);
 
   createEffect(() => {
-    const nextChildren = resolvedChildren.toArray();
-    const currentChildren = renderedChildren();
-    const removedChildren = currentChildren.filter(
-      (child) => !nextChildren.includes(child),
-    );
+    const nextItems = props.each;
+    const nextKeys = new Set(nextItems.map((item) => props.getKey(item)));
+    const current = rendered();
 
-    if (removedChildren.length === 0) {
-      setRenderedChildren(nextChildren);
+    const nextPresentEntries = nextItems.map((item) => ({
+      key: props.getKey(item),
+      item,
+      isPresent: true,
+    }));
+
+    const exitingEntries = current
+      .filter((entry) => !nextKeys.has(entry.key))
+      .map((entry) => ({ ...entry, isPresent: false }));
+
+    const hasExiting = exitingEntries.length > 0;
+
+    if (props.mode === "wait" && hasExiting) {
+      setPending(nextPresentEntries);
+      setRendered(exitingEntries);
       return;
     }
 
-    const nextRendered =
-      props.mode === "wait"
-        ? removedChildren
-        : mergeWithExitingChildren(
-            nextChildren,
-            currentChildren,
-            removedChildren,
-          );
-
-    setRenderedChildren(nextRendered);
-    clearTimeout(exitTimer);
-
-    exitTimer = setTimeout(() => {
-      setRenderedChildren((activeChildren) =>
-        activeChildren.filter((child) => !removedChildren.includes(child)),
-      );
-      props.onExitComplete?.();
-    }, props.exitDurationMs ?? 200);
+    const merged = mergeWithExitingEntries(nextPresentEntries, current, nextKeys);
+    setPending(null);
+    setRendered(merged);
   });
 
-  onCleanup(() => clearTimeout(exitTimer));
+  const safeToRemove = (key: string) => {
+    const current = rendered();
+    const next = current.filter((entry) => !(entry.key === key && !entry.isPresent));
 
-  return <>{renderedChildren()}</>;
+    if (next.length !== current.length) {
+      setRendered(next);
+    }
+
+    const stillExiting = next.some((entry) => !entry.isPresent);
+    if (stillExiting) return;
+
+    const pendingEntries = pending();
+    if (pendingEntries) {
+      setPending(null);
+      setRendered(pendingEntries);
+    }
+
+    props.onExitComplete?.();
+  };
+
+  return (
+    <For each={rendered()}>
+      {(entry) =>
+        props.children(entry.item, {
+          isPresent: entry.isPresent,
+          safeToRemove: () => safeToRemove(entry.key),
+        })
+      }
+    </For>
+  );
 }
 
-function mergeWithExitingChildren<T>(
-  nextChildren: T[],
-  currentChildren: T[],
-  removedChildren: T[],
-): T[] {
-  const mergedChildren = [...nextChildren];
-  currentChildren.forEach((child, index) => {
-    if (removedChildren.includes(child)) {
-      mergedChildren.splice(index, 0, child);
+function mergeWithExitingEntries<T>(
+  nextPresentEntries: PresenceEntry<T>[],
+  current: PresenceEntry<T>[],
+  nextKeys: Set<string>,
+): PresenceEntry<T>[] {
+  const merged = [...nextPresentEntries];
+
+  current.forEach((entry, index) => {
+    if (!nextKeys.has(entry.key)) {
+      merged.splice(index, 0, { ...entry, isPresent: false });
     }
   });
-  return mergedChildren;
+
+  return merged;
 }

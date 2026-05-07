@@ -1,3 +1,5 @@
+import { createEffect, onCleanup } from "solid-js";
+
 import CircleAlert from "~/components/icons/circle-alert";
 import CircleCheckBig from "~/components/icons/circle-check-big";
 import Info from "~/components/icons/info";
@@ -11,12 +13,68 @@ import styles from "./SnackBar.module.css";
 
 interface SnackBarProps {
   snackBar: SnackBarInternalItem;
+  isPresent: boolean;
+  onSafeToRemove: () => void;
   onDismiss: (id: string) => void;
   onPause: (id: string) => void;
   onResume: (id: string) => void;
 }
 
 export function SnackBar(props: SnackBarProps) {
+  let el: HTMLDivElement | undefined;
+  let currentAnimation: Animation | undefined;
+
+  const cancelCurrentAnimation = () => {
+    currentAnimation?.cancel();
+    currentAnimation = undefined;
+  };
+
+  createEffect(() => {
+    if (!el || typeof window === "undefined") return;
+
+    cancelCurrentAnimation();
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (!props.isPresent) props.onSafeToRemove();
+      return;
+    }
+
+    if (props.isPresent) {
+      currentAnimation = el.animate(
+        [
+          { opacity: 0, transform: "translateY(8px) scale(0.98)" },
+          { opacity: 1, transform: "translateY(0) scale(1)" },
+        ],
+        {
+          duration: 220,
+          easing: "ease-out",
+          fill: "both",
+        },
+      );
+      currentAnimation.onfinish = () => {
+        if (!el) return;
+        el.style.opacity = "";
+        el.style.transform = "";
+      };
+      return;
+    }
+
+    currentAnimation = el.animate(
+      [
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+        { opacity: 0, transform: "translateY(-6px) scale(0.98)" },
+      ],
+      {
+        duration: 180,
+        easing: "ease-out",
+        fill: "both",
+      },
+    );
+    currentAnimation.onfinish = () => props.onSafeToRemove();
+  });
+
+  onCleanup(cancelCurrentAnimation);
+
   const progressWidth =
     props.snackBar.duration <= 0
       ? "100%"
@@ -24,6 +82,9 @@ export function SnackBar(props: SnackBarProps) {
 
   return (
     <div
+      ref={(node) => {
+        el = node;
+      }}
       class={cn(
         styles.snackBar,
         props.snackBar.variant === "success"

@@ -1,4 +1,4 @@
-import { For, onCleanup, onMount, type JSX } from "solid-js";
+import { onCleanup, onMount, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Portal } from "solid-js/web";
 
@@ -129,17 +129,17 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
         {props.children}
         <Portal>
           <div class={styles.container} style={{ "z-index": DS_Z_INDEX.toast }}>
-            <AnimatePresence exitDurationMs={200}>
-              <For each={state.queue}>
-                {(snackBar) => (
-                  <SnackBar
-                    snackBar={snackBar}
-                    onDismiss={dismissSnackBar}
-                    onPause={pauseSnackBar}
-                    onResume={resumeSnackBar}
-                  />
-                )}
-              </For>
+            <AnimatePresence each={state.queue} getKey={(snackBar) => snackBar.id}>
+              {(snackBar, presence) => (
+                <SnackBar
+                  snackBar={snackBar}
+                  isPresent={presence.isPresent}
+                  onSafeToRemove={presence.safeToRemove}
+                  onDismiss={dismissSnackBar}
+                  onPause={pauseSnackBar}
+                  onResume={resumeSnackBar}
+                />
+              )}
             </AnimatePresence>
           </div>
         </Portal>
