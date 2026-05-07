@@ -17,7 +17,7 @@ describe("import outbox planning", () => {
     await runtime.dispose();
   });
 
-  it("plans both outbox streams for matching import mutations", async () => {
+  it("plans unified notification outbox entries for matching import mutations", async () => {
     const scenario = createWorkflowScenario(runtime);
     const leadOne = await scenario.lead.assignedTo("execOne", {
       key: "planning-one",
@@ -46,7 +46,6 @@ describe("import outbox planning", () => {
     expect(applied.failed).toBe(0);
 
     const pending = await scenario.outbox.counts("pending");
-    expect(pending.needsExecutive).toBe(1);
-    expect(pending.readyForQuotation).toBe(1);
+    expect(pending.notifications).toBe(2);
   });
 });
