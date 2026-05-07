@@ -2,6 +2,7 @@ import { For, onCleanup, onMount, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Portal } from "solid-js/web";
 
+import { AnimatePresence } from "~/components/ui/animation/animate-presence";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 
 import { SnackBarComponentInstanceContext } from "../contexts/SnackBarComponentInstanceContext";
@@ -128,16 +129,18 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
         {props.children}
         <Portal>
           <div class={styles.container} style={{ "z-index": DS_Z_INDEX.toast }}>
-            <For each={state.queue}>
-              {(snackBar) => (
-                <SnackBar
-                  snackBar={snackBar}
-                  onDismiss={dismissSnackBar}
-                  onPause={pauseSnackBar}
-                  onResume={resumeSnackBar}
-                />
-              )}
-            </For>
+            <AnimatePresence exitDurationMs={200}>
+              <For each={state.queue}>
+                {(snackBar) => (
+                  <SnackBar
+                    snackBar={snackBar}
+                    onDismiss={dismissSnackBar}
+                    onPause={pauseSnackBar}
+                    onResume={resumeSnackBar}
+                  />
+                )}
+              </For>
+            </AnimatePresence>
           </div>
         </Portal>
       </SnackBarContext.Provider>
