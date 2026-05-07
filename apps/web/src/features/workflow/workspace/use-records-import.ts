@@ -78,14 +78,11 @@ export function useRecordsImport() {
     enqueueSuccessSnackBar,
     enqueueErrorSnackBar,
     enqueueWarningSnackBar,
-    updateSnackBar,
-    dismissSnackBar,
   } = useSnackBar();
 
   let fileInputRef: HTMLInputElement | undefined;
   let activeJobId: string | null = null;
   let activeImportType: RecordImportType | null = null;
-  let progressToastId: string | null = null;
   let socket: WebSocket | null = null;
   let pollTimer: number | null = null;
   let wsReconnectTimer: number | null = null;
@@ -139,40 +136,23 @@ export function useRecordsImport() {
     }
   }
 
-  function finalizeProgressToast() {
-    if (progressToastId) {
-      dismissSnackBar(progressToastId);
-      progressToastId = null;
-    }
-  }
-
   function completeProgressToast(event: {
     importType: RecordImportType;
     rowsApplied: number;
     rowsFailed: number;
     rowsTotal: number;
   }) {
-    if (progressToastId) {
-      updateSnackBar(progressToastId, {
-        variant: event.rowsFailed > 0 ? "warning" : "success",
-        message: buildCompletedMessage(event),
-        duration: IMPORT_COMPLETED_DURATION_MS,
-      });
-      progressToastId = null;
-      return;
-    }
-
     if (event.rowsFailed > 0) {
       enqueueWarningSnackBar({
         message: buildCompletedMessage(event),
-        duration: IMPORT_COMPLETED_DURATION_MS,
+        options: { duration: IMPORT_COMPLETED_DURATION_MS },
       });
       return;
     }
 
     enqueueSuccessSnackBar({
       message: buildCompletedMessage(event),
-      duration: IMPORT_COMPLETED_DURATION_MS,
+      options: { duration: IMPORT_COMPLETED_DURATION_MS },
     });
   }
 
@@ -197,17 +177,6 @@ export function useRecordsImport() {
       const rowsFailed = job.rows_failed ?? 0;
       const rowsTotal = job.rows_total ?? 0;
 
-      if (progressToastId) {
-        updateSnackBar(progressToastId, {
-          message: buildProgressMessage({
-            importType: activeImportType,
-            rowsApplied,
-            rowsFailed,
-            rowsTotal,
-          }),
-        });
-      }
-
       if (job.status === "COMPLETED") {
         completeProgressToast({
           importType: activeImportType,
@@ -220,7 +189,6 @@ export function useRecordsImport() {
       }
 
       if (job.status === "FAILED") {
-        finalizeProgressToast();
         enqueueErrorSnackBar({
           message: job.error_message ?? "La importación falló",
         });
@@ -267,12 +235,6 @@ export function useRecordsImport() {
       return;
     }
 
-    if (progressToastId) {
-      updateSnackBar(progressToastId, {
-        message: buildProgressMessage(event),
-      });
-    }
-
     if (event.status === "COMPLETED") {
       completeProgressToast({
         importType: event.importType,
@@ -285,7 +247,6 @@ export function useRecordsImport() {
     }
 
     if (event.status === "FAILED") {
-      finalizeProgressToast();
       enqueueErrorSnackBar({
         message: event.errorMessage ?? "La importación falló",
       });
@@ -363,15 +324,14 @@ export function useRecordsImport() {
       activeJobId = result.jobId;
       activeImportType = result.importType;
 
-      finalizeProgressToast();
-      progressToastId = enqueueInfoSnackBar({
+      enqueueInfoSnackBar({
         message: buildProgressMessage({
           importType: result.importType,
           rowsApplied: 0,
           rowsFailed: 0,
           rowsTotal: result.rowsTotal,
         }),
-        duration: IMPORT_PROGRESS_DURATION_MS,
+        options: { duration: IMPORT_PROGRESS_DURATION_MS },
       });
 
       startPolling();

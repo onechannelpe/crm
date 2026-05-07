@@ -91,6 +91,22 @@
   margin-left: var(--spacing-6);
 }
 
+.actionLink {
+  color: var(--foreground-tertiary);
+  display: block;
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-1);
+  max-width: 200px;
+  overflow: hidden;
+  padding-left: var(--spacing-6);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actionLink:hover {
+  color: var(--foreground-secondary);
+}
+
 .dismiss {
   width: 24px;
   height: 24px;

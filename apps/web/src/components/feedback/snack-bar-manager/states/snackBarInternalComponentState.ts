@@ -1,3 +1,5 @@
+import type { JSX } from "solid-js";
+
 export type SnackBarVariant =
   | "default"
   | "error"
@@ -5,33 +7,36 @@ export type SnackBarVariant =
   | "info"
   | "warning";
 
-export interface SnackBarAction {
-  label: string;
-  onClick?: () => void;
-}
-
 export interface SnackBarOptions {
-  message: string;
-  details?: string;
-  duration?: number;
-  dedupeKey?: string;
-  action?: SnackBarAction;
-}
-
-export interface SnackBarInternalItem extends SnackBarOptions {
   id: string;
   variant: SnackBarVariant;
+  message: string;
+  detailedMessage?: string;
+  duration?: number;
+  dedupeKey?: string;
+  actionText?: string;
+  actionOnClick?: () => void;
+  actionTo?: string;
+  onCancel?: () => void;
+  icon?: JSX.Element;
+  progress?: number;
+  role?: "alert" | "status";
+}
+
+export interface SnackBarInternalItem extends Omit<
+  SnackBarOptions,
+  "duration"
+> {
   duration: number;
-  remaining: number;
-  paused: boolean;
-  createdAt: number;
 }
 
 export interface SnackBarInternalState {
+  maxQueue: number;
   queue: SnackBarInternalItem[];
 }
 
 export function enqueueWithDedupe(
+  maxQueue: number,
   queue: SnackBarInternalItem[],
   item: SnackBarInternalItem,
 ): SnackBarInternalItem[] {
@@ -43,6 +48,9 @@ export function enqueueWithDedupe(
       return queue;
     }
   }
+  if (queue.length >= maxQueue) {
+    return [...queue.slice(1), item];
+  }
   return [...queue, item];
 }
 
@@ -51,31 +59,4 @@ export function removeSnackBarById(
   id: string,
 ): SnackBarInternalItem[] {
   return queue.filter((item) => item.id !== id);
-}
-
-export function tickSnackBarTimers(
-  queue: SnackBarInternalItem[],
-  deltaMs: number,
-): SnackBarInternalItem[] {
-  const nextQueue = queue
-    .map((item) => {
-      if (item.paused || item.duration <= 0) {
-        return item;
-      }
-      return {
-        ...item,
-        remaining: Math.max(0, item.remaining - deltaMs),
-      };
-    })
-    .filter((item) => item.duration <= 0 || item.remaining > 0);
-
-  return nextQueue;
-}
-
-export function setSnackBarPaused(
-  queue: SnackBarInternalItem[],
-  id: string,
-  paused: boolean,
-): SnackBarInternalItem[] {
-  return queue.map((item) => (item.id === id ? { ...item, paused } : item));
 }

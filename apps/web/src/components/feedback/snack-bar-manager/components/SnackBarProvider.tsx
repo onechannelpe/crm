@@ -1,4 +1,4 @@
-import { onCleanup, onMount, type JSX } from "solid-js";
+import { type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Portal } from "solid-js/web";
 
@@ -8,141 +8,134 @@ import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { SnackBarComponentInstanceContext } from "../contexts/SnackBarComponentInstanceContext";
 import { SnackBarContext } from "../hooks/useSnackBar";
 import {
+  type SnackBarOptions,
   enqueueWithDedupe,
   removeSnackBarById,
-  setSnackBarPaused,
-  tickSnackBarTimers,
-  type SnackBarInternalItem,
   type SnackBarInternalState,
-  type SnackBarOptions,
-  type SnackBarVariant,
 } from "../states/snackBarInternalComponentState";
+import { buildErrorAction } from "../utils/buildErrorAction";
 import { SnackBar } from "./SnackBar";
 
 import styles from "./SnackBarProvider.module.css";
 
 const DEFAULT_DURATION_MS = 5000;
-const TICK_MS = 100;
+const DEFAULT_MAX_QUEUE = 3;
 
-export function SnackBarProvider(props: { children: JSX.Element }) {
-  const [state, setState] = createStore<SnackBarInternalState>({ queue: [] });
+export function SnackBarProvider(props: {
+  children: JSX.Element;
+  instanceId?: string;
+}) {
+  const [state, setState] = createStore<SnackBarInternalState>({
+    maxQueue: DEFAULT_MAX_QUEUE,
+    queue: [],
+  });
   let snackBarCounter = 0;
 
-  const enqueueSnackBar = (
-    variant: SnackBarVariant,
-    options: SnackBarOptions,
-  ): string => {
-    snackBarCounter += 1;
-    const duration = options.duration ?? DEFAULT_DURATION_MS;
-    const id = `snack-bar-${Date.now()}-${snackBarCounter}`;
-
-    const item: SnackBarInternalItem = {
-      id,
-      variant,
-      message: options.message,
-      details: options.details,
-      dedupeKey: options.dedupeKey,
-      action: options.action,
-      duration,
-      remaining: duration,
-      paused: false,
-      createdAt: Date.now(),
-    };
-
-    setState("queue", (queue) => enqueueWithDedupe(queue, item));
-    return id;
-  };
-
-  const enqueueSuccessSnackBar = (options: SnackBarOptions): string =>
-    enqueueSnackBar("success", options);
-
-  const enqueueErrorSnackBar = (options: SnackBarOptions): string =>
-    enqueueSnackBar("error", options);
-
-  const enqueueInfoSnackBar = (options: SnackBarOptions): string =>
-    enqueueSnackBar("info", options);
-
-  const enqueueWarningSnackBar = (options: SnackBarOptions): string =>
-    enqueueSnackBar("warning", options);
-
-  const dismissSnackBar = (id: string) => {
+  const handleSnackBarClose = (id: string) => {
     setState("queue", (queue) => removeSnackBarById(queue, id));
   };
 
-  const updateSnackBar = (
-    id: string,
-    patch: Partial<SnackBarOptions> & {
-      variant?: SnackBarVariant;
-      remaining?: number;
-    },
-  ) => {
-    setState(
-      "queue",
-      (item) => item.id === id,
-      (item) => {
-        const duration = patch.duration ?? item.duration;
-        const remaining =
-          patch.duration !== undefined ? duration : item.remaining;
-        return {
-          ...item,
-          variant: patch.variant ?? item.variant,
-          ...patch,
-          duration,
-          remaining,
-        };
-      },
+  const enqueueSnackBar = (
+    message: string,
+    variant: SnackBarOptions["variant"],
+    options?: Omit<SnackBarOptions, "id" | "message" | "variant">,
+  ): string => {
+    snackBarCounter += 1;
+    const duration = options?.duration ?? DEFAULT_DURATION_MS;
+    const id = `snack-bar-${Date.now()}-${snackBarCounter}`;
+
+    const item = {
+      id,
+      variant,
+      message,
+      detailedMessage: options?.detailedMessage,
+      dedupeKey: options?.dedupeKey,
+      actionText: options?.actionText,
+      actionOnClick: options?.actionOnClick,
+      actionTo: options?.actionTo,
+      onCancel: options?.onCancel,
+      icon: options?.icon,
+      progress: options?.progress,
+      role: options?.role,
+      duration,
+    };
+
+    setState("queue", (queue) =>
+      enqueueWithDedupe(state.maxQueue, queue, item),
+    );
+    return id;
+  };
+
+  const enqueueSuccessSnackBar = ({
+    message,
+    options,
+  }: {
+    message: string;
+    options?: Omit<SnackBarOptions, "id" | "message" | "variant">;
+  }): string => enqueueSnackBar(message, "success", options);
+
+  const enqueueErrorSnackBar = ({
+    apolloError,
+    message,
+    options,
+  }: {
+    apolloError?: unknown;
+    message?: string;
+    options?: Omit<SnackBarOptions, "id" | "message" | "variant">;
+  }): string => {
+    if (
+      typeof apolloError === "object" &&
+      apolloError !== null &&
+      "name" in apolloError &&
+      (apolloError as { name?: string }).name === "AbortError"
+    ) {
+      return "";
+    }
+    const errorAction = buildErrorAction({ apolloError });
+    return enqueueSnackBar(
+      message ?? "An error occurred.",
+      "error",
+      errorAction ? { ...options, ...errorAction } : options,
     );
   };
 
-  const pauseSnackBar = (id: string) => {
-    setState("queue", (queue) => setSnackBarPaused(queue, id, true));
-  };
+  const enqueueInfoSnackBar = ({
+    message,
+    options,
+  }: {
+    message: string;
+    options?: Omit<SnackBarOptions, "id" | "message" | "variant">;
+  }): string => enqueueSnackBar(message, "info", options);
 
-  const resumeSnackBar = (id: string) => {
-    setState("queue", (queue) => setSnackBarPaused(queue, id, false));
-  };
-
-  onMount(() => {
-    const interval = setInterval(() => {
-      setState("queue", (queue) => tickSnackBarTimers(queue, TICK_MS));
-    }, TICK_MS);
-
-    onCleanup(() => clearInterval(interval));
-  });
+  const enqueueWarningSnackBar = ({
+    message,
+    options,
+  }: {
+    message: string;
+    options?: Omit<SnackBarOptions, "id" | "message" | "variant">;
+  }): string => enqueueSnackBar(message, "warning", options);
 
   return (
-    <SnackBarComponentInstanceContext.Provider value="default">
+    <SnackBarComponentInstanceContext.Provider
+      value={props.instanceId ?? "default"}
+    >
       <SnackBarContext.Provider
         value={{
           snackBars: state.queue,
-          enqueueSnackBar,
+          handleSnackBarClose,
           enqueueSuccessSnackBar,
           enqueueErrorSnackBar,
           enqueueInfoSnackBar,
           enqueueWarningSnackBar,
-          dismissSnackBar,
-          updateSnackBar,
-          pauseSnackBar,
-          resumeSnackBar,
         }}
       >
         {props.children}
         <Portal>
           <div class={styles.container} style={{ "z-index": DS_Z_INDEX.toast }}>
-            <AnimatePresence
-              each={state.queue}
-              getKey={(snackBar) => snackBar.id}
-            >
-              {(snackBar, presence) => (
-                <SnackBar
-                  snackBar={snackBar}
-                  isPresent={presence.isPresent}
-                  onSafeToRemove={presence.safeToRemove}
-                  onDismiss={dismissSnackBar}
-                  onPause={pauseSnackBar}
-                  onResume={resumeSnackBar}
-                />
-              )}
+            <AnimatePresence>
+              {state.queue.map((snackBar) => (
+                <SnackBar snackBar={snackBar} onClose={handleSnackBarClose} />
+              ))}
             </AnimatePresence>
           </div>
         </Portal>

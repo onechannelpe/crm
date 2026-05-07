@@ -2,12 +2,14 @@ import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
 interface UseProgressAnimationOptions {
   durationMs: number;
+  initialValue?: number;
+  finalValue?: number;
   autoPlay?: boolean;
   onComplete?: () => void;
 }
 
 interface ProgressAnimationState {
-  progress: () => number;
+  value: () => number;
   remainingMs: () => number;
   isPlaying: () => boolean;
   play: () => void;
@@ -18,6 +20,9 @@ interface ProgressAnimationState {
 export function useProgressAnimation(
   options: UseProgressAnimationOptions,
 ): ProgressAnimationState {
+  const initialValue = options.initialValue ?? 100;
+  const finalValue = options.finalValue ?? 0;
+  const valueDelta = finalValue - initialValue;
   const [elapsedMs, setElapsedMs] = createSignal(0);
   const [isPlaying, setIsPlaying] = createSignal(options.autoPlay ?? true);
 
@@ -33,6 +38,7 @@ export function useProgressAnimation(
     }
     return Math.min(1, elapsedMs() / durationMs);
   });
+  const value = createMemo(() => initialValue + valueDelta * progress());
 
   const remainingMs = createMemo(() => Math.max(0, durationMs - elapsedMs()));
 
@@ -124,7 +130,7 @@ export function useProgressAnimation(
   });
 
   return {
-    progress,
+    value,
     remainingMs,
     isPlaying,
     play,

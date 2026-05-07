@@ -1,26 +1,28 @@
+import { A } from "@solidjs/router";
 import { createEffect, onCleanup } from "solid-js";
 
 import CircleAlert from "~/components/icons/circle-alert";
 import CircleCheckBig from "~/components/icons/circle-check-big";
 import Info from "~/components/icons/info";
 import X from "~/components/icons/x";
+import { usePresence } from "~/components/ui/animation/use-presence";
+import { ProgressBar } from "~/components/ui/feedback/progress-bar";
+import { useProgressAnimation } from "~/components/ui/feedback/use-progress-animation";
 import { Button } from "~/components/ui/input/button";
 import { cn } from "~/lib/utils";
 
 import type { SnackBarInternalItem } from "../states/snackBarInternalComponentState";
+import { sanitizeMessageToRenderInSnackbar } from "../utils/sanitizeMessageToRenderInSnackbar";
 
 import styles from "./SnackBar.module.css";
 
 interface SnackBarProps {
   snackBar: SnackBarInternalItem;
-  isPresent: boolean;
-  onSafeToRemove: () => void;
-  onDismiss: (id: string) => void;
-  onPause: (id: string) => void;
-  onResume: (id: string) => void;
+  onClose: (id: string) => void;
 }
 
 export function SnackBar(props: SnackBarProps) {
+  const [isPresent, safeToRemove] = usePresence();
   let el: HTMLDivElement | undefined;
   let currentAnimation: Animation | undefined;
 
@@ -35,11 +37,11 @@ export function SnackBar(props: SnackBarProps) {
     cancelCurrentAnimation();
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      if (!props.isPresent) props.onSafeToRemove();
+      if (!isPresent()) safeToRemove?.();
       return;
     }
 
-    if (props.isPresent) {
+    if (isPresent()) {
       currentAnimation = el.animate(
         [
           { opacity: 0, transform: "translateY(8px) scale(0.98)" },
@@ -70,15 +72,29 @@ export function SnackBar(props: SnackBarProps) {
         fill: "both",
       },
     );
-    currentAnimation.onfinish = () => props.onSafeToRemove();
+    currentAnimation.onfinish = () => safeToRemove?.();
   });
 
   onCleanup(cancelCurrentAnimation);
 
-  const progressWidth =
-    props.snackBar.duration <= 0
-      ? "100%"
-      : `${(props.snackBar.remaining / props.snackBar.duration) * 100}%`;
+  const progress = useProgressAnimation({
+    durationMs: props.snackBar.duration,
+    autoPlay:
+      props.snackBar.duration > 0 &&
+      props.snackBar.progress === undefined,
+    initialValue: props.snackBar.progress ?? 100,
+    finalValue: 0,
+    onComplete: () => props.onClose(props.snackBar.id),
+  });
+  const progressValue =
+    props.snackBar.duration <= 0 ? 100 : progress.value();
+  const sanitizedMessage =
+    sanitizeMessageToRenderInSnackbar(props.snackBar.message) ?? "";
+  const sanitizedDetailedMessage = sanitizeMessageToRenderInSnackbar(
+    props.snackBar.detailedMessage,
+  );
+  const role = props.snackBar.role ?? "status";
+  const ariaLive = role === "alert" ? "assertive" : "polite";
 
   return (
     <div
@@ -97,34 +113,62 @@ export function SnackBar(props: SnackBarProps) {
                 ? styles.warning
                 : styles.default,
       )}
-      onMouseEnter={() => props.onPause(props.snackBar.id)}
-      onMouseLeave={() => props.onResume(props.snackBar.id)}
-      role="status"
-      aria-live="polite"
+      onMouseEnter={() => progress.pause()}
+      onMouseLeave={() => progress.play()}
+      role={role}
+      aria-live={ariaLive}
+      title={sanitizedMessage}
     >
-      <div class={styles.progressBar} style={{ width: progressWidth }} />
+      <ProgressBar value={progressValue} />
       <div class={styles.icon}>
-        {props.snackBar.variant === "success" && <CircleCheckBig size={16} />}
-        {props.snackBar.variant === "error" && <CircleAlert size={16} />}
-        {props.snackBar.variant === "info" && <Info size={16} />}
-        {props.snackBar.variant === "warning" && <CircleAlert size={16} />}
-        {props.snackBar.variant === "default" && <Info size={16} />}
+        {props.snackBar.icon}
+        {!props.snackBar.icon && props.snackBar.variant === "success" && (
+          <CircleCheckBig size={16} />
+        )}
+        {!props.snackBar.icon && props.snackBar.variant === "error" && (
+          <CircleAlert size={16} />
+        )}
+        {!props.snackBar.icon && props.snackBar.variant === "info" && (
+          <Info size={16} />
+        )}
+        {!props.snackBar.icon && props.snackBar.variant === "warning" && (
+          <CircleAlert size={16} />
+        )}
+        {!props.snackBar.icon && props.snackBar.variant === "default" && (
+          <Info size={16} />
+        )}
       </div>
 
       <div class={styles.content}>
-        <p class={styles.message}>{props.snackBar.message}</p>
-        {props.snackBar.details && (
-          <p class={styles.details}>{props.snackBar.details}</p>
+        <p class={styles.message}>{sanitizedMessage}</p>
+        {sanitizedDetailedMessage && (
+          <p class={styles.details}>{sanitizedDetailedMessage}</p>
         )}
-        {props.snackBar.action && (
+        {props.snackBar.actionText && props.snackBar.actionTo && (
+          <A href={props.snackBar.actionTo} class={styles.actionLink}>
+            {props.snackBar.actionText}
+          </A>
+        )}
+        {props.snackBar.actionText && props.snackBar.actionOnClick && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
             class={styles.action}
-            onClick={() => props.snackBar.action?.onClick?.()}
+            onClick={props.snackBar.actionOnClick}
           >
-            {props.snackBar.action.label}
+            {props.snackBar.actionText}
+          </Button>
+        )}
+        {props.snackBar.onCancel && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            class={styles.action}
+            onClick={props.snackBar.onCancel}
+          >
+            Cancelar
           </Button>
         )}
       </div>
@@ -133,7 +177,7 @@ export function SnackBar(props: SnackBarProps) {
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => props.onDismiss(props.snackBar.id)}
+        onClick={() => props.onClose(props.snackBar.id)}
         class={styles.dismiss}
       >
         <X size={14} />
