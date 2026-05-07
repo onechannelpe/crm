@@ -9,7 +9,7 @@ import { For, Show, createEffect, createSignal, on } from "solid-js";
 import type { InviteManagement } from "~/actions/team/contracts";
 import { createTeamInvite } from "~/actions/team/invites";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import Mail from "~/components/icons/mail";
 import X from "~/components/icons/x";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";

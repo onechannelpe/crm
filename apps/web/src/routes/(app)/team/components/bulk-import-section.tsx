@@ -8,7 +8,7 @@ import {
   type BulkPreviewResult,
 } from "~/actions/team/bulk-import";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";

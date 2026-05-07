@@ -1,6 +1,6 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import ChevronRight from "~/components/icons/chevron-right";
 import Link from "~/components/icons/link";
 import List from "~/components/icons/list";

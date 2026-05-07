@@ -3,7 +3,7 @@ import { createContext, useContext } from "solid-js";
 import type {
   SnackBarInternalItem,
   SnackBarOptions,
-} from "../states/snackBarInternalComponentState";
+} from "../states/snack-bar-internal-component-state";
 
 export interface SnackBarApi {
   snackBars: SnackBarInternalItem[];

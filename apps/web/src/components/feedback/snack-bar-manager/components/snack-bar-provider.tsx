@@ -4,18 +4,18 @@ import { Portal } from "solid-js/web";
 import { AnimatePresence } from "~/components/ui/animation/animate-presence";
 import { Animated } from "~/components/ui/animation/animated";
 
-import { SnackBarComponentInstanceContext } from "../contexts/SnackBarComponentInstanceContext";
-import { SnackBarContext } from "../hooks/useSnackBar";
+import { SnackBarComponentInstanceContext } from "../contexts/snack-bar-component-instance-context";
+import { SnackBarContext } from "../hooks/use-snack-bar";
 import {
   type SnackBarOptions,
   enqueueWithDedupe,
   removeSnackBarById,
   type SnackBarInternalItem,
-} from "../states/snackBarInternalComponentState";
-import { buildErrorAction } from "../utils/buildErrorAction";
-import { SnackBar } from "./SnackBar";
+} from "../states/snack-bar-internal-component-state";
+import { buildErrorAction } from "../utils/build-error-action";
+import { SnackBar } from "./snack-bar";
 
-import styles from "./SnackBarProvider.module.css";
+import styles from "./snack-bar-provider.module.css";
 
 const DEFAULT_DURATION_MS = 5000;
 const DEFAULT_MAX_QUEUE = 3;

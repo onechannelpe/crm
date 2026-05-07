@@ -4,7 +4,7 @@ import {
   getUserLoginRetryReport,
   type UserLoginRetryReport,
 } from "~/actions/admin/auth-security";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import {

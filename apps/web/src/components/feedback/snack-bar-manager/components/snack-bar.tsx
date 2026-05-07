@@ -9,10 +9,10 @@ import { useProgressAnimation } from "~/components/ui/feedback/use-progress-anim
 import { Button } from "~/components/ui/input/button";
 import { cn } from "~/lib/utils";
 
-import type { SnackBarInternalItem } from "../states/snackBarInternalComponentState";
-import { sanitizeMessageToRenderInSnackbar } from "../utils/sanitizeMessageToRenderInSnackbar";
+import type { SnackBarInternalItem } from "../states/snack-bar-internal-component-state";
+import { sanitizeMessageToRenderInSnackbar } from "../utils/sanitize-message-to-render-in-snackbar";
 
-import styles from "./SnackBar.module.css";
+import styles from "./snack-bar.module.css";
 
 interface SnackBarProps {
   snackBar: SnackBarInternalItem;

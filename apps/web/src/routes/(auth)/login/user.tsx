@@ -3,7 +3,7 @@ import { onMount } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { LoginCredentialsForm } from "~/components/auth/flow/login-credentials-form";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 
 export default function LoginUserPage() {

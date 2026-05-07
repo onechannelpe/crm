@@ -2,7 +2,7 @@ import { useAction, useSubmissions } from "@solidjs/router";
 import { createSignal, onCleanup } from "solid-js";
 
 import { updateUserProfile } from "~/actions/settings/profile";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { ProfileImageInput } from "~/components/settings/ProfileImageInput";

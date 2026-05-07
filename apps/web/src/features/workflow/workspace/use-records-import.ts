@@ -4,7 +4,7 @@ import {
   getRecordImportJob,
   uploadRecordImportFile,
 } from "~/actions/records/imports";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import {
   recordImportTopic,
   parseRecordImportProgressMessage,

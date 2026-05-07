@@ -7,7 +7,7 @@ import {
 import { Show, createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { addLeadToFavoritesMutation } from "~/features/workflow/data/mutations";
 import {

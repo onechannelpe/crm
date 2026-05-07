@@ -9,7 +9,7 @@ import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recovery-codes-panel";
 import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/useSnackBar";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/hooks/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
