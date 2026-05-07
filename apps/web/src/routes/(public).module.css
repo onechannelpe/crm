@@ -45,33 +45,8 @@
   gap: 12px;
 }
 
-.social {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.socialLink {
-  color: var(--foreground-tertiary);
-  text-decoration: none;
-  font-size: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-
-  &:hover {
-    color: var(--foreground);
-  }
-}
-
 .themeToggle {
   justify-self: end;
-}
-
-@media (max-width: 980px) {
-  .socialLink span {
-    display: none;
-  }
 }
 
 @media (max-width: 800px) {

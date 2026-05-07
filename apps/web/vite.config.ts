@@ -54,7 +54,7 @@ export default defineConfig({
         routes: [
           "/legal/privacy",
           "/legal/terms",
-          "/releases",
+          "/updates",
           "/docs/",
           "/docs/getting-started",
         ],
