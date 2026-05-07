@@ -68,7 +68,7 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
               selectEb.val(params.campaignId).as("campaign_id"),
               "users.id as user_id",
               selectEb.val("email").as("channel"),
-              "addr.address",
+              "addr.address as address",
               selectEb.val("pending").as("status"),
               selectEb.val(null).as("status_reason"),
               selectEb.val(params.createdAt).as("created_at"),
@@ -120,17 +120,17 @@ export function createNotificationDeliveryLogRepo(db: Kysely<Database>) {
                 .on("prefs.event_type", "=", params.eventType)
                 .on("prefs.channel", "=", "whatsapp"),
             )
-            .innerJoin("user_channel_addresses as contacts", (join) =>
+            .innerJoin("user_channel_addresses as addr", (join) =>
               join
-                .onRef("contacts.user_id", "=", "users.id")
-                .on("contacts.channel", "=", "whatsapp")
-                .on("contacts.is_verified", "=", 1),
+                .onRef("addr.user_id", "=", "users.id")
+                .on("addr.channel", "=", "whatsapp")
+                .on("addr.is_verified", "=", 1),
             )
             .select((selectEb) => [
               selectEb.val(params.campaignId).as("campaign_id"),
               "users.id as user_id",
               selectEb.val("whatsapp").as("channel"),
-              "contacts.address as address",
+              "addr.address as address",
               selectEb.val("pending").as("status"),
               selectEb.val(null).as("status_reason"),
               selectEb.val(params.createdAt).as("created_at"),

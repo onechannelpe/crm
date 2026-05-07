@@ -110,7 +110,7 @@ export async function bootstrapUserNotifications(
     email: params.email,
     phoneE164: params.phoneE164,
     now: params.now,
-    repos: { userChannelAddresses: repos.userChannelAddresses },
+    repos,
   });
   if (isErr(channelsResult)) {
     return channelsResult;
