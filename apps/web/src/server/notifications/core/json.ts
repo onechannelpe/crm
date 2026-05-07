@@ -8,10 +8,14 @@ export function safeParseUnknown(value: string): unknown {
 
 export function safeParseObject(value: string): Record<string, unknown> | null {
   const parsed = safeParseUnknown(value);
-  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+  if (isRecord(parsed)) {
     return parsed as Record<string, unknown>;
   }
   return null;
+}
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 export function getString(

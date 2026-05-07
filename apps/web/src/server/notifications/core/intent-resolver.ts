@@ -1,4 +1,4 @@
-import { getNumber, getString, safeParseObject } from "./json";
+import { getNumber, getString, isRecord, safeParseObject } from "./json";
 import type {
   Channel,
   DomainEvent,
@@ -110,8 +110,7 @@ export function resolveNotificationIntents(
         audienceKind === "branch_roles" ||
         audienceKind === "global_roles" ||
         audienceKind === "team") &&
-      audience &&
-      typeof audience === "object"
+      isRecord(audience)
     ) {
       pushIntent(0, {
         audienceKind,
