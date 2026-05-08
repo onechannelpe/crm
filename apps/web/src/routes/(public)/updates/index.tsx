@@ -71,10 +71,7 @@ export default function UpdatesPage() {
         <JsonLd data={buildUpdateListJsonLd(visibleUpdates())} />
       </Show>
 
-      <UpdatesList
-        titleBold={UPDATES_PAGE_COPY.titleBold}
-        titleMuted={UPDATES_PAGE_COPY.titleMuted}
-      >
+      <UpdatesList>
         <Show
           when={visibleUpdates().length > 0}
           fallback={

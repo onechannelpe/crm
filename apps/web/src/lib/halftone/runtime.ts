@@ -37,7 +37,10 @@ import type {
   HalftoneSnapshotRequest,
   HalftoneViewport,
 } from "~/lib/halftone/runtime-types";
-import type { HalftonePose, HalftoneStudioSettings } from "~/lib/halftone/state";
+import type {
+  HalftonePose,
+  HalftoneStudioSettings,
+} from "~/lib/halftone/state";
 import { runCleanupTasks } from "~/lib/lifecycle/run-cleanup-tasks";
 import {
   createSiteWebGlRenderer,
