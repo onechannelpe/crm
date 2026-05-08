@@ -29,6 +29,14 @@ export function isHeavyVisualsKillSwitchEnabled(): boolean {
 
 let cachedSupportProbe: boolean | null = null;
 
+function isWebGlContext(
+  context: RenderingContext,
+): context is WebGLRenderingContext | WebGL2RenderingContext {
+  return (
+    "getExtension" in context && typeof context.getExtension === "function"
+  );
+}
+
 export function detectWebGlSupport(): boolean {
   if (cachedSupportProbe !== null) {
     return cachedSupportProbe;
@@ -51,9 +59,13 @@ export function detectWebGlSupport(): boolean {
       return cachedSupportProbe;
     }
 
-    const loseContextExtension = (
-      probeContext as WebGLRenderingContext
-    ).getExtension("WEBGL_lose_context");
+    if (!isWebGlContext(probeContext)) {
+      cachedSupportProbe = false;
+      return cachedSupportProbe;
+    }
+
+    const loseContextExtension =
+      probeContext.getExtension("WEBGL_lose_context");
     loseContextExtension?.loseContext();
 
     cachedSupportProbe = true;

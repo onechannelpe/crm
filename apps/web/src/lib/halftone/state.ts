@@ -1,3 +1,5 @@
+import { isPlainRecord } from "~/lib/type-guards";
+
 export type HalftoneTabId = "design" | "animations" | "export";
 export type HalftoneSourceMode = "shape" | "image";
 export type HalftoneMaterialSurface = "solid" | "glass";
@@ -429,11 +431,11 @@ export function isRoundedBandHalftoneSettings(value: unknown): value is Omit<
   hoverDashColor?: string;
   toneTarget?: HalftoneToneTarget;
 } {
-  if (!value || typeof value !== "object") {
+  if (!isPlainRecord(value)) {
     return false;
   }
 
-  const candidate = value as Record<string, unknown>;
+  const candidate = value;
 
   return (
     typeof candidate.enabled === "boolean" &&
