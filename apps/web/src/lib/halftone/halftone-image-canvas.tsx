@@ -3,12 +3,12 @@ import * as THREE from "three";
 
 import { loadVisualImage } from "~/lib/visual-runtime";
 
+import type { HalftoneImageFit } from "./footprint";
 import {
   HalftoneCanvas,
   type HalftoneImageInteractionSettings,
   type HalftoneSnapshotFn,
 } from "./halftone-canvas";
-import type { HalftoneImageFit } from "./footprint";
 import type { HalftoneExportPose, HalftoneStudioSettings } from "./state";
 
 type MutableRefObject<T> = { current: T };
@@ -35,8 +35,12 @@ function createImageLoadError(imageUrl: string) {
   return new Error(`Halftone image failed to load: ${imageUrl}`);
 }
 
-export function HalftoneImageCanvas(props: HalftoneImageCanvasProps): JSX.Element {
-  const [imageElement, setImageElement] = createSignal<HTMLImageElement | null>(null);
+export function HalftoneImageCanvas(
+  props: HalftoneImageCanvasProps,
+): JSX.Element {
+  const [imageElement, setImageElement] = createSignal<HTMLImageElement | null>(
+    null,
+  );
 
   const geometry = new THREE.PlaneGeometry(1, 1);
 

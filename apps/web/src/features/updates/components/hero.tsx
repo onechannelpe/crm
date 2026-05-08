@@ -1,6 +1,8 @@
-import styles from "./styles/layout.module.css";
 import { ButtonLink } from "~/components/ui/input/button-link";
+
 import { UpdatesHeroVisual } from "./hero-visual";
+
+import styles from "./styles/layout.module.css";
 
 export function UpdatesHero(props: {
   titleMuted: string;

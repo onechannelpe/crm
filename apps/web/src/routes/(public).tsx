@@ -22,7 +22,9 @@ export default function PublicLayout(props: RouteSectionProps) {
 
   return (
     <main class={styles.main}>
-      <header classList={{ [styles.header]: true, [styles.elevated]: hasScrolled() }}>
+      <header
+        classList={{ [styles.header]: true, [styles.elevated]: hasScrolled() }}
+      >
         <div class={styles.headerContainer}>
           <div class={styles.navSurface}>
             <A href="/" class={styles.logo}>

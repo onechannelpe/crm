@@ -82,7 +82,7 @@ export const applySpringStep = ({
 
 export const resetHalftoneInteractionState = (
   interactionState: HalftoneInteractionState,
-  animation: HalftoneStudioSettings['animation'],
+  animation: HalftoneStudioSettings["animation"],
 ) => {
   interactionState.activePointerId = null;
   interactionState.dragging = false;

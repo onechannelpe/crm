@@ -1,4 +1,12 @@
-import { Show, createEffect, createMemo, createSignal, onCleanup, onMount, type JSX } from "solid-js";
+import {
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  type JSX,
+} from "solid-js";
 
 import { observeElementVisibility } from "~/lib/dom/observe-element-visibility";
 
@@ -7,8 +15,11 @@ import {
   tryReserveWebGlContextSlot,
 } from "./active-webgl-context-budget";
 import { SITE_WEBGL_CONTEXT_LOST_EVENT } from "./create-site-webgl-renderer";
-import { scheduleVisualMount, type VisualMountPriority } from "./visual-mount-scheduler";
 import { useWebGlPolicy } from "./use-webgl-policy";
+import {
+  scheduleVisualMount,
+  type VisualMountPriority,
+} from "./visual-mount-scheduler";
 
 const NON_PRIORITY_ROOT_MARGIN = "50% 0px 50% 0px";
 const PRIORITY_ROOT_MARGIN = "125% 0px 125% 0px";
@@ -48,7 +59,9 @@ export function WebGlMount(props: WebGlMountProps) {
     const isEager = loading === "eager";
 
     const effectiveDisposeDelayMs =
-      priority || isEager ? PRIORITY_OUT_OF_VIEW_DISPOSE_MS : OUT_OF_VIEW_DISPOSE_MS;
+      priority || isEager
+        ? PRIORITY_OUT_OF_VIEW_DISPOSE_MS
+        : OUT_OF_VIEW_DISPOSE_MS;
 
     const effectiveRootMargin = isEager
       ? EAGER_ROOT_MARGIN
@@ -97,7 +110,10 @@ export function WebGlMount(props: WebGlMountProps) {
     onCleanup(() => {
       clearDisposeTimer();
       stopObservingVisibility();
-      element.removeEventListener(SITE_WEBGL_CONTEXT_LOST_EVENT, handleContextLost);
+      element.removeEventListener(
+        SITE_WEBGL_CONTEXT_LOST_EVENT,
+        handleContextLost,
+      );
     });
   });
 
@@ -120,9 +136,12 @@ export function WebGlMount(props: WebGlMountProps) {
       return;
     }
 
-    const cancelScheduledMount = scheduleVisualMount(() => setIsMountReady(true), {
-      priority: effectiveMountPriority(),
-    });
+    const cancelScheduledMount = scheduleVisualMount(
+      () => setIsMountReady(true),
+      {
+        priority: effectiveMountPriority(),
+      },
+    );
 
     onCleanup(() => {
       cancelScheduledMount();
@@ -184,13 +203,16 @@ export function WebGlMount(props: WebGlMountProps) {
         "pointer-events": "none",
         position: props.detachFromLayout ? "absolute" : "relative",
         width: "100%",
-        ...(props.detachFromLayout
-          ? { inset: "0" }
-          : {}),
+        ...(props.detachFromLayout ? { inset: "0" } : {}),
       }}
     >
-      <Show when={wantsContextSlot() && hasContextSlot()} fallback={props.fallback ?? null}>
-        <div style={{ "pointer-events": "auto", height: "100%", width: "100%" }}>
+      <Show
+        when={wantsContextSlot() && hasContextSlot()}
+        fallback={props.fallback ?? null}
+      >
+        <div
+          style={{ "pointer-events": "auto", height: "100%", width: "100%" }}
+        >
           {props.children}
         </div>
       </Show>

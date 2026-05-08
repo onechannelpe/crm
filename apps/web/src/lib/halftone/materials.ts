@@ -1,6 +1,7 @@
+import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+
 import type { HalftoneMaterialSettings } from "~/lib/halftone/state";
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import * as THREE from 'three';
 
 export type HalftoneMaterialAssets = {
   glassBackgroundTexture: THREE.Texture;
@@ -40,7 +41,7 @@ export class HalftoneTransmissionMaterial extends THREE.MeshPhysicalMaterial {
       thickness: { value: 0 },
       thicknessMap: { value: null },
       attenuationDistance: { value: Infinity },
-      attenuationColor: { value: new THREE.Color('white') },
+      attenuationColor: { value: new THREE.Color("white") },
       anisotropicBlur: { value: 0.1 },
       time: { value: 0 },
       distortion: { value: 0 },
@@ -59,10 +60,10 @@ export class HalftoneTransmissionMaterial extends THREE.MeshPhysicalMaterial {
       shader.defines ??= {};
 
       if (this.anisotropy > 0) {
-        shader.defines.USE_ANISOTROPY = '';
+        shader.defines.USE_ANISOTROPY = "";
       }
 
-      shader.defines.USE_TRANSMISSION = '';
+      shader.defines.USE_TRANSMISSION = "";
 
       shader.fragmentShader =
         `
@@ -164,7 +165,7 @@ export class HalftoneTransmissionMaterial extends THREE.MeshPhysicalMaterial {
       ` + shader.fragmentShader;
 
       shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <transmission_pars_fragment>',
+        "#include <transmission_pars_fragment>",
         `
           #ifdef USE_TRANSMISSION
             uniform float _transmission;
@@ -313,7 +314,7 @@ export class HalftoneTransmissionMaterial extends THREE.MeshPhysicalMaterial {
       );
 
       shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <transmission_fragment>',
+        "#include <transmission_fragment>",
         `
           material.transmission = _transmission;
           material.transmissionAlpha = 1.0;
@@ -446,7 +447,7 @@ const GLASS_ENVIRONMENT_INTENSITY_MULTIPLIER = 0.12;
 const GLASS_ENVIRONMENT_ZOOM = 1.55;
 const GLASS_TRANSMISSION_BACKGROUND = new THREE.Color(0x030303);
 const GLASS_TEXTURE_URLS = {
-  environment: '/halftone/materials/glass/environment.jpg',
+  environment: "/halftone/materials/glass/environment.jpg",
 } as const;
 const MAX_TEXTURE_ANISOTROPY = 8;
 
@@ -528,11 +529,11 @@ function createZoomedGlassTexture(
     return sourceTexture;
   }
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
 
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext("2d");
 
   if (!context) {
     return sourceTexture;
@@ -702,7 +703,7 @@ export function applyHalftoneMaterialSettings(
   settings: HalftoneMaterialSettings,
   assets: HalftoneMaterialAssets,
 ) {
-  const isGlass = settings.surface === 'glass';
+  const isGlass = settings.surface === "glass";
   const glassThickness = settings.thickness * GLASS_THICKNESS_TO_WORLD_UNITS;
   const glassEnvironmentIntensity = getGlassEnvironmentIntensity(
     settings.environmentPower,
@@ -712,7 +713,7 @@ export function applyHalftoneMaterialSettings(
     GLASS_ATTENUATION_DISTANCE_MIN,
   );
 
-  material.color.set(isGlass ? '#ffffff' : settings.color);
+  material.color.set(isGlass ? "#ffffff" : settings.color);
   material.roughness = settings.roughness;
   material.metalness = settings.metalness;
   material.envMap = isGlass
@@ -738,7 +739,7 @@ export function applyHalftoneMaterialSettings(
   material.transparent = false;
   material.opacity = 1;
   material.depthWrite = true;
-  material.attenuationColor.set(isGlass ? settings.color : 'white');
+  material.attenuationColor.set(isGlass ? settings.color : "white");
   material.attenuationDistance = isGlass ? glassAttenuationDistance : Infinity;
   material.anisotropicBlur = isGlass
     ? THREE.MathUtils.lerp(0.03, 0.12, settings.roughness)

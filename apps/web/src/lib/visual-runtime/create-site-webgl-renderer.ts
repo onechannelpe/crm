@@ -1,10 +1,10 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export type SiteWebGlRendererParameters = THREE.WebGLRendererParameters & {
   onContextLost?: (event: WebGLContextEvent) => void;
 };
 
-export const SITE_WEBGL_CONTEXT_LOST_EVENT = 'sitewebglcontextlost';
+export const SITE_WEBGL_CONTEXT_LOST_EVENT = "sitewebglcontextlost";
 
 export function createSiteWebGlRenderer(
   parameters?: SiteWebGlRendererParameters,
@@ -20,7 +20,7 @@ export function createSiteWebGlRenderer(
       return;
     }
     disposed = true;
-    canvas.removeEventListener('webglcontextlost', handleContextLost);
+    canvas.removeEventListener("webglcontextlost", handleContextLost);
     try {
       originalDispose();
     } catch {
@@ -32,15 +32,15 @@ export function createSiteWebGlRenderer(
 
   const handleContextLost = (event: Event) => {
     const webglEvent = event as WebGLContextEvent;
-    if (typeof webglEvent.preventDefault === 'function') {
+    if (typeof webglEvent.preventDefault === "function") {
       webglEvent.preventDefault();
     }
 
     try {
       onContextLost?.(webglEvent);
     } catch (callbackError) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('onContextLost callback threw:', callbackError);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("onContextLost callback threw:", callbackError);
       }
     }
 
@@ -51,7 +51,7 @@ export function createSiteWebGlRenderer(
     safeDispose();
   };
 
-  canvas.addEventListener('webglcontextlost', handleContextLost, false);
+  canvas.addEventListener("webglcontextlost", handleContextLost, false);
 
   const originalDispose = renderer.dispose.bind(renderer);
   renderer.dispose = safeDispose;
@@ -63,8 +63,8 @@ export type SiteWebGlRendererCreationFailureHandler = (error: unknown) => void;
 
 export const reportSiteWebGlRendererCreationFailure: SiteWebGlRendererCreationFailureHandler =
   (error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('WebGL renderer creation failed:', error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("WebGL renderer creation failed:", error);
     }
   };
 

@@ -1,8 +1,8 @@
 import {
   observeElementVisibility,
   type ObserveElementVisibilityOptions,
-} from '~/lib/dom/observe-element-visibility';
-import { runCleanupTasks } from '~/lib/lifecycle/run-cleanup-tasks';
+} from "~/lib/dom/observe-element-visibility";
+import { runCleanupTasks } from "~/lib/lifecycle/run-cleanup-tasks";
 
 export type VisualRenderLoop = {
   dispose: () => void;
@@ -14,9 +14,9 @@ export type VisualRenderLoop = {
 export type VisualRenderLoopErrorHandler = (error: unknown) => void;
 
 export type VisualRenderLoopDocument = {
-  addEventListener: Document['addEventListener'];
+  addEventListener: Document["addEventListener"];
   hidden: boolean;
-  removeEventListener: Document['removeEventListener'];
+  removeEventListener: Document["removeEventListener"];
 };
 
 export type VisualRenderLoopScheduler = (
@@ -49,15 +49,15 @@ export type CreateVisualRenderLoopOptions = {
 
 export const reportVisualRenderLoopErrorInDevelopment: VisualRenderLoopErrorHandler =
   (error) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Visual render loop failed:', error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Visual render loop failed:", error);
     }
   };
 
 const MAX_FRAME_DELTA_SECONDS = 0.1;
 
 function getDefaultDocument(): VisualRenderLoopDocument | null {
-  return typeof document === 'undefined' ? null : document;
+  return typeof document === "undefined" ? null : document;
 }
 
 function requestAnimationFrameFromWindow(callback: FrameRequestCallback) {
@@ -172,12 +172,12 @@ export function createVisualRenderLoop({
     };
 
     documentReference.addEventListener(
-      'visibilitychange',
+      "visibilitychange",
       handleVisibilityChange,
     );
     cleanupTasks.push(() =>
       documentReference.removeEventListener(
-        'visibilitychange',
+        "visibilitychange",
         handleVisibilityChange,
       ),
     );

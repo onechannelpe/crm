@@ -1,5 +1,7 @@
 .main {
   min-height: 100dvh;
+  --public-font-base: 0.25rem;
+  --public-font-size-3: calc(var(--public-font-base) * 3);
   --font-sans:
     "Host Grotesk", "Inter Variable", Inter, "Segoe UI", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
@@ -62,7 +64,7 @@
   color: var(--foreground);
   text-decoration: none;
   font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  font-size: var(--public-font-size-3);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0;
@@ -98,7 +100,7 @@
 .ctaGhost,
 .ctaPrimary {
   font-family: var(--font-mono);
-  font-size: var(--font-size-label);
+  font-size: var(--public-font-size-3);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   text-decoration: none;

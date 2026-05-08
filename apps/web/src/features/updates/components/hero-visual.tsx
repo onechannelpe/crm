@@ -1,5 +1,6 @@
+import { HalftoneImageCanvas } from "~/lib/halftone/halftone-image-canvas";
 import { WebGlMount } from "~/lib/visual-runtime";
-import styles from "./styles/layout.module.css";
+
 import {
   MILESTONE_IMAGE_FIT,
   MILESTONE_IMAGE_URL,
@@ -7,7 +8,8 @@ import {
   MILESTONE_PREVIEW_DISTANCE,
   buildMilestoneSettings,
 } from "./milestone-config";
-import { HalftoneImageCanvas } from "~/lib/halftone/halftone-image-canvas";
+
+import styles from "./styles/layout.module.css";
 
 const RELEASE_NOTES_SETTINGS = buildMilestoneSettings({
   animation: {

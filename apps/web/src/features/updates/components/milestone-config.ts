@@ -8,8 +8,8 @@ import {
 
 export type MilestoneSettingsOverrides = HalftoneStudioSettingsOverrides;
 
-export const MILESTONE_IMAGE_URL = '/illustrations/generated/milestone.jpg';
-export const MILESTONE_IMAGE_FIT: HalftoneImageFit = 'cover';
+export const MILESTONE_IMAGE_URL = "/illustrations/generated/milestone.jpg";
+export const MILESTONE_IMAGE_FIT: HalftoneImageFit = "cover";
 export const MILESTONE_PREVIEW_DISTANCE = 4;
 
 export const MILESTONE_INITIAL_POSE: HalftoneExportPose = {
@@ -24,8 +24,8 @@ export const MILESTONE_INITIAL_POSE: HalftoneExportPose = {
 };
 
 const BASE_MILESTONE_SETTINGS = normalizeHalftoneStudioSettings({
-  sourceMode: 'image',
-  shapeKey: 'torusKnot',
+  sourceMode: "image",
+  shapeKey: "torusKnot",
   lighting: {
     intensity: 1.5,
     fillIntensity: 0.15,
@@ -34,8 +34,8 @@ const BASE_MILESTONE_SETTINGS = normalizeHalftoneStudioSettings({
     height: 2,
   },
   material: {
-    surface: 'solid',
-    color: '#d4d0c8',
+    surface: "solid",
+    color: "#d4d0c8",
     roughness: 0.42,
     metalness: 0.16,
     thickness: 150,
@@ -46,15 +46,15 @@ const BASE_MILESTONE_SETTINGS = normalizeHalftoneStudioSettings({
     enabled: true,
     scale: 22,
     power: -0.07,
-    toneTarget: 'light',
+    toneTarget: "light",
     width: 0.46,
     imageContrast: 1,
-    dashColor: '#F3F3F3',
-    hoverDashColor: '#F3F3F3',
+    dashColor: "#F3F3F3",
+    hoverDashColor: "#F3F3F3",
   },
   background: {
     transparent: false,
-    color: '#4A38F5',
+    color: "#4A38F5",
   },
   animation: {
     autoRotateEnabled: true,
@@ -81,8 +81,8 @@ const BASE_MILESTONE_SETTINGS = normalizeHalftoneStudioSettings({
     dragSens: 0.008,
     dragFriction: 0.08,
     dragMomentum: true,
-    rotateAxis: 'y',
-    rotatePreset: 'axis',
+    rotateAxis: "y",
+    rotatePreset: "axis",
     rotateSpeed: 0.2,
     rotatePingPong: false,
     floatAmplitude: 0.16,

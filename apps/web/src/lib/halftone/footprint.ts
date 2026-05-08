@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export interface HalftoneRect {
   height: number;
@@ -7,7 +7,7 @@ export interface HalftoneRect {
   y: number;
 }
 
-export type HalftoneImageFit = 'contain' | 'cover';
+export type HalftoneImageFit = "contain" | "cover";
 
 export interface ImageFootprintScaleArgs {
   imageFit?: HalftoneImageFit;
@@ -85,7 +85,7 @@ export function getImagePreviewZoom(previewDistance: number) {
 }
 
 export function getContainedImageRect({
-  imageFit = 'contain',
+  imageFit = "contain",
   imageHeight,
   imageWidth,
   viewportHeight,
@@ -115,13 +115,13 @@ export function getContainedImageRect({
   let fittedHeight = viewportHeight;
 
   if (imageAspect > viewAspect) {
-    if (imageFit === 'cover') {
+    if (imageFit === "cover") {
       fittedWidth = viewportHeight * imageAspect;
     } else {
       fittedHeight = viewportWidth / imageAspect;
     }
   } else {
-    if (imageFit === 'cover') {
+    if (imageFit === "cover") {
       fittedHeight = viewportWidth / imageAspect;
     } else {
       fittedWidth = viewportHeight * imageAspect;
@@ -158,7 +158,7 @@ export function getFootprintScaleFromRects(
 }
 
 export function getImageFootprintScale({
-  imageFit = 'contain',
+  imageFit = "contain",
   imageHeight,
   imageWidth,
   previewDistance,

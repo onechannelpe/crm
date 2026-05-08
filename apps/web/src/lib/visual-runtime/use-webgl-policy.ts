@@ -23,7 +23,9 @@ export function useWebGlPolicy() {
       return;
     }
 
-    const mediaQueryList = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mediaQueryList = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
     const handleMotionChange = () => setDecision(evaluateWebGlPolicy());
 
     if (typeof mediaQueryList.addEventListener === "function") {

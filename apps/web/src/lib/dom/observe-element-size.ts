@@ -6,7 +6,7 @@ export const observeElementsSize = (
     return () => {};
   }
 
-  if (typeof ResizeObserver === 'function') {
+  if (typeof ResizeObserver === "function") {
     const resizeObserver = new ResizeObserver(() => onResize());
 
     elements.forEach((element) => resizeObserver.observe(element));
@@ -14,13 +14,13 @@ export const observeElementsSize = (
     return () => resizeObserver.disconnect();
   }
 
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return () => {};
   }
 
-  window.addEventListener('resize', onResize);
+  window.addEventListener("resize", onResize);
 
-  return () => window.removeEventListener('resize', onResize);
+  return () => window.removeEventListener("resize", onResize);
 };
 
 export const observeElementSize = (

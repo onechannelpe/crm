@@ -51,9 +51,9 @@ export function detectWebGlSupport(): boolean {
       return cachedSupportProbe;
     }
 
-    const loseContextExtension = (probeContext as WebGLRenderingContext).getExtension(
-      "WEBGL_lose_context",
-    );
+    const loseContextExtension = (
+      probeContext as WebGLRenderingContext
+    ).getExtension("WEBGL_lose_context");
     loseContextExtension?.loseContext();
 
     cachedSupportProbe = true;
