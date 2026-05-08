@@ -1,12 +1,10 @@
 import * as THREE from "three";
 
-import {
-  applyHalftoneMaterialSettings,
-  type HalftoneMaterialAssets,
-  type HalftoneTransmissionMaterial,
-} from "~/lib/halftone/materials";
-import type { HalftonePointerSettings } from "~/lib/halftone/runtime-types";
-import type { HalftoneStudioSettings } from "~/lib/halftone/state";
+import { type HalftoneMaterialAssets } from "../materials/assets";
+import { type HalftoneTransmissionMaterial } from "../materials/material";
+import { applyHalftoneMaterialSettings } from "../materials/render";
+import type { HalftoneStudioSettings } from "../state";
+import type { HalftonePointerSettings } from "./types";
 
 const IMAGE_POINTER_FOLLOW = 0.38;
 const IMAGE_POINTER_VELOCITY_DAMPING = 0.82;

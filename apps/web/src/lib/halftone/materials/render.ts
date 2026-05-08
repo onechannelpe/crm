@@ -1,15 +1,15 @@
 import * as THREE from "three";
 
+import type { HalftoneMaterialSettings } from "../state";
 import {
   GLASS_TRANSMISSION_BACKGROUND,
   type HalftoneMaterialAssets,
-} from "~/lib/halftone/materials/assets";
+} from "./assets";
 import {
   getHalftoneGlassState,
   setHalftoneGlassState,
   type HalftoneTransmissionMaterial,
-} from "~/lib/halftone/materials/material";
-import type { HalftoneMaterialSettings } from "~/lib/halftone/state";
+} from "./material";
 
 const GLASS_THICKNESS_TO_WORLD_UNITS = 1 / 320;
 const GLASS_ATTENUATION_DISTANCE_MIN = 0.12;

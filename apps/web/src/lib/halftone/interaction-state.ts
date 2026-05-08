@@ -1,7 +1,4 @@
-import type {
-  HalftonePose,
-  HalftoneStudioSettings,
-} from "~/lib/halftone/state";
+import type { HalftonePose, HalftoneStudioSettings } from "./state";
 
 export type HalftoneInteractionState = {
   activePointerId: number | null;

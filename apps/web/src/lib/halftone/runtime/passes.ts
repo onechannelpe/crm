@@ -1,15 +1,10 @@
 import * as THREE from "three";
 
-import type { HalftoneImageFit } from "~/lib/halftone/footprint";
-import {
-  createHalftoneMaterial,
-  createHalftoneMaterialAssets,
-} from "~/lib/halftone/materials";
-import {
-  createRenderTarget,
-  type SceneResources,
-} from "~/lib/halftone/runtime-core";
-import type { HalftoneStudioSettings } from "~/lib/halftone/state";
+import type { HalftoneImageFit } from "../footprint";
+import { createHalftoneMaterialAssets } from "../materials/assets";
+import { createHalftoneMaterial } from "../materials/material";
+import type { HalftoneStudioSettings } from "../state";
+import { createRenderTarget, type SceneResources } from "./core";
 
 const passThroughVertexShader = `
   varying vec2 vUv;

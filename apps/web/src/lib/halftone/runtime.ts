@@ -1,41 +1,6 @@
 import * as THREE from "three";
 
 import { observeElementSize } from "~/lib/dom/observe-element-size";
-import {
-  getImagePreviewZoom,
-  type HalftoneImageFit,
-} from "~/lib/halftone/footprint";
-import {
-  createHalftoneInteractionState,
-  resetHalftoneInteractionState,
-  type HalftoneInteractionState,
-} from "~/lib/halftone/interaction-state";
-import {
-  disposeHalftoneMaterialAssets,
-  renderHalftoneMaterialScene,
-} from "~/lib/halftone/materials";
-import {
-  getCanvasCursor,
-  resolveImageInteractionSettings,
-  syncImageElementTexture,
-  syncResources,
-} from "~/lib/halftone/runtime-core";
-import { createRuntimeInteractionHandlers } from "~/lib/halftone/runtime-interaction";
-import {
-  createRuntimePasses,
-  resizeRuntimePasses,
-} from "~/lib/halftone/runtime-passes";
-import type {
-  HalftonePointerSettings,
-  HalftoneRuntime,
-  HalftoneRuntimeConfig,
-  HalftoneSnapshotRequest,
-  HalftoneViewport,
-} from "~/lib/halftone/runtime-types";
-import type {
-  HalftonePose,
-  HalftoneStudioSettings,
-} from "~/lib/halftone/state";
 import { runCleanupTasks } from "~/lib/lifecycle/run-cleanup-tasks";
 import {
   createSiteWebGlRenderer,
@@ -43,6 +8,31 @@ import {
   evaluateWebGlPolicy,
   type VisualRenderLoop,
 } from "~/lib/visual-runtime";
+
+import { getImagePreviewZoom, type HalftoneImageFit } from "./footprint";
+import {
+  createHalftoneInteractionState,
+  resetHalftoneInteractionState,
+  type HalftoneInteractionState,
+} from "./interaction-state";
+import { disposeHalftoneMaterialAssets } from "./materials/assets";
+import { renderHalftoneMaterialScene } from "./materials/render";
+import {
+  getCanvasCursor,
+  resolveImageInteractionSettings,
+  syncImageElementTexture,
+  syncResources,
+} from "./runtime/core";
+import { createRuntimeInteractionHandlers } from "./runtime/interaction";
+import { createRuntimePasses, resizeRuntimePasses } from "./runtime/passes";
+import type {
+  HalftonePointerSettings,
+  HalftoneRuntime,
+  HalftoneRuntimeConfig,
+  HalftoneSnapshotRequest,
+  HalftoneViewport,
+} from "./runtime/types";
+import type { HalftonePose, HalftoneStudioSettings } from "./state";
 
 type MutableRefObject<T> = { current: T };
 

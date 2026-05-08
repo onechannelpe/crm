@@ -12,7 +12,7 @@ import type {
   HalftoneRuntime,
   HalftoneRuntimeConfig,
   HalftoneSnapshotFn,
-} from "~/lib/halftone/runtime-types";
+} from "~/lib/halftone/runtime/types";
 import type {
   HalftonePose,
   HalftoneStudioSettings,

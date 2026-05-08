@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-import type { HalftoneInteractionState } from "~/lib/halftone/interaction-state";
-import type { HalftoneSourceMode } from "~/lib/halftone/state";
+import type { HalftoneInteractionState } from "../interaction-state";
+import type { HalftoneSourceMode } from "../state";
 
 type Ref<T> = { current: T };
 

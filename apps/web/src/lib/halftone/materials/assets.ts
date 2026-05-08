@@ -1,11 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-import {
-  asCanvasImageSource,
-  getTextureImageSize,
-  isMesh,
-} from "~/lib/halftone/materials/guards";
+import { asCanvasImageSource, getTextureImageSize, isMesh } from "./guards";
 
 export type HalftoneMaterialAssets = {
   glassBackgroundTexture: THREE.Texture;
