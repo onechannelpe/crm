@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-import type { HalftoneImageFit } from "~/lib/halftone/footprint";
 import {
   applyHalftoneMaterialSettings,
   type HalftoneMaterialAssets,
@@ -185,7 +184,3 @@ export function syncResources(
   updateMaterial(resources, settings);
   updateHalftone(resources, settings);
 }
-
-export type RuntimeRefs = {
-  imageFitReference: { current: HalftoneImageFit };
-};

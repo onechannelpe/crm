@@ -32,14 +32,12 @@ import {
 } from "~/lib/halftone/runtime-passes";
 import type {
   HalftonePointerSettings,
-  HalftoneRenderStrategy,
   HalftoneRuntime,
   HalftoneRuntimeConfig,
   HalftoneSnapshotRequest,
   HalftoneViewport,
 } from "~/lib/halftone/runtime-types";
-import type { HalftoneStudioSettings } from "~/lib/halftone/state";
-import type { HalftonePose } from "~/lib/halftone/state";
+import type { HalftonePose, HalftoneStudioSettings } from "~/lib/halftone/state";
 import { runCleanupTasks } from "~/lib/lifecycle/run-cleanup-tasks";
 import {
   createSiteWebGlRenderer,
@@ -68,9 +66,6 @@ export async function createHalftoneRuntime({
   let poseChange = initialConfig.onPoseChange;
   let onFirstInteraction = initialConfig.onFirstInteraction;
 
-  const resourcesReference: MutableRefObject<SceneResources | null> = {
-    current: null,
-  };
   const interactionReference: MutableRefObject<HalftoneInteractionState> = {
     current: createHalftoneInteractionState(initialConfig.initialPose),
   };
@@ -108,7 +103,7 @@ export async function createHalftoneRuntime({
   const getWidth = () => Math.max(container.clientWidth, 1);
   const getHeight = () => Math.max(container.clientHeight, 1);
   const getVirtualHeight = () =>
-    Math.max(config.virtualRenderHeight ?? VIRTUAL_RENDER_HEIGHT, getHeight());
+    Math.max(config.virtualRenderHeight, getHeight());
   const getVirtualWidth = () =>
     Math.max(
       Math.round(getVirtualHeight() * (getWidth() / Math.max(getHeight(), 1))),
@@ -197,7 +192,6 @@ export async function createHalftoneRuntime({
     transmissionTarget,
   } = resources;
 
-  resourcesReference.current = resources;
   syncResources(resources, config.settings);
   syncImageElementTexture(resources, imageElement);
 
