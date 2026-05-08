@@ -1,5 +1,5 @@
 import type {
-  HalftoneExportPose,
+  HalftonePose,
   HalftoneStudioSettings,
 } from "~/lib/halftone/state";
 
@@ -31,7 +31,7 @@ export type HalftoneInteractionState = {
 };
 
 export const createHalftoneInteractionState = (
-  initialPose?: Partial<HalftoneExportPose>,
+  initialPose?: Partial<HalftonePose>,
 ): HalftoneInteractionState => ({
   activePointerId: null,
   autoElapsed: initialPose?.autoElapsed ?? 0,

@@ -1,6 +1,6 @@
 import {
   normalizeHalftoneStudioSettings,
-  type HalftoneExportPose,
+  type HalftonePose,
   type HalftoneImageFit,
   type HalftoneStudioSettings,
   type HalftoneStudioSettingsOverrides,
@@ -12,7 +12,7 @@ export const MILESTONE_IMAGE_URL = "/illustrations/generated/milestone.jpg";
 export const MILESTONE_IMAGE_FIT: HalftoneImageFit = "cover";
 export const MILESTONE_PREVIEW_DISTANCE = 4;
 
-export const MILESTONE_INITIAL_POSE: HalftoneExportPose = {
+export const MILESTONE_INITIAL_POSE: HalftonePose = {
   autoElapsed: 0,
   rotateElapsed: 0,
   rotationX: 0,

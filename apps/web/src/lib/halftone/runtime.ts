@@ -23,7 +23,16 @@ import {
   type HalftoneTransmissionMaterial,
   renderHalftoneMaterialScene,
 } from "~/lib/halftone/materials";
+import type {
+  HalftonePointerSettings,
+  HalftoneRenderStrategy,
+  HalftoneRuntime,
+  HalftoneRuntimeConfig,
+  HalftoneSnapshotRequest,
+  HalftoneViewport,
+} from "~/lib/halftone/runtime-types";
 import type { HalftoneStudioSettings } from "~/lib/halftone/state";
+import type { HalftonePose } from "~/lib/halftone/state";
 import { runCleanupTasks } from "~/lib/lifecycle/run-cleanup-tasks";
 import {
   createSiteWebGlRenderer,
@@ -31,15 +40,6 @@ import {
   evaluateWebGlPolicy,
   type VisualRenderLoop,
 } from "~/lib/visual-runtime";
-import type {
-  HalftonePointerSettings,
-  HalftonePose,
-  HalftoneRenderStrategy,
-  HalftoneRuntime,
-  HalftoneRuntimeConfig,
-  HalftoneSnapshotRequest,
-  HalftoneViewport,
-} from "~/lib/halftone/runtime-types";
 
 type MutableRefObject<T> = { current: T };
 
@@ -535,13 +535,15 @@ export async function createHalftoneRuntime({
   const interactionReference: MutableRefObject<HalftoneInteractionState> = {
     current: createHalftoneInteractionState(initialConfig.initialPose),
   };
-  const animationReference: MutableRefObject<HalftoneStudioSettings["animation"]> =
-    {
-      current: initialConfig.settings.animation,
-    };
+  const animationReference: MutableRefObject<
+    HalftoneStudioSettings["animation"]
+  > = {
+    current: initialConfig.settings.animation,
+  };
   const didInteractReference: MutableRefObject<boolean> = { current: false };
-  const initialPoseReference: MutableRefObject<Partial<HalftonePose> | undefined> =
-    { current: initialConfig.initialPose };
+  const initialPoseReference: MutableRefObject<
+    Partial<HalftonePose> | undefined
+  > = { current: initialConfig.initialPose };
   const previewDistanceReference: MutableRefObject<number> = {
     current: initialConfig.previewDistance,
   };
@@ -613,14 +615,20 @@ export async function createHalftoneRuntime({
   canvas.style.height = "100%";
   canvas.style.pointerEvents =
     config.renderStrategy === "static" ? "none" : "auto";
-  canvas.style.touchAction = config.renderStrategy === "static" ? "auto" : "none";
+  canvas.style.touchAction =
+    config.renderStrategy === "static" ? "auto" : "none";
   canvas.style.width = "100%";
   container.appendChild(canvas);
 
   const materialAssets = await createHalftoneMaterialAssets(renderer);
   const scene3d = new THREE.Scene();
   scene3d.background = null;
-  const camera = new THREE.PerspectiveCamera(45, getWidth() / getHeight(), 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    getWidth() / getHeight(),
+    0.1,
+    100,
+  );
   camera.position.z = previewDistanceReference.current;
   const primaryLight = new THREE.DirectionalLight(0xffffff, 1.5);
   scene3d.add(primaryLight);
@@ -630,7 +638,11 @@ export async function createHalftoneRuntime({
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.08);
   scene3d.add(ambientLight);
   const material = createHalftoneMaterial();
-  applyHalftoneMaterialSettings(material, config.settings.material, materialAssets);
+  applyHalftoneMaterialSettings(
+    material,
+    config.settings.material,
+    materialAssets,
+  );
   const currentGeometry = geometryReference.current;
   if (!currentGeometry) {
     throw new Error("Halftone runtime geometry missing during setup.");
@@ -642,7 +654,10 @@ export async function createHalftoneRuntime({
     getRenderWidth(),
     getRenderHeight(),
   );
-  const transmissionTarget = createRenderTarget(getRenderWidth(), getRenderHeight());
+  const transmissionTarget = createRenderTarget(
+    getRenderWidth(),
+    getRenderHeight(),
+  );
   const blurTargetA = createRenderTarget(getRenderWidth(), getRenderHeight());
   const blurTargetB = createRenderTarget(getRenderWidth(), getRenderHeight());
   const fullScreenGeometry = new THREE.PlaneGeometry(2, 2);
@@ -670,14 +685,22 @@ export async function createHalftoneRuntime({
     uniforms: {
       tScene: { value: sceneTarget.texture },
       tGlow: { value: blurTargetB.texture },
-      effectResolution: { value: new THREE.Vector2(getRenderWidth(), getRenderHeight()) },
-      logicalResolution: { value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()) },
+      effectResolution: {
+        value: new THREE.Vector2(getRenderWidth(), getRenderHeight()),
+      },
+      logicalResolution: {
+        value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()),
+      },
       tile: { value: config.settings.halftone.scale },
       s_3: { value: config.settings.halftone.power },
       s_4: { value: config.settings.halftone.width },
-      applyToDarkAreas: { value: config.settings.halftone.toneTarget === "dark" ? 1 : 0 },
+      applyToDarkAreas: {
+        value: config.settings.halftone.toneTarget === "dark" ? 1 : 0,
+      },
       dashColor: { value: new THREE.Color(config.settings.halftone.dashColor) },
-      hoverDashColor: { value: new THREE.Color(config.settings.halftone.hoverDashColor) },
+      hoverDashColor: {
+        value: new THREE.Color(config.settings.halftone.hoverDashColor),
+      },
       time: { value: 0 },
       waveAmount: { value: 0 },
       waveSpeed: { value: 1 },
@@ -701,16 +724,22 @@ export async function createHalftoneRuntime({
   });
 
   const blurHorizontalScene = new THREE.Scene();
-  blurHorizontalScene.add(new THREE.Mesh(fullScreenGeometry, blurHorizontalMaterial));
+  blurHorizontalScene.add(
+    new THREE.Mesh(fullScreenGeometry, blurHorizontalMaterial),
+  );
   const blurVerticalScene = new THREE.Scene();
-  blurVerticalScene.add(new THREE.Mesh(fullScreenGeometry, blurVerticalMaterial));
+  blurVerticalScene.add(
+    new THREE.Mesh(fullScreenGeometry, blurVerticalMaterial),
+  );
   const postScene = new THREE.Scene();
   postScene.add(new THREE.Mesh(fullScreenGeometry, halftoneMaterial));
   const imageMaterial = new THREE.ShaderMaterial({
     uniforms: {
       tImage: { value: null },
       imageSize: { value: new THREE.Vector2(1, 1) },
-      viewportSize: { value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()) },
+      viewportSize: {
+        value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()),
+      },
       zoom: { value: getImagePreviewZoom(previewDistanceReference.current) },
       contrast: { value: config.settings.halftone.imageContrast },
       imageFit: { value: imageFitReference.current === "cover" ? 1 : 0 },
@@ -771,9 +800,92 @@ export async function createHalftoneRuntime({
     blurTargetB.setSize(renderWidth, renderHeight);
     blurHorizontalMaterial.uniforms.res.value.set(renderWidth, renderHeight);
     blurVerticalMaterial.uniforms.res.value.set(renderWidth, renderHeight);
-    halftoneMaterial.uniforms.effectResolution.value.set(renderWidth, renderHeight);
-    halftoneMaterial.uniforms.logicalResolution.value.set(logicalWidth, logicalHeight);
+    halftoneMaterial.uniforms.effectResolution.value.set(
+      renderWidth,
+      renderHeight,
+    );
+    halftoneMaterial.uniforms.logicalResolution.value.set(
+      logicalWidth,
+      logicalHeight,
+    );
     imageMaterial.uniforms.viewportSize.value.set(logicalWidth, logicalHeight);
+  };
+
+  const updatePointerPosition = (
+    event: PointerEvent,
+    options?: { resetVelocity?: boolean },
+  ) => {
+    const interaction = interactionReference.current;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(rect.width, 1);
+    const height = Math.max(rect.height, 1);
+
+    const nextMouseX = THREE.MathUtils.clamp(
+      (event.clientX - rect.left) / width,
+      0,
+      1,
+    );
+    const nextMouseY = THREE.MathUtils.clamp(
+      (event.clientY - rect.top) / height,
+      0,
+      1,
+    );
+
+    const deltaX = nextMouseX - interaction.mouseX;
+    const deltaY = nextMouseY - interaction.mouseY;
+
+    interaction.mouseX = nextMouseX;
+    interaction.mouseY = nextMouseY;
+    interaction.pointerInside =
+      interaction.dragging ||
+      (event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom);
+
+    if (options?.resetVelocity) {
+      interaction.pointerVelocityX = 0;
+      interaction.pointerVelocityY = 0;
+      interaction.smoothedMouseX = nextMouseX;
+      interaction.smoothedMouseY = nextMouseY;
+    } else {
+      interaction.pointerVelocityX = deltaX;
+      interaction.pointerVelocityY = deltaY;
+    }
+  };
+
+  const markFirstInteraction = () => {
+    if (didInteractReference.current) {
+      return;
+    }
+
+    didInteractReference.current = true;
+    onFirstInteraction();
+  };
+
+  const handlePointerMove = (event: PointerEvent) => {
+    const interaction = interactionReference.current;
+    const resetVelocity = !interaction.pointerInside && !interaction.dragging;
+    updatePointerPosition(
+      event,
+      resetVelocity ? { resetVelocity: true } : undefined,
+    );
+
+    if (config.settings.sourceMode === "image" && interaction.pointerInside) {
+      markFirstInteraction();
+    }
+  };
+
+  const handlePointerDown = (event: PointerEvent) => {
+    updatePointerPosition(event, { resetVelocity: true });
+    markFirstInteraction();
+  };
+
+  const handlePointerLeave = () => {
+    const interaction = interactionReference.current;
+    interaction.pointerInside = false;
+    interaction.pointerVelocityX = 0;
+    interaction.pointerVelocityY = 0;
   };
 
   const clock = new THREE.Timer();
@@ -797,13 +909,74 @@ export async function createHalftoneRuntime({
       activeSettings.animation.waveEnabled && !isImageMode
         ? activeSettings.animation.waveAmount
         : 0;
-    halftoneMaterial.uniforms.waveSpeed.value = activeSettings.animation.waveSpeed;
+    halftoneMaterial.uniforms.waveSpeed.value =
+      activeSettings.animation.waveSpeed;
     if (isImageMode && !hasImageTexture) {
       renderer.setRenderTarget(null);
       renderer.clear();
       return;
     }
+    halftoneMaterial.uniforms.cropToBounds.value = isImageMode ? 1 : 0;
+
     if (isImageMode) {
+      const imageInteractionSettings = imageInteractionReference.current;
+      const interaction = interactionReference.current;
+      const hoverEasing =
+        1 -
+        Math.exp(
+          -delta *
+            (interaction.pointerInside
+              ? imageInteractionSettings.hoverFadeIn
+              : imageInteractionSettings.hoverFadeOut),
+        );
+      interaction.hoverStrength +=
+        ((interaction.pointerInside ? 1 : 0) - interaction.hoverStrength) *
+        hoverEasing;
+      interaction.smoothedMouseX +=
+        (interaction.mouseX - interaction.smoothedMouseX) *
+        imageInteractionSettings.pointerFollow;
+      interaction.smoothedMouseY +=
+        (interaction.mouseY - interaction.smoothedMouseY) *
+        imageInteractionSettings.pointerFollow;
+      interaction.pointerVelocityX *=
+        imageInteractionSettings.pointerVelocityDamping;
+      interaction.pointerVelocityY *=
+        imageInteractionSettings.pointerVelocityDamping;
+
+      halftoneMaterial.uniforms.interactionUv.value.set(
+        interaction.smoothedMouseX,
+        1 - interaction.smoothedMouseY,
+      );
+      halftoneMaterial.uniforms.interactionVelocity.value.set(
+        interaction.pointerVelocityX * logicalWidth,
+        -interaction.pointerVelocityY * logicalHeight,
+      );
+      halftoneMaterial.uniforms.dragOffset.value.set(0, 0);
+      halftoneMaterial.uniforms.hoverHalftoneActive.value = activeSettings
+        .animation.hoverHalftoneEnabled
+        ? interaction.hoverStrength
+        : 0;
+      halftoneMaterial.uniforms.hoverHalftonePowerShift.value = activeSettings
+        .animation.hoverHalftoneEnabled
+        ? activeSettings.animation.hoverHalftonePowerShift
+        : 0;
+      halftoneMaterial.uniforms.hoverHalftoneRadius.value =
+        activeSettings.animation.hoverHalftoneRadius;
+      halftoneMaterial.uniforms.hoverHalftoneWidthShift.value = activeSettings
+        .animation.hoverHalftoneEnabled
+        ? activeSettings.animation.hoverHalftoneWidthShift
+        : 0;
+      halftoneMaterial.uniforms.hoverLightStrength.value = activeSettings
+        .animation.hoverLightEnabled
+        ? activeSettings.animation.hoverLightIntensity *
+          interaction.hoverStrength
+        : 0;
+      halftoneMaterial.uniforms.hoverLightRadius.value =
+        activeSettings.animation.hoverLightRadius;
+      halftoneMaterial.uniforms.hoverFlowStrength.value = 0;
+      halftoneMaterial.uniforms.hoverFlowRadius.value = 0.18;
+      halftoneMaterial.uniforms.dragFlowStrength.value = 0;
+
       imageMaterial.uniforms.zoom.value = getImagePreviewZoom(baseDistance);
       renderer.setRenderTarget(sceneTarget);
       renderer.render(imageScene, orthographicCamera);
@@ -848,7 +1021,9 @@ export async function createHalftoneRuntime({
   };
 
   renderCurrentFrame = () => {
-    renderFrame(typeof performance === "undefined" ? undefined : performance.now());
+    renderFrame(
+      typeof performance === "undefined" ? undefined : performance.now(),
+    );
   };
 
   stopObservingSize = observeElementSize(container, () => {
@@ -859,6 +1034,9 @@ export async function createHalftoneRuntime({
   });
 
   if (config.renderStrategy !== "static") {
+    canvas.addEventListener("pointermove", handlePointerMove);
+    canvas.addEventListener("pointerdown", handlePointerDown);
+    canvas.addEventListener("pointerleave", handlePointerLeave);
     renderLoop = createVisualRenderLoop({
       renderFrame,
       shouldRender: () => active && !cancelled && !disposed,
@@ -870,7 +1048,12 @@ export async function createHalftoneRuntime({
     renderCurrentFrame();
   }
 
-  captureSnapshot = async ({ width, height, backgroundColor, includeBackground }) => {
+  captureSnapshot = async ({
+    width,
+    height,
+    backgroundColor,
+    includeBackground,
+  }) => {
     const blob = await (async () => {
       const offscreen = document.createElement("canvas");
       offscreen.width = width;
@@ -894,6 +1077,9 @@ export async function createHalftoneRuntime({
     runCleanupTasks([
       () => stopObservingSize?.(),
       () => renderLoop?.dispose(),
+      () => canvas.removeEventListener("pointermove", handlePointerMove),
+      () => canvas.removeEventListener("pointerdown", handlePointerDown),
+      () => canvas.removeEventListener("pointerleave", handlePointerLeave),
       () => clock.dispose(),
       () => blurHorizontalMaterial.dispose(),
       () => blurVerticalMaterial.dispose(),
@@ -972,11 +1158,15 @@ export async function createHalftoneRuntime({
         prevAnimation.autoRotateEnabled !== nextAnimation.autoRotateEnabled ||
         prevAnimation.followHoverEnabled !== nextAnimation.followHoverEnabled ||
         prevAnimation.followDragEnabled !== nextAnimation.followDragEnabled ||
-        prevAnimation.hoverHalftoneEnabled !== nextAnimation.hoverHalftoneEnabled ||
+        prevAnimation.hoverHalftoneEnabled !==
+          nextAnimation.hoverHalftoneEnabled ||
         prevAnimation.hoverLightEnabled !== nextAnimation.hoverLightEnabled ||
         prevAnimation.dragFlowEnabled !== nextAnimation.dragFlowEnabled
       ) {
-        resetHalftoneInteractionState(interactionReference.current, nextAnimation);
+        resetHalftoneInteractionState(
+          interactionReference.current,
+          nextAnimation,
+        );
       }
       if (
         (!prevAnimation.rotateEnabled && nextAnimation.rotateEnabled) ||
@@ -985,7 +1175,10 @@ export async function createHalftoneRuntime({
         interactionReference.current.rotateElapsed = 0;
       }
       animationReference.current = nextAnimation;
-      if (geometryReference.current && resources.mesh.geometry !== geometryReference.current) {
+      if (
+        geometryReference.current &&
+        resources.mesh.geometry !== geometryReference.current
+      ) {
         resources.mesh.geometry = geometryReference.current;
       }
       syncResources(resources, nextConfig.settings);

@@ -1,11 +1,11 @@
 import { createEffect, createMemo, on, onCleanup, onMount } from "solid-js";
 import * as THREE from "three";
 
-import { VIRTUAL_RENDER_HEIGHT, type HalftoneImageFit } from "~/lib/halftone/footprint";
-import type { HalftoneExportPose, HalftoneStudioSettings } from "~/lib/halftone/state";
 import {
-  createHalftoneRuntime,
-} from "~/lib/halftone/runtime";
+  VIRTUAL_RENDER_HEIGHT,
+  type HalftoneImageFit,
+} from "~/lib/halftone/footprint";
+import { createHalftoneRuntime } from "~/lib/halftone/runtime";
 import type {
   HalftonePointerSettings,
   HalftoneRenderStrategy,
@@ -13,20 +13,27 @@ import type {
   HalftoneRuntimeConfig,
   HalftoneSnapshotFn,
 } from "~/lib/halftone/runtime-types";
+import type {
+  HalftonePose,
+  HalftoneStudioSettings,
+} from "~/lib/halftone/state";
 
 type MutableRefObject<T> = { current: T };
 
-export type HalftoneImageInteractionSettings = HalftonePointerSettings;
-export type { HalftoneSnapshotFn, HalftoneRenderStrategy };
+export type {
+  HalftonePointerSettings,
+  HalftoneSnapshotFn,
+  HalftoneRenderStrategy,
+};
 
 type HalftoneCanvasProps = {
   geometry: THREE.BufferGeometry | null;
-  initialPose?: Partial<HalftoneExportPose>;
+  initialPose?: Partial<HalftonePose>;
   imageElement: HTMLImageElement | null;
   imageFit?: HalftoneImageFit;
-  imageInteraction?: Partial<HalftoneImageInteractionSettings>;
+  imageInteraction?: Partial<HalftonePointerSettings>;
   onFirstInteraction: () => void;
-  onPoseChange: (pose: HalftoneExportPose) => void;
+  onPoseChange: (pose: HalftonePose) => void;
   previewDistance: number;
   renderStrategy?: HalftoneRenderStrategy;
   settings: HalftoneStudioSettings;

@@ -32,7 +32,7 @@ export interface HalftoneMaterialSettings {
   environmentPower: number;
 }
 
-export interface HalftoneEffectSettings {
+export interface HalftonePatternSettings {
   enabled: boolean;
   scale: number;
   power: number;
@@ -106,7 +106,7 @@ export interface HalftoneStudioSettings {
   shapeKey: string;
   lighting: HalftoneLightingSettings;
   material: HalftoneMaterialSettings;
-  halftone: HalftoneEffectSettings;
+  halftone: HalftonePatternSettings;
   background: HalftoneBackgroundSettings;
   animation: HalftoneAnimationSettings;
 }
@@ -119,7 +119,7 @@ export type HalftoneStudioSettingsOverrides = Partial<
 > & {
   lighting?: Partial<HalftoneLightingSettings>;
   material?: Partial<HalftoneMaterialSettings>;
-  halftone?: Partial<HalftoneEffectSettings>;
+  halftone?: Partial<HalftonePatternSettings>;
   background?: Partial<HalftoneBackgroundSettings>;
   animation?: Partial<HalftoneAnimationSettings>;
 };
@@ -145,7 +145,7 @@ export interface HalftoneStudioState {
   statusIsError: boolean;
 }
 
-export interface HalftoneExportPose {
+export interface HalftonePose {
   autoElapsed: number;
   rotateElapsed: number;
   rotationX: number;
@@ -163,7 +163,7 @@ export type HalftoneStudioAction =
   | { type: "replaceSettings"; value: HalftoneStudioSettings }
   | { type: "patchLighting"; value: Partial<HalftoneLightingSettings> }
   | { type: "patchMaterial"; value: Partial<HalftoneMaterialSettings> }
-  | { type: "patchHalftone"; value: Partial<HalftoneEffectSettings> }
+  | { type: "patchHalftone"; value: Partial<HalftonePatternSettings> }
   | { type: "patchBackground"; value: Partial<HalftoneBackgroundSettings> }
   | { type: "patchAnimation"; value: Partial<HalftoneAnimationSettings> }
   | {
@@ -210,7 +210,7 @@ export const DEFAULT_GEOMETRY_SPECS: HalftoneGeometrySpec[] = [
   { key: "dollarCoin", label: "Dollar Coin", kind: "builtin" },
 ];
 
-export const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftoneEffectSettings = {
+export const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftonePatternSettings = {
   enabled: true,
   scale: 24.72,
   power: -0.07,
@@ -221,7 +221,7 @@ export const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftoneEffectSettings = {
   hoverDashColor: "#4A38F5",
 };
 
-export const DEFAULT_IMAGE_HALFTONE_SETTINGS: HalftoneEffectSettings = {
+export const DEFAULT_IMAGE_HALFTONE_SETTINGS: HalftonePatternSettings = {
   enabled: true,
   scale: 24.72,
   power: -0.07,
@@ -423,7 +423,7 @@ export const LEGACY_HALFTONE_SETTING_KEYS = [
 ] as const;
 
 export function isRoundedBandHalftoneSettings(value: unknown): value is Omit<
-  HalftoneEffectSettings,
+  HalftonePatternSettings,
   "hoverDashColor" | "toneTarget"
 > & {
   hoverDashColor?: string;
@@ -456,10 +456,10 @@ export function getDefaultHalftoneSettings(sourceMode: HalftoneSourceMode) {
     : DEFAULT_SHAPE_HALFTONE_SETTINGS;
 }
 
-function normalizeHalftoneEffectSettings(
-  defaults: HalftoneEffectSettings,
-  settings?: Partial<HalftoneEffectSettings>,
-): HalftoneEffectSettings {
+function normalizeHalftonePatternSettings(
+  defaults: HalftonePatternSettings,
+  settings?: Partial<HalftonePatternSettings>,
+): HalftonePatternSettings {
   return {
     enabled: settings?.enabled ?? defaults.enabled,
     scale: settings?.scale ?? defaults.scale,
@@ -569,7 +569,7 @@ export function normalizeHalftoneStudioSettings(
       ...settings?.lighting,
     },
     material,
-    halftone: normalizeHalftoneEffectSettings(
+    halftone: normalizeHalftonePatternSettings(
       getDefaultHalftoneSettings(sourceMode),
       settings?.halftone,
     ),

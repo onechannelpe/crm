@@ -12,7 +12,6 @@ export { HalftoneImageCanvas } from "./halftone-image-canvas";
 export { createHalftoneRuntime } from "./runtime";
 export type {
   HalftonePointerSettings,
-  HalftonePose,
   HalftoneRenderStrategy,
   HalftoneRuntime,
   HalftoneRuntimeConfig,
@@ -54,8 +53,8 @@ export {
   normalizeHalftoneStudioSettings,
   type HalftoneAnimationSettings,
   type HalftoneBackgroundSettings,
-  type HalftoneEffectSettings,
-  type HalftoneExportPose,
+  type HalftonePatternSettings,
+  type HalftonePose,
   type HalftoneGeometrySpec,
   type HalftoneLightingSettings,
   type HalftoneMaterialSettings,

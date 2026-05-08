@@ -13,22 +13,22 @@ import { loadVisualImage } from "~/lib/visual-runtime";
 import type { HalftoneImageFit } from "./footprint";
 import {
   HalftoneCanvas,
-  type HalftoneImageInteractionSettings,
+  type HalftonePointerSettings,
   type HalftoneSnapshotFn,
 } from "./halftone-canvas";
-import type { HalftoneExportPose, HalftoneStudioSettings } from "./state";
+import type { HalftonePose, HalftoneStudioSettings } from "./state";
 
 type MutableRefObject<T> = { current: T };
 
 type HalftoneImageCanvasProps = {
   crossOrigin?: HTMLImageElement["crossOrigin"];
   imageFit?: HalftoneImageFit;
-  imageInteraction?: Partial<HalftoneImageInteractionSettings>;
+  imageInteraction?: Partial<HalftonePointerSettings>;
   imageUrl: string;
-  initialPose?: Partial<HalftoneExportPose>;
+  initialPose?: Partial<HalftonePose>;
   onFirstInteraction?: () => void;
   onImageLoadError?: (error: Error) => void;
-  onPoseChange?: (pose: HalftoneExportPose) => void;
+  onPoseChange?: (pose: HalftonePose) => void;
   previewDistance: number;
   settings: HalftoneStudioSettings;
   snapshotRef?: MutableRefObject<HalftoneSnapshotFn | null>;
@@ -36,7 +36,7 @@ type HalftoneImageCanvasProps = {
 };
 
 const noopFirstInteraction = () => {};
-const noopPoseChange = (_pose: HalftoneExportPose) => {};
+const noopPoseChange = (_pose: HalftonePose) => {};
 
 function createImageLoadError(imageUrl: string) {
   return new Error(`Halftone image failed to load: ${imageUrl}`);

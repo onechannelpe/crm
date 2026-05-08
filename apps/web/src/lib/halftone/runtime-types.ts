@@ -1,12 +1,7 @@
 import * as THREE from "three";
 
 import type { HalftoneImageFit } from "./footprint";
-import type {
-  HalftoneExportPose,
-  HalftoneStudioSettings,
-} from "./state";
-
-export type HalftonePose = HalftoneExportPose;
+import type { HalftonePose, HalftoneStudioSettings } from "./state";
 
 export type HalftoneRenderStrategy = "continuous" | "static";
 
