@@ -1,5 +1,13 @@
 .main {
   min-height: 100dvh;
+  --font-sans:
+    "Host Grotesk", "Inter Variable", Inter, "Segoe UI", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  --font-display:
+    "Host Grotesk", "Inter Variable", Inter, "Segoe UI", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  --font-serif: "Aleo", "Times New Roman", Georgia, serif;
+  font-family: var(--font-sans);
 }
 
 .header {

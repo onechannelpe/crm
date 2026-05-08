@@ -1,35 +1,86 @@
 .hero {
-  max-width: 920px;
-  margin: 32px auto 0;
-  padding: 0 24px 32px;
+  position: relative;
+  max-width: var(--layout-reading-wide);
+  margin: 12px auto 0;
+  padding: var(--spacing-11) var(--spacing-6) var(--spacing-9);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  row-gap: 16px;
+  overflow: clip;
+}
+
+.heroBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      120% 85% at 50% 0%,
+      color-mix(in oklab, var(--accent) 55%, transparent) 0%,
+      transparent 68%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--tertiary) 90%, transparent) 0%,
+      transparent 90%
+    );
 }
 
 .heroTitle {
   margin: 0;
-  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-size: clamp(2rem, 4.7vw, 3.5rem);
   line-height: 1.05;
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   letter-spacing: -0.02em;
 }
 
-.heroBody {
-  margin: 16px 0 0;
-  max-width: 620px;
+.heroTitleMuted {
   color: var(--foreground-secondary);
-  line-height: 1.65;
+  font-family: var(--font-serif);
+}
+
+.heroTitleBold {
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+}
+
+.heroBody {
+  margin: 0;
+  max-width: 591px;
+  color: var(--foreground-secondary);
+  line-height: 1.6;
+}
+
+.heroCta {
+  margin-top: 2px;
+}
+
+.heroVisual {
+  margin-top: var(--spacing-2);
+  width: min(100%, var(--layout-reading-wide));
+  height: 462px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: #777;
+  overflow: clip;
+  box-shadow: var(--shadow-elevation-1);
 }
 
 .root {
-  --sidebar-w: 148px;
-  --sidebar-gap: 32px;
+  --sidebar-w: var(--layout-sidebar-width);
+  --sidebar-gap: var(--layout-sidebar-gap);
   max-width: calc(var(--sidebar-w) + var(--sidebar-gap) + 660px);
   margin-inline: auto;
-  padding-inline: 24px;
-  padding-bottom: 80px;
+  padding-inline: var(--spacing-6);
+  padding-bottom: var(--spacing-12);
 }
 
 .title {
-  margin: 24px 0 40px calc(var(--sidebar-w) + var(--sidebar-gap));
+  margin: var(--spacing-6) 0 var(--spacing-10)
+    calc(var(--sidebar-w) + var(--sidebar-gap));
   font-size: 1.8em;
   display: flex;
   flex-direction: column;
@@ -54,6 +105,16 @@
 }
 
 @media (max-width: 640px) {
+  .hero {
+    margin-top: 0;
+    padding: var(--spacing-7) var(--spacing-4) var(--spacing-6);
+    row-gap: 14px;
+  }
+
+  .heroVisual {
+    height: 360px;
+  }
+
   .title {
     margin-inline-start: 0;
     text-align: center;

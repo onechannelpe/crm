@@ -28,6 +28,10 @@
     "@crm/email-composer": "workspace:*",
     "@crm/images": "workspace:*",
     "@crm/message-channels": "workspace:*",
+    "@fontsource-variable/fraunces": "^5.2.9",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource/aleo": "^5.2.7",
+    "@fontsource/host-grotesk": "^5.2.8",
     "@libsql/client": "^0.17.2",
     "@mdx-js/rollup": "^3.1.1",
     "@node-rs/argon2": "^2.0.2",
@@ -53,6 +57,7 @@
     "solid-js": "^1.9.11",
     "solid-mdx": "^0.0.7",
     "srvx": "^0.11.15",
+    "three": "^0.184.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
@@ -61,6 +66,7 @@
     "@sentry/vite-plugin": "^5.2.0",
     "@types/mdx": "^2.0.13",
     "@types/qrcode": "^1.5.6",
+    "@types/three": "^0.184.1",
     "eslint-plugin-solid": "^0.14.5",
     "rollup-plugin-visualizer": "^7.0.1",
     "vite": "^7.3.2",

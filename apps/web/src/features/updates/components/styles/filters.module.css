@@ -1,10 +1,11 @@
 .filterBar {
-  max-width: 920px;
-  margin: 16px auto 24px;
-  padding: 0 24px;
+  max-width: var(--layout-reading-wide);
+  margin: var(--spacing-2) auto var(--spacing-6);
+  padding: 0 var(--spacing-6);
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
+  gap: var(--spacing-2);
 }
 
 .filterButton {
@@ -12,7 +13,7 @@
   color: var(--foreground-secondary);
   background: transparent;
   border-radius: var(--radius-sm);
-  padding: 6px 10px;
+  padding: 6px var(--spacing-3);
   font-size: var(--font-size-caption);
   cursor: pointer;
 
