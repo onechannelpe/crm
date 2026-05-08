@@ -54,10 +54,6 @@
   line-height: 1.6;
 }
 
-.heroCta {
-  margin-top: 2px;
-}
-
 .heroVisual {
   margin-top: var(--spacing-2);
   width: 100%;

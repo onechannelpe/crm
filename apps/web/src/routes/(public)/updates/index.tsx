@@ -36,8 +36,6 @@ export default function UpdatesPage() {
     <>
       <UpdatesHero
         body={UPDATES_PAGE_COPY.heroBody}
-        ctaHref={UPDATES_PAGE_COPY.heroCtaHref}
-        ctaLabel={UPDATES_PAGE_COPY.heroCtaLabel}
         titleBold={UPDATES_PAGE_COPY.titleBold}
         titleMuted={UPDATES_PAGE_COPY.titleMuted}
       />
