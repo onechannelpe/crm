@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export type SiteWebGlRendererParameters = THREE.WebGLRendererParameters & {
-  onContextLost?: (event: WebGLContextEvent) => void;
+  onContextLost?: (event: Event) => void;
 };
 
 export const SITE_WEBGL_CONTEXT_LOST_EVENT = "sitewebglcontextlost";
@@ -31,13 +31,10 @@ export function createSiteWebGlRenderer(
   };
 
   const handleContextLost = (event: Event) => {
-    const webglEvent = event as WebGLContextEvent;
-    if (typeof webglEvent.preventDefault === "function") {
-      webglEvent.preventDefault();
-    }
+    event.preventDefault();
 
     try {
-      onContextLost?.(webglEvent);
+      onContextLost?.(event);
     } catch (callbackError) {
       if (process.env.NODE_ENV !== "production") {
         console.error("onContextLost callback threw:", callbackError);

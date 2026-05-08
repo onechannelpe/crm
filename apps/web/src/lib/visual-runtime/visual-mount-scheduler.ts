@@ -152,7 +152,7 @@ export function createVisualMountScheduler(
     if (requestAnimationFrame && cancelAnimationFrame) {
       let timeoutHandle: TimeoutHandle | null = null;
       const animationFrameHandle = requestAnimationFrame(() => {
-        timeoutHandle = setTimeout(runNextJob, 0) as TimeoutHandle;
+        timeoutHandle = setTimeout(runNextJob, 0);
       });
 
       cancelScheduledDrain = () => {
@@ -166,11 +166,8 @@ export function createVisualMountScheduler(
       return;
     }
 
-    const timeoutHandle = setTimeout(
-      runNextJob,
-      nextJob.timeoutMs,
-    ) as TimeoutHandle;
-    cancelScheduledDrain = () => clearTimeout(timeoutHandle as TimeoutHandle);
+    const timeoutHandle = setTimeout(runNextJob, nextJob.timeoutMs);
+    cancelScheduledDrain = () => clearTimeout(timeoutHandle);
   };
 
   return {

@@ -155,17 +155,26 @@ function updateHalftone(
   resources: SceneResources,
   settings: HalftoneStudioSettings,
 ) {
+  const dashColorUniform = resources.halftoneMaterial.uniforms.dashColor;
+  const hoverDashColorUniform =
+    resources.halftoneMaterial.uniforms.hoverDashColor;
+
+  if (
+    !dashColorUniform ||
+    !(dashColorUniform.value instanceof THREE.Color) ||
+    !hoverDashColorUniform ||
+    !(hoverDashColorUniform.value instanceof THREE.Color)
+  ) {
+    return;
+  }
+
   resources.halftoneMaterial.uniforms.tile.value = settings.halftone.scale;
   resources.halftoneMaterial.uniforms.s_3.value = settings.halftone.power;
   resources.halftoneMaterial.uniforms.s_4.value = settings.halftone.width;
   resources.halftoneMaterial.uniforms.applyToDarkAreas.value =
     settings.halftone.toneTarget === "dark" ? 1 : 0;
-  (resources.halftoneMaterial.uniforms.dashColor.value as THREE.Color).set(
-    settings.halftone.dashColor,
-  );
-  (resources.halftoneMaterial.uniforms.hoverDashColor.value as THREE.Color).set(
-    settings.halftone.hoverDashColor,
-  );
+  dashColorUniform.value.set(settings.halftone.dashColor);
+  hoverDashColorUniform.value.set(settings.halftone.hoverDashColor);
   resources.halftoneMaterial.uniforms.waveAmount.value =
     settings.animation.waveEnabled && settings.sourceMode !== "image"
       ? settings.animation.waveAmount

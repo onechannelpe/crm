@@ -2,14 +2,10 @@ import * as THREE from "three";
 
 import { observeElementSize } from "~/lib/dom/observe-element-size";
 import {
-  getImageFootprintScale,
   getImagePreviewZoom,
-  getMeshFootprintScale,
   type HalftoneImageFit,
-  VIRTUAL_RENDER_HEIGHT,
 } from "~/lib/halftone/footprint";
 import {
-  applySpringStep,
   createHalftoneInteractionState,
   resetHalftoneInteractionState,
   type HalftoneInteractionState,
@@ -23,7 +19,6 @@ import {
   resolveImageInteractionSettings,
   syncImageElementTexture,
   syncResources,
-  type SceneResources,
 } from "~/lib/halftone/runtime-core";
 import { createRuntimeInteractionHandlers } from "~/lib/halftone/runtime-interaction";
 import {
@@ -126,9 +121,6 @@ export async function createHalftoneRuntime({
 
   let renderLoop: VisualRenderLoop | null = null;
   let cancelled = false;
-  let stopObservingSize: (() => void) | null = null;
-  let disposeRuntime = () => {};
-  let renderCurrentFrame = () => {};
 
   const renderer = createSiteWebGlRenderer({
     antialias: false,
@@ -358,13 +350,13 @@ export async function createHalftoneRuntime({
     renderer.render(postScene, orthographicCamera);
   };
 
-  renderCurrentFrame = () => {
+  const renderCurrentFrame = () => {
     renderFrame(
       typeof performance === "undefined" ? undefined : performance.now(),
     );
   };
 
-  stopObservingSize = observeElementSize(container, () => {
+  const stopObservingSize = observeElementSize(container, () => {
     syncSize();
     if (config.renderStrategy === "static") {
       renderCurrentFrame();
@@ -410,11 +402,15 @@ export async function createHalftoneRuntime({
     return blob;
   };
 
-  disposeRuntime = () => {
+  const disposeRuntime = () => {
     cancelled = true;
     runCleanupTasks([
-      () => stopObservingSize?.(),
-      () => renderLoop?.dispose(),
+      () => stopObservingSize(),
+      () => {
+        if (renderLoop) {
+          renderLoop.dispose();
+        }
+      },
       () => canvas.removeEventListener("pointermove", handlePointerMove),
       () => canvas.removeEventListener("pointerdown", handlePointerDown),
       () => canvas.removeEventListener("pointerleave", handlePointerLeave),

@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 
 import {
   evaluateWebGlPolicy,
@@ -19,7 +19,7 @@ export function useWebGlPolicy() {
   onMount(() => {
     setDecision(evaluateWebGlPolicy());
 
-    if (typeof window === "undefined" || !("matchMedia" in window)) {
+    if (!("matchMedia" in window)) {
       return;
     }
 
@@ -28,17 +28,10 @@ export function useWebGlPolicy() {
     );
     const handleMotionChange = () => setDecision(evaluateWebGlPolicy());
 
-    if (typeof mediaQueryList.addEventListener === "function") {
-      mediaQueryList.addEventListener("change", handleMotionChange);
-      return () => {
-        mediaQueryList.removeEventListener("change", handleMotionChange);
-      };
-    }
-
-    mediaQueryList.addListener(handleMotionChange);
-    return () => {
-      mediaQueryList.removeListener(handleMotionChange);
-    };
+    mediaQueryList.addEventListener("change", handleMotionChange);
+    onCleanup(() => {
+      mediaQueryList.removeEventListener("change", handleMotionChange);
+    });
   });
 
   return decision;

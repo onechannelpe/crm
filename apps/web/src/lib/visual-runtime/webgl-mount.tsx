@@ -196,7 +196,9 @@ export function WebGlMount(props: WebGlMountProps) {
 
   return (
     <div
-      ref={rootReference}
+      ref={(element) => {
+        rootReference = element;
+      }}
       style={{
         height: "100%",
         "min-height": "1px",

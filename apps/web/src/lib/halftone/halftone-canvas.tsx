@@ -67,11 +67,13 @@ export function HalftoneCanvas(props: HalftoneCanvasProps) {
 
     let cancelled = false;
 
-    void createHalftoneRuntime({
-      config: runtimeConfig(),
-      host: mountElement,
-      imageElement: props.imageElement,
-    }).then((nextRuntime) => {
+    const mountRuntime = async () => {
+      const nextRuntime = await createHalftoneRuntime({
+        config: runtimeConfig(),
+        host: mountElement,
+        imageElement: props.imageElement,
+      });
+
       if (cancelled) {
         nextRuntime.dispose();
         return;
@@ -88,7 +90,9 @@ export function HalftoneCanvas(props: HalftoneCanvasProps) {
             width,
           });
       }
-    });
+    };
+
+    void mountRuntime();
 
     onCleanup(() => {
       cancelled = true;
@@ -118,7 +122,9 @@ export function HalftoneCanvas(props: HalftoneCanvasProps) {
   return (
     <div
       aria-hidden
-      ref={mountReference}
+      ref={(element) => {
+        mountReference = element;
+      }}
       style={{
         background: props.settings.background.transparent
           ? "transparent"

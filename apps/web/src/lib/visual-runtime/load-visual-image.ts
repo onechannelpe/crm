@@ -48,13 +48,16 @@ export function loadVisualImage(
       image.crossOrigin = crossOrigin;
     }
 
-    image.onload = () => {
+    const handleLoad = () => {
       void settleImageDecode(image).then(() => resolve(image));
     };
 
-    image.onerror = () => {
+    const handleError = () => {
       reject(createVisualImageLoadError(imageUrl, label));
     };
+
+    image.addEventListener("load", handleLoad, { once: true });
+    image.addEventListener("error", handleError, { once: true });
 
     image.src = imageUrl;
   }).catch((error: unknown) => {
