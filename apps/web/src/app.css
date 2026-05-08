@@ -57,15 +57,15 @@
   --font-size-heading-sm: var(--font-16); /* card/section headings */
   --font-size-heading-md: var(--font-20); /* page titles, auth titles */
   --font-size-heading-lg: var(--font-24); /* stat/metric display numbers */
-  --font-size-3_5: 1.038rem;
-  --font-size-4_5: 1.346rem;
-  --font-size-5_5: 1.654rem;
-  --font-size-6: 1.846rem;
-  --font-size-8: 2.462rem;
-  --font-size-10x: 3.077rem;
-  --font-size-12x: 3.692rem;
-  --font-size-15x: 4.615rem;
-  --font-size-20x: 6.154rem;
+  --font-size-3_5: 0.875rem;
+  --font-size-4_5: 1.125rem;
+  --font-size-5_5: 1.375rem;
+  --font-size-6: 1.5rem;
+  --font-size-8: 2rem;
+  --font-size-10x: 2.5rem;
+  --font-size-12x: 3rem;
+  --font-size-15x: 3.75rem;
+  --font-size-20x: 5rem;
 
   /* font weight */
   --font-weight-light: 300;
