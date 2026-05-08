@@ -1,4 +1,16 @@
-import * as THREE from "three";
+import {
+  BackSide,
+  Camera,
+  Color,
+  FrontSide,
+  MathUtils,
+  Mesh,
+  NoToneMapping,
+  Scene,
+  Texture,
+  WebGLRenderTarget,
+  WebGLRenderer,
+} from "three";
 
 import type { HalftoneMaterialSettings } from "../state";
 import {
@@ -61,17 +73,17 @@ export function applyHalftoneMaterialSettings(
   material.bumpMap = null;
   material.bumpScale = 0;
   material.roughnessMap = null;
-  material.side = THREE.FrontSide;
+  material.side = FrontSide;
   material.transparent = false;
   material.opacity = 1;
   material.depthWrite = true;
   material.setAttenuation(
-    new THREE.Color(isGlass ? settings.color : "white"),
+    new Color(isGlass ? settings.color : "white"),
     isGlass ? glassAttenuationDistance : Infinity,
   );
   material.setOpticalEffects({
     anisotropicBlur: isGlass
-      ? THREE.MathUtils.lerp(0.03, 0.12, settings.roughness)
+      ? MathUtils.lerp(0.03, 0.12, settings.roughness)
       : 0.1,
     chromaticAberration: isGlass ? 0 : 0.05,
     distortion: 0,
@@ -90,18 +102,18 @@ export function applyHalftoneMaterialSettings(
 }
 
 export function renderHalftoneMaterialScene(options: {
-  camera: THREE.Camera;
+  camera: Camera;
   elapsedTime: number;
   material: HalftoneTransmissionMaterial;
-  mesh: THREE.Mesh;
-  outputTarget: THREE.WebGLRenderTarget | null;
-  renderer: THREE.WebGLRenderer;
-  scene: THREE.Scene;
-  transmissionBackground?: THREE.Color | THREE.Texture | null;
+  mesh: Mesh;
+  outputTarget: WebGLRenderTarget | null;
+  renderer: WebGLRenderer;
+  scene: Scene;
+  transmissionBackground?: Color | Texture | null;
   transmissionBackgroundIntensity?: number;
-  transmissionScene?: THREE.Scene;
-  transmissionBacksideTarget: THREE.WebGLRenderTarget;
-  transmissionTarget: THREE.WebGLRenderTarget;
+  transmissionScene?: Scene;
+  transmissionBacksideTarget: WebGLRenderTarget;
+  transmissionTarget: WebGLRenderTarget;
 }) {
   const {
     camera,
@@ -150,7 +162,7 @@ export function renderHalftoneMaterialScene(options: {
   const backgroundIntensity =
     transmissionBackgroundIntensity ?? previousEnvMapIntensity;
 
-  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.toneMapping = NoToneMapping;
 
   if (transmissionScene) {
     renderer.setRenderTarget(transmissionBacksideTarget);
@@ -170,7 +182,7 @@ export function renderHalftoneMaterialScene(options: {
 
   material.setTransmissionBuffer(transmissionBacksideTarget.texture);
   material.thickness = backsideThickness;
-  material.side = THREE.BackSide;
+  material.side = BackSide;
   material.envMapIntensity = backsideEnvMapIntensity;
   renderer.setRenderTarget(transmissionTarget);
   renderer.clear();

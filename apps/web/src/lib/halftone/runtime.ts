@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import { BufferGeometry, SRGBColorSpace, Timer, Vector3 } from "three";
 
 import { observeElementSize } from "~/lib/dom/observe-element-size";
 import { runCleanupTasks } from "~/lib/lifecycle/run-cleanup-tasks";
@@ -69,7 +69,7 @@ export async function createHalftoneRuntime({
   const previewDistanceReference: MutableRefObject<number> = {
     current: initialConfig.previewDistance,
   };
-  const geometryReference: MutableRefObject<THREE.BufferGeometry | null> = {
+  const geometryReference: MutableRefObject<BufferGeometry | null> = {
     current: initialConfig.geometry,
   };
   const imageFitReference: MutableRefObject<HalftoneImageFit> = {
@@ -120,7 +120,7 @@ export async function createHalftoneRuntime({
     },
   });
 
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.outputColorSpace = SRGBColorSpace;
   renderer.setPixelRatio(1);
   renderer.setClearColor(0x000000, 0);
   renderer.setSize(getRenderWidth(), getRenderHeight(), false);
@@ -208,9 +208,9 @@ export async function createHalftoneRuntime({
       onFirstInteraction: () => onFirstInteraction(),
     });
 
-  const clock = new THREE.Timer();
+  const clock = new Timer();
   clock.connect(document);
-  const lookAtTarget = new THREE.Vector3();
+  const lookAtTarget = new Vector3();
 
   const renderFrame = (timestamp?: DOMHighResTimeStamp) => {
     if (cancelled || disposed) return;

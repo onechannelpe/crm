@@ -1,6 +1,6 @@
-import * as THREE from "three";
+import { WebGLRenderer, WebGLRendererParameters } from "three";
 
-export type SiteWebGlRendererParameters = THREE.WebGLRendererParameters & {
+export type SiteWebGlRendererParameters = WebGLRendererParameters & {
   onContextLost?: (event: Event) => void;
 };
 
@@ -8,10 +8,10 @@ export const SITE_WEBGL_CONTEXT_LOST_EVENT = "sitewebglcontextlost";
 
 export function createSiteWebGlRenderer(
   parameters?: SiteWebGlRendererParameters,
-): THREE.WebGLRenderer {
+): WebGLRenderer {
   const { onContextLost, ...rendererParameters } = parameters ?? {};
 
-  const renderer = new THREE.WebGLRenderer(rendererParameters);
+  const renderer = new WebGLRenderer(rendererParameters);
   const canvas = renderer.domElement;
 
   let disposed = false;
@@ -68,7 +68,7 @@ export const reportSiteWebGlRendererCreationFailure: SiteWebGlRendererCreationFa
 export function tryCreateSiteWebGlRenderer(
   parameters?: SiteWebGlRendererParameters,
   onError: SiteWebGlRendererCreationFailureHandler = reportSiteWebGlRendererCreationFailure,
-): THREE.WebGLRenderer | null {
+): WebGLRenderer | null {
   try {
     return createSiteWebGlRenderer(parameters);
   } catch (error) {

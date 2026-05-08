@@ -1,16 +1,30 @@
-import * as THREE from "three";
+import {
+  CanvasTexture,
+  ClampToEdgeWrapping,
+  Color,
+  ColorSpace,
+  EquirectangularReflectionMapping,
+  LinearFilter,
+  LinearMipmapLinearFilter,
+  PMREMGenerator,
+  Scene,
+  SRGBColorSpace,
+  Texture,
+  TextureLoader,
+  WebGLRenderer,
+} from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 import { asCanvasImageSource, getTextureImageSize, isMesh } from "./guards";
 
 export type HalftoneMaterialAssets = {
-  glassBackgroundTexture: THREE.Texture;
-  glassEnvironmentTexture: THREE.Texture;
-  glassTransmissionScene: THREE.Scene;
-  solidEnvironmentTexture: THREE.Texture;
+  glassBackgroundTexture: Texture;
+  glassEnvironmentTexture: Texture;
+  glassTransmissionScene: Scene;
+  solidEnvironmentTexture: Texture;
 };
 
-export const GLASS_TRANSMISSION_BACKGROUND = new THREE.Color(0x030303);
+export const GLASS_TRANSMISSION_BACKGROUND = new Color(0x030303);
 
 const GLASS_ENVIRONMENT_ZOOM = 1.55;
 const GLASS_TEXTURE_URLS = {
@@ -18,20 +32,17 @@ const GLASS_TEXTURE_URLS = {
 } as const;
 const MAX_TEXTURE_ANISOTROPY = 8;
 
-function setTextureSampling(
-  texture: THREE.Texture,
-  renderer: THREE.WebGLRenderer,
-) {
+function setTextureSampling(texture: Texture, renderer: WebGLRenderer) {
   texture.generateMipmaps = true;
-  texture.magFilter = THREE.LinearFilter;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = LinearFilter;
+  texture.minFilter = LinearMipmapLinearFilter;
   texture.anisotropy = Math.min(
     renderer.capabilities.getMaxAnisotropy(),
     MAX_TEXTURE_ANISOTROPY,
   );
 }
 
-function disposeEnvironmentScene(scene: THREE.Scene) {
+function disposeEnvironmentScene(scene: Scene) {
   scene.traverse((object) => {
     if (!isMesh(object)) {
       return;
@@ -50,8 +61,8 @@ function disposeEnvironmentScene(scene: THREE.Scene) {
   });
 }
 
-function createSolidEnvironmentTexture(renderer: THREE.WebGLRenderer) {
-  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+function createSolidEnvironmentTexture(renderer: WebGLRenderer) {
+  const pmremGenerator = new PMREMGenerator(renderer);
   const environmentTexture = pmremGenerator.fromScene(
     new RoomEnvironment(),
     0.04,
@@ -62,8 +73,8 @@ function createSolidEnvironmentTexture(renderer: THREE.WebGLRenderer) {
 }
 
 function createZoomedGlassTexture(
-  sourceTexture: THREE.Texture,
-  renderer: THREE.WebGLRenderer,
+  sourceTexture: Texture,
+  renderer: WebGLRenderer,
   zoom: number,
 ) {
   if (zoom <= 1) {
@@ -108,18 +119,18 @@ function createZoomedGlassTexture(
     height,
   );
 
-  const zoomedTexture = new THREE.CanvasTexture(canvas);
+  const zoomedTexture = new CanvasTexture(canvas);
   zoomedTexture.colorSpace = sourceTexture.colorSpace;
-  zoomedTexture.wrapS = THREE.ClampToEdgeWrapping;
-  zoomedTexture.wrapT = THREE.ClampToEdgeWrapping;
+  zoomedTexture.wrapS = ClampToEdgeWrapping;
+  zoomedTexture.wrapT = ClampToEdgeWrapping;
   setTextureSampling(zoomedTexture, renderer);
   zoomedTexture.needsUpdate = true;
 
   return zoomedTexture;
 }
 
-function createStudioGlassEnvironmentScene(backdropTexture?: THREE.Texture) {
-  const studioScene = new THREE.Scene();
+function createStudioGlassEnvironmentScene(backdropTexture?: Texture) {
+  const studioScene = new Scene();
   studioScene.background = backdropTexture ?? GLASS_TRANSMISSION_BACKGROUND;
   studioScene.backgroundIntensity = backdropTexture ? 1 : 0.4;
 
@@ -127,10 +138,10 @@ function createStudioGlassEnvironmentScene(backdropTexture?: THREE.Texture) {
 }
 
 function createStudioGlassEnvironmentTexture(
-  renderer: THREE.WebGLRenderer,
-  backdropTexture?: THREE.Texture,
+  renderer: WebGLRenderer,
+  backdropTexture?: Texture,
 ) {
-  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  const pmremGenerator = new PMREMGenerator(renderer);
   const environmentTexture = backdropTexture
     ? pmremGenerator.fromEquirectangular(backdropTexture).texture
     : pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -141,12 +152,12 @@ function createStudioGlassEnvironmentTexture(
 
 function loadTexture(
   url: string,
-  renderer: THREE.WebGLRenderer,
-  colorSpace: THREE.ColorSpace,
+  renderer: WebGLRenderer,
+  colorSpace: ColorSpace,
 ) {
-  const loader = new THREE.TextureLoader();
+  const loader = new TextureLoader();
 
-  return new Promise<THREE.Texture>((resolve, reject) => {
+  return new Promise<Texture>((resolve, reject) => {
     loader.load(
       url,
       (texture) => {
@@ -160,11 +171,11 @@ function loadTexture(
   });
 }
 
-async function loadGlassEnvironmentAssets(renderer: THREE.WebGLRenderer) {
+async function loadGlassEnvironmentAssets(renderer: WebGLRenderer) {
   const sourceBackgroundTexture = await loadTexture(
     GLASS_TEXTURE_URLS.environment,
     renderer,
-    THREE.SRGBColorSpace,
+    SRGBColorSpace,
   );
   const backgroundTexture = createZoomedGlassTexture(
     sourceBackgroundTexture,
@@ -174,9 +185,9 @@ async function loadGlassEnvironmentAssets(renderer: THREE.WebGLRenderer) {
   if (backgroundTexture !== sourceBackgroundTexture) {
     sourceBackgroundTexture.dispose();
   }
-  backgroundTexture.mapping = THREE.EquirectangularReflectionMapping;
-  backgroundTexture.wrapS = THREE.ClampToEdgeWrapping;
-  backgroundTexture.wrapT = THREE.ClampToEdgeWrapping;
+  backgroundTexture.mapping = EquirectangularReflectionMapping;
+  backgroundTexture.wrapS = ClampToEdgeWrapping;
+  backgroundTexture.wrapT = ClampToEdgeWrapping;
   backgroundTexture.needsUpdate = true;
   const transmissionScene =
     createStudioGlassEnvironmentScene(backgroundTexture);
@@ -193,7 +204,7 @@ async function loadGlassEnvironmentAssets(renderer: THREE.WebGLRenderer) {
 }
 
 export async function createHalftoneMaterialAssets(
-  renderer: THREE.WebGLRenderer,
+  renderer: WebGLRenderer,
 ): Promise<HalftoneMaterialAssets> {
   const solidEnvironmentTexture = createSolidEnvironmentTexture(renderer);
   const glassEnvironmentAssets = await loadGlassEnvironmentAssets(renderer);

@@ -6,7 +6,7 @@ import {
   on,
   type JSX,
 } from "solid-js";
-import * as THREE from "three";
+import { PlaneGeometry } from "three";
 
 import { loadVisualImage } from "~/lib/visual-runtime";
 
@@ -57,7 +57,7 @@ export function HalftoneImageCanvas(
       }),
   );
 
-  const geometry = new THREE.PlaneGeometry(1, 1);
+  const geometry = new PlaneGeometry(1, 1);
 
   createEffect(
     on(

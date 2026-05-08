@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import { Box3, Matrix4, PerspectiveCamera, Vector3 } from "three";
 
 export interface HalftoneRect {
   height: number;
@@ -19,15 +19,15 @@ export interface ImageFootprintScaleArgs {
 }
 
 export interface ProjectedBoundsArgs {
-  camera: THREE.PerspectiveCamera;
-  localBounds: THREE.Box3;
-  meshMatrixWorld: THREE.Matrix4;
+  camera: PerspectiveCamera;
+  localBounds: Box3;
+  meshMatrixWorld: Matrix4;
   viewportHeight: number;
   viewportWidth: number;
 }
 
 export interface MeshFootprintScaleArgs extends ProjectedBoundsArgs {
-  lookAtTarget: THREE.Vector3;
+  lookAtTarget: Vector3;
 }
 
 export const VIRTUAL_RENDER_HEIGHT = 768;
@@ -65,18 +65,18 @@ function getRectArea(rect: HalftoneRect | null) {
   return Math.max(rect.width, 0) * Math.max(rect.height, 0);
 }
 
-function createBox3Corners(bounds: THREE.Box3) {
+function createBox3Corners(bounds: Box3) {
   const { min, max } = bounds;
 
   return [
-    new THREE.Vector3(min.x, min.y, min.z),
-    new THREE.Vector3(min.x, min.y, max.z),
-    new THREE.Vector3(min.x, max.y, min.z),
-    new THREE.Vector3(min.x, max.y, max.z),
-    new THREE.Vector3(max.x, min.y, min.z),
-    new THREE.Vector3(max.x, min.y, max.z),
-    new THREE.Vector3(max.x, max.y, min.z),
-    new THREE.Vector3(max.x, max.y, max.z),
+    new Vector3(min.x, min.y, min.z),
+    new Vector3(min.x, min.y, max.z),
+    new Vector3(min.x, max.y, min.z),
+    new Vector3(min.x, max.y, max.z),
+    new Vector3(max.x, min.y, min.z),
+    new Vector3(max.x, min.y, max.z),
+    new Vector3(max.x, max.y, min.z),
+    new Vector3(max.x, max.y, max.z),
   ];
 }
 
@@ -260,7 +260,7 @@ export function getMeshFootprintScale({
   const referenceOffset =
     currentOffset.lengthSq() > 0
       ? currentOffset.setLength(REFERENCE_PREVIEW_DISTANCE)
-      : new THREE.Vector3(0, 0, REFERENCE_PREVIEW_DISTANCE);
+      : new Vector3(0, 0, REFERENCE_PREVIEW_DISTANCE);
 
   referenceCamera.position.copy(lookAtTarget).add(referenceOffset);
   referenceCamera.lookAt(lookAtTarget);
@@ -312,14 +312,14 @@ function createBox3Corners(bounds) {
   const { min, max } = bounds;
 
   return [
-    new THREE.Vector3(min.x, min.y, min.z),
-    new THREE.Vector3(min.x, min.y, max.z),
-    new THREE.Vector3(min.x, max.y, min.z),
-    new THREE.Vector3(min.x, max.y, max.z),
-    new THREE.Vector3(max.x, min.y, min.z),
-    new THREE.Vector3(max.x, min.y, max.z),
-    new THREE.Vector3(max.x, max.y, min.z),
-    new THREE.Vector3(max.x, max.y, max.z),
+    new Vector3(min.x, min.y, min.z),
+    new Vector3(min.x, min.y, max.z),
+    new Vector3(min.x, max.y, min.z),
+    new Vector3(min.x, max.y, max.z),
+    new Vector3(max.x, min.y, min.z),
+    new Vector3(max.x, min.y, max.z),
+    new Vector3(max.x, max.y, min.z),
+    new Vector3(max.x, max.y, max.z),
   ];
 }
 
@@ -500,7 +500,7 @@ function getMeshFootprintScale({
   const referenceOffset =
     currentOffset.lengthSq() > 0
       ? currentOffset.setLength(REFERENCE_PREVIEW_DISTANCE)
-      : new THREE.Vector3(0, 0, REFERENCE_PREVIEW_DISTANCE);
+      : new Vector3(0, 0, REFERENCE_PREVIEW_DISTANCE);
 
   referenceCamera.position.copy(lookAtTarget).add(referenceOffset);
   referenceCamera.lookAt(lookAtTarget);

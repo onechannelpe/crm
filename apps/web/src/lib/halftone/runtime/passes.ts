@@ -1,4 +1,17 @@
-import * as THREE from "three";
+import {
+  AmbientLight,
+  BufferGeometry,
+  Color,
+  DirectionalLight,
+  Mesh,
+  OrthographicCamera,
+  PerspectiveCamera,
+  PlaneGeometry,
+  Scene,
+  ShaderMaterial,
+  Vector2,
+  WebGLRenderer,
+} from "three";
 
 import type { HalftoneImageFit } from "../footprint";
 import { createHalftoneMaterialAssets } from "../materials/assets";
@@ -261,35 +274,35 @@ export async function createRuntimePasses({
   renderer,
   settings,
 }: {
-  geometry: THREE.BufferGeometry;
+  geometry: BufferGeometry;
   imageFit: HalftoneImageFit;
   logicalHeight: number;
   logicalWidth: number;
   previewDistance: number;
   renderHeight: number;
   renderWidth: number;
-  renderer: THREE.WebGLRenderer;
+  renderer: WebGLRenderer;
   settings: HalftoneStudioSettings;
 }) {
   const materialAssets = await createHalftoneMaterialAssets(renderer);
-  const scene3d = new THREE.Scene();
+  const scene3d = new Scene();
   scene3d.background = null;
-  const camera = new THREE.PerspectiveCamera(
+  const camera = new PerspectiveCamera(
     45,
     renderWidth / renderHeight,
     0.1,
     100,
   );
   camera.position.z = previewDistance;
-  const primaryLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  const primaryLight = new DirectionalLight(0xffffff, 1.5);
   scene3d.add(primaryLight);
-  const fillLight = new THREE.DirectionalLight(0xffffff, 0.15);
+  const fillLight = new DirectionalLight(0xffffff, 0.15);
   fillLight.position.set(-3, -1, 1);
   scene3d.add(fillLight);
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.08);
+  const ambientLight = new AmbientLight(0xffffff, 0.08);
   scene3d.add(ambientLight);
   const material = createHalftoneMaterial();
-  const mesh = new THREE.Mesh(geometry, material);
+  const mesh = new Mesh(geometry, material);
   scene3d.add(mesh);
 
   const sceneTarget = createRenderTarget(renderWidth, renderHeight);
@@ -300,35 +313,35 @@ export async function createRuntimePasses({
   const transmissionTarget = createRenderTarget(renderWidth, renderHeight);
   const blurTargetA = createRenderTarget(renderWidth, renderHeight);
   const blurTargetB = createRenderTarget(renderWidth, renderHeight);
-  const fullScreenGeometry = new THREE.PlaneGeometry(2, 2);
-  const orthographicCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const fullScreenGeometry = new PlaneGeometry(2, 2);
+  const orthographicCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  const blurHorizontalMaterial = new THREE.ShaderMaterial({
+  const blurHorizontalMaterial = new ShaderMaterial({
     uniforms: {
       tInput: { value: null },
-      dir: { value: new THREE.Vector2(1, 0) },
-      res: { value: new THREE.Vector2(renderWidth, renderHeight) },
+      dir: { value: new Vector2(1, 0) },
+      res: { value: new Vector2(renderWidth, renderHeight) },
     },
     vertexShader: passThroughVertexShader,
     fragmentShader: blurFragmentShader,
   });
-  const blurVerticalMaterial = new THREE.ShaderMaterial({
+  const blurVerticalMaterial = new ShaderMaterial({
     uniforms: {
       tInput: { value: null },
-      dir: { value: new THREE.Vector2(0, 1) },
-      res: { value: new THREE.Vector2(renderWidth, renderHeight) },
+      dir: { value: new Vector2(0, 1) },
+      res: { value: new Vector2(renderWidth, renderHeight) },
     },
     vertexShader: passThroughVertexShader,
     fragmentShader: blurFragmentShader,
   });
-  const halftoneMaterial = new THREE.ShaderMaterial({
+  const halftoneMaterial = new ShaderMaterial({
     transparent: true,
     uniforms: {
       tScene: { value: sceneTarget.texture },
       tGlow: { value: blurTargetB.texture },
-      effectResolution: { value: new THREE.Vector2(renderWidth, renderHeight) },
+      effectResolution: { value: new Vector2(renderWidth, renderHeight) },
       logicalResolution: {
-        value: new THREE.Vector2(logicalWidth, logicalHeight),
+        value: new Vector2(logicalWidth, logicalHeight),
       },
       tile: { value: settings.halftone.scale },
       s_3: { value: settings.halftone.power },
@@ -336,17 +349,17 @@ export async function createRuntimePasses({
       applyToDarkAreas: {
         value: settings.halftone.toneTarget === "dark" ? 1 : 0,
       },
-      dashColor: { value: new THREE.Color(settings.halftone.dashColor) },
+      dashColor: { value: new Color(settings.halftone.dashColor) },
       hoverDashColor: {
-        value: new THREE.Color(settings.halftone.hoverDashColor),
+        value: new Color(settings.halftone.hoverDashColor),
       },
       time: { value: 0 },
       waveAmount: { value: 0 },
       waveSpeed: { value: 1 },
       footprintScale: { value: 1.0 },
-      interactionUv: { value: new THREE.Vector2(0.5, 0.5) },
-      interactionVelocity: { value: new THREE.Vector2(0, 0) },
-      dragOffset: { value: new THREE.Vector2(0, 0) },
+      interactionUv: { value: new Vector2(0.5, 0.5) },
+      interactionVelocity: { value: new Vector2(0, 0) },
+      dragOffset: { value: new Vector2(0, 0) },
       hoverHalftoneActive: { value: 0 },
       hoverHalftonePowerShift: { value: 0 },
       hoverHalftoneRadius: { value: 0.2 },
@@ -362,22 +375,18 @@ export async function createRuntimePasses({
     fragmentShader: halftoneFragmentShader,
   });
 
-  const blurHorizontalScene = new THREE.Scene();
-  blurHorizontalScene.add(
-    new THREE.Mesh(fullScreenGeometry, blurHorizontalMaterial),
-  );
-  const blurVerticalScene = new THREE.Scene();
-  blurVerticalScene.add(
-    new THREE.Mesh(fullScreenGeometry, blurVerticalMaterial),
-  );
-  const postScene = new THREE.Scene();
-  postScene.add(new THREE.Mesh(fullScreenGeometry, halftoneMaterial));
+  const blurHorizontalScene = new Scene();
+  blurHorizontalScene.add(new Mesh(fullScreenGeometry, blurHorizontalMaterial));
+  const blurVerticalScene = new Scene();
+  blurVerticalScene.add(new Mesh(fullScreenGeometry, blurVerticalMaterial));
+  const postScene = new Scene();
+  postScene.add(new Mesh(fullScreenGeometry, halftoneMaterial));
 
-  const imageMaterial = new THREE.ShaderMaterial({
+  const imageMaterial = new ShaderMaterial({
     uniforms: {
       tImage: { value: null },
-      imageSize: { value: new THREE.Vector2(1, 1) },
-      viewportSize: { value: new THREE.Vector2(logicalWidth, logicalHeight) },
+      imageSize: { value: new Vector2(1, 1) },
+      viewportSize: { value: new Vector2(logicalWidth, logicalHeight) },
       zoom: { value: 1 },
       contrast: { value: settings.halftone.imageContrast },
       imageFit: { value: imageFit === "cover" ? 1 : 0 },
@@ -385,8 +394,8 @@ export async function createRuntimePasses({
     vertexShader: passThroughVertexShader,
     fragmentShader: imagePassthroughFragmentShader,
   });
-  const imageScene = new THREE.Scene();
-  imageScene.add(new THREE.Mesh(fullScreenGeometry, imageMaterial));
+  const imageScene = new Scene();
+  imageScene.add(new Mesh(fullScreenGeometry, imageMaterial));
 
   const resources: SceneResources = {
     ambientLight,

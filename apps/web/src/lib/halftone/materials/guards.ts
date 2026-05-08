@@ -1,9 +1,9 @@
-import * as THREE from "three";
+import { Mesh, Object3D } from "three";
 
 import { isPlainRecord } from "~/lib/type-guards";
 
-export function isMesh(object: THREE.Object3D): object is THREE.Mesh {
-  return object instanceof THREE.Mesh;
+export function isMesh(object: Object3D): object is Mesh {
+  return object instanceof Mesh;
 }
 
 export function getTextureImageSize(image: unknown): {

@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import { BufferGeometry } from "three";
 
 import type { HalftoneImageFit } from "../footprint";
 import type { HalftonePose, HalftoneStudioSettings } from "../state";
@@ -34,7 +34,7 @@ export type HalftoneViewport = {
 };
 
 export type HalftoneRuntimeConfig = {
-  geometry: THREE.BufferGeometry | null;
+  geometry: BufferGeometry | null;
   imageFit: HalftoneImageFit;
   imageInteraction?: Partial<HalftonePointerSettings>;
   initialPose?: Partial<HalftonePose>;

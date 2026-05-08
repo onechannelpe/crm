@@ -1,4 +1,21 @@
-import * as THREE from "three";
+import {
+  AmbientLight,
+  ClampToEdgeWrapping,
+  Color,
+  DirectionalLight,
+  LinearFilter,
+  Mesh,
+  OrthographicCamera,
+  PerspectiveCamera,
+  PlaneGeometry,
+  RGBAFormat,
+  Scene,
+  ShaderMaterial,
+  SRGBColorSpace,
+  Texture,
+  WebGLRenderTarget,
+  WebGLRenderer,
+} from "three";
 
 import { type HalftoneMaterialAssets } from "../materials/assets";
 import { type HalftoneTransmissionMaterial } from "../materials/material";
@@ -19,39 +36,39 @@ export const DEFAULT_IMAGE_INTERACTION_SETTINGS: HalftonePointerSettings = {
 };
 
 export type SceneResources = {
-  ambientLight: THREE.AmbientLight;
-  blurHorizontalMaterial: THREE.ShaderMaterial;
-  blurHorizontalScene: THREE.Scene;
-  blurTargetA: THREE.WebGLRenderTarget;
-  blurTargetB: THREE.WebGLRenderTarget;
-  blurVerticalMaterial: THREE.ShaderMaterial;
-  blurVerticalScene: THREE.Scene;
-  camera: THREE.PerspectiveCamera;
+  ambientLight: AmbientLight;
+  blurHorizontalMaterial: ShaderMaterial;
+  blurHorizontalScene: Scene;
+  blurTargetA: WebGLRenderTarget;
+  blurTargetB: WebGLRenderTarget;
+  blurVerticalMaterial: ShaderMaterial;
+  blurVerticalScene: Scene;
+  camera: PerspectiveCamera;
   canvas: HTMLCanvasElement;
-  fillLight: THREE.DirectionalLight;
-  fullScreenGeometry: THREE.PlaneGeometry;
-  halftoneMaterial: THREE.ShaderMaterial;
-  imageMaterial: THREE.ShaderMaterial;
-  imageScene: THREE.Scene;
-  imageTexture: THREE.Texture | null;
+  fillLight: DirectionalLight;
+  fullScreenGeometry: PlaneGeometry;
+  halftoneMaterial: ShaderMaterial;
+  imageMaterial: ShaderMaterial;
+  imageScene: Scene;
+  imageTexture: Texture | null;
   materialAssets: HalftoneMaterialAssets;
   material: HalftoneTransmissionMaterial;
-  mesh: THREE.Mesh;
-  orthographicCamera: THREE.OrthographicCamera;
-  postScene: THREE.Scene;
-  primaryLight: THREE.DirectionalLight;
-  renderer: THREE.WebGLRenderer;
-  scene3d: THREE.Scene;
-  sceneTarget: THREE.WebGLRenderTarget;
-  transmissionBacksideTarget: THREE.WebGLRenderTarget;
-  transmissionTarget: THREE.WebGLRenderTarget;
+  mesh: Mesh;
+  orthographicCamera: OrthographicCamera;
+  postScene: Scene;
+  primaryLight: DirectionalLight;
+  renderer: WebGLRenderer;
+  scene3d: Scene;
+  sceneTarget: WebGLRenderTarget;
+  transmissionBacksideTarget: WebGLRenderTarget;
+  transmissionTarget: WebGLRenderTarget;
 };
 
 export function createRenderTarget(width: number, height: number) {
-  return new THREE.WebGLRenderTarget(width, height, {
-    minFilter: THREE.LinearFilter,
-    magFilter: THREE.LinearFilter,
-    format: THREE.RGBAFormat,
+  return new WebGLRenderTarget(width, height, {
+    minFilter: LinearFilter,
+    magFilter: LinearFilter,
+    format: RGBAFormat,
   });
 }
 
@@ -79,14 +96,14 @@ export function syncImageElementTexture(
     return;
   }
 
-  const texture = new THREE.Texture(imageElement);
-  texture.wrapS = THREE.ClampToEdgeWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
+  const texture = new Texture(imageElement);
+  texture.wrapS = ClampToEdgeWrapping;
+  texture.wrapT = ClampToEdgeWrapping;
   texture.generateMipmaps = false;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = LinearFilter;
+  texture.magFilter = LinearFilter;
   texture.needsUpdate = true;
-  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.colorSpace = SRGBColorSpace;
 
   resources.imageTexture = texture;
   resources.imageMaterial.uniforms.tImage.value = texture;
@@ -112,7 +129,7 @@ export function getCanvasCursor(
 }
 
 function setPrimaryLightPosition(
-  light: THREE.DirectionalLight,
+  light: DirectionalLight,
   angleDegrees: number,
   height: number,
 ) {
@@ -159,9 +176,9 @@ function updateHalftone(
 
   if (
     !dashColorUniform ||
-    !(dashColorUniform.value instanceof THREE.Color) ||
+    !(dashColorUniform.value instanceof Color) ||
     !hoverDashColorUniform ||
-    !(hoverDashColorUniform.value instanceof THREE.Color)
+    !(hoverDashColorUniform.value instanceof Color)
   ) {
     return;
   }

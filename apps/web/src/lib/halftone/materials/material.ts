@@ -1,30 +1,30 @@
-import * as THREE from "three";
+import { Color, MeshPhysicalMaterial, Texture } from "three";
 
 function createHalftoneUniforms() {
   return {
     chromaticAberration: { value: 0.05 },
     transmission: { value: 0 },
     transmissionInternal: { value: 1 },
-    transmissionMap: { value: null as THREE.Texture | null },
-    refractionEnvMap: { value: null as THREE.Texture | null },
+    transmissionMap: { value: null as Texture | null },
+    refractionEnvMap: { value: null as Texture | null },
     useEnvMapRefraction: { value: 0 },
     roughness: { value: 0 },
     thickness: { value: 0 },
-    thicknessMap: { value: null as THREE.Texture | null },
+    thicknessMap: { value: null as Texture | null },
     attenuationDistance: { value: Infinity },
-    attenuationColor: { value: new THREE.Color("white") },
+    attenuationColor: { value: new Color("white") },
     anisotropicBlur: { value: 0.1 },
     time: { value: 0 },
     distortion: { value: 0 },
     distortionScale: { value: 0.5 },
     temporalDistortion: { value: 0 },
-    buffer: { value: null as THREE.Texture | null },
+    buffer: { value: null as Texture | null },
   };
 }
 
 type HalftoneUniforms = ReturnType<typeof createHalftoneUniforms>;
 
-export class HalftoneTransmissionMaterial extends THREE.MeshPhysicalMaterial {
+export class HalftoneTransmissionMaterial extends MeshPhysicalMaterial {
   private readonly halftoneUniforms: HalftoneUniforms;
 
   public constructor(samples = 10) {
@@ -415,7 +415,7 @@ export class HalftoneTransmissionMaterial extends THREE.MeshPhysicalMaterial {
     this.halftoneUniforms.transmissionInternal.value = enabled ? 1 : 0;
   }
 
-  public setRefractionEnvironment(texture: THREE.Texture | null) {
+  public setRefractionEnvironment(texture: Texture | null) {
     this.halftoneUniforms.refractionEnvMap.value = texture;
   }
 
@@ -423,11 +423,11 @@ export class HalftoneTransmissionMaterial extends THREE.MeshPhysicalMaterial {
     this.halftoneUniforms.useEnvMapRefraction.value = enabled ? 1 : 0;
   }
 
-  public setTransmissionBuffer(texture: THREE.Texture | null) {
+  public setTransmissionBuffer(texture: Texture | null) {
     this.halftoneUniforms.buffer.value = texture;
   }
 
-  public setAttenuation(color: THREE.Color, distance: number) {
+  public setAttenuation(color: Color, distance: number) {
     this.halftoneUniforms.attenuationColor.value = color;
     this.halftoneUniforms.attenuationDistance.value = distance;
   }

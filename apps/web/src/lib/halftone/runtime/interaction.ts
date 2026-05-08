@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import { MathUtils } from "three";
 
 import type { HalftoneInteractionState } from "../interaction-state";
 import type { HalftoneSourceMode } from "../state";
@@ -27,12 +27,12 @@ export function createRuntimeInteractionHandlers({
     const width = Math.max(rect.width, 1);
     const height = Math.max(rect.height, 1);
 
-    const nextMouseX = THREE.MathUtils.clamp(
+    const nextMouseX = MathUtils.clamp(
       (event.clientX - rect.left) / width,
       0,
       1,
     );
-    const nextMouseY = THREE.MathUtils.clamp(
+    const nextMouseY = MathUtils.clamp(
       (event.clientY - rect.top) / height,
       0,
       1,

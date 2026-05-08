@@ -1,5 +1,5 @@
 import { createEffect, createMemo, on, onCleanup, onMount } from "solid-js";
-import * as THREE from "three";
+import { BufferGeometry } from "three";
 
 import {
   VIRTUAL_RENDER_HEIGHT,
@@ -27,7 +27,7 @@ export type {
 };
 
 type HalftoneCanvasProps = {
-  geometry: THREE.BufferGeometry | null;
+  geometry: BufferGeometry | null;
   initialPose?: Partial<HalftonePose>;
   imageElement: HTMLImageElement | null;
   imageFit?: HalftoneImageFit;
