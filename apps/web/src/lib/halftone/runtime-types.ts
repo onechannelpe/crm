@@ -1,0 +1,62 @@
+import * as THREE from "three";
+
+import type { HalftoneImageFit } from "./footprint";
+import type {
+  HalftoneExportPose,
+  HalftoneStudioSettings,
+} from "./state";
+
+export type HalftonePose = HalftoneExportPose;
+
+export type HalftoneRenderStrategy = "continuous" | "static";
+
+export type HalftonePointerSettings = {
+  hoverFadeIn: number;
+  hoverFadeOut: number;
+  pointerFollow: number;
+  pointerVelocityDamping: number;
+};
+
+export type HalftoneSnapshotRequest = {
+  backgroundColor?: string;
+  height: number;
+  includeBackground?: boolean;
+  width: number;
+};
+
+export type HalftoneSnapshotFn = (
+  width: number,
+  height: number,
+  options?: {
+    backgroundColor?: string;
+    includeBackground?: boolean;
+  },
+) => Promise<Blob | null>;
+
+export type HalftoneViewport = {
+  cssHeight: number;
+  cssWidth: number;
+};
+
+export type HalftoneRuntimeConfig = {
+  geometry: THREE.BufferGeometry | null;
+  imageFit: HalftoneImageFit;
+  imageInteraction?: Partial<HalftonePointerSettings>;
+  initialPose?: Partial<HalftonePose>;
+  onFirstInteraction: () => void;
+  onPoseChange: (pose: HalftonePose) => void;
+  previewDistance: number;
+  renderStrategy: HalftoneRenderStrategy;
+  settings: HalftoneStudioSettings;
+  virtualRenderHeight: number;
+};
+
+export type HalftoneRuntime = {
+  dispose: () => void;
+  renderNow: () => void;
+  resize: (viewport?: HalftoneViewport) => void;
+  setActive: (active: boolean) => void;
+  setImage: (imageElement: HTMLImageElement | null) => void;
+  snapshot: (request: HalftoneSnapshotRequest) => Promise<Blob | null>;
+  updateConfig: (nextConfig: HalftoneRuntimeConfig) => void;
+};

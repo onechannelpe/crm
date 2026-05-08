@@ -9,6 +9,17 @@ export {
   VIRTUAL_RENDER_HEIGHT,
 } from "./footprint";
 export { HalftoneImageCanvas } from "./halftone-image-canvas";
+export { createHalftoneRuntime } from "./runtime";
+export type {
+  HalftonePointerSettings,
+  HalftonePose,
+  HalftoneRenderStrategy,
+  HalftoneRuntime,
+  HalftoneRuntimeConfig,
+  HalftoneSnapshotFn,
+  HalftoneSnapshotRequest,
+  HalftoneViewport,
+} from "./runtime-types";
 
 export {
   applySpringStep,

@@ -1,4 +1,11 @@
-import { Show, createSignal, onCleanup, onMount, type JSX } from "solid-js";
+import {
+  Show,
+  createEffect,
+  createResource,
+  onCleanup,
+  on,
+  type JSX,
+} from "solid-js";
 import * as THREE from "three";
 
 import { loadVisualImage } from "~/lib/visual-runtime";
@@ -38,45 +45,43 @@ function createImageLoadError(imageUrl: string) {
 export function HalftoneImageCanvas(
   props: HalftoneImageCanvasProps,
 ): JSX.Element {
-  const [imageElement, setImageElement] = createSignal<HTMLImageElement | null>(
-    null,
+  const [imageElement] = createResource(
+    () => ({
+      crossOrigin: props.crossOrigin,
+      imageUrl: props.imageUrl,
+    }),
+    async ({ crossOrigin, imageUrl }) =>
+      loadVisualImage(imageUrl, {
+        crossOrigin,
+        label: "halftone image",
+      }),
   );
 
   const geometry = new THREE.PlaneGeometry(1, 1);
 
-  onMount(() => {
-    let cancelled = false;
-
-    void loadVisualImage(props.imageUrl, {
-      crossOrigin: props.crossOrigin,
-      label: "halftone image",
-    })
-      .then((image) => {
-        if (!cancelled) {
-          setImageElement(image);
-        }
-      })
-      .catch(() => {
-        if (cancelled) {
+  createEffect(
+    on(
+      () => imageElement.error,
+      (error) => {
+        if (!error) {
           return;
         }
 
-        const error = createImageLoadError(props.imageUrl);
-
+        const loadError = createImageLoadError(props.imageUrl);
         if (props.onImageLoadError) {
-          props.onImageLoadError(error);
+          props.onImageLoadError(loadError);
           return;
         }
 
         if (process.env.NODE_ENV !== "production") {
-          console.error(error);
+          console.error(loadError);
         }
-      });
+      },
+    ),
+  );
 
-    onCleanup(() => {
-      cancelled = true;
-      geometry.dispose();
-    });
+  onCleanup(() => {
+    geometry.dispose();
   });
 
   return (
