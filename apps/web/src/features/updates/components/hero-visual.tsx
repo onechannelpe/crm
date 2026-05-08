@@ -1,4 +1,4 @@
-import { HalftoneImageCanvas } from "~/lib/halftone/halftone-image-canvas";
+import { HalftoneImageCanvas } from "~/lib/halftone/image-canvas";
 import { WebGlMount } from "~/lib/visual-runtime";
 
 import {

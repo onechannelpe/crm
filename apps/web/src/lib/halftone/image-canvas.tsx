@@ -10,12 +10,12 @@ import { PlaneGeometry } from "three";
 
 import { loadVisualImage } from "~/lib/visual-runtime";
 
-import type { HalftoneImageFit } from "./footprint";
 import {
   HalftoneCanvas,
   type HalftonePointerSettings,
   type HalftoneSnapshotFn,
-} from "./halftone-canvas";
+} from "./canvas";
+import type { HalftoneImageFit } from "./footprint";
 import type { HalftonePose, HalftoneStudioSettings } from "./state";
 
 type MutableRefObject<T> = { current: T };
