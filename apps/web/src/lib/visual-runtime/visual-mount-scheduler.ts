@@ -1,6 +1,6 @@
 export type VisualMountPriority = "normal" | "priority";
 
-type TimeoutHandle = ReturnType<typeof globalThis.setTimeout>;
+type TimeoutHandle = number;
 
 type VisualMountSchedulerHost = {
   cancelAnimationFrame?: (handle: number) => void;
