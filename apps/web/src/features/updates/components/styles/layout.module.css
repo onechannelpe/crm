@@ -1,6 +1,6 @@
 .hero {
   position: relative;
-  max-width: var(--layout-reading-wide);
+  max-width: var(--layout-max-content);
   margin: 12px auto 0;
   padding: var(--spacing-11) var(--spacing-6) var(--spacing-9);
   display: grid;
@@ -60,7 +60,7 @@
 
 .heroVisual {
   margin-top: var(--spacing-2);
-  width: min(100%, var(--layout-reading-wide));
+  width: 100%;
   height: 462px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
