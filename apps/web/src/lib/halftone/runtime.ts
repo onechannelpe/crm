@@ -19,10 +19,17 @@ import {
   createHalftoneMaterial,
   createHalftoneMaterialAssets,
   disposeHalftoneMaterialAssets,
-  type HalftoneMaterialAssets,
-  type HalftoneTransmissionMaterial,
   renderHalftoneMaterialScene,
 } from "~/lib/halftone/materials";
+import {
+  createRenderTarget,
+  getCanvasCursor,
+  resolveImageInteractionSettings,
+  syncImageElementTexture,
+  syncResources,
+  type SceneResources,
+} from "~/lib/halftone/runtime-core";
+import { createRuntimeInteractionHandlers } from "~/lib/halftone/runtime-interaction";
 import type {
   HalftonePointerSettings,
   HalftoneRenderStrategy,
@@ -289,229 +296,7 @@ const halftoneFragmentShader = `
   }
 `;
 
-const IMAGE_POINTER_FOLLOW = 0.38;
-const IMAGE_POINTER_VELOCITY_DAMPING = 0.82;
-const IMAGE_HOVER_FADE_IN = 18;
-const IMAGE_HOVER_FADE_OUT = 7;
 const MAX_PREVIEW_PIXEL_RATIO = 2;
-
-const DEFAULT_IMAGE_INTERACTION_SETTINGS: HalftonePointerSettings = {
-  hoverFadeIn: IMAGE_HOVER_FADE_IN,
-  hoverFadeOut: IMAGE_HOVER_FADE_OUT,
-  pointerFollow: IMAGE_POINTER_FOLLOW,
-  pointerVelocityDamping: IMAGE_POINTER_VELOCITY_DAMPING,
-};
-
-type SceneResources = {
-  ambientLight: THREE.AmbientLight;
-  blurHorizontalMaterial: THREE.ShaderMaterial;
-  blurHorizontalScene: THREE.Scene;
-  blurTargetA: THREE.WebGLRenderTarget;
-  blurTargetB: THREE.WebGLRenderTarget;
-  blurVerticalMaterial: THREE.ShaderMaterial;
-  blurVerticalScene: THREE.Scene;
-  camera: THREE.PerspectiveCamera;
-  canvas: HTMLCanvasElement;
-  fillLight: THREE.DirectionalLight;
-  fullScreenGeometry: THREE.PlaneGeometry;
-  halftoneMaterial: THREE.ShaderMaterial;
-  imageMaterial: THREE.ShaderMaterial;
-  imageScene: THREE.Scene;
-  imageTexture: THREE.Texture | null;
-  materialAssets: HalftoneMaterialAssets;
-  material: HalftoneTransmissionMaterial;
-  mesh: THREE.Mesh;
-  orthographicCamera: THREE.OrthographicCamera;
-  postScene: THREE.Scene;
-  primaryLight: THREE.DirectionalLight;
-  renderer: THREE.WebGLRenderer;
-  scene3d: THREE.Scene;
-  sceneTarget: THREE.WebGLRenderTarget;
-  transmissionBacksideTarget: THREE.WebGLRenderTarget;
-  transmissionTarget: THREE.WebGLRenderTarget;
-};
-
-type PixelBounds = {
-  maxX: number;
-  maxY: number;
-  minX: number;
-  minY: number;
-};
-
-function createRenderTarget(width: number, height: number) {
-  return new THREE.WebGLRenderTarget(width, height, {
-    minFilter: THREE.LinearFilter,
-    magFilter: THREE.LinearFilter,
-    format: THREE.RGBAFormat,
-  });
-}
-
-function resolveImageInteractionSettings(
-  settings?: Partial<HalftonePointerSettings>,
-): HalftonePointerSettings {
-  return {
-    ...DEFAULT_IMAGE_INTERACTION_SETTINGS,
-    ...settings,
-  };
-}
-
-function syncImageElementTexture(
-  resources: SceneResources,
-  imageElement: HTMLImageElement | null,
-) {
-  if (resources.imageTexture) {
-    resources.imageTexture.dispose();
-    resources.imageTexture = null;
-  }
-
-  if (!imageElement) {
-    resources.imageMaterial.uniforms.tImage.value = null;
-    resources.imageMaterial.uniforms.imageSize.value.set(1, 1);
-    return;
-  }
-
-  const texture = new THREE.Texture(imageElement);
-  texture.wrapS = THREE.ClampToEdgeWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.generateMipmaps = false;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.needsUpdate = true;
-  texture.colorSpace = THREE.SRGBColorSpace;
-
-  resources.imageTexture = texture;
-  resources.imageMaterial.uniforms.tImage.value = texture;
-  resources.imageMaterial.uniforms.imageSize.value.set(
-    imageElement.naturalWidth,
-    imageElement.naturalHeight,
-  );
-}
-
-function getAlphaCropBounds(
-  pixels: Uint8Array,
-  width: number,
-  height: number,
-  threshold = 8,
-  padding = 1,
-): PixelBounds | null {
-  let minX = width;
-  let minY = height;
-  let maxX = -1;
-  let maxY = -1;
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const alpha = pixels[(y * width + x) * 4 + 3];
-
-      if (alpha <= threshold) {
-        continue;
-      }
-
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-    }
-  }
-
-  if (maxX < minX || maxY < minY) {
-    return null;
-  }
-
-  return {
-    minX: Math.max(minX - padding, 0),
-    minY: Math.max(minY - padding, 0),
-    maxX: Math.min(maxX + padding, width - 1),
-    maxY: Math.min(maxY + padding, height - 1),
-  };
-}
-
-function getCanvasCursor(
-  settings: HalftoneStudioSettings,
-  isDragging: boolean,
-) {
-  if (settings.sourceMode === "image") {
-    return "default";
-  }
-
-  if (settings.animation.followDragEnabled) {
-    return isDragging ? "grabbing" : "grab";
-  }
-
-  return "default";
-}
-
-function setPrimaryLightPosition(
-  light: THREE.DirectionalLight,
-  angleDegrees: number,
-  height: number,
-) {
-  const lightAngle = (angleDegrees * Math.PI) / 180;
-  light.position.set(
-    Math.cos(lightAngle) * 5,
-    height,
-    Math.sin(lightAngle) * 5,
-  );
-}
-
-function updateLighting(
-  resources: SceneResources,
-  settings: HalftoneStudioSettings,
-) {
-  resources.primaryLight.intensity = settings.lighting.intensity;
-  setPrimaryLightPosition(
-    resources.primaryLight,
-    settings.lighting.angleDegrees,
-    settings.lighting.height,
-  );
-  resources.fillLight.intensity = settings.lighting.fillIntensity;
-  resources.ambientLight.intensity = settings.lighting.ambientIntensity;
-}
-
-function updateMaterial(
-  resources: SceneResources,
-  settings: HalftoneStudioSettings,
-) {
-  applyHalftoneMaterialSettings(
-    resources.material,
-    settings.material,
-    resources.materialAssets,
-  );
-}
-
-function updateHalftone(
-  resources: SceneResources,
-  settings: HalftoneStudioSettings,
-) {
-  resources.halftoneMaterial.uniforms.tile.value = settings.halftone.scale;
-  resources.halftoneMaterial.uniforms.s_3.value = settings.halftone.power;
-  resources.halftoneMaterial.uniforms.s_4.value = settings.halftone.width;
-  resources.halftoneMaterial.uniforms.applyToDarkAreas.value =
-    settings.halftone.toneTarget === "dark" ? 1 : 0;
-  (resources.halftoneMaterial.uniforms.dashColor.value as THREE.Color).set(
-    settings.halftone.dashColor,
-  );
-  (resources.halftoneMaterial.uniforms.hoverDashColor.value as THREE.Color).set(
-    settings.halftone.hoverDashColor,
-  );
-  resources.halftoneMaterial.uniforms.waveAmount.value =
-    settings.animation.waveEnabled && settings.sourceMode !== "image"
-      ? settings.animation.waveAmount
-      : 0;
-  resources.halftoneMaterial.uniforms.waveSpeed.value =
-    settings.animation.waveSpeed;
-  resources.imageMaterial.uniforms.contrast.value =
-    settings.halftone.imageContrast;
-}
-
-function syncResources(
-  resources: SceneResources,
-  settings: HalftoneStudioSettings,
-) {
-  updateLighting(resources, settings);
-  updateMaterial(resources, settings);
-  updateHalftone(resources, settings);
-}
 
 export async function createHalftoneRuntime({
   config: initialConfig,
@@ -811,82 +596,14 @@ export async function createHalftoneRuntime({
     imageMaterial.uniforms.viewportSize.value.set(logicalWidth, logicalHeight);
   };
 
-  const updatePointerPosition = (
-    event: PointerEvent,
-    options?: { resetVelocity?: boolean },
-  ) => {
-    const interaction = interactionReference.current;
-    const rect = canvas.getBoundingClientRect();
-    const width = Math.max(rect.width, 1);
-    const height = Math.max(rect.height, 1);
-
-    const nextMouseX = THREE.MathUtils.clamp(
-      (event.clientX - rect.left) / width,
-      0,
-      1,
-    );
-    const nextMouseY = THREE.MathUtils.clamp(
-      (event.clientY - rect.top) / height,
-      0,
-      1,
-    );
-
-    const deltaX = nextMouseX - interaction.mouseX;
-    const deltaY = nextMouseY - interaction.mouseY;
-
-    interaction.mouseX = nextMouseX;
-    interaction.mouseY = nextMouseY;
-    interaction.pointerInside =
-      interaction.dragging ||
-      (event.clientX >= rect.left &&
-        event.clientX <= rect.right &&
-        event.clientY >= rect.top &&
-        event.clientY <= rect.bottom);
-
-    if (options?.resetVelocity) {
-      interaction.pointerVelocityX = 0;
-      interaction.pointerVelocityY = 0;
-      interaction.smoothedMouseX = nextMouseX;
-      interaction.smoothedMouseY = nextMouseY;
-    } else {
-      interaction.pointerVelocityX = deltaX;
-      interaction.pointerVelocityY = deltaY;
-    }
-  };
-
-  const markFirstInteraction = () => {
-    if (didInteractReference.current) {
-      return;
-    }
-
-    didInteractReference.current = true;
-    onFirstInteraction();
-  };
-
-  const handlePointerMove = (event: PointerEvent) => {
-    const interaction = interactionReference.current;
-    const resetVelocity = !interaction.pointerInside && !interaction.dragging;
-    updatePointerPosition(
-      event,
-      resetVelocity ? { resetVelocity: true } : undefined,
-    );
-
-    if (config.settings.sourceMode === "image" && interaction.pointerInside) {
-      markFirstInteraction();
-    }
-  };
-
-  const handlePointerDown = (event: PointerEvent) => {
-    updatePointerPosition(event, { resetVelocity: true });
-    markFirstInteraction();
-  };
-
-  const handlePointerLeave = () => {
-    const interaction = interactionReference.current;
-    interaction.pointerInside = false;
-    interaction.pointerVelocityX = 0;
-    interaction.pointerVelocityY = 0;
-  };
+  const { handlePointerDown, handlePointerLeave, handlePointerMove } =
+    createRuntimeInteractionHandlers({
+      canvas,
+      didInteractReference,
+      getSourceMode: () => config.settings.sourceMode,
+      interactionReference,
+      onFirstInteraction: () => onFirstInteraction(),
+    });
 
   const clock = new THREE.Timer();
   clock.connect(document);
