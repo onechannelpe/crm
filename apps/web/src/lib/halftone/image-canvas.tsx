@@ -69,7 +69,7 @@ export function HalftoneImageCanvas(
             if (cancelled) {
               return;
             }
-            setImageElement(image);
+            return setImageElement(image);
           })
           .catch((error: unknown) => {
             if (cancelled) {
