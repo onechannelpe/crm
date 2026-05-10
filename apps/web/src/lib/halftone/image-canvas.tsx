@@ -1,20 +1,24 @@
 import {
-  Show,
   createEffect,
-  createSignal,
-  onCleanup,
+  createMemo,
+  createResource,
   on,
+  onCleanup,
+  onMount,
   type JSX,
 } from "solid-js";
 import { PlaneGeometry } from "three";
 
+import { VIRTUAL_RENDER_HEIGHT } from "~/lib/halftone/footprint";
+import { createHalftoneRuntime } from "~/lib/halftone/runtime";
+import type {
+  HalftonePointerSettings,
+  HalftoneRuntime,
+  HalftoneRuntimeConfig,
+  HalftoneSnapshotFn,
+} from "~/lib/halftone/runtime/types";
 import { loadVisualImage } from "~/lib/visual-runtime";
 
-import {
-  HalftoneCanvas,
-  type HalftonePointerSettings,
-  type HalftoneSnapshotFn,
-} from "./canvas";
 import type { HalftoneImageFit } from "./footprint";
 import type { HalftonePose, HalftoneStudioSettings } from "./state";
 
@@ -38,78 +42,117 @@ type HalftoneImageCanvasProps = {
 const noopFirstInteraction = () => {};
 const noopPoseChange = (_pose: HalftonePose) => {};
 
-function createImageLoadError(imageUrl: string) {
-  return new Error(`Halftone image failed to load: ${imageUrl}`);
-}
-
 export function HalftoneImageCanvas(
   props: HalftoneImageCanvasProps,
 ): JSX.Element {
-  const [imageElement, setImageElement] = createSignal<HTMLImageElement | null>(
-    null,
+  const [imageElement] = createResource(
+    () => ({ crossOrigin: props.crossOrigin, imageUrl: props.imageUrl }),
+    ({ crossOrigin, imageUrl }) =>
+      loadVisualImage(imageUrl, { crossOrigin, label: "halftone image" }),
   );
 
+  if (import.meta.env.DEV) {
+    createEffect(() => {
+      if (imageElement.error) {
+        console.error(imageElement.error);
+      }
+    });
+  }
+
   const geometry = new PlaneGeometry(1, 1);
+  onCleanup(() => geometry.dispose());
+
+  const runtimeConfig = createMemo<HalftoneRuntimeConfig>(() => ({
+    geometry,
+    imageFit: props.imageFit ?? "contain",
+    imageInteraction: props.imageInteraction,
+    initialPose: props.initialPose,
+    maxRenderPixelRatio: props.maxRenderPixelRatio,
+    onFirstInteraction: props.onFirstInteraction ?? noopFirstInteraction,
+    onPoseChange: props.onPoseChange ?? noopPoseChange,
+    previewDistance: props.previewDistance,
+    renderStrategy: "continuous",
+    settings: props.settings,
+    virtualRenderHeight: props.virtualRenderHeight ?? VIRTUAL_RENDER_HEIGHT,
+  }));
+
+  let mountRef: HTMLDivElement | undefined;
+  let runtime: HalftoneRuntime | null = null;
+
+  onMount(() => {
+    const host = mountRef;
+    if (!host) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      const nextRuntime = await createHalftoneRuntime({
+        config: runtimeConfig(),
+        host,
+        imageElement: imageElement.latest ?? null,
+      });
+
+      if (cancelled) {
+        nextRuntime.dispose();
+        return;
+      }
+
+      runtime = nextRuntime;
+
+      // Sync any config or image changes that arrived during async init.
+      runtime.updateConfig(runtimeConfig());
+      runtime.setImage(imageElement.latest ?? null);
+
+      if (props.snapshotRef) {
+        props.snapshotRef.current = (width, height, options) =>
+          nextRuntime.snapshot({
+            backgroundColor: options?.backgroundColor,
+            height,
+            includeBackground: options?.includeBackground,
+            width,
+          });
+      }
+    })();
+
+    onCleanup(() => {
+      cancelled = true;
+      if (props.snapshotRef) {
+        props.snapshotRef.current = null;
+      }
+      runtime?.dispose();
+      runtime = null;
+    });
+  });
+
+  createEffect(
+    on(runtimeConfig, (config) => runtime?.updateConfig(config), {
+      defer: true,
+    }),
+  );
 
   createEffect(
     on(
-      () => ({
-        crossOrigin: props.crossOrigin,
-        imageUrl: props.imageUrl,
-      }),
-      ({ crossOrigin, imageUrl }) => {
-        let cancelled = false;
-        setImageElement(null);
-
-        void loadVisualImage(imageUrl, {
-          crossOrigin,
-          label: "halftone image",
-        })
-          .then((image) => {
-            if (!cancelled) {
-              setImageElement(image);
-            }
-          })
-          .catch((error: unknown) => {
-            if (cancelled) {
-              return;
-            }
-            const loadError =
-              error instanceof Error ? error : createImageLoadError(imageUrl);
-            if (import.meta.env.DEV) {
-              console.error(loadError);
-            }
-          });
-
-        onCleanup(() => {
-          cancelled = true;
-        });
-      },
+      () => imageElement.latest ?? null,
+      (image) => runtime?.setImage(image),
+      { defer: true },
     ),
   );
 
-  onCleanup(() => {
-    geometry.dispose();
-  });
-
   return (
-    <Show when={imageElement()}>
-      {(image) => (
-        <HalftoneCanvas
-          geometry={geometry}
-          imageElement={image()}
-          imageFit={props.imageFit}
-          imageInteraction={props.imageInteraction}
-          initialPose={props.initialPose}
-          maxRenderPixelRatio={props.maxRenderPixelRatio}
-          onFirstInteraction={props.onFirstInteraction ?? noopFirstInteraction}
-          onPoseChange={props.onPoseChange ?? noopPoseChange}
-          previewDistance={props.previewDistance}
-          settings={props.settings}
-          snapshotRef={props.snapshotRef}
-          virtualRenderHeight={props.virtualRenderHeight}
-        />
-      )}
-    </Show>
+    <div
+      aria-hidden
+      ref={(el) => {
+        mountRef = el;
+      }}
+      style={{
+        background: props.settings.background.transparent
+          ? "transparent"
+          : props.settings.background.color,
+        display: "block",
+        height: "100%",
+        "min-width": 0,
+        width: "100%",
+      }}
+    />
   );
 }
