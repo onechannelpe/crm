@@ -98,7 +98,10 @@ export async function createHalftoneRuntime({
       1,
     );
   const getRenderScale = () =>
-    Math.min(window.devicePixelRatio || 1, MAX_PREVIEW_PIXEL_RATIO);
+    Math.min(
+      window.devicePixelRatio || 1,
+      config.maxRenderPixelRatio ?? MAX_PREVIEW_PIXEL_RATIO,
+    );
   const getRenderHeight = () =>
     Math.max(Math.round(getVirtualHeight() * getRenderScale()), 1);
   const getRenderWidth = () =>

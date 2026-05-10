@@ -141,7 +141,11 @@ export function createVisualMountScheduler(
       scheduleDrain();
     };
 
-    if (requestIdleCallback && cancelIdleCallback) {
+    if (
+      nextJob.priority !== "priority" &&
+      requestIdleCallback &&
+      cancelIdleCallback
+    ) {
       const idleHandle = requestIdleCallback(runNextJob, {
         timeout: nextJob.timeoutMs,
       });

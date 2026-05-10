@@ -38,6 +38,7 @@ export type HalftoneRuntimeConfig = {
   imageFit: HalftoneImageFit;
   imageInteraction?: Partial<HalftonePointerSettings>;
   initialPose?: Partial<HalftonePose>;
+  maxRenderPixelRatio?: number;
   onFirstInteraction: () => void;
   onPoseChange: (pose: HalftonePose) => void;
   previewDistance: number;

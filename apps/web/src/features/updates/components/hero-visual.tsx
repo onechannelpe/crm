@@ -31,25 +31,26 @@ const RELEASE_NOTES_SETTINGS = buildMilestoneSettings({
     width: 0.46,
   },
 });
-
-function UpdatesHeroVisualScene() {
-  return (
-    <div aria-hidden="true" class={styles.heroVisual}>
-      <HalftoneImageCanvas
-        imageFit={MILESTONE_IMAGE_FIT}
-        imageUrl={MILESTONE_IMAGE_URL}
-        initialPose={MILESTONE_INITIAL_POSE}
-        previewDistance={MILESTONE_PREVIEW_DISTANCE}
-        settings={RELEASE_NOTES_SETTINGS}
-      />
-    </div>
-  );
-}
+const HERO_VISUAL_RENDER_HEIGHT = 460;
+const HERO_VISUAL_MAX_PIXEL_RATIO = 1.5;
 
 export function UpdatesHeroVisual() {
   return (
-    <WebGlMount priority>
-      <UpdatesHeroVisualScene />
-    </WebGlMount>
+    <div aria-hidden="true" class={styles.heroVisual}>
+      <WebGlMount
+        fallback={<div class={styles.heroVisualPlaceholder} />}
+        priority
+      >
+        <HalftoneImageCanvas
+          imageFit={MILESTONE_IMAGE_FIT}
+          imageUrl={MILESTONE_IMAGE_URL}
+          initialPose={MILESTONE_INITIAL_POSE}
+          maxRenderPixelRatio={HERO_VISUAL_MAX_PIXEL_RATIO}
+          previewDistance={MILESTONE_PREVIEW_DISTANCE}
+          settings={RELEASE_NOTES_SETTINGS}
+          virtualRenderHeight={HERO_VISUAL_RENDER_HEIGHT}
+        />
+      </WebGlMount>
+    </div>
   );
 }

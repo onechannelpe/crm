@@ -65,6 +65,40 @@
   box-shadow: var(--shadow-elevation-1);
 }
 
+.heroVisualPlaceholder {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      130% 90% at 50% 10%,
+      color-mix(in oklab, #ffffff 20%, transparent) 0%,
+      transparent 65%
+    ),
+    linear-gradient(
+      120deg,
+      color-mix(in oklab, #777 82%, #8d8d8d 18%) 0%,
+      color-mix(in oklab, #777 76%, #9a9a9a 24%) 45%,
+      color-mix(in oklab, #777 82%, #8d8d8d 18%) 100%
+    );
+  background-size:
+    100% 100%,
+    220% 100%;
+  animation: heroVisualPlaceholderSweep 2.4s ease-in-out infinite;
+}
+
+@keyframes heroVisualPlaceholderSweep {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      0 0,
+      -140% 0;
+  }
+}
+
 .root {
   --sidebar-w: var(--layout-sidebar-width);
   --sidebar-gap: var(--layout-sidebar-gap);

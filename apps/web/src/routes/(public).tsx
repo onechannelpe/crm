@@ -1,6 +1,6 @@
 import { A } from "@solidjs/router";
 import type { RouteSectionProps } from "@solidjs/router";
-import { For, Suspense, createSignal, onCleanup, onMount } from "solid-js";
+import { For, createSignal, onCleanup, onMount } from "solid-js";
 
 import { ThemeToggle } from "~/components/ui/theme/theme-toggle";
 import { PUBLIC_MENU_ITEMS } from "~/features/public/menu/data";
@@ -51,7 +51,7 @@ export default function PublicLayout(props: RouteSectionProps) {
           </div>
         </div>
       </header>
-      <Suspense>{props.children}</Suspense>
+      {props.children}
     </main>
   );
 }

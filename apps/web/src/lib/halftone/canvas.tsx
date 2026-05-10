@@ -32,6 +32,7 @@ type HalftoneCanvasProps = {
   imageElement: HTMLImageElement | null;
   imageFit?: HalftoneImageFit;
   imageInteraction?: Partial<HalftonePointerSettings>;
+  maxRenderPixelRatio?: number;
   onFirstInteraction: () => void;
   onPoseChange: (pose: HalftonePose) => void;
   previewDistance: number;
@@ -50,6 +51,7 @@ export function HalftoneCanvas(props: HalftoneCanvasProps) {
     imageFit: props.imageFit ?? "contain",
     imageInteraction: props.imageInteraction,
     initialPose: props.initialPose,
+    maxRenderPixelRatio: props.maxRenderPixelRatio,
     onFirstInteraction: props.onFirstInteraction,
     onPoseChange: props.onPoseChange,
     previewDistance: props.previewDistance,

@@ -1,7 +1,7 @@
 import {
   Show,
   createEffect,
-  createResource,
+  createSignal,
   onCleanup,
   on,
   type JSX,
@@ -26,8 +26,8 @@ type HalftoneImageCanvasProps = {
   imageInteraction?: Partial<HalftonePointerSettings>;
   imageUrl: string;
   initialPose?: Partial<HalftonePose>;
+  maxRenderPixelRatio?: number;
   onFirstInteraction?: () => void;
-  onImageLoadError?: (error: Error) => void;
   onPoseChange?: (pose: HalftonePose) => void;
   previewDistance: number;
   settings: HalftoneStudioSettings;
@@ -45,37 +45,46 @@ function createImageLoadError(imageUrl: string) {
 export function HalftoneImageCanvas(
   props: HalftoneImageCanvasProps,
 ): JSX.Element {
-  const [imageElement] = createResource(
-    () => ({
-      crossOrigin: props.crossOrigin,
-      imageUrl: props.imageUrl,
-    }),
-    async ({ crossOrigin, imageUrl }) =>
-      loadVisualImage(imageUrl, {
-        crossOrigin,
-        label: "halftone image",
-      }),
+  const [imageElement, setImageElement] = createSignal<HTMLImageElement | null>(
+    null,
   );
 
   const geometry = new PlaneGeometry(1, 1);
 
   createEffect(
     on(
-      () => imageElement.error,
-      (error) => {
-        if (!error) {
-          return;
-        }
+      () => ({
+        crossOrigin: props.crossOrigin,
+        imageUrl: props.imageUrl,
+      }),
+      ({ crossOrigin, imageUrl }) => {
+        let cancelled = false;
+        setImageElement(null);
 
-        const loadError = createImageLoadError(props.imageUrl);
-        if (props.onImageLoadError) {
-          props.onImageLoadError(loadError);
-          return;
-        }
+        void loadVisualImage(imageUrl, {
+          crossOrigin,
+          label: "halftone image",
+        })
+          .then((image) => {
+            if (cancelled) {
+              return;
+            }
+            setImageElement(image);
+          })
+          .catch((error: unknown) => {
+            if (cancelled) {
+              return;
+            }
+            const loadError =
+              error instanceof Error ? error : createImageLoadError(imageUrl);
+            if (import.meta.env.DEV) {
+              console.error(loadError);
+            }
+          });
 
-        if (process.env.NODE_ENV !== "production") {
-          console.error(loadError);
-        }
+        onCleanup(() => {
+          cancelled = true;
+        });
       },
     ),
   );
@@ -93,6 +102,7 @@ export function HalftoneImageCanvas(
           imageFit={props.imageFit}
           imageInteraction={props.imageInteraction}
           initialPose={props.initialPose}
+          maxRenderPixelRatio={props.maxRenderPixelRatio}
           onFirstInteraction={props.onFirstInteraction ?? noopFirstInteraction}
           onPoseChange={props.onPoseChange ?? noopPoseChange}
           previewDistance={props.previewDistance}
