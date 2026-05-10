@@ -1,5 +1,5 @@
 import { revalidate, useSearchParams } from "@solidjs/router";
-import { createEffect, createMemo, createSignal, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 
 import { isSearchType, type SearchType } from "~/actions/search/contracts";
 import { searchDirect } from "~/actions/search/run";
@@ -79,13 +79,15 @@ export default function SearchPage() {
     }
   }
 
-  createEffect(() => {
-    if (!query()) return;
-    if (model().total > 0) return;
-    if (error()) return;
-    if (!searchParams.query) return;
-    void handleSearch();
-  });
+  createEffect(
+    on(
+      () => searchParams.query,
+      (urlQuery) => {
+        if (!urlQuery || model().total > 0 || error()) return;
+        void handleSearch();
+      },
+    ),
+  );
 
   return (
     <AppPage class={pageStyles.page}>
