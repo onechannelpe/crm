@@ -66,10 +66,9 @@ export function HalftoneImageCanvas(
           label: "halftone image",
         })
           .then((image) => {
-            if (cancelled) {
-              return;
+            if (!cancelled) {
+              setImageElement(image);
             }
-            return setImageElement(image);
           })
           .catch((error: unknown) => {
             if (cancelled) {
