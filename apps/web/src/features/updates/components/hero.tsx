@@ -1,3 +1,5 @@
+import { UpdatesHeroVisual } from "./hero-visual";
+
 import styles from "./styles/layout.module.css";
 
 export function UpdatesHero(props: {
@@ -7,12 +9,14 @@ export function UpdatesHero(props: {
 }) {
   return (
     <section class={styles.hero}>
+      <div class={styles.heroBackdrop} aria-hidden="true" />
       <h1 class={styles.heroTitle}>
-        {props.titleMuted}
+        <span class={styles.heroTitleMuted}>{props.titleMuted}</span>
         <br />
-        {props.titleBold}
+        <span class={styles.heroTitleBold}>{props.titleBold}</span>
       </h1>
       <p class={styles.heroBody}>{props.body}</p>
+      <UpdatesHeroVisual />
     </section>
   );
 }
