@@ -49,9 +49,8 @@ export async function getLeadDetail(
 
   const [
     isFavorite,
-    commercialInput,
+    profile,
     quotations,
-    sale,
     venuesResult,
     negotiationRequestRows,
     historyResult,
@@ -64,10 +63,9 @@ export async function getLeadDetail(
       leadId: input.leadId,
       userId: input.actorUserId,
     }),
-    deps.leadCommercialInputs.findByLeadId(input.leadId),
+    deps.leadProfiles.findByLeadId(input.leadId),
     deps.leadQuotations.listByLeadId(input.leadId),
-    deps.leadSales.findByLeadId(input.leadId),
-    deps.leadSaleVenues.listByLeadId(input.leadId),
+    deps.leadVenues.listByLeadId(input.leadId),
     deps.leadNegotiationRequests.listByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
     deps.sourceStatuses.findByRuc(lead.ruc),
@@ -106,7 +104,7 @@ export async function getLeadDetail(
     reportSectionDegradation("history", historyResult.error);
   }
   if (!venuesResult.ok) {
-    reportSectionDegradation("sale_venues", venuesResult.error);
+    reportSectionDegradation("venues", venuesResult.error);
   }
 
   const negotiationRequests = await Promise.all(
@@ -138,9 +136,8 @@ export async function getLeadDetail(
       executiveName,
       createdByName,
       updatedByName,
-      commercialInput,
+      profile,
       quotations,
-      sale,
       venues,
       negotiationRequests,
       history,

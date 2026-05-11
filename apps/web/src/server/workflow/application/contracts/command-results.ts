@@ -10,8 +10,3 @@ export type LeadQuotationResult = {
   id: string;
 };
 
-export type LeadSaleResult = {
-  leadId: string;
-  saleId: string;
-  transactionId: string;
-};
