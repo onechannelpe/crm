@@ -9,7 +9,10 @@ import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadProfileRepository } from "../ports/lead-profile-repository";
 import type { LeadVenueRepository } from "../ports/sale-repository";
-import { validateVenueDigitalConfig } from "../services/digital-product-policy";
+import {
+  parseVenueDigitalFields,
+  toVenueDigitalInsert,
+} from "../services/digital-product-policy";
 import type { LeadClock } from "../services/lead-clock";
 
 type CreateVenueCommandDeps = {
@@ -43,24 +46,39 @@ export async function createVenueCommand(
     );
   }
 
+  if (lead.stage !== "CLOSING") {
+    return Err(
+      domainError(
+        "validation",
+        "wrong_stage",
+        "Venues can only be created in CLOSING stage",
+      ),
+    );
+  }
+
   const profile = await deps.leadProfiles.findByLeadId(input.leadId);
-  const digitalConfig = validateVenueDigitalConfig({
-    policy: {
-      linkScope: profile?.linkScope ?? "none",
-      onlineScope: profile?.onlineScope ?? "none",
-    },
-    config: input.digitalConfig,
-  });
-  if (!digitalConfig.ok) return digitalConfig;
+  if (!profile) {
+    return Err(
+      domainError(
+        "validation",
+        "scoping_not_complete",
+        "Digital policy must be set before creating venues",
+      ),
+    );
+  }
+
+  const venueFields = parseVenueDigitalFields(
+    { linkScope: profile.linkScope, onlineScope: profile.onlineScope },
+    input.digitalConfig,
+  );
+  if (!venueFields.ok) return venueFields;
 
   const now = deps.clock.now();
   const venueId = await deps.leadVenues.insert({
     leadId: input.leadId,
     nombreComercial: input.nombreComercial,
     posQuantity: input.posQuantity,
-    linkUrl: digitalConfig.value.linkUrl,
-    onlineUrl: digitalConfig.value.onlineUrl,
-    onlineModalidad: digitalConfig.value.onlineModalidad,
+    ...toVenueDigitalInsert(venueFields.value),
     direccion: input.direccion,
     referencia: input.referencia,
     distrito: input.distrito,
@@ -79,7 +97,6 @@ export async function createVenueCommand(
       venueId,
       nombreComercial: input.nombreComercial,
       posQuantity: input.posQuantity,
-      digitalConfig: input.digitalConfig,
       direccion: input.direccion,
       referencia: input.referencia,
       distrito: input.distrito,

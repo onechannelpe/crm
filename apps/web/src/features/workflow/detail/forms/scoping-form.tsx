@@ -157,8 +157,10 @@ export function ScopingForm(props: {
       return;
     }
 
-    if (computedOnlineScope !== "none" && !modalidad) {
-      setError("Modalidad de cobro es obligatoria para Culqi Online");
+    if (computedOnlineScope === "shared" && !modalidad) {
+      setError(
+        "Modalidad de cobro es obligatoria cuando Culqi Online es compartido",
+      );
       return;
     }
 
@@ -183,7 +185,7 @@ export function ScopingForm(props: {
         onlineScope: computedOnlineScope,
         onlineUrl: computedOnlineScope === "shared" ? onUrl : null,
         onlineModalidad:
-          computedOnlineScope !== "none" && modalidad ? modalidad : null,
+          computedOnlineScope === "shared" && modalidad ? modalidad : null,
       });
     } catch (err) {
       setError(toAppError(err, "Error al guardar").publicMessage);
@@ -488,7 +490,10 @@ export function ScopingForm(props: {
                         type="radio"
                         name="onlineScope"
                         checked={onlineScope() === "per_venue"}
-                        onChange={() => setOnlineScope("per_venue")}
+                        onChange={() => {
+                          setOnlineScope("per_venue");
+                          setOnlineModalidad("");
+                        }}
                       />{" "}
                       URL por local
                     </label>
@@ -509,52 +514,52 @@ export function ScopingForm(props: {
                       />
                     </FieldInputValue>
                   </FieldRow>
+                  <FieldRow>
+                    <FieldLabel>
+                      <FieldLabelText>Modalidad de cobro</FieldLabelText>
+                    </FieldLabel>
+                    <FieldInputValue>
+                      <div
+                        style={{
+                          display: "flex",
+                          "flex-direction": "column",
+                          gap: "6px",
+                        }}
+                      >
+                        <label>
+                          <input
+                            type="radio"
+                            name="onlineModalidad"
+                            value="SUSCRIPCIONES"
+                            checked={onlineModalidad() === "SUSCRIPCIONES"}
+                            onChange={() => setOnlineModalidad("SUSCRIPCIONES")}
+                          />{" "}
+                          Suscripciones
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="onlineModalidad"
+                            value="ONE_CLIC"
+                            checked={onlineModalidad() === "ONE_CLIC"}
+                            onChange={() => setOnlineModalidad("ONE_CLIC")}
+                          />{" "}
+                          One Click
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="onlineModalidad"
+                            value="CARGO_UNICO"
+                            checked={onlineModalidad() === "CARGO_UNICO"}
+                            onChange={() => setOnlineModalidad("CARGO_UNICO")}
+                          />{" "}
+                          Cargo único
+                        </label>
+                      </div>
+                    </FieldInputValue>
+                  </FieldRow>
                 </Show>
-                <FieldRow>
-                  <FieldLabel>
-                    <FieldLabelText>Modalidad de cobro</FieldLabelText>
-                  </FieldLabel>
-                  <FieldInputValue>
-                    <div
-                      style={{
-                        display: "flex",
-                        "flex-direction": "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label>
-                        <input
-                          type="radio"
-                          name="onlineModalidad"
-                          value="SUSCRIPCIONES"
-                          checked={onlineModalidad() === "SUSCRIPCIONES"}
-                          onChange={() => setOnlineModalidad("SUSCRIPCIONES")}
-                        />{" "}
-                        Suscripciones
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="onlineModalidad"
-                          value="ONE_CLIC"
-                          checked={onlineModalidad() === "ONE_CLIC"}
-                          onChange={() => setOnlineModalidad("ONE_CLIC")}
-                        />{" "}
-                        One Click
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="onlineModalidad"
-                          value="CARGO_UNICO"
-                          checked={onlineModalidad() === "CARGO_UNICO"}
-                          onChange={() => setOnlineModalidad("CARGO_UNICO")}
-                        />{" "}
-                        Cargo único
-                      </label>
-                    </div>
-                  </FieldInputValue>
-                </FieldRow>
               </Show>
             </FieldTable>
           </div>

@@ -6,100 +6,134 @@ import type {
   VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
-type LeadDigitalPolicy = {
+type LinkConfig = { url: string };
+type OnlineConfig = { url: string; modalidad: ModalidadCobro };
+
+export type LinkPolicy =
+  | { scope: "none" }
+  | { scope: "shared"; config: LinkConfig }
+  | { scope: "per_venue" };
+
+export type OnlinePolicy =
+  | { scope: "none" }
+  | { scope: "shared"; config: OnlineConfig }
+  | { scope: "per_venue" };
+
+export type DigitalPolicy = {
+  link: LinkPolicy;
+  online: OnlinePolicy;
+};
+
+export type VenueDigitalFields = {
+  link: LinkConfig | null;
+  online: OnlineConfig | null;
+};
+
+type VenueSnapshot = {
+  id: string;
+  nombreComercial: string;
+  linkUrl: string | null;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
+};
+
+export function parseDigitalPolicy(raw: {
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
   onlineModalidad: ModalidadCobro | null;
-};
+}): Result<DigitalPolicy, DomainError> {
+  const linkUrl = raw.linkUrl?.trim() || null;
+  const onlineUrl = raw.onlineUrl?.trim() || null;
 
-export type NormalizedVenueDigitalConfig = {
-  linkUrl: string | null;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-};
-
-export function validateLeadDigitalPolicy(
-  policy: LeadDigitalPolicy,
-): Result<void, DomainError> {
-  if (policy.linkScope === "none" && policy.linkUrl !== null) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_link_policy",
-        "Link URL must be empty when link scope is none",
-      ),
-    );
-  }
-  if (policy.linkScope === "shared" && !policy.linkUrl?.trim()) {
-    return Err(
-      domainError(
-        "validation",
-        "missing_link_shared_url",
-        "Link URL is required when link scope is shared",
-      ),
-    );
-  }
-  if (policy.linkScope === "per_venue" && policy.linkUrl !== null) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_link_policy",
-        "Link shared URL must be empty when link scope is per_venue",
-      ),
-    );
-  }
-
-  if (
-    policy.onlineScope === "none" &&
-    (policy.onlineUrl !== null || policy.onlineModalidad !== null)
-  ) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_online_policy",
-        "Online shared fields must be empty when online scope is none",
-      ),
-    );
-  }
-  if (
-    policy.onlineScope === "shared" &&
-    (!policy.onlineUrl?.trim() || policy.onlineModalidad === null)
-  ) {
-    return Err(
-      domainError(
-        "validation",
-        "missing_online_shared_config",
-        "Online shared URL and modalidad are required when online scope is shared",
-      ),
-    );
-  }
-  if (
-    policy.onlineScope === "per_venue" &&
-    (policy.onlineUrl !== null || policy.onlineModalidad !== null)
-  ) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_online_policy",
-        "Online shared fields must be empty when online scope is per_venue",
-      ),
-    );
+  let link: LinkPolicy;
+  if (raw.linkScope === "none") {
+    if (linkUrl !== null) {
+      return Err(
+        domainError(
+          "validation",
+          "invalid_link_policy",
+          "Link URL must be empty when link scope is none",
+        ),
+      );
+    }
+    link = { scope: "none" };
+  } else if (raw.linkScope === "shared") {
+    if (!linkUrl) {
+      return Err(
+        domainError(
+          "validation",
+          "missing_link_shared_url",
+          "Link URL is required when link scope is shared",
+        ),
+      );
+    }
+    link = { scope: "shared", config: { url: linkUrl } };
+  } else {
+    if (linkUrl !== null) {
+      return Err(
+        domainError(
+          "validation",
+          "invalid_link_policy",
+          "Link shared URL must be empty when link scope is per_venue",
+        ),
+      );
+    }
+    link = { scope: "per_venue" };
   }
 
-  return Ok(undefined);
+  let online: OnlinePolicy;
+  if (raw.onlineScope === "none") {
+    if (onlineUrl !== null || raw.onlineModalidad !== null) {
+      return Err(
+        domainError(
+          "validation",
+          "invalid_online_policy",
+          "Online shared fields must be empty when online scope is none",
+        ),
+      );
+    }
+    online = { scope: "none" };
+  } else if (raw.onlineScope === "shared") {
+    if (!onlineUrl || raw.onlineModalidad === null) {
+      return Err(
+        domainError(
+          "validation",
+          "missing_online_shared_config",
+          "Online shared URL and modalidad are required when online scope is shared",
+        ),
+      );
+    }
+    online = {
+      scope: "shared",
+      config: { url: onlineUrl, modalidad: raw.onlineModalidad },
+    };
+  } else {
+    if (onlineUrl !== null || raw.onlineModalidad !== null) {
+      return Err(
+        domainError(
+          "validation",
+          "invalid_online_policy",
+          "Online shared fields must be empty when online scope is per_venue",
+        ),
+      );
+    }
+    online = { scope: "per_venue" };
+  }
+
+  return Ok({ link, online });
 }
 
-export function validateVenueDigitalConfig(input: {
-  policy: Pick<LeadDigitalPolicy, "linkScope" | "onlineScope">;
-  config?: VenueDigitalConfig;
-}): Result<NormalizedVenueDigitalConfig, DomainError> {
-  const linkUrl = input.config?.linkUrl?.trim() || null;
-  const onlineUrl = input.config?.onlineUrl?.trim() || null;
-  const onlineModalidad = input.config?.onlineModalidad ?? null;
+export function parseVenueDigitalFields(
+  scopes: { linkScope: ProductScope; onlineScope: ProductScope },
+  raw?: VenueDigitalConfig,
+): Result<VenueDigitalFields, DomainError> {
+  const linkUrl = raw?.linkUrl?.trim() || null;
+  const onlineUrl = raw?.onlineUrl?.trim() || null;
+  const onlineModalidad = raw?.onlineModalidad ?? null;
 
-  if (input.policy.linkScope !== "per_venue" && linkUrl !== null) {
+  if (scopes.linkScope !== "per_venue" && linkUrl !== null) {
     return Err(
       domainError(
         "validation",
@@ -108,7 +142,7 @@ export function validateVenueDigitalConfig(input: {
       ),
     );
   }
-  if (input.policy.linkScope === "per_venue" && linkUrl === null) {
+  if (scopes.linkScope === "per_venue" && linkUrl === null) {
     return Err(
       domainError(
         "validation",
@@ -119,7 +153,7 @@ export function validateVenueDigitalConfig(input: {
   }
 
   if (
-    input.policy.onlineScope !== "per_venue" &&
+    scopes.onlineScope !== "per_venue" &&
     (onlineUrl !== null || onlineModalidad !== null)
   ) {
     return Err(
@@ -131,7 +165,7 @@ export function validateVenueDigitalConfig(input: {
     );
   }
   if (
-    input.policy.onlineScope === "per_venue" &&
+    scopes.onlineScope === "per_venue" &&
     (onlineUrl === null || onlineModalidad === null)
   ) {
     return Err(
@@ -143,5 +177,69 @@ export function validateVenueDigitalConfig(input: {
     );
   }
 
-  return Ok({ linkUrl, onlineUrl, onlineModalidad });
+  return Ok({
+    link: linkUrl !== null ? { url: linkUrl } : null,
+    online:
+      onlineUrl !== null && onlineModalidad !== null
+        ? { url: onlineUrl, modalidad: onlineModalidad }
+        : null,
+  });
+}
+
+export function validateDigitalAggregate(input: {
+  policy: DigitalPolicy;
+  venues: VenueSnapshot[];
+}): Result<void, DomainError> {
+  const scopes = {
+    linkScope: input.policy.link.scope,
+    onlineScope: input.policy.online.scope,
+  };
+  for (const venue of input.venues) {
+    const check = parseVenueDigitalFields(scopes, {
+      linkUrl: venue.linkUrl,
+      onlineUrl: venue.onlineUrl,
+      onlineModalidad: venue.onlineModalidad,
+    });
+    if (!check.ok) {
+      return Err(
+        domainError(
+          "validation",
+          "invalid_existing_venue_digital_config",
+          `Venue "${venue.nombreComercial}" is incompatible with the selected digital scope policy`,
+          { venueId: venue.id, cause: check.error.code },
+        ),
+      );
+    }
+  }
+  return Ok(undefined);
+}
+
+export function toProfileDigitalFields(policy: DigitalPolicy): {
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
+} {
+  return {
+    linkScope: policy.link.scope,
+    linkUrl: policy.link.scope === "shared" ? policy.link.config.url : null,
+    onlineScope: policy.online.scope,
+    onlineUrl:
+      policy.online.scope === "shared" ? policy.online.config.url : null,
+    onlineModalidad:
+      policy.online.scope === "shared" ? policy.online.config.modalidad : null,
+  };
+}
+
+export function toVenueDigitalInsert(fields: VenueDigitalFields): {
+  linkUrl: string | null;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
+} {
+  return {
+    linkUrl: fields.link?.url ?? null,
+    onlineUrl: fields.online?.url ?? null,
+    onlineModalidad: fields.online?.modalidad ?? null,
+  };
 }

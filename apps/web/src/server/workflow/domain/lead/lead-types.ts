@@ -6,7 +6,6 @@ import type {
   ModalidadCobro,
   Moneda,
   ProductScope,
-  VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "../lead-record";
@@ -86,7 +85,6 @@ export type LeadMutationIntent =
       venueId: string;
       nombreComercial: string;
       posQuantity: number;
-      digitalConfig?: VenueDigitalConfig;
       direccion: string;
       referencia: string;
       distrito: string;

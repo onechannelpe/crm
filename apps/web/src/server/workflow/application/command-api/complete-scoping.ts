@@ -12,13 +12,19 @@ import {
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadProfileRepository } from "../ports/lead-profile-repository";
 import type { PartyRepository } from "../ports/party-repository";
-import { validateLeadDigitalPolicy } from "../services/digital-product-policy";
+import type { LeadVenueRepository } from "../ports/sale-repository";
+import {
+  parseDigitalPolicy,
+  toProfileDigitalFields,
+  validateDigitalAggregate,
+} from "../services/digital-product-policy";
 import type { LeadClock } from "../services/lead-clock";
 
 type CompleteScopingCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
   leadProfiles: LeadProfileRepository;
+  leadVenues: LeadVenueRepository;
   party: PartyRepository;
   clock: LeadClock;
 };
@@ -46,30 +52,40 @@ export async function completeScopingCommand(
     );
   }
 
-  const validDigitalPolicy = validateLeadDigitalPolicy({
+  if (lead.stage !== "SCOPING") {
+    return Err(
+      domainError("validation", "wrong_stage", "Lead is not in SCOPING stage"),
+    );
+  }
+
+  const policy = parseDigitalPolicy({
     linkScope: input.linkScope,
-    linkUrl: input.linkUrl?.trim() || null,
+    linkUrl: input.linkUrl,
     onlineScope: input.onlineScope,
-    onlineUrl: input.onlineUrl?.trim() || null,
+    onlineUrl: input.onlineUrl,
     onlineModalidad: input.onlineModalidad,
   });
-  if (!validDigitalPolicy.ok) return validDigitalPolicy;
+  if (!policy.ok) return policy;
 
-  const normalizedLinkUrl = input.linkUrl?.trim() || null;
-  const normalizedOnlineUrl = input.onlineUrl?.trim() || null;
+  const venues = await deps.leadVenues.listByLeadId(lead.id);
+  if (!venues.ok) return venues;
 
+  const aggregateCheck = validateDigitalAggregate({
+    policy: policy.value,
+    venues: venues.value,
+  });
+  if (!aggregateCheck.ok) return aggregateCheck;
+
+  const digitalFields = toProfileDigitalFields(policy.value);
   const now = deps.clock.now();
+
   await deps.leadProfiles.upsert({
     leadId: lead.id,
     proveedorActual: input.proveedorActual,
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
-    linkScope: input.linkScope,
-    linkUrl: normalizedLinkUrl,
-    onlineScope: input.onlineScope,
-    onlineUrl: normalizedOnlineUrl,
-    onlineModalidad: input.onlineModalidad,
+    ...digitalFields,
     updatedAt: now,
     updatedBy: input.actor.userId,
   });
@@ -99,11 +115,11 @@ export async function completeScopingCommand(
       gpv: input.gpv,
       ticket: input.ticket,
       giroNegocio: input.giroNegocio,
-      linkScope: input.linkScope,
-      linkUrl: normalizedLinkUrl,
-      onlineScope: input.onlineScope,
-      onlineUrl: normalizedOnlineUrl,
-      onlineModalidad: input.onlineModalidad,
+      linkScope: digitalFields.linkScope,
+      linkUrl: digitalFields.linkUrl,
+      onlineScope: digitalFields.onlineScope,
+      onlineUrl: digitalFields.onlineUrl,
+      onlineModalidad: digitalFields.onlineModalidad,
       repLegalNombres: input.repLegalNombres,
       repLegalApellidoPaterno: input.repLegalApellidoPaterno,
       repLegalApellidoMaterno: input.repLegalApellidoMaterno,
