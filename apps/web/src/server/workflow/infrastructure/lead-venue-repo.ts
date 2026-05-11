@@ -4,7 +4,7 @@ import type { Insertable, Selectable } from "kysely";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/server/shared/result";
 import type {
   LeadVenue,
   LeadVenueAccounts,

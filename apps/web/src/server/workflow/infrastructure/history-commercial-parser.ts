@@ -1,7 +1,6 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
-import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
 
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";

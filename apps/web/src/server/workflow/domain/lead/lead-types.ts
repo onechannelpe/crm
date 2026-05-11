@@ -6,7 +6,6 @@ import type {
   ModalidadCobro,
   Moneda,
   ProductScope,
-  SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "../lead-record";
