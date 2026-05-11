@@ -54,13 +54,10 @@ export function validateLeadIntent(
   currentStage: LeadStage,
   intent: LeadMutationIntent,
 ): Result<void, DomainError> {
-  if (intent.kind === "review" && currentStage !== "PENDING_EXTERNAL_REVIEW") {
+  if (intent.kind === "review" && currentStage !== "QUALIFYING") {
     return invalidLeadStage();
   }
-  if (
-    intent.kind === "imported_review" &&
-    currentStage !== "PENDING_EXTERNAL_REVIEW"
-  ) {
+  if (intent.kind === "imported_review" && currentStage !== "QUALIFYING") {
     return invalidLeadStage();
   }
   if (intent.kind === "reassign" && intent.toExecutiveId <= 0) {
@@ -69,25 +66,20 @@ export function validateLeadIntent(
   if (intent.kind === "approve_for_sale" && currentStage !== "QUOTED") {
     return invalidLeadStage();
   }
-  if (
-    intent.kind === "create_quotation" &&
-    currentStage !== "READY_FOR_QUOTATION"
-  ) {
+  if (intent.kind === "create_quotation" && currentStage !== "QUOTING") {
+    return invalidLeadStage();
+  }
+  if (intent.kind === "complete_scoping" && currentStage !== "SCOPING") {
     return invalidLeadStage();
   }
   if (
-    intent.kind === "complete_commercial_input" &&
-    currentStage !== "NEEDS_EXECUTIVE_INPUT"
+    intent.kind === "create_venue" &&
+    currentStage !== "SCOPING" &&
+    currentStage !== "QUOTING"
   ) {
     return invalidLeadStage();
   }
-  if (intent.kind === "create_sale" && currentStage !== "READY_FOR_SALE") {
-    return invalidLeadStage();
-  }
-  if (
-    intent.kind === "create_sale_venue" &&
-    currentStage !== "READY_FOR_SALE"
-  ) {
+  if (intent.kind === "add_venue_accounts" && currentStage !== "CLOSING") {
     return invalidLeadStage();
   }
 

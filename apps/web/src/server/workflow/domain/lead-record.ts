@@ -70,7 +70,7 @@ export function createLeadDraft(input: {
     executiveId: input.executiveId,
     createdBy: input.createdBy,
     updatedBy: null,
-    stage: "PENDING_EXTERNAL_REVIEW",
+    stage: "QUALIFYING",
     status: null,
     prioridad: null,
     createdAt: input.now,

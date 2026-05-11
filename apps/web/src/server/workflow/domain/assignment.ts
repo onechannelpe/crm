@@ -24,7 +24,7 @@ export function decideRegistrationConflict(input: {
   existingStage: LeadStage;
   hasActiveExecutive: boolean;
 }): "reassign_inactive_owner" | "conflict" {
-  if (input.existingStage !== "CONVERTED" && !input.hasActiveExecutive) {
+  if (input.existingStage !== "LIVE" && !input.hasActiveExecutive) {
     return "reassign_inactive_owner";
   }
 
