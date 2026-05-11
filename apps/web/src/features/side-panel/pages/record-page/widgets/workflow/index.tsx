@@ -6,8 +6,8 @@ import {
   RelationRow,
 } from "~/features/side-panel/components/relation-list";
 import {
-  WidgetBody,
   Widget,
+  WidgetBody,
   WidgetHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
@@ -53,28 +53,32 @@ export function WorkflowWidget(props: { data: LeadDetailView }) {
               <RelationMeta>Ronda {negotiationCount()} de 3</RelationMeta>
             </RelationRow>
           </Show>
-          <Show when={props.data.commercialInput}>
-            {(input) => (
+          <Show when={props.data.profile}>
+            {(profile) => (
               <>
                 <RelationRow>
                   <span>GPV</span>
-                  <RelationMeta>{formatAmount(input().gpv)}</RelationMeta>
+                  <RelationMeta>{formatAmount(profile().gpv)}</RelationMeta>
                 </RelationRow>
                 <RelationRow>
                   <span>Ticket</span>
-                  <RelationMeta>{formatAmount(input().ticket)}</RelationMeta>
+                  <RelationMeta>{formatAmount(profile().ticket)}</RelationMeta>
                 </RelationRow>
                 <RelationRow>
                   <span>Tasa actual</span>
-                  <RelationMeta>{formatRate(input().tasaActual)}</RelationMeta>
+                  <RelationMeta>
+                    {formatRate(profile().tasaActual)}
+                  </RelationMeta>
                 </RelationRow>
               </>
             )}
           </Show>
           <RelationRow>
-            <span>Venta</span>
+            <span>Sedes</span>
             <RelationMeta>
-              {props.data.sale ? `Venta #${props.data.sale.id}` : "Pendiente"}
+              {props.data.venues.length === 0
+                ? "Sin sedes"
+                : `${props.data.venues.length} registradas`}
             </RelationMeta>
           </RelationRow>
         </RelationList>

@@ -6,57 +6,21 @@ import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-run
 import type {
   AbonoBank,
   AccountTypeKind,
+  ModalidadCobro,
 } from "~/workflow/contracts/lead-schema";
 
-export async function requestSaleContainerCreation(input: { leadId: string }) {
-  return runAction({
-    actionName: "workflow.create_sale_container",
-    access: { kind: "auth" },
-    input: { leadId: input.leadId },
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.createSale({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-        }),
-      ),
-  });
-}
-
-export const requestSaleCreation = requestSaleContainerCreation;
-
-export async function requestSaleVenueCreation(input: {
+export async function requestVenueCreation(input: {
   leadId: string;
-  saleId: string;
   nombreComercial: string;
-  cantidadPos: number;
+  posQuantity: number;
+  linkUrl: string | null;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
   direccion: string;
   referencia: string;
   distrito: string;
   provincia: string;
   departamento: string;
-  solesAccount: {
-    currency: "PEN";
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
-  dollarAccount?:
-    | {
-        currency: "USD";
-        banco: AbonoBank;
-        tipoCuenta: AccountTypeKind;
-        nroCuenta: string;
-        cci?: string;
-        isSettlement: boolean;
-      }
-    | undefined;
 }) {
   if (!input.nombreComercial.trim()) {
     throw validationError("nombreComercial is required");
@@ -77,28 +41,60 @@ export async function requestSaleVenueCreation(input: {
     throw validationError("referencia is required");
   }
 
+  return runAction({
+    actionName: "workflow.create_venue",
+    access: { kind: "auth" },
+    input: { leadId: input.leadId },
+    execute: (ctx) =>
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.createVenue({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
+          ...input,
+        }),
+      ),
+  });
+}
+
+export async function requestVenueAccountsAddition(input: {
+  leadId: string;
+  venueId: string;
+  solesAccount: {
+    currency: "PEN";
+    banco: AbonoBank;
+    tipoCuenta: AccountTypeKind;
+    nroCuenta: string;
+    cci?: string;
+    isSettlement: boolean;
+  };
+  dollarAccount?:
+    | {
+        currency: "USD";
+        banco: AbonoBank;
+        tipoCuenta: AccountTypeKind;
+        nroCuenta: string;
+        cci?: string;
+        isSettlement: boolean;
+      }
+    | undefined;
+}) {
   if (!input.solesAccount.nroCuenta.trim()) {
     throw validationError("soles account number is required");
   }
-
   if (input.dollarAccount && !input.dollarAccount.nroCuenta.trim()) {
     throw validationError("dollar account number is required");
   }
 
-  const settlementCount =
-    (input.solesAccount.isSettlement ? 1 : 0) +
-    (input.dollarAccount?.isSettlement ? 1 : 0);
-  if (settlementCount !== 1) {
-    throw validationError("exactly one settlement account must be selected");
-  }
-
   return runAction({
-    actionName: "workflow.create_sale_venue",
+    actionName: "workflow.add_venue_accounts",
     access: { kind: "auth" },
-    input: { leadId: input.leadId, saleId: input.saleId },
+    input: { leadId: input.leadId, venueId: input.venueId },
     execute: (ctx) =>
       runWorkflowCommand(({ commandApi }) =>
-        commandApi.createSaleVenue({
+        commandApi.addVenueAccounts({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

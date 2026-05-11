@@ -9,8 +9,8 @@ import {
 } from "~/server/workflow/domain/lead-schema-parser";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
 import type {
-  CulqiProductKind,
   ModalidadCobro,
+  ProductScope,
 } from "~/workflow/contracts/lead-schema";
 
 export async function requestLeadCreation(input: {
@@ -82,16 +82,18 @@ export async function requestLeadReview(input: {
   });
 }
 
-export async function requestLeadCommercialInputCompletion(input: {
+export async function requestScopingCompletion(input: {
   leadId: string;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;
   ticket: number;
   giroNegocio: string;
-  tipoProducto: CulqiProductKind;
-  urlCliente: string | null;
-  modalidadCobro: ModalidadCobro;
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
   repLegalNombres: string;
   repLegalApellidoPaterno: string;
   repLegalApellidoMaterno: string;
@@ -107,12 +109,12 @@ export async function requestLeadCommercialInputCompletion(input: {
   }
 
   return runAction({
-    actionName: "workflow.complete_commercial_input",
+    actionName: "workflow.complete_scoping",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runWorkflowCommand(({ commandApi }) =>
-        commandApi.completeCommercialInput({
+        commandApi.completeScoping({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

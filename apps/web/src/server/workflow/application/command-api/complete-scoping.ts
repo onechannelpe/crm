@@ -7,7 +7,7 @@ import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { CompleteScopingInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import {
-  canCompleteCommercialInput,
+  canCompleteScoping,
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
@@ -29,7 +29,7 @@ export async function completeScopingCommand(
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const canComplete = requirePipelineActionAccess(
     input.actor.role,
-    canCompleteCommercialInput,
+    canCompleteScoping,
   );
   if (!canComplete.ok) return canComplete;
 

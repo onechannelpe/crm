@@ -55,7 +55,7 @@ export function canRegisterLead(role: Role) {
   return hasPermission(role, "lead:register");
 }
 
-export function canCompleteCommercialInput(role: Role) {
+export function canCompleteScoping(role: Role) {
   return hasPermission(role, "lead:commercial-input:complete");
 }
 
