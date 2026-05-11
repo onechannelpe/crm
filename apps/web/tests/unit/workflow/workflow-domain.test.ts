@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { PendingReviewLeadSubject } from "~/server/workflow/domain/lead-subjects";
+import type { QualifyingLeadSubject } from "~/server/workflow/domain/lead-subjects";
 import { resolveReviewTransition } from "~/server/workflow/domain/workflow";
 
-const pendingReviewLead: PendingReviewLeadSubject = {
+const qualifyingLead: QualifyingLeadSubject = {
   id: "lead-1",
   organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963111",
   ruc: "20123456789",
@@ -14,7 +14,7 @@ const pendingReviewLead: PendingReviewLeadSubject = {
   executiveId: 7,
   createdBy: 7,
   updatedBy: null,
-  stage: "PENDING_EXTERNAL_REVIEW",
+  stage: "QUALIFYING",
   status: null,
   prioridad: null,
   createdAt: 1,
@@ -22,33 +22,33 @@ const pendingReviewLead: PendingReviewLeadSubject = {
 };
 
 describe("workflow domain", () => {
-  it("rejects the record when a rejected status arrives during external review", () => {
+  it("disqualifies the record when a rejected status arrives during qualifying", () => {
     const result = resolveReviewTransition({
-      lead: pendingReviewLead,
+      lead: qualifyingLead,
       status: "CARTERIZADO",
       prioridad: "P1",
     });
 
-    expect(result).toBe("REJECTED_BY_STATUS");
+    expect(result).toBe("DISQUALIFIED");
   });
 
-  it("moves to executive input when prioridad is SIN RESULTADO", () => {
+  it("moves to scoping when prioridad is SIN RESULTADO", () => {
     const result = resolveReviewTransition({
-      lead: pendingReviewLead,
+      lead: qualifyingLead,
       status: "DISPONIBLE",
       prioridad: "SIN RESULTADO",
     });
 
-    expect(result).toBe("NEEDS_EXECUTIVE_INPUT");
+    expect(result).toBe("SCOPING");
   });
 
-  it("moves to quotation when status and prioridad are valid", () => {
+  it("moves to quoting when status and prioridad are valid", () => {
     const result = resolveReviewTransition({
-      lead: pendingReviewLead,
+      lead: qualifyingLead,
       status: "DISPONIBLE",
       prioridad: "P1",
     });
 
-    expect(result).toBe("READY_FOR_QUOTATION");
+    expect(result).toBe("QUOTING");
   });
 });
