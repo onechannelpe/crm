@@ -13,11 +13,11 @@ type UpdateMarkdownProps = {
 
 export function UpdateMarkdown(props: UpdateMarkdownProps) {
   const Content = props.content as Component<{
-    components?: Record<string, unknown>;
+    components?: Record<string, Component<any>>;
   }>;
 
   return (
-    <div class={proseStyles.prose}>
+    <div class={`${proseStyles.prose} ${proseStyles.withNativeDetails}`}>
       <Content components={{ Collapsible, UpdateLabel }} />
     </div>
   );
