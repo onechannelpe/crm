@@ -34,9 +34,11 @@ type UpdateLabelProps = {
 };
 
 export function UpdateLabel(props: UpdateLabelProps) {
-  const color = props.color ?? "#95a2b3";
   return (
-    <span class={styles.label} style={{ "--update-label-color": color }}>
+    <span
+      class={styles.label}
+      style={props.color ? { "--update-label-color": props.color } : undefined}
+    >
       {props.children}
     </span>
   );
