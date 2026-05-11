@@ -23,7 +23,7 @@ describe("workflow read access", () => {
     const lead = await scenario.lead.assignedTo("execOne", {
       key: "read-access-back-office",
       organization: { key: "read-access-back-office" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
     });
 
     const result = await runtime.workflow.queryApi.getLeadDetail({
@@ -61,7 +61,7 @@ describe("workflow read access", () => {
     const lead = await scenario.lead.assignedTo("execOne", {
       key: "read-access-exec-blocked",
       organization: { key: "read-access-exec-blocked" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
     });
 
     const result = await runtime.workflow.queryApi.getLeadDetail({

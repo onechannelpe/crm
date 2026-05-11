@@ -29,7 +29,7 @@ describe("workflow lead mutation metadata", () => {
     const lead = await scenario.lead.assignedTo("execOne", {
       key: "metadata-note",
       organization: { key: "metadata-note" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       createdAt: 10,
       updatedAt: 10,
     });
@@ -57,7 +57,7 @@ describe("workflow lead mutation metadata", () => {
     const lead = await scenario.lead.assignedTo("execOne", {
       key: "metadata-reassign",
       organization: { key: "metadata-reassign" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       createdAt: 10,
       updatedAt: 10,
     });
@@ -103,7 +103,7 @@ describe("workflow lead mutation metadata", () => {
     const lead = await scenario.lead.assignedTo("execOne", {
       key: "metadata-import",
       organization: { key: "metadata-import" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
     });
     const result = await scenario.importer.run({
       actor: "backOne",

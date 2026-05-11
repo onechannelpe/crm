@@ -22,14 +22,14 @@ describe("import outbox planning", () => {
     const leadOne = await scenario.lead.assignedTo("execOne", {
       key: "planning-one",
       organization: { key: "planning-one" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       status: "DISPONIBLE",
       prioridad: "P1",
     });
     const leadTwo = await scenario.lead.assignedTo("execTwo", {
       key: "planning-two",
       organization: { key: "planning-two" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       status: "SIN RESULTADO",
       prioridad: "P1",
     });
