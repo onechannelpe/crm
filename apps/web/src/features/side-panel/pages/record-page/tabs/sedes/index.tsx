@@ -31,11 +31,10 @@ export function SedesTab(props: TabContentProps) {
     <Show when={viewProps()} keyed>
       {(data) => (
         <Switch>
-          <Match
-            when={
-              data.lead.stage === "SCOPING" || data.lead.stage === "QUOTING"
-            }
-          >
+          <Match when={data.lead.stage === "SCOPING"}>
+            <VenueReadOnlyView venues={data.venues} />
+          </Match>
+          <Match when={data.lead.stage === "QUOTING"}>
             <VenueCreationView
               leadId={data.lead.id}
               venues={data.venues}

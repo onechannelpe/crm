@@ -211,23 +211,16 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
     },
 
     async countWithAccounts(leadId: string): Promise<number> {
-      const venueRows = await db
-        .selectFrom("workflow_lead_venues")
-        .select("id")
-        .where("lead_id", "=", leadId)
-        .execute();
+      const result = await db
+        .selectFrom("workflow_lead_venue_accounts as a")
+        .innerJoin("workflow_lead_venues as v", "v.id", "a.venue_id")
+        .select((eb) =>
+          eb.fn.count<string>("a.venue_id").distinct().as("count"),
+        )
+        .where("v.lead_id", "=", leadId)
+        .executeTakeFirstOrThrow();
 
-      if (venueRows.length === 0) return 0;
-
-      const venueIds = venueRows.map((r) => r.id);
-      const accountRows = await db
-        .selectFrom("workflow_lead_venue_accounts")
-        .select("venue_id")
-        .where("venue_id", "in", venueIds)
-        .execute();
-
-      const uniqueVenueIds = new Set(accountRows.map((r) => r.venue_id));
-      return uniqueVenueIds.size;
+      return Number(result.count);
     },
   };
 }

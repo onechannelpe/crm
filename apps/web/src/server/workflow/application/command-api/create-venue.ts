@@ -46,16 +46,12 @@ export async function createVenueCommand(
     );
   }
 
-  if (
-    lead.stage !== "SCOPING" &&
-    lead.stage !== "QUOTING" &&
-    lead.stage !== "CLOSING"
-  ) {
+  if (lead.stage !== "QUOTING" && lead.stage !== "CLOSING") {
     return Err(
       domainError(
         "validation",
         "wrong_stage",
-        "Venues can only be created during SCOPING, QUOTING, or CLOSING",
+        "Venues can only be created during QUOTING or CLOSING",
       ),
     );
   }
