@@ -29,7 +29,7 @@ import type {
 
 import { completeScopingMutation } from "../../data/mutations";
 
-import styles from "./commercial-input.module.css";
+import styles from "./scoping-form.module.css";
 
 export function ScopingForm(props: {
   leadId: string;
