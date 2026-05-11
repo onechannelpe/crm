@@ -43,5 +43,6 @@ export type LeadVenueRepository = {
   ): Promise<void>;
   findById(id: string): Promise<Result<LeadVenue | undefined, DomainError>>;
   listByLeadId(leadId: string): Promise<Result<LeadVenue[], DomainError>>;
+  countByLeadId(leadId: string): Promise<number>;
   countWithAccounts(leadId: string): Promise<number>;
 };

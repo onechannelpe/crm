@@ -6,16 +6,14 @@ import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-run
 import type {
   AbonoBank,
   AccountTypeKind,
-  ModalidadCobro,
+  VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
 export async function requestVenueCreation(input: {
   leadId: string;
   nombreComercial: string;
   posQuantity: number;
-  linkUrl: string | null;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  digitalConfig?: VenueDigitalConfig;
   direccion: string;
   referencia: string;
   distrito: string;

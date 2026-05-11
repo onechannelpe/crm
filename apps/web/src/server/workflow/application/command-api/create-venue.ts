@@ -1,22 +1,21 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import {
-  isQuotingLeadSubject,
-  isScopingLeadSubject,
-} from "../../domain/lead-subjects";
-import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { CreateVenueInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type { LeadProfileRepository } from "../ports/lead-profile-repository";
 import type { LeadVenueRepository } from "../ports/sale-repository";
+import { validateVenueDigitalConfig } from "../services/digital-product-policy";
 import type { LeadClock } from "../services/lead-clock";
 
 type CreateVenueCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
+  leadProfiles: LeadProfileRepository;
   leadVenues: LeadVenueRepository;
   clock: LeadClock;
 };
@@ -33,9 +32,6 @@ export async function createVenueCommand(
 
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
-  if (!isScopingLeadSubject(lead) && !isQuotingLeadSubject(lead)) {
-    return invalidLeadStage();
-  }
 
   if (lead.executiveId !== input.actor.userId) {
     return Err(
@@ -47,14 +43,24 @@ export async function createVenueCommand(
     );
   }
 
+  const profile = await deps.leadProfiles.findByLeadId(input.leadId);
+  const digitalConfig = validateVenueDigitalConfig({
+    policy: {
+      linkScope: profile?.linkScope ?? "none",
+      onlineScope: profile?.onlineScope ?? "none",
+    },
+    config: input.digitalConfig,
+  });
+  if (!digitalConfig.ok) return digitalConfig;
+
   const now = deps.clock.now();
   const venueId = await deps.leadVenues.insert({
     leadId: input.leadId,
     nombreComercial: input.nombreComercial,
     posQuantity: input.posQuantity,
-    linkUrl: input.linkUrl,
-    onlineUrl: input.onlineUrl,
-    onlineModalidad: input.onlineModalidad,
+    linkUrl: digitalConfig.value.linkUrl,
+    onlineUrl: digitalConfig.value.onlineUrl,
+    onlineModalidad: digitalConfig.value.onlineModalidad,
     direccion: input.direccion,
     referencia: input.referencia,
     distrito: input.distrito,
@@ -73,9 +79,7 @@ export async function createVenueCommand(
       venueId,
       nombreComercial: input.nombreComercial,
       posQuantity: input.posQuantity,
-      linkUrl: input.linkUrl,
-      onlineUrl: input.onlineUrl,
-      onlineModalidad: input.onlineModalidad,
+      digitalConfig: input.digitalConfig,
       direccion: input.direccion,
       referencia: input.referencia,
       distrito: input.distrito,

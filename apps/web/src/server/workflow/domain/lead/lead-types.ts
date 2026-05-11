@@ -6,6 +6,7 @@ import type {
   ModalidadCobro,
   Moneda,
   ProductScope,
+  VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "../lead-record";
@@ -85,9 +86,7 @@ export type LeadMutationIntent =
       venueId: string;
       nombreComercial: string;
       posQuantity: number;
-      linkUrl: string | null;
-      onlineUrl: string | null;
-      onlineModalidad: ModalidadCobro | null;
+      digitalConfig?: VenueDigitalConfig;
       direccion: string;
       referencia: string;
       distrito: string;
@@ -97,7 +96,7 @@ export type LeadMutationIntent =
   | {
       kind: "add_venue_accounts";
       venueId: string;
-      isFirstVenueWithAccounts: boolean;
+      shouldTransitionToLive: boolean;
     }
   | {
       kind: "request_rate_negotiation";

@@ -23,6 +23,7 @@ import type {
   ModalidadCobro,
   Moneda,
   ProductScope,
+  VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
@@ -117,9 +118,7 @@ export const createVenueMutation = action(
     leadId: string;
     nombreComercial: string;
     posQuantity: number;
-    linkUrl: string | null;
-    onlineUrl: string | null;
-    onlineModalidad: ModalidadCobro | null;
+    digitalConfig?: VenueDigitalConfig;
     direccion: string;
     referencia: string;
     distrito: string;

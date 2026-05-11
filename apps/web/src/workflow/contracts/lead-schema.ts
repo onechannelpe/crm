@@ -68,6 +68,12 @@ export type SaleVenueAccount = {
   isSettlement: boolean;
 };
 
+export type VenueDigitalConfig = {
+  linkUrl?: string | null;
+  onlineUrl?: string | null;
+  onlineModalidad?: ModalidadCobro | null;
+};
+
 export function isMoneda(value: string): value is Moneda {
   return (MONEDAS as readonly string[]).includes(value);
 }

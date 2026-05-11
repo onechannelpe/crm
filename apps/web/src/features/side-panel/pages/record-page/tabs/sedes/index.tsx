@@ -53,6 +53,15 @@ function VenueCreationView(props: {
   leadId: string;
   venues: LeadDetailVenueView[];
 }) {
+  return (
+    <div>
+      <For each={props.venues}>{(venue) => <VenueCard venue={venue} />}</For>
+      <VenueCreatePanel leadId={props.leadId} />
+    </div>
+  );
+}
+
+function VenueCreatePanel(props: { leadId: string }) {
   const createVenue = useAction(createVenueMutation);
   const form = useVenueFormState();
   const [submitting, setSubmitting] = createSignal(false);
@@ -76,17 +85,13 @@ function VenueCreationView(props: {
       setSubmitting(false);
     }
   }
-
   return (
-    <div>
-      <For each={props.venues}>{(venue) => <VenueCard venue={venue} />}</For>
-      <VenueForm
-        form={form}
-        submitting={submitting()}
-        error={error()}
-        onSubmit={(e) => void handleSubmit(e)}
-      />
-    </div>
+    <VenueForm
+      form={form}
+      submitting={submitting()}
+      error={error()}
+      onSubmit={(e) => void handleSubmit(e)}
+    />
   );
 }
 
@@ -96,6 +101,7 @@ function VenueClosingView(props: {
 }) {
   return (
     <div>
+      <VenueCreatePanel leadId={props.leadId} />
       <For each={props.venues}>
         {(venue) => <VenueClosingCard leadId={props.leadId} venue={venue} />}
       </For>

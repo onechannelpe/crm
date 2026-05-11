@@ -322,7 +322,7 @@ export function deriveLeadMutationEvents(input: {
       }),
     ];
 
-    if (intent.isFirstVenueWithAccounts) {
+    if (intent.shouldTransitionToLive) {
       history.push(
         createHistoryEvent({
           leadId: lead.id,

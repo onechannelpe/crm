@@ -82,7 +82,6 @@ function toLeadDetailLead(
   executiveName: string,
   createdByName: string,
   updatedByName: string | null,
-  venueCount: number,
 ): LeadDetailLeadView {
   return {
     id: lead.id,
@@ -101,7 +100,7 @@ function toLeadDetailLead(
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
-    nextStep: presentLeadNextStep({ lead, venueCount }),
+    nextStep: presentLeadNextStep({ lead }),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
@@ -214,7 +213,6 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       source.executiveName,
       source.createdByName,
       source.updatedByName,
-      source.venues.length,
     ),
     profile: source.profile
       ? toLeadDetailProfile(
@@ -232,7 +230,6 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     availableActions: source.availableActions,
     blockingFields: presentLeadBlockingFields({
       lead: source.lead,
-      venueCount: source.venues.length,
       venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
         .length,
     }),

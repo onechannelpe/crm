@@ -184,6 +184,7 @@ export function createWorkflowCommandApi(
         {
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
+          leadProfiles: deps.leadProfiles,
           leadVenues: deps.leadVenues,
           clock: deps.clock,
         },

@@ -3,8 +3,7 @@ import { randomUUIDv7 } from "bun";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { isQuotedLeadSubject } from "../../domain/lead-subjects";
-import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { RequestRateNegotiationInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
@@ -26,7 +25,6 @@ export async function requestRateNegotiationCommand(
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
-  if (!isQuotedLeadSubject(lead)) return invalidLeadStage();
 
   const existingCount = await deps.negotiationRequests.countByLeadId(lead.id);
   const canRequest = requireLeadActionAccess({

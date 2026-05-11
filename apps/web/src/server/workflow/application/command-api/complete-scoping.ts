@@ -1,8 +1,7 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { isScopingLeadSubject } from "../../domain/lead-subjects";
-import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { CompleteScopingInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
@@ -13,6 +12,7 @@ import {
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadProfileRepository } from "../ports/lead-profile-repository";
 import type { PartyRepository } from "../ports/party-repository";
+import { validateLeadDigitalPolicy } from "../services/digital-product-policy";
 import type { LeadClock } from "../services/lead-clock";
 
 type CompleteScopingCommandDeps = {
@@ -35,7 +35,6 @@ export async function completeScopingCommand(
 
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
-  if (!isScopingLeadSubject(lead)) return invalidLeadStage();
 
   if (lead.executiveId !== input.actor.userId) {
     return Err(
@@ -47,6 +46,18 @@ export async function completeScopingCommand(
     );
   }
 
+  const validDigitalPolicy = validateLeadDigitalPolicy({
+    linkScope: input.linkScope,
+    linkUrl: input.linkUrl?.trim() || null,
+    onlineScope: input.onlineScope,
+    onlineUrl: input.onlineUrl?.trim() || null,
+    onlineModalidad: input.onlineModalidad,
+  });
+  if (!validDigitalPolicy.ok) return validDigitalPolicy;
+
+  const normalizedLinkUrl = input.linkUrl?.trim() || null;
+  const normalizedOnlineUrl = input.onlineUrl?.trim() || null;
+
   const now = deps.clock.now();
   await deps.leadProfiles.upsert({
     leadId: lead.id,
@@ -55,9 +66,9 @@ export async function completeScopingCommand(
     gpv: input.gpv,
     ticket: input.ticket,
     linkScope: input.linkScope,
-    linkUrl: input.linkUrl,
+    linkUrl: normalizedLinkUrl,
     onlineScope: input.onlineScope,
-    onlineUrl: input.onlineUrl,
+    onlineUrl: normalizedOnlineUrl,
     onlineModalidad: input.onlineModalidad,
     updatedAt: now,
     updatedBy: input.actor.userId,
@@ -89,9 +100,9 @@ export async function completeScopingCommand(
       ticket: input.ticket,
       giroNegocio: input.giroNegocio,
       linkScope: input.linkScope,
-      linkUrl: input.linkUrl,
+      linkUrl: normalizedLinkUrl,
       onlineScope: input.onlineScope,
-      onlineUrl: input.onlineUrl,
+      onlineUrl: normalizedOnlineUrl,
       onlineModalidad: input.onlineModalidad,
       repLegalNombres: input.repLegalNombres,
       repLegalApellidoPaterno: input.repLegalApellidoPaterno,

@@ -6,6 +6,7 @@ import type {
   Moneda,
   ProductScope,
   SaleVenueAccount,
+  VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
 import type { ActorContext } from "./actor-context";
@@ -111,9 +112,7 @@ export type CreateVenueInput = {
   leadId: string;
   nombreComercial: string;
   posQuantity: number;
-  linkUrl: string | null;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  digitalConfig?: VenueDigitalConfig;
   direccion: string;
   referencia: string;
   distrito: string;

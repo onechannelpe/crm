@@ -200,6 +200,16 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
       );
     },
 
+    async countByLeadId(leadId: string): Promise<number> {
+      const result = await db
+        .selectFrom("workflow_lead_venues")
+        .select((eb) => eb.fn.count("id").as("count"))
+        .where("lead_id", "=", leadId)
+        .executeTakeFirstOrThrow();
+
+      return Number(result.count);
+    },
+
     async countWithAccounts(leadId: string): Promise<number> {
       const venueRows = await db
         .selectFrom("workflow_lead_venues")

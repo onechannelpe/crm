@@ -2,8 +2,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { isBcpBank } from "~/workflow/contracts/lead-schema";
 
-import { isClosingLeadSubject } from "../../domain/lead-subjects";
-import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { AddVenueAccountsInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
@@ -31,7 +30,6 @@ export async function addVenueAccountsCommand(
 
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
-  if (!isClosingLeadSubject(lead)) return invalidLeadStage();
 
   if (lead.executiveId !== input.actor.userId) {
     return Err(
@@ -154,10 +152,12 @@ export async function addVenueAccountsCommand(
     now,
   );
 
-  const venuesWithAccounts = await deps.leadVenues.countWithAccounts(
-    input.leadId,
-  );
-  const isFirstVenueWithAccounts = venuesWithAccounts === 1;
+  const [totalVenues, venuesWithAccounts] = await Promise.all([
+    deps.leadVenues.countByLeadId(input.leadId),
+    deps.leadVenues.countWithAccounts(input.leadId),
+  ]);
+  const shouldTransitionToLive =
+    totalVenues > 0 && venuesWithAccounts === totalVenues;
 
   const outcome = await deps.mutationUow.commit({
     lead,
@@ -166,7 +166,7 @@ export async function addVenueAccountsCommand(
     intent: {
       kind: "add_venue_accounts",
       venueId: input.venueId,
-      isFirstVenueWithAccounts,
+      shouldTransitionToLive,
     },
   });
   if (!outcome.ok) return outcome;

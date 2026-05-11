@@ -75,7 +75,8 @@ export function validateLeadIntent(
   if (
     intent.kind === "create_venue" &&
     currentStage !== "SCOPING" &&
-    currentStage !== "QUOTING"
+    currentStage !== "QUOTING" &&
+    currentStage !== "CLOSING"
   ) {
     return invalidLeadStage();
   }

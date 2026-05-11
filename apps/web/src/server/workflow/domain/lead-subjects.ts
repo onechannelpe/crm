@@ -22,6 +22,10 @@ export type ClosingLeadSubject = LeadSubjectBase & {
   stage: "CLOSING";
 };
 
+export type LiveLeadSubject = LeadSubjectBase & {
+  stage: "LIVE";
+};
+
 export function isQualifyingLeadSubject(
   lead: LeadRecord,
 ): lead is QualifyingLeadSubject {
@@ -50,4 +54,8 @@ export function isClosingLeadSubject(
   lead: LeadRecord,
 ): lead is ClosingLeadSubject {
   return lead.stage === "CLOSING";
+}
+
+export function isLiveLeadSubject(lead: LeadRecord): lead is LiveLeadSubject {
+  return lead.stage === "LIVE";
 }

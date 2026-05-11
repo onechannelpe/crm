@@ -65,7 +65,7 @@ export function deriveLeadPatchFromIntent(input: {
   if (intent.kind === "complete_scoping") return Ok({ stage: "QUOTING" });
   if (intent.kind === "create_venue") return Ok({});
   if (intent.kind === "add_venue_accounts") {
-    return intent.isFirstVenueWithAccounts ? Ok({ stage: "LIVE" }) : Ok({});
+    return intent.shouldTransitionToLive ? Ok({ stage: "LIVE" }) : Ok({});
   }
   if (intent.kind === "request_rate_negotiation")
     return Ok({ stage: "QUOTING" });
