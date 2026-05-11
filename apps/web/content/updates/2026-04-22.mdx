@@ -1,0 +1,39 @@
+---
+title: "Nuevo record show y flujo modular de cotización/venta"
+date: "2026-04-22"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["leads", "pipeline", "workspace"]
+---
+
+Hoy incorporamos una mejora estructural en la experiencia de registros y operaciones comerciales. Se añadió una nueva página de detalle de registro con layout de dos paneles y ruta dedicada, y además se habilitó un flujo modular para crear cotizaciones y ventas dentro del flujo de trabajo.
+
+Junto con eso, retiramos rutas y accesos heredados para estas acciones, simplificando la navegación hacia los nuevos flujos.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#4cb782">Leads</UpdateLabel> Se añadió la nueva página de
+  `record show` con layout de dos paneles y ruteo asociado.
+- <UpdateLabel color="#26b5ce">Pipeline</UpdateLabel> Se incorporó el flujo de
+  creación de cotización y venta con formularios modulares.
+- <UpdateLabel color="#95a2b3">Navegación</UpdateLabel> Se eliminaron enlaces y
+  rutas heredadas de acciones de venta/cotización para consolidar el nuevo
+  recorrido.
+- <UpdateLabel color="#f2c94c">Workspace</UpdateLabel> El botón de importación
+  CSV ahora muestra la etiqueta `Importar`.
+
+</Collapsible>
+
+<Collapsible title="Mantenimiento">
+
+- <UpdateLabel color="#95a2b3">Runtime</UpdateLabel> Se reemplazó el singleton
+  `serverRuntime` por `getServerRuntime()` para inicialización más segura.
+- <UpdateLabel color="#95a2b3">Entorno</UpdateLabel> Se aplicó carga diferida de
+  variables de entorno para evitar inicialización temprana de módulos.
+- <UpdateLabel color="#95a2b3">Pruebas</UpdateLabel> Se aisló el estado de
+  entorno en tests y se migraron property tests a casos explícitos en Vitest.
+- <UpdateLabel color="#95a2b3">Build web</UpdateLabel> Se habilitó índice
+  automático de subcarpetas para mejorar prerendering.
+
+</Collapsible>
