@@ -1,0 +1,41 @@
+---
+title: "Integración de importaciones al workspace y mejoras del shell"
+date: "2026-04-21"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["workspace", "importaciones", "panel-lateral"]
+---
+
+Hoy me enfoqué en conectar mejor el flujo de importaciones con el workspace y reforzar la base de archivos, layout y tipos compartidos. El resultado es una operación más estable para procesos extensos, junto con una interfaz lateral más consistente y adaptable.
+
+También se introdujeron mejoras de resiliencia para el seguimiento de progreso de importaciones, y una reorganización de tipos y contratos de base de datos para simplificar mantenimiento.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#26b5ce">Importaciones</UpdateLabel> El flujo de
+  importación de leads quedó integrado al workspace del pipeline.
+- <UpdateLabel color="#4cb782">Archivos</UpdateLabel> Se incorporó un workflow
+  basado en artefactos y se migraron jobs de importación/exportación.
+- <UpdateLabel color="#f2c94c">Shell</UpdateLabel> El panel lateral ahora es
+  redimensionable con persistencia de ancho y coordinación entre vistas.
+- <UpdateLabel color="#95a2b3">Responsive</UpdateLabel> Se añadió visibilidad
+  responsiva para el frame de escritorio del side panel.
+- <UpdateLabel color="#eb5757">Confiabilidad</UpdateLabel> El tracking de
+  progreso de importaciones usa _backoff_ exponencial con jitter.
+
+</Collapsible>
+
+<Collapsible title="Mantenimiento">
+
+- <UpdateLabel color="#95a2b3">Tipos</UpdateLabel> Se modularizaron las
+  definiciones de tipos de base de datos y se extrajeron tipos compartidos de
+  roles y etapas de pipeline.
+- <UpdateLabel color="#95a2b3">UI interna</UpdateLabel> Se ajustó el layout del
+  navigation drawer y se removió coordinación de resize obsoleta.
+- <UpdateLabel color="#95a2b3">Animaciones</UpdateLabel> Se corrigió el
+  comportamiento del placeholder animado.
+- <UpdateLabel color="#95a2b3">Dependencias</UpdateLabel> Se actualizaron
+  paquetes de `email-composer` y lockfiles del workspace.
+
+</Collapsible>
