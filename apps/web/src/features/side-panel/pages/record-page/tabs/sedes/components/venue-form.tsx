@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
@@ -166,24 +166,30 @@ export function VenueForm(props: {
                       gap: "6px",
                     }}
                   >
-                    {(
-                      [
-                        ["SUSCRIPCIONES", "Suscripciones"],
-                        ["ONE_CLIC", "One Click"],
-                        ["CARGO_UNICO", "Cargo Unico"],
-                      ] as [ModalidadCobro, string][]
-                    ).map(([value, label]) => (
-                      <label>
-                        <input
-                          type="radio"
-                          name="onlineModalidad"
-                          value={value}
-                          checked={props.form.onlineModalidad() === value}
-                          onChange={() => props.form.setOnlineModalidad(value)}
-                        />{" "}
-                        {label}
-                      </label>
-                    ))}
+                    <For
+                      each={
+                        [
+                          ["SUSCRIPCIONES", "Suscripciones"],
+                          ["ONE_CLIC", "One Click"],
+                          ["CARGO_UNICO", "Cargo Unico"],
+                        ] as [ModalidadCobro, string][]
+                      }
+                    >
+                      {([value, label]) => (
+                        <label>
+                          <input
+                            type="radio"
+                            name="onlineModalidad"
+                            value={value}
+                            checked={props.form.onlineModalidad() === value}
+                            onChange={() =>
+                              props.form.setOnlineModalidad(value)
+                            }
+                          />{" "}
+                          {label}
+                        </label>
+                      )}
+                    </For>
                   </div>
                 </FieldInputValue>
               </FieldRow>

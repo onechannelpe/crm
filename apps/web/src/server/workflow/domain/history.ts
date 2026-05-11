@@ -3,7 +3,6 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-  ModalidadCobro,
   Moneda,
 } from "~/workflow/contracts/lead-schema";
 
@@ -66,7 +65,7 @@ export type LeadHistoryPayloadByEvent = {
     giroNegocio: string;
     linkScope: string | null;
     onlineScope: string | null;
-    onlineModalidad: ModalidadCobro | string | null;
+    onlineModalidad: string | null;
     repLegalNombres: string;
     repLegalDni: string;
   };

@@ -22,8 +22,6 @@ export function VenueCard(props: {
   >;
 }) {
   const venue = () => props.venue;
-  const hasSoles = () => !!venue().solesAccount;
-
   return (
     <Widget>
       <WidgetHeader>
@@ -85,39 +83,37 @@ export function VenueCard(props: {
               <FieldInputValue>{venue().onlineUrl}</FieldInputValue>
             </FieldRow>
           </Show>
-          <Show when={hasSoles()}>
-            <>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Banco SOLES</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>{venue().solesAccount!.banco}</FieldInputValue>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  {venue().solesAccount!.tipoCuenta}
-                </FieldInputValue>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  {venue().solesAccount!.nroCuenta}
-                </FieldInputValue>
-              </FieldRow>
-              <Show when={venue().solesAccount!.cci}>
+          <Show when={venue().solesAccount} keyed>
+            {(soles) => (
+              <>
                 <FieldRow>
                   <FieldLabel>
-                    <FieldLabelText>CCI SOLES</FieldLabelText>
+                    <FieldLabelText>Banco SOLES</FieldLabelText>
                   </FieldLabel>
-                  <FieldInputValue>{venue().solesAccount!.cci}</FieldInputValue>
+                  <FieldInputValue>{soles.banco}</FieldInputValue>
                 </FieldRow>
-              </Show>
-            </>
+                <FieldRow>
+                  <FieldLabel>
+                    <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
+                  </FieldLabel>
+                  <FieldInputValue>{soles.tipoCuenta}</FieldInputValue>
+                </FieldRow>
+                <FieldRow>
+                  <FieldLabel>
+                    <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
+                  </FieldLabel>
+                  <FieldInputValue>{soles.nroCuenta}</FieldInputValue>
+                </FieldRow>
+                <Show when={soles.cci}>
+                  <FieldRow>
+                    <FieldLabel>
+                      <FieldLabelText>CCI SOLES</FieldLabelText>
+                    </FieldLabel>
+                    <FieldInputValue>{soles.cci}</FieldInputValue>
+                  </FieldRow>
+                </Show>
+              </>
+            )}
           </Show>
           <Show when={venue().dollarAccount}>
             <>
@@ -157,19 +153,21 @@ export function VenueCard(props: {
               </Show>
             </>
           </Show>
-          <Show when={hasSoles()}>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Cuenta de abono</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                {venue().solesAccount!.isSettlement
-                  ? `SOLES (${venue().solesAccount!.banco})`
-                  : `USD (${venue().dollarAccount?.banco ?? "N/A"})`}
-              </FieldInputValue>
-            </FieldRow>
+          <Show when={venue().solesAccount} keyed>
+            {(soles) => (
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>Cuenta de abono</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  {soles.isSettlement
+                    ? `SOLES (${soles.banco})`
+                    : `USD (${venue().dollarAccount?.banco ?? "N/A"})`}
+                </FieldInputValue>
+              </FieldRow>
+            )}
           </Show>
-          <Show when={!hasSoles()}>
+          <Show when={!venue().solesAccount}>
             <FieldRow>
               <FieldLabel>
                 <FieldLabelText>Cuentas</FieldLabelText>
