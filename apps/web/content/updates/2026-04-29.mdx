@@ -1,0 +1,34 @@
+---
+title: "Fechas relativas y limpieza"
+date: "2026-04-29"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["workflow", "record-show", "testing"]
+---
+
+El cambio principal del día fue una limpieza de `workflow-detail`: se reorganizaron componentes y se eliminó lógica heredada del bloque de interacciones. Se retiraron paneles/formularios antiguos (`interactions-panel`, `interaction-form`, estado y disponibilidad), junto con secciones _legacy_ de línea de tiempo, resumen y cotizaciones dentro de ese flujo.
+
+En paralelo, se extrajo el formateador de fechas relativas a un módulo dedicado (`format-relative-date.ts`) y se añadió cobertura unitaria específica para ese comportamiento. Esto desacopla la lógica de presentación del summary card y facilita reutilización en otros puntos de la UI.
+
+El resto fueron ajustes menores de integración en `record-show`, side panel y utilidades compartidas para mantener consistencia tras la reorganización.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#26b5ce">Workflow detail</UpdateLabel> Reorganización de
+  componentes con eliminación de lógica legacy de interacciones.
+- <UpdateLabel color="#4cb782">Record show</UpdateLabel> Extracción del formateo
+  de fecha relativa a `format-relative-date.ts`.
+- <UpdateLabel color="#f2c94c">Calidad</UpdateLabel> Nuevas pruebas unitarias
+  para validar formato de fechas relativas.
+
+</Collapsible>
+
+<Collapsible title="Mantenimiento">
+
+- <UpdateLabel color="#95a2b3">UI</UpdateLabel> Ajustes menores en tabs, widgets
+  y paneles vinculados al detalle de registro.
+- <UpdateLabel color="#95a2b3">Consistencia</UpdateLabel> Cambios pequeños en
+  utilidades/formatters compartidos para alinear comportamiento.
+
+</Collapsible>
