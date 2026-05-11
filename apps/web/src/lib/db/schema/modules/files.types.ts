@@ -85,7 +85,6 @@ export interface ArtifactDownloadTokensTable {
 export interface WorkflowSaleProofFilesTable {
   id: Generated<number>;
   lead_id: string;
-  sale_id: string;
   artifact_id: string;
   file_asset_id: number;
   uploaded_by_user_id: number;

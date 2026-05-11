@@ -87,11 +87,9 @@ export interface Database {
   auth_throttle_counters: observability.AuthThrottleCountersTable;
   auth_events: observability.AuthEventsTable;
   workflow_leads: workflow.WorkflowLeadsTable;
-  workflow_tipo_producto_kinds: workflow.WorkflowTipoProductoKindsTable;
   workflow_modalidad_cobro_kinds: workflow.WorkflowModalidadCobroKindsTable;
-  workflow_lead_commercial_inputs: workflow.WorkflowLeadCommercialInputsTable;
+  workflow_lead_profiles: workflow.WorkflowLeadProfilesTable;
   workflow_quotations: workflow.WorkflowQuotationsTable;
-  workflow_sales: workflow.WorkflowSalesTable;
   workflow_lead_assignments: workflow.WorkflowLeadAssignmentsTable;
   workflow_lead_favorites: workflow.WorkflowLeadFavoritesTable;
   workflow_history_events: workflow.WorkflowHistoryEventsTable;
@@ -107,8 +105,8 @@ export interface Database {
   workflow_sale_proof_files: files.WorkflowSaleProofFilesTable;
   workflow_negotiation_requests: negotiation.WorkflowNegotiationRequestsTable;
   workflow_negotiation_files: negotiation.WorkflowNegotiationFilesTable;
-  workflow_sale_venues: sales.WorkflowSaleVenuesTable;
-  workflow_sale_venue_accounts: sales.WorkflowSaleVenueAccountsTable;
+  workflow_lead_venues: sales.WorkflowLeadVenuesTable;
+  workflow_lead_venue_accounts: sales.WorkflowLeadVenueAccountsTable;
   workflow_currency_kinds: sales.WorkflowCurrencyKindsTable;
   workflow_account_type_kinds: sales.WorkflowAccountTypeKindsTable;
   workflow_abono_banks: sales.WorkflowAbonoBanksTable;

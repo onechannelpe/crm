@@ -1,18 +1,18 @@
 import type { Generated } from "kysely";
 
 import type {
-  CulqiProductKind,
   ModalidadCobro,
+  ProductScope,
 } from "~/workflow/contracts/lead-schema";
 
 export type WorkflowStageValue =
-  | "PENDING_EXTERNAL_REVIEW"
-  | "REJECTED_BY_STATUS"
-  | "NEEDS_EXECUTIVE_INPUT"
-  | "READY_FOR_QUOTATION"
+  | "QUALIFYING"
+  | "DISQUALIFIED"
+  | "SCOPING"
+  | "QUOTING"
   | "QUOTED"
-  | "READY_FOR_SALE"
-  | "CONVERTED";
+  | "CLOSING"
+  | "LIVE";
 
 export interface WorkflowLeadsTable {
   id: Generated<string>;
@@ -27,21 +27,19 @@ export interface WorkflowLeadsTable {
   updated_at: number;
 }
 
-export interface WorkflowLeadCommercialInputsTable {
+export interface WorkflowLeadProfilesTable {
   lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
   gpv: number | null;
   ticket: number | null;
-  tipo_producto: CulqiProductKind | null;
-  url_cliente: string | null;
-  modalidad_cobro: ModalidadCobro;
+  link_scope: ProductScope;
+  link_url: string | null;
+  online_scope: ProductScope;
+  online_url: string | null;
+  online_modalidad: ModalidadCobro | null;
   updated_at: number;
   updated_by: number;
-}
-
-export interface WorkflowTipoProductoKindsTable {
-  value: CulqiProductKind;
 }
 
 export interface WorkflowModalidadCobroKindsTable {
@@ -60,13 +58,6 @@ export interface WorkflowQuotationsTable {
   version: number;
   created_at: number;
   created_by: number;
-}
-
-export interface WorkflowSalesTable {
-  id: Generated<string>;
-  lead_id: string;
-  executive_id: number;
-  created_at: number;
 }
 
 export interface WorkflowLeadAssignmentsTable {

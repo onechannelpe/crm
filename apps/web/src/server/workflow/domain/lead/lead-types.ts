@@ -3,9 +3,9 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-  Moneda,
-  CulqiProductKind,
   ModalidadCobro,
+  Moneda,
+  ProductScope,
   SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
@@ -63,15 +63,17 @@ export type LeadMutationIntent =
       moneda: Moneda;
     }
   | {
-      kind: "complete_commercial_input";
+      kind: "complete_scoping";
       proveedorActual: string;
       tasaActual: number;
       gpv: number;
       ticket: number;
       giroNegocio: string;
-      tipoProducto: CulqiProductKind;
-      urlCliente: string | null;
-      modalidadCobro: ModalidadCobro;
+      linkScope: ProductScope;
+      linkUrl: string | null;
+      onlineScope: ProductScope;
+      onlineUrl: string | null;
+      onlineModalidad: ModalidadCobro | null;
       repLegalNombres: string;
       repLegalApellidoPaterno: string;
       repLegalApellidoMaterno: string;
@@ -79,21 +81,24 @@ export type LeadMutationIntent =
       repLegalTelefono: string;
       repLegalEmail: string;
     }
-  | { kind: "create_sale"; saleId: string }
   | {
-      kind: "create_sale_venue";
+      kind: "create_venue";
       venueId: string;
-      saleId: string;
       nombreComercial: string;
-      cantidadPos: number;
+      posQuantity: number;
+      linkUrl: string | null;
+      onlineUrl: string | null;
+      onlineModalidad: ModalidadCobro | null;
       direccion: string;
       referencia: string;
       distrito: string;
       provincia: string;
       departamento: string;
-      solesAccount: SaleVenueAccount & { currency: "PEN" };
-      dollarAccount?: (SaleVenueAccount & { currency: "USD" }) | undefined;
-      isFirstVenue: boolean;
+    }
+  | {
+      kind: "add_venue_accounts";
+      venueId: string;
+      isFirstVenueWithAccounts: boolean;
     }
   | {
       kind: "request_rate_negotiation";

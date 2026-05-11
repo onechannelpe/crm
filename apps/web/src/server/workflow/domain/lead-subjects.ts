@@ -2,42 +2,42 @@ import type { LeadRecord } from "./lead-record";
 
 export type LeadSubjectBase = Omit<LeadRecord, "stage">;
 
-export type PendingReviewLeadSubject = LeadSubjectBase & {
-  stage: "PENDING_EXTERNAL_REVIEW";
+export type QualifyingLeadSubject = LeadSubjectBase & {
+  stage: "QUALIFYING";
 };
 
-export type NeedsExecutiveInputLeadSubject = LeadSubjectBase & {
-  stage: "NEEDS_EXECUTIVE_INPUT";
+export type ScopingLeadSubject = LeadSubjectBase & {
+  stage: "SCOPING";
 };
 
-export type ReadyForQuotationLeadSubject = LeadSubjectBase & {
-  stage: "READY_FOR_QUOTATION";
+export type QuotingLeadSubject = LeadSubjectBase & {
+  stage: "QUOTING";
 };
 
 export type QuotedLeadSubject = LeadSubjectBase & {
   stage: "QUOTED";
 };
 
-export type ReadyForSaleLeadSubject = LeadSubjectBase & {
-  stage: "READY_FOR_SALE";
+export type ClosingLeadSubject = LeadSubjectBase & {
+  stage: "CLOSING";
 };
 
-export function isPendingReviewLeadSubject(
+export function isQualifyingLeadSubject(
   lead: LeadRecord,
-): lead is PendingReviewLeadSubject {
-  return lead.stage === "PENDING_EXTERNAL_REVIEW";
+): lead is QualifyingLeadSubject {
+  return lead.stage === "QUALIFYING";
 }
 
-export function isNeedsExecutiveInputLeadSubject(
+export function isScopingLeadSubject(
   lead: LeadRecord,
-): lead is NeedsExecutiveInputLeadSubject {
-  return lead.stage === "NEEDS_EXECUTIVE_INPUT";
+): lead is ScopingLeadSubject {
+  return lead.stage === "SCOPING";
 }
 
-export function isReadyForQuotationLeadSubject(
+export function isQuotingLeadSubject(
   lead: LeadRecord,
-): lead is ReadyForQuotationLeadSubject {
-  return lead.stage === "READY_FOR_QUOTATION";
+): lead is QuotingLeadSubject {
+  return lead.stage === "QUOTING";
 }
 
 export function isQuotedLeadSubject(
@@ -46,8 +46,8 @@ export function isQuotedLeadSubject(
   return lead.stage === "QUOTED";
 }
 
-export function isReadyForSaleLeadSubject(
+export function isClosingLeadSubject(
   lead: LeadRecord,
-): lead is ReadyForSaleLeadSubject {
-  return lead.stage === "READY_FOR_SALE";
+): lead is ClosingLeadSubject {
+  return lead.stage === "CLOSING";
 }

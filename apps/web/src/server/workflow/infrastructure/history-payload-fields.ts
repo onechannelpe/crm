@@ -10,19 +10,15 @@ import {
   parseRequiredAbonoBank,
 } from "~/server/workflow/domain/lead-schema-parser";
 import type {
+  AbonoBank,
   LeadCallOutcome,
   LeadPriority,
   LeadStage,
   LeadStatus,
-  Moneda,
-  AbonoBank,
-  CulqiProductKind,
   ModalidadCobro,
+  Moneda,
 } from "~/workflow/contracts/lead-schema";
-import {
-  isCulqiProductKind,
-  isModalidadCobro,
-} from "~/workflow/contracts/lead-schema";
+import { isModalidadCobro } from "~/workflow/contracts/lead-schema";
 
 import type { HistoryEventRow } from "./history-event-row";
 
@@ -234,19 +230,6 @@ export function requireAbonoBank(
   const value = requireString(payload, key, row);
   if (!value.ok) return value;
   return parseRequiredAbonoBank(value.value);
-}
-
-export function requireCulqiProductKind(
-  payload: Record<string, unknown> | null,
-  key: string,
-  row: HistoryEventRow,
-): Result<CulqiProductKind, DomainError> {
-  const value = requireString(payload, key, row);
-  if (!value.ok) return value;
-  if (!isCulqiProductKind(value.value)) {
-    return invalidPayload(row, key);
-  }
-  return Ok(value.value);
 }
 
 export function requireModalidadCobro(

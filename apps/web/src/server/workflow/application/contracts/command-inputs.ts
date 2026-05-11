@@ -2,9 +2,9 @@ import type {
   LeadCallOutcome,
   LeadPriority,
   LeadStatus,
-  Moneda,
-  CulqiProductKind,
   ModalidadCobro,
+  Moneda,
+  ProductScope,
   SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
@@ -78,7 +78,7 @@ export type CreateQuotationInput = {
   moneda: Moneda;
 };
 
-export type CompleteCommercialInputInput = {
+export type CompleteScopingInput = {
   actor: ActorContext;
   leadId: string;
   proveedorActual: string;
@@ -86,9 +86,11 @@ export type CompleteCommercialInputInput = {
   gpv: number;
   ticket: number;
   giroNegocio: string;
-  tipoProducto: CulqiProductKind;
-  urlCliente: string | null;
-  modalidadCobro: ModalidadCobro;
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
   repLegalNombres: string;
   repLegalApellidoPaterno: string;
   repLegalApellidoMaterno: string;
@@ -104,22 +106,25 @@ export type RequestRateNegotiationInput = {
   artifactIds: string[];
 };
 
-export type CreateSaleInput = {
+export type CreateVenueInput = {
   actor: ActorContext;
   leadId: string;
-};
-
-export type CreateSaleVenueInput = {
-  actor: ActorContext;
-  leadId: string;
-  saleId: string;
   nombreComercial: string;
-  cantidadPos: number;
+  posQuantity: number;
+  linkUrl: string | null;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
   direccion: string;
   referencia: string;
   distrito: string;
   provincia: string;
   departamento: string;
+};
+
+export type AddVenueAccountsInput = {
+  actor: ActorContext;
+  leadId: string;
+  venueId: string;
   solesAccount: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
 };
