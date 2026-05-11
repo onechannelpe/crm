@@ -1,0 +1,50 @@
+---
+title: "Unificación de los registros y nuevas capacidades"
+date: "2026-04-23"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["records", "workflow", "ui"]
+---
+
+El bloque más grande del día fue archivos y adjuntos de venta. Se agregó el flujo completo de comprobantes en `actions/workflow/files.ts`, nuevas pestañas y componentes de UI en `features/side-panel/.../tabs/*`, y se separó `server/files/repo.ts` en repositorios modulares (`artifacts.ts`, `sales.ts`, `tokens.ts`, `events.ts`, `mappers.ts`, `types.ts`). También se ajustaron políticas, validaciones y pruebas unitarias de descarga, solicitud y carga de artefactos.
+
+En paralelo se consolidó la migración funcional de `leads` a `records` en rutas, API y navegación. Ese cambio convivió con una actualización fuerte del `record-show` y del side panel: nuevas acciones de cabecera, navegación contextual, favoritos (alta/baja), y componentes enlazables con `RecordLinkChip`.
+
+Otro bloque de alto impacto fue el workspace del DataGrid. Se actualizó el menú flotante con posicionamiento según viewport, controles de ordenamiento y refinamientos de filtros/columnas. En la capa de datos, se añadió tracking de creador (`createdBy`/`createdByName`) para vistas de workflow.
+
+Como mantenimiento estructural, se modularizó el seed de base de datos (`seed.ts` dividido en `seeds/01-base-data.ts` y `seeds/02-demo-workflow.ts`), se migraron IDs de artefactos a UUID string con validación explícita, y se reforzó compatibilidad de IDs numéricos/string en entidades y DataGrid.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#26b5ce">Records</UpdateLabel> Se renombraron API, rutas y
+  flujos principales de `leads` a `records` en web y backend.
+- <UpdateLabel color="#4cb782">Archivos</UpdateLabel> Se añadieron adjuntos de
+  comprobante de venta con carga, listado y descarga.
+- <UpdateLabel color="#f2c94c">Navegación</UpdateLabel> El panel lateral
+  incorpora soporte extendido y nuevas acciones de navegación de records.
+- <UpdateLabel color="#eb5757">Favoritos</UpdateLabel> Se habilitaron acciones
+  para marcar y desmarcar leads como favoritos.
+- <UpdateLabel color="#95a2b3">Record chip</UpdateLabel> Se agregó
+  `RecordLinkChip` para enlaces navegables a registros relacionados.
+- <UpdateLabel color="#26b5ce">Toolbar</UpdateLabel> El menú flotante ahora
+  posiciona según viewport e integra controles de ordenamiento.
+- <UpdateLabel color="#4cb782">Workflow</UpdateLabel> Se añadió tracking del
+  creador del lead y se migraron acciones/queries desde pipeline.
+
+</Collapsible>
+
+<Collapsible title="Mantenimiento">
+
+- <UpdateLabel color="#95a2b3">Tipos</UpdateLabel> IDs de artefactos pasaron a
+  UUID string y se reforzó su validación por patrón.
+- <UpdateLabel color="#95a2b3">Core</UpdateLabel> Se habilitó soporte de IDs
+  numéricos y string en entidades y DataGrid.
+- <UpdateLabel color="#95a2b3">UI</UpdateLabel> Se mejoró estilo de
+  `record-show` con variables CSS, transiciones y animaciones.
+- <UpdateLabel color="#95a2b3">Estabilidad</UpdateLabel> Se ajustaron labels,
+  alturas de panel y compatibilidad de mocks de Bun para Vitest.
+- <UpdateLabel color="#95a2b3">Datos</UpdateLabel> Datos seed inline fueron
+  extraídos a archivos modulares para mantenimiento más claro.
+
+</Collapsible>
