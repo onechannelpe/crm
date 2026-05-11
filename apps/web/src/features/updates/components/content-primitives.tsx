@@ -14,10 +14,7 @@ type CollapsibleProps = {
 export function Collapsible(props: CollapsibleProps) {
   const contentId = createUniqueId();
   return (
-    <details
-      class={`${styles.collapsible} updates-collapsible`}
-      open={props.defaultOpen}
-    >
+    <details class={styles.collapsible} open={props.defaultOpen}>
       <summary class={styles.trigger} aria-controls={contentId}>
         <span class={styles.chevron} aria-hidden="true">
           <ChevronRight size={16} />
@@ -39,10 +36,7 @@ type UpdateLabelProps = {
 export function UpdateLabel(props: UpdateLabelProps) {
   const color = props.color ?? "#95a2b3";
   return (
-    <span
-      class={`${styles.label} updates-label`}
-      style={{ "--update-label-color": color }}
-    >
+    <span class={styles.label} style={{ "--update-label-color": color }}>
       {props.children}
     </span>
   );

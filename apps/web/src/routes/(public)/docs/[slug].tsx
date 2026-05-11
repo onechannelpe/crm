@@ -17,7 +17,9 @@ export default function DocSlugPage() {
           const Content = entry().content;
           return (
             <article class={styles.article}>
-              <div class={proseStyles.prose}>
+              <div
+                class={`${proseStyles.prose} ${proseStyles.withNativeDetails}`}
+              >
                 <Content />
               </div>
             </article>

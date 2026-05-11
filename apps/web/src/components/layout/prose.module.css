@@ -133,7 +133,9 @@
   & td {
     color: var(--foreground-secondary);
   }
+}
 
+.withNativeDetails {
   /* Accordion / details */
   & details {
     position: relative;
