@@ -46,29 +46,27 @@ export async function createVenueCommand(
     );
   }
 
-  if (lead.stage !== "CLOSING") {
+  if (
+    lead.stage !== "SCOPING" &&
+    lead.stage !== "QUOTING" &&
+    lead.stage !== "CLOSING"
+  ) {
     return Err(
       domainError(
         "validation",
         "wrong_stage",
-        "Venues can only be created in CLOSING stage",
+        "Venues can only be created during SCOPING, QUOTING, or CLOSING",
       ),
     );
   }
 
   const profile = await deps.leadProfiles.findByLeadId(input.leadId);
-  if (!profile) {
-    return Err(
-      domainError(
-        "validation",
-        "scoping_not_complete",
-        "Digital policy must be set before creating venues",
-      ),
-    );
-  }
 
   const venueFields = parseVenueDigitalFields(
-    { linkScope: profile.linkScope, onlineScope: profile.onlineScope },
+    {
+      linkScope: profile?.linkScope ?? "none",
+      onlineScope: profile?.onlineScope ?? "none",
+    },
     input.digitalConfig,
   );
   if (!venueFields.ok) return venueFields;

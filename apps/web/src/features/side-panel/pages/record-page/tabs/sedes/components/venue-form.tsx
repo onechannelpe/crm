@@ -15,12 +15,17 @@ import {
   WidgetHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import type { ModalidadCobro } from "~/workflow/contracts/lead-schema";
+import type {
+  ModalidadCobro,
+  ProductScope,
+} from "~/workflow/contracts/lead-schema";
 
 import type { VenueFormState } from "../model/venue-form-state";
 
 export function VenueForm(props: {
   form: VenueFormState;
+  linkScope: ProductScope;
+  onlineScope: ProductScope;
   submitting: boolean;
   error: string | null;
   onSubmit: (event: SubmitEvent) => void;
@@ -127,33 +132,37 @@ export function VenueForm(props: {
                 />
               </FieldInputValue>
             </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>URL Culqi Link (opcional)</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="url"
-                  value={props.form.linkUrl()}
-                  onChange={props.form.setLinkUrl}
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>URL Culqi Online (opcional)</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="url"
-                  value={props.form.onlineUrl()}
-                  onChange={props.form.setOnlineUrl}
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <Show when={props.form.onlineUrl()}>
+            <Show when={props.linkScope === "per_venue"}>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>URL Culqi Link</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  <TextInput
+                    sizeVariant="sm"
+                    type="url"
+                    value={props.form.linkUrl()}
+                    onChange={props.form.setLinkUrl}
+                    required
+                  />
+                </FieldInputValue>
+              </FieldRow>
+            </Show>
+            <Show when={props.onlineScope === "per_venue"}>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>URL Culqi Online</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  <TextInput
+                    sizeVariant="sm"
+                    type="url"
+                    value={props.form.onlineUrl()}
+                    onChange={props.form.setOnlineUrl}
+                    required
+                  />
+                </FieldInputValue>
+              </FieldRow>
               <FieldRow>
                 <FieldLabel>
                   <FieldLabelText>Modalidad de Cobro</FieldLabelText>

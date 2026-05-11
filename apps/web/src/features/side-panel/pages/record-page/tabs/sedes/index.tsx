@@ -11,6 +11,7 @@ import {
 } from "~/features/workflow/data/mutations";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailVenueView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { ProductScope } from "~/workflow/contracts/lead-schema";
 
 import type { TabContentProps } from "../content-props";
 import { AccountsForm } from "./components/accounts-form";
@@ -35,10 +36,20 @@ export function SedesTab(props: TabContentProps) {
               data.lead.stage === "SCOPING" || data.lead.stage === "QUOTING"
             }
           >
-            <VenueCreationView leadId={data.lead.id} venues={data.venues} />
+            <VenueCreationView
+              leadId={data.lead.id}
+              venues={data.venues}
+              linkScope={data.profile?.linkScope ?? "none"}
+              onlineScope={data.profile?.onlineScope ?? "none"}
+            />
           </Match>
           <Match when={data.lead.stage === "CLOSING"}>
-            <VenueClosingView leadId={data.lead.id} venues={data.venues} />
+            <VenueClosingView
+              leadId={data.lead.id}
+              venues={data.venues}
+              linkScope={data.profile?.linkScope ?? "none"}
+              onlineScope={data.profile?.onlineScope ?? "none"}
+            />
           </Match>
           <Match when={true}>
             <VenueReadOnlyView venues={data.venues} />
@@ -52,16 +63,26 @@ export function SedesTab(props: TabContentProps) {
 function VenueCreationView(props: {
   leadId: string;
   venues: LeadDetailVenueView[];
+  linkScope: ProductScope;
+  onlineScope: ProductScope;
 }) {
   return (
     <div>
       <For each={props.venues}>{(venue) => <VenueCard venue={venue} />}</For>
-      <VenueCreatePanel leadId={props.leadId} />
+      <VenueCreatePanel
+        leadId={props.leadId}
+        linkScope={props.linkScope}
+        onlineScope={props.onlineScope}
+      />
     </div>
   );
 }
 
-function VenueCreatePanel(props: { leadId: string }) {
+function VenueCreatePanel(props: {
+  leadId: string;
+  linkScope: ProductScope;
+  onlineScope: ProductScope;
+}) {
   const createVenue = useAction(createVenueMutation);
   const form = useVenueFormState();
   const [submitting, setSubmitting] = createSignal(false);
@@ -69,7 +90,10 @@ function VenueCreatePanel(props: { leadId: string }) {
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
-    const parsed = buildVenueSubmitInput(form);
+    const parsed = buildVenueSubmitInput(form, {
+      linkScope: props.linkScope,
+      onlineScope: props.onlineScope,
+    });
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -88,6 +112,8 @@ function VenueCreatePanel(props: { leadId: string }) {
   return (
     <VenueForm
       form={form}
+      linkScope={props.linkScope}
+      onlineScope={props.onlineScope}
       submitting={submitting()}
       error={error()}
       onSubmit={(e) => void handleSubmit(e)}
@@ -98,10 +124,16 @@ function VenueCreatePanel(props: { leadId: string }) {
 function VenueClosingView(props: {
   leadId: string;
   venues: LeadDetailVenueView[];
+  linkScope: ProductScope;
+  onlineScope: ProductScope;
 }) {
   return (
     <div>
-      <VenueCreatePanel leadId={props.leadId} />
+      <VenueCreatePanel
+        leadId={props.leadId}
+        linkScope={props.linkScope}
+        onlineScope={props.onlineScope}
+      />
       <For each={props.venues}>
         {(venue) => <VenueClosingCard leadId={props.leadId} venue={venue} />}
       </For>

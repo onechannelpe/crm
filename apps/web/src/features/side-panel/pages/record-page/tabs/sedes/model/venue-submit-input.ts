@@ -1,5 +1,5 @@
 import type {
-  ModalidadCobro,
+  ProductScope,
   VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
@@ -16,32 +16,13 @@ type VenueSubmitInput = {
   departamento: string;
 };
 
-function toVenueDigitalConfig(input: {
-  linkUrl: string | null;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | "";
-}): VenueDigitalConfig | undefined {
-  const config: VenueDigitalConfig = {};
-
-  if (input.linkUrl) {
-    config.linkUrl = input.linkUrl;
-  }
-  if (input.onlineUrl) {
-    config.onlineUrl = input.onlineUrl;
-  }
-  if (input.onlineModalidad) {
-    config.onlineModalidad = input.onlineModalidad;
-  }
-
-  return Object.keys(config).length > 0 ? config : undefined;
-}
-
 export type BuildVenueSubmitResult =
   | { ok: true; value: VenueSubmitInput }
   | { ok: false; error: string };
 
 export function buildVenueSubmitInput(
   form: VenueFormState,
+  policy: { linkScope: ProductScope; onlineScope: ProductScope },
 ): BuildVenueSubmitResult {
   const posQty = Number(form.posQuantity());
 
@@ -68,30 +49,43 @@ export function buildVenueSubmitInput(
     return { ok: false, error: "Cantidad POS debe ser mayor a 0" };
   }
 
-  const modalidad = form.onlineModalidad();
-  const linkUrl = form.linkUrl().trim() || null;
-  const onlineUrl = form.onlineUrl().trim() || null;
-  const digitalConfig = toVenueDigitalConfig({
-    linkUrl,
-    onlineUrl,
-    onlineModalidad: modalidad,
-  });
+  const linkUrl =
+    policy.linkScope === "per_venue" ? form.linkUrl().trim() || null : null;
+  const onlineUrl =
+    policy.onlineScope === "per_venue" ? form.onlineUrl().trim() || null : null;
+  const onlineModalidad =
+    policy.onlineScope === "per_venue" ? form.onlineModalidad() || null : null;
 
-  const value: VenueSubmitInput = {
-    nombreComercial: form.nombreComercial().trim(),
-    posQuantity: posQty,
-    direccion: form.direccion().trim(),
-    referencia: form.referencia().trim(),
-    distrito: form.distrito().trim(),
-    provincia: form.provincia().trim(),
-    departamento: form.departamento().trim(),
-  };
-  if (digitalConfig) {
-    value.digitalConfig = digitalConfig;
+  if (policy.linkScope === "per_venue" && !linkUrl) {
+    return { ok: false, error: "URL Culqi Link es requerida" };
   }
+  if (policy.onlineScope === "per_venue" && !onlineUrl) {
+    return { ok: false, error: "URL Culqi Online es requerida" };
+  }
+  if (policy.onlineScope === "per_venue" && onlineUrl && !onlineModalidad) {
+    return { ok: false, error: "Modalidad de cobro es requerida" };
+  }
+
+  const digitalConfig: VenueDigitalConfig | undefined =
+    linkUrl || onlineUrl
+      ? {
+          ...(linkUrl ? { linkUrl } : {}),
+          ...(onlineUrl ? { onlineUrl } : {}),
+          ...(onlineModalidad ? { onlineModalidad } : {}),
+        }
+      : undefined;
 
   return {
     ok: true,
-    value,
+    value: {
+      nombreComercial: form.nombreComercial().trim(),
+      posQuantity: posQty,
+      digitalConfig,
+      direccion: form.direccion().trim(),
+      referencia: form.referencia().trim(),
+      distrito: form.distrito().trim(),
+      provincia: form.provincia().trim(),
+      departamento: form.departamento().trim(),
+    },
   };
 }
