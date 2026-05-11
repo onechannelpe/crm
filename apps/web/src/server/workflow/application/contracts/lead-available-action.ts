@@ -1,7 +1,7 @@
 export type LeadAvailableAction =
   | "log-call"
   | "add-note"
-  | "complete-commercial-input"
+  | "complete-scoping"
   | "review-lead"
   | "create-quotation"
   | "approve-for-sale"

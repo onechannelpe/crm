@@ -6,9 +6,8 @@ const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   tasaActual: "Tasa actual",
   gpv: "GPV",
   ticket: "Ticket",
-  tipoProducto: "Tipo de producto",
   giroNegocio: "Giro de negocio",
-  venues: "Sedes",
+  venueAccounts: "Cuentas de sedes",
 };
 
 const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
@@ -16,9 +15,8 @@ const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
   tasaActual: "Completar tasa actual",
   gpv: "Completar GPV",
   ticket: "Completar ticket",
-  tipoProducto: "Seleccionar tipo de producto",
   giroNegocio: "Completar giro de negocio",
-  venues: "Registrar al menos una sede",
+  venueAccounts: "Registrar cuentas en al menos una sede",
 };
 
 export type LeadActionUiItem =
@@ -53,8 +51,8 @@ export function mapLeadActionsToUi(
           kind: "button",
         });
         break;
-      // complete-commercial-input is rendered as an inline form section, not an action button.
-      case "complete-commercial-input":
+      // complete-scoping is rendered as an inline form section, not an action button.
+      case "complete-scoping":
       // reassign-lead is handled inline via the RelationFieldRow edit button in the fields widget.
       case "reassign-lead":
       // Actions below have no implemented handler yet.

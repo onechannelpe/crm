@@ -1,24 +1,16 @@
 import type { Generated } from "kysely";
 
 import type {
-  CulqiProductKind,
+  LeadStage,
   ModalidadCobro,
+  ProductScope,
 } from "~/workflow/contracts/lead-schema";
-
-export type WorkflowStageValue =
-  | "PENDING_EXTERNAL_REVIEW"
-  | "REJECTED_BY_STATUS"
-  | "NEEDS_EXECUTIVE_INPUT"
-  | "READY_FOR_QUOTATION"
-  | "QUOTED"
-  | "READY_FOR_SALE"
-  | "CONVERTED";
 
 export interface WorkflowLeadsTable {
   id: Generated<string>;
   organization_id: string;
   executive_id: number;
-  stage: WorkflowStageValue;
+  stage: LeadStage;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
   created_by: number;
@@ -27,21 +19,19 @@ export interface WorkflowLeadsTable {
   updated_at: number;
 }
 
-export interface WorkflowLeadCommercialInputsTable {
+export interface WorkflowLeadProfilesTable {
   lead_id: string;
   proveedor_actual: string | null;
   tasa_actual: number | null;
   gpv: number | null;
   ticket: number | null;
-  tipo_producto: CulqiProductKind | null;
-  url_cliente: string | null;
-  modalidad_cobro: ModalidadCobro;
+  link_scope: ProductScope;
+  link_url: string | null;
+  online_scope: ProductScope;
+  online_url: string | null;
+  online_modalidad: ModalidadCobro | null;
   updated_at: number;
   updated_by: number;
-}
-
-export interface WorkflowTipoProductoKindsTable {
-  value: CulqiProductKind;
 }
 
 export interface WorkflowModalidadCobroKindsTable {
@@ -60,13 +50,6 @@ export interface WorkflowQuotationsTable {
   version: number;
   created_at: number;
   created_by: number;
-}
-
-export interface WorkflowSalesTable {
-  id: Generated<string>;
-  lead_id: string;
-  executive_id: number;
-  created_at: number;
 }
 
 export interface WorkflowLeadAssignmentsTable {
@@ -98,8 +81,8 @@ export interface WorkflowHistoryEventsTable {
     | "commercial_input_completed"
     | "quotation_created"
     | "sale_approved"
-    | "sale_created"
     | "venue_added"
+    | "venue_accounts_added"
     | "call_logged"
     | "note_added";
   actor_user_id: number | null;

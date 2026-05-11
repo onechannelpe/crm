@@ -9,7 +9,6 @@ import type { Database } from "~/lib/db/types";
 import {
   ABONO_BANKS,
   ACCOUNT_TYPE_KINDS,
-  CULQI_PRODUCT_KINDS,
   MODALIDAD_COBRO_KINDS,
   MONEDAS,
 } from "~/workflow/contracts/lead-schema";
@@ -177,11 +176,6 @@ async function seedTemplate(db: Kysely<Database>) {
         created_at: now,
       },
     ])
-    .execute();
-
-  await db
-    .insertInto("workflow_tipo_producto_kinds")
-    .values(CULQI_PRODUCT_KINDS.map((value) => ({ value })))
     .execute();
 
   await db

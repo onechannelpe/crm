@@ -33,7 +33,7 @@ export function VenueCard(props: {
             <FieldLabel>
               <FieldLabelText>Cantidad POS</FieldLabelText>
             </FieldLabel>
-            <FieldInputValue>{venue().cantidadPos}</FieldInputValue>
+            <FieldInputValue>{venue().posQuantity}</FieldInputValue>
           </FieldRow>
           <FieldRow>
             <FieldLabel>
@@ -67,78 +67,114 @@ export function VenueCard(props: {
             </FieldLabel>
             <FieldInputValue>{venue().departamento}</FieldInputValue>
           </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldLabelText>Banco SOLES</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>{venue().solesAccount.banco}</FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>{venue().solesAccount.tipoCuenta}</FieldInputValue>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>{venue().solesAccount.nroCuenta}</FieldInputValue>
-          </FieldRow>
-          <Show when={venue().solesAccount.cci}>
+          <Show when={venue().linkUrl}>
             <FieldRow>
               <FieldLabel>
-                <FieldLabelText>CCI SOLES</FieldLabelText>
+                <FieldLabelText>URL Culqi Link</FieldLabelText>
               </FieldLabel>
-              <FieldInputValue>{venue().solesAccount.cci}</FieldInputValue>
+              <FieldInputValue>{venue().linkUrl}</FieldInputValue>
             </FieldRow>
+          </Show>
+          <Show when={venue().onlineUrl}>
+            <FieldRow>
+              <FieldLabel>
+                <FieldLabelText>URL Culqi Online</FieldLabelText>
+              </FieldLabel>
+              <FieldInputValue>{venue().onlineUrl}</FieldInputValue>
+            </FieldRow>
+          </Show>
+          <Show when={venue().solesAccount} keyed>
+            {(soles) => (
+              <>
+                <FieldRow>
+                  <FieldLabel>
+                    <FieldLabelText>Banco SOLES</FieldLabelText>
+                  </FieldLabel>
+                  <FieldInputValue>{soles.banco}</FieldInputValue>
+                </FieldRow>
+                <FieldRow>
+                  <FieldLabel>
+                    <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
+                  </FieldLabel>
+                  <FieldInputValue>{soles.tipoCuenta}</FieldInputValue>
+                </FieldRow>
+                <FieldRow>
+                  <FieldLabel>
+                    <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
+                  </FieldLabel>
+                  <FieldInputValue>{soles.nroCuenta}</FieldInputValue>
+                </FieldRow>
+                <Show when={soles.cci}>
+                  <FieldRow>
+                    <FieldLabel>
+                      <FieldLabelText>CCI SOLES</FieldLabelText>
+                    </FieldLabel>
+                    <FieldInputValue>{soles.cci}</FieldInputValue>
+                  </FieldRow>
+                </Show>
+              </>
+            )}
           </Show>
           <Show when={venue().dollarAccount}>
+            <>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>Banco USD</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  {venue().dollarAccount?.banco}
+                </FieldInputValue>
+              </FieldRow>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>Tipo cuenta USD</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  {venue().dollarAccount?.tipoCuenta}
+                </FieldInputValue>
+              </FieldRow>
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>Nro cuenta USD</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  {venue().dollarAccount?.nroCuenta}
+                </FieldInputValue>
+              </FieldRow>
+              <Show when={venue().dollarAccount?.cci}>
+                <FieldRow>
+                  <FieldLabel>
+                    <FieldLabelText>CCI USD</FieldLabelText>
+                  </FieldLabel>
+                  <FieldInputValue>
+                    {venue().dollarAccount?.cci}
+                  </FieldInputValue>
+                </FieldRow>
+              </Show>
+            </>
+          </Show>
+          <Show when={venue().solesAccount} keyed>
+            {(soles) => (
+              <FieldRow>
+                <FieldLabel>
+                  <FieldLabelText>Cuenta de abono</FieldLabelText>
+                </FieldLabel>
+                <FieldInputValue>
+                  {soles.isSettlement
+                    ? `SOLES (${soles.banco})`
+                    : `USD (${venue().dollarAccount?.banco ?? "N/A"})`}
+                </FieldInputValue>
+              </FieldRow>
+            )}
+          </Show>
+          <Show when={!venue().solesAccount}>
             <FieldRow>
               <FieldLabel>
-                <FieldLabelText>Banco USD</FieldLabelText>
+                <FieldLabelText>Cuentas</FieldLabelText>
               </FieldLabel>
-              <FieldInputValue>{venue().dollarAccount?.banco}</FieldInputValue>
+              <FieldInputValue>Pendiente de registro</FieldInputValue>
             </FieldRow>
           </Show>
-          <Show when={venue().dollarAccount}>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Tipo cuenta USD</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                {venue().dollarAccount?.tipoCuenta}
-              </FieldInputValue>
-            </FieldRow>
-          </Show>
-          <Show when={venue().dollarAccount}>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Nro cuenta USD</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                {venue().dollarAccount?.nroCuenta}
-              </FieldInputValue>
-            </FieldRow>
-          </Show>
-          <Show when={venue().dollarAccount?.cci}>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>CCI USD</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>{venue().dollarAccount?.cci}</FieldInputValue>
-            </FieldRow>
-          </Show>
-          <FieldRow>
-            <FieldLabel>
-              <FieldLabelText>Cuenta de abono</FieldLabelText>
-            </FieldLabel>
-            <FieldInputValue>
-              {venue().solesAccount.isSettlement
-                ? `SOLES (${venue().solesAccount.banco})`
-                : `USD (${venue().dollarAccount?.banco ?? "N/A"})`}
-            </FieldInputValue>
-          </FieldRow>
         </FieldTable>
       </WidgetBody>
     </Widget>

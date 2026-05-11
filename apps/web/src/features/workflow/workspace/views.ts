@@ -19,13 +19,13 @@ export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   {
     id: "review",
     label: "Revisión",
-    filters: (): LeadListFilters => ({ stage: "PENDING_EXTERNAL_REVIEW" }),
+    filters: (): LeadListFilters => ({ stage: "QUALIFYING" }),
     permission: "lead:review",
   },
   {
     id: "quotation",
     label: "Cotización",
-    filters: (): LeadListFilters => ({ stage: "READY_FOR_QUOTATION" }),
+    filters: (): LeadListFilters => ({ stage: "QUOTING" }),
     permission: "quotation:manage",
   },
   {

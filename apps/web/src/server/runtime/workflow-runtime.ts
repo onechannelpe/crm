@@ -15,11 +15,10 @@ export function createWorkflowRuntime(
     leadDetail: {
       leads: repos.leads,
       leadFavorites: repos.leadFavorites,
-      leadCommercialInputs: repos.leadCommercialInputs,
+      leadProfiles: repos.leadProfiles,
       leadHistory: repos.leadHistory,
       leadQuotations: repos.leadQuotations,
-      leadSales: repos.leadSales,
-      leadSaleVenues: repos.leadSaleVenues,
+      leadVenues: repos.leadVenues,
       leadNegotiationRequests: repos.leadNegotiationRequests,
       negotiationFiles: repos.negotiationFiles,
       sourceStatuses: repos.sourceStatuses,

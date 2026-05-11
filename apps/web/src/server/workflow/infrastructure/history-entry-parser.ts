@@ -5,7 +5,6 @@ import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 import {
   toCommercialInputEntry,
   toQuotationEntry,
-  toSaleEntry,
   toVenueAddedEntry,
 } from "./history-commercial-parser";
 import type { HistoryEventRow } from "./history-event-row";
@@ -20,7 +19,7 @@ import {
   toStatusUpdatedEntry,
   toStageChangeEntry,
 } from "./history-lifecycle-parser";
-import { parsePayload } from "./history-payload-fields";
+import { parsePayload, requireString } from "./history-payload-fields";
 
 export type { HistoryEventRow };
 
@@ -55,10 +54,17 @@ export function toHistoryEntry(
         eventType: "sale_approved",
         payload: null,
       });
-    case "sale_created":
-      return toSaleEntry(row, payload.value);
     case "venue_added":
       return toVenueAddedEntry(row, payload.value);
+    case "venue_accounts_added": {
+      const venueId = requireString(payload.value, "venueId", row);
+      if (!venueId.ok) return venueId;
+      return Ok({
+        ...toHistoryEntryBase(row),
+        eventType: "venue_accounts_added",
+        payload: { venueId: venueId.value },
+      });
+    }
     case "call_logged":
       return toCallEntry(row, payload.value);
     case "note_added":

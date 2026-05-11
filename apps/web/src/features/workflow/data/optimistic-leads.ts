@@ -32,7 +32,7 @@ export function createOptimisticLeadRow(input: {
     executiveName: input.executiveName,
     createdBy: input.createdBy,
     createdByName: input.createdByName,
-    stage: "PENDING_EXTERNAL_REVIEW",
+    stage: "QUALIFYING",
     status: null,
     prioridad: null,
     nextStep: "Review lead",

@@ -1,15 +1,12 @@
-import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
 import type { LeadHistoryRepository } from "../ports/history-repository";
 import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
+import type { LeadProfileRepository } from "../ports/lead-profile-repository";
 import type { LeadQueries } from "../ports/lead-queries";
 import type { LeadRepository } from "../ports/lead-repository";
 import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
 import type { PartyRepository } from "../ports/party-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
-import type {
-  LeadSaleRepository,
-  LeadSaleVenueRepository,
-} from "../ports/sale-repository";
+import type { LeadVenueRepository } from "../ports/sale-repository";
 import type { SourceStatusRepository } from "../ports/source-status-repository";
 import type { WorkflowUserRepository } from "../ports/user-repository";
 
@@ -35,11 +32,10 @@ export type NegotiationFilesQuery = {
 export type LeadDetailDeps = {
   leads: LeadRepository;
   leadFavorites: LeadFavoriteRepository;
-  leadCommercialInputs: LeadCommercialInputRepository;
+  leadProfiles: LeadProfileRepository;
   leadHistory: LeadHistoryRepository;
   leadQuotations: LeadQuotationRepository;
-  leadSales: LeadSaleRepository;
-  leadSaleVenues: LeadSaleVenueRepository;
+  leadVenues: LeadVenueRepository;
   leadNegotiationRequests: NegotiationRequestRepository;
   negotiationFiles: NegotiationFilesQuery;
   sourceStatuses: SourceStatusRepository;

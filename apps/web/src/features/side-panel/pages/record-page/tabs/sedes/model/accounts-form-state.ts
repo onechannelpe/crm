@@ -6,15 +6,7 @@ import {
   type AccountTypeKind,
 } from "~/workflow/contracts/lead-schema";
 
-export function useSedesFormState() {
-  const [nombreComercial, setNombreComercial] = createSignal("");
-  const [cantidadPos, setCantidadPos] = createSignal("1");
-  const [direccion, setDireccion] = createSignal("");
-  const [referencia, setReferencia] = createSignal("");
-  const [distrito, setDistrito] = createSignal("");
-  const [provincia, setProvincia] = createSignal("");
-  const [departamento, setDepartamento] = createSignal("");
-
+export function useAccountsFormState() {
   const [bancoSoles, setBancoSoles] = createSignal<AbonoBank | "">("");
   const [showBancoSolesPicker, setShowBancoSolesPicker] = createSignal(false);
   const [tipoCuentaSoles, setTipoCuentaSoles] = createSignal<
@@ -45,13 +37,6 @@ export function useSedesFormState() {
   );
 
   function reset() {
-    setNombreComercial("");
-    setCantidadPos("1");
-    setDireccion("");
-    setReferencia("");
-    setDistrito("");
-    setProvincia("");
-    setDepartamento("");
     setBancoSoles("");
     setTipoCuentaSoles("");
     setNroCuentaSoles("");
@@ -65,20 +50,6 @@ export function useSedesFormState() {
   }
 
   return {
-    nombreComercial,
-    setNombreComercial,
-    cantidadPos,
-    setCantidadPos,
-    direccion,
-    setDireccion,
-    referencia,
-    setReferencia,
-    distrito,
-    setDistrito,
-    provincia,
-    setProvincia,
-    departamento,
-    setDepartamento,
     bancoSoles,
     setBancoSoles,
     showBancoSolesPicker,
@@ -109,4 +80,4 @@ export function useSedesFormState() {
   };
 }
 
-export type SedesFormState = ReturnType<typeof useSedesFormState>;
+export type AccountsFormState = ReturnType<typeof useAccountsFormState>;

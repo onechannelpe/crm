@@ -5,14 +5,12 @@ import type {
   GetLeadDetailInput,
   ListAssignableExecutivesInput,
 } from "../contracts/query-inputs";
-import type {
-  AssignableExecutivesResult,
-  LeadDetailResult,
-} from "../contracts/query-results";
+import type { AssignableExecutivesResult } from "../contracts/query-results";
 import type {
   AssignableExecutivesDeps,
   LeadDetailDeps,
 } from "../deps/lead-queries";
+import type { LeadDetailView } from "../queries/views/lead-detail";
 import { getLeadDetailQuery } from "./get-lead-detail";
 import { listAssignableExecutivesQuery } from "./list-assignable-executives";
 
@@ -24,7 +22,7 @@ export type WorkflowQueryApiDeps = {
 export type WorkflowQueryApi = {
   getLeadDetail(
     input: GetLeadDetailInput,
-  ): Promise<Result<LeadDetailResult, DomainError>>;
+  ): Promise<Result<LeadDetailView, DomainError>>;
   listAssignableExecutives(
     input: ListAssignableExecutivesInput,
   ): Promise<Result<AssignableExecutivesResult, DomainError>>;

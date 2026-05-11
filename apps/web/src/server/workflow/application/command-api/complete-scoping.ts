@@ -1,62 +1,91 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { isNeedsExecutiveInputLeadSubject } from "../../domain/lead-subjects";
-import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
-import type { CompleteCommercialInputInput } from "../contracts/command-inputs";
+import type { CompleteScopingInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import {
-  canCompleteCommercialInput,
+  canCompleteScoping,
   requirePipelineActionAccess,
 } from "../policies/access";
-import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type { LeadProfileRepository } from "../ports/lead-profile-repository";
 import type { PartyRepository } from "../ports/party-repository";
+import type { LeadVenueRepository } from "../ports/sale-repository";
+import {
+  parseDigitalPolicy,
+  toProfileDigitalFields,
+  validateDigitalAggregate,
+} from "../services/digital-product-policy";
 import type { LeadClock } from "../services/lead-clock";
 
-type CompleteCommercialInputCommandDeps = {
+type CompleteScopingCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
-  leadCommercialInputs: LeadCommercialInputRepository;
+  leadProfiles: LeadProfileRepository;
+  leadVenues: LeadVenueRepository;
   party: PartyRepository;
   clock: LeadClock;
 };
 
-export async function completeCommercialInputCommand(
-  deps: CompleteCommercialInputCommandDeps,
-  input: CompleteCommercialInputInput,
+export async function completeScopingCommand(
+  deps: CompleteScopingCommandDeps,
+  input: CompleteScopingInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const canComplete = requirePipelineActionAccess(
     input.actor.role,
-    canCompleteCommercialInput,
+    canCompleteScoping,
   );
   if (!canComplete.ok) return canComplete;
 
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
-  if (!isNeedsExecutiveInputLeadSubject(lead)) return invalidLeadStage();
 
   if (lead.executiveId !== input.actor.userId) {
     return Err(
       domainError(
         "forbidden",
         "not_owner",
-        "Only the assigned executive can complete commercial input",
+        "Only the assigned executive can complete scoping",
       ),
     );
   }
 
+  if (lead.stage !== "SCOPING") {
+    return Err(
+      domainError("validation", "wrong_stage", "Lead is not in SCOPING stage"),
+    );
+  }
+
+  const policy = parseDigitalPolicy({
+    linkScope: input.linkScope,
+    linkUrl: input.linkUrl,
+    onlineScope: input.onlineScope,
+    onlineUrl: input.onlineUrl,
+    onlineModalidad: input.onlineModalidad,
+  });
+  if (!policy.ok) return policy;
+
+  const venues = await deps.leadVenues.listByLeadId(lead.id);
+  if (!venues.ok) return venues;
+
+  const aggregateCheck = validateDigitalAggregate({
+    policy: policy.value,
+    venues: venues.value,
+  });
+  if (!aggregateCheck.ok) return aggregateCheck;
+
+  const digitalFields = toProfileDigitalFields(policy.value);
   const now = deps.clock.now();
-  await deps.leadCommercialInputs.upsert({
+
+  await deps.leadProfiles.upsert({
     leadId: lead.id,
     proveedorActual: input.proveedorActual,
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
-    tipoProducto: input.tipoProducto,
-    urlCliente: input.urlCliente,
-    modalidadCobro: input.modalidadCobro,
+    ...digitalFields,
     updatedAt: now,
     updatedBy: input.actor.userId,
   });
@@ -80,15 +109,17 @@ export async function completeCommercialInputCommand(
     actorUserId: input.actor.userId,
     now,
     intent: {
-      kind: "complete_commercial_input",
+      kind: "complete_scoping",
       proveedorActual: input.proveedorActual,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
       giroNegocio: input.giroNegocio,
-      tipoProducto: input.tipoProducto,
-      urlCliente: input.urlCliente,
-      modalidadCobro: input.modalidadCobro,
+      linkScope: digitalFields.linkScope,
+      linkUrl: digitalFields.linkUrl,
+      onlineScope: digitalFields.onlineScope,
+      onlineUrl: digitalFields.onlineUrl,
+      onlineModalidad: digitalFields.onlineModalidad,
       repLegalNombres: input.repLegalNombres,
       repLegalApellidoPaterno: input.repLegalApellidoPaterno,
       repLegalApellidoMaterno: input.repLegalApellidoMaterno,

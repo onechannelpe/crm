@@ -3,14 +3,17 @@ import type { Generated } from "kysely";
 import type {
   AbonoBank,
   AccountTypeKind,
+  ModalidadCobro,
 } from "~/workflow/contracts/lead-schema";
 
-export interface WorkflowSaleVenuesTable {
+export interface WorkflowLeadVenuesTable {
   id: Generated<string>;
-  sale_id: string;
   lead_id: string;
   nombre_comercial: string;
-  cantidad_pos: number;
+  pos_quantity: number;
+  link_url: string | null;
+  online_url: string | null;
+  online_modalidad: ModalidadCobro | null;
   direccion: string;
   referencia: string;
   distrito: string;
@@ -20,7 +23,7 @@ export interface WorkflowSaleVenuesTable {
   created_by: number;
 }
 
-export interface WorkflowSaleVenueAccountsTable {
+export interface WorkflowLeadVenueAccountsTable {
   id: Generated<string>;
   venue_id: string;
   currency: "PEN" | "USD";

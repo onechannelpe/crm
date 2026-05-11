@@ -3,20 +3,20 @@ import type {
   LeadStatus,
 } from "~/workflow/contracts/lead-schema";
 
-import type { PendingReviewLeadSubject } from "./lead-subjects";
+import type { QualifyingLeadSubject } from "./lead-subjects";
 
 export function resolveReviewTransition(input: {
-  lead: PendingReviewLeadSubject;
+  lead: QualifyingLeadSubject;
   status: LeadStatus;
   prioridad: LeadPriority;
-}): "REJECTED_BY_STATUS" | "NEEDS_EXECUTIVE_INPUT" | "READY_FOR_QUOTATION" {
+}): "DISQUALIFIED" | "SCOPING" | "QUOTING" {
   if (input.status === "CARTERIZADO" || input.status === "STOCK") {
-    return "REJECTED_BY_STATUS";
+    return "DISQUALIFIED";
   }
 
   if (input.prioridad === "SIN RESULTADO") {
-    return "NEEDS_EXECUTIVE_INPUT";
+    return "SCOPING";
   }
 
-  return "READY_FOR_QUOTATION";
+  return "QUOTING";
 }

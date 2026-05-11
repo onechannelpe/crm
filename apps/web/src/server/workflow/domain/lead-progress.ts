@@ -7,9 +7,8 @@ export type LeadBlockingField =
   | "tasaActual"
   | "gpv"
   | "ticket"
-  | "tipoProducto"
   | "giroNegocio"
-  | "venues";
+  | "venueAccounts";
 
 export type LeadProgress = {
   nextStep: string;
@@ -18,19 +17,19 @@ export type LeadProgress = {
 
 export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
   switch (lead.stage) {
-    case "PENDING_EXTERNAL_REVIEW":
+    case "QUALIFYING":
       return "Review lead";
-    case "REJECTED_BY_STATUS":
+    case "DISQUALIFIED":
       return "No further action";
-    case "NEEDS_EXECUTIVE_INPUT":
-      return "Complete commercial input";
-    case "READY_FOR_QUOTATION":
+    case "SCOPING":
+      return "Complete scoping";
+    case "QUOTING":
       return "Create quotation";
     case "QUOTED":
       return "Approve for sale";
-    case "READY_FOR_SALE":
-      return "Register venue";
-    case "CONVERTED":
+    case "CLOSING":
+      return "Register venue accounts";
+    case "LIVE":
       return "No further action";
     default: {
       const exhaustive: never = lead.stage;
@@ -41,27 +40,20 @@ export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
 
 export function resolveLeadBlockingFields(input: {
   stage: LeadStage;
-  venueCount?: number;
+  venuesWithAccountsCount?: number;
 }): LeadBlockingField[] {
   switch (input.stage) {
-    case "PENDING_EXTERNAL_REVIEW":
-    case "REJECTED_BY_STATUS":
-    case "READY_FOR_QUOTATION":
+    case "QUALIFYING":
+    case "DISQUALIFIED":
+    case "QUOTING":
     case "QUOTED":
-    case "CONVERTED":
+    case "LIVE":
       return [];
-    case "NEEDS_EXECUTIVE_INPUT":
-      return [
-        "proveedorActual",
-        "tasaActual",
-        "gpv",
-        "ticket",
-        "tipoProducto",
-        "giroNegocio",
-      ];
-    case "READY_FOR_SALE": {
-      const venueCount = input.venueCount ?? 0;
-      return venueCount === 0 ? ["venues"] : [];
+    case "SCOPING":
+      return ["proveedorActual", "tasaActual", "gpv", "ticket", "giroNegocio"];
+    case "CLOSING": {
+      const withAccounts = input.venuesWithAccountsCount ?? 0;
+      return withAccounts === 0 ? ["venueAccounts"] : [];
     }
     default: {
       const exhaustive: never = input.stage;
@@ -72,13 +64,13 @@ export function resolveLeadBlockingFields(input: {
 
 export function resolveLeadProgress(input: {
   lead: Pick<LeadRecord, "stage">;
-  venueCount?: number;
+  venuesWithAccountsCount?: number;
 }): LeadProgress {
   return {
     nextStep: resolveLeadNextStep(input.lead),
     blockingFields: resolveLeadBlockingFields({
       stage: input.lead.stage,
-      venueCount: input.venueCount,
+      venuesWithAccountsCount: input.venuesWithAccountsCount,
     }),
   };
 }

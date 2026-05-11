@@ -1,14 +1,11 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
-import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
 
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
 import {
-  requireModalidadCobro,
   nullableString,
-  requireCulqiProductKind,
   requireMoneda,
   requireNumber,
   requireString,
@@ -32,16 +29,32 @@ export function toCommercialInputEntry(
 
   const giroNegocio = requireString(payload, "giroNegocio", row);
   if (!giroNegocio.ok) return giroNegocio;
-  const tipoProducto = requireCulqiProductKind(payload, "tipoProducto", row);
-  if (!tipoProducto.ok) return tipoProducto;
-  const urlCliente = nullableString(payload, "urlCliente", row);
-  if (!urlCliente.ok) return urlCliente;
-  const modalidadCobro = requireModalidadCobro(payload, "modalidadCobro", row);
-  if (!modalidadCobro.ok) return modalidadCobro;
+  const linkScope = nullableString(payload, "linkScope", row);
+  if (!linkScope.ok) return linkScope;
+  const onlineScope = nullableString(payload, "onlineScope", row);
+  if (!onlineScope.ok) return onlineScope;
+  const onlineModalidad = nullableString(payload, "onlineModalidad", row);
+  if (!onlineModalidad.ok) return onlineModalidad;
   const repLegalNombres = requireString(payload, "repLegalNombres", row);
   if (!repLegalNombres.ok) return repLegalNombres;
+  const repLegalApellidoPaterno = requireString(
+    payload,
+    "repLegalApellidoPaterno",
+    row,
+  );
+  if (!repLegalApellidoPaterno.ok) return repLegalApellidoPaterno;
+  const repLegalApellidoMaterno = requireString(
+    payload,
+    "repLegalApellidoMaterno",
+    row,
+  );
+  if (!repLegalApellidoMaterno.ok) return repLegalApellidoMaterno;
   const repLegalDni = requireString(payload, "repLegalDni", row);
   if (!repLegalDni.ok) return repLegalDni;
+  const repLegalTelefono = requireString(payload, "repLegalTelefono", row);
+  if (!repLegalTelefono.ok) return repLegalTelefono;
+  const repLegalEmail = requireString(payload, "repLegalEmail", row);
+  if (!repLegalEmail.ok) return repLegalEmail;
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -52,11 +65,15 @@ export function toCommercialInputEntry(
       gpv: gpv.value,
       ticket: ticket.value,
       giroNegocio: giroNegocio.value,
-      tipoProducto: tipoProducto.value,
-      urlCliente: urlCliente.value,
-      modalidadCobro: modalidadCobro.value,
+      linkScope: linkScope.value,
+      onlineScope: onlineScope.value,
+      onlineModalidad: onlineModalidad.value,
       repLegalNombres: repLegalNombres.value,
+      repLegalApellidoPaterno: repLegalApellidoPaterno.value,
+      repLegalApellidoMaterno: repLegalApellidoMaterno.value,
       repLegalDni: repLegalDni.value,
+      repLegalTelefono: repLegalTelefono.value,
+      repLegalEmail: repLegalEmail.value,
     },
   });
 }
@@ -85,47 +102,21 @@ export function toQuotationEntry(
   });
 }
 
-export function toSaleEntry(
-  row: HistoryEventRow,
-  payload: Record<string, unknown> | null,
-): Result<LeadHistoryEntry, DomainError> {
-  const saleId = requireString(payload, "saleId", row);
-  if (!saleId.ok) return saleId;
-
-  return Ok({
-    ...toHistoryEntryBase(row),
-    eventType: "sale_created",
-    payload: { saleId: saleId.value },
-  });
-}
-
 export function toVenueAddedEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const venueId = requireString(payload, "venueId", row);
   if (!venueId.ok) return venueId;
-  const saleId = requireString(payload, "saleId", row);
-  if (!saleId.ok) return saleId;
   const nombreComercial = requireString(payload, "nombreComercial", row);
   if (!nombreComercial.ok) return nombreComercial;
-
-  const isFirstVenue = payload?.isFirstVenue;
-  if (typeof isFirstVenue !== "boolean") {
-    return invalidHistoryPayload(
-      { id: row.id, eventType: row.event_type },
-      "isFirstVenue",
-    );
-  }
 
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "venue_added",
     payload: {
       venueId: venueId.value,
-      saleId: saleId.value,
       nombreComercial: nombreComercial.value,
-      isFirstVenue,
     },
   });
 }

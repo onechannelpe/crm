@@ -18,10 +18,11 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { ACCOUNT_TYPE_KINDS } from "~/workflow/contracts/lead-schema";
 
-import type { SedesFormState } from "../model/form-state";
+import type { AccountsFormState } from "../model/accounts-form-state";
 
-export function VenueForm(props: {
-  form: SedesFormState;
+export function AccountsForm(props: {
+  venueName: string;
+  form: AccountsFormState;
   submitting: boolean;
   error: string | null;
   onSubmit: (event: SubmitEvent) => void;
@@ -29,106 +30,11 @@ export function VenueForm(props: {
   return (
     <Widget>
       <WidgetHeader>
-        <WidgetTitle text="Agregar sede" />
+        <WidgetTitle text={`Cuentas: ${props.venueName}`} />
       </WidgetHeader>
       <WidgetBody>
         <form onSubmit={props.onSubmit}>
           <FieldTable>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Nombre comercial</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  value={props.form.nombreComercial()}
-                  onChange={props.form.setNombreComercial}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Cantidad POS</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={props.form.cantidadPos()}
-                  onChange={props.form.setCantidadPos}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Direccion</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  value={props.form.direccion()}
-                  onChange={props.form.setDireccion}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Referencia</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  value={props.form.referencia()}
-                  onChange={props.form.setReferencia}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Distrito</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  value={props.form.distrito()}
-                  onChange={props.form.setDistrito}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Provincia</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  value={props.form.provincia()}
-                  onChange={props.form.setProvincia}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Departamento</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  value={props.form.departamento()}
-                  onChange={props.form.setDepartamento}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-
             <FieldRow>
               <FieldLabel>
                 <FieldLabelText>Banco SOLES</FieldLabelText>
@@ -347,7 +253,7 @@ export function VenueForm(props: {
               size="sm"
               loading={props.submitting}
             >
-              Guardar sede
+              Guardar cuentas
             </Button>
           </div>
         </form>

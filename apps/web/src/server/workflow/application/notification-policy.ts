@@ -8,7 +8,7 @@ export function deriveLeadStageNotifications(input: {
   executiveId: number;
   branchId: number | null;
 }): NotificationIntent[] {
-  if (input.toStage === "NEEDS_EXECUTIVE_INPUT") {
+  if (input.toStage === "SCOPING") {
     return [
       {
         id: `${input.eventId}:needs_exec`,
@@ -23,7 +23,7 @@ export function deriveLeadStageNotifications(input: {
     ];
   }
 
-  if (input.toStage === "READY_FOR_QUOTATION") {
+  if (input.toStage === "QUOTING") {
     if (input.branchId === null) return [];
     return [
       {
@@ -43,7 +43,7 @@ export function deriveLeadStageNotifications(input: {
     ];
   }
 
-  if (input.toStage === "READY_FOR_SALE") {
+  if (input.toStage === "CLOSING") {
     return [
       {
         id: `${input.eventId}:ready_sale`,

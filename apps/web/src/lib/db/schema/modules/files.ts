@@ -81,9 +81,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
-    .addColumn("sale_id", "text", (col) =>
-      col.notNull().references("workflow_sales.id").onDelete("cascade"),
-    )
     .addColumn("artifact_id", "text", (col) =>
       col
         .notNull()

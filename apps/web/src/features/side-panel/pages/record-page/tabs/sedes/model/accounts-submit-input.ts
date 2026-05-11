@@ -3,16 +3,9 @@ import type {
   AccountTypeKind,
 } from "~/workflow/contracts/lead-schema";
 
-import type { SedesFormState } from "./form-state";
+import type { AccountsFormState } from "./accounts-form-state";
 
-type SubmitInput = {
-  nombreComercial: string;
-  cantidadPos: number;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+type AccountsSubmitInput = {
   solesAccount: {
     currency: "PEN";
     banco: AbonoBank;
@@ -31,37 +24,16 @@ type SubmitInput = {
   };
 };
 
-export type BuildSubmitInputResult =
-  | { ok: true; value: SubmitInput }
+export type BuildAccountsSubmitResult =
+  | { ok: true; value: AccountsSubmitInput }
   | { ok: false; error: string };
 
-export function buildSubmitInput(form: SedesFormState): BuildSubmitInputResult {
+export function buildAccountsSubmitInput(
+  form: AccountsFormState,
+): BuildAccountsSubmitResult {
   const currentBancoSoles = form.bancoSoles();
   const currentTipoCuentaSoles = form.tipoCuentaSoles();
-  const cantidadPosValue = Number(form.cantidadPos());
 
-  if (!form.nombreComercial().trim() || !form.direccion().trim()) {
-    return {
-      ok: false,
-      error: "Nombre comercial y direccion son obligatorios",
-    };
-  }
-  if (!form.referencia().trim()) {
-    return { ok: false, error: "Referencia es obligatoria" };
-  }
-  if (
-    !form.distrito().trim() ||
-    !form.provincia().trim() ||
-    !form.departamento().trim()
-  ) {
-    return {
-      ok: false,
-      error: "Distrito, provincia y departamento son obligatorios",
-    };
-  }
-  if (!Number.isFinite(cantidadPosValue) || cantidadPosValue <= 0) {
-    return { ok: false, error: "Cantidad POS debe ser mayor a 0" };
-  }
   if (
     !currentBancoSoles ||
     !currentTipoCuentaSoles ||
@@ -127,18 +99,5 @@ export function buildSubmitInput(form: SedesFormState): BuildSubmitInputResult {
     };
   }
 
-  return {
-    ok: true,
-    value: {
-      nombreComercial: form.nombreComercial().trim(),
-      cantidadPos: cantidadPosValue,
-      direccion: form.direccion().trim(),
-      referencia: form.referencia().trim(),
-      distrito: form.distrito().trim(),
-      provincia: form.provincia().trim(),
-      departamento: form.departamento().trim(),
-      solesAccount,
-      dollarAccount,
-    },
-  };
+  return { ok: true, value: { solesAccount, dollarAccount } };
 }

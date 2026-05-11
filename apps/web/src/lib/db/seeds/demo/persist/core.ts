@@ -68,7 +68,6 @@ function buildWorkflowArtifactIds(): WorkflowArtifactIds {
     qidQuoted: "demo-workflow-quotation-quoted",
     qidForSale: "demo-workflow-quotation-for-sale",
     qidConverted: "demo-workflow-quotation-converted",
-    sidConverted: "demo-workflow-sale-converted",
     vidConverted: "demo-workflow-venue-converted",
   };
 }

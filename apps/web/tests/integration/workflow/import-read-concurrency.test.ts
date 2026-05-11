@@ -22,14 +22,14 @@ describe("integration import workflow concurrency", () => {
     const leadOne = await scenario.lead.assignedTo("execOne", {
       key: "import-concurrency-one",
       organization: { key: "import-concurrency-one" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       status: "DISPONIBLE",
       prioridad: "P1",
     });
     const leadTwo = await scenario.lead.assignedTo("execTwo", {
       key: "import-concurrency-two",
       organization: { key: "import-concurrency-two" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       status: "SIN RESULTADO",
       prioridad: "P1",
     });

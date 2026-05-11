@@ -62,9 +62,9 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     renderCell: (lead) => (
       <Badge
         variant={
-          lead.stage === "READY_FOR_SALE"
+          lead.stage === "CLOSING"
             ? "success"
-            : lead.stage === "NEEDS_EXECUTIVE_INPUT"
+            : lead.stage === "SCOPING"
               ? "warning"
               : "secondary"
         }
