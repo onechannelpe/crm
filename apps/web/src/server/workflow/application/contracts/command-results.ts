@@ -9,4 +9,3 @@ export type LeadInteractionResult = {
 export type LeadQuotationResult = {
   id: string;
 };
-

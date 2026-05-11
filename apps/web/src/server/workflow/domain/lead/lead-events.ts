@@ -202,14 +202,14 @@ export function deriveLeadMutationEvents(input: {
           leadId: lead.id,
           eventType: "workflow_stage_changed",
           actorUserId,
-          payload: { from: lead.stage, to: "READY_FOR_SALE" },
+          payload: { from: lead.stage, to: "CLOSING" },
           occurredAt: now,
         }),
       ],
       audit: {
         action: "sale_approved",
         entityId: lead.id,
-        changes: { from: lead.stage, to: "READY_FOR_SALE" },
+        changes: { from: lead.stage, to: "CLOSING" },
       },
     });
   }
@@ -248,7 +248,7 @@ export function deriveLeadMutationEvents(input: {
     });
   }
 
-  if (intent.kind === "complete_commercial_input") {
+  if (intent.kind === "complete_scoping") {
     return Ok({
       history: [
         createHistoryEvent({
@@ -261,9 +261,9 @@ export function deriveLeadMutationEvents(input: {
             gpv: intent.gpv,
             ticket: intent.ticket,
             giroNegocio: intent.giroNegocio,
-            tipoProducto: intent.tipoProducto,
-            urlCliente: intent.urlCliente,
-            modalidadCobro: intent.modalidadCobro,
+            linkScope: intent.linkScope,
+            onlineScope: intent.onlineScope,
+            onlineModalidad: intent.onlineModalidad,
             repLegalNombres: intent.repLegalNombres,
             repLegalDni: intent.repLegalDni,
           },
@@ -273,60 +273,58 @@ export function deriveLeadMutationEvents(input: {
           leadId: lead.id,
           eventType: "workflow_stage_changed",
           actorUserId,
-          payload: { from: lead.stage, to: "READY_FOR_QUOTATION" },
+          payload: { from: lead.stage, to: "QUOTING" },
           occurredAt: now,
         }),
       ],
       audit: {
-        action: "commercial_input_completed",
+        action: "complete_scoping",
         entityId: lead.id,
-        changes: { from: lead.stage, to: "READY_FOR_QUOTATION" },
+        changes: { from: lead.stage, to: "QUOTING" },
       },
     });
   }
 
-  if (intent.kind === "create_sale") {
+  if (intent.kind === "create_venue") {
     return Ok({
       history: [
         createHistoryEvent({
           leadId: lead.id,
-          eventType: "sale_created",
+          eventType: "venue_added",
           actorUserId,
-          payload: { saleId: intent.saleId },
+          payload: {
+            venueId: intent.venueId,
+            nombreComercial: intent.nombreComercial,
+          },
           occurredAt: now,
         }),
       ],
       audit: {
-        action: "sale_created",
+        action: "venue_added",
         entityId: lead.id,
-        changes: { saleId: intent.saleId },
+        changes: { venueId: intent.venueId },
       },
     });
   }
 
-  if (intent.kind === "create_sale_venue") {
+  if (intent.kind === "add_venue_accounts") {
     const history: LeadHistoryEventDraft[] = [
       createHistoryEvent({
         leadId: lead.id,
-        eventType: "venue_added",
+        eventType: "venue_accounts_added",
         actorUserId,
-        payload: {
-          venueId: intent.venueId,
-          saleId: intent.saleId,
-          nombreComercial: intent.nombreComercial,
-          isFirstVenue: intent.isFirstVenue,
-        },
+        payload: { venueId: intent.venueId },
         occurredAt: now,
       }),
     ];
 
-    if (intent.isFirstVenue) {
+    if (intent.isFirstVenueWithAccounts) {
       history.push(
         createHistoryEvent({
           leadId: lead.id,
           eventType: "workflow_stage_changed",
           actorUserId,
-          payload: { from: lead.stage, to: "CONVERTED" },
+          payload: { from: lead.stage, to: "LIVE" },
           occurredAt: now,
         }),
       );
@@ -335,13 +333,9 @@ export function deriveLeadMutationEvents(input: {
     return Ok({
       history,
       audit: {
-        action: "venue_added",
+        action: "venue_accounts_added",
         entityId: lead.id,
-        changes: {
-          venueId: intent.venueId,
-          saleId: intent.saleId,
-          isFirstVenue: intent.isFirstVenue,
-        },
+        changes: { venueId: intent.venueId },
       },
     });
   }

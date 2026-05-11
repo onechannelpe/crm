@@ -25,7 +25,10 @@ export function buildVenueSubmitInput(
   const posQty = Number(form.posQuantity());
 
   if (!form.nombreComercial().trim() || !form.direccion().trim()) {
-    return { ok: false, error: "Nombre comercial y direccion son obligatorios" };
+    return {
+      ok: false,
+      error: "Nombre comercial y direccion son obligatorios",
+    };
   }
   if (!form.referencia().trim()) {
     return { ok: false, error: "Referencia es obligatoria" };

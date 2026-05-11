@@ -78,10 +78,7 @@ function DetailContent(props: { data: LeadDetailView }) {
         {(leadId) => (
           <Switch>
             <Match when={props.data.lead.stage === "SCOPING"}>
-              <ScopingForm
-                leadId={leadId}
-                initialValues={props.data.profile}
-              />
+              <ScopingForm leadId={leadId} initialValues={props.data.profile} />
             </Match>
 
             <Match when={props.data.lead.stage === "QUOTING"}>

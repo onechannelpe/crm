@@ -1,4 +1,7 @@
-import type { AbonoBank, AccountTypeKind } from "~/workflow/contracts/lead-schema";
+import type {
+  AbonoBank,
+  AccountTypeKind,
+} from "~/workflow/contracts/lead-schema";
 
 import type { AccountsFormState } from "./accounts-form-state";
 
@@ -31,11 +34,18 @@ export function buildAccountsSubmitInput(
   const currentBancoSoles = form.bancoSoles();
   const currentTipoCuentaSoles = form.tipoCuentaSoles();
 
-  if (!currentBancoSoles || !currentTipoCuentaSoles || !form.nroCuentaSoles().trim()) {
+  if (
+    !currentBancoSoles ||
+    !currentTipoCuentaSoles ||
+    !form.nroCuentaSoles().trim()
+  ) {
     return { ok: false, error: "Completa todos los datos de cuenta en soles" };
   }
   if (form.requiresCciSoles() && !form.cciSoles().trim()) {
-    return { ok: false, error: "CCI en soles es obligatorio cuando el banco no es BCP" };
+    return {
+      ok: false,
+      error: "CCI en soles es obligatorio cuando el banco no es BCP",
+    };
   }
 
   const solesAccount = {
@@ -62,11 +72,21 @@ export function buildAccountsSubmitInput(
     const currentBancoDolares = form.bancoDolares();
     const currentTipoCuentaDolares = form.tipoCuentaDolares();
 
-    if (!currentBancoDolares || !currentTipoCuentaDolares || !form.nroCuentaDolares().trim()) {
-      return { ok: false, error: "Completa todos los datos de cuenta en dolares" };
+    if (
+      !currentBancoDolares ||
+      !currentTipoCuentaDolares ||
+      !form.nroCuentaDolares().trim()
+    ) {
+      return {
+        ok: false,
+        error: "Completa todos los datos de cuenta en dolares",
+      };
     }
     if (form.requiresCciDolares() && !form.cciDolares().trim()) {
-      return { ok: false, error: "CCI en dolares es obligatorio cuando el banco no es BCP" };
+      return {
+        ok: false,
+        error: "CCI en dolares es obligatorio cuando el banco no es BCP",
+      };
     }
 
     dollarAccount = {

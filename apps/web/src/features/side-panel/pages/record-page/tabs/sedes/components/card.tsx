@@ -125,7 +125,9 @@ export function VenueCard(props: {
                 <FieldLabel>
                   <FieldLabelText>Banco USD</FieldLabelText>
                 </FieldLabel>
-                <FieldInputValue>{venue().dollarAccount?.banco}</FieldInputValue>
+                <FieldInputValue>
+                  {venue().dollarAccount?.banco}
+                </FieldInputValue>
               </FieldRow>
               <FieldRow>
                 <FieldLabel>
@@ -148,7 +150,9 @@ export function VenueCard(props: {
                   <FieldLabel>
                     <FieldLabelText>CCI USD</FieldLabelText>
                   </FieldLabel>
-                  <FieldInputValue>{venue().dollarAccount?.cci}</FieldInputValue>
+                  <FieldInputValue>
+                    {venue().dollarAccount?.cci}
+                  </FieldInputValue>
                 </FieldRow>
               </Show>
             </>

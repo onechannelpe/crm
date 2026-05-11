@@ -79,9 +79,7 @@ function VenueCreationView(props: {
 
   return (
     <div>
-      <For each={props.venues}>
-        {(venue) => <VenueCard venue={venue} />}
-      </For>
+      <For each={props.venues}>{(venue) => <VenueCard venue={venue} />}</For>
       <VenueForm
         form={form}
         submitting={submitting()}
@@ -99,12 +97,7 @@ function VenueClosingView(props: {
   return (
     <div>
       <For each={props.venues}>
-        {(venue) => (
-          <VenueClosingCard
-            leadId={props.leadId}
-            venue={venue}
-          />
-        )}
+        {(venue) => <VenueClosingCard leadId={props.leadId} venue={venue} />}
       </For>
       <Show when={props.venues.length === 0}>
         <Widget>
@@ -198,9 +191,7 @@ function VenueReadOnlyView(props: { venues: LeadDetailVenueView[] }) {
           </Widget>
         }
       >
-        <For each={props.venues}>
-          {(venue) => <VenueCard venue={venue} />}
-        </For>
+        <For each={props.venues}>{(venue) => <VenueCard venue={venue} />}</For>
       </Show>
     </div>
   );

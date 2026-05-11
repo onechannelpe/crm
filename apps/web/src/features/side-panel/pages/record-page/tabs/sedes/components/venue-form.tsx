@@ -180,8 +180,8 @@ export function VenueForm(props: {
                           value={value}
                           checked={props.form.onlineModalidad() === value}
                           onChange={() => props.form.setOnlineModalidad(value)}
-                        />
-                        {" "}{label}
+                        />{" "}
+                        {label}
                       </label>
                     ))}
                   </div>

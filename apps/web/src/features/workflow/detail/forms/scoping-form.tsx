@@ -22,7 +22,10 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailProfileView } from "~/server/workflow/application/queries/views/lead-detail";
-import type { ModalidadCobro, ProductScope } from "~/workflow/contracts/lead-schema";
+import type {
+  ModalidadCobro,
+  ProductScope,
+} from "~/workflow/contracts/lead-schema";
 
 import { completeScopingMutation } from "../../data/mutations";
 
@@ -72,7 +75,9 @@ export function ScopingForm(props: {
   const initialLinkScope = props.initialValues?.linkScope ?? "none";
   const initialOnlineScope = props.initialValues?.onlineScope ?? "none";
 
-  const [linkEnabled, setLinkEnabled] = createSignal(initialLinkScope !== "none");
+  const [linkEnabled, setLinkEnabled] = createSignal(
+    initialLinkScope !== "none",
+  );
   const [linkScope, setLinkScope] = createSignal<"shared" | "per_venue">(
     initialLinkScope === "per_venue" ? "per_venue" : "shared",
   );
@@ -125,20 +130,30 @@ export function ScopingForm(props: {
     const modalidad = onlineModalidad();
 
     if (
-      !nombre || !apellido1 || !apellido2 || !dni ||
-      !telefono || !email || !giro || !proveedor
+      !nombre ||
+      !apellido1 ||
+      !apellido2 ||
+      !dni ||
+      !telefono ||
+      !email ||
+      !giro ||
+      !proveedor
     ) {
       setError("Todos los campos obligatorios deben completarse");
       return;
     }
 
     if (computedLinkScope === "shared" && !url) {
-      setError("URL de Culqi Link es requerida cuando la modalidad es compartida");
+      setError(
+        "URL de Culqi Link es requerida cuando la modalidad es compartida",
+      );
       return;
     }
 
     if (computedOnlineScope === "shared" && !onUrl) {
-      setError("URL de Culqi Online es requerida cuando la modalidad es compartida");
+      setError(
+        "URL de Culqi Online es requerida cuando la modalidad es compartida",
+      );
       return;
     }
 
@@ -167,7 +182,8 @@ export function ScopingForm(props: {
         linkUrl: computedLinkScope === "shared" ? url : null,
         onlineScope: computedOnlineScope,
         onlineUrl: computedOnlineScope === "shared" ? onUrl : null,
-        onlineModalidad: computedOnlineScope !== "none" && modalidad ? modalidad : null,
+        onlineModalidad:
+          computedOnlineScope !== "none" && modalidad ? modalidad : null,
       });
     } catch (err) {
       setError(toAppError(err, "Error al guardar").publicMessage);
@@ -385,8 +401,8 @@ export function ScopingForm(props: {
                       onChange={(e) => {
                         setLinkEnabled(e.currentTarget.checked);
                       }}
-                    />
-                    {" "}Activar Culqi Link
+                    />{" "}
+                    Activar Culqi Link
                   </label>
                 </FieldInputValue>
               </FieldRow>
@@ -402,8 +418,8 @@ export function ScopingForm(props: {
                         name="linkScope"
                         checked={linkScope() === "shared"}
                         onChange={() => setLinkScope("shared")}
-                      />
-                      {" "}URL compartida
+                      />{" "}
+                      URL compartida
                     </label>
                     <label>
                       <input
@@ -411,8 +427,8 @@ export function ScopingForm(props: {
                         name="linkScope"
                         checked={linkScope() === "per_venue"}
                         onChange={() => setLinkScope("per_venue")}
-                      />
-                      {" "}URL por local
+                      />{" "}
+                      URL por local
                     </label>
                   </FieldInputValue>
                 </FieldRow>
@@ -447,8 +463,8 @@ export function ScopingForm(props: {
                         setOnlineEnabled(e.currentTarget.checked);
                         if (!e.currentTarget.checked) setOnlineModalidad("");
                       }}
-                    />
-                    {" "}Activar Culqi Online
+                    />{" "}
+                    Activar Culqi Online
                   </label>
                 </FieldInputValue>
               </FieldRow>
@@ -464,8 +480,8 @@ export function ScopingForm(props: {
                         name="onlineScope"
                         checked={onlineScope() === "shared"}
                         onChange={() => setOnlineScope("shared")}
-                      />
-                      {" "}URL compartida
+                      />{" "}
+                      URL compartida
                     </label>
                     <label>
                       <input
@@ -473,8 +489,8 @@ export function ScopingForm(props: {
                         name="onlineScope"
                         checked={onlineScope() === "per_venue"}
                         onChange={() => setOnlineScope("per_venue")}
-                      />
-                      {" "}URL por local
+                      />{" "}
+                      URL por local
                     </label>
                   </FieldInputValue>
                 </FieldRow>
@@ -513,8 +529,8 @@ export function ScopingForm(props: {
                           value="SUSCRIPCIONES"
                           checked={onlineModalidad() === "SUSCRIPCIONES"}
                           onChange={() => setOnlineModalidad("SUSCRIPCIONES")}
-                        />
-                        {" "}Suscripciones
+                        />{" "}
+                        Suscripciones
                       </label>
                       <label>
                         <input
@@ -523,8 +539,8 @@ export function ScopingForm(props: {
                           value="ONE_CLIC"
                           checked={onlineModalidad() === "ONE_CLIC"}
                           onChange={() => setOnlineModalidad("ONE_CLIC")}
-                        />
-                        {" "}One Click
+                        />{" "}
+                        One Click
                       </label>
                       <label>
                         <input
@@ -533,8 +549,8 @@ export function ScopingForm(props: {
                           value="CARGO_UNICO"
                           checked={onlineModalidad() === "CARGO_UNICO"}
                           onChange={() => setOnlineModalidad("CARGO_UNICO")}
-                        />
-                        {" "}Cargo Unico
+                        />{" "}
+                        Cargo Unico
                       </label>
                     </div>
                   </FieldInputValue>
@@ -543,7 +559,9 @@ export function ScopingForm(props: {
             </FieldTable>
           </div>
 
-          <Show when={error()}>{(msg) => <p class={styles.error}>{msg()}</p>}</Show>
+          <Show when={error()}>
+            {(msg) => <p class={styles.error}>{msg()}</p>}
+          </Show>
           <div class={styles.actions}>
             <Button
               type="submit"
