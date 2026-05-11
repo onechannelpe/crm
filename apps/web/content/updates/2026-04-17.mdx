@@ -1,0 +1,38 @@
+---
+title: "Notificaciones y pipeline + correcciones de plantillas"
+date: "2026-04-17"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["notificaciones", "pipeline", "emails"]
+---
+
+Hoy cerramos una tanda de mejoras orientada a confiabilidad operativa. Reestructuramos el encolado de campañas de notificaciones para que sea más modular y mantenible, y además reforzamos la capa de API de comandos del pipeline para mantener límites claros entre responsabilidades.
+
+También corregimos varios problemas en el flujo de plantillas de email (MJML), incluyendo errores de formato, compilación y contexto de plataforma, para reducir fallos en generación y entrega.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#26b5ce">Notificaciones</UpdateLabel> El encolado de
+  campañas se modularizó con inyección de dependencias funcional para mejorar
+  aislamiento y testabilidad.
+- <UpdateLabel color="#95a2b3">Pipeline</UpdateLabel> Se reforzó el uso de la
+  capa API de comandos para mantener un flujo más consistente en operaciones de
+  pipeline.
+- <UpdateLabel color="#4cb782">Emails</UpdateLabel> La compilación de plantillas
+  ahora corre en paralelo para reducir tiempos de build.
+
+</Collapsible>
+
+<Collapsible title="Arreglos">
+
+- <UpdateLabel color="#eb5757">Plantillas</UpdateLabel> Se corrigieron
+  plantillas MJML malformadas y quiebres de formato que afectaban el render.
+- <UpdateLabel color="#f2c94c">Contexto</UpdateLabel> Se inyecta el nombre de
+  plataforma en plantillas para evitar salidas incompletas.
+- <UpdateLabel color="#95a2b3">Tooling</UpdateLabel> Se añadió `tsconfig` en el
+  paquete de composición de emails para estabilizar compilación y chequeo.
+- <UpdateLabel color="#f2994a">Dependencias</UpdateLabel> Se actualizó MJML a la
+  versión 5.
+
+</Collapsible>

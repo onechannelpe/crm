@@ -1,0 +1,38 @@
+---
+title: "Simulador de tasas y rediseño del panel lateral"
+date: "2026-04-15"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["panel-lateral", "simulador", "ui"]
+---
+
+Hoy añadimos una nueva página de simulación de tasas con calculadora integrada, pensada para hacer estimaciones rápidas desde la misma app. También avanzamos en una reorganización grande del panel lateral para que sus pestañas, timelines y widgets compartan componentes reutilizables.
+
+Este cambio deja la base del side panel mucho más consistente entre vistas de creación y detalle, y facilita iterar en nuevas secciones sin duplicar estructura.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#26b5ce">Simulador</UpdateLabel> Se incorporó la página
+  `rate-simulator` con calculadora de tasas y acceso desde navegación interna.
+- <UpdateLabel color="#eb5757">Acceso</UpdateLabel> Se añadieron controles de
+  acceso y políticas de ruta para la nueva sección de simulación.
+- <UpdateLabel color="#4cb782">Panel lateral</UpdateLabel> El side panel ahora
+  usa primitivas reutilizables para tabs, listas de relaciones, tarjetas de
+  widgets y footer.
+- <UpdateLabel color="#f2c94c">Timeline</UpdateLabel> Se introdujo una
+  estructura más clara, con estados vacíos y componentes dedicados para eventos.
+- <UpdateLabel color="#95a2b3">Consistencia</UpdateLabel> Se unificó la
+  composición de páginas de registro para reducir diferencias entre lead create
+  y lead detail.
+
+</Collapsible>
+
+<Collapsible title="Mantenimiento">
+
+- <UpdateLabel color="#95a2b3">UI base</UpdateLabel> Se consolidaron módulos y
+  estilos del side panel para reducir duplicación.
+- <UpdateLabel color="#95a2b3">Pruebas</UpdateLabel> Se ajustaron tests
+  unitarios de cálculo, rutas y RBAC para cubrir los cambios introducidos.
+
+</Collapsible>

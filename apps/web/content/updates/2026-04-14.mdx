@@ -1,0 +1,46 @@
+---
+title: "Avatares de ejecutivos y actividades económicas de SUNAT"
+date: "2026-04-14"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["leads", "sunat", "ui"]
+---
+
+Hoy mejoramos la lectura rápida de leads en dos frentes. Primero, añadimos avatares de ejecutivos en los chips y vistas donde aparece la asignación, para identificar responsables de un vistazo. Segundo, empezamos a extraer, guardar y mostrar las actividades económicas de SUNAT dentro del detalle del lead.
+
+Con este cambio, la información de actividades ya no queda solo en el proceso de enriquecimiento: ahora también se ve en la interfaz y se puede usar como contexto al revisar cada cuenta.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#4cb782">Pipeline</UpdateLabel> Se añadieron avatares de
+  ejecutivos en chips de registro y vistas relacionadas.
+- <UpdateLabel color="#26b5ce">SUNAT</UpdateLabel> Las actividades económicas
+  ahora se extraen y se guardan como parte del enriquecimiento.
+- <UpdateLabel color="#f2c94c">Leads</UpdateLabel> El detalle del lead muestra
+  actividades económicas en formato de chips para lectura rápida.
+- <UpdateLabel color="#95a2b3">Datos</UpdateLabel> Se ajustaron contratos y
+  consultas internas para exponer esta información de forma consistente.
+
+</Collapsible>
+
+<Collapsible title="Arreglos">
+
+- <UpdateLabel color="#eb5757">Lint</UpdateLabel> Se corrigieron casos de
+  estructura y alcance de funciones para evitar comportamientos ambiguos.
+- <UpdateLabel color="#f2994a">Type safety</UpdateLabel> Se eliminaron usos de
+  non-null assertions (`!`) en puntos sensibles y se reforzó el manejo de
+  valores opcionales.
+- <UpdateLabel color="#5e6ad2">Reglas</UpdateLabel> `no-non-null-assertion` pasó
+  de advertencia a error para prevenir regresiones.
+
+</Collapsible>
+
+<Collapsible title="Mantenimiento">
+
+- <UpdateLabel color="#95a2b3">Tooling</UpdateLabel> Se añadieron categorías de
+  reglas en la configuración de lint.
+- <UpdateLabel color="#95a2b3">Dependencias</UpdateLabel> Se actualizaron
+  herramientas de lint y formateo (`oxlint-tsgolint`, `oxfmt`).
+
+</Collapsible>
