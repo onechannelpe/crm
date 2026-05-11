@@ -89,8 +89,8 @@ export interface WorkflowHistoryEventsTable {
     | "commercial_input_completed"
     | "quotation_created"
     | "sale_approved"
-    | "sale_created"
     | "venue_added"
+    | "venue_accounts_added"
     | "call_logged"
     | "note_added";
   actor_user_id: number | null;

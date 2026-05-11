@@ -1,7 +1,7 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { isReadyForQuotationLeadSubject } from "../../domain/lead-subjects";
+import { isQuotingLeadSubject } from "../../domain/lead-subjects";
 import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { CreateQuotationInput } from "../contracts/command-inputs";
@@ -33,7 +33,7 @@ export async function createQuotationCommand(
 
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
-  if (!isReadyForQuotationLeadSubject(lead)) return invalidLeadStage();
+  if (!isQuotingLeadSubject(lead)) return invalidLeadStage();
 
   const now = deps.clock.now();
   const version = await deps.leadQuotations.nextVersion(lead.id);
