@@ -1,24 +1,16 @@
 import type { Generated } from "kysely";
 
 import type {
+  LeadStage,
   ModalidadCobro,
   ProductScope,
 } from "~/workflow/contracts/lead-schema";
-
-export type WorkflowStageValue =
-  | "QUALIFYING"
-  | "DISQUALIFIED"
-  | "SCOPING"
-  | "QUOTING"
-  | "QUOTED"
-  | "CLOSING"
-  | "LIVE";
 
 export interface WorkflowLeadsTable {
   id: Generated<string>;
   organization_id: string;
   executive_id: number;
-  stage: WorkflowStageValue;
+  stage: LeadStage;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
   created_by: number;

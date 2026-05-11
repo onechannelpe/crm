@@ -233,6 +233,8 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     blockingFields: presentLeadBlockingFields({
       lead: source.lead,
       venueCount: source.venues.length,
+      venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
+        .length,
     }),
     sourceStatus: toLeadSourceStatus(source.sourceStatus),
   };

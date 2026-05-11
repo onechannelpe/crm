@@ -67,7 +67,11 @@ export type LeadHistoryPayloadByEvent = {
     onlineScope: string | null;
     onlineModalidad: string | null;
     repLegalNombres: string;
+    repLegalApellidoPaterno: string;
+    repLegalApellidoMaterno: string;
     repLegalDni: string;
+    repLegalTelefono: string;
+    repLegalEmail: string;
   };
   quotation_created: {
     quotationId: string;

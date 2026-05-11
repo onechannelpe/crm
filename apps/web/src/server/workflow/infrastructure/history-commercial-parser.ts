@@ -37,8 +37,24 @@ export function toCommercialInputEntry(
   if (!onlineModalidad.ok) return onlineModalidad;
   const repLegalNombres = requireString(payload, "repLegalNombres", row);
   if (!repLegalNombres.ok) return repLegalNombres;
+  const repLegalApellidoPaterno = requireString(
+    payload,
+    "repLegalApellidoPaterno",
+    row,
+  );
+  if (!repLegalApellidoPaterno.ok) return repLegalApellidoPaterno;
+  const repLegalApellidoMaterno = requireString(
+    payload,
+    "repLegalApellidoMaterno",
+    row,
+  );
+  if (!repLegalApellidoMaterno.ok) return repLegalApellidoMaterno;
   const repLegalDni = requireString(payload, "repLegalDni", row);
   if (!repLegalDni.ok) return repLegalDni;
+  const repLegalTelefono = requireString(payload, "repLegalTelefono", row);
+  if (!repLegalTelefono.ok) return repLegalTelefono;
+  const repLegalEmail = requireString(payload, "repLegalEmail", row);
+  if (!repLegalEmail.ok) return repLegalEmail;
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -53,7 +69,11 @@ export function toCommercialInputEntry(
       onlineScope: onlineScope.value,
       onlineModalidad: onlineModalidad.value,
       repLegalNombres: repLegalNombres.value,
+      repLegalApellidoPaterno: repLegalApellidoPaterno.value,
+      repLegalApellidoMaterno: repLegalApellidoMaterno.value,
       repLegalDni: repLegalDni.value,
+      repLegalTelefono: repLegalTelefono.value,
+      repLegalEmail: repLegalEmail.value,
     },
   });
 }

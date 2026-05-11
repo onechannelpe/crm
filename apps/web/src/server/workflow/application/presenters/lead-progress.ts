@@ -15,9 +15,11 @@ export function presentLeadNextStep(input: {
 export function presentLeadBlockingFields(input: {
   lead: Pick<LeadRecord, "stage">;
   venueCount?: number;
+  venuesWithAccountsCount?: number;
 }): LeadBlockingField[] {
   return resolveLeadProgress({
     lead: input.lead,
     venueCount: input.venueCount,
+    venuesWithAccountsCount: input.venuesWithAccountsCount,
   }).blockingFields;
 }
