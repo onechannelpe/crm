@@ -117,6 +117,15 @@ export async function addVenueAccountsCommand(
       ),
     );
   }
+  if (venueResult.value.solesAccount) {
+    return Err(
+      domainError(
+        "conflict",
+        "accounts_already_added",
+        "This venue already has accounts registered",
+      ),
+    );
+  }
 
   await deps.leadVenues.addAccounts(
     input.venueId,

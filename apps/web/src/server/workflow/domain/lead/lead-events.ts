@@ -340,6 +340,25 @@ export function deriveLeadMutationEvents(input: {
     });
   }
 
+  if (intent.kind === "request_rate_negotiation") {
+    return Ok({
+      history: [
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "workflow_stage_changed",
+          actorUserId,
+          payload: { from: lead.stage, to: "QUOTING" },
+          occurredAt: now,
+        }),
+      ],
+      audit: {
+        action: "rate_negotiation_requested",
+        entityId: lead.id,
+        changes: { from: lead.stage, to: "QUOTING", round: intent.round },
+      },
+    });
+  }
+
   return Ok({
     history: [],
     audit: {

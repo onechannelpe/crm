@@ -20,5 +20,5 @@ export type LeadProfile = {
 
 export type LeadProfileRepository = {
   findByLeadId(leadId: string): Promise<LeadProfile | undefined>;
-  upsert(values: LeadProfile): Promise<unknown>;
+  upsert(values: LeadProfile): Promise<void>;
 };

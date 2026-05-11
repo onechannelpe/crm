@@ -36,8 +36,8 @@ export function createLeadProfileRepo(db: DatabaseExecutor) {
       return row ? toLeadProfile(row) : undefined;
     },
 
-    upsert(values: LeadProfile) {
-      return db
+    async upsert(values: LeadProfile): Promise<void> {
+      await db
         .insertInto("workflow_lead_profiles")
         .values({
           lead_id: values.leadId,
