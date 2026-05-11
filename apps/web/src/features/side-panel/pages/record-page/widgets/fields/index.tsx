@@ -50,7 +50,7 @@ const LEAD_CREATE_FIELD_ROWS: ReadonlyArray<LeadCreateFieldRow> = [
   {
     label: "Etapa inicial",
     icon: Package,
-    value: leadStageLabel("PENDING_EXTERNAL_REVIEW"),
+    value: leadStageLabel("QUALIFYING"),
   },
   { label: "Última actualización", icon: Clock, value: "" },
 ] as const;

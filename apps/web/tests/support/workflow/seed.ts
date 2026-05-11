@@ -22,13 +22,13 @@ type LeadSeed = {
   organization?: SeededOrganizationRef;
   executiveId: number;
   stage:
-    | "PENDING_EXTERNAL_REVIEW"
-    | "REJECTED_BY_STATUS"
-    | "NEEDS_EXECUTIVE_INPUT"
-    | "READY_FOR_QUOTATION"
+    | "QUALIFYING"
+    | "DISQUALIFIED"
+    | "SCOPING"
+    | "QUOTING"
     | "QUOTED"
-    | "READY_FOR_SALE"
-    | "CONVERTED";
+    | "CLOSING"
+    | "LIVE";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
   createdBy?: number;

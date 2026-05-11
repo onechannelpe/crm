@@ -1,9 +1,9 @@
 import { Match, Show, Switch, createMemo } from "solid-js";
 
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
-import { CommercialInputSection } from "~/features/workflow/detail/forms/commercial-input";
 import { QuotationSection } from "~/features/workflow/detail/forms/quotation";
 import { QuotedSection } from "~/features/workflow/detail/forms/quoted";
+import { ScopingForm } from "~/features/workflow/detail/forms/scoping-form";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { BootstrapWidget } from "../widgets/bootstrap";
@@ -77,14 +77,11 @@ function DetailContent(props: { data: LeadDetailView }) {
       <Show when={props.data.lead.id} keyed>
         {(leadId) => (
           <Switch>
-            <Match when={props.data.lead.stage === "NEEDS_EXECUTIVE_INPUT"}>
-              <CommercialInputSection
-                leadId={leadId}
-                initialValues={props.data.commercialInput}
-              />
+            <Match when={props.data.lead.stage === "SCOPING"}>
+              <ScopingForm leadId={leadId} initialValues={props.data.profile} />
             </Match>
 
-            <Match when={props.data.lead.stage === "READY_FOR_QUOTATION"}>
+            <Match when={props.data.lead.stage === "QUOTING"}>
               <QuotationSection
                 leadId={leadId}
                 existingQuotation={

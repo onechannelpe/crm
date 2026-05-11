@@ -2,11 +2,11 @@ import { shortName } from "~/lib/users/display-name";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
+import type { WorkflowUserRepository } from "../application/ports/user-repository";
 import type {
-  WorkflowUserRepository,
-  WorkflowUserWithName,
-} from "../application/ports/user-repository";
-import type { AssignableExecutivesScope } from "../ports/lead-user-scope-repository";
+  AssignableExecutivesScope,
+  LeadUserWithName,
+} from "../ports/lead-user-scope-repository";
 
 export function createWorkflowUsersRepo(
   executor: DatabaseExecutor,
@@ -25,7 +25,7 @@ export function createWorkflowUsersRepo(
         isActive: user.is_active === 1,
       };
     },
-    async findByIds(ids): Promise<WorkflowUserWithName[]> {
+    async findByIds(ids): Promise<LeadUserWithName[]> {
       const rows = await users.findByIds(ids);
       return rows.map((user) => ({
         id: user.id,
@@ -59,7 +59,7 @@ export function createWorkflowUsersRepo(
     async listAssignableExecutives(
       input: AssignableExecutivesScope,
       options?: { search?: string; limit?: number },
-    ): Promise<WorkflowUserWithName[]> {
+    ): Promise<LeadUserWithName[]> {
       const limit = options?.limit && options.limit > 0 ? options.limit : 50;
       const rows = await users.findAssignableExecutives({
         branchId:

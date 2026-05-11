@@ -2,7 +2,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { LeadRecord } from "../lead-record";
-import { isPendingReviewLeadSubject } from "../lead-subjects";
+import { isQualifyingLeadSubject } from "../lead-subjects";
 import { resolveReviewTransition } from "../workflow";
 import { invalidLeadInput, invalidLeadStage } from "./lead-errors";
 import type { LeadMutationIntent, LeadMutationPatch } from "./lead-types";
@@ -24,7 +24,7 @@ export function deriveLeadPatchFromIntent(input: {
   }
 
   if (intent.kind === "review") {
-    if (!isPendingReviewLeadSubject(lead)) {
+    if (!isQualifyingLeadSubject(lead)) {
       return invalidLeadStage();
     }
     const nextStage = resolveReviewTransition({
@@ -44,7 +44,7 @@ export function deriveLeadPatchFromIntent(input: {
       return Ok({ status: intent.status, prioridad: intent.prioridad });
     }
 
-    if (!isPendingReviewLeadSubject(lead)) {
+    if (!isQualifyingLeadSubject(lead)) {
       return invalidLeadStage();
     }
 
@@ -60,17 +60,15 @@ export function deriveLeadPatchFromIntent(input: {
     });
   }
 
-  if (intent.kind === "approve_for_sale")
-    return Ok({ stage: "READY_FOR_SALE" });
+  if (intent.kind === "approve_for_sale") return Ok({ stage: "CLOSING" });
   if (intent.kind === "create_quotation") return Ok({ stage: "QUOTED" });
-  if (intent.kind === "complete_commercial_input")
-    return Ok({ stage: "READY_FOR_QUOTATION" });
-  if (intent.kind === "create_sale") return Ok({});
-  if (intent.kind === "create_sale_venue") {
-    return intent.isFirstVenue ? Ok({ stage: "CONVERTED" }) : Ok({});
+  if (intent.kind === "complete_scoping") return Ok({ stage: "QUOTING" });
+  if (intent.kind === "create_venue") return Ok({});
+  if (intent.kind === "add_venue_accounts") {
+    return intent.shouldTransitionToLive ? Ok({ stage: "LIVE" }) : Ok({});
   }
   if (intent.kind === "request_rate_negotiation")
-    return Ok({ stage: "READY_FOR_QUOTATION" });
+    return Ok({ stage: "QUOTING" });
 
   return Ok({});
 }

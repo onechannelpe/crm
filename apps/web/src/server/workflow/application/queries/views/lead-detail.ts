@@ -3,9 +3,9 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-  Moneda,
-  CulqiProductKind,
   ModalidadCobro,
+  Moneda,
+  ProductScope,
   SaleVenueAccount,
 } from "~/workflow/contracts/lead-schema";
 
@@ -44,16 +44,18 @@ export type LeadDetailLeadView = {
   updatedAt: number;
 };
 
-export type LeadDetailCommercialInputView = {
+export type LeadDetailProfileView = {
   leadId: string;
   proveedorActual: string | null;
   tasaActual: number | null;
   gpv: number | null;
   ticket: number | null;
   giroNegocio: string | null;
-  tipoProducto: CulqiProductKind | null;
-  urlCliente: string | null;
-  modalidadCobro: ModalidadCobro;
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
   repLegalNombres: string | null;
   repLegalApellidoPaterno: string | null;
   repLegalApellidoMaterno: string | null;
@@ -78,25 +80,20 @@ export type LeadDetailQuotationView = {
   createdBy: number;
 };
 
-export type LeadDetailSaleView = {
+export type LeadDetailVenueView = {
   id: string;
-  leadId: string;
-  executiveId: number;
-  createdAt: number;
-};
-
-export type LeadDetailSaleVenueView = {
-  id: string;
-  saleId: string;
   leadId: string;
   nombreComercial: string;
-  cantidadPos: number;
+  posQuantity: number;
+  linkUrl: string | null;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
   direccion: string;
   referencia: string;
   distrito: string;
   provincia: string;
   departamento: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  solesAccount?: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
   createdBy: number;
@@ -133,10 +130,9 @@ export type LeadDetailNegotiationRequestView = {
 
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
-  commercialInput: LeadDetailCommercialInputView | undefined;
+  profile: LeadDetailProfileView | undefined;
   quotations: LeadDetailQuotationView[];
-  sale: LeadDetailSaleView | undefined;
-  venues: LeadDetailSaleVenueView[];
+  venues: LeadDetailVenueView[];
   negotiationRequests: LeadDetailNegotiationRequestView[];
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];

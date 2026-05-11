@@ -1,8 +1,7 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { isQuotedLeadSubject } from "../../domain/lead-subjects";
-import { invalidLeadStage, leadNotFound } from "../../domain/lead/lead-errors";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { ApproveForSaleInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
@@ -22,7 +21,6 @@ export async function approveForSaleCommand(
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
-  if (!isQuotedLeadSubject(lead)) return invalidLeadStage();
 
   const canApprove = requireLeadActionAccess({
     action: "approve-for-sale",

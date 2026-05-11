@@ -10,7 +10,6 @@ export function createSalesRepo(db: DB) {
   return {
     async insert(input: {
       leadId: string;
-      saleId: string;
       artifactId: string;
       fileAssetId: number;
       uploadedByUserId: number;
@@ -20,7 +19,6 @@ export function createSalesRepo(db: DB) {
         .insertInto("workflow_sale_proof_files")
         .values({
           lead_id: input.leadId,
-          sale_id: input.saleId,
           artifact_id: input.artifactId,
           file_asset_id: input.fileAssetId,
           uploaded_by_user_id: input.uploadedByUserId,
@@ -47,7 +45,6 @@ export function createSalesRepo(db: DB) {
         .select([
           "workflow_sale_proof_files.id as id",
           "workflow_sale_proof_files.lead_id as leadId",
-          "workflow_sale_proof_files.sale_id as saleId",
           "workflow_sale_proof_files.artifact_id as artifactId",
           "workflow_sale_proof_files.file_asset_id as fileAssetId",
           "workflow_sale_proof_files.uploaded_by_user_id as uploadedByUserId",
@@ -64,7 +61,6 @@ export function createSalesRepo(db: DB) {
       return rows.map((row) => ({
         id: row.id,
         leadId: row.leadId,
-        saleId: row.saleId,
         artifactId: row.artifactId,
         fileAssetId: row.fileAssetId,
         uploadedByUserId: row.uploadedByUserId,
@@ -94,7 +90,6 @@ export function createSalesRepo(db: DB) {
         .select([
           "workflow_sale_proof_files.id as id",
           "workflow_sale_proof_files.lead_id as leadId",
-          "workflow_sale_proof_files.sale_id as saleId",
           "workflow_sale_proof_files.artifact_id as artifactId",
           "workflow_sale_proof_files.file_asset_id as fileAssetId",
           "workflow_sale_proof_files.uploaded_by_user_id as uploadedByUserId",
@@ -112,7 +107,6 @@ export function createSalesRepo(db: DB) {
       return {
         id: row.id,
         leadId: row.leadId,
-        saleId: row.saleId,
         artifactId: row.artifactId,
         fileAssetId: row.fileAssetId,
         uploadedByUserId: row.uploadedByUserId,

@@ -7,22 +7,23 @@ import {
 } from "~/actions/workflow/commands/quotations";
 import {
   requestAddLeadToFavorites,
-  requestLeadCommercialInputCompletion,
   requestLeadCreation,
   requestLeadReassignment,
   requestLeadReview,
   requestRemoveLeadFromFavorites,
+  requestScopingCompletion,
 } from "~/actions/workflow/commands/records";
 import {
-  requestSaleContainerCreation,
-  requestSaleVenueCreation,
+  requestVenueAccountsAddition,
+  requestVenueCreation,
 } from "~/actions/workflow/commands/sales";
 import type {
-  Moneda,
   AbonoBank,
   AccountTypeKind,
-  CulqiProductKind,
   ModalidadCobro,
+  Moneda,
+  ProductScope,
+  VenueDigitalConfig,
 } from "~/workflow/contracts/lead-schema";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
@@ -64,7 +65,7 @@ export const reviewLeadMutation = action(
   "workflow.reviewLead",
 );
 
-export const completeCommercialInputMutation = action(
+export const completeScopingMutation = action(
   async (input: {
     leadId: string;
     proveedorActual: string;
@@ -72,9 +73,11 @@ export const completeCommercialInputMutation = action(
     gpv: number;
     ticket: number;
     giroNegocio: string;
-    tipoProducto: CulqiProductKind;
-    urlCliente: string | null;
-    modalidadCobro: ModalidadCobro;
+    linkScope: ProductScope;
+    linkUrl: string | null;
+    onlineScope: ProductScope;
+    onlineUrl: string | null;
+    onlineModalidad: ModalidadCobro | null;
     repLegalNombres: string;
     repLegalApellidoPaterno: string;
     repLegalApellidoMaterno: string;
@@ -82,13 +85,13 @@ export const completeCommercialInputMutation = action(
     repLegalTelefono: string;
     repLegalEmail: string;
   }) => {
-    await requestLeadCommercialInputCompletion(input);
+    await requestScopingCompletion(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
     );
   },
-  "workflow.completeCommercialInput",
+  "workflow.completeScoping",
 );
 
 export const createQuotationMutation = action(
@@ -110,29 +113,31 @@ export const createQuotationMutation = action(
   "workflow.createQuotation",
 );
 
-export const createSaleContainerMutation = action(
-  async (input: { leadId: string }) => {
-    const result = await requestSaleContainerCreation(input);
-    return json(result, {
-      revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key],
-    });
-  },
-  "workflow.createSaleContainer",
-);
-
-export const createSaleMutation = createSaleContainerMutation;
-
-export const createSaleVenueMutation = action(
+export const createVenueMutation = action(
   async (input: {
     leadId: string;
-    saleId: string;
     nombreComercial: string;
-    cantidadPos: number;
+    posQuantity: number;
+    digitalConfig?: VenueDigitalConfig;
     direccion: string;
     referencia: string;
     distrito: string;
     provincia: string;
     departamento: string;
+  }) => {
+    await requestVenueCreation(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.createVenue",
+);
+
+export const addVenueAccountsMutation = action(
+  async (input: {
+    leadId: string;
+    venueId: string;
     solesAccount: {
       currency: "PEN";
       banco: AbonoBank;
@@ -152,13 +157,13 @@ export const createSaleVenueMutation = action(
         }
       | undefined;
   }) => {
-    await requestSaleVenueCreation(input);
+    await requestVenueAccountsAddition(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
     );
   },
-  "workflow.createSaleVenue",
+  "workflow.addVenueAccounts",
 );
 
 export const requestRateNegotiationMutation = action(

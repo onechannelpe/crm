@@ -3,7 +3,7 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
-import { BO1, BO2, EXEC_DANIELA, type OrganizationSeedKey } from "../scenario";
+import { BO1, EXEC_DANIELA, type OrganizationSeedKey } from "../scenario";
 import type { WorkflowArtifactIds, WorkflowLeadIds } from "./history-events";
 
 export async function persistWorkflowCommercialData(
@@ -15,8 +15,7 @@ export async function persistWorkflowCommercialData(
   getOrganizationId: (key: OrganizationSeedKey) => OrganizationId,
 ): Promise<void> {
   const { idQuoted, idForSale, idConverted } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } =
-    artifacts;
+  const { qidQuoted, qidForSale, qidConverted, vidConverted } = artifacts;
   await db
     .insertInto("workflow_quotations")
     .values([
@@ -31,7 +30,7 @@ export async function persistWorkflowCommercialData(
         moneda: "PEN",
         version: 1,
         created_at: now - 10 * day,
-        created_by: BO2,
+        created_by: BO1,
       },
       {
         id: qidForSale,
@@ -77,48 +76,33 @@ export async function persistWorkflowCommercialData(
     .execute();
 
   await db
-    .insertInto("workflow_sales")
-    .values([
-      {
-        id: sidConverted,
-        lead_id: idConverted,
-        executive_id: EXEC_DANIELA,
-        created_at: now - 20 * day,
-      },
-    ])
-    .onConflict((oc) =>
-      oc.column("id").doUpdateSet((eb) => ({
-        lead_id: eb.ref("excluded.lead_id"),
-        executive_id: eb.ref("excluded.executive_id"),
-        created_at: eb.ref("excluded.created_at"),
-      })),
-    )
-    .execute();
-
-  await db
-    .insertInto("workflow_sale_venues")
+    .insertInto("workflow_lead_venues")
     .values([
       {
         id: vidConverted,
-        sale_id: sidConverted,
         lead_id: idConverted,
         nombre_comercial: "Andes Miraflores",
-        cantidad_pos: 3,
+        pos_quantity: 3,
+        link_url: null,
+        online_url: null,
+        online_modalidad: null,
         direccion: "AV. BENAVIDES NRO. 1855",
         referencia: "Frente al parque central",
         distrito: "MIRAFLORES",
         provincia: "LIMA",
         departamento: "LIMA",
-        created_at: now - 20 * day,
+        created_at: now - 22 * day,
         created_by: EXEC_DANIELA,
       },
     ])
     .onConflict((oc) =>
       oc.column("id").doUpdateSet((eb) => ({
-        sale_id: eb.ref("excluded.sale_id"),
         lead_id: eb.ref("excluded.lead_id"),
         nombre_comercial: eb.ref("excluded.nombre_comercial"),
-        cantidad_pos: eb.ref("excluded.cantidad_pos"),
+        pos_quantity: eb.ref("excluded.pos_quantity"),
+        link_url: eb.ref("excluded.link_url"),
+        online_url: eb.ref("excluded.online_url"),
+        online_modalidad: eb.ref("excluded.online_modalidad"),
         direccion: eb.ref("excluded.direccion"),
         referencia: eb.ref("excluded.referencia"),
         distrito: eb.ref("excluded.distrito"),
@@ -131,7 +115,7 @@ export async function persistWorkflowCommercialData(
     .execute();
 
   await db
-    .insertInto("workflow_sale_venue_accounts")
+    .insertInto("workflow_lead_venue_accounts")
     .values([
       {
         id: "demo-workflow-venue-account-pen",
@@ -168,7 +152,7 @@ export async function persistWorkflowCommercialData(
     .execute();
 
   await db
-    .insertInto("workflow_lead_commercial_inputs")
+    .insertInto("workflow_lead_profiles")
     .values([
       {
         lead_id: idConverted,
@@ -176,11 +160,13 @@ export async function persistWorkflowCommercialData(
         tasa_actual: 2.8,
         gpv: 85_000.0,
         ticket: 245.5,
-        tipo_producto: "CULQI_FULL",
-        url_cliente: null,
-        modalidad_cobro: "CARGO_UNICO",
-        updated_at: now - 29 * day,
-        updated_by: BO1,
+        link_scope: "none",
+        link_url: null,
+        online_scope: "none",
+        online_url: null,
+        online_modalidad: null,
+        updated_at: now - 28 * day,
+        updated_by: EXEC_DANIELA,
       },
     ])
     .onConflict((oc) =>
@@ -189,9 +175,11 @@ export async function persistWorkflowCommercialData(
         tasa_actual: eb.ref("excluded.tasa_actual"),
         gpv: eb.ref("excluded.gpv"),
         ticket: eb.ref("excluded.ticket"),
-        tipo_producto: eb.ref("excluded.tipo_producto"),
-        url_cliente: eb.ref("excluded.url_cliente"),
-        modalidad_cobro: eb.ref("excluded.modalidad_cobro"),
+        link_scope: eb.ref("excluded.link_scope"),
+        link_url: eb.ref("excluded.link_url"),
+        online_scope: eb.ref("excluded.online_scope"),
+        online_url: eb.ref("excluded.online_url"),
+        online_modalidad: eb.ref("excluded.online_modalidad"),
         updated_at: eb.ref("excluded.updated_at"),
         updated_by: eb.ref("excluded.updated_by"),
       })),

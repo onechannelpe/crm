@@ -1,12 +1,15 @@
 export const LEAD_STAGES = [
-  "PENDING_EXTERNAL_REVIEW",
-  "REJECTED_BY_STATUS",
-  "NEEDS_EXECUTIVE_INPUT",
-  "READY_FOR_QUOTATION",
+  "QUALIFYING",
+  "DISQUALIFIED",
+  "SCOPING",
+  "QUOTING",
   "QUOTED",
-  "READY_FOR_SALE",
-  "CONVERTED",
+  "CLOSING",
+  "LIVE",
 ] as const;
+
+export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
+export type ProductScope = (typeof PRODUCT_SCOPES)[number];
 
 export const LEAD_STATUSES = [
   "DISPONIBLE",
@@ -38,12 +41,6 @@ export const ABONO_BANKS = [
   "MI BANCO",
 ] as const;
 
-export const CULQI_PRODUCT_KINDS = [
-  "CULQI_FULL",
-  "CULQI_LINK",
-  "CULQI_ONLINE",
-] as const;
-
 export const MODALIDAD_COBRO_KINDS = [
   "SUSCRIPCIONES",
   "ONE_CLIC",
@@ -60,7 +57,6 @@ export type Moneda = (typeof MONEDAS)[number];
 export type SaleBankKind = (typeof SALE_BANK_KINDS)[number];
 export type AbonoBank = (typeof ABONO_BANKS)[number];
 
-export type CulqiProductKind = (typeof CULQI_PRODUCT_KINDS)[number];
 export type ModalidadCobro = (typeof MODALIDAD_COBRO_KINDS)[number];
 export type AccountTypeKind = (typeof ACCOUNT_TYPE_KINDS)[number];
 export type SaleVenueAccount = {
@@ -70,6 +66,12 @@ export type SaleVenueAccount = {
   nroCuenta: string;
   cci?: string;
   isSettlement: boolean;
+};
+
+export type VenueDigitalConfig = {
+  linkUrl?: string | null;
+  onlineUrl?: string | null;
+  onlineModalidad?: ModalidadCobro | null;
 };
 
 export function isMoneda(value: string): value is Moneda {
@@ -92,10 +94,6 @@ export function isLeadStatus(value: string): value is LeadStatus {
 
 export function isBcpBank(value: string | null | undefined): boolean {
   return (value ?? "").trim().toUpperCase() === "BCP";
-}
-
-export function isCulqiProductKind(value: string): value is CulqiProductKind {
-  return (CULQI_PRODUCT_KINDS as readonly string[]).includes(value);
 }
 
 export function isModalidadCobro(value: string): value is ModalidadCobro {

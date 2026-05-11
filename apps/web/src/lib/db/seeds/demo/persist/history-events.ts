@@ -30,7 +30,6 @@ export type WorkflowArtifactIds = {
   qidQuoted: string;
   qidForSale: string;
   qidConverted: string;
-  sidConverted: string;
   vidConverted: string;
 };
 
@@ -50,8 +49,7 @@ export async function persistWorkflowHistoryEvents(
     idConverted,
     idRejected,
   } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, sidConverted, vidConverted } =
-    artifacts;
+  const { qidQuoted, qidForSale, qidConverted, vidConverted } = artifacts;
   await db
     .deleteFrom("workflow_history_events")
     .where("lead_id", "in", [
@@ -67,7 +65,7 @@ export async function persistWorkflowHistoryEvents(
   await db
     .insertInto("workflow_history_events")
     .values([
-      // Lead: PENDING_EXTERNAL_REVIEW
+      // Lead: QUALIFYING
       {
         id: randomUUIDv7(),
         lead_id: idPending,
@@ -76,7 +74,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           ruc: "20103615080",
-          toStage: "PENDING_EXTERNAL_REVIEW",
+          toStage: "QUALIFYING",
         }),
         occurred_at: now - day,
       },
@@ -90,7 +88,7 @@ export async function persistWorkflowHistoryEvents(
         occurred_at: now - day + 1_000,
       },
 
-      // Lead: NEEDS_EXECUTIVE_INPUT
+      // Lead: SCOPING
       {
         id: randomUUIDv7(),
         lead_id: idNeeds,
@@ -99,7 +97,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           ruc: "20103176060",
-          toStage: "PENDING_EXTERNAL_REVIEW",
+          toStage: "QUALIFYING",
         }),
         occurred_at: now - 4 * day,
       },
@@ -123,8 +121,8 @@ export async function persistWorkflowHistoryEvents(
           prioridad: "SIN RESULTADO",
           reason:
             "Cliente sin resultado en primera llamada, requiere seguimiento del ejecutivo",
-          fromStage: "PENDING_EXTERNAL_REVIEW",
-          toStage: "NEEDS_EXECUTIVE_INPUT",
+          fromStage: "QUALIFYING",
+          toStage: "SCOPING",
         }),
         occurred_at: now - 3 * day,
       },
@@ -135,13 +133,13 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "PENDING_EXTERNAL_REVIEW",
-          to: "NEEDS_EXECUTIVE_INPUT",
+          from: "QUALIFYING",
+          to: "SCOPING",
         }),
         occurred_at: now - 3 * day + 100,
       },
 
-      // Lead: READY_FOR_QUOTATION
+      // Lead: QUOTING
       {
         id: randomUUIDv7(),
         lead_id: idReady,
@@ -150,7 +148,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           ruc: "20538856674",
-          toStage: "PENDING_EXTERNAL_REVIEW",
+          toStage: "QUALIFYING",
         }),
         occurred_at: now - 7 * day,
       },
@@ -174,8 +172,8 @@ export async function persistWorkflowHistoryEvents(
           prioridad: "P1",
           reason:
             "Cliente activo con alto volumen de operaciones, excelente candidato",
-          fromStage: "PENDING_EXTERNAL_REVIEW",
-          toStage: "READY_FOR_QUOTATION",
+          fromStage: "QUALIFYING",
+          toStage: "SCOPING",
         }),
         occurred_at: now - 6 * day,
       },
@@ -186,10 +184,46 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "PENDING_EXTERNAL_REVIEW",
-          to: "READY_FOR_QUOTATION",
+          from: "QUALIFYING",
+          to: "SCOPING",
         }),
         occurred_at: now - 6 * day + 100,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idReady,
+        event_type: "commercial_input_completed",
+        actor_user_id: EXEC_ROBERTO,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          proveedorActual: "Izipay",
+          tasaActual: 3.2,
+          gpv: 42000,
+          ticket: 185,
+          giroNegocio: "Venta de electrodomesticos",
+          linkScope: "none",
+          onlineScope: "none",
+          onlineModalidad: null,
+          repLegalNombres: "Carlos",
+          repLegalApellidoPaterno: "Mendez",
+          repLegalApellidoMaterno: "Silva",
+          repLegalDni: "74123456",
+          repLegalTelefono: "945678123",
+          repLegalEmail: "carlos.mendez@empresa.pe",
+        }),
+        occurred_at: now - 6 * day + 200,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idReady,
+        event_type: "workflow_stage_changed",
+        actor_user_id: null,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          from: "SCOPING",
+          to: "QUOTING",
+        }),
+        occurred_at: now - 6 * day + 300,
       },
 
       // Lead: QUOTED
@@ -201,7 +235,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           ruc: "20542245671",
-          toStage: "PENDING_EXTERNAL_REVIEW",
+          toStage: "QUALIFYING",
         }),
         occurred_at: now - 14 * day,
       },
@@ -225,8 +259,8 @@ export async function persistWorkflowHistoryEvents(
           prioridad: "P2",
           reason:
             "Cliente interesado, solicito cotizacion competitiva frente a proveedor actual",
-          fromStage: "PENDING_EXTERNAL_REVIEW",
-          toStage: "READY_FOR_QUOTATION",
+          fromStage: "QUALIFYING",
+          toStage: "SCOPING",
         }),
         occurred_at: now - 13 * day,
       },
@@ -237,10 +271,46 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "PENDING_EXTERNAL_REVIEW",
-          to: "READY_FOR_QUOTATION",
+          from: "QUALIFYING",
+          to: "SCOPING",
         }),
         occurred_at: now - 13 * day + 100,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idQuoted,
+        event_type: "commercial_input_completed",
+        actor_user_id: EXEC_ANDREA,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          proveedorActual: "BBVA",
+          tasaActual: 2.5,
+          gpv: 68000,
+          ticket: 310,
+          giroNegocio: "Restaurantes y servicios de comida",
+          linkScope: "shared",
+          onlineScope: "none",
+          onlineModalidad: null,
+          repLegalNombres: "Maria",
+          repLegalApellidoPaterno: "Torres",
+          repLegalApellidoMaterno: "Vega",
+          repLegalDni: "72345678",
+          repLegalTelefono: "956789234",
+          repLegalEmail: "maria.torres@empresa.pe",
+        }),
+        occurred_at: now - 12 * day,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idQuoted,
+        event_type: "workflow_stage_changed",
+        actor_user_id: null,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          from: "SCOPING",
+          to: "QUOTING",
+        }),
+        occurred_at: now - 12 * day + 100,
       },
       {
         id: randomUUIDv7(),
@@ -262,13 +332,13 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "READY_FOR_QUOTATION",
+          from: "QUOTING",
           to: "QUOTED",
         }),
         occurred_at: now - 10 * day + 100,
       },
 
-      // Lead: READY_FOR_SALE
+      // Lead: CLOSING
       {
         id: randomUUIDv7(),
         lead_id: idForSale,
@@ -277,7 +347,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           ruc: "20394809218",
-          toStage: "PENDING_EXTERNAL_REVIEW",
+          toStage: "QUALIFYING",
         }),
         occurred_at: now - 21 * day,
       },
@@ -301,8 +371,8 @@ export async function persistWorkflowHistoryEvents(
           prioridad: "P1",
           reason:
             "Empresa con alta facturacion mensual, perfil ideal para conversion",
-          fromStage: "PENDING_EXTERNAL_REVIEW",
-          toStage: "READY_FOR_QUOTATION",
+          fromStage: "QUALIFYING",
+          toStage: "SCOPING",
         }),
         occurred_at: now - 20 * day,
       },
@@ -313,10 +383,46 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "PENDING_EXTERNAL_REVIEW",
-          to: "READY_FOR_QUOTATION",
+          from: "QUALIFYING",
+          to: "SCOPING",
         }),
         occurred_at: now - 20 * day + 100,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idForSale,
+        event_type: "commercial_input_completed",
+        actor_user_id: EXEC_RENATO,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          proveedorActual: "Niubiz",
+          tasaActual: 2.9,
+          gpv: 120000,
+          ticket: 450,
+          giroNegocio: "Comercio al por mayor de productos textiles",
+          linkScope: "none",
+          onlineScope: "shared",
+          onlineModalidad: "CARGO_UNICO",
+          repLegalNombres: "Jorge",
+          repLegalApellidoPaterno: "Ramirez",
+          repLegalApellidoMaterno: "Castro",
+          repLegalDni: "70234567",
+          repLegalTelefono: "967890345",
+          repLegalEmail: "jorge.ramirez@empresa.pe",
+        }),
+        occurred_at: now - 19 * day,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idForSale,
+        event_type: "workflow_stage_changed",
+        actor_user_id: null,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          from: "SCOPING",
+          to: "QUOTING",
+        }),
+        occurred_at: now - 19 * day + 100,
       },
       {
         id: randomUUIDv7(),
@@ -338,7 +444,7 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "READY_FOR_QUOTATION",
+          from: "QUOTING",
           to: "QUOTED",
         }),
         occurred_at: now - 18 * day + 100,
@@ -360,12 +466,12 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUOTED",
-          to: "READY_FOR_SALE",
+          to: "CLOSING",
         }),
         occurred_at: now - 15 * day + 100,
       },
 
-      // Lead: CONVERTED
+      // Lead: LIVE
       {
         id: randomUUIDv7(),
         lead_id: idConverted,
@@ -374,7 +480,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           ruc: "20219523468",
-          toStage: "PENDING_EXTERNAL_REVIEW",
+          toStage: "QUALIFYING",
         }),
         occurred_at: now - 30 * day,
       },
@@ -398,8 +504,8 @@ export async function persistWorkflowHistoryEvents(
           prioridad: "P1",
           reason:
             "Empresa constructora consolidada con gran volumen potencial y apertura al cambio",
-          fromStage: "PENDING_EXTERNAL_REVIEW",
-          toStage: "READY_FOR_QUOTATION",
+          fromStage: "QUALIFYING",
+          toStage: "SCOPING",
         }),
         occurred_at: now - 29 * day,
       },
@@ -410,10 +516,46 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "PENDING_EXTERNAL_REVIEW",
-          to: "READY_FOR_QUOTATION",
+          from: "QUALIFYING",
+          to: "SCOPING",
         }),
         occurred_at: now - 29 * day + 100,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idConverted,
+        event_type: "commercial_input_completed",
+        actor_user_id: EXEC_DANIELA,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          proveedorActual: "BBVA",
+          tasaActual: 2.8,
+          gpv: 85000,
+          ticket: 245.5,
+          giroNegocio: "Construccion de edificios residenciales",
+          linkScope: "none",
+          onlineScope: "none",
+          onlineModalidad: null,
+          repLegalNombres: "Daniel",
+          repLegalApellidoPaterno: "Gutierrez",
+          repLegalApellidoMaterno: "Paredes",
+          repLegalDni: "42715983",
+          repLegalTelefono: "987654321",
+          repLegalEmail: "daniel.gutierrez@andes.pe",
+        }),
+        occurred_at: now - 28 * day,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idConverted,
+        event_type: "workflow_stage_changed",
+        actor_user_id: null,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          from: "SCOPING",
+          to: "QUOTING",
+        }),
+        occurred_at: now - 28 * day + 100,
       },
       {
         id: randomUUIDv7(),
@@ -435,7 +577,7 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "READY_FOR_QUOTATION",
+          from: "QUOTING",
           to: "QUOTED",
         }),
         occurred_at: now - 27 * day + 100,
@@ -457,7 +599,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUOTED",
-          to: "READY_FOR_SALE",
+          to: "CLOSING",
         }),
         occurred_at: now - 25 * day + 100,
       },
@@ -469,10 +611,17 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           venueId: vidConverted,
-          saleId: sidConverted,
           nombreComercial: "Andes Miraflores",
-          isFirstVenue: true,
         }),
+        occurred_at: now - 22 * day,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idConverted,
+        event_type: "venue_accounts_added",
+        actor_user_id: EXEC_DANIELA,
+        subject_user_id: null,
+        payload_json: JSON.stringify({ venueId: vidConverted }),
         occurred_at: now - 20 * day,
       },
       {
@@ -482,13 +631,13 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "READY_FOR_SALE",
-          to: "CONVERTED",
+          from: "CLOSING",
+          to: "LIVE",
         }),
         occurred_at: now - 20 * day + 100,
       },
 
-      // Lead: REJECTED_BY_STATUS
+      // Lead: DISQUALIFIED
       {
         id: randomUUIDv7(),
         lead_id: idRejected,
@@ -497,7 +646,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           ruc: "20353745400",
-          toStage: "PENDING_EXTERNAL_REVIEW",
+          toStage: "QUALIFYING",
         }),
         occurred_at: now - 3 * day,
       },
@@ -521,8 +670,8 @@ export async function persistWorkflowHistoryEvents(
           prioridad: "SIN RESULTADO",
           reason:
             "Empresa ya tiene contrato activo con otro proveedor sin apertura a negociar",
-          fromStage: "PENDING_EXTERNAL_REVIEW",
-          toStage: "REJECTED_BY_STATUS",
+          fromStage: "QUALIFYING",
+          toStage: "DISQUALIFIED",
         }),
         occurred_at: now - 2 * day,
       },
@@ -533,8 +682,8 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "PENDING_EXTERNAL_REVIEW",
-          to: "REJECTED_BY_STATUS",
+          from: "QUALIFYING",
+          to: "DISQUALIFIED",
         }),
         occurred_at: now - 2 * day + 100,
       },

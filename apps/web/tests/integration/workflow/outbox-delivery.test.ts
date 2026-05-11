@@ -22,14 +22,14 @@ describe("outbox delivery", () => {
     const leadOne = await scenario.lead.assignedTo("execOne", {
       key: "delivery-one",
       organization: { key: "delivery-one" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       status: "DISPONIBLE",
       prioridad: "P1",
     });
     const leadTwo = await scenario.lead.assignedTo("execTwo", {
       key: "delivery-two",
       organization: { key: "delivery-two" },
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       status: "SIN RESULTADO",
       prioridad: "P1",
     });

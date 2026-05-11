@@ -67,10 +67,9 @@ function createWorkflowCommandRuntime(
     engineGateway,
     leadEnrichmentQueue,
     leadQuotations: repos.leadQuotations,
-    leadCommercialInputs: repos.leadCommercialInputs,
+    leadProfiles: repos.leadProfiles,
     party: repos.party,
-    leadSales: repos.leadSales,
-    leadSaleVenues: repos.leadSaleVenues,
+    leadVenues: repos.leadVenues,
     negotiationRequests: repos.leadNegotiationRequests,
   });
 

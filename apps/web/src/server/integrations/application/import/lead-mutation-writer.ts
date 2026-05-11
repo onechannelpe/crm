@@ -29,7 +29,7 @@ function nextStageFor(
       executiveId: current.executive_id,
       createdBy: current.created_by,
       updatedBy: current.updated_by ?? null,
-      stage: "PENDING_EXTERNAL_REVIEW",
+      stage: "QUALIFYING",
       status: current.status,
       prioridad: current.prioridad,
       createdAt: 0,
@@ -124,7 +124,7 @@ export async function applyLeadMutation(input: {
     };
   }
 
-  if (lead.stage !== "PENDING_EXTERNAL_REVIEW") {
+  if (lead.stage !== "QUALIFYING") {
     const changedAt = Date.now();
     const reason = "Lead is not in pending external review stage";
     await markImportRowFailed({

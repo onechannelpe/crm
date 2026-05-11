@@ -1,7 +1,7 @@
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";
 import type { LeadAvailableAction } from "../contracts/lead-available-action";
-import type { LeadCommercialInput } from "../ports/commercial-input-repository";
+import type { LeadProfile } from "../ports/lead-profile-repository";
 import type {
   LeadNegotiationRequest,
   LeadNegotiationFile,
@@ -11,17 +11,16 @@ import type {
   OrganizationProfile,
 } from "../ports/party-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
-import type { LeadSale, LeadSaleVenue } from "../ports/sale-repository";
+import type { LeadVenue } from "../ports/sale-repository";
 import type { LeadSourceStatus } from "../ports/source-status-repository";
 import type {
-  LeadDetailCommercialInputView,
   LeadDetailLeadView,
   LeadDetailNegotiationFileView,
   LeadDetailNegotiationRequestView,
+  LeadDetailProfileView,
   LeadDetailQuotationView,
-  LeadDetailSaleView,
-  LeadDetailSaleVenueView,
   LeadDetailSourceStatusView,
+  LeadDetailVenueView,
   LeadDetailView,
 } from "../queries/views/lead-detail";
 import {
@@ -47,10 +46,9 @@ export type LeadDetailSource = {
   executiveName: string;
   createdByName: string;
   updatedByName: string | null;
-  commercialInput: LeadCommercialInput | undefined;
+  profile: LeadProfile | undefined;
   quotations: LeadQuotation[];
-  sale: LeadSale | undefined;
-  venues: LeadSaleVenue[];
+  venues: LeadVenue[];
   negotiationRequests: NegotiationRequestWithFiles[];
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
@@ -84,7 +82,6 @@ function toLeadDetailLead(
   executiveName: string,
   createdByName: string,
   updatedByName: string | null,
-  venueCount: number,
 ): LeadDetailLeadView {
   return {
     id: lead.id,
@@ -103,35 +100,37 @@ function toLeadDetailLead(
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
-    nextStep: presentLeadNextStep({ lead, venueCount }),
+    nextStep: presentLeadNextStep({ lead }),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
 }
 
-function toLeadDetailCommercialInput(
-  input: LeadCommercialInput,
+function toLeadDetailProfile(
+  profile: LeadProfile,
   organization: OrganizationProfile | undefined,
   legalRepresentative: LegalRepresentative | undefined,
-): LeadDetailCommercialInputView {
+): LeadDetailProfileView {
   return {
-    leadId: input.leadId,
-    proveedorActual: input.proveedorActual,
-    tasaActual: input.tasaActual,
-    gpv: input.gpv,
-    ticket: input.ticket,
+    leadId: profile.leadId,
+    proveedorActual: profile.proveedorActual,
+    tasaActual: profile.tasaActual,
+    gpv: profile.gpv,
+    ticket: profile.ticket,
     giroNegocio: organization?.giroNegocio ?? null,
-    tipoProducto: input.tipoProducto,
-    urlCliente: input.urlCliente,
-    modalidadCobro: input.modalidadCobro,
+    linkScope: profile.linkScope,
+    linkUrl: profile.linkUrl,
+    onlineScope: profile.onlineScope,
+    onlineUrl: profile.onlineUrl,
+    onlineModalidad: profile.onlineModalidad,
     repLegalNombres: legalRepresentative?.nombres ?? null,
     repLegalApellidoPaterno: legalRepresentative?.apellidoPaterno ?? null,
     repLegalApellidoMaterno: legalRepresentative?.apellidoMaterno ?? null,
     repLegalDni: legalRepresentative?.dni ?? null,
     repLegalTelefono: legalRepresentative?.telefono ?? null,
     repLegalEmail: legalRepresentative?.email ?? null,
-    updatedAt: input.updatedAt,
-    updatedBy: input.updatedBy,
+    updatedAt: profile.updatedAt,
+    updatedBy: profile.updatedBy,
   };
 }
 
@@ -153,35 +152,26 @@ function toLeadDetailQuotation(
   };
 }
 
-function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
-  return {
-    id: sale.id,
-    leadId: sale.leadId,
-    executiveId: sale.executiveId,
-    createdAt: sale.createdAt,
-  };
-}
-
-function toLeadDetailSaleVenue(venue: LeadSaleVenue): LeadDetailSaleVenueView {
-  const result: LeadDetailSaleVenueView = {
+function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
+  const result: LeadDetailVenueView = {
     id: venue.id,
-    saleId: venue.saleId,
     leadId: venue.leadId,
     nombreComercial: venue.nombreComercial,
-    cantidadPos: venue.cantidadPos,
+    posQuantity: venue.posQuantity,
+    linkUrl: venue.linkUrl,
+    onlineUrl: venue.onlineUrl,
+    onlineModalidad: venue.onlineModalidad,
     direccion: venue.direccion,
     referencia: venue.referencia,
     distrito: venue.distrito,
     provincia: venue.provincia,
     departamento: venue.departamento,
-    solesAccount: venue.solesAccount,
     createdAt: venue.createdAt,
     createdBy: venue.createdBy,
   };
 
-  if (venue.dollarAccount) {
-    result.dollarAccount = venue.dollarAccount;
-  }
+  if (venue.solesAccount) result.solesAccount = venue.solesAccount;
+  if (venue.dollarAccount) result.dollarAccount = venue.dollarAccount;
 
   return result;
 }
@@ -223,18 +213,16 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       source.executiveName,
       source.createdByName,
       source.updatedByName,
-      source.venues.length,
     ),
-    commercialInput: source.commercialInput
-      ? toLeadDetailCommercialInput(
-          source.commercialInput,
+    profile: source.profile
+      ? toLeadDetailProfile(
+          source.profile,
           source.organization,
           source.legalRepresentative,
         )
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
-    sale: source.sale ? toLeadDetailSale(source.sale) : undefined,
-    venues: source.venues.map(toLeadDetailSaleVenue),
+    venues: source.venues.map(toLeadDetailVenue),
     negotiationRequests: source.negotiationRequests.map(
       toNegotiationRequestView,
     ),
@@ -242,7 +230,8 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     availableActions: source.availableActions,
     blockingFields: presentLeadBlockingFields({
       lead: source.lead,
-      venueCount: source.venues.length,
+      venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
+        .length,
     }),
     sourceStatus: toLeadSourceStatus(source.sourceStatus),
   };

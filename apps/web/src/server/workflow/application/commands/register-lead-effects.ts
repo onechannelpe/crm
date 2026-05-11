@@ -27,7 +27,7 @@ export async function writeLeadRegistrationEffects(input: {
       leadId,
       eventType: "lead_registered",
       actorUserId: input.actorUserId,
-      payload: { ruc: input.draft.ruc, toStage: "PENDING_EXTERNAL_REVIEW" },
+      payload: { ruc: input.draft.ruc, toStage: "QUALIFYING" },
       occurredAt: input.now,
     }),
   );
@@ -46,7 +46,7 @@ export async function writeLeadRegistrationEffects(input: {
     "lead_registered",
     "lead",
     leadId,
-    { ruc: input.draft.ruc, stage: "PENDING_EXTERNAL_REVIEW" },
+    { ruc: input.draft.ruc, stage: "QUALIFYING" },
   );
 
   return Ok({ leadId });

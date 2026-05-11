@@ -25,7 +25,7 @@ export function toRegisteredEntry(
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "lead_registered",
-    payload: { ruc: ruc.value, toStage: "PENDING_EXTERNAL_REVIEW" },
+    payload: { ruc: ruc.value, toStage: "QUALIFYING" },
   });
 }
 

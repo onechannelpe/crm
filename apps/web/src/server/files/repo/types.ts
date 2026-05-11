@@ -58,7 +58,6 @@ export interface InsertDownloadTokenInput {
 export interface SaleProofFileRecord {
   id: number;
   leadId: string;
-  saleId: string;
   artifactId: string;
   fileAssetId: number;
   uploadedByUserId: number;

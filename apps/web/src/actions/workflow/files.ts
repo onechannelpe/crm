@@ -13,7 +13,6 @@ import {
   canUploadSaleProof,
   requireLeadAccess,
 } from "~/server/workflow/application/policies/access";
-import type { LeadSale } from "~/server/workflow/application/ports/sale-repository";
 import type { LeadRecord } from "~/server/workflow/domain/lead-record";
 
 export type LeadSaleProofFileView = {
@@ -78,33 +77,25 @@ async function requireLeadWithAccess(
   return Ok(lead);
 }
 
-async function requireLeadSaleContext(
+async function requireLiveLeadContext(
   ctx: AppContext,
   leadId: string,
-): Promise<Result<{ lead: LeadRecord; sale: LeadSale }, DomainError>> {
+): Promise<Result<LeadRecord, DomainError>> {
   const leadResult = await requireLeadWithAccess(ctx, leadId);
   if (isErr(leadResult)) return leadResult;
 
   const lead = leadResult.value;
-  if (lead.stage !== "CONVERTED") {
+  if (lead.stage !== "LIVE") {
     return Err(
       domainError(
         "conflict",
-        "lead_not_converted",
-        "Sale proof uploads are only allowed when the lead is converted",
+        "lead_not_live",
+        "Sale proof uploads are only allowed when the lead is live",
       ),
     );
   }
 
-  const { workflow } = getServerRuntime();
-  const sale = await workflow.repos.leadSales.findByLeadId(leadId);
-  if (!sale) {
-    return Err(
-      domainError("conflict", "sale_not_found", "Sale not found for this lead"),
-    );
-  }
-
-  return Ok({ lead, sale });
+  return Ok(lead);
 }
 
 export async function listLeadSaleProofFiles(
@@ -149,10 +140,8 @@ export async function uploadLeadSaleProofFile(
       }
 
       const { files } = getServerRuntime();
-      const contextResult = await requireLeadSaleContext(ctx, leadId);
-      if (isErr(contextResult)) return contextResult;
-
-      const { sale } = contextResult.value;
+      const leadResult = await requireLiveLeadContext(ctx, leadId);
+      if (isErr(leadResult)) return leadResult;
 
       if (!canUploadSaleProof(ctx.actor.role)) {
         return Err(domainError("forbidden", "forbidden", "Access denied"));
@@ -166,7 +155,6 @@ export async function uploadLeadSaleProofFile(
           workflowContext: {
             kind: "sale_proof",
             leadId,
-            saleId: sale.id,
           },
         },
         {
@@ -201,7 +189,6 @@ export async function uploadLeadSaleProofFile(
       const createdAt = ctx.now();
       const id = await files.repo.sales.insert({
         leadId,
-        saleId: sale.id,
         artifactId,
         fileAssetId: fileAsset.id,
         uploadedByUserId: ctx.actor.userId,

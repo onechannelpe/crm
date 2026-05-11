@@ -4,7 +4,7 @@ import type { LeadRecord } from "../../domain/lead-record";
 import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import {
   canAddLeadInteraction,
-  canCompleteCommercialInput,
+  canCompleteScoping,
   canCreateQuotation,
   canReassignLead,
   canReviewLead,
@@ -24,22 +24,16 @@ export function resolveAvailableActions(input: {
     actions.push("log-call", "add-note");
   }
   if (
-    canCompleteCommercialInput(input.actorRole) &&
+    canCompleteScoping(input.actorRole) &&
     ownsLead &&
-    input.lead.stage === "NEEDS_EXECUTIVE_INPUT"
+    input.lead.stage === "SCOPING"
   ) {
-    actions.push("complete-commercial-input");
+    actions.push("complete-scoping");
   }
-  if (
-    canReviewLead(input.actorRole) &&
-    input.lead.stage === "PENDING_EXTERNAL_REVIEW"
-  ) {
+  if (canReviewLead(input.actorRole) && input.lead.stage === "QUALIFYING") {
     actions.push("review-lead");
   }
-  if (
-    canCreateQuotation(input.actorRole) &&
-    input.lead.stage === "READY_FOR_QUOTATION"
-  ) {
+  if (canCreateQuotation(input.actorRole) && input.lead.stage === "QUOTING") {
     actions.push("create-quotation");
   }
   if (

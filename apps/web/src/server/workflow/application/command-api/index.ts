@@ -4,14 +4,14 @@ import type { Result } from "~/server/shared/result";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
 import type { LeadUserScopeRepository } from "../../ports/lead-user-scope-repository";
 import type {
-  AddLeadToFavoritesInput,
   AddLeadNoteInput,
+  AddLeadToFavoritesInput,
+  AddVenueAccountsInput,
   ApplyImportedReviewInput,
   ApproveForSaleInput,
-  CompleteCommercialInputInput,
+  CompleteScopingInput,
   CreateQuotationInput,
-  CreateSaleInput,
-  CreateSaleVenueInput,
+  CreateVenueInput,
   LogLeadCallInput,
   ReassignLeadInput,
   RegisterLeadInput,
@@ -23,31 +23,27 @@ import type {
   LeadCommandResult,
   LeadInteractionResult,
   LeadQuotationResult,
-  LeadSaleResult,
 } from "../contracts/command-results";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { WorkflowAuditService } from "../ports/audit-service";
-import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
 import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type { LeadProfileRepository } from "../ports/lead-profile-repository";
 import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
 import type { PartyRepository } from "../ports/party-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
-import type {
-  LeadSaleRepository,
-  LeadSaleVenueRepository,
-} from "../ports/sale-repository";
+import type { LeadVenueRepository } from "../ports/sale-repository";
 import type { LeadClock } from "../services/lead-clock";
 import { addLeadNoteCommand } from "./add-note";
 import { addToFavoritesCommand } from "./add-to-favorites";
+import { addVenueAccountsCommand } from "./add-venue-accounts";
 import { applyImportedReviewCommand } from "./apply-imported-review";
 import { approveForSaleCommand } from "./approve-for-sale";
-import { completeCommercialInputCommand } from "./complete-commercial-input";
+import { completeScopingCommand } from "./complete-scoping";
 import { createQuotationCommand } from "./create-quotation";
-import { createSaleCommand } from "./create-sale";
-import { createSaleVenueCommand } from "./create-sale-venue";
+import { createVenueCommand } from "./create-venue";
 import { logLeadCallCommand } from "./log-call";
 import { reassignLeadCommand } from "./reassign-lead";
 import { registerLeadCommand } from "./register-lead";
@@ -66,10 +62,9 @@ export type WorkflowCommandApiDeps = {
   engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
   leadQuotations: LeadQuotationRepository;
-  leadCommercialInputs: LeadCommercialInputRepository;
+  leadProfiles: LeadProfileRepository;
   party: PartyRepository;
-  leadSales: LeadSaleRepository;
-  leadSaleVenues: LeadSaleVenueRepository;
+  leadVenues: LeadVenueRepository;
   negotiationRequests: NegotiationRequestRepository;
 };
 
@@ -104,15 +99,15 @@ export type WorkflowCommandApi = {
   createQuotation(
     input: CreateQuotationInput,
   ): Promise<Result<LeadQuotationResult, DomainError>>;
-  completeCommercialInput(
-    input: CompleteCommercialInputInput,
+  completeScoping(
+    input: CompleteScopingInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;
-  createSale(
-    input: CreateSaleInput,
-  ): Promise<Result<LeadSaleResult, DomainError>>;
-  createSaleVenue(
-    input: CreateSaleVenueInput,
-  ): Promise<Result<LeadSaleResult, DomainError>>;
+  createVenue(
+    input: CreateVenueInput,
+  ): Promise<Result<LeadCommandResult, DomainError>>;
+  addVenueAccounts(
+    input: AddVenueAccountsInput,
+  ): Promise<Result<LeadCommandResult, DomainError>>;
   requestRateNegotiation(
     input: RequestRateNegotiationInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;
@@ -173,34 +168,35 @@ export function createWorkflowCommandApi(
         },
         input,
       ),
-    completeCommercialInput: (input) =>
-      completeCommercialInputCommand(
+    completeScoping: (input) =>
+      completeScopingCommand(
         {
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
-          leadCommercialInputs: deps.leadCommercialInputs,
+          leadProfiles: deps.leadProfiles,
+          leadVenues: deps.leadVenues,
           party: deps.party,
           clock: deps.clock,
         },
         input,
       ),
-    createSale: (input) =>
-      createSaleCommand(
+    createVenue: (input) =>
+      createVenueCommand(
         {
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
-          leadSales: deps.leadSales,
+          leadProfiles: deps.leadProfiles,
+          leadVenues: deps.leadVenues,
           clock: deps.clock,
         },
         input,
       ),
-    createSaleVenue: (input) =>
-      createSaleVenueCommand(
+    addVenueAccounts: (input) =>
+      addVenueAccountsCommand(
         {
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
-          leadSales: deps.leadSales,
-          leadSaleVenues: deps.leadSaleVenues,
+          leadVenues: deps.leadVenues,
           clock: deps.clock,
         },
         input,

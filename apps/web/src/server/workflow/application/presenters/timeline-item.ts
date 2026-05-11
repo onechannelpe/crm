@@ -126,17 +126,6 @@ export function presentTimelineItem(
         description: `Aprobada por ${actorDisplayName}.`,
         actorDisplayName,
       };
-    case "sale_created":
-      return {
-        id: `history:${event.id}`,
-        occurredAt: event.occurredAt,
-        kind: "system",
-        title: "Registro de venta creado",
-        description: event.payload
-          ? `Registro #${event.payload.saleId} creado por ${actorDisplayName}.`
-          : `Creada por ${actorDisplayName}.`,
-        actorDisplayName,
-      };
     case "venue_added":
       return {
         id: `history:${event.id}`,
@@ -144,6 +133,15 @@ export function presentTimelineItem(
         kind: "system",
         title: "Sede agregada",
         description: `${event.payload.nombreComercial} registrada por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "venue_accounts_added":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Cuentas de sede registradas",
+        description: `Registradas por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "call_logged":

@@ -4,8 +4,6 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-  CulqiProductKind,
-  ModalidadCobro,
 } from "~/workflow/contracts/lead-schema";
 
 export type LeadHistoryEventType =
@@ -19,15 +17,15 @@ export type LeadHistoryEventType =
   | "commercial_input_completed"
   | "quotation_created"
   | "sale_approved"
-  | "sale_created"
   | "venue_added"
+  | "venue_accounts_added"
   | "call_logged"
   | "note_added";
 
 export type LeadHistoryPayloadByEvent = {
   lead_registered: {
     ruc: string;
-    toStage: Extract<LeadStage, "PENDING_EXTERNAL_REVIEW">;
+    toStage: Extract<LeadStage, "QUALIFYING">;
   };
   lead_status_updated: {
     fromStatus: LeadStatus | null;
@@ -65,11 +63,15 @@ export type LeadHistoryPayloadByEvent = {
     gpv: number;
     ticket: number;
     giroNegocio: string;
-    tipoProducto: CulqiProductKind;
-    urlCliente: string | null;
-    modalidadCobro: ModalidadCobro;
+    linkScope: string | null;
+    onlineScope: string | null;
+    onlineModalidad: string | null;
     repLegalNombres: string;
+    repLegalApellidoPaterno: string;
+    repLegalApellidoMaterno: string;
     repLegalDni: string;
+    repLegalTelefono: string;
+    repLegalEmail: string;
   };
   quotation_created: {
     quotationId: string;
@@ -77,14 +79,12 @@ export type LeadHistoryPayloadByEvent = {
     moneda: Moneda;
   };
   sale_approved: null;
-  sale_created: {
-    saleId: string;
-  };
   venue_added: {
     venueId: string;
-    saleId: string;
     nombreComercial: string;
-    isFirstVenue: boolean;
+  };
+  venue_accounts_added: {
+    venueId: string;
   };
   call_logged: {
     outcome: LeadCallOutcome;

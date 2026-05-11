@@ -49,17 +49,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("workflow_tipo_producto_kinds")
-    .addColumn("value", "varchar(20)", (col) => col.primaryKey())
-    .execute();
-
-  await db.schema
     .createTable("workflow_modalidad_cobro_kinds")
     .addColumn("value", "varchar(20)", (col) => col.primaryKey())
     .execute();
 
   await db.schema
-    .createTable("workflow_lead_commercial_inputs")
+    .createTable("workflow_lead_profiles")
     .addColumn("lead_id", "text", (col) =>
       col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
     )
@@ -67,12 +62,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("tasa_actual", "real")
     .addColumn("gpv", "real")
     .addColumn("ticket", "real")
-    .addColumn("tipo_producto", "varchar(20)", (col) =>
-      col.references("workflow_tipo_producto_kinds.value"),
-    )
-    .addColumn("url_cliente", "text")
-    .addColumn("modalidad_cobro", "varchar(20)", (col) =>
-      col.notNull().references("workflow_modalidad_cobro_kinds.value"),
+    .addColumn("link_scope", "text", (col) => col.notNull().defaultTo("none"))
+    .addColumn("link_url", "text")
+    .addColumn("online_scope", "text", (col) => col.notNull().defaultTo("none"))
+    .addColumn("online_url", "text")
+    .addColumn("online_modalidad", "varchar(20)", (col) =>
+      col.references("workflow_modalidad_cobro_kinds.value"),
     )
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
@@ -103,30 +98,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_workflow_quotations_lead")
     .on("workflow_quotations")
     .columns(["lead_id", "version"])
-    .execute();
-
-  await db.schema
-    .createTable("workflow_sales")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("lead_id", "text", (col) =>
-      col.notNull().references("workflow_leads.id").onDelete("cascade"),
-    )
-    .addColumn("executive_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_sales_lead")
-    .on("workflow_sales")
-    .column("lead_id")
-    .unique()
-    .execute();
-  await db.schema
-    .createIndex("idx_workflow_sales_executive")
-    .on("workflow_sales")
-    .column("executive_id")
     .execute();
 
   await db.schema

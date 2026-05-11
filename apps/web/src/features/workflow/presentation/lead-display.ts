@@ -6,22 +6,22 @@ import type {
 } from "~/workflow/contracts/lead-schema";
 
 const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
-  PENDING_EXTERNAL_REVIEW: "Pendiente de revisión externa",
-  REJECTED_BY_STATUS: "Rechazado por estado",
-  NEEDS_EXECUTIVE_INPUT: "Requiere información comercial",
-  READY_FOR_QUOTATION: "Listo para cotización",
+  QUALIFYING: "Calificando",
+  DISQUALIFIED: "Descalificado",
+  SCOPING: "Relevamiento comercial",
+  QUOTING: "Listo para cotización",
   QUOTED: "Cotizado",
-  READY_FOR_SALE: "Listo para venta",
-  CONVERTED: "Convertido",
+  CLOSING: "En cierre",
+  LIVE: "Activo",
 };
 
 const LEAD_NEXT_STEP_LABELS: Record<string, string> = {
   "Review lead": "Revisar prospecto",
   "No further action": "Sin acciones pendientes",
-  "Complete commercial input": "Completar información comercial",
+  "Complete scoping": "Completar relevamiento comercial",
   "Create quotation": "Crear cotización",
   "Approve for sale": "Aprobar para venta",
-  "Create sale": "Crear venta",
+  "Register venue accounts": "Registrar cuentas de sedes",
 };
 
 export function leadStageLabel(stage: LeadStage): string {
