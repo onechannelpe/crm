@@ -6,7 +6,7 @@ import type { UpdateEntry } from "~/lib/updates/types";
 const updateModules = import.meta.glob<{
   default: Component;
   frontmatter?: unknown;
-}>("../../../content/updates/*.md", { eager: true });
+}>("../../../content/updates/*.{md,mdx}", { eager: true });
 
 const cachedUpdates = parseAndValidateUpdates(updateModules);
 

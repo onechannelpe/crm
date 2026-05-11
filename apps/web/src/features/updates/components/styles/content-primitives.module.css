@@ -1,0 +1,84 @@
+.collapsible {
+  --collapsible-pad-y: 14px;
+  --collapsible-pad-x: 0;
+  border-top: 1px solid var(--border);
+}
+
+.collapsible:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.trigger {
+  width: 100%;
+  padding: var(--collapsible-pad-y) var(--collapsible-pad-x);
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  text-align: left;
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trigger::-webkit-details-marker {
+  display: none;
+}
+
+.chevron {
+  color: var(--foreground-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease;
+}
+
+.title {
+  min-width: 0;
+}
+
+.collapsible[open] .chevron {
+  transform: rotate(90deg);
+}
+
+.content {
+  padding: 0 0 14px;
+  color: var(--foreground-secondary);
+}
+
+.content :global(p:first-child),
+.content :global(ul:first-child),
+.content :global(ol:first-child) {
+  margin-top: 0;
+}
+
+.label {
+  --update-label-color: #95a2b3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  vertical-align: text-bottom;
+  margin-right: 8px;
+}
+
+.label::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--update-label-color);
+  flex-shrink: 0;
+}

@@ -30,7 +30,7 @@ function getFrontmatterValue(
 }
 
 function getSlug(path: string): string {
-  const match = path.match(/\/([^/]+)\.md$/);
+  const match = path.match(/\/([^/]+)\.mdx?$/);
   return match ? match[1] : path;
 }
 

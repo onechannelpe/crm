@@ -1,0 +1,31 @@
+---
+title: "Reasignación de ejecutivos y colas de notificaciones"
+date: "2026-04-16"
+kind: release
+cadence: nightly
+visibility: internal
+tags: ["leads", "asignaciones", "notificaciones"]
+---
+
+Hoy habilitamos la reasignación de ejecutivos en leads directamente desde la vista de detalle, sin tener que salir a otro flujo.
+
+También ajustamos el flujo de notificaciones para procesar más volumen con menos fricción operativa y ordenamos la capa de mutaciones del pipeline bajo un ciclo común de preparación, validación y confirmación.
+
+<Collapsible title="Mejoras">
+
+- <UpdateLabel color="#4cb782">Leads</UpdateLabel> Ahora puedes cambiar al
+  ejecutivo asignado desde el propio detalle del lead con un selector de
+  usuarios.
+- <UpdateLabel color="#f2c94c">Campos</UpdateLabel> En el panel del lead se
+  muestran dos datos nuevos: `Administrado por` y `Actualizado por`.
+- <UpdateLabel color="#eb5757">Acceso</UpdateLabel> Se endurecieron los
+  controles para reasignar leads y para consultar ejecutivos asignables.
+- <UpdateLabel color="#95a2b3">Mutaciones</UpdateLabel> Las operaciones de pipeline ahora siguen el mismo ciclo: `preparar -> validar -> confirmar`.
+- <UpdateLabel color="#26b5ce">Notificaciones</UpdateLabel> El encolado de
+  campañas y entregas pasó a lotes paginados para procesar más volumen.
+- <UpdateLabel color="#26b5ce">Base de datos</UpdateLabel> Las inserciones por
+  conjuntos reducen la presión de escritura en notificaciones.
+- <UpdateLabel color="#95a2b3">Infraestructura</UpdateLabel> Se reordenaron
+  colas y repositorios de notificaciones para mejorar estabilidad y reintentos.
+
+</Collapsible>
