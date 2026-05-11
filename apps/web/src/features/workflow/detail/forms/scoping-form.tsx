@@ -259,7 +259,7 @@ export function ScopingForm(props: {
               </FieldRow>
               <FieldRow>
                 <FieldLabel>
-                  <FieldLabelText>Telefono/Celular</FieldLabelText>
+                  <FieldLabelText>Teléfono/Celular</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
                   <TextInput
@@ -297,7 +297,7 @@ export function ScopingForm(props: {
                   <FieldIcon>
                     <Building2 size={16} />
                   </FieldIcon>
-                  <FieldLabelText>Proveedor Actual</FieldLabelText>
+                  <FieldLabelText>Proveedor actual</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
                   <TextInput
@@ -313,7 +313,7 @@ export function ScopingForm(props: {
                   <FieldIcon>
                     <Target size={16} />
                   </FieldIcon>
-                  <FieldLabelText>Tasa Actual</FieldLabelText>
+                  <FieldLabelText>Tasa actual</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
                   <TextInput
@@ -370,7 +370,7 @@ export function ScopingForm(props: {
                   <FieldIcon>
                     <Building2 size={16} />
                   </FieldIcon>
-                  <FieldLabelText>Giro de Negocio</FieldLabelText>
+                  <FieldLabelText>Giro de negocio</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
                   <TextInput
@@ -391,7 +391,7 @@ export function ScopingForm(props: {
             <FieldTable>
               <FieldRow>
                 <FieldLabel>
-                  <FieldLabelText>Culqi Link</FieldLabelText>
+                  <FieldLabelText>CulqiLink</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
                   <label>
@@ -402,7 +402,7 @@ export function ScopingForm(props: {
                         setLinkEnabled(e.currentTarget.checked);
                       }}
                     />{" "}
-                    Activar Culqi Link
+                    Activar CulqiLink
                   </label>
                 </FieldInputValue>
               </FieldRow>
@@ -435,7 +435,7 @@ export function ScopingForm(props: {
                 <Show when={linkScope() === "shared"}>
                   <FieldRow>
                     <FieldLabel>
-                      <FieldLabelText>URL Culqi Link</FieldLabelText>
+                      <FieldLabelText>URL CulqiLink</FieldLabelText>
                     </FieldLabel>
                     <FieldInputValue>
                       <TextInput
@@ -452,7 +452,7 @@ export function ScopingForm(props: {
 
               <FieldRow>
                 <FieldLabel>
-                  <FieldLabelText>Culqi Online</FieldLabelText>
+                  <FieldLabelText>CulqiOnline</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
                   <label>
@@ -464,7 +464,7 @@ export function ScopingForm(props: {
                         if (!e.currentTarget.checked) setOnlineModalidad("");
                       }}
                     />{" "}
-                    Activar Culqi Online
+                    Activar CulqiOnline
                   </label>
                 </FieldInputValue>
               </FieldRow>
@@ -512,7 +512,7 @@ export function ScopingForm(props: {
                 </Show>
                 <FieldRow>
                   <FieldLabel>
-                    <FieldLabelText>Modalidad de Cobro</FieldLabelText>
+                    <FieldLabelText>Modalidad de cobro</FieldLabelText>
                   </FieldLabel>
                   <FieldInputValue>
                     <div
@@ -550,7 +550,7 @@ export function ScopingForm(props: {
                           checked={onlineModalidad() === "CARGO_UNICO"}
                           onChange={() => setOnlineModalidad("CARGO_UNICO")}
                         />{" "}
-                        Cargo Unico
+                        Cargo único
                       </label>
                     </div>
                   </FieldInputValue>
