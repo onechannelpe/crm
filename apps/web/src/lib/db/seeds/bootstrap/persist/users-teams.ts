@@ -304,6 +304,21 @@ export async function persistUsersAndTeams(
         is_active: 1,
         created_at: now,
       },
+      {
+        id: 40,
+        branch_id: 4,
+        team_id: null,
+        username: "david.duran",
+        email: "david.duran@onechannel.pe",
+        password_hash: realPasswordHash,
+        names: "DAVID",
+        first_surname: "DURAN",
+        second_surname: "",
+        onboarding_completed_at: null,
+        role: "admin",
+        is_active: 1,
+        created_at: now,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
