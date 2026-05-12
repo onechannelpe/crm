@@ -25,6 +25,7 @@
     "seed:prod": "bun --env-file=../../.env.production src/lib/db/seed.ts"
   },
   "dependencies": {
+    "@crm/contracts": "workspace:*",
     "@crm/email-composer": "workspace:*",
     "@crm/images": "workspace:*",
     "@crm/message-channels": "workspace:*",

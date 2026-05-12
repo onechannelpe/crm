@@ -1,5 +1,5 @@
 import { useLocation } from "@solidjs/router";
-import { createMemo } from "solid-js";
+import { Show, createMemo } from "solid-js";
 
 import { ExtensionStatusIndicator } from "~/components/features/extension/extension-status-indicator";
 import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
@@ -25,6 +25,7 @@ export function AppHeader() {
     isSidePanelOpen,
     extensionState,
     extensionError,
+    isExtensionAvailable,
     toggleSidePanel,
   } = useAppHeaderSidePanel();
 
@@ -52,11 +53,13 @@ export function AppHeader() {
       }
       title={<span class={styles.routeLabel}>{currentRoute().label}</span>}
     >
-      <ExtensionStatusIndicator
-        extensionState={extensionState}
-        extensionError={extensionError}
-        onOpen={focusExtensionWindow}
-      />
+      <Show when={isExtensionAvailable()}>
+        <ExtensionStatusIndicator
+          extensionState={extensionState}
+          extensionError={extensionError}
+          onOpen={focusExtensionWindow}
+        />
+      </Show>
       <HeaderNotificationsPanel />
       <TopBarCommandButton
         isOpen={isSidePanelOpen()}

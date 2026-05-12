@@ -3,12 +3,12 @@ import type { Accessor } from "solid-js";
 
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
-import type { ExtensionExecutiveState } from "~/lib/extension/runtime";
+import type { ExecutiveStateSnapshot } from "~/lib/extension/runtime";
 
 import styles from "./extension-status-indicator.module.css";
 
 interface ExtensionStatusIndicatorProps {
-  extensionState: Accessor<ExtensionExecutiveState | null>;
+  extensionState: Accessor<ExecutiveStateSnapshot | null>;
   extensionError: Accessor<string | null>;
   onOpen: () => void;
 }

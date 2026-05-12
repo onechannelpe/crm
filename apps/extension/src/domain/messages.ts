@@ -1,3 +1,8 @@
+import type { BridgeResponse } from "@crm/contracts/extension";
+export type { ExternalRuntimeMessage } from "@crm/contracts/extension";
+export { isExternalRuntimeMessage } from "@crm/contracts/extension";
+import { isBridgeResponse } from "@crm/contracts/extension";
+
 import type { ExecutiveStateSnapshot, ExtensionState } from "./model";
 
 export type RuntimeMessage =
@@ -49,27 +54,15 @@ export type RuntimeMessage =
       refreshToken: string;
     };
 
-export type ExternalRuntimeMessage =
-  | {
-      type: "state.get";
-    }
-  | {
-      type: "assignment.handoff";
-      token: string;
-    };
-
 export type RuntimeResponse =
-  | {
-      ok: true;
+  | (Extract<BridgeResponse, { ok: true }> & {
       state: ExtensionState;
       executiveState: ExecutiveStateSnapshot;
-    }
-  | {
-      ok: false;
-      error: string;
+    })
+  | (Extract<BridgeResponse, { ok: false }> & {
       state?: ExtensionState;
       executiveState?: ExecutiveStateSnapshot;
-    };
+    });
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -126,43 +119,15 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
   }
 }
 
-export function isExternalRuntimeMessage(
-  value: unknown,
-): value is ExternalRuntimeMessage {
-  if (!isObject(value) || typeof value.type !== "string") {
-    return false;
-  }
-
-  switch (value.type) {
-    case "state.get":
-      return true;
-    case "assignment.handoff":
-      return typeof value.token === "string";
-    default:
-      return false;
-  }
-}
-
 export function isRuntimeResponse(value: unknown): value is RuntimeResponse {
-  if (!isObject(value) || typeof value.ok !== "boolean") {
+  if (!isObject(value) || !isBridgeResponse(value)) {
     return false;
   }
 
+  const state = Reflect.get(value, "state");
   if (value.ok) {
-    return (
-      isObject(value.state) &&
-      value.state.schemaVersion === 1 &&
-      isObject(value.executiveState) &&
-      typeof value.executiveState.presenceStatus === "string" &&
-      typeof value.executiveState.syncHealth === "string"
-    );
+    return isObject(state) && state.schemaVersion === 1;
   }
 
-  return (
-    typeof value.error === "string" &&
-    (value.executiveState === undefined ||
-      (isObject(value.executiveState) &&
-        typeof value.executiveState.presenceStatus === "string" &&
-        typeof value.executiveState.syncHealth === "string"))
-  );
+  return state === undefined || (isObject(state) && state.schemaVersion === 1);
 }

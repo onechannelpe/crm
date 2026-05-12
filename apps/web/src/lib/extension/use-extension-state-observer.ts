@@ -1,12 +1,12 @@
 import { createEffect } from "solid-js";
 import type { Accessor } from "solid-js";
 
-import type { ExtensionExecutiveState } from "./runtime";
+import type { ExecutiveStateSnapshot } from "./runtime";
 
 interface UseExtensionStateObserverOptions {
-  extensionState: Accessor<ExtensionExecutiveState | null>;
+  extensionState: Accessor<ExecutiveStateSnapshot | null>;
   extensionError: Accessor<string | null>;
-  onStateChange?: (state: ExtensionExecutiveState | null) => void;
+  onStateChange?: (state: ExecutiveStateSnapshot | null) => void;
   onErrorChange?: (error: string | null) => void;
   onReauthRequired?: () => void;
   onActiveAssignmentChange?: (assignmentId: number | null) => void;
@@ -17,7 +17,7 @@ export function useExtensionStateObserver(
   options: UseExtensionStateObserverOptions,
 ): void {
   // Track previous state to detect changes
-  let prevState: ExtensionExecutiveState | null = null;
+  let prevState: ExecutiveStateSnapshot | null = null;
   let prevError: string | null = null;
 
   createEffect(() => {

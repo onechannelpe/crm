@@ -1,0 +1,8 @@
+{
+  "name": "@crm/contracts",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    "./extension": "./src/extension.ts"
+  }
+}
