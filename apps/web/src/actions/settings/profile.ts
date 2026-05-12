@@ -1,19 +1,28 @@
 "use server";
 
-import { conflictError } from "~/lib/app-errors";
+import { conflictError, validationError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import {
+  isValidPeMobileLocal,
+  normalizePeMobileLocalInput,
+  toPeMobileE164,
+} from "~/lib/phone/pe-mobile";
 import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 export async function updateUserProfile(phone: string): Promise<ActionSuccess> {
   const safePhone = assertNonEmptyString(phone, "phone");
+  const localPhone = normalizePeMobileLocalInput(safePhone);
+  if (!isValidPeMobileLocal(localPhone)) {
+    throw validationError("El número debe tener 9 dígitos y empezar con 9");
+  }
   const session = await requireSession();
 
   const result = await getServerRuntime().users.updatePhone(
     session.userId,
-    safePhone,
+    toPeMobileE164(localPhone),
   );
   if (isErr(result)) {
     throw conflictError("Este número de WhatsApp ya está en uso");

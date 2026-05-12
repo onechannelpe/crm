@@ -26,7 +26,6 @@ import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-pane
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import type { RequestedStep } from "~/features/onboarding/model/event";
-import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 import { buildView } from "~/features/onboarding/services/view";
 import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
@@ -35,6 +34,10 @@ import {
   isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/registration-client";
 import { getErrorMessage } from "~/lib/errors";
+import {
+  isValidPeMobileLocal,
+  normalizePeMobileLocalInput,
+} from "~/lib/phone/pe-mobile";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 
@@ -91,6 +94,7 @@ function OnboardingContent() {
     otpauthUri: string;
     qrCodeDataUrl: string;
   } | null>(null);
+  const [totpStartAttempted, setTotpStartAttempted] = createSignal(false);
   const [totpCode, setTotpCode] = createSignal("");
   const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
   const [submitting, setSubmitting] = createSignal(false);
@@ -122,9 +126,15 @@ function OnboardingContent() {
       setPhone(next.phoneDraft);
     }
     if (next.state.step === "done") {
-      navigate(
-        next.state.step === "done" ? (requirements()?.nextRoute ?? "/") : "/",
-      );
+      navigate(requirements()?.nextRoute ?? "/");
+    }
+  });
+
+  createEffect(() => {
+    const next = view();
+    if (!next || next.state.step !== "totp-step") {
+      setTotpStartAttempted(false);
+      setTotpEnrollment(null);
     }
   });
 
@@ -133,9 +143,10 @@ function OnboardingContent() {
     if (!next || next.state.step !== "totp-step") {
       return;
     }
-    if (totpEnrollment() || totpLoading()) {
+    if (totpEnrollment() || totpLoading() || totpStartAttempted()) {
       return;
     }
+    setTotpStartAttempted(true);
     setTotpLoading(true);
     void startTotpOnboardingStep()
       .then((enrollment) => setTotpEnrollment(enrollment))
@@ -148,9 +159,12 @@ function OnboardingContent() {
   });
 
   async function handleProfileSubmit() {
-    const currentPhone = phone();
-    if (!isValidOnboardingPhone(currentPhone)) {
-      enqueueErrorSnackBar("Ingresa los 9 dígitos de tu WhatsApp corporativo");
+    const currentPhone = normalizePeMobileLocalInput(phone());
+    setPhone(currentPhone);
+    if (!isValidPeMobileLocal(currentPhone)) {
+      enqueueErrorSnackBar(
+        "Ingresa 9 dígitos de tu WhatsApp corporativo y que empiece con 9",
+      );
       return;
     }
     setSubmitting(true);

@@ -9,6 +9,7 @@ import {
 } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
+import { isValidPeMobileLocal, toPeMobileE164 } from "~/lib/phone/pe-mobile";
 import { completeOnboarding as completeOnboardingService } from "~/server/auth/application/commands/complete-onboarding";
 import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
@@ -21,9 +22,10 @@ export interface OnboardingRedirectResponse {
 
 function normalizePeruvianPhone(value: string): string {
   const v = value.replace(/\s+/g, "").trim();
-  if (/^\+51\d{9}$/.test(v)) return v;
-  if (/^\d{9}$/.test(v)) return `+51${v}`;
-  throw validationError("El número debe tener 9 dígitos");
+  if (!isValidPeMobileLocal(v)) {
+    throw validationError("El número debe tener 9 dígitos y empezar con 9");
+  }
+  return toPeMobileE164(v);
 }
 
 function mapOnboardingError(error: { code: string; message: string }): never {

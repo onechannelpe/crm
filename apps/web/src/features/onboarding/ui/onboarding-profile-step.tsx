@@ -1,8 +1,11 @@
 import { Show } from "solid-js";
 
-import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
+import {
+  isValidPeMobileLocal,
+  normalizePeMobileLocalInput,
+} from "~/lib/phone/pe-mobile";
 
 import styles from "./onboarding-profile-step.module.css";
 
@@ -16,7 +19,7 @@ interface OnboardingProfileStepProps {
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const phoneError = () =>
-    props.phone.length > 0 && !isValidOnboardingPhone(props.phone);
+    props.phone.length > 0 && !isValidPeMobileLocal(props.phone);
 
   return (
     <section class={styles.stepStack}>
@@ -65,14 +68,18 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
               placeholder="987654321"
               maxlength="9"
               value={props.phone}
-              onInput={(e) => props.onPhoneInput(e.currentTarget.value)}
+              onInput={(e) =>
+                props.onPhoneInput(
+                  normalizePeMobileLocalInput(e.currentTarget.value),
+                )
+              }
               required
             />
           </div>
         </label>
         <Show when={phoneError()}>
           <p class={styles.helperTextError}>
-            Ingresa los 9 dígitos del número.
+            Ingresa 9 dígitos y que empiece con 9.
           </p>
         </Show>
       </div>
