@@ -5,7 +5,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { conflictError, internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
-import type { PeMobilePhone } from "~/lib/phone/pe-mobile";
+import type { Phone } from "~/lib/phone/pe-mobile";
 import { completeOnboarding as completeOnboardingService } from "~/server/auth/application/commands/complete-onboarding";
 import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
@@ -30,7 +30,7 @@ function mapOnboardingError(error: { code: string; message: string }): never {
 }
 
 export async function completeOnboarding(
-  phone: PeMobilePhone,
+  phone: Phone,
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
@@ -50,7 +50,7 @@ export async function completeOnboarding(
 }
 
 export async function completePasskeyOnboarding(
-  phone: PeMobilePhone,
+  phone: Phone,
   challengeId: number,
   response: RegistrationResponseJSON,
 ): Promise<OnboardingRedirectResponse> {

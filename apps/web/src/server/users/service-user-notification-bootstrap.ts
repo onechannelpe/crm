@@ -1,4 +1,4 @@
-import type { PeMobilePhone } from "~/lib/phone/pe-mobile";
+import type { Phone } from "~/lib/phone/pe-mobile";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -11,7 +11,7 @@ type NotificationBootstrapRepos = {
 async function registerChannelAddresses(params: {
   userId: number;
   email: string;
-  phone: PeMobilePhone;
+  phone: Phone;
   now: number;
   repos: Pick<NotificationBootstrapRepos, "userChannelAddresses">;
 }): Promise<
@@ -89,7 +89,7 @@ export async function bootstrapUserNotifications(
   params: {
     userId: number;
     email: string;
-    phone: PeMobilePhone;
+    phone: Phone;
     now: number;
   },
   repos: NotificationBootstrapRepos,

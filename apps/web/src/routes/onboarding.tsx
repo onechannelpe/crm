@@ -34,7 +34,7 @@ import {
   isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/registration-client";
 import { getErrorMessage } from "~/lib/errors";
-import { isValidPeMobile, normalizePeMobileInput } from "~/lib/phone/pe-mobile";
+import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 
@@ -156,9 +156,9 @@ function OnboardingContent() {
   });
 
   async function handleProfileSubmit() {
-    const currentPhone = normalizePeMobileInput(phone());
+    const currentPhone = normalizePhoneInput(phone());
     setPhone(currentPhone);
-    if (!isValidPeMobile(currentPhone)) {
+    if (!isValidPhone(currentPhone)) {
       enqueueErrorSnackBar(
         "Ingresa 9 dígitos de tu WhatsApp corporativo y que empiece con 9",
       );

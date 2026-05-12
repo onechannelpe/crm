@@ -2,7 +2,7 @@ import { Show } from "solid-js";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
-import { isValidPeMobile, normalizePeMobileInput } from "~/lib/phone/pe-mobile";
+import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 
 import styles from "./onboarding-profile-step.module.css";
 
@@ -15,8 +15,7 @@ interface OnboardingProfileStepProps {
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
-  const phoneError = () =>
-    props.phone.length > 0 && !isValidPeMobile(props.phone);
+  const phoneError = () => props.phone.length > 0 && !isValidPhone(props.phone);
 
   return (
     <section class={styles.stepStack}>
@@ -65,9 +64,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
               maxlength="9"
               value={props.phone}
               onInput={(e) =>
-                props.onPhoneInput(
-                  normalizePeMobileInput(e.currentTarget.value),
-                )
+                props.onPhoneInput(normalizePhoneInput(e.currentTarget.value))
               }
               required
             />

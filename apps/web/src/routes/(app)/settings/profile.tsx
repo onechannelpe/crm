@@ -14,7 +14,7 @@ import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
 } from "~/lib/mutations/profile";
-import { isValidPeMobile, normalizePeMobileInput } from "~/lib/phone/pe-mobile";
+import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 import { shortName } from "~/lib/users/display-name";
 
 import styles from "./settings-page.module.css";
@@ -57,9 +57,9 @@ export default function ProfilePage() {
 
   const saveProfile = async (e: Event) => {
     e.preventDefault();
-    const localPhone = normalizePeMobileInput(profilePhone());
+    const localPhone = normalizePhoneInput(profilePhone());
     setProfilePhone(localPhone);
-    if (!isValidPeMobile(localPhone)) {
+    if (!isValidPhone(localPhone)) {
       enqueueErrorSnackBar("Ingresa 9 dígitos y que empiece con 9");
       return;
     }
@@ -178,7 +178,7 @@ export default function ProfilePage() {
               label="Teléfono"
               value={profilePhone()}
               onInput={(e) =>
-                setProfilePhone(normalizePeMobileInput(e.currentTarget.value))
+                setProfilePhone(normalizePhoneInput(e.currentTarget.value))
               }
               placeholder="987654321"
             />

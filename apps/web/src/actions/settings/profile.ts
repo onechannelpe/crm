@@ -4,13 +4,13 @@ import { conflictError, validationError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { parsePeMobilePhone } from "~/lib/phone/pe-mobile";
+import { parsePhone } from "~/lib/phone/pe-mobile";
 import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 export async function updateUserProfile(phone: string): Promise<ActionSuccess> {
   const safePhone = assertNonEmptyString(phone, "phone");
-  const localPhone = parsePeMobilePhone(safePhone);
+  const localPhone = parsePhone(safePhone);
   if (!localPhone) {
     throw validationError("El número debe tener 9 dígitos y empezar con 9");
   }

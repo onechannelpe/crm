@@ -4,7 +4,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import { getMe } from "~/actions/auth/session";
 import { validationError } from "~/lib/app-errors";
-import { parsePeMobilePhone } from "~/lib/phone/pe-mobile";
+import { parsePhone } from "~/lib/phone/pe-mobile";
 
 import { completePasskeyOnboarding } from "./index";
 
@@ -13,7 +13,7 @@ export async function finishPasskeyOnboardingStep(input: {
   response: RegistrationResponseJSON;
 }): Promise<{ redirectTo: string }> {
   const currentUser = await getMe();
-  const persisted = parsePeMobilePhone(currentUser?.phone);
+  const persisted = parsePhone(currentUser?.phone);
   if (!persisted) {
     throw validationError("El número debe tener 9 dígitos y empezar con 9");
   }
