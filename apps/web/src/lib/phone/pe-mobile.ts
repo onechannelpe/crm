@@ -8,12 +8,12 @@ export function normalizePhoneInput(value: string | null | undefined): string {
   return digits.slice(0, 9);
 }
 
-export function isValidPhone(value: string): boolean {
+export function isValidPhone(value: string): value is Phone {
   return LOCAL_PE_MOBILE.test(value.trim());
 }
 
 export function parsePhone(value: string | null | undefined): Phone | null {
   const normalized = normalizePhoneInput(value);
   if (!isValidPhone(normalized)) return null;
-  return normalized as Phone;
+  return normalized;
 }
