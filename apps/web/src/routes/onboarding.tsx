@@ -262,15 +262,22 @@ function OnboardingContent() {
     }
   });
 
+  const resolved = createMemo(() => {
+    const next = view();
+    const current = user();
+    if (!next || !current) return null;
+    return { next, current };
+  });
+
   return (
-    <Show when={view() && user()}>
-      {
+    <Show when={resolved()} keyed>
+      {(state) => (
         <AuthFlowShell
-          topBar={<OnboardingProgress step={view()!.state.step} />}
+          topBar={<OnboardingProgress step={state.next.state.step} />}
           title={title()}
           footer={
             <div class={styles.footerActions}>
-              <Show when={view()!.state.step === "profile"}>
+              <Show when={state.next.state.step === "profile"}>
                 <Button
                   type="button"
                   loading={submitting()}
@@ -281,8 +288,8 @@ function OnboardingContent() {
               </Show>
               <Show
                 when={
-                  view()!.state.step === "security-choice" &&
-                  view()!.state.canFinishWithoutSecurity
+                  state.next.state.step === "security-choice" &&
+                  state.next.state.canFinishWithoutSecurity
                 }
               >
                 <Button
@@ -295,7 +302,7 @@ function OnboardingContent() {
               </Show>
               <Show
                 when={
-                  view()!.state.step === "totp-step" &&
+                  state.next.state.step === "totp-step" &&
                   recoveryCodes().length > 0
                 }
               >
@@ -310,24 +317,24 @@ function OnboardingContent() {
             </div>
           }
         >
-          <Show when={view()!.state.step === "profile"}>
+          <Show when={state.next.state.step === "profile"}>
             <EnterTransition>
               <OnboardingProfileStep
-                email={user()!.email}
-                fullName={`${user()!.names} ${user()!.firstSurname} ${user()!.secondSurname}`}
+                email={state.current.email}
+                fullName={`${state.current.names} ${state.current.firstSurname} ${state.current.secondSurname}`}
                 phone={phone()}
-                role={user()!.role}
+                role={state.current.role}
                 onPhoneInput={setPhone}
               />
             </EnterTransition>
           </Show>
 
-          <Show when={view()!.state.step === "security-choice"}>
+          <Show when={state.next.state.step === "security-choice"}>
             <EnterTransition>
               <OnboardingSecurityStep
-                hasPasskey={user()!.hasPasskey}
-                totpEnabled={user()!.totpEnabled}
-                securityRequired={view()!.state.securityRequired}
+                hasPasskey={state.current.hasPasskey}
+                totpEnabled={state.current.totpEnabled}
+                securityRequired={state.next.state.securityRequired}
                 onSelectPasskey={() =>
                   void handleChooseSecurity("passkey-step")
                 }
@@ -336,7 +343,7 @@ function OnboardingContent() {
             </EnterTransition>
           </Show>
 
-          <Show when={view()!.state.step === "passkey-step"}>
+          <Show when={state.next.state.step === "passkey-step"}>
             <EnterTransition>
               <div class={styles.passkeyEnrollStep}>
                 <Show when={passkeyPhase() === "device"}>
@@ -359,7 +366,7 @@ function OnboardingContent() {
             </EnterTransition>
           </Show>
 
-          <Show when={view()!.state.step === "totp-step"}>
+          <Show when={state.next.state.step === "totp-step"}>
             <EnterTransition>
               <div class={styles.totpStack}>
                 <Show
@@ -420,7 +427,7 @@ function OnboardingContent() {
             </EnterTransition>
           </Show>
 
-          <Show when={view()!.state.step === "pending-step"}>
+          <Show when={state.next.state.step === "pending-step"}>
             <div class={styles.pendingCreationLoader}>
               <p class={styles.pendingCreationLabel}>
                 Procesando tu configuración...
@@ -431,7 +438,7 @@ function OnboardingContent() {
             </div>
           </Show>
         </AuthFlowShell>
-      }
+      )}
     </Show>
   );
 }
