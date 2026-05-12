@@ -8,13 +8,14 @@ import { APP_LOCALE } from "~/lib/locale";
 import { getServerRuntime } from "~/server/runtime";
 
 export function buildInviteUrl(token: string): string {
+  const path = `/login/invite/${encodeURIComponent(token)}`;
   const event = getRequestEvent();
   const requestUrl = event?.request.url;
   if (!requestUrl) {
-    return `/auth/invite/${token}`;
+    return path;
   }
   const origin = new URL(requestUrl).origin;
-  return `${origin}/auth/invite/${token}`;
+  return `${origin}${path}`;
 }
 
 export async function sendInviteEmail(params: {

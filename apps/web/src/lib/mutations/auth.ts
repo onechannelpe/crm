@@ -1,4 +1,5 @@
 import { action } from "@solidjs/router";
+import { redirect } from "@solidjs/router";
 
 import type {
   PasskeyStartSubmissionResult,
@@ -6,6 +7,10 @@ import type {
   RequestPasswordResetResult,
   ResetPasswordResult,
 } from "~/actions/auth/contracts";
+import {
+  acceptInvitePasswordStep,
+  type AcceptInviteResult,
+} from "~/actions/auth/invite";
 import {
   passkeyStart,
   passwordLogin,
@@ -45,4 +50,23 @@ export const resetPasswordMutation = action(
   async (formData: FormData): Promise<ResetPasswordResult> =>
     resetPassword(formData),
   "resetPassword",
+);
+
+export const acceptInvitePasswordMutation = action(
+  async (formData: FormData): Promise<AcceptInviteResult> => {
+    const token = formData.get("token");
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirmPassword");
+    const result = await acceptInvitePasswordStep({
+      token: typeof token === "string" ? token : "",
+      password: typeof password === "string" ? password : "",
+      confirmPassword:
+        typeof confirmPassword === "string" ? confirmPassword : undefined,
+    });
+    if (result.ok) {
+      throw redirect(result.redirectTo);
+    }
+    return result;
+  },
+  "acceptInvitePassword",
 );
