@@ -3,11 +3,6 @@ import type {
   ExecutiveStateSnapshot,
   SyncHealth,
 } from "@crm/contracts/extension";
-export type {
-  ExecutivePresenceStatus,
-  ExecutiveStateSnapshot,
-  SyncHealth,
-} from "@crm/contracts/extension";
 
 export const STORAGE_KEY = "crm_extension_state_v1" as const;
 

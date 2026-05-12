@@ -1,12 +1,11 @@
+import type { ExecutiveStateSnapshot } from "@crm/contracts/extension";
+
 import {
   isRuntimeResponse,
   type RuntimeMessage,
   type RuntimeResponse,
 } from "@/src/domain/messages";
-import type {
-  ExecutiveStateSnapshot,
-  ExtensionState,
-} from "@/src/domain/model";
+import type { ExtensionState } from "@/src/domain/model";
 
 async function sendMessage(message: RuntimeMessage): Promise<RuntimeResponse> {
   try {

@@ -2,8 +2,9 @@ import type { BridgeResponse } from "@crm/contracts/extension";
 export type { ExternalRuntimeMessage } from "@crm/contracts/extension";
 export { isExternalRuntimeMessage } from "@crm/contracts/extension";
 import { isBridgeResponse } from "@crm/contracts/extension";
+import type { ExecutiveStateSnapshot } from "@crm/contracts/extension";
 
-import type { ExecutiveStateSnapshot, ExtensionState } from "./model";
+import type { ExtensionState } from "./model";
 
 export type RuntimeMessage =
   | {
