@@ -24,9 +24,6 @@ export default function LoginInvitePage() {
       description="Define tu contraseña para activar la cuenta. El perfil ya fue provisionado por RR.HH."
     >
       <Switch>
-        <Match when={inviteInfo() === undefined}>
-          <div />
-        </Match>
         <Match when={inviteInfo() === null}>
           <p class={pageStyles.formError} role="alert">
             Esta invitación no es válida o ya expiró.

@@ -55,14 +55,3 @@ export interface InviteManagement {
   teams: TeamOption[];
   assignableRoles: RoleOption[];
 }
-
-export interface CreateTeamInviteCommand {
-  names: string;
-  firstSurname: string;
-  secondSurname: string;
-  email: string;
-  role: Role;
-  executiveCategory: ExecutiveCategoryValue | null;
-  teamId: number | null;
-  expiresAt: number | null;
-}
