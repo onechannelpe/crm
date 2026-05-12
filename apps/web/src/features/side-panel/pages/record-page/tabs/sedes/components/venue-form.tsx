@@ -176,7 +176,7 @@ export function VenueForm(props: {
                         [
                           ["SUSCRIPCIONES", "Suscripciones"],
                           ["ONE_CLIC", "One Click"],
-                          ["CARGO_UNICO", "Cargo Unico"],
+                          ["CARGO_UNICO", "Cargo único"],
                         ] as [ModalidadCobro, string][]
                       }
                     >
@@ -201,7 +201,9 @@ export function VenueForm(props: {
             </Show>
           </FieldTable>
 
-          <Show when={props.error}>{(message) => <p>{message()}</p>}</Show>
+          <Show when={props.error}>
+            {(message) => <p class={styles.error}>{message()}</p>}
+          </Show>
           <div class={styles.actions}>
             <Button
               type="submit"

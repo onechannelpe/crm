@@ -35,7 +35,20 @@
   border-color: var(--border-hover);
 }
 
-.onlineModeOptions {
+.section {
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.inlineOption {
+  margin-right: var(--spacing-3);
+}
+
+.radioGroup {
   display: flex;
   flex-direction: column;
   gap: 6px;

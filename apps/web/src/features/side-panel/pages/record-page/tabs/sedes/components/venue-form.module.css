@@ -7,5 +7,12 @@
 .actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 12px;
+  margin-top: var(--spacing-3);
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-2);
+  text-align: right;
 }

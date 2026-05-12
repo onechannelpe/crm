@@ -201,10 +201,8 @@ export function ScopingForm(props: {
       </WidgetHeader>
       <WidgetBody>
         <form onSubmit={(e) => void handleSubmit(e)}>
-          <div style={{ "margin-bottom": "16px" }}>
-            <div style={{ "font-weight": "600", "margin-bottom": "8px" }}>
-              Representante Legal
-            </div>
+          <div class={styles.section}>
+            <div class={styles.sectionTitle}>Representante Legal</div>
             <FieldTable>
               <FieldRow>
                 <FieldLabel>
@@ -289,10 +287,8 @@ export function ScopingForm(props: {
             </FieldTable>
           </div>
 
-          <div style={{ "margin-bottom": "16px" }}>
-            <div style={{ "font-weight": "600", "margin-bottom": "8px" }}>
-              Datos Comerciales
-            </div>
+          <div class={styles.section}>
+            <div class={styles.sectionTitle}>Datos Comerciales</div>
             <FieldTable>
               <FieldRow>
                 <FieldLabel>
@@ -386,10 +382,8 @@ export function ScopingForm(props: {
             </FieldTable>
           </div>
 
-          <div style={{ "margin-bottom": "16px" }}>
-            <div style={{ "font-weight": "600", "margin-bottom": "8px" }}>
-              Canal Digital
-            </div>
+          <div class={styles.section}>
+            <div class={styles.sectionTitle}>Canal Digital</div>
             <FieldTable>
               <FieldRow>
                 <FieldLabel>
@@ -414,7 +408,7 @@ export function ScopingForm(props: {
                     <FieldLabelText>Modalidad Link</FieldLabelText>
                   </FieldLabel>
                   <FieldInputValue>
-                    <label style={{ "margin-right": "12px" }}>
+                    <label class={styles.inlineOption}>
                       <input
                         type="radio"
                         name="linkScope"
@@ -476,7 +470,7 @@ export function ScopingForm(props: {
                     <FieldLabelText>Modalidad Online</FieldLabelText>
                   </FieldLabel>
                   <FieldInputValue>
-                    <label style={{ "margin-right": "12px" }}>
+                    <label class={styles.inlineOption}>
                       <input
                         type="radio"
                         name="onlineScope"
@@ -519,7 +513,7 @@ export function ScopingForm(props: {
                       <FieldLabelText>Modalidad de cobro</FieldLabelText>
                     </FieldLabel>
                     <FieldInputValue>
-                      <div class={styles.onlineModeOptions}>
+                      <div class={styles.radioGroup}>
                         <label>
                           <input
                             type="radio"
