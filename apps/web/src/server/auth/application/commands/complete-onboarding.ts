@@ -4,6 +4,7 @@ import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
+import type { PeMobilePhone } from "~/lib/phone/pe-mobile";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
@@ -22,7 +23,7 @@ export async function completeOnboarding(
       strongAuthMethod: "totp" | "passkey" | "federated" | null;
       strongAuthAt: number | null;
     };
-    phone: string;
+    phone: PeMobilePhone;
     ipAddress: string;
     userAgent: string | null;
     invalidateSession(sessionId: string): Promise<void>;

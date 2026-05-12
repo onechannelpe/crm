@@ -7,6 +7,7 @@ import {
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { parsePeMobilePhone } from "~/lib/phone/pe-mobile";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
 import { isErr } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
@@ -69,7 +70,7 @@ describe("passkey onboarding flow", () => {
 
         return completeAccountOnboardingWithRepos(transactionRepos, {
           userId,
-          phone: "999888777",
+          phone: parsePeMobilePhone("999888777")!,
         });
       });
 

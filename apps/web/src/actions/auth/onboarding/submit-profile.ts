@@ -1,7 +1,7 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { isValidPeMobile, normalizePeMobileInput } from "~/lib/phone/pe-mobile";
+import { parsePeMobilePhone } from "~/lib/phone/pe-mobile";
 
 import { getOnboardingRequirements } from "../policy";
 import { completeOnboarding } from "./index";
@@ -9,8 +9,8 @@ import { completeOnboarding } from "./index";
 export async function submitOnboardingProfile(input: {
   phone: string;
 }): Promise<{ redirectTo: string }> {
-  const phone = normalizePeMobileInput(input.phone);
-  if (!isValidPeMobile(phone)) {
+  const phone = parsePeMobilePhone(input.phone);
+  if (!phone) {
     throw validationError("El número debe tener 9 dígitos");
   }
 
