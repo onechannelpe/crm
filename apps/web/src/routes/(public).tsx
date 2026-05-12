@@ -30,7 +30,7 @@ export default function PublicLayout(props: RouteSectionProps) {
             <A href="/" class={styles.logo}>
               Culqi360
             </A>
-            <nav class={styles.nav} aria-label="Public">
+            <nav class={styles.nav} aria-label="Público">
               <For each={PUBLIC_MENU_ITEMS}>
                 {(item) => (
                   <A href={item.href} class={styles.navLink}>
@@ -40,11 +40,11 @@ export default function PublicLayout(props: RouteSectionProps) {
               </For>
             </nav>
             <div class={styles.rightControls}>
-              <A href="/login" class={styles.ctaGhost}>
-                Log in
+              <A href="/" class={styles.ctaGhost}>
+                Inicio
               </A>
               <A href="/login" class={styles.ctaPrimary}>
-                Get started
+                Iniciar sesión
               </A>
               <ThemeToggle class={styles.themeToggle} />
             </div>
