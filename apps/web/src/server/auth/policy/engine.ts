@@ -94,10 +94,10 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
 export function deriveOnboardingRequirements(
   user: Pick<
     CurrentUserView,
-    "phoneE164" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
+    "phone" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
   >,
 ): OnboardingRequirements {
-  const hasPhone = user.phoneE164 !== null;
+  const hasPhone = user.phone !== null;
   const strongAuthRequired = requiresStrongAuthRole(user.role);
   const requiredActions: Array<"set_profile" | "configure_strong_auth"> = [];
   const reasons: string[] = [];

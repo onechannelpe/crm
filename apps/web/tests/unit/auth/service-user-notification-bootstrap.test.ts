@@ -7,7 +7,7 @@ const NOW = 1_710_000_000_000;
 const INPUT = {
   userId: 5,
   email: "test@example.com",
-  phoneE164: "+51999888777",
+  phone: "999888777",
   now: NOW,
 } as const;
 
@@ -44,7 +44,7 @@ describe("bootstrapUserNotifications", () => {
     expect(claimWhatsAppAddress).toHaveBeenCalledTimes(1);
     expect(claimWhatsAppAddress).toHaveBeenCalledWith({
       userId: INPUT.userId,
-      address: INPUT.phoneE164,
+      address: INPUT.phone,
       now: NOW,
     });
     expect(upsertPreference).toHaveBeenCalledTimes(4);

@@ -28,7 +28,7 @@ export type CompleteOnboardingError =
 
 export interface CompleteOnboardingInput {
   userId: UserId;
-  phoneE164: string;
+  phone: string;
 }
 
 export interface AccountOnboardingDeps {
@@ -72,7 +72,7 @@ export async function completeAccountOnboardingWithRepos(
     {
       userId: user.id,
       email: user.email,
-      phoneE164: input.phoneE164,
+      phone: input.phone,
       now: completedAt,
     },
     repos,

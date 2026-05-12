@@ -7,7 +7,7 @@ type OnboardingUser = Parameters<typeof deriveOnboardingRequirements>[0];
 
 function createUser(overrides?: Partial<OnboardingUser>): OnboardingUser {
   return {
-    phoneE164: null,
+    phone: null,
     strongAuthConfigured: false,
     onboardingCompletedAt: null,
     role: "executive",
@@ -32,7 +32,7 @@ describe("onboarding flow", () => {
     const requirements = deriveOnboardingRequirements(
       createUser({
         role: "admin",
-        phoneE164: "+51999888777",
+        phone: "999888777",
       }),
     );
 
@@ -47,7 +47,7 @@ describe("onboarding flow", () => {
     const requirements = deriveOnboardingRequirements(
       createUser({
         role: "admin",
-        phoneE164: null,
+        phone: null,
       }),
     );
 
@@ -66,7 +66,7 @@ describe("onboarding flow", () => {
     const requirements = deriveOnboardingRequirements(
       createUser({
         role: "admin",
-        phoneE164: "+51999888777",
+        phone: "999888777",
         strongAuthConfigured: true,
         onboardingCompletedAt: 1_710_000_000_000,
       }),
@@ -81,7 +81,7 @@ describe("onboarding flow", () => {
   it("allows executive users without strong auth when profile is complete", () => {
     const requirements = deriveOnboardingRequirements(
       createUser({
-        phoneE164: "+51999888777",
+        phone: "999888777",
         onboardingCompletedAt: 1_710_000_000_000,
       }),
     );

@@ -9,7 +9,7 @@ import {
 } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
-import { isValidPeMobileLocal, toPeMobileE164 } from "~/lib/phone/pe-mobile";
+import { isValidPeMobile } from "~/lib/phone/pe-mobile";
 import { completeOnboarding as completeOnboardingService } from "~/server/auth/application/commands/complete-onboarding";
 import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
@@ -20,12 +20,12 @@ export interface OnboardingRedirectResponse {
   redirectTo: string;
 }
 
-function normalizePeruvianPhone(value: string): string {
+function normalizePhone(value: string): string {
   const v = value.replace(/\s+/g, "").trim();
-  if (!isValidPeMobileLocal(v)) {
+  if (!isValidPeMobile(v)) {
     throw validationError("El número debe tener 9 dígitos y empezar con 9");
   }
-  return toPeMobileE164(v);
+  return v;
 }
 
 function mapOnboardingError(error: { code: string; message: string }): never {
@@ -42,14 +42,14 @@ function mapOnboardingError(error: { code: string; message: string }): never {
 }
 
 export async function completeOnboarding(
-  phoneE164: string,
+  phone: string,
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
   const onboardingContext = getServerRuntime().auth.onboarding;
   const result = await completeOnboardingService(onboardingContext, {
     session,
-    phoneE164: normalizePeruvianPhone(phoneE164),
+    phone: normalizePhone(phone),
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
     invalidateSession: (sessionId) =>
@@ -62,7 +62,7 @@ export async function completeOnboarding(
 }
 
 export async function completePasskeyOnboarding(
-  phoneE164: string,
+  phone: string,
   challengeId: number,
   response: RegistrationResponseJSON,
 ): Promise<OnboardingRedirectResponse> {
@@ -91,7 +91,7 @@ export async function completePasskeyOnboarding(
       strongAuthMethod: "passkey",
       strongAuthAt: Date.now(),
     },
-    phoneE164: normalizePeruvianPhone(phoneE164),
+    phone: normalizePhone(phone),
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
     invalidateSession: (sessionId) =>

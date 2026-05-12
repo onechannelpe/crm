@@ -69,7 +69,7 @@ describe("passkey onboarding flow", () => {
 
         return completeAccountOnboardingWithRepos(transactionRepos, {
           userId,
-          phoneE164: "+51999888777",
+          phone: "999888777",
         });
       });
 
@@ -86,7 +86,7 @@ describe("passkey onboarding flow", () => {
         userId,
         "whatsapp",
       );
-    expect(whatsappAddr?.address).toBe("+51999888777");
+    expect(whatsappAddr?.address).toBe("999888777");
 
     const passkeys = await scenario.ctx.repos.passkeys.findByUser(userId);
     expect(passkeys).toHaveLength(1);

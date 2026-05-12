@@ -100,7 +100,7 @@ export async function seedLeadsRequestFixtures(
           },
           role: null,
           phones: {
-            primary: "+51911111111",
+            primary: "911111111",
             secondary: null,
             siblings: null,
           },

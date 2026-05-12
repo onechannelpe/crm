@@ -14,12 +14,7 @@ import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
 } from "~/lib/mutations/profile";
-import {
-  fromPeMobileE164,
-  isValidPeMobileLocal,
-  normalizePeMobileLocalInput,
-  toPeMobileE164,
-} from "~/lib/phone/pe-mobile";
+import { isValidPeMobile, normalizePeMobileInput } from "~/lib/phone/pe-mobile";
 import { shortName } from "~/lib/users/display-name";
 
 import styles from "./settings-page.module.css";
@@ -33,9 +28,7 @@ export default function ProfilePage() {
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const user = () => currentUser();
 
-  const [profilePhone, setProfilePhone] = createSignal(
-    fromPeMobileE164(user().phoneE164) ?? "",
-  );
+  const [profilePhone, setProfilePhone] = createSignal(user().phone || "");
   const [savingProfile, setSavingProfile] = createSignal(false);
   const [avatarUrl, setAvatarUrl] = createSignal(user().avatarUrl);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
@@ -64,9 +57,9 @@ export default function ProfilePage() {
 
   const saveProfile = async (e: Event) => {
     e.preventDefault();
-    const localPhone = normalizePeMobileLocalInput(profilePhone());
+    const localPhone = normalizePeMobileInput(profilePhone());
     setProfilePhone(localPhone);
-    if (!isValidPeMobileLocal(localPhone)) {
+    if (!isValidPeMobile(localPhone)) {
       enqueueErrorSnackBar("Ingresa 9 dígitos y que empiece con 9");
       return;
     }
@@ -75,7 +68,7 @@ export default function ProfilePage() {
       await updateUserProfile(localPhone);
       updateCurrentUser((existing) => ({
         ...existing,
-        phoneE164: toPeMobileE164(localPhone),
+        phone: localPhone,
       }));
       enqueueSuccessSnackBar("Perfil actualizado");
     } catch (err: unknown) {
@@ -185,9 +178,7 @@ export default function ProfilePage() {
               label="Teléfono"
               value={profilePhone()}
               onInput={(e) =>
-                setProfilePhone(
-                  normalizePeMobileLocalInput(e.currentTarget.value),
-                )
+                setProfilePhone(normalizePeMobileInput(e.currentTarget.value))
               }
               placeholder="987654321"
             />

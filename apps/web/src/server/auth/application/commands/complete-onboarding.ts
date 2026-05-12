@@ -22,7 +22,7 @@ export async function completeOnboarding(
       strongAuthMethod: "totp" | "passkey" | "federated" | null;
       strongAuthAt: number | null;
     };
-    phoneE164: string;
+    phone: string;
     ipAddress: string;
     userAgent: string | null;
     invalidateSession(sessionId: string): Promise<void>;
@@ -31,7 +31,7 @@ export async function completeOnboarding(
   const result = await deps.runInRepositoryTransaction((transactionRepos) =>
     completeAccountOnboardingWithRepos(transactionRepos, {
       userId: input.session.userId,
-      phoneE164: input.phoneE164,
+      phone: input.phone,
     }),
   );
   if (isErr(result)) {

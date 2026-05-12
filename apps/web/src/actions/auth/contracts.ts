@@ -13,7 +13,7 @@ export interface CurrentUserView {
   names: string;
   firstSurname: string;
   secondSurname: string;
-  phoneE164: string | null;
+  phone: string | null;
   avatarUrl: string | null;
   avatarVersion: number;
   onboardingCompletedAt: number | null;

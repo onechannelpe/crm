@@ -6,13 +6,13 @@ import { deriveFacts } from "./fact";
 
 export function buildView(input: {
   requirements: OnboardingRequirements;
-  userPhoneE164: string | null;
+  userPhone: string | null;
   phoneDraft: string | undefined;
   requestedStep: RequestedStep;
 }) {
   const facts = deriveFacts({
     requirements: input.requirements,
-    userPhoneE164: input.userPhoneE164,
+    userPhone: input.userPhone,
     phoneDraft: input.phoneDraft,
   });
   const state = resolveViewState(facts, input.requestedStep);

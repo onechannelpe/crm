@@ -52,7 +52,7 @@ export async function getCurrentUser(
     names: user.names,
     firstSurname: user.first_surname,
     secondSurname: user.second_surname,
-    phoneE164: whatsappAddr?.address ?? null,
+    phone: whatsappAddr?.address ?? null,
     avatarUrl: user.avatar_storage_key
       ? `/api/me/avatar?v=${user.avatar_version}`
       : null,

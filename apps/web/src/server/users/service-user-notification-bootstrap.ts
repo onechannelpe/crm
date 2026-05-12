@@ -10,13 +10,13 @@ type NotificationBootstrapRepos = {
 async function registerChannelAddresses(params: {
   userId: number;
   email: string;
-  phoneE164: string;
+  phone: string;
   now: number;
   repos: Pick<NotificationBootstrapRepos, "userChannelAddresses">;
 }): Promise<
   Result<void, { code: "address_already_claimed"; ownerUserId: number }>
 > {
-  const { userId, email, phoneE164, now, repos } = params;
+  const { userId, email, phone, now, repos } = params;
 
   await repos.userChannelAddresses.upsert({
     user_id: userId,
@@ -30,7 +30,7 @@ async function registerChannelAddresses(params: {
 
   const claimResult = await repos.userChannelAddresses.claimWhatsAppAddress({
     userId,
-    address: phoneE164,
+    address: phone,
     now,
   });
   if (claimResult.kind === "already_claimed") {
@@ -88,7 +88,7 @@ export async function bootstrapUserNotifications(
   params: {
     userId: number;
     email: string;
-    phoneE164: string;
+    phone: string;
     now: number;
   },
   repos: NotificationBootstrapRepos,
@@ -98,7 +98,7 @@ export async function bootstrapUserNotifications(
   const channelsResult = await registerChannelAddresses({
     userId: params.userId,
     email: params.email,
-    phoneE164: params.phoneE164,
+    phone: params.phone,
     now: params.now,
     repos,
   });

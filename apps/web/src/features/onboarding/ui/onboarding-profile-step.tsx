@@ -2,10 +2,7 @@ import { Show } from "solid-js";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
-import {
-  isValidPeMobileLocal,
-  normalizePeMobileLocalInput,
-} from "~/lib/phone/pe-mobile";
+import { isValidPeMobile, normalizePeMobileInput } from "~/lib/phone/pe-mobile";
 
 import styles from "./onboarding-profile-step.module.css";
 
@@ -19,7 +16,7 @@ interface OnboardingProfileStepProps {
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const phoneError = () =>
-    props.phone.length > 0 && !isValidPeMobileLocal(props.phone);
+    props.phone.length > 0 && !isValidPeMobile(props.phone);
 
   return (
     <section class={styles.stepStack}>
@@ -60,7 +57,6 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
         <label class={styles.phoneLabel}>
           <span class={styles.phoneLabelText}>WhatsApp corporativo</span>
           <div class={styles.phoneRow}>
-            <span class={styles.phonePrefix}>+51</span>
             <input
               id="onboarding-phone"
               type="tel"
@@ -70,7 +66,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
               value={props.phone}
               onInput={(e) =>
                 props.onPhoneInput(
-                  normalizePeMobileLocalInput(e.currentTarget.value),
+                  normalizePeMobileInput(e.currentTarget.value),
                 )
               }
               required
