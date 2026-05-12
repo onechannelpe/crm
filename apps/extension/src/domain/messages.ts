@@ -2,7 +2,6 @@ import type { BridgeResponse } from "@crm/contracts/extension";
 export type { ExternalRuntimeMessage } from "@crm/contracts/extension";
 export { isExternalRuntimeMessage } from "@crm/contracts/extension";
 import { isBridgeResponse } from "@crm/contracts/extension";
-import type { ExecutiveStateSnapshot } from "@crm/contracts/extension";
 
 import type { ExtensionState } from "./model";
 
@@ -58,11 +57,9 @@ export type RuntimeMessage =
 export type RuntimeResponse =
   | (Extract<BridgeResponse, { ok: true }> & {
       state: ExtensionState;
-      executiveState: ExecutiveStateSnapshot;
     })
   | (Extract<BridgeResponse, { ok: false }> & {
       state?: ExtensionState;
-      executiveState?: ExecutiveStateSnapshot;
     });
 
 function isObject(value: unknown): value is Record<string, unknown> {
