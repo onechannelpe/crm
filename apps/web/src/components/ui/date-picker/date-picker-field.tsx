@@ -49,7 +49,7 @@ export function DatePicker(props: DatePickerProps) {
   );
   let fieldRef: HTMLDivElement | undefined;
   let controlRef: HTMLDivElement | undefined;
-  let popoverRef: HTMLDivElement | undefined;
+  let popoverRef: HTMLDialogElement | undefined;
 
   const closePicker = () => {
     setIsOpen(false);

@@ -30,21 +30,14 @@ export function DataGridHeader<T>(props: {
   return (
     <div
       class={styles.headerRow}
-      role="row"
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
       {props.reorderable ? (
-        <div
-          class={`${styles.headerCell} ${styles.reorderCell}`}
-          role="columnheader"
-          aria-colindex={1}
-        />
+        <div class={`${styles.headerCell} ${styles.reorderCell}`} />
       ) : null}
       {props.selectable === false ? null : (
         <div
           class={`${styles.headerCell} ${styles.checkboxCell}`}
-          role="columnheader"
-          aria-colindex={props.reorderable ? 2 : 1}
           style={
             props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
           }
@@ -61,15 +54,11 @@ export function DataGridHeader<T>(props: {
       <For each={props.columns}>
         {(column, index) => {
           const Icon = column.icon;
-          const colIndex = () =>
-            index() + (props.selectable ? 2 : 1) + (props.reorderable ? 1 : 0);
           const isSticky = () => index() === props.stickyColumnIndex;
 
           return (
             <div
               class={`${styles.headerCell}${isSticky() ? ` ${styles.stickyCell}` : ""}`}
-              role="columnheader"
-              aria-colindex={colIndex()}
               style={isSticky() ? { left: `${props.stickyLeft}px` } : undefined}
             >
               <span class={styles.headerCellContent}>
@@ -96,10 +85,7 @@ export function DataGridHeader<T>(props: {
         }}
       </For>
       {props.onAddColumn ? (
-        <div
-          class={`${styles.headerCell} ${styles.addColumnCell}`}
-          role="columnheader"
-        >
+        <div class={`${styles.headerCell} ${styles.addColumnCell}`}>
           <button
             type="button"
             class={styles.addColumnButton}

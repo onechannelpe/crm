@@ -110,6 +110,7 @@
   position: fixed;
   z-index: calc(var(--z-index-dialog, 50) + 1);
   width: 280px;
+  margin: 0;
   padding: 0 8px 8px;
   border: 1px solid color-mix(in oklab, var(--border) 90%, transparent);
   border-radius: var(--radius-md);

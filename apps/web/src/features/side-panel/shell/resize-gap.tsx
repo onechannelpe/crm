@@ -13,11 +13,10 @@ type ResizeGapFrameProps = {
 
 export function ResizeGapFrame(props: ResizeGapFrameProps) {
   return (
-    <div
+    <hr
       class={cn(styles.gap, !props.isOpen && styles.gapClosed)}
       onPointerDown={props.onPointerDown}
       data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
-      role="separator"
       aria-orientation="vertical"
     />
   );

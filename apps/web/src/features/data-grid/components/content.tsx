@@ -47,7 +47,6 @@ export function DataGridContent<T extends { id: string }>(props: {
   const stickyLeft = () =>
     selectionLeft() + (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
   const rows = () => props.source.rows;
-  const totalCount = () => props.source.totalCount;
   const isLoading = () => props.source.status === "pending";
   const isError = () => props.source.status === "error";
   const errorState = () => props.errorState ?? <>No se pudo cargar la tabla.</>;
@@ -75,14 +74,6 @@ export function DataGridContent<T extends { id: string }>(props: {
             ref={props.setContainer}
             class={styles.table}
             aria-label={props.ariaLabel}
-            aria-colcount={
-              props.columns.length +
-              (props.selectable ? 1 : 0) +
-              (props.reorderable ? 1 : 0)
-            }
-            aria-multiselectable={props.selectable ? "true" : undefined}
-            aria-rowcount={(totalCount() ?? rows().length) + 1}
-            role="grid"
           >
             <DataGridHeader
               columns={props.columns}

@@ -95,7 +95,7 @@ export function CommandPalette(props: CommandPaletteProps) {
         onClick={handleOverlayClick}
         role="presentation"
       >
-        <div class={styles.dialog} role="dialog" aria-modal="true">
+        <dialog open class={styles.dialog} aria-modal="true">
           <div class={styles.searchBox}>
             <Search size={16} class={styles.searchIcon} />
             <input
@@ -152,7 +152,7 @@ export function CommandPalette(props: CommandPaletteProps) {
               Cerrar
             </span>
           </div>
-        </div>
+        </dialog>
       </div>
     </Show>
   );

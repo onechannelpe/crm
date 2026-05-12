@@ -55,7 +55,7 @@ export default function LoginPage() {
           </Show>
         </div>
 
-        <div class={pageStyles.separator} role="separator" />
+        <hr class={pageStyles.separator} />
 
         <div class={pageStyles.ssoButtonContainer}>
           <Button

@@ -7,16 +7,26 @@
 .progressTrack {
   width: 100%;
   height: 3px;
-  background: var(--border);
+  border: none;
+  background-color: var(--border);
   border-radius: 999px;
   overflow: hidden;
+  appearance: none;
 }
 
-.progressFill {
-  height: 100%;
+.progressTrack::-webkit-progress-bar {
+  background-color: var(--border);
+}
+
+.progressTrack::-webkit-progress-value {
   background: var(--foreground);
   border-radius: 999px;
   transition: width 300ms ease;
+}
+
+.progressTrack::-moz-progress-bar {
+  background: var(--foreground);
+  border-radius: 999px;
 }
 
 .totpStack {

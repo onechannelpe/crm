@@ -51,9 +51,9 @@ export function PreviewModal(props: PreviewModalProps) {
                 }
               }}
             >
-              <section
+              <dialog
+                open
                 class={styles.previewDialog}
-                role="dialog"
                 aria-modal="true"
                 aria-labelledby={`preview-title-${state().file.id}`}
               >
@@ -124,7 +124,7 @@ export function PreviewModal(props: PreviewModalProps) {
                     </Match>
                   </Switch>
                 </div>
-              </section>
+              </dialog>
             </div>
           )}
         </Show>

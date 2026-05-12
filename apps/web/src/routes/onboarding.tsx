@@ -19,16 +19,12 @@ import styles from "./onboarding-page.module.css";
 function OnboardingProgress(props: { step: OnboardingView }) {
   const percent = () => (props.step === "profile" ? 50 : 100);
   return (
-    <div
+    <progress
       class={styles.progressTrack}
-      role="progressbar"
-      aria-valuenow={percent()}
-      aria-valuemin={0}
-      aria-valuemax={100}
+      value={percent()}
+      max={100}
       aria-label="Progreso del registro"
-    >
-      <div class={styles.progressFill} style={{ width: `${percent()}%` }} />
-    </div>
+    />
   );
 }
 
