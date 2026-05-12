@@ -1,4 +1,3 @@
-import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import {
   assertNonEmptyString,
@@ -63,19 +62,4 @@ export function parseInviteIdInput(
       ),
     );
   }
-}
-
-export function parseAcceptTeamInviteInput(input: {
-  token: string;
-  password: string;
-}): { token: string; password: string } {
-  const token = input.token.trim();
-  if (token.length === 0) {
-    throw validationError("token is required");
-  }
-
-  return {
-    token,
-    password: input.password,
-  };
 }

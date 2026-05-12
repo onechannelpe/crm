@@ -61,20 +61,3 @@ export function assertOptionalExpiresAt(
   }
   return ts;
 }
-
-export function assertStrongPassword(value: string): string {
-  const safe = assertNonEmptyString(value, "password");
-  if (safe.length < 12) {
-    throw validationError("password must contain at least 12 characters");
-  }
-  if (!/[A-Z]/.test(safe)) {
-    throw validationError("password must include an uppercase letter");
-  }
-  if (!/[a-z]/.test(safe)) {
-    throw validationError("password must include a lowercase letter");
-  }
-  if (!/[0-9]/.test(safe)) {
-    throw validationError("password must include a number");
-  }
-  return safe;
-}

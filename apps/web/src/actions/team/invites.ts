@@ -1,28 +1,15 @@
 "use server";
 
-import type { InviteInfo } from "~/actions/team/contracts";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 import {
   createTeamInvite as createTeamInviteService,
-  getInviteInfo as getInviteInfoService,
   resendTeamInvite as resendTeamInviteService,
   revokeTeamInvite as revokeTeamInviteService,
 } from "~/server/team/application/invites";
 
 import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
-
-export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
-  const result = await getInviteInfoService({
-    token,
-    repos: getServerRuntime().team.invites.repos,
-  });
-  if (isErr(result)) {
-    throw result.error;
-  }
-  return result.value;
-}
 
 export async function createTeamInvite(input: {
   names: string;

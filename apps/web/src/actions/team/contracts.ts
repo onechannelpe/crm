@@ -56,12 +56,6 @@ export interface InviteManagement {
   assignableRoles: RoleOption[];
 }
 
-export interface InviteInfo {
-  fullName: string;
-  username: string;
-  email: string;
-}
-
 export interface CreateTeamInviteCommand {
   names: string;
   firstSurname: string;

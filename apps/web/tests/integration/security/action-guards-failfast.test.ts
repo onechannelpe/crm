@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getUserLoginRetryReport } from "~/actions/admin/auth-security";
 import { listUserSessions } from "~/actions/admin/sessions/read";
 import { revokeUserSession } from "~/actions/admin/sessions/revoke";
-import { acceptTeamInvite } from "~/actions/team/acceptance";
+import { acceptInvitePasswordStep } from "~/actions/auth/invite";
 import {
   createTeamInvite,
   resendTeamInvite,
@@ -45,7 +45,7 @@ describe("action guards fail fast", () => {
       }),
     ).rejects.toThrow("role is invalid");
     await expect(
-      acceptTeamInvite({
+      acceptInvitePasswordStep({
         token: "invalid",
         password: "Password123",
       }),
