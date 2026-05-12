@@ -1,4 +1,5 @@
 import type {
+  AbonoBank,
   ModalidadCobro,
   ProductScope,
 } from "~/workflow/contracts/lead-schema";
@@ -14,6 +15,8 @@ export type LeadProfile = {
   onlineScope: ProductScope;
   onlineUrl: string | null;
   onlineModalidad: ModalidadCobro | null;
+  abonoBank: AbonoBank | null;
+  posTotal: number | null;
   updatedAt: number;
   updatedBy: number;
 };

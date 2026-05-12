@@ -14,7 +14,9 @@ export type LeadHistoryEventType =
   | "workflow_stage_changed"
   | "lead_assigned"
   | "lead_reassigned"
-  | "commercial_input_completed"
+  | "commercial_scope_saved"
+  | "quotation_requested"
+  | "rep_legal_recorded"
   | "quotation_created"
   | "sale_approved"
   | "venue_added"
@@ -57,21 +59,26 @@ export type LeadHistoryPayloadByEvent = {
     toExecutiveId: number;
     reason?: string;
   };
-  commercial_input_completed: {
+  commercial_scope_saved: {
     proveedorActual: string;
     tasaActual: number;
     gpv: number;
     ticket: number;
     giroNegocio: string;
+    abonoBank: string | null;
+    posTotal: number | null;
     linkScope: string | null;
     onlineScope: string | null;
     onlineModalidad: string | null;
-    repLegalNombres: string;
-    repLegalApellidoPaterno: string;
-    repLegalApellidoMaterno: string;
-    repLegalDni: string;
-    repLegalTelefono: string;
-    repLegalEmail: string;
+  };
+  quotation_requested: null;
+  rep_legal_recorded: {
+    nombres: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    dni: string;
+    telefono: string;
+    email: string;
   };
   quotation_created: {
     quotationId: string;

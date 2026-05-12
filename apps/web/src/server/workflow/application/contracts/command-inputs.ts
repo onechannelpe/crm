@@ -1,4 +1,5 @@
 import type {
+  AbonoBank,
   LeadCallOutcome,
   LeadPriority,
   LeadStatus,
@@ -79,7 +80,7 @@ export type CreateQuotationInput = {
   moneda: Moneda;
 };
 
-export type CompleteScopingInput = {
+export type SaveCommercialScopeInput = {
   actor: ActorContext;
   leadId: string;
   proveedorActual: string;
@@ -87,17 +88,29 @@ export type CompleteScopingInput = {
   gpv: number;
   ticket: number;
   giroNegocio: string;
+  abonoBank: AbonoBank;
+  posTotal: number;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
   onlineModalidad: ModalidadCobro | null;
-  repLegalNombres: string;
-  repLegalApellidoPaterno: string;
-  repLegalApellidoMaterno: string;
-  repLegalDni: string;
-  repLegalTelefono: string;
-  repLegalEmail: string;
+};
+
+export type RequestQuotationInput = {
+  actor: ActorContext;
+  leadId: string;
+};
+
+export type RecordRepLegalInput = {
+  actor: ActorContext;
+  leadId: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string;
+  email: string;
 };
 
 export type RequestRateNegotiationInput = {

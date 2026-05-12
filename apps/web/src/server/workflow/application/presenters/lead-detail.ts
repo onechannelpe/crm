@@ -19,6 +19,7 @@ import type {
   LeadDetailNegotiationRequestView,
   LeadDetailProfileView,
   LeadDetailQuotationView,
+  LeadDetailRepLegalView,
   LeadDetailSourceStatusView,
   LeadDetailVenueView,
   LeadDetailView,
@@ -109,7 +110,6 @@ function toLeadDetailLead(
 function toLeadDetailProfile(
   profile: LeadProfile,
   organization: OrganizationProfile | undefined,
-  legalRepresentative: LegalRepresentative | undefined,
 ): LeadDetailProfileView {
   return {
     leadId: profile.leadId,
@@ -118,19 +118,28 @@ function toLeadDetailProfile(
     gpv: profile.gpv,
     ticket: profile.ticket,
     giroNegocio: organization?.giroNegocio ?? null,
+    abonoBank: profile.abonoBank,
+    posTotal: profile.posTotal,
     linkScope: profile.linkScope,
     linkUrl: profile.linkUrl,
     onlineScope: profile.onlineScope,
     onlineUrl: profile.onlineUrl,
     onlineModalidad: profile.onlineModalidad,
-    repLegalNombres: legalRepresentative?.nombres ?? null,
-    repLegalApellidoPaterno: legalRepresentative?.apellidoPaterno ?? null,
-    repLegalApellidoMaterno: legalRepresentative?.apellidoMaterno ?? null,
-    repLegalDni: legalRepresentative?.dni ?? null,
-    repLegalTelefono: legalRepresentative?.telefono ?? null,
-    repLegalEmail: legalRepresentative?.email ?? null,
     updatedAt: profile.updatedAt,
     updatedBy: profile.updatedBy,
+  };
+}
+
+function toLeadDetailRepLegal(
+  legalRepresentative: LegalRepresentative,
+): LeadDetailRepLegalView {
+  return {
+    nombres: legalRepresentative.nombres,
+    apellidoPaterno: legalRepresentative.apellidoPaterno,
+    apellidoMaterno: legalRepresentative.apellidoMaterno,
+    dni: legalRepresentative.dni,
+    telefono: legalRepresentative.telefono ?? null,
+    email: legalRepresentative.email ?? null,
   };
 }
 
@@ -215,11 +224,10 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       source.updatedByName,
     ),
     profile: source.profile
-      ? toLeadDetailProfile(
-          source.profile,
-          source.organization,
-          source.legalRepresentative,
-        )
+      ? toLeadDetailProfile(source.profile, source.organization)
+      : undefined,
+    repLegal: source.legalRepresentative
+      ? toLeadDetailRepLegal(source.legalRepresentative)
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
     venues: source.venues.map(toLeadDetailVenue),
@@ -230,6 +238,8 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     availableActions: source.availableActions,
     blockingFields: presentLeadBlockingFields({
       lead: source.lead,
+      profile: source.profile,
+      organization: source.organization,
       venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
         .length,
     }),

@@ -97,13 +97,31 @@ export function presentTimelineItem(
         description: `${subjectDisplayName} reasignado por ${actorDisplayName}.`,
         actorDisplayName,
       };
-    case "commercial_input_completed":
+    case "commercial_scope_saved":
       return {
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "system",
-        title: "Información comercial completada",
-        description: `Completada por ${actorDisplayName}.`,
+        title: "Alcance comercial guardado",
+        description: `Guardado por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "quotation_requested":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "stage-change",
+        title: "Cotización solicitada",
+        description: `Solicitada por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "rep_legal_recorded":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Representante legal registrado",
+        description: `Registrado por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "quotation_created":

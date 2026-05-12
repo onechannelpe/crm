@@ -3,7 +3,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
-import type { CompleteScopingInput } from "../contracts/command-inputs";
+import type { SaveCommercialScopeInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import {
   canCompleteScoping,
@@ -20,7 +20,7 @@ import {
 } from "../services/digital-product-policy";
 import type { LeadClock } from "../services/lead-clock";
 
-type CompleteScopingCommandDeps = {
+type SaveCommercialScopeCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
   leadProfiles: LeadProfileRepository;
@@ -29,9 +29,9 @@ type CompleteScopingCommandDeps = {
   clock: LeadClock;
 };
 
-export async function completeScopingCommand(
-  deps: CompleteScopingCommandDeps,
-  input: CompleteScopingInput,
+export async function saveCommercialScopeCommand(
+  deps: SaveCommercialScopeCommandDeps,
+  input: SaveCommercialScopeInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const canComplete = requirePipelineActionAccess(
     input.actor.role,
@@ -47,7 +47,7 @@ export async function completeScopingCommand(
       domainError(
         "forbidden",
         "not_owner",
-        "Only the assigned executive can complete scoping",
+        "Only the assigned executive can save commercial scope",
       ),
     );
   }
@@ -85,6 +85,8 @@ export async function completeScopingCommand(
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
+    abonoBank: input.abonoBank,
+    posTotal: input.posTotal,
     ...digitalFields,
     updatedAt: now,
     updatedBy: input.actor.userId,
@@ -94,38 +96,25 @@ export async function completeScopingCommand(
     organizationId: lead.organizationId,
     giroNegocio: input.giroNegocio,
   });
-  await deps.party.upsertPrimaryLegalRepresentative({
-    organizationId: lead.organizationId,
-    nombres: input.repLegalNombres,
-    apellidoPaterno: input.repLegalApellidoPaterno,
-    apellidoMaterno: input.repLegalApellidoMaterno,
-    dni: input.repLegalDni,
-    telefono: input.repLegalTelefono,
-    email: input.repLegalEmail,
-  });
 
   const outcome = await deps.mutationUow.commit({
     lead,
     actorUserId: input.actor.userId,
     now,
     intent: {
-      kind: "complete_scoping",
+      kind: "save_commercial_scope",
       proveedorActual: input.proveedorActual,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
       giroNegocio: input.giroNegocio,
+      abonoBank: input.abonoBank,
+      posTotal: input.posTotal,
       linkScope: digitalFields.linkScope,
       linkUrl: digitalFields.linkUrl,
       onlineScope: digitalFields.onlineScope,
       onlineUrl: digitalFields.onlineUrl,
       onlineModalidad: digitalFields.onlineModalidad,
-      repLegalNombres: input.repLegalNombres,
-      repLegalApellidoPaterno: input.repLegalApellidoPaterno,
-      repLegalApellidoMaterno: input.repLegalApellidoMaterno,
-      repLegalDni: input.repLegalDni,
-      repLegalTelefono: input.repLegalTelefono,
-      repLegalEmail: input.repLegalEmail,
     },
   });
   if (!outcome.ok) return outcome;

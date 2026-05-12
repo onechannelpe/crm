@@ -1,6 +1,7 @@
 import type { Generated } from "kysely";
 
 import type {
+  AbonoBank,
   LeadStage,
   ModalidadCobro,
   ProductScope,
@@ -30,6 +31,8 @@ export interface WorkflowLeadProfilesTable {
   online_scope: ProductScope;
   online_url: string | null;
   online_modalidad: ModalidadCobro | null;
+  abono_bank: AbonoBank | null;
+  pos_total: number | null;
   updated_at: number;
   updated_by: number;
 }
@@ -78,7 +81,9 @@ export interface WorkflowHistoryEventsTable {
     | "workflow_stage_changed"
     | "lead_assigned"
     | "lead_reassigned"
-    | "commercial_input_completed"
+    | "commercial_scope_saved"
+    | "quotation_requested"
+    | "rep_legal_recorded"
     | "quotation_created"
     | "sale_approved"
     | "venue_added"

@@ -248,12 +248,12 @@ export function deriveLeadMutationEvents(input: {
     });
   }
 
-  if (intent.kind === "complete_scoping") {
+  if (intent.kind === "save_commercial_scope") {
     return Ok({
       history: [
         createHistoryEvent({
           leadId: lead.id,
-          eventType: "commercial_input_completed",
+          eventType: "commercial_scope_saved",
           actorUserId,
           payload: {
             proveedorActual: intent.proveedorActual,
@@ -261,16 +261,31 @@ export function deriveLeadMutationEvents(input: {
             gpv: intent.gpv,
             ticket: intent.ticket,
             giroNegocio: intent.giroNegocio,
+            abonoBank: intent.abonoBank,
+            posTotal: intent.posTotal,
             linkScope: intent.linkScope,
             onlineScope: intent.onlineScope,
             onlineModalidad: intent.onlineModalidad,
-            repLegalNombres: intent.repLegalNombres,
-            repLegalApellidoPaterno: intent.repLegalApellidoPaterno,
-            repLegalApellidoMaterno: intent.repLegalApellidoMaterno,
-            repLegalDni: intent.repLegalDni,
-            repLegalTelefono: intent.repLegalTelefono,
-            repLegalEmail: intent.repLegalEmail,
           },
+          occurredAt: now,
+        }),
+      ],
+      audit: {
+        action: "commercial_scope_saved",
+        entityId: lead.id,
+        changes: {},
+      },
+    });
+  }
+
+  if (intent.kind === "request_quotation") {
+    return Ok({
+      history: [
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "quotation_requested",
+          actorUserId,
+          payload: null,
           occurredAt: now,
         }),
         createHistoryEvent({
@@ -282,9 +297,35 @@ export function deriveLeadMutationEvents(input: {
         }),
       ],
       audit: {
-        action: "complete_scoping",
+        action: "quotation_requested",
         entityId: lead.id,
         changes: { from: lead.stage, to: "QUOTING" },
+      },
+    });
+  }
+
+  if (intent.kind === "record_rep_legal") {
+    return Ok({
+      history: [
+        createHistoryEvent({
+          leadId: lead.id,
+          eventType: "rep_legal_recorded",
+          actorUserId,
+          payload: {
+            nombres: intent.nombres,
+            apellidoPaterno: intent.apellidoPaterno,
+            apellidoMaterno: intent.apellidoMaterno,
+            dni: intent.dni,
+            telefono: intent.telefono,
+            email: intent.email,
+          },
+          occurredAt: now,
+        }),
+      ],
+      audit: {
+        action: "rep_legal_recorded",
+        entityId: lead.id,
+        changes: {},
       },
     });
   }

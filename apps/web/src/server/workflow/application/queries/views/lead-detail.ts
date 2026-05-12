@@ -1,5 +1,6 @@
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import type {
+  AbonoBank,
   LeadPriority,
   LeadStage,
   LeadStatus,
@@ -51,19 +52,24 @@ export type LeadDetailProfileView = {
   gpv: number | null;
   ticket: number | null;
   giroNegocio: string | null;
+  abonoBank: AbonoBank | null;
+  posTotal: number | null;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
   onlineModalidad: ModalidadCobro | null;
-  repLegalNombres: string | null;
-  repLegalApellidoPaterno: string | null;
-  repLegalApellidoMaterno: string | null;
-  repLegalDni: string | null;
-  repLegalTelefono: string | null;
-  repLegalEmail: string | null;
   updatedAt: number;
   updatedBy: number;
+};
+
+export type LeadDetailRepLegalView = {
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string | null;
+  email: string | null;
 };
 
 export type LeadDetailQuotationView = {
@@ -131,6 +137,7 @@ export type LeadDetailNegotiationRequestView = {
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
   profile: LeadDetailProfileView | undefined;
+  repLegal: LeadDetailRepLegalView | undefined;
   quotations: LeadDetailQuotationView[];
   venues: LeadDetailVenueView[];
   negotiationRequests: LeadDetailNegotiationRequestView[];

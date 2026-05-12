@@ -5,13 +5,14 @@ import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
 import {
+  nullableNumber,
   nullableString,
   requireMoneda,
   requireNumber,
   requireString,
 } from "./history-payload-fields";
 
-export function toCommercialInputEntry(
+export function toCommercialScopeEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
@@ -29,51 +30,82 @@ export function toCommercialInputEntry(
 
   const giroNegocio = requireString(payload, "giroNegocio", row);
   if (!giroNegocio.ok) return giroNegocio;
+
+  const abonoBank = nullableString(payload, "abonoBank", row);
+  if (!abonoBank.ok) return abonoBank;
+
+  const posTotal = nullableNumber(payload, "posTotal", row);
+  if (!posTotal.ok) return posTotal;
+
   const linkScope = nullableString(payload, "linkScope", row);
   if (!linkScope.ok) return linkScope;
+
   const onlineScope = nullableString(payload, "onlineScope", row);
   if (!onlineScope.ok) return onlineScope;
+
   const onlineModalidad = nullableString(payload, "onlineModalidad", row);
   if (!onlineModalidad.ok) return onlineModalidad;
-  const repLegalNombres = requireString(payload, "repLegalNombres", row);
-  if (!repLegalNombres.ok) return repLegalNombres;
-  const repLegalApellidoPaterno = requireString(
-    payload,
-    "repLegalApellidoPaterno",
-    row,
-  );
-  if (!repLegalApellidoPaterno.ok) return repLegalApellidoPaterno;
-  const repLegalApellidoMaterno = requireString(
-    payload,
-    "repLegalApellidoMaterno",
-    row,
-  );
-  if (!repLegalApellidoMaterno.ok) return repLegalApellidoMaterno;
-  const repLegalDni = requireString(payload, "repLegalDni", row);
-  if (!repLegalDni.ok) return repLegalDni;
-  const repLegalTelefono = requireString(payload, "repLegalTelefono", row);
-  if (!repLegalTelefono.ok) return repLegalTelefono;
-  const repLegalEmail = requireString(payload, "repLegalEmail", row);
-  if (!repLegalEmail.ok) return repLegalEmail;
 
   return Ok({
     ...toHistoryEntryBase(row),
-    eventType: "commercial_input_completed",
+    eventType: "commercial_scope_saved",
     payload: {
       proveedorActual: proveedorActual.value,
       tasaActual: tasaActual.value,
       gpv: gpv.value,
       ticket: ticket.value,
       giroNegocio: giroNegocio.value,
+      abonoBank: abonoBank.value,
+      posTotal: posTotal.value,
       linkScope: linkScope.value,
       onlineScope: onlineScope.value,
       onlineModalidad: onlineModalidad.value,
-      repLegalNombres: repLegalNombres.value,
-      repLegalApellidoPaterno: repLegalApellidoPaterno.value,
-      repLegalApellidoMaterno: repLegalApellidoMaterno.value,
-      repLegalDni: repLegalDni.value,
-      repLegalTelefono: repLegalTelefono.value,
-      repLegalEmail: repLegalEmail.value,
+    },
+  });
+}
+
+export function toRequestQuotationEntry(
+  row: HistoryEventRow,
+): Result<LeadHistoryEntry, DomainError> {
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "quotation_requested",
+    payload: null,
+  });
+}
+
+export function toRepLegalEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const nombres = requireString(payload, "nombres", row);
+  if (!nombres.ok) return nombres;
+
+  const apellidoPaterno = requireString(payload, "apellidoPaterno", row);
+  if (!apellidoPaterno.ok) return apellidoPaterno;
+
+  const apellidoMaterno = requireString(payload, "apellidoMaterno", row);
+  if (!apellidoMaterno.ok) return apellidoMaterno;
+
+  const dni = requireString(payload, "dni", row);
+  if (!dni.ok) return dni;
+
+  const telefono = requireString(payload, "telefono", row);
+  if (!telefono.ok) return telefono;
+
+  const email = requireString(payload, "email", row);
+  if (!email.ok) return email;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "rep_legal_recorded",
+    payload: {
+      nombres: nombres.value,
+      apellidoPaterno: apellidoPaterno.value,
+      apellidoMaterno: apellidoMaterno.value,
+      dni: dni.value,
+      telefono: telefono.value,
+      email: email.value,
     },
   });
 }

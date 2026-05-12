@@ -3,8 +3,10 @@ import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 
 import {
-  toCommercialInputEntry,
+  toCommercialScopeEntry,
   toQuotationEntry,
+  toRepLegalEntry,
+  toRequestQuotationEntry,
   toVenueAddedEntry,
 } from "./history-commercial-parser";
 import type { HistoryEventRow } from "./history-event-row";
@@ -44,8 +46,12 @@ export function toHistoryEntry(
       return toAssignmentEntry(row, payload.value);
     case "lead_reassigned":
       return toReassignmentEntry(row, payload.value);
-    case "commercial_input_completed":
-      return toCommercialInputEntry(row, payload.value);
+    case "commercial_scope_saved":
+      return toCommercialScopeEntry(row, payload.value);
+    case "quotation_requested":
+      return toRequestQuotationEntry(row);
+    case "rep_legal_recorded":
+      return toRepLegalEntry(row, payload.value);
     case "quotation_created":
       return toQuotationEntry(row, payload.value);
     case "sale_approved":

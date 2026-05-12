@@ -28,7 +28,7 @@ export function resolveAvailableActions(input: {
     ownsLead &&
     input.lead.stage === "SCOPING"
   ) {
-    actions.push("complete-scoping");
+    actions.push("request-quotation");
   }
   if (canReviewLead(input.actorRole) && input.lead.stage === "QUALIFYING") {
     actions.push("review-lead");

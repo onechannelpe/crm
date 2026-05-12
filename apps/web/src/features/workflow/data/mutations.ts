@@ -10,8 +10,10 @@ import {
   requestLeadCreation,
   requestLeadReassignment,
   requestLeadReview,
+  requestQuotation,
+  requestRecordRepLegal,
   requestRemoveLeadFromFavorites,
-  requestScopingCompletion,
+  requestSaveCommercialScope,
 } from "~/actions/workflow/commands/records";
 import {
   requestVenueAccountsAddition,
@@ -65,7 +67,7 @@ export const reviewLeadMutation = action(
   "workflow.reviewLead",
 );
 
-export const completeScopingMutation = action(
+export const saveCommercialScopeMutation = action(
   async (input: {
     leadId: string;
     proveedorActual: string;
@@ -73,25 +75,51 @@ export const completeScopingMutation = action(
     gpv: number;
     ticket: number;
     giroNegocio: string;
+    abonoBank: AbonoBank;
+    posTotal: number;
     linkScope: ProductScope;
     linkUrl: string | null;
     onlineScope: ProductScope;
     onlineUrl: string | null;
     onlineModalidad: ModalidadCobro | null;
-    repLegalNombres: string;
-    repLegalApellidoPaterno: string;
-    repLegalApellidoMaterno: string;
-    repLegalDni: string;
-    repLegalTelefono: string;
-    repLegalEmail: string;
   }) => {
-    await requestScopingCompletion(input);
+    await requestSaveCommercialScope(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
     );
   },
-  "workflow.completeScoping",
+  "workflow.saveCommercialScope",
+);
+
+export const requestQuotationMutation = action(
+  async (input: { leadId: string }) => {
+    await requestQuotation(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.requestQuotation",
+);
+
+export const recordRepLegalMutation = action(
+  async (input: {
+    leadId: string;
+    nombres: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    dni: string;
+    telefono: string;
+    email: string;
+  }) => {
+    await requestRecordRepLegal(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.recordRepLegal",
 );
 
 export const createQuotationMutation = action(

@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadReadRepository } from "../../ports/lead-read-repository";
@@ -25,6 +25,16 @@ export async function requestRateNegotiationCommand(
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();
+
+  if (input.artifactIds.length === 0) {
+    return Err(
+      domainError(
+        "validation",
+        "negotiation_files_required",
+        "At least one document is required for rate negotiation",
+      ),
+    );
+  }
 
   const existingCount = await deps.negotiationRequests.countByLeadId(lead.id);
   const canRequest = requireLeadActionAccess({

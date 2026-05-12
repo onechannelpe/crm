@@ -9,15 +9,17 @@ import type {
   AddVenueAccountsInput,
   ApplyImportedReviewInput,
   ApproveForSaleInput,
-  CompleteScopingInput,
   CreateQuotationInput,
   CreateVenueInput,
   LogLeadCallInput,
   ReassignLeadInput,
+  RecordRepLegalInput,
   RegisterLeadInput,
   RemoveLeadFromFavoritesInput,
+  RequestQuotationInput,
   RequestRateNegotiationInput,
   ReviewLeadInput,
+  SaveCommercialScopeInput,
 } from "../contracts/command-inputs";
 import type {
   LeadCommandResult,
@@ -41,15 +43,17 @@ import { addToFavoritesCommand } from "./add-to-favorites";
 import { addVenueAccountsCommand } from "./add-venue-accounts";
 import { applyImportedReviewCommand } from "./apply-imported-review";
 import { approveForSaleCommand } from "./approve-for-sale";
-import { completeScopingCommand } from "./complete-scoping";
 import { createQuotationCommand } from "./create-quotation";
 import { createVenueCommand } from "./create-venue";
 import { logLeadCallCommand } from "./log-call";
 import { reassignLeadCommand } from "./reassign-lead";
+import { recordRepLegalCommand } from "./record-rep-legal";
 import { registerLeadCommand } from "./register-lead";
 import { removeFromFavoritesCommand } from "./remove-from-favorites";
+import { requestQuotationCommand } from "./request-quotation";
 import { requestRateNegotiationCommand } from "./request-rate-negotiation";
 import { reviewLeadCommand } from "./review-lead";
+import { saveCommercialScopeCommand } from "./save-commercial-scope";
 
 export type WorkflowCommandApiDeps = {
   leadReader: LeadReadRepository;
@@ -99,8 +103,14 @@ export type WorkflowCommandApi = {
   createQuotation(
     input: CreateQuotationInput,
   ): Promise<Result<LeadQuotationResult, DomainError>>;
-  completeScoping(
-    input: CompleteScopingInput,
+  saveCommercialScope(
+    input: SaveCommercialScopeInput,
+  ): Promise<Result<LeadCommandResult, DomainError>>;
+  requestQuotation(
+    input: RequestQuotationInput,
+  ): Promise<Result<LeadCommandResult, DomainError>>;
+  recordRepLegal(
+    input: RecordRepLegalInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;
   createVenue(
     input: CreateVenueInput,
@@ -168,13 +178,34 @@ export function createWorkflowCommandApi(
         },
         input,
       ),
-    completeScoping: (input) =>
-      completeScopingCommand(
+    saveCommercialScope: (input) =>
+      saveCommercialScopeCommand(
         {
           leadReader: deps.leadReader,
           mutationUow: deps.mutationUow,
           leadProfiles: deps.leadProfiles,
           leadVenues: deps.leadVenues,
+          party: deps.party,
+          clock: deps.clock,
+        },
+        input,
+      ),
+    requestQuotation: (input) =>
+      requestQuotationCommand(
+        {
+          leadReader: deps.leadReader,
+          mutationUow: deps.mutationUow,
+          leadProfiles: deps.leadProfiles,
+          party: deps.party,
+          clock: deps.clock,
+        },
+        input,
+      ),
+    recordRepLegal: (input) =>
+      recordRepLegalCommand(
+        {
+          leadReader: deps.leadReader,
+          mutationUow: deps.mutationUow,
           party: deps.party,
           clock: deps.clock,
         },

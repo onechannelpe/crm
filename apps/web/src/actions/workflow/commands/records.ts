@@ -8,9 +8,10 @@ import {
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
 import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import type {
-  ModalidadCobro,
-  ProductScope,
+import {
+  isAbonoBank,
+  type ModalidadCobro,
+  type ProductScope,
 } from "~/workflow/contracts/lead-schema";
 
 export async function requestLeadCreation(input: {
@@ -82,24 +83,20 @@ export async function requestLeadReview(input: {
   });
 }
 
-export async function requestScopingCompletion(input: {
+export async function requestSaveCommercialScope(input: {
   leadId: string;
   proveedorActual: string;
   tasaActual: number;
   gpv: number;
   ticket: number;
   giroNegocio: string;
+  abonoBank: string;
+  posTotal: number;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
   onlineModalidad: ModalidadCobro | null;
-  repLegalNombres: string;
-  repLegalApellidoPaterno: string;
-  repLegalApellidoMaterno: string;
-  repLegalDni: string;
-  repLegalTelefono: string;
-  repLegalEmail: string;
 }) {
   if (!input.proveedorActual?.trim()) {
     throw validationError("proveedorActual is required");
@@ -107,14 +104,84 @@ export async function requestScopingCompletion(input: {
   if (!input.giroNegocio?.trim()) {
     throw validationError("giroNegocio is required");
   }
+  if (!isAbonoBank(input.abonoBank)) {
+    throw validationError("abonoBank is invalid");
+  }
+
+  const abonoBank = input.abonoBank;
 
   return runAction({
-    actionName: "workflow.complete_scoping",
+    actionName: "workflow.save_commercial_scope",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runWorkflowCommand(({ commandApi }) =>
-        commandApi.completeScoping({
+        commandApi.saveCommercialScope({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
+          leadId: input.leadId,
+          proveedorActual: input.proveedorActual,
+          tasaActual: input.tasaActual,
+          gpv: input.gpv,
+          ticket: input.ticket,
+          giroNegocio: input.giroNegocio,
+          abonoBank,
+          posTotal: input.posTotal,
+          linkScope: input.linkScope,
+          linkUrl: input.linkUrl,
+          onlineScope: input.onlineScope,
+          onlineUrl: input.onlineUrl,
+          onlineModalidad: input.onlineModalidad,
+        }),
+      ),
+  });
+}
+
+export async function requestQuotation(input: { leadId: string }) {
+  return runAction({
+    actionName: "workflow.request_quotation",
+    access: { kind: "auth" },
+    input,
+    execute: (ctx) =>
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.requestQuotation({
+          actor: {
+            userId: ctx.actor.userId,
+            role: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+          },
+          leadId: input.leadId,
+        }),
+      ),
+  });
+}
+
+export async function requestRecordRepLegal(input: {
+  leadId: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string;
+  email: string;
+}) {
+  if (!input.nombres?.trim()) {
+    throw validationError("nombres is required");
+  }
+  if (!input.dni?.trim()) {
+    throw validationError("dni is required");
+  }
+
+  return runAction({
+    actionName: "workflow.record_rep_legal",
+    access: { kind: "auth" },
+    input: { leadId: input.leadId },
+    execute: (ctx) =>
+      runWorkflowCommand(({ commandApi }) =>
+        commandApi.recordRepLegal({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

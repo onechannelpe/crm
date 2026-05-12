@@ -1,4 +1,5 @@
 import type {
+  AbonoBank,
   LeadCallOutcome,
   LeadPriority,
   LeadStage,
@@ -62,23 +63,29 @@ export type LeadMutationIntent =
       moneda: Moneda;
     }
   | {
-      kind: "complete_scoping";
+      kind: "save_commercial_scope";
       proveedorActual: string;
       tasaActual: number;
       gpv: number;
       ticket: number;
       giroNegocio: string;
+      abonoBank: AbonoBank;
+      posTotal: number;
       linkScope: ProductScope;
       linkUrl: string | null;
       onlineScope: ProductScope;
       onlineUrl: string | null;
       onlineModalidad: ModalidadCobro | null;
-      repLegalNombres: string;
-      repLegalApellidoPaterno: string;
-      repLegalApellidoMaterno: string;
-      repLegalDni: string;
-      repLegalTelefono: string;
-      repLegalEmail: string;
+    }
+  | { kind: "request_quotation" }
+  | {
+      kind: "record_rep_legal";
+      nombres: string;
+      apellidoPaterno: string;
+      apellidoMaterno: string;
+      dni: string;
+      telefono: string;
+      email: string;
     }
   | {
       kind: "create_venue";

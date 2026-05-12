@@ -62,7 +62,9 @@ export function deriveLeadPatchFromIntent(input: {
 
   if (intent.kind === "approve_for_sale") return Ok({ stage: "CLOSING" });
   if (intent.kind === "create_quotation") return Ok({ stage: "QUOTED" });
-  if (intent.kind === "complete_scoping") return Ok({ stage: "QUOTING" });
+  if (intent.kind === "save_commercial_scope") return Ok({});
+  if (intent.kind === "request_quotation") return Ok({ stage: "QUOTING" });
+  if (intent.kind === "record_rep_legal") return Ok({});
   if (intent.kind === "create_venue") return Ok({});
   if (intent.kind === "add_venue_accounts") {
     return intent.shouldTransitionToLive ? Ok({ stage: "LIVE" }) : Ok({});

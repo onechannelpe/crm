@@ -69,7 +69,13 @@ export function validateLeadIntent(
   if (intent.kind === "create_quotation" && currentStage !== "QUOTING") {
     return invalidLeadStage();
   }
-  if (intent.kind === "complete_scoping" && currentStage !== "SCOPING") {
+  if (intent.kind === "save_commercial_scope" && currentStage !== "SCOPING") {
+    return invalidLeadStage();
+  }
+  if (intent.kind === "request_quotation" && currentStage !== "SCOPING") {
+    return invalidLeadStage();
+  }
+  if (intent.kind === "record_rep_legal" && currentStage !== "CLOSING") {
     return invalidLeadStage();
   }
   if (

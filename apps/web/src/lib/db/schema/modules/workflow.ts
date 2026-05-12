@@ -69,6 +69,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("online_modalidad", "varchar(20)", (col) =>
       col.references("workflow_modalidad_cobro_kinds.value"),
     )
+    .addColumn("abono_bank", "varchar(50)", (col) =>
+      col.references("workflow_abono_banks.value"),
+    )
+    .addColumn("pos_total", "integer")
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
       col.notNull().references("users.id"),

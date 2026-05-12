@@ -7,6 +7,8 @@ const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   gpv: "GPV",
   ticket: "Ticket",
   giroNegocio: "Giro de negocio",
+  abonoBank: "Banco de abono",
+  posTotal: "Cantidad de POS",
   venueAccounts: "Cuentas de sedes",
 };
 
@@ -16,6 +18,8 @@ const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
   gpv: "Completar GPV",
   ticket: "Completar ticket",
   giroNegocio: "Completar giro de negocio",
+  abonoBank: "Completar banco de abono",
+  posTotal: "Completar cantidad de POS",
   venueAccounts: "Registrar cuentas en al menos una sede",
 };
 
@@ -51,8 +55,8 @@ export function mapLeadActionsToUi(
           kind: "button",
         });
         break;
-      // complete-scoping is rendered as an inline form section, not an action button.
-      case "complete-scoping":
+      // request-quotation is rendered inline in the commercial scope widget.
+      case "request-quotation":
       // reassign-lead is handled inline via the RelationFieldRow edit button in the fields widget.
       case "reassign-lead":
       // Actions below have no implemented handler yet.

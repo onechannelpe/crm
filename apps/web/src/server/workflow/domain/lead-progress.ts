@@ -1,4 +1,4 @@
-import type { LeadStage } from "~/workflow/contracts/lead-schema";
+import type { AbonoBank, LeadStage } from "~/workflow/contracts/lead-schema";
 
 import type { LeadRecord } from "./lead-record";
 
@@ -8,7 +8,19 @@ export type LeadBlockingField =
   | "gpv"
   | "ticket"
   | "giroNegocio"
+  | "abonoBank"
+  | "posTotal"
   | "venueAccounts";
+
+type ScopingProfileFields = {
+  proveedorActual?: string | null;
+  tasaActual?: number | null;
+  gpv?: number | null;
+  ticket?: number | null;
+  giroNegocio?: string | null;
+  abonoBank?: AbonoBank | null;
+  posTotal?: number | null;
+};
 
 export type LeadProgress = {
   nextStep: string;
@@ -22,7 +34,7 @@ export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
     case "DISQUALIFIED":
       return "No further action";
     case "SCOPING":
-      return "Complete scoping";
+      return "Save commercial scope";
     case "QUOTING":
       return "Create quotation";
     case "QUOTED":
@@ -40,6 +52,7 @@ export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
 
 export function resolveLeadBlockingFields(input: {
   stage: LeadStage;
+  profile?: ScopingProfileFields | null;
   venuesWithAccountsCount?: number;
 }): LeadBlockingField[] {
   switch (input.stage) {
@@ -49,8 +62,18 @@ export function resolveLeadBlockingFields(input: {
     case "QUOTED":
     case "LIVE":
       return [];
-    case "SCOPING":
-      return ["proveedorActual", "tasaActual", "gpv", "ticket", "giroNegocio"];
+    case "SCOPING": {
+      const p = input.profile;
+      const blocking: LeadBlockingField[] = [];
+      if (!p?.proveedorActual) blocking.push("proveedorActual");
+      if (p?.tasaActual == null) blocking.push("tasaActual");
+      if (p?.gpv == null) blocking.push("gpv");
+      if (p?.ticket == null) blocking.push("ticket");
+      if (!p?.giroNegocio) blocking.push("giroNegocio");
+      if (!p?.abonoBank) blocking.push("abonoBank");
+      if (p?.posTotal == null) blocking.push("posTotal");
+      return blocking;
+    }
     case "CLOSING": {
       const withAccounts = input.venuesWithAccountsCount ?? 0;
       return withAccounts === 0 ? ["venueAccounts"] : [];
@@ -64,12 +87,14 @@ export function resolveLeadBlockingFields(input: {
 
 export function resolveLeadProgress(input: {
   lead: Pick<LeadRecord, "stage">;
+  profile?: ScopingProfileFields | null;
   venuesWithAccountsCount?: number;
 }): LeadProgress {
   return {
     nextStep: resolveLeadNextStep(input.lead),
     blockingFields: resolveLeadBlockingFields({
       stage: input.lead.stage,
+      profile: input.profile,
       venuesWithAccountsCount: input.venuesWithAccountsCount,
     }),
   };
