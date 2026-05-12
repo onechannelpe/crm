@@ -12,7 +12,7 @@ type UpdatesFiltersProps = {
 
 export function UpdatesFilters(props: UpdatesFiltersProps) {
   return (
-    <nav class={styles.filterBar} aria-label="Update categories">
+    <nav class={styles.filterBar} aria-label="Categorías de actualizaciones">
       <For each={props.options}>
         {(option) => (
           <button

@@ -4,8 +4,8 @@ export type PublicMenuItem = {
 };
 
 export const PUBLIC_MENU_ITEMS: PublicMenuItem[] = [
-  { href: "/docs", label: "Docs" },
-  { href: "/updates", label: "Updates" },
-  { href: "/legal/privacy", label: "Privacy" },
-  { href: "/legal/terms", label: "Terms" },
+  { href: "/docs", label: "Guías" },
+  { href: "/updates", label: "Changelog" },
+  { href: "/legal/privacy", label: "Privacidad" },
+  { href: "/legal/terms", label: "Términos" },
 ];

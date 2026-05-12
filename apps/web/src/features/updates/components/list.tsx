@@ -4,7 +4,7 @@ import styles from "./styles/layout.module.css";
 
 export function UpdatesList(props: { children: JSX.Element }) {
   return (
-    <section class={styles.root} aria-label="Updates">
+    <section class={styles.root} aria-label="Actualizaciones">
       {props.children}
     </section>
   );
