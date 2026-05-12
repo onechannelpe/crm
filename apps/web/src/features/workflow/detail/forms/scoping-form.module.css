@@ -34,3 +34,9 @@
   background: var(--background-secondary-hover);
   border-color: var(--border-hover);
 }
+
+.onlineModeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

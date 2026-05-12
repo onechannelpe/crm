@@ -519,13 +519,7 @@ export function ScopingForm(props: {
                       <FieldLabelText>Modalidad de cobro</FieldLabelText>
                     </FieldLabel>
                     <FieldInputValue>
-                      <div
-                        style={{
-                          display: "flex",
-                          "flex-direction": "column",
-                          gap: "6px",
-                        }}
-                      >
+                      <div class={styles.onlineModeOptions}>
                         <label>
                           <input
                             type="radio"

@@ -22,6 +22,8 @@ import type {
 
 import type { VenueFormState } from "../model/venue-form-state";
 
+import styles from "./venue-form.module.css";
+
 export function VenueForm(props: {
   form: VenueFormState;
   linkScope: ProductScope;
@@ -168,13 +170,7 @@ export function VenueForm(props: {
                   <FieldLabelText>Modalidad de Cobro</FieldLabelText>
                 </FieldLabel>
                 <FieldInputValue>
-                  <div
-                    style={{
-                      display: "flex",
-                      "flex-direction": "column",
-                      gap: "6px",
-                    }}
-                  >
+                  <div class={styles.radioGroup}>
                     <For
                       each={
                         [
@@ -206,13 +202,7 @@ export function VenueForm(props: {
           </FieldTable>
 
           <Show when={props.error}>{(message) => <p>{message()}</p>}</Show>
-          <div
-            style={{
-              display: "flex",
-              "justify-content": "flex-end",
-              "margin-top": "12px",
-            }}
-          >
+          <div class={styles.actions}>
             <Button
               type="submit"
               variant="primary"
