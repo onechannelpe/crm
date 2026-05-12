@@ -74,7 +74,7 @@ export default function UpdatesPage() {
           when={visibleUpdates().length > 0}
           fallback={
             <UpdatesEmptyMessage>
-              No updates found for the selected category.
+              No hay actualizaciones para esta categoría.
             </UpdatesEmptyMessage>
           }
         >

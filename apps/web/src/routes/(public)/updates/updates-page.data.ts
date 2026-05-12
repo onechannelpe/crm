@@ -1,12 +1,12 @@
 export const UPDATES_PAGE_COPY = {
-  titleMuted: "Latest",
-  titleBold: "Updates",
+  titleMuted: "Últimas",
+  titleBold: "actualizaciones",
   heroBody:
-    "Technical notes and release notes for internal use, including nightly and weekly updates.",
+    "Registro interno de mejoras, cambios técnicos y lanzamientos del producto.",
   filters: {
-    all: "All",
-    technical: "Technical",
-    releaseNightly: "Nightly",
-    releaseWeekly: "Weekly",
+    all: "Todo",
+    technical: "Notas",
+    releaseNightly: "Diario",
+    releaseWeekly: "Semanal",
   },
 } as const;
