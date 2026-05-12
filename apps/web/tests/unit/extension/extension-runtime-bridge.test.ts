@@ -30,7 +30,7 @@ describe("extension runtime bridge", () => {
                 syncHealth: "ok",
                 assignmentId: 42,
                 contactId: 7,
-                phone: "+51999999111",
+                phone: "999999111",
                 presenceUpdatedAt: 1_000,
                 syncUpdatedAt: 1_000,
               },

@@ -100,7 +100,7 @@ export async function seedLeadsRequestFixtures(
           },
           role: null,
           phones: {
-            primary: "+51911111111",
+            primary: "911111111",
             secondary: null,
             siblings: null,
           },
@@ -119,7 +119,7 @@ export async function seedLeadsRequestFixtures(
           organization_name: `Bench Org ${index}`,
           dni: `7000${String(index).padStart(4, "0")}`,
           person_name: `Bench Person ${index}`,
-          phone_primary: `+5199033${String(index).padStart(4, "0")}`,
+          phone_primary: `99033${String(index).padStart(4, "0")}`,
         },
       ]);
     },

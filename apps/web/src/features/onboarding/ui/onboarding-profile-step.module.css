@@ -106,17 +106,6 @@
   outline-offset: 1px;
 }
 
-.phonePrefix {
-  padding: 10px 10px 10px 14px;
-  font-size: var(--font-size-body);
-  color: var(--muted-foreground);
-  font-weight: var(--font-weight-medium);
-  background: color-mix(in oklab, var(--border) 40%, transparent);
-  user-select: none;
-  white-space: nowrap;
-  border-right: 1px solid var(--border);
-}
-
 .phoneInput {
   flex: 1;
   padding: 10px 12px;

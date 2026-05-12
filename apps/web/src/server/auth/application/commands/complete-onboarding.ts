@@ -4,6 +4,7 @@ import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
+import type { Phone } from "~/lib/phone/pe-mobile";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
@@ -22,7 +23,7 @@ export async function completeOnboarding(
       strongAuthMethod: "totp" | "passkey" | "federated" | null;
       strongAuthAt: number | null;
     };
-    phoneE164: string;
+    phone: Phone;
     ipAddress: string;
     userAgent: string | null;
     invalidateSession(sessionId: string): Promise<void>;
@@ -31,7 +32,7 @@ export async function completeOnboarding(
   const result = await deps.runInRepositoryTransaction((transactionRepos) =>
     completeAccountOnboardingWithRepos(transactionRepos, {
       userId: input.session.userId,
-      phoneE164: input.phoneE164,
+      phone: input.phone,
     }),
   );
   if (isErr(result)) {

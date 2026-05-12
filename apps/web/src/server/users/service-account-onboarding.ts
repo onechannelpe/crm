@@ -2,6 +2,7 @@ import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
+import type { Phone } from "~/lib/phone/pe-mobile";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
@@ -28,7 +29,7 @@ export type CompleteOnboardingError =
 
 export interface CompleteOnboardingInput {
   userId: UserId;
-  phoneE164: string;
+  phone: Phone;
 }
 
 export interface AccountOnboardingDeps {
@@ -72,7 +73,7 @@ export async function completeAccountOnboardingWithRepos(
     {
       userId: user.id,
       email: user.email,
-      phoneE164: input.phoneE164,
+      phone: input.phone,
       now: completedAt,
     },
     repos,

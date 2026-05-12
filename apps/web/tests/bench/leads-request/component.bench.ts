@@ -26,7 +26,7 @@ describe("lead assignment component benchmark", () => {
         organization_id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
         dni: "70000001",
         name: "Bench",
-        phone_primary: "+51911111111",
+        phone_primary: "911111111",
         phone_secondary: null,
         last_contacted_at: null,
         last_contacted_by_user_id: null,

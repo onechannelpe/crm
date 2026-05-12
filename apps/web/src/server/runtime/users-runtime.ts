@@ -1,3 +1,4 @@
+import type { Phone } from "~/lib/phone/pe-mobile";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { createUsersRepo } from "~/server/users/repos-users";
@@ -10,7 +11,7 @@ export function createUsersRuntime(infra: ServerInfra) {
 
   async function updatePhone(
     userId: number,
-    phone: string,
+    phone: Phone,
   ): Promise<Result<void, { kind: "address_already_claimed" }>> {
     const claimResult = await userChannelAddressesRepo.claimWhatsAppAddress({
       userId,

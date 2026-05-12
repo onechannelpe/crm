@@ -1,4 +1,3 @@
-import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import type { CurrentUserView } from "~/server/auth/application/contracts";
@@ -95,11 +94,10 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
 export function deriveOnboardingRequirements(
   user: Pick<
     CurrentUserView,
-    "phoneE164" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
+    "phone" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
   >,
 ): OnboardingRequirements {
-  const hasPhone =
-    user.phoneE164 !== null && isValidOnboardingPhone(user.phoneE164);
+  const hasPhone = user.phone !== null;
   const strongAuthRequired = requiresStrongAuthRole(user.role);
   const requiredActions: Array<"set_profile" | "configure_strong_auth"> = [];
   const reasons: string[] = [];

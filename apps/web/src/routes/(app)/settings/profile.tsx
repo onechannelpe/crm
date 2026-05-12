@@ -14,6 +14,7 @@ import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
 } from "~/lib/mutations/profile";
+import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 import { shortName } from "~/lib/users/display-name";
 
 import styles from "./settings-page.module.css";
@@ -27,7 +28,7 @@ export default function ProfilePage() {
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const user = () => currentUser();
 
-  const [profilePhone, setProfilePhone] = createSignal(user().phoneE164 || "");
+  const [profilePhone, setProfilePhone] = createSignal(user().phone || "");
   const [savingProfile, setSavingProfile] = createSignal(false);
   const [avatarUrl, setAvatarUrl] = createSignal(user().avatarUrl);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
@@ -56,12 +57,18 @@ export default function ProfilePage() {
 
   const saveProfile = async (e: Event) => {
     e.preventDefault();
+    const localPhone = normalizePhoneInput(profilePhone());
+    setProfilePhone(localPhone);
+    if (!isValidPhone(localPhone)) {
+      enqueueErrorSnackBar("Ingresa 9 dígitos y que empiece con 9");
+      return;
+    }
     setSavingProfile(true);
     try {
-      await updateUserProfile(profilePhone());
+      await updateUserProfile(localPhone);
       updateCurrentUser((existing) => ({
         ...existing,
-        phoneE164: profilePhone(),
+        phone: localPhone,
       }));
       enqueueSuccessSnackBar("Perfil actualizado");
     } catch (err: unknown) {
@@ -170,8 +177,10 @@ export default function ProfilePage() {
             <Input
               label="Teléfono"
               value={profilePhone()}
-              onInput={(e) => setProfilePhone(e.currentTarget.value)}
-              placeholder="+1 234 567 8900"
+              onInput={(e) =>
+                setProfilePhone(normalizePhoneInput(e.currentTarget.value))
+              }
+              placeholder="987654321"
             />
           </div>
         </form>

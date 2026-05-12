@@ -1,3 +1,4 @@
+import { phone } from "@tests/support/_core/phone";
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -17,7 +18,7 @@ describe("user channel address repo", () => {
     await ctx.repos.userChannelAddresses.upsert({
       user_id: 1,
       channel: "whatsapp",
-      address: "+51911111111",
+      address: "911111111",
       is_verified: 1,
       verified_at: 1000,
       created_at: 1000,
@@ -26,7 +27,7 @@ describe("user channel address repo", () => {
 
     const result = await ctx.repos.userChannelAddresses.claimWhatsAppAddress({
       userId: 1,
-      address: "+51911111111",
+      address: phone("911111111"),
       now: 2000,
     });
 
@@ -38,7 +39,7 @@ describe("user channel address repo", () => {
     expect(row).toMatchObject({
       user_id: 1,
       channel: "whatsapp",
-      address: "+51911111111",
+      address: "911111111",
       is_verified: 1,
       verified_at: 1000,
       updated_at: 1000,
@@ -49,7 +50,7 @@ describe("user channel address repo", () => {
     await ctx.repos.userChannelAddresses.upsert({
       user_id: 1,
       channel: "whatsapp",
-      address: "+51911111111",
+      address: "911111111",
       is_verified: 1,
       verified_at: 1000,
       created_at: 1000,
@@ -58,7 +59,7 @@ describe("user channel address repo", () => {
 
     const result = await ctx.repos.userChannelAddresses.claimWhatsAppAddress({
       userId: 1,
-      address: "+51922222222",
+      address: phone("922222222"),
       now: 2000,
     });
 
@@ -70,7 +71,7 @@ describe("user channel address repo", () => {
     expect(row).toMatchObject({
       user_id: 1,
       channel: "whatsapp",
-      address: "+51922222222",
+      address: "922222222",
       is_verified: 0,
       verified_at: null,
       updated_at: 2000,

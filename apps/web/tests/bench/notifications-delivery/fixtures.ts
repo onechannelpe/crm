@@ -83,7 +83,7 @@ async function seedUsersAndAddresses(
         {
           user_id: userId,
           channel: "whatsapp" as const,
-          address: `+519${String(userId).padStart(7, "0")}`,
+          address: `9${String(userId).padStart(8, "0")}`,
           is_verified: 1,
           verified_at: BENCH_NOW,
           created_at: BENCH_NOW,
