@@ -8,7 +8,7 @@ import { APP_LOCALE } from "~/lib/locale";
 import { getServerRuntime } from "~/server/runtime";
 
 export function buildInviteUrl(token: string): string {
-  const path = `/login?inviteToken=${encodeURIComponent(token)}`;
+  const path = `/login/invite/${encodeURIComponent(token)}`;
   const event = getRequestEvent();
   const requestUrl = event?.request.url;
   if (!requestUrl) {

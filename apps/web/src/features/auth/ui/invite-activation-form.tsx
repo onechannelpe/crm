@@ -1,12 +1,10 @@
 import { useSubmission } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
+import type { InviteActivationView } from "~/actions/auth/invite";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import {
-  acceptInvitePasswordMutation,
-  type InviteActivationView,
-} from "~/lib/mutations/auth";
+import { acceptInvitePasswordMutation } from "~/lib/mutations/auth";
 
 import { LoginFeedback } from "./login-feedback";
 

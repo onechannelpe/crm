@@ -10,7 +10,6 @@ import type {
 import {
   acceptInvitePasswordStep,
   type AcceptInviteResult,
-  type InviteActivationView,
 } from "~/actions/auth/invite";
 import {
   passkeyStart,
@@ -52,8 +51,6 @@ export const resetPasswordMutation = action(
     resetPassword(formData),
   "resetPassword",
 );
-
-export { type InviteActivationView };
 
 export const acceptInvitePasswordMutation = action(
   async (formData: FormData): Promise<AcceptInviteResult> => {
