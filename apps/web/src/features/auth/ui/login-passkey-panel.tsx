@@ -1,8 +1,10 @@
 import { Show } from "solid-js";
 
-import { AuthLoadingBlock } from "./auth-loading-block";
+import { Loader } from "~/components/feedback/loading/loader";
+
 import { LoginFeedback } from "./login-feedback";
 
+import shellStyles from "./auth-flow-shell.module.css";
 import linkStyles from "./auth-links.module.css";
 
 interface LoginPasskeyPanelProps {
@@ -19,7 +21,10 @@ export function LoginPasskeyPanel(props: LoginPasskeyPanelProps) {
     <>
       <LoginFeedback message={props.error} />
       <Show when={props.busy}>
-        <AuthLoadingBlock label="Esperando tu clave de acceso" />
+        <output class={shellStyles.loadingBlock} aria-live="polite">
+          <p class={shellStyles.loadingLabel}>Esperando tu clave de acceso</p>
+          <Loader />
+        </output>
       </Show>
       <Show when={props.hasActiveFlow && !props.busy && props.supported}>
         <button

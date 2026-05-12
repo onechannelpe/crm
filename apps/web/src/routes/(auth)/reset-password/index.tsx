@@ -1,21 +1,21 @@
 import { useSearchParams, useSubmission } from "@solidjs/router";
 import { createMemo, createSignal, Show } from "solid-js";
 
-import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
-import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
+import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
+import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import {
   requestPasswordResetMutation,
   resetPasswordMutation,
 } from "~/lib/mutations/auth";
 
-import styles from "../../auth/auth-shell.module.css";
-import pageStyles from "../../auth/login-page.module.css";
-import shellStyles from "~/components/auth/flow/auth-flow-shell.module.css";
-import linkStyles from "~/components/auth/flow/auth-links.module.css";
+import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
+import linkStyles from "~/features/auth/ui/auth-links.module.css";
+import styles from "~/features/auth/ui/auth-shell.module.css";
+import pageStyles from "~/features/auth/ui/login-page.module.css";
 
 export default function ResetPasswordPage() {
   useAuthPageView("reset_password");

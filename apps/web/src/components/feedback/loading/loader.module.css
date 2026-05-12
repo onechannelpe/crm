@@ -23,7 +23,7 @@
 
 @keyframes slide {
   0% {
-    transform: translateX(-12px);
+    transform: translateX(-16px);
     width: 8px;
     height: 8px;
   }
@@ -35,13 +35,13 @@
   }
 
   30% {
-    transform: translateX(12px);
+    transform: translateX(16px);
     width: 8px;
     height: 8px;
   }
 
   100% {
-    transform: translateX(12px);
+    transform: translateX(16px);
     width: 8px;
     height: 8px;
   }

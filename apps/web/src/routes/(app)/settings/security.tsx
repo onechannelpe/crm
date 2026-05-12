@@ -5,16 +5,16 @@ import {
   disableTotp,
   removeAllPasskeys,
 } from "~/actions/settings/security";
-import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
-import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recovery-codes-panel";
-import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
-import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-panel";
+import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
+import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
+import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
 import { getErrorMessage } from "~/lib/errors";

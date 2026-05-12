@@ -1,18 +1,19 @@
 import { createAsync, useSearchParams } from "@solidjs/router";
 import { createMemo, Show, Suspense } from "solid-js";
 
-import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
-import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";
+import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
-import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
-import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
-import { usePasskeyLogin } from "~/lib/auth/use-passkey-login";
+import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
+import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
+import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { loginFlowQuery } from "~/lib/queries/auth";
 
-import styles from "../../../auth/auth-shell.module.css";
-import pageStyles from "../../../auth/login-page.module.css";
-import linkStyles from "~/components/auth/flow/auth-links.module.css";
+import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
+import linkStyles from "~/features/auth/ui/auth-links.module.css";
+import styles from "~/features/auth/ui/auth-shell.module.css";
+import pageStyles from "~/features/auth/ui/login-page.module.css";
 
 export default function LoginPasskeyPage() {
   useAuthPageView("login_passkey");
@@ -39,7 +40,12 @@ export default function LoginPasskeyPage() {
       description="Retoma el acceso con la clave asociada a tu cuenta."
     >
       <Suspense
-        fallback={<AuthLoadingBlock label="Cargando clave de acceso" />}
+        fallback={
+          <output class={pageStyles.loadingStack} aria-live="polite">
+            <p class={pageStyles.loadingLabel}>Cargando clave de acceso</p>
+            <Loader />
+          </output>
+        }
       >
         <Show
           when={passkeyFlow()}
@@ -68,10 +74,20 @@ export default function LoginPasskeyPage() {
                   )}
                 </Show>
                 <Show when={passkeyLogin.busy()}>
-                  <AuthLoadingBlock label="Esperando tu clave de acceso" />
+                  <output class={shellStyles.loadingBlock} aria-live="polite">
+                    <p class={shellStyles.loadingLabel}>
+                      Esperando tu clave de acceso
+                    </p>
+                    <Loader />
+                  </output>
                 </Show>
                 <Show when={!passkeyLogin.supportKnown()}>
-                  <AuthLoadingBlock label="Comprobando compatibilidad del navegador" />
+                  <output class={shellStyles.loadingBlock} aria-live="polite">
+                    <p class={shellStyles.loadingLabel}>
+                      Comprobando compatibilidad del navegador
+                    </p>
+                    <Loader />
+                  </output>
                 </Show>
                 <Show
                   when={passkeyLogin.supportKnown() && passkeyLogin.supported()}

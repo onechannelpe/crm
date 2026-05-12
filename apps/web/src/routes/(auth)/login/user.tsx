@@ -1,10 +1,10 @@
 import { useSearchParams } from "@solidjs/router";
 import { onMount } from "solid-js";
 
-import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
-import { LoginCredentialsForm } from "~/components/auth/flow/login-credentials-form";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
-import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
+import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
+import { LoginCredentialsForm } from "~/features/auth/ui/login-credentials-form";
 
 export default function LoginUserPage() {
   useAuthPageView("login_user");

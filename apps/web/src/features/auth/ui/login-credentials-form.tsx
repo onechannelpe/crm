@@ -3,9 +3,9 @@ import { createEffect, createSignal, onMount } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { passwordLoginUiMessage } from "~/lib/auth/login-ui";
-import { useLoginFlow } from "~/lib/auth/use-login-flow";
-import { usePasskeyLogin } from "~/lib/auth/use-passkey-login";
+import { passwordLoginUiMessage } from "~/features/auth/model/login-ui";
+import { useLoginFlow } from "~/features/auth/services/use-login-flow";
+import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
 import { passwordLoginMutation } from "~/lib/mutations/auth";
 
 import { LoginFeedback } from "./login-feedback";
