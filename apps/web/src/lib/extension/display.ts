@@ -1,13 +1,7 @@
-import type {
-  ExtensionExecutivePresenceStatus,
-  ExtensionSyncHealth,
-} from "./runtime";
+import type { ExecutivePresenceStatus, SyncHealth } from "./runtime";
 
-type PresenceStatus =
-  | ExtensionExecutivePresenceStatus
-  | "unavailable"
-  | undefined;
-type SyncHealth = ExtensionSyncHealth | "unavailable" | undefined;
+type PresenceStatus = ExecutivePresenceStatus | "unavailable" | undefined;
+type SyncHealthValue = SyncHealth | "unavailable" | undefined;
 
 export function badgeVariantForPresence(status: PresenceStatus) {
   switch (status) {
@@ -23,7 +17,7 @@ export function badgeVariantForPresence(status: PresenceStatus) {
   }
 }
 
-export function badgeVariantForSyncHealth(status: SyncHealth) {
+export function badgeVariantForSyncHealth(status: SyncHealthValue) {
   switch (status) {
     case "ok":
       return "outline" as const;
@@ -54,7 +48,7 @@ export function presenceLabel(status: PresenceStatus): string {
   }
 }
 
-export function syncHealthLabel(status: SyncHealth): string {
+export function syncHealthLabel(status: SyncHealthValue): string {
   switch (status) {
     case "ok":
       return "Sync OK";

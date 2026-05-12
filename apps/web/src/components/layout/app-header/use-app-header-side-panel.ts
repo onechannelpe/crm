@@ -9,8 +9,11 @@ import { useHotkey } from "~/lib/hotkey/use-hotkey";
 export function useAppHeaderSidePanel() {
   const [modKey, setModKey] = createSignal("Ctrl");
   const { isOpen, openPanel, closePanel } = useSidePanel();
-  const { state: extensionState, error: extensionError } =
-    createExtensionPortConnection();
+  const {
+    state: extensionState,
+    error: extensionError,
+    isAvailable: isExtensionAvailable,
+  } = createExtensionPortConnection();
 
   onMount(() => {
     if (/Mac/i.test(navigator.platform)) {
@@ -34,6 +37,7 @@ export function useAppHeaderSidePanel() {
     isSidePanelOpen: isOpen,
     extensionState,
     extensionError,
+    isExtensionAvailable,
     toggleSidePanel,
   };
 }

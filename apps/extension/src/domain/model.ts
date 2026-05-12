@@ -1,3 +1,9 @@
+import type {
+  ExecutivePresenceStatus,
+  ExecutiveStateSnapshot,
+  SyncHealth,
+} from "@crm/contracts/extension";
+
 export const STORAGE_KEY = "crm_extension_state_v1" as const;
 
 export type CallPhase = "dialing" | "active" | "ended";
@@ -8,15 +14,6 @@ export type RecordingPhase =
   | "recording"
   | "stopping"
   | "error";
-
-export type ExecutivePresenceStatus =
-  | "idle"
-  | "ready"
-  | "dialing"
-  | "active"
-  | "wrap_up";
-
-export type SyncHealth = "ok" | "pending" | "error" | "reauth_required";
 
 export type QueueJobType =
   | "executive.presence"
@@ -72,16 +69,6 @@ export interface SyncConfig {
   apiBaseUrl: string | null;
   sessionToken: string | null;
   refreshToken: string | null;
-}
-
-export interface ExecutiveStateSnapshot {
-  presenceStatus: ExecutivePresenceStatus;
-  syncHealth: SyncHealth;
-  assignmentId: number | null;
-  contactId: number | null;
-  phone: string | null;
-  presenceUpdatedAt: number | null;
-  syncUpdatedAt: number | null;
 }
 
 export interface ExtensionState {

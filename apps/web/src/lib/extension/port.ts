@@ -4,7 +4,7 @@ import type { Accessor } from "solid-js";
 import { isPlainRecord } from "~/lib/type-guards";
 
 import { getExtensionId, isRuntimeResponse } from "./runtime";
-import type { ExtensionExecutiveState } from "./runtime";
+import type { ExecutiveStateSnapshot } from "./runtime";
 
 interface ChromePort {
   onMessage: { addListener(callback: (message: unknown) => void): void };
@@ -32,31 +32,40 @@ function getChromeRuntimeConnectApi(): ChromeRuntimeConnectApi | null {
 }
 
 export interface ExtensionPortConnection {
-  state: Accessor<ExtensionExecutiveState | null>;
+  state: Accessor<ExecutiveStateSnapshot | null>;
   error: Accessor<string | null>;
+  isAvailable: Accessor<boolean>;
 }
 
 export function createExtensionPortConnection(): ExtensionPortConnection {
-  const [state, setState] = createSignal<ExtensionExecutiveState | null>(null);
+  const [state, setState] = createSignal<ExecutiveStateSnapshot | null>(null);
   const [error, setError] = createSignal<string | null>(null);
+  const [isAvailable, setIsAvailable] = createSignal(false);
+  let hasReceivedState = false;
 
   const extensionId = getExtensionId();
   if (!extensionId) {
-    setError("Configura VITE_CRM_EXTENSION_ID para conectar la extensión.");
-    return { state, error };
+    return { state, error, isAvailable };
   }
 
   const runtime = getChromeRuntimeConnectApi();
   if (!runtime) {
-    setError("CRM extension runtime is unavailable in this browser.");
-    return { state, error };
+    return { state, error, isAvailable };
   }
 
-  const port = runtime.connect(extensionId, { name: "web" });
+  setIsAvailable(true);
+  let port: ChromePort;
+  try {
+    port = runtime.connect(extensionId, { name: "web" });
+  } catch {
+    setIsAvailable(false);
+    return { state, error, isAvailable };
+  }
 
   port.onMessage.addListener((message: unknown) => {
     if (!isRuntimeResponse(message)) return;
     if (message.ok) {
+      hasReceivedState = true;
       setState(message.executiveState);
       setError(null);
     } else {
@@ -67,10 +76,15 @@ export function createExtensionPortConnection(): ExtensionPortConnection {
 
   port.onDisconnect.addListener(() => {
     setState(null);
+    if (!hasReceivedState) {
+      setError(null);
+      return;
+    }
+
     setError(runtime.lastError?.message ?? "Extension disconnected.");
   });
 
   onCleanup(() => port.disconnect());
 
-  return { state, error };
+  return { state, error, isAvailable };
 }

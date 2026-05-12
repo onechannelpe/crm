@@ -1,47 +1,21 @@
+import type {
+  BridgeResponse,
+  ExecutivePresenceStatus,
+  ExecutiveStateSnapshot,
+  SyncHealth,
+} from "@crm/contracts/extension";
+import { isBridgeResponse } from "@crm/contracts/extension";
+
 import { isPlainRecord } from "~/lib/type-guards";
 
-export type ExtensionExecutivePresenceStatus =
-  | "idle"
-  | "ready"
-  | "dialing"
-  | "active"
-  | "wrap_up";
-
-export type ExtensionSyncHealth =
-  | "ok"
-  | "pending"
-  | "error"
-  | "reauth_required";
-
-export interface ExtensionExecutiveState {
-  presenceStatus: ExtensionExecutivePresenceStatus;
-  syncHealth: ExtensionSyncHealth;
-  assignmentId: number | null;
-  contactId: number | null;
-  phone: string | null;
-  presenceUpdatedAt: number | null;
-  syncUpdatedAt: number | null;
-}
+export type { ExecutivePresenceStatus, ExecutiveStateSnapshot, SyncHealth };
 
 interface AssignmentHandoffMessage {
   type: "assignment.handoff";
   token: string;
 }
 
-interface ExtensionRuntimeSuccess {
-  ok: true;
-  executiveState: ExtensionExecutiveState;
-}
-
-interface ExtensionRuntimeFailure {
-  ok: false;
-  error: string;
-  executiveState?: ExtensionExecutiveState;
-}
-
-export type ExtensionRuntimeResponse =
-  | ExtensionRuntimeSuccess
-  | ExtensionRuntimeFailure;
+export type ExtensionRuntimeResponse = BridgeResponse;
 
 interface ChromeRuntimeApi {
   lastError?: { message?: string };
@@ -52,36 +26,10 @@ interface ChromeRuntimeApi {
   ) => void;
 }
 
-function isExecutiveState(value: unknown): value is ExtensionExecutiveState {
-  return (
-    isPlainRecord(value) &&
-    typeof value.presenceStatus === "string" &&
-    typeof value.syncHealth === "string" &&
-    (value.assignmentId === null || typeof value.assignmentId === "number") &&
-    (value.contactId === null || typeof value.contactId === "number") &&
-    (value.phone === null || typeof value.phone === "string") &&
-    (value.presenceUpdatedAt === null ||
-      typeof value.presenceUpdatedAt === "number") &&
-    (value.syncUpdatedAt === null || typeof value.syncUpdatedAt === "number")
-  );
-}
-
 export function isRuntimeResponse(
   value: unknown,
 ): value is ExtensionRuntimeResponse {
-  if (!isPlainRecord(value) || typeof value.ok !== "boolean") {
-    return false;
-  }
-
-  if (value.ok) {
-    return isExecutiveState(value.executiveState);
-  }
-
-  return (
-    typeof value.error === "string" &&
-    (value.executiveState === undefined ||
-      isExecutiveState(value.executiveState))
-  );
+  return isBridgeResponse(value);
 }
 
 function isChromeRuntimeApi(value: unknown): value is ChromeRuntimeApi {
@@ -107,11 +55,7 @@ export function getExtensionId(): string | null {
   return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
 }
 
-export function isExtensionBridgeConfigured(): boolean {
-  return getExtensionId() !== null;
-}
-
-function bridgeUnavailable(message: string): ExtensionRuntimeFailure {
+function bridgeUnavailable(message: string): ExtensionRuntimeResponse {
   return { ok: false, error: message };
 }
 
