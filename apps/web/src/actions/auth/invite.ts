@@ -1,9 +1,7 @@
 "use server";
 
-import { validationError } from "~/lib/app-errors";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { submitInviteAcceptance } from "~/server/auth/application/commands/submit-invite-acceptance";
 import { getServerRuntime } from "~/server/runtime";
@@ -16,41 +14,87 @@ export interface InviteActivationView {
   email: string;
 }
 
+export type AcceptInviteErrorCode =
+  | "invalid_token"
+  | "password_too_short"
+  | "password_missing_uppercase"
+  | "password_missing_lowercase"
+  | "password_missing_number"
+  | "invite_invalid_or_expired"
+  | "invite_target_active";
+
 export type AcceptInviteResult =
   | { ok: true; redirectTo: string }
-  | { ok: false; message: string };
+  | { ok: false; code: AcceptInviteErrorCode; message: string };
 
-function assertInviteToken(raw: string): string {
-  const token = assertNonEmptyString(raw, "token").trim();
-  if (!isValidInviteTokenFormat(token)) {
-    throw validationError("token is invalid");
+function readInviteToken(
+  raw: string,
+):
+  | { ok: true; value: string }
+  | { ok: false; code: "invalid_token"; message: string } {
+  const token = raw.trim();
+  if (!token || !isValidInviteTokenFormat(token)) {
+    return {
+      ok: false,
+      code: "invalid_token",
+      message: "El enlace de invitación no es válido.",
+    };
   }
-  return token;
+  return { ok: true, value: token };
 }
 
-function assertStrongPassword(raw: string): string {
-  const password = assertNonEmptyString(raw, "password");
-  if (password.length < 12) {
-    throw validationError("password must contain at least 12 characters");
+function readStrongPassword(
+  raw: string,
+):
+  | { ok: true; value: string }
+  | { ok: false; code: AcceptInviteErrorCode; message: string } {
+  if (!raw.trim()) {
+    return {
+      ok: false,
+      code: "password_too_short",
+      message: "La contraseña debe tener al menos 12 caracteres.",
+    };
   }
-  if (!/[A-Z]/.test(password)) {
-    throw validationError("password must include an uppercase letter");
+  if (raw.length < 12) {
+    return {
+      ok: false,
+      code: "password_too_short",
+      message: "La contraseña debe tener al menos 12 caracteres.",
+    };
   }
-  if (!/[a-z]/.test(password)) {
-    throw validationError("password must include a lowercase letter");
+  if (!/[A-Z]/.test(raw)) {
+    return {
+      ok: false,
+      code: "password_missing_uppercase",
+      message: "La contraseña debe incluir una letra mayúscula.",
+    };
   }
-  if (!/[0-9]/.test(password)) {
-    throw validationError("password must include a number");
+  if (!/[a-z]/.test(raw)) {
+    return {
+      ok: false,
+      code: "password_missing_lowercase",
+      message: "La contraseña debe incluir una letra minúscula.",
+    };
   }
-  return password;
+  if (!/[0-9]/.test(raw)) {
+    return {
+      ok: false,
+      code: "password_missing_number",
+      message: "La contraseña debe incluir un número.",
+    };
+  }
+  return { ok: true, value: raw };
 }
 
 export async function getInviteActivationView(
   tokenInput: string,
 ): Promise<InviteActivationView | null> {
-  const token = assertInviteToken(tokenInput);
+  const safeToken = readInviteToken(tokenInput);
+  if (!safeToken.ok) {
+    return null;
+  }
   const result = await getInviteInfoService({
-    token,
+    token: safeToken.value,
     repos: getServerRuntime().team.invites.repos,
   });
   if (isErr(result)) {
@@ -63,8 +107,14 @@ export async function acceptInvitePasswordStep(input: {
   token: string;
   password: string;
 }): Promise<AcceptInviteResult> {
-  const token = assertInviteToken(input.token);
-  const password = assertStrongPassword(input.password);
+  const token = readInviteToken(input.token);
+  if (!token.ok) {
+    return token;
+  }
+  const password = readStrongPassword(input.password);
+  if (!password.ok) {
+    return password;
+  }
   const request = getRequestClientMetadata();
 
   const result = await submitInviteAcceptance(
@@ -73,11 +123,26 @@ export async function acceptInvitePasswordStep(input: {
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,
     },
-    { token, password },
+    { token: token.value, password: password.value },
   );
 
   if (isErr(result)) {
-    return { ok: false, message: result.error.message };
+    switch (result.error.code) {
+      case "invite_invalid_or_expired":
+        return {
+          ok: false,
+          code: "invite_invalid_or_expired",
+          message: "Esta invitación no es válida o ya expiró.",
+        };
+      case "invite_target_active":
+        return {
+          ok: false,
+          code: "invite_target_active",
+          message: "Esta cuenta ya fue activada.",
+        };
+      default:
+        throw result.error;
+    }
   }
 
   setSessionCookie(result.value.sessionToken);

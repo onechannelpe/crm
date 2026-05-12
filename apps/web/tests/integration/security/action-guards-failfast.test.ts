@@ -49,7 +49,11 @@ describe("action guards fail fast", () => {
         token: "invalid",
         password: "Password123",
       }),
-    ).rejects.toThrow("token is invalid");
+    ).resolves.toEqual({
+      ok: false,
+      code: "invalid_token",
+      message: "El enlace de invitación no es válido.",
+    });
   });
 
   it("rejects invalid range/count values before auth", async () => {
