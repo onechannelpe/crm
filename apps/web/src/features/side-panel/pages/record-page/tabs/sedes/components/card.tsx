@@ -119,7 +119,7 @@ export function VenueCard(props: {
                   <FieldInputValue>
                     {soles.isSettlement
                       ? `SOLES (${soles.banco})`
-                      : `USD (${venue().dollarAccount?.banco ?? "N/A"})`}
+                      : `USD (${venue().dollarAccount?.banco ?? "no registrado"})`}
                   </FieldInputValue>
                 </FieldRow>
               </>
