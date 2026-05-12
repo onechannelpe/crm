@@ -8,9 +8,14 @@ interface AuthLoadingBlockProps {
 
 export function AuthLoadingBlock(props: AuthLoadingBlockProps) {
   return (
-    <div class={styles.block} role="status" aria-live="polite" aria-busy="true">
+    <output
+      class={styles.block}
+      aria-live="polite"
+      aria-busy="true"
+      aria-label={props.label}
+    >
       <span class={styles.srOnly}>{props.label}</span>
       <Loader />
-    </div>
+    </output>
   );
 }

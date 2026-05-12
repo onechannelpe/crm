@@ -30,12 +30,12 @@ interface DatePickerPopoverProps {
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSelect: (date: Date) => void;
-  onPopoverMount: (element: HTMLDivElement | undefined) => void;
+  onPopoverMount: (element: HTMLDialogElement | undefined) => void;
 }
 
 export function DatePickerPopover(props: DatePickerPopoverProps) {
   const [position, setPosition] = createSignal({ top: 0, left: 0 });
-  let popoverRef: HTMLDivElement | undefined;
+  let popoverRef: HTMLDialogElement | undefined;
 
   createEffect(() => {
     if (!props.isOpen()) return;
@@ -80,9 +80,9 @@ export function DatePickerPopover(props: DatePickerPopoverProps) {
   return (
     <Show when={props.isOpen()}>
       <Portal>
-        <div
+        <dialog
+          open
           class={styles.popover}
-          role="dialog"
           aria-modal="false"
           style={{
             top: `${position().top}px`,
@@ -107,7 +107,7 @@ export function DatePickerPopover(props: DatePickerPopoverProps) {
             onNextMonth={props.onNextMonth}
             onSelect={props.onSelect}
           />
-        </div>
+        </dialog>
       </Portal>
     </Show>
   );

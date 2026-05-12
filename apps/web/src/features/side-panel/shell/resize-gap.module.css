@@ -1,7 +1,9 @@
 .gap {
   cursor: col-resize;
+  border: 0;
   flex-shrink: 0;
   height: 100%;
+  margin: 0;
   transition: width 0.15s ease;
   width: 8px;
 }

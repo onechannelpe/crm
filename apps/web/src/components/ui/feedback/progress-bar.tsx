@@ -8,20 +8,11 @@ interface ProgressBarProps {
 export function ProgressBar(props: ProgressBarProps) {
   const clamped = () => Math.max(0, Math.min(100, props.value));
   return (
-    <div
+    <progress
       class={styles.root}
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={clamped()}
-    >
-      <div
-        class={styles.bar}
-        style={{
-          width: `${clamped()}%`,
-          "background-color": props.barColor,
-        }}
-      />
-    </div>
+      value={clamped()}
+      max={100}
+      style={{ "--progress-color": props.barColor }}
+    />
   );
 }

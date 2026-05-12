@@ -16,7 +16,6 @@ export function DataGridRow<T extends { id: string }>(props: {
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
   reorderable: boolean;
-  rowIndex: number;
   rowOrderIndex: number;
   selectionLeft: number;
   selectable?: boolean;
@@ -31,11 +30,9 @@ export function DataGridRow<T extends { id: string }>(props: {
   return (
     <div
       class={styles.bodyRow}
-      role="row"
       data-grid-row-id={props.row.id}
       data-grid-row-index={props.rowOrderIndex}
       data-selectable-id={props.row.id}
-      aria-rowindex={props.rowIndex}
       aria-selected={
         props.selectable === false
           ? undefined
@@ -53,11 +50,7 @@ export function DataGridRow<T extends { id: string }>(props: {
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
       {props.reorderable ? (
-        <div
-          class={`${styles.bodyCell} ${styles.reorderCell}`}
-          aria-colindex={1}
-          role="gridcell"
-        >
+        <div class={`${styles.bodyCell} ${styles.reorderCell}`}>
           <button
             type="button"
             class={styles.reorderHandle}
@@ -82,10 +75,8 @@ export function DataGridRow<T extends { id: string }>(props: {
       {props.selectable === false ? null : (
         <div
           class={`${styles.bodyCell} ${styles.checkboxCell}`}
-          aria-colindex={props.reorderable ? 2 : 1}
           data-selection-cell="true"
           data-select-disable="true"
-          role="gridcell"
           style={
             props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
           }
@@ -106,10 +97,6 @@ export function DataGridRow<T extends { id: string }>(props: {
       <For each={props.columns}>
         {(column, index) => (
           <DataGridCell
-            ariaColIndex={
-              index() + (props.selectable ? 2 : 1) + (props.reorderable ? 1 : 0)
-            }
-            role="gridcell"
             sticky={index() === props.stickyColumnIndex}
             stickyLeft={props.stickyLeft}
           >

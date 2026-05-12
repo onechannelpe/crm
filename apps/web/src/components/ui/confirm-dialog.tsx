@@ -39,7 +39,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
             if (e.target === e.currentTarget && !props.loading) props.onClose();
           }}
         >
-          <div class={styles.dialog} role="dialog" aria-modal="true">
+          <dialog open class={styles.dialog} aria-modal="true">
             <div class={styles.header}>
               <h3 class={styles.title}>{props.title}</h3>
               <p class={styles.description}>{props.description}</p>
@@ -65,7 +65,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
                 {props.confirmLabel}
               </Button>
             </div>
-          </div>
+          </dialog>
         </div>
       </PresenceTransition>
     </Portal>

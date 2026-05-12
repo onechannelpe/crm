@@ -25,7 +25,6 @@ export function DataGridBody<T extends { id: string }>(props: {
             columns={props.columns}
             gridTemplateColumns={props.gridTemplateColumns}
             reorderable={props.reorderable}
-            rowIndex={index() + 2}
             rowOrderIndex={index()}
             selectable={props.selectable}
             row={row}

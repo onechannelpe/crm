@@ -15,7 +15,7 @@ function toTrack<T>(column: DataGridColumn<T>) {
   if (column.minWidth && column.maxWidth) {
     return `minmax(${column.minWidth}px, ${column.maxWidth}px)`;
   }
-  if (column.minWidth) return `minmax(${column.minWidth}px, max-content)`;
+  if (column.minWidth) return `minmax(${column.minWidth}px, 1fr)`;
   if (column.maxWidth) return `fit-content(${column.maxWidth}px)`;
   if (column.grow) return "minmax(180px, 1fr)";
   return "max-content";

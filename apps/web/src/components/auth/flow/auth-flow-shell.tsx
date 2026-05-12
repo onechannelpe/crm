@@ -22,10 +22,10 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
   return (
     <div class={styles.shell}>
       <section class={styles.surface}>
-        {props.topBar !== undefined ? (
-          <div class={styles.topBar}>{props.topBar}</div>
-        ) : null}
         <div class={styles.content}>
+          {props.topBar !== undefined ? (
+            <div class={styles.topBar}>{props.topBar}</div>
+          ) : null}
           <div class={styles.logo}>
             <ResponsiveImage
               sources={logo}
