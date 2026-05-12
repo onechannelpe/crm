@@ -22,6 +22,13 @@ export function useLeadRecordPageState() {
     });
   }
 
+  function setSubtitle(subtitle: string) {
+    updatePageState(pageId(), (state) => {
+      if (state.page !== "view-record") return state;
+      return { ...state, subtitle };
+    });
+  }
+
   const leadId = createMemo(() => pageState().leadId);
 
   const activeTab = createMemo<ViewRecordTabId>(() =>
@@ -40,5 +47,6 @@ export function useLeadRecordPageState() {
     activeTab,
     label,
     setActiveTab,
+    setSubtitle,
   };
 }

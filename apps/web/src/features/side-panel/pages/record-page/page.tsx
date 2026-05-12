@@ -4,7 +4,7 @@ import {
   useAction,
   useNavigate,
 } from "@solidjs/router";
-import { Show, createMemo } from "solid-js";
+import { Show, createEffect, createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -32,12 +32,21 @@ export function RecordPage() {
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar, enqueueInfoSnackBar } =
     useSnackBar();
   const { currentUser } = useAuthenticatedSession();
-  const { leadId, activeTab, setActiveTab } = useLeadRecordPageState();
+  const { leadId, activeTab, setActiveTab, setSubtitle } =
+    useLeadRecordPageState();
   const canDeleteCompany = createMemo(() => currentUser().role === "superuser");
 
   const detailData = createAsync(async () => {
     return leadDetailQuery(leadId());
   });
+  createEffect(() => {
+    const detail = detailData();
+    if (!detail) return;
+    const { ruc, district, department } = detail.lead;
+    const geo = [district, department].filter(Boolean).join(", ");
+    setSubtitle([ruc, geo].filter(Boolean).join(" · "));
+  });
+
   createRecordPageController({
     leadId,
     detailData,

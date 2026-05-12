@@ -4,12 +4,12 @@ import type { LeadListRowView } from "~/server/workflow/application/queries/view
 
 export function useOpenLeadRecord() {
   const rowOpen = useSidePanelRowOpen<
-    Pick<LeadListRowView, "id" | "ruc" | "razonSocial">
+    Pick<LeadListRowView, "id" | "ruc" | "razonSocial" | "address">
   >((lead) =>
     createLeadRecordDetailSidePanelPage({
       leadId: lead.id,
       title: lead.razonSocial ?? "",
-      subtitle: lead.ruc,
+      subtitle: [lead.ruc, lead.address].filter(Boolean).join(" · "),
     }),
   );
 

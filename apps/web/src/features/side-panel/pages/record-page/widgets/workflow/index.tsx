@@ -70,8 +70,22 @@ export function WorkflowWidget(props: { data: LeadDetailView }) {
                     {formatRate(profile().tasaActual)}
                   </RelationMeta>
                 </RelationRow>
+                <Show when={profile().proveedorActual}>
+                  {(proveedor) => (
+                    <RelationRow>
+                      <span>Proveedor actual</span>
+                      <RelationMeta>{proveedor()}</RelationMeta>
+                    </RelationRow>
+                  )}
+                </Show>
               </>
             )}
+          </Show>
+          <Show when={props.data.lead.stage === "CLOSING"}>
+            <RelationRow>
+              <span>Siguiente paso</span>
+              <RelationMeta>Completar cuentas en Sedes</RelationMeta>
+            </RelationRow>
           </Show>
           <RelationRow>
             <span>Sedes</span>

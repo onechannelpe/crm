@@ -1,15 +1,12 @@
 import { Show } from "solid-js";
 import type { JSX } from "solid-js";
 
-import Building2 from "~/components/icons/building-2";
 import Clock from "~/components/icons/calendar-clock";
 import Checkbox from "~/components/icons/checkbox";
-import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { RecordInlineCell, RelationFieldRow } from "~/components/ui/field-row";
 import { RecordChip } from "~/components/ui/record-chip/record-chip";
-import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import { FieldTextValue } from "~/features/side-panel/components/field-table";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import {
@@ -58,49 +55,6 @@ function ManagedByRow(props: { data: LeadDetailView }) {
 }
 
 export const LEAD_DETAIL_FIELD_GROUPS: FieldGroup[] = [
-  {
-    key: "empresa",
-    label: "Empresa",
-    fields: [
-      {
-        key: "ruc",
-        label: "RUC",
-        renderCell: (data) => (
-          <RecordInlineCell label="RUC" icon={MapIcon}>
-            <FieldTextValue>{data.lead.ruc}</FieldTextValue>
-          </RecordInlineCell>
-        ),
-      },
-      {
-        key: "razonSocial",
-        label: "Razón social",
-        renderCell: (data) => (
-          <RecordInlineCell label="Razón social" icon={Building2}>
-            <FieldTextValue>{data.lead.razonSocial ?? ""}</FieldTextValue>
-          </RecordInlineCell>
-        ),
-      },
-      {
-        key: "economicActivities",
-        label: "Actividades",
-        renderCell: (data) => (
-          <RecordInlineCell label="Actividades" icon={Building2}>
-            <FieldChipList
-              emptyLabel="—"
-              items={data.sourceStatus.sunat.economicActivities.map(
-                (activity) => ({
-                  id: `${activity.role}-${activity.order ?? 0}-${activity.code}`,
-                  label: activity.code,
-                  tone: activity.role === "principal" ? "positive" : "neutral",
-                  tooltip: `${activity.label} - ${activity.description}`,
-                }),
-              )}
-            />
-          </RecordInlineCell>
-        ),
-      },
-    ],
-  },
   {
     key: "estado",
     label: "Estado",
