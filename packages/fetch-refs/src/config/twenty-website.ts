@@ -5,8 +5,8 @@ export const twentyWebsiteConfig: SourceConfig = {
   repo: "https://github.com/twentyhq/twenty.git",
   mounts: [
     {
-      repoPath: "packages/twenty-website/src",
-      localPath: ".refs/twenty-website",
+      repoPath: "packages/twenty-website-new/src",
+      localPath: ".refs/twenty-website-new",
     },
   ],
 };
