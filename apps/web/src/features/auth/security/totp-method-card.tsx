@@ -4,7 +4,7 @@ import ShieldCheck from "~/components/icons/shield-check";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 
-import { OtpSlotInput } from "../flow/otp-slot-input";
+import { OtpSlotInput } from "../ui/otp-slot-input";
 import type { TotpEnrollmentState } from "./use-totp-enrollment";
 
 import styles from "./security-enrollment-panel.module.css";

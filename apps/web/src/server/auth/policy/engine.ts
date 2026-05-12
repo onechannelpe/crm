@@ -1,6 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
+import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 import type { CurrentUserView } from "~/server/auth/application/contracts";
 
 import { resolveOnboardingSessionState } from "../state/transitions";

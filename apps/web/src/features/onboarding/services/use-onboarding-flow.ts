@@ -7,10 +7,10 @@ import {
 } from "~/actions/auth/onboarding";
 import { beginPasskeyRegistration } from "~/actions/auth/onboarding/passkey";
 import { getOnboardingRequirements } from "~/actions/auth/policy";
-import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
+import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useSession } from "~/components/providers/session-provider";
-import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
+import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
@@ -20,6 +20,7 @@ import type { OnboardingRequirements } from "~/server/auth/policy/types";
 
 export type OnboardingView = "profile" | "security-choice" | "passkey" | "totp";
 export type PasskeyOnboardingPhase = "idle" | "device" | "server";
+export type PendingCreationLoaderStep = "none" | "step-1" | "step-2" | "step-3";
 
 export function useOnboardingFlow() {
   const navigate = useNavigate();
@@ -35,6 +36,9 @@ export function useOnboardingFlow() {
   const [passkeySupported, setPasskeySupported] = createSignal(false);
   const [requirements, setRequirements] =
     createSignal<OnboardingRequirements | null>(null);
+  const [pendingCreationLoaderStep, setPendingCreationLoaderStep] =
+    createSignal<PendingCreationLoaderStep>("none");
+  let creationLoaderTimerIds: number[] = [];
 
   const submitting = createMemo(
     () => onboardingSubmitting() || passkeyPhase() === "server",
@@ -51,6 +55,26 @@ export function useOnboardingFlow() {
     navigate(result.redirectTo);
   }
 
+  const clearCreationLoaderSchedule = () => {
+    for (const id of creationLoaderTimerIds) {
+      clearTimeout(id);
+    }
+    creationLoaderTimerIds = [];
+  };
+
+  const scheduleCreationLoader = () => {
+    clearCreationLoaderSchedule();
+    creationLoaderTimerIds.push(
+      window.setTimeout(() => setPendingCreationLoaderStep("step-1"), 500),
+    );
+    creationLoaderTimerIds.push(
+      window.setTimeout(() => setPendingCreationLoaderStep("step-2"), 2000),
+    );
+    creationLoaderTimerIds.push(
+      window.setTimeout(() => setPendingCreationLoaderStep("step-3"), 5000),
+    );
+  };
+
   async function submitOnboarding(
     action: () => Promise<{ redirectTo: string }>,
     failureMessage: string,
@@ -60,11 +84,14 @@ export function useOnboardingFlow() {
     }
 
     setOnboardingSubmitting(true);
+    scheduleCreationLoader();
     try {
       await completeOnboardingAndRedirect(action);
     } catch (error: unknown) {
       enqueueErrorSnackBar(getErrorMessage(error, failureMessage));
     } finally {
+      clearCreationLoaderSchedule();
+      setPendingCreationLoaderStep("none");
       setOnboardingSubmitting(false);
     }
   }
@@ -134,6 +161,8 @@ export function useOnboardingFlow() {
   // Redirect to login if session expires mid-onboarding
   createEffect(() => {
     if (user() === null) {
+      clearCreationLoaderSchedule();
+      setPendingCreationLoaderStep("none");
       navigate("/login");
     }
   });
@@ -262,6 +291,7 @@ export function useOnboardingFlow() {
     onboardingState,
     passkeySupported,
     totpEnrollment,
+    pendingCreationLoaderStep,
     goBack,
     handleProfileContinue,
     handlePasskeySelection,

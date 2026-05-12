@@ -2,7 +2,7 @@ import { Show } from "solid-js";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
-import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
+import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 
 import styles from "./onboarding-profile-step.module.css";
 

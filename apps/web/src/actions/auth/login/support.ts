@@ -9,7 +9,7 @@ import type {
 import { internalError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
+import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import type { SubmitPrimaryLoginError } from "~/server/auth/application/contracts";
 import type { BeginPasskeyLoginError } from "~/server/auth/passkey/service";

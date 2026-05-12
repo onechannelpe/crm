@@ -1,21 +1,21 @@
 import { useSearchParams } from "@solidjs/router";
 import { onMount, Show } from "solid-js";
 
-import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
-import { LastUsedPill } from "~/components/auth/flow/last-used-pill";
-import { LegalFooter } from "~/components/auth/flow/legal-footer";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
+import { LastUsedPill } from "~/features/auth/ui/last-used-pill";
+import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Google from "~/components/icons/brands/google";
 import { Button } from "~/components/ui/input/button";
 import { ButtonLink } from "~/components/ui/input/button-link";
-import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
-import { useLoginFlow } from "~/lib/auth/use-login-flow";
-import { usePasskeyLogin } from "~/lib/auth/use-passkey-login";
+import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
+import { useLoginFlow } from "~/features/auth/services/use-login-flow";
+import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
 
-import styles from "../../auth/auth-shell.module.css";
-import pageStyles from "../../auth/login-page.module.css";
-import shellStyles from "~/components/auth/flow/auth-flow-shell.module.css";
-import linkStyles from "~/components/auth/flow/auth-links.module.css";
+import styles from "~/features/auth/ui/auth-shell.module.css";
+import pageStyles from "~/features/auth/ui/login-page.module.css";
+import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
+import linkStyles from "~/features/auth/ui/auth-links.module.css";
 
 export default function LoginPage() {
   useAuthPageView("login");
