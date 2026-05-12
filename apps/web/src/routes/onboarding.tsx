@@ -167,10 +167,9 @@ function OnboardingContent() {
   }
 
   async function handleChooseSecurity(method: "passkey-step" | "totp-step") {
-    const currentPhone = phone();
     setSubmitting(true);
     try {
-      const result = await chooseSecurity({ phone: currentPhone, method });
+      const result = await chooseSecurity({ method });
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
@@ -182,7 +181,6 @@ function OnboardingContent() {
   }
 
   async function handlePasskeySetup() {
-    const currentPhone = phone();
     if (!passkeySupported()) {
       enqueueErrorSnackBar(
         "Este dispositivo no es compatible con claves de acceso.",
@@ -196,7 +194,6 @@ function OnboardingContent() {
       const response = await createRegistrationResponse(options);
       setPasskeyPhase("server");
       const result = await finishPasskeyOnboardingStep({
-        phone: currentPhone,
         challengeId,
         response,
       });
@@ -229,10 +226,9 @@ function OnboardingContent() {
   }
 
   async function handleComplete() {
-    const currentPhone = phone();
     setSubmitting(true);
     try {
-      const result = await completeOnboardingStep({ phone: currentPhone });
+      const result = await completeOnboardingStep();
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
