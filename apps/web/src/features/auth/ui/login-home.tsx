@@ -6,11 +6,12 @@ import { ButtonLink } from "~/components/ui/input/button-link";
 import { useLoginFlow } from "~/features/auth/services/use-login-flow";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
 
+import { LastUsedPill } from "./last-used-pill";
+import { LegalFooter } from "./legal-footer";
+
 import shellStyles from "./auth-flow-shell.module.css";
 import linkStyles from "./auth-links.module.css";
 import styles from "./auth-shell.module.css";
-import { LastUsedPill } from "./last-used-pill";
-import { LegalFooter } from "./legal-footer";
 import pageStyles from "./login-page.module.css";
 
 export function LoginHome() {
