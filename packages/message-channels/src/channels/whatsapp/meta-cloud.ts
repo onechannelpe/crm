@@ -12,11 +12,7 @@ interface SendWhatsAppTextInput {
 }
 
 function normalizeRecipient(raw: string): string {
-  const digits = raw.replaceAll(/\D/g, "");
-  if (/^9\d{8}$/.test(digits)) {
-    return `51${digits}`;
-  }
-  return digits;
+  return raw.replaceAll(/\D/g, "");
 }
 
 export async function sendWithWhatsAppCloudText(

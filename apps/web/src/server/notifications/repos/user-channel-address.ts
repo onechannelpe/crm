@@ -1,6 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { Database, UserChannelAddressesTable } from "~/lib/db/types";
+import type { Phone } from "~/lib/phone/pe-mobile";
 
 type ChannelType = UserChannelAddressesTable["channel"];
 
@@ -50,7 +51,7 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
 
     async claimWhatsAppAddress(values: {
       userId: number;
-      address: string;
+      address: Phone;
       now: number;
     }): Promise<
       { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: number }

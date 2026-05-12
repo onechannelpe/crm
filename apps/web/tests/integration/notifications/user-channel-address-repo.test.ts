@@ -2,6 +2,8 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { parsePhone } from "~/lib/phone/pe-mobile";
+
 describe("user channel address repo", () => {
   let ctx: TestDbContext;
 
@@ -26,7 +28,7 @@ describe("user channel address repo", () => {
 
     const result = await ctx.repos.userChannelAddresses.claimWhatsAppAddress({
       userId: 1,
-      address: "911111111",
+      address: parsePhone("911111111")!,
       now: 2000,
     });
 
@@ -58,7 +60,7 @@ describe("user channel address repo", () => {
 
     const result = await ctx.repos.userChannelAddresses.claimWhatsAppAddress({
       userId: 1,
-      address: "922222222",
+      address: parsePhone("922222222")!,
       now: 2000,
     });
 

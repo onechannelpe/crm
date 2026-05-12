@@ -6,8 +6,8 @@ import type {
   CampaignEmailParams,
 } from "@crm/email-composer";
 import type {
-  DeliveryReceipt,
   DeliveryError,
+  DeliveryReceipt,
   MessageChannels,
   Result,
 } from "@crm/message-channels";
@@ -82,7 +82,7 @@ export function createMessagingGateway(deps: {
 
     sendWhatsAppText(input) {
       return deps.channels.sendWhatsAppText({
-        to: input.to,
+        to: `51${input.to}`,
         body: input.body,
       });
     },
