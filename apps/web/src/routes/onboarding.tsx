@@ -1,18 +1,18 @@
 import { Show, Suspense } from "solid-js";
 
-import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
-import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
-import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-panel";
 import { Loader } from "~/components/feedback/loading/loader";
-import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profile-step";
-import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
 import { SessionProvider } from "~/components/providers/session-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
+import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-panel";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
+import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import {
   useOnboardingFlow,
   type OnboardingView,
 } from "~/features/onboarding/services/use-onboarding-flow";
+import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profile-step";
+import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 

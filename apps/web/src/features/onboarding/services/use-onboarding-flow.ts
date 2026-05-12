@@ -7,9 +7,9 @@ import {
 } from "~/actions/auth/onboarding";
 import { beginPasskeyRegistration } from "~/actions/auth/onboarding/passkey";
 import { getOnboardingRequirements } from "~/actions/auth/policy";
-import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useSession } from "~/components/providers/session-provider";
+import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
 import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 import {
   createRegistrationResponse,

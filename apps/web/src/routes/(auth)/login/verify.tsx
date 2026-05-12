@@ -1,9 +1,6 @@
 import { createAsync, useSearchParams, useSubmission } from "@solidjs/router";
 import { createMemo, createSignal, onMount, Show, Suspense } from "solid-js";
 
-import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
-import { LegalFooter } from "~/features/auth/ui/legal-footer";
-import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { Loader } from "~/components/feedback/loading/loader";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
@@ -11,13 +8,16 @@ import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
 import { totpLoginUiMessage } from "~/features/auth/model/login-ui";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
+import { LegalFooter } from "~/features/auth/ui/legal-footer";
+import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { totpLoginMutation } from "~/lib/mutations/auth";
 import { loginFlowQuery } from "~/lib/queries/auth";
 
-import styles from "~/features/auth/ui/auth-shell.module.css";
-import pageStyles from "~/features/auth/ui/login-page.module.css";
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";
+import styles from "~/features/auth/ui/auth-shell.module.css";
+import pageStyles from "~/features/auth/ui/login-page.module.css";
 
 export default function LoginVerifyPage() {
   useAuthPageView("login_verify");
@@ -57,10 +57,7 @@ export default function LoginVerifyPage() {
       <div class={pageStyles.formStack}>
         <Suspense
           fallback={
-            <output
-              class={pageStyles.loadingStack}
-              aria-live="polite"
-            >
+            <output class={pageStyles.loadingStack} aria-live="polite">
               <p class={pageStyles.loadingLabel}>Cargando verificación</p>
               <Loader />
             </output>

@@ -1,19 +1,19 @@
 import { createAsync, useSearchParams } from "@solidjs/router";
 import { createMemo, Show, Suspense } from "solid-js";
 
-import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { loginFlowQuery } from "~/lib/queries/auth";
 
-import styles from "~/features/auth/ui/auth-shell.module.css";
-import pageStyles from "~/features/auth/ui/login-page.module.css";
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";
+import styles from "~/features/auth/ui/auth-shell.module.css";
+import pageStyles from "~/features/auth/ui/login-page.module.css";
 
 export default function LoginPasskeyPage() {
   useAuthPageView("login_passkey");

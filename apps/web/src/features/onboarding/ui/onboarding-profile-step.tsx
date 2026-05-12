@@ -1,8 +1,8 @@
 import { Show } from "solid-js";
 
+import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
-import { isValidOnboardingPhone } from "~/features/onboarding/model/onboarding-phone";
 
 import styles from "./onboarding-profile-step.module.css";
 
