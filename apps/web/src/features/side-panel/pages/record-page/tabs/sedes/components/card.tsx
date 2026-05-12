@@ -112,6 +112,16 @@ export function VenueCard(props: {
                     <FieldInputValue>{soles.cci}</FieldInputValue>
                   </FieldRow>
                 </Show>
+                <FieldRow>
+                  <FieldLabel>
+                    <FieldLabelText>Cuenta de abono</FieldLabelText>
+                  </FieldLabel>
+                  <FieldInputValue>
+                    {soles.isSettlement
+                      ? `SOLES (${soles.banco})`
+                      : `USD (${venue().dollarAccount?.banco ?? "no registrado"})`}
+                  </FieldInputValue>
+                </FieldRow>
               </>
             )}
           </Show>
@@ -152,20 +162,6 @@ export function VenueCard(props: {
                 </FieldRow>
               </Show>
             </>
-          </Show>
-          <Show when={venue().solesAccount} keyed>
-            {(soles) => (
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Cuenta de abono</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  {soles.isSettlement
-                    ? `SOLES (${soles.banco})`
-                    : `USD (${venue().dollarAccount?.banco ?? "N/A"})`}
-                </FieldInputValue>
-              </FieldRow>
-            )}
           </Show>
           <Show when={!venue().solesAccount}>
             <FieldRow>
