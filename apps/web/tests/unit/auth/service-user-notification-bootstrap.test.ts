@@ -1,14 +1,14 @@
 // oxlint-disable vitest/require-mock-type-parameters
+import { phone } from "@tests/support/_core/phone";
 import { describe, expect, it, vi } from "vitest";
 
-import { parsePhone } from "~/lib/phone/pe-mobile";
 import { bootstrapUserNotifications } from "~/server/users/service-user-notification-bootstrap";
 
 const NOW = 1_710_000_000_000;
 const INPUT = {
   userId: 5,
   email: "test@example.com",
-  phone: parsePhone("999888777")!,
+  phone: phone(),
   now: NOW,
 } as const;
 

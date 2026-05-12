@@ -1,3 +1,4 @@
+import { phone } from "@tests/support/_core/phone";
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import {
   buildRegistrationResponse,
@@ -7,7 +8,6 @@ import {
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { parsePhone } from "~/lib/phone/pe-mobile";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
 import { isErr } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
@@ -70,7 +70,7 @@ describe("passkey onboarding flow", () => {
 
         return completeAccountOnboardingWithRepos(transactionRepos, {
           userId,
-          phone: parsePhone("999888777")!,
+          phone: phone(),
         });
       });
 
