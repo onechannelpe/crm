@@ -56,9 +56,12 @@ export const acceptInvitePasswordMutation = action(
   async (formData: FormData): Promise<AcceptInviteResult> => {
     const token = formData.get("token");
     const password = formData.get("password");
+    const confirmPassword = formData.get("confirmPassword");
     const result = await acceptInvitePasswordStep({
       token: typeof token === "string" ? token : "",
       password: typeof password === "string" ? password : "",
+      confirmPassword:
+        typeof confirmPassword === "string" ? confirmPassword : undefined,
     });
     if (result.ok) {
       throw redirect(result.redirectTo);

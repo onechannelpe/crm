@@ -20,6 +20,7 @@ export type AcceptInviteErrorCode =
   | "password_missing_uppercase"
   | "password_missing_lowercase"
   | "password_missing_number"
+  | "password_mismatch"
   | "invite_invalid_or_expired"
   | "invite_target_active";
 
@@ -106,7 +107,19 @@ export async function getInviteActivationView(
 export async function acceptInvitePasswordStep(input: {
   token: string;
   password: string;
+  confirmPassword?: string;
 }): Promise<AcceptInviteResult> {
+  if (
+    input.confirmPassword !== undefined &&
+    input.password !== input.confirmPassword
+  ) {
+    return {
+      ok: false,
+      code: "password_mismatch",
+      message: "Las contraseñas no coinciden.",
+    };
+  }
+
   const token = readInviteToken(input.token);
   if (!token.ok) {
     return token;

@@ -73,6 +73,7 @@ export function InviteActivationForm(props: {
       <Input
         placeholder="Confirmar contraseña"
         type="password"
+        name="confirmPassword"
         value={confirmPassword()}
         onInput={(event) => setConfirmPassword(event.currentTarget.value)}
         autocomplete="new-password"
