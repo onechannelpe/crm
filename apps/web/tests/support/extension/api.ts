@@ -1,15 +1,38 @@
 import { createExtensionService } from "~/server/extension/service";
+import { Err, type Result } from "~/server/shared/result";
 
 import type { TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";
 
 export function createTransactionRunner(ctx: TestDbContext) {
-  return <T>(
-    operation: (transactionRepos: TestDbContext["repos"]) => Promise<T>,
-  ) =>
-    ctx.db.transaction().execute((transactionDb) => {
-      return operation(createTestRepositories(transactionDb));
-    });
+  class TestRollbackError<TError> extends Error {
+    constructor(readonly error: TError) {
+      super("rollback");
+    }
+  }
+
+  return {
+    async run<T, TError>(
+      work: (
+        transactionRepos: TestDbContext["repos"],
+      ) => Promise<Result<T, TError>>,
+    ): Promise<Result<T, TError>> {
+      try {
+        return await ctx.db.transaction().execute(async (transactionDb) => {
+          const result = await work(createTestRepositories(transactionDb));
+          if (!result.ok) {
+            throw new TestRollbackError(result.error);
+          }
+          return result;
+        });
+      } catch (error) {
+        if (error instanceof TestRollbackError) {
+          return Err(error.error);
+        }
+        throw error;
+      }
+    },
+  };
 }
 
 export function createExtensionScenario(
@@ -17,7 +40,7 @@ export function createExtensionScenario(
   now: () => number = () => Date.now(),
 ) {
   const service = createExtensionService(ctx.repos, {
-    runInTransaction: createTransactionRunner(ctx),
+    uow: createTransactionRunner(ctx),
     now,
   });
 

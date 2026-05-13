@@ -7,21 +7,31 @@ import { createUsersRepo } from "~/server/users/repos-users";
 
 import { createInviteService } from "../application/invite-service";
 
-function createInviteRepos(executor: DatabaseExecutor) {
-  return {
+export type InviteRepos = {
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  teams: ReturnType<typeof createTeamsRepo>;
+  userInvites: ReturnType<typeof createUserInvitesRepo>;
+  users: ReturnType<typeof createUsersRepo>;
+};
+
+export function createInviteServiceContext(executor: DatabaseExecutor) {
+  const repos: InviteRepos = {
     auditLogs: createAuditLogsRepo(executor),
     teams: createTeamsRepo(executor),
     userInvites: createUserInvitesRepo(executor),
     users: createUsersRepo(executor),
   };
-}
-export type InviteRepos = ReturnType<typeof createInviteRepos>;
-
-export function createInviteServiceContext(executor: DatabaseExecutor) {
-  const repos = createInviteRepos(executor);
 
   const inviteService = createInviteService(repos, {
-    uow: createExecutorUow(executor, createInviteRepos),
+    uow: createExecutorUow(
+      executor,
+      (txDb): InviteRepos => ({
+        auditLogs: createAuditLogsRepo(txDb),
+        teams: createTeamsRepo(txDb),
+        userInvites: createUserInvitesRepo(txDb),
+        users: createUsersRepo(txDb),
+      }),
+    ),
   });
 
   return {

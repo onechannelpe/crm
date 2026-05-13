@@ -31,7 +31,7 @@ export async function updateSearchPolicyOverride(input: {
     execute: (ctx) =>
       updateSearchPolicyOverrideService(
         ctx,
-        getServerRuntime().capacity.commands.repos,
+        getServerRuntime().capacity.commands,
         overrideInput.value,
       ),
   });
@@ -52,7 +52,7 @@ export async function updateLeadPolicyOverride(input: {
     execute: (ctx) =>
       updateLeadPolicyOverrideService(
         ctx,
-        getServerRuntime().capacity.commands.repos,
+        getServerRuntime().capacity.commands,
         overrideInput.value,
       ),
   });
@@ -80,7 +80,7 @@ export async function updateSearchPolicyDefault(input: {
     execute: (ctx) =>
       updateSearchPolicyDefaultService(
         ctx,
-        getServerRuntime().capacity.commands.repos,
+        getServerRuntime().capacity.commands,
         {
           scope: {
             kind: scopeInput.value.scopeType,
@@ -119,7 +119,7 @@ export async function updateLeadPolicyDefault(input: {
     execute: (ctx) =>
       updateLeadPolicyDefaultService(
         ctx,
-        getServerRuntime().capacity.commands.repos,
+        getServerRuntime().capacity.commands,
         {
           scope: {
             kind: scopeInput.value.scopeType,

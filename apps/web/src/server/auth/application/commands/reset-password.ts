@@ -3,6 +3,7 @@ import {
   hashPasswordResetToken,
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
+import { Ok } from "~/server/shared/result";
 
 import type { PasswordResetRequestContext } from "../../infrastructure/password-reset-context";
 import type { ResetPasswordResult } from "../contracts";
@@ -33,9 +34,10 @@ export async function resetPassword(input: {
   }
 
   const passwordHash = await hashPassword(input.password);
-  await input.deps.runInRepositoryTransaction(async (repos) => {
+  await input.deps.uow.run(async (repos) => {
     await repos.passwordResetTokens.expireAllForUser(record.user_id, now);
     await repos.users.updatePassword(record.user_id, passwordHash);
+    return Ok(undefined);
   });
 
   return { ok: true };

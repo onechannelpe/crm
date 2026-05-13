@@ -1,8 +1,13 @@
 import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
+import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 import { createUsersRepo } from "~/server/users/repos-users";
+
+type PasswordResetRepos = {
+  users: ReturnType<typeof createUsersRepo>;
+  passwordResetTokens: ReturnType<typeof createPasswordResetTokensRepo>;
+};
 
 interface PasswordResetContextDeps {
   executor: DatabaseExecutor;
@@ -10,26 +15,21 @@ interface PasswordResetContextDeps {
 }
 
 export function createPasswordResetContext(deps: PasswordResetContextDeps) {
-  const runInRepositoryTransaction: RepositoryTransactionRunner<
-    ReturnType<typeof createPasswordResetRepos>
-  > = (operation) =>
-    deps.executor
-      .transaction()
-      .execute((transactionDb) =>
-        operation(createPasswordResetRepos(transactionDb)),
-      );
-
-  return {
-    repos: createPasswordResetRepos(deps.executor),
-    runInRepositoryTransaction,
-    messaging: deps.messaging,
+  const repos: PasswordResetRepos = {
+    users: createUsersRepo(deps.executor),
+    passwordResetTokens: createPasswordResetTokensRepo(deps.executor),
   };
-}
 
-function createPasswordResetRepos(executor: DatabaseExecutor) {
   return {
-    users: createUsersRepo(executor),
-    passwordResetTokens: createPasswordResetTokensRepo(executor),
+    repos,
+    uow: createExecutorUow(
+      deps.executor,
+      (txDb): PasswordResetRepos => ({
+        users: createUsersRepo(txDb),
+        passwordResetTokens: createPasswordResetTokensRepo(txDb),
+      }),
+    ),
+    messaging: deps.messaging,
   };
 }
 
@@ -37,5 +37,5 @@ type PasswordResetContext = ReturnType<typeof createPasswordResetContext>;
 
 export type PasswordResetRequestContext = Pick<
   PasswordResetContext,
-  "repos" | "messaging" | "runInRepositoryTransaction"
+  "repos" | "messaging" | "uow"
 >;

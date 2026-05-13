@@ -22,40 +22,55 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
-function createCapacityRepos(executor: DatabaseExecutor) {
-  return {
-    users: createCapacityUsersRepo(executor),
-    teams: createCapacityTeamsRepo(executor),
-    branchSupervisors: createBranchSupervisorsRepo(executor),
-    auditLogs: createAuditLogsRepo(executor),
-    capacityRequests: createCapacityRequestsRepo(executor),
-    searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),
-    searchPolicyOverrides: createSearchPolicyOverridesRepo(executor),
-    leadPolicyDefaults: createLeadPolicyDefaultsRepo(executor),
-    leadPolicyOverrides: createLeadPolicyOverridesRepo(executor),
-    searchCapacityGrants: createSearchCapacityGrantsRepo(executor),
-    searchUsageReservations: createSearchUsageReservationsRepo(executor),
-    searchUsageCommits: createSearchUsageCommitsRepo(executor),
-    leadCapacityGrants: createLeadCapacityGrantsRepo(executor),
-    leadUsageReservations: createLeadUsageReservationsRepo(executor),
-    leadUsageCommits: createLeadUsageCommitsRepo(executor),
-    contactAssignments: createContactAssignmentsRepo(executor),
-  };
-}
-export type CapacityRepos = ReturnType<typeof createCapacityRepos>;
+export type CapacityRepos = {
+  users: ReturnType<typeof createCapacityUsersRepo>;
+  teams: ReturnType<typeof createCapacityTeamsRepo>;
+  branchSupervisors: ReturnType<typeof createBranchSupervisorsRepo>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  capacityRequests: ReturnType<typeof createCapacityRequestsRepo>;
+  searchPolicyDefaults: ReturnType<typeof createSearchPolicyDefaultsRepo>;
+  searchPolicyOverrides: ReturnType<typeof createSearchPolicyOverridesRepo>;
+  leadPolicyDefaults: ReturnType<typeof createLeadPolicyDefaultsRepo>;
+  leadPolicyOverrides: ReturnType<typeof createLeadPolicyOverridesRepo>;
+  searchCapacityGrants: ReturnType<typeof createSearchCapacityGrantsRepo>;
+  searchUsageReservations: ReturnType<typeof createSearchUsageReservationsRepo>;
+  searchUsageCommits: ReturnType<typeof createSearchUsageCommitsRepo>;
+  leadCapacityGrants: ReturnType<typeof createLeadCapacityGrantsRepo>;
+  leadUsageReservations: ReturnType<typeof createLeadUsageReservationsRepo>;
+  leadUsageCommits: ReturnType<typeof createLeadUsageCommitsRepo>;
+  contactAssignments: ReturnType<typeof createContactAssignmentsRepo>;
+};
 
 export function createCapacityCommandsContext(executor: DatabaseExecutor) {
   return {
-    repos: createCapacityRepos(executor),
     rateLimitDeps: {
       actionRateLimits: createActionRateLimitsRepo(executor),
       auditLogs: createAuditLogsRepo(executor),
     },
-    uow: createExecutorUow(executor, createCapacityRepos),
+    uow: createExecutorUow(
+      executor,
+      (txDb): CapacityRepos => ({
+        users: createCapacityUsersRepo(txDb),
+        teams: createCapacityTeamsRepo(txDb),
+        branchSupervisors: createBranchSupervisorsRepo(txDb),
+        auditLogs: createAuditLogsRepo(txDb),
+        capacityRequests: createCapacityRequestsRepo(txDb),
+        searchPolicyDefaults: createSearchPolicyDefaultsRepo(txDb),
+        searchPolicyOverrides: createSearchPolicyOverridesRepo(txDb),
+        leadPolicyDefaults: createLeadPolicyDefaultsRepo(txDb),
+        leadPolicyOverrides: createLeadPolicyOverridesRepo(txDb),
+        searchCapacityGrants: createSearchCapacityGrantsRepo(txDb),
+        searchUsageReservations: createSearchUsageReservationsRepo(txDb),
+        searchUsageCommits: createSearchUsageCommitsRepo(txDb),
+        leadCapacityGrants: createLeadCapacityGrantsRepo(txDb),
+        leadUsageReservations: createLeadUsageReservationsRepo(txDb),
+        leadUsageCommits: createLeadUsageCommitsRepo(txDb),
+        contactAssignments: createContactAssignmentsRepo(txDb),
+      }),
+    ),
   };
 }
 
 export type CapacityCommandsContext = ReturnType<
   typeof createCapacityCommandsContext
 >;
-export type CapacityCommandRepos = CapacityCommandsContext["repos"];

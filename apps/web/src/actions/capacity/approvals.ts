@@ -22,7 +22,7 @@ export async function approveCapacity(requestId: number, note?: string) {
     execute: (ctx) =>
       approveCapacityService(
         ctx,
-        getServerRuntime().capacity.approval,
+        getServerRuntime().capacity.commands,
         decisionInput.value,
       ),
   });
@@ -38,7 +38,7 @@ export async function rejectCapacity(requestId: number, note: string) {
     access: { kind: "permission", permission: "capacity:approve" },
     input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
-      rejectCapacityService(ctx, getServerRuntime().capacity.approval, {
+      rejectCapacityService(ctx, getServerRuntime().capacity.commands, {
         requestId: decisionInput.value.requestId,
         note: safeNote,
       }),
@@ -59,7 +59,7 @@ export async function grantMoreSearches(
     execute: (ctx) =>
       grantSearchCapacityService(
         ctx,
-        getServerRuntime().capacity.commands.repos,
+        getServerRuntime().capacity.commands,
         {
           targetUserId: grantInput.value.userId,
           amount: grantInput.value.amount,
@@ -83,7 +83,7 @@ export async function grantMoreLeadRefill(
     execute: (ctx) =>
       grantLeadCapacityService(
         ctx,
-        getServerRuntime().capacity.commands.repos,
+        getServerRuntime().capacity.commands,
         {
           targetUserId: grantInput.value.userId,
           amount: grantInput.value.amount,
