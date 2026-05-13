@@ -167,15 +167,18 @@ function composeWorkflowIntentHandlersRuntime(
         input,
       ),
     recordRepLegal: (input: Parameters<typeof recordRepLegalCommand>[1]) =>
-      recordRepLegalCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          party: baseDeps.party,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
+      executor.transaction().execute((tx) => {
+        const txRepos = createWorkflowRepos(tx);
+        return recordRepLegalCommand(
+          {
+            leadReader: createLeadReadRepository(txRepos.leads),
+            mutationUow: createLeadMutationUow(tx),
+            party: txRepos.party,
+            clock: baseDeps.clock,
+          },
+          input,
+        );
+      }),
     createVenue: (input: Parameters<typeof createVenueCommand>[1]) =>
       createVenueCommand(
         {
