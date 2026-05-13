@@ -4,8 +4,8 @@ import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createFilesRuntime } from "~/server/runtime/files-runtime";
 import type { ServerInfra } from "~/server/runtime/infra";
-import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
-import { createWorkflowModule } from "~/server/workflow/module";
+import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
+import type { EngineClient } from "~/server/shared/engine/client";
 
 import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
 
@@ -23,7 +23,7 @@ export interface TestRuntime {
   auth: {
     sessionService: ReturnType<typeof createSessionService>;
   };
-  workflow: ReturnType<typeof createWorkflowModule>;
+  workflow: ReturnType<typeof createWorkflowRuntime>;
   integrations: ReturnType<typeof createIntegrationRuntime>;
   dispose(): Promise<void>;
 }
@@ -52,9 +52,12 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     }),
   };
 
-  const engineGateway: WorkflowEngineGateway = {
-    async enrichByRuc() {
-      return null;
+  const engineClient: EngineClient = {
+    async search() {
+      return { ok: true, value: [] };
+    },
+    async requestCandidates() {
+      return { ok: true, value: [] };
     },
   };
 
@@ -64,11 +67,8 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     logger,
   };
 
-  const workflow = createWorkflowModule({
-    executor: infra.db,
-    engineGateway,
-    files: createFilesRuntime(infra),
-  });
+  const files = createFilesRuntime(infra);
+  const workflow = createWorkflowRuntime(infra, engineClient, files);
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
