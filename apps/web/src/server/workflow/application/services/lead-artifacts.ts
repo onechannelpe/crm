@@ -2,8 +2,6 @@ import type {
   LeadNegotiationFileView,
   LeadSaleProofFileView,
 } from "~/contracts/workflow";
-import type { Role } from "~/lib/auth/access/rbac";
-import { hasPermission } from "~/lib/auth/access/rbac";
 import type {
   ArtifactRepos,
   SyncExecutor,
@@ -15,6 +13,7 @@ import type { FileStorage } from "~/server/files/storage";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import { canUploadSaleProof, requireLeadAccess } from "../policies/access";
 
 type LeadRecord = {
   id: string;
@@ -32,54 +31,6 @@ type LeadArtifactDeps = {
   filesStorage: FileStorage;
   filesSyncExecutor: SyncExecutor;
 };
-
-const LEAD_READ_PERMISSIONS = [
-  "lead:work",
-  "lead:workflow",
-  "lead:register",
-  "lead:commercial-input:complete",
-  "lead:sale:create",
-  "lead:view:all",
-  "lead:review",
-  "quotation:manage",
-  "lead:reassign",
-] as const;
-
-function canReadLead(role: Role) {
-  return LEAD_READ_PERMISSIONS.some((permission) =>
-    hasPermission(role, permission),
-  );
-}
-
-function canViewAllLeads(role: Role) {
-  return (
-    hasPermission(role, "lead:view:all") ||
-    hasPermission(role, "lead:review") ||
-    hasPermission(role, "quotation:manage") ||
-    hasPermission(role, "lead:reassign")
-  );
-}
-
-function requireLeadAccess(input: {
-  actorUserId: number;
-  actorRole: Role;
-  executiveId: number;
-}): Result<void, DomainError> {
-  if (!canReadLead(input.actorRole)) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
-  }
-  if (
-    !canViewAllLeads(input.actorRole) &&
-    input.executiveId !== input.actorUserId
-  ) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
-  }
-  return Ok(undefined);
-}
-
-function canUploadSaleProof(role: Role) {
-  return hasPermission(role, "lead:sale:upload-proof");
-}
 
 async function requireReadableLead(
   deps: LeadArtifactDeps,

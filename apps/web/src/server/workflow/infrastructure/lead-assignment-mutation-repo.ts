@@ -1,5 +1,5 @@
-import type { LeadAssignmentRepository } from "../../application/ports/assignment-repository";
-import type { LeadAssignmentMutationRepository } from "../../application/ports/lead-assignment-mutation-repository";
+import type { LeadAssignmentRepository } from "../application/ports/assignment-repository";
+import type { LeadAssignmentMutationRepository } from "../application/ports/lead-assignment-mutation-repository";
 
 export function createLeadAssignmentMutationRepository(
   assignments: LeadAssignmentRepository,

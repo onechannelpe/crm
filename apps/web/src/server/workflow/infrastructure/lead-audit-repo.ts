@@ -1,5 +1,5 @@
-import type { WorkflowAuditService } from "../../application/ports/audit-service";
-import type { LeadAuditRepository } from "../../application/ports/lead-audit-repository";
+import type { WorkflowAuditService } from "../application/ports/audit-service";
+import type { LeadAuditRepository } from "../application/ports/lead-audit-repository";
 
 export function createLeadAuditRepository(
   auditService: WorkflowAuditService,

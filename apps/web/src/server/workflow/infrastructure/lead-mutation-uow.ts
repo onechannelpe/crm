@@ -12,16 +12,16 @@ import {
   executeLeadMutation,
 } from "../../application/services/lead-mutation-orchestrator";
 import { deriveLeadPatchFromIntent } from "../../domain/lead/lead-transitions";
-import { createAssignmentRepo } from "../assignment-repo";
+import { createAssignmentRepo } from "./assignment-repo";
 import {
   createWorkflowAuditLogRepo,
   createWorkflowAuditService,
   createWorkflowAuditLogsRepo,
-} from "../audit-log";
-import { createHistoryRepo } from "../history-repo";
-import type { PublishLeadMutationNotificationsInput } from "../lead-mutation-notification-publisher";
-import { createLeadRepo } from "../lead-repo";
-import { createLeadAssignmentMutationRepository } from "./lead-assignment-repo";
+} from "./audit-log";
+import { createHistoryRepo } from "./history-repo";
+import type { PublishLeadMutationNotificationsInput } from "./lead-mutation-notification-publisher";
+import { createLeadRepo } from "./lead-repo";
+import { createLeadAssignmentMutationRepository } from "./lead-assignment-mutation-repo";
 import { createLeadAuditRepository } from "./lead-audit-repo";
 import { createLeadEventRepository } from "./lead-event-repo";
 import {
