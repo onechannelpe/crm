@@ -1,17 +1,17 @@
-import type { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import type { createContactsRepo } from "~/server/contacts/repos-contacts";
-import type { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
-import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { ContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { ContactsRepo } from "~/server/contacts/repos-contacts";
+import type { OrganizationsRepo } from "~/server/contacts/repos-organizations";
+import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { AppUow } from "~/server/shared/application/uow";
 
-import type { createExtensionRuntimeRepo } from "../repos";
+import type { ExtensionRuntimeRepo } from "../repos";
 
 export type ExtensionRepos = {
-  contactAssignments: ReturnType<typeof createContactAssignmentsRepo>;
-  contacts: ReturnType<typeof createContactsRepo>;
-  extensionRuntime: ReturnType<typeof createExtensionRuntimeRepo>;
-  organizations: ReturnType<typeof createOrganizationsRepo>;
-  sessions: ReturnType<typeof createSessionRepository>;
+  contactAssignments: ContactAssignmentsRepo;
+  contacts: ContactsRepo;
+  extensionRuntime: ExtensionRuntimeRepo;
+  organizations: OrganizationsRepo;
+  sessions: SessionRepository;
 };
 
 export interface ExtensionServiceDeps {

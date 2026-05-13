@@ -1,19 +1,31 @@
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import { createContactsRepo } from "~/server/contacts/repos-contacts";
-import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
-import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import {
+  createContactAssignmentsRepo,
+  type ContactAssignmentsRepo,
+} from "~/server/contacts/repos-assignments";
+import { createContactsRepo, type ContactsRepo } from "~/server/contacts/repos-contacts";
+import {
+  createOrganizationsRepo,
+  type OrganizationsRepo,
+} from "~/server/contacts/repos-organizations";
+import {
+  createSessionRepository,
+  type SessionRepository,
+} from "~/server/sessions/repos-sessions";
 import { createExecutorUow } from "~/server/shared/application/uow";
 
-import { createExtensionRuntimeRepo } from "../extension/repos";
+import {
+  createExtensionRuntimeRepo,
+  type ExtensionRuntimeRepo,
+} from "../extension/repos";
 import { createExtensionService } from "../extension/service";
 import type { ServerInfra } from "./infra";
 
 export type ExtensionRuntimeRepos = {
-  contactAssignments: ReturnType<typeof createContactAssignmentsRepo>;
-  contacts: ReturnType<typeof createContactsRepo>;
-  extensionRuntime: ReturnType<typeof createExtensionRuntimeRepo>;
-  organizations: ReturnType<typeof createOrganizationsRepo>;
-  sessions: ReturnType<typeof createSessionRepository>;
+  contactAssignments: ContactAssignmentsRepo;
+  contacts: ContactsRepo;
+  extensionRuntime: ExtensionRuntimeRepo;
+  organizations: OrganizationsRepo;
+  sessions: SessionRepository;
 };
 
 export function createExtensionRuntime(infra: ServerInfra) {

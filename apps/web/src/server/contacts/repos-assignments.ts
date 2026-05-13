@@ -119,3 +119,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type ContactAssignmentsRepo = ReturnType<
+  typeof createContactAssignmentsRepo
+>;

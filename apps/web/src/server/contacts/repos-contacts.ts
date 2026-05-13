@@ -61,3 +61,5 @@ export function createContactsRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type ContactsRepo = ReturnType<typeof createContactsRepo>;

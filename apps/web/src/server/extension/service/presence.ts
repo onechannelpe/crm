@@ -4,12 +4,10 @@ import type {
   ExtensionSyncHealth,
   TeamExecutiveStatusView,
 } from "../contracts";
-import type { createExtensionRuntimeRepo } from "../repos";
+import type { ExtensionRuntimeRepo } from "../repos";
 
 export const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
 export const EXECUTIVE_SYNC_STALE_AFTER_MS = 2 * 60_000;
-
-type ExtensionRuntimeRepo = ReturnType<typeof createExtensionRuntimeRepo>;
 
 export function mapLifecycleStatus(
   event: Extract<ExtensionRuntimeEventEnvelope, { type: "call.lifecycle" }>,

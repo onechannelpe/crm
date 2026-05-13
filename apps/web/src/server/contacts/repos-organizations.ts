@@ -75,3 +75,5 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type OrganizationsRepo = ReturnType<typeof createOrganizationsRepo>;
