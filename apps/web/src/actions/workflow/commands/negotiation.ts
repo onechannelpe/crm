@@ -4,7 +4,7 @@ import { AppError } from "~/lib/app-errors";
 import { runActionResult } from "~/server/shared/action-runtime";
 import type { Result } from "~/server/shared/result";
 import type { LeadCommandResult } from "~/server/workflow/application/contracts/command-results";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 
 export async function requestRateNegotiation(input: {
   leadId: string;

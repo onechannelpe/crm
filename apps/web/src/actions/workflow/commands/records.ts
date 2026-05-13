@@ -6,7 +6,7 @@ import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 import {
   isAbonoBank,
   type ModalidadCobro,

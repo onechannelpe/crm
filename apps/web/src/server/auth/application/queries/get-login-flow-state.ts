@@ -1,14 +1,14 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import { createPasskeyProvider } from "~/lib/auth/providers/passkey-provider";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { createPasskeyLoginStateService } from "~/server/auth/passkey/service/login-state";
 
 import type { LoginFlowState } from "../contracts";
 
 async function readActiveLoginFlow(
   flowId: number,
-  deps: AuthLoginRepos,
+  deps: AuthLoginDeps,
 ): Promise<LoginFlowState | null> {
   const safeFlowId = assertPositiveInt(flowId, "flowId");
   const flow = await deps.loginFlows.findById(safeFlowId);
@@ -39,7 +39,7 @@ async function readActiveLoginFlow(
 
 export async function getLoginFlowState(
   flowId: number,
-  deps: AuthLoginRepos,
+  deps: AuthLoginDeps,
 ): Promise<LoginFlowState | null> {
   return readActiveLoginFlow(flowId, deps);
 }

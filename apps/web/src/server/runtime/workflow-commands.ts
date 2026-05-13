@@ -7,23 +7,22 @@ import { getServerRuntime } from "~/server/runtime";
 import { runResultTransaction } from "~/server/shared/application/uow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
-
-import type { WorkflowEngineGateway } from "../application/ports/engine-gateway";
-import type { LeadEnrichmentQueue } from "../application/ports/enrichment-queue";
-import { systemLeadClock } from "../application/services/lead-clock";
+import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
+import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
+import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import {
   createWorkflowUseCases,
   type WorkflowUseCases,
-} from "../application/use-cases";
+} from "~/server/workflow/application/use-cases";
 import {
   createWorkflowAuditLogRepo,
   createWorkflowAuditService,
   createWorkflowAuditLogsRepo,
-} from "./audit-log";
-import { createLeadMutationUow } from "./repos/lead-mutation-uow";
-import { createLeadReadRepository } from "./repos/lead-read-repo";
-import { createLeadUserScopeRepository } from "./repos/lead-user-scope-repo";
-import { createWorkflowRepos } from "./workflow-repos";
+} from "~/server/workflow/infrastructure/audit-log";
+import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
+import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos/lead-read-repo";
+import { createLeadUserScopeRepository } from "~/server/workflow/infrastructure/repos/lead-user-scope-repo";
+import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
 export type WorkflowCommandRuntime = {
   useCases: WorkflowUseCases;
@@ -35,9 +34,7 @@ function createWorkflowCommandRuntime(
 ): WorkflowCommandRuntime {
   const repos = createWorkflowRepos(executor);
   const auditService = createWorkflowAuditService({
-    auditLogs: createWorkflowAuditLogRepo(
-      createWorkflowAuditLogsRepo(executor),
-    ),
+    auditLogs: createWorkflowAuditLogRepo(createWorkflowAuditLogsRepo(executor)),
   });
   const enrichmentCommand = createEnrichmentCommand(
     createSearchEnrichmentRepo(executor),

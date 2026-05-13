@@ -3,7 +3,7 @@
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sourcing-policy";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 
 export async function querySourcingPolicy(branchId: number) {
   return runAction({

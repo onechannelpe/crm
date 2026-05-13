@@ -7,7 +7,7 @@ import {
   type SessionRequestMetadata,
 } from "~/lib/auth/session/session-transition";
 import { config } from "~/lib/config";
-import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
 import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { AuthProof } from "~/server/auth/policy/types";
@@ -23,7 +23,7 @@ async function createTotpLoginFlow(
   identifier: string,
   userId: number,
   primaryAuthMethod: "password" | "google" | "passkey",
-  deps: { loginFlows: AuthLoginRepos["loginFlows"] },
+  deps: { loginFlows: AuthLoginDeps["loginFlows"] },
 ): Promise<TotpLoginFlowState> {
   const flowId = await deps.loginFlows.create({
     identifier,
@@ -46,7 +46,7 @@ export async function completePrimaryAuthProof(params: {
   identifier: string;
   request: SessionRequestMetadata;
   context?: AuthContext;
-  deps: AuthLoginRepos;
+  deps: AuthLoginDeps;
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
 }): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const context =

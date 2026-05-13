@@ -1,7 +1,7 @@
 "use server";
 
 import { runAction } from "~/server/shared/action-runtime";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 import type { Moneda } from "~/workflow/contracts/lead-schema";
 
 export async function requestQuotationCreation(input: {

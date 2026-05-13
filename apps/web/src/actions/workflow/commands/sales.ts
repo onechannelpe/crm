@@ -2,7 +2,7 @@
 
 import { validationError } from "~/lib/app-errors";
 import { runAction } from "~/server/shared/action-runtime";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 import type {
   AbonoBank,
   AccountTypeKind,
