@@ -8,7 +8,7 @@ import type { LeadDetailView } from "~/server/workflow/application/queries/views
 
 import styles from "./record-right-panel.module.css";
 
-type RecordRightPanelTab = "timeline" | "tasks" | "notes" | "files";
+type RecordRightPanelTab = "activity" | "tasks" | "files";
 
 type RecordRightPanelProps = {
   data: LeadDetailView;
@@ -16,19 +16,14 @@ type RecordRightPanelProps = {
 
 const RIGHT_PANEL_TABS: ReadonlyArray<TabItem<RecordRightPanelTab>> = [
   {
-    id: "timeline",
-    icon: VIEW_RECORD_TABS_BY_ID.timeline.icon,
-    label: VIEW_RECORD_TABS_BY_ID.timeline.label,
+    id: "activity",
+    icon: VIEW_RECORD_TABS_BY_ID.activity.icon,
+    label: VIEW_RECORD_TABS_BY_ID.activity.label,
   },
   {
     id: "tasks",
     icon: VIEW_RECORD_TABS_BY_ID.tasks.icon,
     label: VIEW_RECORD_TABS_BY_ID.tasks.label,
-  },
-  {
-    id: "notes",
-    icon: VIEW_RECORD_TABS_BY_ID.notes.icon,
-    label: VIEW_RECORD_TABS_BY_ID.notes.label,
   },
   {
     id: "files",
@@ -39,7 +34,7 @@ const RIGHT_PANEL_TABS: ReadonlyArray<TabItem<RecordRightPanelTab>> = [
 
 export function RecordRightPanel(props: RecordRightPanelProps) {
   const [activeTab, setActiveTab] =
-    createSignal<RecordRightPanelTab>("timeline");
+    createSignal<RecordRightPanelTab>("activity");
 
   return (
     <div class={styles.panel}>

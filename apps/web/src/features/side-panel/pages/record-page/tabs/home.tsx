@@ -1,9 +1,8 @@
-import { Match, Show, Switch, createMemo } from "solid-js";
+import { Show, createMemo } from "solid-js";
 
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
-import { QuotationSection } from "~/features/workflow/detail/forms/quotation";
-import { QuotedSection } from "~/features/workflow/detail/forms/quoted";
-import { ScopingForm } from "~/features/workflow/detail/forms/scoping-form";
+import { CommercialScopeWidget } from "~/features/workflow/detail/forms/commercial-scope-widget";
+import { RepLegalWidget } from "~/features/workflow/detail/forms/rep-legal-widget";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 
 import { BootstrapWidget } from "../widgets/bootstrap";
@@ -21,28 +20,31 @@ export function HomeTab(props: TabContentProps) {
   );
 
   return (
-    <Switch>
-      <Match when={viewProps()} keyed>
-        {(view) => (
-          <div class={styles.homeContent}>
-            <DetailContent data={view.data} />
-          </div>
-        )}
-      </Match>
-      <Match when={createProps()} keyed>
-        {(create) => (
-          <div class={styles.homeContent}>
-            <CreateContent
-              razonSocial={create.razonSocial}
-              address={create.address}
-              engineStatus={create.engineStatus}
-              submitting={create.submitting}
-              onSubmit={create.onSubmit}
-            />
-          </div>
-        )}
-      </Match>
-    </Switch>
+    <Show
+      when={viewProps()}
+      keyed
+      fallback={
+        <Show when={createProps()} keyed>
+          {(create) => (
+            <div class={styles.homeContent}>
+              <CreateContent
+                razonSocial={create.razonSocial}
+                address={create.address}
+                engineStatus={create.engineStatus}
+                submitting={create.submitting}
+                onSubmit={create.onSubmit}
+              />
+            </div>
+          )}
+        </Show>
+      }
+    >
+      {(view) => (
+        <div class={styles.homeContent}>
+          <DetailContent data={view.data} />
+        </div>
+      )}
+    </Show>
   );
 }
 
@@ -72,43 +74,17 @@ function CreateContent(props: {
 function DetailContent(props: { data: LeadDetailView }) {
   return (
     <>
+      <WorkflowWidget data={props.data} />
       <DetailFieldsWidget data={props.data} />
-
       <Show when={props.data.lead.id} keyed>
         {(leadId) => (
-          <Switch>
-            <Match when={props.data.lead.stage === "SCOPING"}>
-              <ScopingForm leadId={leadId} initialValues={props.data.profile} />
-            </Match>
-
-            <Match when={props.data.lead.stage === "QUOTING"}>
-              <QuotationSection
-                leadId={leadId}
-                existingQuotation={
-                  props.data.quotations[props.data.quotations.length - 1]
-                }
-              />
-            </Match>
-
-            <Match when={props.data.lead.stage === "QUOTED"}>
-              <QuotedSection
-                leadId={leadId}
-                quotation={props.data.quotations[0]}
-                negotiationRequests={props.data.negotiationRequests}
-                canApprove={props.data.availableActions.includes(
-                  "approve-for-sale",
-                )}
-                canRequestNegotiation={props.data.availableActions.includes(
-                  "request-rate-negotiation",
-                )}
-              />
-            </Match>
-          </Switch>
+          <>
+            <CommercialScopeWidget leadId={leadId} data={props.data} />
+            <RepLegalWidget leadId={leadId} data={props.data} />
+          </>
         )}
       </Show>
-
-      <WorkflowWidget data={props.data} />
-
+      <SunatWidget data={props.data} />
       <LeadActionsWidget
         leadId={props.data.lead.id}
         availableActions={props.data.availableActions}

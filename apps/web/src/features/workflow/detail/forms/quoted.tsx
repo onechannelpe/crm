@@ -154,6 +154,10 @@ export function QuotedSection(props: QuotedSectionProps) {
       setError("El fundamento es requerido");
       return;
     }
+    if (stagedFiles().length === 0) {
+      setError("Se requiere al menos un documento de soporte");
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
@@ -291,7 +295,7 @@ export function QuotedSection(props: QuotedSectionProps) {
 
               <div class={styles.fileSection}>
                 <span class={styles.fileSectionLabel}>
-                  Documentos de soporte (opcional)
+                  Documentos de soporte
                 </span>
                 <label
                   for={fileInputId}

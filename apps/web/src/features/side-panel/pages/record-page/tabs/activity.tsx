@@ -2,15 +2,15 @@ import { Show, createMemo } from "solid-js";
 
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 
-import type { TabContentProps } from "../content-props";
-import { EventList } from "./components/event-list";
-import { buildCreateGroups } from "./model/create";
-import { normalizeLeadEvent } from "./model/event";
-import { groupEventsByMonth } from "./model/group";
+import type { TabContentProps } from "./content-props";
+import { EventList } from "./timeline/components/event-list";
+import { buildCreateGroups } from "./timeline/model/create";
+import { normalizeLeadEvent } from "./timeline/model/event";
+import { groupEventsByMonth } from "./timeline/model/group";
 
-import styles from "./styles.module.css";
+import styles from "./timeline/styles.module.css";
 
-export function TimelineTab(props: TabContentProps) {
+export function ActivityTab(props: TabContentProps) {
   const groups = createMemo(() => {
     if (props.mode === "create") {
       return buildCreateGroups({
@@ -36,7 +36,7 @@ export function TimelineTab(props: TabContentProps) {
         fallback={
           <ActivityTabEmptyState
             type="emptyTimeline"
-            title="Aún no hay actividad"
+            title="Aun no hay actividad"
             subtitle="No hay actividad asociada a este registro."
           />
         }

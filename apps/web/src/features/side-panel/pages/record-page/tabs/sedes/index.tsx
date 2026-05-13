@@ -1,5 +1,5 @@
 import { useAction } from "@solidjs/router";
-import { For, Match, Show, Switch, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 
 import {
   Widget,
@@ -29,51 +29,56 @@ export function SedesTab(props: TabContentProps) {
 
   return (
     <Show when={viewProps()} keyed>
-      {(data) => (
-        <Switch>
-          <Match when={data.lead.stage === "SCOPING"}>
-            <VenueReadOnlyView venues={data.venues} />
-          </Match>
-          <Match when={data.lead.stage === "QUOTING"}>
-            <VenueCreationView
-              leadId={data.lead.id}
-              venues={data.venues}
-              linkScope={data.profile?.linkScope ?? "none"}
-              onlineScope={data.profile?.onlineScope ?? "none"}
-            />
-          </Match>
-          <Match when={data.lead.stage === "CLOSING"}>
-            <VenueClosingView
-              leadId={data.lead.id}
-              venues={data.venues}
-              linkScope={data.profile?.linkScope ?? "none"}
-              onlineScope={data.profile?.onlineScope ?? "none"}
-            />
-          </Match>
-          <Match when={true}>
-            <VenueReadOnlyView venues={data.venues} />
-          </Match>
-        </Switch>
-      )}
-    </Show>
-  );
-}
+      {(data) => {
+        const canAddVenue = ["QUOTING", "CLOSING", "LIVE"].includes(
+          data.lead.stage,
+        );
+        const canAddAccounts = ["CLOSING", "LIVE"].includes(data.lead.stage);
 
-function VenueCreationView(props: {
-  leadId: string;
-  venues: LeadDetailVenueView[];
-  linkScope: ProductScope;
-  onlineScope: ProductScope;
-}) {
-  return (
-    <div>
-      <For each={props.venues}>{(venue) => <VenueCard venue={venue} />}</For>
-      <VenueCreatePanel
-        leadId={props.leadId}
-        linkScope={props.linkScope}
-        onlineScope={props.onlineScope}
-      />
-    </div>
+        return (
+          <div>
+            <Show when={canAddVenue}>
+              <VenueCreatePanel
+                leadId={data.lead.id}
+                linkScope={data.profile?.linkScope ?? "none"}
+                onlineScope={data.profile?.onlineScope ?? "none"}
+              />
+            </Show>
+            <Show
+              when={data.venues.length > 0}
+              fallback={
+                <Show when={!canAddVenue}>
+                  <Widget>
+                    <WidgetBody>
+                      <div
+                        style={{
+                          padding: "12px",
+                          "text-align": "center",
+                          color: "#666",
+                        }}
+                      >
+                        No hay sedes registradas
+                      </div>
+                    </WidgetBody>
+                  </Widget>
+                </Show>
+              }
+            >
+              <For each={data.venues}>
+                {(venue) => (
+                  <>
+                    <VenueCard venue={venue} />
+                    <Show when={canAddAccounts && !venue.solesAccount}>
+                      <AccountsFormPanel leadId={data.lead.id} venue={venue} />
+                    </Show>
+                  </>
+                )}
+              </For>
+            </Show>
+          </div>
+        );
+      }}
+    </Show>
   );
 }
 
@@ -108,6 +113,7 @@ function VenueCreatePanel(props: {
       setSubmitting(false);
     }
   }
+
   return (
     <VenueForm
       form={form}
@@ -120,42 +126,7 @@ function VenueCreatePanel(props: {
   );
 }
 
-function VenueClosingView(props: {
-  leadId: string;
-  venues: LeadDetailVenueView[];
-  linkScope: ProductScope;
-  onlineScope: ProductScope;
-}) {
-  return (
-    <div>
-      <VenueCreatePanel
-        leadId={props.leadId}
-        linkScope={props.linkScope}
-        onlineScope={props.onlineScope}
-      />
-      <For each={props.venues}>
-        {(venue) => <VenueClosingCard leadId={props.leadId} venue={venue} />}
-      </For>
-      <Show when={props.venues.length === 0}>
-        <Widget>
-          <WidgetBody>
-            <div
-              style={{
-                padding: "12px",
-                "text-align": "center",
-                color: "#666",
-              }}
-            >
-              No hay sedes registradas
-            </div>
-          </WidgetBody>
-        </Widget>
-      </Show>
-    </div>
-  );
-}
-
-function VenueClosingCard(props: {
+function AccountsFormPanel(props: {
   leadId: string;
   venue: LeadDetailVenueView;
 }) {
@@ -163,8 +134,6 @@ function VenueClosingCard(props: {
   const form = useAccountsFormState();
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
-
-  const hasAccounts = () => !!props.venue.solesAccount;
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -192,44 +161,12 @@ function VenueClosingCard(props: {
   }
 
   return (
-    <div>
-      <VenueCard venue={props.venue} />
-      <Show when={!hasAccounts()}>
-        <AccountsForm
-          venueName={props.venue.nombreComercial}
-          form={form}
-          submitting={submitting()}
-          error={error()}
-          onSubmit={(e) => void handleSubmit(e)}
-        />
-      </Show>
-    </div>
-  );
-}
-
-function VenueReadOnlyView(props: { venues: LeadDetailVenueView[] }) {
-  return (
-    <div>
-      <Show
-        when={props.venues.length > 0}
-        fallback={
-          <Widget>
-            <WidgetBody>
-              <div
-                style={{
-                  padding: "12px",
-                  "text-align": "center",
-                  color: "#666",
-                }}
-              >
-                No hay sedes registradas
-              </div>
-            </WidgetBody>
-          </Widget>
-        }
-      >
-        <For each={props.venues}>{(venue) => <VenueCard venue={venue} />}</For>
-      </Show>
-    </div>
+    <AccountsForm
+      venueName={props.venue.nombreComercial}
+      form={form}
+      submitting={submitting()}
+      error={error()}
+      onSubmit={(e) => void handleSubmit(e)}
+    />
   );
 }

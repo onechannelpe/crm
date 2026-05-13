@@ -18,7 +18,7 @@ const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
 const LEAD_NEXT_STEP_LABELS: Record<string, string> = {
   "Review lead": "Revisar prospecto",
   "No further action": "Sin acciones pendientes",
-  "Complete scoping": "Completar relevamiento comercial",
+  "Save commercial scope": "Guardar alcance comercial",
   "Create quotation": "Crear cotización",
   "Approve for sale": "Aprobar para venta",
   "Register venue accounts": "Registrar cuentas de sedes",
