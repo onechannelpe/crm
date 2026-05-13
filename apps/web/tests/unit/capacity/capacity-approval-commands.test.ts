@@ -7,10 +7,8 @@ import {
 } from "@tests/support/capacity/approval-harness";
 import { describe, expect, it } from "vitest";
 
-import {
-  approveCapacityRequest,
-  rejectCapacityRequest,
-} from "~/server/capacity/application/commands";
+import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
+import { rejectCapacityRequest as rejectCapacityRequestUseCase } from "~/server/capacity/application/use-cases/reject-capacity-request";
 
 describe("capacity approval commands", () => {
   it("approves a pending search request and grants search capacity", async () => {
@@ -99,10 +97,14 @@ describe("capacity approval commands", () => {
       targetUser: { role: "executive", branchId: 1, teamId: null },
     });
 
-    const result = await rejectCapacityRequest(makeContext(), harness.port, {
-      requestId: REQUEST_ID,
-      note: "  not justified  ",
-    });
+    const result = await rejectCapacityRequestUseCase(
+      makeContext(),
+      harness.port,
+      {
+        requestId: REQUEST_ID,
+        note: "  not justified  ",
+      },
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("Expected success");

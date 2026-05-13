@@ -1,5 +1,10 @@
 import type { AppContext } from "~/server/shared/action-runtime";
 
+import { getAuditEvents } from "./queries/get-audit-events";
+import { getExecutiveDetail } from "./queries/get-executive-detail";
+import { getPolicyDefaults } from "./queries/get-policy-defaults";
+import { listManagedExecutives } from "./queries/list-managed-executives";
+import { listPendingRequests } from "./queries/list-pending-requests";
 import { approveCapacityRequest } from "./use-cases/approve-capacity-request";
 import { grantLeadCapacityDirect } from "./use-cases/grant-lead-capacity-direct";
 import { grantSearchCapacityDirect } from "./use-cases/grant-search-capacity-direct";
@@ -9,11 +14,6 @@ import { updateLeadPolicyDefault } from "./use-cases/update-lead-policy-default"
 import { updateLeadPolicyOverride } from "./use-cases/update-lead-policy-override";
 import { updateSearchPolicyDefault } from "./use-cases/update-search-policy-default";
 import { updateSearchPolicyOverride } from "./use-cases/update-search-policy-override";
-import { getAuditEvents } from "./queries/get-audit-events";
-import { getExecutiveDetail } from "./queries/get-executive-detail";
-import { getPolicyDefaults } from "./queries/get-policy-defaults";
-import { listManagedExecutives } from "./queries/list-managed-executives";
-import { listPendingRequests } from "./queries/list-pending-requests";
 
 type RequestCapacityDeps = Parameters<typeof requestCapacity>[1];
 type ApproveCapacityRequestDeps = Parameters<typeof approveCapacityRequest>[1];
@@ -23,7 +23,9 @@ type GrantLeadCapacityDeps = Parameters<typeof grantLeadCapacityDirect>[1];
 type UpdateSearchPolicyDefaultDeps = Parameters<
   typeof updateSearchPolicyDefault
 >[1];
-type UpdateLeadPolicyDefaultDeps = Parameters<typeof updateLeadPolicyDefault>[1];
+type UpdateLeadPolicyDefaultDeps = Parameters<
+  typeof updateLeadPolicyDefault
+>[1];
 type UpdateSearchPolicyOverrideDeps = Parameters<
   typeof updateSearchPolicyOverride
 >[1];
@@ -77,7 +79,11 @@ export function createCapacityUseCases(deps: CapacityUseCaseDeps) {
       ctx: AppContext,
       input: Parameters<typeof grantSearchCapacityDirect>[2],
     ) {
-      return grantSearchCapacityDirect(ctx, deps.grantSearchCapacityDirect, input);
+      return grantSearchCapacityDirect(
+        ctx,
+        deps.grantSearchCapacityDirect,
+        input,
+      );
     },
     grantLeadCapacityDirect(
       ctx: AppContext,
@@ -89,7 +95,11 @@ export function createCapacityUseCases(deps: CapacityUseCaseDeps) {
       ctx: AppContext,
       input: Parameters<typeof updateSearchPolicyDefault>[2],
     ) {
-      return updateSearchPolicyDefault(ctx, deps.updateSearchPolicyDefault, input);
+      return updateSearchPolicyDefault(
+        ctx,
+        deps.updateSearchPolicyDefault,
+        input,
+      );
     },
     updateLeadPolicyDefault(
       ctx: AppContext,
@@ -111,7 +121,11 @@ export function createCapacityUseCases(deps: CapacityUseCaseDeps) {
       ctx: AppContext,
       input: Parameters<typeof updateLeadPolicyOverride>[2],
     ) {
-      return updateLeadPolicyOverride(ctx, deps.updateLeadPolicyOverride, input);
+      return updateLeadPolicyOverride(
+        ctx,
+        deps.updateLeadPolicyOverride,
+        input,
+      );
     },
     listManagedExecutives(ctx: AppContext) {
       return listManagedExecutives(ctx, deps.listManagedExecutives);

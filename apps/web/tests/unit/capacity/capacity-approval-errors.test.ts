@@ -6,10 +6,8 @@ import {
 } from "@tests/support/capacity/approval-harness";
 import { describe, expect, it } from "vitest";
 
-import {
-  approveCapacityRequest,
-  rejectCapacityRequest,
-} from "~/server/capacity/application/commands";
+import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
+import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
 
 describe("capacity approval failures", () => {
   it("returns request_not_found when request does not exist", async () => {

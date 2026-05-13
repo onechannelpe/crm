@@ -70,16 +70,13 @@ export async function updateSearchPolicyDefault(input: {
       monthlyLimit: limitResult.value,
     },
     execute: (ctx) =>
-      getServerRuntime().capacity.useCases.updateSearchPolicyDefault(
-        ctx,
-        {
-          scope: {
-            kind: scopeInput.value.scopeType,
-            scopeId: scopeInput.value.scopeId,
-          },
-          monthlyLimit: limitResult.value,
+      getServerRuntime().capacity.useCases.updateSearchPolicyDefault(ctx, {
+        scope: {
+          kind: scopeInput.value.scopeType,
+          scopeId: scopeInput.value.scopeId,
         },
-      ),
+        monthlyLimit: limitResult.value,
+      }),
   });
 }
 
@@ -108,16 +105,13 @@ export async function updateLeadPolicyDefault(input: {
       dailyLimit: policyResult.value.dailyRefillLimit,
     },
     execute: (ctx) =>
-      getServerRuntime().capacity.useCases.updateLeadPolicyDefault(
-        ctx,
-        {
-          scope: {
-            kind: scopeInput.value.scopeType,
-            scopeId: scopeInput.value.scopeId,
-          },
-          bufferTarget: policyResult.value.activeBufferTarget,
-          dailyLimit: policyResult.value.dailyRefillLimit,
+      getServerRuntime().capacity.useCases.updateLeadPolicyDefault(ctx, {
+        scope: {
+          kind: scopeInput.value.scopeType,
+          scopeId: scopeInput.value.scopeId,
         },
-      ),
+        bufferTarget: policyResult.value.activeBufferTarget,
+        dailyLimit: policyResult.value.dailyRefillLimit,
+      }),
   });
 }
