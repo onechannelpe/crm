@@ -1,3 +1,4 @@
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -32,4 +33,19 @@ export async function runResultTransaction<TTx, T>(
     }
     throw error;
   }
+}
+
+export function createExecutorUow<TTx>(
+  executor: DatabaseExecutor,
+  bindTx: (txDb: DatabaseExecutor) => TTx,
+): AppUow<TTx> {
+  return {
+    run(work) {
+      return runResultTransaction(
+        (operation) =>
+          executor.transaction().execute((txDb) => operation(bindTx(txDb))),
+        work,
+      );
+    },
+  };
 }

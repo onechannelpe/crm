@@ -14,7 +14,7 @@ export function createInviteRuntime(deps: InviteServiceDeps): InviteRuntime {
     now: deps.now ?? Date.now,
     inviteTtlMs: deps.inviteTtlMs ?? DEFAULT_INVITE_TTL_MS,
     hashPassword: deps.hashPassword ?? hashPassword,
-    runInTransaction: deps.runInTransaction,
+    uow: deps.uow,
   };
 }
 

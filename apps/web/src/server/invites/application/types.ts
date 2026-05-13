@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { AppUow } from "~/server/shared/application/uow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
@@ -147,18 +148,14 @@ export interface InviteDeps {
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
   now?: () => number;
-  runInTransaction: <T>(
-    operation: (repos: InviteDeps) => Promise<T>,
-  ) => Promise<T>;
+  uow: AppUow<InviteDeps>;
   hashPassword?: (password: string) => Promise<string>;
 }
 
 export interface InviteRuntime {
   now: () => number;
   inviteTtlMs: number;
-  runInTransaction: <T>(
-    operation: (repos: InviteDeps) => Promise<T>,
-  ) => Promise<T>;
+  uow: AppUow<InviteDeps>;
   hashPassword: (password: string) => Promise<string>;
 }
 

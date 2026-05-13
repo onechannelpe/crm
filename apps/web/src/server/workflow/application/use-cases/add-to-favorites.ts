@@ -1,11 +1,11 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { LeadReadRepository } from "../ports/lead-read-repository";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { AddLeadToFavoritesInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";
 
 type AddToFavoritesCommandDeps = {

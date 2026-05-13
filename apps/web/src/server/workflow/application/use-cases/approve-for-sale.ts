@@ -2,11 +2,11 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { ApproveForSaleInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import { requireLeadActionAccess } from "../policies/lead-action-policy";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";
 
 type ApproveForSaleCommandDeps = {

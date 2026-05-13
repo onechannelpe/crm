@@ -15,7 +15,7 @@ import {
 } from "./assignment-plan";
 import {
   createContactAssignmentsFromCandidates,
-  type AssignContactsTransactionRunner,
+  type AssignContactsUow,
   type ContactRecord,
   type OrganizationRecord,
 } from "./contact-assignment-writer";
@@ -38,7 +38,7 @@ type AssignContactsRepos = AssignmentPlanRepos &
 
 interface AssignContactsDeps {
   repos: AssignContactsRepos;
-  runInTransaction: AssignContactsTransactionRunner;
+  uow: AssignContactsUow;
   engine: Pick<EngineClient, "requestCandidates">;
 }
 
@@ -91,7 +91,7 @@ export async function assignContacts(
   command: AssignContactsCommand,
   deps: AssignContactsDeps,
 ): Promise<Result<AssignContactsResult, DomainError>> {
-  const { repos, runInTransaction, engine } = deps;
+  const { repos, uow, engine } = deps;
 
   const plan = await planContactAssignments(command.actorUserId, repos);
   if (isErr(plan)) return plan;
@@ -124,10 +124,17 @@ export async function assignContacts(
   const assigned = await createContactAssignmentsFromCandidates({
     actorUserId: command.actorUserId,
     candidates: candidatesResult.value,
-    runInTransaction,
+    uow,
+  });
+  if (isErr(assigned)) {
+    return assigned;
+  }
+
+  await finalizeAssignmentReservation({
+    reservationId,
+    assigned: assigned.value,
+    repos,
   });
 
-  await finalizeAssignmentReservation({ reservationId, assigned, repos });
-
-  return Ok({ requested: plan.value.requested, assigned });
+  return Ok({ requested: plan.value.requested, assigned: assigned.value });
 }

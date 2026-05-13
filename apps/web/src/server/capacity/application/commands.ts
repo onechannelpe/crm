@@ -68,7 +68,7 @@ export async function approveCapacityRequest(
   input: { requestId: number; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   await port.enforceApprovalRateLimit(ctx.actor.userId);
-  return port.withTransaction(async (tx) => {
+  return port.uow.run(async (tx) => {
     const request = await tx.findRequestById(input.requestId);
     if (!request) {
       return Err(
@@ -158,7 +158,7 @@ export async function rejectCapacityRequest(
     );
   }
 
-  return port.withTransaction(async (tx) => {
+  return port.uow.run(async (tx) => {
     const request = await tx.findRequestById(input.requestId);
     if (!request) {
       return Err(

@@ -48,7 +48,7 @@ describe("lead refill service benchmark", () => {
         },
         {
           repos: assignmentContext.repos,
-          runInTransaction: assignmentContext.runInTransaction,
+          uow: assignmentContext.uow,
           engine: assignmentContext.engine,
         },
       );

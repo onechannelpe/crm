@@ -2,6 +2,7 @@ import type { createContactAssignmentsRepo } from "~/server/contacts/repos-assig
 import type { createContactsRepo } from "~/server/contacts/repos-contacts";
 import type { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { AppUow } from "~/server/shared/application/uow";
 
 import type { createExtensionRuntimeRepo } from "../repos";
 
@@ -15,22 +16,8 @@ export type ExtensionRepos = {
 
 export interface ExtensionServiceDeps {
   now?: () => number;
-  runInTransaction: <T>(
-    operation: (transactionRepos: ExtensionRepos) => Promise<T>,
-  ) => Promise<T>;
+  uow: AppUow<ExtensionRepos>;
 }
-
-export type ExtensionServiceError =
-  | { reason: "unauthorized"; message: string }
-  | { reason: "forbidden"; message: string }
-  | { reason: "misconfigured"; message: string }
-  | { reason: "assignment_not_found"; message: string }
-  | { reason: "assignment_inactive"; message: string }
-  | { reason: "invalid_origin"; message: string }
-  | { reason: "handoff_invalid"; message: string }
-  | { reason: "installation_invalid"; message: string }
-  | { reason: "session_invalid"; message: string }
-  | { reason: "unexpected"; message: string };
 
 export async function hasActiveAuthSession(
   repos: ExtensionRepos,

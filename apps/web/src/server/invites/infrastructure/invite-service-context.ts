@@ -1,3 +1,4 @@
+import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -14,18 +15,13 @@ function createInviteRepos(executor: DatabaseExecutor) {
     users: createUsersRepo(executor),
   };
 }
+export type InviteRepos = ReturnType<typeof createInviteRepos>;
 
 export function createInviteServiceContext(executor: DatabaseExecutor) {
   const repos = createInviteRepos(executor);
 
   const inviteService = createInviteService(repos, {
-    runInTransaction(operation) {
-      return executor
-        .transaction()
-        .execute((transactionDb) =>
-          operation(createInviteRepos(transactionDb)),
-        );
-    },
+    uow: createExecutorUow(executor, createInviteRepos),
   });
 
   return {

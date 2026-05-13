@@ -34,13 +34,13 @@ export async function POST(event: APIEvent): Promise<Response> {
 
     if (isErr(result)) {
       const status =
-        result.error.reason === "assignment_not_found"
+        result.error.code === "assignment_not_found"
           ? 404
-          : result.error.reason === "assignment_inactive"
+          : result.error.code === "assignment_inactive"
             ? 409
-            : result.error.reason === "invalid_origin"
+            : result.error.code === "invalid_origin"
               ? 403
-              : result.error.reason === "misconfigured"
+              : result.error.code === "misconfigured"
                 ? 503
                 : 500;
       return Response.json({ error: result.error.message }, { status });

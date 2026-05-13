@@ -64,7 +64,7 @@ export async function completeContactAssignmentCall(
           outcome: parsedInput.outcome,
           notes: notes?.trim() ? notes : null,
         },
-        getServerRuntime().contactAssignments.interactionRunner,
+        getServerRuntime().contactAssignments.interactionUow,
       ),
   });
 }

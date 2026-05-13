@@ -11,6 +11,7 @@ import {
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { EngineClient } from "~/server/shared/engine/client";
 
@@ -27,6 +28,9 @@ function createContactAssignmentRepos(executor: DatabaseExecutor) {
     contacts: createContactsRepo(executor),
   };
 }
+export type ContactAssignmentRepos = ReturnType<
+  typeof createContactAssignmentRepos
+>;
 
 interface ContactAssignmentContextDeps {
   executor: DatabaseExecutor;
@@ -41,17 +45,7 @@ export function createContactAssignmentContext(
   return {
     repos: createContactAssignmentRepos(executor),
     engine,
-    runInTransaction: <T>(
-      operation: (
-        repos: ReturnType<typeof createContactAssignmentRepos>,
-      ) => Promise<T>,
-    ) => {
-      return executor
-        .transaction()
-        .execute((transactionDb) =>
-          operation(createContactAssignmentRepos(transactionDb)),
-        );
-    },
+    uow: createExecutorUow(executor, createContactAssignmentRepos),
   };
 }
 

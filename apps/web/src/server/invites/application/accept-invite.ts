@@ -17,7 +17,7 @@ export async function acceptInvite(
   runtime: InviteRuntime,
   input: AcceptInviteInput,
 ): Promise<Result<InviteAcceptedResult, DomainError>> {
-  return runtime.runInTransaction(async (transactionRepos) => {
+  return runtime.uow.run(async (transactionRepos) => {
     const currentTime = runtime.now();
     await transactionRepos.userInvites.expirePendingBefore(currentTime);
 

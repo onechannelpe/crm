@@ -2,7 +2,6 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { CreateQuotationInput } from "../contracts/command-inputs";
 import type { LeadQuotationResult } from "../contracts/command-results";
 import {
@@ -10,6 +9,7 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadQuotationRepository } from "../ports/quotation-repository";
 import type { LeadClock } from "../services/lead-clock";
 

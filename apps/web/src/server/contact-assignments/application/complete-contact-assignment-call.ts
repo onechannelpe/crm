@@ -1,32 +1,30 @@
 import { hasPermission } from "~/lib/auth/access/rbac";
+import type { AppUow } from "~/server/shared/application/uow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  ContactAssignmentInteractionRepos,
-  ContactAssignmentInteractionRunner,
-} from "../infrastructure/interaction-context";
-import type {
   CompleteContactAssignmentCallCommand,
   CompleteContactAssignmentCallResult,
 } from "./contracts";
-
-function rejectMismatchedAssignment(): never {
-  throw new Error(
-    "Contact assignment is not active or does not match the contact",
-  );
-}
+import type { CompleteContactAssignmentCallTxPort } from "./ports/complete-contact-assignment-call-tx-port";
 
 async function completeAssignmentInteraction(
   input: CompleteContactAssignmentCallCommand,
-  repos: ContactAssignmentInteractionRepos,
+  repos: CompleteContactAssignmentCallTxPort,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
   const assignment = await repos.contactAssignments.findActiveByIdForUser(
     input.assignmentId,
     input.actorUserId,
   );
   if (!assignment || assignment.contact_id !== input.contactId) {
-    return rejectMismatchedAssignment();
+    return Err(
+      domainError(
+        "forbidden",
+        "assignment_inactive",
+        "Contact assignment is not active or does not match the contact",
+      ),
+    );
   }
 
   await repos.contactAssignments.markCompleted(
@@ -47,7 +45,7 @@ async function completeAssignmentInteraction(
 
 export function completeContactAssignmentCall(
   input: CompleteContactAssignmentCallCommand,
-  runInTransaction: ContactAssignmentInteractionRunner,
+  uow: AppUow<CompleteContactAssignmentCallTxPort>,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
   if (!hasPermission(input.actorRole, "lead:work")) {
     return Promise.resolve(
@@ -55,7 +53,5 @@ export function completeContactAssignmentCall(
     );
   }
 
-  return runInTransaction((repos) =>
-    completeAssignmentInteraction(input, repos),
-  );
+  return uow.run((repos) => completeAssignmentInteraction(input, repos));
 }

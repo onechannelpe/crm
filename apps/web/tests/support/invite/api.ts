@@ -1,7 +1,9 @@
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
+import { runResultTransaction } from "~/server/shared/application/uow";
 
 import type { TestDbContext } from "../runtime/db";
+import { createTestRepositories } from "../runtime/repos";
 
 export function createInviteTestKit(
   ctx: TestDbContext,
@@ -23,6 +25,19 @@ export function createInviteTestKit(
   };
 } {
   const service = createInviteService(ctx.repos, {
+    uow: {
+      run(work) {
+        return runResultTransaction(
+          (operation) =>
+            ctx.db
+              .transaction()
+              .execute((transactionDb) =>
+                operation(createTestRepositories(transactionDb)),
+              ),
+          work,
+        );
+      },
+    },
     now: options.now,
     hashPassword: options.hashPassword,
   });

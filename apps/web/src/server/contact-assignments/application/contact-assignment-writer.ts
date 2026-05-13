@@ -1,7 +1,10 @@
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
+import type { AppUow } from "~/server/shared/application/uow";
+import type { DomainError } from "~/server/shared/domain-error";
 import type { RecordCandidate } from "~/server/shared/engine/record-contract";
 import type { OrganizationId, UserId } from "~/server/shared/ids";
+import { Ok, type Result } from "~/server/shared/result";
 
 export type OrganizationRecord = {
   id: OrganizationId;
@@ -31,9 +34,7 @@ export interface AssignContactsTransactionRepos {
   };
 }
 
-export type AssignContactsTransactionRunner = <T>(
-  operation: (repos: AssignContactsTransactionRepos) => Promise<T>,
-) => Promise<T>;
+export type AssignContactsUow = AppUow<AssignContactsTransactionRepos>;
 
 function groupCandidatesByRuc(
   candidates: RecordCandidate[],
@@ -148,9 +149,9 @@ function buildAvailableAssignments(input: {
 export async function createContactAssignmentsFromCandidates(input: {
   actorUserId: UserId;
   candidates: RecordCandidate[];
-  runInTransaction: AssignContactsTransactionRunner;
-}): Promise<number> {
-  return input.runInTransaction(async (txRepos) => {
+  uow: AssignContactsUow;
+}): Promise<Result<number, DomainError>> {
+  return input.uow.run(async (txRepos) => {
     const organizationIdsByRuc = await findOrCreateOrganizationsByRuc(
       input.candidates,
       txRepos,
@@ -173,6 +174,6 @@ export async function createContactAssignmentsFromCandidates(input: {
     if (assignments.length > 0) {
       await txRepos.contactAssignments.createMany(assignments);
     }
-    return assignments.length;
+    return Ok(assignments.length);
   });
 }

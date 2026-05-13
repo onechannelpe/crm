@@ -1,5 +1,4 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
+import type { AppUow } from "~/server/shared/application/uow";
 
 import type { CapacityTeam, ManageableCapacityUser } from "./actor-scope";
 
@@ -49,7 +48,5 @@ export interface CapacityApprovalTxPort {
 
 export interface CapacityApprovalPort {
   enforceApprovalRateLimit(userId: number): Promise<void>;
-  withTransaction<T>(
-    operation: (tx: CapacityApprovalTxPort) => Promise<Result<T, DomainError>>,
-  ): Promise<Result<T, DomainError>>;
+  uow: AppUow<CapacityApprovalTxPort>;
 }

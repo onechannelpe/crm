@@ -17,6 +17,7 @@ import {
 } from "~/server/capacity/infrastructure/policy-repos";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
@@ -41,6 +42,7 @@ function createCapacityRepos(executor: DatabaseExecutor) {
     contactAssignments: createContactAssignmentsRepo(executor),
   };
 }
+export type CapacityRepos = ReturnType<typeof createCapacityRepos>;
 
 export function createCapacityCommandsContext(executor: DatabaseExecutor) {
   return {
@@ -49,17 +51,7 @@ export function createCapacityCommandsContext(executor: DatabaseExecutor) {
       actionRateLimits: createActionRateLimitsRepo(executor),
       auditLogs: createAuditLogsRepo(executor),
     },
-    runInRepositoryTransaction<T>(
-      operation: (
-        transactionRepos: ReturnType<typeof createCapacityRepos>,
-      ) => Promise<T>,
-    ) {
-      return executor
-        .transaction()
-        .execute((transactionDb) =>
-          operation(createCapacityRepos(transactionDb)),
-        );
-    },
+    uow: createExecutorUow(executor, createCapacityRepos),
   };
 }
 

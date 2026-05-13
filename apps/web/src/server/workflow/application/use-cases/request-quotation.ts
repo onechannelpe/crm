@@ -3,7 +3,6 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { resolveLeadBlockingFields } from "../../domain/lead-progress";
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { RequestQuotationInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";
 import {
@@ -12,6 +11,7 @@ import {
 } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadProfileRepository } from "../ports/lead-profile-repository";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { PartyRepository } from "../ports/party-repository";
 import type { LeadClock } from "../services/lead-clock";
 
