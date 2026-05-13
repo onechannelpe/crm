@@ -213,4 +213,26 @@ describe("assignContacts", () => {
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");
   });
+
+  it("cancels reservation when assignment persistence throws", async () => {
+    const repos = makeRepos(0);
+    repos.contactAssignments.createMany = async () => {
+      throw new Error("db write failed");
+    };
+    const engine = {
+      requestCandidates: async (): Promise<Result<RecordCandidate[], DomainError>> =>
+        Ok([makeCandidate(1)]),
+    };
+
+    await expect(
+      assignContacts(
+        { actorUserId: USER_ID, branchId: BRANCH_ID },
+        { repos, uow: makeTransaction(repos), engine },
+      ),
+    ).rejects.toThrow("db write failed");
+
+    const reservations = repos.leadUsageReservations.rows;
+    expect(reservations).toHaveLength(1);
+    expect(reservations[0].status).toBe("cancelled");
+  });
 });

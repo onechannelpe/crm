@@ -4,7 +4,7 @@ import {
   type LeadReservationId,
   type UserId,
 } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
   LeadCapacityGrantsRepo,
@@ -40,6 +40,14 @@ interface UsageRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
+}
+
+export interface ExecuteWithLeadUsageReservationCommand {
+  actorUserId: UserId;
+  requested: number;
+  remainingCapacity: number;
+  reserveReason: ReserveLeadUsageCommand["reason"];
+  failureReason: CancelLeadUsageCommand["reason"];
 }
 
 export async function reserveLeadUsage(
@@ -121,4 +129,62 @@ export async function grantLeadCapacity(
     actor_user_id: command.actorUserId,
   });
   return Ok(undefined);
+}
+
+export async function executeWithLeadUsageReservation<T>(
+  command: ExecuteWithLeadUsageReservationCommand,
+  repos: Pick<UsageRepos, "leadUsageReservations" | "leadUsageCommits">,
+  run: (
+    reservationId: LeadReservationId,
+  ) => Promise<Result<{ value: T; consumed: number }, DomainError>>,
+): Promise<Result<T, DomainError>> {
+  const reservationResult = await reserveLeadUsage(
+    {
+      actorUserId: command.actorUserId,
+      amount: command.requested,
+      remainingCapacity: command.remainingCapacity,
+      reason: command.reserveReason,
+    },
+    repos,
+  );
+  if (isErr(reservationResult)) {
+    return reservationResult;
+  }
+
+  const reservationId = reservationResult.value;
+
+  let runResult: Result<{ value: T; consumed: number }, DomainError>;
+  try {
+    runResult = await run(reservationId);
+  } catch (error) {
+    await cancelLeadUsage(
+      { reservationId, reason: command.failureReason },
+      repos,
+    );
+    throw error;
+  }
+
+  if (isErr(runResult)) {
+    await cancelLeadUsage(
+      { reservationId, reason: command.failureReason },
+      repos,
+    );
+    return runResult;
+  }
+
+  const consumed = runResult.value.consumed;
+  if (consumed === 0) {
+    await cancelLeadUsage({ reservationId, reason: "partial_use" }, repos);
+    return Ok(runResult.value.value);
+  }
+
+  const commitResult = await commitLeadUsage(
+    { reservationId, amount: consumed },
+    repos,
+  );
+  if (isErr(commitResult)) {
+    return commitResult;
+  }
+
+  return Ok(runResult.value.value);
 }
