@@ -124,20 +124,11 @@ async function findOrCreateContactsByKey(
 
 function buildAvailableAssignments(input: {
   actorUserId: UserId;
-  candidates: RecordCandidate[];
-  organizationIdsByRuc: Map<string, OrganizationId>;
   contactsByKey: Map<string, ContactRecord>;
 }) {
   const assignments = [];
-  for (const candidate of input.candidates) {
-    const organizationId = input.organizationIdsByRuc.get(candidate.ruc);
-    if (organizationId === undefined) {
-      continue;
-    }
-    const contact = input.contactsByKey.get(
-      resolveContactKey({ organizationId, candidate }),
-    );
-    if (!contact || !canContactNow(contact)) {
+  for (const contact of input.contactsByKey.values()) {
+    if (!canContactNow(contact)) {
       continue;
     }
     assignments.push(createAssignment(input.actorUserId, contact.id));
@@ -166,8 +157,6 @@ export async function createContactAssignmentsFromCandidates(input: {
     );
     const assignments = buildAvailableAssignments({
       actorUserId: input.actorUserId,
-      candidates: input.candidates,
-      organizationIdsByRuc,
       contactsByKey,
     });
 

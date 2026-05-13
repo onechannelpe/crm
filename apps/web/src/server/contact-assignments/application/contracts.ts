@@ -1,4 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import type { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 
@@ -27,7 +26,6 @@ export type CompleteContactAssignmentCallResult = ActionSuccess;
 
 export type CompleteContactAssignmentCallCommand = {
   actorUserId: UserId;
-  actorRole: Role;
   assignmentId: number;
   contactId: number;
   outcome: ContactAssignmentCallOutcome;

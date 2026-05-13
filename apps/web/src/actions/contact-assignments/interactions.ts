@@ -8,31 +8,78 @@ import type {
 } from "~/server/contact-assignments/application/contracts";
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/server/contact-assignments/application/contracts";
 import { getServerRuntime } from "~/server/runtime";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { runAction } from "~/server/shared/action-runtime";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
-function parseCallOutcome(value: string): ContactAssignmentCallOutcome {
+function parseCallOutcome(
+  value: string,
+): Result<ContactAssignmentCallOutcome, DomainError> {
   for (const outcome of CONTACT_ASSIGNMENT_CALL_OUTCOMES) {
     if (outcome === value) {
-      return outcome;
+      return Ok(outcome);
     }
   }
-  throw new Error("Invalid call outcome");
+  return Err(
+    domainError(
+      "validation",
+      "contact_assignment.call_outcome.invalid",
+      "Invalid call outcome",
+    ),
+  );
 }
 
-function parseCompleteContactAssignmentCallInput(input: {
-  assignmentId: number;
-  contactId: number;
-  outcome: string;
-}): {
+type CompleteCallInput = {
   assignmentId: number;
   contactId: number;
   outcome: ContactAssignmentCallOutcome;
-} {
-  return {
-    assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
-    contactId: assertPositiveInt(input.contactId, "contactId"),
-    outcome: parseCallOutcome(input.outcome),
-  };
+};
+
+function parseFieldAsPositiveInt(
+  value: number,
+  fieldName: "assignmentId" | "contactId",
+): Result<number, DomainError> {
+  try {
+    return Ok(assertPositiveInt(value, fieldName));
+  } catch (error) {
+    return Err(
+      domainError(
+        "validation",
+        `contact_assignment.${fieldName}.invalid`,
+        error instanceof Error
+          ? error.message
+          : `${fieldName} must be a positive integer`,
+      ),
+    );
+  }
+}
+
+function parseCompleteCallInput(input: {
+  assignmentId: number;
+  contactId: number;
+  outcome: string;
+}): Result<CompleteCallInput, DomainError> {
+  const assignmentIdResult = parseFieldAsPositiveInt(
+    input.assignmentId,
+    "assignmentId",
+  );
+  if (!assignmentIdResult.ok) return assignmentIdResult;
+
+  const contactIdResult = parseFieldAsPositiveInt(input.contactId, "contactId");
+  if (!contactIdResult.ok) {
+    return contactIdResult;
+  }
+
+  const outcomeResult = parseCallOutcome(input.outcome);
+  if (!outcomeResult.ok) {
+    return outcomeResult;
+  }
+
+  return Ok({
+    assignmentId: assignmentIdResult.value,
+    contactId: contactIdResult.value,
+    outcome: outcomeResult.value,
+  });
 }
 
 export async function completeContactAssignmentCall(
@@ -41,30 +88,30 @@ export async function completeContactAssignmentCall(
   outcome: string,
   notes?: string,
 ): Promise<CompleteContactAssignmentCallResult> {
-  const parsedInput = parseCompleteContactAssignmentCallInput({
-    assignmentId,
-    contactId,
-    outcome,
-  });
   return runAction({
     actionName: "contact_assignments.complete_call",
     access: { kind: "permission", permission: "lead:work" },
-    input: {
-      assignmentId: parsedInput.assignmentId,
-      contactId: parsedInput.contactId,
-      outcome: parsedInput.outcome,
-    },
-    execute: (ctx) =>
-      completeContactAssignmentCallUseCase(
+    input: { assignmentId, contactId, outcome },
+    execute: (ctx) => {
+      const parsedInput = parseCompleteCallInput({
+        assignmentId,
+        contactId,
+        outcome,
+      });
+      if (!parsedInput.ok) {
+        return Promise.resolve(parsedInput);
+      }
+
+      return completeContactAssignmentCallUseCase(
         {
           actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          assignmentId: parsedInput.assignmentId,
-          contactId: parsedInput.contactId,
-          outcome: parsedInput.outcome,
+          assignmentId: parsedInput.value.assignmentId,
+          contactId: parsedInput.value.contactId,
+          outcome: parsedInput.value.outcome,
           notes: notes?.trim() ? notes : null,
         },
         getServerRuntime().contactAssignments.interactionUow,
-      ),
+      );
+    },
   });
 }

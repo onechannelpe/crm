@@ -1,4 +1,3 @@
-import { hasPermission } from "~/lib/auth/access/rbac";
 import type { AppUow } from "~/server/shared/application/uow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -67,11 +66,5 @@ export function completeContactAssignmentCall(
   input: CompleteContactAssignmentCallCommand,
   uow: AppUow<CompleteContactAssignmentCallTxRepos>,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
-  if (!hasPermission(input.actorRole, "lead:work")) {
-    return Promise.resolve(
-      Err(domainError("forbidden", "forbidden", "Access denied")),
-    );
-  }
-
   return uow.run((repos) => completeAssignmentInteraction(input, repos));
 }
