@@ -1,9 +1,7 @@
-import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
-import { deriveLeadStageNotifications } from "../../application/notification-policy";
 import type {
   LeadMutationUow,
   LeadMutationOutcome,
@@ -21,6 +19,7 @@ import {
   createWorkflowAuditLogsRepo,
 } from "../audit-log";
 import { createHistoryRepo } from "../history-repo";
+import type { PublishLeadMutationNotificationsInput } from "../lead-mutation-notification-publisher";
 import { createLeadRepo } from "../lead-repo";
 import { createLeadAssignmentMutationRepository } from "./lead-assignment-repo";
 import { createLeadAuditRepository } from "./lead-audit-repo";
@@ -51,46 +50,12 @@ function createMutationDeps(executor: DatabaseExecutor) {
 
 export function createLeadMutationUow(
   executor: DatabaseExecutor,
+  options?: {
+    publishNotifications?: (
+      input: PublishLeadMutationNotificationsInput,
+    ) => Promise<void>;
+  },
 ): LeadMutationUow {
-  async function resolveExecutiveBranchId(executiveId: number) {
-    const row = await executor
-      .selectFrom("users")
-      .select("branch_id")
-      .where("id", "=", executiveId)
-      .executeTakeFirst();
-    return row?.branch_id ?? null;
-  }
-
-  async function enqueueLeadMutationNotifications(input: {
-    leadId: string;
-    ruc: string;
-    executiveId: number;
-    events: LeadMutationOutcome["events"];
-    historyIds: string[];
-    now: number;
-  }) {
-    const branchId = await resolveExecutiveBranchId(input.executiveId);
-
-    /* eslint-disable no-await-in-loop */
-    for (let index = 0; index < input.events.history.length; index += 1) {
-      const event = input.events.history[index];
-      const eventId = input.historyIds[index];
-      if (!eventId) continue;
-      if (event.eventType !== "workflow_stage_changed") continue;
-
-      const intents = deriveLeadStageNotifications({
-        eventId,
-        leadId: input.leadId,
-        toStage: event.payload.to,
-        ruc: input.ruc,
-        executiveId: input.executiveId,
-        branchId,
-      });
-      await enqueueNotifications(executor, intents, input.now);
-    }
-    /* eslint-enable no-await-in-loop */
-  }
-
   return {
     derivePatch(input) {
       return deriveLeadPatchFromIntent(input);
@@ -122,14 +87,16 @@ export function createLeadMutationUow(
       });
       if (!result.ok) return result;
 
-      await enqueueLeadMutationNotifications({
-        leadId: input.lead.id,
-        ruc: input.lead.ruc,
-        executiveId: input.lead.executiveId,
-        events: result.value.events,
-        historyIds: result.value.historyIds,
-        now: input.now,
-      });
+      if (options?.publishNotifications) {
+        await options.publishNotifications({
+          leadId: input.lead.id,
+          ruc: input.lead.ruc,
+          executiveId: input.lead.executiveId,
+          events: result.value.events,
+          historyIds: result.value.historyIds,
+          now: input.now,
+        });
+      }
 
       return result;
     },
@@ -154,14 +121,16 @@ export function createLeadMutationUow(
       if (!result.ok || !result.value.applied) return result;
 
       if (result.value.events && result.value.historyIds) {
-        await enqueueLeadMutationNotifications({
-          leadId: input.lead.id,
-          ruc: input.lead.ruc,
-          executiveId: input.lead.executiveId,
-          events: result.value.events,
-          historyIds: result.value.historyIds,
-          now: input.now,
-        });
+        if (options?.publishNotifications) {
+          await options.publishNotifications({
+            leadId: input.lead.id,
+            ruc: input.lead.ruc,
+            executiveId: input.lead.executiveId,
+            events: result.value.events,
+            historyIds: result.value.historyIds,
+            now: input.now,
+          });
+        }
       }
       return result;
     },

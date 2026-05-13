@@ -8,13 +8,13 @@ import type { LeadCommandResult } from "../contracts/command-results";
 import { resolveAssignableExecutivesScope } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
-import type { LeadUserScopeRepository } from "../ports/lead-user-scope-repository";
+import type { WorkflowUserRepository } from "../ports/user-repository";
 import type { LeadClock } from "../services/lead-clock";
 
 type ReassignLeadCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
-  users: LeadUserScopeRepository;
+  users: WorkflowUserRepository;
   clock: LeadClock;
 };
 

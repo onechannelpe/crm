@@ -57,8 +57,12 @@ import {
   createWorkflowAuditService,
   createWorkflowAuditLogsRepo,
 } from "~/server/workflow/infrastructure/audit-log";
+import { createLeadMutationNotificationPublisher } from "~/server/workflow/infrastructure/lead-mutation-notification-publisher";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
-import { createWorkflowRepos, type WorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
+import {
+  createWorkflowRepos,
+  type WorkflowRepos,
+} from "~/server/workflow/infrastructure/workflow-repos";
 import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sunat-enrichment-writeback-queue";
 
 type WorkflowCommandDeps = {
@@ -89,10 +93,14 @@ function createWorkflowCommandDeps(
       await enrichmentCommand.enqueueRequest("ruc", ruc, requestedByUserId);
     },
   };
+  const publishNotifications =
+    createLeadMutationNotificationPublisher(executor);
 
   return {
     repos,
-    mutationUow: createLeadMutationUow(executor),
+    mutationUow: createLeadMutationUow(executor, {
+      publishNotifications,
+    }),
     clock: systemLeadClock,
     registerLead: {
       leads: repos.leads,
@@ -147,13 +155,7 @@ function createWorkflowCommands(
         {
           leadReader: deps.repos.leads,
           mutationUow: deps.mutationUow,
-          users: {
-            findUserById: (id) => deps.repos.users.findById(id),
-            isExecutiveAssignable: (scope, executiveId) =>
-              deps.repos.users.isExecutiveAssignable(scope, executiveId),
-            listAssignableExecutives: (scope, options) =>
-              deps.repos.users.listAssignableExecutives(scope, options),
-          },
+          users: deps.repos.users,
           clock: deps.clock,
         },
         input,

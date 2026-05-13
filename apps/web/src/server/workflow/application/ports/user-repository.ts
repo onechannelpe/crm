@@ -1,8 +1,17 @@
-import type {
-  AssignableExecutivesScope,
-  LeadUser,
-  LeadUserWithName,
-} from "./lead-user-scope-repository";
+export type LeadUser = {
+  id: number;
+  isActive: boolean;
+};
+
+export type LeadUserWithName = {
+  id: number;
+  fullName: string;
+};
+
+export type AssignableExecutivesScope = {
+  actorRole: "superuser" | "admin" | "sales_manager" | "supervisor";
+  actorBranchId: number;
+};
 
 export type WorkflowUserRepository = {
   findById(id: number): Promise<LeadUser | undefined>;

@@ -5,7 +5,7 @@ import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
   AssignableExecutivesScope,
   LeadUserWithName,
-} from "../application/ports/lead-user-scope-repository";
+} from "../application/ports/user-repository";
 import type { WorkflowUserRepository } from "../application/ports/user-repository";
 
 export function createWorkflowUsersRepo(

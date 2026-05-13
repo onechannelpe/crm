@@ -43,8 +43,6 @@ import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/en
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
-import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos/lead-read-repo";
-import { createLeadUserScopeRepository } from "~/server/workflow/infrastructure/repos/lead-user-scope-repo";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
 import type { TestRuntime } from "../runtime/app";
@@ -73,11 +71,11 @@ function buildCommandApi(
 ) {
   const repos = createWorkflowRepos(executor);
   const baseDeps = {
-    leadReader: createLeadReadRepository(repos.leads),
+    leadReader: repos.leads,
     leadRepo: repos.leads,
     leadFavorites: repos.leadFavorites,
     mutationUow: createLeadMutationUow(executor),
-    users: createLeadUserScopeRepository(repos.users),
+    users: repos.users,
     clock: systemLeadClock,
     registerLead: {
       leads: repos.leads,
