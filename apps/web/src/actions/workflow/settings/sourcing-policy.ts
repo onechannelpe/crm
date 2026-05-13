@@ -2,7 +2,6 @@
 
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sourcing-policy";
 
 export async function querySourcingPolicy(branchId: number) {
   return runAction({
@@ -10,12 +9,10 @@ export async function querySourcingPolicy(branchId: number) {
     access: { kind: "auth" },
     input: { branchId },
     execute: (ctx) =>
-      getSourcingPolicy(
-        {
-          sourcingPolicies: getServerRuntime().workflow.repos.sourcingPolicies,
-        },
-        { actorRole: ctx.actor.role, branchId },
-      ),
+      getServerRuntime().workflow.queries.getSourcingPolicy({
+        actorRole: ctx.actor.role,
+        branchId,
+      }),
   });
 }
 
@@ -28,7 +25,7 @@ export async function saveSourcingPolicy(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.useCases.updateSourcingPolicy({
+      getServerRuntime().workflow.commands.updateSourcingPolicy({
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         branchId: input.branchId,

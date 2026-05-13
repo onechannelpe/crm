@@ -22,7 +22,7 @@ import {
 } from "../audit-log";
 import { createHistoryRepo } from "../history-repo";
 import { createLeadRepo } from "../lead-repo";
-import { createLeadAssignmentRepositoryPort } from "./lead-assignment-repo";
+import { createLeadAssignmentMutationRepository } from "./lead-assignment-repo";
 import { createLeadAuditRepository } from "./lead-audit-repo";
 import { createLeadEventRepository } from "./lead-event-repo";
 import {
@@ -45,7 +45,7 @@ function createMutationDeps(executor: DatabaseExecutor) {
     checkedLeadWriter: createCheckedLeadWriteRepository(executor),
     eventRepository: createLeadEventRepository(leadHistory),
     auditRepository: createLeadAuditRepository(auditService),
-    leadAssignments: createLeadAssignmentRepositoryPort(leadAssignments),
+    leadAssignments: createLeadAssignmentMutationRepository(leadAssignments),
   };
 }
 

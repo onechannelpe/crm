@@ -1,9 +1,9 @@
 import type { LeadAssignmentRepository } from "../../application/ports/assignment-repository";
-import type { LeadAssignmentRepositoryPort } from "../../ports/lead-assignment-repository";
+import type { LeadAssignmentMutationRepository } from "../../application/ports/lead-assignment-mutation-repository";
 
-export function createLeadAssignmentRepositoryPort(
+export function createLeadAssignmentMutationRepository(
   assignments: LeadAssignmentRepository,
-): LeadAssignmentRepositoryPort {
+): LeadAssignmentMutationRepository {
   return {
     async replaceActiveAssignment(input) {
       await assignments.deactivateActiveForLead(input.leadId);

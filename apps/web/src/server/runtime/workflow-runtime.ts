@@ -1,9 +1,35 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
+import type {
+  AddLeadNoteInput,
+  AddLeadToFavoritesInput,
+  AddVenueAccountsInput,
+  ApplyImportedReviewInput,
+  ApproveForSaleInput,
+  CreateQuotationInput,
+  CreateVenueInput,
+  LogLeadCallInput,
+  ReassignLeadInput,
+  RecordRepLegalInput,
+  RegisterLeadInput,
+  RemoveLeadFromFavoritesInput,
+  RequestQuotationInput,
+  RequestRateNegotiationInput,
+  ReviewLeadInput,
+  SaveCommercialScopeInput,
+} from "~/server/workflow/application/contracts/command-inputs";
+import type {
+  GetLeadDetailInput,
+  ListAssignableExecutivesInput,
+} from "~/server/workflow/application/contracts/query-inputs";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
+import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
+import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sourcing-policy";
+import { listLeads } from "~/server/workflow/application/queries/list-leads";
 import { createWorkflowQueryApi } from "~/server/workflow/application/query-api";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
@@ -36,7 +62,7 @@ import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sun
 
 import type { ServerInfra } from "./infra";
 
-function composeWorkflowIntentHandlersRuntime(
+function createWorkflowCommandsRuntime(
   executor: DatabaseExecutor,
   engineGateway: WorkflowEngineGateway,
 ) {
@@ -81,9 +107,9 @@ function composeWorkflowIntentHandlersRuntime(
   };
 
   return {
-    registerLead: (input: Parameters<typeof registerLeadCommand>[1]) =>
+    registerLead: (input: RegisterLeadInput) =>
       registerLeadCommand(baseDeps, input),
-    addToFavorites: (input: Parameters<typeof addToFavoritesCommand>[1]) =>
+    addToFavorites: (input: AddLeadToFavoritesInput) =>
       addToFavoritesCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -92,9 +118,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    removeFromFavorites: (
-      input: Parameters<typeof removeFromFavoritesCommand>[1],
-    ) =>
+    removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
       removeFromFavoritesCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -103,17 +127,14 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    reassignLead: (input: Parameters<typeof reassignLeadCommand>[1]) =>
+    reassignLead: (input: ReassignLeadInput) =>
       reassignLeadCommand(baseDeps, input),
-    reviewLead: (input: Parameters<typeof reviewLeadCommand>[1]) =>
-      reviewLeadCommand(baseDeps, input),
-    addLeadNote: (input: Parameters<typeof addLeadNoteCommand>[1]) =>
+    reviewLead: (input: ReviewLeadInput) => reviewLeadCommand(baseDeps, input),
+    addLeadNote: (input: AddLeadNoteInput) =>
       addLeadNoteCommand(baseDeps, input),
-    logLeadCall: (input: Parameters<typeof logLeadCallCommand>[1]) =>
+    logLeadCall: (input: LogLeadCallInput) =>
       logLeadCallCommand(baseDeps, input),
-    applyImportedReview: (
-      input: Parameters<typeof applyImportedReviewCommand>[1],
-    ) =>
+    applyImportedReview: (input: ApplyImportedReviewInput) =>
       applyImportedReviewCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -122,7 +143,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    approveForSale: (input: Parameters<typeof approveForSaleCommand>[1]) =>
+    approveForSale: (input: ApproveForSaleInput) =>
       approveForSaleCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -131,7 +152,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    createQuotation: (input: Parameters<typeof createQuotationCommand>[1]) =>
+    createQuotation: (input: CreateQuotationInput) =>
       createQuotationCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -141,9 +162,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    saveCommercialScope: (
-      input: Parameters<typeof saveCommercialScopeCommand>[1],
-    ) =>
+    saveCommercialScope: (input: SaveCommercialScopeInput) =>
       saveCommercialScopeCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -155,7 +174,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    requestQuotation: (input: Parameters<typeof requestQuotationCommand>[1]) =>
+    requestQuotation: (input: RequestQuotationInput) =>
       requestQuotationCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -166,7 +185,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    recordRepLegal: (input: Parameters<typeof recordRepLegalCommand>[1]) =>
+    recordRepLegal: (input: RecordRepLegalInput) =>
       executor.transaction().execute((tx) => {
         const txRepos = createWorkflowRepos(tx);
         return recordRepLegalCommand(
@@ -179,7 +198,7 @@ function composeWorkflowIntentHandlersRuntime(
           input,
         );
       }),
-    createVenue: (input: Parameters<typeof createVenueCommand>[1]) =>
+    createVenue: (input: CreateVenueInput) =>
       createVenueCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -190,7 +209,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    addVenueAccounts: (input: Parameters<typeof addVenueAccountsCommand>[1]) =>
+    addVenueAccounts: (input: AddVenueAccountsInput) =>
       addVenueAccountsCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -200,9 +219,7 @@ function composeWorkflowIntentHandlersRuntime(
         },
         input,
       ),
-    requestRateNegotiation: (
-      input: Parameters<typeof requestRateNegotiationCommand>[1],
-    ) =>
+    requestRateNegotiation: (input: RequestRateNegotiationInput) =>
       requestRateNegotiationCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -214,7 +231,7 @@ function composeWorkflowIntentHandlersRuntime(
       ),
     requestSunatRefresh: (input: {
       actorUserId: number;
-      actorRole: Parameters<typeof requestSunatRefresh>[0]["actorRole"];
+      actorRole: Role;
       leadId: string;
     }) =>
       requestSunatRefresh({
@@ -227,7 +244,7 @@ function composeWorkflowIntentHandlersRuntime(
       }),
     updateSourcingPolicy: (input: {
       actorUserId: number;
-      actorRole: Parameters<typeof updateSourcingPolicy>[1]["actorRole"];
+      actorRole: Role;
       branchId: number;
       engineAssignmentEnabled: boolean;
     }) =>
@@ -235,6 +252,39 @@ function composeWorkflowIntentHandlersRuntime(
         { sourcingPolicies: baseDeps.sourcingPolicies },
         input,
       ),
+  };
+}
+
+function createWorkflowQueriesRuntime(
+  repos: ReturnType<typeof createWorkflowRepos>,
+  queryApi: ReturnType<typeof createWorkflowQueryApi>,
+  engineGateway: WorkflowEngineGateway,
+) {
+  return {
+    getLeadDetail: (input: GetLeadDetailInput) => queryApi.getLeadDetail(input),
+    listAssignableExecutives: (input: ListAssignableExecutivesInput) =>
+      queryApi.listAssignableExecutives(input),
+    listLeads: (input: {
+      actorUserId: number;
+      actorRole: Role;
+      actorBranchId: number;
+      filters: {
+        stage?: string;
+        status?: string;
+        prioridad?: string;
+        executiveId?: number;
+        updatedSinceMs?: number;
+        updatedUntilMs?: number;
+        sortBy?: string;
+        sortDirection?: string;
+        limit?: number;
+        offset?: number;
+      };
+    }) => listLeads({ leads: repos.leadQueries }, input),
+    getLeadBootstrapPreview: (input: { ruc: string }) =>
+      getLeadBootstrapPreview({ party: repos.party }, engineGateway, input),
+    getSourcingPolicy: (input: { actorRole: Role; branchId: number }) =>
+      getSourcingPolicy({ sourcingPolicies: repos.sourcingPolicies }, input),
   };
 }
 
@@ -267,8 +317,8 @@ export function createWorkflowRuntime(
   return {
     repos,
     engineGateway,
-    useCases: composeWorkflowIntentHandlersRuntime(infra.db, engineGateway),
-    queryApi,
+    commands: createWorkflowCommandsRuntime(infra.db, engineGateway),
+    queries: createWorkflowQueriesRuntime(repos, queryApi, engineGateway),
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {
         executor: infra.db,

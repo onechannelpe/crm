@@ -44,7 +44,7 @@ export async function requestVenueCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.useCases.createVenue({
+      getServerRuntime().workflow.commands.createVenue({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,
@@ -89,7 +89,7 @@ export async function requestVenueAccountsAddition(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId, venueId: input.venueId },
     execute: (ctx) =>
-      getServerRuntime().workflow.useCases.addVenueAccounts({
+      getServerRuntime().workflow.commands.addVenueAccounts({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,

@@ -4,7 +4,7 @@ import type { LeadRepository } from "../../application/ports/lead-repository";
 import type {
   LeadWriteRepository,
   CheckedLeadWriteRepository,
-} from "../../ports/lead-write-repository";
+} from "../../application/ports/lead-write-repository";
 import { toLeadPatchRow } from "../lead-repo";
 
 export function createLeadWriteRepository(

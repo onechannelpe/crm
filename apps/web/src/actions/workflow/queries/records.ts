@@ -2,8 +2,6 @@
 
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
-import { listLeads } from "~/server/workflow/application/queries/list-leads";
 import type { AssignableExecutiveView } from "~/server/workflow/application/queries/views/assignable-executive";
 import type { LeadBootstrapPreviewView } from "~/server/workflow/application/queries/views/lead-bootstrap-preview";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
@@ -26,15 +24,12 @@ export async function queryLeadList(filters: {
     access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
-      listLeads(
-        { leads: getServerRuntime().workflow.repos.leadQueries },
-        {
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          actorBranchId: ctx.actor.branchId,
-          filters,
-        },
-      ),
+      getServerRuntime().workflow.queries.listLeads({
+        actorUserId: ctx.actor.userId,
+        actorRole: ctx.actor.role,
+        actorBranchId: ctx.actor.branchId,
+        filters,
+      }),
   });
 }
 
@@ -44,7 +39,7 @@ export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.queryApi.getLeadDetail({
+      getServerRuntime().workflow.queries.getLeadDetail({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,
@@ -62,14 +57,8 @@ export async function queryLeadBootstrapPreview(
     actionName: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
     input: { ruc },
-    execute: () => {
-      const { workflow } = getServerRuntime();
-      return getLeadBootstrapPreview(
-        { party: workflow.repos.party },
-        workflow.engineGateway,
-        { ruc },
-      );
-    },
+    execute: () =>
+      getServerRuntime().workflow.queries.getLeadBootstrapPreview({ ruc }),
   });
 }
 
@@ -83,7 +72,7 @@ export async function queryAssignableExecutives(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.queryApi.listAssignableExecutives({
+      getServerRuntime().workflow.queries.listAssignableExecutives({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,

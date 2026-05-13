@@ -18,7 +18,7 @@ export async function requestQuotationCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.useCases.createQuotation({
+      getServerRuntime().workflow.commands.createQuotation({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,
@@ -35,7 +35,7 @@ export async function requestSaleApproval(leadId: string) {
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.useCases.approveForSale({
+      getServerRuntime().workflow.commands.approveForSale({
         actor: {
           userId: ctx.actor.userId,
           role: ctx.actor.role,

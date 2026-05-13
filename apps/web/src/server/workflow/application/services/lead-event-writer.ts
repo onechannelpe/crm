@@ -1,6 +1,6 @@
 import type { LeadHistoryEventDraft } from "../../domain/history";
-import type { LeadAuditRepository } from "../../ports/lead-audit-repository";
-import type { LeadEventRepository } from "../../ports/lead-event-repository";
+import type { LeadAuditRepository } from "../ports/lead-audit-repository";
+import type { LeadEventRepository } from "../ports/lead-event-repository";
 
 export async function writeLeadEvents(input: {
   events: LeadHistoryEventDraft[];

@@ -1,4 +1,4 @@
-import type { LeadPatch } from "../domain/lead-record";
+import type { LeadPatch } from "../../domain/lead-record";
 
 export type LeadWriteRepository = {
   updateLead(input: {

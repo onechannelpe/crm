@@ -1,4 +1,4 @@
-export type LeadAssignmentRepositoryPort = {
+export type LeadAssignmentMutationRepository = {
   replaceActiveAssignment(input: {
     leadId: string;
     toExecutiveId: number;
