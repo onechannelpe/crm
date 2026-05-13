@@ -2,6 +2,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { registerLead } from "~/server/workflow/application/commands/register-lead";
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import type {
   AddLeadNoteInput,
@@ -25,6 +26,7 @@ import type {
   GetLeadDetailInput,
   ListAssignableExecutivesInput,
 } from "~/server/workflow/application/contracts/query-inputs";
+import type { RegisterLeadDeps } from "~/server/workflow/application/deps/register-lead";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
@@ -43,7 +45,6 @@ import { createVenueCommand } from "~/server/workflow/application/use-cases/crea
 import { logLeadCallCommand } from "~/server/workflow/application/use-cases/log-call";
 import { reassignLeadCommand } from "~/server/workflow/application/use-cases/reassign-lead";
 import { recordRepLegalCommand } from "~/server/workflow/application/use-cases/record-rep-legal";
-import { registerLeadCommand } from "~/server/workflow/application/use-cases/register-lead";
 import { removeFromFavoritesCommand } from "~/server/workflow/application/use-cases/remove-from-favorites";
 import { requestQuotationCommand } from "~/server/workflow/application/use-cases/request-quotation";
 import { requestRateNegotiationCommand } from "~/server/workflow/application/use-cases/request-rate-negotiation";
@@ -62,10 +63,31 @@ import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sun
 
 import type { ServerInfra } from "./infra";
 
-function createWorkflowCommandsRuntime(
+type WorkflowCommandDeps = {
+  leadReader: ReturnType<typeof createLeadReadRepository>;
+  leadRepo: ReturnType<typeof createWorkflowRepos>["leads"];
+  leadFavorites: ReturnType<typeof createWorkflowRepos>["leadFavorites"];
+  mutationUow: ReturnType<typeof createLeadMutationUow>;
+  users: ReturnType<typeof createLeadUserScopeRepository>;
+  clock: typeof systemLeadClock;
+  registerLead: RegisterLeadDeps;
+  auditService: ReturnType<typeof createWorkflowAuditService>;
+  engineGateway: WorkflowEngineGateway;
+  leadEnrichmentQueue: LeadEnrichmentQueue;
+  leadQuotations: ReturnType<typeof createWorkflowRepos>["leadQuotations"];
+  leadProfiles: ReturnType<typeof createWorkflowRepos>["leadProfiles"];
+  party: ReturnType<typeof createWorkflowRepos>["party"];
+  leadVenues: ReturnType<typeof createWorkflowRepos>["leadVenues"];
+  negotiationRequests: ReturnType<
+    typeof createWorkflowRepos
+  >["leadNegotiationRequests"];
+  sourcingPolicies: ReturnType<typeof createWorkflowRepos>["sourcingPolicies"];
+};
+
+function createWorkflowCommandDeps(
   executor: DatabaseExecutor,
   engineGateway: WorkflowEngineGateway,
-) {
+): WorkflowCommandDeps {
   const repos = createWorkflowRepos(executor);
   const auditService = createWorkflowAuditService({
     auditLogs: createWorkflowAuditLogRepo(
@@ -81,7 +103,7 @@ function createWorkflowCommandsRuntime(
     },
   };
 
-  const baseDeps = {
+  return {
     leadReader: createLeadReadRepository(repos.leads),
     leadRepo: repos.leads,
     leadFavorites: repos.leadFavorites,
@@ -105,10 +127,22 @@ function createWorkflowCommandsRuntime(
     negotiationRequests: repos.leadNegotiationRequests,
     sourcingPolicies: repos.sourcingPolicies,
   };
+}
 
+function createWorkflowCoreCommands(baseDeps: WorkflowCommandDeps) {
   return {
     registerLead: (input: RegisterLeadInput) =>
-      registerLeadCommand(baseDeps, input),
+      registerLead({
+        actorUserId: input.actor.userId,
+        actorRole: input.actor.role,
+        executiveId: input.executiveId,
+        ruc: input.ruc,
+        deps: baseDeps.registerLead,
+        mutationUow: baseDeps.mutationUow,
+        auditService: baseDeps.auditService,
+        engineGateway: baseDeps.engineGateway,
+        leadEnrichmentQueue: baseDeps.leadEnrichmentQueue,
+      }),
     addToFavorites: (input: AddLeadToFavoritesInput) =>
       addToFavoritesCommand(
         {
@@ -130,6 +164,11 @@ function createWorkflowCommandsRuntime(
     reassignLead: (input: ReassignLeadInput) =>
       reassignLeadCommand(baseDeps, input),
     reviewLead: (input: ReviewLeadInput) => reviewLeadCommand(baseDeps, input),
+  };
+}
+
+function createWorkflowInteractionCommands(baseDeps: WorkflowCommandDeps) {
+  return {
     addLeadNote: (input: AddLeadNoteInput) =>
       addLeadNoteCommand(baseDeps, input),
     logLeadCall: (input: LogLeadCallInput) =>
@@ -143,6 +182,14 @@ function createWorkflowCommandsRuntime(
         },
         input,
       ),
+  };
+}
+
+function createWorkflowSalesCommands(
+  executor: DatabaseExecutor,
+  baseDeps: WorkflowCommandDeps,
+) {
+  return {
     approveForSale: (input: ApproveForSaleInput) =>
       approveForSaleCommand(
         {
@@ -229,6 +276,11 @@ function createWorkflowCommandsRuntime(
         },
         input,
       ),
+  };
+}
+
+function createWorkflowSettingsCommands(baseDeps: WorkflowCommandDeps) {
+  return {
     requestSunatRefresh: (input: {
       actorUserId: number;
       actorRole: Role;
@@ -252,6 +304,20 @@ function createWorkflowCommandsRuntime(
         { sourcingPolicies: baseDeps.sourcingPolicies },
         input,
       ),
+  };
+}
+
+function createWorkflowCommandsRuntime(
+  executor: DatabaseExecutor,
+  engineGateway: WorkflowEngineGateway,
+) {
+  const baseDeps = createWorkflowCommandDeps(executor, engineGateway);
+
+  return {
+    ...createWorkflowCoreCommands(baseDeps),
+    ...createWorkflowInteractionCommands(baseDeps),
+    ...createWorkflowSalesCommands(executor, baseDeps),
+    ...createWorkflowSettingsCommands(baseDeps),
   };
 }
 

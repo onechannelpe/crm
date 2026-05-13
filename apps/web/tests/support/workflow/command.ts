@@ -1,7 +1,27 @@
 import type { Transaction } from "kysely";
 
+import type { Role } from "~/lib/auth/access/rbac";
 import type { Database } from "~/lib/db/types";
+import { registerLead } from "~/server/workflow/application/commands/register-lead";
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
+import type {
+  AddLeadNoteInput,
+  AddLeadToFavoritesInput,
+  AddVenueAccountsInput,
+  ApplyImportedReviewInput,
+  ApproveForSaleInput,
+  CreateQuotationInput,
+  CreateVenueInput,
+  LogLeadCallInput,
+  ReassignLeadInput,
+  RecordRepLegalInput,
+  RegisterLeadInput,
+  RemoveLeadFromFavoritesInput,
+  RequestQuotationInput,
+  RequestRateNegotiationInput,
+  ReviewLeadInput,
+  SaveCommercialScopeInput,
+} from "~/server/workflow/application/contracts/command-inputs";
 import type { WorkflowAuditService } from "~/server/workflow/application/ports/audit-service";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
@@ -17,7 +37,6 @@ import { createVenueCommand } from "~/server/workflow/application/use-cases/crea
 import { logLeadCallCommand } from "~/server/workflow/application/use-cases/log-call";
 import { reassignLeadCommand } from "~/server/workflow/application/use-cases/reassign-lead";
 import { recordRepLegalCommand } from "~/server/workflow/application/use-cases/record-rep-legal";
-import { registerLeadCommand } from "~/server/workflow/application/use-cases/register-lead";
 import { removeFromFavoritesCommand } from "~/server/workflow/application/use-cases/remove-from-favorites";
 import { requestQuotationCommand } from "~/server/workflow/application/use-cases/request-quotation";
 import { requestRateNegotiationCommand } from "~/server/workflow/application/use-cases/request-rate-negotiation";
@@ -80,9 +99,19 @@ function buildCommandApi(
   };
 
   return {
-    registerLead: (input: Parameters<typeof registerLeadCommand>[1]) =>
-      registerLeadCommand(baseDeps, input),
-    addToFavorites: (input: Parameters<typeof addToFavoritesCommand>[1]) =>
+    registerLead: (input: RegisterLeadInput) =>
+      registerLead({
+        actorUserId: input.actor.userId,
+        actorRole: input.actor.role,
+        executiveId: input.executiveId,
+        ruc: input.ruc,
+        deps: baseDeps.registerLead,
+        mutationUow: baseDeps.mutationUow,
+        auditService: baseDeps.auditService,
+        engineGateway: baseDeps.engineGateway,
+        leadEnrichmentQueue: baseDeps.leadEnrichmentQueue,
+      }),
+    addToFavorites: (input: AddLeadToFavoritesInput) =>
       addToFavoritesCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -91,9 +120,7 @@ function buildCommandApi(
         },
         input,
       ),
-    removeFromFavorites: (
-      input: Parameters<typeof removeFromFavoritesCommand>[1],
-    ) =>
+    removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
       removeFromFavoritesCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -102,17 +129,14 @@ function buildCommandApi(
         },
         input,
       ),
-    reassignLead: (input: Parameters<typeof reassignLeadCommand>[1]) =>
+    reassignLead: (input: ReassignLeadInput) =>
       reassignLeadCommand(baseDeps, input),
-    reviewLead: (input: Parameters<typeof reviewLeadCommand>[1]) =>
-      reviewLeadCommand(baseDeps, input),
-    addLeadNote: (input: Parameters<typeof addLeadNoteCommand>[1]) =>
+    reviewLead: (input: ReviewLeadInput) => reviewLeadCommand(baseDeps, input),
+    addLeadNote: (input: AddLeadNoteInput) =>
       addLeadNoteCommand(baseDeps, input),
-    logLeadCall: (input: Parameters<typeof logLeadCallCommand>[1]) =>
+    logLeadCall: (input: LogLeadCallInput) =>
       logLeadCallCommand(baseDeps, input),
-    applyImportedReview: (
-      input: Parameters<typeof applyImportedReviewCommand>[1],
-    ) =>
+    applyImportedReview: (input: ApplyImportedReviewInput) =>
       applyImportedReviewCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -121,7 +145,7 @@ function buildCommandApi(
         },
         input,
       ),
-    approveForSale: (input: Parameters<typeof approveForSaleCommand>[1]) =>
+    approveForSale: (input: ApproveForSaleInput) =>
       approveForSaleCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -130,7 +154,7 @@ function buildCommandApi(
         },
         input,
       ),
-    createQuotation: (input: Parameters<typeof createQuotationCommand>[1]) =>
+    createQuotation: (input: CreateQuotationInput) =>
       createQuotationCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -140,9 +164,7 @@ function buildCommandApi(
         },
         input,
       ),
-    saveCommercialScope: (
-      input: Parameters<typeof saveCommercialScopeCommand>[1],
-    ) =>
+    saveCommercialScope: (input: SaveCommercialScopeInput) =>
       saveCommercialScopeCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -154,7 +176,7 @@ function buildCommandApi(
         },
         input,
       ),
-    requestQuotation: (input: Parameters<typeof requestQuotationCommand>[1]) =>
+    requestQuotation: (input: RequestQuotationInput) =>
       requestQuotationCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -165,7 +187,7 @@ function buildCommandApi(
         },
         input,
       ),
-    recordRepLegal: (input: Parameters<typeof recordRepLegalCommand>[1]) =>
+    recordRepLegal: (input: RecordRepLegalInput) =>
       recordRepLegalCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -175,7 +197,7 @@ function buildCommandApi(
         },
         input,
       ),
-    createVenue: (input: Parameters<typeof createVenueCommand>[1]) =>
+    createVenue: (input: CreateVenueInput) =>
       createVenueCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -186,7 +208,7 @@ function buildCommandApi(
         },
         input,
       ),
-    addVenueAccounts: (input: Parameters<typeof addVenueAccountsCommand>[1]) =>
+    addVenueAccounts: (input: AddVenueAccountsInput) =>
       addVenueAccountsCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -196,9 +218,7 @@ function buildCommandApi(
         },
         input,
       ),
-    requestRateNegotiation: (
-      input: Parameters<typeof requestRateNegotiationCommand>[1],
-    ) =>
+    requestRateNegotiation: (input: RequestRateNegotiationInput) =>
       requestRateNegotiationCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -210,7 +230,7 @@ function buildCommandApi(
       ),
     requestSunatRefresh: (input: {
       actorUserId: number;
-      actorRole: Parameters<typeof requestSunatRefresh>[0]["actorRole"];
+      actorRole: Role;
       leadId: string;
     }) =>
       requestSunatRefresh({
@@ -223,7 +243,7 @@ function buildCommandApi(
       }),
     updateSourcingPolicy: (input: {
       actorUserId: number;
-      actorRole: Parameters<typeof updateSourcingPolicy>[1]["actorRole"];
+      actorRole: Role;
       branchId: number;
       engineAssignmentEnabled: boolean;
     }) =>
