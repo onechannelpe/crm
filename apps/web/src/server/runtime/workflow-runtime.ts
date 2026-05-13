@@ -6,8 +6,8 @@ import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/en
 import { createWorkflowQueryApi } from "~/server/workflow/application/query-api";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import {
-  createWorkflowUseCases,
-  type WorkflowUseCases,
+  bindWorkflowIntentHandlers,
+  type WorkflowIntentHandlers,
 } from "~/server/workflow/application/use-cases";
 import {
   createWorkflowAuditLogRepo,
@@ -22,10 +22,10 @@ import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sun
 
 import type { ServerInfra } from "./infra";
 
-function createWorkflowUseCasesRuntime(
+function composeWorkflowIntentHandlersRuntime(
   executor: DatabaseExecutor,
   engineGateway: WorkflowEngineGateway,
-): WorkflowUseCases {
+): WorkflowIntentHandlers {
   const repos = createWorkflowRepos(executor);
   const auditService = createWorkflowAuditService({
     auditLogs: createWorkflowAuditLogRepo(
@@ -41,7 +41,7 @@ function createWorkflowUseCasesRuntime(
     },
   };
 
-  const useCases = createWorkflowUseCases({
+  const useCases = bindWorkflowIntentHandlers({
     leadReader: createLeadReadRepository(repos.leads),
     leadRepo: repos.leads,
     leadFavorites: repos.leadFavorites,
@@ -98,7 +98,7 @@ export function createWorkflowRuntime(
   return {
     repos,
     engineGateway,
-    useCases: createWorkflowUseCasesRuntime(infra.db, engineGateway),
+    useCases: composeWorkflowIntentHandlersRuntime(infra.db, engineGateway),
     queryApi,
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {

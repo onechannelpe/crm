@@ -6,8 +6,8 @@ import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import {
-  createWorkflowUseCases,
-  type WorkflowUseCases,
+  bindWorkflowIntentHandlers,
+  type WorkflowIntentHandlers,
 } from "~/server/workflow/application/use-cases";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
 import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos/lead-read-repo";
@@ -37,9 +37,9 @@ export type TestCommandOverrides = {
 function buildCommandApi(
   executor: Transaction<Database>,
   overrides?: TestCommandOverrides,
-): WorkflowUseCases {
+): WorkflowIntentHandlers {
   const repos = createWorkflowRepos(executor);
-  return createWorkflowUseCases({
+  return bindWorkflowIntentHandlers({
     leadReader: createLeadReadRepository(repos.leads),
     leadRepo: repos.leads,
     leadFavorites: repos.leadFavorites,
@@ -68,7 +68,7 @@ function buildCommandApi(
 
 export function runTestWorkflowCommand<T>(
   runtime: TestRuntime,
-  operation: (commandApi: WorkflowUseCases) => Promise<T>,
+  operation: (commandApi: WorkflowIntentHandlers) => Promise<T>,
   overrides?: TestCommandOverrides,
 ): Promise<T> {
   return runtime.ctx.db

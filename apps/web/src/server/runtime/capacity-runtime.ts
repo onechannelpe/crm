@@ -6,7 +6,7 @@ import {
   createSearchUsageCommitsRepo,
   createSearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
-import { createCapacityUseCases } from "~/server/capacity/application/use-cases";
+import { bindCapacityIntentHandlers } from "~/server/capacity/application/use-cases";
 import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import { createCapacityTeamsRepo } from "~/server/capacity/infrastructure/capacity-teams-repo";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
@@ -55,7 +55,7 @@ export function createCapacityRuntime(infra: ServerInfra) {
   };
 
   return {
-    useCases: createCapacityUseCases({
+    useCases: bindCapacityIntentHandlers({
       requestCapacity: { rateLimitDeps, uow },
       approveCapacityRequest: { rateLimitDeps, uow },
       rejectCapacityRequest: { rateLimitDeps, uow },

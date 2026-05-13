@@ -60,7 +60,7 @@ import { requestRateNegotiationCommand } from "./request-rate-negotiation";
 import { reviewLeadCommand } from "./review-lead";
 import { saveCommercialScopeCommand } from "./save-commercial-scope";
 
-export type WorkflowUseCaseDeps = {
+export type WorkflowIntentDeps = {
   leadReader: LeadReadRepository;
   leadRepo: LeadRepository;
   leadFavorites: LeadFavoriteRepository;
@@ -79,7 +79,7 @@ export type WorkflowUseCaseDeps = {
   sourcingPolicies: LeadSourcingPolicyRepository;
 };
 
-export type WorkflowUseCases = {
+export type WorkflowIntentHandlers = {
   registerLead(
     input: RegisterLeadInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;
@@ -149,9 +149,9 @@ export type WorkflowUseCases = {
   >;
 };
 
-export function createWorkflowUseCases(
-  deps: WorkflowUseCaseDeps,
-): WorkflowUseCases {
+export function bindWorkflowIntentHandlers(
+  deps: WorkflowIntentDeps,
+): WorkflowIntentHandlers {
   return {
     registerLead: (input) => registerLeadCommand(deps, input),
     addToFavorites: (input) =>

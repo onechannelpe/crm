@@ -38,7 +38,7 @@ type ListPendingRequestsDeps = Parameters<typeof listPendingRequests>[1];
 type GetPolicyDefaultsDeps = Parameters<typeof getPolicyDefaults>[1];
 type GetAuditEventsDeps = Parameters<typeof getAuditEvents>[1];
 
-export type CapacityUseCaseDeps = {
+export type CapacityIntentDeps = {
   requestCapacity: RequestCapacityDeps;
   approveCapacityRequest: ApproveCapacityRequestDeps;
   rejectCapacityRequest: RejectCapacityRequestDeps;
@@ -55,7 +55,7 @@ export type CapacityUseCaseDeps = {
   getAuditEvents: GetAuditEventsDeps;
 };
 
-export function createCapacityUseCases(deps: CapacityUseCaseDeps) {
+export function bindCapacityIntentHandlers(deps: CapacityIntentDeps) {
   return {
     requestCapacity(
       ctx: AppContext,
