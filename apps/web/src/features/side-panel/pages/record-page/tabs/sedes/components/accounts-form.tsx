@@ -16,7 +16,7 @@ import {
   WidgetHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import { ACCOUNT_TYPE_KINDS } from "~/workflow/contracts/lead-schema";
+import { ACCOUNT_TYPE_KINDS } from "~/contracts/workflow";
 
 import type { AccountsFormState } from "../model/accounts-form-state";
 

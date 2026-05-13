@@ -12,7 +12,7 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { blockingFieldLabel } from "~/features/workflow/detail/actions/workflow-ui";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 import { formatAmount, formatRate } from "./format";
 

@@ -7,7 +7,7 @@ import type {
   ModalidadCobro,
   Moneda,
   ProductScope,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import type { LeadRecord } from "../lead-record";
 

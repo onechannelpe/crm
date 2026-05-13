@@ -5,7 +5,7 @@ import { WorkflowWidget } from "~/features/side-panel/pages/record-page/widgets/
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
 import { CommercialScopeWidget } from "~/features/workflow/detail/forms/commercial-scope-widget";
 import { RepLegalWidget } from "~/features/workflow/detail/forms/rep-legal-widget";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 import { RecordSummaryCard } from "../summary-card/record-summary-card";
 

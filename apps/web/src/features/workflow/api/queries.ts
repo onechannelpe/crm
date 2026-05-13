@@ -5,18 +5,22 @@ import {
   queryLeadList,
 } from "~/actions/workflow/queries/records";
 
-export async function queryWorkflowLeadList(filters: Parameters<typeof queryLeadList>[0]) {
+export async function queryLeadListApi(
+  filters: Parameters<typeof queryLeadList>[0],
+) {
   return queryLeadList(filters);
 }
 
-export async function queryWorkflowLeadDetail(leadId: string) {
+export async function queryLeadDetailApi(leadId: string) {
   return queryLeadDetail(leadId);
 }
 
-export async function queryWorkflowLeadBootstrapPreview(ruc: string) {
+export async function queryLeadBootstrapPreviewApi(ruc: string) {
   return queryLeadBootstrapPreview(ruc);
 }
 
-export async function queryWorkflowAssignableExecutives(input: Parameters<typeof queryAssignableExecutives>[0]) {
+export async function queryAssignableExecutivesApi(
+  input: Parameters<typeof queryAssignableExecutives>[0],
+) {
   return queryAssignableExecutives(input);
 }

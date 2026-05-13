@@ -3,8 +3,8 @@ import {
   leadStageLabel,
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
-import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
-import { isLeadStage, isLeadStatus } from "~/workflow/contracts/lead-schema";
+import type { LeadListRowView } from "~/contracts/workflow";
+import { isLeadStage, isLeadStatus } from "~/contracts/workflow";
 
 import type { LeadListFilters } from "../data/types";
 

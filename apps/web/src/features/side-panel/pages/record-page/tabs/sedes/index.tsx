@@ -10,8 +10,8 @@ import {
   createVenueMutation,
 } from "~/features/workflow/data/mutations";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailVenueView } from "~/server/workflow/application/queries/views/lead-detail";
-import type { ProductScope } from "~/workflow/contracts/lead-schema";
+import type { LeadDetailVenueView } from "~/contracts/workflow";
+import type { ProductScope } from "~/contracts/workflow";
 
 import type { TabContentProps } from "../content-props";
 import { AccountsForm } from "./components/accounts-form";

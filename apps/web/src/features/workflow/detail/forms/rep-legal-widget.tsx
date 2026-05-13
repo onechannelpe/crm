@@ -19,7 +19,7 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 import { recordRepLegalMutation } from "../../data/mutations";
 

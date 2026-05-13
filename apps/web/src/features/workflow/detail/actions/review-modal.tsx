@@ -9,7 +9,7 @@ import { toAppError } from "~/lib/app-errors";
 import {
   LEAD_PRIORITIES,
   LEAD_STATUSES,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import { reviewLeadMutation } from "../../data/mutations";
 

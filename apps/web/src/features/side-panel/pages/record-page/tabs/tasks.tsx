@@ -18,7 +18,7 @@ import {
   blockingTaskLabel,
   mapLeadActionsToUi,
 } from "~/features/workflow/detail/actions/workflow-ui";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 import type { TabContentProps } from "./content-props";
 

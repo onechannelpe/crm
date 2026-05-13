@@ -1,7 +1,7 @@
 import type {
   ProductScope,
   VenueDigitalConfig,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import type { VenueFormState } from "./venue-form-state";
 

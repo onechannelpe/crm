@@ -1,7 +1,7 @@
 "use server";
 
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { assertNonEmptyString } from "~/contracts/guards";
 import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/application/commands/begin-totp-enrollment";
 import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/application/commands/finish-totp-enrollment";
 import { getServerRuntime } from "~/server/runtime";

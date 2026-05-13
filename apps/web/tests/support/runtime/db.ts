@@ -11,7 +11,7 @@ import {
   ACCOUNT_TYPE_KINDS,
   MODALIDAD_COBRO_KINDS,
   MONEDAS,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import {
   createTestRepositories,

@@ -1,7 +1,7 @@
 import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 
-import type { LeadSaleProofFileView } from "~/server/workflow/application/contracts/command-results";
+import type { LeadSaleProofFileView } from "~/contracts/workflow";
 import { Button } from "~/components/ui/input/button";
 
 import styles from "./files.module.css";

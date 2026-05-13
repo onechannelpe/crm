@@ -6,7 +6,7 @@ import {
   issueSessionTransition,
   type SessionRequestMetadata,
 } from "~/lib/auth/session/session-transition";
-import { assertPositiveInt } from "~/lib/contracts/guards";
+import { assertPositiveInt } from "~/contracts/guards";
 import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 

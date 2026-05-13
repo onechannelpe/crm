@@ -14,7 +14,7 @@ import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads
 import { leadListQuery } from "~/features/workflow/data/queries";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { requestAndDownload } from "~/lib/files/client";
-import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import type { LeadListRowView } from "~/contracts/workflow";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";

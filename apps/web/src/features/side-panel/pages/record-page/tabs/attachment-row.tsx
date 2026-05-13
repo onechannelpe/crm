@@ -1,6 +1,6 @@
 import { createMemo } from "solid-js";
 
-import type { LeadSaleProofFileView } from "~/actions/workflow/files";
+import type { LeadSaleProofFileView } from "~/contracts/workflow";
 import CalendarDays from "~/components/icons/calendar-days";
 import {
   ActivityListRow,

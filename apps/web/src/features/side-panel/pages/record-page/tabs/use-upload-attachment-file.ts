@@ -1,6 +1,6 @@
 import { createSignal, type Accessor } from "solid-js";
 
-import { uploadLeadSaleProofFile } from "~/actions/workflow/files";
+import { uploadLeadSaleProofFileApi } from "~/features/workflow/api/files";
 
 type UseUploadAttachmentFileParams = {
   leadId: Accessor<string | null>;
@@ -21,7 +21,7 @@ export function useUploadAttachmentFile(params: UseUploadAttachmentFileParams) {
 
     setPendingUploads((current) => current + 1);
     try {
-      await uploadLeadSaleProofFile(id, formData);
+      await uploadLeadSaleProofFileApi(id, formData);
       await params.onUploaded?.();
     } finally {
       setPendingUploads((current) => Math.max(0, current - 1));

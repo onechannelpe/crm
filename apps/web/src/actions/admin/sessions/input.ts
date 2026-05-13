@@ -1,7 +1,7 @@
 import {
   assertNonEmptyString,
   assertPositiveInt,
-} from "~/lib/contracts/guards";
+} from "~/contracts/guards";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

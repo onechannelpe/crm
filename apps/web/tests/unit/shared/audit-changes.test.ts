@@ -4,7 +4,7 @@ import {
   allSessionsRevokedChanges,
   serializeAuditChanges,
   sessionRevokedByAdminChanges,
-} from "~/lib/contracts/audit";
+} from "~/contracts/audit";
 
 describe("audit changes contracts", () => {
   it("serializes undefined changes as null", () => {

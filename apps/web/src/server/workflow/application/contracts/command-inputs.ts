@@ -8,7 +8,7 @@ import type {
   ProductScope,
   SaleVenueAccount,
   VenueDigitalConfig,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import type { ActorContext } from "./actor-context";
 

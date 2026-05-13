@@ -20,7 +20,7 @@ import {
 } from "~/features/workflow/presentation/lead-display";
 import type { Role } from "~/lib/auth/access/rbac";
 import { formatDate } from "~/lib/utils";
-import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import type { LeadListRowView } from "~/contracts/workflow";
 
 import styles from "./styles.module.css";
 

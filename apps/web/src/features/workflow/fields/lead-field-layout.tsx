@@ -16,7 +16,7 @@ import {
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
 import { formatDateTime } from "~/lib/utils";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 export type FieldConfig = {
   key: string;

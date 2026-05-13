@@ -1,7 +1,7 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { assertPositiveInt } from "~/lib/contracts/guards";
+import { assertPositiveInt } from "~/contracts/guards";
 
 export function resolveBoundedPositiveInt(params: {
   value: number | undefined;

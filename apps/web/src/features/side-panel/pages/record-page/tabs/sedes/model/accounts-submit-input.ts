@@ -1,7 +1,7 @@
 import type {
   AbonoBank,
   AccountTypeKind,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import type { AccountsFormState } from "./accounts-form-state";
 

@@ -1,7 +1,7 @@
 import type {
   LeadPriority,
   LeadStatus,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import type { QualifyingLeadSubject } from "./lead-subjects";
 

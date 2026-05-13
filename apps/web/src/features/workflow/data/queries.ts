@@ -1,13 +1,13 @@
 import { query } from "@solidjs/router";
 
 import {
-  queryAssignableExecutives,
-  queryLeadDetail,
-  queryLeadList,
-} from "~/actions/workflow/queries/records";
-import type { AssignableExecutiveView } from "~/server/workflow/application/queries/views/assignable-executive";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
-import type { LeadListView } from "~/server/workflow/application/queries/views/lead-list";
+  queryAssignableExecutivesApi,
+  queryLeadDetailApi,
+  queryLeadListApi,
+} from "~/features/workflow/api/queries";
+import type { AssignableExecutiveView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadListView } from "~/contracts/workflow";
 
 import type { LeadListFilters } from "./types";
 
@@ -28,7 +28,7 @@ function normalizeLeadListFilters(filters: LeadListFilters): LeadListFilters {
 
 export const leadListQuery = query(
   async (filters: LeadListFilters): Promise<LeadListView> => {
-    return queryLeadList(normalizeLeadListFilters(filters));
+    return queryLeadListApi(normalizeLeadListFilters(filters));
   },
   "workflow.leadList",
 );
@@ -38,7 +38,7 @@ export function leadListKeyFor(filters: LeadListFilters): string {
 }
 
 export const leadDetailQuery = query(
-  (leadId: string): Promise<LeadDetailView> => queryLeadDetail(leadId),
+  (leadId: string): Promise<LeadDetailView> => queryLeadDetailApi(leadId),
   "workflow.leadDetail",
 );
 
@@ -47,6 +47,6 @@ export const assignableExecutivesQuery = query(
     leadId: string;
     search?: string;
     limit?: number;
-  }): Promise<AssignableExecutiveView[]> => queryAssignableExecutives(input),
+  }): Promise<AssignableExecutiveView[]> => queryAssignableExecutivesApi(input),
   "workflow.assignableExecutives",
 );

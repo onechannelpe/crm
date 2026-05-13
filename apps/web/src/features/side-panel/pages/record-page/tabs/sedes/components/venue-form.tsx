@@ -18,7 +18,7 @@ import {
 import type {
   ModalidadCobro,
   ProductScope,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import type { VenueFormState } from "../model/venue-form-state";
 

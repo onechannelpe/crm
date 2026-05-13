@@ -23,7 +23,7 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadAvailableAction } from "~/server/workflow/application/contracts/lead-available-action";
+import type { LeadAvailableAction } from "~/contracts/workflow";
 
 import { approveForSaleMutation } from "../../data/mutations";
 import { ReviewLeadModal } from "./review-modal";

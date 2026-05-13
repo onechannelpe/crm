@@ -4,7 +4,7 @@ import { validationError } from "~/lib/app-errors";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import type { LeadSaleProofFileView } from "~/server/workflow/application/contracts/command-results";
+import type { LeadSaleProofFileView } from "~/contracts/workflow";
 
 export async function listLeadSaleProofFiles(
   leadId: string,

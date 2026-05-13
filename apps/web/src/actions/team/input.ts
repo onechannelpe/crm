@@ -2,7 +2,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import {
   assertNonEmptyString,
   assertPositiveInt,
-} from "~/lib/contracts/guards";
+} from "~/contracts/guards";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { TeamId } from "~/server/shared/ids";

@@ -8,8 +8,16 @@ import { createSalesRepo } from "~/server/files/repo/sales";
 import { createTokensRepo } from "~/server/files/repo/tokens";
 import { createFileStorage } from "~/server/files/storage";
 import { createLeadQueries } from "~/server/workflow/infrastructure/lead-queries";
+import type { ArtifactRepos, SyncExecutor } from "~/server/files/service/contracts";
+import type { FileStorage } from "~/server/files/storage";
 
 import type { ServerInfra } from "./infra";
+
+export type WorkflowFilesRuntime = {
+  repo: ArtifactRepos;
+  storage: FileStorage;
+  syncExecutor: SyncExecutor;
+};
 
 export function createFilesRuntime(infra: ServerInfra) {
   const repo = {
@@ -23,9 +31,10 @@ export function createFilesRuntime(infra: ServerInfra) {
   const storage = createFileStorage(config.uploads.storageRoot);
   const syncExecutor = createRecordsExportExecutor(createLeadQueries(infra.db));
 
-  return {
+  const runtime: WorkflowFilesRuntime = {
     repo,
     storage,
     syncExecutor,
   };
+  return runtime;
 }

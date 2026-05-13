@@ -20,12 +20,12 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailQuotationView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailQuotationView } from "~/contracts/workflow";
 import {
   isMoneda,
   MONEDAS,
   type Moneda,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import { createQuotationMutation } from "../../data/mutations";
 

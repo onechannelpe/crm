@@ -1,4 +1,4 @@
-import { assertPositiveInt } from "~/lib/contracts/guards";
+import { assertPositiveInt } from "~/contracts/guards";
 import { getEnvFor } from "~/lib/env";
 import type { AppUow } from "~/server/shared/application/uow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";

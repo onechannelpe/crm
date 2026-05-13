@@ -3,11 +3,11 @@
 import { workflowActorFrom } from "~/actions/workflow/shared";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import type { LeadListFiltersInput } from "~/server/workflow/application/contracts/query-inputs";
-import type { AssignableExecutiveView } from "~/server/workflow/application/queries/views/assignable-executive";
-import type { LeadBootstrapPreviewView } from "~/server/workflow/application/queries/views/lead-bootstrap-preview";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
-import type { LeadListView } from "~/server/workflow/application/queries/views/lead-list";
+import type { LeadListFiltersInput } from "~/contracts/workflow";
+import type { AssignableExecutiveView } from "~/contracts/workflow";
+import type { LeadBootstrapPreviewView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadListView } from "~/contracts/workflow";
 
 export async function queryLeadList(
   filters: LeadListFiltersInput,

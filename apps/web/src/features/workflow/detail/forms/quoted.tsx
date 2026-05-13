@@ -1,7 +1,7 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, createUniqueId, For, Show } from "solid-js";
 
-import { uploadLeadNegotiationFile } from "~/actions/workflow/negotiation-files";
+import { uploadLeadNegotiationFileApi } from "~/features/workflow/api/files";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Paperclip from "~/components/icons/paperclip";
@@ -34,7 +34,7 @@ import { toAppError } from "~/lib/app-errors";
 import type {
   LeadDetailNegotiationRequestView,
   LeadDetailQuotationView,
-} from "~/server/workflow/application/queries/views/lead-detail";
+} from "~/contracts/workflow";
 
 import {
   approveForSaleMutation,
@@ -106,7 +106,7 @@ export function QuotedSection(props: QuotedSectionProps) {
         files.map((file) => {
           const formData = new FormData();
           formData.set("file", file);
-          return uploadLeadNegotiationFile(props.leadId, formData);
+          return uploadLeadNegotiationFileApi(props.leadId, formData);
         }),
       );
 

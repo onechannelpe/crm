@@ -5,7 +5,7 @@ import { randomUUIDv7 } from "bun";
 import { validationError } from "~/lib/app-errors";
 import { isRole } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { assertNonEmptyString } from "~/contracts/guards";
 import type { NotificationAudience } from "~/server/notifications/types";
 import { getServerRuntime } from "~/server/runtime";
 

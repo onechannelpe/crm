@@ -1,4 +1,1 @@
-export type AssignableExecutiveView = {
-  id: number;
-  fullName: string;
-};
+export type { AssignableExecutiveView } from "~/contracts/workflow";

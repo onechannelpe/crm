@@ -11,7 +11,7 @@ import {
   type LeadStatus,
   type Moneda,
   type AbonoBank,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));

@@ -8,7 +8,7 @@ import type {
   AbonoBank,
   AccountTypeKind,
   VenueDigitalConfig,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 export async function requestVenueCreation(input: {
   leadId: string;

@@ -3,7 +3,7 @@ import { isRole, type Role } from "~/lib/auth/access/rbac";
 import {
   assertNonEmptyString,
   assertPositiveInt,
-} from "~/lib/contracts/guards";
+} from "~/contracts/guards";
 import {
   isExecutiveCategoryValue,
   type ExecutiveCategoryValue,

@@ -1,7 +1,7 @@
 import {
   assertNonEmptyString,
   assertPositiveInt,
-} from "~/lib/contracts/guards";
+} from "~/contracts/guards";
 import type { AuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { AuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { LoginFlowsRepo } from "~/server/auth/repos-login-flows";

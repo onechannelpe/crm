@@ -3,7 +3,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   QUALIFYING: "Calificando",

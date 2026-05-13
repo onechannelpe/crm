@@ -13,7 +13,7 @@ import {
   WidgetOptionsButton,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 export function SunatWidget(props: { data?: LeadDetailView }) {
   const activities = () =>

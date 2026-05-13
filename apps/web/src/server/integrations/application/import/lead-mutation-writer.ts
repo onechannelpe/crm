@@ -4,7 +4,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import type { ImportRowInput, LeadMutationResult, LoadedLead } from "./types";
 

@@ -6,8 +6,8 @@ import { requireSession } from "~/lib/auth/access/session";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-import type { ActionSuccess } from "~/lib/contracts/common";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
+import type { ActionSuccess } from "~/contracts/common";
+import { assertNonEmptyString } from "~/contracts/guards";
 import { getServerRuntime } from "~/server/runtime";
 import type { UserId } from "~/server/shared/ids";
 

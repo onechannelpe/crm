@@ -1,7 +1,7 @@
 import {
   serializeAuditChanges,
   sessionRevokedByAdminChanges,
-} from "~/lib/contracts/audit";
+} from "~/contracts/audit";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";

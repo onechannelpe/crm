@@ -4,7 +4,7 @@ import type {
   AbonoBank,
   AccountTypeKind,
   ModalidadCobro,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 export interface WorkflowLeadVenuesTable {
   id: Generated<string>;

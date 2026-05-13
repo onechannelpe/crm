@@ -32,7 +32,7 @@ import {
   type FieldGroup,
 } from "~/features/workflow/fields/lead-field-layout";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;
 

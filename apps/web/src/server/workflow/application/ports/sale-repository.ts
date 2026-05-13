@@ -3,7 +3,7 @@ import type { Result } from "~/server/shared/result";
 import type {
   ModalidadCobro,
   SaleVenueAccount,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 export type LeadVenue = {
   id: string;

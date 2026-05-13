@@ -1,4 +1,4 @@
-import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import type { LeadListRowView } from "~/contracts/workflow";
 
 import type { OptimisticLeadRow } from "./optimistic-leads";
 

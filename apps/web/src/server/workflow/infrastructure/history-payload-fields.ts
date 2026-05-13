@@ -17,8 +17,8 @@ import type {
   LeadStatus,
   ModalidadCobro,
   Moneda,
-} from "~/workflow/contracts/lead-schema";
-import { isModalidadCobro } from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
+import { isModalidadCobro } from "~/contracts/workflow";
 
 import type { HistoryEventRow } from "./history-event-row";
 

@@ -7,7 +7,7 @@ import type {
   ManagedExecutiveView,
   PendingCapacityRequestView,
 } from "~/actions/capacity/contracts";
-import { assertPositiveInt } from "~/lib/contracts/guards";
+import { assertPositiveInt } from "~/contracts/guards";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

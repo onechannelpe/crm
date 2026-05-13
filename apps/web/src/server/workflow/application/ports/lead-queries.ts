@@ -3,7 +3,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 export type LeadListFilters = {
   actorUserId: number;

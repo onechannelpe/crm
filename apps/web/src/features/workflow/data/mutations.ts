@@ -1,10 +1,10 @@
 import { action, json } from "@solidjs/router";
 
-import { requestRateNegotiation } from "~/actions/workflow/commands/negotiation";
+import { requestRateNegotiation } from "~/features/workflow/api/mutations";
 import {
   requestQuotationCreation,
   requestSaleApproval,
-} from "~/actions/workflow/commands/quotations";
+} from "~/features/workflow/api/mutations";
 import {
   requestAddLeadToFavorites,
   requestLeadCreation,
@@ -14,11 +14,11 @@ import {
   requestRecordRepLegal,
   requestRemoveLeadFromFavorites,
   requestSaveCommercialScope,
-} from "~/actions/workflow/commands/records";
+} from "~/features/workflow/api/mutations";
 import {
   requestVenueAccountsAddition,
   requestVenueCreation,
-} from "~/actions/workflow/commands/sales";
+} from "~/features/workflow/api/mutations";
 import type {
   AbonoBank,
   AccountTypeKind,
@@ -26,7 +26,7 @@ import type {
   Moneda,
   ProductScope,
   VenueDigitalConfig,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 

@@ -4,7 +4,7 @@ import type {
   ModalidadCobro,
   ProductScope,
   VenueDigitalConfig,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 type LinkConfig = { url: string };
 type OnlineConfig = { url: string; modalidad: ModalidadCobro };

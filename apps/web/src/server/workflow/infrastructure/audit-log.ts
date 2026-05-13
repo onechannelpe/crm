@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 
-import { serializeAuditChanges } from "~/lib/contracts/audit";
+import { serializeAuditChanges } from "~/contracts/audit";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type {

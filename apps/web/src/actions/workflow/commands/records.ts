@@ -12,7 +12,7 @@ import {
   isAbonoBank,
   type ModalidadCobro,
   type ProductScope,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow";
 
 export async function requestLeadCreation(input: {
   ruc: string;

@@ -1,4 +1,4 @@
-import type { ActionSuccess } from "~/lib/contracts/common";
+import type { ActionSuccess } from "~/contracts/common";
 import type { ContactAssignmentStatus } from "~/server/contact-assignments/domain/assignment";
 import type { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 
