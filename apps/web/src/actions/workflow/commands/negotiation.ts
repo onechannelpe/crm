@@ -1,10 +1,10 @@
 "use server";
 
 import { AppError } from "~/lib/app-errors";
+import { getServerRuntime } from "~/server/runtime";
 import { runActionResult } from "~/server/shared/action-runtime";
 import type { Result } from "~/server/shared/result";
 import type { LeadCommandResult } from "~/server/workflow/application/contracts/command-results";
-import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 
 export async function requestRateNegotiation(input: {
   leadId: string;
@@ -16,7 +16,7 @@ export async function requestRateNegotiation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.requestRateNegotiation({
           actor: {
             userId: ctx.actor.userId,

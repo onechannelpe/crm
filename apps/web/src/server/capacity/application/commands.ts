@@ -15,6 +15,102 @@ import type { CapacityCommandsContext } from "../infrastructure/commands-context
 import { setLeadScopeDefault, setLeadUserOverride } from "./lead-policy";
 import { setSearchScopeDefault, setSearchUserOverride } from "./search-policy";
 
+type CapacityRequestTx = {
+  capacityRequests: {
+    findById(id: number): Promise<
+      | {
+          id: number;
+          user_id: number;
+          kind: "search_extra" | "lead_refill_extra";
+          status: "pending" | "approved" | "rejected" | "canceled";
+          requested_amount: number;
+          reason: string;
+        }
+      | undefined
+    >;
+    markApproved(
+      id: number,
+      reviewerUserId: number,
+      decisionNote: string | null,
+    ): Promise<{ numUpdatedRows?: bigint } | undefined>;
+    markRejected(
+      id: number,
+      reviewerUserId: number,
+      decisionNote: string | null,
+    ): Promise<{ numUpdatedRows?: bigint } | undefined>;
+  };
+};
+
+type CapacityManageTx = {
+  users: {
+    findById(id: number): Promise<
+      | {
+          role: AppContext["actor"]["role"];
+          branchId: number;
+          teamId: number | null;
+        }
+      | undefined
+    >;
+  };
+};
+
+type CapacityGrantTx = {
+  searchCapacityGrants: {
+    insert(values: {
+      user_id: number;
+      amount: number;
+      reason: string;
+      actor_user_id: number;
+    }): Promise<void>;
+    findByUserAndPeriod(
+      userId: number,
+      periodStart: string,
+      periodEnd: string,
+    ): Promise<
+      {
+        id: string;
+        user_id: number;
+        reason: string;
+        created_at: number;
+        amount: number;
+        actor_user_id: number;
+      }[]
+    >;
+  };
+  leadCapacityGrants: {
+    insert(values: {
+      user_id: number;
+      amount: number;
+      reason: string;
+      actor_user_id: number;
+    }): Promise<void>;
+    findByUserAndDate(
+      userId: number,
+      date: string,
+    ): Promise<
+      {
+        id: string;
+        user_id: number;
+        reason: string;
+        created_at: number;
+        amount: number;
+        actor_user_id: number;
+      }[]
+    >;
+  };
+};
+
+type CapacityApprovalDeps = {
+  rateLimitDeps: CapacityCommandsContext["rateLimitDeps"];
+  uow: {
+    run<T>(
+      work: (
+        tx: CapacityRequestTx & CapacityManageTx & CapacityGrantTx,
+      ) => Promise<Result<T, DomainError>>,
+    ): Promise<Result<T, DomainError>>;
+  };
+};
+
 export async function requestCapacity(
   ctx: AppContext,
   deps: CapacityCommandsContext,
@@ -39,7 +135,7 @@ export async function requestCapacity(
 
 export async function approveCapacityRequest(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityApprovalDeps,
   input: { requestId: number; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   await checkActionRateLimit(
@@ -130,7 +226,7 @@ export async function approveCapacityRequest(
 
 export async function rejectCapacityRequest(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityApprovalDeps,
   input: { requestId: number; note: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   await checkActionRateLimit(

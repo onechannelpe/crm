@@ -1,6 +1,6 @@
 "use server";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 import type { LeadCallOutcome } from "~/workflow/contracts/lead-schema";
 
 export async function recordLeadCall(input: {
@@ -13,7 +13,7 @@ export async function recordLeadCall(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.logLeadCall({
           actor: {
             userId: ctx.actor.userId,
@@ -34,7 +34,7 @@ export async function addLeadNote(input: { leadId: string; body: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.addLeadNote({
           actor: {
             userId: ctx.actor.userId,

@@ -2,7 +2,7 @@ import type {
   AssignableExecutivesScope,
   LeadUser,
   LeadUserWithName,
-} from "../../ports/lead-user-scope-repository";
+} from "./lead-user-scope-repository";
 
 export type WorkflowUserRepository = {
   findById(id: number): Promise<LeadUser | undefined>;

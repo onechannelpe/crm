@@ -1,8 +1,7 @@
+import type { InsertResult } from "kysely";
+
 import type { Role } from "~/lib/auth/access/rbac";
-import type {
-  CapacityApprovalPort,
-  CapacityApprovalTxPort,
-} from "~/server/capacity/application/ports";
+import { approveCapacityRequest } from "~/server/capacity/application/commands";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 export const ACTOR_USER_ID = 99;
@@ -60,6 +59,9 @@ export function makeApprovalHarness(input: {
   targetUser?: ManagedUser | undefined;
   failMarkApproved?: boolean;
 }) {
+  type ApprovalDeps = Parameters<typeof approveCapacityRequest>[1];
+  type ApprovalTx = Parameters<Parameters<ApprovalDeps["uow"]["run"]>[0]>[0];
+
   let request = input.request ? { ...input.request } : undefined;
   let searchGrants: GrantRow[] = [];
   let leadGrants: GrantRow[] = [];
@@ -70,11 +72,33 @@ export function makeApprovalHarness(input: {
     const draftSearchGrants = [...searchGrants];
     const draftLeadGrants = [...leadGrants];
 
-    return {
-      tx: {
-        findRequestById: async (id: number) =>
-          draftRequest?.id === id ? draftRequest : undefined,
-        markRequestApproved: async (
+    const tx: ApprovalTx = {
+      users: {
+        findById: async (id: number) =>
+          id === input.request?.userId && input.targetUser
+            ? {
+                id,
+                role: input.targetUser.role,
+                branchId: input.targetUser.branchId,
+                teamId: input.targetUser.teamId,
+              }
+            : undefined,
+      },
+      capacityRequests: {
+        findById: async (id: number) =>
+          draftRequest?.id === id
+            ? {
+                id: draftRequest.id,
+                user_id: draftRequest.userId,
+                kind: draftRequest.kind,
+                status: draftRequest.status,
+                requested_amount: draftRequest.requestedAmount,
+                reason: draftRequest.reason,
+                reviewer_user_id: draftRequest.decidedByUserId ?? null,
+                decision_note: draftRequest.decisionNote ?? null,
+              }
+            : undefined,
+        markApproved: async (
           id: number,
           actorUserId: number,
           note: string | null,
@@ -83,37 +107,62 @@ export function makeApprovalHarness(input: {
             throw new Error("db connection lost");
           }
           if (!draftRequest || draftRequest.id !== id) {
-            return false;
+            return { numUpdatedRows: BigInt(0) };
           }
           draftRequest.status = "approved";
           draftRequest.decidedByUserId = actorUserId;
           draftRequest.decisionNote = note;
-          return true;
+          return { numUpdatedRows: BigInt(1) };
         },
-        markRequestRejected: async (
+        markRejected: async (
           id: number,
           actorUserId: number,
-          note: string,
+          note: string | null,
         ) => {
           if (!draftRequest || draftRequest.id !== id) {
-            return false;
+            return { numUpdatedRows: BigInt(0) };
           }
           draftRequest.status = "rejected";
           draftRequest.decidedByUserId = actorUserId;
           draftRequest.decisionNote = note;
-          return true;
+          return { numUpdatedRows: BigInt(1) };
         },
-        findManagedUserById: async (userId: number) =>
-          userId === input.request?.userId ? input.targetUser : undefined,
-        findManagedTeamById: async (_teamId: number) => undefined,
-        findBranchSupervisors: async (_branchId: number) => [],
-        grantSearchCapacity: async (values: GrantRow) => {
-          draftSearchGrants.push(values);
+      },
+      searchCapacityGrants: {
+        insert: async (values: {
+          user_id: number;
+          amount: number;
+          reason: string;
+          actor_user_id: number;
+        }) => {
+          draftSearchGrants.push({
+            userId: values.user_id,
+            amount: values.amount,
+            reason: values.reason,
+            actorUserId: values.actor_user_id,
+          });
         },
-        grantLeadCapacity: async (values: GrantRow) => {
-          draftLeadGrants.push(values);
+        findByUserAndPeriod: async () => [],
+      },
+      leadCapacityGrants: {
+        insert: async (values: {
+          user_id: number;
+          amount: number;
+          reason: string;
+          actor_user_id: number;
+        }) => {
+          draftLeadGrants.push({
+            userId: values.user_id,
+            amount: values.amount,
+            reason: values.reason,
+            actorUserId: values.actor_user_id,
+          });
         },
-      } satisfies CapacityApprovalTxPort,
+        findByUserAndDate: async () => [],
+      },
+    };
+    return {
+      tx,
       commit() {
         request = draftRequest;
         searchGrants = draftSearchGrants;
@@ -136,16 +185,41 @@ export function makeApprovalHarness(input: {
       return transactionCalls;
     },
     port: {
-      enforceApprovalRateLimit: async () => undefined,
-      async withTransaction<T>(
-        operation: (tx: CapacityApprovalTxPort) => Promise<T>,
-      ): Promise<T> {
-        transactionCalls += 1;
-        const transaction = buildTxPort();
-        const result = await operation(transaction.tx);
-        transaction.commit();
-        return result;
+      rateLimitDeps: {
+        actionRateLimits: {
+          checkAndIncrement: async () => ({
+            request_count: 0,
+            window_started_at: 0,
+          }),
+          deleteUpdatedBefore: async () => 0,
+        },
+        auditLogs: {
+          create: async () =>
+            ({
+              insertId: BigInt(1),
+              numInsertedOrUpdatedRows: BigInt(1),
+            }) satisfies InsertResult,
+          findByUser: async () => [],
+          findByEntity: async () => [],
+          listRecent: async () => [],
+        },
       },
-    } satisfies CapacityApprovalPort,
+      uow: {
+        async run<T>(operation: (tx: ApprovalTx) => Promise<T>): Promise<T> {
+          transactionCalls += 1;
+          const transaction = buildTxPort();
+          const result = await operation(transaction.tx);
+          if (
+            typeof result === "object" &&
+            result !== null &&
+            "ok" in result &&
+            result.ok
+          ) {
+            transaction.commit();
+          }
+          return result;
+        },
+      },
+    },
   };
 }

@@ -6,7 +6,7 @@ import {
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { AssignableExecutivesScope } from "../../ports/lead-user-scope-repository";
+import type { AssignableExecutivesScope } from "../ports/lead-user-scope-repository";
 
 const LEAD_READ_PERMISSIONS: Permission[] = [
   "lead:work",

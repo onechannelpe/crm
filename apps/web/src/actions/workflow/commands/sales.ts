@@ -1,8 +1,8 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 import type {
   AbonoBank,
   AccountTypeKind,
@@ -44,7 +44,7 @@ export async function requestVenueCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.createVenue({
           actor: {
             userId: ctx.actor.userId,
@@ -91,7 +91,7 @@ export async function requestVenueAccountsAddition(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId, venueId: input.venueId },
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.addVenueAccounts({
           actor: {
             userId: ctx.actor.userId,

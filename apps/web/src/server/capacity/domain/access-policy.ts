@@ -22,6 +22,14 @@ interface ScopeRepos<
   };
 }
 
+interface ExecutiveRepos<
+  T extends ManageableCapacityUser = ManageableCapacityUser,
+> {
+  users: {
+    findById(id: number): Promise<T | undefined>;
+  };
+}
+
 function canManageExecutiveRecord(
   actor: AuthSession,
   target: ManageableCapacityUser,
@@ -37,7 +45,7 @@ function canManageExecutiveRecord(
 export async function canManageExecutive<T extends ManageableCapacityUser>(
   actor: AuthSession,
   targetUserId: number,
-  repos: ScopeRepos<T>,
+  repos: ExecutiveRepos<T>,
 ): Promise<{ ok: boolean; target: T | null }> {
   const target = await repos.users.findById(targetUserId);
   if (!target) return { ok: false, target: null };

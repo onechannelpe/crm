@@ -1,4 +1,5 @@
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
+import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -7,7 +8,6 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";

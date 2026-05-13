@@ -1,12 +1,12 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
-import { runWorkflowCommand } from "~/server/runtime/workflow-commands";
 import {
   isAbonoBank,
   type ModalidadCobro,
@@ -28,7 +28,7 @@ export async function requestLeadCreation(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.registerLead({
           actor: {
             userId: ctx.actor.userId,
@@ -66,7 +66,7 @@ export async function requestLeadReview(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.reviewLead({
           actor: {
             userId: ctx.actor.userId,
@@ -114,7 +114,7 @@ export async function requestSaveCommercialScope(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.saveCommercialScope({
           actor: {
             userId: ctx.actor.userId,
@@ -145,7 +145,7 @@ export async function requestQuotation(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.requestQuotation({
           actor: {
             userId: ctx.actor.userId,
@@ -179,7 +179,7 @@ export async function requestRecordRepLegal(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.recordRepLegal({
           actor: {
             userId: ctx.actor.userId,
@@ -201,7 +201,7 @@ export async function requestLeadReassignment(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.reassignLead({
           actor: {
             userId: ctx.actor.userId,
@@ -221,7 +221,7 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.addToFavorites({
           actor: {
             userId: ctx.actor.userId,
@@ -242,7 +242,7 @@ export async function requestRemoveLeadFromFavorites(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.removeFromFavorites({
           actor: {
             userId: ctx.actor.userId,
@@ -261,7 +261,7 @@ export async function requestLeadSunatRefresh(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ useCases }) =>
+      getServerRuntime().workflow.commands.run(({ useCases }) =>
         useCases.requestSunatRefresh({
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,

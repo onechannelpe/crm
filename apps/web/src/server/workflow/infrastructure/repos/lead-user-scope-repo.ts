@@ -1,5 +1,5 @@
+import type { LeadUserScopeRepository } from "../../application/ports/lead-user-scope-repository";
 import type { WorkflowUserRepository } from "../../application/ports/user-repository";
-import type { LeadUserScopeRepository } from "../../ports/lead-user-scope-repository";
 
 export function createLeadUserScopeRepository(
   users: WorkflowUserRepository,
