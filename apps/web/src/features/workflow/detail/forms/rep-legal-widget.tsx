@@ -4,6 +4,7 @@ import { Show, createSignal } from "solid-js";
 import User from "~/components/icons/user";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import type { LeadDetailView } from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldInputValue,
@@ -19,7 +20,6 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailView } from "~/contracts/workflow";
 
 import { recordRepLegalMutation } from "../../data/mutations";
 

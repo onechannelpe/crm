@@ -6,6 +6,13 @@ import Moneybag from "~/components/icons/moneybag";
 import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import type { LeadDetailView } from "~/contracts/workflow";
+import {
+  ABONO_BANKS,
+  type AbonoBank,
+  type ModalidadCobro,
+  type ProductScope,
+} from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldInputValue,
@@ -21,13 +28,6 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailView } from "~/contracts/workflow";
-import {
-  ABONO_BANKS,
-  type AbonoBank,
-  type ModalidadCobro,
-  type ProductScope,
-} from "~/contracts/workflow";
 
 import {
   requestQuotationMutation,

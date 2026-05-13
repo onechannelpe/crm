@@ -1,8 +1,8 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
+import { assertPositiveInt } from "~/contracts/guards";
 import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 import { config } from "~/lib/config";
-import { assertPositiveInt } from "~/contracts/guards";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { domainError } from "~/server/shared/domain-error";
 import type { DomainError } from "~/server/shared/domain-error";

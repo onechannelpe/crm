@@ -1,9 +1,9 @@
 import { createEffect, Match, onCleanup, Show, Switch } from "solid-js";
 import { Portal } from "solid-js/web";
 
-import type { LeadSaleProofFileView } from "~/contracts/workflow";
 import { PresenceTransition } from "~/components/ui/animation/presence-transition";
 import { Button } from "~/components/ui/input/button";
+import type { LeadSaleProofFileView } from "~/contracts/workflow";
 
 import { getFileCategoryFromMime } from "./file-category";
 

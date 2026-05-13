@@ -1,3 +1,13 @@
+import type {
+  AbonoBank,
+  LeadCallOutcome,
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+  ModalidadCobro,
+  Moneda,
+} from "~/contracts/workflow";
+import { isModalidadCobro } from "~/contracts/workflow";
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
@@ -9,16 +19,6 @@ import {
   parseRequiredMoneda,
   parseRequiredAbonoBank,
 } from "~/server/workflow/domain/lead-schema-parser";
-import type {
-  AbonoBank,
-  LeadCallOutcome,
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-  ModalidadCobro,
-  Moneda,
-} from "~/contracts/workflow";
-import { isModalidadCobro } from "~/contracts/workflow";
 
 import type { HistoryEventRow } from "./history-event-row";
 

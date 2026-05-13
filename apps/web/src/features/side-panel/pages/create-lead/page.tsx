@@ -2,8 +2,8 @@ import { useAction } from "@solidjs/router";
 import { createMemo, createResource, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { queryLeadBootstrapPreviewApi } from "~/features/workflow/api/queries";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { queryLeadBootstrapPreviewApi } from "~/features/workflow/api/queries";
 import { createLeadMutation } from "~/features/workflow/data/mutations";
 
 import { PanelList } from "../../components/list";

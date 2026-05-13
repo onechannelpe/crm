@@ -1,5 +1,6 @@
 import { For, Show } from "solid-js";
 
+import type { LeadDetailView } from "~/contracts/workflow";
 import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import {
   RelationList,
@@ -13,7 +14,6 @@ import {
   WidgetOptionsButton,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import type { LeadDetailView } from "~/contracts/workflow";
 
 export function SunatWidget(props: { data?: LeadDetailView }) {
   const activities = () =>

@@ -1,10 +1,9 @@
 import { createSignal, For, Show } from "solid-js";
 
-import { requestLeadSaleProofDownloadTokenApi } from "~/features/workflow/api/files";
-import type { LeadSaleProofFileView } from "~/contracts/workflow";
-import { requestNegotiationFileDownloadTokenApi } from "~/features/workflow/api/files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
+import type { LeadSaleProofFileView } from "~/contracts/workflow";
+import type { LeadDetailNegotiationRequestView } from "~/contracts/workflow";
 import {
   ActivitySection,
   ActivityListCard,
@@ -14,7 +13,8 @@ import {
   ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-import type { LeadDetailNegotiationRequestView } from "~/contracts/workflow";
+import { requestLeadSaleProofDownloadTokenApi } from "~/features/workflow/api/files";
+import { requestNegotiationFileDownloadTokenApi } from "~/features/workflow/api/files";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal } from "./preview-modal";

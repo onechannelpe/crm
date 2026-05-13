@@ -3,6 +3,7 @@ import { For, Show } from "solid-js";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import { BankPicker } from "~/components/ui/pickers/bank-picker";
+import { ACCOUNT_TYPE_KINDS } from "~/contracts/workflow";
 import {
   FieldInputValue,
   FieldLabel,
@@ -16,7 +17,6 @@ import {
   WidgetHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import { ACCOUNT_TYPE_KINDS } from "~/contracts/workflow";
 
 import type { AccountsFormState } from "../model/accounts-form-state";
 

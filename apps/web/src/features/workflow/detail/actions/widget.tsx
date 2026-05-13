@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
+import type { LeadAvailableAction } from "~/contracts/workflow";
 import {
   ActionRowButton,
   ActionRowLink,
@@ -23,7 +24,6 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadAvailableAction } from "~/contracts/workflow";
 
 import { approveForSaleMutation } from "../../data/mutations";
 import { ReviewLeadModal } from "./review-modal";

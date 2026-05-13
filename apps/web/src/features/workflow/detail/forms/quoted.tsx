@@ -1,13 +1,16 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, createUniqueId, For, Show } from "solid-js";
 
-import { uploadLeadNegotiationFileApi } from "~/features/workflow/api/files";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Paperclip from "~/components/icons/paperclip";
 import Target from "~/components/icons/target";
 import Trash from "~/components/icons/trash";
 import { Button } from "~/components/ui/input/button";
+import type {
+  LeadDetailNegotiationRequestView,
+  LeadDetailQuotationView,
+} from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldLabel,
@@ -30,11 +33,8 @@ import {
   formatAmount,
   formatRate,
 } from "~/features/side-panel/pages/record-page/widgets/workflow/format";
+import { uploadLeadNegotiationFileApi } from "~/features/workflow/api/files";
 import { toAppError } from "~/lib/app-errors";
-import type {
-  LeadDetailNegotiationRequestView,
-  LeadDetailQuotationView,
-} from "~/contracts/workflow";
 
 import {
   approveForSaleMutation,

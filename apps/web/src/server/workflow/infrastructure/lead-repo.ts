@@ -1,6 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Insertable, Updateable } from "kysely";
 
+import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
@@ -9,11 +10,6 @@ import type {
   LeadPatch,
   LeadRecord,
 } from "~/server/workflow/domain/lead-record";
-import type {
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-} from "~/contracts/workflow";
 
 export type LeadRow = {
   id: string;

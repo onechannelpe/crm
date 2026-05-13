@@ -1,9 +1,9 @@
-import { config } from "~/lib/config";
 import {
   assertFinitePositive,
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/contracts/guards";
+import { config } from "~/lib/config";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

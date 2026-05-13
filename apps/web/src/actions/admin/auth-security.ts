@@ -2,9 +2,9 @@
 
 import type { Selectable } from "kysely";
 
+import { assertNonEmptyString } from "~/contracts/guards";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
-import { assertNonEmptyString } from "~/contracts/guards";
 import type { Database } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import { getServerRuntime } from "~/server/runtime";

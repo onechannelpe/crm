@@ -5,6 +5,8 @@ import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import type { LeadDetailQuotationView } from "~/contracts/workflow";
+import { isMoneda, MONEDAS, type Moneda } from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldInputValue,
@@ -20,12 +22,6 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailQuotationView } from "~/contracts/workflow";
-import {
-  isMoneda,
-  MONEDAS,
-  type Moneda,
-} from "~/contracts/workflow";
 
 import { createQuotationMutation } from "../../data/mutations";
 

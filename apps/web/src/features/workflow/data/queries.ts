@@ -1,13 +1,13 @@
 import { query } from "@solidjs/router";
 
+import type { AssignableExecutiveView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadListView } from "~/contracts/workflow";
 import {
   queryAssignableExecutivesApi,
   queryLeadDetailApi,
   queryLeadListApi,
 } from "~/features/workflow/api/queries";
-import type { AssignableExecutiveView } from "~/contracts/workflow";
-import type { LeadDetailView } from "~/contracts/workflow";
-import type { LeadListView } from "~/contracts/workflow";
 
 import type { LeadListFilters } from "./types";
 

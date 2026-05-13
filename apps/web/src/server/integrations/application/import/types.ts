@@ -1,9 +1,5 @@
+import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { NotificationIntent } from "~/server/notifications/types";
-import type {
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-} from "~/contracts/workflow";
 
 export type RowResult =
   | { row: number; ok: false; reason: string }

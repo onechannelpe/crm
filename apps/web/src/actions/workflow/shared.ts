@@ -1,5 +1,5 @@
-import type { AppContext } from "~/server/shared/action-runtime";
 import type { ActorContext } from "~/contracts/workflow";
+import type { AppContext } from "~/server/shared/action-runtime";
 
 export function workflowActorFrom(ctx: AppContext): ActorContext {
   return {

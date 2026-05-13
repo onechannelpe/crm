@@ -1,10 +1,10 @@
+import type { LeadListRowView } from "~/contracts/workflow";
+import { isLeadStage, isLeadStatus } from "~/contracts/workflow";
 import type { RecordIndexFilterDefinition } from "~/features/record-index/model/filter";
 import {
   leadStageLabel,
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
-import type { LeadListRowView } from "~/contracts/workflow";
-import { isLeadStage, isLeadStatus } from "~/contracts/workflow";
 
 import type { LeadListFilters } from "../data/types";
 

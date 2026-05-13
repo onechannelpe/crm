@@ -1,5 +1,5 @@
-import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
 import type { LeadListRowView } from "~/contracts/workflow";
+import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
 
 import type { LeadListFilters } from "../data/types";
 

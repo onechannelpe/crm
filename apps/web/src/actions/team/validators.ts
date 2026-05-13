@@ -1,9 +1,6 @@
+import { assertNonEmptyString, assertPositiveInt } from "~/contracts/guards";
 import { validationError } from "~/lib/app-errors";
 import { isRole, type Role } from "~/lib/auth/access/rbac";
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/contracts/guards";
 import {
   isExecutiveCategoryValue,
   type ExecutiveCategoryValue,

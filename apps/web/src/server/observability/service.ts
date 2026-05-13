@@ -1,6 +1,6 @@
+import { serializeAuditChanges } from "~/contracts/audit";
 import type { AppErrorCode } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
-import { serializeAuditChanges } from "~/contracts/audit";
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,

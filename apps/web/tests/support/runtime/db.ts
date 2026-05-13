@@ -3,15 +3,15 @@ import { join } from "node:path";
 
 import { sql, type Kysely } from "kysely";
 
-import { createDb } from "~/lib/db/client";
-import { migrateToLatest } from "~/lib/db/migrate";
-import type { Database } from "~/lib/db/types";
 import {
   ABONO_BANKS,
   ACCOUNT_TYPE_KINDS,
   MODALIDAD_COBRO_KINDS,
   MONEDAS,
 } from "~/contracts/workflow";
+import { createDb } from "~/lib/db/client";
+import { migrateToLatest } from "~/lib/db/migrate";
+import type { Database } from "~/lib/db/types";
 
 import {
   createTestRepositories,

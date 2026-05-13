@@ -11,6 +11,7 @@ import {
   RecordChip,
   RecordLinkChip,
 } from "~/components/ui/record-chip/record-chip";
+import type { LeadListRowView } from "~/contracts/workflow";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   leadNextStepLabel,
@@ -20,7 +21,6 @@ import {
 } from "~/features/workflow/presentation/lead-display";
 import type { Role } from "~/lib/auth/access/rbac";
 import { formatDate } from "~/lib/utils";
-import type { LeadListRowView } from "~/contracts/workflow";
 
 import styles from "./styles.module.css";
 

@@ -9,6 +9,7 @@ import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+import type { LeadDetailView } from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldLabel,
@@ -32,7 +33,6 @@ import {
   type FieldGroup,
 } from "~/features/workflow/fields/lead-field-layout";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
-import type { LeadDetailView } from "~/contracts/workflow";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;
 

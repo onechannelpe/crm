@@ -1,6 +1,8 @@
 import { useAction } from "@solidjs/router";
 import { For, Show, createMemo, createSignal } from "solid-js";
 
+import type { LeadDetailVenueView } from "~/contracts/workflow";
+import type { ProductScope } from "~/contracts/workflow";
 import {
   Widget,
   WidgetBody,
@@ -10,8 +12,6 @@ import {
   createVenueMutation,
 } from "~/features/workflow/data/mutations";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailVenueView } from "~/contracts/workflow";
-import type { ProductScope } from "~/contracts/workflow";
 
 import type { TabContentProps } from "../content-props";
 import { AccountsForm } from "./components/accounts-form";

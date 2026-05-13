@@ -1,5 +1,13 @@
 import { action, json } from "@solidjs/router";
 
+import type {
+  AbonoBank,
+  AccountTypeKind,
+  ModalidadCobro,
+  Moneda,
+  ProductScope,
+  VenueDigitalConfig,
+} from "~/contracts/workflow";
 import { requestRateNegotiation } from "~/features/workflow/api/mutations";
 import {
   requestQuotationCreation,
@@ -19,14 +27,6 @@ import {
   requestVenueAccountsAddition,
   requestVenueCreation,
 } from "~/features/workflow/api/mutations";
-import type {
-  AbonoBank,
-  AccountTypeKind,
-  ModalidadCobro,
-  Moneda,
-  ProductScope,
-  VenueDigitalConfig,
-} from "~/contracts/workflow";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 

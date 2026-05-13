@@ -1,9 +1,6 @@
+import type { ModalidadCobro, SaleVenueAccount } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
-import type {
-  ModalidadCobro,
-  SaleVenueAccount,
-} from "~/contracts/workflow";
 
 export type LeadVenue = {
   id: string;

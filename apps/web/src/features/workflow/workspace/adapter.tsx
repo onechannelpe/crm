@@ -4,6 +4,7 @@ import { createEffect, createMemo, createSignal, on } from "solid-js";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import type { LeadListRowView } from "~/contracts/workflow";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
   RecordIndexAdapter,
@@ -14,7 +15,6 @@ import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads
 import { leadListQuery } from "~/features/workflow/data/queries";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { requestAndDownload } from "~/lib/files/client";
-import type { LeadListRowView } from "~/contracts/workflow";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";

@@ -7,6 +7,7 @@ import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { RecordInlineCell, RelationFieldRow } from "~/components/ui/field-row";
 import { RecordChip } from "~/components/ui/record-chip/record-chip";
+import type { LeadDetailView } from "~/contracts/workflow";
 import { FieldTextValue } from "~/features/side-panel/components/field-table";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import {
@@ -16,7 +17,6 @@ import {
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
 import { formatDateTime } from "~/lib/utils";
-import type { LeadDetailView } from "~/contracts/workflow";
 
 export type FieldConfig = {
   key: string;

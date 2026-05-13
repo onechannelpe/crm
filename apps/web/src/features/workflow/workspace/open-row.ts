@@ -1,6 +1,6 @@
+import type { LeadListRowView } from "~/contracts/workflow";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createLeadRecordDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import type { LeadListRowView } from "~/contracts/workflow";
 
 export function useOpenLeadRecord() {
   const rowOpen = useSidePanelRowOpen<

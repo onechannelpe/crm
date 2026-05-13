@@ -1,10 +1,6 @@
+import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { resolveReviewTransition } from "~/server/workflow/domain/workflow";
-import type {
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-} from "~/contracts/workflow";
 
 import type { ImportRowInput, LeadMutationResult, LoadedLead } from "./types";
 

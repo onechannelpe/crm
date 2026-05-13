@@ -1,11 +1,21 @@
-import { requestLeadSaleProofDownloadToken, listLeadSaleProofFiles, uploadLeadSaleProofFile } from "~/actions/workflow/files";
-import { requestNegotiationFileDownloadToken, uploadLeadNegotiationFile } from "~/actions/workflow/negotiation-files";
+import {
+  requestLeadSaleProofDownloadToken,
+  listLeadSaleProofFiles,
+  uploadLeadSaleProofFile,
+} from "~/actions/workflow/files";
+import {
+  requestNegotiationFileDownloadToken,
+  uploadLeadNegotiationFile,
+} from "~/actions/workflow/negotiation-files";
 
 export async function listLeadSaleProofFilesApi(leadId: string) {
   return listLeadSaleProofFiles(leadId);
 }
 
-export async function uploadLeadSaleProofFileApi(leadId: string, formData: FormData) {
+export async function uploadLeadSaleProofFileApi(
+  leadId: string,
+  formData: FormData,
+) {
   return uploadLeadSaleProofFile(leadId, formData);
 }
 
@@ -16,7 +26,10 @@ export async function requestLeadSaleProofDownloadTokenApi(input: {
   return requestLeadSaleProofDownloadToken(input);
 }
 
-export async function uploadLeadNegotiationFileApi(leadId: string, formData: FormData) {
+export async function uploadLeadNegotiationFileApi(
+  leadId: string,
+  formData: FormData,
+) {
   return uploadLeadNegotiationFile(leadId, formData);
 }
 

@@ -1,9 +1,9 @@
 import { Show, createMemo } from "solid-js";
 
+import type { LeadDetailView } from "~/contracts/workflow";
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
 import { CommercialScopeWidget } from "~/features/workflow/detail/forms/commercial-scope-widget";
 import { RepLegalWidget } from "~/features/workflow/detail/forms/rep-legal-widget";
-import type { LeadDetailView } from "~/contracts/workflow";
 
 import { BootstrapWidget } from "../widgets/bootstrap";
 import { CreateFieldsWidget, DetailFieldsWidget } from "../widgets/fields";

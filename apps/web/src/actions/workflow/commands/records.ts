@@ -1,6 +1,11 @@
 "use server";
 
 import { workflowActorFrom } from "~/actions/workflow/shared";
+import {
+  isAbonoBank,
+  type ModalidadCobro,
+  type ProductScope,
+} from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -8,11 +13,6 @@ import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
-import {
-  isAbonoBank,
-  type ModalidadCobro,
-  type ProductScope,
-} from "~/contracts/workflow";
 
 export async function requestLeadCreation(input: {
   ruc: string;

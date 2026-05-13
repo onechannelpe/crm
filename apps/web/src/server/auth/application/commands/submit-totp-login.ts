@@ -1,3 +1,4 @@
+import { assertPositiveInt } from "~/contracts/guards";
 import { verifyTotpStepUp } from "~/lib/auth/factors/totp-verifier";
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
@@ -6,7 +7,6 @@ import {
   issueSessionTransition,
   type SessionRequestMetadata,
 } from "~/lib/auth/session/session-transition";
-import { assertPositiveInt } from "~/contracts/guards";
 import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 

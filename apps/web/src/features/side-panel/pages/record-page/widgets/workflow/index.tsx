@@ -1,5 +1,6 @@
 import { Show } from "solid-js";
 
+import type { LeadDetailView } from "~/contracts/workflow";
 import {
   RelationList,
   RelationMeta,
@@ -12,7 +13,6 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 import { blockingFieldLabel } from "~/features/workflow/detail/actions/workflow-ui";
-import type { LeadDetailView } from "~/contracts/workflow";
 
 import { formatAmount, formatRate } from "./format";
 

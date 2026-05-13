@@ -1,7 +1,4 @@
-import type {
-  ProductScope,
-  VenueDigitalConfig,
-} from "~/contracts/workflow";
+import type { ProductScope, VenueDigitalConfig } from "~/contracts/workflow";
 
 import type { VenueFormState } from "./venue-form-state";
 
