@@ -1,4 +1,7 @@
-import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import {
+  checkActionRateLimit,
+  type RateLimitDeps,
+} from "~/lib/security/action-rate-limit";
 import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
 import type { AppUow } from "~/server/shared/application/uow";
@@ -12,7 +15,7 @@ import {
   toDbCapacityRequestKind,
 } from "../domain/request-policy";
 import type { CapacityRequestKind, ScopeRef } from "../domain/types";
-import type { CapacityCommandsContext } from "../infrastructure/commands-context";
+import type { CapacityTeam, ManageableCapacityUser } from "./actor-scope";
 import { setLeadScopeDefault, setLeadUserOverride } from "./lead-policy";
 import { setSearchScopeDefault, setSearchUserOverride } from "./search-policy";
 
@@ -41,17 +44,21 @@ type CapacityRequestTx = {
     ): Promise<{ numUpdatedRows?: bigint } | undefined>;
   };
 };
+type CapacityRequestCreateTx = {
+  capacityRequests: {
+    create(values: {
+      user_id: number;
+      kind: "search_extra" | "lead_refill_extra";
+      status: "pending";
+      requested_amount: number;
+      reason: string;
+    }): Promise<unknown>;
+  };
+};
 
 type CapacityManageTx = {
   users: {
-    findById(id: number): Promise<
-      | {
-          role: AppContext["actor"]["role"];
-          branchId: number;
-          teamId: number | null;
-        }
-      | undefined
-    >;
+    findById(id: number): Promise<ManageableCapacityUser | undefined>;
   };
 };
 
@@ -101,14 +108,68 @@ type CapacityGrantTx = {
   };
 };
 
+type CapacityPolicyTx = {
+  teams: {
+    findById(id: number): Promise<CapacityTeam | undefined>;
+  };
+  branchSupervisors: {
+    isSupervisor(branchId: number, userId: number): Promise<boolean>;
+  };
+  searchPolicyDefaults: {
+    upsert(values: {
+      scope_type: "branch" | "team";
+      scope_id: number;
+      period_type: "month";
+      search_limit: number;
+    }): Promise<unknown>;
+  };
+  leadPolicyDefaults: {
+    upsert(values: {
+      scope_type: "branch" | "team";
+      scope_id: number;
+      active_buffer_target: number;
+      daily_refill_limit: number;
+    }): Promise<unknown>;
+  };
+  searchPolicyOverrides: {
+    replaceForUser(values: {
+      user_id: number;
+      search_limit: number;
+      effective_from: number;
+      expires_at: number | null;
+      set_by_user_id: number;
+    }): Promise<unknown>;
+  };
+  leadPolicyOverrides: {
+    replaceForUser(values: {
+      user_id: number;
+      active_buffer_target: number;
+      daily_refill_limit: number;
+      effective_from: number;
+      expires_at: number | null;
+      set_by_user_id: number;
+    }): Promise<unknown>;
+  };
+};
+
 type CapacityApprovalDeps = {
-  rateLimitDeps: CapacityCommandsContext["rateLimitDeps"];
+  rateLimitDeps: RateLimitDeps;
   uow: AppUow<CapacityRequestTx & CapacityManageTx & CapacityGrantTx>;
+};
+type CapacityGrantDeps = {
+  uow: AppUow<CapacityManageTx & CapacityGrantTx>;
+};
+type CapacityPolicyDeps = {
+  uow: AppUow<CapacityManageTx & CapacityPolicyTx>;
+};
+type CapacityRequestDeps = {
+  rateLimitDeps: RateLimitDeps;
+  uow: AppUow<CapacityRequestCreateTx>;
 };
 
 export async function requestCapacity(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityRequestDeps,
   input: { kind: CapacityRequestKind; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   await checkActionRateLimit(
@@ -294,7 +355,7 @@ export async function rejectCapacityRequest(
 
 export async function grantSearchCapacityDirect(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityGrantDeps,
   input: { targetUserId: number; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
@@ -325,7 +386,7 @@ export async function grantSearchCapacityDirect(
 
 export async function grantLeadCapacityDirect(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityGrantDeps,
   input: { targetUserId: number; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
@@ -356,7 +417,7 @@ export async function grantLeadCapacityDirect(
 
 export async function updateSearchPolicyDefault(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityPolicyDeps,
   input: { scope: ScopeRef; monthlyLimit: number },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
@@ -377,7 +438,7 @@ export async function updateSearchPolicyDefault(
 
 export async function updateLeadPolicyDefault(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityPolicyDeps,
   input: { scope: ScopeRef; bufferTarget: number; dailyLimit: number },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
@@ -399,7 +460,7 @@ export async function updateLeadPolicyDefault(
 
 export async function updateSearchPolicyOverride(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityPolicyDeps,
   input: { userId: number; monthlyLimit: number; expiresAt: number | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
@@ -434,7 +495,7 @@ export async function updateSearchPolicyOverride(
 
 export async function updateLeadPolicyOverride(
   ctx: AppContext,
-  deps: CapacityCommandsContext,
+  deps: CapacityPolicyDeps,
   input: {
     userId: number;
     bufferTarget: number;

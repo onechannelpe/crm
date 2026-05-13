@@ -5,13 +5,26 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
+import type { CapacityUser } from "./actor-scope";
 import { canManageExecutive } from "../domain/access-policy";
-import type { CapacityReadContext } from "../infrastructure/read-context";
 import type { ManagedExecutiveView } from "./contracts";
+
+interface ManagedExecutivesDeps {
+  repos: Omit<Parameters<typeof getSearchCapacitySnapshot>[1], "users"> &
+    Omit<Parameters<typeof getLeadCapacitySnapshot>[1], "users"> & {
+      users: {
+        findById(id: number): Promise<CapacityUser | undefined>;
+        findByBranch(branchId: number): Promise<
+          CapacityUser[]
+        >;
+        findAllActive(): Promise<CapacityUser[]>;
+      };
+    };
+}
 
 export async function listManagedExecutives(
   ctx: AppContext,
-  deps: CapacityReadContext,
+  deps: ManagedExecutivesDeps,
 ): Promise<Result<ManagedExecutiveView[], DomainError>> {
   const users =
     ctx.actor.role === "superuser"

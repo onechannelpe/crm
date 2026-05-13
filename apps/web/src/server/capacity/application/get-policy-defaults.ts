@@ -2,12 +2,51 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityReadContext } from "../infrastructure/read-context";
 import type { CapacityPolicyDefaultsView } from "./contracts";
+
+interface PolicyDefaultsDeps {
+  repos: {
+    teams: {
+      findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
+    };
+    searchPolicyDefaults: {
+      findForScope(
+        scopeType: "branch" | "team",
+        scopeId: number,
+      ): Promise<{ search_limit: number } | undefined>;
+      listForScope(
+        scopeType: "branch" | "team",
+        scopeIds: number[],
+      ): Promise<Array<{ scope_id: number; search_limit: number }>>;
+    };
+    leadPolicyDefaults: {
+      findForScope(
+        scopeType: "branch" | "team",
+        scopeId: number,
+      ): Promise<
+        | {
+            active_buffer_target: number;
+            daily_refill_limit: number;
+          }
+        | undefined
+      >;
+      listForScope(
+        scopeType: "branch" | "team",
+        scopeIds: number[],
+      ): Promise<
+        Array<{
+          scope_id: number;
+          active_buffer_target: number;
+          daily_refill_limit: number;
+        }>
+      >;
+    };
+  };
+}
 
 export async function getPolicyDefaults(
   ctx: AppContext,
-  deps: CapacityReadContext,
+  deps: PolicyDefaultsDeps,
 ): Promise<Result<CapacityPolicyDefaultsView, DomainError>> {
   const [teams, branchSearch, branchLead] = await Promise.all([
     deps.repos.teams.findByBranch(ctx.actor.branchId),

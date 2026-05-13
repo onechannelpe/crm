@@ -4,8 +4,35 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityReadContext } from "../infrastructure/read-context";
 import type { CapacityAuditEvent, AuditChangeValue } from "./contracts";
+
+interface AuditReadDeps {
+  repos: {
+    auditLogs: {
+      listRecent(input: {
+        fromInclusive: number;
+        toInclusive: number;
+        limit: number;
+      }): Promise<
+        Array<{
+          id: number;
+          created_at: number;
+          user_id: number;
+          action: string;
+          entity_type: string;
+          entity_id: number | null;
+          changes: unknown;
+        }>
+      >;
+    };
+    users: {
+      findByBranchIncludingInactive(branchId: number): Promise<Array<{ id: number }>>;
+    };
+    teams: {
+      findByBranch(branchId: number): Promise<Array<{ id: number }>>;
+    };
+  };
+}
 
 function isAuditScalar(
   value: unknown,
@@ -47,7 +74,7 @@ function parseAuditChanges(raw: unknown): AuditChangeValue {
 
 export async function getAuditEvents(
   ctx: AppContext,
-  deps: CapacityReadContext,
+  deps: AuditReadDeps,
   input: { limit?: number },
 ): Promise<Result<CapacityAuditEvent[], DomainError>> {
   const effectiveLimit = Math.max(1, input.limit ?? AUDIT_READER_DEFAULT_LIMIT);

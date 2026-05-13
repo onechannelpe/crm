@@ -3,10 +3,6 @@ import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { resolveLeadPolicy, type LeadPolicy } from "../domain/policy";
-import type {
-  LeadPolicyDefaultsRepo,
-  LeadPolicyOverridesRepo,
-} from "../infrastructure/policy-repos";
 import type { ActorScope } from "./actor-scope";
 
 export type SetLeadScopeDefaultCommand =
@@ -35,8 +31,56 @@ interface PolicyRepos {
   users: {
     findById(id: UserId): Promise<ActorScope | undefined>;
   };
-  leadPolicyDefaults: LeadPolicyDefaultsRepo;
-  leadPolicyOverrides: LeadPolicyOverridesRepo;
+  leadPolicyDefaults: {
+    findForScope(
+      scopeType: "branch" | "team",
+      scopeId: number,
+    ): Promise<
+      | {
+          active_buffer_target: number;
+          daily_refill_limit: number;
+        }
+      | undefined
+      | null
+    >;
+  };
+  leadPolicyOverrides: {
+    findActiveForUser(
+      userId: UserId,
+      now: number,
+    ): Promise<
+      | {
+          active_buffer_target: number;
+          daily_refill_limit: number;
+        }
+      | undefined
+      | null
+    >;
+  };
+}
+
+interface LeadPolicyDefaultsWriter {
+  leadPolicyDefaults: {
+    upsert(values: {
+      scope_type: "branch" | "team";
+      scope_id: number;
+      active_buffer_target: number;
+      daily_refill_limit: number;
+    }): Promise<unknown>;
+  };
+}
+
+interface LeadPolicyOverridesWriter {
+  leadPolicyOverrides: {
+    replaceForUser(values: {
+      user_id: UserId;
+      active_buffer_target: number;
+      daily_refill_limit: number;
+      effective_from: number;
+      expires_at: number | null;
+      set_by_user_id: UserId;
+    }): Promise<unknown>;
+  };
 }
 
 export async function getEffectiveLeadPolicy(
@@ -66,7 +110,7 @@ export async function getEffectiveLeadPolicy(
 
 export async function setLeadScopeDefault(
   command: SetLeadScopeDefaultCommand,
-  repos: Pick<PolicyRepos, "leadPolicyDefaults">,
+  repos: LeadPolicyDefaultsWriter,
 ): Promise<Result<void, DomainError>> {
   await repos.leadPolicyDefaults.upsert({
     scope_type: command.scopeType,
@@ -79,7 +123,7 @@ export async function setLeadScopeDefault(
 
 export async function setLeadUserOverride(
   command: SetLeadUserOverrideCommand,
-  repos: Pick<PolicyRepos, "leadPolicyOverrides">,
+  repos: LeadPolicyOverridesWriter,
 ): Promise<Result<void, DomainError>> {
   await repos.leadPolicyOverrides.replaceForUser({
     user_id: command.targetUserId,

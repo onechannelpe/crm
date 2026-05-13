@@ -5,14 +5,38 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
+import type { CapacityUser } from "./actor-scope";
 import { canManageExecutive } from "../domain/access-policy";
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
-import type { CapacityReadContext } from "../infrastructure/read-context";
 import type { ExecutiveCapacityDetailView } from "./contracts";
+
+interface ExecutiveDetailDeps {
+  repos: {
+    users: { findById(id: number): Promise<CapacityUser | undefined> };
+    capacityRequests: {
+      listByUser(userId: number): Promise<
+        Array<{
+          id: number;
+          user_id: number;
+          kind: "search_extra" | "lead_refill_extra";
+          status: "pending" | "approved" | "rejected" | "canceled";
+          requested_amount: number;
+          reason: string;
+          decision_note: string | null;
+          reviewer_user_id: number | null;
+          created_at: number;
+          updated_at: number;
+          decided_at: number | null;
+        }>
+      >;
+    };
+  } & Omit<Parameters<typeof getSearchCapacitySnapshot>[1], "users"> &
+    Omit<Parameters<typeof getLeadCapacitySnapshot>[1], "users">;
+}
 
 export async function getExecutiveDetail(
   ctx: AppContext,
-  deps: CapacityReadContext,
+  deps: ExecutiveDetailDeps,
   input: { userId: number },
 ): Promise<Result<ExecutiveCapacityDetailView, DomainError>> {
   const managed = await canManageExecutive(ctx.actor, input.userId, deps.repos);
