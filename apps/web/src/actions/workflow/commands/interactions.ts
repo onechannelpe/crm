@@ -13,18 +13,16 @@ export async function recordLeadCall(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.logLeadCall({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-          outcome: input.outcome,
-          notes: input.notes ?? null,
-        }),
-      ),
+      getServerRuntime().workflow.useCases.logLeadCall({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+        outcome: input.outcome,
+        notes: input.notes ?? null,
+      }),
   });
 }
 
@@ -34,16 +32,14 @@ export async function addLeadNote(input: { leadId: string; body: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.addLeadNote({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-          body: input.body,
-        }),
-      ),
+      getServerRuntime().workflow.useCases.addLeadNote({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+        body: input.body,
+      }),
   });
 }

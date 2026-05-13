@@ -28,8 +28,7 @@ export async function requestLeadCreation(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.registerLead({
+      getServerRuntime().workflow.useCases.registerLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -38,7 +37,6 @@ export async function requestLeadCreation(input: {
           ruc: normalizedRuc,
           executiveId: input.executiveId ?? ctx.actor.userId,
         }),
-      ),
   });
 }
 
@@ -66,8 +64,7 @@ export async function requestLeadReview(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.reviewLead({
+      getServerRuntime().workflow.useCases.reviewLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -78,7 +75,6 @@ export async function requestLeadReview(input: {
           prioridad: reviewedPrioridad.value,
           reason: input.reason,
         }),
-      ),
   });
 }
 
@@ -114,8 +110,7 @@ export async function requestSaveCommercialScope(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.saveCommercialScope({
+      getServerRuntime().workflow.useCases.saveCommercialScope({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -135,7 +130,6 @@ export async function requestSaveCommercialScope(input: {
           onlineUrl: input.onlineUrl,
           onlineModalidad: input.onlineModalidad,
         }),
-      ),
   });
 }
 
@@ -145,8 +139,7 @@ export async function requestQuotation(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.requestQuotation({
+      getServerRuntime().workflow.useCases.requestQuotation({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -154,7 +147,6 @@ export async function requestQuotation(input: { leadId: string }) {
           },
           leadId: input.leadId,
         }),
-      ),
   });
 }
 
@@ -179,8 +171,7 @@ export async function requestRecordRepLegal(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.recordRepLegal({
+      getServerRuntime().workflow.useCases.recordRepLegal({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -188,7 +179,6 @@ export async function requestRecordRepLegal(input: {
           },
           ...input,
         }),
-      ),
   });
 }
 
@@ -201,8 +191,7 @@ export async function requestLeadReassignment(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.reassignLead({
+      getServerRuntime().workflow.useCases.reassignLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -211,7 +200,6 @@ export async function requestLeadReassignment(input: {
           leadId: input.leadId,
           toExecutiveId: input.newExecutiveId,
         }),
-      ),
   });
 }
 
@@ -221,8 +209,7 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.addToFavorites({
+      getServerRuntime().workflow.useCases.addToFavorites({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -230,7 +217,6 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
           },
           leadId: input.leadId,
         }),
-      ),
   });
 }
 
@@ -242,8 +228,7 @@ export async function requestRemoveLeadFromFavorites(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.removeFromFavorites({
+      getServerRuntime().workflow.useCases.removeFromFavorites({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -251,7 +236,6 @@ export async function requestRemoveLeadFromFavorites(input: {
           },
           leadId: input.leadId,
         }),
-      ),
   });
 }
 
@@ -261,12 +245,10 @@ export async function requestLeadSunatRefresh(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.requestSunatRefresh({
+      getServerRuntime().workflow.useCases.requestSunatRefresh({
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           leadId: input.leadId,
         }),
-      ),
   });
 }

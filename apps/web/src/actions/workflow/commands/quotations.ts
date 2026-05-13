@@ -18,16 +18,14 @@ export async function requestQuotationCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.createQuotation({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          ...input,
-        }),
-      ),
+      getServerRuntime().workflow.useCases.createQuotation({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -37,15 +35,13 @@ export async function requestSaleApproval(leadId: string) {
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.approveForSale({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId,
-        }),
-      ),
+      getServerRuntime().workflow.useCases.approveForSale({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId,
+      }),
   });
 }

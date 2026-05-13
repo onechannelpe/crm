@@ -16,8 +16,7 @@ export async function requestRateNegotiation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.run(({ useCases }) =>
-        useCases.requestRateNegotiation({
+      getServerRuntime().workflow.useCases.requestRateNegotiation({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -25,6 +24,5 @@ export async function requestRateNegotiation(input: {
           },
           ...input,
         }),
-      ),
   });
 }

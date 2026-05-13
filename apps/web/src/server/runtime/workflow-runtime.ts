@@ -3,9 +3,6 @@ import type { Transaction } from "kysely";
 import type { Database } from "~/lib/db/types";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
-import { runResultTransaction } from "~/server/shared/application/uow";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { createWorkflowQueryApi } from "~/server/workflow/application/query-api";
@@ -27,14 +24,10 @@ import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sun
 
 import type { ServerInfra } from "./infra";
 
-export type WorkflowCommandRuntime = {
-  useCases: WorkflowUseCases;
-};
-
-function createWorkflowCommandRuntime(
+function createWorkflowUseCasesRuntime(
   executor: Transaction<Database>,
   engineGateway: WorkflowEngineGateway,
-): WorkflowCommandRuntime {
+): WorkflowUseCases {
   const repos = createWorkflowRepos(executor);
   const auditService = createWorkflowAuditService({
     auditLogs: createWorkflowAuditLogRepo(
@@ -75,7 +68,7 @@ function createWorkflowCommandRuntime(
     sourcingPolicies: repos.sourcingPolicies,
   });
 
-  return { useCases };
+  return useCases;
 }
 
 export function createWorkflowRuntime(
@@ -107,19 +100,7 @@ export function createWorkflowRuntime(
   return {
     repos,
     engineGateway,
-    commands: {
-      run<TResult>(
-        operation: (
-          runtime: WorkflowCommandRuntime,
-        ) => Promise<Result<TResult, DomainError>>,
-      ): Promise<Result<TResult, DomainError>> {
-        return runResultTransaction<Transaction<Database>, TResult>(
-          (work) => infra.db.transaction().execute((trx) => work(trx)),
-          (executor) =>
-            operation(createWorkflowCommandRuntime(executor, engineGateway)),
-        );
-      },
-    },
+    useCases: createWorkflowUseCasesRuntime(infra.db, engineGateway),
     queryApi,
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {
