@@ -56,13 +56,9 @@ export function createLeadMutationUow(
     ) => Promise<void>;
   },
 ): LeadMutationUow {
-  return {
-    derivePatch(input) {
-      return deriveLeadPatchFromIntent(input);
-    },
-
-    async commit(input): Promise<Result<LeadMutationOutcome, DomainError>> {
-      const deps = createMutationDeps(executor);
+  async function commitMutation(input: Parameters<LeadMutationUow["commit"]>[0]) {
+    return executor.transaction().execute(async (txDb) => {
+      const deps = createMutationDeps(txDb);
 
       if (input.assignment) {
         await deps.leadAssignments.replaceActiveAssignment({
@@ -73,7 +69,7 @@ export function createLeadMutationUow(
         });
       }
 
-      const result = await executeLeadMutation({
+      return executeLeadMutation({
         deps: {
           leadWriter: deps.leadWriter,
           checkedLeadWriter: deps.checkedLeadWriter,
@@ -85,6 +81,37 @@ export function createLeadMutationUow(
         now: input.now,
         intent: input.intent,
       });
+    });
+  }
+
+  async function commitCheckedMutation(
+    input: Parameters<LeadMutationUow["commitChecked"]>[0],
+  ) {
+    return executor.transaction().execute(async (txDb) => {
+      const deps = createMutationDeps(txDb);
+      return executeCheckedLeadMutation({
+        deps: {
+          leadWriter: deps.leadWriter,
+          checkedLeadWriter: deps.checkedLeadWriter,
+          eventRepository: deps.eventRepository,
+          auditRepository: deps.auditRepository,
+        },
+        lead: input.lead,
+        actorUserId: input.actorUserId,
+        now: input.now,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+        intent: input.intent,
+      });
+    });
+  }
+
+  return {
+    derivePatch(input) {
+      return deriveLeadPatchFromIntent(input);
+    },
+
+    async commit(input): Promise<Result<LeadMutationOutcome, DomainError>> {
+      const result = await commitMutation(input);
       if (!result.ok) return result;
 
       if (options?.publishNotifications) {
@@ -104,20 +131,7 @@ export function createLeadMutationUow(
     async commitChecked(
       input,
     ): Promise<Result<CheckedLeadMutationOutcome, DomainError>> {
-      const deps = createMutationDeps(executor);
-      const result = await executeCheckedLeadMutation({
-        deps: {
-          leadWriter: deps.leadWriter,
-          checkedLeadWriter: deps.checkedLeadWriter,
-          eventRepository: deps.eventRepository,
-          auditRepository: deps.auditRepository,
-        },
-        lead: input.lead,
-        actorUserId: input.actorUserId,
-        now: input.now,
-        expectedUpdatedAt: input.expectedUpdatedAt,
-        intent: input.intent,
-      });
+      const result = await commitCheckedMutation(input);
       if (!result.ok || !result.value.applied) return result;
 
       if (result.value.events && result.value.historyIds) {
