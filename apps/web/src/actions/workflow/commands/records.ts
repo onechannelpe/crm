@@ -29,8 +29,8 @@ export async function requestLeadCreation(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.registerLead({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.registerLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -67,8 +67,8 @@ export async function requestLeadReview(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.reviewLead({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.reviewLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -115,8 +115,8 @@ export async function requestSaveCommercialScope(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.saveCommercialScope({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.saveCommercialScope({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -146,8 +146,8 @@ export async function requestQuotation(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.requestQuotation({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.requestQuotation({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -180,8 +180,8 @@ export async function requestRecordRepLegal(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.recordRepLegal({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.recordRepLegal({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -202,8 +202,8 @@ export async function requestLeadReassignment(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.reassignLead({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.reassignLead({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -222,8 +222,8 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.addToFavorites({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.addToFavorites({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -243,8 +243,8 @@ export async function requestRemoveLeadFromFavorites(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.removeFromFavorites({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.removeFromFavorites({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

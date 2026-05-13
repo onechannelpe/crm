@@ -7,9 +7,9 @@ import { getServerRuntime } from "~/server/runtime";
 
 import { runInWorkflowTransaction } from "../../shared/workflow-transaction";
 import {
-  createWorkflowCommandApi,
-  type WorkflowCommandApi,
-} from "../application/command-api";
+  createWorkflowUseCases,
+  type WorkflowUseCases,
+} from "../application/use-cases";
 import type { WorkflowAuditService } from "../application/ports/audit-service";
 import type { WorkflowEngineGateway } from "../application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "../application/ports/enrichment-queue";
@@ -28,7 +28,7 @@ export type WorkflowCommandRuntime = {
   repos: WorkflowRepos;
   auditService: WorkflowAuditService;
   leadEnrichmentQueue: LeadEnrichmentQueue;
-  commandApi: WorkflowCommandApi;
+  useCases: WorkflowUseCases;
 };
 
 function createWorkflowCommandRuntime(
@@ -50,7 +50,7 @@ function createWorkflowCommandRuntime(
     },
   };
 
-  const commandApi = createWorkflowCommandApi({
+  const useCases = createWorkflowUseCases({
     leadReader: createLeadReadRepository(repos.leads),
     leadFavorites: repos.leadFavorites,
     mutationUow: createLeadMutationUow(executor),
@@ -73,7 +73,7 @@ function createWorkflowCommandRuntime(
     negotiationRequests: repos.leadNegotiationRequests,
   });
 
-  return { repos, auditService, leadEnrichmentQueue, commandApi };
+  return { repos, auditService, leadEnrichmentQueue, useCases };
 }
 
 export async function runWorkflowCommand<TResult>(

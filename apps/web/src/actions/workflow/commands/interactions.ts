@@ -13,8 +13,8 @@ export async function recordLeadCall(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.logLeadCall({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.logLeadCall({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -34,8 +34,8 @@ export async function addLeadNote(input: { leadId: string; body: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.addLeadNote({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.addLeadNote({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

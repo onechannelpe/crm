@@ -44,8 +44,8 @@ export async function requestVenueCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.createVenue({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.createVenue({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -91,8 +91,8 @@ export async function requestVenueAccountsAddition(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId, venueId: input.venueId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.addVenueAccounts({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.addVenueAccounts({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

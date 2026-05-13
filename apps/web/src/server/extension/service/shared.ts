@@ -15,7 +15,7 @@ export type ExtensionRepos = {
 
 export interface ExtensionServiceDeps {
   now?: () => number;
-  runInTransaction?: <T>(
+  runInTransaction: <T>(
     operation: (transactionRepos: ExtensionRepos) => Promise<T>,
   ) => Promise<T>;
 }

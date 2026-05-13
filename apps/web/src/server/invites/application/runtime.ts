@@ -3,7 +3,6 @@ import { hashPassword } from "~/lib/auth/password/password";
 
 import type {
   InviteAcceptedResult,
-  InviteDeps,
   InviteRuntime,
   InviteServiceDeps,
 } from "./types";
@@ -11,17 +10,13 @@ import type {
 const DEFAULT_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function createInviteRuntime(
-  repos: InviteDeps,
   deps: InviteServiceDeps,
 ): InviteRuntime {
   return {
     now: deps.now ?? Date.now,
     inviteTtlMs: deps.inviteTtlMs ?? DEFAULT_INVITE_TTL_MS,
     hashPassword: deps.hashPassword ?? hashPassword,
-    runInTransaction:
-      deps.runInTransaction ??
-      (async <T>(operation: (transactionRepos: InviteDeps) => Promise<T>) =>
-        operation(repos)),
+    runInTransaction: deps.runInTransaction,
   };
 }
 

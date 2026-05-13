@@ -16,8 +16,8 @@ export async function requestRateNegotiation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.requestRateNegotiation({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.requestRateNegotiation({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

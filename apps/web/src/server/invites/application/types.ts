@@ -147,7 +147,7 @@ export interface InviteDeps {
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
   now?: () => number;
-  runInTransaction?: <T>(
+  runInTransaction: <T>(
     operation: (repos: InviteDeps) => Promise<T>,
   ) => Promise<T>;
   hashPassword?: (password: string) => Promise<string>;

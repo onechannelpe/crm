@@ -18,8 +18,8 @@ export async function requestQuotationCreation(input: {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.createQuotation({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.createQuotation({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,
@@ -37,8 +37,8 @@ export async function requestSaleApproval(leadId: string) {
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.approveForSale({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.approveForSale({
           actor: {
             userId: ctx.actor.userId,
             role: ctx.actor.role,

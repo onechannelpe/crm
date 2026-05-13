@@ -21,7 +21,7 @@ export { hasActiveAuthSession } from "./service/shared";
 
 export function createExtensionService(
   repos: ExtensionRepos,
-  deps: ExtensionServiceDeps = {},
+  deps: ExtensionServiceDeps,
 ) {
   const now = deps.now ?? (() => Date.now());
   const runInTransaction = deps.runInTransaction;

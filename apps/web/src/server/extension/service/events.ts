@@ -27,7 +27,7 @@ import {
 interface EventsMethodContext {
   repos: ExtensionRepos;
   now: () => number;
-  runInTransaction?: <T>(
+  runInTransaction: <T>(
     operation: (transactionRepos: ExtensionRepos) => Promise<T>,
   ) => Promise<T>;
 }
@@ -39,7 +39,7 @@ export async function ingestRuntimeEvent(
     event: ExtensionRuntimeEventEnvelope;
   },
 ): Promise<Result<void, ExtensionServiceError>> {
-  const { repos, now, runInTransaction } = context;
+  const { now, runInTransaction } = context;
 
   try {
     const sessionClaims = await verifyExtensionToken(
@@ -71,12 +71,7 @@ export async function ingestRuntimeEvent(
         ? input.event.payload.sessionId
         : null;
 
-    const run =
-      runInTransaction ??
-      (async <T>(operation: (transactionRepos: ExtensionRepos) => Promise<T>) =>
-        operation(repos));
-
-    return await run(async (txRepos) => {
+    return await runInTransaction(async (txRepos) => {
       const subjectUserId = parseSubjectUserId(sessionClaims.sub);
       const session =
         await txRepos.extensionRuntime.findValidInstallationSession(

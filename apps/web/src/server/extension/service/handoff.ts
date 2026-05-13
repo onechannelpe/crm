@@ -35,7 +35,7 @@ const EXTENSION_HANDOFF_TTL_MS = 120_000;
 interface HandoffMethodContext {
   repos: ExtensionRepos;
   now: () => number;
-  runInTransaction?: <T>(
+  runInTransaction: <T>(
     operation: (transactionRepos: ExtensionRepos) => Promise<T>,
   ) => Promise<T>;
 }
@@ -164,12 +164,6 @@ export async function claimInstallationSession(
       return Err({
         reason: "installation_invalid",
         message: "Extension installation ID must be a UUID",
-      });
-    }
-    if (!runInTransaction) {
-      return Err({
-        reason: "unexpected",
-        message: "Extension transaction runner is not configured",
       });
     }
 

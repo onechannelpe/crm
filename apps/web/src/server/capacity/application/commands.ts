@@ -19,16 +19,6 @@ import { setLeadScopeDefault, setLeadUserOverride } from "./lead-policy";
 import type { CapacityApprovalPort, CapacityApprovalTxPort } from "./ports";
 import { setSearchScopeDefault, setSearchUserOverride } from "./search-policy";
 
-class RollbackError extends Error {
-  constructor(readonly domainErr: DomainError) {
-    super(domainErr.message);
-  }
-}
-
-function rollback(err: DomainError): never {
-  throw new RollbackError(err);
-}
-
 function toManagedScopeRepos(tx: CapacityApprovalTxPort) {
   return {
     users: {
@@ -78,84 +68,77 @@ export async function approveCapacityRequest(
   input: { requestId: number; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   await port.enforceApprovalRateLimit(ctx.actor.userId);
-  try {
-    const result = await port.withTransaction(async (tx) => {
-      const request = await tx.findRequestById(input.requestId);
-      if (!request) {
-        rollback(
-          domainError("not_found", "request_not_found", "Request not found"),
-        );
-      }
-      if (request.status !== "pending") {
-        rollback(
-          domainError(
-            "conflict",
-            "request_not_pending",
-            "Request is no longer pending",
-          ),
-        );
-      }
-
-      const managed = await canManageExecutive(
-        ctx.actor,
-        request.userId,
-        toManagedScopeRepos(tx),
+  return port.withTransaction(async (tx) => {
+    const request = await tx.findRequestById(input.requestId);
+    if (!request) {
+      return Err(
+        domainError("not_found", "request_not_found", "Request not found"),
       );
-      if (!managed.target) {
-        rollback(
-          domainError(
-            "not_found",
-            "request_target_not_found",
-            "Request target not found",
-          ),
-        );
-      }
-      if (!managed.ok) {
-        rollback(
-          domainError("forbidden", "forbidden", "Cannot approve this request"),
-        );
-      }
-
-      const note = normalizeDecisionNote(input.note);
-      const approved = await tx.markRequestApproved(
-        request.id,
-        ctx.actor.userId,
-        note,
+    }
+    if (request.status !== "pending") {
+      return Err(
+        domainError(
+          "conflict",
+          "request_not_pending",
+          "Request is no longer pending",
+        ),
       );
-      if (!approved) {
-        rollback(
-          domainError(
-            "conflict",
-            "request_not_pending",
-            "Request is no longer pending",
-          ),
-        );
-      }
+    }
 
-      if (request.kind === "search_extra") {
-        await tx.grantSearchCapacity({
-          actorUserId: ctx.actor.userId,
-          userId: request.userId,
-          amount: request.requestedAmount,
-          reason: note ?? request.reason,
-        });
-      } else {
-        await tx.grantLeadCapacity({
-          actorUserId: ctx.actor.userId,
-          userId: request.userId,
-          amount: request.requestedAmount,
-          reason: note ?? request.reason,
-        });
-      }
+    const managed = await canManageExecutive(
+      ctx.actor,
+      request.userId,
+      toManagedScopeRepos(tx),
+    );
+    if (!managed.target) {
+      return Err(
+        domainError(
+          "not_found",
+          "request_target_not_found",
+          "Request target not found",
+        ),
+      );
+    }
+    if (!managed.ok) {
+      return Err(
+        domainError("forbidden", "forbidden", "Cannot approve this request"),
+      );
+    }
 
-      return { success: true as const };
-    });
+    const note = normalizeDecisionNote(input.note);
+    const approved = await tx.markRequestApproved(
+      request.id,
+      ctx.actor.userId,
+      note,
+    );
+    if (!approved) {
+      return Err(
+        domainError(
+          "conflict",
+          "request_not_pending",
+          "Request is no longer pending",
+        ),
+      );
+    }
 
-    return Ok(result);
-  } catch (error) {
-    if (error instanceof RollbackError) return Err(error.domainErr);
-    throw error;
-  }
+    if (request.kind === "search_extra") {
+      await tx.grantSearchCapacity({
+        actorUserId: ctx.actor.userId,
+        userId: request.userId,
+        amount: request.requestedAmount,
+        reason: note ?? request.reason,
+      });
+    } else {
+      await tx.grantLeadCapacity({
+        actorUserId: ctx.actor.userId,
+        userId: request.userId,
+        amount: request.requestedAmount,
+        reason: note ?? request.reason,
+      });
+    }
+
+    return Ok({ success: true as const });
+  });
 }
 
 export async function rejectCapacityRequest(
@@ -175,67 +158,60 @@ export async function rejectCapacityRequest(
     );
   }
 
-  try {
-    const result = await port.withTransaction(async (tx) => {
-      const request = await tx.findRequestById(input.requestId);
-      if (!request) {
-        rollback(
-          domainError("not_found", "request_not_found", "Request not found"),
-        );
-      }
-      if (request.status !== "pending") {
-        rollback(
-          domainError(
-            "conflict",
-            "request_not_pending",
-            "Request is no longer pending",
-          ),
-        );
-      }
-
-      const managed = await canManageExecutive(
-        ctx.actor,
-        request.userId,
-        toManagedScopeRepos(tx),
+  return port.withTransaction(async (tx) => {
+    const request = await tx.findRequestById(input.requestId);
+    if (!request) {
+      return Err(
+        domainError("not_found", "request_not_found", "Request not found"),
       );
-      if (!managed.target) {
-        rollback(
-          domainError(
-            "not_found",
-            "request_target_not_found",
-            "Request target not found",
-          ),
-        );
-      }
-      if (!managed.ok) {
-        rollback(
-          domainError("forbidden", "forbidden", "Cannot reject this request"),
-        );
-      }
-
-      const rejected = await tx.markRequestRejected(
-        request.id,
-        ctx.actor.userId,
-        note,
+    }
+    if (request.status !== "pending") {
+      return Err(
+        domainError(
+          "conflict",
+          "request_not_pending",
+          "Request is no longer pending",
+        ),
       );
-      if (!rejected) {
-        rollback(
-          domainError(
-            "conflict",
-            "request_not_pending",
-            "Request is no longer pending",
-          ),
-        );
-      }
+    }
 
-      return { success: true as const };
-    });
+    const managed = await canManageExecutive(
+      ctx.actor,
+      request.userId,
+      toManagedScopeRepos(tx),
+    );
+    if (!managed.target) {
+      return Err(
+        domainError(
+          "not_found",
+          "request_target_not_found",
+          "Request target not found",
+        ),
+      );
+    }
+    if (!managed.ok) {
+      return Err(
+        domainError("forbidden", "forbidden", "Cannot reject this request"),
+      );
+    }
 
-    return Ok(result);
-  } catch (error) {
-    if (error instanceof RollbackError) return Err(error.domainErr);
-    throw error;
-  }
+    const rejected = await tx.markRequestRejected(
+      request.id,
+      ctx.actor.userId,
+      note,
+    );
+    if (!rejected) {
+      return Err(
+        domainError(
+          "conflict",
+          "request_not_pending",
+          "Request is no longer pending",
+        ),
+      );
+    }
+
+    return Ok({ success: true as const });
+  });
 }
 
 export async function grantSearchCapacityDirect(
