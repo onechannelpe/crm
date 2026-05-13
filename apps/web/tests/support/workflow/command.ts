@@ -42,7 +42,7 @@ import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
-import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
+import { createLeadMutationUow } from "~/server/workflow/infrastructure/lead-mutation-uow";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
 import type { TestRuntime } from "../runtime/app";

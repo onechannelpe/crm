@@ -13,10 +13,6 @@ import { isAbonoBank } from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import {
-  parseRequiredLeadPriority,
-  parseRequiredLeadStatus,
-} from "~/server/workflow/domain/lead-schema-parser";
 
 export async function requestLeadCreation(input: CreateLeadInput) {
   const normalizedRuc = input.ruc.trim();
@@ -43,15 +39,6 @@ export async function requestLeadReview(input: ReviewLeadInput) {
     throw validationError("reason is required");
   }
 
-  const reviewedStatus = parseRequiredLeadStatus(input.status);
-  if (!reviewedStatus.ok) {
-    throw validationError("invalid status");
-  }
-  const reviewedPrioridad = parseRequiredLeadPriority(input.prioridad);
-  if (!reviewedPrioridad.ok) {
-    throw validationError("invalid prioridad");
-  }
-
   return runAction({
     actionName: "workflow.review_lead",
     access: { kind: "auth" },
@@ -60,8 +47,8 @@ export async function requestLeadReview(input: ReviewLeadInput) {
       getServerRuntime().workflow.commands.reviewLead({
         actor: workflowActorFrom(ctx),
         leadId: input.leadId,
-        status: reviewedStatus.value,
-        prioridad: reviewedPrioridad.value,
+        status: input.status,
+        prioridad: input.prioridad,
         reason: input.reason,
       }),
   });

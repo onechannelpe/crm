@@ -1,17 +1,19 @@
 import type {
-  SaleVenueAccount,
-  VenueDigitalConfig,
-} from "~/contracts/workflow";
-import type {
   ActorContext,
-  AbonoBank,
-  LeadCallOutcome,
+  AddLeadNoteInput as AddLeadNotePayload,
+  AddVenueAccountsInput as AddVenueAccountsPayload,
+  CreateQuotationInput as CreateQuotationPayload,
+  CreateVenueInput as CreateVenuePayload,
+  LogLeadCallInput as LogLeadCallPayload,
   LeadPriority,
   LeadStatus,
-  ModalidadCobro,
-  Moneda,
-  ProductScope,
+  RecordRepLegalInput as RecordRepLegalPayload,
+  RequestRateNegotiationInput as RequestRateNegotiationPayload,
+  ReviewLeadInput as ReviewLeadPayload,
+  SaveCommercialScopeInput as SaveCommercialScopePayload,
 } from "~/contracts/workflow";
+
+type WithActor<T> = T & { actor: ActorContext };
 
 export type ReassignLeadInput = {
   actor: ActorContext;
@@ -31,24 +33,15 @@ export type RemoveLeadFromFavoritesInput = {
 
 export type ReviewLeadInput = {
   actor: ActorContext;
-  leadId: string;
-  status: LeadStatus;
-  prioridad: LeadPriority;
-  reason: string;
+  leadId: ReviewLeadPayload["leadId"];
+  status: ReviewLeadPayload["status"];
+  prioridad: ReviewLeadPayload["prioridad"];
+  reason: ReviewLeadPayload["reason"];
 };
 
-export type AddLeadNoteInput = {
-  actor: ActorContext;
-  leadId: string;
-  body: string;
-};
+export type AddLeadNoteInput = WithActor<AddLeadNotePayload>;
 
-export type LogLeadCallInput = {
-  actor: ActorContext;
-  leadId: string;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
-};
+export type LogLeadCallInput = WithActor<LogLeadCallPayload>;
 
 export type ApplyImportedReviewInput = {
   actor: ActorContext;
@@ -72,75 +65,23 @@ export type ApproveForSaleInput = {
 
 export type CreateQuotationInput = {
   actor: ActorContext;
-  leadId: string;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: Moneda;
-};
+} & CreateQuotationPayload;
 
-export type SaveCommercialScopeInput = {
-  actor: ActorContext;
-  leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: AbonoBank;
-  posTotal: number;
-  linkScope: ProductScope;
-  linkUrl: string | null;
-  onlineScope: ProductScope;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-};
+export type SaveCommercialScopeInput = WithActor<SaveCommercialScopePayload>;
 
 export type RequestQuotationInput = {
   actor: ActorContext;
   leadId: string;
 };
 
-export type RecordRepLegalInput = {
-  actor: ActorContext;
-  leadId: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  dni: string;
-  telefono: string;
-  email: string;
-};
+export type RecordRepLegalInput = WithActor<RecordRepLegalPayload>;
 
-export type RequestRateNegotiationInput = {
-  actor: ActorContext;
-  leadId: string;
-  justification: string;
-  artifactIds: string[];
-};
+export type RequestRateNegotiationInput =
+  WithActor<RequestRateNegotiationPayload>;
 
-export type CreateVenueInput = {
-  actor: ActorContext;
-  leadId: string;
-  nombreComercial: string;
-  posQuantity: number;
-  digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
-};
+export type CreateVenueInput = WithActor<CreateVenuePayload>;
 
-export type AddVenueAccountsInput = {
-  actor: ActorContext;
-  leadId: string;
-  venueId: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
-  dollarAccount?: SaleVenueAccount & { currency: "USD" };
-};
+export type AddVenueAccountsInput = WithActor<AddVenueAccountsPayload>;
 
 export type RequestSunatRefreshInput = {
   actor: ActorContext;

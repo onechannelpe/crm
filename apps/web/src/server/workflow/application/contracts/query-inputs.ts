@@ -1,17 +1,15 @@
-import type { LeadListFiltersInput } from "~/contracts/workflow";
-import type { ActorContext } from "~/contracts/workflow";
+import type {
+  ActorContext,
+  AssignableExecutivesInput as AssignableExecutivesPayload,
+  LeadIdInput,
+  LeadListFiltersInput,
+} from "~/contracts/workflow";
 
-export type GetLeadDetailInput = {
-  actor: ActorContext;
-  leadId: string;
-};
+type WithActor<T> = T & { actor: ActorContext };
 
-export type ListAssignableExecutivesInput = {
-  actor: ActorContext;
-  leadId: string;
-  search?: string;
-  limit?: number;
-};
+export type GetLeadDetailInput = WithActor<LeadIdInput>;
+
+export type ListAssignableExecutivesInput = WithActor<AssignableExecutivesPayload>;
 
 export type ListLeadsInput = {
   actor: ActorContext;

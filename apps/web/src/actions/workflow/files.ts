@@ -1,23 +1,33 @@
 "use server";
 
-import type {
-  LeadNegotiationFileView,
-  LeadSaleProofFileView,
-  LeadArtifactInput,
-} from "~/contracts/workflow";
-import { AppError, validationError } from "~/lib/app-errors";
-import { maxUploadBytesForArtifactType } from "~/server/files/validators";
+import type { LeadArtifactInput } from "~/contracts/workflow";
+import type { LeadNegotiationFileView } from "~/contracts/workflow";
+import { AppError } from "~/lib/app-errors";
+import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction, runActionResult } from "~/server/shared/action-runtime";
 import type { Result } from "~/server/shared/result";
 
-export async function listLeadSaleProofFiles(
-  leadId: string,
-): Promise<LeadSaleProofFileView[]> {
-  if (!leadId.trim()) throw validationError("leadId is required");
+function parseUploadFile(formData: FormData): {
+  name: string;
+  sizeBytes: number;
+  stream: ReadableStream<Uint8Array>;
+} {
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    throw validationError("file is required");
+  }
 
+  return {
+    name: file.name,
+    sizeBytes: file.size,
+    stream: file.stream(),
+  };
+}
+
+export async function listLeadSaleProofFiles(leadId: string) {
   return runAction({
-    actionName: "workflow.lead.sale_proof.list",
+    actionName: "workflow.list_sale_proof_files",
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
@@ -28,40 +38,25 @@ export async function listLeadSaleProofFiles(
   });
 }
 
-export async function uploadLeadSaleProofFile(
-  leadId: string,
-  formData: FormData,
-): Promise<LeadSaleProofFileView> {
-  if (!leadId.trim()) throw validationError("leadId is required");
+export async function uploadLeadSaleProofFile(leadId: string, formData: FormData) {
+  const file = parseUploadFile(formData);
 
   return runAction({
-    actionName: "workflow.lead.sale_proof.upload",
+    actionName: "workflow.upload_sale_proof_file",
     access: { kind: "auth" },
-    input: { leadId },
-    execute: async (ctx) => {
-      const file = formData.get("file");
-      if (!(file instanceof File)) throw validationError("file is required");
-      if (file.size > maxUploadBytesForArtifactType("sale_proof")) {
-        throw validationError("file_too_large");
-      }
-
-      return getServerRuntime().workflow.leadArtifacts.uploadSaleProofFile({
+    input: { leadId, fileName: file.name, sizeBytes: file.sizeBytes },
+    execute: (ctx) =>
+      getServerRuntime().workflow.leadArtifacts.uploadSaleProofFile({
         ctx,
         leadId,
-        file: { name: file.name, sizeBytes: file.size, stream: file.stream() },
-      });
-    },
+        file,
+      }),
   });
 }
 
-export async function requestLeadSaleProofDownloadToken(
-  input: LeadArtifactInput,
-): Promise<{ token: string }> {
-  if (!input.leadId.trim()) throw validationError("leadId is required");
-  if (!input.artifactId.trim()) throw validationError("artifactId is required");
-
+export async function requestLeadSaleProofDownloadToken(input: LeadArtifactInput) {
   return runAction({
-    actionName: "workflow.lead.sale_proof.download_token",
+    actionName: "workflow.request_sale_proof_download_token",
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
@@ -77,36 +72,24 @@ export async function uploadLeadNegotiationFile(
   leadId: string,
   formData: FormData,
 ): Promise<Result<LeadNegotiationFileView, AppError>> {
-  if (!leadId.trim()) throw validationError("leadId is required");
+  const file = parseUploadFile(formData);
 
   return runActionResult({
-    actionName: "workflow.lead.negotiation.upload",
+    actionName: "workflow.upload_negotiation_file",
     access: { kind: "auth" },
-    input: { leadId },
-    execute: async (ctx) => {
-      const file = formData.get("file");
-      if (!(file instanceof File)) throw validationError("file is required");
-      if (file.size > maxUploadBytesForArtifactType("negotiation_file")) {
-        throw validationError("file_too_large");
-      }
-
-      return getServerRuntime().workflow.leadArtifacts.uploadNegotiationFile({
+    input: { leadId, fileName: file.name, sizeBytes: file.sizeBytes },
+    execute: (ctx) =>
+      getServerRuntime().workflow.leadArtifacts.uploadNegotiationFile({
         ctx,
         leadId,
-        file: { name: file.name, sizeBytes: file.size, stream: file.stream() },
-      });
-    },
+        file,
+      }),
   });
 }
 
-export async function requestNegotiationFileDownloadToken(
-  input: LeadArtifactInput,
-): Promise<Result<{ token: string }, AppError>> {
-  if (!input.leadId.trim()) throw validationError("leadId is required");
-  if (!input.artifactId.trim()) throw validationError("artifactId is required");
-
+export async function requestNegotiationFileDownloadToken(input: LeadArtifactInput) {
   return runActionResult({
-    actionName: "workflow.lead.negotiation.download_token",
+    actionName: "workflow.request_negotiation_download_token",
     access: { kind: "auth" },
     input,
     execute: (ctx) =>

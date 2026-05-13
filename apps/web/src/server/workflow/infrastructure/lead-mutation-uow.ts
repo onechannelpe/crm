@@ -6,12 +6,12 @@ import type {
   LeadMutationUow,
   LeadMutationOutcome,
   CheckedLeadMutationOutcome,
-} from "../../application/ports/lead-mutation-uow";
+} from "../application/ports/lead-mutation-uow";
 import {
   executeCheckedLeadMutation,
   executeLeadMutation,
-} from "../../application/services/lead-mutation-orchestrator";
-import { deriveLeadPatchFromIntent } from "../../domain/lead/lead-transitions";
+} from "../application/services/lead-mutation-orchestrator";
+import { deriveLeadPatchFromIntent } from "../domain/lead/lead-transitions";
 import { createAssignmentRepo } from "./assignment-repo";
 import {
   createWorkflowAuditLogRepo,

@@ -11,7 +11,7 @@ import {
   createWorkflowAuditLogsRepo,
 } from "~/server/workflow/infrastructure/audit-log";
 import { createLeadMutationNotificationPublisher } from "~/server/workflow/infrastructure/lead-mutation-notification-publisher";
-import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
+import { createLeadMutationUow } from "~/server/workflow/infrastructure/lead-mutation-uow";
 import type { WorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
 export type WorkflowCommandDeps = {

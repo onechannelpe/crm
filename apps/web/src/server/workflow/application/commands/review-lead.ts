@@ -4,6 +4,10 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { ReviewLeadInput } from "../contracts/command-inputs";
+import {
+  parseRequiredLeadPriority,
+  parseRequiredLeadStatus,
+} from "../../domain/lead-schema-parser";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";
@@ -29,14 +33,24 @@ export async function reviewLeadCommand(
     return prepared;
   }
 
+  const status = parseRequiredLeadStatus(input.status);
+  if (!status.ok) {
+    return status;
+  }
+
+  const prioridad = parseRequiredLeadPriority(input.prioridad);
+  if (!prioridad.ok) {
+    return prioridad;
+  }
+
   const outcome = await deps.mutationUow.commit({
     lead: prepared.value.lead,
     actorUserId: input.actor.userId,
     now: prepared.value.now,
     intent: {
       kind: "review",
-      status: input.status,
-      prioridad: input.prioridad,
+      status: status.value,
+      prioridad: prioridad.value,
       reason: input.reason,
     },
   });

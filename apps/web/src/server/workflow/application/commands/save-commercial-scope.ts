@@ -3,6 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
+import { parseRequiredAbonoBank } from "../../domain/lead-schema-parser";
 import type { SaveCommercialScopeInput } from "../contracts/command-inputs";
 import {
   canCompleteScoping,
@@ -77,6 +78,10 @@ export async function saveCommercialScopeCommand(
   if (!aggregateCheck.ok) return aggregateCheck;
 
   const digitalFields = toProfileDigitalFields(policy.value);
+  const abonoBank = parseRequiredAbonoBank(input.abonoBank);
+  if (!abonoBank.ok) {
+    return abonoBank;
+  }
   const now = deps.clock.now();
 
   await deps.leadProfiles.upsert({
@@ -85,7 +90,7 @@ export async function saveCommercialScopeCommand(
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
-    abonoBank: input.abonoBank,
+    abonoBank: abonoBank.value,
     posTotal: input.posTotal,
     ...digitalFields,
     updatedAt: now,
@@ -108,7 +113,7 @@ export async function saveCommercialScopeCommand(
       gpv: input.gpv,
       ticket: input.ticket,
       giroNegocio: input.giroNegocio,
-      abonoBank: input.abonoBank,
+      abonoBank: abonoBank.value,
       posTotal: input.posTotal,
       linkScope: digitalFields.linkScope,
       linkUrl: digitalFields.linkUrl,
