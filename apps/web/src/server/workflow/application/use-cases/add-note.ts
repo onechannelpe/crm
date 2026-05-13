@@ -1,24 +1,30 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { LeadReadRepository } from "../../ports/lead-read-repository";
+import { invalidLeadInput } from "../../domain/lead/lead-errors";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import { requireFirstHistoryId } from "../command-kernel/require-history-id";
-import type { LogLeadCallInput } from "../contracts/command-inputs";
+import type { AddLeadNoteInput } from "../contracts/command-inputs";
 import type { LeadInteractionResult } from "../contracts/command-results";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadClock } from "../services/lead-clock";
 
-type LogLeadCallCommandDeps = {
+type AddLeadNoteCommandDeps = {
   leadReader: LeadReadRepository;
   mutationUow: LeadMutationUow;
   clock: LeadClock;
 };
 
-export async function logLeadCallCommand(
-  deps: LogLeadCallCommandDeps,
-  input: LogLeadCallInput,
+export async function addLeadNoteCommand(
+  deps: AddLeadNoteCommandDeps,
+  input: AddLeadNoteInput,
 ): Promise<Result<LeadInteractionResult, DomainError>> {
+  const body = input.body.trim();
+  if (!body) {
+    return invalidLeadInput("note_required", "Note body is required");
+  }
+
   const prepared = await prepareLeadCommand({
     leadReader: deps.leadReader,
     clock: deps.clock,
@@ -35,9 +41,8 @@ export async function logLeadCallCommand(
     actorUserId: input.actor.userId,
     now: prepared.value.now,
     intent: {
-      kind: "log_call",
-      outcome: input.outcome,
-      notes: input.notes?.trim() ?? null,
+      kind: "add_note",
+      body,
     },
   });
   if (!outcome.ok) {

@@ -4,16 +4,17 @@ import type { Database } from "~/lib/db/types";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { getServerRuntime } from "~/server/runtime";
+import { runResultTransaction } from "~/server/shared/application/uow";
+import type { DomainError } from "~/server/shared/domain-error";
+import type { Result } from "~/server/shared/result";
 
-import { runInWorkflowTransaction } from "../../shared/workflow-transaction";
+import type { WorkflowEngineGateway } from "../application/ports/engine-gateway";
+import type { LeadEnrichmentQueue } from "../application/ports/enrichment-queue";
+import { systemLeadClock } from "../application/services/lead-clock";
 import {
   createWorkflowUseCases,
   type WorkflowUseCases,
 } from "../application/use-cases";
-import type { WorkflowAuditService } from "../application/ports/audit-service";
-import type { WorkflowEngineGateway } from "../application/ports/engine-gateway";
-import type { LeadEnrichmentQueue } from "../application/ports/enrichment-queue";
-import { systemLeadClock } from "../application/services/lead-clock";
 import {
   createWorkflowAuditLogRepo,
   createWorkflowAuditService,
@@ -22,12 +23,9 @@ import {
 import { createLeadMutationUow } from "./repos/lead-mutation-uow";
 import { createLeadReadRepository } from "./repos/lead-read-repo";
 import { createLeadUserScopeRepository } from "./repos/lead-user-scope-repo";
-import { createWorkflowRepos, type WorkflowRepos } from "./workflow-repos";
+import { createWorkflowRepos } from "./workflow-repos";
 
 export type WorkflowCommandRuntime = {
-  repos: WorkflowRepos;
-  auditService: WorkflowAuditService;
-  leadEnrichmentQueue: LeadEnrichmentQueue;
   useCases: WorkflowUseCases;
 };
 
@@ -52,6 +50,7 @@ function createWorkflowCommandRuntime(
 
   const useCases = createWorkflowUseCases({
     leadReader: createLeadReadRepository(repos.leads),
+    leadRepo: repos.leads,
     leadFavorites: repos.leadFavorites,
     mutationUow: createLeadMutationUow(executor),
     users: createLeadUserScopeRepository(repos.users),
@@ -71,16 +70,24 @@ function createWorkflowCommandRuntime(
     party: repos.party,
     leadVenues: repos.leadVenues,
     negotiationRequests: repos.leadNegotiationRequests,
+    sourcingPolicies: repos.sourcingPolicies,
   });
 
-  return { repos, auditService, leadEnrichmentQueue, useCases };
+  return { useCases };
 }
 
 export async function runWorkflowCommand<TResult>(
-  operation: (runtime: WorkflowCommandRuntime) => Promise<TResult>,
-): Promise<TResult> {
+  operation: (
+    runtime: WorkflowCommandRuntime,
+  ) => Promise<Result<TResult, DomainError>>,
+): Promise<Result<TResult, DomainError>> {
   const { workflow } = getServerRuntime();
-  return runInWorkflowTransaction(async ({ executor }) =>
-    operation(createWorkflowCommandRuntime(executor, workflow.engineGateway)),
+  return runResultTransaction(
+    (work) =>
+      getServerRuntime()
+        .infra.db.transaction()
+        .execute((trx) => work(trx)),
+    (executor) =>
+      operation(createWorkflowCommandRuntime(executor, workflow.engineGateway)),
   );
 }

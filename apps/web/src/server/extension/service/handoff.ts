@@ -158,6 +158,17 @@ export async function claimInstallationSession(
   },
 ): Promise<Result<ClaimExtensionSessionResponse, ExtensionServiceError>> {
   const { now, runInTransaction } = context;
+  const invalidHandoff = (): Result<never, ExtensionServiceError> =>
+    Err({
+      reason: "handoff_invalid",
+      message: "Extension handoff token is invalid or expired",
+    });
+  const claimedByOtherInstallation = (): Result<never, ExtensionServiceError> =>
+    Err({
+      reason: "handoff_invalid",
+      message:
+        "Extension handoff token has already been claimed by another installation",
+    });
 
   try {
     if (!isUuid(input.installationId)) {
@@ -187,7 +198,7 @@ export async function claimInstallationSession(
       });
     }
 
-    const credentials: SessionCredentials = await runInTransaction(
+    const claimResult = await runInTransaction(
       async (txRepos) => {
         const handoff = await txRepos.extensionRuntime.findHandoffByJti(
           handoffClaims.jti,
@@ -201,7 +212,7 @@ export async function claimInstallationSession(
           handoff.auth_session_id !== handoffClaims.authSessionId ||
           handoff.assignment_id !== handoffClaims.assignmentId
         ) {
-          throw new Error("invalid handoff");
+          return invalidHandoff();
         }
 
         const authSessionActive = await hasActiveAuthSession(
@@ -210,7 +221,7 @@ export async function claimInstallationSession(
           claimedAt,
         );
         if (!authSessionActive) {
-          throw new Error("invalid handoff");
+          return invalidHandoff();
         }
 
         let session: InstallationSessionRecord;
@@ -220,7 +231,7 @@ export async function claimInstallationSession(
             handoff.installation_id !== input.installationId ||
             !handoff.installation_session_jti
           ) {
-            throw new Error("handoff claimed by another installation");
+            return claimedByOtherInstallation();
           }
 
           const existingSession =
@@ -229,7 +240,7 @@ export async function claimInstallationSession(
               claimedAt,
             );
           if (!existingSession) {
-            throw new Error("handoff session expired");
+            return invalidHandoff();
           }
           session = existingSession;
         } else {
@@ -255,7 +266,7 @@ export async function claimInstallationSession(
               racedHandoff.installation_id !== input.installationId ||
               !racedHandoff.installation_session_jti
             ) {
-              throw new Error("handoff claimed by another installation");
+              return claimedByOtherInstallation();
             }
             const racedSession =
               await txRepos.extensionRuntime.findValidInstallationSession(
@@ -263,7 +274,7 @@ export async function claimInstallationSession(
                 claimedAt,
               );
             if (!racedSession) {
-              throw new Error("handoff session expired");
+              return invalidHandoff();
             }
             session = racedSession;
           } else {
@@ -328,11 +339,10 @@ export async function claimInstallationSession(
           syncHealth: "ok",
           updatedAt: claimedAt,
         });
-        return sessionCredentials;
+        return Ok(sessionCredentials);
       },
     );
-
-    return Ok(credentials);
+    return claimResult;
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
       return Err({
@@ -344,26 +354,6 @@ export async function claimInstallationSession(
       return Err({
         reason: "handoff_invalid",
         message: "Extension handoff token is invalid or expired",
-      });
-    }
-    if (
-      error instanceof Error &&
-      (error.message === "invalid handoff" ||
-        error.message === "handoff session expired")
-    ) {
-      return Err({
-        reason: "handoff_invalid",
-        message: "Extension handoff token is invalid or expired",
-      });
-    }
-    if (
-      error instanceof Error &&
-      error.message === "handoff claimed by another installation"
-    ) {
-      return Err({
-        reason: "handoff_invalid",
-        message:
-          "Extension handoff token has already been claimed by another installation",
       });
     }
 

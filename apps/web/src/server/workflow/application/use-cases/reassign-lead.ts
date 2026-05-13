@@ -2,8 +2,8 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { invalidLeadInput } from "../../domain/lead/lead-errors";
-import type { LeadReadRepository } from "../../ports/lead-read-repository";
-import type { LeadUserScopeRepository } from "../../ports/lead-user-scope-repository";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadUserScopeRepository } from "../ports/lead-user-scope-repository";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { ReassignLeadInput } from "../contracts/command-inputs";
 import type { LeadCommandResult } from "../contracts/command-results";

@@ -9,9 +9,7 @@ import type {
 
 const DEFAULT_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-export function createInviteRuntime(
-  deps: InviteServiceDeps,
-): InviteRuntime {
+export function createInviteRuntime(deps: InviteServiceDeps): InviteRuntime {
   return {
     now: deps.now ?? Date.now,
     inviteTtlMs: deps.inviteTtlMs ?? DEFAULT_INVITE_TTL_MS,

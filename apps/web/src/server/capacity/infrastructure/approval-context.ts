@@ -1,4 +1,7 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { runResultTransaction } from "~/server/shared/application/uow";
+import type { DomainError } from "~/server/shared/domain-error";
+import type { Result } from "~/server/shared/result";
 
 import type {
   CapacityApprovalPort,
@@ -17,8 +20,12 @@ export function createCapacityApprovalContext(
         context.rateLimitDeps,
       );
     },
-    withTransaction<T>(operation: (tx: CapacityApprovalTxPort) => Promise<T>) {
-      return context.runInRepositoryTransaction((repos) =>
+    withTransaction<T>(
+      operation: (
+        tx: CapacityApprovalTxPort,
+      ) => Promise<Result<T, DomainError>>,
+    ) {
+      return runResultTransaction(context.runInRepositoryTransaction, (repos) =>
         operation({
           async findRequestById(requestId) {
             const request = await repos.capacityRequests.findById(requestId);

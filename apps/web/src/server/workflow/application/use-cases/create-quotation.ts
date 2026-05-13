@@ -2,7 +2,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { LeadReadRepository } from "../../ports/lead-read-repository";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { CreateQuotationInput } from "../contracts/command-inputs";
 import type { LeadQuotationResult } from "../contracts/command-results";
 import {

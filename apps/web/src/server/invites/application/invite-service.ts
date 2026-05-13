@@ -11,7 +11,7 @@ export function createInviteService(
   deps: InviteDeps,
   runtimeOverrides: InviteServiceDeps,
 ): InviteService {
-  const runtime = createInviteRuntime(deps, runtimeOverrides);
+  const runtime = createInviteRuntime(runtimeOverrides);
 
   return {
     listPendingInvites(branchId) {

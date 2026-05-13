@@ -1,8 +1,14 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
+import type { Role } from "~/lib/auth/access/rbac";
 
-import type { LeadReadRepository } from "./ports/lead-read-repository";
-import type { LeadUserScopeRepository } from "./ports/lead-user-scope-repository";
+import { requestSunatRefresh } from "../commands/request-sunat-refresh";
+import { updateSourcingPolicy } from "../settings/update-sourcing-policy";
+import { addLeadNoteCommand } from "./add-note";
+import { addToFavoritesCommand } from "./add-to-favorites";
+import { addVenueAccountsCommand } from "./add-venue-accounts";
+import { applyImportedReviewCommand } from "./apply-imported-review";
+import { approveForSaleCommand } from "./approve-for-sale";
 import type {
   AddLeadNoteInput,
   AddLeadToFavoritesInput,
@@ -20,43 +26,43 @@ import type {
   RequestRateNegotiationInput,
   ReviewLeadInput,
   SaveCommercialScopeInput,
-} from "./contracts/command-inputs";
+} from "../contracts/command-inputs";
 import type {
   LeadCommandResult,
   LeadInteractionResult,
   LeadQuotationResult,
-} from "./contracts/command-results";
-import type { RegisterLeadDeps } from "./deps/register-lead";
-import type { WorkflowAuditService } from "./ports/audit-service";
-import type { WorkflowEngineGateway } from "./ports/engine-gateway";
-import type { LeadEnrichmentQueue } from "./ports/enrichment-queue";
-import type { LeadFavoriteRepository } from "./ports/lead-favorite-repository";
-import type { LeadMutationUow } from "./ports/lead-mutation-uow";
-import type { LeadProfileRepository } from "./ports/lead-profile-repository";
-import type { NegotiationRequestRepository } from "./ports/negotiation-request-repository";
-import type { PartyRepository } from "./ports/party-repository";
-import type { LeadQuotationRepository } from "./ports/quotation-repository";
-import type { LeadVenueRepository } from "./ports/sale-repository";
-import type { LeadClock } from "./services/lead-clock";
-import { addLeadNoteCommand } from "./command-api/add-note";
-import { addToFavoritesCommand } from "./command-api/add-to-favorites";
-import { addVenueAccountsCommand } from "./command-api/add-venue-accounts";
-import { applyImportedReviewCommand } from "./command-api/apply-imported-review";
-import { approveForSaleCommand } from "./command-api/approve-for-sale";
-import { createQuotationCommand } from "./command-api/create-quotation";
-import { createVenueCommand } from "./command-api/create-venue";
-import { logLeadCallCommand } from "./command-api/log-call";
-import { reassignLeadCommand } from "./command-api/reassign-lead";
-import { recordRepLegalCommand } from "./command-api/record-rep-legal";
-import { registerLeadCommand } from "./command-api/register-lead";
-import { removeFromFavoritesCommand } from "./command-api/remove-from-favorites";
-import { requestQuotationCommand } from "./command-api/request-quotation";
-import { requestRateNegotiationCommand } from "./command-api/request-rate-negotiation";
-import { reviewLeadCommand } from "./command-api/review-lead";
-import { saveCommercialScopeCommand } from "./command-api/save-commercial-scope";
+} from "../contracts/command-results";
+import { createQuotationCommand } from "./create-quotation";
+import { createVenueCommand } from "./create-venue";
+import type { RegisterLeadDeps } from "../deps/register-lead";
+import { logLeadCallCommand } from "./log-call";
+import type { WorkflowAuditService } from "../ports/audit-service";
+import type { WorkflowEngineGateway } from "../ports/engine-gateway";
+import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
+import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
+import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type { LeadProfileRepository } from "../ports/lead-profile-repository";
+import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { LeadUserScopeRepository } from "../ports/lead-user-scope-repository";
+import type { NegotiationRequestRepository } from "../ports/negotiation-request-repository";
+import type { PartyRepository } from "../ports/party-repository";
+import type { LeadQuotationRepository } from "../ports/quotation-repository";
+import type { LeadVenueRepository } from "../ports/sale-repository";
+import type { LeadSourcingPolicyRepository } from "../ports/sourcing-policy-repository";
+import { reassignLeadCommand } from "./reassign-lead";
+import { recordRepLegalCommand } from "./record-rep-legal";
+import { registerLeadCommand } from "./register-lead";
+import { removeFromFavoritesCommand } from "./remove-from-favorites";
+import { requestQuotationCommand } from "./request-quotation";
+import { requestRateNegotiationCommand } from "./request-rate-negotiation";
+import { reviewLeadCommand } from "./review-lead";
+import { saveCommercialScopeCommand } from "./save-commercial-scope";
+import type { LeadClock } from "../services/lead-clock";
 
 export type WorkflowUseCaseDeps = {
   leadReader: LeadReadRepository;
+  leadRepo: LeadRepository;
   leadFavorites: LeadFavoriteRepository;
   mutationUow: LeadMutationUow;
   users: LeadUserScopeRepository;
@@ -70,6 +76,7 @@ export type WorkflowUseCaseDeps = {
   party: PartyRepository;
   leadVenues: LeadVenueRepository;
   negotiationRequests: NegotiationRequestRepository;
+  sourcingPolicies: LeadSourcingPolicyRepository;
 };
 
 export type WorkflowUseCases = {
@@ -121,6 +128,25 @@ export type WorkflowUseCases = {
   requestRateNegotiation(
     input: RequestRateNegotiationInput,
   ): Promise<Result<LeadCommandResult, DomainError>>;
+  requestSunatRefresh(input: {
+    actorUserId: number;
+    actorRole: Role;
+    leadId: string;
+  }): Promise<Result<void, DomainError>>;
+  updateSourcingPolicy(input: {
+    actorUserId: number;
+    actorRole: Role;
+    branchId: number;
+    engineAssignmentEnabled: boolean;
+  }): Promise<
+    Result<
+      {
+        branchId: number;
+        engineAssignmentEnabled: boolean;
+      },
+      DomainError
+    >
+  >;
 };
 
 export function createWorkflowUseCases(
@@ -242,5 +268,16 @@ export function createWorkflowUseCases(
         },
         input,
       ),
+    requestSunatRefresh: (input) =>
+      requestSunatRefresh({
+        actorUserId: input.actorUserId,
+        actorRole: input.actorRole,
+        leadId: input.leadId,
+        leadRepo: deps.leadRepo,
+        enrichmentQueue: deps.leadEnrichmentQueue,
+        auditService: deps.auditService,
+      }),
+    updateSourcingPolicy: (input) =>
+      updateSourcingPolicy({ sourcingPolicies: deps.sourcingPolicies }, input),
   };
 }

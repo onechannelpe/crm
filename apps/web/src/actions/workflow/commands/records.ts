@@ -2,7 +2,6 @@
 
 import { validationError } from "~/lib/app-errors";
 import { runAction } from "~/server/shared/action-runtime";
-import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
@@ -262,14 +261,11 @@ export async function requestLeadSunatRefresh(input: { leadId: string }) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runWorkflowCommand(({ repos, auditService, leadEnrichmentQueue }) =>
-        requestSunatRefresh({
+      runWorkflowCommand(({ useCases }) =>
+        useCases.requestSunatRefresh({
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           leadId: input.leadId,
-          leadRepo: repos.leads,
-          enrichmentQueue: leadEnrichmentQueue,
-          auditService,
         }),
       ),
   });
