@@ -1,6 +1,4 @@
 import { createDefaultEngineClient } from "~/server/shared/engine/client";
-import { createWorkflowApp } from "~/server/workflow/application/app";
-import { createEngineGateway } from "~/server/workflow/infrastructure/engine-gateway";
 
 import { createAdminRuntime } from "./admin-runtime";
 import { createAuthRuntime } from "./auth-runtime";
@@ -18,11 +16,11 @@ import { createSearchRuntime } from "./search-runtime";
 import { createSecurityRuntime } from "./security-runtime";
 import { createTeamRuntime } from "./team-runtime";
 import { createUsersRuntime } from "./users-runtime";
+import { createWorkflowRuntime } from "./workflow-runtime";
 
 export function createServerRuntime() {
   const infra = createServerInfra();
   const engine = createDefaultEngineClient();
-  const engineGateway = createEngineGateway(engine);
   const notifications = createNotificationsRuntime(infra);
 
   return {
@@ -38,10 +36,7 @@ export function createServerRuntime() {
     integrations: createIntegrationsRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),
-    workflow: createWorkflowApp({
-      executor: infra.db,
-      engineGateway,
-    }),
+    workflow: createWorkflowRuntime(infra, engine),
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
     search: createSearchRuntime(infra),
