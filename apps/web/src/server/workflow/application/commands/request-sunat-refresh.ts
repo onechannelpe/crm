@@ -2,19 +2,19 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
-import type { ActorContext } from "../contracts/actor-context";
+import type { RequestSunatRefreshInput } from "../contracts/command-inputs";
 import { requireLeadReadAccess } from "../policies/access";
 import type { WorkflowAuditService } from "../ports/audit-service";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadRepository } from "../ports/lead-repository";
 
-export async function requestSunatRefresh(input: {
-  actor: ActorContext;
-  leadId: string;
-  leadRepo: LeadRepository;
-  enrichmentQueue: LeadEnrichmentQueue;
-  auditService: WorkflowAuditService;
-}): Promise<Result<void, DomainError>> {
+export async function requestSunatRefresh(
+  input: RequestSunatRefreshInput & {
+    leadRepo: LeadRepository;
+    enrichmentQueue: LeadEnrichmentQueue;
+    auditService: WorkflowAuditService;
+  },
+): Promise<Result<void, DomainError>> {
   const canRead = requireLeadReadAccess(input.actor.role);
   if (!canRead.ok) {
     return canRead;

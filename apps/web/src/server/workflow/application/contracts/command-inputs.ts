@@ -140,3 +140,14 @@ export type AddVenueAccountsInput = {
   solesAccount: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
 };
+
+export type RequestSunatRefreshInput = {
+  actor: ActorContext;
+  leadId: string;
+};
+
+export type UpdateSourcingPolicyInput = {
+  actor: ActorContext;
+  branchId: number;
+  engineAssignmentEnabled: boolean;
+};

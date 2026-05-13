@@ -5,6 +5,7 @@ import type { Result } from "~/server/shared/result";
 import type { createArtifactsRepo } from "../repo/artifacts";
 import type { createAssetsRepo } from "../repo/assets";
 import type { createEventsRepo } from "../repo/events";
+import type { createNegotiationFilesRepo } from "../repo/negotiation";
 import type { createSalesRepo } from "../repo/sales";
 import type { createTokensRepo } from "../repo/tokens";
 import type { FileStorage } from "../storage";
@@ -22,6 +23,7 @@ export interface ArtifactRepos {
   events: ReturnType<typeof createEventsRepo>;
   tokens: ReturnType<typeof createTokensRepo>;
   sales: ReturnType<typeof createSalesRepo>;
+  negotiation: ReturnType<typeof createNegotiationFilesRepo>;
 }
 
 export interface SyncExecutor {

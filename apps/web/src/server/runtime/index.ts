@@ -22,12 +22,13 @@ export function createServerRuntime() {
   const infra = createServerInfra();
   const engine = createDefaultEngineClient();
   const notifications = createNotificationsRuntime(infra);
+  const files = createFilesRuntime(infra);
 
   return {
     infra,
     engine,
     admin: createAdminRuntime(infra),
-    files: createFilesRuntime(infra),
+    files,
     auth: createAuthRuntime(infra, notifications),
     capacity: createCapacityRuntime(infra),
     clientSearch: createClientSearchRuntime(infra),
@@ -36,7 +37,7 @@ export function createServerRuntime() {
     integrations: createIntegrationsRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),
-    workflow: createWorkflowRuntime(infra, engine),
+    workflow: createWorkflowRuntime(infra, engine, files),
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
     search: createSearchRuntime(infra),

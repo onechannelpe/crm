@@ -1,5 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
 import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
@@ -8,6 +6,10 @@ import { approveForSaleCommand } from "~/server/workflow/application/commands/ap
 import { createQuotationCommand } from "~/server/workflow/application/commands/create-quotation";
 import { createVenueCommand } from "~/server/workflow/application/commands/create-venue";
 import { logLeadCallCommand } from "~/server/workflow/application/commands/log-call";
+import {
+  requestNegotiationDownloadToken,
+  uploadNegotiationFile,
+} from "~/server/workflow/application/commands/negotiation-files";
 import { reassignLeadCommand } from "~/server/workflow/application/commands/reassign-lead";
 import { recordRepLegalCommand } from "~/server/workflow/application/commands/record-rep-legal";
 import { registerLead } from "~/server/workflow/application/commands/register-lead";
@@ -16,6 +18,11 @@ import { requestQuotationCommand } from "~/server/workflow/application/commands/
 import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
+import {
+  listSaleProofFiles,
+  requestSaleProofDownloadToken,
+  uploadSaleProofFile,
+} from "~/server/workflow/application/commands/sale-proof-files";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
 import type {
   AddLeadNoteInput,
@@ -32,19 +39,16 @@ import type {
   RemoveLeadFromFavoritesInput,
   RequestQuotationInput,
   RequestRateNegotiationInput,
+  RequestSunatRefreshInput,
   ReviewLeadInput,
   SaveCommercialScopeInput,
+  UpdateSourcingPolicyInput,
 } from "~/server/workflow/application/contracts/command-inputs";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
-import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
-import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 
 import type { WorkflowCommandDeps } from "./create-workflow-command-deps";
 
-export function createWorkflowCommands(
-  deps: WorkflowCommandDeps,
-  executor: DatabaseExecutor,
-) {
+export function createWorkflowCommands(deps: WorkflowCommandDeps) {
   return {
     registerLead: (input: RegisterLeadInput) =>
       registerLead({
@@ -165,18 +169,15 @@ export function createWorkflowCommands(
         input,
       ),
     recordRepLegal: (input: RecordRepLegalInput) =>
-      executor.transaction().execute((tx) => {
-        const txRepos = createWorkflowRepos(tx);
-        return recordRepLegalCommand(
-          {
-            leadReader: txRepos.leads,
-            mutationUow: createLeadMutationUow(tx),
-            party: txRepos.party,
-            clock: deps.clock,
-          },
-          input,
-        );
-      }),
+      recordRepLegalCommand(
+        {
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          party: deps.repos.party,
+          clock: deps.clock,
+        },
+        input,
+      ),
     createVenue: (input: CreateVenueInput) =>
       createVenueCommand(
         {
@@ -208,10 +209,7 @@ export function createWorkflowCommands(
         },
         input,
       ),
-    requestSunatRefresh: (input: {
-      actor: { userId: number; role: Role; branchId: number };
-      leadId: string;
-    }) =>
+    requestSunatRefresh: (input: RequestSunatRefreshInput) =>
       requestSunatRefresh({
         actor: input.actor,
         leadId: input.leadId,
@@ -219,13 +217,86 @@ export function createWorkflowCommands(
         enrichmentQueue: deps.leadEnrichmentQueue,
         auditService: deps.auditService,
       }),
-    updateSourcingPolicy: (input: {
-      actor: { userId: number; role: Role; branchId: number };
-      branchId: number;
-      engineAssignmentEnabled: boolean;
-    }) =>
+    updateSourcingPolicy: (input: UpdateSourcingPolicyInput) =>
       updateSourcingPolicy(
         { sourcingPolicies: deps.repos.sourcingPolicies },
+        input,
+      ),
+    listSaleProofFiles: (input: {
+      ctx: import("~/server/shared/action-runtime/context").AppContext;
+      leadId: string;
+    }) =>
+      listSaleProofFiles(
+        {
+          leadReader: deps.repos.leads,
+          filesRepo: deps.filesRepo,
+          filesStorage: deps.filesStorage,
+          filesSyncExecutor: deps.filesSyncExecutor,
+        },
+        input,
+      ),
+    uploadSaleProofFile: (input: {
+      ctx: import("~/server/shared/action-runtime/context").AppContext;
+      leadId: string;
+      file: {
+        name: string;
+        sizeBytes: number;
+        stream: ReadableStream<Uint8Array>;
+      };
+    }) =>
+      uploadSaleProofFile(
+        {
+          leadReader: deps.repos.leads,
+          filesRepo: deps.filesRepo,
+          filesStorage: deps.filesStorage,
+          filesSyncExecutor: deps.filesSyncExecutor,
+        },
+        input,
+      ),
+    requestSaleProofDownloadToken: (input: {
+      ctx: import("~/server/shared/action-runtime/context").AppContext;
+      leadId: string;
+      artifactId: string;
+    }) =>
+      requestSaleProofDownloadToken(
+        {
+          leadReader: deps.repos.leads,
+          filesRepo: deps.filesRepo,
+          filesStorage: deps.filesStorage,
+          filesSyncExecutor: deps.filesSyncExecutor,
+        },
+        input,
+      ),
+    uploadNegotiationFile: (input: {
+      ctx: import("~/server/shared/action-runtime/context").AppContext;
+      leadId: string;
+      file: {
+        name: string;
+        sizeBytes: number;
+        stream: ReadableStream<Uint8Array>;
+      };
+    }) =>
+      uploadNegotiationFile(
+        {
+          leadReader: deps.repos.leads,
+          filesRepo: deps.filesRepo,
+          filesStorage: deps.filesStorage,
+          filesSyncExecutor: deps.filesSyncExecutor,
+        },
+        input,
+      ),
+    requestNegotiationDownloadToken: (input: {
+      ctx: import("~/server/shared/action-runtime/context").AppContext;
+      leadId: string;
+      artifactId: string;
+    }) =>
+      requestNegotiationDownloadToken(
+        {
+          leadReader: deps.repos.leads,
+          filesRepo: deps.filesRepo,
+          filesStorage: deps.filesStorage,
+          filesSyncExecutor: deps.filesSyncExecutor,
+        },
         input,
       ),
   };

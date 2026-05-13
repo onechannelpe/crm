@@ -2,6 +2,7 @@ import { createSessionService } from "~/server/auth/application/session-service"
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
+import { createFilesRuntime } from "~/server/runtime/files-runtime";
 import type { ServerInfra } from "~/server/runtime/infra";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import { createWorkflowModule } from "~/server/workflow/module";
@@ -66,6 +67,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const workflow = createWorkflowModule({
     executor: infra.db,
     engineGateway,
+    files: createFilesRuntime(infra),
   });
   const integrations = createIntegrationRuntime(ctx.db);
 
