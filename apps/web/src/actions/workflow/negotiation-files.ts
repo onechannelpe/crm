@@ -36,7 +36,9 @@ export async function uploadLeadNegotiationFile(
   });
 }
 
-export async function requestNegotiationFileDownloadToken(input: LeadArtifactInput): Promise<Result<{ token: string }, AppError>> {
+export async function requestNegotiationFileDownloadToken(
+  input: LeadArtifactInput,
+): Promise<Result<{ token: string }, AppError>> {
   if (!input.leadId.trim()) throw validationError("leadId is required");
   if (!input.artifactId.trim()) throw validationError("artifactId is required");
 

@@ -1,7 +1,10 @@
 "use server";
 
 import { workflowActorFrom } from "~/actions/workflow/shared";
-import type { AddVenueAccountsInput, CreateVenueInput } from "~/contracts/workflow";
+import type {
+  AddVenueAccountsInput,
+  CreateVenueInput,
+} from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -38,7 +41,9 @@ export async function requestVenueCreation(input: CreateVenueInput) {
   });
 }
 
-export async function requestVenueAccountsAddition(input: AddVenueAccountsInput) {
+export async function requestVenueAccountsAddition(
+  input: AddVenueAccountsInput,
+) {
   if (!input.solesAccount.nroCuenta.trim()) {
     throw validationError("soles account number is required");
   }

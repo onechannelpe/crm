@@ -54,7 +54,9 @@ export async function uploadLeadSaleProofFile(
   });
 }
 
-export async function requestLeadSaleProofDownloadToken(input: LeadArtifactInput): Promise<{ token: string }> {
+export async function requestLeadSaleProofDownloadToken(
+  input: LeadArtifactInput,
+): Promise<{ token: string }> {
   if (!input.leadId.trim()) {
     throw validationError("leadId is required");
   }

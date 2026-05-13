@@ -9,9 +9,7 @@ import type {
   LeadListFiltersInput,
 } from "~/contracts/workflow";
 
-export async function queryLeadListApi(
-  filters: LeadListFiltersInput,
-) {
+export async function queryLeadListApi(filters: LeadListFiltersInput) {
   return queryLeadList(filters);
 }
 

@@ -67,7 +67,9 @@ export async function requestLeadReview(input: ReviewLeadInput) {
   });
 }
 
-export async function requestSaveCommercialScope(input: SaveCommercialScopeInput) {
+export async function requestSaveCommercialScope(
+  input: SaveCommercialScopeInput,
+) {
   if (!input.proveedorActual?.trim()) {
     throw validationError("proveedorActual is required");
   }

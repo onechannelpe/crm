@@ -52,7 +52,9 @@ export async function queryLeadBootstrapPreview(
   });
 }
 
-export async function queryAssignableExecutives(input: AssignableExecutivesInput): Promise<AssignableExecutiveView[]> {
+export async function queryAssignableExecutives(
+  input: AssignableExecutivesInput,
+): Promise<AssignableExecutiveView[]> {
   return runAction({
     actionName: "workflow.list_assignable_executives",
     access: { kind: "auth" },
