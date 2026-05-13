@@ -1,7 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 
 import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadAvailableAction } from "../contracts/lead-available-action";
+import type { LeadAvailableAction } from "~/contracts/workflow";
 import {
   canAddLeadInteraction,
   canCompleteScoping,

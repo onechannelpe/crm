@@ -3,7 +3,7 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { PartyRepository } from "../ports/party-repository";
-import type { LeadBootstrapPreviewView } from "./views/lead-bootstrap-preview";
+import type { LeadBootstrapPreviewView } from "~/contracts/workflow";
 
 type LeadBootstrapPreviewQueryDeps = {
   party: PartyRepository;

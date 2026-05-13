@@ -5,7 +5,7 @@ import { invalidLeadInput } from "../../domain/lead/lead-errors";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import { requireFirstHistoryId } from "../command-kernel/require-history-id";
 import type { AddLeadNoteInput } from "../contracts/command-inputs";
-import type { LeadInteractionResult } from "../contracts/command-results";
+import type { LeadInteractionResult } from "~/contracts/workflow";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";

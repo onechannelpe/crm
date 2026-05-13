@@ -3,6 +3,7 @@ import type {
   VenueDigitalConfig,
 } from "~/contracts/workflow";
 import type {
+  ActorContext,
   AbonoBank,
   LeadCallOutcome,
   LeadPriority,
@@ -11,8 +12,6 @@ import type {
   Moneda,
   ProductScope,
 } from "~/contracts/workflow";
-
-import type { ActorContext } from "./actor-context";
 
 export type ReassignLeadInput = {
   actor: ActorContext;

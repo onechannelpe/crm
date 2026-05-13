@@ -1,6 +1,6 @@
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadAvailableAction } from "../contracts/lead-available-action";
+import type { LeadAvailableAction } from "~/contracts/workflow";
 import type { LeadProfile } from "../ports/lead-profile-repository";
 import type {
   LeadNegotiationRequest,
@@ -23,7 +23,7 @@ import type {
   LeadDetailSourceStatusView,
   LeadDetailVenueView,
   LeadDetailView,
-} from "../queries/views/lead-detail";
+} from "~/contracts/workflow";
 import {
   presentLeadBlockingFields,
   presentLeadNextStep,

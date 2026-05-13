@@ -10,7 +10,7 @@ import {
 } from "../policies/access";
 import type { LeadRepository } from "../ports/lead-repository";
 import type { WorkflowUserRepository } from "../ports/user-repository";
-import type { AssignableExecutiveView } from "./views/assignable-executive";
+import type { AssignableExecutiveView } from "~/contracts/workflow";
 
 type AssignableExecutivesQueryDeps = {
   leads: LeadRepository;

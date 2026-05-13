@@ -4,7 +4,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import { resolveLeadBlockingFields } from "../../domain/lead-progress";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { RequestQuotationInput } from "../contracts/command-inputs";
-import type { LeadCommandResult } from "../contracts/command-results";
+import type { LeadCommandResult } from "~/contracts/workflow";
 import {
   canCompleteScoping,
   requirePipelineActionAccess,

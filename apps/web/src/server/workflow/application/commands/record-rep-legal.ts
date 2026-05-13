@@ -3,7 +3,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { RecordRepLegalInput } from "../contracts/command-inputs";
-import type { LeadCommandResult } from "../contracts/command-results";
+import type { LeadCommandResult } from "~/contracts/workflow";
 import {
   canCompleteScoping,
   requirePipelineActionAccess,

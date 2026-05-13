@@ -5,7 +5,7 @@ import type { LeadRecord } from "../../domain/lead-record";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { authorizeLeadOperation } from "../../domain/lead/lead-policies";
 import type { LeadOperation } from "../../domain/lead/lead-types";
-import type { ActorContext } from "../contracts/actor-context";
+import type { ActorContext } from "~/contracts/workflow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";
 

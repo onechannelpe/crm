@@ -3,7 +3,7 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { ReviewLeadInput } from "../contracts/command-inputs";
-import type { LeadCommandResult } from "../contracts/command-results";
+import type { LeadCommandResult } from "~/contracts/workflow";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";

@@ -14,7 +14,7 @@ import {
 import type { LeadListFilters, LeadQueries } from "../ports/lead-queries";
 import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
-import type { LeadListView } from "./views/lead-list";
+import type { LeadListView } from "~/contracts/workflow";
 
 const LEAD_SORT_FIELDS = [
   "createdAt",

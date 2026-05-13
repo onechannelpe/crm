@@ -9,7 +9,7 @@ import {
   loadLeadDetailSections,
   type LeadDetailQueryDeps,
 } from "./load-lead-detail-sections";
-import type { LeadDetailView } from "./views/lead-detail";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 export async function getLeadDetail(
   deps: LeadDetailQueryDeps,

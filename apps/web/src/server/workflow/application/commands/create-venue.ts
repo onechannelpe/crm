@@ -3,7 +3,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { CreateVenueInput } from "../contracts/command-inputs";
-import type { LeadCommandResult } from "../contracts/command-results";
+import type { LeadCommandResult } from "~/contracts/workflow";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadProfileRepository } from "../ports/lead-profile-repository";

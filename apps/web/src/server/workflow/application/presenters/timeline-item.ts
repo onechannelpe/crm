@@ -1,7 +1,7 @@
 import type { LeadCallOutcome } from "~/contracts/workflow";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 
-import type { LeadTimelineItem } from "../queries/views/lead-detail";
+import type { LeadTimelineItem } from "~/contracts/workflow";
 import { formatTimelineActorName } from "./timeline-actor-name";
 
 function describeCallOutcome(outcome: LeadCallOutcome | null) {

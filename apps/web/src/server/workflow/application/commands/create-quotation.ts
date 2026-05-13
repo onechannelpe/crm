@@ -3,7 +3,7 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { CreateQuotationInput } from "../contracts/command-inputs";
-import type { LeadQuotationResult } from "../contracts/command-results";
+import type { LeadQuotationResult } from "~/contracts/workflow";
 import {
   canCreateQuotation,
   requirePipelineActionAccess,

@@ -3,7 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, type Result } from "~/server/shared/result";
 
 import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadAvailableAction } from "../contracts/lead-available-action";
+import type { LeadAvailableAction } from "~/contracts/workflow";
 import {
   canApproveForSale,
   canRequestRateNegotiation,

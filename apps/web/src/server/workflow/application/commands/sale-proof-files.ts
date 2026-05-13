@@ -11,7 +11,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { requireReadableLead } from "../command-kernel/require-lead-access";
-import type { LeadSaleProofFileView } from "../contracts/command-results";
+import type { LeadSaleProofFileView } from "~/contracts/workflow";
 import { canUploadSaleProof } from "../policies/access";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
 
