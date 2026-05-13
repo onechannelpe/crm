@@ -1,10 +1,10 @@
 import type { LeadCommandResult } from "~/contracts/workflow";
+import type { SaveCommercialScopeCommandInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { leadNotFound } from "../../domain/lead/lead-errors";
 import { parseRequiredAbonoBank } from "../../domain/lead-schema-parser";
-import type { SaveCommercialScopeInput } from "../contracts/command-inputs";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import {
   canCompleteScoping,
   requirePipelineActionAccess,
@@ -32,7 +32,7 @@ type SaveCommercialScopeCommandDeps = {
 
 export async function saveCommercialScopeCommand(
   deps: SaveCommercialScopeCommandDeps,
-  input: SaveCommercialScopeInput,
+  input: SaveCommercialScopeCommandInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const canComplete = requirePipelineActionAccess(
     input.actor.role,

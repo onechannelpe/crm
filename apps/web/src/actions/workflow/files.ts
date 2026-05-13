@@ -38,7 +38,10 @@ export async function listLeadSaleProofFiles(leadId: string) {
   });
 }
 
-export async function uploadLeadSaleProofFile(leadId: string, formData: FormData) {
+export async function uploadLeadSaleProofFile(
+  leadId: string,
+  formData: FormData,
+) {
   const file = parseUploadFile(formData);
 
   return runAction({
@@ -54,7 +57,9 @@ export async function uploadLeadSaleProofFile(leadId: string, formData: FormData
   });
 }
 
-export async function requestLeadSaleProofDownloadToken(input: LeadArtifactInput) {
+export async function requestLeadSaleProofDownloadToken(
+  input: LeadArtifactInput,
+) {
   return runAction({
     actionName: "workflow.request_sale_proof_download_token",
     access: { kind: "auth" },
@@ -87,16 +92,20 @@ export async function uploadLeadNegotiationFile(
   });
 }
 
-export async function requestNegotiationFileDownloadToken(input: LeadArtifactInput) {
+export async function requestNegotiationFileDownloadToken(
+  input: LeadArtifactInput,
+) {
   return runActionResult({
     actionName: "workflow.request_negotiation_download_token",
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.leadArtifacts.requestNegotiationDownloadToken({
-        ctx,
-        leadId: input.leadId,
-        artifactId: input.artifactId,
-      }),
+      getServerRuntime().workflow.leadArtifacts.requestNegotiationDownloadToken(
+        {
+          ctx,
+          leadId: input.leadId,
+          artifactId: input.artifactId,
+        },
+      ),
   });
 }

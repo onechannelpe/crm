@@ -1,13 +1,13 @@
 import type { LeadCommandResult } from "~/contracts/workflow";
+import type { ReviewLeadCommandInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { ReviewLeadInput } from "../contracts/command-inputs";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
 } from "../../domain/lead-schema-parser";
+import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";
@@ -20,7 +20,7 @@ type ReviewLeadCommandDeps = {
 
 export async function reviewLeadCommand(
   deps: ReviewLeadCommandDeps,
-  input: ReviewLeadInput,
+  input: ReviewLeadCommandInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const prepared = await prepareLeadCommand({
     leadReader: deps.leadReader,

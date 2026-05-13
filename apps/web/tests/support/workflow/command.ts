@@ -1,5 +1,23 @@
 import type { Transaction } from "kysely";
 
+import type {
+  AddLeadNoteCommandInput,
+  AddLeadToFavoritesInput,
+  AddVenueAccountsCommandInput,
+  ApplyImportedReviewInput,
+  ApproveForSaleInput,
+  CreateQuotationCommandInput,
+  CreateVenueCommandInput,
+  LogLeadCallCommandInput,
+  ReassignLeadCommandInput,
+  RecordRepLegalCommandInput,
+  RegisterLeadInput,
+  RemoveLeadFromFavoritesInput,
+  RequestQuotationInput,
+  RequestRateNegotiationCommandInput,
+  ReviewLeadCommandInput,
+  SaveCommercialScopeCommandInput,
+} from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { Database } from "~/lib/db/types";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
@@ -19,24 +37,6 @@ import { requestRateNegotiationCommand } from "~/server/workflow/application/com
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
-import type {
-  AddLeadNoteInput,
-  AddLeadToFavoritesInput,
-  AddVenueAccountsInput,
-  ApplyImportedReviewInput,
-  ApproveForSaleInput,
-  CreateQuotationInput,
-  CreateVenueInput,
-  LogLeadCallInput,
-  ReassignLeadInput,
-  RecordRepLegalInput,
-  RegisterLeadInput,
-  RemoveLeadFromFavoritesInput,
-  RequestQuotationInput,
-  RequestRateNegotiationInput,
-  ReviewLeadInput,
-  SaveCommercialScopeInput,
-} from "~/server/workflow/application/contracts/command-inputs";
 import type { WorkflowAuditService } from "~/server/workflow/application/ports/audit-service";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
@@ -127,12 +127,13 @@ function buildCommandApi(
         },
         input,
       ),
-    reassignLead: (input: ReassignLeadInput) =>
+    reassignLead: (input: ReassignLeadCommandInput) =>
       reassignLeadCommand(baseDeps, input),
-    reviewLead: (input: ReviewLeadInput) => reviewLeadCommand(baseDeps, input),
-    addLeadNote: (input: AddLeadNoteInput) =>
+    reviewLead: (input: ReviewLeadCommandInput) =>
+      reviewLeadCommand(baseDeps, input),
+    addLeadNote: (input: AddLeadNoteCommandInput) =>
       addLeadNoteCommand(baseDeps, input),
-    logLeadCall: (input: LogLeadCallInput) =>
+    logLeadCall: (input: LogLeadCallCommandInput) =>
       logLeadCallCommand(baseDeps, input),
     applyImportedReview: (input: ApplyImportedReviewInput) =>
       applyImportedReviewCommand(
@@ -152,7 +153,7 @@ function buildCommandApi(
         },
         input,
       ),
-    createQuotation: (input: CreateQuotationInput) =>
+    createQuotation: (input: CreateQuotationCommandInput) =>
       createQuotationCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -162,7 +163,7 @@ function buildCommandApi(
         },
         input,
       ),
-    saveCommercialScope: (input: SaveCommercialScopeInput) =>
+    saveCommercialScope: (input: SaveCommercialScopeCommandInput) =>
       saveCommercialScopeCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -185,7 +186,7 @@ function buildCommandApi(
         },
         input,
       ),
-    recordRepLegal: (input: RecordRepLegalInput) =>
+    recordRepLegal: (input: RecordRepLegalCommandInput) =>
       recordRepLegalCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -195,7 +196,7 @@ function buildCommandApi(
         },
         input,
       ),
-    createVenue: (input: CreateVenueInput) =>
+    createVenue: (input: CreateVenueCommandInput) =>
       createVenueCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -206,7 +207,7 @@ function buildCommandApi(
         },
         input,
       ),
-    addVenueAccounts: (input: AddVenueAccountsInput) =>
+    addVenueAccounts: (input: AddVenueAccountsCommandInput) =>
       addVenueAccountsCommand(
         {
           leadReader: baseDeps.leadReader,
@@ -216,7 +217,7 @@ function buildCommandApi(
         },
         input,
       ),
-    requestRateNegotiation: (input: RequestRateNegotiationInput) =>
+    requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
       requestRateNegotiationCommand(
         {
           leadReader: baseDeps.leadReader,

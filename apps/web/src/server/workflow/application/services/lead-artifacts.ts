@@ -13,20 +13,12 @@ import type { FileStorage } from "~/server/files/storage";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+
 import { canUploadSaleProof, requireLeadAccess } from "../policies/access";
-
-type LeadRecord = {
-  id: string;
-  executiveId: number;
-  stage: string;
-};
-
-type LeadReader = {
-  findById(id: string): Promise<LeadRecord | undefined>;
-};
+import type { LeadReadRepository } from "../ports/lead-read-repository";
 
 type LeadArtifactDeps = {
-  leadReader: LeadReader;
+  leadReader: LeadReadRepository;
   filesRepo: ArtifactRepos;
   filesStorage: FileStorage;
   filesSyncExecutor: SyncExecutor;
@@ -35,7 +27,12 @@ type LeadArtifactDeps = {
 async function requireReadableLead(
   deps: LeadArtifactDeps,
   input: { leadId: string; ctx: AppContext },
-): Promise<Result<LeadRecord, DomainError>> {
+): Promise<
+  Result<
+    NonNullable<Awaited<ReturnType<LeadReadRepository["findById"]>>>,
+    DomainError
+  >
+> {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));

@@ -1,10 +1,10 @@
 import type { LeadCommandResult } from "~/contracts/workflow";
+import type { ReassignLeadCommandInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { invalidLeadInput } from "../../domain/lead/lead-errors";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { ReassignLeadInput } from "../contracts/command-inputs";
 import { resolveAssignableExecutivesScope } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
@@ -20,7 +20,7 @@ type ReassignLeadCommandDeps = {
 
 export async function reassignLeadCommand(
   deps: ReassignLeadCommandDeps,
-  input: ReassignLeadInput,
+  input: ReassignLeadCommandInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const prepared = await prepareLeadCommand({
     leadReader: deps.leadReader,

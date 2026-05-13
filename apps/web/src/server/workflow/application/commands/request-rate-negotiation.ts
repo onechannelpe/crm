@@ -1,11 +1,11 @@
 import { randomUUIDv7 } from "bun";
 
 import type { LeadCommandResult } from "~/contracts/workflow";
+import type { RequestRateNegotiationCommandInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { RequestRateNegotiationInput } from "../contracts/command-inputs";
 import { requireLeadActionAccess } from "../policies/lead-action-policy";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
@@ -21,7 +21,7 @@ type Deps = {
 
 export async function requestRateNegotiationCommand(
   deps: Deps,
-  input: RequestRateNegotiationInput,
+  input: RequestRateNegotiationCommandInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) return leadNotFound();

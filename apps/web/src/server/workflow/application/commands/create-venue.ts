@@ -1,9 +1,9 @@
 import type { LeadCommandResult } from "~/contracts/workflow";
+import type { CreateVenueCommandInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { CreateVenueInput } from "../contracts/command-inputs";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadProfileRepository } from "../ports/lead-profile-repository";
@@ -25,7 +25,7 @@ type CreateVenueCommandDeps = {
 
 export async function createVenueCommand(
   deps: CreateVenueCommandDeps,
-  input: CreateVenueInput,
+  input: CreateVenueCommandInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const canCreate = requirePipelineActionAccess(
     input.actor.role,

@@ -1,8 +1,8 @@
+import type { UpdateSourcingPolicyInput } from "~/contracts/workflow";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { UpdateSourcingPolicyInput } from "../contracts/command-inputs";
 import type { SourcingPolicyDeps } from "../deps/sourcing-policy";
 
 export async function updateSourcingPolicy(

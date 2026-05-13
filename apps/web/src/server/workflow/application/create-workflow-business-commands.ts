@@ -1,3 +1,23 @@
+import type {
+  AddLeadNoteCommandInput,
+  AddLeadToFavoritesInput,
+  AddVenueAccountsCommandInput,
+  ApplyImportedReviewInput,
+  ApproveForSaleInput,
+  CreateQuotationCommandInput,
+  CreateVenueCommandInput,
+  LogLeadCallCommandInput,
+  ReassignLeadCommandInput,
+  RecordRepLegalCommandInput,
+  RegisterLeadInput,
+  RemoveLeadFromFavoritesInput,
+  RequestQuotationInput,
+  RequestRateNegotiationCommandInput,
+  RequestSunatRefreshInput,
+  ReviewLeadCommandInput,
+  SaveCommercialScopeCommandInput,
+  UpdateSourcingPolicyInput,
+} from "~/contracts/workflow";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
 import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
@@ -15,26 +35,6 @@ import { requestRateNegotiationCommand } from "~/server/workflow/application/com
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
-import type {
-  AddLeadNoteInput,
-  AddLeadToFavoritesInput,
-  AddVenueAccountsInput,
-  ApplyImportedReviewInput,
-  ApproveForSaleInput,
-  CreateQuotationInput,
-  CreateVenueInput,
-  LogLeadCallInput,
-  ReassignLeadInput,
-  RecordRepLegalInput,
-  RegisterLeadInput,
-  RemoveLeadFromFavoritesInput,
-  RequestQuotationInput,
-  RequestRateNegotiationInput,
-  RequestSunatRefreshInput,
-  ReviewLeadInput,
-  SaveCommercialScopeInput,
-  UpdateSourcingPolicyInput,
-} from "~/server/workflow/application/contracts/command-inputs";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 
 import type { WorkflowCommandDeps } from "./create-workflow-command-deps";
@@ -71,7 +71,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    reassignLead: (input: ReassignLeadInput) =>
+    reassignLead: (input: ReassignLeadCommandInput) =>
       reassignLeadCommand(
         {
           leadReader: deps.repos.leads,
@@ -81,7 +81,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    reviewLead: (input: ReviewLeadInput) =>
+    reviewLead: (input: ReviewLeadCommandInput) =>
       reviewLeadCommand(
         {
           leadReader: deps.repos.leads,
@@ -90,7 +90,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    addLeadNote: (input: AddLeadNoteInput) =>
+    addLeadNote: (input: AddLeadNoteCommandInput) =>
       addLeadNoteCommand(
         {
           leadReader: deps.repos.leads,
@@ -99,7 +99,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    logLeadCall: (input: LogLeadCallInput) =>
+    logLeadCall: (input: LogLeadCallCommandInput) =>
       logLeadCallCommand(
         {
           leadReader: deps.repos.leads,
@@ -126,7 +126,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    createQuotation: (input: CreateQuotationInput) =>
+    createQuotation: (input: CreateQuotationCommandInput) =>
       createQuotationCommand(
         {
           leadReader: deps.repos.leads,
@@ -136,7 +136,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    saveCommercialScope: (input: SaveCommercialScopeInput) =>
+    saveCommercialScope: (input: SaveCommercialScopeCommandInput) =>
       saveCommercialScopeCommand(
         {
           leadReader: deps.repos.leads,
@@ -159,7 +159,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    recordRepLegal: (input: RecordRepLegalInput) =>
+    recordRepLegal: (input: RecordRepLegalCommandInput) =>
       recordRepLegalCommand(
         {
           leadReader: deps.repos.leads,
@@ -169,7 +169,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    createVenue: (input: CreateVenueInput) =>
+    createVenue: (input: CreateVenueCommandInput) =>
       createVenueCommand(
         {
           leadReader: deps.repos.leads,
@@ -180,7 +180,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    addVenueAccounts: (input: AddVenueAccountsInput) =>
+    addVenueAccounts: (input: AddVenueAccountsCommandInput) =>
       addVenueAccountsCommand(
         {
           leadReader: deps.repos.leads,
@@ -190,7 +190,7 @@ export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
         },
         input,
       ),
-    requestRateNegotiation: (input: RequestRateNegotiationInput) =>
+    requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
       requestRateNegotiationCommand(
         {
           leadReader: deps.repos.leads,

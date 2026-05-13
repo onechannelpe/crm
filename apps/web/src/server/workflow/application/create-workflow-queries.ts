@@ -1,9 +1,9 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import type {
   GetLeadDetailInput,
   ListAssignableExecutivesInput,
   ListLeadsInput,
-} from "~/server/workflow/application/contracts/query-inputs";
+} from "~/contracts/workflow";
+import type { Role } from "~/lib/auth/access/rbac";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/application/queries/get-lead-detail";

@@ -1,9 +1,9 @@
 import type { LeadQuotationResult } from "~/contracts/workflow";
+import type { CreateQuotationCommandInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { CreateQuotationInput } from "../contracts/command-inputs";
 import {
   canCreateQuotation,
   requirePipelineActionAccess,
@@ -22,7 +22,7 @@ type CreateQuotationCommandDeps = {
 
 export async function createQuotationCommand(
   deps: CreateQuotationCommandDeps,
-  input: CreateQuotationInput,
+  input: CreateQuotationCommandInput,
 ): Promise<Result<LeadQuotationResult, DomainError>> {
   const canCreate = requirePipelineActionAccess(
     input.actor.role,

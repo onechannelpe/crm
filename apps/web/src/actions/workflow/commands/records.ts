@@ -9,7 +9,6 @@ import {
   type ReviewLeadInput,
   type SaveCommercialScopeInput,
 } from "~/contracts/workflow";
-import { isAbonoBank } from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -63,11 +62,6 @@ export async function requestSaveCommercialScope(
   if (!input.giroNegocio?.trim()) {
     throw validationError("giroNegocio is required");
   }
-  if (!isAbonoBank(input.abonoBank)) {
-    throw validationError("abonoBank is invalid");
-  }
-
-  const abonoBank = input.abonoBank;
 
   return runAction({
     actionName: "workflow.save_commercial_scope",
@@ -82,7 +76,7 @@ export async function requestSaveCommercialScope(
         gpv: input.gpv,
         ticket: input.ticket,
         giroNegocio: input.giroNegocio,
-        abonoBank,
+        abonoBank: input.abonoBank,
         posTotal: input.posTotal,
         linkScope: input.linkScope,
         linkUrl: input.linkUrl,

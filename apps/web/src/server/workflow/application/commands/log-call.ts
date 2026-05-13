@@ -1,10 +1,10 @@
 import type { LeadInteractionResult } from "~/contracts/workflow";
+import type { LogLeadCallCommandInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import { requireFirstHistoryId } from "../command-kernel/require-history-id";
-import type { LogLeadCallInput } from "../contracts/command-inputs";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
 import type { LeadClock } from "../services/lead-clock";
@@ -17,7 +17,7 @@ type LogLeadCallCommandDeps = {
 
 export async function logLeadCallCommand(
   deps: LogLeadCallCommandDeps,
-  input: LogLeadCallInput,
+  input: LogLeadCallCommandInput,
 ): Promise<Result<LeadInteractionResult, DomainError>> {
   const prepared = await prepareLeadCommand({
     leadReader: deps.leadReader,

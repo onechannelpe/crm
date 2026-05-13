@@ -1,9 +1,9 @@
 import type { LeadCommandResult } from "~/contracts/workflow";
+import type { RecordRepLegalCommandInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { RecordRepLegalInput } from "../contracts/command-inputs";
 import {
   canCompleteScoping,
   requirePipelineActionAccess,
@@ -22,7 +22,7 @@ type RecordRepLegalCommandDeps = {
 
 export async function recordRepLegalCommand(
   deps: RecordRepLegalCommandDeps,
-  input: RecordRepLegalInput,
+  input: RecordRepLegalCommandInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const canRecord = requirePipelineActionAccess(
     input.actor.role,

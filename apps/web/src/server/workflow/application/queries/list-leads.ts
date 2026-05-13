@@ -1,4 +1,5 @@
 import type { LeadListView } from "~/contracts/workflow";
+import type { ListLeadsInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -7,7 +8,6 @@ import {
   parseLeadStage,
   parseLeadStatus,
 } from "../../domain/lead-schema-parser";
-import type { ListLeadsInput } from "../contracts/query-inputs";
 import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,

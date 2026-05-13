@@ -1,10 +1,10 @@
 import { isBcpBank } from "~/contracts/workflow";
 import type { LeadCommandResult } from "~/contracts/workflow";
+import type { AddVenueAccountsCommandInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import type { AddVenueAccountsInput } from "../contracts/command-inputs";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";
@@ -20,7 +20,7 @@ type AddVenueAccountsCommandDeps = {
 
 export async function addVenueAccountsCommand(
   deps: AddVenueAccountsCommandDeps,
-  input: AddVenueAccountsInput,
+  input: AddVenueAccountsCommandInput,
 ): Promise<Result<LeadCommandResult, DomainError>> {
   const canCreate = requirePipelineActionAccess(
     input.actor.role,
