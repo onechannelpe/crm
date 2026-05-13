@@ -7,7 +7,9 @@ import type { CapacityPolicyDefaultsView } from "./contracts";
 interface PolicyDefaultsDeps {
   repos: {
     teams: {
-      findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
+      findByBranch(
+        branchId: number,
+      ): Promise<Array<{ id: number; name: string }>>;
     };
     searchPolicyDefaults: {
       findForScope(

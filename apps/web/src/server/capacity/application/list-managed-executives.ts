@@ -5,8 +5,8 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityUser } from "./actor-scope";
 import { canManageExecutive } from "../domain/access-policy";
+import type { CapacityUser } from "./actor-scope";
 import type { ManagedExecutiveView } from "./contracts";
 
 interface ManagedExecutivesDeps {
@@ -14,9 +14,7 @@ interface ManagedExecutivesDeps {
     Omit<Parameters<typeof getLeadCapacitySnapshot>[1], "users"> & {
       users: {
         findById(id: number): Promise<CapacityUser | undefined>;
-        findByBranch(branchId: number): Promise<
-          CapacityUser[]
-        >;
+        findByBranch(branchId: number): Promise<CapacityUser[]>;
         findAllActive(): Promise<CapacityUser[]>;
       };
     };

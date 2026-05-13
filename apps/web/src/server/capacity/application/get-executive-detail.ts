@@ -5,9 +5,9 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityUser } from "./actor-scope";
 import { canManageExecutive } from "../domain/access-policy";
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
+import type { CapacityUser } from "./actor-scope";
 import type { ExecutiveCapacityDetailView } from "./contracts";
 
 interface ExecutiveDetailDeps {

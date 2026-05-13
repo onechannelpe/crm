@@ -26,7 +26,9 @@ interface AuditReadDeps {
       >;
     };
     users: {
-      findByBranchIncludingInactive(branchId: number): Promise<Array<{ id: number }>>;
+      findByBranchIncludingInactive(
+        branchId: number,
+      ): Promise<Array<{ id: number }>>;
     };
     teams: {
       findByBranch(branchId: number): Promise<Array<{ id: number }>>;
