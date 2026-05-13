@@ -4,7 +4,7 @@ import Package from "~/components/icons/package";
 import Phone from "~/components/icons/phone";
 import Plus from "~/components/icons/plus";
 import TimelineEvent from "~/components/icons/timeline-event";
-import type { LeadTimelineItem } from "~/contracts/workflow";
+import type { LeadTimelineItem } from "~/contracts/workflow/views";
 
 export function eventIcon(kind: LeadTimelineItem["kind"]): JSX.Element {
   if (kind === "call") {

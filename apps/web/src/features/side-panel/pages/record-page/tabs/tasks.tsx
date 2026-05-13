@@ -2,7 +2,7 @@ import { createMemo, For, Show } from "solid-js";
 
 import Checkbox from "~/components/icons/checkbox";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow/views";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import {
   ActivityListCard,

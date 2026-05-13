@@ -9,4 +9,4 @@ export type {
   LeadDetailVenueView,
   LeadDetailView,
   LeadTimelineItem,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/views";

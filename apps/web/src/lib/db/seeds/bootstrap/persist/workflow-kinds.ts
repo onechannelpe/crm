@@ -5,7 +5,7 @@ import {
   ACCOUNT_TYPE_KINDS,
   MODALIDAD_COBRO_KINDS,
   MONEDAS,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/vocabulary";
 
 import type { Database } from "../../../types";
 

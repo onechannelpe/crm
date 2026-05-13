@@ -11,7 +11,7 @@ import {
   RecordChip,
   RecordLinkChip,
 } from "~/components/ui/record-chip/record-chip";
-import type { LeadListRowView } from "~/contracts/workflow";
+import type { LeadListRowView } from "~/contracts/workflow/views";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   leadNextStepLabel,

@@ -1,5 +1,5 @@
-import type { LeadAvailableAction } from "~/contracts/workflow";
-import type { LeadBlockingField } from "~/contracts/workflow";
+import type { LeadAvailableAction } from "~/contracts/workflow/views";
+import type { LeadBlockingField } from "~/contracts/workflow/views";
 
 const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   proveedorActual: "Proveedor actual",

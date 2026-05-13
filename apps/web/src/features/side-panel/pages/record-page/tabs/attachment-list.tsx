@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { LeadSaleProofFileView } from "~/contracts/workflow";
+import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { ActivityListCard } from "~/features/side-panel/components/activity-tabs/primitives";
 

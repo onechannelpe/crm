@@ -4,7 +4,7 @@ import { Show, createSignal } from "solid-js";
 import User from "~/components/icons/user";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
-import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow/views";
 import {
   FieldIcon,
   FieldInputValue,

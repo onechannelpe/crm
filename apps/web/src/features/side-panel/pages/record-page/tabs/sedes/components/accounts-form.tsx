@@ -3,7 +3,7 @@ import { For, Show } from "solid-js";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import { BankPicker } from "~/components/ui/pickers/bank-picker";
-import { ACCOUNT_TYPE_KINDS } from "~/contracts/workflow";
+import { ACCOUNT_TYPE_KINDS } from "~/contracts/workflow/vocabulary";
 import {
   FieldInputValue,
   FieldLabel,

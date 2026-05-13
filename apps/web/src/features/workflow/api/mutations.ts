@@ -17,7 +17,7 @@ import {
   requestVenueAccountsAddition,
   requestVenueCreation,
 } from "~/actions/workflow/commands/sales";
-import type { LeadIdInput } from "~/contracts/workflow";
+import type { LeadIdInput } from "~/contracts/workflow/inputs";
 
 export async function requestLeadCreationApi(
   input: Parameters<typeof requestLeadCreation>[0],

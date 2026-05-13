@@ -1,4 +1,4 @@
-import type { ActorContext } from "~/contracts/workflow";
+import type { ActorContext } from "~/contracts/workflow/primitives";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 export function workflowActorFrom(ctx: AppContext): ActorContext {

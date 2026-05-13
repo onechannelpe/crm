@@ -1,1 +1,1 @@
-export type { LeadAvailableAction } from "~/contracts/workflow";
+export type { LeadAvailableAction } from "~/contracts/workflow/views";

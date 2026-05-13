@@ -1,1 +1,1 @@
-export type { ActorContext } from "~/contracts/workflow";
+export type { ActorContext } from "~/contracts/workflow/primitives";

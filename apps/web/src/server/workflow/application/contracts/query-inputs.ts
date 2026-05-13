@@ -1,4 +1,5 @@
-import type { ActorContext, LeadListFiltersInput } from "~/contracts/workflow";
+import type { LeadListFiltersInput } from "~/contracts/workflow/inputs";
+import type { ActorContext } from "~/contracts/workflow/primitives";
 
 export type GetLeadDetailInput = {
   actor: ActorContext;

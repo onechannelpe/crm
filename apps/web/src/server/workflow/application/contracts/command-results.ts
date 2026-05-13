@@ -5,4 +5,4 @@ export type {
   LeadQuotationResult,
   LeadSaleProofFileView,
   WorkflowFileStatus,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/results";

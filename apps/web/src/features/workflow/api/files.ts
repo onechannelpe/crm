@@ -7,7 +7,7 @@ import {
   requestNegotiationFileDownloadToken,
   uploadLeadNegotiationFile,
 } from "~/actions/workflow/negotiation-files";
-import type { LeadArtifactInput } from "~/contracts/workflow";
+import type { LeadArtifactInput } from "~/contracts/workflow/inputs";
 
 export async function listLeadSaleProofFilesApi(leadId: string) {
   return listLeadSaleProofFiles(leadId);

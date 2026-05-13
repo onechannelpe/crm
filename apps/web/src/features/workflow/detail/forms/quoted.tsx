@@ -10,7 +10,7 @@ import { Button } from "~/components/ui/input/button";
 import type {
   LeadDetailNegotiationRequestView,
   LeadDetailQuotationView,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/results";
 import {
   FieldIcon,
   FieldLabel,

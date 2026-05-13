@@ -1,4 +1,8 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 
 export type LeadListFilters = {
   stage?: LeadStage;

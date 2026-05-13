@@ -1,4 +1,8 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 import type { NotificationIntent } from "~/server/notifications/types";
 
 export type RowResult =

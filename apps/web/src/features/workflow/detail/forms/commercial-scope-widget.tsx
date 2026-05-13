@@ -6,13 +6,13 @@ import Moneybag from "~/components/icons/moneybag";
 import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
-import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow/views";
 import {
   ABONO_BANKS,
   type AbonoBank,
   type ModalidadCobro,
   type ProductScope,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/vocabulary";
 import {
   FieldIcon,
   FieldInputValue,

@@ -4,7 +4,7 @@ import { workflowActorFrom } from "~/actions/workflow/shared";
 import type {
   LeadCommandResult,
   RequestRateNegotiationInput,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/inputs";
 import { AppError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runActionResult } from "~/server/shared/action-runtime";

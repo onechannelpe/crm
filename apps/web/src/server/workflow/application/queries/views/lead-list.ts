@@ -1,1 +1,1 @@
-export type { LeadListRowView, LeadListView } from "~/contracts/workflow";
+export type { LeadListRowView, LeadListView } from "~/contracts/workflow/views";

@@ -1,4 +1,8 @@
 import type {
+  SaleVenueAccount,
+  VenueDigitalConfig,
+} from "~/contracts/workflow/primitives";
+import type {
   AbonoBank,
   LeadCallOutcome,
   LeadPriority,
@@ -6,9 +10,7 @@ import type {
   ModalidadCobro,
   Moneda,
   ProductScope,
-  SaleVenueAccount,
-  VenueDigitalConfig,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/vocabulary";
 
 import type { ActorContext } from "./actor-context";
 

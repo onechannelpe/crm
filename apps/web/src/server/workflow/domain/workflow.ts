@@ -1,4 +1,4 @@
-import type { LeadPriority, LeadStatus } from "~/contracts/workflow";
+import type { LeadPriority, LeadStatus } from "~/contracts/workflow/vocabulary";
 
 import type { QualifyingLeadSubject } from "./lead-subjects";
 
