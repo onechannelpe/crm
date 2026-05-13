@@ -57,15 +57,11 @@ export async function grantMoreSearches(
     access: { kind: "permission", permission: "capacity:manage" },
     input: grantInput.value,
     execute: (ctx) =>
-      grantSearchCapacityService(
-        ctx,
-        getServerRuntime().capacity.commands,
-        {
-          targetUserId: grantInput.value.userId,
-          amount: grantInput.value.amount,
-          reason: grantInput.value.reason,
-        },
-      ),
+      grantSearchCapacityService(ctx, getServerRuntime().capacity.commands, {
+        targetUserId: grantInput.value.userId,
+        amount: grantInput.value.amount,
+        reason: grantInput.value.reason,
+      }),
   });
 }
 
@@ -81,14 +77,10 @@ export async function grantMoreLeadRefill(
     access: { kind: "permission", permission: "capacity:manage" },
     input: grantInput.value,
     execute: (ctx) =>
-      grantLeadCapacityService(
-        ctx,
-        getServerRuntime().capacity.commands,
-        {
-          targetUserId: grantInput.value.userId,
-          amount: grantInput.value.amount,
-          reason: grantInput.value.reason,
-        },
-      ),
+      grantLeadCapacityService(ctx, getServerRuntime().capacity.commands, {
+        targetUserId: grantInput.value.userId,
+        amount: grantInput.value.amount,
+        reason: grantInput.value.reason,
+      }),
   });
 }

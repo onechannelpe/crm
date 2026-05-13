@@ -50,7 +50,9 @@ export async function approveCapacityRequest(
   return deps.uow.run(async (tx) => {
     const request = await tx.capacityRequests.findById(input.requestId);
     if (!request) {
-      return Err(domainError("not_found", "request_not_found", "Request not found"));
+      return Err(
+        domainError("not_found", "request_not_found", "Request not found"),
+      );
     }
     if (request.status !== "pending") {
       return Err(
@@ -73,7 +75,9 @@ export async function approveCapacityRequest(
       );
     }
     if (!managed.ok) {
-      return Err(domainError("forbidden", "forbidden", "Cannot approve this request"));
+      return Err(
+        domainError("forbidden", "forbidden", "Cannot approve this request"),
+      );
     }
 
     const note = normalizeDecisionNote(input.note);
@@ -148,7 +152,9 @@ export async function rejectCapacityRequest(
   return deps.uow.run(async (tx) => {
     const request = await tx.capacityRequests.findById(input.requestId);
     if (!request) {
-      return Err(domainError("not_found", "request_not_found", "Request not found"));
+      return Err(
+        domainError("not_found", "request_not_found", "Request not found"),
+      );
     }
     if (request.status !== "pending") {
       return Err(
@@ -171,7 +177,9 @@ export async function rejectCapacityRequest(
       );
     }
     if (!managed.ok) {
-      return Err(domainError("forbidden", "forbidden", "Cannot reject this request"));
+      return Err(
+        domainError("forbidden", "forbidden", "Cannot reject this request"),
+      );
     }
 
     const rejectedResult = await tx.capacityRequests.markRejected(
