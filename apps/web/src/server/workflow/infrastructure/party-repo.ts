@@ -96,9 +96,42 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
     },
     async upsertPrimaryLegalRepresentative(values: LegalRepresentative) {
       const now = Date.now();
+      const fullName = [
+        values.nombres,
+        values.apellidoPaterno,
+        values.apellidoMaterno,
+      ]
+        .filter((part) => part.trim().length > 0)
+        .join(" ");
+
+      await db
+        .insertInto("people")
+        .values({
+          dni: values.dni,
+          full_name: fullName,
+          email: values.email,
+          created_at: now,
+          updated_at: now,
+        })
+        .onConflict((oc) =>
+          oc.column("dni").doUpdateSet({
+            full_name: fullName,
+            email: values.email,
+            updated_at: now,
+          }),
+        )
+        .executeTakeFirstOrThrow();
+
+      const person = await db
+        .selectFrom("people")
+        .select(["id"])
+        .where("dni", "=", values.dni)
+        .executeTakeFirstOrThrow();
+
       await db
         .insertInto("organization_people")
         .values({
+          person_id: person.id,
           organization_id: values.organizationId,
           dni: values.dni,
           nombres: values.nombres,
@@ -111,6 +144,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
         })
         .onConflict((oc) =>
           oc.columns(["organization_id", "dni"]).doUpdateSet({
+            person_id: person.id,
             nombres: values.nombres,
             apellido_paterno: values.apellidoPaterno,
             apellido_materno: values.apellidoMaterno,
@@ -121,7 +155,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
         )
         .executeTakeFirstOrThrow();
 
-      const person = await db
+      const organizationPerson = await db
         .selectFrom("organization_people")
         .select("id")
         .where("organization_id", "=", values.organizationId)
@@ -144,7 +178,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
       await db
         .insertInto("organization_person_roles")
         .values({
-          organization_person_id: person.id,
+          organization_person_id: organizationPerson.id,
           role: "LEGAL_REPRESENTATIVE",
           is_primary: 1,
           effective_from: now,
