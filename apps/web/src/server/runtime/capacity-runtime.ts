@@ -6,7 +6,20 @@ import {
   createSearchUsageCommitsRepo,
   createSearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
-import { bindCapacityIntentHandlers } from "~/server/capacity/application/use-cases";
+import { getAuditEvents } from "~/server/capacity/application/queries/get-audit-events";
+import { getExecutiveDetail } from "~/server/capacity/application/queries/get-executive-detail";
+import { getPolicyDefaults } from "~/server/capacity/application/queries/get-policy-defaults";
+import { listManagedExecutives } from "~/server/capacity/application/queries/list-managed-executives";
+import { listPendingRequests } from "~/server/capacity/application/queries/list-pending-requests";
+import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
+import { grantLeadCapacityDirect } from "~/server/capacity/application/use-cases/grant-lead-capacity-direct";
+import { grantSearchCapacityDirect } from "~/server/capacity/application/use-cases/grant-search-capacity-direct";
+import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
+import { requestCapacity } from "~/server/capacity/application/use-cases/request-capacity";
+import { updateLeadPolicyDefault } from "~/server/capacity/application/use-cases/update-lead-policy-default";
+import { updateLeadPolicyOverride } from "~/server/capacity/application/use-cases/update-lead-policy-override";
+import { updateSearchPolicyDefault } from "~/server/capacity/application/use-cases/update-search-policy-default";
+import { updateSearchPolicyOverride } from "~/server/capacity/application/use-cases/update-search-policy-override";
 import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import { createCapacityTeamsRepo } from "~/server/capacity/infrastructure/capacity-teams-repo";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
@@ -55,21 +68,55 @@ export function createCapacityRuntime(infra: ServerInfra) {
   };
 
   return {
-    useCases: bindCapacityIntentHandlers({
-      requestCapacity: { rateLimitDeps, uow },
-      approveCapacityRequest: { rateLimitDeps, uow },
-      rejectCapacityRequest: { rateLimitDeps, uow },
-      grantSearchCapacityDirect: { uow },
-      grantLeadCapacityDirect: { uow },
-      updateSearchPolicyDefault: { uow },
-      updateLeadPolicyDefault: { uow },
-      updateSearchPolicyOverride: { uow },
-      updateLeadPolicyOverride: { uow },
-      listManagedExecutives: { repos: readRepos },
-      getExecutiveDetail: { repos: readRepos },
-      listPendingRequests: { repos: readRepos },
-      getPolicyDefaults: { repos: readRepos },
-      getAuditEvents: { repos: readRepos },
-    }),
+    useCases: {
+      requestCapacity: (ctx: Parameters<typeof requestCapacity>[0], input: Parameters<typeof requestCapacity>[2]) =>
+        requestCapacity(ctx, { rateLimitDeps, uow }, input),
+      approveCapacityRequest: (
+        ctx: Parameters<typeof approveCapacityRequest>[0],
+        input: Parameters<typeof approveCapacityRequest>[2],
+      ) => approveCapacityRequest(ctx, { rateLimitDeps, uow }, input),
+      rejectCapacityRequest: (
+        ctx: Parameters<typeof rejectCapacityRequest>[0],
+        input: Parameters<typeof rejectCapacityRequest>[2],
+      ) => rejectCapacityRequest(ctx, { rateLimitDeps, uow }, input),
+      grantSearchCapacityDirect: (
+        ctx: Parameters<typeof grantSearchCapacityDirect>[0],
+        input: Parameters<typeof grantSearchCapacityDirect>[2],
+      ) => grantSearchCapacityDirect(ctx, { uow }, input),
+      grantLeadCapacityDirect: (
+        ctx: Parameters<typeof grantLeadCapacityDirect>[0],
+        input: Parameters<typeof grantLeadCapacityDirect>[2],
+      ) => grantLeadCapacityDirect(ctx, { uow }, input),
+      updateSearchPolicyDefault: (
+        ctx: Parameters<typeof updateSearchPolicyDefault>[0],
+        input: Parameters<typeof updateSearchPolicyDefault>[2],
+      ) => updateSearchPolicyDefault(ctx, { uow }, input),
+      updateLeadPolicyDefault: (
+        ctx: Parameters<typeof updateLeadPolicyDefault>[0],
+        input: Parameters<typeof updateLeadPolicyDefault>[2],
+      ) => updateLeadPolicyDefault(ctx, { uow }, input),
+      updateSearchPolicyOverride: (
+        ctx: Parameters<typeof updateSearchPolicyOverride>[0],
+        input: Parameters<typeof updateSearchPolicyOverride>[2],
+      ) => updateSearchPolicyOverride(ctx, { uow }, input),
+      updateLeadPolicyOverride: (
+        ctx: Parameters<typeof updateLeadPolicyOverride>[0],
+        input: Parameters<typeof updateLeadPolicyOverride>[2],
+      ) => updateLeadPolicyOverride(ctx, { uow }, input),
+      listManagedExecutives: (ctx: Parameters<typeof listManagedExecutives>[0]) =>
+        listManagedExecutives(ctx, { repos: readRepos }),
+      getExecutiveDetail: (
+        ctx: Parameters<typeof getExecutiveDetail>[0],
+        input: Parameters<typeof getExecutiveDetail>[2],
+      ) => getExecutiveDetail(ctx, { repos: readRepos }, input),
+      listPendingRequests: (ctx: Parameters<typeof listPendingRequests>[0]) =>
+        listPendingRequests(ctx, { repos: readRepos }),
+      getPolicyDefaults: (ctx: Parameters<typeof getPolicyDefaults>[0]) =>
+        getPolicyDefaults(ctx, { repos: readRepos }),
+      getAuditEvents: (
+        ctx: Parameters<typeof getAuditEvents>[0],
+        input: Parameters<typeof getAuditEvents>[2],
+      ) => getAuditEvents(ctx, { repos: readRepos }, input),
+    },
   };
 }
