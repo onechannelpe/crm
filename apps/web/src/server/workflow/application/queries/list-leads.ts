@@ -1,3 +1,4 @@
+import type { LeadListView } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -14,7 +15,6 @@ import {
 import type { LeadListFilters, LeadQueries } from "../ports/lead-queries";
 import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
-import type { LeadListView } from "~/contracts/workflow";
 
 const LEAD_SORT_FIELDS = [
   "createdAt",

@@ -1,7 +1,10 @@
 "use server";
 
 import type { LeadArtifactInput } from "~/contracts/workflow";
-import type { LeadNegotiationFileView, LeadSaleProofFileView } from "~/contracts/workflow";
+import type {
+  LeadNegotiationFileView,
+  LeadSaleProofFileView,
+} from "~/contracts/workflow";
 import { AppError, validationError } from "~/lib/app-errors";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";
@@ -20,7 +23,10 @@ export async function listLeadSaleProofFiles(
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      getServerRuntime().files.leadArtifacts.listSaleProofFiles({ ctx, leadId }),
+      getServerRuntime().files.leadArtifacts.listSaleProofFiles({
+        ctx,
+        leadId,
+      }),
   });
 }
 

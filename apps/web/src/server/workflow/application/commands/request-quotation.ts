@@ -1,10 +1,10 @@
+import type { LeadCommandResult } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { resolveLeadBlockingFields } from "../../domain/lead-progress";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import type { RequestQuotationInput } from "../contracts/command-inputs";
-import type { LeadCommandResult } from "~/contracts/workflow";
 import {
   canCompleteScoping,
   requirePipelineActionAccess,

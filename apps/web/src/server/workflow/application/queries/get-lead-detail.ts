@@ -1,3 +1,4 @@
+import type { LeadDetailView } from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
@@ -9,7 +10,6 @@ import {
   loadLeadDetailSections,
   type LeadDetailQueryDeps,
 } from "./load-lead-detail-sections";
-import type { LeadDetailView } from "~/contracts/workflow";
 
 export async function getLeadDetail(
   deps: LeadDetailQueryDeps,

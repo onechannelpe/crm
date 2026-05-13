@@ -1,6 +1,18 @@
+import type { LeadAvailableAction } from "~/contracts/workflow";
+import type {
+  LeadDetailLeadView,
+  LeadDetailNegotiationFileView,
+  LeadDetailNegotiationRequestView,
+  LeadDetailProfileView,
+  LeadDetailQuotationView,
+  LeadDetailRepLegalView,
+  LeadDetailSourceStatusView,
+  LeadDetailVenueView,
+  LeadDetailView,
+} from "~/contracts/workflow";
+
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadAvailableAction } from "~/contracts/workflow";
 import type { LeadProfile } from "../ports/lead-profile-repository";
 import type {
   LeadNegotiationRequest,
@@ -13,17 +25,6 @@ import type {
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadVenue } from "../ports/sale-repository";
 import type { LeadSourceStatus } from "../ports/source-status-repository";
-import type {
-  LeadDetailLeadView,
-  LeadDetailNegotiationFileView,
-  LeadDetailNegotiationRequestView,
-  LeadDetailProfileView,
-  LeadDetailQuotationView,
-  LeadDetailRepLegalView,
-  LeadDetailSourceStatusView,
-  LeadDetailVenueView,
-  LeadDetailView,
-} from "~/contracts/workflow";
 import {
   presentLeadBlockingFields,
   presentLeadNextStep,

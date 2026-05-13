@@ -1,13 +1,16 @@
+import type {
+  LeadNegotiationFileView,
+  LeadSaleProofFileView,
+} from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import type { LeadNegotiationFileView, LeadSaleProofFileView } from "~/contracts/workflow";
-import { requestArtifact } from "~/server/files/service/request-artifact";
-import { requestDownloadToken } from "~/server/files/service/request-download-token";
-import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import type {
   ArtifactRepos,
   SyncExecutor,
 } from "~/server/files/service/contracts";
+import { requestArtifact } from "~/server/files/service/request-artifact";
+import { requestDownloadToken } from "~/server/files/service/request-download-token";
+import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import type { FileStorage } from "~/server/files/storage";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
@@ -196,7 +199,11 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!fileAsset) {
         return Err(
-          domainError("external", "file_asset_not_found", "File asset not found"),
+          domainError(
+            "external",
+            "file_asset_not_found",
+            "File asset not found",
+          ),
         );
       }
 
@@ -236,7 +243,11 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!saleProof || saleProof.leadId !== input.leadId) {
         return Err(
-          domainError("not_found", "sale_proof_not_found", "Sale proof not found"),
+          domainError(
+            "not_found",
+            "sale_proof_not_found",
+            "Sale proof not found",
+          ),
         );
       }
 
@@ -304,7 +315,11 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!fileAsset) {
         return Err(
-          domainError("external", "file_asset_not_found", "File asset not found"),
+          domainError(
+            "external",
+            "file_asset_not_found",
+            "File asset not found",
+          ),
         );
       }
 
@@ -329,7 +344,11 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!record || record.leadId !== input.leadId) {
         return Err(
-          domainError("not_found", "file_not_found", "Negotiation file not found"),
+          domainError(
+            "not_found",
+            "file_not_found",
+            "Negotiation file not found",
+          ),
         );
       }
 

@@ -56,7 +56,9 @@ export function createLeadMutationUow(
     ) => Promise<void>;
   },
 ): LeadMutationUow {
-  async function commitMutation(input: Parameters<LeadMutationUow["commit"]>[0]) {
+  async function commitMutation(
+    input: Parameters<LeadMutationUow["commit"]>[0],
+  ) {
     return executor.transaction().execute(async (txDb) => {
       const deps = createMutationDeps(txDb);
 

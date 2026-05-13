@@ -1,10 +1,10 @@
+import type { LeadCommandResult } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { invalidLeadInput } from "../../domain/lead/lead-errors";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { ReassignLeadInput } from "../contracts/command-inputs";
-import type { LeadCommandResult } from "~/contracts/workflow";
 import { resolveAssignableExecutivesScope } from "../policies/access";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";
 import type { LeadReadRepository } from "../ports/lead-read-repository";

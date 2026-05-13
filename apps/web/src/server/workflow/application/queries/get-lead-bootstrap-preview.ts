@@ -1,9 +1,9 @@
+import type { LeadBootstrapPreviewView } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { WorkflowEngineGateway } from "../ports/engine-gateway";
 import type { PartyRepository } from "../ports/party-repository";
-import type { LeadBootstrapPreviewView } from "~/contracts/workflow";
 
 type LeadBootstrapPreviewQueryDeps = {
   party: PartyRepository;
