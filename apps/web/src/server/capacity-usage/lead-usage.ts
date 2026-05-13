@@ -12,24 +12,24 @@ import type {
   LeadUsageReservationsRepo,
 } from "./repos";
 
-export interface ReserveLeadUsageCommand {
+interface ReserveLeadUsageCommand {
   actorUserId: UserId;
   amount: number;
   remainingCapacity: number;
   reason: "lead_refill" | "admin_grant_adjustment";
 }
 
-export interface CommitLeadUsageCommand {
+interface CommitLeadUsageCommand {
   reservationId: LeadReservationId;
   amount: number;
 }
 
-export interface CancelLeadUsageCommand {
+interface CancelLeadUsageCommand {
   reservationId: LeadReservationId;
   reason: "external_failure" | "partial_use" | "workflow_cancelled";
 }
 
-export interface GrantLeadCapacityCommand {
+interface GrantLeadCapacityCommand {
   actorUserId: UserId;
   targetUserId: UserId;
   amount: number;
@@ -42,7 +42,7 @@ interface UsageRepos {
   leadUsageCommits: LeadUsageCommitsRepo;
 }
 
-export interface ExecuteWithLeadUsageReservationCommand {
+interface ExecuteWithLeadUsageReservationCommand {
   actorUserId: UserId;
   requested: number;
   remainingCapacity: number;
@@ -50,7 +50,7 @@ export interface ExecuteWithLeadUsageReservationCommand {
   failureReason: CancelLeadUsageCommand["reason"];
 }
 
-export async function reserveLeadUsage(
+async function reserveLeadUsage(
   command: ReserveLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<LeadReservationId, DomainError>> {
@@ -67,7 +67,7 @@ export async function reserveLeadUsage(
   return Ok(asLeadReservationId(row.id));
 }
 
-export async function commitLeadUsage(
+async function commitLeadUsage(
   command: CommitLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations" | "leadUsageCommits">,
 ): Promise<Result<void, DomainError>> {
@@ -95,7 +95,7 @@ export async function commitLeadUsage(
   return Ok(undefined);
 }
 
-export async function cancelLeadUsage(
+async function cancelLeadUsage(
   command: CancelLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<void, DomainError>> {

@@ -220,8 +220,9 @@ describe("assignContacts", () => {
       throw new Error("db write failed");
     };
     const engine = {
-      requestCandidates: async (): Promise<Result<RecordCandidate[], DomainError>> =>
-        Ok([makeCandidate(1)]),
+      requestCandidates: async (): Promise<
+        Result<RecordCandidate[], DomainError>
+      > => Ok([makeCandidate(1)]),
     };
 
     await expect(
