@@ -1,6 +1,7 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
+import type { AppUow } from "~/server/shared/application/uow";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -102,13 +103,7 @@ type CapacityGrantTx = {
 
 type CapacityApprovalDeps = {
   rateLimitDeps: CapacityCommandsContext["rateLimitDeps"];
-  uow: {
-    run<T>(
-      work: (
-        tx: CapacityRequestTx & CapacityManageTx & CapacityGrantTx,
-      ) => Promise<Result<T, DomainError>>,
-    ): Promise<Result<T, DomainError>>;
-  };
+  uow: AppUow<CapacityRequestTx & CapacityManageTx & CapacityGrantTx>;
 };
 
 export async function requestCapacity(
