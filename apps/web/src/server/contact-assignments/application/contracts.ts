@@ -2,13 +2,16 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import type { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 
-type AssignmentStatus = "active" | "completed" | "expired";
+export type AssignmentStatus = "active" | "completed" | "expired";
 
-type CallOutcome =
+export type ContactAssignmentCallOutcome =
   | "no_answer"
   | "callback_scheduled"
   | "sale_made"
   | "invalid_data";
+
+export const CONTACT_ASSIGNMENT_CALL_OUTCOMES: ReadonlyArray<ContactAssignmentCallOutcome> =
+  ["no_answer", "callback_scheduled", "sale_made", "invalid_data"];
 
 export interface AssignContactsCommand {
   actorUserId: UserId;
@@ -25,10 +28,9 @@ export type CompleteContactAssignmentCallResult = ActionSuccess;
 export type CompleteContactAssignmentCallCommand = {
   actorUserId: UserId;
   actorRole: Role;
-  branchId: BranchId;
   assignmentId: number;
   contactId: number;
-  outcome: CallOutcome;
+  outcome: ContactAssignmentCallOutcome;
   notes: string | null;
 };
 

@@ -12,7 +12,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const session = await requireAuth();
   await requirePermission("lead:work");
 
-  const { contactAssignments } = getServerRuntime().contactAssignments.read;
+  const { contactAssignments } = getServerRuntime().contactAssignments.repos;
   const activeLeads = await contactAssignments.findActiveByUser(session.userId);
 
   return {

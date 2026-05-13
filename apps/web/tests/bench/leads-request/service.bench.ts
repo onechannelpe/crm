@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
-import { createContactAssignmentContext } from "~/server/contact-assignments/infrastructure/assignment-context";
+import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
 import type { EngineClient } from "~/server/shared/engine/client";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -14,7 +14,7 @@ describe("lead refill service benchmark", () => {
   let engine!: EngineClient;
   let userIds: number[] = [];
   const cursor = { value: 0 };
-  let assignmentContext!: ReturnType<typeof createContactAssignmentContext>;
+  let assignmentContext!: ReturnType<typeof createContactAssignmentsContext>;
 
   beforeAll(async () => {
     const ctx = await db.setup();
@@ -22,7 +22,7 @@ describe("lead refill service benchmark", () => {
     userIds = fixtures.userIds;
     engine = fixtures.engineClient;
 
-    assignmentContext = createContactAssignmentContext({
+    assignmentContext = createContactAssignmentsContext({
       executor: ctx.db,
       engine,
     });

@@ -14,6 +14,7 @@ import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { EngineClient } from "~/server/shared/engine/client";
+import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
 
 export type ContactAssignmentRepos = {
   users: ReturnType<typeof createCapacityUsersRepo>;
@@ -27,13 +28,13 @@ export type ContactAssignmentRepos = {
   contacts: ReturnType<typeof createContactsRepo>;
 };
 
-interface ContactAssignmentContextDeps {
+interface ContactAssignmentsContextDeps {
   executor: DatabaseExecutor;
   engine: Pick<EngineClient, "requestCandidates">;
 }
 
-export function createContactAssignmentContext(
-  deps: ContactAssignmentContextDeps,
+export function createContactAssignmentsContext(
+  deps: ContactAssignmentsContextDeps,
 ) {
   const { executor, engine } = deps;
   const repos: ContactAssignmentRepos = {
@@ -51,6 +52,10 @@ export function createContactAssignmentContext(
   return {
     repos,
     engine,
+    interactionUow: createExecutorUow(executor, (txDb) => ({
+      contactAssignments: createContactAssignmentsRepo(txDb),
+      interactionLogs: createInteractionLogsRepo(txDb),
+    })),
     uow: createExecutorUow(
       executor,
       (txDb): ContactAssignmentRepos => ({
@@ -68,6 +73,6 @@ export function createContactAssignmentContext(
   };
 }
 
-export type ContactAssignmentContext = ReturnType<
-  typeof createContactAssignmentContext
+export type ContactAssignmentsContext = ReturnType<
+  typeof createContactAssignmentsContext
 >;

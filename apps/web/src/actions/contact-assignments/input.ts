@@ -1,4 +1,4 @@
-import type { AssignContactsCommand } from "~/actions/contact-assignments/contracts";
+import type { AssignContactsCommand } from "~/server/contact-assignments/application/contracts";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

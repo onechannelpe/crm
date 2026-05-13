@@ -1,15 +1,16 @@
 "use server";
 
-import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/actions/contact-assignments/contracts";
-import type { CompleteContactAssignmentCallResult } from "~/actions/contact-assignments/contracts";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
+import type {
+  CompleteContactAssignmentCallResult,
+  ContactAssignmentCallOutcome,
+} from "~/server/contact-assignments/application/contracts";
+import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/server/contact-assignments/application/contracts";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-type CallOutcome = (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
-
-function parseCallOutcome(value: string): CallOutcome {
+function parseCallOutcome(value: string): ContactAssignmentCallOutcome {
   for (const outcome of CONTACT_ASSIGNMENT_CALL_OUTCOMES) {
     if (outcome === value) {
       return outcome;
@@ -25,7 +26,7 @@ function parseCompleteContactAssignmentCallInput(input: {
 }): {
   assignmentId: number;
   contactId: number;
-  outcome: CallOutcome;
+  outcome: ContactAssignmentCallOutcome;
 } {
   return {
     assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
@@ -58,7 +59,6 @@ export async function completeContactAssignmentCall(
         {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
-          branchId: ctx.actor.branchId,
           assignmentId: parsedInput.assignmentId,
           contactId: parsedInput.contactId,
           outcome: parsedInput.outcome,

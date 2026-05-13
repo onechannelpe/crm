@@ -4,14 +4,34 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
+  ContactAssignmentCallOutcome,
   CompleteContactAssignmentCallCommand,
   CompleteContactAssignmentCallResult,
 } from "./contracts";
-import type { CompleteContactAssignmentCallTxPort } from "./ports/complete-contact-assignment-call-tx-port";
+
+type CompleteContactAssignmentCallTxRepos = {
+  contactAssignments: {
+    findActiveByIdForUser(
+      assignmentId: number,
+      userId: number,
+    ): Promise<{ contact_id: number } | undefined>;
+    markCompleted(assignmentId: number, userId: number): Promise<unknown>;
+  };
+  interactionLogs: {
+    create(input: {
+      contact_id: number;
+      user_id: number;
+      outcome: ContactAssignmentCallOutcome;
+      notes: string | null;
+      duration_seconds: number | null;
+      created_at: number;
+    }): Promise<unknown>;
+  };
+};
 
 async function completeAssignmentInteraction(
   input: CompleteContactAssignmentCallCommand,
-  repos: CompleteContactAssignmentCallTxPort,
+  repos: CompleteContactAssignmentCallTxRepos,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
   const assignment = await repos.contactAssignments.findActiveByIdForUser(
     input.assignmentId,
@@ -45,7 +65,7 @@ async function completeAssignmentInteraction(
 
 export function completeContactAssignmentCall(
   input: CompleteContactAssignmentCallCommand,
-  uow: AppUow<CompleteContactAssignmentCallTxPort>,
+  uow: AppUow<CompleteContactAssignmentCallTxRepos>,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
   if (!hasPermission(input.actorRole, "lead:work")) {
     return Promise.resolve(

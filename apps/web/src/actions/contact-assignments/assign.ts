@@ -22,7 +22,7 @@ export async function assignCurrentUserContacts() {
 
       return assignContacts(
         cmdResult.value,
-        getServerRuntime().contactAssignments.assignment,
+        getServerRuntime().contactAssignments,
       );
     },
   });
