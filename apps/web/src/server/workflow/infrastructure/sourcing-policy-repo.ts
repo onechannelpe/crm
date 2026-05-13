@@ -4,8 +4,8 @@ import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { LeadSourcingPolicy } from "~/server/workflow/application/ports/sourcing-policy-repository";
 
-export type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
-export type NewSourcingPolicyRow = Insertable<
+type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
+type NewSourcingPolicyRow = Insertable<
   Database["lead_sourcing_policies"]
 >;
 

@@ -11,12 +11,12 @@ import type {
   LeadVenueInsert,
 } from "~/server/workflow/application/ports/sale-repository";
 
-export type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
-export type NewLeadVenueRow = Insertable<Database["workflow_lead_venues"]>;
-export type LeadVenueAccountRow = Selectable<
+type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
+type NewLeadVenueRow = Insertable<Database["workflow_lead_venues"]>;
+type LeadVenueAccountRow = Selectable<
   Database["workflow_lead_venue_accounts"]
 >;
-export type NewLeadVenueAccountRow = Insertable<
+type NewLeadVenueAccountRow = Insertable<
   Database["workflow_lead_venue_accounts"]
 >;
 

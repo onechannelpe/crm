@@ -4,8 +4,8 @@ import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { LeadProfile } from "~/server/workflow/application/ports/lead-profile-repository";
 
-export type LeadProfileRow = Selectable<Database["workflow_lead_profiles"]>;
-export type NewLeadProfileRow = Insertable<Database["workflow_lead_profiles"]>;
+type LeadProfileRow = Selectable<Database["workflow_lead_profiles"]>;
+type NewLeadProfileRow = Insertable<Database["workflow_lead_profiles"]>;
 
 function toLeadProfile(row: LeadProfileRow): LeadProfile {
   return {

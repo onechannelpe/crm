@@ -21,8 +21,6 @@ export function createWorkflowRuntime(
   const commandDeps = createWorkflowCommandDeps(infra.db, repos, engineGateway);
 
   return {
-    repos,
-    engineGateway,
     commands: createWorkflowBusinessCommands(commandDeps),
     queries: createWorkflowQueries(repos, engineGateway),
     leadArtifacts: createLeadArtifactsService({

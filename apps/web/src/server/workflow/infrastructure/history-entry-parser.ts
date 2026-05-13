@@ -23,8 +23,6 @@ import {
 } from "./history-lifecycle-parser";
 import { parsePayload, requireString } from "./history-payload-fields";
 
-export type { HistoryEventRow };
-
 export function toHistoryEntry(
   row: HistoryEventRow,
 ): Result<LeadHistoryEntry, DomainError> {

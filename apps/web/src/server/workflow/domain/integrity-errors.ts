@@ -25,13 +25,3 @@ export function invalidHistoryPayload(
     },
   );
 }
-
-export function missingSaleVenuePenAccount(
-  venueId: string,
-): Result<never, DomainError> {
-  return integrityError(
-    "workflow_sale_venue_pen_account_missing",
-    `Missing PEN account for sale venue ${venueId}`,
-    { venueId },
-  );
-}

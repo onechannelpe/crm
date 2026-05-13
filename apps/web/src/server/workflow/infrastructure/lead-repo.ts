@@ -11,7 +11,7 @@ import type {
   LeadRecord,
 } from "~/server/workflow/domain/lead-record";
 
-export type LeadRow = {
+type LeadRow = {
   id: string;
   organization_id: OrganizationId;
   executive_id: number;
@@ -31,8 +31,8 @@ type LeadWithOrganizationRow = LeadRow & {
   district: string | null;
   department: string | null;
 };
-export type NewLeadRow = Insertable<Database["workflow_leads"]>;
-export type LeadRowPatch = Updateable<Database["workflow_leads"]>;
+type NewLeadRow = Insertable<Database["workflow_leads"]>;
+type LeadRowPatch = Updateable<Database["workflow_leads"]>;
 
 function toLead(row: LeadWithOrganizationRow): LeadRecord {
   return {

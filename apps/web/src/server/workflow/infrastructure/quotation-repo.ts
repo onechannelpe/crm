@@ -5,8 +5,8 @@ import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { LeadQuotation } from "~/server/workflow/application/ports/quotation-repository";
 
-export type QuotationRow = Selectable<Database["workflow_quotations"]>;
-export type NewQuotationRow = Insertable<Database["workflow_quotations"]>;
+type QuotationRow = Selectable<Database["workflow_quotations"]>;
+type NewQuotationRow = Insertable<Database["workflow_quotations"]>;
 
 function toLeadQuotation(row: QuotationRow): LeadQuotation {
   return {
