@@ -30,9 +30,10 @@ import type { RegisterLeadDeps } from "~/server/workflow/application/deps/regist
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
+import { getLeadDetail } from "~/server/workflow/application/queries/get-lead-detail";
 import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sourcing-policy";
+import { listAssignableExecutives } from "~/server/workflow/application/queries/list-assignable-executives";
 import { listLeads } from "~/server/workflow/application/queries/list-leads";
-import { createWorkflowQueryApi } from "~/server/workflow/application/query-api";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 import { addLeadNoteCommand } from "~/server/workflow/application/use-cases/add-note";
@@ -323,13 +324,45 @@ function createWorkflowCommandsRuntime(
 
 function createWorkflowQueriesRuntime(
   repos: ReturnType<typeof createWorkflowRepos>,
-  queryApi: ReturnType<typeof createWorkflowQueryApi>,
   engineGateway: WorkflowEngineGateway,
 ) {
   return {
-    getLeadDetail: (input: GetLeadDetailInput) => queryApi.getLeadDetail(input),
+    getLeadDetail: (input: GetLeadDetailInput) =>
+      getLeadDetail(
+        {
+          leads: repos.leads,
+          leadFavorites: repos.leadFavorites,
+          leadProfiles: repos.leadProfiles,
+          leadHistory: repos.leadHistory,
+          leadQuotations: repos.leadQuotations,
+          leadVenues: repos.leadVenues,
+          leadNegotiationRequests: repos.leadNegotiationRequests,
+          negotiationFiles: repos.negotiationFiles,
+          sourceStatuses: repos.sourceStatuses,
+          users: repos.users,
+          party: repos.party,
+        },
+        {
+          actorUserId: input.actor.userId,
+          actorRole: input.actor.role,
+          leadId: input.leadId,
+        },
+      ),
     listAssignableExecutives: (input: ListAssignableExecutivesInput) =>
-      queryApi.listAssignableExecutives(input),
+      listAssignableExecutives(
+        {
+          leads: repos.leads,
+          users: repos.users,
+        },
+        {
+          actorUserId: input.actor.userId,
+          actorRole: input.actor.role,
+          actorBranchId: input.actor.branchId,
+          leadId: input.leadId,
+          search: input.search,
+          limit: input.limit,
+        },
+      ),
     listLeads: (input: {
       actorUserId: number;
       actorRole: Role;
@@ -360,31 +393,11 @@ export function createWorkflowRuntime(
 ) {
   const repos = createWorkflowRepos(infra.db);
 
-  const queryApi = createWorkflowQueryApi({
-    leadDetail: {
-      leads: repos.leads,
-      leadFavorites: repos.leadFavorites,
-      leadProfiles: repos.leadProfiles,
-      leadHistory: repos.leadHistory,
-      leadQuotations: repos.leadQuotations,
-      leadVenues: repos.leadVenues,
-      leadNegotiationRequests: repos.leadNegotiationRequests,
-      negotiationFiles: repos.negotiationFiles,
-      sourceStatuses: repos.sourceStatuses,
-      users: repos.users,
-      party: repos.party,
-    },
-    assignableExecutives: {
-      leads: repos.leads,
-      users: repos.users,
-    },
-  });
-
   return {
     repos,
     engineGateway,
     commands: createWorkflowCommandsRuntime(infra.db, engineGateway),
-    queries: createWorkflowQueriesRuntime(repos, queryApi, engineGateway),
+    queries: createWorkflowQueriesRuntime(repos, engineGateway),
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {
         executor: infra.db,
