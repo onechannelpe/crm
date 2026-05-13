@@ -1,12 +1,6 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import {
-  approveCapacityRequest as approveCapacityService,
-  grantLeadCapacityDirect as grantLeadCapacityService,
-  grantSearchCapacityDirect as grantSearchCapacityService,
-  rejectCapacityRequest as rejectCapacityService,
-} from "~/server/capacity/application/commands";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -20,9 +14,8 @@ export async function approveCapacity(requestId: number, note?: string) {
     access: { kind: "permission", permission: "capacity:approve" },
     input: decisionInput.value,
     execute: (ctx) =>
-      approveCapacityService(
+      getServerRuntime().capacity.useCases.approveCapacityRequest(
         ctx,
-        getServerRuntime().capacity.commands,
         decisionInput.value,
       ),
   });
@@ -38,7 +31,7 @@ export async function rejectCapacity(requestId: number, note: string) {
     access: { kind: "permission", permission: "capacity:approve" },
     input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
-      rejectCapacityService(ctx, getServerRuntime().capacity.commands, {
+      getServerRuntime().capacity.useCases.rejectCapacityRequest(ctx, {
         requestId: decisionInput.value.requestId,
         note: safeNote,
       }),
@@ -57,7 +50,7 @@ export async function grantMoreSearches(
     access: { kind: "permission", permission: "capacity:manage" },
     input: grantInput.value,
     execute: (ctx) =>
-      grantSearchCapacityService(ctx, getServerRuntime().capacity.commands, {
+      getServerRuntime().capacity.useCases.grantSearchCapacityDirect(ctx, {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,
@@ -77,7 +70,7 @@ export async function grantMoreLeadRefill(
     access: { kind: "permission", permission: "capacity:manage" },
     input: grantInput.value,
     execute: (ctx) =>
-      grantLeadCapacityService(ctx, getServerRuntime().capacity.commands, {
+      getServerRuntime().capacity.useCases.grantLeadCapacityDirect(ctx, {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,

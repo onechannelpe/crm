@@ -1,11 +1,5 @@
 "use server";
 
-import {
-  updateLeadPolicyDefault as updateLeadPolicyDefaultService,
-  updateLeadPolicyOverride as updateLeadPolicyOverrideService,
-  updateSearchPolicyDefault as updateSearchPolicyDefaultService,
-  updateSearchPolicyOverride as updateSearchPolicyOverrideService,
-} from "~/server/capacity/application/commands";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -29,9 +23,8 @@ export async function updateSearchPolicyOverride(input: {
     access: { kind: "permission", permission: "capacity:policy:manage" },
     input: overrideInput.value,
     execute: (ctx) =>
-      updateSearchPolicyOverrideService(
+      getServerRuntime().capacity.useCases.updateSearchPolicyOverride(
         ctx,
-        getServerRuntime().capacity.commands,
         overrideInput.value,
       ),
   });
@@ -50,9 +43,8 @@ export async function updateLeadPolicyOverride(input: {
     access: { kind: "permission", permission: "capacity:policy:manage" },
     input: overrideInput.value,
     execute: (ctx) =>
-      updateLeadPolicyOverrideService(
+      getServerRuntime().capacity.useCases.updateLeadPolicyOverride(
         ctx,
-        getServerRuntime().capacity.commands,
         overrideInput.value,
       ),
   });
@@ -78,9 +70,8 @@ export async function updateSearchPolicyDefault(input: {
       monthlyLimit: limitResult.value,
     },
     execute: (ctx) =>
-      updateSearchPolicyDefaultService(
+      getServerRuntime().capacity.useCases.updateSearchPolicyDefault(
         ctx,
-        getServerRuntime().capacity.commands,
         {
           scope: {
             kind: scopeInput.value.scopeType,
@@ -117,9 +108,8 @@ export async function updateLeadPolicyDefault(input: {
       dailyLimit: policyResult.value.dailyRefillLimit,
     },
     execute: (ctx) =>
-      updateLeadPolicyDefaultService(
+      getServerRuntime().capacity.useCases.updateLeadPolicyDefault(
         ctx,
-        getServerRuntime().capacity.commands,
         {
           scope: {
             kind: scopeInput.value.scopeType,
