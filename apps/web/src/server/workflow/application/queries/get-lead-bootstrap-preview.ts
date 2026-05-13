@@ -1,12 +1,16 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { LeadBootstrapPreviewDeps } from "../deps/lead-queries";
 import type { WorkflowEngineGateway } from "../ports/engine-gateway";
+import type { PartyRepository } from "../ports/party-repository";
 import type { LeadBootstrapPreviewView } from "./views/lead-bootstrap-preview";
 
+type LeadBootstrapPreviewQueryDeps = {
+  party: PartyRepository;
+};
+
 export async function getLeadBootstrapPreview(
-  deps: LeadBootstrapPreviewDeps,
+  deps: LeadBootstrapPreviewQueryDeps,
   engineGateway: WorkflowEngineGateway,
   input: { ruc: string },
 ): Promise<Result<LeadBootstrapPreviewView, DomainError>> {

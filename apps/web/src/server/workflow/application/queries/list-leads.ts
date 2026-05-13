@@ -7,12 +7,11 @@ import {
   parseLeadStatus,
 } from "../../domain/lead-schema-parser";
 import type { ListLeadsInput } from "../contracts/query-inputs";
-import type { LeadListDeps } from "../deps/lead-queries";
 import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
-import type { LeadListFilters } from "../ports/lead-queries";
+import type { LeadListFilters, LeadQueries } from "../ports/lead-queries";
 import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
 import type { LeadListView } from "./views/lead-list";
@@ -26,6 +25,10 @@ const LEAD_SORT_FIELDS = [
 type LeadSortField = (typeof LEAD_SORT_FIELDS)[number];
 const LEAD_SORT_DIRECTIONS = ["asc", "desc"] as const;
 type LeadSortDirection = (typeof LEAD_SORT_DIRECTIONS)[number];
+
+type LeadListQueryDeps = {
+  leads: LeadQueries;
+};
 
 function parseLeadSortField(
   value: string | undefined,
@@ -66,7 +69,7 @@ function parseLeadSortDirection(
 }
 
 export async function listLeads(
-  deps: LeadListDeps,
+  deps: LeadListQueryDeps,
   input: {
     actorUserId: number;
     actorRole: ListLeadsInput["actor"]["role"];

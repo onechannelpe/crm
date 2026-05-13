@@ -2,17 +2,23 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { AssignableExecutivesDeps } from "../deps/lead-queries";
 import {
   canReassignLead,
   requireLeadAccess,
   requirePipelineActionAccess,
   resolveAssignableExecutivesScope,
 } from "../policies/access";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { WorkflowUserRepository } from "../ports/user-repository";
 import type { AssignableExecutiveView } from "./views/assignable-executive";
 
+type AssignableExecutivesQueryDeps = {
+  leads: LeadRepository;
+  users: WorkflowUserRepository;
+};
+
 export async function listAssignableExecutives(
-  deps: AssignableExecutivesDeps,
+  deps: AssignableExecutivesQueryDeps,
   input: {
     actorUserId: number;
     actorRole: Role;
