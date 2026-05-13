@@ -29,14 +29,14 @@ export async function requestLeadCreation(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.registerLead({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          ruc: normalizedRuc,
-          executiveId: input.executiveId ?? ctx.actor.userId,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ruc: normalizedRuc,
+        executiveId: input.executiveId ?? ctx.actor.userId,
+      }),
   });
 }
 
@@ -65,16 +65,16 @@ export async function requestLeadReview(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.reviewLead({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-          status: reviewedStatus.value,
-          prioridad: reviewedPrioridad.value,
-          reason: input.reason,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+        status: reviewedStatus.value,
+        prioridad: reviewedPrioridad.value,
+        reason: input.reason,
+      }),
   });
 }
 
@@ -111,25 +111,25 @@ export async function requestSaveCommercialScope(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.saveCommercialScope({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-          proveedorActual: input.proveedorActual,
-          tasaActual: input.tasaActual,
-          gpv: input.gpv,
-          ticket: input.ticket,
-          giroNegocio: input.giroNegocio,
-          abonoBank,
-          posTotal: input.posTotal,
-          linkScope: input.linkScope,
-          linkUrl: input.linkUrl,
-          onlineScope: input.onlineScope,
-          onlineUrl: input.onlineUrl,
-          onlineModalidad: input.onlineModalidad,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+        proveedorActual: input.proveedorActual,
+        tasaActual: input.tasaActual,
+        gpv: input.gpv,
+        ticket: input.ticket,
+        giroNegocio: input.giroNegocio,
+        abonoBank,
+        posTotal: input.posTotal,
+        linkScope: input.linkScope,
+        linkUrl: input.linkUrl,
+        onlineScope: input.onlineScope,
+        onlineUrl: input.onlineUrl,
+        onlineModalidad: input.onlineModalidad,
+      }),
   });
 }
 
@@ -140,13 +140,13 @@ export async function requestQuotation(input: { leadId: string }) {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.requestQuotation({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }
 
@@ -172,13 +172,13 @@ export async function requestRecordRepLegal(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.recordRepLegal({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          ...input,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -192,14 +192,14 @@ export async function requestLeadReassignment(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.reassignLead({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-          toExecutiveId: input.newExecutiveId,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+        toExecutiveId: input.newExecutiveId,
+      }),
   });
 }
 
@@ -210,13 +210,13 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.addToFavorites({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }
 
@@ -229,13 +229,13 @@ export async function requestRemoveLeadFromFavorites(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.removeFromFavorites({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-        }),
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }
 
@@ -246,9 +246,9 @@ export async function requestLeadSunatRefresh(input: { leadId: string }) {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.requestSunatRefresh({
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          leadId: input.leadId,
-        }),
+        actorUserId: ctx.actor.userId,
+        actorRole: ctx.actor.role,
+        leadId: input.leadId,
+      }),
   });
 }

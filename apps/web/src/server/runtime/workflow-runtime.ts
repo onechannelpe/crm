@@ -1,8 +1,6 @@
-import type { Transaction } from "kysely";
-
-import type { Database } from "~/lib/db/types";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { createWorkflowQueryApi } from "~/server/workflow/application/query-api";
@@ -25,7 +23,7 @@ import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sun
 import type { ServerInfra } from "./infra";
 
 function createWorkflowUseCasesRuntime(
-  executor: Transaction<Database>,
+  executor: DatabaseExecutor,
   engineGateway: WorkflowEngineGateway,
 ): WorkflowUseCases {
   const repos = createWorkflowRepos(executor);

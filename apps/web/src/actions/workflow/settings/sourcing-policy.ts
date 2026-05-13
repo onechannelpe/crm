@@ -15,6 +15,7 @@ export async function querySourcingPolicy(branchId: number) {
           sourcingPolicies: getServerRuntime().workflow.repos.sourcingPolicies,
         },
         { actorRole: ctx.actor.role, branchId },
+      ),
   });
 }
 
@@ -28,10 +29,10 @@ export async function saveSourcingPolicy(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.useCases.updateSourcingPolicy({
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          branchId: input.branchId,
-          engineAssignmentEnabled: input.engineAssignmentEnabled,
-        }),
+        actorUserId: ctx.actor.userId,
+        actorRole: ctx.actor.role,
+        branchId: input.branchId,
+        engineAssignmentEnabled: input.engineAssignmentEnabled,
+      }),
   });
 }
