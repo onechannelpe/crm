@@ -6,20 +6,23 @@ import { createEventsRepo } from "~/server/files/repo/events";
 import { createNegotiationFilesRepo } from "~/server/files/repo/negotiation";
 import { createSalesRepo } from "~/server/files/repo/sales";
 import { createTokensRepo } from "~/server/files/repo/tokens";
+import { createLeadArtifactsService } from "~/server/files/service/lead-artifacts";
 import type {
   ArtifactRepos,
   SyncExecutor,
 } from "~/server/files/service/contracts";
 import { createFileStorage } from "~/server/files/storage";
 import type { FileStorage } from "~/server/files/storage";
+import { createLeadRepo } from "~/server/workflow/infrastructure/lead-repo";
 import { createLeadQueries } from "~/server/workflow/infrastructure/lead-queries";
 
 import type { ServerInfra } from "./infra";
 
-export type WorkflowFilesRuntime = {
+export type FilesRuntime = {
   repo: ArtifactRepos;
   storage: FileStorage;
   syncExecutor: SyncExecutor;
+  leadArtifacts: ReturnType<typeof createLeadArtifactsService>;
 };
 
 export function createFilesRuntime(infra: ServerInfra) {
@@ -34,10 +37,16 @@ export function createFilesRuntime(infra: ServerInfra) {
   const storage = createFileStorage(config.uploads.storageRoot);
   const syncExecutor = createRecordsExportExecutor(createLeadQueries(infra.db));
 
-  const runtime: WorkflowFilesRuntime = {
+  const runtime: FilesRuntime = {
     repo,
     storage,
     syncExecutor,
+    leadArtifacts: createLeadArtifactsService({
+      leadReader: createLeadRepo(infra.db),
+      filesRepo: repo,
+      filesStorage: storage,
+      filesSyncExecutor: syncExecutor,
+    }),
   };
   return runtime;
 }

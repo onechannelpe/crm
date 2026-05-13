@@ -37,7 +37,7 @@ export function createServerRuntime() {
     integrations: createIntegrationsRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),
-    workflow: createWorkflowRuntime(infra, engine, files),
+    workflow: createWorkflowRuntime(infra, engine),
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
     search: createSearchRuntime(infra),

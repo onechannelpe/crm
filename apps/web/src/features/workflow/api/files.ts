@@ -2,11 +2,11 @@ import {
   requestLeadSaleProofDownloadToken,
   listLeadSaleProofFiles,
   uploadLeadSaleProofFile,
-} from "~/actions/workflow/files";
+} from "~/actions/files/lead-artifacts";
 import {
   requestNegotiationFileDownloadToken,
   uploadLeadNegotiationFile,
-} from "~/actions/workflow/negotiation-files";
+} from "~/actions/files/lead-artifacts";
 import type { LeadArtifactInput } from "~/contracts/workflow";
 
 export async function listLeadSaleProofFilesApi(leadId: string) {

@@ -1,10 +1,5 @@
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
-import type {
-  ArtifactRepos,
-  SyncExecutor,
-} from "~/server/files/service/contracts";
-import type { FileStorage } from "~/server/files/storage";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { RegisterLeadDeps } from "~/server/workflow/application/deps/register-lead";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
@@ -27,20 +22,12 @@ export type WorkflowCommandDeps = {
   auditService: ReturnType<typeof createWorkflowAuditService>;
   engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
-  filesRepo: ArtifactRepos;
-  filesStorage: FileStorage;
-  filesSyncExecutor: SyncExecutor;
 };
 
 export function createWorkflowCommandDeps(
   executor: DatabaseExecutor,
   repos: WorkflowRepos,
   engineGateway: WorkflowEngineGateway,
-  files: {
-    repo: ArtifactRepos;
-    storage: FileStorage;
-    syncExecutor: SyncExecutor;
-  },
 ): WorkflowCommandDeps {
   const auditService = createWorkflowAuditService({
     auditLogs: createWorkflowAuditLogRepo(
@@ -74,8 +61,5 @@ export function createWorkflowCommandDeps(
     auditService,
     engineGateway,
     leadEnrichmentQueue,
-    filesRepo: files.repo,
-    filesStorage: files.storage,
-    filesSyncExecutor: files.syncExecutor,
   };
 }
