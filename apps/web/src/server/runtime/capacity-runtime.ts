@@ -69,8 +69,10 @@ export function createCapacityRuntime(infra: ServerInfra) {
 
   return {
     useCases: {
-      requestCapacity: (ctx: Parameters<typeof requestCapacity>[0], input: Parameters<typeof requestCapacity>[2]) =>
-        requestCapacity(ctx, { rateLimitDeps, uow }, input),
+      requestCapacity: (
+        ctx: Parameters<typeof requestCapacity>[0],
+        input: Parameters<typeof requestCapacity>[2],
+      ) => requestCapacity(ctx, { rateLimitDeps, uow }, input),
       approveCapacityRequest: (
         ctx: Parameters<typeof approveCapacityRequest>[0],
         input: Parameters<typeof approveCapacityRequest>[2],
@@ -103,8 +105,9 @@ export function createCapacityRuntime(infra: ServerInfra) {
         ctx: Parameters<typeof updateLeadPolicyOverride>[0],
         input: Parameters<typeof updateLeadPolicyOverride>[2],
       ) => updateLeadPolicyOverride(ctx, { uow }, input),
-      listManagedExecutives: (ctx: Parameters<typeof listManagedExecutives>[0]) =>
-        listManagedExecutives(ctx, { repos: readRepos }),
+      listManagedExecutives: (
+        ctx: Parameters<typeof listManagedExecutives>[0],
+      ) => listManagedExecutives(ctx, { repos: readRepos }),
       getExecutiveDetail: (
         ctx: Parameters<typeof getExecutiveDetail>[0],
         input: Parameters<typeof getExecutiveDetail>[2],

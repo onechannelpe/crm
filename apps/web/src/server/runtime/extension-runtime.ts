@@ -2,7 +2,10 @@ import {
   createContactAssignmentsRepo,
   type ContactAssignmentsRepo,
 } from "~/server/contacts/repos-assignments";
-import { createContactsRepo, type ContactsRepo } from "~/server/contacts/repos-contacts";
+import {
+  createContactsRepo,
+  type ContactsRepo,
+} from "~/server/contacts/repos-contacts";
 import {
   createOrganizationsRepo,
   type OrganizationsRepo,

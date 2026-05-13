@@ -1,11 +1,11 @@
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { createWorkflowQueryApi } from "~/server/workflow/application/query-api";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
-import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 import { addLeadNoteCommand } from "~/server/workflow/application/use-cases/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/use-cases/add-to-favorites";
@@ -39,7 +39,7 @@ import type { ServerInfra } from "./infra";
 function composeWorkflowIntentHandlersRuntime(
   executor: DatabaseExecutor,
   engineGateway: WorkflowEngineGateway,
-){
+) {
   const repos = createWorkflowRepos(executor);
   const auditService = createWorkflowAuditService({
     auditLogs: createWorkflowAuditLogRepo(
@@ -227,7 +227,11 @@ function composeWorkflowIntentHandlersRuntime(
       actorRole: Parameters<typeof updateSourcingPolicy>[1]["actorRole"];
       branchId: number;
       engineAssignmentEnabled: boolean;
-    }) => updateSourcingPolicy({ sourcingPolicies: baseDeps.sourcingPolicies }, input),
+    }) =>
+      updateSourcingPolicy(
+        { sourcingPolicies: baseDeps.sourcingPolicies },
+        input,
+      ),
   };
 }
 

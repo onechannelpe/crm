@@ -1,11 +1,11 @@
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import type { WorkflowAuditService } from "~/server/workflow/application/ports/audit-service";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
-import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 import { addLeadNoteCommand } from "~/server/workflow/application/use-cases/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/use-cases/add-to-favorites";
@@ -51,7 +51,7 @@ export type TestCommandOverrides = {
 function buildCommandApi(
   executor: Transaction<Database>,
   overrides?: TestCommandOverrides,
-){
+) {
   const repos = createWorkflowRepos(executor);
   const baseDeps = {
     leadReader: createLeadReadRepository(repos.leads),
@@ -226,7 +226,11 @@ function buildCommandApi(
       actorRole: Parameters<typeof updateSourcingPolicy>[1]["actorRole"];
       branchId: number;
       engineAssignmentEnabled: boolean;
-    }) => updateSourcingPolicy({ sourcingPolicies: baseDeps.sourcingPolicies }, input),
+    }) =>
+      updateSourcingPolicy(
+        { sourcingPolicies: baseDeps.sourcingPolicies },
+        input,
+      ),
   };
 }
 
