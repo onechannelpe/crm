@@ -8,24 +8,20 @@ import type {
   ProductScope,
   VenueDigitalConfig,
 } from "~/contracts/workflow";
-import { requestRateNegotiation } from "~/features/workflow/api/mutations";
 import {
-  requestQuotationCreation,
-  requestSaleApproval,
-} from "~/features/workflow/api/mutations";
-import {
-  requestAddLeadToFavorites,
-  requestLeadCreation,
-  requestLeadReassignment,
-  requestLeadReview,
-  requestQuotation,
-  requestRecordRepLegal,
-  requestRemoveLeadFromFavorites,
-  requestSaveCommercialScope,
-} from "~/features/workflow/api/mutations";
-import {
-  requestVenueAccountsAddition,
-  requestVenueCreation,
+  requestAddLeadToFavoritesApi,
+  requestLeadCreationApi,
+  requestLeadReassignmentApi,
+  requestLeadReviewApi,
+  requestQuotationApi,
+  requestQuotationCreationApi,
+  requestRateNegotiationApi,
+  requestRecordRepLegalApi,
+  requestRemoveLeadFromFavoritesApi,
+  requestSaleApprovalApi,
+  requestSaveCommercialScopeApi,
+  requestVenueAccountsAdditionApi,
+  requestVenueCreationApi,
 } from "~/features/workflow/api/mutations";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
@@ -36,13 +32,13 @@ type CreateLeadInput = {
 };
 
 export const createLeadMutation = action(async (input: CreateLeadInput) => {
-  const result = await requestLeadCreation(input);
+  const result = await requestLeadCreationApi(input);
   return json(result, { revalidate: leadListQuery.key });
 }, "workflow.createLead");
 
 export const approveForSaleMutation = action(
   async (input: { leadId: string }) => {
-    await requestSaleApproval(input.leadId);
+    await requestSaleApprovalApi({ leadId: input.leadId });
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -58,7 +54,7 @@ export const reviewLeadMutation = action(
     prioridad: string;
     reason: string;
   }) => {
-    await requestLeadReview(input);
+    await requestLeadReviewApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -83,7 +79,7 @@ export const saveCommercialScopeMutation = action(
     onlineUrl: string | null;
     onlineModalidad: ModalidadCobro | null;
   }) => {
-    await requestSaveCommercialScope(input);
+    await requestSaveCommercialScopeApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -94,7 +90,7 @@ export const saveCommercialScopeMutation = action(
 
 export const requestQuotationMutation = action(
   async (input: { leadId: string }) => {
-    await requestQuotation(input);
+    await requestQuotationApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -113,7 +109,7 @@ export const recordRepLegalMutation = action(
     telefono: string;
     email: string;
   }) => {
-    await requestRecordRepLegal(input);
+    await requestRecordRepLegalApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -132,7 +128,7 @@ export const createQuotationMutation = action(
     fee: number;
     moneda: Moneda;
   }) => {
-    await requestQuotationCreation(input);
+    await requestQuotationCreationApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -153,7 +149,7 @@ export const createVenueMutation = action(
     provincia: string;
     departamento: string;
   }) => {
-    await requestVenueCreation(input);
+    await requestVenueCreationApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -185,7 +181,7 @@ export const addVenueAccountsMutation = action(
         }
       | undefined;
   }) => {
-    await requestVenueAccountsAddition(input);
+    await requestVenueAccountsAdditionApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -200,7 +196,7 @@ export const requestRateNegotiationMutation = action(
     justification: string;
     artifactIds: string[];
   }) => {
-    const result = await requestRateNegotiation(input);
+    const result = await requestRateNegotiationApi(input);
     if (!result.ok) {
       throw result.error;
     }
@@ -214,7 +210,7 @@ export const requestRateNegotiationMutation = action(
 
 export const reassignLeadMutation = action(
   async (input: { leadId: string; newExecutiveId: number }) => {
-    await requestLeadReassignment(input);
+    await requestLeadReassignmentApi(input);
     return json(
       {},
       {
@@ -227,7 +223,7 @@ export const reassignLeadMutation = action(
 
 export const addLeadToFavoritesMutation = action(
   async (input: { leadId: string }) => {
-    await requestAddLeadToFavorites(input);
+    await requestAddLeadToFavoritesApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
@@ -238,7 +234,7 @@ export const addLeadToFavoritesMutation = action(
 
 export const removeLeadFromFavoritesMutation = action(
   async (input: { leadId: string }) => {
-    await requestRemoveLeadFromFavorites(input);
+    await requestRemoveLeadFromFavoritesApi(input);
     return json(
       {},
       { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },

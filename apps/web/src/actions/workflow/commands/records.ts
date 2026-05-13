@@ -3,8 +3,12 @@
 import { workflowActorFrom } from "~/actions/workflow/shared";
 import {
   isAbonoBank,
-  type ModalidadCobro,
-  type ProductScope,
+  type CreateLeadInput,
+  type LeadIdInput,
+  type ReassignLeadInput,
+  type RecordRepLegalInput,
+  type ReviewLeadInput,
+  type SaveCommercialScopeInput,
 } from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
@@ -14,10 +18,7 @@ import {
   parseRequiredLeadStatus,
 } from "~/server/workflow/domain/lead-schema-parser";
 
-export async function requestLeadCreation(input: {
-  ruc: string;
-  executiveId?: number;
-}) {
+export async function requestLeadCreation(input: CreateLeadInput) {
   const normalizedRuc = input.ruc.trim();
 
   if (!normalizedRuc) {
@@ -37,12 +38,7 @@ export async function requestLeadCreation(input: {
   });
 }
 
-export async function requestLeadReview(input: {
-  leadId: string;
-  status: string;
-  prioridad: string;
-  reason: string;
-}) {
+export async function requestLeadReview(input: ReviewLeadInput) {
   if (!input.reason?.trim()) {
     throw validationError("reason is required");
   }
@@ -71,21 +67,7 @@ export async function requestLeadReview(input: {
   });
 }
 
-export async function requestSaveCommercialScope(input: {
-  leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: string;
-  posTotal: number;
-  linkScope: ProductScope;
-  linkUrl: string | null;
-  onlineScope: ProductScope;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-}) {
+export async function requestSaveCommercialScope(input: SaveCommercialScopeInput) {
   if (!input.proveedorActual?.trim()) {
     throw validationError("proveedorActual is required");
   }
@@ -122,7 +104,7 @@ export async function requestSaveCommercialScope(input: {
   });
 }
 
-export async function requestQuotation(input: { leadId: string }) {
+export async function requestQuotation(input: LeadIdInput) {
   return runAction({
     actionName: "workflow.request_quotation",
     access: { kind: "auth" },
@@ -135,15 +117,7 @@ export async function requestQuotation(input: { leadId: string }) {
   });
 }
 
-export async function requestRecordRepLegal(input: {
-  leadId: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  dni: string;
-  telefono: string;
-  email: string;
-}) {
+export async function requestRecordRepLegal(input: RecordRepLegalInput) {
   if (!input.nombres?.trim()) {
     throw validationError("nombres is required");
   }
@@ -163,10 +137,7 @@ export async function requestRecordRepLegal(input: {
   });
 }
 
-export async function requestLeadReassignment(input: {
-  leadId: string;
-  newExecutiveId: number;
-}) {
+export async function requestLeadReassignment(input: ReassignLeadInput) {
   return runAction({
     actionName: "workflow.reassign_lead",
     access: { kind: "auth" },
@@ -180,7 +151,7 @@ export async function requestLeadReassignment(input: {
   });
 }
 
-export async function requestAddLeadToFavorites(input: { leadId: string }) {
+export async function requestAddLeadToFavorites(input: LeadIdInput) {
   return runAction({
     actionName: "workflow.add_lead_to_favorites",
     access: { kind: "auth" },
@@ -193,9 +164,7 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
   });
 }
 
-export async function requestRemoveLeadFromFavorites(input: {
-  leadId: string;
-}) {
+export async function requestRemoveLeadFromFavorites(input: LeadIdInput) {
   return runAction({
     actionName: "workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
@@ -208,7 +177,7 @@ export async function requestRemoveLeadFromFavorites(input: {
   });
 }
 
-export async function requestLeadSunatRefresh(input: { leadId: string }) {
+export async function requestLeadSunatRefresh(input: LeadIdInput) {
   return runAction({
     actionName: "workflow.request_sunat_refresh",
     access: { kind: "auth" },

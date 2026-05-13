@@ -4,9 +4,13 @@ import {
   queryLeadDetail,
   queryLeadList,
 } from "~/actions/workflow/queries/records";
+import type {
+  AssignableExecutivesInput,
+  LeadListFiltersInput,
+} from "~/contracts/workflow";
 
 export async function queryLeadListApi(
-  filters: Parameters<typeof queryLeadList>[0],
+  filters: LeadListFiltersInput,
 ) {
   return queryLeadList(filters);
 }
@@ -20,7 +24,7 @@ export async function queryLeadBootstrapPreviewApi(ruc: string) {
 }
 
 export async function queryAssignableExecutivesApi(
-  input: Parameters<typeof queryAssignableExecutives>[0],
+  input: AssignableExecutivesInput,
 ) {
   return queryAssignableExecutives(input);
 }

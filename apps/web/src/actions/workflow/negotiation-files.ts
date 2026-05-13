@@ -1,6 +1,9 @@
 "use server";
 
-import type { LeadNegotiationFileView } from "~/contracts/workflow";
+import type {
+  LeadArtifactInput,
+  LeadNegotiationFileView,
+} from "~/contracts/workflow";
 import { AppError, validationError } from "~/lib/app-errors";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";
@@ -33,10 +36,7 @@ export async function uploadLeadNegotiationFile(
   });
 }
 
-export async function requestNegotiationFileDownloadToken(input: {
-  leadId: string;
-  artifactId: string;
-}): Promise<Result<{ token: string }, AppError>> {
+export async function requestNegotiationFileDownloadToken(input: LeadArtifactInput): Promise<Result<{ token: string }, AppError>> {
   if (!input.leadId.trim()) throw validationError("leadId is required");
   if (!input.artifactId.trim()) throw validationError("artifactId is required");
 

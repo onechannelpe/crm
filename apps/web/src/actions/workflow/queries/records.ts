@@ -1,7 +1,10 @@
 "use server";
 
 import { workflowActorFrom } from "~/actions/workflow/shared";
-import type { LeadListFiltersInput } from "~/contracts/workflow";
+import type {
+  AssignableExecutivesInput,
+  LeadListFiltersInput,
+} from "~/contracts/workflow";
 import type { AssignableExecutiveView } from "~/contracts/workflow";
 import type { LeadBootstrapPreviewView } from "~/contracts/workflow";
 import type { LeadDetailView } from "~/contracts/workflow";
@@ -49,11 +52,7 @@ export async function queryLeadBootstrapPreview(
   });
 }
 
-export async function queryAssignableExecutives(input: {
-  leadId: string;
-  search?: string;
-  limit?: number;
-}): Promise<AssignableExecutiveView[]> {
+export async function queryAssignableExecutives(input: AssignableExecutivesInput): Promise<AssignableExecutiveView[]> {
   return runAction({
     actionName: "workflow.list_assignable_executives",
     access: { kind: "auth" },

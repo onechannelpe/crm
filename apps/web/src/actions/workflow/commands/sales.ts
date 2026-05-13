@@ -1,26 +1,12 @@
 "use server";
 
 import { workflowActorFrom } from "~/actions/workflow/shared";
-import type {
-  AbonoBank,
-  AccountTypeKind,
-  VenueDigitalConfig,
-} from "~/contracts/workflow";
+import type { AddVenueAccountsInput, CreateVenueInput } from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function requestVenueCreation(input: {
-  leadId: string;
-  nombreComercial: string;
-  posQuantity: number;
-  digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
-}) {
+export async function requestVenueCreation(input: CreateVenueInput) {
   if (!input.nombreComercial.trim()) {
     throw validationError("nombreComercial is required");
   }
@@ -52,28 +38,7 @@ export async function requestVenueCreation(input: {
   });
 }
 
-export async function requestVenueAccountsAddition(input: {
-  leadId: string;
-  venueId: string;
-  solesAccount: {
-    currency: "PEN";
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
-  dollarAccount?:
-    | {
-        currency: "USD";
-        banco: AbonoBank;
-        tipoCuenta: AccountTypeKind;
-        nroCuenta: string;
-        cci?: string;
-        isSettlement: boolean;
-      }
-    | undefined;
-}) {
+export async function requestVenueAccountsAddition(input: AddVenueAccountsInput) {
   if (!input.solesAccount.nroCuenta.trim()) {
     throw validationError("soles account number is required");
   }

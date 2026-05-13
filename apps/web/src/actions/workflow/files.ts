@@ -1,6 +1,10 @@
 "use server";
 
-import type { LeadSaleProofFileView } from "~/contracts/workflow";
+import type {
+  LeadArtifactInput,
+  LeadIdInput,
+  LeadSaleProofFileView,
+} from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";
@@ -50,10 +54,7 @@ export async function uploadLeadSaleProofFile(
   });
 }
 
-export async function requestLeadSaleProofDownloadToken(input: {
-  leadId: string;
-  artifactId: string;
-}): Promise<{ token: string }> {
+export async function requestLeadSaleProofDownloadToken(input: LeadArtifactInput): Promise<{ token: string }> {
   if (!input.leadId.trim()) {
     throw validationError("leadId is required");
   }

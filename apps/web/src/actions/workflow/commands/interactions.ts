@@ -1,14 +1,11 @@
 "use server";
+
 import { workflowActorFrom } from "~/actions/workflow/shared";
-import type { LeadCallOutcome } from "~/contracts/workflow";
+import type { AddLeadNoteInput, LogLeadCallInput } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function recordLeadCall(input: {
-  leadId: string;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
-}) {
+export async function recordLeadCall(input: LogLeadCallInput) {
   return runAction({
     actionName: "workflow.log_call",
     access: { kind: "auth" },
@@ -23,7 +20,7 @@ export async function recordLeadCall(input: {
   });
 }
 
-export async function addLeadNote(input: { leadId: string; body: string }) {
+export async function addLeadNote(input: AddLeadNoteInput) {
   return runAction({
     actionName: "workflow.add_note",
     access: { kind: "auth" },
