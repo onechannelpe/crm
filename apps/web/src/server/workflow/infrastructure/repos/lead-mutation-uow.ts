@@ -1,7 +1,5 @@
-import type { Transaction } from "kysely";
-
-import type { Database } from "~/lib/db/types";
 import { enqueueNotifications } from "~/server/notifications/outbox";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
@@ -32,7 +30,7 @@ import {
   createLeadWriteRepository,
 } from "./lead-write-repo";
 
-function createMutationDeps(executor: Transaction<Database>) {
+function createMutationDeps(executor: DatabaseExecutor) {
   const leads = createLeadRepo(executor);
   const leadHistory = createHistoryRepo(executor);
   const leadAssignments = createAssignmentRepo(executor);
@@ -52,7 +50,7 @@ function createMutationDeps(executor: Transaction<Database>) {
 }
 
 export function createLeadMutationUow(
-  executor: Transaction<Database>,
+  executor: DatabaseExecutor,
 ): LeadMutationUow {
   async function resolveExecutiveBranchId(executiveId: number) {
     const row = await executor
