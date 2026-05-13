@@ -1,7 +1,7 @@
 "use server";
 
-import type { LeadArtifactInput } from "~/contracts/workflow/inputs";
-import type { LeadNegotiationFileView } from "~/contracts/workflow/results";
+import type { LeadArtifactInput } from "~/contracts/workflow";
+import type { LeadNegotiationFileView } from "~/contracts/workflow";
 import { AppError, validationError } from "~/lib/app-errors";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import { getServerRuntime } from "~/server/runtime";

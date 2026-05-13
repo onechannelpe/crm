@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
-import type { LeadAvailableAction } from "~/contracts/workflow/views";
+import type { LeadAvailableAction } from "~/contracts/workflow";
 import {
   ActionRowButton,
   ActionRowLink,

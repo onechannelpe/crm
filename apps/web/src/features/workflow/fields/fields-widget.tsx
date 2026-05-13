@@ -1,6 +1,6 @@
 import { For } from "solid-js";
 
-import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { LeadDetailView } from "~/contracts/workflow";
 import { FieldTable } from "~/features/side-panel/components/field-table";
 
 import { LEAD_DETAIL_FIELD_GROUPS } from "./lead-field-layout";

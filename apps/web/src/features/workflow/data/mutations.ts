@@ -7,7 +7,7 @@ import type {
   Moneda,
   ProductScope,
   VenueDigitalConfig,
-} from "~/contracts/workflow/inputs";
+} from "~/contracts/workflow";
 import {
   requestAddLeadToFavoritesApi,
   requestLeadCreationApi,

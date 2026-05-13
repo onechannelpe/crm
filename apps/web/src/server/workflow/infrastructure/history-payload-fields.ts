@@ -6,8 +6,8 @@ import type {
   LeadStatus,
   ModalidadCobro,
   Moneda,
-} from "~/contracts/workflow/vocabulary";
-import { isModalidadCobro } from "~/contracts/workflow/vocabulary";
+} from "~/contracts/workflow";
+import { isModalidadCobro } from "~/contracts/workflow";
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";

@@ -9,7 +9,7 @@ import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
-import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { LeadDetailView } from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldLabel,

@@ -7,7 +7,7 @@ import {
 import type {
   AssignableExecutivesInput,
   LeadListFiltersInput,
-} from "~/contracts/workflow/inputs";
+} from "~/contracts/workflow";
 
 export async function queryLeadListApi(filters: LeadListFiltersInput) {
   return queryLeadList(filters);

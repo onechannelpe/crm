@@ -9,7 +9,7 @@ import {
   type LeadStatus,
   type Moneda,
   type AbonoBank,
-} from "~/contracts/workflow/vocabulary";
+} from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

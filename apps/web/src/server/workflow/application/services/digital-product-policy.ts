@@ -1,8 +1,5 @@
-import type { VenueDigitalConfig } from "~/contracts/workflow/primitives";
-import type {
-  ModalidadCobro,
-  ProductScope,
-} from "~/contracts/workflow/vocabulary";
+import type { VenueDigitalConfig } from "~/contracts/workflow";
+import type { ModalidadCobro, ProductScope } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

@@ -1,4 +1,4 @@
-import type { Moneda } from "~/contracts/workflow/vocabulary";
+import type { Moneda } from "~/contracts/workflow";
 
 export type LeadQuotation = {
   id: string;

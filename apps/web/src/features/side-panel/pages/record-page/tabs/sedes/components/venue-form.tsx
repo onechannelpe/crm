@@ -2,10 +2,7 @@ import { For, Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
-import type {
-  ModalidadCobro,
-  ProductScope,
-} from "~/contracts/workflow/vocabulary";
+import type { ModalidadCobro, ProductScope } from "~/contracts/workflow";
 import {
   FieldInputValue,
   FieldLabel,

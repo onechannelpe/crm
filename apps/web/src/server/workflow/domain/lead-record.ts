@@ -1,8 +1,4 @@
-import type {
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-} from "~/contracts/workflow/vocabulary";
+import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";

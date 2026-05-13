@@ -4,7 +4,7 @@ import { workflowActorFrom } from "~/actions/workflow/shared";
 import type {
   AddVenueAccountsInput,
   CreateVenueInput,
-} from "~/contracts/workflow/inputs";
+} from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";

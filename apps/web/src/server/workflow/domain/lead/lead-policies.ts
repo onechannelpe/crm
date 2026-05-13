@@ -1,4 +1,4 @@
-import type { LeadStage } from "~/contracts/workflow/vocabulary";
+import type { LeadStage } from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";

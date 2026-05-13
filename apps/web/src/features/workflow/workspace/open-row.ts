@@ -1,4 +1,4 @@
-import type { LeadListRowView } from "~/contracts/workflow/views";
+import type { LeadListRowView } from "~/contracts/workflow";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createLeadRecordDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 

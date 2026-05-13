@@ -5,12 +5,8 @@ import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
-import type { LeadDetailQuotationView } from "~/contracts/workflow/views";
-import {
-  isMoneda,
-  MONEDAS,
-  type Moneda,
-} from "~/contracts/workflow/vocabulary";
+import type { LeadDetailQuotationView } from "~/contracts/workflow";
+import { isMoneda, MONEDAS, type Moneda } from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldInputValue,

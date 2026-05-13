@@ -1,6 +1,6 @@
 import { createResource, type Accessor } from "solid-js";
 
-import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
+import type { LeadSaleProofFileView } from "~/contracts/workflow";
 import { listLeadSaleProofFilesApi } from "~/features/workflow/api/files";
 
 export function useAttachments(leadId: Accessor<string | null>) {

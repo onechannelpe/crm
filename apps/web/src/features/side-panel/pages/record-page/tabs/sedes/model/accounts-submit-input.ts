@@ -1,7 +1,4 @@
-import type {
-  AbonoBank,
-  AccountTypeKind,
-} from "~/contracts/workflow/vocabulary";
+import type { AbonoBank, AccountTypeKind } from "~/contracts/workflow";
 
 import type { AccountsFormState } from "./accounts-form-state";
 

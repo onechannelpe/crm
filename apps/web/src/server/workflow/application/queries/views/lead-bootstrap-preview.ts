@@ -1,1 +1,1 @@
-export type { LeadBootstrapPreviewView } from "~/contracts/workflow/views";
+export type { LeadBootstrapPreviewView } from "~/contracts/workflow";

@@ -1,1 +1,1 @@
-export type { AssignableExecutiveView } from "~/contracts/workflow/views";
+export type { AssignableExecutiveView } from "~/contracts/workflow";

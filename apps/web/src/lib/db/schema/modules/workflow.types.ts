@@ -5,7 +5,7 @@ import type {
   LeadStage,
   ModalidadCobro,
   ProductScope,
-} from "~/contracts/workflow/vocabulary";
+} from "~/contracts/workflow";
 
 export interface WorkflowLeadsTable {
   id: Generated<string>;

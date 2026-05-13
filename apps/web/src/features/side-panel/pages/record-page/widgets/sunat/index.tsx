@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { LeadDetailView } from "~/contracts/workflow";
 import { FieldChipList } from "~/features/side-panel/components/field-chip-list";
 import {
   RelationList,

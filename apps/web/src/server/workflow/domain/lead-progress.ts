@@ -1,4 +1,4 @@
-import type { AbonoBank, LeadStage } from "~/contracts/workflow/vocabulary";
+import type { AbonoBank, LeadStage } from "~/contracts/workflow";
 
 import type { LeadRecord } from "./lead-record";
 

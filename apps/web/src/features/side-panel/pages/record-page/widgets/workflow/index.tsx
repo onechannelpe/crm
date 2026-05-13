@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { LeadDetailView } from "~/contracts/workflow";
 import {
   RelationList,
   RelationMeta,

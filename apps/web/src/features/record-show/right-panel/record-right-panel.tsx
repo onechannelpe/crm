@@ -1,7 +1,7 @@
 import { createSignal, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { LeadDetailView } from "~/contracts/workflow";
 import { TabStrip } from "~/features/side-panel/components/tab-strip";
 import type { TabItem } from "~/features/side-panel/components/tab-strip";
 import { VIEW_RECORD_TABS_BY_ID } from "~/features/side-panel/pages/record-page/tabs/tab-registry";

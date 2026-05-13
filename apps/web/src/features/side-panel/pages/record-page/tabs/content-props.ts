@@ -1,4 +1,4 @@
-import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { LeadDetailView } from "~/contracts/workflow";
 
 export type CreateTabContentProps = {
   mode: "create";

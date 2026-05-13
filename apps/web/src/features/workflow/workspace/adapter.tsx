@@ -4,7 +4,7 @@ import { createEffect, createMemo, createSignal, on } from "solid-js";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import type { LeadListRowView } from "~/contracts/workflow/views";
+import type { LeadListRowView } from "~/contracts/workflow";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
   RecordIndexAdapter,

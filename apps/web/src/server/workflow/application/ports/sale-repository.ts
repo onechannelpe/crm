@@ -1,5 +1,5 @@
-import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
-import type { ModalidadCobro } from "~/contracts/workflow/vocabulary";
+import type { SaleVenueAccount } from "~/contracts/workflow";
+import type { ModalidadCobro } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 

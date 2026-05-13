@@ -1,10 +1,8 @@
 "use server";
 
 import { workflowActorFrom } from "~/actions/workflow/shared";
-import type {
-  LeadCommandResult,
-  RequestRateNegotiationInput,
-} from "~/contracts/workflow/inputs";
+import type { RequestRateNegotiationInput } from "~/contracts/workflow";
+import type { LeadCommandResult } from "~/contracts/workflow";
 import { AppError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runActionResult } from "~/server/shared/action-runtime";

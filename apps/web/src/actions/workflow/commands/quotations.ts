@@ -1,10 +1,7 @@
 "use server";
 
 import { workflowActorFrom } from "~/actions/workflow/shared";
-import type {
-  CreateQuotationInput,
-  LeadIdInput,
-} from "~/contracts/workflow/inputs";
+import type { CreateQuotationInput, LeadIdInput } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

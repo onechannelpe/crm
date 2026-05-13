@@ -1,8 +1,4 @@
-import type {
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-} from "~/contracts/workflow/vocabulary";
+import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import { APP_LOCALE } from "~/lib/locale";
 
 const LEAD_STAGE_LABELS: Record<LeadStage, string> = {

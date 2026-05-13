@@ -4,11 +4,11 @@ import { workflowActorFrom } from "~/actions/workflow/shared";
 import type {
   AssignableExecutivesInput,
   LeadListFiltersInput,
-} from "~/contracts/workflow/inputs";
-import type { AssignableExecutiveView } from "~/contracts/workflow/views";
-import type { LeadBootstrapPreviewView } from "~/contracts/workflow/views";
-import type { LeadDetailView } from "~/contracts/workflow/views";
-import type { LeadListView } from "~/contracts/workflow/views";
+} from "~/contracts/workflow";
+import type { AssignableExecutiveView } from "~/contracts/workflow";
+import type { LeadBootstrapPreviewView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadListView } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

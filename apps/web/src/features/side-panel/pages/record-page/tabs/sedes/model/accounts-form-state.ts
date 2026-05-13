@@ -4,7 +4,7 @@ import {
   isBcpBank,
   type AbonoBank,
   type AccountTypeKind,
-} from "~/contracts/workflow/vocabulary";
+} from "~/contracts/workflow";
 
 export function useAccountsFormState() {
   const [bancoSoles, setBancoSoles] = createSignal<AbonoBank | "">("");

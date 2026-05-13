@@ -2,7 +2,7 @@ import type {
   AbonoBank,
   ModalidadCobro,
   ProductScope,
-} from "~/contracts/workflow/vocabulary";
+} from "~/contracts/workflow";
 
 export type LeadProfile = {
   leadId: string;

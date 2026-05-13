@@ -2,7 +2,7 @@ import { createMemo, createSignal, For } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow/vocabulary";
+import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow";
 
 import styles from "./styles.module.css";
 

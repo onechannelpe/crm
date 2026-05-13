@@ -1,8 +1,8 @@
 import { useAction } from "@solidjs/router";
 import { For, Show, createMemo, createSignal } from "solid-js";
 
-import type { LeadDetailVenueView } from "~/contracts/workflow/views";
-import type { ProductScope } from "~/contracts/workflow/vocabulary";
+import type { LeadDetailVenueView } from "~/contracts/workflow";
+import type { ProductScope } from "~/contracts/workflow";
 import {
   Widget,
   WidgetBody,
