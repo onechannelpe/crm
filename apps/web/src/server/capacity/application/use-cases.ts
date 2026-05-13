@@ -1,21 +1,19 @@
 import type { AppContext } from "~/server/shared/action-runtime";
 
-import {
-  approveCapacityRequest,
-  grantLeadCapacityDirect,
-  grantSearchCapacityDirect,
-  rejectCapacityRequest,
-  requestCapacity,
-  updateLeadPolicyDefault,
-  updateLeadPolicyOverride,
-  updateSearchPolicyDefault,
-  updateSearchPolicyOverride,
-} from "./commands";
-import { getAuditEvents } from "./get-audit-events";
-import { getExecutiveDetail } from "./get-executive-detail";
-import { getPolicyDefaults } from "./get-policy-defaults";
-import { listManagedExecutives } from "./list-managed-executives";
-import { listPendingRequests } from "./list-pending-requests";
+import { approveCapacityRequest } from "./use-cases/approve-capacity-request";
+import { grantLeadCapacityDirect } from "./use-cases/grant-lead-capacity-direct";
+import { grantSearchCapacityDirect } from "./use-cases/grant-search-capacity-direct";
+import { rejectCapacityRequest } from "./use-cases/reject-capacity-request";
+import { requestCapacity } from "./use-cases/request-capacity";
+import { updateLeadPolicyDefault } from "./use-cases/update-lead-policy-default";
+import { updateLeadPolicyOverride } from "./use-cases/update-lead-policy-override";
+import { updateSearchPolicyDefault } from "./use-cases/update-search-policy-default";
+import { updateSearchPolicyOverride } from "./use-cases/update-search-policy-override";
+import { getAuditEvents } from "./queries/get-audit-events";
+import { getExecutiveDetail } from "./queries/get-executive-detail";
+import { getPolicyDefaults } from "./queries/get-policy-defaults";
+import { listManagedExecutives } from "./queries/list-managed-executives";
+import { listPendingRequests } from "./queries/list-pending-requests";
 
 type RequestCapacityDeps = Parameters<typeof requestCapacity>[1];
 type ApproveCapacityRequestDeps = Parameters<typeof approveCapacityRequest>[1];
