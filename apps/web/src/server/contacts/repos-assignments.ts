@@ -35,17 +35,22 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
     ): Promise<ActiveContactAssignmentView[]> {
       return db
         .selectFrom("lead_assignments")
-        .innerJoin("contacts", "contacts.id", "lead_assignments.contact_id")
+        .innerJoin(
+          "organization_people",
+          "organization_people.id",
+          "lead_assignments.contact_id",
+        )
+        .innerJoin("people", "people.id", "organization_people.person_id")
         .select([
           "lead_assignments.id as assignmentId",
           "lead_assignments.assigned_at as assignedAt",
           "lead_assignments.expires_at as expiresAt",
           "lead_assignments.status",
-          "contacts.id as contactId",
-          "contacts.name",
-          "contacts.dni",
-          "contacts.phone_primary as phonePrimary",
-          "contacts.organization_id as organizationId",
+          "organization_people.id as contactId",
+          "people.full_name as name",
+          "organization_people.dni",
+          "organization_people.telefono as phonePrimary",
+          "organization_people.organization_id as organizationId",
         ])
         .where("lead_assignments.user_id", "=", userId)
         .where("lead_assignments.status", "=", "active")

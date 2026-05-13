@@ -23,20 +23,18 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
     },
 
     async findOrCreate(ruc: string, name: string) {
-      const existing = await this.findByRuc(ruc);
-      if (existing) return existing;
-
       const id = randomUUIDv7();
       await db
         .insertInto("organizations")
         .values({ id, ruc, name, created_at: Date.now() })
+        .onConflict((oc) => oc.column("ruc").doNothing())
         .executeTakeFirstOrThrow();
 
-      const created = await this.findById(id);
-      if (!created) {
-        throw new Error("Failed to load organization after creation");
+      const organization = await this.findByRuc(ruc);
+      if (!organization) {
+        throw new Error("Failed to load organization after upsert");
       }
-      return created;
+      return organization;
     },
 
     lockToBranch(orgId: OrganizationId, branchId: number, userId: number) {

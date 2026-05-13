@@ -36,6 +36,7 @@ export interface Database {
   organizations: core.OrganizationsTable;
   branch_supervisors: core.BranchSupervisorsTable;
   back_office_assignments: core.BackOfficeAssignmentsTable;
+  people: core.PeopleTable;
   login_flows: auth.LoginFlowsTable;
   passkeys: auth.PasskeysTable;
   webauthn_challenges: auth.WebauthnChallengesTable;
@@ -50,7 +51,6 @@ export interface Database {
   users: identity.UsersTable;
   organization_people: leads.OrganizationPeopleTable;
   organization_person_roles: leads.OrganizationPersonRolesTable;
-  contacts: leads.ContactsTable;
   lead_assignments: leads.LeadAssignmentsTable;
   interaction_logs: leads.InteractionLogsTable;
   search_capacity_grants: capacity.SearchCapacityGrantsTable;

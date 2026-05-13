@@ -191,6 +191,30 @@ export async function persistWorkflowCommercialData(
     .execute();
 
   const convertedOrgId = getOrganizationId("converted");
+
+  await db
+    .insertInto("people")
+    .values({
+      dni: "42715983",
+      full_name: "Daniel Gutierrez Paredes",
+      email: "daniel.gutierrez@andes.pe",
+      created_at: now - 29 * day,
+      updated_at: now - 29 * day,
+    })
+    .onConflict((oc) =>
+      oc.column("dni").doUpdateSet({
+        full_name: "Daniel Gutierrez Paredes",
+        email: "daniel.gutierrez@andes.pe",
+        updated_at: now - 29 * day,
+      }),
+    )
+    .execute();
+  const legalRepPerson = await db
+    .selectFrom("people")
+    .select("id")
+    .where("dni", "=", "42715983")
+    .executeTakeFirstOrThrow();
+
   await db
     .updateTable("organizations")
     .set({ giro_negocio: "Construccion de edificios residenciales" })
@@ -200,6 +224,7 @@ export async function persistWorkflowCommercialData(
   await db
     .insertInto("organization_people")
     .values({
+      person_id: legalRepPerson.id,
       organization_id: convertedOrgId,
       dni: "42715983",
       nombres: "Daniel",
@@ -207,6 +232,9 @@ export async function persistWorkflowCommercialData(
       apellido_materno: "Paredes",
       telefono: "987654321",
       email: "daniel.gutierrez@andes.pe",
+      last_contacted_at: null,
+      last_contacted_by_user_id: null,
+      cooldown_until: null,
       created_at: now - 29 * day,
       updated_at: now - 29 * day,
     })
