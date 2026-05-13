@@ -3,7 +3,7 @@ import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import type { ServerInfra } from "~/server/runtime/infra";
-import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
+import { createWorkflowApp } from "~/server/workflow/application/app";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 
 import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
@@ -22,7 +22,7 @@ export interface TestRuntime {
   auth: {
     sessionService: ReturnType<typeof createSessionService>;
   };
-  workflow: ReturnType<typeof createWorkflowRuntime>;
+  workflow: ReturnType<typeof createWorkflowApp>;
   integrations: ReturnType<typeof createIntegrationRuntime>;
   dispose(): Promise<void>;
 }
@@ -63,7 +63,10 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     logger,
   };
 
-  const workflow = createWorkflowRuntime(infra, engineGateway);
+  const workflow = createWorkflowApp({
+    executor: infra.db,
+    engineGateway,
+  });
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
