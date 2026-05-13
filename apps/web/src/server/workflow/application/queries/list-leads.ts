@@ -1,4 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -7,6 +6,7 @@ import {
   parseLeadStage,
   parseLeadStatus,
 } from "../../domain/lead-schema-parser";
+import type { ListLeadsInput } from "../contracts/query-inputs";
 import type { LeadListDeps } from "../deps/lead-queries";
 import {
   requireLeadReadAccess,
@@ -69,20 +69,9 @@ export async function listLeads(
   deps: LeadListDeps,
   input: {
     actorUserId: number;
-    actorRole: Role;
+    actorRole: ListLeadsInput["actor"]["role"];
     actorBranchId: number;
-    filters: {
-      stage?: string;
-      status?: string;
-      prioridad?: string;
-      executiveId?: number;
-      updatedSinceMs?: number;
-      updatedUntilMs?: number;
-      sortBy?: string;
-      sortDirection?: string;
-      limit?: number;
-      offset?: number;
-    };
+    filters: ListLeadsInput["filters"];
   },
 ): Promise<Result<LeadListView, DomainError>> {
   const canRead = requireLeadReadAccess(input.actorRole);

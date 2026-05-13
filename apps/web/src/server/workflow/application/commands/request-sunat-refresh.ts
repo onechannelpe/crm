@@ -1,22 +1,21 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
+import type { ActorContext } from "../contracts/actor-context";
 import { requireLeadReadAccess } from "../policies/access";
 import type { WorkflowAuditService } from "../ports/audit-service";
 import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import type { LeadRepository } from "../ports/lead-repository";
 
 export async function requestSunatRefresh(input: {
-  actorUserId: number;
-  actorRole: Role;
+  actor: ActorContext;
   leadId: string;
   leadRepo: LeadRepository;
   enrichmentQueue: LeadEnrichmentQueue;
   auditService: WorkflowAuditService;
 }): Promise<Result<void, DomainError>> {
-  const canRead = requireLeadReadAccess(input.actorRole);
+  const canRead = requireLeadReadAccess(input.actor.role);
   if (!canRead.ok) {
     return canRead;
   }
@@ -28,11 +27,11 @@ export async function requestSunatRefresh(input: {
 
   await input.enrichmentQueue.enqueueRucVerification(
     lead.ruc,
-    input.actorUserId,
+    input.actor.userId,
   );
 
   await input.auditService.log(
-    input.actorUserId,
+    input.actor.userId,
     "sunat_refresh_requested",
     "lead",
     input.leadId,

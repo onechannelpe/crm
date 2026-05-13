@@ -1,7 +1,7 @@
-import type { Transaction } from "kysely";
-
 import type { Role } from "~/lib/auth/access/rbac";
-import type { Database } from "~/lib/db/types";
+import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createEnrichmentCommand } from "~/server/client-search/request";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
 import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
@@ -37,42 +37,73 @@ import type {
   ReviewLeadInput,
   SaveCommercialScopeInput,
 } from "~/server/workflow/application/contracts/command-inputs";
-import type { WorkflowAuditService } from "~/server/workflow/application/ports/audit-service";
+import type {
+  GetLeadDetailInput,
+  ListAssignableExecutivesInput,
+  ListLeadsInput,
+} from "~/server/workflow/application/contracts/query-inputs";
+import type { RegisterLeadDeps } from "~/server/workflow/application/deps/register-lead";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
+import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
+import { getLeadDetail } from "~/server/workflow/application/queries/get-lead-detail";
+import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sourcing-policy";
+import { listAssignableExecutives } from "~/server/workflow/application/queries/list-assignable-executives";
+import { listLeads } from "~/server/workflow/application/queries/list-leads";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
+import {
+  createWorkflowAuditLogRepo,
+  createWorkflowAuditService,
+  createWorkflowAuditLogsRepo,
+} from "~/server/workflow/infrastructure/audit-log";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
 import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos/lead-read-repo";
 import { createLeadUserScopeRepository } from "~/server/workflow/infrastructure/repos/lead-user-scope-repo";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
+import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sunat-enrichment-writeback-queue";
 
-import type { TestRuntime } from "../runtime/app";
-
-const NO_OP_AUDIT: WorkflowAuditService = {
-  log: async () => {},
+type WorkflowCommandDeps = {
+  leadReader: ReturnType<typeof createLeadReadRepository>;
+  leadRepo: ReturnType<typeof createWorkflowRepos>["leads"];
+  leadFavorites: ReturnType<typeof createWorkflowRepos>["leadFavorites"];
+  mutationUow: ReturnType<typeof createLeadMutationUow>;
+  users: ReturnType<typeof createLeadUserScopeRepository>;
+  clock: typeof systemLeadClock;
+  registerLead: RegisterLeadDeps;
+  auditService: ReturnType<typeof createWorkflowAuditService>;
+  engineGateway: WorkflowEngineGateway;
+  leadEnrichmentQueue: LeadEnrichmentQueue;
+  leadQuotations: ReturnType<typeof createWorkflowRepos>["leadQuotations"];
+  leadProfiles: ReturnType<typeof createWorkflowRepos>["leadProfiles"];
+  party: ReturnType<typeof createWorkflowRepos>["party"];
+  leadVenues: ReturnType<typeof createWorkflowRepos>["leadVenues"];
+  negotiationRequests: ReturnType<
+    typeof createWorkflowRepos
+  >["leadNegotiationRequests"];
+  sourcingPolicies: ReturnType<typeof createWorkflowRepos>["sourcingPolicies"];
 };
 
-const NO_OP_ENGINE_GATEWAY: WorkflowEngineGateway = {
-  enrichByRuc: async () => null,
-};
-
-const NO_OP_ENRICHMENT_QUEUE: LeadEnrichmentQueue = {
-  enqueueRucVerification: async () => {},
-};
-
-export type TestCommandOverrides = {
-  engineGateway?: WorkflowEngineGateway;
-  auditService?: WorkflowAuditService;
-  leadEnrichmentQueue?: LeadEnrichmentQueue;
-};
-
-function buildCommandApi(
-  executor: Transaction<Database>,
-  overrides?: TestCommandOverrides,
-) {
+function createWorkflowCommandDeps(
+  executor: DatabaseExecutor,
+  engineGateway: WorkflowEngineGateway,
+): WorkflowCommandDeps {
   const repos = createWorkflowRepos(executor);
-  const baseDeps = {
+  const auditService = createWorkflowAuditService({
+    auditLogs: createWorkflowAuditLogRepo(
+      createWorkflowAuditLogsRepo(executor),
+    ),
+  });
+  const enrichmentCommand = createEnrichmentCommand(
+    createSearchEnrichmentRepo(executor),
+  );
+  const leadEnrichmentQueue: LeadEnrichmentQueue = {
+    async enqueueRucVerification(ruc, requestedByUserId) {
+      await enrichmentCommand.enqueueRequest("ruc", ruc, requestedByUserId);
+    },
+  };
+
+  return {
     leadReader: createLeadReadRepository(repos.leads),
     leadRepo: repos.leads,
     leadFavorites: repos.leadFavorites,
@@ -86,18 +117,19 @@ function buildCommandApi(
       users: repos.users,
       party: repos.party,
     },
+    auditService,
+    engineGateway,
+    leadEnrichmentQueue,
     leadQuotations: repos.leadQuotations,
     leadProfiles: repos.leadProfiles,
     party: repos.party,
     leadVenues: repos.leadVenues,
     negotiationRequests: repos.leadNegotiationRequests,
     sourcingPolicies: repos.sourcingPolicies,
-    auditService: overrides?.auditService ?? NO_OP_AUDIT,
-    engineGateway: overrides?.engineGateway ?? NO_OP_ENGINE_GATEWAY,
-    leadEnrichmentQueue:
-      overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE,
   };
+}
 
+function createWorkflowCoreCommands(baseDeps: WorkflowCommandDeps) {
   return {
     registerLead: (input: RegisterLeadInput) =>
       registerLead({
@@ -132,6 +164,11 @@ function buildCommandApi(
     reassignLead: (input: ReassignLeadInput) =>
       reassignLeadCommand(baseDeps, input),
     reviewLead: (input: ReviewLeadInput) => reviewLeadCommand(baseDeps, input),
+  };
+}
+
+function createWorkflowInteractionCommands(baseDeps: WorkflowCommandDeps) {
+  return {
     addLeadNote: (input: AddLeadNoteInput) =>
       addLeadNoteCommand(baseDeps, input),
     logLeadCall: (input: LogLeadCallInput) =>
@@ -145,6 +182,14 @@ function buildCommandApi(
         },
         input,
       ),
+  };
+}
+
+function createWorkflowSalesCommands(
+  executor: DatabaseExecutor,
+  baseDeps: WorkflowCommandDeps,
+) {
+  return {
     approveForSale: (input: ApproveForSaleInput) =>
       approveForSaleCommand(
         {
@@ -188,15 +233,18 @@ function buildCommandApi(
         input,
       ),
     recordRepLegal: (input: RecordRepLegalInput) =>
-      recordRepLegalCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          party: baseDeps.party,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
+      executor.transaction().execute((tx) => {
+        const txRepos = createWorkflowRepos(tx);
+        return recordRepLegalCommand(
+          {
+            leadReader: createLeadReadRepository(txRepos.leads),
+            mutationUow: createLeadMutationUow(tx),
+            party: txRepos.party,
+            clock: baseDeps.clock,
+          },
+          input,
+        );
+      }),
     createVenue: (input: CreateVenueInput) =>
       createVenueCommand(
         {
@@ -228,6 +276,11 @@ function buildCommandApi(
         },
         input,
       ),
+  };
+}
+
+function createWorkflowSettingsCommands(baseDeps: WorkflowCommandDeps) {
+  return {
     requestSunatRefresh: (input: {
       actor: { userId: number; role: Role; branchId: number };
       leadId: string;
@@ -251,12 +304,92 @@ function buildCommandApi(
   };
 }
 
-export function runTestWorkflowCommand<T>(
-  runtime: TestRuntime,
-  operation: (commandApi: ReturnType<typeof buildCommandApi>) => Promise<T>,
-  overrides?: TestCommandOverrides,
-): Promise<T> {
-  return runtime.ctx.db
-    .transaction()
-    .execute((trx) => operation(buildCommandApi(trx, overrides)));
+function createWorkflowCommands(
+  executor: DatabaseExecutor,
+  engineGateway: WorkflowEngineGateway,
+) {
+  const baseDeps = createWorkflowCommandDeps(executor, engineGateway);
+
+  return {
+    ...createWorkflowCoreCommands(baseDeps),
+    ...createWorkflowInteractionCommands(baseDeps),
+    ...createWorkflowSalesCommands(executor, baseDeps),
+    ...createWorkflowSettingsCommands(baseDeps),
+  };
+}
+
+function createWorkflowQueries(
+  repos: ReturnType<typeof createWorkflowRepos>,
+  engineGateway: WorkflowEngineGateway,
+) {
+  return {
+    getLeadDetail: (input: GetLeadDetailInput) =>
+      getLeadDetail(
+        {
+          leads: repos.leads,
+          leadFavorites: repos.leadFavorites,
+          leadProfiles: repos.leadProfiles,
+          leadHistory: repos.leadHistory,
+          leadQuotations: repos.leadQuotations,
+          leadVenues: repos.leadVenues,
+          leadNegotiationRequests: repos.leadNegotiationRequests,
+          negotiationFiles: repos.negotiationFiles,
+          sourceStatuses: repos.sourceStatuses,
+          users: repos.users,
+          party: repos.party,
+        },
+        {
+          actorUserId: input.actor.userId,
+          actorRole: input.actor.role,
+          leadId: input.leadId,
+        },
+      ),
+    listAssignableExecutives: (input: ListAssignableExecutivesInput) =>
+      listAssignableExecutives(
+        {
+          leads: repos.leads,
+          users: repos.users,
+        },
+        {
+          actorUserId: input.actor.userId,
+          actorRole: input.actor.role,
+          actorBranchId: input.actor.branchId,
+          leadId: input.leadId,
+          search: input.search,
+          limit: input.limit,
+        },
+      ),
+    listLeads: (input: ListLeadsInput) =>
+      listLeads(
+        { leads: repos.leadQueries },
+        {
+          actorUserId: input.actor.userId,
+          actorRole: input.actor.role,
+          actorBranchId: input.actor.branchId,
+          filters: input.filters,
+        },
+      ),
+    getLeadBootstrapPreview: (input: { ruc: string }) =>
+      getLeadBootstrapPreview({ party: repos.party }, engineGateway, input),
+    getSourcingPolicy: (input: { actorRole: Role; branchId: number }) =>
+      getSourcingPolicy({ sourcingPolicies: repos.sourcingPolicies }, input),
+  };
+}
+
+export function createWorkflowApp(input: {
+  executor: DatabaseExecutor;
+  engineGateway: WorkflowEngineGateway;
+}) {
+  const repos = createWorkflowRepos(input.executor);
+
+  return {
+    repos,
+    engineGateway: input.engineGateway,
+    commands: createWorkflowCommands(input.executor, input.engineGateway),
+    queries: createWorkflowQueries(repos, input.engineGateway),
+    createSunatEnrichmentWritebackQueue: (workerId: string) =>
+      createSunatEnrichmentWritebackQueue(workerId, {
+        executor: input.executor,
+      }),
+  };
 }

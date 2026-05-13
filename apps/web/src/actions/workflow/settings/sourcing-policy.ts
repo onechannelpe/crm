@@ -1,5 +1,6 @@
 "use server";
 
+import { workflowActorFrom } from "~/actions/workflow/shared";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -26,8 +27,7 @@ export async function saveSourcingPolicy(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.commands.updateSourcingPolicy({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
+        actor: workflowActorFrom(ctx),
         branchId: input.branchId,
         engineAssignmentEnabled: input.engineAssignmentEnabled,
       }),

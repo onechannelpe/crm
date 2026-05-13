@@ -1,5 +1,6 @@
 "use server";
 
+import { workflowActorFrom } from "~/actions/workflow/shared";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import type { Moneda } from "~/workflow/contracts/lead-schema";
@@ -19,11 +20,7 @@ export async function requestQuotationCreation(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.createQuotation({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         ...input,
       }),
   });
@@ -36,11 +33,7 @@ export async function requestSaleApproval(leadId: string) {
     input: { leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.approveForSale({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId,
       }),
   });

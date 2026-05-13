@@ -1,33 +1,24 @@
 "use server";
 
+import { workflowActorFrom } from "~/actions/workflow/shared";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import type { LeadListFiltersInput } from "~/server/workflow/application/contracts/query-inputs";
 import type { AssignableExecutiveView } from "~/server/workflow/application/queries/views/assignable-executive";
 import type { LeadBootstrapPreviewView } from "~/server/workflow/application/queries/views/lead-bootstrap-preview";
 import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/workflow/application/queries/views/lead-list";
 
-export async function queryLeadList(filters: {
-  stage?: string;
-  status?: string;
-  prioridad?: string;
-  executiveId?: number;
-  updatedSinceMs?: number;
-  updatedUntilMs?: number;
-  sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
-  sortDirection?: "asc" | "desc";
-  limit?: number;
-  offset?: number;
-}): Promise<LeadListView> {
+export async function queryLeadList(
+  filters: LeadListFiltersInput,
+): Promise<LeadListView> {
   return runAction({
     actionName: "workflow.list_leads",
     access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
       getServerRuntime().workflow.queries.listLeads({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        actorBranchId: ctx.actor.branchId,
+        actor: workflowActorFrom(ctx),
         filters,
       }),
   });
@@ -40,11 +31,7 @@ export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
     input: { leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.queries.getLeadDetail({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId,
       }),
   });
@@ -73,11 +60,7 @@ export async function queryAssignableExecutives(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.queries.listAssignableExecutives({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
         search: input.search,
         limit: input.limit,

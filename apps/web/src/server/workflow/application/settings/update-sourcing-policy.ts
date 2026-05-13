@@ -1,15 +1,14 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import type { ActorContext } from "../contracts/actor-context";
 import type { SourcingPolicyDeps } from "../deps/sourcing-policy";
 
 export async function updateSourcingPolicy(
   deps: SourcingPolicyDeps,
   input: {
-    actorUserId: number;
-    actorRole: Role;
+    actor: ActorContext;
     branchId: number;
     engineAssignmentEnabled: boolean;
   },
@@ -22,7 +21,7 @@ export async function updateSourcingPolicy(
     DomainError
   >
 > {
-  if (!hasPermission(input.actorRole, "capacity:policy:manage")) {
+  if (!hasPermission(input.actor.role, "capacity:policy:manage")) {
     return Err(domainError("forbidden", "forbidden", "Access denied"));
   }
 
@@ -30,7 +29,7 @@ export async function updateSourcingPolicy(
     branchId: input.branchId,
     engineAssignmentEnabled: input.engineAssignmentEnabled,
     updatedAt: Date.now(),
-    updatedByUserId: input.actorUserId,
+    updatedByUserId: input.actor.userId,
   });
 
   return Ok({

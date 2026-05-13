@@ -11,3 +11,21 @@ export type ListAssignableExecutivesInput = {
   search?: string;
   limit?: number;
 };
+
+export type LeadListFiltersInput = {
+  stage?: string;
+  status?: string;
+  prioridad?: string;
+  executiveId?: number;
+  updatedSinceMs?: number;
+  updatedUntilMs?: number;
+  sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
+  sortDirection?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+};
+
+export type ListLeadsInput = {
+  actor: ActorContext;
+  filters: LeadListFiltersInput;
+};

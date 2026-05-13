@@ -1,5 +1,6 @@
 "use server";
 
+import { workflowActorFrom } from "~/actions/workflow/shared";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -45,11 +46,7 @@ export async function requestVenueCreation(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.createVenue({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         ...input,
       }),
   });
@@ -90,11 +87,7 @@ export async function requestVenueAccountsAddition(input: {
     input: { leadId: input.leadId, venueId: input.venueId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.addVenueAccounts({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         ...input,
       }),
   });

@@ -8,6 +8,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { domainError } from "~/server/shared/domain-error";
 import { Err } from "~/server/shared/result";
+import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
+import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
 import { resolveAvailableActions } from "~/server/workflow/application/policies/action-availability";
 import {
   MAX_NEGOTIATION_FILES,
@@ -15,8 +17,6 @@ import {
   requireLeadActionAccess,
 } from "~/server/workflow/application/policies/lead-action-policy";
 import type { LeadMutationUow } from "~/server/workflow/application/ports/lead-mutation-uow";
-import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
-import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
 
 describe("lead action policy", () => {
   it("allows supervisors and sales managers to access leads assigned to others", () => {

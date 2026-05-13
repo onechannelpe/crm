@@ -1,5 +1,6 @@
 "use server";
 
+import { workflowActorFrom } from "~/actions/workflow/shared";
 import { AppError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runActionResult } from "~/server/shared/action-runtime";
@@ -17,11 +18,7 @@ export async function requestRateNegotiation(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.requestRateNegotiation({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         ...input,
       }),
   });

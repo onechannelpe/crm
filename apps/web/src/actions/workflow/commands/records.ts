@@ -1,5 +1,6 @@
 "use server";
 
+import { workflowActorFrom } from "~/actions/workflow/shared";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -29,11 +30,7 @@ export async function requestLeadCreation(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.commands.registerLead({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         ruc: normalizedRuc,
         executiveId: input.executiveId ?? ctx.actor.userId,
       }),
@@ -65,11 +62,7 @@ export async function requestLeadReview(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.reviewLead({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
         status: reviewedStatus.value,
         prioridad: reviewedPrioridad.value,
@@ -111,11 +104,7 @@ export async function requestSaveCommercialScope(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.saveCommercialScope({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
         proveedorActual: input.proveedorActual,
         tasaActual: input.tasaActual,
@@ -140,11 +129,7 @@ export async function requestQuotation(input: { leadId: string }) {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.commands.requestQuotation({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
       }),
   });
@@ -172,11 +157,7 @@ export async function requestRecordRepLegal(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.recordRepLegal({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         ...input,
       }),
   });
@@ -192,11 +173,7 @@ export async function requestLeadReassignment(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.commands.reassignLead({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
         toExecutiveId: input.newExecutiveId,
       }),
@@ -210,11 +187,7 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.commands.addToFavorites({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
       }),
   });
@@ -229,11 +202,7 @@ export async function requestRemoveLeadFromFavorites(input: {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.commands.removeFromFavorites({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
       }),
   });
@@ -246,8 +215,7 @@ export async function requestLeadSunatRefresh(input: { leadId: string }) {
     input,
     execute: (ctx) =>
       getServerRuntime().workflow.commands.requestSunatRefresh({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
+        actor: workflowActorFrom(ctx),
         leadId: input.leadId,
       }),
   });
