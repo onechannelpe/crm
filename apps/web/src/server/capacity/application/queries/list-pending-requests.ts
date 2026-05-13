@@ -2,8 +2,8 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { fromDbCapacityRequestKind } from "../domain/request-policy";
-import type { PendingCapacityRequestView } from "./contracts";
+import { fromDbCapacityRequestKind } from "../../domain/request-policy";
+import type { PendingCapacityRequestView } from "../contracts";
 
 interface PendingRequestsDeps {
   repos: {

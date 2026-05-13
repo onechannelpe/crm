@@ -4,7 +4,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityAuditEvent, AuditChangeValue } from "./contracts";
+import type { AuditChangeValue, CapacityAuditEvent } from "../contracts";
 
 interface AuditReadDeps {
   repos: {

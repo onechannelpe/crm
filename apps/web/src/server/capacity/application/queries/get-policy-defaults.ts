@@ -2,7 +2,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityPolicyDefaultsView } from "./contracts";
+import type { CapacityPolicyDefaultsView } from "../contracts";
 
 interface PolicyDefaultsDeps {
   repos: {

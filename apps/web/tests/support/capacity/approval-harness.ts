@@ -1,7 +1,7 @@
 import type { InsertResult } from "kysely";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { approveCapacityRequest } from "~/server/capacity/application/commands";
+import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 export const ACTOR_USER_ID = 99;

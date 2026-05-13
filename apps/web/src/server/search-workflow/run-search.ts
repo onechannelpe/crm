@@ -9,7 +9,7 @@ import {
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
-import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,

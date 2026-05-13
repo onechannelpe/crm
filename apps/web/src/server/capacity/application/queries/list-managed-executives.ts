@@ -1,13 +1,13 @@
 import { longName } from "~/lib/users/display-name";
-import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
-import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../domain/access-policy";
-import type { CapacityUser } from "./actor-scope";
-import type { ManagedExecutiveView } from "./contracts";
+import { canManageExecutive } from "../../domain/access-policy";
+import type { CapacityUser } from "../actor-scope";
+import type { ManagedExecutiveView } from "../contracts";
 
 interface ManagedExecutivesDeps {
   repos: Omit<Parameters<typeof getSearchCapacitySnapshot>[1], "users"> &

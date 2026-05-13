@@ -1,14 +1,14 @@
 import { longName } from "~/lib/users/display-name";
-import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
-import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../domain/access-policy";
-import { fromDbCapacityRequestKind } from "../domain/request-policy";
-import type { CapacityUser } from "./actor-scope";
-import type { ExecutiveCapacityDetailView } from "./contracts";
+import { canManageExecutive } from "../../domain/access-policy";
+import { fromDbCapacityRequestKind } from "../../domain/request-policy";
+import type { CapacityUser } from "../actor-scope";
+import type { ExecutiveCapacityDetailView } from "../contracts";
 
 interface ExecutiveDetailDeps {
   repos: {
