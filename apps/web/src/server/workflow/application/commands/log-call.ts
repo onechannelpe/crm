@@ -44,10 +44,7 @@ export async function logLeadCallCommand(
     return outcome;
   }
 
-  const interactionId = requireFirstHistoryId(
-    outcome.value.historyIds,
-    "missing_interaction_history_id",
-  );
+  const interactionId = requireFirstHistoryId(outcome.value.historyIds);
   if (!interactionId.ok) {
     return interactionId;
   }

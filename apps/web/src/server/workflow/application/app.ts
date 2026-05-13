@@ -58,37 +58,24 @@ import {
   createWorkflowAuditLogsRepo,
 } from "~/server/workflow/infrastructure/audit-log";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/repos/lead-mutation-uow";
-import { createLeadReadRepository } from "~/server/workflow/infrastructure/repos/lead-read-repo";
-import { createLeadUserScopeRepository } from "~/server/workflow/infrastructure/repos/lead-user-scope-repo";
-import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
+import { createWorkflowRepos, type WorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sunat-enrichment-writeback-queue";
 
 type WorkflowCommandDeps = {
-  leadReader: ReturnType<typeof createLeadReadRepository>;
-  leadRepo: ReturnType<typeof createWorkflowRepos>["leads"];
-  leadFavorites: ReturnType<typeof createWorkflowRepos>["leadFavorites"];
+  repos: WorkflowRepos;
   mutationUow: ReturnType<typeof createLeadMutationUow>;
-  users: ReturnType<typeof createLeadUserScopeRepository>;
   clock: typeof systemLeadClock;
   registerLead: RegisterLeadDeps;
   auditService: ReturnType<typeof createWorkflowAuditService>;
   engineGateway: WorkflowEngineGateway;
   leadEnrichmentQueue: LeadEnrichmentQueue;
-  leadQuotations: ReturnType<typeof createWorkflowRepos>["leadQuotations"];
-  leadProfiles: ReturnType<typeof createWorkflowRepos>["leadProfiles"];
-  party: ReturnType<typeof createWorkflowRepos>["party"];
-  leadVenues: ReturnType<typeof createWorkflowRepos>["leadVenues"];
-  negotiationRequests: ReturnType<
-    typeof createWorkflowRepos
-  >["leadNegotiationRequests"];
-  sourcingPolicies: ReturnType<typeof createWorkflowRepos>["sourcingPolicies"];
 };
 
 function createWorkflowCommandDeps(
   executor: DatabaseExecutor,
+  repos: WorkflowRepos,
   engineGateway: WorkflowEngineGateway,
 ): WorkflowCommandDeps {
-  const repos = createWorkflowRepos(executor);
   const auditService = createWorkflowAuditService({
     auditLogs: createWorkflowAuditLogRepo(
       createWorkflowAuditLogsRepo(executor),
@@ -104,11 +91,8 @@ function createWorkflowCommandDeps(
   };
 
   return {
-    leadReader: createLeadReadRepository(repos.leads),
-    leadRepo: repos.leads,
-    leadFavorites: repos.leadFavorites,
+    repos,
     mutationUow: createLeadMutationUow(executor),
-    users: createLeadUserScopeRepository(repos.users),
     clock: systemLeadClock,
     registerLead: {
       leads: repos.leads,
@@ -120,16 +104,13 @@ function createWorkflowCommandDeps(
     auditService,
     engineGateway,
     leadEnrichmentQueue,
-    leadQuotations: repos.leadQuotations,
-    leadProfiles: repos.leadProfiles,
-    party: repos.party,
-    leadVenues: repos.leadVenues,
-    negotiationRequests: repos.leadNegotiationRequests,
-    sourcingPolicies: repos.sourcingPolicies,
   };
 }
 
-function createWorkflowCoreCommands(baseDeps: WorkflowCommandDeps) {
+function createWorkflowCommands(
+  deps: WorkflowCommandDeps,
+  executor: DatabaseExecutor,
+) {
   return {
     registerLead: (input: RegisterLeadInput) =>
       registerLead({
@@ -137,98 +118,121 @@ function createWorkflowCoreCommands(baseDeps: WorkflowCommandDeps) {
         actorRole: input.actor.role,
         executiveId: input.executiveId,
         ruc: input.ruc,
-        deps: baseDeps.registerLead,
-        mutationUow: baseDeps.mutationUow,
-        auditService: baseDeps.auditService,
-        engineGateway: baseDeps.engineGateway,
-        leadEnrichmentQueue: baseDeps.leadEnrichmentQueue,
+        deps: deps.registerLead,
+        mutationUow: deps.mutationUow,
+        auditService: deps.auditService,
+        engineGateway: deps.engineGateway,
+        leadEnrichmentQueue: deps.leadEnrichmentQueue,
       }),
     addToFavorites: (input: AddLeadToFavoritesInput) =>
       addToFavoritesCommand(
         {
-          leadReader: baseDeps.leadReader,
-          leadFavorites: baseDeps.leadFavorites,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          leadFavorites: deps.repos.leadFavorites,
+          clock: deps.clock,
         },
         input,
       ),
     removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
       removeFromFavoritesCommand(
         {
-          leadReader: baseDeps.leadReader,
-          leadFavorites: baseDeps.leadFavorites,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          leadFavorites: deps.repos.leadFavorites,
+          clock: deps.clock,
         },
         input,
       ),
     reassignLead: (input: ReassignLeadInput) =>
-      reassignLeadCommand(baseDeps, input),
-    reviewLead: (input: ReviewLeadInput) => reviewLeadCommand(baseDeps, input),
-  };
-}
-
-function createWorkflowInteractionCommands(baseDeps: WorkflowCommandDeps) {
-  return {
-    addLeadNote: (input: AddLeadNoteInput) =>
-      addLeadNoteCommand(baseDeps, input),
-    logLeadCall: (input: LogLeadCallInput) =>
-      logLeadCallCommand(baseDeps, input),
-    applyImportedReview: (input: ApplyImportedReviewInput) =>
-      applyImportedReviewCommand(
+      reassignLeadCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          users: {
+            findUserById: (id) => deps.repos.users.findById(id),
+            isExecutiveAssignable: (scope, executiveId) =>
+              deps.repos.users.isExecutiveAssignable(scope, executiveId),
+            listAssignableExecutives: (scope, options) =>
+              deps.repos.users.listAssignableExecutives(scope, options),
+          },
+          clock: deps.clock,
         },
         input,
       ),
-  };
-}
-
-function createWorkflowSalesCommands(
-  executor: DatabaseExecutor,
-  baseDeps: WorkflowCommandDeps,
-) {
-  return {
+    reviewLead: (input: ReviewLeadInput) =>
+      reviewLeadCommand(
+        {
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          clock: deps.clock,
+        },
+        input,
+      ),
+    addLeadNote: (input: AddLeadNoteInput) =>
+      addLeadNoteCommand(
+        {
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          clock: deps.clock,
+        },
+        input,
+      ),
+    logLeadCall: (input: LogLeadCallInput) =>
+      logLeadCallCommand(
+        {
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          clock: deps.clock,
+        },
+        input,
+      ),
+    applyImportedReview: (input: ApplyImportedReviewInput) =>
+      applyImportedReviewCommand(
+        {
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          clock: deps.clock,
+        },
+        input,
+      ),
     approveForSale: (input: ApproveForSaleInput) =>
       approveForSaleCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          clock: deps.clock,
         },
         input,
       ),
     createQuotation: (input: CreateQuotationInput) =>
       createQuotationCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadQuotations: baseDeps.leadQuotations,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          leadQuotations: deps.repos.leadQuotations,
+          clock: deps.clock,
         },
         input,
       ),
     saveCommercialScope: (input: SaveCommercialScopeInput) =>
       saveCommercialScopeCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadProfiles: baseDeps.leadProfiles,
-          leadVenues: baseDeps.leadVenues,
-          party: baseDeps.party,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          leadProfiles: deps.repos.leadProfiles,
+          leadVenues: deps.repos.leadVenues,
+          party: deps.repos.party,
+          clock: deps.clock,
         },
         input,
       ),
     requestQuotation: (input: RequestQuotationInput) =>
       requestQuotationCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadProfiles: baseDeps.leadProfiles,
-          party: baseDeps.party,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          leadProfiles: deps.repos.leadProfiles,
+          party: deps.repos.party,
+          clock: deps.clock,
         },
         input,
       ),
@@ -237,10 +241,10 @@ function createWorkflowSalesCommands(
         const txRepos = createWorkflowRepos(tx);
         return recordRepLegalCommand(
           {
-            leadReader: createLeadReadRepository(txRepos.leads),
+            leadReader: txRepos.leads,
             mutationUow: createLeadMutationUow(tx),
             party: txRepos.party,
-            clock: baseDeps.clock,
+            clock: deps.clock,
           },
           input,
         );
@@ -248,39 +252,34 @@ function createWorkflowSalesCommands(
     createVenue: (input: CreateVenueInput) =>
       createVenueCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadProfiles: baseDeps.leadProfiles,
-          leadVenues: baseDeps.leadVenues,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          leadProfiles: deps.repos.leadProfiles,
+          leadVenues: deps.repos.leadVenues,
+          clock: deps.clock,
         },
         input,
       ),
     addVenueAccounts: (input: AddVenueAccountsInput) =>
       addVenueAccountsCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadVenues: baseDeps.leadVenues,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          leadVenues: deps.repos.leadVenues,
+          clock: deps.clock,
         },
         input,
       ),
     requestRateNegotiation: (input: RequestRateNegotiationInput) =>
       requestRateNegotiationCommand(
         {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          negotiationRequests: baseDeps.negotiationRequests,
-          clock: baseDeps.clock,
+          leadReader: deps.repos.leads,
+          mutationUow: deps.mutationUow,
+          negotiationRequests: deps.repos.leadNegotiationRequests,
+          clock: deps.clock,
         },
         input,
       ),
-  };
-}
-
-function createWorkflowSettingsCommands(baseDeps: WorkflowCommandDeps) {
-  return {
     requestSunatRefresh: (input: {
       actor: { userId: number; role: Role; branchId: number };
       leadId: string;
@@ -288,9 +287,9 @@ function createWorkflowSettingsCommands(baseDeps: WorkflowCommandDeps) {
       requestSunatRefresh({
         actor: input.actor,
         leadId: input.leadId,
-        leadRepo: baseDeps.leadRepo,
-        enrichmentQueue: baseDeps.leadEnrichmentQueue,
-        auditService: baseDeps.auditService,
+        leadRepo: deps.repos.leads,
+        enrichmentQueue: deps.leadEnrichmentQueue,
+        auditService: deps.auditService,
       }),
     updateSourcingPolicy: (input: {
       actor: { userId: number; role: Role; branchId: number };
@@ -298,28 +297,14 @@ function createWorkflowSettingsCommands(baseDeps: WorkflowCommandDeps) {
       engineAssignmentEnabled: boolean;
     }) =>
       updateSourcingPolicy(
-        { sourcingPolicies: baseDeps.sourcingPolicies },
+        { sourcingPolicies: deps.repos.sourcingPolicies },
         input,
       ),
   };
 }
 
-function createWorkflowCommands(
-  executor: DatabaseExecutor,
-  engineGateway: WorkflowEngineGateway,
-) {
-  const baseDeps = createWorkflowCommandDeps(executor, engineGateway);
-
-  return {
-    ...createWorkflowCoreCommands(baseDeps),
-    ...createWorkflowInteractionCommands(baseDeps),
-    ...createWorkflowSalesCommands(executor, baseDeps),
-    ...createWorkflowSettingsCommands(baseDeps),
-  };
-}
-
 function createWorkflowQueries(
-  repos: ReturnType<typeof createWorkflowRepos>,
+  repos: WorkflowRepos,
   engineGateway: WorkflowEngineGateway,
 ) {
   return {
@@ -381,11 +366,16 @@ export function createWorkflowApp(input: {
   engineGateway: WorkflowEngineGateway;
 }) {
   const repos = createWorkflowRepos(input.executor);
+  const commandDeps = createWorkflowCommandDeps(
+    input.executor,
+    repos,
+    input.engineGateway,
+  );
 
   return {
     repos,
     engineGateway: input.engineGateway,
-    commands: createWorkflowCommands(input.executor, input.engineGateway),
+    commands: createWorkflowCommands(commandDeps, input.executor),
     queries: createWorkflowQueries(repos, input.engineGateway),
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {
