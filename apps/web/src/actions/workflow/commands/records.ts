@@ -1,6 +1,13 @@
 "use server";
 
-import { workflowActorFrom } from "~/actions/workflow/shared";
+import {
+  toLeadIdActorInput,
+  toReassignLeadInput,
+  toRecordRepLegalInput,
+  toRegisterLeadInput,
+  toReviewLeadInput,
+  toSaveCommercialScopeInput,
+} from "~/actions/workflow/mappers";
 import {
   type CreateLeadInput,
   type LeadIdInput,
@@ -25,11 +32,9 @@ export async function requestLeadCreation(input: CreateLeadInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.registerLead({
-        actor: workflowActorFrom(ctx),
-        ruc: normalizedRuc,
-        executiveId: input.executiveId ?? ctx.actor.userId,
-      }),
+      getServerRuntime().workflow.commands.registerLead(
+        toRegisterLeadInput(ctx, input),
+      ),
   });
 }
 
@@ -43,13 +48,9 @@ export async function requestLeadReview(input: ReviewLeadInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.reviewLead({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-        status: input.status,
-        prioridad: input.prioridad,
-        reason: input.reason,
-      }),
+      getServerRuntime().workflow.commands.reviewLead(
+        toReviewLeadInput(ctx, input),
+      ),
   });
 }
 
@@ -68,22 +69,9 @@ export async function requestSaveCommercialScope(
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.saveCommercialScope({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-        proveedorActual: input.proveedorActual,
-        tasaActual: input.tasaActual,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        giroNegocio: input.giroNegocio,
-        abonoBank: input.abonoBank,
-        posTotal: input.posTotal,
-        linkScope: input.linkScope,
-        linkUrl: input.linkUrl,
-        onlineScope: input.onlineScope,
-        onlineUrl: input.onlineUrl,
-        onlineModalidad: input.onlineModalidad,
-      }),
+      getServerRuntime().workflow.commands.saveCommercialScope(
+        toSaveCommercialScopeInput(ctx, input),
+      ),
   });
 }
 
@@ -93,10 +81,9 @@ export async function requestQuotation(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.requestQuotation({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-      }),
+      getServerRuntime().workflow.commands.requestQuotation(
+        toLeadIdActorInput(ctx, input),
+      ),
   });
 }
 
@@ -113,10 +100,9 @@ export async function requestRecordRepLegal(input: RecordRepLegalInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.recordRepLegal({
-        actor: workflowActorFrom(ctx),
-        ...input,
-      }),
+      getServerRuntime().workflow.commands.recordRepLegal(
+        toRecordRepLegalInput(ctx, input),
+      ),
   });
 }
 
@@ -126,11 +112,9 @@ export async function requestLeadReassignment(input: ReassignLeadInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.reassignLead({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-        toExecutiveId: input.newExecutiveId,
-      }),
+      getServerRuntime().workflow.commands.reassignLead(
+        toReassignLeadInput(ctx, input),
+      ),
   });
 }
 
@@ -140,10 +124,9 @@ export async function requestAddLeadToFavorites(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.addToFavorites({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-      }),
+      getServerRuntime().workflow.commands.addToFavorites(
+        toLeadIdActorInput(ctx, input),
+      ),
   });
 }
 
@@ -153,10 +136,9 @@ export async function requestRemoveLeadFromFavorites(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.removeFromFavorites({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-      }),
+      getServerRuntime().workflow.commands.removeFromFavorites(
+        toLeadIdActorInput(ctx, input),
+      ),
   });
 }
 
@@ -166,9 +148,8 @@ export async function requestLeadSunatRefresh(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.requestSunatRefresh({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-      }),
+      getServerRuntime().workflow.commands.requestSunatRefresh(
+        toLeadIdActorInput(ctx, input),
+      ),
   });
 }

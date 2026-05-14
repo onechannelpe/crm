@@ -1,14 +1,18 @@
 "use server";
 
-import { workflowActorFrom } from "~/actions/workflow/shared";
+import {
+  toGetLeadDetailInput,
+  toListAssignableExecutivesInput,
+  toListLeadsInput,
+} from "~/actions/workflow/mappers";
 import type {
   AssignableExecutivesInput,
+  AssignableExecutiveView,
+  LeadBootstrapPreviewView,
+  LeadDetailView,
   LeadListFiltersInput,
+  LeadListView,
 } from "~/contracts/workflow";
-import type { AssignableExecutiveView } from "~/contracts/workflow";
-import type { LeadBootstrapPreviewView } from "~/contracts/workflow";
-import type { LeadDetailView } from "~/contracts/workflow";
-import type { LeadListView } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -20,10 +24,9 @@ export async function queryLeadList(
     access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
-      getServerRuntime().workflow.queries.listLeads({
-        actor: workflowActorFrom(ctx),
-        filters,
-      }),
+      getServerRuntime().workflow.queries.listLeads(
+        toListLeadsInput(ctx, filters),
+      ),
   });
 }
 
@@ -33,10 +36,9 @@ export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.queries.getLeadDetail({
-        actor: workflowActorFrom(ctx),
-        leadId,
-      }),
+      getServerRuntime().workflow.queries.getLeadDetail(
+        toGetLeadDetailInput(ctx, leadId),
+      ),
   });
 }
 
@@ -60,11 +62,8 @@ export async function queryAssignableExecutives(
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.queries.listAssignableExecutives({
-        actor: workflowActorFrom(ctx),
-        leadId: input.leadId,
-        search: input.search,
-        limit: input.limit,
-      }),
+      getServerRuntime().workflow.queries.listAssignableExecutives(
+        toListAssignableExecutivesInput(ctx, input),
+      ),
   });
 }

@@ -1,8 +1,10 @@
 "use server";
 
-import { workflowActorFrom } from "~/actions/workflow/shared";
-import type { RequestRateNegotiationInput } from "~/contracts/workflow";
-import type { LeadCommandResult } from "~/contracts/workflow";
+import { toRequestRateNegotiationInput } from "~/actions/workflow/mappers";
+import type {
+  LeadCommandResult,
+  RequestRateNegotiationInput,
+} from "~/contracts/workflow";
 import { AppError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runActionResult } from "~/server/shared/action-runtime";
@@ -16,9 +18,8 @@ export async function requestRateNegotiation(
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.requestRateNegotiation({
-        actor: workflowActorFrom(ctx),
-        ...input,
-      }),
+      getServerRuntime().workflow.commands.requestRateNegotiation(
+        toRequestRateNegotiationInput(ctx, input),
+      ),
   });
 }
