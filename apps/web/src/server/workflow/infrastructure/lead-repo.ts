@@ -6,10 +6,7 @@ import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
 import type { LeadPatch } from "~/server/workflow/application/ports/lead";
-import type {
-  LeadDraft,
-  LeadState,
-} from "~/server/workflow/domain/lead/state";
+import type { LeadDraft, LeadState } from "~/server/workflow/domain/lead/state";
 
 type LeadRow = {
   id: string;

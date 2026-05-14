@@ -10,6 +10,7 @@ import { domainError } from "~/server/shared/domain-error";
 import { Err } from "~/server/shared/result";
 import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
 import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
+import type { LeadUnitOfWork } from "~/server/workflow/application/ports/uow";
 import {
   authorizeLeadAction,
   MAX_NEGOTIATION_FILES,
@@ -17,18 +18,25 @@ import {
   resolveAvailableActions,
 } from "~/server/workflow/domain/lead/policy";
 import { requestRateNegotiation } from "~/server/workflow/domain/lead/transitions";
-import type { LeadUnitOfWork } from "~/server/workflow/application/ports/uow";
 
 describe("lead action policy", () => {
   it("allows supervisors and sales managers to access leads assigned to others", () => {
     const lead = makeWorkflowLead({ executiveId: 1 });
 
     expect(
-      authorizeLeadAction("request-negotiation", { userId: 2, role: "supervisor" }, lead).ok,
+      authorizeLeadAction(
+        "request-negotiation",
+        { userId: 2, role: "supervisor" },
+        lead,
+      ).ok,
     ).toBe(true);
 
     expect(
-      authorizeLeadAction("request-negotiation", { userId: 2, role: "sales_manager" }, lead).ok,
+      authorizeLeadAction(
+        "request-negotiation",
+        { userId: 2, role: "sales_manager" },
+        lead,
+      ).ok,
     ).toBe(true);
   });
 

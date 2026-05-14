@@ -9,7 +9,9 @@ import type {
 import type { LeadState } from "~/server/workflow/domain/lead/state";
 import type { LeadStateRepository } from "~/server/workflow/infrastructure/lead-state-repo";
 
-export function makeWorkflowLead(overrides: Partial<LeadState> = {}): LeadState {
+export function makeWorkflowLead(
+  overrides: Partial<LeadState> = {},
+): LeadState {
   return {
     id: "lead-1",
     organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963121",
