@@ -54,13 +54,6 @@ function parseRequestedStep(raw: string | string[] | undefined): RequestedStep {
   return null;
 }
 
-function parseSearchString(
-  raw: string | string[] | undefined,
-): string | undefined {
-  if (Array.isArray(raw)) return undefined;
-  return raw;
-}
-
 function OnboardingProgress(props: { step: string }) {
   const percent = () => (props.step === "profile" ? 50 : 100);
   return (
@@ -97,7 +90,6 @@ function OnboardingContent() {
   const [submitting, setSubmitting] = createSignal(false);
 
   const requestedStep = createMemo(() => parseRequestedStep(searchParams.step));
-
   const view = createMemo(() => {
     const currentUser = user();
     const policy = requirements();
@@ -107,7 +99,6 @@ function OnboardingContent() {
     return buildView({
       requirements: policy,
       userPhone: currentUser?.phone ?? null,
-      phoneDraft: parseSearchString(searchParams.phone),
       requestedStep: requestedStep(),
     });
   });
@@ -119,9 +110,6 @@ function OnboardingContent() {
   createEffect(() => {
     const next = view();
     if (!next) return;
-    if (phone() === "" && next.phoneDraft !== "") {
-      setPhone(next.phoneDraft);
-    }
     if (next.state.step === "done") {
       navigate(requirements()?.nextRoute ?? "/");
     }
@@ -167,6 +155,7 @@ function OnboardingContent() {
     setSubmitting(true);
     try {
       const result = await submitOnboardingProfile({ phone: currentPhone });
+      await refreshCurrentUser();
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
@@ -180,10 +169,7 @@ function OnboardingContent() {
   async function handleChooseSecurity(method: "passkey-step" | "totp-step") {
     setSubmitting(true);
     try {
-      const result = await chooseSecurity({
-        method,
-        phone: normalizePhoneInput(phone()),
-      });
+      const result = await chooseSecurity({ method });
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
@@ -210,7 +196,6 @@ function OnboardingContent() {
       const result = await finishPasskeyOnboardingStep({
         challengeId,
         response,
-        phone: normalizePhoneInput(phone()),
       });
       navigate(result.redirectTo);
     } catch (error: unknown) {
@@ -243,9 +228,7 @@ function OnboardingContent() {
   async function handleComplete() {
     setSubmitting(true);
     try {
-      const result = await completeOnboardingStep({
-        phone: normalizePhoneInput(phone()),
-      });
+      const result = await completeOnboardingStep();
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
