@@ -5,11 +5,11 @@ import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
+import type { LeadPatch } from "~/server/workflow/application/ports/lead";
 import type {
   LeadDraft,
-  LeadPatch,
-  LeadRecord,
-} from "~/server/workflow/domain/lead-record";
+  LeadState,
+} from "~/server/workflow/domain/lead/state";
 
 type LeadRow = {
   id: string;
@@ -30,11 +30,12 @@ type LeadWithOrganizationRow = LeadRow & {
   address: string | null;
   district: string | null;
   department: string | null;
+  version: number;
 };
 type NewLeadRow = Insertable<Database["workflow_leads"]>;
 type LeadRowPatch = Updateable<Database["workflow_leads"]>;
 
-function toLead(row: LeadWithOrganizationRow): LeadRecord {
+function toLead(row: LeadWithOrganizationRow): LeadState {
   return {
     id: row.id,
     organizationId: row.organization_id,
@@ -51,6 +52,7 @@ function toLead(row: LeadWithOrganizationRow): LeadRecord {
     prioridad: row.prioridad,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    version: row.version,
   };
 }
 
@@ -94,6 +96,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       "lead.prioridad",
       "lead.created_at",
       "lead.updated_at",
+      "lead.version",
       "org.ruc",
       "org.name as razon_social",
       "org.address",

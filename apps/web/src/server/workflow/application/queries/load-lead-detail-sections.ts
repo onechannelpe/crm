@@ -169,7 +169,7 @@ export async function loadLeadDetailSections(
   );
 
   return Ok({
-    lead: lead as unknown as LeadState,
+    lead,
     isFavorite,
     profile,
     quotations,
