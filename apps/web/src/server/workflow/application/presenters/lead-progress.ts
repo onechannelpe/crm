@@ -2,11 +2,11 @@ import {
   resolveLeadProgress,
   type LeadBlockingField,
 } from "../../domain/lead-progress";
-import type { LeadRecord } from "../../domain/lead-record";
+import type { LeadState } from "../../domain/lead/state";
 import type { LeadProfile, OrganizationProfile } from "../ports/entities";
 
 export function presentLeadNextStep(input: {
-  lead: Pick<LeadRecord, "stage">;
+  lead: Pick<LeadState, "stage">;
 }): string {
   return resolveLeadProgress({
     lead: input.lead,
@@ -14,7 +14,7 @@ export function presentLeadNextStep(input: {
 }
 
 export function presentLeadBlockingFields(input: {
-  lead: Pick<LeadRecord, "stage">;
+  lead: Pick<LeadState, "stage">;
   profile?: LeadProfile | null;
   organization?: OrganizationProfile | null;
   venuesWithAccountsCount?: number;

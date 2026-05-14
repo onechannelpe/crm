@@ -14,7 +14,8 @@ import type {
   LeadSaleProofFileView,
 } from "~/server/workflow/types";
 
-import { canUploadSaleProof, requireLeadAccess } from "../policies/access";
+import { hasPermission } from "~/lib/auth/access/rbac";
+import { authorizeLeadAction } from "../../domain/lead/policy";
 import type { LeadReadRepository } from "../ports/lead";
 
 type LeadArtifactDeps = {
@@ -37,11 +38,11 @@ async function requireReadableLead(
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
-  const access = requireLeadAccess({
-    actorUserId: input.ctx.actor.userId,
-    actorRole: input.ctx.actor.role,
-    executiveId: lead.executiveId,
-  });
+  const access = authorizeLeadAction(
+    "view",
+    { userId: input.ctx.actor.userId, role: input.ctx.actor.role },
+    lead,
+  );
   if (!access.ok) {
     return access;
   }
@@ -109,7 +110,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
           ),
         );
       }
-      if (!canUploadSaleProof(input.ctx.actor.role)) {
+      if (!hasPermission(input.ctx.actor.role, "lead:sale:upload-proof")) {
         return Err(domainError("forbidden", "forbidden", "Access denied"));
       }
 

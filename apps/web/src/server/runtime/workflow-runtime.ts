@@ -1,6 +1,5 @@
 import type { EngineClient } from "~/server/shared/engine/client";
 import { createWorkflowCommandBus } from "~/server/workflow/application/command-bus";
-import { createWorkflowCommandDeps } from "~/server/workflow/application/command-deps";
 import { createWorkflowQueryBus } from "~/server/workflow/application/query-bus";
 import { createLeadArtifactsService } from "~/server/workflow/application/services/lead-artifacts";
 import { createEngineGateway } from "~/server/workflow/infrastructure/engine-gateway";
@@ -18,10 +17,9 @@ export function createWorkflowRuntime(
 ) {
   const engineGateway = createEngineGateway(engine);
   const repos = createWorkflowRepos(infra.db);
-  const commandDeps = createWorkflowCommandDeps(infra.db, repos, engineGateway);
 
   return {
-    commands: createWorkflowCommandBus(commandDeps),
+    commands: createWorkflowCommandBus(infra.db, repos),
     queries: createWorkflowQueryBus(repos, engineGateway),
     leadArtifacts: createLeadArtifactsService({
       leadReader: createLeadRepo(infra.db),

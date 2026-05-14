@@ -4,11 +4,10 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { AssignableExecutiveView } from "~/server/workflow/types";
 
 import {
-  canReassignLead,
-  requireLeadAccess,
-  requirePipelineActionAccess,
+  authorizeLeadAction,
+  requireCapability,
   resolveAssignableExecutivesScope,
-} from "../policies/access";
+} from "../../domain/lead/policy";
 import type { WorkflowUserRepository } from "../ports/entities";
 import type { LeadRepository } from "../ports/lead";
 
@@ -28,35 +27,26 @@ export async function listAssignableExecutives(
     limit?: number;
   },
 ): Promise<Result<AssignableExecutiveView[], DomainError>> {
-  const canReassign = requirePipelineActionAccess(
-    input.actorRole,
-    canReassignLead,
-  );
-  if (!canReassign.ok) {
-    return canReassign;
-  }
+  const canReassign = requireCapability("reassign", { role: input.actorRole });
+  if (!canReassign.ok) return canReassign;
 
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
 
-  const canAccessLead = requireLeadAccess({
-    actorUserId: input.actorUserId,
-    actorRole: input.actorRole,
-    executiveId: lead.executiveId,
-  });
-  if (!canAccessLead.ok) {
-    return canAccessLead;
-  }
+  const canAccess = authorizeLeadAction(
+    "view",
+    { userId: input.actorUserId, role: input.actorRole },
+    lead,
+  );
+  if (!canAccess.ok) return canAccess;
 
   const scope = resolveAssignableExecutivesScope({
     actorRole: input.actorRole,
     actorBranchId: input.actorBranchId,
   });
-  if (!scope.ok) {
-    return scope;
-  }
+  if (!scope.ok) return scope;
 
   const users = await deps.users.listAssignableExecutives(scope.value, {
     search: input.search,

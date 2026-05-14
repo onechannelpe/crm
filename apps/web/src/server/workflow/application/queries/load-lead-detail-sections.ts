@@ -3,7 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadHistoryEntry } from "../../domain/history";
-import type { LeadRecord } from "../../domain/lead-record";
+import type { LeadState } from "../../domain/lead/state";
 import type {
   LeadProfileRepository,
   LeadNegotiationRequest,
@@ -69,7 +69,7 @@ export type LeadDetailQueryDeps = {
 };
 
 export type LeadDetailLoadedSections = {
-  lead: LeadRecord;
+  lead: LeadState;
   isFavorite: boolean;
   profile: Awaited<ReturnType<LeadProfileRepository["findByLeadId"]>>;
   quotations: LeadQuotation[];
@@ -169,7 +169,7 @@ export async function loadLeadDetailSections(
   );
 
   return Ok({
-    lead,
+    lead: lead as unknown as LeadState,
     isFavorite,
     profile,
     quotations,

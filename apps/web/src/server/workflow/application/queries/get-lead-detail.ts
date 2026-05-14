@@ -3,8 +3,11 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadDetailView } from "~/server/workflow/types";
 
-import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
-import { resolveAvailableActions } from "../policies/action-availability";
+import {
+  authorizeLeadAction,
+  canRevealFullTimeline,
+  resolveAvailableActions,
+} from "../../domain/lead/policy";
 import { presentLeadDetail } from "../presenters/lead-detail";
 import {
   loadLeadDetailSections,
@@ -28,14 +31,12 @@ export async function getLeadDetail(
   }
   const { lead } = loaded.value;
 
-  const canAccessLead = requireLeadAccess({
-    actorUserId: input.actorUserId,
-    actorRole: input.actorRole,
-    executiveId: lead.executiveId,
-  });
-  if (!canAccessLead.ok) {
-    return canAccessLead;
-  }
+  const canAccess = authorizeLeadAction(
+    "view",
+    { userId: input.actorUserId, role: input.actorRole },
+    lead,
+  );
+  if (!canAccess.ok) return canAccess;
 
   const userMap = new Map(loaded.value.userRows.map((u) => [u.id, u.fullName]));
   const executiveName = userMap.get(lead.executiveId) ?? "Desconocido";
@@ -45,12 +46,11 @@ export async function getLeadDetail(
     : null;
 
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
-  const availableActions = resolveAvailableActions({
-    actorUserId: input.actorUserId,
-    actorRole: input.actorRole,
+  const availableActions = resolveAvailableActions(
+    { userId: input.actorUserId, role: input.actorRole },
     lead,
-    negotiationRequestCount: loaded.value.negotiationRequestRows.length,
-  });
+    { negotiationRequestCount: loaded.value.negotiationRequestRows.length },
+  );
 
   return Ok(
     presentLeadDetail({

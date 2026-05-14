@@ -12,7 +12,7 @@ import type {
 } from "~/server/workflow/types";
 
 import type { LeadHistoryEntry } from "../../domain/history";
-import type { LeadRecord } from "../../domain/lead-record";
+import type { LeadState } from "../../domain/lead/state";
 import type {
   LeadProfile,
   LeadNegotiationRequest,
@@ -41,7 +41,7 @@ export type NegotiationRequestWithFiles = {
 };
 
 export type LeadDetailSource = {
-  lead: LeadRecord;
+  lead: LeadState;
   isFavorite: boolean;
   executiveName: string;
   createdByName: string;
@@ -76,7 +76,7 @@ function toLeadSourceStatus(
 }
 
 function toLeadDetailLead(
-  lead: LeadRecord,
+  lead: LeadState,
   organization: OrganizationProfile,
   isFavorite: boolean,
   executiveName: string,

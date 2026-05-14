@@ -8,9 +8,9 @@ import {
   parseLeadStatus,
 } from "../../domain/lead-schema-parser";
 import {
-  requireLeadReadAccess,
+  requireCapability,
   resolveLeadListExecutiveScope,
-} from "../policies/access";
+} from "../../domain/lead/policy";
 import type { LeadListFilters, LeadQueries } from "../ports/lead";
 import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
@@ -76,7 +76,7 @@ export async function listLeads(
     filters: ListLeadsInput["filters"];
   },
 ): Promise<Result<LeadListView, DomainError>> {
-  const canRead = requireLeadReadAccess(input.actorRole);
+  const canRead = requireCapability("view", { role: input.actorRole });
   if (!canRead.ok) {
     return canRead;
   }

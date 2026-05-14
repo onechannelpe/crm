@@ -16,11 +16,6 @@ import type {
   LeadPatch,
   LeadRecord,
 } from "../../domain/lead-record";
-import type { LeadMutationEvents } from "../../domain/lead/lead-events";
-import type {
-  LeadMutationIntent,
-  LeadMutationPatch,
-} from "../../domain/lead/lead-types";
 
 export type LeadAssignmentDraft = {
   leadId: string;
@@ -40,33 +35,11 @@ export type LeadAssignmentRepository = {
   findActiveByLead(leadId: string): Promise<LeadAssignment | undefined>;
 };
 
-export type LeadAssignmentMutationRepository = {
-  replaceActiveAssignment(input: {
-    leadId: string;
-    toExecutiveId: number;
-    assignedBy: number;
-    assignedAt: number;
-  }): Promise<void>;
-};
-
 export type LeadHistoryRepository = {
   insert(values: LeadHistoryEventDraft): Promise<string>;
   listByLeadId(
     leadId: string,
   ): Promise<Result<LeadHistoryEntry[], DomainError>>;
-};
-
-export type LeadEventRepository = {
-  append(events: LeadHistoryEventDraft[]): Promise<string[]>;
-};
-
-export type LeadAuditRepository = {
-  append(input: {
-    actorUserId: number;
-    action: string;
-    entityId: string;
-    changes?: Record<string, unknown>;
-  }): Promise<void>;
 };
 
 export type LeadFavoriteRepository = {
@@ -82,45 +55,6 @@ export type LeadFavoriteRepository = {
   removeForUser(input: { leadId: string; userId: number }): Promise<void>;
 };
 
-export type LeadMutationOutcome = {
-  events: LeadMutationEvents;
-  historyIds: string[];
-};
-
-export type CheckedLeadMutationOutcome = {
-  applied: boolean;
-  events?: LeadMutationOutcome["events"];
-  historyIds?: string[];
-};
-
-export type LeadAssignmentMutationInput = {
-  leadId: string;
-  toExecutiveId: number;
-  assignedBy: number;
-  assignedAt: number;
-};
-
-export type LeadMutationUow = {
-  commit(input: {
-    lead: LeadRecord;
-    actorUserId: number;
-    now: number;
-    intent: LeadMutationIntent;
-    assignment?: LeadAssignmentMutationInput;
-  }): Promise<Result<LeadMutationOutcome, DomainError>>;
-  commitChecked(input: {
-    lead: LeadRecord;
-    actorUserId: number;
-    now: number;
-    expectedUpdatedAt: number;
-    intent: LeadMutationIntent;
-  }): Promise<Result<CheckedLeadMutationOutcome, DomainError>>;
-  derivePatch(input: {
-    lead: LeadRecord;
-    intent: LeadMutationIntent;
-  }): Result<LeadMutationPatch, DomainError>;
-};
-
 export type LeadReadRepository = {
   findById(id: string): Promise<LeadRecord | undefined>;
 };
@@ -132,25 +66,6 @@ export type LeadRepository = {
   findByRucMany(rucs: string[]): Promise<LeadRecord[]>;
   updateById(id: string, values: LeadPatch): Promise<unknown>;
   updateByRuc(ruc: string, values: LeadPatch): Promise<unknown>;
-};
-
-export type LeadWriteRepository = {
-  updateLead(input: {
-    leadId: string;
-    actorUserId: number;
-    now: number;
-    patch: Omit<LeadPatch, "updatedBy" | "updatedAt">;
-  }): Promise<void>;
-};
-
-export type CheckedLeadWriteRepository = {
-  updateLeadChecked(input: {
-    leadId: string;
-    actorUserId: number;
-    now: number;
-    expectedUpdatedAt: number;
-    patch: Omit<LeadPatch, "updatedBy" | "updatedAt">;
-  }): Promise<boolean>;
 };
 
 export type LeadListFilters = {

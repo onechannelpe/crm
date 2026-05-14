@@ -3,6 +3,7 @@ import { randomUUIDv7 } from "bun";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { isBcpBank } from "~/contracts/workflow";
+import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
@@ -10,15 +11,6 @@ import { addVenueAccounts } from "../../domain/lead/transitions";
 import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type { LeadVenueRepository } from "../ports/entities";
 import type { LeadUnitOfWork } from "../ports/uow";
-
-type BankAccount = {
-  currency: string;
-  banco: string;
-  tipoCuenta: string;
-  nroCuenta: string;
-  cci?: string | null;
-  isSettlement: boolean;
-};
 
 type Ports = {
   leads: LeadStateRepository;
@@ -31,16 +23,12 @@ export async function addVenueAccountsCommand(
     actor: WorkflowActor;
     leadId: string;
     venueId: string;
-    solesAccount: BankAccount;
-    dollarAccount?: BankAccount;
+    solesAccount: SaleVenueAccount & { currency: "PEN" };
+    dollarAccount?: SaleVenueAccount & { currency: "USD" };
     idempotencyKey?: string;
   },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  if (input.solesAccount.currency !== "PEN") {
-    return Err(domainError("validation", "invalid_soles_currency", "Soles account must use PEN currency"));
-  }
-
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
   const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
   if (!isBcpSoles && !cciSoles) {
@@ -56,9 +44,6 @@ export async function addVenueAccountsCommand(
 
   let cciDolares: string | null = null;
   if (input.dollarAccount) {
-    if (input.dollarAccount.currency !== "USD") {
-      return Err(domainError("validation", "invalid_dollar_currency", "Dollar account must use USD currency"));
-    }
     const isBcpDolares = isBcpBank(input.dollarAccount.banco);
     cciDolares = isBcpDolares ? null : input.dollarAccount.cci?.trim() || null;
     if (!isBcpDolares && !cciDolares) {
