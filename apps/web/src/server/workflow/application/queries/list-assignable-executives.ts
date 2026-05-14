@@ -1,7 +1,7 @@
-import type { AssignableExecutiveView } from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { AssignableExecutiveView } from "~/server/workflow/types";
 
 import {
   canReassignLead,

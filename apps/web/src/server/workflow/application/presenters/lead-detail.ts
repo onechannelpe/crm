@@ -1,5 +1,5 @@
-import type { LeadAvailableAction } from "~/contracts/workflow";
 import type {
+  LeadAvailableAction,
   LeadDetailLeadView,
   LeadDetailNegotiationFileView,
   LeadDetailNegotiationRequestView,
@@ -9,7 +9,7 @@ import type {
   LeadDetailSourceStatusView,
   LeadDetailVenueView,
   LeadDetailView,
-} from "~/contracts/workflow";
+} from "~/server/workflow/types";
 
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";

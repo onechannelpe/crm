@@ -1,23 +1,5 @@
 import type { Transaction } from "kysely";
 
-import type {
-  AddLeadNoteCommandInput,
-  AddLeadToFavoritesInput,
-  AddVenueAccountsCommandInput,
-  ApplyImportedReviewInput,
-  ApproveForSaleInput,
-  CreateQuotationCommandInput,
-  CreateVenueCommandInput,
-  LogLeadCallCommandInput,
-  ReassignLeadCommandInput,
-  RecordRepLegalCommandInput,
-  RegisterLeadInput,
-  RemoveLeadFromFavoritesInput,
-  RequestQuotationInput,
-  RequestRateNegotiationCommandInput,
-  ReviewLeadCommandInput,
-  SaveCommercialScopeCommandInput,
-} from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { Database } from "~/lib/db/types";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
@@ -44,6 +26,24 @@ import { systemLeadClock } from "~/server/workflow/application/services/lead-clo
 import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/lead-mutation-uow";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
+import type {
+  AddLeadNoteCommandInput,
+  AddLeadToFavoritesInput,
+  AddVenueAccountsCommandInput,
+  ApplyImportedReviewInput,
+  ApproveForSaleInput,
+  CreateQuotationCommandInput,
+  CreateVenueCommandInput,
+  LogLeadCallCommandInput,
+  ReassignLeadCommandInput,
+  RecordRepLegalCommandInput,
+  RegisterLeadInput,
+  RemoveLeadFromFavoritesInput,
+  RequestQuotationInput,
+  RequestRateNegotiationCommandInput,
+  ReviewLeadCommandInput,
+  SaveCommercialScopeCommandInput,
+} from "~/server/workflow/types";
 
 import type { TestRuntime } from "../runtime/app";
 

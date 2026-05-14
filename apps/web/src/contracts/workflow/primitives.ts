@@ -1,5 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
-
 import type {
   AbonoBank,
   AccountTypeKind,
@@ -20,10 +18,4 @@ export type VenueDigitalConfig = {
   linkUrl?: string | null;
   onlineUrl?: string | null;
   onlineModalidad?: ModalidadCobro | null;
-};
-
-export type ActorContext = {
-  userId: number;
-  role: Role;
-  branchId: number;
 };

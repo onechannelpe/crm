@@ -1,6 +1,6 @@
-import type { ApplyImportedReviewInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { ApplyImportedReviewInput } from "~/server/workflow/types";
 
 import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
 import type { LeadMutationUow } from "../ports/lead-mutation-uow";

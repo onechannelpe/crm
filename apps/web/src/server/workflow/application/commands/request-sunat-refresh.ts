@@ -1,7 +1,7 @@
-import type { RequestSunatRefreshInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
+import type { RequestSunatRefreshInput } from "~/server/workflow/types";
 
 import { requireLeadReadAccess } from "../policies/access";
 import type { WorkflowAuditService } from "../ports/audit-service";

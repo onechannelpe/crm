@@ -1,7 +1,7 @@
-import type { LeadDetailView } from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { LeadDetailView } from "~/server/workflow/types";
 
 import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
 import { resolveAvailableActions } from "../policies/action-availability";

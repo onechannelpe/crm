@@ -1,6 +1,6 @@
-import type { ActorContext } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import type { LeadRecord } from "../../domain/lead-record";
 import { leadNotFound } from "../../domain/lead/lead-errors";
@@ -17,7 +17,7 @@ export type PreparedLeadCommand = {
 export async function prepareLeadCommand(input: {
   leadReader: LeadReadRepository;
   clock: LeadClock;
-  actor: ActorContext;
+  actor: WorkflowActor;
   leadId: string;
   operation: LeadOperation;
 }): Promise<Result<PreparedLeadCommand, DomainError>> {

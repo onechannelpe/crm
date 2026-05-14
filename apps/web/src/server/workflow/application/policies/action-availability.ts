@@ -1,5 +1,5 @@
-import type { LeadAvailableAction } from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
+import type { LeadAvailableAction } from "~/server/workflow/types";
 
 import type { LeadRecord } from "../../domain/lead-record";
 import {

@@ -1,8 +1,3 @@
-import type {
-  GetLeadDetailInput,
-  ListAssignableExecutivesInput,
-  ListLeadsInput,
-} from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
 import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
@@ -11,6 +6,11 @@ import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sou
 import { listAssignableExecutives } from "~/server/workflow/application/queries/list-assignable-executives";
 import { listLeads } from "~/server/workflow/application/queries/list-leads";
 import type { WorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
+import type {
+  GetLeadDetailInput,
+  ListAssignableExecutivesInput,
+  ListLeadsInput,
+} from "~/server/workflow/types";
 
 export function createWorkflowQueries(
   repos: WorkflowRepos,

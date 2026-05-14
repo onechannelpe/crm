@@ -5,9 +5,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { LeadSourcingPolicy } from "~/server/workflow/application/ports/sourcing-policy-repository";
 
 type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
-type NewSourcingPolicyRow = Insertable<
-  Database["lead_sourcing_policies"]
->;
+type NewSourcingPolicyRow = Insertable<Database["lead_sourcing_policies"]>;
 
 function toLeadSourcingPolicy(row: SourcingPolicyRow): LeadSourcingPolicy {
   return {

@@ -1,8 +1,4 @@
 import type {
-  LeadNegotiationFileView,
-  LeadSaleProofFileView,
-} from "~/contracts/workflow";
-import type {
   ArtifactRepos,
   SyncExecutor,
 } from "~/server/files/service/contracts";
@@ -13,6 +9,10 @@ import type { FileStorage } from "~/server/files/storage";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type {
+  LeadNegotiationFileView,
+  LeadSaleProofFileView,
+} from "~/server/workflow/types";
 
 import { canUploadSaleProof, requireLeadAccess } from "../policies/access";
 import type { LeadReadRepository } from "../ports/lead-read-repository";

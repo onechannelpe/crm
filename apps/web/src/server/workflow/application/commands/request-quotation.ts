@@ -1,7 +1,7 @@
-import type { LeadCommandResult } from "~/contracts/workflow";
-import type { RequestQuotationInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { LeadCommandResult } from "~/server/workflow/types";
+import type { RequestQuotationInput } from "~/server/workflow/types";
 
 import { resolveLeadBlockingFields } from "../../domain/lead-progress";
 import { leadNotFound } from "../../domain/lead/lead-errors";

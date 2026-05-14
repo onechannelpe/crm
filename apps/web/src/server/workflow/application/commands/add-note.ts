@@ -1,7 +1,7 @@
-import type { LeadInteractionResult } from "~/contracts/workflow";
-import type { AddLeadNoteCommandInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { LeadInteractionResult } from "~/server/workflow/types";
+import type { AddLeadNoteCommandInput } from "~/server/workflow/types";
 
 import { invalidLeadInput } from "../../domain/lead/lead-errors";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";

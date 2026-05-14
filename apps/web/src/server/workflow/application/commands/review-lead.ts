@@ -1,7 +1,7 @@
-import type { LeadCommandResult } from "~/contracts/workflow";
-import type { ReviewLeadCommandInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { LeadCommandResult } from "~/server/workflow/types";
+import type { ReviewLeadCommandInput } from "~/server/workflow/types";
 
 import {
   parseRequiredLeadPriority,

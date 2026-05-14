@@ -1,8 +1,8 @@
-import { isBcpBank } from "~/contracts/workflow";
-import type { LeadCommandResult } from "~/contracts/workflow";
-import type { AddVenueAccountsCommandInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import { isBcpBank } from "~/server/workflow/types";
+import type { LeadCommandResult } from "~/server/workflow/types";
+import type { AddVenueAccountsCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";

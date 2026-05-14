@@ -1,9 +1,9 @@
 import { randomUUIDv7 } from "bun";
 
-import type { LeadCommandResult } from "~/contracts/workflow";
-import type { RequestRateNegotiationCommandInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { LeadCommandResult } from "~/server/workflow/types";
+import type { RequestRateNegotiationCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requireLeadActionAccess } from "../policies/lead-action-policy";

@@ -1,3 +1,21 @@
+import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
+import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
+import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
+import { applyImportedReviewCommand } from "~/server/workflow/application/commands/apply-imported-review";
+import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
+import { createQuotationCommand } from "~/server/workflow/application/commands/create-quotation";
+import { createVenueCommand } from "~/server/workflow/application/commands/create-venue";
+import { logLeadCallCommand } from "~/server/workflow/application/commands/log-call";
+import { reassignLeadCommand } from "~/server/workflow/application/commands/reassign-lead";
+import { recordRepLegalCommand } from "~/server/workflow/application/commands/record-rep-legal";
+import { registerLead } from "~/server/workflow/application/commands/register-lead";
+import { removeFromFavoritesCommand } from "~/server/workflow/application/commands/remove-from-favorites";
+import { requestQuotationCommand } from "~/server/workflow/application/commands/request-quotation";
+import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
+import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
+import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
+import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
+import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 import type {
   AddLeadNoteCommandInput,
   AddLeadToFavoritesInput,
@@ -17,25 +35,7 @@ import type {
   ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
   UpdateSourcingPolicyInput,
-} from "~/contracts/workflow";
-import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
-import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
-import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
-import { applyImportedReviewCommand } from "~/server/workflow/application/commands/apply-imported-review";
-import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
-import { createQuotationCommand } from "~/server/workflow/application/commands/create-quotation";
-import { createVenueCommand } from "~/server/workflow/application/commands/create-venue";
-import { logLeadCallCommand } from "~/server/workflow/application/commands/log-call";
-import { reassignLeadCommand } from "~/server/workflow/application/commands/reassign-lead";
-import { recordRepLegalCommand } from "~/server/workflow/application/commands/record-rep-legal";
-import { registerLead } from "~/server/workflow/application/commands/register-lead";
-import { removeFromFavoritesCommand } from "~/server/workflow/application/commands/remove-from-favorites";
-import { requestQuotationCommand } from "~/server/workflow/application/commands/request-quotation";
-import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
-import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
-import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
-import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
-import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
+} from "~/server/workflow/types";
 
 import type { WorkflowCommandDeps } from "./create-workflow-command-deps";
 

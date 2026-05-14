@@ -1,7 +1,7 @@
-import type { LeadCommandResult } from "~/contracts/workflow";
-import type { RemoveLeadFromFavoritesInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { LeadCommandResult } from "~/server/workflow/types";
+import type { RemoveLeadFromFavoritesInput } from "~/server/workflow/types";
 
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";

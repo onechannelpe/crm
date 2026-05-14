@@ -1,5 +1,9 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/server/workflow/types";
 
 export type LeadListFilters = {
   actorUserId: number;

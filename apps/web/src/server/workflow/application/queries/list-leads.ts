@@ -1,7 +1,6 @@
-import type { LeadListView } from "~/contracts/workflow";
-import type { ListLeadsInput } from "~/contracts/workflow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { LeadListView, ListLeadsInput } from "~/server/workflow/types";
 
 import {
   parseLeadPriority,

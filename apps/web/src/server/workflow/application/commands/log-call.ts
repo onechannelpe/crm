@@ -1,7 +1,7 @@
-import type { LeadInteractionResult } from "~/contracts/workflow";
-import type { LogLeadCallCommandInput } from "~/contracts/workflow";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import type { LeadInteractionResult } from "~/server/workflow/types";
+import type { LogLeadCallCommandInput } from "~/server/workflow/types";
 
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import { requireFirstHistoryId } from "../command-kernel/require-history-id";

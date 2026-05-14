@@ -13,9 +13,7 @@ import type {
 
 type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
 type NewLeadVenueRow = Insertable<Database["workflow_lead_venues"]>;
-type LeadVenueAccountRow = Selectable<
-  Database["workflow_lead_venue_accounts"]
->;
+type LeadVenueAccountRow = Selectable<Database["workflow_lead_venue_accounts"]>;
 type NewLeadVenueAccountRow = Insertable<
   Database["workflow_lead_venue_accounts"]
 >;
