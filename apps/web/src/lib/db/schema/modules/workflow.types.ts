@@ -18,7 +18,7 @@ export interface WorkflowLeadsTable {
   updated_by: number | null;
   created_at: number;
   updated_at: number;
-  version: number;
+  version: Generated<number>;
 }
 
 export interface WorkflowIdempotencyKeysTable {

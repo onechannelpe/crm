@@ -3,15 +3,13 @@ import { vi } from "vitest";
 import { Ok } from "~/server/shared/result";
 import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/entities";
 import type {
-  LeadMutationOutcome,
-  LeadMutationUow,
-} from "~/server/workflow/application/ports/lead";
-import type { LeadReadRepository } from "~/server/workflow/application/ports/lead";
-import type { LeadRecord } from "~/server/workflow/domain/lead-record";
+  CommitResult,
+  LeadUnitOfWork,
+} from "~/server/workflow/application/ports/uow";
+import type { LeadState } from "~/server/workflow/domain/lead/state";
+import type { LeadStateRepository } from "~/server/workflow/infrastructure/lead-state-repo";
 
-export function makeWorkflowLead(
-  overrides: Partial<LeadRecord> = {},
-): LeadRecord {
+export function makeWorkflowLead(overrides: Partial<LeadState> = {}): LeadState {
   return {
     id: "lead-1",
     organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963121",
@@ -28,41 +26,25 @@ export function makeWorkflowLead(
     prioridad: null,
     createdAt: 10,
     updatedAt: 10,
+    version: 1,
     ...overrides,
   };
 }
 
-export function makeLeadReader(lead: LeadRecord): LeadReadRepository {
+export function makeLeadStates(lead: LeadState): LeadStateRepository {
   return {
     findById: async () => lead,
   };
 }
 
-export function makeMutationUow(commit?: LeadMutationUow["commit"]) {
-  const defaultCommit = vi.fn<LeadMutationUow["commit"]>(async () =>
-    Ok({
-      events: {
-        history: [],
-        audit: { action: "test", entityId: "lead-1", changes: {} },
-      },
-      historyIds: [],
-    } satisfies LeadMutationOutcome),
+export function makeUow(commit?: LeadUnitOfWork["commit"]) {
+  const defaultCommit = vi.fn<LeadUnitOfWork["commit"]>(async () =>
+    Ok({ eventIds: ["event-1"], wasIdempotent: false } satisfies CommitResult),
   );
   const commitMock = commit ?? defaultCommit;
-  const commitChecked = vi.fn<LeadMutationUow["commitChecked"]>(async () =>
-    Ok({ applied: true }),
-  );
-  const derivePatch = vi.fn<LeadMutationUow["derivePatch"]>(() => Ok({}));
-
   return {
-    uow: {
-      commit: commitMock,
-      commitChecked,
-      derivePatch,
-    } satisfies LeadMutationUow,
+    uow: { commit: commitMock } satisfies LeadUnitOfWork,
     commit: commitMock,
-    commitChecked,
-    derivePatch,
   };
 }
 

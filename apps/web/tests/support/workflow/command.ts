@@ -1,6 +1,5 @@
 import type { Transaction } from "kysely";
 
-import type { Role } from "~/lib/auth/access/rbac";
 import type { Database } from "~/lib/db/types";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
@@ -20,13 +19,9 @@ import { requestSunatRefresh } from "~/server/workflow/application/commands/requ
 import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
 import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
-import type {
-  LeadEnrichmentQueue,
-  WorkflowAuditService,
-  WorkflowEngineGateway,
-} from "~/server/workflow/application/ports/gateways";
-import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
-import { createLeadMutationUow } from "~/server/workflow/infrastructure/lead-mutation-uow";
+import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/gateways";
+import { createLeadStateRepo } from "~/server/workflow/infrastructure/lead-state-repo";
+import { createLeadUow } from "~/server/workflow/infrastructure/uow";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {
   AddLeadNoteCommandInput,
@@ -43,27 +38,19 @@ import type {
   RemoveLeadFromFavoritesInput,
   RequestQuotationInput,
   RequestRateNegotiationCommandInput,
+  RequestSunatRefreshInput,
   ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
+  UpdateSourcingPolicyInput,
 } from "~/server/workflow/types";
 
 import type { TestRuntime } from "../runtime/app";
-
-const NO_OP_AUDIT: WorkflowAuditService = {
-  log: async () => {},
-};
-
-const NO_OP_ENGINE_GATEWAY: WorkflowEngineGateway = {
-  enrichByRuc: async () => null,
-};
 
 const NO_OP_ENRICHMENT_QUEUE: LeadEnrichmentQueue = {
   enqueueRucVerification: async () => {},
 };
 
 export type TestCommandOverrides = {
-  engineGateway?: WorkflowEngineGateway;
-  auditService?: WorkflowAuditService;
   leadEnrichmentQueue?: LeadEnrichmentQueue;
 };
 
@@ -72,183 +59,129 @@ function buildCommandApi(
   overrides?: TestCommandOverrides,
 ) {
   const repos = createWorkflowRepos(executor);
-  const baseDeps = {
-    leadReader: repos.leads,
-    leadRepo: repos.leads,
-    leadFavorites: repos.leadFavorites,
-    mutationUow: createLeadMutationUow(executor),
-    users: repos.users,
-    clock: systemLeadClock,
-    registerLead: {
-      leads: repos.leads,
-      leadAssignments: repos.leadAssignments,
-      leadHistory: repos.leadHistory,
-      users: repos.users,
-      party: repos.party,
-    },
-    leadQuotations: repos.leadQuotations,
-    leadProfiles: repos.leadProfiles,
-    party: repos.party,
-    leadVenues: repos.leadVenues,
-    negotiationRequests: repos.leadNegotiationRequests,
-    sourcingPolicies: repos.sourcingPolicies,
-    auditService: overrides?.auditService ?? NO_OP_AUDIT,
-    engineGateway: overrides?.engineGateway ?? NO_OP_ENGINE_GATEWAY,
-    leadEnrichmentQueue:
-      overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE,
-  };
+  const uow = createLeadUow(executor);
+  const leadStates = createLeadStateRepo(executor);
+  const enrichmentQueue =
+    overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE;
 
   return {
     registerLead: (input: RegisterLeadInput) =>
-      registerLead({
-        actorUserId: input.actor.userId,
-        actorRole: input.actor.role,
-        executiveId: input.executiveId,
-        ruc: input.ruc,
-        deps: baseDeps.registerLead,
-        mutationUow: baseDeps.mutationUow,
-        auditService: baseDeps.auditService,
-        engineGateway: baseDeps.engineGateway,
-        leadEnrichmentQueue: baseDeps.leadEnrichmentQueue,
-      }),
+      registerLead(
+        {
+          actorUserId: input.actor.userId,
+          actorRole: input.actor.role,
+          executiveId: input.executiveId,
+          ruc: input.ruc,
+        },
+        {
+          leads: repos.leads,
+          leadAssignments: repos.leadAssignments,
+          leadHistory: repos.leadHistory,
+          leadStates,
+          party: repos.party,
+          users: repos.users,
+          uow,
+          enrichmentQueue,
+        },
+      ),
+
     addToFavorites: (input: AddLeadToFavoritesInput) =>
-      addToFavoritesCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          leadFavorites: baseDeps.leadFavorites,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
-      removeFromFavoritesCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          leadFavorites: baseDeps.leadFavorites,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    reassignLead: (input: ReassignLeadCommandInput) =>
-      reassignLeadCommand(baseDeps, input),
-    reviewLead: (input: ReviewLeadCommandInput) =>
-      reviewLeadCommand(baseDeps, input),
-    addLeadNote: (input: AddLeadNoteCommandInput) =>
-      addLeadNoteCommand(baseDeps, input),
-    logLeadCall: (input: LogLeadCallCommandInput) =>
-      logLeadCallCommand(baseDeps, input),
-    applyImportedReview: (input: ApplyImportedReviewInput) =>
-      applyImportedReviewCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    approveForSale: (input: ApproveForSaleInput) =>
-      approveForSaleCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    createQuotation: (input: CreateQuotationCommandInput) =>
-      createQuotationCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadQuotations: baseDeps.leadQuotations,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    saveCommercialScope: (input: SaveCommercialScopeCommandInput) =>
-      saveCommercialScopeCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadProfiles: baseDeps.leadProfiles,
-          leadVenues: baseDeps.leadVenues,
-          party: baseDeps.party,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    requestQuotation: (input: RequestQuotationInput) =>
-      requestQuotationCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadProfiles: baseDeps.leadProfiles,
-          party: baseDeps.party,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    recordRepLegal: (input: RecordRepLegalCommandInput) =>
-      recordRepLegalCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          party: baseDeps.party,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    createVenue: (input: CreateVenueCommandInput) =>
-      createVenueCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadProfiles: baseDeps.leadProfiles,
-          leadVenues: baseDeps.leadVenues,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    addVenueAccounts: (input: AddVenueAccountsCommandInput) =>
-      addVenueAccountsCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          leadVenues: baseDeps.leadVenues,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
-      requestRateNegotiationCommand(
-        {
-          leadReader: baseDeps.leadReader,
-          mutationUow: baseDeps.mutationUow,
-          negotiationRequests: baseDeps.negotiationRequests,
-          clock: baseDeps.clock,
-        },
-        input,
-      ),
-    requestSunatRefresh: (input: {
-      actor: { userId: number; role: Role; branchId: number };
-      leadId: string;
-    }) =>
-      requestSunatRefresh({
-        actor: input.actor,
-        leadId: input.leadId,
-        leadRepo: baseDeps.leadRepo,
-        enrichmentQueue: baseDeps.leadEnrichmentQueue,
-        auditService: baseDeps.auditService,
+      addToFavoritesCommand(input, {
+        leads: leadStates,
+        leadFavorites: repos.leadFavorites,
       }),
-    updateSourcingPolicy: (input: {
-      actor: { userId: number; role: Role; branchId: number };
-      branchId: number;
-      engineAssignmentEnabled: boolean;
-    }) =>
-      updateSourcingPolicy(
-        { sourcingPolicies: baseDeps.sourcingPolicies },
-        input,
-      ),
+
+    removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
+      removeFromFavoritesCommand(input, {
+        leads: leadStates,
+        leadFavorites: repos.leadFavorites,
+      }),
+
+    reassignLead: (input: ReassignLeadCommandInput) =>
+      reassignLeadCommand(input, {
+        leads: leadStates,
+        uow,
+        users: repos.users,
+      }),
+
+    reviewLead: (input: ReviewLeadCommandInput) =>
+      reviewLeadCommand(input, { leads: leadStates, uow }),
+
+    addLeadNote: (input: AddLeadNoteCommandInput) =>
+      addLeadNoteCommand(input, { leads: leadStates, uow }),
+
+    logLeadCall: (input: LogLeadCallCommandInput) =>
+      logLeadCallCommand(input, { leads: leadStates, uow }),
+
+    applyImportedReview: (input: ApplyImportedReviewInput) =>
+      applyImportedReviewCommand(input, { leads: leadStates, uow }),
+
+    approveForSale: (input: ApproveForSaleInput) =>
+      approveForSaleCommand(input, { leads: leadStates, uow }),
+
+    createQuotation: (input: CreateQuotationCommandInput) =>
+      createQuotationCommand(input, {
+        leads: leadStates,
+        uow,
+        leadQuotations: repos.leadQuotations,
+      }),
+
+    saveCommercialScope: (input: SaveCommercialScopeCommandInput) =>
+      saveCommercialScopeCommand(input, {
+        leads: leadStates,
+        uow,
+        leadProfiles: repos.leadProfiles,
+        leadVenues: repos.leadVenues,
+        party: repos.party,
+      }),
+
+    requestQuotation: (input: RequestQuotationInput) =>
+      requestQuotationCommand(input, {
+        leads: leadStates,
+        uow,
+        leadProfiles: repos.leadProfiles,
+        party: repos.party,
+      }),
+
+    recordRepLegal: (input: RecordRepLegalCommandInput) =>
+      recordRepLegalCommand(input, {
+        leads: leadStates,
+        uow,
+        party: repos.party,
+      }),
+
+    createVenue: (input: CreateVenueCommandInput) =>
+      createVenueCommand(input, {
+        leads: leadStates,
+        uow,
+        leadProfiles: repos.leadProfiles,
+        leadVenues: repos.leadVenues,
+      }),
+
+    addVenueAccounts: (input: AddVenueAccountsCommandInput) =>
+      addVenueAccountsCommand(input, {
+        leads: leadStates,
+        uow,
+        leadVenues: repos.leadVenues,
+      }),
+
+    requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
+      requestRateNegotiationCommand(input, {
+        leads: leadStates,
+        uow,
+        negotiationRequests: repos.leadNegotiationRequests,
+      }),
+
+    requestSunatRefresh: (input: RequestSunatRefreshInput) =>
+      requestSunatRefresh(input, {
+        leads: repos.leads,
+        enrichmentQueue,
+      }),
+
+    updateSourcingPolicy: (input: UpdateSourcingPolicyInput) =>
+      updateSourcingPolicy(input, {
+        sourcingPolicies: repos.sourcingPolicies,
+      }),
   };
 }
 
