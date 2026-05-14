@@ -6,14 +6,16 @@ import { parsePhone } from "~/lib/phone/pe-mobile";
 
 import { completeOnboarding } from "./index";
 
-export async function completeOnboardingStep(): Promise<{
+export async function completeOnboardingStep(input?: {
+  phone?: string;
+}): Promise<{
   redirectTo: string;
 }> {
   const currentUser = await getMe();
-  const persisted = parsePhone(currentUser?.phone);
-  if (!persisted) {
+  const phone = parsePhone(input?.phone) ?? parsePhone(currentUser?.phone);
+  if (!phone) {
     throw validationError("El número debe tener 9 dígitos y empezar con 9");
   }
 
-  return completeOnboarding(persisted);
+  return completeOnboarding(phone);
 }

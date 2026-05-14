@@ -210,6 +210,7 @@ function OnboardingContent() {
       const result = await finishPasskeyOnboardingStep({
         challengeId,
         response,
+        phone: normalizePhoneInput(phone()),
       });
       navigate(result.redirectTo);
     } catch (error: unknown) {
@@ -242,7 +243,9 @@ function OnboardingContent() {
   async function handleComplete() {
     setSubmitting(true);
     try {
-      const result = await completeOnboardingStep();
+      const result = await completeOnboardingStep({
+        phone: normalizePhoneInput(phone()),
+      });
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
