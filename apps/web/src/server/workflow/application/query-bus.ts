@@ -12,7 +12,7 @@ import type {
   ListLeadsInput,
 } from "~/server/workflow/types";
 
-export function createWorkflowQueries(
+export function createWorkflowQueryBus(
   repos: WorkflowRepos,
   engineGateway: WorkflowEngineGateway,
 ) {

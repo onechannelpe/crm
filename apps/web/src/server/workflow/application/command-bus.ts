@@ -37,9 +37,9 @@ import type {
   UpdateSourcingPolicyInput,
 } from "~/server/workflow/types";
 
-import type { WorkflowCommandDeps } from "./create-workflow-command-deps";
+import type { WorkflowCommandDeps } from "./command-deps";
 
-export function createWorkflowBusinessCommands(deps: WorkflowCommandDeps) {
+export function createWorkflowCommandBus(deps: WorkflowCommandDeps) {
   return {
     registerLead: (input: RegisterLeadInput) =>
       registerLead({
