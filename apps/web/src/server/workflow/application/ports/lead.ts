@@ -11,11 +11,11 @@ import type {
   LeadHistoryEntry,
   LeadHistoryEventDraft,
 } from "../../domain/history";
-import type {
-  LeadDraft,
-  LeadPatch,
-  LeadRecord,
-} from "../../domain/lead-record";
+import type { LeadDraft, LeadState } from "../../domain/lead/state";
+
+export type LeadPatch = Partial<
+  Omit<LeadState, "id" | "version" | "createdAt" | "createdBy" | "organizationId" | "ruc" | "razonSocial" | "address" | "district" | "department">
+>;
 
 export type LeadAssignmentDraft = {
   leadId: string;
@@ -56,14 +56,14 @@ export type LeadFavoriteRepository = {
 };
 
 export type LeadReadRepository = {
-  findById(id: string): Promise<LeadRecord | undefined>;
+  findById(id: string): Promise<LeadState | undefined>;
 };
 
 export type LeadRepository = {
   insert(values: LeadDraft): Promise<string>;
-  findById(id: string): Promise<LeadRecord | undefined>;
-  findByRuc(ruc: string): Promise<LeadRecord | undefined>;
-  findByRucMany(rucs: string[]): Promise<LeadRecord[]>;
+  findById(id: string): Promise<LeadState | undefined>;
+  findByRuc(ruc: string): Promise<LeadState | undefined>;
+  findByRucMany(rucs: string[]): Promise<LeadState[]>;
   updateById(id: string, values: LeadPatch): Promise<unknown>;
   updateByRuc(ruc: string, values: LeadPatch): Promise<unknown>;
 };

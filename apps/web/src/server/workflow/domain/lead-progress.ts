@@ -1,7 +1,5 @@
 import type { AbonoBank, LeadStage } from "~/contracts/workflow";
 
-import type { LeadRecord } from "./lead-record";
-
 export type LeadBlockingField =
   | "proveedorActual"
   | "tasaActual"
@@ -27,7 +25,7 @@ export type LeadProgress = {
   blockingFields: LeadBlockingField[];
 };
 
-function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
+function resolveLeadNextStep(lead: { stage: LeadStage }): string {
   switch (lead.stage) {
     case "QUALIFYING":
       return "Review lead";
@@ -86,7 +84,7 @@ export function resolveLeadBlockingFields(input: {
 }
 
 export function resolveLeadProgress(input: {
-  lead: Pick<LeadRecord, "stage">;
+  lead: { stage: LeadStage };
   profile?: ScopingProfileFields | null;
   venuesWithAccountsCount?: number;
 }): LeadProgress {
