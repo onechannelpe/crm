@@ -30,7 +30,7 @@ export async function createVenueCommand(
     leadId: string;
     nombreComercial: string;
     posQuantity: number;
-    digitalConfig: Parameters<typeof parseVenueDigitalFields>[1];
+    digitalConfig?: Parameters<typeof parseVenueDigitalFields>[1];
     direccion: string;
     referencia: string;
     distrito: string;

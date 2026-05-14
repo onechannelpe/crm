@@ -14,23 +14,6 @@ function nextStageFor(
   }
 
   return resolveReviewTransition({
-    lead: {
-      id: current.id,
-      organizationId: current.organization_id,
-      ruc: current.ruc,
-      razonSocial: null,
-      address: null,
-      district: null,
-      department: null,
-      executiveId: current.executive_id,
-      createdBy: current.created_by,
-      updatedBy: current.updated_by ?? null,
-      stage: "QUALIFYING",
-      status: current.status,
-      prioridad: current.prioridad,
-      createdAt: 0,
-      updatedAt: 0,
-    },
     status: nextStatus,
     prioridad: nextPrioridad,
   });
