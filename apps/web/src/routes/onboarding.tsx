@@ -180,7 +180,10 @@ function OnboardingContent() {
   async function handleChooseSecurity(method: "passkey-step" | "totp-step") {
     setSubmitting(true);
     try {
-      const result = await chooseSecurity({ method });
+      const result = await chooseSecurity({
+        method,
+        phone: normalizePhoneInput(phone()),
+      });
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
