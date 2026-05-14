@@ -13,6 +13,7 @@ import type {
   RequestRateNegotiationInput,
   ReviewLeadInput,
   SaveCommercialScopeInput,
+  SaveDigitalPolicyInput,
 } from "~/contracts/workflow";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type {
@@ -28,6 +29,7 @@ import type {
   RequestRateNegotiationCommandInput,
   ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
+  SaveDigitalPolicyCommandInput,
   WorkflowActor,
 } from "~/server/workflow/types";
 
@@ -61,6 +63,13 @@ export function toSaveCommercialScopeInput(
   ctx: AppContext,
   input: SaveCommercialScopeInput,
 ): SaveCommercialScopeCommandInput {
+  return { actor: workflowActorFrom(ctx), ...input };
+}
+
+export function toSaveDigitalPolicyInput(
+  ctx: AppContext,
+  input: SaveDigitalPolicyInput,
+): SaveDigitalPolicyCommandInput {
   return { actor: workflowActorFrom(ctx), ...input };
 }
 

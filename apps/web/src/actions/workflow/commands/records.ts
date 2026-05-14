@@ -7,6 +7,7 @@ import {
   toRegisterLeadInput,
   toReviewLeadInput,
   toSaveCommercialScopeInput,
+  toSaveDigitalPolicyInput,
 } from "~/actions/workflow/mappers";
 import {
   type CreateLeadInput,
@@ -16,6 +17,7 @@ import {
   type RequestQuotationInput,
   type ReviewLeadInput,
   type SaveCommercialScopeInput,
+  type SaveDigitalPolicyInput,
 } from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
@@ -91,6 +93,18 @@ export async function requestQuotation(input: RequestQuotationInput) {
     execute: (ctx) =>
       getServerRuntime().workflow.commands.requestQuotation(
         toSaveCommercialScopeInput(ctx, input),
+      ),
+  });
+}
+
+export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
+  return runAction({
+    actionName: "workflow.save_digital_policy",
+    access: { kind: "auth" },
+    input: { leadId: input.leadId },
+    execute: (ctx) =>
+      getServerRuntime().workflow.commands.saveDigitalPolicy(
+        toSaveDigitalPolicyInput(ctx, input),
       ),
   });
 }

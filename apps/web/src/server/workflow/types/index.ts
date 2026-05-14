@@ -51,6 +51,7 @@ export type {
   LogLeadCallCommandInput,
   CreateQuotationCommandInput,
   SaveCommercialScopeCommandInput,
+  SaveDigitalPolicyCommandInput,
   RecordRepLegalCommandInput,
   RequestRateNegotiationCommandInput,
   CreateVenueCommandInput,

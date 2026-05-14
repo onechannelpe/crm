@@ -12,6 +12,7 @@ import {
   requestRecordRepLegal,
   requestRemoveLeadFromFavorites,
   requestSaveCommercialScope,
+  requestSaveDigitalPolicy,
 } from "~/actions/workflow/commands/records";
 import {
   requestVenueAccountsAddition,
@@ -45,6 +46,12 @@ export async function requestQuotationApi(
   input: Parameters<typeof requestQuotation>[0],
 ) {
   return requestQuotation(input);
+}
+
+export async function requestSaveDigitalPolicyApi(
+  input: Parameters<typeof requestSaveDigitalPolicy>[0],
+) {
+  return requestSaveDigitalPolicy(input);
 }
 
 export async function requestRecordRepLegalApi(

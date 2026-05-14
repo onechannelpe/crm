@@ -20,6 +20,7 @@ import {
   requestRemoveLeadFromFavoritesApi,
   requestSaleApprovalApi,
   requestSaveCommercialScopeApi,
+  requestSaveDigitalPolicyApi,
   requestVenueAccountsAdditionApi,
   requestVenueCreationApi,
 } from "~/features/workflow/api/mutations";
@@ -73,11 +74,6 @@ export const saveCommercialScopeMutation = action(
     giroNegocio: string;
     abonoBank: AbonoBank;
     posTotal: number;
-    linkScope: ProductScope;
-    linkUrl: string | null;
-    onlineScope: ProductScope;
-    onlineUrl: string | null;
-    onlineModalidad: ModalidadCobro | null;
   }) => {
     await requestSaveCommercialScopeApi(input);
     return json(
@@ -98,11 +94,6 @@ export const requestQuotationMutation = action(
     giroNegocio: string;
     abonoBank: AbonoBank;
     posTotal: number;
-    linkScope: ProductScope;
-    linkUrl: string | null;
-    onlineScope: ProductScope;
-    onlineUrl: string | null;
-    onlineModalidad: ModalidadCobro | null;
   }) => {
     await requestQuotationApi(input);
     return json(
@@ -111,6 +102,24 @@ export const requestQuotationMutation = action(
     );
   },
   "workflow.requestQuotation",
+);
+
+export const saveDigitalPolicyMutation = action(
+  async (input: {
+    leadId: string;
+    linkScope: ProductScope;
+    linkUrl: string | null;
+    onlineScope: ProductScope;
+    onlineUrl: string | null;
+    onlineModalidad: ModalidadCobro | null;
+  }) => {
+    await requestSaveDigitalPolicyApi(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.saveDigitalPolicy",
 );
 
 export const recordRepLegalMutation = action(

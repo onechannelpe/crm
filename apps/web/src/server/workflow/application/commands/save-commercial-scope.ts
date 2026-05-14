@@ -1,9 +1,5 @@
 import { randomUUIDv7 } from "bun";
 
-import type {
-  ModalidadCobro,
-  ProductScope,
-} from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
@@ -15,11 +11,6 @@ import { saveCommercialScope } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
-import {
-  parseDigitalPolicy,
-  toProfileDigitalFields,
-  validateDigitalAggregate,
-} from "../services/digital-product-policy";
 
 type Ports = {
   executor: DatabaseExecutor;
@@ -36,11 +27,6 @@ export async function saveCommercialScopeCommand(
     giroNegocio: string;
     abonoBank: string;
     posTotal: number;
-    linkScope: ProductScope;
-    linkUrl: string | null;
-    onlineScope: ProductScope;
-    onlineUrl: string | null;
-    onlineModalidad: ModalidadCobro | null;
     idempotencyKey?: string;
   },
   ports: Ports,
@@ -52,29 +38,10 @@ export async function saveCommercialScopeCommand(
 
     const state = await leads.findById(input.leadId);
     if (!state) return leadNotFound();
-
-    const policy = parseDigitalPolicy({
-      linkScope: input.linkScope,
-      linkUrl: input.linkUrl,
-      onlineScope: input.onlineScope,
-      onlineUrl: input.onlineUrl,
-      onlineModalidad: input.onlineModalidad,
-    });
-    if (!policy.ok) return policy;
-
-    const venues = await repos.leadVenues.listByLeadId(state.id);
-    if (!venues.ok) return venues;
-
-    const aggregateCheck = validateDigitalAggregate({
-      policy: policy.value,
-      venues: venues.value,
-    });
-    if (!aggregateCheck.ok) return aggregateCheck;
+    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
 
     const abonoBank = parseRequiredAbonoBank(input.abonoBank);
     if (!abonoBank.ok) return abonoBank;
-
-    const digitalFields = toProfileDigitalFields(policy.value);
     const now = Date.now();
     const transition = saveCommercialScope(state, {
       actor: input.actor,
@@ -85,11 +52,6 @@ export async function saveCommercialScopeCommand(
       giroNegocio: input.giroNegocio,
       abonoBank: abonoBank.value,
       posTotal: input.posTotal,
-      linkScope: digitalFields.linkScope,
-      linkUrl: digitalFields.linkUrl,
-      onlineScope: digitalFields.onlineScope,
-      onlineUrl: digitalFields.onlineUrl,
-      onlineModalidad: digitalFields.onlineModalidad,
       now,
     });
     if (!transition.ok) return transition;
@@ -100,9 +62,13 @@ export async function saveCommercialScopeCommand(
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
+      linkScope: profile?.linkScope ?? "none",
+      linkUrl: profile?.linkUrl ?? null,
+      onlineScope: profile?.onlineScope ?? "none",
+      onlineUrl: profile?.onlineUrl ?? null,
+      onlineModalidad: profile?.onlineModalidad ?? null,
       abonoBank: abonoBank.value,
       posTotal: input.posTotal,
-      ...digitalFields,
       updatedAt: now,
       updatedBy: input.actor.userId,
     });

@@ -55,6 +55,10 @@ export type SaveCommercialScopeInput = {
   giroNegocio: string;
   abonoBank: string;
   posTotal: number;
+};
+
+export type SaveDigitalPolicyInput = {
+  leadId: string;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;

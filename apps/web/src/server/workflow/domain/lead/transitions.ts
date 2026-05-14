@@ -4,9 +4,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-  ModalidadCobro,
   Moneda,
-  ProductScope,
 } from "~/contracts/workflow";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
@@ -279,11 +277,6 @@ export function saveCommercialScope(
     giroNegocio: string;
     abonoBank: AbonoBank;
     posTotal: number;
-    linkScope: ProductScope;
-    linkUrl: string | null;
-    onlineScope: ProductScope;
-    onlineUrl: string | null;
-    onlineModalidad: ModalidadCobro | null;
     now: number;
   },
 ): TransitionResult {
@@ -304,9 +297,9 @@ export function saveCommercialScope(
         giroNegocio: input.giroNegocio,
         abonoBank: input.abonoBank,
         posTotal: input.posTotal,
-        linkScope: input.linkScope,
-        onlineScope: input.onlineScope,
-        onlineModalidad: input.onlineModalidad,
+        linkScope: null,
+        onlineScope: null,
+        onlineModalidad: null,
       },
       occurredAt: input.now,
     }),
