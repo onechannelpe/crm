@@ -56,7 +56,7 @@ describe("lead action policy", () => {
     const lead = makeWorkflowLead();
 
     const maxRounds = requestRateNegotiation(lead, {
-      actor: { userId: 1, role: "executive", branchId: 1 },
+      actor: { userId: 1, role: "executive" },
       negotiationRequestId: "req-1",
       round: MAX_NEGOTIATION_ROUNDS + 1,
       negotiationRequestCount: MAX_NEGOTIATION_ROUNDS,
@@ -72,7 +72,7 @@ describe("lead action policy", () => {
     const lead = makeWorkflowLead();
 
     const maxFiles = requestRateNegotiation(lead, {
-      actor: { userId: 1, role: "executive", branchId: 1 },
+      actor: { userId: 1, role: "executive" },
       negotiationRequestId: "req-1",
       round: 1,
       negotiationRequestCount: 0,
