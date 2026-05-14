@@ -36,15 +36,6 @@ export function toCommercialScopeEntry(
   const posTotal = nullableNumber(payload, "posTotal", row);
   if (!posTotal.ok) return posTotal;
 
-  const linkScope = nullableString(payload, "linkScope", row);
-  if (!linkScope.ok) return linkScope;
-
-  const onlineScope = nullableString(payload, "onlineScope", row);
-  if (!onlineScope.ok) return onlineScope;
-
-  const onlineModalidad = nullableString(payload, "onlineModalidad", row);
-  if (!onlineModalidad.ok) return onlineModalidad;
-
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "commercial_scope_saved",
@@ -56,9 +47,6 @@ export function toCommercialScopeEntry(
       giroNegocio: giroNegocio.value,
       abonoBank: abonoBank.value,
       posTotal: posTotal.value,
-      linkScope: linkScope.value,
-      onlineScope: onlineScope.value,
-      onlineModalidad: onlineModalidad.value,
     },
   });
 }

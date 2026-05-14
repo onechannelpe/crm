@@ -180,13 +180,13 @@ export function createLeadRecordCreateSidePanelPage(): SidePanelPageDefinition {
     entry: {
       page: "create-lead",
       pageId,
-      pageTitle: "Nuevo prospecto",
+      pageTitle: "Nuevo cliente",
       pageIcon: Building2,
     },
     state: {
       page: "create-lead",
       recordType: "lead",
-      title: "Nuevo prospecto",
+      title: "Nuevo cliente",
       subtitle: "Borrador",
       draft: DEFAULT_LEAD_RECORD_DRAFT_STATE,
     },
@@ -210,7 +210,7 @@ export function createLeadRecordDetailSidePanelPage(
       recordType: "lead",
       leadId: input.leadId,
       title: input.title,
-      subtitle: input.subtitle ?? `Prospecto ${input.leadId}`,
+      subtitle: input.subtitle ?? `Cliente ${input.leadId}`,
       activeTab: "home",
     },
   };

@@ -128,6 +128,18 @@ export async function requestRecordRepLegal(input: RecordRepLegalInput) {
   });
 }
 
+export async function requestStartSetupExecution(input: LeadIdInput) {
+  return runAction({
+    actionName: "workflow.start_setup_execution",
+    access: { kind: "auth" },
+    input: { leadId: input.leadId },
+    execute: (ctx) =>
+      getServerRuntime().workflow.commands.startSetupExecution(
+        toLeadIdActorInput(ctx, input),
+      ),
+  });
+}
+
 export async function requestLeadReassignment(input: ReassignLeadInput) {
   return runAction({
     actionName: "workflow.reassign_lead",

@@ -158,6 +158,13 @@ export function resolveAvailableActions(
     actions.push("approve-for-sale");
   }
   if (
+    caps.has("complete-scoping") &&
+    ownsLead &&
+    state.stage === "SETUP_PLAN"
+  ) {
+    actions.push("start-setup-execution");
+  }
+  if (
     caps.has("request-negotiation") &&
     (ownsLead || canSeeAll) &&
     state.stage === "QUOTED" &&

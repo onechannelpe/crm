@@ -38,7 +38,7 @@ export function presentTimelineItem(
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "system",
-        title: "Prospecto registrado",
+        title: "Cliente registrado",
         description: `Registrado por ${actorDisplayName}.`,
         actorDisplayName,
       };
@@ -86,7 +86,7 @@ export function presentTimelineItem(
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "assignment",
-        title: "Prospecto asignado",
+        title: "Cliente asignado",
         description: `${subjectDisplayName} asignado por ${actorDisplayName}.`,
         actorDisplayName,
       };
@@ -95,7 +95,7 @@ export function presentTimelineItem(
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "assignment",
-        title: "Prospecto reasignado",
+        title: "Cliente reasignado",
         description: `${subjectDisplayName} reasignado por ${actorDisplayName}.`,
         actorDisplayName,
       };

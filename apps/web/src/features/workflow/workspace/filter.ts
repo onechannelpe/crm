@@ -24,7 +24,11 @@ export const LEAD_WORKSPACE_FILTERS = [
     label: leadStageLabel("QUOTING"),
   },
   { value: "stage:QUOTED", label: leadStageLabel("QUOTED") },
-  { value: "stage:CLOSING", label: leadStageLabel("CLOSING") },
+  { value: "stage:SETUP_PLAN", label: leadStageLabel("SETUP_PLAN") },
+  {
+    value: "stage:SETUP_EXECUTION",
+    label: leadStageLabel("SETUP_EXECUTION"),
+  },
   { value: "stage:LIVE", label: leadStageLabel("LIVE") },
   {
     value: "stage:DISQUALIFIED",

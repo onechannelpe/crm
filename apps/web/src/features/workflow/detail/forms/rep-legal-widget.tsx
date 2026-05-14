@@ -29,7 +29,7 @@ export function RepLegalWidget(props: {
 }) {
   const record = useAction(recordRepLegalMutation);
 
-  const canEdit = () => props.data.lead.stage === "CLOSING";
+  const canEdit = () => props.data.lead.stage === "SETUP_EXECUTION";
   const repLegal = () => props.data.repLegal;
 
   const [nombres, setNombres] = createSignal(repLegal()?.nombres ?? "");

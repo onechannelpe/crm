@@ -9,6 +9,7 @@ const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   giroNegocio: "Giro de negocio",
   abonoBank: "Banco de abono",
   posTotal: "Cantidad de POS",
+  digitalPolicy: "Política digital",
   venueAccounts: "Cuentas de sedes",
 };
 
@@ -20,6 +21,7 @@ const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
   giroNegocio: "Completar giro de negocio",
   abonoBank: "Completar banco de abono",
   posTotal: "Completar cantidad de POS",
+  digitalPolicy: "Definir política digital",
   venueAccounts: "Registrar cuentas en al menos una sede",
 };
 
@@ -51,7 +53,14 @@ export function mapLeadActionsToUi(
       case "review-lead":
         items.push({
           id: action,
-          label: "Revisar prospecto",
+          label: "Revisar cliente",
+          kind: "button",
+        });
+        break;
+      case "start-setup-execution":
+        items.push({
+          id: action,
+          label: "Iniciar afiliación",
           kind: "button",
         });
         break;

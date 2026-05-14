@@ -21,6 +21,7 @@ import {
   requestSaleApprovalApi,
   requestSaveCommercialScopeApi,
   requestSaveDigitalPolicyApi,
+  requestStartSetupExecutionApi,
   requestVenueAccountsAdditionApi,
   requestVenueCreationApi,
 } from "~/features/workflow/api/mutations";
@@ -120,6 +121,17 @@ export const saveDigitalPolicyMutation = action(
     );
   },
   "workflow.saveDigitalPolicy",
+);
+
+export const startSetupExecutionMutation = action(
+  async (input: { leadId: string }) => {
+    await requestStartSetupExecutionApi(input);
+    return json(
+      {},
+      { revalidate: [leadDetailQuery.keyFor(input.leadId), leadListQuery.key] },
+    );
+  },
+  "workflow.startSetupExecution",
 );
 
 export const recordRepLegalMutation = action(

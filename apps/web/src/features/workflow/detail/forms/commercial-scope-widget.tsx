@@ -7,12 +7,7 @@ import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import type { LeadDetailView } from "~/contracts/workflow";
-import {
-  ABONO_BANKS,
-  type AbonoBank,
-  type ModalidadCobro,
-  type ProductScope,
-} from "~/contracts/workflow";
+import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldInputValue,
@@ -65,39 +60,9 @@ export function CommercialScopeWidget(props: {
     profile()?.posTotal?.toString() ?? "",
   );
 
-  const initialLinkScope = profile()?.linkScope ?? "none";
-  const initialOnlineScope = profile()?.onlineScope ?? "none";
-
-  const [linkEnabled, setLinkEnabled] = createSignal(
-    initialLinkScope !== "none",
-  );
-  const [linkScope, setLinkScope] = createSignal<"shared" | "per_venue">(
-    initialLinkScope === "per_venue" ? "per_venue" : "shared",
-  );
-  const [linkUrl, setLinkUrl] = createSignal(profile()?.linkUrl ?? "");
-
-  const [onlineEnabled, setOnlineEnabled] = createSignal(
-    initialOnlineScope !== "none",
-  );
-  const [onlineScope, setOnlineScope] = createSignal<"shared" | "per_venue">(
-    initialOnlineScope === "per_venue" ? "per_venue" : "shared",
-  );
-  const [onlineUrl, setOnlineUrl] = createSignal(profile()?.onlineUrl ?? "");
-  const [onlineModalidad, setOnlineModalidad] = createSignal<
-    ModalidadCobro | ""
-  >(profile()?.onlineModalidad ?? "");
-
   const [saving, setSaving] = createSignal(false);
   const [requesting, setRequesting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
-
-  function resolvedLinkScope(): ProductScope {
-    return linkEnabled() ? linkScope() : "none";
-  }
-
-  function resolvedOnlineScope(): ProductScope {
-    return onlineEnabled() ? onlineScope() : "none";
-  }
 
   function validateForm(): string | null {
     if (!proveedorActual().trim()) return "Proveedor actual es requerido";
@@ -105,14 +70,6 @@ export function CommercialScopeWidget(props: {
     if (!abonoBank()) return "Banco de abono es requerido";
     if (!posTotal().trim() || Number(posTotal()) <= 0)
       return "Cantidad de POS es requerida";
-    const computedLinkScope = resolvedLinkScope();
-    const computedOnlineScope = resolvedOnlineScope();
-    if (computedLinkScope === "shared" && !linkUrl().trim())
-      return "URL de CulqiLink es requerida cuando la modalidad es compartida";
-    if (computedOnlineScope === "shared" && !onlineUrl().trim())
-      return "URL de CulqiOnline es requerida cuando la modalidad es compartida";
-    if (computedOnlineScope === "shared" && !onlineModalidad())
-      return "Modalidad de cobro es obligatoria cuando CulqiOnline es compartido";
     return null;
   }
 
@@ -128,9 +85,6 @@ export function CommercialScopeWidget(props: {
     setError(null);
     setSaving(true);
     try {
-      const computedLinkScope = resolvedLinkScope();
-      const computedOnlineScope = resolvedOnlineScope();
-      const modalidad = onlineModalidad();
       await save({
         leadId: props.leadId,
         proveedorActual: proveedorActual().trim(),
@@ -140,12 +94,6 @@ export function CommercialScopeWidget(props: {
         giroNegocio: giroNegocio().trim(),
         abonoBank: bank,
         posTotal: Number(posTotal()),
-        linkScope: computedLinkScope,
-        linkUrl: computedLinkScope === "shared" ? linkUrl().trim() : null,
-        onlineScope: computedOnlineScope,
-        onlineUrl: computedOnlineScope === "shared" ? onlineUrl().trim() : null,
-        onlineModalidad:
-          computedOnlineScope === "shared" && modalidad ? modalidad : null,
       });
     } catch (err) {
       setError(toAppError(err, "Error al guardar").publicMessage);
@@ -165,9 +113,6 @@ export function CommercialScopeWidget(props: {
     setError(null);
     setRequesting(true);
     try {
-      const computedLinkScope = resolvedLinkScope();
-      const computedOnlineScope = resolvedOnlineScope();
-      const modalidad = onlineModalidad();
       await requestQuotation({
         leadId: props.leadId,
         proveedorActual: proveedorActual().trim(),
@@ -177,15 +122,9 @@ export function CommercialScopeWidget(props: {
         giroNegocio: giroNegocio().trim(),
         abonoBank: bank,
         posTotal: Number(posTotal()),
-        linkScope: computedLinkScope,
-        linkUrl: computedLinkScope === "shared" ? linkUrl().trim() : null,
-        onlineScope: computedOnlineScope,
-        onlineUrl: computedOnlineScope === "shared" ? onlineUrl().trim() : null,
-        onlineModalidad:
-          computedOnlineScope === "shared" && modalidad ? modalidad : null,
       });
     } catch (err) {
-      setError(toAppError(err, "Error al solicitar cotizacion").publicMessage);
+      setError(toAppError(err, "Error al solicitar cotización").publicMessage);
     } finally {
       setRequesting(false);
     }
@@ -377,167 +316,6 @@ export function CommercialScopeWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>CulqiLink</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={linkEnabled()}
-                      onChange={(e) => setLinkEnabled(e.currentTarget.checked)}
-                    />{" "}
-                    Activar CulqiLink
-                  </label>
-                </FieldInputValue>
-              </FieldRow>
-              <Show when={linkEnabled()}>
-                <FieldRow>
-                  <FieldLabel>
-                    <FieldLabelText>Modalidad Link</FieldLabelText>
-                  </FieldLabel>
-                  <FieldInputValue>
-                    <label>
-                      <input
-                        type="radio"
-                        name="linkScope"
-                        checked={linkScope() === "shared"}
-                        onChange={() => setLinkScope("shared")}
-                      />{" "}
-                      URL compartida
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="linkScope"
-                        checked={linkScope() === "per_venue"}
-                        onChange={() => setLinkScope("per_venue")}
-                      />{" "}
-                      URL por local
-                    </label>
-                  </FieldInputValue>
-                </FieldRow>
-                <Show when={linkScope() === "shared"}>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>URL CulqiLink</FieldLabelText>
-                    </FieldLabel>
-                    <FieldInputValue>
-                      <TextInput
-                        sizeVariant="sm"
-                        type="url"
-                        value={linkUrl()}
-                        onChange={setLinkUrl}
-                        required
-                      />
-                    </FieldInputValue>
-                  </FieldRow>
-                </Show>
-              </Show>
-
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>CulqiOnline</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={onlineEnabled()}
-                      onChange={(e) => {
-                        setOnlineEnabled(e.currentTarget.checked);
-                        if (!e.currentTarget.checked) setOnlineModalidad("");
-                      }}
-                    />{" "}
-                    Activar CulqiOnline
-                  </label>
-                </FieldInputValue>
-              </FieldRow>
-              <Show when={onlineEnabled()}>
-                <FieldRow>
-                  <FieldLabel>
-                    <FieldLabelText>Modalidad Online</FieldLabelText>
-                  </FieldLabel>
-                  <FieldInputValue>
-                    <label>
-                      <input
-                        type="radio"
-                        name="onlineScope"
-                        checked={onlineScope() === "shared"}
-                        onChange={() => setOnlineScope("shared")}
-                      />{" "}
-                      URL compartida
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="onlineScope"
-                        checked={onlineScope() === "per_venue"}
-                        onChange={() => {
-                          setOnlineScope("per_venue");
-                          setOnlineModalidad("");
-                        }}
-                      />{" "}
-                      URL por local
-                    </label>
-                  </FieldInputValue>
-                </FieldRow>
-                <Show when={onlineScope() === "shared"}>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>URL CulqiOnline</FieldLabelText>
-                    </FieldLabel>
-                    <FieldInputValue>
-                      <TextInput
-                        sizeVariant="sm"
-                        type="url"
-                        value={onlineUrl()}
-                        onChange={setOnlineUrl}
-                        required
-                      />
-                    </FieldInputValue>
-                  </FieldRow>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>Modalidad de cobro</FieldLabelText>
-                    </FieldLabel>
-                    <FieldInputValue>
-                      <label>
-                        <input
-                          type="radio"
-                          name="onlineModalidad"
-                          value="SUSCRIPCIONES"
-                          checked={onlineModalidad() === "SUSCRIPCIONES"}
-                          onChange={() => setOnlineModalidad("SUSCRIPCIONES")}
-                        />{" "}
-                        Suscripciones
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="onlineModalidad"
-                          value="ONE_CLIC"
-                          checked={onlineModalidad() === "ONE_CLIC"}
-                          onChange={() => setOnlineModalidad("ONE_CLIC")}
-                        />{" "}
-                        One Click
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="onlineModalidad"
-                          value="CARGO_UNICO"
-                          checked={onlineModalidad() === "CARGO_UNICO"}
-                          onChange={() => setOnlineModalidad("CARGO_UNICO")}
-                        />{" "}
-                        Cargo unico
-                      </label>
-                    </FieldInputValue>
-                  </FieldRow>
-                </Show>
-              </Show>
             </FieldTable>
 
             <Show when={error()}>
@@ -563,7 +341,7 @@ export function CommercialScopeWidget(props: {
                   loading={requesting()}
                   onClick={() => void handleRequestQuotation()}
                 >
-                  Solicitar cotizacion
+                  Solicitar cotización
                 </Button>
               </Show>
             </div>

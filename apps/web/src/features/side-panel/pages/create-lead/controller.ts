@@ -80,7 +80,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
       input.onLeadCreated({ leadId: result.leadId, ruc });
     } catch (submitError) {
       optimisticTransactions.rollback(txId);
-      const appError = toAppError(submitError, "Error al registrar prospecto");
+      const appError = toAppError(submitError, "Error al registrar cliente");
       if (
         appError.code === "validation" &&
         appError.publicMessage.includes("RUC")

@@ -192,7 +192,7 @@ export function approveForSale(
       leadId: state.id,
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
-      payload: { from: state.stage, to: "CLOSING" },
+      payload: { from: state.stage, to: "SETUP_PLAN" },
       occurredAt: input.now,
     }),
   ];
@@ -297,9 +297,6 @@ export function saveCommercialScope(
         giroNegocio: input.giroNegocio,
         abonoBank: input.abonoBank,
         posTotal: input.posTotal,
-        linkScope: null,
-        onlineScope: null,
-        onlineModalidad: null,
       },
       occurredAt: input.now,
     }),
@@ -323,7 +320,7 @@ export function recordRepLegal(
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-scoping", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "CLOSING") return invalidLeadStage();
+  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -363,7 +360,7 @@ export function createVenue(
   const authz = authorizeLeadAction("create-venue", input.actor, state);
   if (!authz.ok) return authz;
 
-  const validStages: LeadStage[] = ["SCOPING", "QUOTING", "CLOSING"];
+  const validStages: LeadStage[] = ["SETUP_EXECUTION"];
   if (!validStages.includes(state.stage)) return invalidLeadStage();
 
   const events: LeadEvent[] = [
@@ -393,7 +390,7 @@ export function addVenueAccounts(
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "CLOSING") return invalidLeadStage();
+  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -416,6 +413,27 @@ export function addVenueAccounts(
       }),
     );
   }
+
+  return finish(state, events, input.actor, input.now);
+}
+
+export function startSetupExecution(
+  state: LeadState,
+  input: { actor: Actor; now: number },
+): TransitionResult {
+  const authz = authorizeLeadAction("complete-scoping", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "SETUP_PLAN") return invalidLeadStage();
+
+  const events: LeadEvent[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "SETUP_EXECUTION" },
+      occurredAt: input.now,
+    }),
+  ];
 
   return finish(state, events, input.actor, input.now);
 }

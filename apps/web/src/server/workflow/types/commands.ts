@@ -47,6 +47,7 @@ export type LeadIdWithActor = {
 export type AddLeadToFavoritesInput = LeadIdWithActor;
 export type RemoveLeadFromFavoritesInput = LeadIdWithActor;
 export type ApproveForSaleInput = LeadIdWithActor;
+export type StartSetupExecutionInput = LeadIdWithActor;
 export type RequestSunatRefreshInput = LeadIdWithActor;
 
 export type AddLeadNoteCommandInput = {

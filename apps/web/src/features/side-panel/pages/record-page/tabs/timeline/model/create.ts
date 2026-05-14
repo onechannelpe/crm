@@ -11,7 +11,7 @@ export function buildCreateGroups(props: {
       createdAt: Date.now(),
       name: "lead.created",
       author: "Tú",
-      action: "abrió el borrador del prospecto",
+      action: "abrió el borrador del cliente",
       subject: props.ruc?.trim()
         ? `RUC ${props.ruc.trim()}`
         : "Borrador abierto",

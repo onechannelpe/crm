@@ -112,7 +112,7 @@ export function LeadsWorkspace() {
   const adapter = {
     id: "leads-workspace",
     title: () => activeView().label,
-    ariaLabel: "Prospectos",
+    ariaLabel: "Clientes",
     class: `${styles.page} record-index-container-gate-for-drag-select`,
     pickerIcon: List,
     columns: workspaceColumnsForRole(user.role),
@@ -134,7 +134,7 @@ export function LeadsWorkspace() {
     rowOpen,
     emptyState: {
       icon: Building2,
-      title: "No hay prospectos",
+      title: "No hay clientes",
       description: "No existen resultados para esta vista.",
     },
     createAction: hasPermission(user.role, "lead:register")

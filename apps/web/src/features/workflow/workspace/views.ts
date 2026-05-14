@@ -13,7 +13,7 @@ export type WorkspaceView = {
 export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   {
     id: "mine",
-    label: "Mis prospectos",
+    label: "Mis clientes",
     filters: (userId: number): LeadListFilters => ({ executiveId: userId }),
   },
   {

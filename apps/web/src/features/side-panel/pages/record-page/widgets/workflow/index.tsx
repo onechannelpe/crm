@@ -81,7 +81,7 @@ export function WorkflowWidget(props: { data: LeadDetailView }) {
               </>
             )}
           </Show>
-          <Show when={props.data.lead.stage === "CLOSING"}>
+          <Show when={props.data.lead.stage === "SETUP_EXECUTION"}>
             <RelationRow>
               <span>Siguiente paso</span>
               <RelationMeta>Completar cuentas en Sedes</RelationMeta>

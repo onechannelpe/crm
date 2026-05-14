@@ -330,7 +330,7 @@ export async function persistWorkflowHistoryEvents(
         occurred_at: now - 10 * day + 100,
       },
 
-      // Lead: CLOSING
+      // Lead: SETUP_PLAN
       {
         id: randomUUIDv7(),
         lead_id: idForSale,
@@ -454,7 +454,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUOTED",
-          to: "CLOSING",
+          to: "SETUP_PLAN",
         }),
         occurred_at: now - 15 * day + 100,
       },
@@ -583,9 +583,21 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUOTED",
-          to: "CLOSING",
+          to: "SETUP_PLAN",
         }),
         occurred_at: now - 25 * day + 100,
+      },
+      {
+        id: randomUUIDv7(),
+        lead_id: idConverted,
+        event_type: "workflow_stage_changed",
+        actor_user_id: null,
+        subject_user_id: null,
+        payload_json: JSON.stringify({
+          from: "SETUP_PLAN",
+          to: "SETUP_EXECUTION",
+        }),
+        occurred_at: now - 24 * day + 100,
       },
       {
         id: randomUUIDv7(),
@@ -615,7 +627,7 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "CLOSING",
+          from: "SETUP_EXECUTION",
           to: "LIVE",
         }),
         occurred_at: now - 20 * day + 100,

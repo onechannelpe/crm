@@ -2,21 +2,23 @@ import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import { APP_LOCALE } from "~/lib/locale";
 
 const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
-  QUALIFYING: "Calificando",
+  QUALIFYING: "En calificación",
   DISQUALIFIED: "Descalificado",
   SCOPING: "Relevamiento comercial",
   QUOTING: "Listo para cotización",
   QUOTED: "Cotizado",
-  CLOSING: "En cierre",
+  SETUP_PLAN: "Plan de afiliación",
+  SETUP_EXECUTION: "Afiliación en curso",
   LIVE: "Activo",
 };
 
 const LEAD_NEXT_STEP_LABELS: Record<string, string> = {
-  "Review lead": "Revisar prospecto",
+  "Review lead": "Revisar cliente",
   "No further action": "Sin acciones pendientes",
   "Save commercial scope": "Guardar alcance comercial",
   "Create quotation": "Crear cotización",
   "Approve for sale": "Aprobar para venta",
+  "Define digital policy": "Definir política digital",
   "Register venue accounts": "Registrar cuentas de sedes",
 };
 

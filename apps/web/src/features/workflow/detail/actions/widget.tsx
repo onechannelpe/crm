@@ -25,7 +25,10 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 
-import { approveForSaleMutation } from "../../data/mutations";
+import {
+  approveForSaleMutation,
+  startSetupExecutionMutation,
+} from "../../data/mutations";
 import { ReviewLeadModal } from "./review-modal";
 import { mapLeadActionsToUi } from "./workflow-ui";
 
@@ -38,8 +41,11 @@ export function LeadActionsWidget(props: {
   availableActions: LeadAvailableAction[];
 }) {
   const approve = useAction(approveForSaleMutation);
+  const startSetupExecution = useAction(startSetupExecutionMutation);
   const [openModal, setOpenModal] = createSignal<OpenModal>(null);
   const [approving, setApproving] = createSignal(false);
+  const [startingSetupExecution, setStartingSetupExecution] =
+    createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
   const actions = createMemo(() => mapLeadActionsToUi(props.availableActions));
@@ -68,6 +74,19 @@ export function LeadActionsWidget(props: {
     }
   }
 
+  async function handleStartSetupExecution() {
+    if (!props.availableActions.includes("start-setup-execution")) return;
+    setError(null);
+    setStartingSetupExecution(true);
+    try {
+      await startSetupExecution({ leadId: props.leadId });
+    } catch (err) {
+      setError(toAppError(err, "Error al iniciar afiliación").publicMessage);
+    } finally {
+      setStartingSetupExecution(false);
+    }
+  }
+
   function handleButtonAction(actionId: LeadAvailableAction) {
     if (approving()) return;
     if (actionId === "approve-for-sale") {
@@ -76,6 +95,10 @@ export function LeadActionsWidget(props: {
     }
     if (actionId === "review-lead") {
       setOpenModal(actionId);
+      return;
+    }
+    if (actionId === "start-setup-execution") {
+      void handleStartSetupExecution();
     }
   }
 
@@ -93,13 +116,16 @@ export function LeadActionsWidget(props: {
                   when={action.kind === "link" && action}
                   fallback={
                     <ActionRowButton
-                      disabled={approving()}
+                      disabled={approving() || startingSetupExecution()}
                       onClick={() => handleButtonAction(action.id)}
                     >
                       <span>
                         {approving() && action.id === "approve-for-sale"
                           ? "Aprobando..."
-                          : action.label}
+                          : startingSetupExecution() &&
+                              action.id === "start-setup-execution"
+                            ? "Iniciando..."
+                            : action.label}
                       </span>
                       <ChevronRight size={14} />
                     </ActionRowButton>
@@ -117,7 +143,7 @@ export function LeadActionsWidget(props: {
             <Show when={actions().length === 0}>
               <RelationRow>
                 <span>Sin acciones disponibles</span>
-                <RelationMeta>Flujo al dia</RelationMeta>
+                <RelationMeta>Flujo al día</RelationMeta>
               </RelationRow>
             </Show>
           </RelationList>

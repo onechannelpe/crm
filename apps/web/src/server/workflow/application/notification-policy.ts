@@ -16,8 +16,8 @@ export function deriveLeadStageNotifications(input: {
         audience: { kind: "user_ids", userIds: [input.executiveId] },
         channels: ["in_app"],
         priority: "high",
-        title: "Accion requerida",
-        bodyText: `El prospecto RUC ${input.ruc} requiere tu informacion comercial`,
+        title: "Acción requerida",
+        bodyText: `El cliente RUC ${input.ruc} requiere tu información comercial`,
         actionUrl: "/records",
       },
     ];
@@ -36,14 +36,14 @@ export function deriveLeadStageNotifications(input: {
         },
         channels: ["in_app"],
         priority: "normal",
-        title: "Prospecto listo para cotizacion",
-        bodyText: `El prospecto RUC ${input.ruc} esta listo para cotizar`,
+        title: "Cliente listo para cotización",
+        bodyText: `El cliente RUC ${input.ruc} está listo para cotizar`,
         actionUrl: `/records/${input.leadId}`,
       },
     ];
   }
 
-  if (input.toStage === "CLOSING") {
+  if (input.toStage === "SETUP_PLAN") {
     return [
       {
         id: `${input.eventId}:ready_sale`,
@@ -51,8 +51,8 @@ export function deriveLeadStageNotifications(input: {
         audience: { kind: "user_ids", userIds: [input.executiveId] },
         channels: ["in_app"],
         priority: "high",
-        title: "Prospecto listo para venta",
-        bodyText: `El prospecto RUC ${input.ruc} fue aprobado. Puedes registrar la venta.`,
+        title: "Cliente listo para afiliación",
+        bodyText: `El cliente RUC ${input.ruc} fue aprobado. Define la política digital para continuar.`,
         actionUrl: `/records/${input.leadId}`,
       },
     ];

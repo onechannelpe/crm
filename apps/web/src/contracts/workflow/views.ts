@@ -16,6 +16,7 @@ export type LeadAvailableAction =
   | "review-lead"
   | "create-quotation"
   | "approve-for-sale"
+  | "start-setup-execution"
   | "request-rate-negotiation"
   | "reassign-lead";
 
@@ -27,6 +28,7 @@ export type LeadBlockingField =
   | "giroNegocio"
   | "abonoBank"
   | "posTotal"
+  | "digitalPolicy"
   | "venueAccounts";
 
 export type AssignableExecutiveView = {

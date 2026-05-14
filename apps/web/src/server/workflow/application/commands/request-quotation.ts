@@ -57,6 +57,7 @@ export async function requestQuotationCommand(
 
     const state = await leads.findById(input.leadId);
     if (!state) return leadNotFound();
+    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
 
     const abonoBank = parseRequiredAbonoBank(input.abonoBank);
     if (!abonoBank.ok) return abonoBank;
@@ -70,6 +71,11 @@ export async function requestQuotationCommand(
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
+      linkScope: profile?.linkScope ?? "none",
+      linkUrl: profile?.linkUrl ?? null,
+      onlineScope: profile?.onlineScope ?? "none",
+      onlineUrl: profile?.onlineUrl ?? null,
+      onlineModalidad: profile?.onlineModalidad ?? null,
       abonoBank: abonoBank.value,
       posTotal: input.posTotal,
       updatedAt: now,

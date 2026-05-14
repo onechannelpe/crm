@@ -71,7 +71,7 @@ export function QuotationSection(props: QuotationSectionProps) {
         moneda: moneda(),
       });
     } catch (err) {
-      setError(toAppError(err, "Error al crear cotizacion").publicMessage);
+      setError(toAppError(err, "Error al crear cotización").publicMessage);
     } finally {
       setSubmitting(false);
     }
@@ -213,7 +213,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               size="sm"
               loading={submitting()}
             >
-              Crear cotizacion
+              Crear cotización
             </Button>
           </div>
         </form>

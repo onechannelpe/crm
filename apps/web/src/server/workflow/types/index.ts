@@ -45,6 +45,7 @@ export type {
   AddLeadToFavoritesInput,
   RemoveLeadFromFavoritesInput,
   ApproveForSaleInput,
+  StartSetupExecutionInput,
   RequestQuotationInput,
   RequestSunatRefreshInput,
   AddLeadNoteCommandInput,

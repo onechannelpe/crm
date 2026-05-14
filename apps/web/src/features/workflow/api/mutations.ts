@@ -13,6 +13,7 @@ import {
   requestRemoveLeadFromFavorites,
   requestSaveCommercialScope,
   requestSaveDigitalPolicy,
+  requestStartSetupExecution,
 } from "~/actions/workflow/commands/records";
 import {
   requestVenueAccountsAddition,
@@ -58,6 +59,12 @@ export async function requestRecordRepLegalApi(
   input: Parameters<typeof requestRecordRepLegal>[0],
 ) {
   return requestRecordRepLegal(input);
+}
+
+export async function requestStartSetupExecutionApi(
+  input: Parameters<typeof requestStartSetupExecution>[0],
+) {
+  return requestStartSetupExecution(input);
 }
 
 export async function requestQuotationCreationApi(

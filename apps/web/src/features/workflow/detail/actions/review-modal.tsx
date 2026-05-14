@@ -55,7 +55,7 @@ export function ReviewLeadModal(props: {
         onClick={handleOverlayClick}
       >
         <dialog open class={styles.dialog} aria-modal="true">
-          <h3 class={styles.dialogTitle}>Revisar prospecto</h3>
+          <h3 class={styles.dialogTitle}>Revisar cliente</h3>
           <form class={styles.form} onSubmit={(e) => void handleSubmit(e)}>
             <Select
               label="Estado"

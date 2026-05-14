@@ -4,7 +4,8 @@ export const LEAD_STAGES = [
   "SCOPING",
   "QUOTING",
   "QUOTED",
-  "CLOSING",
+  "SETUP_PLAN",
+  "SETUP_EXECUTION",
   "LIVE",
 ] as const;
 

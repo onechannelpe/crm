@@ -7,7 +7,7 @@ export function useCreateLeadRecordAction() {
 
   return {
     label: "Añadir nuevo",
-    emptyLabel: "Añadir un prospecto",
+    emptyLabel: "Añadir un cliente",
     inlineLabel: "Añadir nuevo",
     icon: Plus,
     onClick: () => {

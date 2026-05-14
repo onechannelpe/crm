@@ -8,6 +8,7 @@ export type LeadBlockingField =
   | "giroNegocio"
   | "abonoBank"
   | "posTotal"
+  | "digitalPolicy"
   | "venueAccounts";
 
 type ScopingProfileFields = {
@@ -18,6 +19,11 @@ type ScopingProfileFields = {
   giroNegocio?: string | null;
   abonoBank?: AbonoBank | null;
   posTotal?: number | null;
+  linkScope?: "none" | "shared" | "per_venue";
+  linkUrl?: string | null;
+  onlineScope?: "none" | "shared" | "per_venue";
+  onlineUrl?: string | null;
+  onlineModalidad?: string | null;
 };
 
 export type LeadProgress = {
@@ -37,7 +43,9 @@ function resolveLeadNextStep(lead: { stage: LeadStage }): string {
       return "Create quotation";
     case "QUOTED":
       return "Approve for sale";
-    case "CLOSING":
+    case "SETUP_PLAN":
+      return "Define digital policy";
+    case "SETUP_EXECUTION":
       return "Register venue accounts";
     case "LIVE":
       return "No further action";
@@ -72,7 +80,16 @@ export function resolveLeadBlockingFields(input: {
       if (p?.posTotal == null) blocking.push("posTotal");
       return blocking;
     }
-    case "CLOSING": {
+    case "SETUP_PLAN": {
+      const p = input.profile;
+      if (!p) return ["digitalPolicy"];
+      if (p.linkScope === "shared" && !p.linkUrl) return ["digitalPolicy"];
+      if (p.onlineScope === "shared" && (!p.onlineUrl || !p.onlineModalidad)) {
+        return ["digitalPolicy"];
+      }
+      return [];
+    }
+    case "SETUP_EXECUTION": {
       const withAccounts = input.venuesWithAccountsCount ?? 0;
       return withAccounts === 0 ? ["venueAccounts"] : [];
     }

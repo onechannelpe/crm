@@ -19,6 +19,8 @@ import type {
   RequestSunatRefreshInput,
   ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
+  SaveDigitalPolicyCommandInput,
+  StartSetupExecutionInput,
   UpdateSourcingPolicyInput,
 } from "~/server/workflow/types";
 
@@ -42,6 +44,8 @@ import { requestRateNegotiationCommand } from "./commands/request-rate-negotiati
 import { requestSunatRefresh } from "./commands/request-sunat-refresh";
 import { reviewLeadCommand } from "./commands/review-lead";
 import { saveCommercialScopeCommand } from "./commands/save-commercial-scope";
+import { saveDigitalPolicyCommand } from "./commands/save-digital-policy";
+import { startSetupExecutionCommand } from "./commands/start-setup-execution";
 import { updateSourcingPolicy } from "./commands/update-sourcing-policy";
 
 export function createWorkflowCommandBus(
@@ -101,6 +105,11 @@ export function createWorkflowCommandBus(
     approveForSale: (input: ApproveForSaleInput) =>
       approveForSaleCommand(input, { leads: leadStates, uow }),
 
+    startSetupExecution: (input: StartSetupExecutionInput) =>
+      startSetupExecutionCommand(input, {
+        executor,
+      }),
+
     createQuotation: (input: CreateQuotationCommandInput) =>
       createQuotationCommand(input, {
         executor,
@@ -108,6 +117,11 @@ export function createWorkflowCommandBus(
 
     saveCommercialScope: (input: SaveCommercialScopeCommandInput) =>
       saveCommercialScopeCommand(input, {
+        executor,
+      }),
+
+    saveDigitalPolicy: (input: SaveDigitalPolicyCommandInput) =>
+      saveDigitalPolicyCommand(input, {
         executor,
       }),
 

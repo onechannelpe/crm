@@ -67,9 +67,6 @@ export type LeadHistoryPayloadByEvent = {
     giroNegocio: string;
     abonoBank: string | null;
     posTotal: number | null;
-    linkScope: string | null;
-    onlineScope: string | null;
-    onlineModalidad: string | null;
   };
   quotation_requested: null;
   rep_legal_recorded: {

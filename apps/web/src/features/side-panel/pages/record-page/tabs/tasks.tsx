@@ -61,9 +61,9 @@ function deriveCreateTasks(props: {
     },
     {
       id: "create-lead",
-      title: "Crear prospecto",
+      title: "Crear cliente",
       meta: props.canCreate
-        ? "Se creará el prospecto en QUALIFYING"
+        ? "Se creará el cliente"
         : "Bloqueado hasta validar el RUC",
       status: props.canCreate ? "DONE" : "TODO",
     },
