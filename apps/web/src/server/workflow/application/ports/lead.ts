@@ -14,7 +14,19 @@ import type {
 import type { LeadDraft, LeadState } from "../../domain/lead/state";
 
 export type LeadPatch = Partial<
-  Omit<LeadState, "id" | "version" | "createdAt" | "createdBy" | "organizationId" | "ruc" | "razonSocial" | "address" | "district" | "department">
+  Omit<
+    LeadState,
+    | "id"
+    | "version"
+    | "createdAt"
+    | "createdBy"
+    | "organizationId"
+    | "ruc"
+    | "razonSocial"
+    | "address"
+    | "district"
+    | "department"
+  >
 >;
 
 export type LeadAssignmentDraft = {

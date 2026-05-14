@@ -44,13 +44,21 @@ import { reviewLeadCommand } from "./commands/review-lead";
 import { saveCommercialScopeCommand } from "./commands/save-commercial-scope";
 import { updateSourcingPolicy } from "./commands/update-sourcing-policy";
 
-export function createWorkflowCommandBus(executor: DatabaseExecutor, repos: WorkflowRepos) {
+export function createWorkflowCommandBus(
+  executor: DatabaseExecutor,
+  repos: WorkflowRepos,
+) {
   const uow = createLeadUow(executor);
   const leadStates = createLeadStateRepo(executor);
 
-  const enrichmentCommand = createEnrichmentCommand(createSearchEnrichmentRepo(executor));
+  const enrichmentCommand = createEnrichmentCommand(
+    createSearchEnrichmentRepo(executor),
+  );
   const enrichmentQueue = {
-    async enqueueRucVerification(ruc: string, requestedByUserId: number): Promise<void> {
+    async enqueueRucVerification(
+      ruc: string,
+      requestedByUserId: number,
+    ): Promise<void> {
       await enrichmentCommand.enqueueRequest("ruc", ruc, requestedByUserId);
     },
   };
@@ -80,7 +88,11 @@ export function createWorkflowCommandBus(executor: DatabaseExecutor, repos: Work
       reviewLeadCommand(input, { leads: leadStates, uow }),
 
     reassignLead: (input: ReassignLeadCommandInput) =>
-      reassignLeadCommand(input, { leads: leadStates, uow, users: repos.users }),
+      reassignLeadCommand(input, {
+        leads: leadStates,
+        uow,
+        users: repos.users,
+      }),
 
     addLeadNote: (input: AddLeadNoteCommandInput) =>
       addLeadNoteCommand(input, { leads: leadStates, uow }),
@@ -116,7 +128,11 @@ export function createWorkflowCommandBus(executor: DatabaseExecutor, repos: Work
       }),
 
     recordRepLegal: (input: RecordRepLegalCommandInput) =>
-      recordRepLegalCommand(input, { leads: leadStates, uow, party: repos.party }),
+      recordRepLegalCommand(input, {
+        leads: leadStates,
+        uow,
+        party: repos.party,
+      }),
 
     createVenue: (input: CreateVenueCommandInput) =>
       createVenueCommand(input, {

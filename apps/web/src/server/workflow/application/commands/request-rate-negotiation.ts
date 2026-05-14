@@ -52,7 +52,8 @@ export async function requestRateNegotiationCommand(
     }),
   );
 
-  const validatedArtifacts: Array<{ artifactId: string; fileAssetId: number }> = [];
+  const validatedArtifacts: Array<{ artifactId: string; fileAssetId: number }> =
+    [];
   for (const art of artifacts) {
     if (!art.fileAssetId) {
       return Err(
@@ -63,7 +64,10 @@ export async function requestRateNegotiationCommand(
         ),
       );
     }
-    validatedArtifacts.push({ artifactId: art.artifactId, fileAssetId: art.fileAssetId });
+    validatedArtifacts.push({
+      artifactId: art.artifactId,
+      fileAssetId: art.fileAssetId,
+    });
   }
 
   const negotiationRequestId = randomUUIDv7();

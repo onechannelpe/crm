@@ -1,9 +1,9 @@
 import { randomUUIDv7 } from "bun";
 
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import { isBcpBank } from "~/contracts/workflow";
 import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
@@ -32,14 +32,26 @@ export async function addVenueAccountsCommand(
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
   const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
   if (!isBcpSoles && !cciSoles) {
-    return Err(domainError("validation", "missing_cci_soles", "CCI is required for soles account when the bank is not BCP"));
+    return Err(
+      domainError(
+        "validation",
+        "missing_cci_soles",
+        "CCI is required for soles account when the bank is not BCP",
+      ),
+    );
   }
 
   const settlementCount =
     (input.solesAccount.isSettlement ? 1 : 0) +
     (input.dollarAccount?.isSettlement ? 1 : 0);
   if (settlementCount !== 1) {
-    return Err(domainError("validation", "invalid_settlement_account", "Exactly one settlement account must be selected"));
+    return Err(
+      domainError(
+        "validation",
+        "invalid_settlement_account",
+        "Exactly one settlement account must be selected",
+      ),
+    );
   }
 
   let cciDolares: string | null = null;
@@ -47,7 +59,13 @@ export async function addVenueAccountsCommand(
     const isBcpDolares = isBcpBank(input.dollarAccount.banco);
     cciDolares = isBcpDolares ? null : input.dollarAccount.cci?.trim() || null;
     if (!isBcpDolares && !cciDolares) {
-      return Err(domainError("validation", "missing_cci_dolares", "CCI is required for dollar account when the bank is not BCP"));
+      return Err(
+        domainError(
+          "validation",
+          "missing_cci_dolares",
+          "CCI is required for dollar account when the bank is not BCP",
+        ),
+      );
     }
   }
 
@@ -57,10 +75,22 @@ export async function addVenueAccountsCommand(
   const venueResult = await ports.leadVenues.findById(input.venueId);
   if (!venueResult.ok) return venueResult;
   if (!venueResult.value || venueResult.value.leadId !== input.leadId) {
-    return Err(domainError("not_found", "venue_not_found", "Venue not found for this lead"));
+    return Err(
+      domainError(
+        "not_found",
+        "venue_not_found",
+        "Venue not found for this lead",
+      ),
+    );
   }
   if (venueResult.value.solesAccount) {
-    return Err(domainError("conflict", "accounts_already_added", "This venue already has accounts registered"));
+    return Err(
+      domainError(
+        "conflict",
+        "accounts_already_added",
+        "This venue already has accounts registered",
+      ),
+    );
   }
 
   const now = Date.now();
@@ -96,7 +126,8 @@ export async function addVenueAccountsCommand(
     ports.leadVenues.countByLeadId(input.leadId),
     ports.leadVenues.countWithAccounts(input.leadId),
   ]);
-  const shouldTransitionToLive = totalVenues > 0 && venuesWithAccounts === totalVenues;
+  const shouldTransitionToLive =
+    totalVenues > 0 && venuesWithAccounts === totalVenues;
 
   const transition = addVenueAccounts(state, {
     actor: input.actor,

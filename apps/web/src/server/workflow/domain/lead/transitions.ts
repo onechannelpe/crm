@@ -8,21 +8,28 @@ import type {
   Moneda,
   ProductScope,
 } from "~/contracts/workflow";
+import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { domainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { Role } from "~/lib/auth/access/rbac";
 
 import { createHistoryEvent } from "../history";
 import { resolveReviewTransition } from "../workflow";
-import { invalidLeadInput, invalidLeadStage } from "./lead-errors";
 import type { LeadEvent } from "./events";
-import { authorizeLeadAction, MAX_NEGOTIATION_FILES, MAX_NEGOTIATION_ROUNDS } from "./policy";
+import { invalidLeadInput, invalidLeadStage } from "./lead-errors";
+import {
+  authorizeLeadAction,
+  MAX_NEGOTIATION_FILES,
+  MAX_NEGOTIATION_ROUNDS,
+} from "./policy";
 import { applyEvents } from "./reducer";
 import type { LeadState } from "./state";
 
 type Actor = { userId: number; role: Role };
-type TransitionResult = Result<{ next: LeadState; events: LeadEvent[] }, DomainError>;
+type TransitionResult = Result<
+  { next: LeadState; events: LeadEvent[] },
+  DomainError
+>;
 
 function conflict(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("conflict", code, message));
@@ -34,20 +41,32 @@ function finish(
   actor: Actor,
   now: number,
 ): TransitionResult {
-  return Ok({ next: applyEvents(state, events, { actorUserId: actor.userId, now }), events });
+  return Ok({
+    next: applyEvents(state, events, { actorUserId: actor.userId, now }),
+    events,
+  });
 }
 
 // --- Commands ---
 
 export function reviewLead(
   state: LeadState,
-  input: { actor: Actor; status: LeadStatus; prioridad: LeadPriority; reason: string; now: number },
+  input: {
+    actor: Actor;
+    status: LeadStatus;
+    prioridad: LeadPriority;
+    reason: string;
+    now: number;
+  },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
   if (!authz.ok) return authz;
   if (state.stage !== "QUALIFYING") return invalidLeadStage();
 
-  const nextStage = resolveReviewTransition({ status: input.status, prioridad: input.prioridad });
+  const nextStage = resolveReviewTransition({
+    status: input.status,
+    prioridad: input.prioridad,
+  });
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -83,7 +102,10 @@ export function reassignLead(
   if (!authz.ok) return authz;
 
   if (state.executiveId === input.toExecutiveId) {
-    return invalidLeadInput("same_executive", "Lead is already assigned to the selected executive");
+    return invalidLeadInput(
+      "same_executive",
+      "Lead is already assigned to the selected executive",
+    );
   }
 
   const events: LeadEvent[] = [
@@ -92,7 +114,10 @@ export function reassignLead(
       eventType: "lead_reassigned",
       actorUserId: input.actor.userId,
       subjectUserId: input.toExecutiveId,
-      payload: { fromExecutiveId: state.executiveId, toExecutiveId: input.toExecutiveId },
+      payload: {
+        fromExecutiveId: state.executiveId,
+        toExecutiveId: input.toExecutiveId,
+      },
       occurredAt: input.now,
     }),
   ];
@@ -126,7 +151,12 @@ export function addNote(
 
 export function logCall(
   state: LeadState,
-  input: { actor: Actor; outcome: LeadCallOutcome; notes: string | null; now: number },
+  input: {
+    actor: Actor;
+    outcome: LeadCallOutcome;
+    notes: string | null;
+    now: number;
+  },
 ): TransitionResult {
   const authz = authorizeLeadAction("interact", input.actor, state);
   if (!authz.ok) return authz;
@@ -202,7 +232,13 @@ export function requestQuotation(
 
 export function createQuotation(
   state: LeadState,
-  input: { actor: Actor; quotationId: string; version: number; moneda: Moneda; now: number },
+  input: {
+    actor: Actor;
+    quotationId: string;
+    version: number;
+    moneda: Moneda;
+    now: number;
+  },
 ): TransitionResult {
   const authz = authorizeLeadAction("create-quotation", input.actor, state);
   if (!authz.ok) return authz;
@@ -213,7 +249,11 @@ export function createQuotation(
       leadId: state.id,
       eventType: "quotation_created",
       actorUserId: input.actor.userId,
-      payload: { quotationId: input.quotationId, version: input.version, moneda: input.moneda },
+      payload: {
+        quotationId: input.quotationId,
+        version: input.version,
+        moneda: input.moneda,
+      },
       occurredAt: input.now,
     }),
     createHistoryEvent({
@@ -338,7 +378,10 @@ export function createVenue(
       leadId: state.id,
       eventType: "venue_added",
       actorUserId: input.actor.userId,
-      payload: { venueId: input.venueId, nombreComercial: input.nombreComercial },
+      payload: {
+        venueId: input.venueId,
+        nombreComercial: input.nombreComercial,
+      },
       occurredAt: input.now,
     }),
   ];
@@ -348,7 +391,12 @@ export function createVenue(
 
 export function addVenueAccounts(
   state: LeadState,
-  input: { actor: Actor; venueId: string; shouldTransitionToLive: boolean; now: number },
+  input: {
+    actor: Actor;
+    venueId: string;
+    shouldTransitionToLive: boolean;
+    now: number;
+  },
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
   if (!authz.ok) return authz;
@@ -395,10 +443,19 @@ export function requestRateNegotiation(
   if (state.stage !== "QUOTED") return invalidLeadStage();
 
   if (input.negotiationRequestCount >= MAX_NEGOTIATION_ROUNDS) {
-    return conflict("max_negotiation_rounds_reached", `Maximum of ${MAX_NEGOTIATION_ROUNDS} negotiation rounds allowed`);
+    return conflict(
+      "max_negotiation_rounds_reached",
+      `Maximum of ${MAX_NEGOTIATION_ROUNDS} negotiation rounds allowed`,
+    );
   }
   if (input.artifactCount > MAX_NEGOTIATION_FILES) {
-    return Err(domainError("validation", "max_negotiation_files_exceeded", `Maximum of ${MAX_NEGOTIATION_FILES} negotiation files allowed`));
+    return Err(
+      domainError(
+        "validation",
+        "max_negotiation_files_exceeded",
+        `Maximum of ${MAX_NEGOTIATION_FILES} negotiation files allowed`,
+      ),
+    );
   }
 
   const events: LeadEvent[] = [
@@ -428,7 +485,10 @@ export function applyImportedReview(
 
   if (input.type === "import_status") {
     if (input.status === null) {
-      return invalidLeadInput("missing_status", "Status is required for import_status");
+      return invalidLeadInput(
+        "missing_status",
+        "Status is required for import_status",
+      );
     }
     const events: LeadEvent[] = [
       createHistoryEvent({
@@ -447,7 +507,10 @@ export function applyImportedReview(
   }
 
   if (input.prioridad === null) {
-    return invalidLeadInput("missing_prioridad", "Prioridad is required for import_prioridad");
+    return invalidLeadInput(
+      "missing_prioridad",
+      "Prioridad is required for import_prioridad",
+    );
   }
   const events: LeadEvent[] = [
     createHistoryEvent({

@@ -27,7 +27,10 @@ export async function requestSunatRefresh(
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
 
-  await ports.enrichmentQueue.enqueueRucVerification(lead.ruc, input.actor.userId);
+  await ports.enrichmentQueue.enqueueRucVerification(
+    lead.ruc,
+    input.actor.userId,
+  );
 
   return Ok(void 0);
 }

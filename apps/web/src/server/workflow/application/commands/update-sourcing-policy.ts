@@ -16,7 +16,9 @@ export async function updateSourcingPolicy(
     engineAssignmentEnabled: boolean;
   },
   ports: Ports,
-): Promise<Result<{ branchId: number; engineAssignmentEnabled: boolean }, DomainError>> {
+): Promise<
+  Result<{ branchId: number; engineAssignmentEnabled: boolean }, DomainError>
+> {
   if (!hasPermission(input.actor.role, "capacity:policy:manage")) {
     return Err(domainError("forbidden", "forbidden", "Access denied"));
   }

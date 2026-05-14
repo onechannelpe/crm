@@ -1,6 +1,6 @@
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import type { LeadStage } from "~/contracts/workflow";
 import type { LeadAvailableAction } from "~/contracts/workflow/views";
+import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -23,7 +23,10 @@ export type LeadCapability =
 
 export type AssignableExecutivesScope =
   | { actorRole: "superuser"; actorBranchId: number }
-  | { actorRole: "admin" | "sales_manager" | "supervisor"; actorBranchId: number };
+  | {
+      actorRole: "admin" | "sales_manager" | "supervisor";
+      actorBranchId: number;
+    };
 
 const OWNER_REQUIRED = new Set<LeadCapability>([
   "complete-scoping",
@@ -73,7 +76,10 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("approve-for-sale");
     caps.add("request-negotiation");
   }
-  if (hasPermission(role, "lead:work") && hasPermission(role, "lead:view:all")) {
+  if (
+    hasPermission(role, "lead:work") &&
+    hasPermission(role, "lead:view:all")
+  ) {
     caps.add("request-negotiation");
   }
   if (hasPermission(role, "lead:register")) caps.add("register");
@@ -117,7 +123,8 @@ export function requireCapability(
   capability: LeadCapability,
   actor: { role: Role },
 ): Result<void, DomainError> {
-  if (!resolveCapabilities(actor.role).has(capability)) return forbiddenLeadAccess();
+  if (!resolveCapabilities(actor.role).has(capability))
+    return forbiddenLeadAccess();
   return Ok(undefined);
 }
 
@@ -187,7 +194,10 @@ export function resolveAssignableExecutivesScope(input: {
     input.actorRole === "sales_manager" ||
     input.actorRole === "supervisor"
   ) {
-    return Ok({ actorRole: input.actorRole, actorBranchId: input.actorBranchId });
+    return Ok({
+      actorRole: input.actorRole,
+      actorBranchId: input.actorBranchId,
+    });
   }
   return forbiddenLeadAccess();
 }

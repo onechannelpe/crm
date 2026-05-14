@@ -1,3 +1,4 @@
+import { hasPermission } from "~/lib/auth/access/rbac";
 import type {
   ArtifactRepos,
   SyncExecutor,
@@ -14,7 +15,6 @@ import type {
   LeadSaleProofFileView,
 } from "~/server/workflow/types";
 
-import { hasPermission } from "~/lib/auth/access/rbac";
 import { authorizeLeadAction } from "../../domain/lead/policy";
 import type { LeadReadRepository } from "../ports/lead";
 

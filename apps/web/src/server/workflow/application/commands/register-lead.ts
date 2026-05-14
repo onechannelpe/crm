@@ -4,13 +4,16 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { createLeadDraft } from "../../domain/lead/state";
+import { normalizeLeadRuc } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requireCapability } from "../../domain/lead/policy";
+import { createLeadDraft } from "../../domain/lead/state";
 import { reassignLead } from "../../domain/lead/transitions";
-import { normalizeLeadRuc } from "../../domain/lead-schema-parser";
 import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
-import type { PartyRepository, WorkflowUserRepository } from "../ports/entities";
+import type {
+  PartyRepository,
+  WorkflowUserRepository,
+} from "../ports/entities";
 import type { LeadEnrichmentQueue } from "../ports/gateways";
 import type {
   LeadAssignmentRepository,
@@ -19,7 +22,10 @@ import type {
 } from "../ports/lead";
 import type { LeadUnitOfWork } from "../ports/uow";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
-import { ensureActiveExecutive, resolveLeadRegistration } from "./register-lead-resolution";
+import {
+  ensureActiveExecutive,
+  resolveLeadRegistration,
+} from "./register-lead-resolution";
 
 type Ports = {
   leads: LeadRepository;
@@ -122,7 +128,10 @@ export async function registerLead(
   });
   if (!result.ok) return result;
 
-  await ports.enrichmentQueue.enqueueRucVerification(ruc.value, input.actorUserId);
+  await ports.enrichmentQueue.enqueueRucVerification(
+    ruc.value,
+    input.actorUserId,
+  );
 
   return result;
 }

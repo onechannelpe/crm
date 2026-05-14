@@ -1,6 +1,6 @@
+import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
-import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
 import type { LeadState } from "~/server/workflow/domain/lead/state";
 
 type LeadWithOrgRow = {

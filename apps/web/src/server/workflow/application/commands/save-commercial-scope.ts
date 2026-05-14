@@ -13,12 +13,12 @@ import type {
   LeadVenueRepository,
   PartyRepository,
 } from "../ports/entities";
+import type { LeadUnitOfWork } from "../ports/uow";
 import {
   parseDigitalPolicy,
   toProfileDigitalFields,
   validateDigitalAggregate,
 } from "../services/digital-product-policy";
-import type { LeadUnitOfWork } from "../ports/uow";
 
 type Ports = {
   leads: LeadStateRepository;

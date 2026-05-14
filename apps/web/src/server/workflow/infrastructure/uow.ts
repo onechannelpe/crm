@@ -1,14 +1,18 @@
 import { randomUUIDv7 } from "bun";
 
 import { serializeAuditChanges } from "~/contracts/audit";
+import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError } from "~/server/shared/domain-error";
 import { Err, Ok } from "~/server/shared/result";
-import { enqueueNotifications } from "~/server/notifications/outbox";
+import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
+import type {
+  CommitInput,
+  CommitResult,
+  LeadUnitOfWork,
+} from "~/server/workflow/application/ports/uow";
 import type { LeadEvent } from "~/server/workflow/domain/lead/events";
 import type { LeadState } from "~/server/workflow/domain/lead/state";
-import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
-import type { CommitInput, CommitResult, LeadUnitOfWork } from "~/server/workflow/application/ports/uow";
 
 function deriveAuditAction(events: LeadEvent[]): string {
   return events[0]?.eventType ?? "lead_updated";
@@ -16,7 +20,12 @@ function deriveAuditAction(events: LeadEvent[]): string {
 
 async function replaceActiveAssignment(
   db: DatabaseExecutor,
-  input: { leadId: string; toExecutiveId: number; assignedBy: number; at: number },
+  input: {
+    leadId: string;
+    toExecutiveId: number;
+    assignedBy: number;
+    at: number;
+  },
 ): Promise<void> {
   await db
     .updateTable("workflow_lead_assignments")
@@ -74,7 +83,13 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
           .executeTakeFirst();
 
         if (Number(updateResult.numUpdatedRows) === 0) {
-          return Err(domainError("conflict", "concurrency_conflict", "Lead was modified concurrently"));
+          return Err(
+            domainError(
+              "conflict",
+              "concurrency_conflict",
+              "Lead was modified concurrently",
+            ),
+          );
         }
 
         // 3. Assignment replacement (for reassign)
@@ -99,7 +114,9 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
               event_type: event.eventType,
               actor_user_id: event.actorUserId,
               subject_user_id: event.subjectUserId,
-              payload_json: event.payload ? JSON.stringify(event.payload) : null,
+              payload_json: event.payload
+                ? JSON.stringify(event.payload)
+                : null,
               occurred_at: event.occurredAt,
             })
             .execute();

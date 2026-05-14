@@ -7,12 +7,15 @@ import type { WorkflowActor } from "~/server/workflow/types";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { createVenue } from "../../domain/lead/transitions";
 import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
-import type { LeadProfileRepository, LeadVenueRepository } from "../ports/entities";
+import type {
+  LeadProfileRepository,
+  LeadVenueRepository,
+} from "../ports/entities";
+import type { LeadUnitOfWork } from "../ports/uow";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
 } from "../services/digital-product-policy";
-import type { LeadUnitOfWork } from "../ports/uow";
 
 type Ports = {
   leads: LeadStateRepository;

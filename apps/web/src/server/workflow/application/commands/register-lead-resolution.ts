@@ -25,7 +25,11 @@ export async function ensureActiveExecutive(input: {
   const targetExecutive = await input.deps.users.findById(input.executiveId);
   if (!targetExecutive || !targetExecutive.isActive) {
     return Err(
-      domainError("validation", "invalid_executive", "Target executive not found or inactive"),
+      domainError(
+        "validation",
+        "invalid_executive",
+        "Target executive not found or inactive",
+      ),
     );
   }
 
@@ -52,7 +56,11 @@ export async function resolveLeadRegistration(input: {
 
   if (decision === "conflict") {
     return Err(
-      domainError("conflict", "ruc_conflict", "A lead with this RUC already exists"),
+      domainError(
+        "conflict",
+        "ruc_conflict",
+        "A lead with this RUC already exists",
+      ),
     );
   }
 

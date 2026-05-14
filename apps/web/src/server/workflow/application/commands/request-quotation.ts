@@ -45,7 +45,11 @@ export async function requestQuotationCommand(
 
   if (blockingFields.length > 0) {
     return Err(
-      domainError("conflict", "blocking_fields_present", "Commercial scope is incomplete"),
+      domainError(
+        "conflict",
+        "blocking_fields_present",
+        "Commercial scope is incomplete",
+      ),
     );
   }
 
