@@ -127,10 +127,10 @@ export function CommercialScopeWidget(props: {
     if (!bank) return;
     setError(null);
     setSaving(true);
-    const computedLinkScope = resolvedLinkScope();
-    const computedOnlineScope = resolvedOnlineScope();
-    const modalidad = onlineModalidad();
     try {
+      const computedLinkScope = resolvedLinkScope();
+      const computedOnlineScope = resolvedOnlineScope();
+      const modalidad = onlineModalidad();
       await save({
         leadId: props.leadId,
         proveedorActual: proveedorActual().trim(),
@@ -155,10 +155,35 @@ export function CommercialScopeWidget(props: {
   }
 
   async function handleRequestQuotation() {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    const bank = abonoBank();
+    if (!bank) return;
     setError(null);
     setRequesting(true);
     try {
-      await requestQuotation({ leadId: props.leadId });
+      const computedLinkScope = resolvedLinkScope();
+      const computedOnlineScope = resolvedOnlineScope();
+      const modalidad = onlineModalidad();
+      await requestQuotation({
+        leadId: props.leadId,
+        proveedorActual: proveedorActual().trim(),
+        tasaActual: Number(tasaActual()),
+        gpv: Number(gpv()),
+        ticket: Number(ticket()),
+        giroNegocio: giroNegocio().trim(),
+        abonoBank: bank,
+        posTotal: Number(posTotal()),
+        linkScope: computedLinkScope,
+        linkUrl: computedLinkScope === "shared" ? linkUrl().trim() : null,
+        onlineScope: computedOnlineScope,
+        onlineUrl: computedOnlineScope === "shared" ? onlineUrl().trim() : null,
+        onlineModalidad:
+          computedOnlineScope === "shared" && modalidad ? modalidad : null,
+      });
     } catch (err) {
       setError(toAppError(err, "Error al solicitar cotizacion").publicMessage);
     } finally {

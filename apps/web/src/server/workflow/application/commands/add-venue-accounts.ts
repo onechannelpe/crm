@@ -2,20 +2,19 @@ import { randomUUIDv7 } from "bun";
 
 import { isBcpBank } from "~/contracts/workflow";
 import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { addVenueAccounts } from "../../domain/lead/transitions";
-import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
-import type { LeadVenueRepository } from "../ports/entities";
-import type { LeadUnitOfWork } from "../ports/uow";
+import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
+import { createLeadUow } from "../../infrastructure/uow";
+import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 type Ports = {
-  leads: LeadStateRepository;
-  uow: LeadUnitOfWork;
-  leadVenues: LeadVenueRepository;
+  executor: DatabaseExecutor;
 };
 
 export async function addVenueAccountsCommand(
@@ -69,80 +68,85 @@ export async function addVenueAccountsCommand(
     }
   }
 
-  const state = await ports.leads.findById(input.leadId);
-  if (!state) return leadNotFound();
+  return ports.executor.transaction().execute(async (tx) => {
+    const repos = createWorkflowRepos(tx);
+    const leads = createLeadStateRepo(tx);
+    const uow = createLeadUow(tx);
 
-  const venueResult = await ports.leadVenues.findById(input.venueId);
-  if (!venueResult.ok) return venueResult;
-  if (!venueResult.value || venueResult.value.leadId !== input.leadId) {
-    return Err(
-      domainError(
-        "not_found",
-        "venue_not_found",
-        "Venue not found for this lead",
-      ),
-    );
-  }
-  if (venueResult.value.solesAccount) {
-    return Err(
-      domainError(
-        "conflict",
-        "accounts_already_added",
-        "This venue already has accounts registered",
-      ),
-    );
-  }
+    const state = await leads.findById(input.leadId);
+    if (!state) return leadNotFound();
 
-  const now = Date.now();
+    const venueResult = await repos.leadVenues.findById(input.venueId);
+    if (!venueResult.ok) return venueResult;
+    if (!venueResult.value || venueResult.value.leadId !== input.leadId) {
+      return Err(
+        domainError(
+          "not_found",
+          "venue_not_found",
+          "Venue not found for this lead",
+        ),
+      );
+    }
+    if (venueResult.value.solesAccount) {
+      return Err(
+        domainError(
+          "conflict",
+          "accounts_already_added",
+          "This venue already has accounts registered",
+        ),
+      );
+    }
 
-  await ports.leadVenues.addAccounts(
-    input.venueId,
-    {
-      solesAccount: {
-        currency: "PEN",
-        banco: input.solesAccount.banco,
-        tipoCuenta: input.solesAccount.tipoCuenta,
-        nroCuenta: input.solesAccount.nroCuenta,
-        ...(cciSoles ? { cci: cciSoles } : {}),
-        isSettlement: input.solesAccount.isSettlement,
+    const now = Date.now();
+    const [totalVenues, venuesWithAccounts] = await Promise.all([
+      repos.leadVenues.countByLeadId(input.leadId),
+      repos.leadVenues.countWithAccounts(input.leadId),
+    ]);
+    const shouldTransitionToLive =
+      totalVenues > 0 && venuesWithAccounts + 1 === totalVenues;
+
+    const transition = addVenueAccounts(state, {
+      actor: input.actor,
+      venueId: input.venueId,
+      shouldTransitionToLive,
+      now,
+    });
+    if (!transition.ok) return transition;
+
+    await repos.leadVenues.addAccounts(
+      input.venueId,
+      {
+        solesAccount: {
+          currency: "PEN",
+          banco: input.solesAccount.banco,
+          tipoCuenta: input.solesAccount.tipoCuenta,
+          nroCuenta: input.solesAccount.nroCuenta,
+          ...(cciSoles ? { cci: cciSoles } : {}),
+          isSettlement: input.solesAccount.isSettlement,
+        },
+        ...(input.dollarAccount
+          ? {
+              dollarAccount: {
+                currency: "USD",
+                banco: input.dollarAccount.banco,
+                tipoCuenta: input.dollarAccount.tipoCuenta,
+                nroCuenta: input.dollarAccount.nroCuenta,
+                ...(cciDolares ? { cci: cciDolares } : {}),
+                isSettlement: input.dollarAccount.isSettlement,
+              },
+            }
+          : {}),
       },
-      ...(input.dollarAccount
-        ? {
-            dollarAccount: {
-              currency: "USD",
-              banco: input.dollarAccount.banco,
-              tipoCuenta: input.dollarAccount.tipoCuenta,
-              nroCuenta: input.dollarAccount.nroCuenta,
-              ...(cciDolares ? { cci: cciDolares } : {}),
-              isSettlement: input.dollarAccount.isSettlement,
-            },
-          }
-        : {}),
-    },
-    now,
-  );
+      now,
+    );
 
-  const [totalVenues, venuesWithAccounts] = await Promise.all([
-    ports.leadVenues.countByLeadId(input.leadId),
-    ports.leadVenues.countWithAccounts(input.leadId),
-  ]);
-  const shouldTransitionToLive =
-    totalVenues > 0 && venuesWithAccounts === totalVenues;
+    const committed = await uow.commit({
+      next: transition.value.next,
+      events: transition.value.events,
+      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+    });
+    if (!committed.ok) return committed;
 
-  const transition = addVenueAccounts(state, {
-    actor: input.actor,
-    venueId: input.venueId,
-    shouldTransitionToLive,
-    now,
+    return Ok({ leadId: state.id });
   });
-  if (!transition.ok) return transition;
-
-  const committed = await ports.uow.commit({
-    next: transition.value.next,
-    events: transition.value.events,
-    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
-  });
-  if (!committed.ok) return committed;
-
-  return Ok({ leadId: state.id });
 }

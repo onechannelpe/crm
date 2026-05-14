@@ -13,6 +13,7 @@ import {
   type LeadIdInput,
   type ReassignLeadInput,
   type RecordRepLegalInput,
+  type RequestQuotationInput,
   type ReviewLeadInput,
   type SaveCommercialScopeInput,
 } from "~/contracts/workflow";
@@ -75,14 +76,21 @@ export async function requestSaveCommercialScope(
   });
 }
 
-export async function requestQuotation(input: LeadIdInput) {
+export async function requestQuotation(input: RequestQuotationInput) {
+  if (!input.proveedorActual?.trim()) {
+    throw validationError("proveedorActual is required");
+  }
+  if (!input.giroNegocio?.trim()) {
+    throw validationError("giroNegocio is required");
+  }
+
   return runAction({
     actionName: "workflow.request_quotation",
     access: { kind: "auth" },
-    input,
+    input: { leadId: input.leadId },
     execute: (ctx) =>
       getServerRuntime().workflow.commands.requestQuotation(
-        toLeadIdActorInput(ctx, input),
+        toSaveCommercialScopeInput(ctx, input),
       ),
   });
 }

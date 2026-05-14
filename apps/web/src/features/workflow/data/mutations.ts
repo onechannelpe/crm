@@ -89,7 +89,21 @@ export const saveCommercialScopeMutation = action(
 );
 
 export const requestQuotationMutation = action(
-  async (input: { leadId: string }) => {
+  async (input: {
+    leadId: string;
+    proveedorActual: string;
+    tasaActual: number;
+    gpv: number;
+    ticket: number;
+    giroNegocio: string;
+    abonoBank: AbonoBank;
+    posTotal: number;
+    linkScope: ProductScope;
+    linkUrl: string | null;
+    onlineScope: ProductScope;
+    onlineUrl: string | null;
+    onlineModalidad: ModalidadCobro | null;
+  }) => {
     await requestQuotationApi(input);
     return json(
       {},

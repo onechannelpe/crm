@@ -47,7 +47,6 @@ export type LeadIdWithActor = {
 export type AddLeadToFavoritesInput = LeadIdWithActor;
 export type RemoveLeadFromFavoritesInput = LeadIdWithActor;
 export type ApproveForSaleInput = LeadIdWithActor;
-export type RequestQuotationInput = LeadIdWithActor;
 export type RequestSunatRefreshInput = LeadIdWithActor;
 
 export type AddLeadNoteCommandInput = {
@@ -90,6 +89,8 @@ export type SaveCommercialScopeCommandInput = {
   onlineUrl: string | null;
   onlineModalidad: ModalidadCobro | null;
 };
+
+export type RequestQuotationInput = SaveCommercialScopeCommandInput;
 
 export type RecordRepLegalCommandInput = {
   actor: WorkflowActor;

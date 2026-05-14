@@ -4,6 +4,7 @@ import type {
   ModalidadCobro,
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
@@ -11,13 +12,9 @@ import type { WorkflowActor } from "~/server/workflow/types";
 import { parseRequiredAbonoBank } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { saveCommercialScope } from "../../domain/lead/transitions";
-import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
-import type {
-  LeadProfileRepository,
-  LeadVenueRepository,
-  PartyRepository,
-} from "../ports/entities";
-import type { LeadUnitOfWork } from "../ports/uow";
+import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
+import { createLeadUow } from "../../infrastructure/uow";
+import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 import {
   parseDigitalPolicy,
   toProfileDigitalFields,
@@ -25,11 +22,7 @@ import {
 } from "../services/digital-product-policy";
 
 type Ports = {
-  leads: LeadStateRepository;
-  uow: LeadUnitOfWork;
-  leadProfiles: LeadProfileRepository;
-  leadVenues: LeadVenueRepository;
-  party: PartyRepository;
+  executor: DatabaseExecutor;
 };
 
 export async function saveCommercialScopeCommand(
@@ -52,75 +45,80 @@ export async function saveCommercialScopeCommand(
   },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const state = await ports.leads.findById(input.leadId);
-  if (!state) return leadNotFound();
+  return ports.executor.transaction().execute(async (tx) => {
+    const repos = createWorkflowRepos(tx);
+    const leads = createLeadStateRepo(tx);
+    const uow = createLeadUow(tx);
 
-  const policy = parseDigitalPolicy({
-    linkScope: input.linkScope,
-    linkUrl: input.linkUrl,
-    onlineScope: input.onlineScope,
-    onlineUrl: input.onlineUrl,
-    onlineModalidad: input.onlineModalidad,
+    const state = await leads.findById(input.leadId);
+    if (!state) return leadNotFound();
+
+    const policy = parseDigitalPolicy({
+      linkScope: input.linkScope,
+      linkUrl: input.linkUrl,
+      onlineScope: input.onlineScope,
+      onlineUrl: input.onlineUrl,
+      onlineModalidad: input.onlineModalidad,
+    });
+    if (!policy.ok) return policy;
+
+    const venues = await repos.leadVenues.listByLeadId(state.id);
+    if (!venues.ok) return venues;
+
+    const aggregateCheck = validateDigitalAggregate({
+      policy: policy.value,
+      venues: venues.value,
+    });
+    if (!aggregateCheck.ok) return aggregateCheck;
+
+    const abonoBank = parseRequiredAbonoBank(input.abonoBank);
+    if (!abonoBank.ok) return abonoBank;
+
+    const digitalFields = toProfileDigitalFields(policy.value);
+    const now = Date.now();
+    const transition = saveCommercialScope(state, {
+      actor: input.actor,
+      proveedorActual: input.proveedorActual,
+      tasaActual: input.tasaActual,
+      gpv: input.gpv,
+      ticket: input.ticket,
+      giroNegocio: input.giroNegocio,
+      abonoBank: abonoBank.value,
+      posTotal: input.posTotal,
+      linkScope: digitalFields.linkScope,
+      linkUrl: digitalFields.linkUrl,
+      onlineScope: digitalFields.onlineScope,
+      onlineUrl: digitalFields.onlineUrl,
+      onlineModalidad: digitalFields.onlineModalidad,
+      now,
+    });
+    if (!transition.ok) return transition;
+
+    await repos.leadProfiles.upsert({
+      leadId: state.id,
+      proveedorActual: input.proveedorActual,
+      tasaActual: input.tasaActual,
+      gpv: input.gpv,
+      ticket: input.ticket,
+      abonoBank: abonoBank.value,
+      posTotal: input.posTotal,
+      ...digitalFields,
+      updatedAt: now,
+      updatedBy: input.actor.userId,
+    });
+
+    await repos.party.updateOrganizationCommercial({
+      organizationId: state.organizationId,
+      giroNegocio: input.giroNegocio,
+    });
+
+    const committed = await uow.commit({
+      next: transition.value.next,
+      events: transition.value.events,
+      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+    });
+    if (!committed.ok) return committed;
+
+    return Ok({ leadId: state.id });
   });
-  if (!policy.ok) return policy;
-
-  const venues = await ports.leadVenues.listByLeadId(state.id);
-  if (!venues.ok) return venues;
-
-  const aggregateCheck = validateDigitalAggregate({
-    policy: policy.value,
-    venues: venues.value,
-  });
-  if (!aggregateCheck.ok) return aggregateCheck;
-
-  const abonoBank = parseRequiredAbonoBank(input.abonoBank);
-  if (!abonoBank.ok) return abonoBank;
-
-  const digitalFields = toProfileDigitalFields(policy.value);
-  const now = Date.now();
-
-  await ports.leadProfiles.upsert({
-    leadId: state.id,
-    proveedorActual: input.proveedorActual,
-    tasaActual: input.tasaActual,
-    gpv: input.gpv,
-    ticket: input.ticket,
-    abonoBank: abonoBank.value,
-    posTotal: input.posTotal,
-    ...digitalFields,
-    updatedAt: now,
-    updatedBy: input.actor.userId,
-  });
-
-  await ports.party.updateOrganizationCommercial({
-    organizationId: state.organizationId,
-    giroNegocio: input.giroNegocio,
-  });
-
-  const transition = saveCommercialScope(state, {
-    actor: input.actor,
-    proveedorActual: input.proveedorActual,
-    tasaActual: input.tasaActual,
-    gpv: input.gpv,
-    ticket: input.ticket,
-    giroNegocio: input.giroNegocio,
-    abonoBank: abonoBank.value,
-    posTotal: input.posTotal,
-    linkScope: digitalFields.linkScope,
-    linkUrl: digitalFields.linkUrl,
-    onlineScope: digitalFields.onlineScope,
-    onlineUrl: digitalFields.onlineUrl,
-    onlineModalidad: digitalFields.onlineModalidad,
-    now,
-  });
-  if (!transition.ok) return transition;
-
-  const committed = await ports.uow.commit({
-    next: transition.value.next,
-    events: transition.value.events,
-    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
-  });
-  if (!committed.ok) return committed;
-
-  return Ok({ leadId: state.id });
 }

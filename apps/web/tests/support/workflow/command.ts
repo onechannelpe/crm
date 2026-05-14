@@ -75,13 +75,11 @@ function buildCommandApi(
         },
         {
           leads: repos.leads,
-          leadAssignments: repos.leadAssignments,
-          leadHistory: repos.leadHistory,
           leadStates,
-          party: repos.party,
           users: repos.users,
           uow,
           enrichmentQueue,
+          executor,
         },
       ),
 
@@ -121,48 +119,32 @@ function buildCommandApi(
 
     createQuotation: (input: CreateQuotationCommandInput) =>
       createQuotationCommand(input, {
-        leads: leadStates,
-        uow,
-        leadQuotations: repos.leadQuotations,
+        executor,
       }),
 
     saveCommercialScope: (input: SaveCommercialScopeCommandInput) =>
       saveCommercialScopeCommand(input, {
-        leads: leadStates,
-        uow,
-        leadProfiles: repos.leadProfiles,
-        leadVenues: repos.leadVenues,
-        party: repos.party,
+        executor,
       }),
 
     requestQuotation: (input: RequestQuotationInput) =>
       requestQuotationCommand(input, {
-        leads: leadStates,
-        uow,
-        leadProfiles: repos.leadProfiles,
-        party: repos.party,
+        executor,
       }),
 
     recordRepLegal: (input: RecordRepLegalCommandInput) =>
       recordRepLegalCommand(input, {
-        leads: leadStates,
-        uow,
-        party: repos.party,
+        executor,
       }),
 
     createVenue: (input: CreateVenueCommandInput) =>
       createVenueCommand(input, {
-        leads: leadStates,
-        uow,
-        leadProfiles: repos.leadProfiles,
-        leadVenues: repos.leadVenues,
+        executor,
       }),
 
     addVenueAccounts: (input: AddVenueAccountsCommandInput) =>
       addVenueAccountsCommand(input, {
-        leads: leadStates,
-        uow,
-        leadVenues: repos.leadVenues,
+        executor,
       }),
 
     requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>

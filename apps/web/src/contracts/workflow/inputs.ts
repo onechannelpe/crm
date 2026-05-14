@@ -62,6 +62,8 @@ export type SaveCommercialScopeInput = {
   onlineModalidad: ModalidadCobro | null;
 };
 
+export type RequestQuotationInput = SaveCommercialScopeInput;
+
 export type RecordRepLegalInput = {
   leadId: string;
   nombres: string;

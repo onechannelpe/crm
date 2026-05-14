@@ -1,6 +1,7 @@
 import { randomUUIDv7 } from "bun";
 
 import type { Role } from "~/lib/auth/access/rbac";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -10,16 +11,10 @@ import { requireCapability } from "../../domain/lead/policy";
 import { createLeadDraft } from "../../domain/lead/state";
 import { reassignLead } from "../../domain/lead/transitions";
 import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
-import type {
-  PartyRepository,
-  WorkflowUserRepository,
-} from "../ports/entities";
+import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+import type { WorkflowUserRepository } from "../ports/entities";
 import type { LeadEnrichmentQueue } from "../ports/gateways";
-import type {
-  LeadAssignmentRepository,
-  LeadHistoryRepository,
-  LeadRepository,
-} from "../ports/lead";
+import type { LeadRepository } from "../ports/lead";
 import type { LeadUnitOfWork } from "../ports/uow";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {
@@ -29,13 +24,11 @@ import {
 
 type Ports = {
   leads: LeadRepository;
-  leadAssignments: LeadAssignmentRepository;
-  leadHistory: LeadHistoryRepository;
   leadStates: LeadStateRepository;
-  party: PartyRepository;
   users: WorkflowUserRepository;
   uow: LeadUnitOfWork;
   enrichmentQueue: LeadEnrichmentQueue;
+  executor: DatabaseExecutor;
 };
 
 export async function registerLead(
@@ -94,37 +87,40 @@ export async function registerLead(
     return Ok({ leadId: state.id });
   }
 
-  const organization =
-    (await ports.party.findOrganizationByRuc(ruc.value)) ??
-    (await ports.party.createOrganization({
+  const result = await ports.executor.transaction().execute(async (db) => {
+    const txRepos = createWorkflowRepos(db);
+    const organization =
+      (await txRepos.party.findOrganizationByRuc(ruc.value)) ??
+      (await txRepos.party.createOrganization({
+        ruc: ruc.value,
+        name: ruc.value,
+        address: null,
+        district: null,
+        department: null,
+      }));
+
+    const draft = createLeadDraft({
+      organizationId: organization.id,
       ruc: ruc.value,
-      name: ruc.value,
-      address: null,
-      district: null,
-      department: null,
-    }));
+      razonSocial: organization.name,
+      address: organization.address,
+      executiveId: input.executiveId,
+      createdBy: input.actorUserId,
+      now,
+    });
+    if (!draft.ok) return draft;
 
-  const draft = createLeadDraft({
-    organizationId: organization.id,
-    ruc: ruc.value,
-    razonSocial: organization.name,
-    address: organization.address,
-    executiveId: input.executiveId,
-    createdBy: input.actorUserId,
-    now,
-  });
-  if (!draft.ok) return draft;
-
-  const result = await writeLeadRegistrationEffects({
-    deps: {
-      leads: ports.leads,
-      leadAssignments: ports.leadAssignments,
-      leadHistory: ports.leadHistory,
-    },
-    actorUserId: input.actorUserId,
-    executiveId: input.executiveId,
-    draft: draft.value,
-    now,
+    return writeLeadRegistrationEffects({
+      deps: {
+        leads: txRepos.leads,
+        leadAssignments: txRepos.leadAssignments,
+        leadHistory: txRepos.leadHistory,
+      },
+      actorUserId: input.actorUserId,
+      executiveId: input.executiveId,
+      draft: draft.value,
+      now,
+    });
   });
   if (!result.ok) return result;
 
