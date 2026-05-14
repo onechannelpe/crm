@@ -1,11 +1,11 @@
 import { randomUUIDv7 } from "bun";
 
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
 import type {
   ModalidadCobro,
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
 import { parseRequiredAbonoBank } from "../../domain/lead-schema-parser";
