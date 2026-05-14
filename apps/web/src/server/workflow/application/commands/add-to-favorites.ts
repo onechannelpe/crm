@@ -1,39 +1,34 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
-  AddLeadToFavoritesInput,
-  LeadCommandResult,
-} from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
-import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { LeadFavoriteRepository, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import { leadNotFound } from "../../domain/lead/lead-errors";
+import { authorizeLeadAction } from "../../domain/lead/policy";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
+import type { LeadFavoriteRepository } from "../ports/lead";
 
-type AddToFavoritesCommandDeps = {
-  leadReader: LeadReadRepository;
+type Ports = {
+  leads: LeadStateRepository;
   leadFavorites: LeadFavoriteRepository;
-  clock: LeadClock;
 };
 
 export async function addToFavoritesCommand(
-  deps: AddToFavoritesCommandDeps,
-  input: AddLeadToFavoritesInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const prepared = await prepareLeadCommand({
-    leadReader: deps.leadReader,
-    clock: deps.clock,
-    actor: input.actor,
-    leadId: input.leadId,
-    operation: "view_detail",
-  });
-  if (!prepared.ok) {
-    return prepared;
-  }
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
-  await deps.leadFavorites.addForUser({
+  const authz = authorizeLeadAction("view", input.actor, state);
+  if (!authz.ok) return authz;
+
+  await ports.leadFavorites.addForUser({
     leadId: input.leadId,
     userId: input.actor.userId,
-    createdAt: prepared.value.now,
+    createdAt: Date.now(),
   });
 
   return Ok({ leadId: input.leadId });

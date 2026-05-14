@@ -18,6 +18,13 @@ export interface WorkflowLeadsTable {
   updated_by: number | null;
   created_at: number;
   updated_at: number;
+  version: number;
+}
+
+export interface WorkflowIdempotencyKeysTable {
+  key: string;
+  result_json: string;
+  created_at: number;
 }
 
 export interface WorkflowLeadProfilesTable {

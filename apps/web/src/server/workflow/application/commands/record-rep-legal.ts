@@ -1,57 +1,40 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadCommandResult,
-  RecordRepLegalCommandInput,
-} from "~/server/workflow/types";
+import { randomUUIDv7 } from "bun";
+
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import {
-  canCompleteScoping,
-  requirePipelineActionAccess,
-} from "../policies/access";
+import { recordRepLegal } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type { PartyRepository } from "../ports/entities";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type RecordRepLegalCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
   party: PartyRepository;
-  clock: LeadClock;
 };
 
 export async function recordRepLegalCommand(
-  deps: RecordRepLegalCommandDeps,
-  input: RecordRepLegalCommandInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const canRecord = requirePipelineActionAccess(
-    input.actor.role,
-    canCompleteScoping,
-  );
-  if (!canRecord.ok) return canRecord;
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    nombres: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    dni: string;
+    telefono: string;
+    email: string;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) return leadNotFound();
-
-  if (lead.executiveId !== input.actor.userId) {
-    return Err(
-      domainError(
-        "forbidden",
-        "not_owner",
-        "Only the assigned executive can record rep legal",
-      ),
-    );
-  }
-
-  if (lead.stage !== "CLOSING") {
-    return Err(
-      domainError("validation", "wrong_stage", "Lead is not in CLOSING stage"),
-    );
-  }
-
-  await deps.party.upsertPrimaryLegalRepresentative({
-    organizationId: lead.organizationId,
+  await ports.party.upsertPrimaryLegalRepresentative({
+    organizationId: state.organizationId,
     nombres: input.nombres,
     apellidoPaterno: input.apellidoPaterno,
     apellidoMaterno: input.apellidoMaterno,
@@ -60,22 +43,25 @@ export async function recordRepLegalCommand(
     email: input.email,
   });
 
-  const now = deps.clock.now();
-  const outcome = await deps.mutationUow.commit({
-    lead,
-    actorUserId: input.actor.userId,
+  const now = Date.now();
+  const transition = recordRepLegal(state, {
+    actor: input.actor,
+    nombres: input.nombres,
+    apellidoPaterno: input.apellidoPaterno,
+    apellidoMaterno: input.apellidoMaterno,
+    dni: input.dni,
+    telefono: input.telefono,
+    email: input.email,
     now,
-    intent: {
-      kind: "record_rep_legal",
-      nombres: input.nombres,
-      apellidoPaterno: input.apellidoPaterno,
-      apellidoMaterno: input.apellidoMaterno,
-      dni: input.dni,
-      telefono: input.telefono,
-      email: input.email,
-    },
   });
-  if (!outcome.ok) return outcome;
+  if (!transition.ok) return transition;
 
-  return Ok({ leadId: lead.id });
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+  if (!committed.ok) return committed;
+
+  return Ok({ leadId: state.id });
 }

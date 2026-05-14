@@ -87,6 +87,7 @@ export interface Database {
   auth_throttle_counters: observability.AuthThrottleCountersTable;
   auth_events: observability.AuthEventsTable;
   workflow_leads: workflow.WorkflowLeadsTable;
+  workflow_idempotency_keys: workflow.WorkflowIdempotencyKeysTable;
   workflow_modalidad_cobro_kinds: workflow.WorkflowModalidadCobroKindsTable;
   workflow_lead_profiles: workflow.WorkflowLeadProfilesTable;
   workflow_quotations: workflow.WorkflowQuotationsTable;

@@ -1,63 +1,58 @@
+import { randomUUIDv7 } from "bun";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadCommandResult,
-  ReviewLeadCommandInput,
-} from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
 } from "../../domain/lead-schema-parser";
-import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import { leadNotFound } from "../../domain/lead/lead-errors";
+import { reviewLead } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type ReviewLeadCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
-  clock: LeadClock;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
 };
 
 export async function reviewLeadCommand(
-  deps: ReviewLeadCommandDeps,
-  input: ReviewLeadCommandInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const prepared = await prepareLeadCommand({
-    leadReader: deps.leadReader,
-    clock: deps.clock,
-    actor: input.actor,
-    leadId: input.leadId,
-    operation: "review",
-  });
-  if (!prepared.ok) {
-    return prepared;
-  }
-
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    status: string;
+    prioridad: string;
+    reason: string;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
   const status = parseRequiredLeadStatus(input.status);
-  if (!status.ok) {
-    return status;
-  }
+  if (!status.ok) return status;
 
   const prioridad = parseRequiredLeadPriority(input.prioridad);
-  if (!prioridad.ok) {
-    return prioridad;
-  }
+  if (!prioridad.ok) return prioridad;
 
-  const outcome = await deps.mutationUow.commit({
-    lead: prepared.value.lead,
-    actorUserId: input.actor.userId,
-    now: prepared.value.now,
-    intent: {
-      kind: "review",
-      status: status.value,
-      prioridad: prioridad.value,
-      reason: input.reason,
-    },
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
+
+  const transition = reviewLead(state, {
+    actor: input.actor,
+    status: status.value,
+    prioridad: prioridad.value,
+    reason: input.reason,
+    now: Date.now(),
   });
-  if (!outcome.ok) {
-    return outcome;
-  }
+  if (!transition.ok) return transition;
 
-  return Ok({ leadId: prepared.value.lead.id });
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+  if (!committed.ok) return committed;
+
+  return Ok({ leadId: state.id });
 }

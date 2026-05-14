@@ -1,54 +1,48 @@
+import { randomUUIDv7 } from "bun";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadInteractionResult,
-  LogLeadCallCommandInput,
-} from "~/server/workflow/types";
+import type { LeadCallOutcome } from "~/contracts/workflow";
+import type { WorkflowActor } from "~/server/workflow/types";
 
-import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import { requireFirstHistoryId } from "../command-kernel/require-history-id";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import { leadNotFound } from "../../domain/lead/lead-errors";
+import { logCall } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type LogLeadCallCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
-  clock: LeadClock;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
 };
 
 export async function logLeadCallCommand(
-  deps: LogLeadCallCommandDeps,
-  input: LogLeadCallCommandInput,
-): Promise<Result<LeadInteractionResult, DomainError>> {
-  const prepared = await prepareLeadCommand({
-    leadReader: deps.leadReader,
-    clock: deps.clock,
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    outcome: LeadCallOutcome;
+    notes?: string | null;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ interactionId: string }, DomainError>> {
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
+
+  const now = Date.now();
+  const transition = logCall(state, {
     actor: input.actor,
-    leadId: input.leadId,
-    operation: "interact",
+    outcome: input.outcome,
+    notes: input.notes?.trim() ?? null,
+    now,
   });
-  if (!prepared.ok) {
-    return prepared;
-  }
+  if (!transition.ok) return transition;
 
-  const outcome = await deps.mutationUow.commit({
-    lead: prepared.value.lead,
-    actorUserId: input.actor.userId,
-    now: prepared.value.now,
-    intent: {
-      kind: "log_call",
-      outcome: input.outcome,
-      notes: input.notes?.trim() ?? null,
-    },
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
   });
-  if (!outcome.ok) {
-    return outcome;
-  }
+  if (!committed.ok) return committed;
 
-  const interactionId = requireFirstHistoryId(outcome.value.historyIds);
-  if (!interactionId.ok) {
-    return interactionId;
-  }
-
-  return Ok({ interactionId: interactionId.value });
+  return Ok({ interactionId: committed.value.eventIds[0]! });
 }

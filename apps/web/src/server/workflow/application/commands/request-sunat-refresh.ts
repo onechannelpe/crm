@@ -1,43 +1,33 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { RequestSunatRefreshInput } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
-import { requireLeadReadAccess } from "../policies/access";
-import type {
-  WorkflowAuditService,
-  LeadEnrichmentQueue,
-} from "../ports/gateways";
-import type { LeadRepository } from "../ports/lead";
+import { resolveCapabilities } from "../../domain/lead/policy";
+import type { LeadEnrichmentQueue } from "../ports/gateways";
+import type { LeadReadRepository } from "../ports/lead";
+
+type Ports = {
+  leads: LeadReadRepository;
+  enrichmentQueue: LeadEnrichmentQueue;
+};
 
 export async function requestSunatRefresh(
-  input: RequestSunatRefreshInput & {
-    leadRepo: LeadRepository;
-    enrichmentQueue: LeadEnrichmentQueue;
-    auditService: WorkflowAuditService;
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
   },
+  ports: Ports,
 ): Promise<Result<void, DomainError>> {
-  const canRead = requireLeadReadAccess(input.actor.role);
-  if (!canRead.ok) {
-    return canRead;
+  if (!resolveCapabilities(input.actor.role).has("view")) {
+    return Err(domainError("forbidden", "forbidden", "Access denied"));
   }
 
-  const lead = await input.leadRepo.findById(input.leadId);
+  const lead = await ports.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
 
-  await input.enrichmentQueue.enqueueRucVerification(
-    lead.ruc,
-    input.actor.userId,
-  );
-
-  await input.auditService.log(
-    input.actor.userId,
-    "sunat_refresh_requested",
-    "lead",
-    input.leadId,
-    { ruc: lead.ruc },
-  );
+  await ports.enrichmentQueue.enqueueRucVerification(lead.ruc, input.actor.userId);
 
   return Ok(void 0);
 }

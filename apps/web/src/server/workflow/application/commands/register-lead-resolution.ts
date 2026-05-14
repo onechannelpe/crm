@@ -5,28 +5,27 @@ import {
   decideRegistrationConflict,
   ensureCanReassignLead,
 } from "../../domain/assignment";
-import type { LeadRecord } from "../../domain/lead-record";
-import type {
-  ActiveExecutiveDeps,
-  LeadRegistrationLookupDeps,
-} from "../deps/register-lead";
+import type { LeadState } from "../../domain/lead/state";
+import type { WorkflowUserRepository } from "../ports/entities";
+import type { LeadRepository } from "../ports/lead";
 
 export type LeadRegistrationResolution =
   | { kind: "create" }
-  | { kind: "reassign"; lead: LeadRecord };
+  | { kind: "reassign"; lead: Pick<LeadState, "id"> };
+
+type LookupDeps = {
+  leads: LeadRepository;
+  users: WorkflowUserRepository;
+};
 
 export async function ensureActiveExecutive(input: {
-  deps: ActiveExecutiveDeps;
+  deps: { users: WorkflowUserRepository };
   executiveId: number;
 }): Promise<Result<void, DomainError>> {
   const targetExecutive = await input.deps.users.findById(input.executiveId);
   if (!targetExecutive || !targetExecutive.isActive) {
     return Err(
-      domainError(
-        "validation",
-        "invalid_executive",
-        "Target executive not found or inactive",
-      ),
+      domainError("validation", "invalid_executive", "Target executive not found or inactive"),
     );
   }
 
@@ -34,7 +33,7 @@ export async function ensureActiveExecutive(input: {
 }
 
 export async function resolveLeadRegistration(input: {
-  deps: LeadRegistrationLookupDeps;
+  deps: LookupDeps;
   ruc: string;
   executiveId: number;
 }): Promise<Result<LeadRegistrationResolution, DomainError>> {
@@ -53,11 +52,7 @@ export async function resolveLeadRegistration(input: {
 
   if (decision === "conflict") {
     return Err(
-      domainError(
-        "conflict",
-        "ruc_conflict",
-        "A lead with this RUC already exists",
-      ),
+      domainError("conflict", "ruc_conflict", "A lead with this RUC already exists"),
     );
   }
 
@@ -69,5 +64,5 @@ export async function resolveLeadRegistration(input: {
     return canReassign;
   }
 
-  return Ok({ kind: "reassign", lead: existingLead });
+  return Ok({ kind: "reassign", lead: { id: existingLead.id } });
 }

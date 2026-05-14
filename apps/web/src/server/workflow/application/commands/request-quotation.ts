@@ -1,60 +1,37 @@
+import { randomUUIDv7 } from "bun";
+
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadCommandResult,
-  RequestQuotationInput,
-} from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { resolveLeadBlockingFields } from "../../domain/lead-progress";
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import {
-  canCompleteScoping,
-  requirePipelineActionAccess,
-} from "../policies/access";
+import { requestQuotation } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type { LeadProfileRepository, PartyRepository } from "../ports/entities";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type RequestQuotationCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
   leadProfiles: LeadProfileRepository;
   party: PartyRepository;
-  clock: LeadClock;
 };
 
 export async function requestQuotationCommand(
-  deps: RequestQuotationCommandDeps,
-  input: RequestQuotationInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const canRequest = requirePipelineActionAccess(
-    input.actor.role,
-    canCompleteScoping,
-  );
-  if (!canRequest.ok) return canRequest;
-
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) return leadNotFound();
-
-  if (lead.executiveId !== input.actor.userId) {
-    return Err(
-      domainError(
-        "forbidden",
-        "not_owner",
-        "Only the assigned executive can request a quotation",
-      ),
-    );
-  }
-
-  if (lead.stage !== "SCOPING") {
-    return Err(
-      domainError("validation", "wrong_stage", "Lead is not in SCOPING stage"),
-    );
-  }
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
   const [profile, organization] = await Promise.all([
-    deps.leadProfiles.findByLeadId(lead.id),
-    deps.party.findOrganizationById(lead.organizationId),
+    ports.leadProfiles.findByLeadId(state.id),
+    ports.party.findOrganizationById(state.organizationId),
   ]);
 
   const profileWithGiro = profile
@@ -62,28 +39,26 @@ export async function requestQuotationCommand(
     : null;
 
   const blockingFields = resolveLeadBlockingFields({
-    stage: lead.stage,
+    stage: state.stage,
     profile: profileWithGiro,
   });
 
   if (blockingFields.length > 0) {
     return Err(
-      domainError(
-        "conflict",
-        "blocking_fields_present",
-        "Commercial scope is incomplete",
-      ),
+      domainError("conflict", "blocking_fields_present", "Commercial scope is incomplete"),
     );
   }
 
-  const now = deps.clock.now();
-  const outcome = await deps.mutationUow.commit({
-    lead,
-    actorUserId: input.actor.userId,
-    now,
-    intent: { kind: "request_quotation" },
-  });
-  if (!outcome.ok) return outcome;
+  const now = Date.now();
+  const transition = requestQuotation(state, { actor: input.actor, now });
+  if (!transition.ok) return transition;
 
-  return Ok({ leadId: lead.id });
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+  if (!committed.ok) return committed;
+
+  return Ok({ leadId: state.id });
 }

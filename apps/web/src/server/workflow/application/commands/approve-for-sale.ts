@@ -1,44 +1,40 @@
+import { randomUUIDv7 } from "bun";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
-  ApproveForSaleInput,
-  LeadCommandResult,
-} from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import { requireLeadActionAccess } from "../policies/lead-action-policy";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import { approveForSale } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type ApproveForSaleCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
-  clock: LeadClock;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
 };
 
 export async function approveForSaleCommand(
-  deps: ApproveForSaleCommandDeps,
-  input: ApproveForSaleInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) return leadNotFound();
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
-  const canApprove = requireLeadActionAccess({
-    action: "approve-for-sale",
-    actorUserId: input.actor.userId,
-    actorRole: input.actor.role,
-    lead,
+  const now = Date.now();
+  const transition = approveForSale(state, { actor: input.actor, now });
+  if (!transition.ok) return transition;
+
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
   });
-  if (!canApprove.ok) return canApprove;
+  if (!committed.ok) return committed;
 
-  const now = deps.clock.now();
-  const outcome = await deps.mutationUow.commit({
-    lead,
-    actorUserId: input.actor.userId,
-    now,
-    intent: { kind: "approve_for_sale" },
-  });
-  if (!outcome.ok) return outcome;
-
-  return Ok({ leadId: lead.id });
+  return Ok({ leadId: state.id });
 }

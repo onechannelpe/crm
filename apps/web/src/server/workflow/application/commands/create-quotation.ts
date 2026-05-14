@@ -1,43 +1,43 @@
+import { randomUUIDv7 } from "bun";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadQuotationResult,
-  CreateQuotationCommandInput,
-} from "~/server/workflow/types";
+import type { Moneda } from "~/contracts/workflow";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import {
-  canCreateQuotation,
-  requirePipelineActionAccess,
-} from "../policies/access";
+import { createQuotation } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type { LeadQuotationRepository } from "../ports/entities";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type CreateQuotationCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
   leadQuotations: LeadQuotationRepository;
-  clock: LeadClock;
 };
 
 export async function createQuotationCommand(
-  deps: CreateQuotationCommandDeps,
-  input: CreateQuotationCommandInput,
-): Promise<Result<LeadQuotationResult, DomainError>> {
-  const canCreate = requirePipelineActionAccess(
-    input.actor.role,
-    canCreateQuotation,
-  );
-  if (!canCreate.ok) return canCreate;
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    paybackPricing: number;
+    tarifaDebito: number;
+    tarifaCredito: number;
+    tarifaForaneo: number;
+    fee: number;
+    moneda: Moneda;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ id: string }, DomainError>> {
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) return leadNotFound();
-
-  const now = deps.clock.now();
-  const version = await deps.leadQuotations.nextVersion(lead.id);
-  const quotationId = await deps.leadQuotations.insert({
-    leadId: lead.id,
+  const now = Date.now();
+  const version = await ports.leadQuotations.nextVersion(state.id);
+  const quotationId = await ports.leadQuotations.insert({
+    leadId: state.id,
     paybackPricing: input.paybackPricing,
     tarifaDebito: input.tarifaDebito,
     tarifaCredito: input.tarifaCredito,
@@ -49,18 +49,21 @@ export async function createQuotationCommand(
     createdBy: input.actor.userId,
   });
 
-  const outcome = await deps.mutationUow.commit({
-    lead,
-    actorUserId: input.actor.userId,
+  const transition = createQuotation(state, {
+    actor: input.actor,
+    quotationId,
+    version,
+    moneda: input.moneda,
     now,
-    intent: {
-      kind: "create_quotation",
-      quotationId,
-      version,
-      moneda: input.moneda,
-    },
   });
-  if (!outcome.ok) return outcome;
+  if (!transition.ok) return transition;
+
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+  if (!committed.ok) return committed;
 
   return Ok({ id: quotationId });
 }

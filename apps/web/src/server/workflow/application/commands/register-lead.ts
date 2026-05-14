@@ -1,100 +1,103 @@
+import { randomUUIDv7 } from "bun";
+
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { createLeadDraft } from "../../domain/lead-record";
+import { createLeadDraft } from "../../domain/lead/state";
+import { leadNotFound } from "../../domain/lead/lead-errors";
+import { requireCapability } from "../../domain/lead/policy";
+import { reassignLead } from "../../domain/lead/transitions";
 import { normalizeLeadRuc } from "../../domain/lead-schema-parser";
-import type { RegisterLeadDeps } from "../deps/register-lead";
-import {
-  canRegisterLead,
-  requirePipelineActionAccess,
-} from "../policies/access";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
+import type { PartyRepository, WorkflowUserRepository } from "../ports/entities";
+import type { LeadEnrichmentQueue } from "../ports/gateways";
 import type {
-  WorkflowAuditService,
-  WorkflowEngineGateway,
-  LeadEnrichmentQueue,
-} from "../ports/gateways";
-import type { LeadMutationUow } from "../ports/lead";
+  LeadAssignmentRepository,
+  LeadHistoryRepository,
+  LeadRepository,
+} from "../ports/lead";
+import type { LeadUnitOfWork } from "../ports/uow";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
-import {
-  ensureActiveExecutive,
-  resolveLeadRegistration,
-} from "./register-lead-resolution";
+import { ensureActiveExecutive, resolveLeadRegistration } from "./register-lead-resolution";
 
-export async function registerLead(input: {
-  actorUserId: number;
-  actorRole: Role;
-  executiveId: number;
-  ruc: string;
-  deps: RegisterLeadDeps;
-  mutationUow: LeadMutationUow;
-  auditService: WorkflowAuditService;
-  engineGateway: WorkflowEngineGateway;
-  leadEnrichmentQueue: LeadEnrichmentQueue;
-}): Promise<Result<{ leadId: string }, DomainError>> {
-  const canRegister = requirePipelineActionAccess(
-    input.actorRole,
-    canRegisterLead,
-  );
-  if (!canRegister.ok) {
-    return canRegister;
-  }
+type Ports = {
+  leads: LeadRepository;
+  leadAssignments: LeadAssignmentRepository;
+  leadHistory: LeadHistoryRepository;
+  leadStates: LeadStateRepository;
+  party: PartyRepository;
+  users: WorkflowUserRepository;
+  uow: LeadUnitOfWork;
+  enrichmentQueue: LeadEnrichmentQueue;
+};
+
+export async function registerLead(
+  input: {
+    actorUserId: number;
+    actorRole: Role;
+    executiveId: number;
+    ruc: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
+  const canRegister = requireCapability("register", { role: input.actorRole });
+  if (!canRegister.ok) return canRegister;
 
   const ruc = normalizeLeadRuc(input.ruc);
-  if (!ruc.ok) {
-    return ruc;
-  }
+  if (!ruc.ok) return ruc;
 
   const activeExecutive = await ensureActiveExecutive({
-    deps: input.deps,
+    deps: { users: ports.users },
     executiveId: input.executiveId,
   });
-  if (!activeExecutive.ok) {
-    return activeExecutive;
-  }
+  if (!activeExecutive.ok) return activeExecutive;
 
   const resolution = await resolveLeadRegistration({
-    deps: input.deps,
+    deps: { leads: ports.leads, users: ports.users },
     ruc: ruc.value,
     executiveId: input.executiveId,
   });
-  if (!resolution.ok) {
-    return resolution;
-  }
+  if (!resolution.ok) return resolution;
 
   const now = Date.now();
+
   if (resolution.value.kind === "reassign") {
-    const { lead } = resolution.value;
-    const outcome = await input.mutationUow.commit({
-      lead,
-      actorUserId: input.actorUserId,
+    const state = await ports.leadStates.findById(resolution.value.lead.id);
+    if (!state) return leadNotFound();
+
+    const transition = reassignLead(state, {
+      actor: { userId: input.actorUserId, role: input.actorRole },
+      toExecutiveId: input.executiveId,
       now,
-      intent: {
-        kind: "reassign",
-        toExecutiveId: input.executiveId,
-        reason: "inactive_previous_executive",
-      },
+    });
+    if (!transition.ok) return transition;
+
+    const committed = await ports.uow.commit({
+      next: transition.value.next,
+      events: transition.value.events,
+      idempotencyKey: randomUUIDv7(),
       assignment: {
-        leadId: lead.id,
         toExecutiveId: input.executiveId,
         assignedBy: input.actorUserId,
-        assignedAt: now,
+        at: now,
       },
     });
-    if (!outcome.ok) return outcome;
-    return Ok({ leadId: lead.id });
+    if (!committed.ok) return committed;
+
+    return Ok({ leadId: state.id });
   }
 
-  const enrichment = await input.engineGateway.enrichByRuc(ruc.value);
   const organization =
-    (await input.deps.party.findOrganizationByRuc(ruc.value)) ??
-    (await input.deps.party.createOrganization({
+    (await ports.party.findOrganizationByRuc(ruc.value)) ??
+    (await ports.party.createOrganization({
       ruc: ruc.value,
-      name: enrichment?.razonSocial ?? ruc.value,
-      address: enrichment?.address ?? null,
+      name: ruc.value,
+      address: null,
       district: null,
       department: null,
     }));
+
   const draft = createLeadDraft({
     organizationId: organization.id,
     ruc: ruc.value,
@@ -104,26 +107,22 @@ export async function registerLead(input: {
     createdBy: input.actorUserId,
     now,
   });
-  if (!draft.ok) {
-    return draft;
-  }
+  if (!draft.ok) return draft;
 
   const result = await writeLeadRegistrationEffects({
-    deps: input.deps,
-    auditService: input.auditService,
+    deps: {
+      leads: ports.leads,
+      leadAssignments: ports.leadAssignments,
+      leadHistory: ports.leadHistory,
+    },
     actorUserId: input.actorUserId,
     executiveId: input.executiveId,
     draft: draft.value,
     now,
   });
-  if (!result.ok) {
-    return result;
-  }
+  if (!result.ok) return result;
 
-  await input.leadEnrichmentQueue.enqueueRucVerification(
-    ruc.value,
-    input.actorUserId,
-  );
+  await ports.enrichmentQueue.enqueueRucVerification(ruc.value, input.actorUserId);
 
   return result;
 }

@@ -1,50 +1,56 @@
+import { randomUUIDv7 } from "bun";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { ApplyImportedReviewInput } from "~/server/workflow/types";
+import type { LeadPriority, LeadStatus } from "~/contracts/workflow";
+import type { WorkflowActor } from "~/server/workflow/types";
 
-import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import { leadNotFound } from "../../domain/lead/lead-errors";
+import { applyImportedReview } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type ApplyImportedReviewCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
-  clock: LeadClock;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
 };
 
 export async function applyImportedReviewCommand(
-  deps: ApplyImportedReviewCommandDeps,
-  input: ApplyImportedReviewInput,
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    type: "import_status" | "import_prioridad";
+    status?: LeadStatus | null;
+    prioridad?: LeadPriority | null;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
 ): Promise<Result<{ applied: boolean; leadId: string }, DomainError>> {
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) {
-    return leadNotFound();
-  }
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
-  if (input.type === "import_status" && input.status === undefined) {
-    return invalidLeadInput("invalid_status", "Status is required");
-  }
-  if (input.type === "import_prioridad" && input.prioridad === undefined) {
-    return invalidLeadInput("invalid_prioridad", "Prioridad is required");
-  }
-
-  const now = deps.clock.now();
-  const outcome = await deps.mutationUow.commitChecked({
-    lead,
-    actorUserId: input.actor.userId,
+  const now = Date.now();
+  const transition = applyImportedReview(state, {
+    actor: input.actor,
+    type: input.type,
+    status: input.status ?? null,
+    prioridad: input.prioridad ?? null,
     now,
-    expectedUpdatedAt: input.expectedUpdatedAt,
-    intent: {
-      kind: "imported_review",
-      type: input.type,
-      status: input.status ?? null,
-      prioridad: input.prioridad ?? null,
-      reason: "Imported from CSV",
-    },
   });
-  if (!outcome.ok) {
-    return outcome;
+  if (!transition.ok) return transition;
+
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+
+  if (!committed.ok) {
+    if (committed.error.code === "concurrency_conflict") {
+      return Ok({ applied: false, leadId: state.id });
+    }
+    return committed;
   }
 
-  return Ok({ applied: outcome.value.applied, leadId: lead.id });
+  return Ok({ applied: true, leadId: state.id });
 }

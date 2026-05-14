@@ -2,31 +2,30 @@ import { randomUUIDv7 } from "bun";
 
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadCommandResult,
-  RequestRateNegotiationCommandInput,
-} from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import { requireLeadActionAccess } from "../policies/lead-action-policy";
+import { requestRateNegotiation } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type { NegotiationRequestRepository } from "../ports/entities";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type Deps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
   negotiationRequests: NegotiationRequestRepository;
-  clock: LeadClock;
 };
 
 export async function requestRateNegotiationCommand(
-  deps: Deps,
-  input: RequestRateNegotiationCommandInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) return leadNotFound();
-
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    artifactIds: string[];
+    justification: string;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
   if (input.artifactIds.length === 0) {
     return Err(
       domainError(
@@ -37,63 +36,60 @@ export async function requestRateNegotiationCommand(
     );
   }
 
-  const existingCount = await deps.negotiationRequests.countByLeadId(lead.id);
-  const canRequest = requireLeadActionAccess({
-    action: "request-rate-negotiation",
-    actorUserId: input.actor.userId,
-    actorRole: input.actor.role,
-    lead,
-    negotiationRequestCount: existingCount,
-    artifactCount: input.artifactIds.length,
-  });
-  if (!canRequest.ok) return canRequest;
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
-  const round = existingCount + 1;
-  const now = deps.clock.now();
-  const negotiationRequestId = randomUUIDv7();
+  const existingCount = await ports.negotiationRequests.countByLeadId(state.id);
 
   const artifacts = await Promise.all(
     input.artifactIds.map(async (artifactId) => {
       const fileAssetId =
-        await deps.negotiationRequests.findFileAssetIdForArtifact(
+        await ports.negotiationRequests.findFileAssetIdForArtifact(
           artifactId,
-          lead.id,
+          state.id,
         );
       return { artifactId, fileAssetId };
     }),
   );
 
-  const validatedArtifacts: Array<{ artifactId: string; fileAssetId: number }> =
-    [];
-
+  const validatedArtifacts: Array<{ artifactId: string; fileAssetId: number }> = [];
   for (const art of artifacts) {
     if (!art.fileAssetId) {
-      return {
-        ok: false,
-        error: domainError(
+      return Err(
+        domainError(
           "conflict",
           "artifact_not_found",
           `Artifact ${art.artifactId} not found or not ready`,
         ),
-      };
+      );
     }
-    validatedArtifacts.push({
-      artifactId: art.artifactId,
-      fileAssetId: art.fileAssetId,
-    });
+    validatedArtifacts.push({ artifactId: art.artifactId, fileAssetId: art.fileAssetId });
   }
 
-  const outcome = await deps.mutationUow.commit({
-    lead,
-    actorUserId: input.actor.userId,
-    now,
-    intent: { kind: "request_rate_negotiation", negotiationRequestId, round },
-  });
-  if (!outcome.ok) return outcome;
+  const negotiationRequestId = randomUUIDv7();
+  const round = existingCount + 1;
+  const now = Date.now();
 
-  await deps.negotiationRequests.insert({
+  const transition = requestRateNegotiation(state, {
+    actor: input.actor,
+    negotiationRequestId,
+    round,
+    negotiationRequestCount: existingCount,
+    artifactCount: validatedArtifacts.length,
+    now,
+  });
+  if (!transition.ok) return transition;
+
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+  if (!committed.ok) return committed;
+
+  await ports.negotiationRequests.insert({
     id: negotiationRequestId,
-    leadId: lead.id,
+    leadId: state.id,
     round,
     justification: input.justification,
     requestedBy: input.actor.userId,
@@ -102,8 +98,8 @@ export async function requestRateNegotiationCommand(
 
   await Promise.all(
     validatedArtifacts.map((art) =>
-      deps.negotiationRequests.insertFile({
-        leadId: lead.id,
+      ports.negotiationRequests.insertFile({
+        leadId: state.id,
         negotiationRequestId,
         artifactId: art.artifactId,
         fileAssetId: art.fileAssetId,
@@ -113,5 +109,5 @@ export async function requestRateNegotiationCommand(
     ),
   );
 
-  return Ok({ leadId: lead.id });
+  return Ok({ leadId: state.id });
 }

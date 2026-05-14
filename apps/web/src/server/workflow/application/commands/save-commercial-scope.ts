@@ -1,66 +1,55 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadCommandResult,
-  SaveCommercialScopeCommandInput,
-} from "~/server/workflow/types";
+import { randomUUIDv7 } from "bun";
+
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { parseRequiredAbonoBank } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import {
-  canCompleteScoping,
-  requirePipelineActionAccess,
-} from "../policies/access";
+import { saveCommercialScope } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type {
   LeadProfileRepository,
-  PartyRepository,
   LeadVenueRepository,
+  PartyRepository,
 } from "../ports/entities";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import {
   parseDigitalPolicy,
   toProfileDigitalFields,
   validateDigitalAggregate,
 } from "../services/digital-product-policy";
-import type { LeadClock } from "../services/lead-clock";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type SaveCommercialScopeCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
   leadProfiles: LeadProfileRepository;
   leadVenues: LeadVenueRepository;
   party: PartyRepository;
-  clock: LeadClock;
 };
 
 export async function saveCommercialScopeCommand(
-  deps: SaveCommercialScopeCommandDeps,
-  input: SaveCommercialScopeCommandInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const canComplete = requirePipelineActionAccess(
-    input.actor.role,
-    canCompleteScoping,
-  );
-  if (!canComplete.ok) return canComplete;
-
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) return leadNotFound();
-
-  if (lead.executiveId !== input.actor.userId) {
-    return Err(
-      domainError(
-        "forbidden",
-        "not_owner",
-        "Only the assigned executive can save commercial scope",
-      ),
-    );
-  }
-
-  if (lead.stage !== "SCOPING") {
-    return Err(
-      domainError("validation", "wrong_stage", "Lead is not in SCOPING stage"),
-    );
-  }
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    proveedorActual: string;
+    tasaActual: number;
+    gpv: number;
+    ticket: number;
+    giroNegocio: string;
+    abonoBank: string;
+    posTotal: number;
+    linkScope: string;
+    linkUrl?: string | null;
+    onlineScope: string;
+    onlineUrl?: string | null;
+    onlineModalidad?: string | null;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
 
   const policy = parseDigitalPolicy({
     linkScope: input.linkScope,
@@ -71,7 +60,7 @@ export async function saveCommercialScopeCommand(
   });
   if (!policy.ok) return policy;
 
-  const venues = await deps.leadVenues.listByLeadId(lead.id);
+  const venues = await ports.leadVenues.listByLeadId(state.id);
   if (!venues.ok) return venues;
 
   const aggregateCheck = validateDigitalAggregate({
@@ -80,15 +69,14 @@ export async function saveCommercialScopeCommand(
   });
   if (!aggregateCheck.ok) return aggregateCheck;
 
-  const digitalFields = toProfileDigitalFields(policy.value);
   const abonoBank = parseRequiredAbonoBank(input.abonoBank);
-  if (!abonoBank.ok) {
-    return abonoBank;
-  }
-  const now = deps.clock.now();
+  if (!abonoBank.ok) return abonoBank;
 
-  await deps.leadProfiles.upsert({
-    leadId: lead.id,
+  const digitalFields = toProfileDigitalFields(policy.value);
+  const now = Date.now();
+
+  await ports.leadProfiles.upsert({
+    leadId: state.id,
     proveedorActual: input.proveedorActual,
     tasaActual: input.tasaActual,
     gpv: input.gpv,
@@ -100,32 +88,35 @@ export async function saveCommercialScopeCommand(
     updatedBy: input.actor.userId,
   });
 
-  await deps.party.updateOrganizationCommercial({
-    organizationId: lead.organizationId,
+  await ports.party.updateOrganizationCommercial({
+    organizationId: state.organizationId,
     giroNegocio: input.giroNegocio,
   });
 
-  const outcome = await deps.mutationUow.commit({
-    lead,
-    actorUserId: input.actor.userId,
+  const transition = saveCommercialScope(state, {
+    actor: input.actor,
+    proveedorActual: input.proveedorActual,
+    tasaActual: input.tasaActual,
+    gpv: input.gpv,
+    ticket: input.ticket,
+    giroNegocio: input.giroNegocio,
+    abonoBank: abonoBank.value,
+    posTotal: input.posTotal,
+    linkScope: digitalFields.linkScope,
+    linkUrl: digitalFields.linkUrl,
+    onlineScope: digitalFields.onlineScope,
+    onlineUrl: digitalFields.onlineUrl,
+    onlineModalidad: digitalFields.onlineModalidad,
     now,
-    intent: {
-      kind: "save_commercial_scope",
-      proveedorActual: input.proveedorActual,
-      tasaActual: input.tasaActual,
-      gpv: input.gpv,
-      ticket: input.ticket,
-      giroNegocio: input.giroNegocio,
-      abonoBank: abonoBank.value,
-      posTotal: input.posTotal,
-      linkScope: digitalFields.linkScope,
-      linkUrl: digitalFields.linkUrl,
-      onlineScope: digitalFields.onlineScope,
-      onlineUrl: digitalFields.onlineUrl,
-      onlineModalidad: digitalFields.onlineModalidad,
-    },
   });
-  if (!outcome.ok) return outcome;
+  if (!transition.ok) return transition;
 
-  return Ok({ leadId: lead.id });
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+  if (!committed.ok) return committed;
+
+  return Ok({ leadId: state.id });
 }

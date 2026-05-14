@@ -1,55 +1,38 @@
+import { randomUUIDv7 } from "bun";
+
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadCommandResult,
-  ReassignLeadCommandInput,
-} from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
-import { invalidLeadInput } from "../../domain/lead/lead-errors";
-import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import { resolveAssignableExecutivesScope } from "../policies/access";
+import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
+import { resolveAssignableExecutivesScope } from "../../domain/lead/policy";
+import { reassignLead } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type { WorkflowUserRepository } from "../ports/entities";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type ReassignLeadCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
   users: WorkflowUserRepository;
-  clock: LeadClock;
 };
 
 export async function reassignLeadCommand(
-  deps: ReassignLeadCommandDeps,
-  input: ReassignLeadCommandInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const prepared = await prepareLeadCommand({
-    leadReader: deps.leadReader,
-    clock: deps.clock,
-    actor: input.actor,
-    leadId: input.leadId,
-    operation: "reassign",
-  });
-  if (!prepared.ok) {
-    return prepared;
-  }
-
-  if (prepared.value.lead.executiveId === input.toExecutiveId) {
-    return invalidLeadInput(
-      "same_executive",
-      "Lead is already assigned to the selected executive",
-    );
-  }
-
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    toExecutiveId: number;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
   const scope = resolveAssignableExecutivesScope({
     actorRole: input.actor.role,
     actorBranchId: input.actor.branchId,
   });
-  if (!scope.ok) {
-    return scope;
-  }
+  if (!scope.ok) return scope;
 
-  const isAssignable = await deps.users.isExecutiveAssignable(
+  const isAssignable = await ports.users.isExecutiveAssignable(
     scope.value,
     input.toExecutiveId,
   );
@@ -60,24 +43,28 @@ export async function reassignLeadCommand(
     );
   }
 
-  const outcome = await deps.mutationUow.commit({
-    lead: prepared.value.lead,
-    actorUserId: input.actor.userId,
-    now: prepared.value.now,
-    intent: {
-      kind: "reassign",
-      toExecutiveId: input.toExecutiveId,
-    },
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
+
+  const now = Date.now();
+  const transition = reassignLead(state, {
+    actor: input.actor,
+    toExecutiveId: input.toExecutiveId,
+    now,
+  });
+  if (!transition.ok) return transition;
+
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
     assignment: {
-      leadId: prepared.value.lead.id,
       toExecutiveId: input.toExecutiveId,
       assignedBy: input.actor.userId,
-      assignedAt: prepared.value.now,
+      at: now,
     },
   });
-  if (!outcome.ok) {
-    return outcome;
-  }
+  if (!committed.ok) return committed;
 
-  return Ok({ leadId: prepared.value.lead.id });
+  return Ok({ leadId: state.id });
 }

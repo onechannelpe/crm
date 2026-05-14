@@ -1,132 +1,86 @@
+import { randomUUIDv7 } from "bun";
+
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import {
-  isBcpBank,
-  type AddVenueAccountsCommandInput,
-  type LeadCommandResult,
-} from "~/server/workflow/types";
+import { isBcpBank } from "~/contracts/workflow";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
+import { addVenueAccounts } from "../../domain/lead/transitions";
+import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
 import type { LeadVenueRepository } from "../ports/entities";
-import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
-import type { LeadClock } from "../services/lead-clock";
+import type { LeadUnitOfWork } from "../ports/uow";
 
-type AddVenueAccountsCommandDeps = {
-  leadReader: LeadReadRepository;
-  mutationUow: LeadMutationUow;
+type BankAccount = {
+  currency: string;
+  banco: string;
+  tipoCuenta: string;
+  nroCuenta: string;
+  cci?: string | null;
+  isSettlement: boolean;
+};
+
+type Ports = {
+  leads: LeadStateRepository;
+  uow: LeadUnitOfWork;
   leadVenues: LeadVenueRepository;
-  clock: LeadClock;
 };
 
 export async function addVenueAccountsCommand(
-  deps: AddVenueAccountsCommandDeps,
-  input: AddVenueAccountsCommandInput,
-): Promise<Result<LeadCommandResult, DomainError>> {
-  const canCreate = requirePipelineActionAccess(
-    input.actor.role,
-    canCreateSale,
-  );
-  if (!canCreate.ok) return canCreate;
-
-  const lead = await deps.leadReader.findById(input.leadId);
-  if (!lead) return leadNotFound();
-
-  if (lead.executiveId !== input.actor.userId) {
-    return Err(
-      domainError(
-        "forbidden",
-        "not_owner",
-        "Only the assigned executive can add venue accounts",
-      ),
-    );
-  }
-
+  input: {
+    actor: WorkflowActor;
+    leadId: string;
+    venueId: string;
+    solesAccount: BankAccount;
+    dollarAccount?: BankAccount;
+    idempotencyKey?: string;
+  },
+  ports: Ports,
+): Promise<Result<{ leadId: string }, DomainError>> {
   if (input.solesAccount.currency !== "PEN") {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_soles_currency",
-        "Soles account must use PEN currency",
-      ),
-    );
+    return Err(domainError("validation", "invalid_soles_currency", "Soles account must use PEN currency"));
   }
 
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
   const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
   if (!isBcpSoles && !cciSoles) {
-    return Err(
-      domainError(
-        "validation",
-        "missing_cci_soles",
-        "CCI is required for soles account when the bank is not BCP",
-      ),
-    );
+    return Err(domainError("validation", "missing_cci_soles", "CCI is required for soles account when the bank is not BCP"));
   }
 
   const settlementCount =
     (input.solesAccount.isSettlement ? 1 : 0) +
     (input.dollarAccount?.isSettlement ? 1 : 0);
   if (settlementCount !== 1) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_settlement_account",
-        "Exactly one settlement account must be selected",
-      ),
-    );
+    return Err(domainError("validation", "invalid_settlement_account", "Exactly one settlement account must be selected"));
   }
 
-  let cciDolares: string | undefined;
+  let cciDolares: string | null = null;
   if (input.dollarAccount) {
     if (input.dollarAccount.currency !== "USD") {
-      return Err(
-        domainError(
-          "validation",
-          "invalid_dollar_currency",
-          "Dollar account must use USD currency",
-        ),
-      );
+      return Err(domainError("validation", "invalid_dollar_currency", "Dollar account must use USD currency"));
     }
     const isBcpDolares = isBcpBank(input.dollarAccount.banco);
-    const normalizedCciDolares = isBcpDolares
-      ? null
-      : input.dollarAccount.cci?.trim() || null;
-    if (!isBcpDolares && !normalizedCciDolares) {
-      return Err(
-        domainError(
-          "validation",
-          "missing_cci_dolares",
-          "CCI is required for dollar account when the bank is not BCP",
-        ),
-      );
+    cciDolares = isBcpDolares ? null : input.dollarAccount.cci?.trim() || null;
+    if (!isBcpDolares && !cciDolares) {
+      return Err(domainError("validation", "missing_cci_dolares", "CCI is required for dollar account when the bank is not BCP"));
     }
-    cciDolares = normalizedCciDolares ?? undefined;
   }
 
-  const now = deps.clock.now();
-  const venueResult = await deps.leadVenues.findById(input.venueId);
+  const state = await ports.leads.findById(input.leadId);
+  if (!state) return leadNotFound();
+
+  const venueResult = await ports.leadVenues.findById(input.venueId);
   if (!venueResult.ok) return venueResult;
   if (!venueResult.value || venueResult.value.leadId !== input.leadId) {
-    return Err(
-      domainError(
-        "not_found",
-        "venue_not_found",
-        "Venue not found for this lead",
-      ),
-    );
+    return Err(domainError("not_found", "venue_not_found", "Venue not found for this lead"));
   }
   if (venueResult.value.solesAccount) {
-    return Err(
-      domainError(
-        "conflict",
-        "accounts_already_added",
-        "This venue already has accounts registered",
-      ),
-    );
+    return Err(domainError("conflict", "accounts_already_added", "This venue already has accounts registered"));
   }
 
-  await deps.leadVenues.addAccounts(
+  const now = Date.now();
+
+  await ports.leadVenues.addAccounts(
     input.venueId,
     {
       solesAccount: {
@@ -154,23 +108,25 @@ export async function addVenueAccountsCommand(
   );
 
   const [totalVenues, venuesWithAccounts] = await Promise.all([
-    deps.leadVenues.countByLeadId(input.leadId),
-    deps.leadVenues.countWithAccounts(input.leadId),
+    ports.leadVenues.countByLeadId(input.leadId),
+    ports.leadVenues.countWithAccounts(input.leadId),
   ]);
-  const shouldTransitionToLive =
-    totalVenues > 0 && venuesWithAccounts === totalVenues;
+  const shouldTransitionToLive = totalVenues > 0 && venuesWithAccounts === totalVenues;
 
-  const outcome = await deps.mutationUow.commit({
-    lead,
-    actorUserId: input.actor.userId,
+  const transition = addVenueAccounts(state, {
+    actor: input.actor,
+    venueId: input.venueId,
+    shouldTransitionToLive,
     now,
-    intent: {
-      kind: "add_venue_accounts",
-      venueId: input.venueId,
-      shouldTransitionToLive,
-    },
   });
-  if (!outcome.ok) return outcome;
+  if (!transition.ok) return transition;
 
-  return Ok({ leadId: lead.id });
+  const committed = await ports.uow.commit({
+    next: transition.value.next,
+    events: transition.value.events,
+    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+  });
+  if (!committed.ok) return committed;
+
+  return Ok({ leadId: state.id });
 }
