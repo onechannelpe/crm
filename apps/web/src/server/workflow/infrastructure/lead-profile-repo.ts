@@ -2,7 +2,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadProfile } from "~/server/workflow/application/ports/lead-profile-repository";
+import type { LeadProfile } from "~/server/workflow/application/ports/entities";
 
 type LeadProfileRow = Selectable<Database["workflow_lead_profiles"]>;
 type NewLeadProfileRow = Insertable<Database["workflow_lead_profiles"]>;

@@ -6,7 +6,7 @@ import type {
   LegalRepresentative,
   OrganizationProfile,
   PartyRepository,
-} from "~/server/workflow/application/ports/party-repository";
+} from "~/server/workflow/application/ports/entities";
 
 function toOrganizationProfile(row: {
   id: OrganizationId;

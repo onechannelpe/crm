@@ -19,11 +19,13 @@ import { requestRateNegotiationCommand } from "~/server/workflow/application/com
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
-import type { WorkflowAuditService } from "~/server/workflow/application/ports/audit-service";
-import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
-import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
+import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
+import type {
+  LeadEnrichmentQueue,
+  WorkflowAuditService,
+  WorkflowEngineGateway,
+} from "~/server/workflow/application/ports/gateways";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
-import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
 import { createLeadMutationUow } from "~/server/workflow/infrastructure/lead-mutation-uow";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {

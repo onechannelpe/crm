@@ -2,8 +2,8 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadBootstrapPreviewView } from "~/server/workflow/types";
 
-import type { WorkflowEngineGateway } from "../ports/engine-gateway";
-import type { PartyRepository } from "../ports/party-repository";
+import type { PartyRepository } from "../ports/entities";
+import type { WorkflowEngineGateway } from "../ports/gateways";
 
 type LeadBootstrapPreviewQueryDeps = {
   party: PartyRepository;

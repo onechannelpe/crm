@@ -15,7 +15,7 @@ import type {
 } from "~/server/workflow/types";
 
 import { canUploadSaleProof, requireLeadAccess } from "../policies/access";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadReadRepository } from "../ports/lead";
 
 type LeadArtifactDeps = {
   leadReader: LeadReadRepository;

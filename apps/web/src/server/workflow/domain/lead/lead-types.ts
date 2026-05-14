@@ -8,9 +8,6 @@ import type {
   Moneda,
   ProductScope,
 } from "~/contracts/workflow";
-
-import type { LeadRecord } from "../lead-record";
-
 export type LeadOperation =
   | "reassign"
   | "review"
@@ -114,11 +111,4 @@ export type LeadMutationPatch = {
   stage?: LeadStage;
   status?: LeadStatus | null;
   prioridad?: LeadPriority | null;
-};
-
-export type LeadMutationContext = {
-  lead: LeadRecord;
-  actorUserId: number;
-  now: number;
-  intent: LeadMutationIntent;
 };

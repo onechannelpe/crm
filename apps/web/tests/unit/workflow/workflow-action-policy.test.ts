@@ -16,7 +16,7 @@ import {
   MAX_NEGOTIATION_ROUNDS,
   requireLeadActionAccess,
 } from "~/server/workflow/application/policies/lead-action-policy";
-import type { LeadMutationUow } from "~/server/workflow/application/ports/lead-mutation-uow";
+import type { LeadMutationUow } from "~/server/workflow/application/ports/lead";
 
 describe("lead action policy", () => {
   it("allows supervisors and sales managers to access leads assigned to others", () => {

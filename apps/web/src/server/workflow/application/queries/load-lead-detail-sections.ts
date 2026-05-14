@@ -4,25 +4,24 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
-import type { LeadProfileRepository } from "../ports/lead-profile-repository";
-import type { LeadRepository } from "../ports/lead-repository";
 import type {
+  LeadProfileRepository,
   LeadNegotiationRequest,
   NegotiationRequestRepository,
-} from "../ports/negotiation-request-repository";
-import type { PartyRepository } from "../ports/party-repository";
-import type {
+  PartyRepository,
   LeadQuotation,
   LeadQuotationRepository,
-} from "../ports/quotation-repository";
-import type { LeadVenue, LeadVenueRepository } from "../ports/sale-repository";
-import type { SourceStatusRepository } from "../ports/source-status-repository";
-import type {
+  LeadVenue,
+  LeadVenueRepository,
+  SourceStatusRepository,
   LeadUserWithName,
   WorkflowUserRepository,
-} from "../ports/user-repository";
+} from "../ports/entities";
+import type {
+  LeadHistoryRepository,
+  LeadFavoriteRepository,
+  LeadRepository,
+} from "../ports/lead";
 
 const logger = createLogger("workflow-get-lead-detail");
 

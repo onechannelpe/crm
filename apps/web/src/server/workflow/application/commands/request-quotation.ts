@@ -11,10 +11,8 @@ import {
   canCompleteScoping,
   requirePipelineActionAccess,
 } from "../policies/access";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadProfileRepository } from "../ports/lead-profile-repository";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
-import type { PartyRepository } from "../ports/party-repository";
+import type { LeadProfileRepository, PartyRepository } from "../ports/entities";
+import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 type RequestQuotationCommandDeps = {

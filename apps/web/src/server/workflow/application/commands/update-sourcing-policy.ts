@@ -1,12 +1,11 @@
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { LeadSourcingPolicyRepository } from "~/server/workflow/application/ports/entities";
 import type { UpdateSourcingPolicyInput } from "~/server/workflow/types";
 
-import type { SourcingPolicyDeps } from "../deps/sourcing-policy";
-
 export async function updateSourcingPolicy(
-  deps: SourcingPolicyDeps,
+  deps: { sourcingPolicies: LeadSourcingPolicyRepository },
   input: UpdateSourcingPolicyInput,
 ): Promise<
   Result<

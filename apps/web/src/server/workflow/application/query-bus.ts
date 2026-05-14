@@ -1,5 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
+import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/gateways";
 import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/application/queries/get-lead-detail";
 import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sourcing-policy";

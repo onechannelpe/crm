@@ -4,7 +4,7 @@ import { Ok, type Result } from "~/server/shared/result";
 import { createHistoryEvent } from "../../domain/history";
 import type { LeadDraft } from "../../domain/lead-record";
 import type { RegisterLeadDeps } from "../deps/register-lead";
-import type { WorkflowAuditService } from "../ports/audit-service";
+import type { WorkflowAuditService } from "../ports/gateways";
 
 export async function writeLeadRegistrationEffects(input: {
   deps: RegisterLeadDeps;

@@ -9,8 +9,7 @@ import {
   toRequestQuotationEntry,
   toVenueAddedEntry,
 } from "./history-commercial-parser";
-import type { HistoryEventRow } from "./history-event-row";
-import { toHistoryEntryBase } from "./history-event-row";
+import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import { toCallEntry, toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,

@@ -10,8 +10,7 @@ import {
   parseRequiredLeadStatus,
 } from "../../domain/lead-schema-parser";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 type ReviewLeadCommandDeps = {

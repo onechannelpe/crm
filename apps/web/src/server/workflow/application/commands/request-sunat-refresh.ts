@@ -1,12 +1,13 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
-import { Err, Ok } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import type { RequestSunatRefreshInput } from "~/server/workflow/types";
 
 import { requireLeadReadAccess } from "../policies/access";
-import type { WorkflowAuditService } from "../ports/audit-service";
-import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
-import type { LeadRepository } from "../ports/lead-repository";
+import type {
+  WorkflowAuditService,
+  LeadEnrichmentQueue,
+} from "../ports/gateways";
+import type { LeadRepository } from "../ports/lead";
 
 export async function requestSunatRefresh(
   input: RequestSunatRefreshInput & {

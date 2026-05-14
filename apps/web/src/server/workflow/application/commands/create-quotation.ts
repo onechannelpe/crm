@@ -10,9 +10,8 @@ import {
   canCreateQuotation,
   requirePipelineActionAccess,
 } from "../policies/access";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
-import type { LeadQuotationRepository } from "../ports/quotation-repository";
+import type { LeadQuotationRepository } from "../ports/entities";
+import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 type CreateQuotationCommandDeps = {

@@ -3,8 +3,7 @@ import { Ok, type Result } from "~/server/shared/result";
 import type { ApplyImportedReviewInput } from "~/server/workflow/types";
 
 import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 type ApplyImportedReviewCommandDeps = {

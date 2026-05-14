@@ -1,8 +1,9 @@
-import type { LeadBlockingField } from "../../domain/lead-progress";
-import { resolveLeadProgress } from "../../domain/lead-progress";
+import {
+  resolveLeadProgress,
+  type LeadBlockingField,
+} from "../../domain/lead-progress";
 import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadProfile } from "../ports/lead-profile-repository";
-import type { OrganizationProfile } from "../ports/party-repository";
+import type { LeadProfile, OrganizationProfile } from "../ports/entities";
 
 export function presentLeadNextStep(input: {
   lead: Pick<LeadRecord, "stage">;

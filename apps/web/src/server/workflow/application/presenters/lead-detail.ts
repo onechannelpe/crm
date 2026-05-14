@@ -13,18 +13,16 @@ import type {
 
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadProfile } from "../ports/lead-profile-repository";
 import type {
+  LeadProfile,
   LeadNegotiationRequest,
   LeadNegotiationFile,
-} from "../ports/negotiation-request-repository";
-import type {
   LegalRepresentative,
   OrganizationProfile,
-} from "../ports/party-repository";
-import type { LeadQuotation } from "../ports/quotation-repository";
-import type { LeadVenue } from "../ports/sale-repository";
-import type { LeadSourceStatus } from "../ports/source-status-repository";
+  LeadQuotation,
+  LeadVenue,
+  LeadSourceStatus,
+} from "../ports/entities";
 import {
   presentLeadBlockingFields,
   presentLeadNextStep,

@@ -27,7 +27,7 @@ export type LeadProgress = {
   blockingFields: LeadBlockingField[];
 };
 
-export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
+function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
   switch (lead.stage) {
     case "QUALIFYING":
       return "Review lead";

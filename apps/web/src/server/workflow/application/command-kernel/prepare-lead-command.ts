@@ -6,7 +6,7 @@ import type { LeadRecord } from "../../domain/lead-record";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { authorizeLeadOperation } from "../../domain/lead/lead-policies";
 import type { LeadOperation } from "../../domain/lead/lead-types";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 export type PreparedLeadCommand = {

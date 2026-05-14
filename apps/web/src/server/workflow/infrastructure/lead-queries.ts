@@ -5,7 +5,7 @@ import type {
   LeadListFilters,
   LeadQueries,
   RecordExportFilters,
-} from "../application/ports/lead-queries";
+} from "../application/ports/lead";
 import type { LeadQueryDatabase } from "./lead-query-types";
 
 type VisibilityQuery = SelectQueryBuilder<

@@ -11,7 +11,7 @@ import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
-import type { LeadListFilters, LeadQueries } from "../ports/lead-queries";
+import type { LeadListFilters, LeadQueries } from "../ports/lead";
 import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
 

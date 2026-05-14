@@ -2,8 +2,10 @@ import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { RegisterLeadDeps } from "~/server/workflow/application/deps/register-lead";
-import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
-import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/enrichment-queue";
+import type {
+  LeadEnrichmentQueue,
+  WorkflowEngineGateway,
+} from "~/server/workflow/application/ports/gateways";
 import { systemLeadClock } from "~/server/workflow/application/services/lead-clock";
 import {
   createWorkflowAuditLogRepo,

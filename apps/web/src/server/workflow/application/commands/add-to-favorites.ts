@@ -6,8 +6,7 @@ import type {
 } from "~/server/workflow/types";
 
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
-import type { LeadFavoriteRepository } from "../ports/lead-favorite-repository";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadFavoriteRepository, LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 type AddToFavoritesCommandDeps = {

@@ -7,8 +7,7 @@ import type {
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requireLeadActionAccess } from "../policies/lead-action-policy";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 type ApproveForSaleCommandDeps = {

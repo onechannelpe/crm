@@ -3,7 +3,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadQuotation } from "~/server/workflow/application/ports/quotation-repository";
+import type { LeadQuotation } from "~/server/workflow/application/ports/entities";
 
 type QuotationRow = Selectable<Database["workflow_quotations"]>;
 type NewQuotationRow = Insertable<Database["workflow_quotations"]>;

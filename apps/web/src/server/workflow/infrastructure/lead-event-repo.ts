@@ -1,5 +1,7 @@
-import type { LeadHistoryRepository } from "../application/ports/history-repository";
-import type { LeadEventRepository } from "../application/ports/lead-event-repository";
+import type {
+  LeadEventRepository,
+  LeadHistoryRepository,
+} from "../application/ports/lead";
 import type { LeadHistoryEventDraft } from "../domain/history";
 
 export function createLeadEventRepository(

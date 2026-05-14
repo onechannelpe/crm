@@ -1,13 +1,10 @@
-import type {
-  AbonoBank,
-  LeadCallOutcome,
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-  ModalidadCobro,
-  Moneda,
+import {
+  type LeadCallOutcome,
+  type LeadPriority,
+  type LeadStage,
+  type LeadStatus,
+  type Moneda,
 } from "~/contracts/workflow";
-import { isModalidadCobro } from "~/contracts/workflow";
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
@@ -17,7 +14,6 @@ import {
   parseRequiredLeadStage,
   parseRequiredLeadStatus,
   parseRequiredMoneda,
-  parseRequiredAbonoBank,
 } from "~/server/workflow/domain/lead-schema-parser";
 
 import type { HistoryEventRow } from "./history-event-row";
@@ -236,26 +232,4 @@ export function requireMoneda(
   const value = requireString(payload, "moneda", row);
   if (!value.ok) return value;
   return parseRequiredMoneda(value.value);
-}
-
-export function requireAbonoBank(
-  payload: Record<string, unknown> | null,
-  key: string,
-  row: HistoryEventRow,
-): Result<AbonoBank, DomainError> {
-  const value = requireString(payload, key, row);
-  if (!value.ok) return value;
-  return parseRequiredAbonoBank(value.value);
-}
-
-export function requireModalidadCobro(
-  payload: Record<string, unknown> | null,
-  key: string,
-  row: HistoryEventRow,
-): Result<ModalidadCobro, DomainError> {
-  const value = payload?.[key];
-  if (typeof value !== "string" || !isModalidadCobro(value)) {
-    return invalidPayload(row, key);
-  }
-  return Ok(value);
 }

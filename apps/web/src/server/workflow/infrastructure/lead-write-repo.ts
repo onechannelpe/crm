@@ -1,10 +1,10 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { LeadRepository } from "../application/ports/lead-repository";
 import type {
-  LeadWriteRepository,
   CheckedLeadWriteRepository,
-} from "../application/ports/lead-write-repository";
+  LeadRepository,
+  LeadWriteRepository,
+} from "../application/ports/lead";
 import { toLeadPatchRow } from "./lead-repo";
 
 export function createLeadWriteRepository(

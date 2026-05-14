@@ -15,7 +15,7 @@ import { requestRateNegotiationCommand } from "~/server/workflow/application/com
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
 import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
-import { updateSourcingPolicy } from "~/server/workflow/application/settings/update-sourcing-policy";
+import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
 import type {
   AddLeadNoteCommandInput,
   AddLeadToFavoritesInput,

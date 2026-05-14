@@ -9,8 +9,8 @@ import {
   requirePipelineActionAccess,
   resolveAssignableExecutivesScope,
 } from "../policies/access";
-import type { LeadRepository } from "../ports/lead-repository";
-import type { WorkflowUserRepository } from "../ports/user-repository";
+import type { WorkflowUserRepository } from "../ports/entities";
+import type { LeadRepository } from "../ports/lead";
 
 type AssignableExecutivesQueryDeps = {
   leads: LeadRepository;

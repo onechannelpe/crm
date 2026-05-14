@@ -9,10 +9,12 @@ import {
   canRegisterLead,
   requirePipelineActionAccess,
 } from "../policies/access";
-import type { WorkflowAuditService } from "../ports/audit-service";
-import type { WorkflowEngineGateway } from "../ports/engine-gateway";
-import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
+import type {
+  WorkflowAuditService,
+  WorkflowEngineGateway,
+  LeadEnrichmentQueue,
+} from "../ports/gateways";
+import type { LeadMutationUow } from "../ports/lead";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {
   ensureActiveExecutive,

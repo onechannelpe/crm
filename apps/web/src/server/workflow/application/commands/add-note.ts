@@ -8,8 +8,7 @@ import type {
 import { invalidLeadInput } from "../../domain/lead/lead-errors";
 import { prepareLeadCommand } from "../command-kernel/prepare-lead-command";
 import { requireFirstHistoryId } from "../command-kernel/require-history-id";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
+import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import type { LeadClock } from "../services/lead-clock";
 
 type AddLeadNoteCommandDeps = {

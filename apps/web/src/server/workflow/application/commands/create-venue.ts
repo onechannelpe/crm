@@ -7,10 +7,11 @@ import type {
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
-import type { LeadMutationUow } from "../ports/lead-mutation-uow";
-import type { LeadProfileRepository } from "../ports/lead-profile-repository";
-import type { LeadReadRepository } from "../ports/lead-read-repository";
-import type { LeadVenueRepository } from "../ports/sale-repository";
+import type {
+  LeadProfileRepository,
+  LeadVenueRepository,
+} from "../ports/entities";
+import type { LeadMutationUow, LeadReadRepository } from "../ports/lead";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,

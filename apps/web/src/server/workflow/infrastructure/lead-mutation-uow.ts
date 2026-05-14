@@ -6,7 +6,7 @@ import type {
   LeadMutationUow,
   LeadMutationOutcome,
   CheckedLeadMutationOutcome,
-} from "../application/ports/lead-mutation-uow";
+} from "../application/ports/lead";
 import {
   executeCheckedLeadMutation,
   executeLeadMutation,

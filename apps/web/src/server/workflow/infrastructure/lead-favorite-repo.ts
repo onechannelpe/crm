@@ -1,5 +1,5 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadFavoriteRepository } from "~/server/workflow/application/ports/lead-favorite-repository";
+import type { LeadFavoriteRepository } from "~/server/workflow/application/ports/lead";
 
 export function createLeadFavoriteRepo(
   db: DatabaseExecutor,

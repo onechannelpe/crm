@@ -7,7 +7,7 @@ import type {
   AuditLogDraft,
   AuditLogRepository,
   WorkflowAuditService,
-} from "../application/ports/audit-service";
+} from "../application/ports/gateways";
 
 export function createWorkflowAuditLogRepo(auditLogs: {
   create(values: {

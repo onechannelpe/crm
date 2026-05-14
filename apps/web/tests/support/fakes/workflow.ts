@@ -1,12 +1,12 @@
 import { vi } from "vitest";
 
 import { Ok } from "~/server/shared/result";
+import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/entities";
 import type {
   LeadMutationOutcome,
   LeadMutationUow,
-} from "~/server/workflow/application/ports/lead-mutation-uow";
-import type { LeadReadRepository } from "~/server/workflow/application/ports/lead-read-repository";
-import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/negotiation-request-repository";
+} from "~/server/workflow/application/ports/lead";
+import type { LeadReadRepository } from "~/server/workflow/application/ports/lead";
 import type { LeadRecord } from "~/server/workflow/domain/lead-record";
 
 export function makeWorkflowLead(

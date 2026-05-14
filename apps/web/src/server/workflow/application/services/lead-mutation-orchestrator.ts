@@ -9,12 +9,12 @@ import {
 import { validateLeadIntent } from "../../domain/lead/lead-policies";
 import { deriveLeadPatchFromIntent } from "../../domain/lead/lead-transitions";
 import type { LeadMutationIntent } from "../../domain/lead/lead-types";
-import type { LeadAuditRepository } from "../ports/lead-audit-repository";
-import type { LeadEventRepository } from "../ports/lead-event-repository";
 import type {
+  LeadAuditRepository,
+  LeadEventRepository,
   CheckedLeadWriteRepository,
   LeadWriteRepository,
-} from "../ports/lead-write-repository";
+} from "../ports/lead";
 import { writeLeadEvents } from "./lead-event-writer";
 
 export type LeadMutationOrchestratorDeps = {

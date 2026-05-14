@@ -6,7 +6,7 @@ import {
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { AssignableExecutivesScope } from "../ports/user-repository";
+import type { AssignableExecutivesScope } from "../ports/entities";
 
 const LEAD_READ_PERMISSIONS: Permission[] = [
   "lead:work",
@@ -24,13 +24,13 @@ function forbidden(): Result<never, DomainError> {
   return Err(domainError("forbidden", "forbidden", "Access denied"));
 }
 
-export function canReadLead(role: Role) {
+function canReadLead(role: Role) {
   return LEAD_READ_PERMISSIONS.some((permission) =>
     hasPermission(role, permission),
   );
 }
 
-export function canViewAllLeads(role: Role) {
+function canViewAllLeads(role: Role) {
   return (
     hasPermission(role, "lead:view:all") ||
     hasPermission(role, "lead:review") ||
@@ -41,10 +41,6 @@ export function canViewAllLeads(role: Role) {
 
 export function canRevealFullTimeline(role: Role) {
   return role === "sales_manager" || role === "admin" || role === "superuser";
-}
-
-export function canViewAllSales(role: Role) {
-  return role !== "executive";
 }
 
 export function canAddLeadInteraction(role: Role) {

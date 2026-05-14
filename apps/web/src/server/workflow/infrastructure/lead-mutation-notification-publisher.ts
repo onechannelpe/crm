@@ -2,7 +2,7 @@ import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { deriveLeadStageNotifications } from "../application/notification-policy";
-import type { LeadMutationOutcome } from "../application/ports/lead-mutation-uow";
+import type { LeadMutationOutcome } from "../application/ports/lead";
 
 export type PublishLeadMutationNotificationsInput = {
   leadId: string;
