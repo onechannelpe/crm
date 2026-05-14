@@ -25,7 +25,6 @@ import type {
 } from "~/server/workflow/types";
 
 import { createLeadStateRepo } from "../infrastructure/lead-state-repo";
-import { createLeadUow } from "../infrastructure/uow";
 import type { WorkflowRepos } from "../infrastructure/workflow-repos";
 import { addLeadNoteCommand } from "./commands/add-note";
 import { addToFavoritesCommand } from "./commands/add-to-favorites";
@@ -52,7 +51,6 @@ export function createWorkflowCommandBus(
   executor: DatabaseExecutor,
   repos: WorkflowRepos,
 ) {
-  const uow = createLeadUow(executor);
   const leadStates = createLeadStateRepo(executor);
 
   const enrichmentCommand = createEnrichmentCommand(
@@ -80,30 +78,25 @@ export function createWorkflowCommandBus(
           leads: repos.leads,
           leadStates,
           users: repos.users,
-          uow,
           enrichmentQueue,
           executor,
         },
       ),
 
     reviewLead: (input: ReviewLeadCommandInput) =>
-      reviewLeadCommand(input, { leads: leadStates, uow }),
+      reviewLeadCommand(input, { executor }),
 
     reassignLead: (input: ReassignLeadCommandInput) =>
-      reassignLeadCommand(input, {
-        leads: leadStates,
-        uow,
-        users: repos.users,
-      }),
+      reassignLeadCommand(input, { executor }),
 
     addLeadNote: (input: AddLeadNoteCommandInput) =>
-      addLeadNoteCommand(input, { leads: leadStates, uow }),
+      addLeadNoteCommand(input, { executor }),
 
     logLeadCall: (input: LogLeadCallCommandInput) =>
-      logLeadCallCommand(input, { leads: leadStates, uow }),
+      logLeadCallCommand(input, { executor }),
 
     approveForSale: (input: ApproveForSaleInput) =>
-      approveForSaleCommand(input, { leads: leadStates, uow }),
+      approveForSaleCommand(input, { executor }),
 
     startSetupExecution: (input: StartSetupExecutionInput) =>
       startSetupExecutionCommand(input, {
@@ -146,14 +139,10 @@ export function createWorkflowCommandBus(
       }),
 
     requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
-      requestRateNegotiationCommand(input, {
-        leads: leadStates,
-        uow,
-        negotiationRequests: repos.leadNegotiationRequests,
-      }),
+      requestRateNegotiationCommand(input, { executor }),
 
     applyImportedReview: (input: ApplyImportedReviewInput) =>
-      applyImportedReviewCommand(input, { leads: leadStates, uow }),
+      applyImportedReviewCommand(input, { executor }),
 
     requestSunatRefresh: (input: RequestSunatRefreshInput) =>
       requestSunatRefresh(input, {
@@ -162,16 +151,10 @@ export function createWorkflowCommandBus(
       }),
 
     addToFavorites: (input: AddLeadToFavoritesInput) =>
-      addToFavoritesCommand(input, {
-        leads: leadStates,
-        leadFavorites: repos.leadFavorites,
-      }),
+      addToFavoritesCommand(input, { executor }),
 
     removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
-      removeFromFavoritesCommand(input, {
-        leads: leadStates,
-        leadFavorites: repos.leadFavorites,
-      }),
+      removeFromFavoritesCommand(input, { executor }),
 
     updateSourcingPolicy: (input: UpdateSourcingPolicyInput) =>
       updateSourcingPolicy(input, { sourcingPolicies: repos.sourcingPolicies }),

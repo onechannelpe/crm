@@ -1,15 +1,15 @@
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { authorizeLeadAction } from "../../domain/lead/policy";
-import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
-import type { LeadFavoriteRepository } from "../ports/lead";
+import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
+import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 type Ports = {
-  leads: LeadStateRepository;
-  leadFavorites: LeadFavoriteRepository;
+  executor: DatabaseExecutor;
 };
 
 export async function addToFavoritesCommand(
@@ -19,17 +19,21 @@ export async function addToFavoritesCommand(
   },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const state = await ports.leads.findById(input.leadId);
-  if (!state) return leadNotFound();
+  return ports.executor.transaction().execute(async (tx) => {
+    const leads = createLeadStateRepo(tx);
+    const repos = createWorkflowRepos(tx);
+    const state = await leads.findById(input.leadId);
+    if (!state) return leadNotFound();
 
-  const authz = authorizeLeadAction("view", input.actor, state);
-  if (!authz.ok) return authz;
+    const authz = authorizeLeadAction("view", input.actor, state);
+    if (!authz.ok) return authz;
 
-  await ports.leadFavorites.addForUser({
-    leadId: input.leadId,
-    userId: input.actor.userId,
-    createdAt: Date.now(),
+    await repos.leadFavorites.addForUser({
+      leadId: input.leadId,
+      userId: input.actor.userId,
+      createdAt: Date.now(),
+    });
+
+    return Ok({ leadId: input.leadId });
   });
-
-  return Ok({ leadId: input.leadId });
 }

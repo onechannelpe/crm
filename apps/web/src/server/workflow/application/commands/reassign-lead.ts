@@ -1,5 +1,6 @@
 import { randomUUIDv7 } from "bun";
 
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
@@ -7,14 +8,12 @@ import type { WorkflowActor } from "~/server/workflow/types";
 import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
 import { resolveAssignableExecutivesScope } from "../../domain/lead/policy";
 import { reassignLead } from "../../domain/lead/transitions";
-import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
-import type { WorkflowUserRepository } from "../ports/entities";
-import type { LeadUnitOfWork } from "../ports/uow";
+import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
+import { createLeadUow } from "../../infrastructure/uow";
+import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 type Ports = {
-  leads: LeadStateRepository;
-  uow: LeadUnitOfWork;
-  users: WorkflowUserRepository;
+  executor: DatabaseExecutor;
 };
 
 export async function reassignLeadCommand(
@@ -26,45 +25,50 @@ export async function reassignLeadCommand(
   },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const scope = resolveAssignableExecutivesScope({
-    actorRole: input.actor.role,
-    actorBranchId: input.actor.branchId,
-  });
-  if (!scope.ok) return scope;
+  return ports.executor.transaction().execute(async (tx) => {
+    const repos = createWorkflowRepos(tx);
+    const leads = createLeadStateRepo(tx);
+    const uow = createLeadUow(tx);
+    const scope = resolveAssignableExecutivesScope({
+      actorRole: input.actor.role,
+      actorBranchId: input.actor.branchId,
+    });
+    if (!scope.ok) return scope;
 
-  const isAssignable = await ports.users.isExecutiveAssignable(
-    scope.value,
-    input.toExecutiveId,
-  );
-  if (!isAssignable) {
-    return invalidLeadInput(
-      "invalid_executive",
-      "Target executive is not assignable for this actor scope",
+    const isAssignable = await repos.users.isExecutiveAssignable(
+      scope.value,
+      input.toExecutiveId,
     );
-  }
+    if (!isAssignable) {
+      return invalidLeadInput(
+        "invalid_executive",
+        "Target executive is not assignable for this actor scope",
+      );
+    }
 
-  const state = await ports.leads.findById(input.leadId);
-  if (!state) return leadNotFound();
+    const state = await leads.findById(input.leadId);
+    if (!state) return leadNotFound();
 
-  const now = Date.now();
-  const transition = reassignLead(state, {
-    actor: input.actor,
-    toExecutiveId: input.toExecutiveId,
-    now,
-  });
-  if (!transition.ok) return transition;
-
-  const committed = await ports.uow.commit({
-    next: transition.value.next,
-    events: transition.value.events,
-    idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
-    assignment: {
+    const now = Date.now();
+    const transition = reassignLead(state, {
+      actor: input.actor,
       toExecutiveId: input.toExecutiveId,
-      assignedBy: input.actor.userId,
-      at: now,
-    },
-  });
-  if (!committed.ok) return committed;
+      now,
+    });
+    if (!transition.ok) return transition;
 
-  return Ok({ leadId: state.id });
+    const committed = await uow.commit({
+      next: transition.value.next,
+      events: transition.value.events,
+      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      assignment: {
+        toExecutiveId: input.toExecutiveId,
+        assignedBy: input.actor.userId,
+        at: now,
+      },
+    });
+    if (!committed.ok) return committed;
+
+    return Ok({ leadId: state.id });
+  });
 }

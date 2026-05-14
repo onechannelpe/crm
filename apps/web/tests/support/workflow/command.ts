@@ -21,7 +21,6 @@ import { saveCommercialScopeCommand } from "~/server/workflow/application/comman
 import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/gateways";
 import { createLeadStateRepo } from "~/server/workflow/infrastructure/lead-state-repo";
-import { createLeadUow } from "~/server/workflow/infrastructure/uow";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {
   AddLeadNoteCommandInput,
@@ -59,7 +58,6 @@ function buildCommandApi(
   overrides?: TestCommandOverrides,
 ) {
   const repos = createWorkflowRepos(executor);
-  const uow = createLeadUow(executor);
   const leadStates = createLeadStateRepo(executor);
   const enrichmentQueue =
     overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE;
@@ -77,45 +75,34 @@ function buildCommandApi(
           leads: repos.leads,
           leadStates,
           users: repos.users,
-          uow,
           enrichmentQueue,
           executor,
         },
       ),
 
     addToFavorites: (input: AddLeadToFavoritesInput) =>
-      addToFavoritesCommand(input, {
-        leads: leadStates,
-        leadFavorites: repos.leadFavorites,
-      }),
+      addToFavoritesCommand(input, { executor }),
 
     removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
-      removeFromFavoritesCommand(input, {
-        leads: leadStates,
-        leadFavorites: repos.leadFavorites,
-      }),
+      removeFromFavoritesCommand(input, { executor }),
 
     reassignLead: (input: ReassignLeadCommandInput) =>
-      reassignLeadCommand(input, {
-        leads: leadStates,
-        uow,
-        users: repos.users,
-      }),
+      reassignLeadCommand(input, { executor }),
 
     reviewLead: (input: ReviewLeadCommandInput) =>
-      reviewLeadCommand(input, { leads: leadStates, uow }),
+      reviewLeadCommand(input, { executor }),
 
     addLeadNote: (input: AddLeadNoteCommandInput) =>
-      addLeadNoteCommand(input, { leads: leadStates, uow }),
+      addLeadNoteCommand(input, { executor }),
 
     logLeadCall: (input: LogLeadCallCommandInput) =>
-      logLeadCallCommand(input, { leads: leadStates, uow }),
+      logLeadCallCommand(input, { executor }),
 
     applyImportedReview: (input: ApplyImportedReviewInput) =>
-      applyImportedReviewCommand(input, { leads: leadStates, uow }),
+      applyImportedReviewCommand(input, { executor }),
 
     approveForSale: (input: ApproveForSaleInput) =>
-      approveForSaleCommand(input, { leads: leadStates, uow }),
+      approveForSaleCommand(input, { executor }),
 
     createQuotation: (input: CreateQuotationCommandInput) =>
       createQuotationCommand(input, {
@@ -148,11 +135,7 @@ function buildCommandApi(
       }),
 
     requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
-      requestRateNegotiationCommand(input, {
-        leads: leadStates,
-        uow,
-        negotiationRequests: repos.leadNegotiationRequests,
-      }),
+      requestRateNegotiationCommand(input, { executor }),
 
     requestSunatRefresh: (input: RequestSunatRefreshInput) =>
       requestSunatRefresh(input, {

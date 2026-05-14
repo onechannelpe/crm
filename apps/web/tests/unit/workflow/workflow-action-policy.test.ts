@@ -1,27 +1,46 @@
+import { expectErr } from "@tests/support/_core/assertions";
 import {
-  makeLeadStates,
-  makeNegotiationRequests,
-  makeUow,
-  makeWorkflowLead,
-} from "@tests/support/fakes/workflow";
-import { describe, expect, it, vi } from "vitest";
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
+import { runTestWorkflowCommand } from "@tests/support/workflow/command";
+import { createWorkflowScenario } from "@tests/support/workflow/scenario";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { domainError } from "~/server/shared/domain-error";
-import { Err } from "~/server/shared/result";
-import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
-import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
-import type { LeadUnitOfWork } from "~/server/workflow/application/ports/uow";
 import {
   authorizeLeadAction,
   MAX_NEGOTIATION_FILES,
   MAX_NEGOTIATION_ROUNDS,
   resolveAvailableActions,
 } from "~/server/workflow/domain/lead/policy";
+import type { LeadState } from "~/server/workflow/domain/lead/state";
 import { requestRateNegotiation } from "~/server/workflow/domain/lead/transitions";
+
+function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
+  return {
+    id: "lead-1",
+    organizationId: "org-1",
+    ruc: "20600000001",
+    razonSocial: null,
+    address: null,
+    district: null,
+    department: null,
+    executiveId: 1,
+    createdBy: 1,
+    updatedBy: null,
+    stage: "QUOTED",
+    status: null,
+    prioridad: null,
+    createdAt: 100,
+    updatedAt: 100,
+    version: 0,
+    ...overrides,
+  };
+}
 
 describe("lead action policy", () => {
   it("allows supervisors and sales managers to access leads assigned to others", () => {
-    const lead = makeWorkflowLead({ executiveId: 1 });
+    const lead = { executiveId: 1, stage: "QUOTED" } as const;
 
     expect(
       authorizeLeadAction(
@@ -44,7 +63,10 @@ describe("lead action policy", () => {
     const result = authorizeLeadAction(
       "approve-for-sale",
       { userId: 2, role: "executive" },
-      makeWorkflowLead({ executiveId: 1 }),
+      {
+        executiveId: 1,
+        stage: "QUOTED",
+      } as const,
     );
 
     expect(result.ok).toBe(false);
@@ -53,9 +75,7 @@ describe("lead action policy", () => {
   });
 
   it("enforces negotiation round limit via transition", () => {
-    const lead = makeWorkflowLead();
-
-    const maxRounds = requestRateNegotiation(lead, {
+    const maxRounds = requestRateNegotiation(makeLeadState(), {
       actor: { userId: 1, role: "executive" },
       negotiationRequestId: "req-1",
       round: MAX_NEGOTIATION_ROUNDS + 1,
@@ -69,9 +89,7 @@ describe("lead action policy", () => {
   });
 
   it("enforces negotiation file limit via transition", () => {
-    const lead = makeWorkflowLead();
-
-    const maxFiles = requestRateNegotiation(lead, {
+    const maxFiles = requestRateNegotiation(makeLeadState(), {
       actor: { userId: 1, role: "executive" },
       negotiationRequestId: "req-1",
       round: 1,
@@ -87,7 +105,7 @@ describe("lead action policy", () => {
   it("hides request negotiation when the round limit is reached", () => {
     const actions = resolveAvailableActions(
       { userId: 1, role: "executive" },
-      makeWorkflowLead(),
+      makeLeadState(),
       { negotiationRequestCount: MAX_NEGOTIATION_ROUNDS },
     );
 
@@ -96,74 +114,68 @@ describe("lead action policy", () => {
 });
 
 describe("workflow action commands", () => {
+  let runtime: TestRuntime;
+
+  beforeEach(async () => {
+    runtime = await createTestRuntime("workflow-action-policy");
+    runtime.now.set(1_000);
+  });
+
+  afterEach(async () => {
+    await runtime.dispose();
+  });
+
   it("blocks approve-for-sale for executives on leads assigned to others", async () => {
-    const uow = makeUow();
-    const result = await approveForSaleCommand(
-      {
-        actor: { userId: 2, role: "executive", branchId: 1 },
-        leadId: "lead-1",
-      },
-      {
-        leads: makeLeadStates(makeWorkflowLead({ executiveId: 1 })),
-        uow: uow.uow,
-      },
+    const scenario = createWorkflowScenario(runtime);
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-approve",
+      organization: { key: "policy-approve" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.approveForSale({
+        actor: scenario.actor.by("execTwo"),
+        leadId: lead.id,
+      }),
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
-    expect(uow.commit).not.toHaveBeenCalled();
+    expectErr(result);
+    const row = await runtime.ctx.db
+      .selectFrom("workflow_leads")
+      .select(["stage"])
+      .where("id", "=", lead.id)
+      .executeTakeFirstOrThrow();
+    expect(row.stage).toBe("QUOTED");
   });
 
-  it("blocks writes when negotiation file limit is exceeded", async () => {
-    const negotiationRequests = makeNegotiationRequests();
-    const uow = makeUow();
+  it("blocks rate negotiation when no files are attached and does not persist requests", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation",
+      organization: { key: "policy-negotiation" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
 
-    const result = await requestRateNegotiationCommand(
-      {
-        actor: { userId: 1, role: "executive", branchId: 1 },
-        leadId: "lead-1",
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.requestRateNegotiation({
+        actor: scenario.actor.by("execOne"),
+        leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["a1", "a2", "a3", "a4"],
-      },
-      {
-        leads: makeLeadStates(makeWorkflowLead()),
-        uow: uow.uow,
-        negotiationRequests: negotiationRequests.repo,
-      },
+        artifactIds: [],
+      }),
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
-    expect(uow.commit).not.toHaveBeenCalled();
-    expect(negotiationRequests.insert).not.toHaveBeenCalled();
-  });
-
-  it("does not persist negotiation records when lead mutation fails", async () => {
-    const negotiationRequests = makeNegotiationRequests();
-    const uow = makeUow(
-      vi.fn<LeadUnitOfWork["commit"]>(async () =>
-        Err(domainError("conflict", "mutation_failed", "Mutation failed")),
-      ),
-    );
-
-    const result = await requestRateNegotiationCommand(
-      {
-        actor: { userId: 1, role: "executive", branchId: 1 },
-        leadId: "lead-1",
-        justification: "Need better rate",
-        artifactIds: ["a1"],
-      },
-      {
-        leads: makeLeadStates(makeWorkflowLead()),
-        uow: uow.uow,
-        negotiationRequests: negotiationRequests.repo,
-      },
-    );
-
-    expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
-    expect(uow.commit).toHaveBeenCalledOnce();
-    expect(negotiationRequests.insert).not.toHaveBeenCalled();
-    expect(negotiationRequests.insertFile).not.toHaveBeenCalled();
+    expectErr(result);
+    const rows = await runtime.ctx.db
+      .selectFrom("workflow_negotiation_requests")
+      .select(["id"])
+      .where("lead_id", "=", lead.id)
+      .execute();
+    expect(rows).toHaveLength(0);
   });
 });

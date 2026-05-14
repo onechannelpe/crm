@@ -10,12 +10,15 @@ import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requireCapability } from "../../domain/lead/policy";
 import { createLeadDraft } from "../../domain/lead/state";
 import { reassignLead } from "../../domain/lead/transitions";
-import type { LeadStateRepository } from "../../infrastructure/lead-state-repo";
+import {
+  createLeadStateRepo,
+  type LeadStateRepository,
+} from "../../infrastructure/lead-state-repo";
+import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 import type { WorkflowUserRepository } from "../ports/entities";
 import type { LeadEnrichmentQueue } from "../ports/gateways";
 import type { LeadRepository } from "../ports/lead";
-import type { LeadUnitOfWork } from "../ports/uow";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {
   ensureActiveExecutive,
@@ -26,7 +29,6 @@ type Ports = {
   leads: LeadRepository;
   leadStates: LeadStateRepository;
   users: WorkflowUserRepository;
-  uow: LeadUnitOfWork;
   enrichmentQueue: LeadEnrichmentQueue;
   executor: DatabaseExecutor;
 };
@@ -62,29 +64,34 @@ export async function registerLead(
   const now = Date.now();
 
   if (resolution.value.kind === "reassign") {
-    const state = await ports.leadStates.findById(resolution.value.lead.id);
-    if (!state) return leadNotFound();
+    const leadId = resolution.value.lead.id;
+    return ports.executor.transaction().execute(async (tx) => {
+      const txLeads = createLeadStateRepo(tx);
+      const txUow = createLeadUow(tx);
+      const state = await txLeads.findById(leadId);
+      if (!state) return leadNotFound();
 
-    const transition = reassignLead(state, {
-      actor: { userId: input.actorUserId, role: input.actorRole },
-      toExecutiveId: input.executiveId,
-      now,
-    });
-    if (!transition.ok) return transition;
-
-    const committed = await ports.uow.commit({
-      next: transition.value.next,
-      events: transition.value.events,
-      idempotencyKey: randomUUIDv7(),
-      assignment: {
+      const transition = reassignLead(state, {
+        actor: { userId: input.actorUserId, role: input.actorRole },
         toExecutiveId: input.executiveId,
-        assignedBy: input.actorUserId,
-        at: now,
-      },
-    });
-    if (!committed.ok) return committed;
+        now,
+      });
+      if (!transition.ok) return transition;
 
-    return Ok({ leadId: state.id });
+      const committed = await txUow.commit({
+        next: transition.value.next,
+        events: transition.value.events,
+        idempotencyKey: randomUUIDv7(),
+        assignment: {
+          toExecutiveId: input.executiveId,
+          assignedBy: input.actorUserId,
+          at: now,
+        },
+      });
+      if (!committed.ok) return committed;
+
+      return Ok({ leadId: state.id });
+    });
   }
 
   const result = await ports.executor.transaction().execute(async (db) => {
