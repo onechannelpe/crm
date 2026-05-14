@@ -1,7 +1,9 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { LeadCommandResult } from "~/server/workflow/types";
-import type { SaveCommercialScopeCommandInput } from "~/server/workflow/types";
+import type {
+  LeadCommandResult,
+  SaveCommercialScopeCommandInput,
+} from "~/server/workflow/types";
 
 import { parseRequiredAbonoBank } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";

@@ -1,7 +1,9 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { LeadQuotationResult } from "~/server/workflow/types";
-import type { CreateQuotationCommandInput } from "~/server/workflow/types";
+import type {
+  LeadQuotationResult,
+  CreateQuotationCommandInput,
+} from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import {

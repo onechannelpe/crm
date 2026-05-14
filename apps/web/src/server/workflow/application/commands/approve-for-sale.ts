@@ -1,7 +1,9 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { LeadCommandResult } from "~/server/workflow/types";
-import type { ApproveForSaleInput } from "~/server/workflow/types";
+import type {
+  ApproveForSaleInput,
+  LeadCommandResult,
+} from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requireLeadActionAccess } from "../policies/lead-action-policy";
