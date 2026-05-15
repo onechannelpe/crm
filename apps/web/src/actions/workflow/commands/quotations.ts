@@ -9,12 +9,13 @@ export async function requestQuotationCreation(input: CreateQuotationInput) {
     actionName: "workflow.create_quotation",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.createQuotation({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         ...input,
       }),
@@ -26,12 +27,13 @@ export async function requestSaleApproval(input: { leadId: string }) {
     actionName: "workflow.approve_for_sale",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.approveForSale({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         leadId: input.leadId,
       }),
