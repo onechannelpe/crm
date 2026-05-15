@@ -1,9 +1,9 @@
 "use server";
 
-import type {
-  AddVenueAccountsInput,
-  CreateVenueInput,
-} from "~/contracts/workflow";
+import {
+  type AddVenueAccountsInput,
+  type CreateVenueInput,
+} from "~/contracts/workflow/inputs";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";

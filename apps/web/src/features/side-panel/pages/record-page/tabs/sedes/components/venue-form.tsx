@@ -6,7 +6,7 @@ import {
   MODALIDAD_COBRO_KINDS,
   type ModalidadCobro,
   type ProductScope,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/vocabulary";
 import {
   FieldInputValue,
   FieldLabel,

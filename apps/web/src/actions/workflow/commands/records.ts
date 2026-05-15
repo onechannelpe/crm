@@ -8,7 +8,7 @@ import {
   type RequestQuotationInput,
   type SaveCommercialScopeInput,
   type SaveDigitalPolicyInput,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/inputs";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";

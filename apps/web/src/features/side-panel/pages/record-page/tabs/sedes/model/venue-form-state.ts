@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-import type { ModalidadCobro } from "~/contracts/workflow";
+import type { ModalidadCobro } from "~/contracts/workflow/vocabulary";
 
 export function useVenueFormState() {
   const [nombreComercial, setNombreComercial] = createSignal("");

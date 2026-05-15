@@ -31,7 +31,7 @@ import type {
   RequestRateNegotiationInput,
   SaveCommercialScopeInput,
   SaveDigitalPolicyInput,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/inputs";
 
 import { leadDetailQuery, leadListQuery } from "./queries";
 

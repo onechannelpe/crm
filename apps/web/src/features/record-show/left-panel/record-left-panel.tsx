@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow/views";
 import { DetailFieldsWidget } from "~/features/side-panel/pages/record-page/widgets/fields";
 import { WorkflowWidget } from "~/features/side-panel/pages/record-page/widgets/workflow";
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";

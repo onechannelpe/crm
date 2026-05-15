@@ -1,6 +1,6 @@
 "use server";
 
-import type { LeadNegotiationFileView } from "~/contracts/workflow";
+import { type LeadNegotiationFileView } from "~/contracts/workflow/results";
 import { AppError, validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction, runActionResult } from "~/server/shared/action-runtime";

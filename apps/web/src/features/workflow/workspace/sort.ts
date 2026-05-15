@@ -1,7 +1,5 @@
-import type {
-  LeadListRowView,
-  ListLeadsFiltersInput,
-} from "~/contracts/workflow";
+import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
+import { type LeadListRowView } from "~/contracts/workflow/views";
 import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
 
 export type LeadSortKey =

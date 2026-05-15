@@ -1,7 +1,7 @@
 import type { Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import type { LeadListRowView } from "~/contracts/workflow";
+import type { LeadListRowView } from "~/contracts/workflow/views";
 
 export type OptimisticLeadRow = LeadListRowView & {
   optimisticClientKey: string;

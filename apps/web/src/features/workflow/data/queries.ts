@@ -5,11 +5,15 @@ import {
   queryLeadDetail,
   queryLeadList,
 } from "~/actions/workflow/queries/records";
-import type { AssignableExecutiveView } from "~/contracts/workflow";
-import type { LeadDetailView } from "~/contracts/workflow";
-import type { ListAssignableExecutivesInput } from "~/contracts/workflow";
-import type { ListLeadsFiltersInput } from "~/contracts/workflow";
-import type { LeadListView } from "~/contracts/workflow";
+import {
+  type ListAssignableExecutivesInput,
+  type ListLeadsFiltersInput,
+} from "~/contracts/workflow/inputs";
+import {
+  type AssignableExecutiveView,
+  type LeadDetailView,
+  type LeadListView,
+} from "~/contracts/workflow/views";
 
 function normalizeLeadListFilters(
   filters: ListLeadsFiltersInput,

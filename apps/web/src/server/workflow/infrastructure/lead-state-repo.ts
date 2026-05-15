@@ -1,4 +1,8 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "~/contracts/workflow";
+import {
+  type LeadPriority,
+  type LeadStage,
+  type LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
 import type { LeadState } from "~/server/workflow/domain/lead/state";

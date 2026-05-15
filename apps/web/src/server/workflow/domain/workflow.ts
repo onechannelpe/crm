@@ -1,4 +1,7 @@
-import type { LeadPriority, LeadStatus } from "~/contracts/workflow";
+import {
+  type LeadPriority,
+  type LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 
 export function resolveReviewTransition(input: {
   status: LeadStatus;

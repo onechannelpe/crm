@@ -1,13 +1,15 @@
 "use server";
 
-import type {
-  AssignableExecutiveView,
-  LeadBootstrapPreviewView,
-  LeadDetailView,
-  ListAssignableExecutivesInput,
-  ListLeadsFiltersInput,
-  LeadListView,
-} from "~/contracts/workflow";
+import {
+  type ListAssignableExecutivesInput,
+  type ListLeadsFiltersInput,
+} from "~/contracts/workflow/inputs";
+import {
+  type AssignableExecutiveView,
+  type LeadBootstrapPreviewView,
+  type LeadDetailView,
+  type LeadListView,
+} from "~/contracts/workflow/views";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

@@ -1,4 +1,7 @@
-import type { AbonoBank, LeadStage } from "~/contracts/workflow";
+import {
+  type AbonoBank,
+  type LeadStage,
+} from "~/contracts/workflow/vocabulary";
 
 export type LeadBlockingField =
   | "proveedorActual"

@@ -1,6 +1,6 @@
 "use server";
 
-import type { CreateQuotationInput } from "~/contracts/workflow";
+import { type CreateQuotationInput } from "~/contracts/workflow/inputs";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

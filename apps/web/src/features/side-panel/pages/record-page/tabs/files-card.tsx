@@ -6,8 +6,8 @@ import {
 } from "~/actions/workflow/files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
-import type { LeadSaleProofFileView } from "~/contracts/workflow";
-import type { LeadDetailNegotiationRequestView } from "~/contracts/workflow";
+import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
+import { type LeadDetailNegotiationRequestView } from "~/contracts/workflow/views";
 import {
   ActivitySection,
   ActivityListCard,

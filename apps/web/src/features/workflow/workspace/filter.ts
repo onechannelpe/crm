@@ -1,9 +1,6 @@
-import {
-  LEAD_STAGES,
-  LEAD_STATUSES,
-  type LeadListRowView,
-  type ListLeadsFiltersInput,
-} from "~/contracts/workflow";
+import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
+import { type LeadListRowView } from "~/contracts/workflow/views";
+import { LEAD_STAGES, LEAD_STATUSES } from "~/contracts/workflow/vocabulary";
 import type { RecordIndexFilterDefinition } from "~/features/record-index/model/filter";
 import {
   leadStageLabel,

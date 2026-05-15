@@ -5,7 +5,10 @@ import { Portal } from "solid-js/web";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
-import { LEAD_PRIORITIES, LEAD_STATUSES } from "~/contracts/workflow";
+import {
+  LEAD_PRIORITIES,
+  LEAD_STATUSES,
+} from "~/contracts/workflow/vocabulary";
 import { toAppError } from "~/lib/app-errors";
 
 import { reviewLeadMutation } from "../../data/mutations";

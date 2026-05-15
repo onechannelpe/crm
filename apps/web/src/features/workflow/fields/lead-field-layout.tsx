@@ -7,7 +7,7 @@ import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { RecordInlineCell, RelationFieldRow } from "~/components/ui/field-row";
 import { RecordChip } from "~/components/ui/record-chip/record-chip";
-import type { LeadDetailView } from "~/contracts/workflow";
+import type { LeadDetailView } from "~/contracts/workflow/views";
 import { FieldTextValue } from "~/features/side-panel/components/field-table";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import {

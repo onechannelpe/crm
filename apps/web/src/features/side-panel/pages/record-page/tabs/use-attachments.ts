@@ -1,7 +1,7 @@
 import { createResource, type Accessor } from "solid-js";
 
 import { listLeadSaleProofFiles } from "~/actions/workflow/files";
-import type { LeadSaleProofFileView } from "~/contracts/workflow";
+import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
 
 export function useAttachments(leadId: Accessor<string | null>) {
   const [attachments, { refetch, mutate }] = createResource<

@@ -3,7 +3,7 @@ import { Portal } from "solid-js/web";
 
 import { PresenceTransition } from "~/components/ui/animation/presence-transition";
 import { Button } from "~/components/ui/input/button";
-import type { LeadSaleProofFileView } from "~/contracts/workflow";
+import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
 
 import { getFileCategoryFromMime } from "./file-category";
 

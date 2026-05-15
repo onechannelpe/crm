@@ -1,9 +1,7 @@
 "use server";
 
-import type {
-  LeadCommandResult,
-  RequestRateNegotiationInput,
-} from "~/contracts/workflow";
+import { type RequestRateNegotiationInput } from "~/contracts/workflow/inputs";
+import { type LeadCommandResult } from "~/contracts/workflow/results";
 import { AppError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runActionResult } from "~/server/shared/action-runtime";

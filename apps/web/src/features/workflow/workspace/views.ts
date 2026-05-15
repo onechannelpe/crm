@@ -1,4 +1,4 @@
-import type { ListLeadsFiltersInput } from "~/contracts/workflow";
+import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import type { Permission } from "~/lib/auth/access/rbac";
 

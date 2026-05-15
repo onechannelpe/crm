@@ -2,8 +2,11 @@ import { useAction } from "@solidjs/router";
 import { For, Show, createMemo, createSignal } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
-import type { LeadDetailVenueView } from "~/contracts/workflow";
-import type { ModalidadCobro, ProductScope } from "~/contracts/workflow";
+import type { LeadDetailVenueView } from "~/contracts/workflow/views";
+import {
+  type ModalidadCobro,
+  type ProductScope,
+} from "~/contracts/workflow/vocabulary";
 import {
   Widget,
   WidgetBody,

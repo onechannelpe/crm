@@ -1,3 +1,37 @@
+import type { SaleVenueAccount, VenueDigitalConfig } from "./primitives";
+import type {
+  AbonoBank,
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+  ModalidadCobro,
+  Moneda,
+  ProductScope,
+} from "./vocabulary";
+
+export type CreateLeadInput = {
+  ruc: string;
+  executiveId?: number;
+};
+
+export type LeadReviewInput = {
+  leadId: string;
+  status: string;
+  prioridad: string;
+  reason: string;
+};
+
+export type SaveCommercialScopeInput = {
+  leadId: string;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  giroNegocio: string;
+  abonoBank: AbonoBank;
+  posTotal: number;
+};
+
 export type RequestQuotationInput = {
   leadId: string;
   proveedorActual: string;
@@ -5,6 +39,84 @@ export type RequestQuotationInput = {
   gpv: number;
   ticket: number;
   giroNegocio: string;
-  abonoBank: string;
+  abonoBank: AbonoBank;
   posTotal: number;
+};
+
+export type SaveDigitalPolicyInput = {
+  leadId: string;
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
+};
+
+export type RecordRepLegalInput = {
+  leadId: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string;
+  email: string;
+};
+
+export type CreateQuotationInput = {
+  leadId: string;
+  paybackPricing: number;
+  tarifaDebito: number;
+  tarifaCredito: number;
+  tarifaForaneo: number;
+  fee: number;
+  moneda: Moneda;
+};
+
+export type CreateVenueInput = {
+  leadId: string;
+  nombreComercial: string;
+  posQuantity: number;
+  digitalConfig?: VenueDigitalConfig;
+  direccion: string;
+  referencia: string;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+};
+
+export type AddVenueAccountsInput = {
+  leadId: string;
+  venueId: string;
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
+};
+
+export type RequestRateNegotiationInput = {
+  leadId: string;
+  justification: string;
+  artifactIds: string[];
+};
+
+export type ReassignLeadInput = {
+  leadId: string;
+  newExecutiveId: number;
+};
+
+export type ListLeadsFiltersInput = {
+  stage?: LeadStage;
+  status?: LeadStatus;
+  prioridad?: LeadPriority;
+  executiveId?: number;
+  updatedSinceMs?: number;
+  updatedUntilMs?: number;
+  sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
+  sortDirection?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+};
+
+export type ListAssignableExecutivesInput = {
+  leadId: string;
+  search?: string;
+  limit?: number;
 };
