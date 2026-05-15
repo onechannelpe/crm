@@ -1,24 +1,12 @@
 "use server";
 
 import type {
-  SaleVenueAccount,
-  VenueDigitalConfig,
-} from "~/contracts/workflow/primitives";
+  AddVenueAccountsInput,
+  CreateVenueInput,
+} from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-
-type CreateVenueInput = {
-  leadId: string;
-  nombreComercial: string;
-  posQuantity: number;
-  digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
-};
 
 export async function requestVenueCreation(input: CreateVenueInput) {
   if (!input.nombreComercial.trim()) {
@@ -56,12 +44,9 @@ export async function requestVenueCreation(input: CreateVenueInput) {
   });
 }
 
-export async function requestVenueAccountsAddition(input: {
-  leadId: string;
-  venueId: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
-  dollarAccount?: SaleVenueAccount & { currency: "USD" };
-}) {
+export async function requestVenueAccountsAddition(
+  input: AddVenueAccountsInput,
+) {
   if (!input.solesAccount.nroCuenta.trim()) {
     throw validationError("soles account number is required");
   }

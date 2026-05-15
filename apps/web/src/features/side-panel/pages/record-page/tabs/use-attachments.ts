@@ -1,7 +1,7 @@
 import { createResource, type Accessor } from "solid-js";
 
+import { listLeadSaleProofFiles } from "~/actions/workflow/files";
 import type { LeadSaleProofFileView } from "~/contracts/workflow";
-import { listLeadSaleProofFilesApi } from "~/features/workflow/api/files";
 
 export function useAttachments(leadId: Accessor<string | null>) {
   const [attachments, { refetch, mutate }] = createResource<
@@ -11,7 +11,7 @@ export function useAttachments(leadId: Accessor<string | null>) {
     if (!id) {
       return [];
     }
-    return listLeadSaleProofFilesApi(id);
+    return listLeadSaleProofFiles(id);
   });
 
   return {

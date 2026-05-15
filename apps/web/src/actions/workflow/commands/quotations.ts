@@ -1,18 +1,8 @@
 "use server";
 
-import type { LeadIdInput, Moneda } from "~/contracts/workflow";
+import type { CreateQuotationInput } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-
-type CreateQuotationInput = {
-  leadId: string;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: Moneda;
-};
 
 export async function requestQuotationCreation(input: CreateQuotationInput) {
   return runAction({
@@ -31,7 +21,7 @@ export async function requestQuotationCreation(input: CreateQuotationInput) {
   });
 }
 
-export async function requestSaleApproval(input: LeadIdInput) {
+export async function requestSaleApproval(input: { leadId: string }) {
   return runAction({
     actionName: "workflow.approve_for_sale",
     access: { kind: "auth" },

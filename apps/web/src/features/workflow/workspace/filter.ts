@@ -1,12 +1,22 @@
-import type { LeadListRowView } from "~/contracts/workflow";
-import { isLeadStage, isLeadStatus } from "~/contracts/workflow";
+import {
+  LEAD_STAGES,
+  LEAD_STATUSES,
+  type LeadListRowView,
+  type ListLeadsFiltersInput,
+} from "~/contracts/workflow";
 import type { RecordIndexFilterDefinition } from "~/features/record-index/model/filter";
 import {
   leadStageLabel,
   leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
 
-import type { LeadListFilters } from "../data/types";
+function isLeadStage(value: string): value is (typeof LEAD_STAGES)[number] {
+  return (LEAD_STAGES as readonly string[]).includes(value);
+}
+
+function isLeadStatus(value: string): value is (typeof LEAD_STATUSES)[number] {
+  return (LEAD_STATUSES as readonly string[]).includes(value);
+}
 
 export const LEAD_WORKSPACE_FILTERS = [
   { value: "all", label: "Todos" },
@@ -59,7 +69,7 @@ export function applyLeadWorkspaceFilter(
 export function resolveLeadWorkspaceFilterQuery(
   value: string | undefined,
 ): Pick<
-  LeadListFilters,
+  ListLeadsFiltersInput,
   "stage" | "status" | "updatedSinceMs" | "updatedUntilMs"
 > {
   if (value === "updated_today") {

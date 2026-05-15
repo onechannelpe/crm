@@ -64,22 +64,6 @@ export type LeadListView = {
   totalCount: number;
 };
 
-export type SunatEconomicActivity = {
-  role: "principal" | "secondary";
-  order: number | null;
-  label: string;
-  code: string;
-  description: string;
-};
-
-export type SunatSourceStatus =
-  | "idle"
-  | "queued"
-  | "running"
-  | "completed"
-  | "failed"
-  | "stale";
-
 export type LeadTimelineItem = {
   id: string;
   occurredAt: number;
@@ -109,33 +93,6 @@ export type LeadDetailLeadView = {
   nextStep: string;
   createdAt: number;
   updatedAt: number;
-};
-
-export type LeadDetailProfileView = {
-  leadId: string;
-  proveedorActual: string | null;
-  tasaActual: number | null;
-  gpv: number | null;
-  ticket: number | null;
-  giroNegocio: string | null;
-  abonoBank: AbonoBank | null;
-  posTotal: number | null;
-  linkScope: ProductScope;
-  linkUrl: string | null;
-  onlineScope: ProductScope;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-  updatedAt: number;
-  updatedBy: number;
-};
-
-export type LeadDetailRepLegalView = {
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  dni: string;
-  telefono: string | null;
-  email: string | null;
 };
 
 export type LeadDetailQuotationView = {
@@ -171,26 +128,6 @@ export type LeadDetailVenueView = {
   createdBy: number;
 };
 
-export type LeadDetailSourceStatusView = {
-  sunat: {
-    status: SunatSourceStatus;
-    fetchedAt: number | null;
-    district: string | null;
-    department: string | null;
-    contributorStatus: string | null;
-    contributorCondition: string | null;
-    economicActivities: SunatEconomicActivity[];
-    payloadAvailable: boolean;
-  };
-};
-
-export type LeadDetailNegotiationFileView = {
-  artifactId: string;
-  filename: string;
-  detectedMime: string;
-  sizeBytes: number;
-};
-
 export type LeadDetailNegotiationRequestView = {
   id: string;
   round: number;
@@ -211,4 +148,58 @@ export type LeadDetailView = {
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];
   sourceStatus: LeadDetailSourceStatusView;
+};
+
+// Internal detail helpers kept local to this contract file.
+type LeadDetailProfileView = {
+  leadId: string;
+  proveedorActual: string | null;
+  tasaActual: number | null;
+  gpv: number | null;
+  ticket: number | null;
+  giroNegocio: string | null;
+  abonoBank: AbonoBank | null;
+  posTotal: number | null;
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
+  updatedAt: number;
+  updatedBy: number;
+};
+
+type LeadDetailRepLegalView = {
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string | null;
+  email: string | null;
+};
+
+type LeadDetailSourceStatusView = {
+  sunat: {
+    status: "idle" | "queued" | "running" | "completed" | "failed" | "stale";
+    fetchedAt: number | null;
+    district: string | null;
+    department: string | null;
+    contributorStatus: string | null;
+    contributorCondition: string | null;
+    economicActivities: Array<{
+      role: "principal" | "secondary";
+      order: number | null;
+      label: string;
+      code: string;
+      description: string;
+    }>;
+    payloadAvailable: boolean;
+  };
+};
+
+type LeadDetailNegotiationFileView = {
+  artifactId: string;
+  filename: string;
+  detectedMime: string;
+  sizeBytes: number;
 };

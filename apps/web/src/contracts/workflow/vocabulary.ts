@@ -52,18 +52,6 @@ export type AbonoBank = (typeof ABONO_BANKS)[number];
 export type ModalidadCobro = (typeof MODALIDAD_COBRO_KINDS)[number];
 export type AccountTypeKind = (typeof ACCOUNT_TYPE_KINDS)[number];
 
-export function isMoneda(value: string): value is Moneda {
-  return (MONEDAS as readonly string[]).includes(value);
-}
-
-export function isLeadStage(value: string): value is LeadStage {
-  return (LEAD_STAGES as readonly string[]).includes(value);
-}
-
-export function isLeadStatus(value: string): value is LeadStatus {
-  return (LEAD_STATUSES as readonly string[]).includes(value);
-}
-
 export function isBcpBank(value: string | null | undefined): boolean {
   return (value ?? "").trim().toUpperCase() === "BCP";
 }

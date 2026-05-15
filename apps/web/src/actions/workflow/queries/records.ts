@@ -1,18 +1,18 @@
 "use server";
 
 import type {
-  AssignableExecutivesInput,
   AssignableExecutiveView,
   LeadBootstrapPreviewView,
   LeadDetailView,
-  LeadListFiltersInput,
+  ListAssignableExecutivesInput,
+  ListLeadsFiltersInput,
   LeadListView,
 } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function queryLeadList(
-  filters: LeadListFiltersInput,
+  filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
   return runAction({
     actionName: "workflow.list_leads",
@@ -60,7 +60,7 @@ export async function queryLeadBootstrapPreview(
 }
 
 export async function queryAssignableExecutives(
-  input: AssignableExecutivesInput,
+  input: ListAssignableExecutivesInput,
 ): Promise<AssignableExecutiveView[]> {
   return runAction({
     actionName: "workflow.list_assignable_executives",

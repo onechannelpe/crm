@@ -1,6 +1,7 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, createUniqueId, For, Show } from "solid-js";
 
+import { uploadLeadNegotiationFile } from "~/actions/workflow/files";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Paperclip from "~/components/icons/paperclip";
@@ -33,7 +34,6 @@ import {
   formatAmount,
   formatRate,
 } from "~/features/side-panel/pages/record-page/widgets/workflow/format";
-import { uploadLeadNegotiationFileApi } from "~/features/workflow/api/files";
 import { toAppError } from "~/lib/app-errors";
 
 import {
@@ -106,7 +106,7 @@ export function QuotedSection(props: QuotedSectionProps) {
         files.map((file) => {
           const formData = new FormData();
           formData.set("file", file);
-          return uploadLeadNegotiationFileApi(props.leadId, formData);
+          return uploadLeadNegotiationFile(props.leadId, formData);
         }),
       );
 

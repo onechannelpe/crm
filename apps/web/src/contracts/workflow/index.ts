@@ -6,9 +6,6 @@ export {
   MODALIDAD_COBRO_KINDS,
   MONEDAS,
   isBcpBank,
-  isLeadStage,
-  isLeadStatus,
-  isMoneda,
   type AbonoBank,
   type AccountTypeKind,
   type LeadPriority,
@@ -19,16 +16,7 @@ export {
   type ProductScope,
 } from "./vocabulary";
 export type { VenueDigitalConfig } from "./primitives";
-export type {
-  AssignableExecutivesInput,
-  CreateLeadInput,
-  LeadArtifactInput,
-  LeadIdInput,
-  LeadListFiltersInput,
-  RequestQuotationInput,
-  SaveCommercialScopeInput,
-  SaveDigitalPolicyInput,
-} from "./inputs";
+export type { RequestQuotationInput } from "./inputs";
 export type {
   LeadCommandResult,
   LeadNegotiationFileView,

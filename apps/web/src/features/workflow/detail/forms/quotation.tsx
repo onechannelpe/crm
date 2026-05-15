@@ -6,7 +6,7 @@ import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import type { LeadDetailQuotationView } from "~/contracts/workflow";
-import { isMoneda, MONEDAS, type Moneda } from "~/contracts/workflow";
+import { MONEDAS, type Moneda } from "~/contracts/workflow";
 import {
   FieldIcon,
   FieldInputValue,
@@ -31,6 +31,10 @@ type QuotationSectionProps = {
   leadId: string;
   existingQuotation?: LeadDetailQuotationView;
 };
+
+function isMoneda(value: string): value is Moneda {
+  return (MONEDAS as readonly string[]).includes(value);
+}
 
 export function QuotationSection(props: QuotationSectionProps) {
   const create = useAction(createQuotationMutation);

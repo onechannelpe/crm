@@ -1,9 +1,6 @@
 "use server";
 
-import type {
-  LeadArtifactInput,
-  LeadNegotiationFileView,
-} from "~/contracts/workflow";
+import type { LeadNegotiationFileView } from "~/contracts/workflow";
 import { AppError, validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction, runActionResult } from "~/server/shared/action-runtime";
@@ -58,9 +55,10 @@ export async function uploadLeadSaleProofFile(
   });
 }
 
-export async function requestLeadSaleProofDownloadToken(
-  input: LeadArtifactInput,
-) {
+export async function requestLeadSaleProofDownloadToken(input: {
+  leadId: string;
+  artifactId: string;
+}) {
   return runAction({
     actionName: "workflow.request_sale_proof_download_token",
     access: { kind: "auth" },
@@ -93,9 +91,10 @@ export async function uploadLeadNegotiationFile(
   });
 }
 
-export async function requestNegotiationFileDownloadToken(
-  input: LeadArtifactInput,
-) {
+export async function requestNegotiationFileDownloadToken(input: {
+  leadId: string;
+  artifactId: string;
+}) {
   return runActionResult({
     actionName: "workflow.request_negotiation_download_token",
     access: { kind: "auth" },

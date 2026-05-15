@@ -2,7 +2,11 @@ import { For, Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
-import type { ModalidadCobro, ProductScope } from "~/contracts/workflow";
+import {
+  MODALIDAD_COBRO_KINDS,
+  type ModalidadCobro,
+  type ProductScope,
+} from "~/contracts/workflow";
 import {
   FieldInputValue,
   FieldLabel,
@@ -20,6 +24,12 @@ import {
 import type { VenueFormState } from "../model/venue-form-state";
 
 import styles from "./venue-form.module.css";
+
+const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
+  SUSCRIPCIONES: "Suscripciones",
+  ONE_CLIC: "One Click",
+  CARGO_UNICO: "Cargo único",
+};
 
 export function VenueForm(props: {
   form: VenueFormState;
@@ -168,16 +178,8 @@ export function VenueForm(props: {
                 </FieldLabel>
                 <FieldInputValue>
                   <div class={styles.radioGroup}>
-                    <For
-                      each={
-                        [
-                          ["SUSCRIPCIONES", "Suscripciones"],
-                          ["ONE_CLIC", "One Click"],
-                          ["CARGO_UNICO", "Cargo único"],
-                        ] as [ModalidadCobro, string][]
-                      }
-                    >
-                      {([value, label]) => (
+                    <For each={MODALIDAD_COBRO_KINDS}>
+                      {(value) => (
                         <label>
                           <input
                             type="radio"
@@ -188,7 +190,7 @@ export function VenueForm(props: {
                               props.form.setOnlineModalidad(value)
                             }
                           />{" "}
-                          {label}
+                          {MODALIDAD_COBRO_LABELS[value]}
                         </label>
                       )}
                     </For>

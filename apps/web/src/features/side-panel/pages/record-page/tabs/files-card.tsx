@@ -1,5 +1,9 @@
 import { createSignal, For, Show } from "solid-js";
 
+import {
+  requestLeadSaleProofDownloadToken,
+  requestNegotiationFileDownloadToken,
+} from "~/actions/workflow/files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import type { LeadSaleProofFileView } from "~/contracts/workflow";
@@ -13,8 +17,6 @@ import {
   ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-import { requestLeadSaleProofDownloadTokenApi } from "~/features/workflow/api/files";
-import { requestNegotiationFileDownloadTokenApi } from "~/features/workflow/api/files";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal } from "./preview-modal";
@@ -72,7 +74,7 @@ export function FilesCard(props: FilesCardProps) {
   async function handleDownload(artifactId: string) {
     setError(null);
     try {
-      const token = await requestLeadSaleProofDownloadTokenApi({
+      const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
         artifactId,
       });
@@ -87,7 +89,7 @@ export function FilesCard(props: FilesCardProps) {
   async function handlePreview(file: LeadSaleProofFileView) {
     setError(null);
     try {
-      const token = await requestLeadSaleProofDownloadTokenApi({
+      const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
         artifactId: file.artifactId,
       });
@@ -110,7 +112,7 @@ export function FilesCard(props: FilesCardProps) {
 
   async function handleNegotiationDownload(leadId: string, artifactId: string) {
     setError(null);
-    const result = await requestNegotiationFileDownloadTokenApi({
+    const result = await requestNegotiationFileDownloadToken({
       leadId,
       artifactId,
     });

@@ -1,17 +1,19 @@
 import { query } from "@solidjs/router";
 
+import {
+  queryAssignableExecutives,
+  queryLeadDetail,
+  queryLeadList,
+} from "~/actions/workflow/queries/records";
 import type { AssignableExecutiveView } from "~/contracts/workflow";
 import type { LeadDetailView } from "~/contracts/workflow";
+import type { ListAssignableExecutivesInput } from "~/contracts/workflow";
+import type { ListLeadsFiltersInput } from "~/contracts/workflow";
 import type { LeadListView } from "~/contracts/workflow";
-import {
-  queryAssignableExecutivesApi,
-  queryLeadDetailApi,
-  queryLeadListApi,
-} from "~/features/workflow/api/queries";
 
-import type { LeadListFilters } from "./types";
-
-function normalizeLeadListFilters(filters: LeadListFilters): LeadListFilters {
+function normalizeLeadListFilters(
+  filters: ListLeadsFiltersInput,
+): ListLeadsFiltersInput {
   return {
     stage: filters.stage,
     status: filters.status,
@@ -27,26 +29,23 @@ function normalizeLeadListFilters(filters: LeadListFilters): LeadListFilters {
 }
 
 export const leadListQuery = query(
-  async (filters: LeadListFilters): Promise<LeadListView> => {
-    return queryLeadListApi(normalizeLeadListFilters(filters));
+  async (filters: ListLeadsFiltersInput): Promise<LeadListView> => {
+    return queryLeadList(normalizeLeadListFilters(filters));
   },
   "workflow.leadList",
 );
 
-export function leadListKeyFor(filters: LeadListFilters): string {
+export function leadListKeyFor(filters: ListLeadsFiltersInput): string {
   return leadListQuery.keyFor(normalizeLeadListFilters(filters));
 }
 
 export const leadDetailQuery = query(
-  (leadId: string): Promise<LeadDetailView> => queryLeadDetailApi(leadId),
+  (leadId: string): Promise<LeadDetailView> => queryLeadDetail(leadId),
   "workflow.leadDetail",
 );
 
 export const assignableExecutivesQuery = query(
-  (input: {
-    leadId: string;
-    search?: string;
-    limit?: number;
-  }): Promise<AssignableExecutiveView[]> => queryAssignableExecutivesApi(input),
+  (input: ListAssignableExecutivesInput): Promise<AssignableExecutiveView[]> =>
+    queryAssignableExecutives(input),
   "workflow.assignableExecutives",
 );

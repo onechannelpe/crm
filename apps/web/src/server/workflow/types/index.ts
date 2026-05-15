@@ -19,12 +19,8 @@ export type {
   LeadAvailableAction,
   LeadBootstrapPreviewView,
   LeadDetailLeadView,
-  LeadDetailNegotiationFileView,
   LeadDetailNegotiationRequestView,
-  LeadDetailProfileView,
   LeadDetailQuotationView,
-  LeadDetailRepLegalView,
-  LeadDetailSourceStatusView,
   LeadDetailVenueView,
   LeadDetailView,
   LeadListView,
@@ -32,9 +28,7 @@ export type {
 } from "~/contracts/workflow/views";
 export type {
   LeadCommandResult,
-  LeadInteractionResult,
   LeadNegotiationFileView,
-  LeadQuotationResult,
   LeadSaleProofFileView,
 } from "~/contracts/workflow/results";
 export type {

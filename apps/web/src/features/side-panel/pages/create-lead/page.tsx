@@ -2,8 +2,8 @@ import { useAction } from "@solidjs/router";
 import { createMemo, createResource, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
+import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { queryLeadBootstrapPreviewApi } from "~/features/workflow/api/queries";
 import { createLeadMutation } from "~/features/workflow/data/mutations";
 
 import { PanelList } from "../../components/list";
@@ -37,7 +37,7 @@ export function CreateLeadPage() {
     if (!ruc) {
       return null;
     }
-    return queryLeadBootstrapPreviewApi(ruc);
+    return queryLeadBootstrapPreview(ruc);
   });
 
   const latestBootstrapPreview = createMemo(

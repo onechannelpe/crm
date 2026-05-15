@@ -3,7 +3,10 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type {
+  VenueDigitalConfig,
+  WorkflowActor,
+} from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { createVenue } from "../../domain/lead/transitions";
@@ -25,7 +28,7 @@ export async function createVenueCommand(
     leadId: string;
     nombreComercial: string;
     posQuantity: number;
-    digitalConfig?: Parameters<typeof parseVenueDigitalFields>[1];
+    digitalConfig?: VenueDigitalConfig;
     direccion: string;
     referencia: string;
     distrito: string;

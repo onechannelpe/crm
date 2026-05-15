@@ -1,7 +1,8 @@
-import type { LeadListRowView } from "~/contracts/workflow";
+import type {
+  LeadListRowView,
+  ListLeadsFiltersInput,
+} from "~/contracts/workflow";
 import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
-
-import type { LeadListFilters } from "../data/types";
 
 export type LeadSortKey =
   | "createdAt_desc"
@@ -31,7 +32,7 @@ export function sortLeadRows(leads: LeadListRowView[], sortKey: LeadSortKey) {
 
 export function resolveLeadWorkspaceSortQuery(
   value: string | undefined,
-): Pick<LeadListFilters, "sortBy" | "sortDirection"> {
+): Pick<ListLeadsFiltersInput, "sortBy" | "sortDirection"> {
   switch (value) {
     case "createdAt_asc":
       return { sortBy: "createdAt", sortDirection: "asc" };

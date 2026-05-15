@@ -1,12 +1,8 @@
 import type {
   LeadAvailableAction,
   LeadDetailLeadView,
-  LeadDetailNegotiationFileView,
   LeadDetailNegotiationRequestView,
-  LeadDetailProfileView,
   LeadDetailQuotationView,
-  LeadDetailRepLegalView,
-  LeadDetailSourceStatusView,
   LeadDetailVenueView,
   LeadDetailView,
 } from "~/server/workflow/types";
@@ -23,6 +19,12 @@ import type {
   LeadVenue,
   LeadSourceStatus,
 } from "../ports/entities";
+import type {
+  LeadDetailNegotiationFileView,
+  LeadDetailProfileView,
+  LeadDetailRepLegalView,
+  LeadDetailSourceStatusView,
+} from "./lead-detail-types";
 import {
   presentLeadBlockingFields,
   presentLeadNextStep,
