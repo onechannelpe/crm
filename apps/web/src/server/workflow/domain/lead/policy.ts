@@ -73,7 +73,6 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
   }
   if (hasPermission(role, "quotation:manage")) {
     caps.add("create-quotation");
-    caps.add("approve-for-sale");
     caps.add("request-negotiation");
   }
   if (
