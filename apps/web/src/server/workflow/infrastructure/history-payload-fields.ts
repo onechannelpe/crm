@@ -4,7 +4,7 @@ import {
   type LeadStage,
   type LeadStatus,
   type Moneda,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/vocabulary";
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";

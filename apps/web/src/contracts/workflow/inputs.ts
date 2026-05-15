@@ -1,10 +1,4 @@
-import type { SaleVenueAccount, VenueDigitalConfig } from "./primitives";
-import type {
-  LeadCallOutcome,
-  ModalidadCobro,
-  Moneda,
-  ProductScope,
-} from "./vocabulary";
+import type { ModalidadCobro, ProductScope } from "./vocabulary";
 
 export type LeadListFiltersInput = {
   stage?: string;
@@ -39,24 +33,6 @@ export type CreateLeadInput = {
   executiveId?: number;
 };
 
-export type ReviewLeadInput = {
-  leadId: string;
-  status: string;
-  prioridad: string;
-  reason: string;
-};
-
-export type SaveCommercialScopeInput = {
-  leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: string;
-  posTotal: number;
-};
-
 export type SaveDigitalPolicyInput = {
   leadId: string;
   linkScope: ProductScope;
@@ -67,64 +43,13 @@ export type SaveDigitalPolicyInput = {
 };
 
 export type RequestQuotationInput = SaveCommercialScopeInput;
-
-export type RecordRepLegalInput = {
+export type SaveCommercialScopeInput = {
   leadId: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  dni: string;
-  telefono: string;
-  email: string;
-};
-
-export type ReassignLeadInput = {
-  leadId: string;
-  newExecutiveId: number;
-};
-
-export type CreateQuotationInput = {
-  leadId: string;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: Moneda;
-};
-
-export type CreateVenueInput = {
-  leadId: string;
-  nombreComercial: string;
-  posQuantity: number;
-  digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
-};
-
-export type AddVenueAccountsInput = {
-  leadId: string;
-  venueId: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
-  dollarAccount?: SaleVenueAccount & { currency: "USD" };
-};
-
-export type RequestRateNegotiationInput = {
-  leadId: string;
-  justification: string;
-  artifactIds: string[];
-};
-
-export type LogLeadCallInput = {
-  leadId: string;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
-};
-
-export type AddLeadNoteInput = {
-  leadId: string;
-  body: string;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  giroNegocio: string;
+  abonoBank: string;
+  posTotal: number;
 };

@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 
-import type { LeadCallOutcome } from "~/contracts/workflow";
+import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";

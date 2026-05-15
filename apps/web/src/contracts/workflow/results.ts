@@ -10,8 +10,6 @@ export type LeadQuotationResult = {
   id: string;
 };
 
-export type WorkflowFileStatus = "ready" | "processing" | "failed";
-
 export type LeadSaleProofFileView = {
   id: number;
   artifactId: string;
@@ -20,7 +18,7 @@ export type LeadSaleProofFileView = {
   sizeBytes: number;
   uploadedAt: number;
   uploadedByUserId: number;
-  status: WorkflowFileStatus;
+  status: "ready" | "processing" | "failed";
 };
 
 export type LeadNegotiationFileView = {

@@ -3,12 +3,9 @@
 import {
   type CreateLeadInput,
   type LeadIdInput,
-  type ReassignLeadInput,
-  type RecordRepLegalInput,
+  type ModalidadCobro,
+  type ProductScope,
   type RequestQuotationInput,
-  type ReviewLeadInput,
-  type SaveCommercialScopeInput,
-  type SaveDigitalPolicyInput,
 } from "~/contracts/workflow";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
@@ -17,6 +14,36 @@ import {
   type ReassignLeadCommandInput,
   type RegisterLeadInput,
 } from "~/server/workflow/types";
+
+type SaveCommercialScopeInput = {
+  leadId: string;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  giroNegocio: string;
+  abonoBank: string;
+  posTotal: number;
+};
+
+type SaveDigitalPolicyInput = {
+  leadId: string;
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
+};
+
+type RecordRepLegalInput = {
+  leadId: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string;
+  email: string;
+};
 
 export async function requestLeadCreation(input: CreateLeadInput) {
   const normalizedRuc = input.ruc.trim();
@@ -42,7 +69,12 @@ export async function requestLeadCreation(input: CreateLeadInput) {
   });
 }
 
-export async function requestLeadReview(input: ReviewLeadInput) {
+export async function requestLeadReview(input: {
+  leadId: string;
+  status: string;
+  prioridad: string;
+  reason: string;
+}) {
   if (!input.reason?.trim()) {
     throw validationError("reason is required");
   }
@@ -171,7 +203,10 @@ export async function requestStartSetupExecution(input: LeadIdInput) {
   });
 }
 
-export async function requestLeadReassignment(input: ReassignLeadInput) {
+export async function requestLeadReassignment(input: {
+  leadId: string;
+  newExecutiveId: number;
+}) {
   return runAction({
     actionName: "workflow.reassign_lead",
     access: { kind: "auth" },

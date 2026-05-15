@@ -5,7 +5,7 @@ import type {
   LeadStage,
   LeadStatus,
   Moneda,
-} from "~/contracts/workflow";
+} from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { domainError } from "~/server/shared/domain-error";

@@ -1,8 +1,18 @@
 "use server";
 
-import type { CreateQuotationInput, LeadIdInput } from "~/contracts/workflow";
+import type { LeadIdInput, Moneda } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+
+type CreateQuotationInput = {
+  leadId: string;
+  paybackPricing: number;
+  tarifaDebito: number;
+  tarifaCredito: number;
+  tarifaForaneo: number;
+  fee: number;
+  moneda: Moneda;
+};
 
 export async function requestQuotationCreation(input: CreateQuotationInput) {
   return runAction({
