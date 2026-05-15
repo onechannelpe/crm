@@ -14,12 +14,13 @@ export async function requestRateNegotiation(
     actionName: "workflow.request_rate_negotiation",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.requestRateNegotiation({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         ...input,
       }),

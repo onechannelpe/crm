@@ -16,7 +16,11 @@ export async function recordLeadCall(input: {
 
     execute: ({ actor }) =>
       getServerRuntime().workflow.commands.logLeadCall({
-        actor,
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
         leadId: input.leadId,
         outcome: input.outcome,
         notes: input.notes ?? null,
@@ -32,7 +36,11 @@ export async function addLeadNote(input: { leadId: string; body: string }) {
 
     execute: ({ actor }) =>
       getServerRuntime().workflow.commands.addLeadNote({
-        actor,
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
         ...input,
       }),
   });
