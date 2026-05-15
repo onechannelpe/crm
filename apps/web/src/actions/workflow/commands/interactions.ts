@@ -13,13 +13,10 @@ export async function recordLeadCall(input: {
     actionName: "workflow.log_call",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.logLeadCall({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor,
         leadId: input.leadId,
         outcome: input.outcome,
         notes: input.notes ?? null,
@@ -32,13 +29,10 @@ export async function addLeadNote(input: { leadId: string; body: string }) {
     actionName: "workflow.add_note",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.addLeadNote({
-        actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-        },
+        actor,
         ...input,
       }),
   });
