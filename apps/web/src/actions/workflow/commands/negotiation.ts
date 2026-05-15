@@ -1,6 +1,5 @@
 "use server";
 
-import { toRequestRateNegotiationInput } from "~/actions/workflow/mappers";
 import type {
   LeadCommandResult,
   RequestRateNegotiationInput,
@@ -18,8 +17,13 @@ export async function requestRateNegotiation(
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.requestRateNegotiation(
-        toRequestRateNegotiationInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.requestRateNegotiation({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }

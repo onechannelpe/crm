@@ -1,9 +1,5 @@
 "use server";
 
-import {
-  toCreateQuotationInput,
-  toLeadIdActorInput,
-} from "~/actions/workflow/mappers";
 import type { CreateQuotationInput, LeadIdInput } from "~/contracts/workflow";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -14,9 +10,14 @@ export async function requestQuotationCreation(input: CreateQuotationInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.createQuotation(
-        toCreateQuotationInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.createQuotation({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -26,8 +27,13 @@ export async function requestSaleApproval(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.approveForSale(
-        toLeadIdActorInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.approveForSale({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }

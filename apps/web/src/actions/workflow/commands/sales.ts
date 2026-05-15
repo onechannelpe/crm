@@ -1,9 +1,5 @@
 "use server";
 
-import {
-  toAddVenueAccountsInput,
-  toCreateVenueInput,
-} from "~/actions/workflow/mappers";
 import type {
   AddVenueAccountsInput,
   CreateVenueInput,
@@ -37,9 +33,14 @@ export async function requestVenueCreation(input: CreateVenueInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.createVenue(
-        toCreateVenueInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.createVenue({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -58,8 +59,13 @@ export async function requestVenueAccountsAddition(
     access: { kind: "auth" },
     input: { leadId: input.leadId, venueId: input.venueId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.addVenueAccounts(
-        toAddVenueAccountsInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.addVenueAccounts({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }

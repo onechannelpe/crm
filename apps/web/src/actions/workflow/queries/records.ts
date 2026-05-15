@@ -1,10 +1,5 @@
 "use server";
 
-import {
-  toGetLeadDetailInput,
-  toListAssignableExecutivesInput,
-  toListLeadsInput,
-} from "~/actions/workflow/mappers";
 import type {
   AssignableExecutivesInput,
   AssignableExecutiveView,
@@ -24,9 +19,14 @@ export async function queryLeadList(
     access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
-      getServerRuntime().workflow.queries.listLeads(
-        toListLeadsInput(ctx, filters),
-      ),
+      getServerRuntime().workflow.queries.listLeads({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        filters,
+      }),
   });
 }
 
@@ -36,9 +36,14 @@ export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
     access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.queries.getLeadDetail(
-        toGetLeadDetailInput(ctx, leadId),
-      ),
+      getServerRuntime().workflow.queries.getLeadDetail({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId,
+      }),
   });
 }
 
@@ -62,8 +67,13 @@ export async function queryAssignableExecutives(
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.queries.listAssignableExecutives(
-        toListAssignableExecutivesInput(ctx, input),
-      ),
+      getServerRuntime().workflow.queries.listAssignableExecutives({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }

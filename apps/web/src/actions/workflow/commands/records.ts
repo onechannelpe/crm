@@ -1,15 +1,6 @@
 "use server";
 
 import {
-  toLeadIdActorInput,
-  toReassignLeadInput,
-  toRecordRepLegalInput,
-  toRegisterLeadInput,
-  toReviewLeadInput,
-  toSaveCommercialScopeInput,
-  toSaveDigitalPolicyInput,
-} from "~/actions/workflow/mappers";
-import {
   type CreateLeadInput,
   type LeadIdInput,
   type ReassignLeadInput,
@@ -22,6 +13,10 @@ import {
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import {
+  type ReassignLeadCommandInput,
+  type RegisterLeadInput,
+} from "~/server/workflow/types";
 
 export async function requestLeadCreation(input: CreateLeadInput) {
   const normalizedRuc = input.ruc.trim();
@@ -35,9 +30,15 @@ export async function requestLeadCreation(input: CreateLeadInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.registerLead(
-        toRegisterLeadInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.registerLead({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ruc: input.ruc.trim(),
+        executiveId: input.executiveId ?? ctx.actor.userId,
+      } satisfies RegisterLeadInput),
   });
 }
 
@@ -51,9 +52,14 @@ export async function requestLeadReview(input: ReviewLeadInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.reviewLead(
-        toReviewLeadInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.reviewLead({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -72,9 +78,14 @@ export async function requestSaveCommercialScope(
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.saveCommercialScope(
-        toSaveCommercialScopeInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.saveCommercialScope({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -91,9 +102,14 @@ export async function requestQuotation(input: RequestQuotationInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.requestQuotation(
-        toSaveCommercialScopeInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.requestQuotation({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -103,9 +119,14 @@ export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.saveDigitalPolicy(
-        toSaveDigitalPolicyInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.saveDigitalPolicy({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -122,9 +143,14 @@ export async function requestRecordRepLegal(input: RecordRepLegalInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.recordRepLegal(
-        toRecordRepLegalInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.recordRepLegal({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
@@ -134,9 +160,14 @@ export async function requestStartSetupExecution(input: LeadIdInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.startSetupExecution(
-        toLeadIdActorInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.startSetupExecution({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }
 
@@ -146,9 +177,15 @@ export async function requestLeadReassignment(input: ReassignLeadInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.reassignLead(
-        toReassignLeadInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.reassignLead({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+        toExecutiveId: input.newExecutiveId,
+      } satisfies ReassignLeadCommandInput),
   });
 }
 
@@ -158,9 +195,14 @@ export async function requestAddLeadToFavorites(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.addToFavorites(
-        toLeadIdActorInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.addToFavorites({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }
 
@@ -170,9 +212,14 @@ export async function requestRemoveLeadFromFavorites(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.removeFromFavorites(
-        toLeadIdActorInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.removeFromFavorites({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }
 
@@ -182,8 +229,13 @@ export async function requestLeadSunatRefresh(input: LeadIdInput) {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      getServerRuntime().workflow.commands.requestSunatRefresh(
-        toLeadIdActorInput(ctx, input),
-      ),
+      getServerRuntime().workflow.commands.requestSunatRefresh({
+        actor: {
+          userId: ctx.actor.userId,
+          role: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }
