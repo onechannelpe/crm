@@ -32,6 +32,8 @@ const OWNER_REQUIRED = new Set<LeadCapability>([
   "complete-scoping",
   "create-venue",
   "add-venue-accounts",
+  "approve-for-sale",
+  "request-negotiation",
 ]);
 
 export const MAX_NEGOTIATION_ROUNDS = 3;
@@ -48,7 +50,9 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
     hasPermission(role, "lead:sale:create") ||
     hasPermission(role, "lead:view:all") ||
     hasPermission(role, "lead:review") ||
-    hasPermission(role, "quotation:manage") ||
+    hasPermission(role, "quotation:create") ||
+    hasPermission(role, "quotation:revise") ||
+    hasPermission(role, "quotation:view:all") ||
     hasPermission(role, "lead:reassign");
 
   if (canRead) caps.add("view");
@@ -71,15 +75,11 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("add-venue-accounts");
     caps.add("approve-for-sale");
   }
-  if (hasPermission(role, "quotation:manage")) {
-    caps.add("create-quotation");
-    caps.add("request-negotiation");
-  }
   if (
-    hasPermission(role, "lead:work") &&
-    hasPermission(role, "lead:view:all")
+    hasPermission(role, "quotation:create") ||
+    hasPermission(role, "quotation:revise")
   ) {
-    caps.add("request-negotiation");
+    caps.add("create-quotation");
   }
   if (hasPermission(role, "lead:register")) caps.add("register");
 
@@ -90,7 +90,7 @@ export function canViewAllLeads(role: Role): boolean {
   return (
     hasPermission(role, "lead:view:all") ||
     hasPermission(role, "lead:review") ||
-    hasPermission(role, "quotation:manage") ||
+    hasPermission(role, "quotation:view:all") ||
     hasPermission(role, "lead:reassign")
   );
 }
@@ -112,6 +112,14 @@ export function authorizeLeadAction(
   if (!ownsLead && !canViewAllLeads(actor.role)) return forbiddenLeadAccess();
 
   if (!caps.has(capability)) return forbiddenLeadAccess();
+
+  if (
+    (capability === "approve-for-sale" ||
+      capability === "request-negotiation") &&
+    actor.role !== "executive"
+  ) {
+    return forbiddenLeadAccess();
+  }
 
   if (OWNER_REQUIRED.has(capability) && !ownsLead) return forbiddenLeadAccess();
 
@@ -149,11 +157,7 @@ export function resolveAvailableActions(
   if (caps.has("create-quotation") && state.stage === "QUOTING") {
     actions.push("create-quotation");
   }
-  if (
-    caps.has("approve-for-sale") &&
-    (ownsLead || canSeeAll) &&
-    state.stage === "QUOTED"
-  ) {
+  if (caps.has("approve-for-sale") && ownsLead && state.stage === "QUOTED") {
     actions.push("approve-for-sale");
   }
   if (
@@ -165,7 +169,7 @@ export function resolveAvailableActions(
   }
   if (
     caps.has("request-negotiation") &&
-    (ownsLead || canSeeAll) &&
+    ownsLead &&
     state.stage === "QUOTED" &&
     meta.negotiationRequestCount < MAX_NEGOTIATION_ROUNDS
   ) {

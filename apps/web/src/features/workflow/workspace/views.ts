@@ -27,7 +27,7 @@ export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
     id: "quotation",
     label: "Cotización",
     filters: (): ListLeadsFiltersInput => ({ stage: "QUOTING" }),
-    permission: "quotation:manage",
+    permission: "quotation:create",
   },
   {
     id: "all",
