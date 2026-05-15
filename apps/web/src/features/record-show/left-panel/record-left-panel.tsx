@@ -4,9 +4,7 @@ import type { LeadDetailView } from "~/contracts/workflow/views";
 import { DetailFieldsWidget } from "~/features/side-panel/pages/record-page/widgets/fields";
 import { WorkflowWidget } from "~/features/side-panel/pages/record-page/widgets/workflow";
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
-import { CommercialScopeWidget } from "~/features/workflow/detail/forms/commercial-scope-widget";
-import { QuotationSection } from "~/features/workflow/detail/forms/quotation";
-import { RepLegalWidget } from "~/features/workflow/detail/forms/rep-legal-widget";
+import { WorkflowStageSections } from "~/features/workflow/detail/sections/workflow-stage-sections";
 
 import { RecordSummaryCard } from "../summary-card/record-summary-card";
 
@@ -25,18 +23,7 @@ export function RecordLeftPanel(props: RecordLeftPanelProps) {
         <DetailFieldsWidget data={props.data} />
         <Show when={props.data.lead.id} keyed>
           {(leadId) => (
-            <>
-              <CommercialScopeWidget leadId={leadId} data={props.data} />
-              <Show
-                when={props.data.availableActions.includes("create-quotation")}
-              >
-                <QuotationSection
-                  leadId={leadId}
-                  existingQuotation={props.data.quotations.at(-1)}
-                />
-              </Show>
-              <RepLegalWidget leadId={leadId} data={props.data} />
-            </>
+            <WorkflowStageSections leadId={leadId} data={props.data} />
           )}
         </Show>
         <LeadActionsWidget
