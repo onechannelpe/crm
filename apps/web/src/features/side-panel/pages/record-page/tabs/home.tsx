@@ -3,6 +3,7 @@ import { Show, createMemo } from "solid-js";
 import type { LeadDetailView } from "~/contracts/workflow";
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
 import { CommercialScopeWidget } from "~/features/workflow/detail/forms/commercial-scope-widget";
+import { QuotationSection } from "~/features/workflow/detail/forms/quotation";
 import { RepLegalWidget } from "~/features/workflow/detail/forms/rep-legal-widget";
 
 import { BootstrapWidget } from "../widgets/bootstrap";
@@ -80,6 +81,14 @@ function DetailContent(props: { data: LeadDetailView }) {
         {(leadId) => (
           <>
             <CommercialScopeWidget leadId={leadId} data={props.data} />
+            <Show
+              when={props.data.availableActions.includes("create-quotation")}
+            >
+              <QuotationSection
+                leadId={leadId}
+                existingQuotation={props.data.quotations.at(-1)}
+              />
+            </Show>
             <RepLegalWidget leadId={leadId} data={props.data} />
           </>
         )}
