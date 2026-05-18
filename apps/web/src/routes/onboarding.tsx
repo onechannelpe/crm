@@ -293,7 +293,7 @@ function OnboardingContent() {
                   loading={submitting()}
                   onClick={() => void handleComplete()}
                 >
-                  Finalizar
+                  Finalizar sin 2FA
                 </Button>
               </Show>
               <Show

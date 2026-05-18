@@ -16,7 +16,7 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
       <p class={styles.helperText}>
         <Show
           when={props.securityRequired}
-          fallback="Configura un método para proteger mejor tu cuenta."
+          fallback="Este paso es opcional. Puedes finalizar ahora y configurar 2FA más adelante."
         >
           Elige cómo confirmarás tu identidad al iniciar sesión.
         </Show>
