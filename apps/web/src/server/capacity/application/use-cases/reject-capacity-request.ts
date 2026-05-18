@@ -16,6 +16,7 @@ export async function rejectCapacityRequest(
     "capacity.approve",
     ctx.actor.userId,
     deps.rateLimitDeps,
+    ctx.ipAddress,
   );
   const note = normalizeDecisionNote(input.note);
   if (!note) {

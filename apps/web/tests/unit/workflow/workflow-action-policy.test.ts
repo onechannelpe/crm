@@ -39,7 +39,7 @@ function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
 }
 
 describe("lead action policy", () => {
-  it("allows supervisors and sales managers to access leads assigned to others", () => {
+  it("blocks supervisors and sales managers from owner-only lead actions", () => {
     const lead = { executiveId: 1, stage: "QUOTED" } as const;
 
     expect(
@@ -48,7 +48,7 @@ describe("lead action policy", () => {
         { userId: 2, role: "supervisor" },
         lead,
       ).ok,
-    ).toBe(true);
+    ).toBe(false);
 
     expect(
       authorizeLeadAction(
@@ -56,7 +56,7 @@ describe("lead action policy", () => {
         { userId: 2, role: "sales_manager" },
         lead,
       ).ok,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("blocks executives from approving leads assigned to others", () => {

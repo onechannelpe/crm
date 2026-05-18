@@ -1,6 +1,4 @@
-import type { Transaction } from "kysely";
-
-import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
 import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
@@ -54,7 +52,7 @@ export type TestCommandOverrides = {
 };
 
 function buildCommandApi(
-  executor: Transaction<Database>,
+  executor: DatabaseExecutor,
   overrides?: TestCommandOverrides,
 ) {
   const repos = createWorkflowRepos(executor);
@@ -155,7 +153,5 @@ export function runTestWorkflowCommand<T>(
   operation: (commandApi: ReturnType<typeof buildCommandApi>) => Promise<T>,
   overrides?: TestCommandOverrides,
 ): Promise<T> {
-  return runtime.ctx.db
-    .transaction()
-    .execute((trx) => operation(buildCommandApi(trx, overrides)));
+  return operation(buildCommandApi(runtime.ctx.db, overrides));
 }

@@ -18,6 +18,7 @@ export async function approveCapacityRequest(
     "capacity.approve",
     ctx.actor.userId,
     deps.rateLimitDeps,
+    ctx.ipAddress,
   );
   return deps.uow.run(async (tx) => {
     const request = await tx.capacityRequests.findById(input.requestId);
