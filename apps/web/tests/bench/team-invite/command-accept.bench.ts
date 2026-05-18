@@ -1,9 +1,10 @@
-import { createInviteTestKit } from "@tests/support/invite/api";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
+import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-context";
+import { createExecutorUow } from "~/server/shared/application/uow";
 
-import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
@@ -21,12 +22,11 @@ describe("team invite accept command benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const kit = createInviteTestKit(ctx, {
-      now: () => BENCH_NOW,
+    const inviteService = createInviteService(bindInviteRepos(ctx.db), {
+      uow: createExecutorUow(ctx.db, bindInviteRepos),
       hashPassword: async () => "bench-password-hash",
-      transactional: false,
     });
-    inviteAccept = kit.commands.accept;
+    inviteAccept = (input) => inviteService.acceptInvite(input);
 
     const fixtures = await seedTeamInviteFixtures(ctx);
     acceptFixtures = fixtures.acceptFixtures;

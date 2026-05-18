@@ -14,24 +14,20 @@ export type InviteRepos = {
   users: ReturnType<typeof createUsersRepo>;
 };
 
-export function createInviteServiceContext(executor: DatabaseExecutor) {
-  const repos: InviteRepos = {
-    auditLogs: createAuditLogsRepo(executor),
-    teams: createTeamsRepo(executor),
-    userInvites: createUserInvitesRepo(executor),
-    users: createUsersRepo(executor),
+export function bindInviteRepos(db: DatabaseExecutor): InviteRepos {
+  return {
+    auditLogs: createAuditLogsRepo(db),
+    teams: createTeamsRepo(db),
+    userInvites: createUserInvitesRepo(db),
+    users: createUsersRepo(db),
   };
+}
+
+export function createInviteServiceContext(executor: DatabaseExecutor) {
+  const repos = bindInviteRepos(executor);
 
   const inviteService = createInviteService(repos, {
-    uow: createExecutorUow(
-      executor,
-      (txDb): InviteRepos => ({
-        auditLogs: createAuditLogsRepo(txDb),
-        teams: createTeamsRepo(txDb),
-        userInvites: createUserInvitesRepo(txDb),
-        users: createUsersRepo(txDb),
-      }),
-    ),
+    uow: createExecutorUow(executor, bindInviteRepos),
   });
 
   return {
