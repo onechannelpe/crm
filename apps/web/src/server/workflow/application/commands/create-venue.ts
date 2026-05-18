@@ -8,6 +8,7 @@ import type {
   WorkflowActor,
 } from "~/server/workflow/types";
 
+import { parseRequiredLeadText } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { createVenue } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
@@ -38,6 +39,43 @@ export async function createVenueCommand(
   },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
+  const nombreComercial = parseRequiredLeadText(
+    input.nombreComercial,
+    "nombre_comercial_required",
+    "Nombre comercial is required",
+  );
+  if (!nombreComercial.ok) return nombreComercial;
+  const direccion = parseRequiredLeadText(
+    input.direccion,
+    "direccion_required",
+    "Direccion is required",
+  );
+  if (!direccion.ok) return direccion;
+  const referencia = parseRequiredLeadText(
+    input.referencia,
+    "referencia_required",
+    "Referencia is required",
+  );
+  if (!referencia.ok) return referencia;
+  const distrito = parseRequiredLeadText(
+    input.distrito,
+    "distrito_required",
+    "Distrito is required",
+  );
+  if (!distrito.ok) return distrito;
+  const provincia = parseRequiredLeadText(
+    input.provincia,
+    "provincia_required",
+    "Provincia is required",
+  );
+  if (!provincia.ok) return provincia;
+  const departamento = parseRequiredLeadText(
+    input.departamento,
+    "departamento_required",
+    "Departamento is required",
+  );
+  if (!departamento.ok) return departamento;
+
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -61,13 +99,13 @@ export async function createVenueCommand(
     const transition = createVenue(state, {
       actor: input.actor,
       venueId,
-      nombreComercial: input.nombreComercial,
+      nombreComercial: nombreComercial.value,
       posQuantity: input.posQuantity,
-      direccion: input.direccion,
-      referencia: input.referencia,
-      distrito: input.distrito,
-      provincia: input.provincia,
-      departamento: input.departamento,
+      direccion: direccion.value,
+      referencia: referencia.value,
+      distrito: distrito.value,
+      provincia: provincia.value,
+      departamento: departamento.value,
       now,
     });
     if (!transition.ok) return transition;
@@ -77,14 +115,14 @@ export async function createVenueCommand(
       .values({
         id: venueId,
         lead_id: input.leadId,
-        nombre_comercial: input.nombreComercial,
+        nombre_comercial: nombreComercial.value,
         pos_quantity: input.posQuantity,
         ...toVenueDigitalInsert(venueFields.value),
-        direccion: input.direccion,
-        referencia: input.referencia,
-        distrito: input.distrito,
-        provincia: input.provincia,
-        departamento: input.departamento,
+        direccion: direccion.value,
+        referencia: referencia.value,
+        distrito: distrito.value,
+        provincia: provincia.value,
+        departamento: departamento.value,
         created_at: now,
         created_by: input.actor.userId,
       })

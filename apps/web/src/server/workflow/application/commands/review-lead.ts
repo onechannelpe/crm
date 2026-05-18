@@ -8,6 +8,7 @@ import type { WorkflowActor } from "~/server/workflow/types";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
+  parseRequiredLeadText,
 } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { reviewLead } from "../../domain/lead/transitions";
@@ -34,6 +35,12 @@ export async function reviewLeadCommand(
 
   const prioridad = parseRequiredLeadPriority(input.prioridad);
   if (!prioridad.ok) return prioridad;
+  const reason = parseRequiredLeadText(
+    input.reason,
+    "review_reason_required",
+    "Reason is required",
+  );
+  if (!reason.ok) return reason;
 
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
@@ -45,7 +52,7 @@ export async function reviewLeadCommand(
       actor: input.actor,
       status: status.value,
       prioridad: prioridad.value,
-      reason: input.reason,
+      reason: reason.value,
       now: Date.now(),
     });
     if (!transition.ok) return transition;

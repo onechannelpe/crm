@@ -7,6 +7,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
+import { parseRequiredLeadText } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { addVenueAccounts } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
@@ -28,6 +29,22 @@ export async function addVenueAccountsCommand(
   },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
+  const solesNroCuenta = parseRequiredLeadText(
+    input.solesAccount.nroCuenta,
+    "soles_account_number_required",
+    "Soles account number is required",
+  );
+  if (!solesNroCuenta.ok) return solesNroCuenta;
+
+  const dollarNroCuenta = input.dollarAccount
+    ? parseRequiredLeadText(
+        input.dollarAccount.nroCuenta,
+        "dollar_account_number_required",
+        "Dollar account number is required",
+      )
+    : null;
+  if (dollarNroCuenta && !dollarNroCuenta.ok) return dollarNroCuenta;
+
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
   const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
   if (!isBcpSoles && !cciSoles) {
@@ -120,7 +137,7 @@ export async function addVenueAccountsCommand(
           currency: "PEN",
           banco: input.solesAccount.banco,
           tipoCuenta: input.solesAccount.tipoCuenta,
-          nroCuenta: input.solesAccount.nroCuenta,
+          nroCuenta: solesNroCuenta.value,
           ...(cciSoles ? { cci: cciSoles } : {}),
           isSettlement: input.solesAccount.isSettlement,
         },
@@ -130,7 +147,7 @@ export async function addVenueAccountsCommand(
                 currency: "USD",
                 banco: input.dollarAccount.banco,
                 tipoCuenta: input.dollarAccount.tipoCuenta,
-                nroCuenta: input.dollarAccount.nroCuenta,
+                nroCuenta: dollarNroCuenta!.value,
                 ...(cciDolares ? { cci: cciDolares } : {}),
                 isSettlement: input.dollarAccount.isSettlement,
               },

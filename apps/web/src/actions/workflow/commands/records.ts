@@ -9,7 +9,6 @@ import {
   type SaveCommercialScopeInput,
   type SaveDigitalPolicyInput,
 } from "~/contracts/workflow/inputs";
-import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
@@ -18,44 +17,36 @@ import {
 } from "~/server/workflow/types";
 
 export async function requestLeadCreation(input: CreateLeadInput) {
-  const normalizedRuc = input.ruc.trim();
-
-  if (!normalizedRuc) {
-    throw validationError("ruc is required");
-  }
-
   return runAction({
     actionName: "workflow.register_lead",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.registerLead({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
-        ruc: input.ruc.trim(),
-        executiveId: input.executiveId ?? ctx.actor.userId,
+        ruc: input.ruc,
+        executiveId: input.executiveId ?? actor.userId,
       } satisfies RegisterLeadInput),
   });
 }
 
 export async function requestLeadReview(input: LeadReviewInput) {
-  if (!input.reason?.trim()) {
-    throw validationError("reason is required");
-  }
-
   return runAction({
     actionName: "workflow.review_lead",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.reviewLead({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         ...input,
       }),
@@ -65,23 +56,17 @@ export async function requestLeadReview(input: LeadReviewInput) {
 export async function requestSaveCommercialScope(
   input: SaveCommercialScopeInput,
 ) {
-  if (!input.proveedorActual?.trim()) {
-    throw validationError("proveedorActual is required");
-  }
-  if (!input.giroNegocio?.trim()) {
-    throw validationError("giroNegocio is required");
-  }
-
   return runAction({
     actionName: "workflow.save_commercial_scope",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.saveCommercialScope({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         ...input,
       }),
@@ -89,23 +74,17 @@ export async function requestSaveCommercialScope(
 }
 
 export async function requestQuotation(input: RequestQuotationInput) {
-  if (!input.proveedorActual?.trim()) {
-    throw validationError("proveedorActual is required");
-  }
-  if (!input.giroNegocio?.trim()) {
-    throw validationError("giroNegocio is required");
-  }
-
   return runAction({
     actionName: "workflow.request_quotation",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.requestQuotation({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         ...input,
       }),
@@ -117,12 +96,13 @@ export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
     actionName: "workflow.save_digital_policy",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.saveDigitalPolicy({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         ...input,
       }),
@@ -130,23 +110,17 @@ export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
 }
 
 export async function requestRecordRepLegal(input: RecordRepLegalInput) {
-  if (!input.nombres?.trim()) {
-    throw validationError("nombres is required");
-  }
-  if (!input.dni?.trim()) {
-    throw validationError("dni is required");
-  }
-
   return runAction({
     actionName: "workflow.record_rep_legal",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.recordRepLegal({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         ...input,
       }),
@@ -157,13 +131,14 @@ export async function requestStartSetupExecution(input: { leadId: string }) {
   return runAction({
     actionName: "workflow.start_setup_execution",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
-    execute: (ctx) =>
+    input,
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.startSetupExecution({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         leadId: input.leadId,
       }),
@@ -175,12 +150,13 @@ export async function requestLeadReassignment(input: ReassignLeadInput) {
     actionName: "workflow.reassign_lead",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.reassignLead({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         leadId: input.leadId,
         toExecutiveId: input.newExecutiveId,
@@ -193,12 +169,13 @@ export async function requestAddLeadToFavorites(input: { leadId: string }) {
     actionName: "workflow.add_lead_to_favorites",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.addToFavorites({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         leadId: input.leadId,
       }),
@@ -212,12 +189,13 @@ export async function requestRemoveLeadFromFavorites(input: {
     actionName: "workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.removeFromFavorites({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         leadId: input.leadId,
       }),
@@ -229,12 +207,13 @@ export async function requestLeadSunatRefresh(input: { leadId: string }) {
     actionName: "workflow.request_sunat_refresh",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
+
+    execute: ({ actor }) =>
       getServerRuntime().workflow.commands.requestSunatRefresh({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         leadId: input.leadId,
       }),

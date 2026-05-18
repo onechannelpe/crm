@@ -1,11 +1,14 @@
 import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
-import { parseRequiredAbonoBank } from "../../domain/lead-schema-parser";
+import {
+  parseRequiredAbonoBank,
+  parseRequiredLeadText,
+} from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requestQuotation } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
@@ -31,24 +34,18 @@ export async function requestQuotationCommand(
   },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  if (!input.proveedorActual.trim()) {
-    return Err(
-      domainError(
-        "validation",
-        "proveedor_actual_required",
-        "Proveedor actual is required",
-      ),
-    );
-  }
-  if (!input.giroNegocio.trim()) {
-    return Err(
-      domainError(
-        "validation",
-        "giro_negocio_required",
-        "Giro de negocio is required",
-      ),
-    );
-  }
+  const proveedorActual = parseRequiredLeadText(
+    input.proveedorActual,
+    "proveedor_actual_required",
+    "Proveedor actual is required",
+  );
+  if (!proveedorActual.ok) return proveedorActual;
+  const giroNegocio = parseRequiredLeadText(
+    input.giroNegocio,
+    "giro_negocio_required",
+    "Giro de negocio is required",
+  );
+  if (!giroNegocio.ok) return giroNegocio;
 
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
@@ -67,7 +64,7 @@ export async function requestQuotationCommand(
 
     await repos.leadProfiles.upsert({
       leadId: state.id,
-      proveedorActual: input.proveedorActual,
+      proveedorActual: proveedorActual.value,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
@@ -84,7 +81,7 @@ export async function requestQuotationCommand(
 
     await repos.party.updateOrganizationCommercial({
       organizationId: state.organizationId,
-      giroNegocio: input.giroNegocio,
+      giroNegocio: giroNegocio.value,
     });
 
     const committed = await uow.commit({

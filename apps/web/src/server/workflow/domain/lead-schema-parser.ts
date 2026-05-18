@@ -29,6 +29,18 @@ export function normalizeLeadRuc(ruc: string): Result<string, DomainError> {
   return Ok(normalizedRuc);
 }
 
+export function parseRequiredLeadText(
+  value: string,
+  errorCode: string,
+  message: string,
+): Result<string, DomainError> {
+  const normalized = value.trim();
+  if (!normalized) {
+    return fail(errorCode, message);
+  }
+  return Ok(normalized);
+}
+
 function parseOptionalLeadValue<TValue extends string>(
   value: string | undefined,
   options: readonly TValue[],
