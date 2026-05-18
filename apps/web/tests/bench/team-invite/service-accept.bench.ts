@@ -23,6 +23,7 @@ describe("team invite accept benchmark", () => {
     const ctx = await db.setup();
     const kit = createInviteTestKit(ctx, {
       now: () => BENCH_NOW,
+      transactional: false,
     });
     inviteAccept = kit.commands.accept;
 

@@ -14,6 +14,7 @@ export function createInviteTestKit(
     now?: () => number;
     hashPassword?: (password: string) => Promise<string>;
     createRepos?: InviteTestRepoFactory;
+    transactional?: boolean;
   } = {},
 ): {
   service: InviteService;
@@ -29,9 +30,15 @@ export function createInviteTestKit(
   };
 } {
   const createRepos = options.createRepos ?? createTestRepositories;
-  const service = createInviteService(createRepos(ctx.db), {
+  const baseRepos = createRepos(ctx.db);
+  const transactional = options.transactional ?? true;
+
+  const service = createInviteService(baseRepos, {
     uow: {
       run(work) {
+        if (!transactional) {
+          return work(baseRepos);
+        }
         return runResultTransaction(
           (operation) =>
             ctx.db

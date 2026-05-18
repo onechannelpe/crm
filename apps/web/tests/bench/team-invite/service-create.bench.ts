@@ -19,6 +19,7 @@ describe("team invite create benchmark", () => {
     const ctx = await db.setup();
     const kit = createInviteTestKit(ctx, {
       now: () => BENCH_NOW,
+      transactional: false,
     });
     inviteCreate = kit.commands.create;
 

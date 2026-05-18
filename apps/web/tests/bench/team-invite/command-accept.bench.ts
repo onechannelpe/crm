@@ -24,6 +24,7 @@ describe("team invite accept command benchmark", () => {
     const kit = createInviteTestKit(ctx, {
       now: () => BENCH_NOW,
       hashPassword: async () => "bench-password-hash",
+      transactional: false,
     });
     inviteAccept = kit.commands.accept;
 
