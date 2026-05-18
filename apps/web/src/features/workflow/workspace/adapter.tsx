@@ -175,7 +175,7 @@ export function LeadsWorkspace() {
       <input
         ref={recordImport.bindFileInput}
         type="file"
-        accept=".csv"
+        accept=".csv,.xlsx"
         style={{ display: "none" }}
         onChange={recordImport.onFileInputChange}
       />
