@@ -1,15 +1,19 @@
 import { createInviteService } from "~/server/invites/application/invite-service";
+import type { InviteDeps } from "~/server/invites/application/types";
 import type { InviteService } from "~/server/invites/application/types";
 import { runResultTransaction } from "~/server/shared/application/uow";
 
 import type { TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";
 
+type InviteTestRepoFactory = (db: TestDbContext["db"]) => InviteDeps;
+
 export function createInviteTestKit(
   ctx: TestDbContext,
   options: {
     now?: () => number;
     hashPassword?: (password: string) => Promise<string>;
+    createRepos?: InviteTestRepoFactory;
   } = {},
 ): {
   service: InviteService;
@@ -24,7 +28,8 @@ export function createInviteTestKit(
     userActive(userId: number): Promise<number | undefined>;
   };
 } {
-  const service = createInviteService(ctx.repos, {
+  const createRepos = options.createRepos ?? createTestRepositories;
+  const service = createInviteService(createRepos(ctx.db), {
     uow: {
       run(work) {
         return runResultTransaction(
@@ -32,7 +37,7 @@ export function createInviteTestKit(
             ctx.db
               .transaction()
               .execute((transactionDb) =>
-                operation(createTestRepositories(transactionDb)),
+                operation(createRepos(transactionDb)),
               ),
           work,
         );

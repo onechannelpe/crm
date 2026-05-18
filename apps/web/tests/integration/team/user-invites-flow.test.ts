@@ -2,6 +2,7 @@ import { expectOk } from "@tests/support/_core/assertions";
 import { createInviteTestKit } from "@tests/support/invite/api";
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
+import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, describe, expect, it } from "vitest";
 
 describe("user invite lifecycle", () => {
@@ -81,46 +82,40 @@ describe("user invite lifecycle", () => {
   it("handles raced user creation without escaping the Result contract", async () => {
     ctx = await createIsolatedTestDb("user-invites-race");
     let shouldSimulateRace = true;
-    const baseUsersRepo = ctx.repos.users;
-    type CreateUserInput = Parameters<typeof baseUsersRepo.create>[0];
-
-    const reposWithRace = {
-      ...ctx.repos,
-      users: {
-        ...baseUsersRepo,
-        async create(values: CreateUserInput): Promise<number> {
-          if (!shouldSimulateRace) {
-            return baseUsersRepo.create(values);
-          }
-          shouldSimulateRace = false;
-          const racedUserId = await baseUsersRepo.create(values);
-          await baseUsersRepo.updateInviteProvisioning(racedUserId, {
-            team_id: null,
-            names: values.names,
-            first_surname: values.first_surname,
-            second_surname: values.second_surname,
-            role: values.role,
-            is_active: 0,
-          });
-          throw new Error(
-            "SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: users.email",
-          );
-        },
+    const kit = createInviteTestKit(ctx, {
+      now: () => 1_700_000_000_000,
+      createRepos(db) {
+        const repos = createTestRepositories(db);
+        type CreateUserInput = Parameters<typeof repos.users.create>[0];
+        return {
+          ...repos,
+          users: {
+            ...repos.users,
+            async create(values: CreateUserInput): Promise<number> {
+              if (!shouldSimulateRace) {
+                return repos.users.create(values);
+              }
+              shouldSimulateRace = false;
+              const racedUserId = await repos.users.create(values);
+              await repos.users.updateInviteProvisioning(racedUserId, {
+                team_id: null,
+                names: values.names,
+                first_surname: values.first_surname,
+                second_surname: values.second_surname,
+                role: values.role,
+                is_active: 0,
+              });
+              throw new Error(
+                "SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: users.email",
+              );
+            },
+          },
+        };
       },
-    };
-
-    const service = createInviteTestKit(
-      {
-        ...ctx,
-        repos: reposWithRace,
-      },
-      {
-        now: () => 1_700_000_000_000,
-      },
-    ).service;
+    });
 
     expectOk(
-      await service.createInvite({
+      await kit.commands.create({
         actorUserId: 5,
         actorRole: "superuser",
         branchId: 2,
