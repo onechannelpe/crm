@@ -69,8 +69,9 @@ function buildCompletedMessage(event: {
   return `Procesados ${event.rowsTotal} ${unit}`;
 }
 
-function isCsvFile(file: File): boolean {
-  return file.name.toLowerCase().endsWith(".csv");
+function isSupportedFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return name.endsWith(".csv") || name.endsWith(".xlsx");
 }
 
 function websocketUrl(): string {
@@ -227,8 +228,8 @@ export function useRecordsImport() {
   }
 
   async function importFile(file: File): Promise<void> {
-    if (!isCsvFile(file)) {
-      enqueueErrorSnackBar("Solo se permiten archivos .csv");
+    if (!isSupportedFile(file)) {
+      enqueueErrorSnackBar("Solo se permiten archivos .csv o .xlsx");
       return;
     }
 

@@ -1,98 +1,41 @@
-import type { RecordImportType } from "~/features/records-imports/contracts";
-import type { ImportRowInput } from "~/server/integrations/application/import/types";
+import { MAX_RECORD_IMPORT_ROWS, type ParsedFile } from "./contracts";
+import { fromCsv } from "./csv";
+import { mapRecordImportRow } from "./row-mapper";
+import { fromXlsx } from "./xlsx";
 
-import {
-  MAX_RECORD_IMPORT_ROWS,
-  type RecordImportStreamFactory,
-  type ResolvedLayout,
-} from "./contracts";
-import {
-  resolveLayoutForImportType,
-  inspectRecordImportCsv,
-} from "./header-match";
-import {
-  assertSupportedLeadCsvLine,
-  consumeCsvLinesFromStream,
-  isLineEmpty,
-} from "./line-reader";
-import {
-  mapRecordImportRow,
-  splitLeadCsvLine,
-  type RecordImportInvalidRow,
-} from "./row-mapper";
+export { type ParsedFile } from "./contracts";
 
-export {
-  MAX_RECORD_IMPORT_ROWS,
-  PRIORITY_IMPORT_HEADERS,
-  STATUS_IMPORT_HEADERS,
-  type RecordImportCsvInspectionResult,
-  type RecordImportTypeDetectionErrorCode,
-} from "./contracts";
-export { inspectRecordImportCsv };
+export function parseImportFile(
+  buffer: ArrayBuffer,
+  extension: "csv" | "xlsx",
+): ParsedFile {
+  const { importType, headers, rows } =
+    extension === "xlsx" ? fromXlsx(buffer) : fromCsv(buffer);
 
-export async function parseRecordImportRowsFromStream(input: {
-  streamFactory: RecordImportStreamFactory;
-  importType: RecordImportType;
-}): Promise<{
-  validRows: ImportRowInput[];
-  invalidRows: RecordImportInvalidRow[];
-}> {
-  const validRows: ImportRowInput[] = [];
-  const invalidRows: RecordImportInvalidRow[] = [];
-  let layout: ResolvedLayout | null = null;
-  let processedRows = 0;
-
-  await consumeCsvLinesFromStream(input.streamFactory(), (line, rowNumber) => {
-    if (isLineEmpty(line)) {
-      return;
-    }
-
-    assertSupportedLeadCsvLine(line);
-
-    if (!layout) {
-      const resolution = resolveLayoutForImportType(line, input.importType);
-      if (!resolution.ok) {
-        throw new Error(resolution.message);
-      }
-      layout = resolution.layout;
-      return;
-    }
-
-    const cells = splitLeadCsvLine(line, layout.delimiter);
-    if (cells.length !== layout.headers.length) {
-      invalidRows.push({
-        row: rowNumber,
-        reason: `Invalid column count: expected ${layout.headers.length}, got ${cells.length}`,
-        type: input.importType,
-      });
-      return;
-    }
-
-    processedRows++;
-    if (processedRows > MAX_RECORD_IMPORT_ROWS) {
-      throw new Error(
-        `Import exceeds maximum supported rows (${MAX_RECORD_IMPORT_ROWS})`,
-      );
-    }
-
-    const mapped = mapRecordImportRow({
-      rowNumber,
-      importType: input.importType,
-      headers: layout.headers,
-      cells,
-    });
-
-    if (!mapped.ok) {
-      invalidRows.push(mapped.row);
-      return;
-    }
-
-    validRows.push(mapped.row);
-  });
-
-  if (!layout) {
-    throw new Error("CSV header row is required");
+  if (rows.length > MAX_RECORD_IMPORT_ROWS) {
+    throw new Error(
+      `Import exceeds maximum supported rows (${MAX_RECORD_IMPORT_ROWS})`,
+    );
   }
 
-  return { validRows, invalidRows };
+  const validRows = [];
+  const invalidRows = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowNumber = i + 1;
+    const result = mapRecordImportRow({
+      rowNumber,
+      importType,
+      headers,
+      cells: rows[i],
+    });
+
+    if (result.ok) {
+      validRows.push(result.row);
+    } else {
+      invalidRows.push(result.row);
+    }
+  }
+
+  return { importType, validRows, invalidRows };
 }

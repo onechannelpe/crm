@@ -1,10 +1,9 @@
 import type { RecordImportType } from "~/features/records-imports/contracts";
-import type { CsvDelimiter } from "~/server/csv/core";
+import { normalizeCsvHeader } from "~/server/csv/core";
+import type { ImportRowInput } from "~/server/integrations/application/import/types";
 
-export const RECORD_IMPORT_DELIMITERS: readonly CsvDelimiter[] = [
-  ",",
-  ";",
-] as const;
+import type { RecordImportInvalidRow } from "./row-mapper";
+
 export const MAX_RECORD_IMPORT_ROWS = 10_000;
 
 export const STATUS_IMPORT_HEADERS = [
@@ -27,41 +26,12 @@ export const PRIORITY_IMPORT_HEADERS = [
   "categoria",
 ] as const;
 
-export type RecordImportTypeDetectionErrorCode =
-  | "unknown_headers"
-  | "ambiguous_headers"
-  | "missing_required_headers";
-
-export type RecordImportCsvInspectionResult =
-  | {
-      ok: true;
-      importType: RecordImportType;
-      headers: string[];
-    }
-  | {
-      ok: false;
-      code: RecordImportTypeDetectionErrorCode;
-      message: string;
-      headers: string[];
-    };
-
-export type RecordImportStreamFactory = () => ReadableStream<Uint8Array>;
-
-export interface HeaderMatch {
-  expected: readonly string[];
-  missing: string[];
-  unknown: string[];
-  exact: boolean;
+export interface ParsedFile {
+  importType: RecordImportType;
+  validRows: ImportRowInput[];
+  invalidRows: RecordImportInvalidRow[];
 }
 
-export interface HeaderCandidate {
-  delimiter: CsvDelimiter;
-  headers: string[];
-  statusMatch: HeaderMatch;
-  priorityMatch: HeaderMatch;
-}
-
-export interface ResolvedLayout {
-  delimiter: CsvDelimiter;
-  headers: string[];
+export function normalizeHeader(raw: string): string {
+  return normalizeCsvHeader(raw.replace(/^\uFEFF/, ""));
 }

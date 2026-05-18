@@ -1,16 +1,22 @@
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
+import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { parseRecordImportRowsFromStream } from "./intake";
+import type { RecordImportInvalidRow } from "./intake/row-mapper";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,
 } from "./progress-events";
 
+interface StoredRows {
+  validRows: ImportRowInput[];
+  invalidRows: RecordImportInvalidRow[];
+}
+
 export function createRecordImportRunner(deps: {
   executor: DatabaseExecutor;
-  openFileStream: (filePath: string) => ReadableStream<Uint8Array>;
+  readFile: (filePath: string) => Promise<Uint8Array>;
   updateProgress: (input: {
     jobId: string;
     rowsTotal?: number;
@@ -18,7 +24,7 @@ export function createRecordImportRunner(deps: {
     rowsFailed?: number;
   }) => Promise<unknown>;
 }) {
-  const { executor, openFileStream, updateProgress } = deps;
+  const { executor, readFile, updateProgress } = deps;
 
   return {
     async process(
@@ -33,21 +39,17 @@ export function createRecordImportRunner(deps: {
       if (!job.file_path) {
         throw new Error("Missing file path for import job");
       }
-      const filePath = job.file_path;
 
       if (job.type !== "import_status" && job.type !== "import_prioridad") {
         throw new Error(`Unsupported import type: ${job.type}`);
       }
 
-      const { validRows, invalidRows } = await parseRecordImportRowsFromStream({
-        streamFactory: () => openFileStream(filePath),
-        importType: job.type,
-      });
-      if (signal.aborted) {
-        throw new Error("Job aborted");
-      }
-
+      const bytes = await readFile(job.file_path);
+      const { validRows, invalidRows }: StoredRows = JSON.parse(
+        new TextDecoder().decode(bytes),
+      );
       const rowsTotal = validRows.length + invalidRows.length;
+
       await updateProgress({
         jobId: job.id,
         rowsTotal,
@@ -64,6 +66,8 @@ export function createRecordImportRunner(deps: {
           errorMessage: null,
         }),
       );
+
+      if (signal.aborted) throw new Error("Job aborted");
 
       const applied = await applyImportRows(
         {
@@ -86,6 +90,7 @@ export function createRecordImportRunner(deps: {
         },
         executor,
       );
+
       await updateProgress({
         jobId: job.id,
         rowsTotal,
@@ -93,9 +98,7 @@ export function createRecordImportRunner(deps: {
         rowsFailed: applied.failed,
       });
 
-      if (signal.aborted) {
-        throw new Error("Job aborted after processing");
-      }
+      if (signal.aborted) throw new Error("Job aborted after processing");
 
       return {
         rowsTotal,
