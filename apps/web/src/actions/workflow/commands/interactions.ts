@@ -30,28 +30,30 @@ export async function recordLeadCall(input: {
 }
 
 export async function addLeadNote(input: { leadId: string; body: string }) {
+  const parsedBody = parseRequiredLeadText(
+    input.body,
+    "note_body_required",
+    "Note body is required",
+  );
+
+  if (!parsedBody.ok) {
+    return parsedBody;
+  }
+
   return runAction({
     actionName: "workflow.add_note",
     access: { kind: "auth" },
     input,
 
-    execute: async ({ actor }) => {
-      const body = parseRequiredLeadText(
-        input.body,
-        "note_body_required",
-        "Note body is required",
-      );
-      if (!body.ok) return body;
-
-      return getServerRuntime().workflow.commands.addLeadNote({
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.addLeadNote({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        body: body.value,
-      });
-    },
+        body: parsedBody.value,
+      }),
   });
 }
