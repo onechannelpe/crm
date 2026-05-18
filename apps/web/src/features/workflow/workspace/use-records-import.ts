@@ -196,10 +196,6 @@ export function useRecordsImport() {
 
     socket.addEventListener("open", () => {
       s.wsReconnectAttempt = 0;
-      if (s.pollTimer !== null) {
-        window.clearTimeout(s.pollTimer);
-        s.pollTimer = null;
-      }
       socket.send(
         buildRealtimeSubscriptionMessage({
           type: "subscribe",
