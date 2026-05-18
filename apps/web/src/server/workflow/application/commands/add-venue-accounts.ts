@@ -1,6 +1,5 @@
 import { randomUUIDv7 } from "bun";
 
-import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import { isBcpBank } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError, type DomainError } from "~/server/shared/domain-error";

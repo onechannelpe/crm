@@ -47,6 +47,6 @@ export async function logLeadCallCommand(
     });
     if (!committed.ok) return committed;
 
-    return Ok({ interactionId: committed.value.eventIds[0]! });
+    return Ok({ interactionId: committed.value.eventIds[0] });
   });
 }

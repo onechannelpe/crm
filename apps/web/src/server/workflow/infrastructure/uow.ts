@@ -12,7 +12,6 @@ import type {
   LeadUnitOfWork,
 } from "~/server/workflow/application/ports/uow";
 import type { LeadEvent } from "~/server/workflow/domain/lead/events";
-import type { LeadState } from "~/server/workflow/domain/lead/state";
 
 function deriveAuditAction(events: LeadEvent[]): string {
   return events[0]?.eventType ?? "lead_updated";
@@ -61,7 +60,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         .executeTakeFirst();
 
       if (existing) {
-        const prior = JSON.parse(existing.result_json) as CommitResult;
+        const prior: CommitResult = JSON.parse(existing.result_json);
         return Ok({ ...prior, wasIdempotent: true });
       }
 
@@ -106,6 +105,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
       const eventIds: string[] = [];
       for (const event of events) {
         const id = randomUUIDv7();
+        // eslint-disable-next-line no-await-in-loop
         await db
           .insertInto("workflow_history_events")
           .values({
@@ -138,7 +138,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
 
       // 6. Notifications (inside transaction for atomicity)
       const stageChangedEvents = events
-        .map((e, i) => ({ event: e, id: eventIds[i]! }))
+        .map((e, i) => ({ event: e, id: eventIds[i] }))
         .filter(({ event }) => event.eventType === "workflow_stage_changed");
 
       if (stageChangedEvents.length > 0) {

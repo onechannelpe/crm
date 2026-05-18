@@ -142,7 +142,6 @@ export function resolveAvailableActions(
 ): LeadAvailableAction[] {
   const caps = resolveCapabilities(actor.role);
   const ownsLead = state.executiveId === actor.userId;
-  const canSeeAll = canViewAllLeads(actor.role);
   const actions: LeadAvailableAction[] = [];
 
   if (caps.has("interact")) {
