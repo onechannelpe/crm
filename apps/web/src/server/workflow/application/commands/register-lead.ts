@@ -5,7 +5,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { normalizeLeadRuc } from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requireCapability } from "../../domain/lead/policy";
 import { createLeadDraft } from "../../domain/lead/state";
@@ -16,6 +15,7 @@ import {
 } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+import { normalizeLeadRuc } from "../../parsers";
 import type { WorkflowUserRepository } from "../ports/entities";
 import type { LeadEnrichmentQueue } from "../ports/gateways";
 import type { LeadRepository } from "../ports/lead";

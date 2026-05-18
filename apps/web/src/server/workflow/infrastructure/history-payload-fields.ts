@@ -14,7 +14,7 @@ import {
   parseRequiredLeadStage,
   parseRequiredLeadStatus,
   parseRequiredMoneda,
-} from "~/server/workflow/domain/lead-schema-parser";
+} from "~/server/workflow/parsers";
 
 import type { HistoryEventRow } from "./history-event-row";
 

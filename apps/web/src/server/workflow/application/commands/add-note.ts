@@ -32,7 +32,7 @@ export async function addLeadNoteCommand(
     const now = Date.now();
     const transition = addNote(state, {
       actor: input.actor,
-      body: input.body.trim(),
+      body: input.body,
       now,
     });
     if (!transition.ok) return transition;

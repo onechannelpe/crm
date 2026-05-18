@@ -3,13 +3,8 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { ReviewLeadCommandInput } from "~/server/workflow/types";
 
-import {
-  parseRequiredLeadPriority,
-  parseRequiredLeadStatus,
-  parseRequiredLeadText,
-} from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { reviewLead } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
@@ -20,28 +15,9 @@ type Ports = {
 };
 
 export async function reviewLeadCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    status: string;
-    prioridad: string;
-    reason: string;
-    idempotencyKey?: string;
-  },
+  input: ReviewLeadCommandInput & { idempotencyKey?: string },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const status = parseRequiredLeadStatus(input.status);
-  if (!status.ok) return status;
-
-  const prioridad = parseRequiredLeadPriority(input.prioridad);
-  if (!prioridad.ok) return prioridad;
-  const reason = parseRequiredLeadText(
-    input.reason,
-    "review_reason_required",
-    "Reason is required",
-  );
-  if (!reason.ok) return reason;
-
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
     const uow = createLeadUow(tx);
@@ -50,9 +26,9 @@ export async function reviewLeadCommand(
 
     const transition = reviewLead(state, {
       actor: input.actor,
-      status: status.value,
-      prioridad: prioridad.value,
-      reason: reason.value,
+      status: input.status,
+      prioridad: input.prioridad,
+      reason: input.reason,
       now: Date.now(),
     });
     if (!transition.ok) return transition;

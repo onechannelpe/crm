@@ -3,6 +3,7 @@
 import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import { parseRequiredLeadText } from "~/server/workflow/parsers";
 
 export async function recordLeadCall(input: {
   leadId: string;
@@ -34,14 +35,23 @@ export async function addLeadNote(input: { leadId: string; body: string }) {
     access: { kind: "auth" },
     input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.addLeadNote({
+    execute: async ({ actor }) => {
+      const body = parseRequiredLeadText(
+        input.body,
+        "note_body_required",
+        "Note body is required",
+      );
+      if (!body.ok) return body;
+
+      return getServerRuntime().workflow.commands.addLeadNote({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        ...input,
-      }),
+        leadId: input.leadId,
+        body: body.value,
+      });
+    },
   });
 }

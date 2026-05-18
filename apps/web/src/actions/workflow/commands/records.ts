@@ -12,6 +12,11 @@ import {
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
+  parseRequiredLeadPriority,
+  parseRequiredLeadStatus,
+  parseRequiredLeadText,
+} from "~/server/workflow/parsers";
+import {
   type ReassignLeadCommandInput,
   type RegisterLeadInput,
 } from "~/server/workflow/types";
@@ -41,15 +46,30 @@ export async function requestLeadReview(input: LeadReviewInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.reviewLead({
+    execute: async ({ actor }) => {
+      const status = parseRequiredLeadStatus(input.status);
+      if (!status.ok) return status;
+      const prioridad = parseRequiredLeadPriority(input.prioridad);
+      if (!prioridad.ok) return prioridad;
+      const reason = parseRequiredLeadText(
+        input.reason,
+        "review_reason_required",
+        "Reason is required",
+      );
+      if (!reason.ok) return reason;
+
+      return getServerRuntime().workflow.commands.reviewLead({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        ...input,
-      }),
+        leadId: input.leadId,
+        status: status.value,
+        prioridad: prioridad.value,
+        reason: reason.value,
+      });
+    },
   });
 }
 
@@ -61,15 +81,36 @@ export async function requestSaveCommercialScope(
     access: { kind: "auth" },
     input: { leadId: input.leadId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.saveCommercialScope({
+    execute: async ({ actor }) => {
+      const proveedorActual = parseRequiredLeadText(
+        input.proveedorActual,
+        "proveedor_actual_required",
+        "Proveedor actual is required",
+      );
+      if (!proveedorActual.ok) return proveedorActual;
+      const giroNegocio = parseRequiredLeadText(
+        input.giroNegocio,
+        "giro_negocio_required",
+        "Giro de negocio is required",
+      );
+      if (!giroNegocio.ok) return giroNegocio;
+
+      return getServerRuntime().workflow.commands.saveCommercialScope({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        ...input,
-      }),
+        leadId: input.leadId,
+        proveedorActual: proveedorActual.value,
+        tasaActual: input.tasaActual,
+        gpv: input.gpv,
+        ticket: input.ticket,
+        giroNegocio: giroNegocio.value,
+        abonoBank: input.abonoBank,
+        posTotal: input.posTotal,
+      });
+    },
   });
 }
 
@@ -79,15 +120,36 @@ export async function requestQuotation(input: RequestQuotationInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.requestQuotation({
+    execute: async ({ actor }) => {
+      const proveedorActual = parseRequiredLeadText(
+        input.proveedorActual,
+        "proveedor_actual_required",
+        "Proveedor actual is required",
+      );
+      if (!proveedorActual.ok) return proveedorActual;
+      const giroNegocio = parseRequiredLeadText(
+        input.giroNegocio,
+        "giro_negocio_required",
+        "Giro de negocio is required",
+      );
+      if (!giroNegocio.ok) return giroNegocio;
+
+      return getServerRuntime().workflow.commands.requestQuotation({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        ...input,
-      }),
+        leadId: input.leadId,
+        proveedorActual: proveedorActual.value,
+        tasaActual: input.tasaActual,
+        gpv: input.gpv,
+        ticket: input.ticket,
+        giroNegocio: giroNegocio.value,
+        abonoBank: input.abonoBank,
+        posTotal: input.posTotal,
+      });
+    },
   });
 }
 
@@ -115,15 +177,59 @@ export async function requestRecordRepLegal(input: RecordRepLegalInput) {
     access: { kind: "auth" },
     input: { leadId: input.leadId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.recordRepLegal({
+    execute: async ({ actor }) => {
+      const nombres = parseRequiredLeadText(
+        input.nombres,
+        "nombres_required",
+        "Nombres is required",
+      );
+      if (!nombres.ok) return nombres;
+      const apellidoPaterno = parseRequiredLeadText(
+        input.apellidoPaterno,
+        "apellido_paterno_required",
+        "Apellido paterno is required",
+      );
+      if (!apellidoPaterno.ok) return apellidoPaterno;
+      const apellidoMaterno = parseRequiredLeadText(
+        input.apellidoMaterno,
+        "apellido_materno_required",
+        "Apellido materno is required",
+      );
+      if (!apellidoMaterno.ok) return apellidoMaterno;
+      const dni = parseRequiredLeadText(
+        input.dni,
+        "dni_required",
+        "DNI is required",
+      );
+      if (!dni.ok) return dni;
+      const telefono = parseRequiredLeadText(
+        input.telefono,
+        "telefono_required",
+        "Telefono is required",
+      );
+      if (!telefono.ok) return telefono;
+      const email = parseRequiredLeadText(
+        input.email,
+        "email_required",
+        "Email is required",
+      );
+      if (!email.ok) return email;
+
+      return getServerRuntime().workflow.commands.recordRepLegal({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        ...input,
-      }),
+        leadId: input.leadId,
+        nombres: nombres.value,
+        apellidoPaterno: apellidoPaterno.value,
+        apellidoMaterno: apellidoMaterno.value,
+        dni: dni.value,
+        telefono: telefono.value,
+        email: email.value,
+      });
+    },
   });
 }
 

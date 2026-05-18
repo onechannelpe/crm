@@ -1,3 +1,9 @@
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
+
 import type { WorkflowActor } from "./actor";
 
 export type ListAssignableExecutivesInput = {
@@ -10,9 +16,9 @@ export type ListAssignableExecutivesInput = {
 export type ListLeadsInput = {
   actor: WorkflowActor;
   filters: {
-    stage?: string;
-    status?: string;
-    prioridad?: string;
+    stage?: LeadStage;
+    status?: LeadStatus;
+    prioridad?: LeadPriority;
     executiveId?: number;
     updatedSinceMs?: number;
     updatedUntilMs?: number;

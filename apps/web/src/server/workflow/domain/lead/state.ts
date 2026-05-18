@@ -7,7 +7,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { normalizeLeadRuc } from "../lead-schema-parser";
+import { normalizeLeadRuc } from "../../parsers";
 
 export type LeadState = {
   id: string;

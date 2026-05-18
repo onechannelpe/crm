@@ -1,10 +1,7 @@
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { CsvDelimiter } from "~/server/csv/core";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import {
-  parseLeadPriority,
-  parseLeadStatus,
-} from "~/server/workflow/domain/lead-schema-parser";
+import { parseLeadPriority, parseLeadStatus } from "~/server/workflow/parsers";
 
 export interface RecordImportInvalidRow {
   row: number;

@@ -3,12 +3,8 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { SaveCommercialScopeCommandInput } from "~/server/workflow/types";
 
-import {
-  parseRequiredAbonoBank,
-  parseRequiredLeadText,
-} from "../../domain/lead-schema-parser";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { saveCommercialScope } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
@@ -20,33 +16,9 @@ type Ports = {
 };
 
 export async function saveCommercialScopeCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    proveedorActual: string;
-    tasaActual: number;
-    gpv: number;
-    ticket: number;
-    giroNegocio: string;
-    abonoBank: string;
-    posTotal: number;
-    idempotencyKey?: string;
-  },
+  input: SaveCommercialScopeCommandInput & { idempotencyKey?: string },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const proveedorActual = parseRequiredLeadText(
-    input.proveedorActual,
-    "proveedor_actual_required",
-    "Proveedor actual is required",
-  );
-  if (!proveedorActual.ok) return proveedorActual;
-  const giroNegocio = parseRequiredLeadText(
-    input.giroNegocio,
-    "giro_negocio_required",
-    "Giro de negocio is required",
-  );
-  if (!giroNegocio.ok) return giroNegocio;
-
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -56,17 +28,15 @@ export async function saveCommercialScopeCommand(
     if (!state) return leadNotFound();
     const profile = await repos.leadProfiles.findByLeadId(input.leadId);
 
-    const abonoBank = parseRequiredAbonoBank(input.abonoBank);
-    if (!abonoBank.ok) return abonoBank;
     const now = Date.now();
     const transition = saveCommercialScope(state, {
       actor: input.actor,
-      proveedorActual: proveedorActual.value,
+      proveedorActual: input.proveedorActual,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
-      giroNegocio: giroNegocio.value,
-      abonoBank: abonoBank.value,
+      giroNegocio: input.giroNegocio,
+      abonoBank: input.abonoBank,
       posTotal: input.posTotal,
       now,
     });
@@ -74,7 +44,7 @@ export async function saveCommercialScopeCommand(
 
     await repos.leadProfiles.upsert({
       leadId: state.id,
-      proveedorActual: proveedorActual.value,
+      proveedorActual: input.proveedorActual,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
@@ -83,7 +53,7 @@ export async function saveCommercialScopeCommand(
       onlineScope: profile?.onlineScope ?? "none",
       onlineUrl: profile?.onlineUrl ?? null,
       onlineModalidad: profile?.onlineModalidad ?? null,
-      abonoBank: abonoBank.value,
+      abonoBank: input.abonoBank,
       posTotal: input.posTotal,
       updatedAt: now,
       updatedBy: input.actor.userId,
@@ -91,7 +61,7 @@ export async function saveCommercialScopeCommand(
 
     await repos.party.updateOrganizationCommercial({
       organizationId: state.organizationId,
-      giroNegocio: giroNegocio.value,
+      giroNegocio: input.giroNegocio,
     });
 
     const committed = await uow.commit({

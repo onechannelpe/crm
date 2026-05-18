@@ -1,5 +1,6 @@
 import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import type {
+  AbonoBank,
   LeadCallOutcome,
   LeadPriority,
   LeadStatus,
@@ -25,8 +26,8 @@ export type ReassignLeadCommandInput = {
 export type ReviewLeadCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  status: string;
-  prioridad: string;
+  status: LeadStatus;
+  prioridad: LeadPriority;
   reason: string;
 };
 
@@ -82,7 +83,7 @@ export type SaveCommercialScopeCommandInput = {
   gpv: number;
   ticket: number;
   giroNegocio: string;
-  abonoBank: string;
+  abonoBank: AbonoBank;
   posTotal: number;
 };
 
