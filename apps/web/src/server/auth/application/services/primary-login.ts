@@ -23,7 +23,7 @@ async function createTotpLoginFlow(
   identifier: string,
   userId: number,
   primaryAuthMethod: "password" | "google" | "passkey",
-  deps: { loginFlows: AuthLoginDeps["loginFlows"] },
+  deps: Pick<AuthLoginDeps, "loginFlows">,
 ): Promise<TotpLoginFlowState> {
   const flowId = await deps.loginFlows.create({
     identifier,

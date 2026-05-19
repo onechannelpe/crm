@@ -33,9 +33,8 @@ function normalizeLeadListFilters(
 }
 
 export const leadListQuery = query(
-  async (filters: ListLeadsFiltersInput): Promise<LeadListView> => {
-    return queryLeadList(normalizeLeadListFilters(filters));
-  },
+  (filters: ListLeadsFiltersInput): Promise<LeadListView> =>
+    queryLeadList(normalizeLeadListFilters(filters)),
   "workflow.leadList",
 );
 

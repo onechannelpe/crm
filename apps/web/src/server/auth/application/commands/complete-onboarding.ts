@@ -49,16 +49,19 @@ export async function completeOnboarding(
         phone: input.phone,
       },
     );
+
     if (isErr(onboarding)) {
       return Err(mapOnboardingError(onboarding.error));
     }
     return Ok(undefined);
   });
+
   if (isErr(result)) {
     return result;
   }
 
   const user = await deps.repos.users.findById(input.session.userId);
+
   if (!user) {
     throw new Error("No se pudo completar el registro");
   }
