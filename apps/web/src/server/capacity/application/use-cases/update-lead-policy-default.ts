@@ -10,11 +10,19 @@ import type { CapacityPolicyDeps } from "./shared";
 export async function updateLeadPolicyDefault(
   ctx: AppContext,
   deps: CapacityPolicyDeps,
-  input: { scope: ScopeRef; bufferTarget: number; dailyLimit: number },
+  input: {
+    scope: ScopeRef;
+    bufferTarget: number;
+    dailyLimit: number;
+  },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
     const check = await canManageScope(ctx.actor, input.scope, tx);
-    if (isErr(check)) return check;
+
+    if (isErr(check)) {
+      return check;
+    }
+
     const result = await setLeadScopeDefault(
       {
         scopeType: input.scope.kind,
@@ -24,7 +32,11 @@ export async function updateLeadPolicyDefault(
       },
       tx,
     );
-    if (isErr(result)) return result;
+
+    if (isErr(result)) {
+      return result;
+    }
+
     return Ok({ success: true });
   });
 }
