@@ -12,6 +12,7 @@ function parseUploadFile(formData: FormData): {
   stream: ReadableStream<Uint8Array>;
 } {
   const file = formData.get("file");
+
   if (!(file instanceof File)) {
     throw validationError("file is required");
   }
@@ -28,6 +29,7 @@ export async function listLeadSaleProofFiles(leadId: string) {
     actionName: "workflow.list_sale_proof_files",
     access: { kind: "auth" },
     input: { leadId },
+
     execute: (ctx) =>
       getServerRuntime().workflow.leadArtifacts.listSaleProofFiles({
         ctx,
@@ -45,7 +47,12 @@ export async function uploadLeadSaleProofFile(
   return runAction({
     actionName: "workflow.upload_sale_proof_file",
     access: { kind: "auth" },
-    input: { leadId, fileName: file.name, sizeBytes: file.sizeBytes },
+    input: {
+      leadId,
+      fileName: file.name,
+      sizeBytes: file.sizeBytes,
+    },
+
     execute: (ctx) =>
       getServerRuntime().workflow.leadArtifacts.uploadSaleProofFile({
         ctx,
@@ -63,6 +70,7 @@ export async function requestLeadSaleProofDownloadToken(input: {
     actionName: "workflow.request_sale_proof_download_token",
     access: { kind: "auth" },
     input,
+
     execute: (ctx) =>
       getServerRuntime().workflow.leadArtifacts.requestSaleProofDownloadToken({
         ctx,
@@ -81,7 +89,12 @@ export async function uploadLeadNegotiationFile(
   return runActionResult({
     actionName: "workflow.upload_negotiation_file",
     access: { kind: "auth" },
-    input: { leadId, fileName: file.name, sizeBytes: file.sizeBytes },
+    input: {
+      leadId,
+      fileName: file.name,
+      sizeBytes: file.sizeBytes,
+    },
+
     execute: (ctx) =>
       getServerRuntime().workflow.leadArtifacts.uploadNegotiationFile({
         ctx,
@@ -99,6 +112,7 @@ export async function requestNegotiationFileDownloadToken(input: {
     actionName: "workflow.request_negotiation_download_token",
     access: { kind: "auth" },
     input,
+
     execute: (ctx) =>
       getServerRuntime().workflow.leadArtifacts.requestNegotiationDownloadToken(
         {
