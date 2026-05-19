@@ -4,7 +4,9 @@ import type { RecordImportType } from "~/features/records-imports/contracts";
 
 import {
   normalizeHeader,
+  PRIORITY_IMPORT_HEADERS_ALT,
   PRIORITY_IMPORT_HEADERS,
+  STATUS_IMPORT_HEADERS_ALT,
   STATUS_IMPORT_HEADERS,
 } from "./contracts";
 
@@ -22,8 +24,20 @@ function detectImportType(normalized: string[]): RecordImportType | null {
     return "import_status";
   }
   if (
+    normalized.length === STATUS_IMPORT_HEADERS_ALT.length &&
+    normalized.every((h, i) => h === STATUS_IMPORT_HEADERS_ALT[i])
+  ) {
+    return "import_status";
+  }
+  if (
     normalized.length === PRIORITY_IMPORT_HEADERS.length &&
     normalized.every((h, i) => h === PRIORITY_IMPORT_HEADERS[i])
+  ) {
+    return "import_prioridad";
+  }
+  if (
+    normalized.length === PRIORITY_IMPORT_HEADERS_ALT.length &&
+    normalized.every((h, i) => h === PRIORITY_IMPORT_HEADERS_ALT[i])
   ) {
     return "import_prioridad";
   }

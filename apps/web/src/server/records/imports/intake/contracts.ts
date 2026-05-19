@@ -15,6 +15,13 @@ export const STATUS_IMPORT_HEADERS = [
   "resultado",
 ] as const;
 
+export const STATUS_IMPORT_HEADERS_ALT = [
+  "documento_a_consultar",
+  "resultado",
+  "identificador_interno",
+  "nro._linea",
+] as const;
+
 export const PRIORITY_IMPORT_HEADERS = [
   "nro_de_solicitud",
   "fecha",
@@ -24,6 +31,15 @@ export const PRIORITY_IMPORT_HEADERS = [
   "segmento",
   "prioridad",
   "categoria",
+] as const;
+
+export const PRIORITY_IMPORT_HEADERS_ALT = [
+  "documento_a_consultar",
+  "segmento",
+  "prioridad",
+  "evaluacion",
+  "identificador_interno",
+  "nro._linea",
 ] as const;
 
 export interface ParsedFile {

@@ -38,7 +38,7 @@ export function mapRecordImportRow(input: {
   | { ok: true; row: ImportRowInput }
   | { ok: false; row: RecordImportInvalidRow } {
   const record = readRecord(input.headers, input.cells);
-  const ruc = record.documento ?? "";
+  const ruc = (record.documento ?? record.documento_a_consultar ?? "").trim();
 
   if (!/^\d+$/.test(ruc)) {
     return {
