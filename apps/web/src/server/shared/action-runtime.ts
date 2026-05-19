@@ -111,6 +111,11 @@ export async function runActionResult<T, E extends DomainError>(
     result = await params.execute(telemetry.ctx);
   } catch (error) {
     if (error instanceof Response) throw error;
+    if (error instanceof AppError) {
+      const safeError = sanitize(error);
+      recordActionError(telemetry, toTelemetryError(safeError));
+      return Err(safeError);
+    }
     captureException(error);
     recordActionError(telemetry, toTelemetryError(error));
     return Err(sanitize(internalError("An unexpected error occurred")));
