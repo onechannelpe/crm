@@ -39,15 +39,20 @@ export function makeLeadStates(lead: LeadState): LeadStateRepository {
   };
 }
 
-export function makeUow(commit?: LeadUnitOfWork["commit"]) {
-  const defaultCommit = vi.fn<LeadUnitOfWork["commit"]>(async () =>
-    Ok({ eventIds: ["event-1"], wasIdempotent: false } satisfies CommitResult),
-  );
-  const commitMock = commit ?? defaultCommit;
+export function makeUow(commit = makeCommitMock()) {
   return {
-    uow: { commit: commitMock } satisfies LeadUnitOfWork,
-    commit: commitMock,
+    uow: { commit } satisfies LeadUnitOfWork,
+    commit,
   };
+}
+
+function makeCommitMock() {
+  return vi.fn<LeadUnitOfWork["commit"]>(async () =>
+    Ok({
+      eventIds: ["event-1"],
+      wasIdempotent: false,
+    } satisfies CommitResult),
+  );
 }
 
 export function makeNegotiationRequests(
@@ -65,15 +70,17 @@ export function makeNegotiationRequests(
     async () => [],
   );
 
+  const repo = {
+    insert,
+    insertFile,
+    findFileAssetIdForArtifact,
+    countByLeadId,
+    listByLeadId,
+    ...overrides,
+  } satisfies NegotiationRequestRepository;
+
   return {
-    repo: {
-      insert,
-      insertFile,
-      findFileAssetIdForArtifact,
-      countByLeadId,
-      listByLeadId,
-      ...overrides,
-    } satisfies NegotiationRequestRepository,
+    repo,
     insert,
     insertFile,
     findFileAssetIdForArtifact,

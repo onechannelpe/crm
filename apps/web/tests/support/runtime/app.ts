@@ -30,6 +30,7 @@ export interface TestRuntime {
 
 export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const ctx = await createIsolatedTestDb(prefix);
+
   let currentNow = Date.now();
 
   const now = {
@@ -43,6 +44,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     info() {},
     error() {},
   };
+
   const auth = {
     sessionService: createSessionService({
       sessions: createAuthSessionRepo(ctx.db),
@@ -52,15 +54,6 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     }),
   };
 
-  const engineClient: EngineClient = {
-    async search() {
-      return { ok: true, value: [] };
-    },
-    async requestCandidates() {
-      return { ok: true, value: [] };
-    },
-  };
-
   const infra: ServerInfra = {
     db: ctx.db,
     now: now.get,
@@ -68,6 +61,19 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   };
 
   const files = createFilesRuntime(infra);
+
+  const emptyEngineResult = { ok: true as const, value: [] };
+
+  const engineClient: EngineClient = {
+    async search() {
+      return emptyEngineResult;
+    },
+
+    async requestCandidates() {
+      return emptyEngineResult;
+    },
+  };
+
   const workflow = createWorkflowRuntime(infra, engineClient, files);
   const integrations = createIntegrationRuntime(ctx.db);
 
@@ -77,6 +83,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     auth,
     workflow,
     integrations,
+
     async dispose() {
       await cleanupTestDb(ctx);
     },
