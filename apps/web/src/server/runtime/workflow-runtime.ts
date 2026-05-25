@@ -13,7 +13,7 @@ import type { ServerInfra } from "./infra";
 export function createWorkflowRuntime(
   infra: ServerInfra,
   engine: EngineClient,
-  files: Pick<FilesRuntime, "repo" | "storage" | "syncExecutor">,
+  files: Pick<FilesRuntime, "repo" | "storage">,
 ) {
   const engineGateway = createEngineGateway(engine);
   const repos = createWorkflowRepos(infra.db);
@@ -23,9 +23,9 @@ export function createWorkflowRuntime(
     queries: createWorkflowQueryBus(repos, engineGateway),
     leadArtifacts: createLeadArtifactsService({
       leadReader: createLeadRepo(infra.db),
+      leadQueries: repos.leadQueries,
       filesRepo: files.repo,
       filesStorage: files.storage,
-      filesSyncExecutor: files.syncExecutor,
     }),
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {

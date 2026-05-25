@@ -26,16 +26,6 @@ export interface ArtifactRepos {
   negotiation: ReturnType<typeof createNegotiationFilesRepo>;
 }
 
-export interface SyncExecutor {
-  run(
-    artifactType: ArtifactType,
-    context: Record<string, unknown>,
-  ): Promise<{
-    bytes: Uint8Array;
-    filename: string;
-  }>;
-}
-
 export type ArtifactEventRepo = Pick<ArtifactRepos, "events">;
 
 export interface RequestArtifactInput {
@@ -70,8 +60,6 @@ export type ListArtifactsRepo = Pick<ArtifactRepos, "artifacts">;
 
 export interface RequestArtifactDeps {
   repo: RequestArtifactRepo;
-  storage: FileStorage;
-  syncExecutor: SyncExecutor;
 }
 
 export interface UploadArtifactDeps {
@@ -107,7 +95,7 @@ export interface ArtifactServiceApi {
     ctx: AppContext,
     input: RequestArtifactInput,
     deps: RequestArtifactDeps,
-  ) => Promise<Result<ArtifactWithAsset, DomainError>>;
+  ) => Promise<Result<WorkflowArtifact, DomainError>>;
   uploadArtifactFile: (
     ctx: AppContext,
     artifactId: string,

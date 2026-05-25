@@ -1,12 +1,11 @@
 import { hasPermission } from "~/lib/auth/access/rbac";
-import type {
-  ArtifactRepos,
-  SyncExecutor,
-} from "~/server/files/service/contracts";
+import type { ArtifactRepos } from "~/server/files/service/contracts";
+import { createDownloadArtifact } from "~/server/files/service/create-download-artifact";
 import { requestArtifact } from "~/server/files/service/request-artifact";
 import { requestDownloadToken } from "~/server/files/service/request-download-token";
 import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import type { FileStorage } from "~/server/files/storage";
+import { buildRecordExportCsv } from "~/server/integrations/infrastructure/lead-export-builder";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -16,13 +15,13 @@ import type {
 } from "~/server/workflow/types";
 
 import { authorizeLeadAction } from "../../domain/lead/policy";
-import type { LeadReadRepository } from "../ports/lead";
+import type { LeadQueries, LeadReadRepository } from "../ports/lead";
 
 type LeadArtifactDeps = {
   leadReader: LeadReadRepository;
+  leadQueries: LeadQueries;
   filesRepo: ArtifactRepos;
   filesStorage: FileStorage;
-  filesSyncExecutor: SyncExecutor;
 };
 
 async function requireReadableLead(
@@ -79,6 +78,53 @@ function mapSaleProofFile(record: {
 
 export function createLeadArtifactsService(deps: LeadArtifactDeps) {
   return {
+    async requestLeadsExportDownloadToken(input: {
+      ctx: AppContext;
+    }): Promise<Result<{ token: string }, DomainError>> {
+      if (!hasPermission(input.ctx.actor.role, "integration:manage")) {
+        return Err(domainError("forbidden", "forbidden", "Access denied"));
+      }
+
+      const rows = await deps.leadQueries.export({
+        actorUserId: input.ctx.actor.userId,
+        actorRole: input.ctx.actor.role,
+        actorBranchId: input.ctx.actor.branchId,
+      });
+      const csv = buildRecordExportCsv(
+        rows.map((lead) => ({
+          ruc: lead.ruc,
+          razon_social: lead.razonSocial ?? "",
+          executive_id: lead.executiveId,
+          executive_name: lead.executiveName,
+          created_at: new Date(lead.createdAt).toISOString().slice(0, 10),
+          stage: lead.stage,
+          address: lead.address ?? "",
+          status: lead.status ?? "",
+          prioridad: lead.prioridad ?? "",
+        })),
+      );
+      const bytes = new TextEncoder().encode(csv);
+
+      const requested = await createDownloadArtifact(
+        input.ctx,
+        {
+          artifactType: "records_export",
+          workflowContext: {},
+          filename: "records-export.csv",
+          bytes,
+        },
+        {
+          repo: deps.filesRepo,
+          storage: deps.filesStorage,
+        },
+      );
+      if (!requested.ok) return requested;
+
+      return requestDownloadToken(input.ctx, requested.value.artifact.id, {
+        repo: deps.filesRepo,
+      });
+    },
+
     async listSaleProofFiles(input: {
       ctx: AppContext;
       leadId: string;
@@ -123,13 +169,11 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         },
         {
           repo: deps.filesRepo,
-          storage: deps.filesStorage,
-          syncExecutor: deps.filesSyncExecutor,
         },
       );
       if (!requested.ok) return requested;
 
-      const artifactId = requested.value.artifact.id;
+      const artifactId = requested.value.id;
       const uploaded = await uploadArtifactFile(
         input.ctx,
         artifactId,
@@ -239,13 +283,11 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         },
         {
           repo: deps.filesRepo,
-          storage: deps.filesStorage,
-          syncExecutor: deps.filesSyncExecutor,
         },
       );
       if (!requested.ok) return requested;
 
-      const artifactId = requested.value.artifact.id;
+      const artifactId = requested.value.id;
       const uploaded = await uploadArtifactFile(
         input.ctx,
         artifactId,

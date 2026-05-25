@@ -38,6 +38,20 @@ export async function listLeadSaleProofFiles(leadId: string) {
   });
 }
 
+export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
+  token: string;
+}> {
+  return runAction({
+    actionName: "workflow.request_leads_export_download_token",
+    access: { kind: "auth" },
+    input: {},
+    execute: (ctx) =>
+      getServerRuntime().workflow.leadArtifacts.requestLeadsExportDownloadToken(
+        { ctx },
+      ),
+  });
+}
+
 export async function uploadLeadSaleProofFile(
   leadId: string,
   formData: FormData,

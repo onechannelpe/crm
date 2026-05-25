@@ -1,6 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, on } from "solid-js";
 
+import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
@@ -14,7 +15,7 @@ import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
 import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads";
 import { leadListQuery } from "~/features/workflow/data/queries";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import { requestAndDownload } from "~/lib/files/client";
+import { downloadWithToken } from "~/lib/files/client";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";
@@ -106,7 +107,8 @@ export function LeadsWorkspace() {
   const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
   async function handleExport() {
-    await requestAndDownload("records_export", {});
+    const { token } = await requestWorkflowLeadsExportDownloadToken();
+    downloadWithToken(token);
   }
 
   const adapter = {

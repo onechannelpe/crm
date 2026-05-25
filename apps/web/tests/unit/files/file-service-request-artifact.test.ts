@@ -28,18 +28,8 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
   };
 }
 
-const CSV_BYTES = new TextEncoder().encode("ruc,nombre\n201,Acme");
-
-describe("requestArtifact sync export metadata", () => {
-  it("uses file metadata derived from executor output", async () => {
-    const insertedAssets: Array<{
-      extension: string;
-      detectedMime: string;
-      signatureKind: string | null;
-      safeDisplayFilename: string;
-      storageKey: string;
-    }> = [];
-
+describe("requestArtifact", () => {
+  it("rejects download artifact creation from generic path", async () => {
     const deps: RequestArtifactDeps = {
       repo: {
         artifacts: {
@@ -62,60 +52,18 @@ describe("requestArtifact sync export metadata", () => {
             createdAt: 1,
             updatedAt: 1,
           }),
-          findFileAssetForArtifact: async () => ({
-            id: 9,
-            storageKey: "records_export-42-1700000000000.csv",
-            originalFilename: "records-export.csv",
-            safeDisplayFilename: "records-export.csv",
-            detectedMime: "text/csv; charset=utf-8",
-            extension: "csv",
-            sizeBytes: CSV_BYTES.length,
-            sha256Hex: "hash",
-            signatureKind: "csv",
-            scanStatus: "clean",
-            scanEngine: null,
-            scanReference: null,
-            createdAt: 1,
-          }),
+          findFileAssetForArtifact: async () => null,
           insertFileBinding: async () => {},
           list: async () => [],
         },
         assets: {
-          insert: async (input) => {
-            insertedAssets.push({
-              extension: input.extension,
-              detectedMime: input.detectedMime,
-              signatureKind: input.signatureKind,
-              safeDisplayFilename: input.safeDisplayFilename,
-              storageKey: input.storageKey,
-            });
-            return 9;
-          },
+          insert: async () => 9,
           findById: async () => null,
         },
         events: {
           insert: async () => {},
           list: async () => [],
         },
-      },
-
-      storage: {
-        putFromWebStream: async () => ({
-          sha256: "unused",
-          sizeBytes: CSV_BYTES.length,
-        }),
-        putBytes: async () => ({
-          sha256: "hash",
-          sizeBytes: CSV_BYTES.length,
-        }),
-        getBytes: async () => CSV_BYTES,
-        delete: async () => {},
-      },
-      syncExecutor: {
-        run: async () => ({
-          bytes: CSV_BYTES,
-          filename: "records-export.csv",
-        }),
       },
     };
 
@@ -129,10 +77,12 @@ describe("requestArtifact sync export metadata", () => {
       deps,
     );
 
-    expect(isErr(result)).toBe(false);
-    expect(insertedAssets[0]?.extension).toBe("csv");
-    expect(insertedAssets[0]?.signatureKind).toBe("csv");
-    expect(insertedAssets[0]?.detectedMime).toBe("text/csv; charset=utf-8");
-    expect(insertedAssets[0]?.storageKey.endsWith(".csv")).toBe(true);
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected error result");
+    }
+    expect(result.error.code).toBe(
+      "download_artifact_requires_generated_payload",
+    );
   });
 });
