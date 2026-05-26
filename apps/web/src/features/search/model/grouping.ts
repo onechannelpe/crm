@@ -7,7 +7,8 @@ export interface CompanyRef {
 
 export interface PersonGroup {
   key: string;
-  dni: string;
+  doc_type: string;
+  doc_number: string;
   displayName: string;
   aliases: string[];
   companies: CompanyRef[];
@@ -42,22 +43,28 @@ function companyKey(ruc: string | null, name: string | null): string {
   return `${normalized(ruc)}|${normalized(name)}`;
 }
 
-export function groupPeopleByDni(
+export function groupByDocument(
   results: readonly SearchResult[],
 ): PersonGroup[] {
   const groups = new Map<string, SearchResult[]>();
   for (const row of results) {
-    const dni = normalized(row.person.dni);
-    if (!dni) continue;
-    const existing = groups.get(dni);
+    if (row.kind !== "document") continue;
+    const key = `${row.doc.doc_type}:${row.doc.doc_number}`;
+    const existing = groups.get(key);
     if (existing) {
       existing.push(row);
     } else {
-      groups.set(dni, [row]);
+      groups.set(key, [row]);
     }
   }
 
-  return [...groups.entries()].map(([dni, rows]) => {
+  return [...groups.entries()].map(([key, rows]) => {
+    const first = rows[0]!;
+    const docType =
+      first.kind === "document" ? first.doc.doc_type : "";
+    const docNumber =
+      first.kind === "document" ? first.doc.doc_number : "";
+
     const aliases: string[] = [];
     const aliasSet = new Set<string>();
     const phones: string[] = [];
@@ -66,16 +73,17 @@ export function groupPeopleByDni(
     const companyKeys = new Set<string>();
 
     for (const row of rows) {
-      pushUnique(aliases, aliasSet, row.person.name);
+      if (row.kind !== "document") continue;
+      pushUnique(aliases, aliasSet, row.doc.name);
       pushUnique(phones, phoneSet, row.phones.primary);
       pushUnique(phones, phoneSet, row.phones.secondary);
       for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(phones, phoneSet, siblingPhone);
       }
 
-      const key = companyKey(row.org?.ruc ?? null, row.org?.name ?? null);
-      if (key !== "|" && !companyKeys.has(key)) {
-        companyKeys.add(key);
+      const ck = companyKey(row.org?.ruc ?? null, row.org?.name ?? null);
+      if (ck !== "|" && !companyKeys.has(ck)) {
+        companyKeys.add(ck);
         companies.push({
           ruc: normalized(row.org?.ruc) || null,
           name: normalized(row.org?.name) || null,
@@ -83,24 +91,26 @@ export function groupPeopleByDni(
       }
     }
 
-    const displayName = aliases.find((alias) => alias.length > 0) ?? dni;
-    return { key: dni, dni, displayName, aliases, companies, phones };
+    const displayName =
+      aliases.find((alias) => alias.length > 0) ?? docNumber;
+    return { key, doc_type: docType, doc_number: docNumber, displayName, aliases, companies, phones };
   });
 }
 
-export function groupCompaniesByRuc(
+export function groupByCompany(
   results: readonly SearchResult[],
 ): CompanyGroup[] {
   const groups = new Map<string, CompanyGroup>();
 
   for (const [index, row] of results.entries()) {
-    const ruc = normalized(row.org?.ruc ?? null);
+    if (row.kind !== "company") continue;
+    const ruc = normalized(row.company.ruc);
     const key = ruc ? `ruc:${ruc}` : `row:${index}`;
     const existing = groups.get(key);
 
     if (existing) {
       if (!existing.name) {
-        existing.name = normalized(row.org?.name ?? null) || null;
+        existing.name = normalized(row.company.legal_name) || null;
       }
 
       const phoneSet = new Set(existing.phones);
@@ -108,18 +118,6 @@ export function groupCompaniesByRuc(
       pushUnique(existing.phones, phoneSet, row.phones.secondary);
       for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(existing.phones, phoneSet, siblingPhone);
-      }
-
-      const emailSet = new Set(existing.emails);
-      pushUnique(existing.emails, emailSet, row.person.email);
-
-      const personDni = normalized(row.person.dni);
-      const personName = normalized(row.person.name);
-      const existingPeople = new Set(
-        existing.people.map((person) => person.dni),
-      );
-      if (personDni && !existingPeople.has(personDni)) {
-        existing.people.push({ dni: personDni, name: personName || personDni });
       }
       continue;
     }
@@ -132,20 +130,13 @@ export function groupCompaniesByRuc(
       pushUnique(phones, phoneSet, siblingPhone);
     }
 
-    const emails: string[] = [];
-    const emailSet = new Set<string>();
-    pushUnique(emails, emailSet, row.person.email);
-
-    const personDni = normalized(row.person.dni);
     groups.set(key, {
       key,
       ruc: ruc || null,
-      name: normalized(row.org?.name ?? null) || null,
-      people: personDni
-        ? [{ dni: personDni, name: normalized(row.person.name) || personDni }]
-        : [],
+      name: normalized(row.company.legal_name) || null,
+      people: [],
       phones,
-      emails,
+      emails: [],
     });
   }
 

@@ -31,10 +31,17 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(source_id) REFERENCES source_registry(source_id)
         );
 
-        CREATE TABLE IF NOT EXISTS person_profile (
-            person_id INTEGER PRIMARY KEY,
-            dni TEXT UNIQUE,
-            natural_ruc10 TEXT UNIQUE,
+        -- Identity anchor: any valid (doc_type, doc_number) pair
+        CREATE TABLE IF NOT EXISTS document (
+            doc_id INTEGER PRIMARY KEY,
+            doc_type TEXT NOT NULL,
+            doc_number TEXT NOT NULL,
+            UNIQUE(doc_type, doc_number)
+        );
+
+        -- Person attributes for a document holder
+        CREATE TABLE IF NOT EXISTS document_attribute (
+            doc_id INTEGER PRIMARY KEY,
             full_name TEXT NOT NULL DEFAULT '',
             birth_date TEXT,
             birth_place TEXT,
@@ -43,7 +50,9 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             location_text TEXT,
             mother_name TEXT,
             father_name TEXT,
-            ubigeo_code TEXT
+            ubigeo_code TEXT,
+            natural_ruc10 TEXT,
+            FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
         CREATE TABLE IF NOT EXISTS company_profile (
@@ -65,38 +74,40 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             economic_activity TEXT
         );
 
-        CREATE TABLE IF NOT EXISTS person_company_role (
+        -- Role links a document holder (nullable if unresolved) to a company
+        CREATE TABLE IF NOT EXISTS company_role (
             role_id INTEGER PRIMARY KEY,
-            person_id INTEGER,
             company_id INTEGER NOT NULL,
+            doc_id INTEGER,
             rep_doc_type TEXT NOT NULL DEFAULT '',
             rep_doc_number TEXT NOT NULL DEFAULT '',
             rep_name TEXT NOT NULL DEFAULT '',
             role_name TEXT NOT NULL DEFAULT '',
             role_start_date TEXT NOT NULL DEFAULT '',
-            resolution_status TEXT NOT NULL DEFAULT 'unresolved',
             UNIQUE(company_id, rep_doc_type, rep_doc_number, role_name, role_start_date),
-            FOREIGN KEY(person_id) REFERENCES person_profile(person_id),
-            FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
+            FOREIGN KEY(company_id) REFERENCES company_profile(company_id),
+            FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        CREATE TABLE IF NOT EXISTS person_phone (
-            person_id INTEGER NOT NULL,
+        -- Phones anchored to a document holder
+        CREATE TABLE IF NOT EXISTS document_phone (
+            doc_id INTEGER NOT NULL,
             phone TEXT NOT NULL,
             first_seen_snapshot_id INTEGER NOT NULL,
             last_seen_snapshot_id INTEGER NOT NULL,
             confidence INTEGER NOT NULL DEFAULT 100,
-            PRIMARY KEY(person_id, phone),
-            FOREIGN KEY(person_id) REFERENCES person_profile(person_id)
+            PRIMARY KEY(doc_id, phone),
+            FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        CREATE TABLE IF NOT EXISTS person_email (
-            person_id INTEGER NOT NULL,
+        -- Emails anchored to a document holder
+        CREATE TABLE IF NOT EXISTS document_email (
+            doc_id INTEGER NOT NULL,
             email TEXT NOT NULL,
             source_id INTEGER NOT NULL,
             reliability INTEGER NOT NULL,
-            PRIMARY KEY(person_id, email),
-            FOREIGN KEY(person_id) REFERENCES person_profile(person_id),
+            PRIMARY KEY(doc_id, email),
+            FOREIGN KEY(doc_id) REFERENCES document(doc_id),
             FOREIGN KEY(source_id) REFERENCES source_registry(source_id)
         );
 
@@ -131,25 +142,36 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(updated_snapshot_id) REFERENCES source_snapshot(snapshot_id)
         );
 
-        CREATE TABLE IF NOT EXISTS projection_dirty_person (
-            person_id INTEGER PRIMARY KEY,
+        -- Dirty tracking: independent per axis
+        CREATE TABLE IF NOT EXISTS projection_dirty_doc (
+            doc_id INTEGER PRIMARY KEY,
             updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-            FOREIGN KEY(person_id) REFERENCES person_profile(person_id)
+            FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
+        CREATE TABLE IF NOT EXISTS projection_dirty_company (
+            company_id INTEGER PRIMARY KEY,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
+        );
+
+        -- Phone aggregates
         CREATE TABLE IF NOT EXISTS ruc_phone_agg (
             org_ruc TEXT PRIMARY KEY,
             phones TEXT NOT NULL
         );
 
-        CREATE TABLE IF NOT EXISTS dni_phone_agg (
-            dni TEXT PRIMARY KEY,
-            phones TEXT NOT NULL
+        CREATE TABLE IF NOT EXISTS doc_phone_agg (
+            doc_id INTEGER PRIMARY KEY,
+            phones TEXT NOT NULL,
+            FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        CREATE TABLE IF NOT EXISTS search_projection (
-            id INTEGER PRIMARY KEY,
-            dni TEXT NOT NULL,
+        -- Person-centric search projection (one row per document)
+        CREATE TABLE IF NOT EXISTS doc_projection (
+            doc_id INTEGER PRIMARY KEY,
+            doc_type TEXT NOT NULL,
+            doc_number TEXT NOT NULL,
             name TEXT,
             birth_date TEXT,
             birth_place TEXT,
@@ -182,17 +204,58 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             rep_doc_number TEXT,
             rep_name TEXT,
             phone_primary TEXT,
-            phone_secondary TEXT
+            phone_secondary TEXT,
+            FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        CREATE TABLE IF NOT EXISTS search_projection_phone_index (
+        -- Company-centric search projection (one row per company, always present)
+        CREATE TABLE IF NOT EXISTS company_projection (
+            company_id INTEGER PRIMARY KEY,
+            ruc TEXT NOT NULL,
+            legal_name TEXT,
+            trade_name TEXT,
+            company_type TEXT,
+            org_status TEXT,
+            org_condition TEXT,
+            fiscal_address TEXT,
+            registration_date TEXT,
+            activity_start_date TEXT,
+            line_of_business TEXT,
+            economic_activity TEXT,
+            org_ubigeo_code TEXT,
+            org_department TEXT,
+            org_province TEXT,
+            org_district TEXT,
+            rep_doc_type TEXT,
+            rep_doc_number TEXT,
+            rep_name TEXT,
+            role_name TEXT,
+            role_start_date TEXT,
+            phone_primary TEXT,
+            phone_secondary TEXT,
+            FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
+        );
+
+        -- Phone lookup indexes for both projections
+        CREATE TABLE IF NOT EXISTS doc_projection_phone_index (
             phone TEXT NOT NULL,
-            projection_id INTEGER NOT NULL,
-            UNIQUE(phone, projection_id)
+            doc_id INTEGER NOT NULL,
+            UNIQUE(phone, doc_id)
         );
 
-        CREATE VIRTUAL TABLE IF NOT EXISTS search_projection_fts USING fts5(
-            person_name,
+        CREATE TABLE IF NOT EXISTS company_projection_phone_index (
+            phone TEXT NOT NULL,
+            company_id INTEGER NOT NULL,
+            UNIQUE(phone, company_id)
+        );
+
+        -- Full-text search indexes
+        CREATE VIRTUAL TABLE IF NOT EXISTS doc_projection_fts USING fts5(
+            doc_name,
+            tokenize="unicode61 remove_diacritics 1"
+        );
+
+        CREATE VIRTUAL TABLE IF NOT EXISTS company_projection_fts USING fts5(
             company_name,
             tokenize="unicode61 remove_diacritics 1"
         );

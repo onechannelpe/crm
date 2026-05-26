@@ -25,19 +25,35 @@ SELECT
     company_district
 FROM shard.stage_rows;
 
-CREATE INDEX tmp_stage_person_dni_idx ON tmp_stage(person_dni);
+CREATE INDEX tmp_stage_rep_doc_idx ON tmp_stage(rep_doc_type, rep_doc_number);
 CREATE INDEX tmp_stage_company_ruc_idx ON tmp_stage(company_ruc);
 CREATE INDEX tmp_stage_role_lookup_idx
     ON tmp_stage(company_ruc, rep_doc_type, rep_doc_number, role_name, role_start_date);
 
-CREATE TEMP TABLE tmp_person_dedup AS
+-- Deduplicate documents from rep doc rows and DNI-only rows.
+CREATE TEMP TABLE tmp_doc_dedup AS
 SELECT
-    person_dni,
-    MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS person_natural_ruc,
-    MAX(CASE WHEN person_full_name <> '' THEN person_full_name ELSE '' END) AS person_full_name
+    rep_doc_type AS doc_type,
+    rep_doc_number AS doc_number,
+    MAX(CASE WHEN rep_name <> '' THEN rep_name
+             WHEN person_full_name <> '' THEN person_full_name
+             ELSE '' END) AS full_name,
+    MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS natural_ruc
+FROM tmp_stage
+WHERE NULLIF(rep_doc_type, '') IS NOT NULL AND NULLIF(rep_doc_number, '') IS NOT NULL
+GROUP BY rep_doc_type, rep_doc_number
+UNION ALL
+SELECT
+    'DNI' AS doc_type,
+    person_dni AS doc_number,
+    MAX(CASE WHEN person_full_name <> '' THEN person_full_name ELSE '' END) AS full_name,
+    MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS natural_ruc
 FROM tmp_stage
 WHERE person_dni IS NOT NULL
+  AND (NULLIF(rep_doc_type, '') IS NULL OR NULLIF(rep_doc_number, '') IS NULL)
 GROUP BY person_dni;
+
+CREATE INDEX tmp_doc_dedup_idx ON tmp_doc_dedup(doc_type, doc_number);
 
 CREATE TEMP TABLE tmp_company_dedup AS
 SELECT

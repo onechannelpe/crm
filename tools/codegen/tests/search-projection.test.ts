@@ -134,11 +134,11 @@ describe("groupByObject", () => {
     expect(names).toContain("phones");
   });
 
-  test("person comes before org in preferred order", () => {
+  test("org comes before person because org is in preferred order and person is not", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
     const groups = groupByObject(spec.fields);
     const names = groups.map((g) => g.objectName);
-    expect(names.indexOf("person")).toBeLessThan(names.indexOf("org"));
+    expect(names.indexOf("org")).toBeLessThan(names.indexOf("person"));
   });
 
   test("throws on malformed path", () => {
@@ -217,31 +217,31 @@ describe("renderProjectionContractRust", () => {
 describe("renderResultContractRust", () => {
   test("PersonInfo struct is present", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec);
+    const output = renderResultContractRust(spec, spec);
     expect(output).toContain("pub struct PersonInfo");
   });
 
   test("nullable string field renders as Option<String>", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec);
+    const output = renderResultContractRust(spec, spec);
     expect(output).toContain("pub name: Option<String>");
   });
 
   test("non-nullable string field renders as String", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec);
+    const output = renderResultContractRust(spec, spec);
     expect(output).toContain("pub dni: String");
   });
 
   test("nullable string_array field renders as Option<Vec<String>>", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec);
+    const output = renderResultContractRust(spec, spec);
     expect(output).toContain("pub siblings: Option<Vec<String>>");
   });
 
-  test("org field in SearchRow is Option<OrgInfo>", () => {
+  test("org field in DocumentRow is Option<OrgInfo>", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec);
+    const output = renderResultContractRust(spec, spec);
     expect(output).toContain("pub org: Option<OrgInfo>");
   });
 });
@@ -273,37 +273,37 @@ describe("renderProjectionContractTs", () => {
 describe("renderResultContractTs", () => {
   test("PersonInfo interface is present", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec);
+    const output = renderResultContractTs(spec, spec);
     expect(output).toContain("export interface PersonInfo");
   });
 
   test("nullable string field renders as string | null", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec);
+    const output = renderResultContractTs(spec, spec);
     expect(output).toContain("name: string | null;");
   });
 
   test("non-nullable string field renders as string", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec);
+    const output = renderResultContractTs(spec, spec);
     expect(output).toContain("dni: string;");
   });
 
   test("nullable string_array field renders as string[] | null", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec);
+    const output = renderResultContractTs(spec, spec);
     expect(output).toContain("siblings: string[] | null;");
   });
 
-  test("SearchResult interface has org as OrgInfo | null", () => {
+  test("DocumentRow has org as OrgInfo | null", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec);
+    const output = renderResultContractTs(spec, spec);
     expect(output).toContain("org: OrgInfo | null;");
   });
 
   test("SearchResponse interface is present", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec);
+    const output = renderResultContractTs(spec, spec);
     expect(output).toContain("export interface SearchResponse");
   });
 });

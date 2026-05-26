@@ -1,21 +1,22 @@
 // GENERATED FILE. DO NOT EDIT.
-// Source: contracts/engine/search-projection.json
+// Source: contracts/engine/doc-projection.json
 // Generator: tools/codegen/bin/generate.ts
 
-export const SEARCH_PROJECTION_NAME = "search_projection" as const;
-export const SEARCH_PROJECTION_PATHS = [
-  "person.dni",
-  "person.name",
-  "person.ruc",
-  "person.birth_date",
-  "person.birth_place",
-  "person.sex",
-  "person.marital_status",
-  "person.location_text",
-  "person.ubigeo_code",
-  "person.mother_name",
-  "person.father_name",
-  "person.email",
+export const DOC_PROJECTION_NAME = "doc_projection" as const;
+export const DOC_PROJECTION_PATHS = [
+  "doc.doc_type",
+  "doc.doc_number",
+  "doc.name",
+  "doc.ruc",
+  "doc.birth_date",
+  "doc.birth_place",
+  "doc.sex",
+  "doc.marital_status",
+  "doc.location_text",
+  "doc.ubigeo_code",
+  "doc.mother_name",
+  "doc.father_name",
+  "doc.email",
   "org.ruc",
   "org.name",
   "org.trade_name",
@@ -40,20 +41,20 @@ export const SEARCH_PROJECTION_PATHS = [
   "phones.secondary",
   "phones.siblings",
 ] as const;
-export type SearchProjectionPath = (typeof SEARCH_PROJECTION_PATHS)[number];
+export type DOC_PROJECTION_PATH = (typeof DOC_PROJECTION_PATHS)[number];
 
-export const SEARCH_PROJECTION_NULLABLE_PATHS = [
-  "person.name",
-  "person.ruc",
-  "person.birth_date",
-  "person.birth_place",
-  "person.sex",
-  "person.marital_status",
-  "person.location_text",
-  "person.ubigeo_code",
-  "person.mother_name",
-  "person.father_name",
-  "person.email",
+export const DOC_PROJECTION_NULLABLE_PATHS = [
+  "doc.name",
+  "doc.ruc",
+  "doc.birth_date",
+  "doc.birth_place",
+  "doc.sex",
+  "doc.marital_status",
+  "doc.location_text",
+  "doc.ubigeo_code",
+  "doc.mother_name",
+  "doc.father_name",
+  "doc.email",
   "org.ruc",
   "org.name",
   "org.trade_name",
@@ -78,5 +79,5 @@ export const SEARCH_PROJECTION_NULLABLE_PATHS = [
   "phones.secondary",
   "phones.siblings",
 ] as const;
-export type SearchProjectionNullablePath =
-  (typeof SEARCH_PROJECTION_NULLABLE_PATHS)[number];
+export type DOC_PROJECTION_NULLABLE_PATH =
+  (typeof DOC_PROJECTION_NULLABLE_PATHS)[number];

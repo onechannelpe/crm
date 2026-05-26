@@ -1,8 +1,8 @@
 import type { SearchDirectResult } from "~/actions/search/contracts";
 
 import {
-  groupCompaniesByRuc,
-  groupPeopleByDni,
+  groupByCompany,
+  groupByDocument,
   type CompanyGroup,
   type PersonGroup,
 } from "./grouping";
@@ -16,8 +16,8 @@ export interface SearchViewModel {
 export function createSearchViewModel(
   response: SearchDirectResult,
 ): SearchViewModel {
-  const people = groupPeopleByDni(response.raw);
-  const companies = groupCompaniesByRuc(response.raw);
+  const people = groupByDocument(response.raw);
+  const companies = groupByCompany(response.raw);
 
   return {
     people,

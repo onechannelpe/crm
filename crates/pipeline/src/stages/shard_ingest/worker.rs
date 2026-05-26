@@ -116,10 +116,7 @@ pub(super) fn run_shard_worker(
             company_district: canonical_row.company_district,
         };
 
-        if !stage_row.rep_doc_number.is_empty()
-            && stage_row.person_dni.is_none()
-            && stage_row.rep_doc_type.eq_ignore_ascii_case("DNI")
-        {
+        if canonical_row.had_rep_doc_input && stage_row.rep_doc_type.is_empty() {
             counters.invalid_dni_rows += 1;
         }
 

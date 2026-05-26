@@ -18,9 +18,11 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
     let file = tempfile::NamedTempFile::new().expect("temp file");
     let conn = Connection::open(file.path()).expect("open");
     conn.execute_batch(
-        "CREATE TABLE search_projection (
-            id                  INTEGER PRIMARY KEY,
-            dni                 TEXT NOT NULL,
+        "
+        CREATE TABLE doc_projection (
+            doc_id              INTEGER PRIMARY KEY,
+            doc_type            TEXT NOT NULL,
+            doc_number          TEXT NOT NULL,
             name                TEXT,
             birth_date          TEXT,
             birth_place         TEXT,
@@ -55,13 +57,52 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
             phone_primary       TEXT,
             phone_secondary     TEXT
         );
-        CREATE TABLE search_projection_phone_index (
-            phone         TEXT    NOT NULL,
-            projection_id INTEGER NOT NULL
+        CREATE TABLE company_projection (
+            company_id          INTEGER PRIMARY KEY,
+            ruc                 TEXT NOT NULL,
+            legal_name          TEXT,
+            trade_name          TEXT,
+            company_type        TEXT,
+            org_status          TEXT,
+            org_condition       TEXT,
+            fiscal_address      TEXT,
+            registration_date   TEXT,
+            activity_start_date TEXT,
+            line_of_business    TEXT,
+            economic_activity   TEXT,
+            org_ubigeo_code     TEXT,
+            org_department      TEXT,
+            org_province        TEXT,
+            org_district        TEXT,
+            rep_doc_type        TEXT,
+            rep_doc_number      TEXT,
+            rep_name            TEXT,
+            role_name           TEXT,
+            role_start_date     TEXT,
+            phone_primary       TEXT,
+            phone_secondary     TEXT
         );
-        CREATE VIRTUAL TABLE search_projection_fts USING fts5(person_name, company_name);
+        CREATE TABLE doc_projection_phone_index (
+            phone   TEXT    NOT NULL,
+            doc_id  INTEGER NOT NULL,
+            UNIQUE(phone, doc_id)
+        );
+        CREATE TABLE company_projection_phone_index (
+            phone       TEXT    NOT NULL,
+            company_id  INTEGER NOT NULL,
+            UNIQUE(phone, company_id)
+        );
+        CREATE VIRTUAL TABLE doc_projection_fts USING fts5(
+            doc_name,
+            tokenize='unicode61 remove_diacritics 1'
+        );
+        CREATE VIRTUAL TABLE company_projection_fts USING fts5(
+            company_name,
+            tokenize='unicode61 remove_diacritics 1'
+        );
         CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
-        CREATE TABLE dni_phone_agg (dni     TEXT PRIMARY KEY, phones TEXT NOT NULL);",
+        CREATE TABLE doc_phone_agg  (doc_id  INTEGER PRIMARY KEY, phones TEXT NOT NULL);
+        ",
     )
     .expect("seed schema");
     file

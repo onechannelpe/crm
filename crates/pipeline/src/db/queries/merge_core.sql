@@ -1,37 +1,20 @@
-INSERT INTO person_profile(dni, natural_ruc10, full_name)
-SELECT
-    person_dni,
-    NULLIF(person_natural_ruc, ''),
-    person_full_name
-FROM tmp_person_dedup
-WHERE 1 = 1
-ON CONFLICT(dni) DO UPDATE SET
-    natural_ruc10 = CASE
-        WHEN excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 <> '' THEN excluded.natural_ruc10
-        ELSE person_profile.natural_ruc10
-    END,
-    full_name = CASE
-        WHEN excluded.full_name <> '' THEN excluded.full_name
-        ELSE person_profile.full_name
-    END
-WHERE
-    (excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 <> '' AND excluded.natural_ruc10 <> person_profile.natural_ruc10)
-    OR (excluded.full_name <> '' AND excluded.full_name <> person_profile.full_name);
+INSERT INTO document(doc_type, doc_number)
+SELECT doc_type, doc_number FROM tmp_doc_dedup
+ON CONFLICT(doc_type, doc_number) DO NOTHING;
 
-INSERT INTO person_profile(dni, natural_ruc10, full_name)
-SELECT
-    NULL,
-    NULLIF(person_natural_ruc, ''),
-    person_full_name
-FROM tmp_stage
-WHERE person_dni IS NULL
-    AND NULLIF(person_natural_ruc, '') IS NOT NULL
-ON CONFLICT(natural_ruc10) DO UPDATE SET
+INSERT INTO document_attribute(doc_id, full_name, natural_ruc10)
+SELECT d.doc_id, td.full_name, NULLIF(td.natural_ruc, '')
+FROM tmp_doc_dedup td
+JOIN document d ON d.doc_type = td.doc_type AND d.doc_number = td.doc_number
+ON CONFLICT(doc_id) DO UPDATE SET
     full_name = CASE
         WHEN excluded.full_name <> '' THEN excluded.full_name
-        ELSE person_profile.full_name
-    END
-WHERE excluded.full_name <> '' AND excluded.full_name <> person_profile.full_name;
+        ELSE document_attribute.full_name
+    END,
+    natural_ruc10 = COALESCE(excluded.natural_ruc10, document_attribute.natural_ruc10)
+WHERE
+    (excluded.full_name <> '' AND excluded.full_name <> document_attribute.full_name)
+    OR (excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 <> document_attribute.natural_ruc10);
 
 INSERT INTO company_profile(ruc, legal_name, status, condition, company_type, economic_activity, ubigeo_code, department, province, district)
 SELECT
@@ -73,17 +56,16 @@ WHERE
 
 CREATE TEMP TABLE tmp_role_source AS
 SELECT DISTINCT
-    pp.person_id AS person_id,
-    cp.company_id AS company_id,
+    d.doc_id,
+    cp.company_id,
     ts.rep_doc_type,
     ts.rep_doc_number,
     ts.rep_name,
     ts.role_name,
-    ts.role_start_date,
-    CASE WHEN pp.person_id IS NULL THEN 'unresolved' ELSE 'resolved' END AS resolution_status
+    ts.role_start_date
 FROM tmp_stage ts
 JOIN company_profile cp ON cp.ruc = ts.company_ruc
-LEFT JOIN person_profile pp ON pp.dni = ts.person_dni
+LEFT JOIN document d ON d.doc_type = ts.rep_doc_type AND d.doc_number = ts.rep_doc_number
 WHERE
     ts.company_ruc IS NOT NULL
     AND (
@@ -92,35 +74,23 @@ WHERE
         OR ts.rep_name <> ''
     );
 
-INSERT INTO person_company_role(
-    person_id,
-    company_id,
-    rep_doc_type,
-    rep_doc_number,
-    rep_name,
-    role_name,
-    role_start_date,
-    resolution_status
-)
+INSERT INTO company_role(doc_id, company_id, rep_doc_type, rep_doc_number, rep_name, role_name, role_start_date)
 SELECT
-    person_id,
+    doc_id,
     company_id,
     rep_doc_type,
     rep_doc_number,
     rep_name,
     role_name,
-    role_start_date,
-    resolution_status
+    role_start_date
 FROM tmp_role_source
 WHERE 1 = 1
 ON CONFLICT(company_id, rep_doc_type, rep_doc_number, role_name, role_start_date) DO UPDATE SET
-    person_id = COALESCE(person_company_role.person_id, excluded.person_id),
+    doc_id = COALESCE(company_role.doc_id, excluded.doc_id),
     rep_name = CASE
         WHEN excluded.rep_name <> '' THEN excluded.rep_name
-        ELSE person_company_role.rep_name
-    END,
-    resolution_status = excluded.resolution_status
+        ELSE company_role.rep_name
+    END
 WHERE
-    (person_company_role.person_id IS NULL AND excluded.person_id IS NOT NULL)
-    OR (excluded.rep_name <> '' AND excluded.rep_name <> person_company_role.rep_name)
-    OR (excluded.resolution_status <> person_company_role.resolution_status);
+    (company_role.doc_id IS NULL AND excluded.doc_id IS NOT NULL)
+    OR (excluded.rep_name <> '' AND excluded.rep_name <> company_role.rep_name);

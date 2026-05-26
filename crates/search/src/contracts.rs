@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-pub use crate::result_contract_generated::SearchRow;
+pub use crate::result_contract_generated::{
+    CompanyInfo, CompanyRow, DocInfo, DocumentRow, OrgInfo, PhoneInfo, RepInfo, RoleInfo,
+    SearchResult,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct SearchRequest {
@@ -28,6 +31,6 @@ fn default_limit() -> usize {
 
 #[derive(Debug, Serialize)]
 pub struct SearchResponse {
-    pub results: Vec<SearchRow>,
+    pub results: Vec<SearchResult>,
     pub count: usize,
 }

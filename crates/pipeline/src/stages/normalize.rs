@@ -17,7 +17,7 @@ struct NormalizationSummary {
     total_rows: usize,
     normalized_rows: usize,
     error_rows: usize,
-    invalid_dni_rows: usize,
+    invalid_doc_rows: usize,
     invalid_ruc_rows: usize,
     invalid_phone_rows: usize,
     empty_payload_rows: usize,
@@ -173,9 +173,11 @@ fn normalize_source_entry(
         let row = canonical::map_record(&resolved_mapping, &record);
 
         let mut errors: Vec<&str> = Vec::new();
-        if row.had_person_dni_input && row.person_dni.is_none() {
-            summary.invalid_dni_rows += 1;
-            errors.push("invalid_dni");
+        let has_invalid_rep_doc = row.had_rep_doc_input && row.rep_doc_type.is_empty();
+        let has_invalid_person_doc = row.had_person_doc_input && row.person_dni.is_none();
+        if has_invalid_rep_doc || has_invalid_person_doc {
+            summary.invalid_doc_rows += 1;
+            errors.push("invalid_doc");
         }
         if row.had_company_ruc_input && row.company_ruc.is_none() {
             summary.invalid_ruc_rows += 1;

@@ -1,8 +1,8 @@
 use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
 use crate::domain::normalize_helpers::{
-    normalize_ambiguous_doc, normalize_dni, normalize_person_document_with_natural_ruc,
-    normalize_phone_with_kind, normalize_ruc, normalize_text,
+    normalize_ambiguous_doc, normalize_person_document_with_natural_ruc,
+    normalize_phone_with_kind, normalize_ruc, normalize_text, validate_rep_doc,
 };
 use csv::StringRecord;
 use std::collections::{HashMap, HashSet};
@@ -12,7 +12,8 @@ use std::sync::OnceLock;
 pub(crate) struct CanonicalRow {
     pub(crate) person_dni: Option<String>,
     pub(crate) person_natural_ruc: Option<String>,
-    pub(crate) had_person_dni_input: bool,
+    pub(crate) had_person_doc_input: bool,
+    pub(crate) had_rep_doc_input: bool,
     pub(crate) person_full_name: String,
     pub(crate) email: Option<String>,
     pub(crate) company_ruc: Option<String>,
@@ -45,8 +46,8 @@ pub(crate) struct ResolvedMapping {
 pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> CanonicalRow {
     let person_dni_raw = mapped_value("person_dni", resolved, record);
     let person_or_company_doc_raw = mapped_value("person_or_company_doc", resolved, record);
-    let rep_doc_type = mapped_value("rep_doc_type", resolved, record);
-    let rep_doc_number = mapped_value("rep_doc_number", resolved, record);
+    let rep_doc_type_raw = mapped_value("rep_doc_type", resolved, record);
+    let rep_doc_number_raw = mapped_value("rep_doc_number", resolved, record);
     let person_full_name = mapped_value("person_full_name", resolved, record);
     let rep_name = mapped_value("rep_name", resolved, record);
     let company_ruc_raw = mapped_value("company_ruc", resolved, record);
@@ -64,24 +65,21 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
         && !doc_resolved_to_person
         && !doc_resolved_to_company;
 
-    let person_dni = person_dni_from_person_doc.or(doc_person_dni).or_else(|| {
-        if rep_doc_type.eq_ignore_ascii_case("DNI") {
-            normalize_dni(&rep_doc_number)
-        } else {
-            None
-        }
-    });
-
+    let person_dni = person_dni_from_person_doc.or(doc_person_dni);
     let person_natural_ruc = person_natural_ruc_from_person_doc.or(doc_natural_ruc);
-
     let company_ruc = normalize_ruc(&company_ruc_raw).or(doc_company_ruc);
+
+    let had_rep_doc_input = !rep_doc_type_raw.is_empty() && !rep_doc_number_raw.is_empty();
+    let (rep_doc_type, rep_doc_number) =
+        validate_rep_doc(&rep_doc_type_raw, &rep_doc_number_raw).unwrap_or_default();
 
     CanonicalRow {
         person_dni,
         person_natural_ruc,
-        had_person_dni_input: !person_dni_raw.is_empty()
+        had_person_doc_input: !person_dni_raw.is_empty()
             || doc_resolved_to_person
             || doc_unresolved,
+        had_rep_doc_input,
         person_full_name: if !person_full_name.is_empty() {
             person_full_name
         } else {

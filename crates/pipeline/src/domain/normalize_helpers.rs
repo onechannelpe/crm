@@ -24,6 +24,53 @@ pub enum PhoneKind {
     Fixed,
 }
 
+/// Validates and normalizes a representative's document. Returns `(canonical_type, normalized_number)` or `None` if invalid.
+pub fn validate_rep_doc(doc_type: &str, doc_number: &str) -> Option<(String, String)> {
+    let number = doc_number.trim();
+    if number.is_empty() {
+        return None;
+    }
+    let dtype = doc_type.trim().to_ascii_uppercase();
+    match dtype.as_str() {
+        "DNI" => normalize_dni(number).map(|n| ("DNI".into(), n)),
+        "CE" | "C.E." | "CARNET DE EXTRANJERIA" | "CARNET EXTRANJERIA" => {
+            normalize_alnum_upper(number, 1, 11).map(|n| ("CE".into(), n))
+        }
+        "PASAPORTE" | "PASSPORT" => {
+            normalize_alnum_upper(number, 1, 15).map(|n| ("PASAPORTE".into(), n))
+        }
+        "PTP" => {
+            let n = digits(number);
+            (n.len() == 9).then_some(("PTP".into(), n))
+        }
+        "C.S.R." | "CARNET DE REFUGIO" | "CARNET SOLICITUD REFUGIO" => {
+            let n = digits(number);
+            ((5..=9).contains(&n.len())).then_some(("CSR".into(), n))
+        }
+        "C.I.R.E." | "CARNET IDENTIDAD" | "CARNET DE IDENTIDAD" => {
+            let n = digits(number);
+            ((1..=9).contains(&n.len())).then_some(("CIRE".into(), n))
+        }
+        "DOC. IDENT. EXTRANJERO" | "D.I.E." | "DOC.IDENT.EXTRANJERO" | "DOC IDENT EXTRANJERO" => {
+            normalize_alnum_upper(number, 1, 15).map(|n| ("DIE".into(), n))
+        }
+        _ => None,
+    }
+}
+
+fn normalize_alnum_upper(value: &str, min_len: usize, max_len: usize) -> Option<String> {
+    let cleaned: String = value
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect::<String>()
+        .to_ascii_uppercase();
+    if cleaned.len() >= min_len && cleaned.len() <= max_len {
+        Some(cleaned)
+    } else {
+        None
+    }
+}
+
 pub fn normalize_phone_with_kind(value: &str) -> Option<(String, PhoneKind)> {
     if value.chars().any(|c| c.is_alphabetic()) {
         return None;

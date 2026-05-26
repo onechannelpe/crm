@@ -4,17 +4,19 @@
  *
  * Artifacts produced:
  *   contracts/engine/api.json
- *     → apps/web/src/server/shared/engine/contract.ts
+ *     -> apps/web/src/server/shared/engine/contract.ts
  *
  *   contracts/engine/record-api.json
- *     → crates/leads/src/contracts_generated.rs
- *     → apps/web/src/server/shared/engine/record-contract.ts
+ *     -> crates/leads/src/contracts_generated.rs
+ *     -> apps/web/src/server/shared/engine/record-contract.ts
  *
- *   contracts/engine/search-projection.json
- *     → crates/search/src/projection_contract_generated.rs
- *     → crates/search/src/result_contract_generated.rs
- *     → apps/web/src/server/shared/engine/projection-contract.ts
- *     → apps/web/src/server/shared/engine/result-contract.ts
+ *   contracts/engine/doc-projection.json + contracts/engine/company-projection.json
+ *     -> crates/search/src/doc_projection_contract_generated.rs
+ *     -> crates/search/src/company_projection_contract_generated.rs
+ *     -> crates/search/src/result_contract_generated.rs
+ *     -> apps/web/src/server/shared/engine/doc-projection-contract.ts
+ *     -> apps/web/src/server/shared/engine/company-projection-contract.ts
+ *     -> apps/web/src/server/shared/engine/result-contract.ts
  */
 
 import {
@@ -62,28 +64,58 @@ await writeOrCheck(
   check,
 );
 
-// search projection
-const projSpec = parseProjectionSpec(
-  await loadJson("contracts/engine/search-projection.json"),
+// search projections — two independent contracts
+const docProjSpec = parseProjectionSpec(
+  await loadJson("contracts/engine/doc-projection.json"),
+);
+const companyProjSpec = parseProjectionSpec(
+  await loadJson("contracts/engine/company-projection.json"),
+);
+
+await writeOrCheck(
+  "crates/search/src/doc_projection_contract_generated.rs",
+  renderProjectionContractRust(
+    docProjSpec,
+    "DOC_PROJECTION",
+    "contracts/engine/doc-projection.json",
+  ),
+  check,
 );
 await writeOrCheck(
-  "crates/search/src/projection_contract_generated.rs",
-  renderProjectionContractRust(projSpec),
+  "crates/search/src/company_projection_contract_generated.rs",
+  renderProjectionContractRust(
+    companyProjSpec,
+    "COMPANY_PROJECTION",
+    "contracts/engine/company-projection.json",
+  ),
   check,
 );
 await writeOrCheck(
   "crates/search/src/result_contract_generated.rs",
-  renderResultContractRust(projSpec),
+  renderResultContractRust(docProjSpec, companyProjSpec),
   check,
 );
 await writeOrCheck(
-  "apps/web/src/server/shared/engine/projection-contract.ts",
-  renderProjectionContractTs(projSpec),
+  "apps/web/src/server/shared/engine/doc-projection-contract.ts",
+  renderProjectionContractTs(
+    docProjSpec,
+    "DOC_PROJECTION",
+    "contracts/engine/doc-projection.json",
+  ),
+  check,
+);
+await writeOrCheck(
+  "apps/web/src/server/shared/engine/company-projection-contract.ts",
+  renderProjectionContractTs(
+    companyProjSpec,
+    "COMPANY_PROJECTION",
+    "contracts/engine/company-projection.json",
+  ),
   check,
 );
 await writeOrCheck(
   "apps/web/src/server/shared/engine/result-contract.ts",
-  renderResultContractTs(projSpec),
+  renderResultContractTs(docProjSpec, companyProjSpec),
   check,
 );
 

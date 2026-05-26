@@ -49,10 +49,10 @@ pub async fn health_handler(pool: SqlitePool) -> impl IntoResponse {
 fn probe_db(pool: &SqlitePool) -> Option<(Option<String>, i64, i64)> {
     let conn = pool.get().ok()?;
 
-    // Confirm the projection table exists and has at least one row.
+    // Confirm the doc projection table exists and has at least one row.
     let _: i64 = conn
         .query_row(
-            "SELECT EXISTS(SELECT 1 FROM search_projection LIMIT 1)",
+            "SELECT EXISTS(SELECT 1 FROM doc_projection LIMIT 1)",
             [],
             |r| r.get(0),
         )

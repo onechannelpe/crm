@@ -100,30 +100,55 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
         }
     }
 
-    // Global: search_projection must be non-empty.
-    let projection_count: i64 =
-        conn.query_row("SELECT COUNT(*) FROM search_projection", [], |row| {
+    // Global: both projections must be non-empty.
+    let doc_projection_count: i64 =
+        conn.query_row("SELECT COUNT(*) FROM doc_projection", [], |row| {
             row.get(0)
         })?;
     checks.push(GateCheck {
-        name: "search_projection.row_count_gt_0".into(),
-        passed: projection_count > 0,
-        actual: projection_count as f64,
+        name: "doc_projection.row_count_gt_0".into(),
+        passed: doc_projection_count > 0,
+        actual: doc_projection_count as f64,
         threshold: 1.0,
-        message: format!("search_projection has {projection_count} rows"),
+        message: format!("doc_projection has {doc_projection_count} rows"),
     });
 
-    let phone_index_count: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM search_projection_phone_index",
+    let company_projection_count: i64 =
+        conn.query_row("SELECT COUNT(*) FROM company_projection", [], |row| {
+            row.get(0)
+        })?;
+    checks.push(GateCheck {
+        name: "company_projection.row_count_gt_0".into(),
+        passed: company_projection_count > 0,
+        actual: company_projection_count as f64,
+        threshold: 1.0,
+        message: format!("company_projection has {company_projection_count} rows"),
+    });
+
+    let doc_phone_index_count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM doc_projection_phone_index",
         [],
         |row| row.get(0),
     )?;
     checks.push(GateCheck {
-        name: "search_projection_phone_index.row_count_gt_0".into(),
-        passed: phone_index_count > 0,
-        actual: phone_index_count as f64,
+        name: "doc_projection_phone_index.row_count_gt_0".into(),
+        passed: doc_phone_index_count > 0,
+        actual: doc_phone_index_count as f64,
         threshold: 1.0,
-        message: format!("search_projection_phone_index has {phone_index_count} rows"),
+        message: format!("doc_projection_phone_index has {doc_phone_index_count} rows"),
+    });
+
+    let company_phone_index_count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM company_projection_phone_index",
+        [],
+        |row| row.get(0),
+    )?;
+    checks.push(GateCheck {
+        name: "company_projection_phone_index.row_count_gt_0".into(),
+        passed: company_phone_index_count > 0,
+        actual: company_phone_index_count as f64,
+        threshold: 1.0,
+        message: format!("company_projection_phone_index has {company_phone_index_count} rows"),
     });
 
     let all_passed = checks.iter().all(|c| c.passed);

@@ -77,46 +77,39 @@ pub(super) fn merge_one_shard(
     tx.execute_batch(&merge_email_sql)?;
     timings.email_secs = email_started_at.elapsed().as_secs_f64();
 
-    // Mark dirty persons and update row hash tracking.
+    // Mark dirty docs and companies, then update row hash tracking.
     let dirty_started_at = Instant::now();
     tx.execute_batch(
         r#"
-        INSERT OR IGNORE INTO projection_dirty_person(person_id)
-        SELECT DISTINCT pp.person_id
+        INSERT OR IGNORE INTO projection_dirty_doc(doc_id)
+        SELECT DISTINCT d.doc_id
         FROM tmp_stage ts
         JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
-        JOIN person_profile pp ON pp.dni = ts.person_dni
-        WHERE ts.person_dni IS NOT NULL;
+        JOIN document d ON d.doc_type = ts.rep_doc_type AND d.doc_number = ts.rep_doc_number
+        WHERE ts.rep_doc_type <> '' AND ts.rep_doc_number <> '';
 
-        INSERT OR IGNORE INTO projection_dirty_person(person_id)
-        SELECT DISTINCT pp.person_id
+        INSERT OR IGNORE INTO projection_dirty_doc(doc_id)
+        SELECT DISTINCT d.doc_id
         FROM tmp_stage ts
         JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
-        JOIN person_profile pp ON pp.natural_ruc10 = ts.person_natural_ruc
-        WHERE ts.person_natural_ruc IS NOT NULL;
+        JOIN document d ON d.doc_type = 'DNI' AND d.doc_number = ts.person_dni
+        WHERE ts.person_dni IS NOT NULL
+          AND (ts.rep_doc_type = '' OR ts.rep_doc_number = '');
 
-        INSERT OR IGNORE INTO projection_dirty_person(person_id)
-        SELECT DISTINCT pcr.person_id
+        INSERT OR IGNORE INTO projection_dirty_doc(doc_id)
+        SELECT DISTINCT cr.doc_id
         FROM tmp_stage ts
         JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
         JOIN company_profile cp ON cp.ruc = ts.company_ruc
-        JOIN person_company_role pcr ON pcr.company_id = cp.company_id
-        WHERE ts.company_ruc IS NOT NULL
-            AND pcr.person_id IS NOT NULL;
+        JOIN company_role cr ON cr.company_id = cp.company_id
+        WHERE ts.company_ruc IS NOT NULL AND cr.doc_id IS NOT NULL;
 
-        INSERT OR IGNORE INTO projection_dirty_person(person_id)
-        SELECT DISTINCT pcr.person_id
+        INSERT OR IGNORE INTO projection_dirty_company(company_id)
+        SELECT DISTINCT cp.company_id
         FROM tmp_stage ts
         JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
         JOIN company_profile cp ON cp.ruc = ts.company_ruc
-        JOIN person_company_role pcr
-            ON pcr.company_id = cp.company_id
-           AND pcr.rep_doc_type = ts.rep_doc_type
-           AND pcr.rep_doc_number = ts.rep_doc_number
-           AND pcr.role_name = ts.role_name
-           AND pcr.role_start_date = ts.role_start_date
-        WHERE ts.company_ruc IS NOT NULL
-            AND pcr.person_id IS NOT NULL;
+        WHERE ts.company_ruc IS NOT NULL;
         "#,
     )?;
     tx.execute(

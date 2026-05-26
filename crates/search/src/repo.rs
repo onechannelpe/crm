@@ -1,4 +1,7 @@
-use crate::result_contract_generated::{OrgInfo, PersonInfo, PhoneInfo, RoleInfo, SearchRow};
+use crate::result_contract_generated::{
+    CompanyInfo, CompanyRow, DocInfo, DocumentRow, OrgInfo, PhoneInfo, RepInfo, RoleInfo,
+    SearchResult,
+};
 use rusqlite::{Connection, Row, params};
 use shared::error::ApiError;
 use std::sync::LazyLock;
@@ -9,37 +12,37 @@ pub trait SearchRepository: Send + Sync {
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError>;
+    ) -> Result<Vec<SearchResult>, ApiError>;
     fn search_by_ruc(
         &self,
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError>;
+    ) -> Result<Vec<SearchResult>, ApiError>;
     fn search_by_phone(
         &self,
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError>;
+    ) -> Result<Vec<SearchResult>, ApiError>;
     fn search_by_phone_enriched(
         &self,
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError>;
+    ) -> Result<Vec<SearchResult>, ApiError>;
     fn search_by_person_name(
         &self,
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError>;
+    ) -> Result<Vec<SearchResult>, ApiError>;
     fn search_by_company_name(
         &self,
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError>;
+    ) -> Result<Vec<SearchResult>, ApiError>;
 }
 
 #[derive(Default)]
@@ -51,7 +54,7 @@ impl SearchRepository for SqliteSearchRepository {
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         search_by_dni(conn, value, limit)
     }
 
@@ -60,7 +63,7 @@ impl SearchRepository for SqliteSearchRepository {
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         search_by_ruc(conn, value, limit)
     }
 
@@ -69,7 +72,7 @@ impl SearchRepository for SqliteSearchRepository {
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         search_by_phone(conn, value, limit)
     }
 
@@ -78,7 +81,7 @@ impl SearchRepository for SqliteSearchRepository {
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         search_by_phone_enriched(conn, value, limit)
     }
 
@@ -87,7 +90,7 @@ impl SearchRepository for SqliteSearchRepository {
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         search_by_person_name(conn, value, limit)
     }
 
@@ -96,13 +99,14 @@ impl SearchRepository for SqliteSearchRepository {
         conn: &Connection,
         value: &str,
         limit: usize,
-    ) -> Result<Vec<SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         search_by_company_name(conn, value, limit)
     }
 }
 
-const SELECT_COLUMNS: &str = "
-  c.dni,
+const DOC_SELECT_COLUMNS: &str = "
+  c.doc_type,
+  c.doc_number,
   NULLIF(c.name, '')                AS name,
   NULLIF(c.person_ruc, '')          AS ruc,
   NULLIF(c.birth_date, '')          AS birth_date,
@@ -137,51 +141,110 @@ const SELECT_COLUMNS: &str = "
   NULLIF(c.phone_primary, '')       AS phone_primary,
   NULLIF(c.phone_secondary, '')     AS phone_secondary";
 
+const COMPANY_SELECT_COLUMNS: &str = "
+  c.ruc,
+  NULLIF(c.legal_name, '')          AS legal_name,
+  NULLIF(c.trade_name, '')          AS trade_name,
+  NULLIF(c.company_type, '')        AS company_type,
+  NULLIF(c.org_status, '')          AS org_status,
+  NULLIF(c.org_condition, '')       AS org_condition,
+  NULLIF(c.fiscal_address, '')      AS fiscal_address,
+  NULLIF(c.registration_date, '')   AS registration_date,
+  NULLIF(c.activity_start_date, '') AS activity_start_date,
+  NULLIF(c.line_of_business, '')    AS line_of_business,
+  NULLIF(c.economic_activity, '')   AS economic_activity,
+  NULLIF(c.org_ubigeo_code, '')     AS org_ubigeo_code,
+  NULLIF(c.org_department, '')      AS org_department,
+  NULLIF(c.org_province, '')        AS org_province,
+  NULLIF(c.org_district, '')        AS org_district,
+  NULLIF(c.rep_doc_type, '')        AS rep_doc_type,
+  NULLIF(c.rep_doc_number, '')      AS rep_doc_number,
+  NULLIF(c.rep_name, '')            AS rep_name,
+  NULLIF(c.role_name, '')           AS role_name,
+  NULLIF(c.role_start_date, '')     AS role_start_date,
+  NULLIF(c.phone_primary, '')       AS phone_primary,
+  NULLIF(c.phone_secondary, '')     AS phone_secondary";
+
 static SQL_DNI: LazyLock<String> = LazyLock::new(|| {
-    format!("SELECT{SELECT_COLUMNS}\nFROM search_projection c\nWHERE c.dni = ?1 LIMIT ?2")
+    format!(
+        "SELECT{DOC_SELECT_COLUMNS}\n\
+         FROM doc_projection c\n\
+         WHERE c.doc_type = 'DNI' AND c.doc_number = ?1\n\
+         LIMIT ?2"
+    )
 });
 
 static SQL_RUC: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS},\n  rpa.phones AS sibling_phones\n\
-         FROM search_projection c\n\
-         LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.org_ruc\n\
-         WHERE c.org_ruc = ?1 LIMIT ?2"
+        "SELECT{COMPANY_SELECT_COLUMNS},\n  rpa.phones AS sibling_phones\n\
+         FROM company_projection c\n\
+         LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.ruc\n\
+         WHERE c.ruc = ?1\n\
+         LIMIT ?2"
     )
 });
 
-static SQL_PHONE: LazyLock<String> = LazyLock::new(|| {
+static SQL_PHONE_DOC: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS}\n\
-         FROM search_projection c\n\
-         JOIN search_projection_phone_index p ON p.projection_id = c.id\n\
-         WHERE p.phone = ?1 LIMIT ?2"
+        "SELECT{DOC_SELECT_COLUMNS}\n\
+         FROM doc_projection c\n\
+         JOIN doc_projection_phone_index p ON p.doc_id = c.doc_id\n\
+         WHERE p.phone = ?1\n\
+         LIMIT ?2"
     )
 });
 
-static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
+static SQL_PHONE_COMPANY: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS},
-  CASE
-    WHEN c.org_ruc IS NOT NULL AND c.org_ruc <> '' THEN rpa.phones
-    ELSE dpa.phones
-  END AS sibling_phones
-FROM search_projection_phone_index pi
-JOIN search_projection c ON c.id = pi.projection_id
-LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.org_ruc
-LEFT JOIN dni_phone_agg dpa ON dpa.dni    = c.dni
-WHERE pi.phone = ?1
-LIMIT ?2"
+        "SELECT{COMPANY_SELECT_COLUMNS}\n\
+         FROM company_projection c\n\
+         JOIN company_projection_phone_index p ON p.company_id = c.company_id\n\
+         WHERE p.phone = ?1\n\
+         LIMIT ?2"
     )
 });
 
-static SQL_FTS: LazyLock<String> = LazyLock::new(|| {
+static SQL_PHONE_ENRICHED_DOC: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS}\n\
-         FROM search_projection c\n\
-         JOIN search_projection_fts f ON f.rowid = c.id\n\
-         WHERE search_projection_fts MATCH ?1\n\
-         ORDER BY rank LIMIT ?2"
+        "SELECT{DOC_SELECT_COLUMNS},\n  dpa.phones AS sibling_phones\n\
+         FROM doc_projection_phone_index pi\n\
+         JOIN doc_projection c ON c.doc_id = pi.doc_id\n\
+         LEFT JOIN doc_phone_agg dpa ON dpa.doc_id = c.doc_id\n\
+         WHERE pi.phone = ?1\n\
+         LIMIT ?2"
+    )
+});
+
+static SQL_PHONE_ENRICHED_COMPANY: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "SELECT{COMPANY_SELECT_COLUMNS},\n  rpa.phones AS sibling_phones\n\
+         FROM company_projection_phone_index pi\n\
+         JOIN company_projection c ON c.company_id = pi.company_id\n\
+         LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.ruc\n\
+         WHERE pi.phone = ?1\n\
+         LIMIT ?2"
+    )
+});
+
+static SQL_FTS_DOC: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "SELECT{DOC_SELECT_COLUMNS}\n\
+         FROM doc_projection c\n\
+         JOIN doc_projection_fts f ON f.rowid = c.doc_id\n\
+         WHERE doc_projection_fts MATCH ?1\n\
+         ORDER BY rank\n\
+         LIMIT ?2"
+    )
+});
+
+static SQL_FTS_COMPANY: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "SELECT{COMPANY_SELECT_COLUMNS}\n\
+         FROM company_projection c\n\
+         JOIN company_projection_fts f ON f.rowid = c.company_id\n\
+         WHERE company_projection_fts MATCH ?1\n\
+         ORDER BY rank\n\
+         LIMIT ?2"
     )
 });
 
@@ -191,17 +254,17 @@ pub fn search_by_dni(
     conn: &Connection,
     value: &str,
     limit: usize,
-) -> Result<Vec<SearchRow>, ApiError> {
-    query_rows(conn, &SQL_DNI, params![value, limit as i64])
+) -> Result<Vec<SearchResult>, ApiError> {
+    query_doc_rows(conn, &SQL_DNI, params![value, limit as i64])
 }
 
 pub fn search_by_ruc(
     conn: &Connection,
     value: &str,
     limit: usize,
-) -> Result<Vec<SearchRow>, ApiError> {
+) -> Result<Vec<SearchResult>, ApiError> {
     let mut stmt = conn.prepare_cached(&SQL_RUC).map_err(db_err)?;
-    stmt.query_map(params![value, limit as i64], map_row_with_siblings)
+    stmt.query_map(params![value, limit as i64], map_company_row_with_siblings)
         .map_err(db_err)?
         .collect::<Result<Vec<_>, _>>()
         .map_err(db_err)
@@ -211,31 +274,48 @@ pub fn search_by_phone(
     conn: &Connection,
     value: &str,
     limit: usize,
-) -> Result<Vec<SearchRow>, ApiError> {
-    query_rows(conn, &SQL_PHONE, params![value, limit as i64])
+) -> Result<Vec<SearchResult>, ApiError> {
+    let mut results = query_doc_rows(conn, &SQL_PHONE_DOC, params![value, limit as i64])?;
+    let company = query_company_rows(conn, &SQL_PHONE_COMPANY, params![value, limit as i64])?;
+    results.extend(company);
+    Ok(results)
 }
 
 pub fn search_by_phone_enriched(
     conn: &Connection,
     value: &str,
     limit: usize,
-) -> Result<Vec<SearchRow>, ApiError> {
-    let mut stmt = conn.prepare_cached(&SQL_PHONE_ENRICHED).map_err(db_err)?;
-    stmt.query_map(params![value, limit as i64], map_row_with_siblings)
+) -> Result<Vec<SearchResult>, ApiError> {
+    let mut doc_stmt = conn.prepare_cached(&SQL_PHONE_ENRICHED_DOC).map_err(db_err)?;
+    let docs = doc_stmt
+        .query_map(params![value, limit as i64], map_doc_row_with_siblings)
         .map_err(db_err)?
         .collect::<Result<Vec<_>, _>>()
-        .map_err(db_err)
+        .map_err(db_err)?;
+
+    let mut company_stmt = conn
+        .prepare_cached(&SQL_PHONE_ENRICHED_COMPANY)
+        .map_err(db_err)?;
+    let mut companies = company_stmt
+        .query_map(params![value, limit as i64], map_company_row_with_siblings)
+        .map_err(db_err)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(db_err)?;
+
+    let mut results = docs;
+    results.append(&mut companies);
+    Ok(results)
 }
 
 pub fn search_by_person_name(
     conn: &Connection,
     text: &str,
     limit: usize,
-) -> Result<Vec<SearchRow>, ApiError> {
-    query_rows(
+) -> Result<Vec<SearchResult>, ApiError> {
+    query_doc_rows(
         conn,
-        &SQL_FTS,
-        params![fts_query("person_name", text), limit as i64],
+        &SQL_FTS_DOC,
+        params![fts_query("doc_name", text), limit as i64],
     )
 }
 
@@ -243,28 +323,47 @@ pub fn search_by_company_name(
     conn: &Connection,
     text: &str,
     limit: usize,
-) -> Result<Vec<SearchRow>, ApiError> {
-    query_rows(
+) -> Result<Vec<SearchResult>, ApiError> {
+    query_company_rows(
         conn,
-        &SQL_FTS,
+        &SQL_FTS_COMPANY,
         params![fts_query("company_name", text), limit as i64],
     )
 }
 
 // internals
 
-fn query_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchRow>, ApiError>
+fn query_doc_rows<P>(
+    conn: &Connection,
+    sql: &str,
+    params: P,
+) -> Result<Vec<SearchResult>, ApiError>
 where
     P: rusqlite::Params,
 {
     let mut stmt = conn.prepare_cached(sql).map_err(db_err)?;
-    stmt.query_map(params, map_row)
+    stmt.query_map(params, map_doc_row)
         .map_err(db_err)?
         .collect::<Result<Vec<_>, _>>()
         .map_err(db_err)
 }
 
-fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
+fn query_company_rows<P>(
+    conn: &Connection,
+    sql: &str,
+    params: P,
+) -> Result<Vec<SearchResult>, ApiError>
+where
+    P: rusqlite::Params,
+{
+    let mut stmt = conn.prepare_cached(sql).map_err(db_err)?;
+    stmt.query_map(params, map_company_row)
+        .map_err(db_err)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(db_err)
+}
+
+fn map_doc_row(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
     let org_ruc: Option<String> = row.get("org_ruc")?;
     let org_name: Option<String> = row.get("org_name")?;
     let trade_name: Option<String> = row.get("trade_name")?;
@@ -341,9 +440,10 @@ fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
         })
     };
 
-    Ok(SearchRow {
-        person: PersonInfo {
-            dni: row.get("dni")?,
+    Ok(SearchResult::Document(DocumentRow {
+        doc: DocInfo {
+            doc_type: row.get("doc_type")?,
+            doc_number: row.get("doc_number")?,
             name: row.get("name")?,
             ruc: row.get("ruc")?,
             birth_date: row.get("birth_date")?,
@@ -363,16 +463,80 @@ fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
             secondary: row.get("phone_secondary")?,
             siblings: None,
         },
-    })
+    }))
 }
 
-fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
-    let mut base = map_row(row)?;
-    let siblings: Option<String> = row.get("sibling_phones")?;
-    base.phones.siblings = siblings
-        .as_deref()
-        .map(|s| s.split(';').map(str::to_owned).collect());
-    Ok(base)
+fn map_doc_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
+    let mut result = map_doc_row(row)?;
+    let raw: Option<String> = row.get("sibling_phones")?;
+    if let SearchResult::Document(ref mut doc_row) = result {
+        doc_row.phones.siblings = raw
+            .as_deref()
+            .map(|s| s.split(';').map(str::to_owned).collect());
+    }
+    Ok(result)
+}
+
+fn map_company_row(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
+    let rep_doc_type: Option<String> = row.get("rep_doc_type")?;
+    let rep_doc_number: Option<String> = row.get("rep_doc_number")?;
+    let rep_name: Option<String> = row.get("rep_name")?;
+    let role_name: Option<String> = row.get("role_name")?;
+    let role_start_date: Option<String> = row.get("role_start_date")?;
+
+    let rep = if rep_doc_type.is_none()
+        && rep_doc_number.is_none()
+        && rep_name.is_none()
+        && role_name.is_none()
+        && role_start_date.is_none()
+    {
+        None
+    } else {
+        Some(RepInfo {
+            doc_type: rep_doc_type,
+            doc_number: rep_doc_number,
+            name: rep_name,
+            role_name,
+            role_start_date,
+        })
+    };
+
+    Ok(SearchResult::Company(CompanyRow {
+        company: CompanyInfo {
+            ruc: row.get("ruc")?,
+            legal_name: row.get("legal_name")?,
+            trade_name: row.get("trade_name")?,
+            company_type: row.get("company_type")?,
+            status: row.get("org_status")?,
+            condition: row.get("org_condition")?,
+            fiscal_address: row.get("fiscal_address")?,
+            registration_date: row.get("registration_date")?,
+            activity_start_date: row.get("activity_start_date")?,
+            line_of_business: row.get("line_of_business")?,
+            economic_activity: row.get("economic_activity")?,
+            ubigeo_code: row.get("org_ubigeo_code")?,
+            department: row.get("org_department")?,
+            province: row.get("org_province")?,
+            district: row.get("org_district")?,
+        },
+        rep,
+        phones: PhoneInfo {
+            primary: row.get("phone_primary")?,
+            secondary: row.get("phone_secondary")?,
+            siblings: None,
+        },
+    }))
+}
+
+fn map_company_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
+    let mut result = map_company_row(row)?;
+    let raw: Option<String> = row.get("sibling_phones")?;
+    if let SearchResult::Company(ref mut company_row) = result {
+        company_row.phones.siblings = raw
+            .as_deref()
+            .map(|s| s.split(';').map(str::to_owned).collect());
+    }
+    Ok(result)
 }
 
 /// Builds an FTS5 AND-prefix query from a validated text input.

@@ -39,16 +39,28 @@ fn gate_reads_latest_snapshot_even_when_materialized() {
         .expect("insert metrics");
     connection
         .execute(
-            "INSERT INTO search_projection(id, dni) VALUES (?1, ?2)",
-            params![1_i64, "12345678"],
+            "INSERT INTO doc_projection(doc_id, doc_type, doc_number) VALUES (?1, ?2, ?3)",
+            params![1_i64, "DNI", "12345678"],
         )
-        .expect("insert projection row");
+        .expect("insert doc projection row");
     connection
         .execute(
-            "INSERT INTO search_projection_phone_index(phone, projection_id) VALUES (?1, ?2)",
+            "INSERT INTO company_projection(company_id, ruc) VALUES (?1, ?2)",
+            params![1_i64, "20100011111"],
+        )
+        .expect("insert company projection row");
+    connection
+        .execute(
+            "INSERT INTO doc_projection_phone_index(phone, doc_id) VALUES (?1, ?2)",
             params!["999111222", 1_i64],
         )
-        .expect("insert phone index row");
+        .expect("insert doc phone index row");
+    connection
+        .execute(
+            "INSERT INTO company_projection_phone_index(phone, company_id) VALUES (?1, ?2)",
+            params!["999111222", 1_i64],
+        )
+        .expect("insert company phone index row");
 
     let gate_result = run_gate(&database_path_string).expect("run gate");
     assert!(gate_result.passed);

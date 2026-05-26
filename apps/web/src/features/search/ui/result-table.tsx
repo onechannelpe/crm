@@ -80,7 +80,7 @@ export function ResultTable(props: ResultTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead class={styles.headerCell}>Person</TableHead>
-                <TableHead class={styles.headerCell}>DNI</TableHead>
+                <TableHead class={styles.headerCell}>Document</TableHead>
                 <TableHead class={styles.headerCell}>Companies</TableHead>
                 <TableHead class={styles.headerCell}>Phones</TableHead>
               </TableRow>
@@ -108,7 +108,7 @@ export function ResultTable(props: ResultTableProps) {
                       }
                       shape="round"
                     />
-                    <TableCell class={styles.codeCell}>{group.dni}</TableCell>
+                    <TableCell class={styles.codeCell}>{group.doc_type} {group.doc_number}</TableCell>
                     <TableCell class={styles.dataCell}>
                       <RecordChipList
                         items={group.companies

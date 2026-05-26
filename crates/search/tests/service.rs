@@ -1,6 +1,6 @@
 mod common;
 
-use search::contracts::{SearchRequest, SearchType};
+use search::contracts::{SearchRequest, SearchResult, SearchType};
 use search::repo::SearchRepository;
 use search::service::SearchService;
 use shared::error::ApiError;
@@ -16,7 +16,7 @@ impl SearchRepository for FailingSearchRepo {
         _conn: &Connection,
         _value: &str,
         _limit: usize,
-    ) -> Result<Vec<search::contracts::SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         Err(ApiError::Service("fake repo failure".into()))
     }
 
@@ -25,7 +25,7 @@ impl SearchRepository for FailingSearchRepo {
         _conn: &Connection,
         _value: &str,
         _limit: usize,
-    ) -> Result<Vec<search::contracts::SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         Err(ApiError::Service("fake repo failure".into()))
     }
 
@@ -34,7 +34,7 @@ impl SearchRepository for FailingSearchRepo {
         _conn: &Connection,
         _value: &str,
         _limit: usize,
-    ) -> Result<Vec<search::contracts::SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         Err(ApiError::Service("fake repo failure".into()))
     }
 
@@ -43,7 +43,7 @@ impl SearchRepository for FailingSearchRepo {
         _conn: &Connection,
         _value: &str,
         _limit: usize,
-    ) -> Result<Vec<search::contracts::SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         Err(ApiError::Service("fake repo failure".into()))
     }
 
@@ -52,7 +52,7 @@ impl SearchRepository for FailingSearchRepo {
         _conn: &Connection,
         _value: &str,
         _limit: usize,
-    ) -> Result<Vec<search::contracts::SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         Err(ApiError::Service("fake repo failure".into()))
     }
 
@@ -61,7 +61,7 @@ impl SearchRepository for FailingSearchRepo {
         _conn: &Connection,
         _value: &str,
         _limit: usize,
-    ) -> Result<Vec<search::contracts::SearchRow>, ApiError> {
+    ) -> Result<Vec<SearchResult>, ApiError> {
         Err(ApiError::Service("fake repo failure".into()))
     }
 }

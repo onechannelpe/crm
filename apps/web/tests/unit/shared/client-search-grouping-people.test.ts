@@ -1,20 +1,20 @@
-import { makeSearchRow } from "@tests/support/shared/search-row";
+import { makeDocumentResult } from "@tests/support/shared/search-row";
 import { describe, expect, it } from "vitest";
 
-import { groupPeopleByDni } from "~/features/search/model/grouping";
+import { groupByDocument } from "~/features/search/model/grouping";
 
 describe("client search grouping people", () => {
-  it("groups people by dni and keeps first name as displayName", () => {
-    const groups = groupPeopleByDni([
-      makeSearchRow({
-        dni: "12345678",
+  it("groups documents by type+number and keeps first name as displayName", () => {
+    const groups = groupByDocument([
+      makeDocumentResult({
+        doc_number: "12345678",
         name: "RICARDO GARCIA PINCHI",
         org_ruc: "20100000001",
         org_name: "ACME SAC",
         phone_primary: "999111222",
       }),
-      makeSearchRow({
-        dni: "12345678",
+      makeDocumentResult({
+        doc_number: "12345678",
         name: "GARCIA PINCHI RICARDO",
         org_ruc: "20100000002",
         org_name: "GLOBEX SAC",
@@ -36,9 +36,9 @@ describe("client search grouping people", () => {
   });
 
   it("collects sibling phones alongside primary and secondary", () => {
-    const groups = groupPeopleByDni([
-      makeSearchRow({
-        dni: "12345678",
+    const groups = groupByDocument([
+      makeDocumentResult({
+        doc_number: "12345678",
         phone_primary: "999000001",
         sibling_phones: ["999000002", "999000003"],
       }),
@@ -47,17 +47,10 @@ describe("client search grouping people", () => {
     expect(groups[0]?.phones).toEqual(["999000001", "999000002", "999000003"]);
   });
 
-  it("skips rows with blank dni", () => {
-    const groups = groupPeopleByDni([
-      makeSearchRow({ dni: "", name: "GHOST" }),
-    ]);
-    expect(groups).toHaveLength(0);
-  });
-
   it("deduplicates repeated phones across fields", () => {
-    const groups = groupPeopleByDni([
-      makeSearchRow({ dni: "12345678", phone_primary: "999000001" }),
-      makeSearchRow({ dni: "12345678", phone_secondary: "999000001" }),
+    const groups = groupByDocument([
+      makeDocumentResult({ doc_number: "12345678", phone_primary: "999000001" }),
+      makeDocumentResult({ doc_number: "12345678", phone_secondary: "999000001" }),
     ]);
 
     expect(groups[0]?.phones).toEqual(["999000001"]);

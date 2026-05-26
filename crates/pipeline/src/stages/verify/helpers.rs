@@ -152,23 +152,25 @@ pub(super) fn materialize_and_quick_check(db_path: &str) -> Result<(), PipelineE
     println!("[pipeline] quick checks");
     let conn = open_rw(db_path)?;
     for table in [
-        "person_profile",
+        "document",
         "company_profile",
-        "person_company_role",
+        "company_role",
         "company_phone",
-        "search_projection",
-        "search_projection_phone_index",
+        "doc_projection",
+        "doc_projection_phone_index",
+        "company_projection",
+        "company_projection_phone_index",
     ] {
         let sql = format!("SELECT EXISTS(SELECT 1 FROM {table} LIMIT 1)");
         let has_rows: i64 = conn.query_row(&sql, [], |row| row.get(0))?;
         println!("{table}_has_rows={has_rows}");
     }
-    let max_id: i64 = conn.query_row(
-        "SELECT COALESCE(MAX(id), 0) FROM search_projection",
+    let max_doc_id: i64 = conn.query_row(
+        "SELECT COALESCE(MAX(doc_id), 0) FROM doc_projection",
         [],
         |row| row.get(0),
     )?;
-    println!("search_projection_max_id={max_id}");
+    println!("doc_projection_max_doc_id={max_doc_id}");
     println!("[pipeline] done: {db_path}");
     Ok(())
 }

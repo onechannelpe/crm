@@ -168,7 +168,7 @@ fn publish_with_gate_and_metadata(from: &str, to: &str) -> Result<(), PipelineEr
         let now_nanos = now_duration.as_nanos();
         let build_id = format!("build-{now_nanos}");
         let rows: i64 =
-            conn.query_row("SELECT COUNT(*) FROM search_projection", params![], |r| {
+            conn.query_row("SELECT COUNT(*) FROM doc_projection", params![], |r| {
                 r.get(0)
             })?;
         println!(

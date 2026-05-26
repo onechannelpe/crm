@@ -1,17 +1,16 @@
-use crate::projection_contract_generated::{
-    SEARCH_PROJECTION_NAME, SEARCH_PROJECTION_NULLABLE_PATHS, SEARCH_PROJECTION_PATHS,
-    SEARCH_PROJECTION_STORAGE_MAPPINGS,
-};
 use rusqlite::{Connection, OptionalExtension};
 use shared::error::StartupError;
 use std::collections::HashSet;
 
 const REQUIRED_TABLES: &[&str] = &[
-    "search_projection",
-    "search_projection_phone_index",
-    "search_projection_fts",
+    "doc_projection",
+    "doc_projection_phone_index",
+    "doc_projection_fts",
+    "company_projection",
+    "company_projection_phone_index",
+    "company_projection_fts",
     "ruc_phone_agg",
-    "dni_phone_agg",
+    "doc_phone_agg",
 ];
 
 pub fn validate(conn: &Connection) -> Result<(), StartupError> {
@@ -24,47 +23,98 @@ pub fn validate(conn: &Connection) -> Result<(), StartupError> {
             )));
         }
     }
-    validate_projection_paths()?;
-    validate_required_columns(conn)?;
+    validate_doc_paths()?;
+    validate_company_paths()?;
+    validate_doc_columns(conn)?;
+    validate_company_columns(conn)?;
     Ok(())
 }
 
-fn validate_projection_paths() -> Result<(), StartupError> {
-    if SEARCH_PROJECTION_NAME.trim().is_empty() {
+fn validate_doc_paths() -> Result<(), StartupError> {
+    use crate::doc_projection_contract_generated::{
+        DOC_PROJECTION_NAME, DOC_PROJECTION_NULLABLE_PATHS, DOC_PROJECTION_PATHS,
+    };
+    if DOC_PROJECTION_NAME.trim().is_empty() {
         return Err(StartupError::Config(
-            "projection contract must include a non-empty projection name".into(),
+            "doc projection contract must include a non-empty projection name".into(),
         ));
     }
     let mut seen = HashSet::new();
-    for path in SEARCH_PROJECTION_PATHS {
+    for path in DOC_PROJECTION_PATHS {
         if !seen.insert(*path) {
             return Err(StartupError::Config(format!(
-                "duplicate projection path in contract: {path}"
+                "duplicate path in doc projection contract: {path}"
             )));
         }
     }
-
-    for nullable_path in SEARCH_PROJECTION_NULLABLE_PATHS {
-        if !seen.contains(nullable_path) {
+    for path in DOC_PROJECTION_NULLABLE_PATHS {
+        if !seen.contains(path) {
             return Err(StartupError::Config(format!(
-                "nullable projection path not present in full path set: {nullable_path}"
+                "nullable path not in doc projection path set: {path}"
             )));
         }
     }
     Ok(())
 }
 
-fn validate_required_columns(conn: &Connection) -> Result<(), StartupError> {
-    for mapping in SEARCH_PROJECTION_STORAGE_MAPPINGS {
+fn validate_company_paths() -> Result<(), StartupError> {
+    use crate::company_projection_contract_generated::{
+        COMPANY_PROJECTION_NAME, COMPANY_PROJECTION_NULLABLE_PATHS, COMPANY_PROJECTION_PATHS,
+    };
+    if COMPANY_PROJECTION_NAME.trim().is_empty() {
+        return Err(StartupError::Config(
+            "company projection contract must include a non-empty projection name".into(),
+        ));
+    }
+    let mut seen = HashSet::new();
+    for path in COMPANY_PROJECTION_PATHS {
+        if !seen.insert(*path) {
+            return Err(StartupError::Config(format!(
+                "duplicate path in company projection contract: {path}"
+            )));
+        }
+    }
+    for path in COMPANY_PROJECTION_NULLABLE_PATHS {
+        if !seen.contains(path) {
+            return Err(StartupError::Config(format!(
+                "nullable path not in company projection path set: {path}"
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_doc_columns(conn: &Connection) -> Result<(), StartupError> {
+    use crate::doc_projection_contract_generated::DOC_PROJECTION_STORAGE_MAPPINGS;
+    for mapping in DOC_PROJECTION_STORAGE_MAPPINGS {
         if mapping.table.trim().is_empty() || mapping.column.trim().is_empty() {
             return Err(StartupError::Config(format!(
-                "projection path '{}' has invalid storage mapping",
+                "doc projection path '{}' has invalid storage mapping",
                 mapping.path
             )));
         }
         if !table_has_column(conn, mapping.table, mapping.column)? {
             return Err(StartupError::Database(format!(
-                "missing required column for projection path '{}': {}.{}",
+                "missing column for doc projection path '{}': {}.{}",
+                mapping.path, mapping.table, mapping.column
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_company_columns(conn: &Connection) -> Result<(), StartupError> {
+    use crate::company_projection_contract_generated::COMPANY_PROJECTION_STORAGE_MAPPINGS;
+    for mapping in COMPANY_PROJECTION_STORAGE_MAPPINGS {
+        if mapping.table.trim().is_empty() || mapping.column.trim().is_empty() {
+            return Err(StartupError::Config(format!(
+                "company projection path '{}' has invalid storage mapping",
+                mapping.path
+            )));
+        }
+        if !table_has_column(conn, mapping.table, mapping.column)? {
+            return Err(StartupError::Database(format!(
+                "missing column for company projection path '{}': {}.{}",
                 mapping.path, mapping.table, mapping.column
             )));
         }

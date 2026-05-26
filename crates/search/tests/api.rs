@@ -76,7 +76,8 @@ async fn search_by_dni_returns_matching_row() {
     response.assert_status_ok();
     let payload = response.json::<serde_json::Value>();
     assert_eq!(payload["count"], 1);
-    assert_eq!(payload["results"][0]["person"]["dni"], "12345678");
+    assert_eq!(payload["results"][0]["kind"], "document");
+    assert_eq!(payload["results"][0]["doc"]["doc_number"], "12345678");
 }
 
 #[tokio::test]
@@ -90,8 +91,11 @@ async fn search_by_phone_enriched_returns_siblings() {
 
     response.assert_status_ok();
     let payload = response.json::<serde_json::Value>();
-    assert_eq!(payload["count"], 1);
-    assert_eq!(payload["results"][0]["person"]["dni"], "12345678");
+    // doc_id=1 and company_id=1 both have phone 999111222 indexed
+    assert_eq!(payload["count"], 2);
+    // docs come first in the concatenation
+    assert_eq!(payload["results"][0]["kind"], "document");
+    assert_eq!(payload["results"][0]["doc"]["doc_number"], "12345678");
     assert_eq!(payload["results"][0]["org"]["name"], "ACME SAC");
     assert_eq!(payload["results"][0]["role"]["name"], "GERENTE GENERAL");
     assert!(
