@@ -142,10 +142,12 @@ pub fn read_manifest(path: Option<&Path>) -> Result<Option<DatasetManifest>, Str
     if manifest.doc_projection_contract_sha256.trim().is_empty() {
         return Err("manifest doc_projection_contract_sha256 must be non-empty".to_string());
     }
-    if manifest.company_projection_contract_sha256.trim().is_empty() {
-        return Err(
-            "manifest company_projection_contract_sha256 must be non-empty".to_string(),
-        );
+    if manifest
+        .company_projection_contract_sha256
+        .trim()
+        .is_empty()
+    {
+        return Err("manifest company_projection_contract_sha256 must be non-empty".to_string());
     }
 
     Ok(Some(manifest))

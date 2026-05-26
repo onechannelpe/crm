@@ -21,15 +21,13 @@ const [
   sourceRaw,
   docProjectionRaw,
   companyProjectionRaw,
-] = await Promise.all(
-  [
-    loadJson(MANIFEST_PATH),
-    loadJson(CANONICAL_PATH),
-    loadJson(SOURCE_PATH),
-    loadJson(DOC_PROJECTION_PATH),
-    loadJson(COMPANY_PROJECTION_PATH),
-  ],
-);
+] = await Promise.all([
+  loadJson(MANIFEST_PATH),
+  loadJson(CANONICAL_PATH),
+  loadJson(SOURCE_PATH),
+  loadJson(DOC_PROJECTION_PATH),
+  loadJson(COMPANY_PROJECTION_PATH),
+]);
 
 const manifest = parseSourceManifest(manifestRaw);
 const canonical = parseCanonicalContract(canonicalRaw);
