@@ -54,24 +54,50 @@ WHERE
     OR excluded.province IS NOT NULL
     OR excluded.district IS NOT NULL;
 
-CREATE TEMP TABLE tmp_role_source AS
-SELECT DISTINCT
-    d.doc_id,
+CREATE TEMP TABLE tmp_resolved_facts AS
+SELECT
+    ts.source_row_number,
     cp.company_id,
+    ts.company_ruc,
+    ts.person_dni,
     ts.rep_doc_type,
     ts.rep_doc_number,
     ts.rep_name,
     ts.role_name,
-    ts.role_start_date
+    ts.role_start_date,
+    ts.email,
+    CASE
+        WHEN ts.rep_doc_type <> '' AND ts.rep_doc_number <> '' THEN rep_doc.doc_id
+        WHEN ts.person_dni IS NOT NULL THEN dni_doc.doc_id
+        ELSE NULL
+    END AS doc_id
 FROM tmp_stage ts
-JOIN company_profile cp ON cp.ruc = ts.company_ruc
-LEFT JOIN document d ON d.doc_type = ts.rep_doc_type AND d.doc_number = ts.rep_doc_number
+LEFT JOIN company_profile cp ON cp.ruc = ts.company_ruc
+LEFT JOIN document rep_doc
+    ON rep_doc.doc_type = ts.rep_doc_type AND rep_doc.doc_number = ts.rep_doc_number
+LEFT JOIN document dni_doc
+    ON dni_doc.doc_type = 'DNI' AND dni_doc.doc_number = ts.person_dni;
+
+CREATE INDEX tmp_resolved_facts_row_idx ON tmp_resolved_facts(source_row_number);
+CREATE INDEX tmp_resolved_facts_doc_idx ON tmp_resolved_facts(doc_id);
+CREATE INDEX tmp_resolved_facts_company_idx ON tmp_resolved_facts(company_id);
+
+CREATE TEMP TABLE tmp_role_source AS
+SELECT DISTINCT
+    rf.doc_id,
+    rf.company_id,
+    rf.rep_doc_type,
+    rf.rep_doc_number,
+    rf.rep_name,
+    rf.role_name,
+    rf.role_start_date
+FROM tmp_resolved_facts rf
 WHERE
-    ts.company_ruc IS NOT NULL
+    rf.company_id IS NOT NULL
     AND (
-        ts.role_name <> ''
-        OR ts.rep_doc_number <> ''
-        OR ts.rep_name <> ''
+        rf.role_name <> ''
+        OR rf.rep_doc_number <> ''
+        OR rf.rep_name <> ''
     );
 
 INSERT INTO company_role(doc_id, company_id, rep_doc_type, rep_doc_number, rep_name, role_name, role_start_date)

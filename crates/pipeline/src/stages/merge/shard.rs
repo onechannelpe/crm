@@ -82,34 +82,23 @@ pub(super) fn merge_one_shard(
     tx.execute_batch(
         r#"
         INSERT OR IGNORE INTO projection_dirty_doc(doc_id)
-        SELECT DISTINCT d.doc_id
-        FROM tmp_stage ts
-        JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
-        JOIN document d ON d.doc_type = ts.rep_doc_type AND d.doc_number = ts.rep_doc_number
-        WHERE ts.rep_doc_type <> '' AND ts.rep_doc_number <> '';
-
-        INSERT OR IGNORE INTO projection_dirty_doc(doc_id)
-        SELECT DISTINCT d.doc_id
-        FROM tmp_stage ts
-        JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
-        JOIN document d ON d.doc_type = 'DNI' AND d.doc_number = ts.person_dni
-        WHERE ts.person_dni IS NOT NULL
-          AND (ts.rep_doc_type = '' OR ts.rep_doc_number = '');
+        SELECT DISTINCT rf.doc_id
+        FROM tmp_resolved_facts rf
+        JOIN tmp_row_delta delta ON delta.source_row_number = rf.source_row_number
+        WHERE rf.doc_id IS NOT NULL;
 
         INSERT OR IGNORE INTO projection_dirty_doc(doc_id)
         SELECT DISTINCT cr.doc_id
-        FROM tmp_stage ts
-        JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
-        JOIN company_profile cp ON cp.ruc = ts.company_ruc
-        JOIN company_role cr ON cr.company_id = cp.company_id
-        WHERE ts.company_ruc IS NOT NULL AND cr.doc_id IS NOT NULL;
+        FROM tmp_resolved_facts rf
+        JOIN tmp_row_delta delta ON delta.source_row_number = rf.source_row_number
+        JOIN company_role cr ON cr.company_id = rf.company_id
+        WHERE rf.company_id IS NOT NULL AND cr.doc_id IS NOT NULL;
 
         INSERT OR IGNORE INTO projection_dirty_company(company_id)
-        SELECT DISTINCT cp.company_id
-        FROM tmp_stage ts
-        JOIN tmp_row_delta delta ON delta.source_row_number = ts.source_row_number
-        JOIN company_profile cp ON cp.ruc = ts.company_ruc
-        WHERE ts.company_ruc IS NOT NULL;
+        SELECT DISTINCT rf.company_id
+        FROM tmp_resolved_facts rf
+        JOIN tmp_row_delta delta ON delta.source_row_number = rf.source_row_number
+        WHERE rf.company_id IS NOT NULL;
         "#,
     )?;
     tx.execute(
