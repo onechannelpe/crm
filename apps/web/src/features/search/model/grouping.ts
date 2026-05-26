@@ -60,10 +60,8 @@ export function groupByDocument(
 
   return [...groups.entries()].map(([key, rows]) => {
     const first = rows[0]!;
-    const docType =
-      first.kind === "document" ? first.doc.doc_type : "";
-    const docNumber =
-      first.kind === "document" ? first.doc.doc_number : "";
+    const docType = first.kind === "document" ? first.doc.doc_type : "";
+    const docNumber = first.kind === "document" ? first.doc.doc_number : "";
 
     const aliases: string[] = [];
     const aliasSet = new Set<string>();
@@ -91,9 +89,16 @@ export function groupByDocument(
       }
     }
 
-    const displayName =
-      aliases.find((alias) => alias.length > 0) ?? docNumber;
-    return { key, doc_type: docType, doc_number: docNumber, displayName, aliases, companies, phones };
+    const displayName = aliases.find((alias) => alias.length > 0) ?? docNumber;
+    return {
+      key,
+      doc_type: docType,
+      doc_number: docNumber,
+      displayName,
+      aliases,
+      companies,
+      phones,
+    };
   });
 }
 

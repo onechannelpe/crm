@@ -286,7 +286,9 @@ pub fn search_by_phone_enriched(
     value: &str,
     limit: usize,
 ) -> Result<Vec<SearchResult>, ApiError> {
-    let mut doc_stmt = conn.prepare_cached(&SQL_PHONE_ENRICHED_DOC).map_err(db_err)?;
+    let mut doc_stmt = conn
+        .prepare_cached(&SQL_PHONE_ENRICHED_DOC)
+        .map_err(db_err)?;
     let docs = doc_stmt
         .query_map(params![value, limit as i64], map_doc_row_with_siblings)
         .map_err(db_err)?
@@ -333,11 +335,7 @@ pub fn search_by_company_name(
 
 // internals
 
-fn query_doc_rows<P>(
-    conn: &Connection,
-    sql: &str,
-    params: P,
-) -> Result<Vec<SearchResult>, ApiError>
+fn query_doc_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchResult>, ApiError>
 where
     P: rusqlite::Params,
 {

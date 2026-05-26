@@ -1,8 +1,8 @@
 use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
 use crate::domain::normalize_helpers::{
-    normalize_ambiguous_doc, normalize_person_document_with_natural_ruc,
-    normalize_phone_with_kind, normalize_ruc, normalize_text, validate_rep_doc,
+    normalize_ambiguous_doc, normalize_person_document_with_natural_ruc, normalize_phone_with_kind,
+    normalize_ruc, normalize_text, validate_rep_doc,
 };
 use csv::StringRecord;
 use std::collections::{HashMap, HashSet};

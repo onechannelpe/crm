@@ -53,35 +53,45 @@
       "canonical_fields": ["registration_date"],
       "nullable": true,
       "derivation": "sunat_padron_ruc",
-      "storage": [{ "table": "company_projection", "column": "registration_date" }]
+      "storage": [
+        { "table": "company_projection", "column": "registration_date" }
+      ]
     },
     {
       "path": "company.activity_start_date",
       "canonical_fields": ["activity_start_date"],
       "nullable": true,
       "derivation": "sunat_padron_ruc",
-      "storage": [{ "table": "company_projection", "column": "activity_start_date" }]
+      "storage": [
+        { "table": "company_projection", "column": "activity_start_date" }
+      ]
     },
     {
       "path": "company.line_of_business",
       "canonical_fields": ["line_of_business"],
       "nullable": true,
       "derivation": "sunat_padron_ruc",
-      "storage": [{ "table": "company_projection", "column": "line_of_business" }]
+      "storage": [
+        { "table": "company_projection", "column": "line_of_business" }
+      ]
     },
     {
       "path": "company.economic_activity",
       "canonical_fields": ["economic_activity"],
       "nullable": true,
       "derivation": "sunat_padron_ruc",
-      "storage": [{ "table": "company_projection", "column": "economic_activity" }]
+      "storage": [
+        { "table": "company_projection", "column": "economic_activity" }
+      ]
     },
     {
       "path": "company.ubigeo_code",
       "canonical_fields": ["company_ubigeo"],
       "nullable": true,
       "derivation": "sunat_padron_ruc",
-      "storage": [{ "table": "company_projection", "column": "org_ubigeo_code" }]
+      "storage": [
+        { "table": "company_projection", "column": "org_ubigeo_code" }
+      ]
     },
     {
       "path": "company.department",
@@ -132,7 +142,9 @@
       "path": "rep.role_start_date",
       "canonical_fields": ["role_start_date"],
       "nullable": true,
-      "storage": [{ "table": "company_projection", "column": "role_start_date" }]
+      "storage": [
+        { "table": "company_projection", "column": "role_start_date" }
+      ]
     },
     {
       "path": "phones.primary",
@@ -146,7 +158,9 @@
       "canonical_fields": ["phone"],
       "nullable": true,
       "derivation": "ranked_second_phone_per_company",
-      "storage": [{ "table": "company_projection", "column": "phone_secondary" }]
+      "storage": [
+        { "table": "company_projection", "column": "phone_secondary" }
+      ]
     },
     {
       "path": "phones.siblings",

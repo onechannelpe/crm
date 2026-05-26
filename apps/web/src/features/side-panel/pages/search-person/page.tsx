@@ -20,7 +20,9 @@ export function SearchPersonPage() {
           </div>
           <div class={styles.heroText}>
             <div class={styles.title}>{pageState().person.displayName}</div>
-            <div class={styles.subtitle}>{pageState().person.doc_type} {pageState().person.doc_number}</div>
+            <div class={styles.subtitle}>
+              {pageState().person.doc_type} {pageState().person.doc_number}
+            </div>
           </div>
         </section>
 

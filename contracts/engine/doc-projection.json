@@ -147,7 +147,9 @@
       "canonical_fields": ["activity_start_date"],
       "nullable": true,
       "derivation": "sunat_padron_ruc",
-      "storage": [{ "table": "doc_projection", "column": "activity_start_date" }]
+      "storage": [
+        { "table": "doc_projection", "column": "activity_start_date" }
+      ]
     },
     {
       "path": "org.line_of_business",

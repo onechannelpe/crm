@@ -108,7 +108,9 @@ export function ResultTable(props: ResultTableProps) {
                       }
                       shape="round"
                     />
-                    <TableCell class={styles.codeCell}>{group.doc_type} {group.doc_number}</TableCell>
+                    <TableCell class={styles.codeCell}>
+                      {group.doc_type} {group.doc_number}
+                    </TableCell>
                     <TableCell class={styles.dataCell}>
                       <RecordChipList
                         items={group.companies

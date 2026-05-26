@@ -102,9 +102,7 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
 
     // Global: both projections must be non-empty.
     let doc_projection_count: i64 =
-        conn.query_row("SELECT COUNT(*) FROM doc_projection", [], |row| {
-            row.get(0)
-        })?;
+        conn.query_row("SELECT COUNT(*) FROM doc_projection", [], |row| row.get(0))?;
     checks.push(GateCheck {
         name: "doc_projection.row_count_gt_0".into(),
         passed: doc_projection_count > 0,

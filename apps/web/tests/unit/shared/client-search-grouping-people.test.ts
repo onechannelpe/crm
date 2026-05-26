@@ -49,8 +49,14 @@ describe("client search grouping people", () => {
 
   it("deduplicates repeated phones across fields", () => {
     const groups = groupByDocument([
-      makeDocumentResult({ doc_number: "12345678", phone_primary: "999000001" }),
-      makeDocumentResult({ doc_number: "12345678", phone_secondary: "999000001" }),
+      makeDocumentResult({
+        doc_number: "12345678",
+        phone_primary: "999000001",
+      }),
+      makeDocumentResult({
+        doc_number: "12345678",
+        phone_secondary: "999000001",
+      }),
     ]);
 
     expect(groups[0]?.phones).toEqual(["999000001"]);

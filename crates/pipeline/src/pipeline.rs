@@ -167,10 +167,9 @@ fn publish_with_gate_and_metadata(from: &str, to: &str) -> Result<(), PipelineEr
         let now_millis = now_duration.as_millis() as i64;
         let now_nanos = now_duration.as_nanos();
         let build_id = format!("build-{now_nanos}");
-        let rows: i64 =
-            conn.query_row("SELECT COUNT(*) FROM doc_projection", params![], |r| {
-                r.get(0)
-            })?;
+        let rows: i64 = conn.query_row("SELECT COUNT(*) FROM doc_projection", params![], |r| {
+            r.get(0)
+        })?;
         println!(
             "[pipeline] build metadata: build_id={} gate_passed={} built_at={} rows={}",
             build_id, gate_passed, now_millis, rows
