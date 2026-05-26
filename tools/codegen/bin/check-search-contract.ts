@@ -12,21 +12,30 @@ import { loadJson } from "../src/shared.ts";
 const MANIFEST_PATH = "crates/pipeline/data/mappings/source-manifest.json";
 const CANONICAL_PATH = "contracts/pipeline/canonical-contract.json";
 const SOURCE_PATH = "contracts/pipeline/source-contract.json";
-const PROJECTION_PATH = "contracts/engine/search-projection.json";
+const DOC_PROJECTION_PATH = "contracts/engine/doc-projection.json";
+const COMPANY_PROJECTION_PATH = "contracts/engine/company-projection.json";
 
-const [manifestRaw, canonicalRaw, sourceRaw, projectionRaw] = await Promise.all(
+const [
+  manifestRaw,
+  canonicalRaw,
+  sourceRaw,
+  docProjectionRaw,
+  companyProjectionRaw,
+] = await Promise.all(
   [
     loadJson(MANIFEST_PATH),
     loadJson(CANONICAL_PATH),
     loadJson(SOURCE_PATH),
-    loadJson(PROJECTION_PATH),
+    loadJson(DOC_PROJECTION_PATH),
+    loadJson(COMPANY_PROJECTION_PATH),
   ],
 );
 
 const manifest = parseSourceManifest(manifestRaw);
 const canonical = parseCanonicalContract(canonicalRaw);
 const source = parseSourceContract(sourceRaw);
-const projection = parseProjectionSpec(projectionRaw);
+const docProjection = parseProjectionSpec(docProjectionRaw);
+const companyProjection = parseProjectionSpec(companyProjectionRaw);
 
 const enabledSources = manifest.sources.filter((s) => s.enabled);
 
@@ -37,11 +46,24 @@ const loaded: LoadedSource[] = await Promise.all(
   })),
 );
 
-const result = checkSearchContract(canonical, source, projection, loaded);
+const docResult = checkSearchContract(canonical, source, docProjection, loaded);
+const companyResult = checkSearchContract(
+  canonical,
+  source,
+  companyProjection,
+  loaded,
+);
 
-if (!result.ok) {
-  console.error(result.errors.join("\n"));
+const errors: string[] = [];
+if (!docResult.ok) {
+  errors.push(...docResult.errors.map((e) => `[doc] ${e}`));
+}
+if (!companyResult.ok) {
+  errors.push(...companyResult.errors.map((e) => `[company] ${e}`));
+}
+if (errors.length > 0) {
+  console.error(errors.join("\n"));
   process.exit(1);
 }
 
-console.log(result.summary);
+console.log([docResult.summary, companyResult.summary].join("\n"));

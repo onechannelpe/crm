@@ -8,8 +8,8 @@ import type { ProjectionField, ProjectionSpec } from "./parse.ts";
 
 export function renderProjectionContractRust(
   spec: ProjectionSpec,
-  prefix: string = "SEARCH_PROJECTION",
-  sourceFile: string = "contracts/engine/search-projection.json",
+  prefix: string,
+  sourceFile: string,
 ): string {
   const allPaths = spec.fields.map((f) => f.path);
   const nullablePaths = spec.fields

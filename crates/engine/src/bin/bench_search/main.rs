@@ -34,13 +34,18 @@ fn run_main() -> Result<(), String> {
         return Err(format!("db path does not exist: {}", db_path.display()));
     }
 
-    let contract_sha = sha256_file(&cfg.projection_contract_path)?;
+    let doc_contract_sha = sha256_file(&cfg.doc_projection_contract_path)?;
+    let company_contract_sha = sha256_file(&cfg.company_projection_contract_path)?;
     if let Some(m) = &manifest
-        && m.contract_sha256 != contract_sha
+        && (m.doc_projection_contract_sha256 != doc_contract_sha
+            || m.company_projection_contract_sha256 != company_contract_sha)
     {
         return Err(format!(
-            "contract hash mismatch expected={} actual={}",
-            m.contract_sha256, contract_sha
+            "projection contract hash mismatch expected_doc={} actual_doc={} expected_company={} actual_company={}",
+            m.doc_projection_contract_sha256,
+            doc_contract_sha,
+            m.company_projection_contract_sha256,
+            company_contract_sha
         ));
     }
 

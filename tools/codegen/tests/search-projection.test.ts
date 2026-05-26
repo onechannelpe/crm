@@ -187,13 +187,21 @@ describe("NULLABLE_OBJECTS", () => {
 describe("renderProjectionContractRust", () => {
   test("output is marked as generated", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(spec);
+    const output = renderProjectionContractRust(
+      spec,
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
     expect(output).toContain("GENERATED FILE");
   });
 
   test("projection name constant is present", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(spec);
+    const output = renderProjectionContractRust(
+      spec,
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
     expect(output).toContain(
       'SEARCH_PROJECTION_NAME: &str = "search_projection"',
     );
@@ -201,14 +209,22 @@ describe("renderProjectionContractRust", () => {
 
   test("all paths appear in PATHS constant", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(spec);
+    const output = renderProjectionContractRust(
+      spec,
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
     expect(output).toContain('"person.dni"');
     expect(output).toContain('"phones.siblings"');
   });
 
   test("multi-storage field produces two mapping entries", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(spec);
+    const output = renderProjectionContractRust(
+      spec,
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
     expect(output).toContain('"ruc_phone_agg"');
     expect(output).toContain('"dni_phone_agg"');
   });
@@ -249,21 +265,33 @@ describe("renderResultContractRust", () => {
 describe("renderProjectionContractTs", () => {
   test("SEARCH_PROJECTION_NAME constant is present", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractTs(spec);
+    const output = renderProjectionContractTs(
+      spec,
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
     expect(output).toContain("SEARCH_PROJECTION_NAME");
     expect(output).toContain('"search_projection"');
   });
 
   test("nullable path appears in NULLABLE_PATHS", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractTs(spec);
+    const output = renderProjectionContractTs(
+      spec,
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
     expect(output).toContain("SEARCH_PROJECTION_NULLABLE_PATHS");
     expect(output).toContain('"person.name"');
   });
 
   test("non-nullable path does not appear in NULLABLE_PATHS", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractTs(spec);
+    const output = renderProjectionContractTs(
+      spec,
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
     // person.dni is not nullable
     const nullableSection = output.slice(output.indexOf("NULLABLE_PATHS"));
     expect(nullableSection).not.toContain('"person.dni"');

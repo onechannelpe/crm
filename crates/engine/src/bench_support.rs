@@ -58,7 +58,8 @@ pub struct DatasetManifest {
     pub dataset_id: String,
     pub dataset_version: String,
     pub db_path: String,
-    pub contract_sha256: String,
+    pub doc_projection_contract_sha256: String,
+    pub company_projection_contract_sha256: String,
     pub projection_rows: Option<i64>,
     pub workload_sha256: Option<String>,
 }
@@ -138,8 +139,13 @@ pub fn read_manifest(path: Option<&Path>) -> Result<Option<DatasetManifest>, Str
     if manifest.dataset_version.trim().is_empty() {
         return Err("manifest dataset_version must be non-empty".to_string());
     }
-    if manifest.contract_sha256.trim().is_empty() {
-        return Err("manifest contract_sha256 must be non-empty".to_string());
+    if manifest.doc_projection_contract_sha256.trim().is_empty() {
+        return Err("manifest doc_projection_contract_sha256 must be non-empty".to_string());
+    }
+    if manifest.company_projection_contract_sha256.trim().is_empty() {
+        return Err(
+            "manifest company_projection_contract_sha256 must be non-empty".to_string(),
+        );
     }
 
     Ok(Some(manifest))
