@@ -2,7 +2,7 @@ use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, load_manifest, verify_manifest};
 use crate::config::mapping::SourceMapping;
 use crate::normalize::canonical;
-use crate::normalize::helpers::{normalize_phone_with_kind, PhoneKind};
+use crate::normalize::helpers::{PhoneKind, normalize_phone_with_kind};
 use crate::normalize::record_hash::hash_record;
 use csv::ReaderBuilder;
 use std::fs;

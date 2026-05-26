@@ -2,8 +2,6 @@ pub mod cli;
 pub mod config;
 pub mod contract_guard;
 pub mod core;
-pub mod db;
-pub mod domain;
 pub mod errors;
 pub mod normalize;
 pub mod pipeline;

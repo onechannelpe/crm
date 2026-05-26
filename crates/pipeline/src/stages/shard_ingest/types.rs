@@ -17,7 +17,7 @@ pub struct ShardIngestConfig<'a> {
 pub struct IngestCounters {
     pub total_rows: i64,
     pub accepted_rows: i64,
-    pub invalid_dni_rows: i64,
+    pub invalid_doc_rows: i64,
     pub invalid_ruc_rows: i64,
     pub invalid_phone_rows: i64,
 }
@@ -26,7 +26,7 @@ impl IngestCounters {
     pub fn add_from(&mut self, other: &IngestCounters) {
         self.total_rows += other.total_rows;
         self.accepted_rows += other.accepted_rows;
-        self.invalid_dni_rows += other.invalid_dni_rows;
+        self.invalid_doc_rows += other.invalid_doc_rows;
         self.invalid_ruc_rows += other.invalid_ruc_rows;
         self.invalid_phone_rows += other.invalid_phone_rows;
     }

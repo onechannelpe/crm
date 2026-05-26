@@ -1,9 +1,9 @@
 use crate::PipelineError;
 use crate::config::manifest::{SourceManifest, SourceManifestEntry, verify_manifest};
 use crate::core::schema::open_rw;
-use crate::stages::bootstrap::PhaseTiming;
-use crate::serving::materialize::materialize_serving;
 use crate::core::{fail_snapshot, merge_ingest_session};
+use crate::serving::materialize::materialize_serving;
+use crate::stages::bootstrap::PhaseTiming;
 use crate::stages::shard_ingest::{ShardIngestConfig, ingest_to_shards};
 use crate::stages::validate::validate_snapshot;
 use std::path::Path;

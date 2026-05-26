@@ -13,7 +13,7 @@ pub fn validate_snapshot(db_path: &str, snapshot_label: &str) -> Result<(), Pipe
                 ss.status,
                 sm.total_rows,
                 sm.accepted_rows,
-                sm.invalid_dni_rows,
+                sm.invalid_doc_rows,
                 sm.invalid_ruc_rows,
                 sm.invalid_phone_rows
             FROM source_snapshot ss
@@ -42,7 +42,7 @@ pub fn validate_snapshot(db_path: &str, snapshot_label: &str) -> Result<(), Pipe
         status,
         total_rows,
         accepted_rows,
-        invalid_dni,
+        invalid_doc,
         invalid_ruc,
         invalid_phone,
     )) = row
@@ -53,7 +53,7 @@ pub fn validate_snapshot(db_path: &str, snapshot_label: &str) -> Result<(), Pipe
     };
 
     println!(
-        "{{\"snapshot_id\":{snapshot_id},\"status\":\"{status}\",\"total_rows\":{total_rows},\"accepted_rows\":{accepted_rows},\"invalid_dni_rows\":{invalid_dni},\"invalid_ruc_rows\":{invalid_ruc},\"invalid_phone_rows\":{invalid_phone}}}"
+        "{{\"snapshot_id\":{snapshot_id},\"status\":\"{status}\",\"total_rows\":{total_rows},\"accepted_rows\":{accepted_rows},\"invalid_doc_rows\":{invalid_doc},\"invalid_ruc_rows\":{invalid_ruc},\"invalid_phone_rows\":{invalid_phone}}}"
     );
     Ok(())
 }

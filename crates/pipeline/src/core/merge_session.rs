@@ -1,7 +1,7 @@
 use crate::PipelineError;
+use crate::core::merge_shard::{MergeShardTimings, merge_one_shard};
 use crate::core::repo;
 use crate::core::schema::open_rw;
-use crate::core::merge_shard::{merge_one_shard, MergeShardTimings};
 use crate::stages::shard_ingest::IngestSession;
 
 #[derive(Default, Clone, Copy)]
@@ -48,11 +48,11 @@ pub fn merge_ingest_session(
     tx.commit()?;
 
     println!(
-        "{{\"snapshot_id\":{},\"total_rows\":{},\"accepted_rows\":{},\"invalid_dni_rows\":{},\"invalid_ruc_rows\":{},\"invalid_phone_rows\":{}}}",
+        "{{\"snapshot_id\":{},\"total_rows\":{},\"accepted_rows\":{},\"invalid_doc_rows\":{},\"invalid_ruc_rows\":{},\"invalid_phone_rows\":{}}}",
         session.snapshot_id,
         session.counters.total_rows,
         session.counters.accepted_rows,
-        session.counters.invalid_dni_rows,
+        session.counters.invalid_doc_rows,
         session.counters.invalid_ruc_rows,
         session.counters.invalid_phone_rows
     );

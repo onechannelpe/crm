@@ -117,7 +117,7 @@ pub(super) fn run_shard_worker(
         };
 
         if canonical_row.had_rep_doc_input && stage_row.rep_doc_type.is_empty() {
-            counters.invalid_dni_rows += 1;
+            counters.invalid_doc_rows += 1;
         }
 
         if stage_row.person_dni.is_none()
