@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::db::schema::init_schema;
+use crate::core::schema::init_schema;
 use crate::stages::bootstrap::{PhaseTiming, RunContext, SourceCheckpoint};
 use crate::stages::verify::helpers::{
     IngestPhaseConfig, load_enabled_sources, mark_snapshots_materialized,

@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::db::schema::open_rw;
+use crate::core::schema::open_rw;
 
 pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;

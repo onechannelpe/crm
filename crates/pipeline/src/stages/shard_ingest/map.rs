@@ -1,6 +1,6 @@
 use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
-use crate::domain::canonical;
+use crate::normalize::canonical;
 use csv::ReaderBuilder;
 use std::path::Path;
 

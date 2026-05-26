@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::db::schema::open_rw;
+use crate::core::schema::open_rw;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]

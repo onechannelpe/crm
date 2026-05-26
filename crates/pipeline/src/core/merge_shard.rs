@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::stages::merge::sql::{
+use crate::core::merge_sql::{
     MERGE_CLEANUP_SQL, MERGE_CORE_SQL, MERGE_EMAIL_SQL, MERGE_PHONE_SQL, MERGE_PREPARE_SQL,
 };
 use rusqlite::params;

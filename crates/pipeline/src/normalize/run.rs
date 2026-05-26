@@ -1,9 +1,9 @@
 use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, load_manifest, verify_manifest};
 use crate::config::mapping::SourceMapping;
-use crate::domain::canonical;
-use crate::domain::normalize_helpers::{PhoneKind, normalize_phone_with_kind};
-use crate::domain::record_hash::hash_record;
+use crate::normalize::canonical;
+use crate::normalize::helpers::{normalize_phone_with_kind, PhoneKind};
+use crate::normalize::record_hash::hash_record;
 use csv::ReaderBuilder;
 use std::fs;
 use std::path::Path;

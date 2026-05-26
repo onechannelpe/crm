@@ -1,8 +1,8 @@
 use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
-use crate::db::repo;
-use crate::db::schema::open_rw;
-use crate::domain::canonical;
+use crate::core::repo;
+use crate::core::schema::open_rw;
+use crate::normalize::canonical;
 use crate::stages::shard_ingest::types::{
     IngestCounters, IngestSession, ShardIngestConfig, ShardResult, ShardTask, WorkerHandle,
     sanitize_path_component,
@@ -238,7 +238,7 @@ fn dispatch_records(
 }
 
 fn mark_snapshot_failed(db_path: &str, snapshot_id: i64) -> Result<(), PipelineError> {
-    use crate::db::repo;
+    use crate::core::repo;
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
     repo::set_snapshot_status(&tx, snapshot_id, "failed")?;

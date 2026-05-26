@@ -1,2 +1,2 @@
-pub mod repo;
-pub mod schema;
+pub use crate::core::repo;
+pub use crate::core::schema;

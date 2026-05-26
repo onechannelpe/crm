@@ -1,7 +1,7 @@
 use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
-use crate::domain::canonical;
-use crate::domain::record_hash::hash_record;
+use crate::normalize::canonical;
+use crate::normalize::record_hash::hash_record;
 use crate::stages::shard_ingest::types::{IngestCounters, ShardTask, ShardWorkerResult, StageRow};
 use rusqlite::{Connection, params};
 use std::fs;
