@@ -17,7 +17,8 @@ export function WorkflowTab(props: WorkflowTabProps) {
       <Show
         when={
           props.data.lead.stage === "SETUP_PLAN" ||
-          props.data.lead.stage === "SETUP_EXECUTION"
+          props.data.lead.stage === "SETUP_EXECUTION" ||
+          props.data.lead.stage === "LIVE"
         }
       >
         <SetupWorkspace data={props.data} />
