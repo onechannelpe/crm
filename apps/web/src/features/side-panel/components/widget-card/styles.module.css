@@ -39,7 +39,6 @@
 
 .widgetBody {
   margin-top: var(--spacing-2);
-  overflow: hidden;
 }
 
 .seeAllButton {

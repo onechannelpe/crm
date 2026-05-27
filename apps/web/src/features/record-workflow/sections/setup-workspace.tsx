@@ -310,6 +310,7 @@ function VenueCreatePanel(props: {
 }) {
   const createVenue = useAction(createVenueMutation);
   const form = useVenueFormState();
+  const [showForm, setShowForm] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
@@ -329,6 +330,7 @@ function VenueCreatePanel(props: {
       await createVenue({ leadId: props.leadId, ...parsed.value });
       await revalidateWorkflowLead(props.leadId);
       form.reset();
+      setShowForm(false);
     } catch (err) {
       setError(toAppError(err, "No se pudo registrar la sede").publicMessage);
     } finally {
@@ -337,14 +339,30 @@ function VenueCreatePanel(props: {
   }
 
   return (
-    <VenueForm
-      form={form}
-      linkScope={props.linkScope}
-      onlineScope={props.onlineScope}
-      submitting={submitting()}
-      error={error()}
-      onSubmit={(e) => void handleSubmit(e)}
-    />
+    <Show
+      when={showForm()}
+      fallback={
+        <div style={{ padding: "var(--spacing-3) 0" }}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+          >
+            + Agregar sede
+          </Button>
+        </div>
+      }
+    >
+      <VenueForm
+        form={form}
+        linkScope={props.linkScope}
+        onlineScope={props.onlineScope}
+        submitting={submitting()}
+        error={error()}
+        onSubmit={(e) => void handleSubmit(e)}
+      />
+    </Show>
   );
 }
 
