@@ -7,7 +7,7 @@ use leads::api::{RecordState, router as record_router};
 use leads::repo::SqliteLeadsRepository;
 use leads::service::{CandidateService, ImportService};
 use search::api::{SearchState, router as search_router};
-use search::repo::SqliteSearchRepository;
+use search::query::sqlite::SqliteSearchRepository;
 use search::service::SearchService;
 use shared::error::StartupError;
 use shared::hmac::HmacVerifier;
