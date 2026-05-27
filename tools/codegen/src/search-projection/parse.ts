@@ -1,6 +1,6 @@
 import { asObject, asString, asStringArray } from "../shared.ts";
 
-export type ValueType = "string" | "string_array";
+export type ValueType = "string" | "string_array" | "integer";
 
 export type StorageMapping = {
   table: string;
@@ -21,7 +21,7 @@ export type ProjectionSpec = {
   fields: ProjectionField[];
 };
 
-const VALID_VALUE_TYPES = new Set<string>(["string", "string_array"]);
+const VALID_VALUE_TYPES = new Set<string>(["string", "string_array", "integer"]);
 
 export function parseProjectionSpec(raw: unknown): ProjectionSpec {
   const root = asObject(raw, "projection spec");
@@ -51,7 +51,7 @@ export function parseProjectionSpec(raw: unknown): ProjectionSpec {
         !VALID_VALUE_TYPES.has(valueTypeRaw as string)
       ) {
         throw new Error(
-          `fields[${i}].value_type must be "string" | "string_array" when present`,
+          `fields[${i}].value_type must be "string" | "string_array" | "integer" when present`,
         );
       }
 

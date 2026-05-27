@@ -1,4 +1,4 @@
-use crm_pipeline::normalize::helpers::{
+use crm_pipeline::normalize::{
     PhoneKind, derive_dni_from_natural_ruc, normalize_ambiguous_doc,
     normalize_person_document_with_natural_ruc, normalize_phone_with_kind,
 };

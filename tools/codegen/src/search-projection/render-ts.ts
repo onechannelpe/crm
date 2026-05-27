@@ -115,8 +115,11 @@ export function renderResultContractTs(
 }
 
 function tsFieldType(field: ProjectionField): string {
-  if (field.value_type === "string_array") {
-    return field.nullable ? "string[] | null" : "string[]";
-  }
-  return field.nullable ? "string | null" : "string";
+    if (field.value_type === "string_array") {
+        return field.nullable ? "string[] | null" : "string[]";
+    }
+    if (field.value_type === "integer") {
+        return field.nullable ? "number | null" : "number";
+    }
+    return field.nullable ? "string | null" : "string";
 }

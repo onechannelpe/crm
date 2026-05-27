@@ -11,10 +11,6 @@ function prop(source: object, key: string): unknown {
   return Reflect.get(source, key);
 }
 
-function isNullableString(value: unknown): value is string | null {
-  return value === null || typeof value === "string";
-}
-
 function isSearchResult(value: unknown): value is SearchResult {
   if (typeof value !== "object" || value === null) return false;
   const kind = prop(value, "kind");

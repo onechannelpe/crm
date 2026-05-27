@@ -141,5 +141,8 @@ function rustFieldType(field: ProjectionField): string {
   if (field.value_type === "string_array") {
     return field.nullable ? "Option<Vec<String>>" : "Vec<String>";
   }
+  if (field.value_type === "integer") {
+    return field.nullable ? "Option<i64>" : "i64";
+  }
   return field.nullable ? "Option<String>" : "String";
 }

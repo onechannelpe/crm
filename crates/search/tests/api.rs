@@ -101,7 +101,7 @@ async fn search_by_document_returns_matching_row() {
 }
 
 #[tokio::test]
-async fn search_by_phone_enriched_returns_siblings() {
+async fn search_by_phone_returns_siblings() {
     let server = make_server(100);
     let response = signed_request(
         &json!({"intent":"people","query":"999111222","limit":20}),

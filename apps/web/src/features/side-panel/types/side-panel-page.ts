@@ -150,7 +150,10 @@ type CreateSearchCompanyDetailSidePanelPageInput = {
 export function createSearchCompanyDetailSidePanelPage(
   input: CreateSearchCompanyDetailSidePanelPageInput,
 ): SidePanelPageDefinition {
-  const pageId = createSidePanelPageId();
+  const pageId = createEntitySidePanelPageId(
+    "search-company-detail",
+    String(input.company.id),
+  );
 
   return {
     entry: {

@@ -38,7 +38,6 @@ pub fn promote_db(from: &str, to: &str) -> Result<(), PipelineError> {
         if Path::new(&to_shm).exists() {
             fs::remove_file(&to_shm)?;
         }
-
         fs::rename(&tmp, to)?;
         Ok(())
     })();

@@ -4,6 +4,7 @@
 
 export const COMPANY_PROJECTION_NAME = "company_projection" as const;
 export const COMPANY_PROJECTION_PATHS = [
+  "company.id",
   "company.ruc",
   "company.legal_name",
   "company.trade_name",

@@ -65,6 +65,7 @@ pub struct DocumentRow {
 
 #[derive(Debug, Serialize)]
 pub struct CompanyInfo {
+    pub id: i64,
     pub ruc: String,
     pub legal_name: Option<String>,
     pub trade_name: Option<String>,

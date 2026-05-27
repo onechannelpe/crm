@@ -1,16 +1,10 @@
 use crate::PipelineError;
-use crate::canonical::schema::open_rw;
-
-const PRIMARY_ROLE_BY_DOC_POLICY_SQL: &str =
-    include_str!("../canonical/queries/policy_primary_role_by_doc.sql");
-const PRIMARY_ROLE_BY_COMPANY_POLICY_SQL: &str =
-    include_str!("../canonical/queries/policy_primary_role_by_company.sql");
+use crate::schema::open_rw;
 
 pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
 
-    create_indexes(&tx)?;
     create_dirty_worksets(&tx)?;
 
     let dirty_doc_count: i64 =
@@ -43,36 +37,6 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
     Ok(())
 }
 
-fn create_indexes(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineError> {
-    tx.execute_batch(
-        r#"
-        CREATE INDEX IF NOT EXISTS idx_company_role_doc_id
-            ON company_role(doc_id);
-        CREATE INDEX IF NOT EXISTS idx_company_role_company_id
-            ON company_role(company_id);
-        CREATE INDEX IF NOT EXISTS idx_document_phone_doc_id
-            ON document_phone(doc_id, confidence DESC, phone);
-        CREATE INDEX IF NOT EXISTS idx_document_email_doc_id
-            ON document_email(doc_id, reliability DESC, email);
-        CREATE INDEX IF NOT EXISTS idx_doc_projection_dirty
-            ON projection_dirty_doc(doc_id);
-        CREATE INDEX IF NOT EXISTS idx_company_projection_dirty
-            ON projection_dirty_company(company_id);
-        CREATE INDEX IF NOT EXISTS idx_doc_projection_phone_phone
-            ON doc_projection_phone_index(phone);
-        CREATE INDEX IF NOT EXISTS idx_company_projection_phone_phone
-            ON company_projection_phone_index(phone);
-        CREATE INDEX IF NOT EXISTS idx_doc_projection_doc
-            ON doc_projection(doc_number);
-        CREATE INDEX IF NOT EXISTS idx_company_projection_ruc
-            ON company_projection(ruc);
-        CREATE INDEX IF NOT EXISTS idx_company_phone_phone
-            ON company_phone(phone);
-        "#,
-    )?;
-    Ok(())
-}
-
 fn create_dirty_worksets(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineError> {
     tx.execute_batch(
         r#"
@@ -87,7 +51,7 @@ fn create_dirty_worksets(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineE
 }
 
 fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineError> {
-    let sql = format!(
+    tx.execute_batch(
         r#"
         DELETE FROM doc_projection_phone_index
         WHERE doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids);
@@ -99,7 +63,6 @@ fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), Pipe
         WHERE doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids);
 
         WITH
-        {primary_role_by_doc_policy_sql},
         ranked_phone AS (
             SELECT
                 dp.doc_id,
@@ -183,7 +146,7 @@ fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), Pipe
         FROM document d
         LEFT JOIN document_attribute da ON da.doc_id = d.doc_id
         LEFT JOIN primary_role_by_doc prd ON prd.doc_id = d.doc_id
-        LEFT JOIN company_profile cp ON cp.company_id = prd.company_id
+        LEFT JOIN company cp ON cp.company_id = prd.company_id
         LEFT JOIN top_two_phones phones ON phones.doc_id = d.doc_id
         LEFT JOIN top_best_email tbe ON tbe.doc_id = d.doc_id
         WHERE d.doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids);
@@ -212,15 +175,12 @@ fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), Pipe
         )
         GROUP BY doc_id;
         "#,
-        primary_role_by_doc_policy_sql = PRIMARY_ROLE_BY_DOC_POLICY_SQL,
-    );
-
-    tx.execute_batch(&sql)?;
+    )?;
     Ok(())
 }
 
 fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineError> {
-    let sql = format!(
+    tx.execute_batch(
         r#"
         DELETE FROM company_projection_phone_index
         WHERE company_id IN (SELECT company_id FROM tmp_dirty_company_ids);
@@ -232,7 +192,6 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
         WHERE company_id IN (SELECT company_id FROM tmp_dirty_company_ids);
 
         WITH
-        {primary_role_by_company_policy_sql},
         ranked_phone AS (
             SELECT
                 cph.company_id,
@@ -284,7 +243,7 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
             NULLIF(prc.role_start_date, '') AS role_start_date,
             phones.phone_primary,
             phones.phone_secondary
-        FROM company_profile cp
+        FROM company cp
         LEFT JOIN primary_role_by_company prc ON prc.company_id = cp.company_id
         LEFT JOIN top_two_phones phones ON phones.company_id = cp.company_id
         WHERE cp.company_id IN (SELECT company_id FROM tmp_dirty_company_ids);
@@ -301,7 +260,7 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
 
         DELETE FROM ruc_phone_agg
         WHERE org_ruc IN (
-            SELECT cp2.ruc FROM company_profile cp2
+            SELECT cp2.ruc FROM company cp2
             WHERE cp2.company_id IN (SELECT company_id FROM tmp_dirty_company_ids)
         );
 
@@ -310,17 +269,14 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
         FROM (
             SELECT cp2.ruc AS org_ruc, cpi.phone
             FROM company_projection_phone_index cpi
-            JOIN company_profile cp2 ON cp2.company_id = cpi.company_id
+            JOIN company cp2 ON cp2.company_id = cpi.company_id
             WHERE cpi.company_id IN (SELECT company_id FROM tmp_dirty_company_ids)
             GROUP BY cp2.ruc, cpi.phone
             ORDER BY cp2.ruc, cpi.phone
         )
         GROUP BY org_ruc;
         "#,
-        primary_role_by_company_policy_sql = PRIMARY_ROLE_BY_COMPANY_POLICY_SQL,
-    );
-
-    tx.execute_batch(&sql)?;
+    )?;
     Ok(())
 }
 

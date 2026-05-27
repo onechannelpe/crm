@@ -70,6 +70,7 @@ export function makeDocumentResult(partial: {
 }
 
 export function makeCompanyResult(partial: {
+  id?: number;
   ruc?: string;
   legal_name?: string | null;
   phone_primary?: string | null;
@@ -77,16 +78,19 @@ export function makeCompanyResult(partial: {
   sibling_phones?: string[] | null;
 }): SearchResult {
   const {
+    id,
     ruc = "20100000001",
     legal_name = "ACME SAC",
     phone_primary = null,
     phone_secondary = null,
     sibling_phones = null,
   } = partial;
+  const stableId = id ?? Number(ruc);
 
   return {
     kind: "company",
     company: {
+      id: stableId,
       ruc,
       legal_name,
       trade_name: null,

@@ -26,12 +26,6 @@ pub trait SearchRepository: Send + Sync {
         value: &str,
         limit: usize,
     ) -> Result<Vec<SearchResult>, ApiError>;
-    fn search_by_phone_enriched(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError>;
     fn search_by_person_name(
         &self,
         conn: &Connection,
@@ -76,15 +70,6 @@ impl SearchRepository for SqliteSearchRepository {
         limit: usize,
     ) -> Result<Vec<SearchResult>, ApiError> {
         search_by_phone(conn, value, limit)
-    }
-
-    fn search_by_phone_enriched(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError> {
-        search_by_phone_enriched(conn, value, limit)
     }
 
     fn search_by_person_name(
@@ -144,6 +129,7 @@ const DOC_SELECT_COLUMNS: &str = "
   NULLIF(c.phone_secondary, '')     AS phone_secondary";
 
 const COMPANY_SELECT_COLUMNS: &str = "
+  c.company_id                      AS company_id,
   c.ruc,
   NULLIF(c.legal_name, '')          AS legal_name,
   NULLIF(c.trade_name, '')          AS trade_name,
@@ -182,26 +168,6 @@ static SQL_RUC: LazyLock<String> = LazyLock::new(|| {
          FROM company_projection c\n\
          LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.ruc\n\
          WHERE c.ruc = ?1\n\
-         LIMIT ?2"
-    )
-});
-
-static SQL_PHONE_DOC: LazyLock<String> = LazyLock::new(|| {
-    format!(
-        "SELECT{DOC_SELECT_COLUMNS}\n\
-         FROM doc_projection c\n\
-         JOIN doc_projection_phone_index p ON p.doc_id = c.doc_id\n\
-         WHERE p.phone = ?1\n\
-         LIMIT ?2"
-    )
-});
-
-static SQL_PHONE_COMPANY: LazyLock<String> = LazyLock::new(|| {
-    format!(
-        "SELECT{COMPANY_SELECT_COLUMNS}\n\
-         FROM company_projection c\n\
-         JOIN company_projection_phone_index p ON p.company_id = c.company_id\n\
-         WHERE p.phone = ?1\n\
          LIMIT ?2"
     )
 });
@@ -278,17 +244,6 @@ pub fn search_by_ruc(
 }
 
 pub fn search_by_phone(
-    conn: &Connection,
-    value: &str,
-    limit: usize,
-) -> Result<Vec<SearchResult>, ApiError> {
-    let mut results = query_doc_rows(conn, &SQL_PHONE_DOC, params![value, limit as i64])?;
-    let company = query_company_rows(conn, &SQL_PHONE_COMPANY, params![value, limit as i64])?;
-    results.extend(company);
-    Ok(results)
-}
-
-pub fn search_by_phone_enriched(
     conn: &Connection,
     value: &str,
     limit: usize,
@@ -508,6 +463,7 @@ fn map_company_row(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
 
     Ok(SearchResult::Company(CompanyRow {
         company: CompanyInfo {
+            id: row.get("company_id")?,
             ruc: row.get("ruc")?,
             legal_name: row.get("legal_name")?,
             trade_name: row.get("trade_name")?,

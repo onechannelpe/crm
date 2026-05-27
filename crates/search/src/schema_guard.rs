@@ -23,61 +23,53 @@ pub fn validate(conn: &Connection) -> Result<(), StartupError> {
             )));
         }
     }
-    validate_doc_paths()?;
-    validate_company_paths()?;
+    use crate::company_projection_contract_generated::{
+        COMPANY_PROJECTION_NAME, COMPANY_PROJECTION_NULLABLE_PATHS, COMPANY_PROJECTION_PATHS,
+    };
+    use crate::doc_projection_contract_generated::{
+        DOC_PROJECTION_NAME, DOC_PROJECTION_NULLABLE_PATHS, DOC_PROJECTION_PATHS,
+    };
+
+    validate_projection_paths(
+        DOC_PROJECTION_NAME,
+        "doc projection",
+        DOC_PROJECTION_PATHS,
+        DOC_PROJECTION_NULLABLE_PATHS,
+    )?;
+    validate_projection_paths(
+        COMPANY_PROJECTION_NAME,
+        "company projection",
+        COMPANY_PROJECTION_PATHS,
+        COMPANY_PROJECTION_NULLABLE_PATHS,
+    )?;
     validate_doc_columns(conn)?;
     validate_company_columns(conn)?;
     Ok(())
 }
 
-fn validate_doc_paths() -> Result<(), StartupError> {
-    use crate::doc_projection_contract_generated::{
-        DOC_PROJECTION_NAME, DOC_PROJECTION_NULLABLE_PATHS, DOC_PROJECTION_PATHS,
-    };
-    if DOC_PROJECTION_NAME.trim().is_empty() {
-        return Err(StartupError::Config(
-            "doc projection contract must include a non-empty projection name".into(),
-        ));
+fn validate_projection_paths(
+    projection_name: &str,
+    projection_label: &str,
+    paths: &[&str],
+    nullable_paths: &[&str],
+) -> Result<(), StartupError> {
+    if projection_name.trim().is_empty() {
+        return Err(StartupError::Config(format!(
+            "{projection_label} contract must include a non-empty projection name"
+        )));
     }
     let mut seen = HashSet::new();
-    for path in DOC_PROJECTION_PATHS {
+    for path in paths {
         if !seen.insert(*path) {
             return Err(StartupError::Config(format!(
-                "duplicate path in doc projection contract: {path}"
+                "duplicate path in {projection_label} contract: {path}"
             )));
         }
     }
-    for path in DOC_PROJECTION_NULLABLE_PATHS {
+    for path in nullable_paths {
         if !seen.contains(path) {
             return Err(StartupError::Config(format!(
-                "nullable path not in doc projection path set: {path}"
-            )));
-        }
-    }
-    Ok(())
-}
-
-fn validate_company_paths() -> Result<(), StartupError> {
-    use crate::company_projection_contract_generated::{
-        COMPANY_PROJECTION_NAME, COMPANY_PROJECTION_NULLABLE_PATHS, COMPANY_PROJECTION_PATHS,
-    };
-    if COMPANY_PROJECTION_NAME.trim().is_empty() {
-        return Err(StartupError::Config(
-            "company projection contract must include a non-empty projection name".into(),
-        ));
-    }
-    let mut seen = HashSet::new();
-    for path in COMPANY_PROJECTION_PATHS {
-        if !seen.insert(*path) {
-            return Err(StartupError::Config(format!(
-                "duplicate path in company projection contract: {path}"
-            )));
-        }
-    }
-    for path in COMPANY_PROJECTION_NULLABLE_PATHS {
-        if !seen.contains(path) {
-            return Err(StartupError::Config(format!(
-                "nullable path not in company projection path set: {path}"
+                "nullable path not in {projection_label} path set: {path}"
             )));
         }
     }

@@ -106,7 +106,7 @@ pub fn plan_query(intent: SearchIntent, query: &str) -> Result<QueryStrategy, Ap
         if value.len() == 11 {
             return Ok(QueryStrategy::Ruc(value.to_owned()));
         }
-        if (8..=12).contains(&value.len()) {
+        if value.len() == 8 {
             return Ok(QueryStrategy::Document {
                 doc_type: "DNI".to_owned(),
                 doc_number: value.to_owned(),

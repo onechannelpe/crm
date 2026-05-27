@@ -31,7 +31,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(source_id) REFERENCES source_registry(source_id)
         );
 
-        -- Identity anchor: any valid (doc_type, doc_number) pair
         CREATE TABLE IF NOT EXISTS document (
             doc_id INTEGER PRIMARY KEY,
             doc_type TEXT NOT NULL,
@@ -39,7 +38,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             UNIQUE(doc_type, doc_number)
         );
 
-        -- Person attributes for a document holder
         CREATE TABLE IF NOT EXISTS document_attribute (
             doc_id INTEGER PRIMARY KEY,
             full_name TEXT NOT NULL DEFAULT '',
@@ -55,7 +53,7 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        CREATE TABLE IF NOT EXISTS company_profile (
+        CREATE TABLE IF NOT EXISTS company (
             company_id INTEGER PRIMARY KEY,
             ruc TEXT NOT NULL UNIQUE,
             legal_name TEXT NOT NULL DEFAULT '',
@@ -74,7 +72,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             economic_activity TEXT
         );
 
-        -- Role links a document holder (nullable if unresolved) to a company
         CREATE TABLE IF NOT EXISTS company_role (
             role_id INTEGER PRIMARY KEY,
             company_id INTEGER NOT NULL,
@@ -85,11 +82,10 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             role_name TEXT NOT NULL DEFAULT '',
             role_start_date TEXT NOT NULL DEFAULT '',
             UNIQUE(company_id, rep_doc_type, rep_doc_number, role_name, role_start_date),
-            FOREIGN KEY(company_id) REFERENCES company_profile(company_id),
+            FOREIGN KEY(company_id) REFERENCES company(company_id),
             FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        -- Phones anchored to a document holder
         CREATE TABLE IF NOT EXISTS document_phone (
             doc_id INTEGER NOT NULL,
             phone TEXT NOT NULL,
@@ -100,7 +96,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        -- Emails anchored to a document holder
         CREATE TABLE IF NOT EXISTS document_email (
             doc_id INTEGER NOT NULL,
             email TEXT NOT NULL,
@@ -118,7 +113,7 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             last_seen_snapshot_id INTEGER NOT NULL,
             confidence INTEGER NOT NULL DEFAULT 100,
             PRIMARY KEY(company_id, phone),
-            FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
+            FOREIGN KEY(company_id) REFERENCES company(company_id)
         );
 
         CREATE TABLE IF NOT EXISTS snapshot_metrics (
@@ -142,7 +137,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(updated_snapshot_id) REFERENCES source_snapshot(snapshot_id)
         );
 
-        -- Dirty tracking: independent per axis
         CREATE TABLE IF NOT EXISTS projection_dirty_doc (
             doc_id INTEGER PRIMARY KEY,
             updated_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -152,10 +146,9 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
         CREATE TABLE IF NOT EXISTS projection_dirty_company (
             company_id INTEGER PRIMARY KEY,
             updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-            FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
+            FOREIGN KEY(company_id) REFERENCES company(company_id)
         );
 
-        -- Phone aggregates
         CREATE TABLE IF NOT EXISTS ruc_phone_agg (
             org_ruc TEXT PRIMARY KEY,
             phones TEXT NOT NULL
@@ -167,7 +160,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        -- Person-centric search projection (one row per document)
         CREATE TABLE IF NOT EXISTS doc_projection (
             doc_id INTEGER PRIMARY KEY,
             doc_type TEXT NOT NULL,
@@ -208,7 +200,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(doc_id) REFERENCES document(doc_id)
         );
 
-        -- Company-centric search projection (one row per company, always present)
         CREATE TABLE IF NOT EXISTS company_projection (
             company_id INTEGER PRIMARY KEY,
             ruc TEXT NOT NULL,
@@ -233,10 +224,9 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             role_start_date TEXT,
             phone_primary TEXT,
             phone_secondary TEXT,
-            FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
+            FOREIGN KEY(company_id) REFERENCES company(company_id)
         );
 
-        -- Phone lookup indexes for both projections
         CREATE TABLE IF NOT EXISTS doc_projection_phone_index (
             phone TEXT NOT NULL,
             doc_id INTEGER NOT NULL,
@@ -249,7 +239,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             UNIQUE(phone, company_id)
         );
 
-        -- Full-text search indexes
         CREATE VIRTUAL TABLE IF NOT EXISTS doc_projection_fts USING fts5(
             doc_name,
             tokenize="unicode61 remove_diacritics 1"
@@ -265,9 +254,80 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             value TEXT NOT NULL
         );
 
+        -- Indexes
         CREATE INDEX IF NOT EXISTS idx_source_row_hash_latest_source_hash
             ON source_row_hash_latest(source_id, raw_hash);
 
+        CREATE INDEX IF NOT EXISTS idx_company_role_doc_id
+            ON company_role(doc_id);
+
+        CREATE INDEX IF NOT EXISTS idx_company_role_company_id
+            ON company_role(company_id);
+
+        CREATE INDEX IF NOT EXISTS idx_document_phone_doc_id
+            ON document_phone(doc_id, confidence DESC, phone);
+
+        CREATE INDEX IF NOT EXISTS idx_document_email_doc_id
+            ON document_email(doc_id, reliability DESC, email);
+
+        CREATE INDEX IF NOT EXISTS idx_doc_projection_dirty
+            ON projection_dirty_doc(doc_id);
+
+        CREATE INDEX IF NOT EXISTS idx_company_projection_dirty
+            ON projection_dirty_company(company_id);
+
+        CREATE INDEX IF NOT EXISTS idx_doc_projection_phone_phone
+            ON doc_projection_phone_index(phone);
+
+        CREATE INDEX IF NOT EXISTS idx_company_projection_phone_phone
+            ON company_projection_phone_index(phone);
+
+        CREATE INDEX IF NOT EXISTS idx_doc_projection_doc
+            ON doc_projection(doc_number);
+
+        CREATE INDEX IF NOT EXISTS idx_company_projection_ruc
+            ON company_projection(ruc);
+
+        CREATE INDEX IF NOT EXISTS idx_company_phone_phone
+            ON company_phone(phone);
+
+        -- Views: primary representative policy for each axis.
+        -- Using a view instead of a CTE keeps policy logic in one place and lets
+        -- both materialize and any debugging tool query it directly.
+        CREATE VIEW IF NOT EXISTS primary_role_by_doc AS
+        SELECT doc_id, company_id, role_name, role_start_date, rep_doc_type, rep_doc_number, rep_name
+        FROM (
+            SELECT
+                cr.doc_id, cr.company_id, cr.role_name, cr.role_start_date,
+                cr.rep_doc_type, cr.rep_doc_number, cr.rep_name,
+                ROW_NUMBER() OVER (
+                    PARTITION BY cr.doc_id
+                    ORDER BY
+                        CASE WHEN NULLIF(cr.role_start_date, '') IS NULL THEN 1 ELSE 0 END,
+                        cr.role_start_date DESC,
+                        cr.role_id ASC
+                ) AS rn
+            FROM company_role cr
+            WHERE cr.doc_id IS NOT NULL
+        )
+        WHERE rn = 1;
+
+        CREATE VIEW IF NOT EXISTS primary_role_by_company AS
+        SELECT company_id, rep_doc_type, rep_doc_number, rep_name, role_name, role_start_date
+        FROM (
+            SELECT
+                cr.company_id, cr.rep_doc_type, cr.rep_doc_number, cr.rep_name,
+                cr.role_name, cr.role_start_date,
+                ROW_NUMBER() OVER (
+                    PARTITION BY cr.company_id
+                    ORDER BY
+                        CASE WHEN NULLIF(cr.role_start_date, '') IS NULL THEN 1 ELSE 0 END,
+                        cr.role_start_date DESC,
+                        cr.role_id ASC
+                ) AS rn
+            FROM company_role cr
+        )
+        WHERE rn = 1;
         "#,
     )?;
 

@@ -1,9 +1,7 @@
 use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, load_manifest, verify_manifest};
 use crate::config::mapping::SourceMapping;
-use crate::normalize::canonical;
-use crate::normalize::helpers::{PhoneKind, normalize_phone_with_kind};
-use crate::normalize::record_hash::hash_record;
+use crate::normalize::{self, PhoneKind, hash_record, normalize_phone_with_kind};
 use csv::ReaderBuilder;
 use std::fs;
 use std::path::Path;
@@ -119,7 +117,7 @@ fn normalize_source_entry(
     } else {
         None
     };
-    let resolved_mapping = canonical::resolve_mapping(&mapping, headers.as_ref())?;
+    let resolved_mapping = normalize::resolve_mapping(&mapping, headers.as_ref())?;
 
     let mut summary = NormalizationSummary {
         source_key: source.source_key.clone(),
@@ -170,7 +168,7 @@ fn normalize_source_entry(
 
         summary.total_rows += 1;
         let record_hash = hash_record(&record, mapping.delimiter.as_str());
-        let row = canonical::map_record(&resolved_mapping, &record);
+        let row = normalize::map_record(&resolved_mapping, &record);
 
         let mut errors: Vec<&str> = Vec::new();
         let has_invalid_rep_doc = row.had_rep_doc_input && row.rep_doc_type.is_empty();

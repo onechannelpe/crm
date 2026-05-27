@@ -11,7 +11,6 @@ pub fn sample_with_header(src: PathBuf, out: PathBuf, cap: usize) -> Result<(), 
     let out_file = File::create(out)?;
     let mut writer = BufWriter::new(out_file);
 
-    // Preserve the original header row exactly as written.
     let mut buf = Vec::new();
     if reader.read_until(b'\n', &mut buf)? == 0 {
         writer.flush()?;

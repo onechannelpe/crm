@@ -11,6 +11,7 @@ pub struct ProjectionStorageMapping {
 pub const COMPANY_PROJECTION_NAME: &str = "company_projection";
 
 pub const COMPANY_PROJECTION_PATHS: &[&str] = &[
+    "company.id",
     "company.ruc",
     "company.legal_name",
     "company.trade_name",
@@ -62,6 +63,11 @@ pub const COMPANY_PROJECTION_NULLABLE_PATHS: &[&str] = &[
 ];
 
 pub const COMPANY_PROJECTION_STORAGE_MAPPINGS: &[ProjectionStorageMapping] = &[
+    ProjectionStorageMapping {
+        path: "company.id",
+        table: "company_projection",
+        column: "company_id",
+    },
     ProjectionStorageMapping {
         path: "company.ruc",
         table: "company_projection",

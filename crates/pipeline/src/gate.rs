@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::canonical::schema::open_rw;
+use crate::schema::open_rw;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -28,7 +28,6 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
     let conn = open_rw(db_path)?;
     let mut checks = Vec::new();
 
-    // Per-source (latest snapshot): invalid_doc_ratio < 5% and accepted_rows > 0.
     let snapshots: Vec<SourceSnapshotMetrics> = {
         let mut stmt = conn.prepare(
             r#"
@@ -74,14 +73,14 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
         let accepted = snapshot.accepted_rows.unwrap_or_default();
         let invalid_doc = snapshot.invalid_doc_rows.unwrap_or_default();
         let total = snapshot.total_rows.unwrap_or_default();
-        let accepted_check = GateCheck {
+
+        checks.push(GateCheck {
             name: format!("{}.accepted_rows_gt_0", snapshot.source_key),
             passed: accepted > 0,
             actual: accepted as f64,
             threshold: 1.0,
             message: format!("source {}: accepted_rows={accepted}", snapshot.source_key),
-        };
-        checks.push(accepted_check);
+        });
 
         if total > 0 {
             let ratio = invalid_doc as f64 / total as f64;
@@ -100,7 +99,6 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
         }
     }
 
-    // Global: both projections must be non-empty.
     let doc_projection_count: i64 =
         conn.query_row("SELECT COUNT(*) FROM doc_projection", [], |row| row.get(0))?;
     checks.push(GateCheck {

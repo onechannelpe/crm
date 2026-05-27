@@ -1,13 +1,13 @@
 use crate::PipelineError;
-use crate::canonical::schema::open_rw;
 use crate::cli::Command;
 use crate::config::manifest::verify_manifest;
 use crate::config::runtime::{PipelineRuntimeConfig, ProfileMode};
 use crate::contract_guard::validate_contracts;
-use crate::normalize;
-use crate::projection::promote;
-use crate::quality::gate;
-use crate::stages::verify;
+use crate::gate;
+use crate::promote;
+use crate::report;
+use crate::run;
+use crate::schema::open_rw;
 use rusqlite::params;
 use std::path::Path;
 use std::time::SystemTime;
@@ -23,7 +23,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
             validate_contracts(&runtime.paths.manifest)?;
             let resolved = runtime.resolve_profile(&profile)?;
-            normalize::normalize_matrix(
+            report::normalize_matrix(
                 &runtime.paths.manifest,
                 resolved.row_cap,
                 &runtime.paths.normalized_dir,
@@ -38,7 +38,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-{}", profile));
 
-            verify::run_matrix(
+            run::run_matrix(
                 &bench_db.to_string_lossy(),
                 &bench_build_dir.to_string_lossy(),
                 &runtime.paths.manifest,
@@ -56,7 +56,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-map-{}", profile));
 
-            verify::run_matrix_map_only(
+            run::run_matrix_map_only(
                 &bench_build_dir.to_string_lossy(),
                 &runtime.paths.manifest,
                 resolved.row_cap,
@@ -75,7 +75,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
                 )));
             }
 
-            verify::run_full(
+            run::run_full(
                 &runtime.paths.staged_db,
                 &runtime.paths.manifest,
                 resolved.workers,
@@ -106,7 +106,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let refresh_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("refresh-{}", profile));
 
-            verify::run_matrix(
+            run::run_matrix(
                 &refresh_db.to_string_lossy(),
                 &refresh_build_dir.to_string_lossy(),
                 &runtime.paths.manifest,
@@ -156,7 +156,6 @@ fn publish_with_gate_and_metadata(from: &str, to: &str) -> Result<(), PipelineEr
             );
         }
     }
-    // Stamp promoted-build metadata into the staging database before VACUUM INTO.
     {
         let conn = open_rw(from)?;
         let now_duration = SystemTime::now()

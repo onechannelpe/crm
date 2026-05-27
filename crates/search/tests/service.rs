@@ -39,15 +39,6 @@ impl SearchRepository for FailingSearchRepo {
         Err(ApiError::Service("fake repo failure".into()))
     }
 
-    fn search_by_phone_enriched(
-        &self,
-        _conn: &Connection,
-        _value: &str,
-        _limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError> {
-        Err(ApiError::Service("fake repo failure".into()))
-    }
-
     fn search_by_person_name(
         &self,
         _conn: &Connection,

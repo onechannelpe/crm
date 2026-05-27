@@ -1,4 +1,4 @@
-use crm_pipeline::canonical::schema::open_rw;
+use crm_pipeline::schema::open_rw;
 use rusqlite::params;
 
 pub fn seed_minimal_gate_ready_state(db_path: &str) {
@@ -42,7 +42,7 @@ pub fn seed_minimal_gate_ready_state(db_path: &str) {
         .expect("insert doc projection row");
     connection
         .execute(
-            "INSERT INTO company_profile(company_id, ruc, legal_name) VALUES (?1, ?2, ?3)",
+            "INSERT INTO company(company_id, ruc, legal_name) VALUES (?1, ?2, ?3)",
             params![1_i64, "20100011111", "ACME S.A.C."],
         )
         .expect("insert company profile row");

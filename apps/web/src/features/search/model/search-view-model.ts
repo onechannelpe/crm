@@ -22,6 +22,6 @@ export function createSearchViewModel(
   return {
     people,
     companies,
-    total: response.rows.length,
+    total: people.length + companies.length,
   };
 }

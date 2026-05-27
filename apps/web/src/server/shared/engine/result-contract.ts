@@ -58,6 +58,7 @@ export interface DocumentRow {
 }
 
 export interface CompanyInfo {
+  id: number;
   ruc: string;
   legal_name: string | null;
   trade_name: string | null;

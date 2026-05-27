@@ -16,7 +16,7 @@ WHERE
     (excluded.full_name <> '' AND excluded.full_name <> document_attribute.full_name)
     OR (excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 <> document_attribute.natural_ruc10);
 
-INSERT INTO company_profile(ruc, legal_name, status, condition, company_type, economic_activity, ubigeo_code, department, province, district)
+INSERT INTO company(ruc, legal_name, status, condition, company_type, economic_activity, ubigeo_code, department, province, district)
 SELECT
     company_ruc,
     company_name,
@@ -33,18 +33,18 @@ WHERE 1 = 1
 ON CONFLICT(ruc) DO UPDATE SET
     legal_name = CASE
         WHEN excluded.legal_name <> '' THEN excluded.legal_name
-        ELSE company_profile.legal_name
+        ELSE company.legal_name
     END,
-    status = COALESCE(excluded.status, company_profile.status),
-    condition = COALESCE(excluded.condition, company_profile.condition),
-    company_type = COALESCE(excluded.company_type, company_profile.company_type),
-    economic_activity = COALESCE(excluded.economic_activity, company_profile.economic_activity),
-    ubigeo_code = COALESCE(excluded.ubigeo_code, company_profile.ubigeo_code),
-    department = COALESCE(excluded.department, company_profile.department),
-    province = COALESCE(excluded.province, company_profile.province),
-    district = COALESCE(excluded.district, company_profile.district)
+    status = COALESCE(excluded.status, company.status),
+    condition = COALESCE(excluded.condition, company.condition),
+    company_type = COALESCE(excluded.company_type, company.company_type),
+    economic_activity = COALESCE(excluded.economic_activity, company.economic_activity),
+    ubigeo_code = COALESCE(excluded.ubigeo_code, company.ubigeo_code),
+    department = COALESCE(excluded.department, company.department),
+    province = COALESCE(excluded.province, company.province),
+    district = COALESCE(excluded.district, company.district)
 WHERE
-    (excluded.legal_name <> '' AND excluded.legal_name <> company_profile.legal_name)
+    (excluded.legal_name <> '' AND excluded.legal_name <> company.legal_name)
     OR excluded.status IS NOT NULL
     OR excluded.condition IS NOT NULL
     OR excluded.company_type IS NOT NULL
@@ -72,7 +72,7 @@ SELECT
         ELSE NULL
     END AS doc_id
 FROM tmp_stage ts
-LEFT JOIN company_profile cp ON cp.ruc = ts.company_ruc
+LEFT JOIN company cp ON cp.ruc = ts.company_ruc
 LEFT JOIN document rep_doc
     ON rep_doc.doc_type = ts.rep_doc_type AND rep_doc.doc_number = ts.rep_doc_number
 LEFT JOIN document dni_doc

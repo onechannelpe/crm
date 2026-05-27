@@ -16,6 +16,7 @@ export interface PersonGroup {
 }
 
 export interface CompanyGroup {
+  id: number;
   key: string;
   ruc: string | null;
   name: string | null;
@@ -41,10 +42,19 @@ function companyKey(ruc: string | null, name: string | null): string {
   return `${normalized(ruc)}|${normalized(name)}`;
 }
 
+function companyGroupKey(
+  row: Extract<SearchResult, { kind: "company" }>,
+): string {
+  return `company:${row.company.id}`;
+}
+
 export function groupByDocument(
   results: readonly SearchResult[],
 ): PersonGroup[] {
-  const groups = new Map<string, SearchResult[]>();
+  const groups = new Map<
+    string,
+    Extract<SearchResult, { kind: "document" }>[]
+  >();
   for (const row of results) {
     if (row.kind !== "document") continue;
     const key = `${row.doc.doc_type}:${row.doc.doc_number}`;
@@ -56,10 +66,12 @@ export function groupByDocument(
     }
   }
 
-  return [...groups.entries()].map(([key, rows]) => {
-    const first = rows[0]!;
-    const docType = first.kind === "document" ? first.doc.doc_type : "";
-    const docNumber = first.kind === "document" ? first.doc.doc_number : "";
+  const out: PersonGroup[] = [];
+  for (const [key, rows] of groups.entries()) {
+    const first = rows[0];
+    if (!first) continue;
+    const docType = first.doc.doc_type;
+    const docNumber = first.doc.doc_number;
 
     const aliases: string[] = [];
     const aliasSet = new Set<string>();
@@ -69,7 +81,6 @@ export function groupByDocument(
     const companyKeys = new Set<string>();
 
     for (const row of rows) {
-      if (row.kind !== "document") continue;
       pushUnique(aliases, aliasSet, row.doc.name);
       pushUnique(phones, phoneSet, row.phones.primary);
       pushUnique(phones, phoneSet, row.phones.secondary);
@@ -88,7 +99,7 @@ export function groupByDocument(
     }
 
     const displayName = aliases.find((alias) => alias.length > 0) ?? docNumber;
-    return {
+    out.push({
       key,
       doc_type: docType,
       doc_number: docNumber,
@@ -96,8 +107,9 @@ export function groupByDocument(
       aliases,
       companies,
       phones,
-    };
-  });
+    });
+  }
+  return out;
 }
 
 export function groupByCompany(
@@ -105,10 +117,10 @@ export function groupByCompany(
 ): CompanyGroup[] {
   const groups = new Map<string, CompanyGroup>();
 
-  for (const [index, row] of results.entries()) {
+  for (const row of results) {
     if (row.kind !== "company") continue;
+    const key = companyGroupKey(row);
     const ruc = normalized(row.company.ruc);
-    const key = ruc ? `ruc:${ruc}` : `row:${index}`;
     const existing = groups.get(key);
 
     if (existing) {
@@ -134,6 +146,7 @@ export function groupByCompany(
     }
 
     groups.set(key, {
+      id: row.company.id,
       key,
       ruc: ruc || null,
       name: normalized(row.company.legal_name) || null,

@@ -2,6 +2,13 @@
   "projection": "company_projection",
   "fields": [
     {
+      "path": "company.id",
+      "canonical_fields": ["company_id"],
+      "nullable": false,
+      "value_type": "integer",
+      "storage": [{ "table": "company_projection", "column": "company_id" }]
+    },
+    {
       "path": "company.ruc",
       "canonical_fields": ["company_ruc"],
       "nullable": false,
