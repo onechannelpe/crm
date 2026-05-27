@@ -3,6 +3,7 @@ import { Show } from "solid-js";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
 import { WorkflowStageSections } from "~/features/workflow/detail/sections/workflow-stage-sections";
+
 import { SetupWorkspace } from "../sections/setup-workspace";
 
 type WorkflowTabProps = {

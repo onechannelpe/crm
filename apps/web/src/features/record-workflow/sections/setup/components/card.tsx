@@ -1,5 +1,6 @@
 import { Show } from "solid-js";
 
+import type { LeadDetailVenueView } from "~/contracts/workflow/views";
 import {
   FieldInputValue,
   FieldLabel,
@@ -14,13 +15,7 @@ import {
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
 
-import type { TabContentProps } from "../../content-props";
-
-export function VenueCard(props: {
-  venue: NonNullable<
-    Extract<TabContentProps, { mode: "view" }>["data"]["venues"][number]
-  >;
-}) {
+export function VenueCard(props: { venue: LeadDetailVenueView }) {
   const venue = () => props.venue;
   return (
     <Widget>
