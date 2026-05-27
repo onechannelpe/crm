@@ -4,11 +4,7 @@ import { usePageInstanceId } from "../../router/page-instance-context";
 import { useSidePanelPageState } from "../../router/page-state";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { ViewRecordTabId } from "./model";
-import {
-  VIEW_RECORD_TABS,
-  VIEW_RECORD_TABS_BY_ID,
-  resolveActiveTabId,
-} from "./tabs/tab-registry";
+import { resolveActiveViewRecordTabId } from "./tabs/view-record-tabs";
 
 export function useLeadRecordPageState() {
   const pageId = usePageInstanceId();
@@ -32,11 +28,7 @@ export function useLeadRecordPageState() {
   const leadId = createMemo(() => pageState().leadId);
 
   const activeTab = createMemo<ViewRecordTabId>(() =>
-    resolveActiveTabId({
-      activeTabId: pageState().activeTab,
-      tabById: VIEW_RECORD_TABS_BY_ID,
-      defaultTabId: VIEW_RECORD_TABS[0].id,
-    }),
+    resolveActiveViewRecordTabId(pageState().activeTab),
   );
 
   const label = createMemo(() => pageState().subtitle);

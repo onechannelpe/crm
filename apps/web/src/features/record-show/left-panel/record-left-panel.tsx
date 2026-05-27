@@ -1,10 +1,7 @@
 import { Show } from "solid-js";
 
 import type { LeadDetailView } from "~/contracts/workflow/views";
-import { DetailFieldsWidget } from "~/features/side-panel/pages/record-page/widgets/fields";
 import { WorkflowWidget } from "~/features/side-panel/pages/record-page/widgets/workflow";
-import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
-import { WorkflowStageSections } from "~/features/workflow/detail/sections/workflow-stage-sections";
 
 import { RecordSummaryCard } from "../summary-card/record-summary-card";
 
@@ -20,16 +17,11 @@ export function RecordLeftPanel(props: RecordLeftPanelProps) {
       <RecordSummaryCard lead={props.data.lead} />
       <div class={styles.scrollBody}>
         <WorkflowWidget data={props.data} />
-        <DetailFieldsWidget data={props.data} />
-        <Show when={props.data.lead.id} keyed>
-          {(leadId) => (
-            <WorkflowStageSections leadId={leadId} data={props.data} />
-          )}
+        <Show when={props.data.blockingFields.length > 0}>
+          <p class={styles.helperText}>
+            Completa las tareas en la pestaña Flujo para avanzar de etapa.
+          </p>
         </Show>
-        <LeadActionsWidget
-          leadId={props.data.lead.id}
-          availableActions={props.data.availableActions}
-        />
       </div>
     </div>
   );

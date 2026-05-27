@@ -4,11 +4,7 @@ import { usePageInstanceId } from "../../router/page-instance-context";
 import { useSidePanelPageState } from "../../router/page-state";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { CreateLeadTabId } from "../record-page/model";
-import {
-  CREATE_LEAD_TABS_BY_ID,
-  CREATE_LEAD_TABS,
-  resolveActiveTabId,
-} from "../record-page/tabs/tab-registry";
+import { CREATE_LEAD_TABS_BY_ID, resolveActiveCreateLeadTabId } from "./tabs";
 
 export function useCreateLeadPageState() {
   const pageId = usePageInstanceId();
@@ -31,11 +27,7 @@ export function useCreateLeadPageState() {
 
   const draftRuc = createMemo(() => pageState().draft.ruc);
   const activeTab = createMemo<CreateLeadTabId>(() => {
-    return resolveActiveTabId({
-      activeTabId: pageState().draft.activeTab,
-      tabById: CREATE_LEAD_TABS_BY_ID,
-      defaultTabId: CREATE_LEAD_TABS[0].id,
-    });
+    return resolveActiveCreateLeadTabId(pageState().draft.activeTab);
   });
   const label = createMemo(() => {
     const tab = CREATE_LEAD_TABS_BY_ID[activeTab()];

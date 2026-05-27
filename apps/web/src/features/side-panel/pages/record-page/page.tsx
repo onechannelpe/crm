@@ -21,7 +21,10 @@ import { TabStrip } from "../../components/tab-strip";
 import { createRecordPageController } from "./controller";
 import { Footer } from "./footer";
 import { useLeadRecordPageState } from "./state";
-import { VIEW_RECORD_TABS_BY_ID, VIEW_RECORD_TABS } from "./tabs/tab-registry";
+import {
+  VIEW_RECORD_TABS,
+  VIEW_RECORD_TABS_BY_ID,
+} from "./tabs/view-record-tabs";
 
 import styles from "./page.module.css";
 
@@ -80,7 +83,6 @@ export function RecordPage() {
             {(detail) => (
               <Dynamic
                 component={VIEW_RECORD_TABS_BY_ID[activeTab()].component}
-                mode="view"
                 data={detail()}
               />
             )}

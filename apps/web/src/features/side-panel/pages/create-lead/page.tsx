@@ -13,12 +13,9 @@ import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadRecordDetailSidePanelPage } from "../../types/side-panel-page";
 import { Footer } from "../record-page/footer";
 import type { CreateTabContentProps } from "../record-page/tabs/content-props";
-import {
-  CREATE_LEAD_TABS_BY_ID,
-  CREATE_LEAD_TABS,
-} from "../record-page/tabs/tab-registry";
 import { createCreateLeadController } from "./controller";
 import { useCreateLeadPageState } from "./state";
+import { CREATE_LEAD_TABS, CREATE_LEAD_TABS_BY_ID } from "./tabs";
 
 import styles from "../record-page/page.module.css";
 
