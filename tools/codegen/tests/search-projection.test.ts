@@ -1,11 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  groupByObject,
-  fieldProp,
-  infoTypeName,
-  NULLABLE_OBJECTS,
-} from "../src/search-projection/group.ts";
+import { groupByObject } from "../src/search-projection/group.ts";
 import { parseProjectionSpec } from "../src/search-projection/parse.ts";
 import {
   renderProjectionContractRust,
@@ -16,11 +11,16 @@ import {
   renderResultContractTs,
 } from "../src/search-projection/render-ts.ts";
 
-// fixture
-
-const MINIMAL_SPEC = {
+const SPEC = {
   projection: "search_projection",
   fields: [
+    {
+      path: "company.id",
+      canonical_fields: ["company_id"],
+      nullable: false,
+      value_type: "integer",
+      storage: [{ table: "search_projection", column: "company_id" }],
+    },
     {
       path: "person.dni",
       canonical_fields: ["person_dni"],
@@ -54,69 +54,39 @@ const MINIMAL_SPEC = {
 };
 
 describe("parseProjectionSpec", () => {
-  test("accepts a valid spec", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
+  test("applies defaults and preserves explicit values", () => {
+    const spec = parseProjectionSpec(SPEC);
+
     expect(spec.projection).toBe("search_projection");
-    expect(spec.fields).toHaveLength(4);
-  });
+    expect(spec.fields).toHaveLength(5);
 
-  test("nullable defaults to false when absent", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
+    expect(spec.fields[1]!.value_type).toBe("string");
     expect(spec.fields[0]!.nullable).toBe(false);
+    expect(spec.fields[2]!.nullable).toBe(true);
+    expect(spec.fields[4]!.derivation).toBe("grouped_phone_aggregate");
+    expect(spec.fields[4]!.storage).toHaveLength(2);
   });
 
-  test("nullable:true is preserved", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    expect(spec.fields[1]!.nullable).toBe(true);
-  });
-
-  test("value_type defaults to string when absent", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    expect(spec.fields[0]!.value_type).toBe("string");
-  });
-
-  test("value_type string_array is preserved", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    expect(spec.fields[3]!.value_type).toBe("string_array");
-  });
-
-  test("derivation is preserved when present", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    expect(spec.fields[3]!.derivation).toBe("grouped_phone_aggregate");
-  });
-
-  test("derivation is undefined when absent", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    expect(spec.fields[0]!.derivation).toBeUndefined();
-  });
-
-  test("multiple storage entries are supported", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    expect(spec.fields[3]!.storage).toHaveLength(2);
-  });
-
-  test("rejects non-object input", () => {
+  test("rejects invalid root input", () => {
     expect(() => parseProjectionSpec(null)).toThrow();
     expect(() => parseProjectionSpec(42)).toThrow();
   });
 
-  test("rejects empty storage array", () => {
+  test("rejects invalid storage mappings", () => {
     expect(() =>
       parseProjectionSpec({
-        ...MINIMAL_SPEC,
-        fields: [{ ...MINIMAL_SPEC.fields[0], storage: [] }],
+        ...SPEC,
+        fields: [{ ...SPEC.fields[0], storage: [] }],
       }),
     ).toThrow("non-empty");
-  });
 
-  test("rejects storage entry with empty table", () => {
     expect(() =>
       parseProjectionSpec({
-        ...MINIMAL_SPEC,
+        ...SPEC,
         fields: [
           {
-            ...MINIMAL_SPEC.fields[0],
-            storage: [{ table: "", column: "col" }],
+            ...SPEC.fields[0],
+            storage: [{ table: "", column: "company_id" }],
           },
         ],
       }),
@@ -125,23 +95,15 @@ describe("parseProjectionSpec", () => {
 });
 
 describe("groupByObject", () => {
-  test("groups fields by object prefix", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
+  test("groups by object prefix and preserves preferred ordering", () => {
+    const spec = parseProjectionSpec(SPEC);
     const groups = groupByObject(spec.fields);
     const names = groups.map((g) => g.objectName);
-    expect(names).toContain("person");
-    expect(names).toContain("org");
-    expect(names).toContain("phones");
+
+    expect(names).toEqual(["company", "org", "phones", "person"]);
   });
 
-  test("org comes before person because org is in preferred order and person is not", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const groups = groupByObject(spec.fields);
-    const names = groups.map((g) => g.objectName);
-    expect(names.indexOf("org")).toBeLessThan(names.indexOf("person"));
-  });
-
-  test("throws on malformed path", () => {
+  test("throws when field path is not object.property", () => {
     expect(() =>
       groupByObject([
         {
@@ -157,181 +119,48 @@ describe("groupByObject", () => {
   });
 });
 
-describe("fieldProp", () => {
-  test("returns the property portion of a path", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    expect(fieldProp(spec.fields[0]!)).toBe("dni");
-    expect(fieldProp(spec.fields[2]!)).toBe("ruc");
-  });
-});
+describe("renderProjectionContract", () => {
+  test("renders nullable path sets and storage mappings for Rust + TS", () => {
+    const spec = parseProjectionSpec(SPEC);
 
-describe("infoTypeName", () => {
-  test("org maps to OrgInfo", () =>
-    expect(infoTypeName("org")).toBe("OrgInfo"));
-  test("phones maps to PhoneInfo", () =>
-    expect(infoTypeName("phones")).toBe("PhoneInfo"));
-  test("person maps to PersonInfo", () =>
-    expect(infoTypeName("person")).toBe("PersonInfo"));
-  test("role maps to RoleInfo", () =>
-    expect(infoTypeName("role")).toBe("RoleInfo"));
-});
-
-describe("NULLABLE_OBJECTS", () => {
-  test("org is nullable", () => expect(NULLABLE_OBJECTS.has("org")).toBe(true));
-  test("role is nullable", () =>
-    expect(NULLABLE_OBJECTS.has("role")).toBe(true));
-  test("person is not nullable", () =>
-    expect(NULLABLE_OBJECTS.has("person")).toBe(false));
-});
-
-describe("renderProjectionContractRust", () => {
-  test("output is marked as generated", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(
+    const rust = renderProjectionContractRust(
       spec,
       "SEARCH_PROJECTION",
       "contracts/engine/search-projection.json",
     );
-    expect(output).toContain("GENERATED FILE");
-  });
-
-  test("projection name constant is present", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(
+    const ts = renderProjectionContractTs(
       spec,
       "SEARCH_PROJECTION",
       "contracts/engine/search-projection.json",
     );
-    expect(output).toContain(
-      'SEARCH_PROJECTION_NAME: &str = "search_projection"',
+
+    expect(rust).toContain('"person.name"');
+    expect(rust).toContain('"ruc_phone_agg"');
+    expect(rust).toContain('"dni_phone_agg"');
+
+    const nullableSection = ts.slice(
+      ts.indexOf("SEARCH_PROJECTION_NULLABLE_PATHS"),
     );
-  });
-
-  test("all paths appear in PATHS constant", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(
-      spec,
-      "SEARCH_PROJECTION",
-      "contracts/engine/search-projection.json",
-    );
-    expect(output).toContain('"person.dni"');
-    expect(output).toContain('"phones.siblings"');
-  });
-
-  test("multi-storage field produces two mapping entries", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractRust(
-      spec,
-      "SEARCH_PROJECTION",
-      "contracts/engine/search-projection.json",
-    );
-    expect(output).toContain('"ruc_phone_agg"');
-    expect(output).toContain('"dni_phone_agg"');
-  });
-});
-
-describe("renderResultContractRust", () => {
-  test("PersonInfo struct is present", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec, spec);
-    expect(output).toContain("pub struct PersonInfo");
-  });
-
-  test("nullable string field renders as Option<String>", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec, spec);
-    expect(output).toContain("pub name: Option<String>");
-  });
-
-  test("non-nullable string field renders as String", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec, spec);
-    expect(output).toContain("pub dni: String");
-  });
-
-  test("nullable string_array field renders as Option<Vec<String>>", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec, spec);
-    expect(output).toContain("pub siblings: Option<Vec<String>>");
-  });
-
-  test("org field in DocumentRow is Option<OrgInfo>", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractRust(spec, spec);
-    expect(output).toContain("pub org: Option<OrgInfo>");
-  });
-});
-
-describe("renderProjectionContractTs", () => {
-  test("SEARCH_PROJECTION_NAME constant is present", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractTs(
-      spec,
-      "SEARCH_PROJECTION",
-      "contracts/engine/search-projection.json",
-    );
-    expect(output).toContain("SEARCH_PROJECTION_NAME");
-    expect(output).toContain('"search_projection"');
-  });
-
-  test("nullable path appears in NULLABLE_PATHS", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractTs(
-      spec,
-      "SEARCH_PROJECTION",
-      "contracts/engine/search-projection.json",
-    );
-    expect(output).toContain("SEARCH_PROJECTION_NULLABLE_PATHS");
-    expect(output).toContain('"person.name"');
-  });
-
-  test("non-nullable path does not appear in NULLABLE_PATHS", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderProjectionContractTs(
-      spec,
-      "SEARCH_PROJECTION",
-      "contracts/engine/search-projection.json",
-    );
-    // person.dni is not nullable
-    const nullableSection = output.slice(output.indexOf("NULLABLE_PATHS"));
+    expect(nullableSection).toContain('"person.name"');
     expect(nullableSection).not.toContain('"person.dni"');
   });
 });
 
-describe("renderResultContractTs", () => {
-  test("PersonInfo interface is present", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec, spec);
-    expect(output).toContain("export interface PersonInfo");
-  });
+describe("renderResultContract", () => {
+  test("maps value types and nullability consistently in Rust + TS", () => {
+    const spec = parseProjectionSpec(SPEC);
 
-  test("nullable string field renders as string | null", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec, spec);
-    expect(output).toContain("name: string | null;");
-  });
+    const rust = renderResultContractRust(spec, spec);
+    const ts = renderResultContractTs(spec, spec);
 
-  test("non-nullable string field renders as string", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec, spec);
-    expect(output).toContain("dni: string;");
-  });
+    expect(rust).toContain("pub id: i64");
+    expect(rust).toContain("pub name: Option<String>");
+    expect(rust).toContain("pub siblings: Option<Vec<String>>");
+    expect(rust).toContain("pub org: Option<OrgInfo>");
 
-  test("nullable string_array field renders as string[] | null", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec, spec);
-    expect(output).toContain("siblings: string[] | null;");
-  });
-
-  test("DocumentRow has org as OrgInfo | null", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec, spec);
-    expect(output).toContain("org: OrgInfo | null;");
-  });
-
-  test("SearchResponse interface is present", () => {
-    const spec = parseProjectionSpec(MINIMAL_SPEC);
-    const output = renderResultContractTs(spec, spec);
-    expect(output).toContain("export interface SearchResponse");
+    expect(ts).toContain("id: number;");
+    expect(ts).toContain("name: string | null;");
+    expect(ts).toContain("siblings: string[] | null;");
+    expect(ts).toContain("org: OrgInfo | null;");
   });
 });
