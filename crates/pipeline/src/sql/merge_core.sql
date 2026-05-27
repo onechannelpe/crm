@@ -1,5 +1,6 @@
 INSERT INTO document(doc_type, doc_number)
 SELECT doc_type, doc_number FROM tmp_doc_dedup
+WHERE 1 = 1
 ON CONFLICT(doc_type, doc_number) DO NOTHING;
 
 INSERT INTO document_attribute(doc_id, full_name, natural_ruc10)
