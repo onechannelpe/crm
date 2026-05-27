@@ -13,7 +13,7 @@ import {
   DEFAULT_LEAD_RECORD_DRAFT_STATE,
   type LeadRecordDraftState,
   type ViewRecordTabId,
-} from "~/features/side-panel/pages/record-page/model";
+} from "~/features/side-panel/pages/record-page/tab-ids";
 
 export type SidePanelIcon = Component<{
   class?: string;

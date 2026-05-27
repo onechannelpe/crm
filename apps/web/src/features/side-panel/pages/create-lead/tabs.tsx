@@ -4,7 +4,7 @@ import HomeTabler from "~/components/icons/home-tabler";
 import Paperclip from "~/components/icons/paperclip";
 import TimelineEvent from "~/components/icons/timeline-event";
 import type { TabIconComponent } from "~/features/side-panel/components/tab-strip";
-import type { CreateLeadTabId } from "~/features/side-panel/pages/record-page/model";
+import type { CreateLeadTabId } from "~/features/side-panel/pages/record-page/tab-ids";
 import { ActivityTab } from "~/features/side-panel/pages/record-page/tabs/activity";
 import { FilesTab } from "~/features/side-panel/pages/record-page/tabs/files";
 

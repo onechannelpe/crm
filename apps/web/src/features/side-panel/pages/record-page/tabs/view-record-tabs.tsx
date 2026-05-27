@@ -10,7 +10,7 @@ import { DataTab } from "~/features/record-workflow/tabs/data-tab";
 import { FilesTab } from "~/features/record-workflow/tabs/files-tab";
 import { WorkflowTab } from "~/features/record-workflow/tabs/workflow-tab";
 import type { TabIconComponent } from "~/features/side-panel/components/tab-strip";
-import type { ViewRecordTabId } from "~/features/side-panel/pages/record-page/model";
+import type { ViewRecordTabId } from "~/features/side-panel/pages/record-page/tab-ids";
 
 type TabComponent = (props: { data: LeadDetailView }) => JSX.Element;
 

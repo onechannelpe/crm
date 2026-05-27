@@ -3,7 +3,7 @@ import { createMemo } from "solid-js";
 import { usePageInstanceId } from "../../router/page-instance-context";
 import { useSidePanelPageState } from "../../router/page-state";
 import { useSidePanel } from "../../state/use-side-panel";
-import type { CreateLeadTabId } from "../record-page/model";
+import type { CreateLeadTabId } from "../record-page/tab-ids";
 import { CREATE_LEAD_TABS_BY_ID, resolveActiveCreateLeadTabId } from "./tabs";
 
 export function useCreateLeadPageState() {

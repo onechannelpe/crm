@@ -3,7 +3,7 @@ import { Dynamic } from "solid-js/web";
 
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import { TabStrip } from "~/features/side-panel/components/tab-strip";
-import type { ViewRecordTabId } from "~/features/side-panel/pages/record-page/model";
+import type { ViewRecordTabId } from "~/features/side-panel/pages/record-page/tab-ids";
 import {
   VIEW_RECORD_TABS,
   VIEW_RECORD_TABS_BY_ID,
