@@ -1,5 +1,5 @@
-pub mod cli;
 pub mod canonical;
+pub mod cli;
 pub mod config;
 pub mod contract_guard;
 pub mod errors;

@@ -7,22 +7,18 @@ pub use crate::result_contract_generated::{
 
 #[derive(Debug, Deserialize)]
 pub struct SearchRequest {
-    #[serde(rename = "type")]
-    pub search_type: SearchType,
-    pub value: String,
+    pub intent: SearchIntent,
+    pub query: String,
     #[serde(default = "default_limit")]
     pub limit: usize,
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
-pub enum SearchType {
-    Dni,
-    Ruc,
-    Phone,
-    PhoneEnriched,
-    PersonName,
-    CompanyName,
+pub enum SearchIntent {
+    People,
+    Companies,
+    Mixed,
 }
 
 fn default_limit() -> usize {

@@ -11,15 +11,15 @@ import { mapSearchError } from "./errors";
 import { parseSearchCommand } from "./input";
 
 export async function searchDirect(
-  type: unknown,
-  value: unknown,
+  intent: unknown,
+  query: unknown,
   limit?: unknown,
 ): Promise<SearchDirectResult> {
   const { repos, rateLimitDeps } = getServerRuntime().search;
   const session = await requirePermission("search:use");
   await checkActionRateLimit("search.use", session.userId, rateLimitDeps);
 
-  const cmdResult = parseSearchCommand(session.userId, type, value, limit);
+  const cmdResult = parseSearchCommand(session.userId, intent, query, limit);
   if (isErr(cmdResult)) mapSearchError(cmdResult.error);
 
   const result = await runDirectSearch(

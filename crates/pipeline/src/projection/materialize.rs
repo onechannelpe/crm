@@ -2,9 +2,9 @@ use crate::PipelineError;
 use crate::canonical::schema::open_rw;
 
 const PRIMARY_ROLE_BY_DOC_POLICY_SQL: &str =
-    include_str!("../core/queries/policy_primary_role_by_doc.sql");
+    include_str!("../canonical/queries/policy_primary_role_by_doc.sql");
 const PRIMARY_ROLE_BY_COMPANY_POLICY_SQL: &str =
-    include_str!("../core/queries/policy_primary_role_by_company.sql");
+    include_str!("../canonical/queries/policy_primary_role_by_company.sql");
 
 pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;

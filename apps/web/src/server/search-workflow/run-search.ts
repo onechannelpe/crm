@@ -18,14 +18,14 @@ import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
-import type { SearchType } from "~/server/shared/workflow-types";
+import type { SearchIntent } from "~/server/shared/workflow-types";
 
 import { mapToSearchResult, type SearchResult_ } from "./domain";
 
 export interface RunDirectSearchCommand {
   actorUserId: UserId;
-  type: SearchType;
-  value: string;
+  intent: SearchIntent;
+  query: string;
   limit: number;
 }
 
@@ -65,8 +65,8 @@ export async function runDirectSearch(
   const reservationId = reservationResult.value;
 
   const searchResult = await engine.search(
-    command.type,
-    command.value,
+    command.intent,
+    command.query,
     command.limit,
   );
 

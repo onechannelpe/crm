@@ -1,8 +1,8 @@
 use crate::PipelineError;
+use crate::canonical::schema::open_rw;
+use crate::canonical::{fail_snapshot, merge_ingest_session};
 use crate::config::manifest::{SourceManifest, SourceManifestEntry, verify_manifest};
-use crate::core::schema::open_rw;
-use crate::core::{fail_snapshot, merge_ingest_session};
-use crate::serving::materialize::materialize_serving;
+use crate::projection::materialize::materialize_serving;
 use crate::stages::bootstrap::PhaseTiming;
 use crate::stages::shard_ingest::{ShardIngestConfig, ingest_to_shards};
 use crate::stages::validate::validate_snapshot;
@@ -115,7 +115,7 @@ pub(super) fn run_ingest_phase(
 
     let mut conn = open_rw(config.db_path)?;
     let tx = conn.transaction()?;
-    crate::core::repo::set_snapshot_status(&tx, snapshot_id, "validated")?;
+    crate::canonical::repo::set_snapshot_status(&tx, snapshot_id, "validated")?;
     tx.commit()?;
     let validate_secs = validate_started_at.elapsed().as_secs_f64();
 

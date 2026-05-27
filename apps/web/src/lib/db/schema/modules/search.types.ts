@@ -4,13 +4,7 @@ export interface ClientSearchViewsTable {
   id: Generated<number>;
   user_id: number;
   name: string;
-  search_type:
-    | "dni"
-    | "ruc"
-    | "phone"
-    | "person_name"
-    | "company_name"
-    | "phone_enriched";
+  search_type: "people" | "companies" | "mixed";
   query_value: string;
   limit_value: number;
   is_default: number;

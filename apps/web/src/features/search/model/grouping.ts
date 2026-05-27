@@ -19,9 +19,7 @@ export interface CompanyGroup {
   key: string;
   ruc: string | null;
   name: string | null;
-  people: Array<{ dni: string; name: string }>;
   phones: string[];
-  emails: string[];
 }
 
 function normalized(value: string | null | undefined): string {
@@ -139,9 +137,7 @@ export function groupByCompany(
       key,
       ruc: ruc || null,
       name: normalized(row.company.legal_name) || null,
-      people: [],
       phones,
-      emails: [],
     });
   }
 

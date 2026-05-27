@@ -7,7 +7,7 @@ import type {
   SearchResult,
 } from "~/server/shared/engine/types";
 import type { Result } from "~/server/shared/result";
-import type { SearchType } from "~/server/shared/workflow-types";
+import type { SearchIntent } from "~/server/shared/workflow-types";
 
 export interface RecordCandidatesRequest {
   branchId: number;
@@ -20,8 +20,8 @@ export interface RecordCandidatesRequest {
 
 export interface EngineClient {
   search(
-    type: SearchType,
-    value: string,
+    intent: SearchIntent,
+    query: string,
     limit?: number,
   ): Promise<Result<SearchResult[], DomainError>>;
   requestCandidates(

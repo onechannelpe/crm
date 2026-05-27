@@ -1,7 +1,5 @@
 use proptest::prelude::*;
-use search::domain::{
-    validate_document_number, validate_phone, validate_ruc, validate_text,
-};
+use search::domain::{validate_document_number, validate_phone, validate_ruc, validate_text};
 
 proptest! {
     // Document number

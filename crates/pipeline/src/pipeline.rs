@@ -1,12 +1,12 @@
 use crate::PipelineError;
+use crate::canonical::schema::open_rw;
 use crate::cli::Command;
 use crate::config::manifest::verify_manifest;
 use crate::config::runtime::{PipelineRuntimeConfig, ProfileMode};
 use crate::contract_guard::validate_contracts;
-use crate::canonical::schema::open_rw;
 use crate::normalize;
-use crate::quality::gate;
 use crate::projection::promote;
+use crate::quality::gate;
 use crate::stages::verify;
 use rusqlite::params;
 use std::path::Path;

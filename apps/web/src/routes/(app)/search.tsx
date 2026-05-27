@@ -1,12 +1,13 @@
 import { revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 
-import { isSearchType, type SearchType } from "~/actions/search/contracts";
+import type { SearchIntent } from "~/actions/search/contracts";
 import { searchDirect } from "~/actions/search/run";
 import Search from "~/components/icons/search";
 import { AppPage } from "~/components/layout/page";
 import {
-  inferSearchType,
+  intentFromTab,
+  tabFromIntent,
   type SearchTab,
 } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
@@ -24,7 +25,7 @@ import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = createSignal("");
-  const [searchType, setSearchType] = createSignal<SearchType>("person_name");
+  const [intent, setIntent] = createSignal<SearchIntent>("people");
   const [tab, setTab] = createSignal<SearchTab>("people");
   const [model, setModel] = createSignal(
     createSearchViewModel({ items: [], raw: [] }),
@@ -40,19 +41,19 @@ export default function SearchPage() {
       setQuery(searchParams.query);
     }
 
-    if (typeof searchParams.type !== "string") {
+    if (typeof searchParams.intent !== "string") {
       return;
     }
-    if (!isSearchType(searchParams.type)) {
+    if (
+      searchParams.intent !== "people" &&
+      searchParams.intent !== "companies" &&
+      searchParams.intent !== "mixed"
+    ) {
       return;
     }
 
-    setSearchType(searchParams.type);
-    setTab(
-      searchParams.type === "company_name" || searchParams.type === "ruc"
-        ? "companies"
-        : "people",
-    );
+    setIntent(searchParams.intent);
+    setTab(tabFromIntent(searchParams.intent));
   });
 
   async function handleSearch(event?: Event) {
@@ -60,8 +61,8 @@ export default function SearchPage() {
     setSearching(true);
     setError(null);
     try {
-      const response = await searchDirect(searchType(), query(), 20);
-      setSearchParams({ type: searchType(), query: query(), limit: "20" });
+      const response = await searchDirect(intent(), query(), 20);
+      setSearchParams({ intent: intent(), query: query(), limit: "20" });
       const nextModel = createSearchViewModel(response);
       setModel(nextModel);
       setSelectedKey(null);
@@ -107,15 +108,13 @@ export default function SearchPage() {
           tabs={["people", "companies"]}
           onTabChange={(nextTab) => {
             setTab(nextTab);
-            const inferred = inferSearchType(query(), nextTab);
-            setSearchType(inferred);
+            setIntent(intentFromTab(nextTab));
             setSelectedKey(null);
             closePanel();
           }}
           query={query()}
           onQueryInput={(value) => {
             setQuery(value);
-            setSearchType(inferSearchType(value, tab()));
             setSelectedKey(null);
             closePanel();
           }}

@@ -1,6 +1,6 @@
 mod common;
 
-use search::contracts::{SearchRequest, SearchResult, SearchType};
+use search::contracts::{SearchIntent, SearchRequest, SearchResult};
 use search::query::sqlite::SearchRepository;
 use search::service::SearchService;
 use shared::error::ApiError;
@@ -78,8 +78,8 @@ fn make_test_pool() -> shared::sqlite::SqlitePool {
 fn search_service_supports_repo_injection_for_failure_paths() {
     let service = SearchService::with_repo(make_test_pool(), 100, Arc::new(FailingSearchRepo));
     let req = SearchRequest {
-        search_type: SearchType::Dni,
-        value: "12345678".into(),
+        intent: SearchIntent::People,
+        query: "12345678".into(),
         limit: 10,
     };
 
