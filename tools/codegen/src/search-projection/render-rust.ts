@@ -129,8 +129,8 @@ export function renderResultContractRust(
   lines.push("#[derive(Debug, Serialize)]");
   lines.push('#[serde(tag = "kind", rename_all = "snake_case")]');
   lines.push("pub enum SearchResult {");
-  lines.push("    Document(DocumentRow),");
-  lines.push("    Company(CompanyRow),");
+  lines.push("    Document(Box<DocumentRow>),");
+  lines.push("    Company(Box<CompanyRow>),");
   lines.push("}");
   lines.push("");
 

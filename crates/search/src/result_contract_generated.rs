@@ -102,6 +102,6 @@ pub struct CompanyRow {
 #[derive(Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum SearchResult {
-    Document(DocumentRow),
-    Company(CompanyRow),
+    Document(Box<DocumentRow>),
+    Company(Box<CompanyRow>),
 }

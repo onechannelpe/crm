@@ -1,7 +1,7 @@
 use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
 use crate::merge;
-use crate::normalize::{self, NormalizedRow, ResolvedMapping, hash_record};
+use crate::normalize::{self, ResolvedMapping, hash_record};
 use csv::ReaderBuilder;
 use rusqlite::{Connection, params};
 use std::fs;

@@ -1,6 +1,6 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use engine::bench_support::read_workload;
-use search::contracts::{SearchRequest, SearchType};
+use search::contracts::{SearchIntent, SearchRequest};
 use search::service::SearchService;
 use std::path::PathBuf;
 
@@ -46,8 +46,8 @@ fn bench_search_service(c: &mut Criterion) {
         b.iter(|| {
             for value in &workload.dni {
                 let req = SearchRequest {
-                    search_type: SearchType::Dni,
-                    value: value.clone(),
+                    intent: SearchIntent::People,
+                    query: value.clone(),
                     limit: 50,
                 };
                 let _ = service.search(&req);
@@ -59,8 +59,8 @@ fn bench_search_service(c: &mut Criterion) {
         b.iter(|| {
             for value in &workload.person_name {
                 let req = SearchRequest {
-                    search_type: SearchType::PersonName,
-                    value: value.clone(),
+                    intent: SearchIntent::People,
+                    query: value.clone(),
                     limit: 50,
                 };
                 let _ = service.search(&req);

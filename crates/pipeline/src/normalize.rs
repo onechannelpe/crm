@@ -328,7 +328,7 @@ pub fn normalize_phone_with_kind(value: &str) -> Option<(String, PhoneKind)> {
 
 fn normalize_location_value(value: String) -> String {
     let trimmed = value.trim();
-    if trimmed.to_ascii_uppercase() == "NO DISPONIBLE" {
+    if trimmed.eq_ignore_ascii_case("NO DISPONIBLE") {
         return String::new();
     }
     trimmed.to_owned()

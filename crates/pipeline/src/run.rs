@@ -184,16 +184,29 @@ pub fn run_full(
     Ok(())
 }
 
-pub fn run_matrix(
-    db_path: &str,
-    build_dir: &str,
-    manifest_path: &str,
-    workers: usize,
-    row_cap: usize,
-    run_osiptel_sample: bool,
-    batch_size: usize,
-    source_row_caps: &HashMap<String, usize>,
-) -> Result<(), PipelineError> {
+pub struct RunMatrixConfig<'a> {
+    pub db_path: &'a str,
+    pub build_dir: &'a str,
+    pub manifest_path: &'a str,
+    pub workers: usize,
+    pub row_cap: usize,
+    pub run_osiptel_sample: bool,
+    pub batch_size: usize,
+    pub source_row_caps: &'a HashMap<String, usize>,
+}
+
+pub fn run_matrix(config: RunMatrixConfig<'_>) -> Result<(), PipelineError> {
+    let RunMatrixConfig {
+        db_path,
+        build_dir,
+        manifest_path,
+        workers,
+        row_cap,
+        run_osiptel_sample,
+        batch_size,
+        source_row_caps,
+    } = config;
+
     let run_started_at = Instant::now();
     let mut timings = Vec::new();
     let mut checkpoints = Vec::new();

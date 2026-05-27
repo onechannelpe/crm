@@ -38,16 +38,16 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-{}", profile));
 
-            run::run_matrix(
-                &bench_db.to_string_lossy(),
-                &bench_build_dir.to_string_lossy(),
-                &runtime.paths.manifest,
-                resolved.workers,
-                resolved.row_cap,
-                resolved.include_osiptel,
-                resolved.batch_size,
-                &resolved.source_row_caps,
-            )
+            run::run_matrix(run::RunMatrixConfig {
+                db_path: &bench_db.to_string_lossy(),
+                build_dir: &bench_build_dir.to_string_lossy(),
+                manifest_path: &runtime.paths.manifest,
+                workers: resolved.workers,
+                row_cap: resolved.row_cap,
+                run_osiptel_sample: resolved.include_osiptel,
+                batch_size: resolved.batch_size,
+                source_row_caps: &resolved.source_row_caps,
+            })
         }
         Command::BenchMap { config, profile } => {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
@@ -106,16 +106,16 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let refresh_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("refresh-{}", profile));
 
-            run::run_matrix(
-                &refresh_db.to_string_lossy(),
-                &refresh_build_dir.to_string_lossy(),
-                &runtime.paths.manifest,
-                resolved.workers,
-                resolved.row_cap,
-                resolved.include_osiptel,
-                resolved.batch_size,
-                &resolved.source_row_caps,
-            )?;
+            run::run_matrix(run::RunMatrixConfig {
+                db_path: &refresh_db.to_string_lossy(),
+                build_dir: &refresh_build_dir.to_string_lossy(),
+                manifest_path: &runtime.paths.manifest,
+                workers: resolved.workers,
+                row_cap: resolved.row_cap,
+                run_osiptel_sample: resolved.include_osiptel,
+                batch_size: resolved.batch_size,
+                source_row_caps: &resolved.source_row_caps,
+            })?;
 
             let to = to.unwrap_or(runtime.paths.engine_db);
             publish_with_gate_and_metadata(&refresh_db.to_string_lossy(), &to)

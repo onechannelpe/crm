@@ -400,7 +400,7 @@ fn map_doc_row(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
         })
     };
 
-    Ok(SearchResult::Document(DocumentRow {
+    Ok(SearchResult::Document(Box::new(DocumentRow {
         doc: DocInfo {
             doc_type: row.get("doc_type")?,
             doc_number: row.get("doc_number")?,
@@ -423,7 +423,7 @@ fn map_doc_row(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
             secondary: row.get("phone_secondary")?,
             siblings: None,
         },
-    }))
+    })))
 }
 
 fn map_doc_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
@@ -461,7 +461,7 @@ fn map_company_row(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
         })
     };
 
-    Ok(SearchResult::Company(CompanyRow {
+    Ok(SearchResult::Company(Box::new(CompanyRow {
         company: CompanyInfo {
             id: row.get("company_id")?,
             ruc: row.get("ruc")?,
@@ -486,7 +486,7 @@ fn map_company_row(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
             secondary: row.get("phone_secondary")?,
             siblings: None,
         },
-    }))
+    })))
 }
 
 fn map_company_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchResult> {
