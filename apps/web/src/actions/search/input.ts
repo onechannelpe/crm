@@ -1,8 +1,8 @@
+import { isSearchIntent } from "~/contracts/search/vocabulary";
 import type { RunDirectSearchCommand } from "~/server/search-workflow/run-search";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { isSearchIntent } from "~/server/shared/workflow-types";
 
 export function parseSearchCommand(
   actorUserId: UserId,

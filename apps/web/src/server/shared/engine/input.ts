@@ -1,16 +1,10 @@
-import type { SearchIntent } from "~/server/shared/workflow-types";
-
 function hasMeaningfulToken(value: string): boolean {
   return value
     .split(/\s+/)
     .some((token) => token.replace(/[^\p{L}\p{N}]/gu, "").length >= 3);
 }
 
-export function validateSearchInput(
-  _intent: SearchIntent,
-  query: string,
-  limit: number,
-): void {
+export function validateSearchInput(query: string, limit: number): void {
   const value = query.trim();
   if (!value) {
     throw new Error("Search query is required");

@@ -1,6 +1,6 @@
 "use server";
 
-import type { SearchDirectResult } from "~/actions/search/contracts";
+import type { SearchDirectResult } from "~/contracts/search/results";
 import { requirePermission } from "~/lib/auth/access/session";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { getServerRuntime } from "~/server/runtime";

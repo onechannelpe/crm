@@ -1,10 +1,13 @@
 import { revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 
-import type { SearchIntent } from "~/actions/search/contracts";
 import { searchDirect } from "~/actions/search/run";
 import Search from "~/components/icons/search";
 import { AppPage } from "~/components/layout/page";
+import {
+  isSearchIntent,
+  type SearchIntent,
+} from "~/contracts/search/vocabulary";
 import {
   intentFromTab,
   tabFromIntent,
@@ -27,9 +30,7 @@ export default function SearchPage() {
   const [query, setQuery] = createSignal("");
   const [intent, setIntent] = createSignal<SearchIntent>("people");
   const [tab, setTab] = createSignal<SearchTab>("people");
-  const [model, setModel] = createSignal(
-    createSearchViewModel({ items: [], raw: [] }),
-  );
+  const [model, setModel] = createSignal(createSearchViewModel({ rows: [] }));
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
   const [searching, setSearching] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -41,13 +42,9 @@ export default function SearchPage() {
       setQuery(searchParams.query);
     }
 
-    if (typeof searchParams.intent !== "string") {
-      return;
-    }
     if (
-      searchParams.intent !== "people" &&
-      searchParams.intent !== "companies" &&
-      searchParams.intent !== "mixed"
+      typeof searchParams.intent !== "string" ||
+      !isSearchIntent(searchParams.intent)
     ) {
       return;
     }
@@ -69,7 +66,7 @@ export default function SearchPage() {
       closePanel();
       await revalidate(mySearchAllowanceQuery.key);
     } catch (searchError) {
-      setModel(createSearchViewModel({ items: [], raw: [] }));
+      setModel(createSearchViewModel({ rows: [] }));
       setSelectedKey(null);
       closePanel();
       setError(

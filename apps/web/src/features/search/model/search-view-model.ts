@@ -1,4 +1,4 @@
-import type { SearchDirectResult } from "~/actions/search/contracts";
+import type { SearchDirectResult } from "~/contracts/search/results";
 
 import {
   groupByCompany,
@@ -16,12 +16,12 @@ export interface SearchViewModel {
 export function createSearchViewModel(
   response: SearchDirectResult,
 ): SearchViewModel {
-  const people = groupByDocument(response.raw);
-  const companies = groupByCompany(response.raw);
+  const people = groupByDocument(response.rows);
+  const companies = groupByCompany(response.rows);
 
   return {
     people,
     companies,
-    total: response.raw.length,
+    total: response.rows.length,
   };
 }

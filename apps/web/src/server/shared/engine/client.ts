@@ -1,3 +1,4 @@
+import type { SearchIntent } from "~/contracts/search/vocabulary";
 import { getEnvFor } from "~/lib/env";
 import { createEngineAdapter } from "~/server/adapters/engine/client";
 import type { DomainError } from "~/server/shared/domain-error";
@@ -7,7 +8,6 @@ import type {
   SearchResult,
 } from "~/server/shared/engine/types";
 import type { Result } from "~/server/shared/result";
-import type { SearchIntent } from "~/server/shared/workflow-types";
 
 export interface RecordCandidatesRequest {
   branchId: number;

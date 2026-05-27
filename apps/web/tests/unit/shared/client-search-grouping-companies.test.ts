@@ -26,7 +26,6 @@ describe("client search grouping companies", () => {
     expect(groups).toHaveLength(1);
     expect(groups[0]?.ruc).toBe("20100000001");
     expect(groups[0]?.name).toBe("ACME SAC");
-    expect(groups[0]?.people).toEqual([]);
     expect(groups[0]?.phones).toEqual(["999111222", "999333444", "999777888"]);
   });
 

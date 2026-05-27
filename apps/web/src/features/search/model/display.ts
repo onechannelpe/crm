@@ -1,14 +1,11 @@
-import type { SearchType } from "~/actions/search/contracts";
+import type { SearchIntent } from "~/contracts/search/vocabulary";
 
 export type SearchTab = "people" | "companies";
 
-export function inferSearchType(query: string, tab: SearchTab): SearchType {
-  const value = query.trim();
+export function intentFromTab(tab: SearchTab): SearchIntent {
+  return tab === "companies" ? "companies" : "people";
+}
 
-  if (/^\d{8}$/.test(value)) return "dni";
-  if (/^\d{11}$/.test(value)) return "ruc";
-  if (/^[+\d()\s-]{6,}$/.test(value)) return "phone";
-
-  if (tab === "companies") return "company_name";
-  return "person_name";
+export function tabFromIntent(intent: SearchIntent): SearchTab {
+  return intent === "companies" ? "companies" : "people";
 }

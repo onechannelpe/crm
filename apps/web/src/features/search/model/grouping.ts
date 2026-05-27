@@ -1,4 +1,4 @@
-import type { SearchResult } from "~/actions/search/contracts";
+import type { SearchResult } from "~/server/shared/engine/types";
 
 export interface CompanyRef {
   ruc: string | null;
