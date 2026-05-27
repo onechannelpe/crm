@@ -1,7 +1,7 @@
 pub mod api;
 pub mod contracts;
 pub mod domain;
-pub mod repo;
+pub mod query;
 pub mod service;
 
 mod company_projection_contract_generated;

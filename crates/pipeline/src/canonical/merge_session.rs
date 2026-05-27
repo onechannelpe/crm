@@ -1,7 +1,7 @@
 use crate::PipelineError;
-use crate::core::merge_shard::{MergeShardTimings, merge_one_shard};
-use crate::core::repo;
-use crate::core::schema::open_rw;
+use crate::canonical::merge_shard::{MergeShardTimings, merge_one_shard};
+use crate::canonical::repo;
+use crate::canonical::schema::open_rw;
 use crate::stages::shard_ingest::IngestSession;
 
 #[derive(Default, Clone, Copy)]

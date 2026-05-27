@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::core::schema::open_rw;
+use crate::canonical::schema::open_rw;
 use rusqlite::OptionalExtension;
 
 pub fn validate_snapshot(db_path: &str, snapshot_label: &str) -> Result<(), PipelineError> {

@@ -1,6 +1,6 @@
 use crate::contracts::{SearchRequest, SearchResponse, SearchType};
 use crate::domain;
-use crate::repo::{SearchRepository, SqliteSearchRepository};
+use crate::query::sqlite::{SearchRepository, SqliteSearchRepository};
 use shared::error::ApiError;
 use shared::sqlite::SqlitePool;
 use std::sync::Arc;
@@ -32,7 +32,7 @@ impl SearchService {
     #[tracing::instrument(skip(self, req), fields(search_type = ?req.search_type, limit = req.limit))]
     pub fn search(&self, req: &SearchRequest) -> Result<SearchResponse, ApiError> {
         match req.search_type {
-            SearchType::Dni => domain::validate_dni(&req.value)?,
+            SearchType::Dni => domain::validate_document_number(&req.value)?,
             SearchType::Ruc => domain::validate_ruc(&req.value)?,
             SearchType::Phone | SearchType::PhoneEnriched => domain::validate_phone(&req.value)?,
             SearchType::PersonName | SearchType::CompanyName => domain::validate_text(&req.value)?,
@@ -45,7 +45,10 @@ impl SearchService {
             .map_err(|e| ApiError::Service(format!("pool get failed: {e}")))?;
 
         let rows = match req.search_type {
-            SearchType::Dni => self.repo.search_by_dni(&conn, &req.value, limit)?,
+            SearchType::Dni => {
+                self.repo
+                    .search_by_document(&conn, "DNI", &req.value, limit)?
+            }
             SearchType::Ruc => self.repo.search_by_ruc(&conn, &req.value, limit)?,
             SearchType::Phone => self.repo.search_by_phone(&conn, &req.value, limit)?,
             SearchType::PhoneEnriched => self

@@ -1,4 +1,4 @@
-use crm_pipeline::db::schema::open_rw;
+use crm_pipeline::canonical::schema::open_rw;
 use rusqlite::params;
 
 pub fn seed_minimal_gate_ready_state(db_path: &str) {
@@ -24,7 +24,7 @@ pub fn seed_minimal_gate_ready_state(db_path: &str) {
         .expect("insert snapshot");
     connection
         .execute(
-            "INSERT INTO snapshot_metrics(snapshot_id, total_rows, accepted_rows, invalid_dni_rows, invalid_ruc_rows, invalid_phone_rows) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO snapshot_metrics(snapshot_id, total_rows, accepted_rows, invalid_doc_rows, invalid_ruc_rows, invalid_phone_rows) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             params![1_i64, 100_i64, 95_i64, 2_i64, 0_i64, 0_i64],
         )
         .expect("insert metrics");

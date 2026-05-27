@@ -1,27 +1,29 @@
 use proptest::prelude::*;
-use search::domain::{validate_dni, validate_phone, validate_ruc, validate_text};
+use search::domain::{
+    validate_document_number, validate_phone, validate_ruc, validate_text,
+};
 
 proptest! {
-    // DNI
+    // Document number
 
     #[test]
-    fn dni_accepts_8_to_12_digits(s in "[0-9]{8,12}") {
-        prop_assert!(validate_dni(&s).is_ok());
+    fn doc_number_accepts_8_to_12_digits(s in "[0-9]{8,12}") {
+        prop_assert!(validate_document_number(&s).is_ok());
     }
 
     #[test]
-    fn dni_rejects_too_short(s in "[0-9]{0,7}") {
-        prop_assert!(validate_dni(&s).is_err());
+    fn doc_number_rejects_too_short(s in "[0-9]{0,7}") {
+        prop_assert!(validate_document_number(&s).is_err());
     }
 
     #[test]
-    fn dni_rejects_too_long(s in "[0-9]{13,20}") {
-        prop_assert!(validate_dni(&s).is_err());
+    fn doc_number_rejects_too_long(s in "[0-9]{13,20}") {
+        prop_assert!(validate_document_number(&s).is_err());
     }
 
     #[test]
-    fn dni_rejects_non_digits(s in "[0-9]{7}[a-z][0-9]{0,3}") {
-        prop_assert!(validate_dni(&s).is_err());
+    fn doc_number_rejects_non_digits(s in "[0-9]{7}[a-z][0-9]{0,3}") {
+        prop_assert!(validate_document_number(&s).is_err());
     }
 
     // RUC

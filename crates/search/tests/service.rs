@@ -1,7 +1,7 @@
 mod common;
 
 use search::contracts::{SearchRequest, SearchResult, SearchType};
-use search::repo::SearchRepository;
+use search::query::sqlite::SearchRepository;
 use search::service::SearchService;
 use shared::error::ApiError;
 
@@ -11,10 +11,11 @@ use std::sync::Arc;
 struct FailingSearchRepo;
 
 impl SearchRepository for FailingSearchRepo {
-    fn search_by_dni(
+    fn search_by_document(
         &self,
         _conn: &Connection,
-        _value: &str,
+        _doc_type: &str,
+        _doc_number: &str,
         _limit: usize,
     ) -> Result<Vec<SearchResult>, ApiError> {
         Err(ApiError::Service("fake repo failure".into()))

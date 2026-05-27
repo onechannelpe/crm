@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::core::schema::open_rw;
+use crate::canonical::schema::open_rw;
 
 const PRIMARY_ROLE_BY_DOC_POLICY_SQL: &str =
     include_str!("../core/queries/policy_primary_role_by_doc.sql");

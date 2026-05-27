@@ -7,10 +7,11 @@ use shared::error::ApiError;
 use std::sync::LazyLock;
 
 pub trait SearchRepository: Send + Sync {
-    fn search_by_dni(
+    fn search_by_document(
         &self,
         conn: &Connection,
-        value: &str,
+        doc_type: &str,
+        doc_number: &str,
         limit: usize,
     ) -> Result<Vec<SearchResult>, ApiError>;
     fn search_by_ruc(
@@ -49,13 +50,14 @@ pub trait SearchRepository: Send + Sync {
 pub struct SqliteSearchRepository;
 
 impl SearchRepository for SqliteSearchRepository {
-    fn search_by_dni(
+    fn search_by_document(
         &self,
         conn: &Connection,
-        value: &str,
+        doc_type: &str,
+        doc_number: &str,
         limit: usize,
     ) -> Result<Vec<SearchResult>, ApiError> {
-        search_by_dni(conn, value, limit)
+        search_by_document(conn, doc_type, doc_number, limit)
     }
 
     fn search_by_ruc(
@@ -165,12 +167,12 @@ const COMPANY_SELECT_COLUMNS: &str = "
   NULLIF(c.phone_primary, '')       AS phone_primary,
   NULLIF(c.phone_secondary, '')     AS phone_secondary";
 
-static SQL_DNI: LazyLock<String> = LazyLock::new(|| {
+static SQL_DOCUMENT: LazyLock<String> = LazyLock::new(|| {
     format!(
         "SELECT{DOC_SELECT_COLUMNS}\n\
          FROM doc_projection c\n\
-         WHERE c.doc_type = 'DNI' AND c.doc_number = ?1\n\
-         LIMIT ?2"
+         WHERE c.doc_type = ?1 AND c.doc_number = ?2\n\
+         LIMIT ?3"
     )
 });
 
@@ -250,12 +252,17 @@ static SQL_FTS_COMPANY: LazyLock<String> = LazyLock::new(|| {
 
 // public query functions
 
-pub fn search_by_dni(
+pub fn search_by_document(
     conn: &Connection,
-    value: &str,
+    doc_type: &str,
+    doc_number: &str,
     limit: usize,
 ) -> Result<Vec<SearchResult>, ApiError> {
-    query_doc_rows(conn, &SQL_DNI, params![value, limit as i64])
+    query_doc_rows(
+        conn,
+        &SQL_DOCUMENT,
+        params![doc_type, doc_number, limit as i64],
+    )
 }
 
 pub fn search_by_ruc(

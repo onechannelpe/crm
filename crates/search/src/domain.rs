@@ -1,9 +1,11 @@
 use crate::contracts::SearchType;
 use shared::error::ApiError;
 
-pub fn validate_dni(value: &str) -> Result<(), ApiError> {
+pub fn validate_document_number(value: &str) -> Result<(), ApiError> {
     if value.len() < 8 || value.len() > 12 || !value.chars().all(|c| c.is_ascii_digit()) {
-        return Err(ApiError::Validation("dni must be 8-12 digits".into()));
+        return Err(ApiError::Validation(
+            "document number must be 8-12 digits".into(),
+        ));
     }
     Ok(())
 }

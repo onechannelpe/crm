@@ -1,6 +1,6 @@
-use crm_pipeline::db::schema::init_schema;
-use crm_pipeline::stages::gate::run_gate;
-use crm_pipeline::stages::promote::promote_db;
+use crm_pipeline::canonical::schema::init_schema;
+use crm_pipeline::projection::promote::promote_db;
+use crm_pipeline::quality::gate::run_gate;
 use tempfile::tempdir;
 
 mod common;
@@ -26,7 +26,7 @@ fn gate_reads_latest_snapshot_even_when_materialized() {
         gate_result
             .checks
             .iter()
-            .any(|check| check.name == "sunat.invalid_dni_ratio")
+            .any(|check| check.name == "sunat.invalid_doc_ratio")
     );
 }
 
