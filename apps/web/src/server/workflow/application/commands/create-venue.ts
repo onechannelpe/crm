@@ -57,6 +57,7 @@ export async function createVenueCommand(
     });
     if (!transition.ok) return transition;
 
+    const digital = toVenueDigitalInsert(venueFields.value);
     await tx
       .insertInto("workflow_lead_venues")
       .values({
@@ -64,7 +65,9 @@ export async function createVenueCommand(
         lead_id: input.leadId,
         nombre_comercial: input.nombreComercial,
         pos_quantity: input.posQuantity,
-        ...toVenueDigitalInsert(venueFields.value),
+        link_url: digital.linkUrl,
+        online_url: digital.onlineUrl,
+        online_modalidad: digital.onlineModalidad,
         direccion: input.direccion,
         referencia: input.referencia,
         distrito: input.distrito,
