@@ -21,7 +21,11 @@ export type ProjectionSpec = {
   fields: ProjectionField[];
 };
 
-const VALID_VALUE_TYPES = new Set<string>(["string", "string_array", "integer"]);
+const VALID_VALUE_TYPES = new Set<string>([
+  "string",
+  "string_array",
+  "integer",
+]);
 
 export function parseProjectionSpec(raw: unknown): ProjectionSpec {
   const root = asObject(raw, "projection spec");

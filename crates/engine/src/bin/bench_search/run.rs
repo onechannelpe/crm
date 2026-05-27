@@ -59,11 +59,25 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
     let mut metrics = BTreeMap::new();
     metrics.insert(
         "dni".to_string(),
-        bench_query(&service, "dni", SearchIntent::Mixed, &workload.dni, iterations, max_limit)?,
+        bench_query(
+            &service,
+            "dni",
+            SearchIntent::Mixed,
+            &workload.dni,
+            iterations,
+            max_limit,
+        )?,
     );
     metrics.insert(
         "ruc".to_string(),
-        bench_query(&service, "ruc", SearchIntent::Mixed, &workload.ruc, iterations, max_limit)?,
+        bench_query(
+            &service,
+            "ruc",
+            SearchIntent::Mixed,
+            &workload.ruc,
+            iterations,
+            max_limit,
+        )?,
     );
     metrics.insert(
         "phone".to_string(),
