@@ -39,7 +39,8 @@ import { toAppError } from "~/lib/app-errors";
 import {
   approveForSaleMutation,
   requestRateNegotiationMutation,
-} from "../../data/mutations";
+} from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 import styles from "./quoted.module.css";
 
@@ -82,6 +83,7 @@ export function QuotedSection(props: QuotedSectionProps) {
     setApproving(true);
     try {
       await approve({ leadId: props.leadId });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al aprobar").publicMessage);
     } finally {
@@ -166,6 +168,7 @@ export function QuotedSection(props: QuotedSectionProps) {
         justification: justification().trim(),
         artifactIds: stagedFiles().map((f) => f.artifactId),
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al enviar solicitud").publicMessage);
     } finally {

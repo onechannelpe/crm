@@ -11,7 +11,8 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import { toAppError } from "~/lib/app-errors";
 
-import { reviewLeadMutation } from "../../data/mutations";
+import { reviewLeadMutation } from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 import styles from "./widget.module.css";
 
@@ -38,6 +39,7 @@ export function ReviewLeadModal(props: {
         prioridad: prioridad(),
         reason: reason(),
       });
+      await revalidateWorkflowLead(props.leadId);
       props.onClose();
     } catch (err) {
       setError(toAppError(err, "Error al revisar").publicMessage);

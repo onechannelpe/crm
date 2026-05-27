@@ -4,7 +4,7 @@ import { Dynamic } from "solid-js/web";
 
 import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { createLeadMutation } from "~/features/workflow/data/mutations";
+import { createLeadMutation } from "~/features/workflow/data/command-mutations";
 
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";

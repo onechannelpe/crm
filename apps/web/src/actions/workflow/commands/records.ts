@@ -9,6 +9,7 @@ import {
   type SaveCommercialScopeInput,
   type SaveDigitalPolicyInput,
 } from "~/contracts/workflow/inputs";
+import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
@@ -20,6 +21,15 @@ import {
   type ReassignLeadCommandInput,
   type RegisterLeadInput,
 } from "~/server/workflow/types";
+
+function assertParsed<T>(
+  parsed: { ok: true; value: T } | { ok: false; error: { message: string } },
+): T {
+  if (!parsed.ok) {
+    throw validationError(parsed.error.message);
+  }
+  return parsed.value;
+}
 
 function parseCommercialScope(input: {
   proveedorActual: string;
@@ -74,27 +84,15 @@ export async function requestLeadCreation(input: CreateLeadInput) {
 }
 
 export async function requestLeadReview(input: LeadReviewInput) {
-  const status = parseRequiredLeadStatus(input.status);
-
-  if (!status.ok) {
-    return status;
-  }
-
-  const prioridad = parseRequiredLeadPriority(input.prioridad);
-
-  if (!prioridad.ok) {
-    return prioridad;
-  }
-
-  const reason = parseRequiredLeadText(
-    input.reason,
-    "review_reason_required",
-    "Reason is required",
+  const status = assertParsed(parseRequiredLeadStatus(input.status));
+  const prioridad = assertParsed(parseRequiredLeadPriority(input.prioridad));
+  const reason = assertParsed(
+    parseRequiredLeadText(
+      input.reason,
+      "review_reason_required",
+      "Reason is required",
+    ),
   );
-
-  if (!reason.ok) {
-    return reason;
-  }
 
   return runAction({
     actionName: "workflow.review_lead",
@@ -109,9 +107,9 @@ export async function requestLeadReview(input: LeadReviewInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        status: status.value,
-        prioridad: prioridad.value,
-        reason: reason.value,
+        status,
+        prioridad,
+        reason,
       }),
   });
 }
@@ -119,11 +117,7 @@ export async function requestLeadReview(input: LeadReviewInput) {
 export async function requestSaveCommercialScope(
   input: SaveCommercialScopeInput,
 ) {
-  const commercialScope = parseCommercialScope(input);
-
-  if (!commercialScope.ok) {
-    return commercialScope;
-  }
+  const commercialScope = assertParsed(parseCommercialScope(input));
 
   return runAction({
     actionName: "workflow.save_commercial_scope",
@@ -138,11 +132,11 @@ export async function requestSaveCommercialScope(
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        proveedorActual: commercialScope.value.proveedorActual,
+        proveedorActual: commercialScope.proveedorActual,
         tasaActual: input.tasaActual,
         gpv: input.gpv,
         ticket: input.ticket,
-        giroNegocio: commercialScope.value.giroNegocio,
+        giroNegocio: commercialScope.giroNegocio,
         abonoBank: input.abonoBank,
         posTotal: input.posTotal,
       }),
@@ -150,11 +144,7 @@ export async function requestSaveCommercialScope(
 }
 
 export async function requestQuotation(input: RequestQuotationInput) {
-  const commercialScope = parseCommercialScope(input);
-
-  if (!commercialScope.ok) {
-    return commercialScope;
-  }
+  const commercialScope = assertParsed(parseCommercialScope(input));
 
   return runAction({
     actionName: "workflow.request_quotation",
@@ -169,11 +159,11 @@ export async function requestQuotation(input: RequestQuotationInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        proveedorActual: commercialScope.value.proveedorActual,
+        proveedorActual: commercialScope.proveedorActual,
         tasaActual: input.tasaActual,
         gpv: input.gpv,
         ticket: input.ticket,
-        giroNegocio: commercialScope.value.giroNegocio,
+        giroNegocio: commercialScope.giroNegocio,
         abonoBank: input.abonoBank,
         posTotal: input.posTotal,
       }),
@@ -199,65 +189,40 @@ export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
 }
 
 export async function requestRecordRepLegal(input: RecordRepLegalInput) {
-  const nombres = parseRequiredLeadText(
-    input.nombres,
-    "nombres_required",
-    "Nombres is required",
+  const nombres = assertParsed(
+    parseRequiredLeadText(
+      input.nombres,
+      "nombres_required",
+      "Nombres is required",
+    ),
   );
-
-  if (!nombres.ok) {
-    return nombres;
-  }
-
-  const apellidoPaterno = parseRequiredLeadText(
-    input.apellidoPaterno,
-    "apellido_paterno_required",
-    "Apellido paterno is required",
+  const apellidoPaterno = assertParsed(
+    parseRequiredLeadText(
+      input.apellidoPaterno,
+      "apellido_paterno_required",
+      "Apellido paterno is required",
+    ),
   );
-
-  if (!apellidoPaterno.ok) {
-    return apellidoPaterno;
-  }
-
-  const apellidoMaterno = parseRequiredLeadText(
-    input.apellidoMaterno,
-    "apellido_materno_required",
-    "Apellido materno is required",
+  const apellidoMaterno = assertParsed(
+    parseRequiredLeadText(
+      input.apellidoMaterno,
+      "apellido_materno_required",
+      "Apellido materno is required",
+    ),
   );
-
-  if (!apellidoMaterno.ok) {
-    return apellidoMaterno;
-  }
-
-  const dni = parseRequiredLeadText(
-    input.dni,
-    "dni_required",
-    "DNI is required",
+  const dni = assertParsed(
+    parseRequiredLeadText(input.dni, "dni_required", "DNI is required"),
   );
-
-  if (!dni.ok) {
-    return dni;
-  }
-
-  const telefono = parseRequiredLeadText(
-    input.telefono,
-    "telefono_required",
-    "Telefono is required",
+  const telefono = assertParsed(
+    parseRequiredLeadText(
+      input.telefono,
+      "telefono_required",
+      "Telefono is required",
+    ),
   );
-
-  if (!telefono.ok) {
-    return telefono;
-  }
-
-  const email = parseRequiredLeadText(
-    input.email,
-    "email_required",
-    "Email is required",
+  const email = assertParsed(
+    parseRequiredLeadText(input.email, "email_required", "Email is required"),
   );
-
-  if (!email.ok) {
-    return email;
-  }
 
   return runAction({
     actionName: "workflow.record_rep_legal",
@@ -272,12 +237,12 @@ export async function requestRecordRepLegal(input: RecordRepLegalInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        nombres: nombres.value,
-        apellidoPaterno: apellidoPaterno.value,
-        apellidoMaterno: apellidoMaterno.value,
-        dni: dni.value,
-        telefono: telefono.value,
-        email: email.value,
+        nombres,
+        apellidoPaterno,
+        apellidoMaterno,
+        dni,
+        telefono,
+        email,
       }),
   });
 }

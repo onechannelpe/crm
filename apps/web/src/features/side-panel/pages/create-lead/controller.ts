@@ -5,6 +5,7 @@ import {
   addOptimisticLead,
   createOptimisticLeadRow,
 } from "~/features/workflow/data/optimistic-leads";
+import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
 import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
 
@@ -76,6 +77,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
 
     try {
       const result = await createCommand.run({ ruc });
+      await revalidateWorkflowLeadList();
       optimisticTransactions.commit(txId);
       input.onLeadCreated({ leadId: result.leadId, ruc });
     } catch (submitError) {

@@ -15,11 +15,12 @@ import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-
 import {
   addLeadToFavoritesMutation,
   removeLeadFromFavoritesMutation,
-} from "~/features/workflow/data/mutations";
+} from "~/features/workflow/data/command-mutations";
 import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
+import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
 import styles from "./record-show-header.module.css";
@@ -108,10 +109,12 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     try {
       if (isFavorite()) {
         await removeFavorite({ leadId: props.leadId });
+        await revalidateWorkflowLead(props.leadId);
         return;
       }
 
       await addFavorite({ leadId: props.leadId });
+      await revalidateWorkflowLead(props.leadId);
     } finally {
       setFavoriteBusy(false);
     }

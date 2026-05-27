@@ -18,7 +18,8 @@ import {
   createVenueMutation,
   saveDigitalPolicyMutation,
   startSetupExecutionMutation,
-} from "~/features/workflow/data/mutations";
+} from "~/features/workflow/data/command-mutations";
+import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { toAppError } from "~/lib/app-errors";
 
 import type { TabContentProps } from "../content-props";
@@ -158,6 +159,7 @@ function DigitalPolicyPanel(props: {
     setStarting(true);
     try {
       await startSetupExecution({ leadId: props.leadId });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "No se pudo iniciar afiliación").publicMessage);
     } finally {
@@ -187,6 +189,7 @@ function DigitalPolicyPanel(props: {
         onlineModalidad:
           selectedOnlineScope === "shared" && modalidad ? modalidad : null,
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(
         toAppError(err, "No se pudo guardar política digital").publicMessage,
@@ -363,6 +366,7 @@ function VenueCreatePanel(props: {
     setError(null);
     try {
       await createVenue({ leadId: props.leadId, ...parsed.value });
+      await revalidateWorkflowLead(props.leadId);
       form.reset();
     } catch (err) {
       setError(toAppError(err, "No se pudo registrar la sede").publicMessage);
@@ -407,6 +411,7 @@ function AccountsFormPanel(props: {
         venueId: props.venue.id,
         ...parsed.value,
       });
+      await revalidateWorkflowLead(props.leadId);
       form.reset();
     } catch (err) {
       setError(
