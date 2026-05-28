@@ -12,7 +12,7 @@ pub mod promote;
 pub mod report;
 pub mod run;
 pub mod sample;
-pub mod schema;
+pub mod storage;
 pub mod validate;
 
 pub use errors::PipelineError;
