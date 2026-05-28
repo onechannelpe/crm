@@ -2,7 +2,6 @@ pub mod cli;
 pub mod config;
 pub mod contract_guard;
 pub mod errors;
-pub mod extract;
 pub mod gate;
 pub mod ingest;
 pub mod materialize;
@@ -12,6 +11,7 @@ pub mod pipeline;
 pub mod promote;
 pub mod report;
 pub mod run;
+pub mod sample;
 pub mod schema;
 pub mod validate;
 

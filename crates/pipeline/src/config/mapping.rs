@@ -38,6 +38,8 @@ pub struct SourceMapping {
     pub phone_prefixes: Vec<String>,
     #[serde(default = "default_source_encoding")]
     pub encoding: SourceEncoding,
+    #[serde(default)]
+    pub doc_type_map: HashMap<String, String>,
 }
 
 fn default_true() -> bool {
@@ -116,6 +118,7 @@ mod tests {
             phone_columns: Vec::new(),
             phone_prefixes: Vec::new(),
             encoding,
+            doc_type_map: HashMap::new(),
         }
     }
 

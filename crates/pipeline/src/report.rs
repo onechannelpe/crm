@@ -168,7 +168,7 @@ fn normalize_source_entry(
 
         summary.total_rows += 1;
         let record_hash = hash_record(&record, mapping.delimiter.as_str());
-        let row = normalize::map_record(&resolved_mapping, &record);
+        let row = normalize::normalize_row(&resolved_mapping, &record);
 
         let mut errors: Vec<&str> = Vec::new();
         let has_invalid_rep_doc = row.had_rep_doc_input && row.rep_doc_type.is_empty();

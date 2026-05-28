@@ -18,33 +18,6 @@ fn is_digits(value: &str) -> bool {
     value.chars().all(|c| c.is_ascii_digit())
 }
 
-pub fn validate_document_number(value: &str) -> Result<(), ApiError> {
-    if value.len() < 8 || value.len() > 12 || !is_digits(value) {
-        return Err(ApiError::Validation(
-            "document number must be 8-12 digits".into(),
-        ));
-    }
-    Ok(())
-}
-
-pub fn validate_doc_type(value: &str) -> Result<(), ApiError> {
-    let normalized = value.trim().to_ascii_uppercase();
-    if normalized.is_empty() || normalized.len() > 24 {
-        return Err(ApiError::Validation(
-            "document type must be 1-24 characters".into(),
-        ));
-    }
-    if !normalized
-        .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '.')
-    {
-        return Err(ApiError::Validation(
-            "document type must be alphanumeric/underscore/dot".into(),
-        ));
-    }
-    Ok(())
-}
-
 pub fn validate_ruc(value: &str) -> Result<(), ApiError> {
     if value.len() != 11 || !is_digits(value) {
         return Err(ApiError::Validation("ruc must be exactly 11 digits".into()));
@@ -78,14 +51,33 @@ pub fn validate_text(value: &str) -> Result<(), ApiError> {
 }
 
 fn parse_document_query(value: &str) -> Result<(String, String), ApiError> {
-    let (doc_type, doc_number) = value.split_once(':').ok_or_else(|| {
-        ApiError::Validation("document query must be in DOC_TYPE:DOC_NUMBER format".into())
-    })?;
-    let doc_type = doc_type.trim().to_ascii_uppercase();
-    let doc_number = doc_number.trim().to_owned();
-    validate_doc_type(&doc_type)?;
-    validate_document_number(&doc_number)?;
+    let (raw_type, raw_number) = value
+        .split_once(':')
+        .ok_or_else(|| ApiError::Validation("document query must be TYPE:NUMBER".into()))?;
+    let doc_type = raw_type.trim().to_ascii_uppercase();
+    let doc_number = match doc_type.as_str() {
+        "DNI" => collect_valid(raw_number.trim(), u8::is_ascii_digit, 8, 8),
+        "CE" => collect_valid(raw_number.trim(), u8::is_ascii_alphanumeric, 4, 11),
+        "PTP" => collect_valid(raw_number.trim(), u8::is_ascii_digit, 9, 9),
+        "CSR" => collect_valid(raw_number.trim(), u8::is_ascii_digit, 5, 9),
+        "CIRE" => collect_valid(raw_number.trim(), u8::is_ascii_alphanumeric, 4, 9),
+        _ => None,
+    }
+    .ok_or_else(|| ApiError::Validation("invalid document type or number".into()))?;
     Ok((doc_type, doc_number))
+}
+
+fn collect_valid(value: &str, valid: fn(&u8) -> bool, min: usize, max: usize) -> Option<String> {
+    let mut out = String::with_capacity(max.min(value.len()));
+    for b in value.bytes() {
+        if valid(&b) {
+            out.push(b.to_ascii_uppercase() as char);
+            if out.len() > max {
+                return None;
+            }
+        }
+    }
+    (out.len() >= min).then_some(out)
 }
 
 pub fn plan_query(intent: SearchIntent, query: &str) -> Result<QueryStrategy, ApiError> {

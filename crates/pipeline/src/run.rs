@@ -1,9 +1,9 @@
 use crate::PipelineError;
 use crate::config::manifest::{SourceManifest, SourceManifestEntry, verify_manifest};
-use crate::extract::sample_with_header;
 use crate::ingest::{ShardIngestConfig, ingest_to_shards, map_snapshot_only};
 use crate::materialize::materialize_serving;
 use crate::merge::{MergePhaseStats, fail_snapshot, merge_ingest_session, set_snapshot_status};
+use crate::sample::sample_with_header;
 use crate::schema::{init_schema, open_rw};
 use crate::validate::validate_snapshot;
 use serde::Serialize;

@@ -198,7 +198,7 @@ pub fn map_snapshot_only(mapping_path: &str, input_path: &str) -> Result<usize, 
     for result in reader.byte_records() {
         let byte_record = result?;
         let record = mapping.decode_byte_record(&byte_record)?;
-        let _row = normalize::map_record(&resolved_mapping, &record);
+        let _row = normalize::normalize_row(&resolved_mapping, &record);
         total_rows += 1;
     }
     Ok(total_rows)
@@ -439,7 +439,7 @@ fn run_shard_worker(
 
     while let Ok(task) = rx.recv() {
         counters.total_rows += 1;
-        let row = normalize::map_record(&resolved_mapping, &task.record);
+        let row = normalize::normalize_row(&resolved_mapping, &task.record);
 
         if row.had_rep_doc_input && row.rep_doc_type.is_empty() {
             counters.invalid_doc_rows += 1;
