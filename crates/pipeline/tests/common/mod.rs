@@ -1,4 +1,4 @@
-use crm_pipeline::schema::open_rw;
+use crm_pipeline::storage::db::open_rw;
 use rusqlite::params;
 
 pub fn seed_minimal_gate_ready_state(db_path: &str) {

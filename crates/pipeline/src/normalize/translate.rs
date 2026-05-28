@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::FieldValues;
+use super::row::FieldValues;
 
 /// Applies source-specific vocabulary translations to extracted field values.
 /// Currently only translates `rep_doc_type` via the per-source `doc_type_map`.

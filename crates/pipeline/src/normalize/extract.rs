@@ -3,7 +3,7 @@ use crate::config::mapping::SourceMapping;
 use csv::StringRecord;
 use std::collections::HashMap;
 
-use super::FieldValues;
+use super::row::FieldValues;
 
 /// Precomputed per-source lookup table. Built once from `SourceMapping` at startup,
 /// then cloned to each worker thread. Per-row processing only uses `ResolvedMapping`.

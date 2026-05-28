@@ -7,7 +7,7 @@ use crate::gate;
 use crate::promote;
 use crate::report;
 use crate::run;
-use crate::schema::open_rw;
+use crate::storage::db::open_rw;
 use rusqlite::params;
 use std::path::Path;
 use std::time::SystemTime;
@@ -38,7 +38,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-{}", profile));
 
-            run::run_matrix(run::RunMatrixConfig {
+            run::matrix::run(run::matrix::Config {
                 db_path: &bench_db.to_string_lossy(),
                 build_dir: &bench_build_dir.to_string_lossy(),
                 manifest_path: &runtime.paths.manifest,
@@ -56,7 +56,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-map-{}", profile));
 
-            run::run_matrix_map_only(
+            run::matrix::map_only(
                 &bench_build_dir.to_string_lossy(),
                 &runtime.paths.manifest,
                 resolved.row_cap,
@@ -75,7 +75,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
                 )));
             }
 
-            run::run_full(
+            run::full::run(
                 &runtime.paths.staged_db,
                 &runtime.paths.manifest,
                 resolved.workers,
@@ -106,7 +106,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let refresh_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("refresh-{}", profile));
 
-            run::run_matrix(run::RunMatrixConfig {
+            run::matrix::run(run::matrix::Config {
                 db_path: &refresh_db.to_string_lossy(),
                 build_dir: &refresh_build_dir.to_string_lossy(),
                 manifest_path: &runtime.paths.manifest,
