@@ -31,7 +31,7 @@ pub fn parse_args() -> Result<Config, String> {
     let mut mode = BenchmarkMode::Smoke;
     let mut db_path: Option<PathBuf> = None;
     let mut dataset_manifest_json: Option<PathBuf> = None;
-    let mut workload_json = PathBuf::from("crates/engine/bench/workloads/default.json");
+    let mut workload_json = PathBuf::from("crates/engine/benches/workloads/default.json");
     let mut doc_projection_contract_path = PathBuf::from("contracts/engine/doc-projection.json");
     let mut company_projection_contract_path =
         PathBuf::from("contracts/engine/company-projection.json");

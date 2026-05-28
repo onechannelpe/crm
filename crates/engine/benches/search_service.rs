@@ -17,7 +17,7 @@ fn bench_search_service(c: &mut Criterion) {
         return;
     }
 
-    let workload_path = PathBuf::from("crates/engine/bench/workloads/default.json");
+    let workload_path = PathBuf::from("crates/engine/benches/workloads/default.json");
     let workload = match read_workload(&workload_path) {
         Ok(w) => w,
         Err(e) => {
