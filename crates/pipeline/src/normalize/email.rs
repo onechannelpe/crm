@@ -48,11 +48,7 @@ fn is_placeholder_domain(domain: &str) -> bool {
     // Named placeholder domains.
     if matches!(
         domain,
-        "dummy.com"
-            | "email.com.pe"
-            | "notiene.com"
-            | "sincorreo.com"
-            | "sincorreo.com.pe"
+        "dummy.com" | "email.com.pe" | "notiene.com" | "sincorreo.com" | "sincorreo.com.pe"
     ) {
         return true;
     }
@@ -118,8 +114,16 @@ mod tests {
     #[test]
     fn named_placeholder_locals_rejected() {
         for local in &[
-            "dummy", "email", "mail", "null", "noemail",
-            "sincorreo", "notengo", "ninguno", "cliente", "direccionerrada",
+            "dummy",
+            "email",
+            "mail",
+            "null",
+            "noemail",
+            "sincorreo",
+            "notengo",
+            "ninguno",
+            "cliente",
+            "direccionerrada",
         ] {
             let addr = format!("{local}@gmail.com");
             assert_eq!(normalize_email(&addr), None, "expected None for {addr}");
@@ -129,8 +133,11 @@ mod tests {
     #[test]
     fn placeholder_domains_rejected() {
         for domain in &[
-            "dummy.com", "email.com.pe", "notiene.com",
-            "sincorreo.com", "sincorreo.com.pe",
+            "dummy.com",
+            "email.com.pe",
+            "notiene.com",
+            "sincorreo.com",
+            "sincorreo.com.pe",
         ] {
             let addr = format!("user@{domain}");
             assert_eq!(normalize_email(&addr), None, "expected None for {addr}");
@@ -140,8 +147,13 @@ mod tests {
     #[test]
     fn typo_domains_rejected() {
         for domain in &[
-            "gamil.com", "gmai.com", "gmial.com",
-            "gmail.co", "gmail.con", "gmil.com", "hotmai.com",
+            "gamil.com",
+            "gmai.com",
+            "gmial.com",
+            "gmail.co",
+            "gmail.con",
+            "gmil.com",
+            "hotmai.com",
         ] {
             let addr = format!("user@{domain}");
             assert_eq!(normalize_email(&addr), None, "expected None for {addr}");

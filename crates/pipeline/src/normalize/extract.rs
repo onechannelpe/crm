@@ -145,17 +145,3 @@ fn build_header_index(headers: Option<&StringRecord>) -> Option<HashMap<String, 
             .collect()
     })
 }
-
-#[cfg(test)]
-impl ResolvedMapping {
-    pub(super) fn for_test(
-        fields: HashMap<String, Option<usize>>,
-        phone_columns: Vec<usize>,
-    ) -> Self {
-        ResolvedMapping {
-            fields,
-            phone_columns,
-            doc_type_map: HashMap::new(),
-        }
-    }
-}
