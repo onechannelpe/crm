@@ -2,7 +2,7 @@ mod cli;
 mod report;
 mod run;
 
-use engine::bench_support::{
+use engine::benchmark::{
     BenchmarkVerdict, compare_to_baseline, read_manifest, read_workload, sha256_file,
 };
 use std::path::PathBuf;

@@ -1,5 +1,5 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use engine::bench_support::read_workload;
+use engine::benchmark::read_workload;
 use search::contracts::{SearchIntent, SearchRequest};
 use search::service::SearchService;
 use std::path::PathBuf;

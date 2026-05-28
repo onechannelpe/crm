@@ -1,4 +1,4 @@
-use engine::bench_support::{BenchmarkMode, BenchmarkSummary, QueryMetrics, Workload, percentile};
+use engine::benchmark::{BenchmarkMode, BenchmarkSummary, QueryMetrics, Workload, percentile};
 use search::contracts::{SearchIntent, SearchRequest};
 use search::service::SearchService;
 use std::collections::BTreeMap;
@@ -125,7 +125,7 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
     );
 
     Ok(BenchmarkSummary {
-        contract_version: engine::bench_support::CONTRACT_VERSION,
+        contract_version: engine::benchmark::CONTRACT_VERSION,
         mode,
         git_sha,
         dataset_id,

@@ -1,4 +1,4 @@
-use engine::bench_support::BenchmarkMode;
+use engine::benchmark::BenchmarkMode;
 use std::env;
 use std::path::PathBuf;
 
