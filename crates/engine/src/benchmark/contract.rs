@@ -1,5 +1,3 @@
-//! Benchmark report contracts and measurement helpers.
-
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 

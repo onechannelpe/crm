@@ -1,5 +1,3 @@
-//! Baseline comparison for benchmark reports.
-
 use super::contract::BenchmarkSummary;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;

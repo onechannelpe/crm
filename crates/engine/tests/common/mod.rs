@@ -1,6 +1,7 @@
 use axum::Router;
 use axum::routing::get;
 use axum_test::TestServer;
+use engine::health;
 use leads::api::{RecordState, router as record_router};
 use leads::service::{CandidateService, ImportService};
 use rusqlite::Connection;
@@ -12,8 +13,6 @@ use shared::sqlite::make_readonly_pool;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Creates a temp SQLite file with the minimal search schema needed for engine tests.
-#[allow(dead_code)]
 pub fn create_test_db() -> tempfile::NamedTempFile {
     let file = tempfile::NamedTempFile::new().expect("temp file");
     let conn = Connection::open(file.path()).expect("open");
@@ -108,9 +107,6 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
     file
 }
 
-/// Builds a full `TestServer` wiring search + record routers together with a
-/// stub health endpoint. Useful for engine-level integration tests.
-#[allow(dead_code)]
 pub fn make_test_server() -> (TestServer, tempfile::NamedTempFile) {
     let db = create_test_db();
     let pool = make_readonly_pool(db.path().to_str().expect("path")).expect("pool");
@@ -137,10 +133,11 @@ pub fn make_test_server() -> (TestServer, tempfile::NamedTempFile) {
         limiter: limiter.clone(),
     });
 
+    let health_pool = pool.clone();
     let app = Router::new()
         .route(
             "/v1/health",
-            get(|| async { axum::Json(serde_json::json!({"status": "ok"})) }),
+            get(move || health::handler(health_pool.clone())),
         )
         .merge(search_router(search_state))
         .merge(record_router(record_state));

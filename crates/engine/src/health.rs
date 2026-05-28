@@ -1,5 +1,3 @@
-//! Health endpoint backed by the pipeline projection database.
-
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use serde::Serialize;
@@ -16,7 +14,6 @@ pub struct HealthResponse {
     pub rows: Option<i64>,
 }
 
-/// Returns current projection health and build metadata when available.
 pub async fn handler(pool: SqlitePool) -> impl IntoResponse {
     let result = tokio::task::spawn_blocking(move || probe_db(&pool))
         .await
@@ -43,8 +40,6 @@ pub async fn handler(pool: SqlitePool) -> impl IntoResponse {
         ),
     }
 }
-
-// ===== probe =====
 
 fn probe_db(pool: &SqlitePool) -> Option<(Option<String>, i64, i64)> {
     let conn = pool.get().ok()?;

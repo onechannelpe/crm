@@ -1,5 +1,3 @@
-//! Engine process bootstrap and HTTP router assembly.
-
 use axum::Router;
 use axum::routing::get;
 use leads::api::{RecordState, router as record_router};

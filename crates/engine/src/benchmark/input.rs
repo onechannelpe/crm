@@ -1,5 +1,3 @@
-//! Benchmark workload, dataset manifest, and file hashing inputs.
-
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::fs;
