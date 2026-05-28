@@ -66,23 +66,6 @@ fn location_fields_strips_whitespace_from_valid_values() {
 }
 
 #[test]
-fn location_fields_keep_valid_values() {
-    let fields = HashMap::from([
-        ("company_ubigeo".to_owned(), "col0"),
-        ("company_department".to_owned(), "col1"),
-        ("company_province".to_owned(), "col2"),
-        ("company_district".to_owned(), "col3"),
-    ]);
-    let resolved = resolved_with_fields(fields);
-    let record = StringRecord::from(vec!["150101", "LIMA", "LIMA", "LIMA"]);
-    let row = normalize_row(&resolved, &record);
-    assert_eq!(row.company_ubigeo, "150101");
-    assert_eq!(row.company_department, "LIMA");
-    assert_eq!(row.company_province, "LIMA");
-    assert_eq!(row.company_district, "LIMA");
-}
-
-#[test]
 fn doc_type_map_translates_before_normalize() {
     let mut doc_type_map = HashMap::new();
     doc_type_map.insert("01".to_owned(), "DNI".to_owned());

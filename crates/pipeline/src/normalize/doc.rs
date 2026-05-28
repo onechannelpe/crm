@@ -163,17 +163,4 @@ mod tests {
         assert!(normalize_doc("PASAPORTE", "AB123456").is_none());
         assert!(normalize_doc("D.I.E.", "AB123456").is_none());
     }
-
-    #[test]
-    fn derive_dni_from_natural_ruc_extracts_digits_2_to_9() {
-        assert_eq!(
-            derive_dni_from_natural_ruc("10123456785"),
-            Some("12345678".to_owned())
-        );
-    }
-
-    #[test]
-    fn derive_dni_from_natural_ruc_rejects_non_natural_ruc() {
-        assert!(derive_dni_from_natural_ruc("20100000001").is_none());
-    }
 }

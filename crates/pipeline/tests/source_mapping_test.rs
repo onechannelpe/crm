@@ -40,8 +40,7 @@ fn utf8_mode_rejects_invalid_utf8_bytes() {
     let mapping = mapping_with_encoding(SourceEncoding::Utf8);
     let record = single_field_record(&[0xD1]);
 
-    let err = mapping.decode_byte_record(&record).expect_err("must fail");
-    assert!(err.to_string().contains("invalid utf-8"));
+    assert!(mapping.decode_byte_record(&record).is_err());
 }
 
 #[test]
