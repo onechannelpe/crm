@@ -13,7 +13,3 @@ target/
 *.log
 *.ps1
 *.sqld
-
-*.md
-*.txt
-tools/*.ts
