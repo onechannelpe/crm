@@ -6,9 +6,10 @@ import type {
   LeadDetailVenueView,
   LeadDetailView,
 } from "~/contracts/workflow/views";
-import type {
-  ModalidadCobro,
-  ProductScope,
+import {
+  MODALIDAD_COBRO_KINDS,
+  type ModalidadCobro,
+  type ProductScope,
 } from "~/contracts/workflow/vocabulary";
 import {
   Widget,
@@ -32,33 +33,40 @@ import { buildAccountsSubmitInput } from "./setup/model/accounts-submit-input";
 import { useVenueFormState } from "./setup/model/venue-form-state";
 import { buildVenueSubmitInput } from "./setup/model/venue-submit-input";
 
+const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
+  SUSCRIPCIONES: "Suscripciones",
+  ONE_CLIC: "One Click",
+  CARGO_UNICO: "Cargo único",
+};
+
 export function SetupWorkspace(props: { data: LeadDetailView }) {
-  const data = () => props.data;
-  const canAddVenue = () => data().lead.stage === "SETUP_EXECUTION";
-  const canAddAccounts = () => data().lead.stage === "SETUP_EXECUTION";
-  const canEditDigitalPolicy = () => data().lead.stage === "SETUP_PLAN";
+  const canAddVenue = () => props.data.lead.stage === "SETUP_EXECUTION";
+  const canAddAccounts = () => props.data.lead.stage === "SETUP_EXECUTION";
+  const canEditDigitalPolicy = () => props.data.lead.stage === "SETUP_PLAN";
 
   return (
     <div>
       <Show when={canEditDigitalPolicy()}>
         <DigitalPolicyPanel
-          leadId={data().lead.id}
-          linkScope={data().profile?.linkScope ?? "none"}
-          linkUrl={data().profile?.linkUrl ?? null}
-          onlineScope={data().profile?.onlineScope ?? "none"}
-          onlineUrl={data().profile?.onlineUrl ?? null}
-          onlineModalidad={data().profile?.onlineModalidad ?? null}
+          leadId={props.data.lead.id}
+          linkScope={props.data.profile?.linkScope ?? "none"}
+          linkUrl={props.data.profile?.linkUrl ?? null}
+          onlineScope={props.data.profile?.onlineScope ?? "none"}
+          onlineUrl={props.data.profile?.onlineUrl ?? null}
+          onlineModalidad={props.data.profile?.onlineModalidad ?? null}
         />
       </Show>
+
       <Show when={canAddVenue()}>
         <VenueCreatePanel
-          leadId={data().lead.id}
-          linkScope={data().profile?.linkScope ?? "none"}
-          onlineScope={data().profile?.onlineScope ?? "none"}
+          leadId={props.data.lead.id}
+          linkScope={props.data.profile?.linkScope ?? "none"}
+          onlineScope={props.data.profile?.onlineScope ?? "none"}
         />
       </Show>
+
       <Show
-        when={data().venues.length > 0}
+        when={props.data.venues.length > 0}
         fallback={
           <Show when={!canAddVenue()}>
             <Widget>
@@ -77,12 +85,12 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
           </Show>
         }
       >
-        <For each={data().venues}>
+        <For each={props.data.venues}>
           {(venue) => (
             <>
               <VenueCard venue={venue} />
               <Show when={canAddAccounts() && !venue.solesAccount}>
-                <AccountsFormPanel leadId={data().lead.id} venue={venue} />
+                <AccountsFormPanel leadId={props.data.lead.id} venue={venue} />
               </Show>
             </>
           )}
@@ -127,31 +135,40 @@ function DigitalPolicyPanel(props: {
   function validate(): string | null {
     const selectedLinkScope = resolvedLinkScope();
     const selectedOnlineScope = resolvedOnlineScope();
+
     if (selectedLinkScope === "shared" && !linkUrl().trim()) {
       return "URL de CulqiLink es requerida cuando la modalidad es compartida";
     }
+
     if (selectedOnlineScope === "shared" && !onlineUrl().trim()) {
       return "URL de CulqiOnline es requerida cuando la modalidad es compartida";
     }
+
     if (selectedOnlineScope === "shared" && !onlineModalidad()) {
       return "Modalidad de cobro es obligatoria cuando CulqiOnline es compartido";
     }
+
     return null;
   }
 
   async function handleSave(event: SubmitEvent) {
     event.preventDefault();
+
     const validationError = validate();
+
     if (validationError) {
       setError(validationError);
       return;
     }
+
     setSubmitting(true);
     setError(null);
+
     try {
       const selectedLinkScope = resolvedLinkScope();
       const selectedOnlineScope = resolvedOnlineScope();
       const modalidad = onlineModalidad();
+
       await saveDigitalPolicy({
         leadId: props.leadId,
         linkScope: selectedLinkScope,
@@ -161,6 +178,7 @@ function DigitalPolicyPanel(props: {
         onlineModalidad:
           selectedOnlineScope === "shared" && modalidad ? modalidad : null,
       });
+
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(
@@ -176,16 +194,18 @@ function DigitalPolicyPanel(props: {
       <WidgetHeader>
         <WidgetTitle text="Política digital" />
       </WidgetHeader>
+
       <WidgetBody>
-        <form onSubmit={(e) => void handleSave(e)}>
+        <form onSubmit={(event) => void handleSave(event)}>
           <label>
             <input
               type="checkbox"
               checked={linkEnabled()}
-              onChange={(e) => setLinkEnabled(e.currentTarget.checked)}
+              onChange={(event) => setLinkEnabled(event.currentTarget.checked)}
             />{" "}
             Activar CulqiLink
           </label>
+
           <Show when={linkEnabled()}>
             <label>
               <input
@@ -196,6 +216,7 @@ function DigitalPolicyPanel(props: {
               />{" "}
               URL compartida
             </label>
+
             <label>
               <input
                 type="radio"
@@ -205,26 +226,32 @@ function DigitalPolicyPanel(props: {
               />{" "}
               URL por local
             </label>
+
             <Show when={linkScope() === "shared"}>
               <input
                 type="url"
                 value={linkUrl()}
-                onChange={(e) => setLinkUrl(e.currentTarget.value)}
+                onChange={(event) => setLinkUrl(event.currentTarget.value)}
                 placeholder="URL CulqiLink"
               />
             </Show>
           </Show>
+
           <label>
             <input
               type="checkbox"
               checked={onlineEnabled()}
-              onChange={(e) => {
-                setOnlineEnabled(e.currentTarget.checked);
-                if (!e.currentTarget.checked) setOnlineModalidad("");
+              onChange={(event) => {
+                setOnlineEnabled(event.currentTarget.checked);
+
+                if (!event.currentTarget.checked) {
+                  setOnlineModalidad("");
+                }
               }}
             />{" "}
             Activar CulqiOnline
           </label>
+
           <Show when={onlineEnabled()}>
             <label>
               <input
@@ -235,6 +262,7 @@ function DigitalPolicyPanel(props: {
               />{" "}
               URL compartida
             </label>
+
             <label>
               <input
                 type="radio"
@@ -247,48 +275,36 @@ function DigitalPolicyPanel(props: {
               />{" "}
               URL por local
             </label>
+
             <Show when={onlineScope() === "shared"}>
               <input
                 type="url"
                 value={onlineUrl()}
-                onChange={(e) => setOnlineUrl(e.currentTarget.value)}
+                onChange={(event) => setOnlineUrl(event.currentTarget.value)}
                 placeholder="URL CulqiOnline"
               />
-              <label>
-                <input
-                  type="radio"
-                  name="onlineModalidad"
-                  value="SUSCRIPCIONES"
-                  checked={onlineModalidad() === "SUSCRIPCIONES"}
-                  onChange={() => setOnlineModalidad("SUSCRIPCIONES")}
-                />{" "}
-                Suscripciones
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="onlineModalidad"
-                  value="ONE_CLIC"
-                  checked={onlineModalidad() === "ONE_CLIC"}
-                  onChange={() => setOnlineModalidad("ONE_CLIC")}
-                />{" "}
-                One click
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="onlineModalidad"
-                  value="CARGO_UNICO"
-                  checked={onlineModalidad() === "CARGO_UNICO"}
-                  onChange={() => setOnlineModalidad("CARGO_UNICO")}
-                />{" "}
-                Cargo unico
-              </label>
+
+              <For each={MODALIDAD_COBRO_KINDS}>
+                {(value) => (
+                  <label>
+                    <input
+                      type="radio"
+                      name="onlineModalidad"
+                      value={value}
+                      checked={onlineModalidad() === value}
+                      onChange={() => setOnlineModalidad(value)}
+                    />{" "}
+                    {MODALIDAD_COBRO_LABELS[value]}
+                  </label>
+                )}
+              </For>
             </Show>
           </Show>
+
           <Show when={error()}>
             {(msg) => <p style={{ color: "red", margin: "8px 0" }}>{msg()}</p>}
           </Show>
+
           <Button
             type="submit"
             variant="secondary"
@@ -316,16 +332,20 @@ function VenueCreatePanel(props: {
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
+
     const parsed = buildVenueSubmitInput(form, {
       linkScope: props.linkScope,
       onlineScope: props.onlineScope,
     });
+
     if (!parsed.ok) {
       setError(parsed.error);
       return;
     }
+
     setSubmitting(true);
     setError(null);
+
     try {
       await createVenue({ leadId: props.leadId, ...parsed.value });
       await revalidateWorkflowLead(props.leadId);
@@ -360,7 +380,7 @@ function VenueCreatePanel(props: {
         onlineScope={props.onlineScope}
         submitting={submitting()}
         error={error()}
-        onSubmit={(e) => void handleSubmit(e)}
+        onSubmit={(event) => void handleSubmit(event)}
       />
     </Show>
   );
@@ -377,19 +397,24 @@ function AccountsFormPanel(props: {
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
+
     const parsed = buildAccountsSubmitInput(form);
+
     if (!parsed.ok) {
       setError(parsed.error);
       return;
     }
+
     setSubmitting(true);
     setError(null);
+
     try {
       await addAccounts({
         leadId: props.leadId,
         venueId: props.venue.id,
         ...parsed.value,
       });
+
       await revalidateWorkflowLead(props.leadId);
       form.reset();
     } catch (err) {
@@ -407,7 +432,7 @@ function AccountsFormPanel(props: {
       form={form}
       submitting={submitting()}
       error={error()}
-      onSubmit={(e) => void handleSubmit(e)}
+      onSubmit={(event) => void handleSubmit(event)}
     />
   );
 }
