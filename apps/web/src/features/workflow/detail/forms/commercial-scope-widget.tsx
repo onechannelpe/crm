@@ -27,7 +27,8 @@ import { toAppError } from "~/lib/app-errors";
 import {
   requestQuotationMutation,
   saveCommercialScopeMutation,
-} from "../../data/mutations";
+} from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 export function CommercialScopeWidget(props: {
   leadId: string;
@@ -95,6 +96,7 @@ export function CommercialScopeWidget(props: {
         abonoBank: bank,
         posTotal: Number(posTotal()),
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al guardar").publicMessage);
     } finally {
@@ -123,6 +125,7 @@ export function CommercialScopeWidget(props: {
         abonoBank: bank,
         posTotal: Number(posTotal()),
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al solicitar cotización").publicMessage);
     } finally {

@@ -9,18 +9,22 @@ import { Dynamic } from "solid-js/web";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { addLeadToFavoritesMutation } from "~/features/workflow/data/mutations";
+import { addLeadToFavoritesMutation } from "~/features/workflow/data/command-mutations";
 import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
+import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 
 import { PanelList } from "../../components/list";
 import { TabStrip } from "../../components/tab-strip";
 import { createRecordPageController } from "./controller";
 import { Footer } from "./footer";
 import { useLeadRecordPageState } from "./state";
-import { VIEW_RECORD_TABS_BY_ID, VIEW_RECORD_TABS } from "./tabs/tab-registry";
+import {
+  VIEW_RECORD_TABS,
+  VIEW_RECORD_TABS_BY_ID,
+} from "./tabs/view-record-tabs";
 
 import styles from "./page.module.css";
 
@@ -79,7 +83,6 @@ export function RecordPage() {
             {(detail) => (
               <Dynamic
                 component={VIEW_RECORD_TABS_BY_ID[activeTab()].component}
-                mode="view"
                 data={detail()}
               />
             )}
@@ -95,13 +98,15 @@ export function RecordPage() {
               showDeleteCompany: canDeleteCompany(),
               addToFavoritesDisabled: detail().lead.isFavorite,
               onAddToFavorites: () => {
-                void addToFavorites({ leadId: detail().lead.id })
-                  .then(() =>
-                    enqueueSuccessSnackBar("Empresa agregada a favoritos"),
-                  )
-                  .catch(() =>
-                    enqueueErrorSnackBar("No se pudo agregar a favoritos"),
-                  );
+                void (async () => {
+                  try {
+                    await addToFavorites({ leadId: detail().lead.id });
+                    await revalidateWorkflowLead(detail().lead.id);
+                    enqueueSuccessSnackBar("Empresa agregada a favoritos");
+                  } catch {
+                    enqueueErrorSnackBar("No se pudo agregar a favoritos");
+                  }
+                })();
               },
               onExportCompany: () => {
                 const payload = {

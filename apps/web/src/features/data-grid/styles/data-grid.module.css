@@ -740,4 +740,9 @@
   .tableContainer {
     margin-left: 0;
   }
+
+  .emptyStateSurface {
+    justify-content: flex-start;
+    min-width: 100%;
+  }
 }

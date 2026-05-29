@@ -48,9 +48,9 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
   }
 
   return {
-    async search(type, value, limit = 20) {
+    async search(intent, query, limit = 20) {
       const requestId = crypto.randomUUID();
-      const body = JSON.stringify({ type, value, limit });
+      const body = JSON.stringify({ intent, query, limit });
 
       let response: Response;
       try {

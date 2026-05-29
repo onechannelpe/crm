@@ -21,7 +21,8 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 
-import { recordRepLegalMutation } from "../../data/mutations";
+import { recordRepLegalMutation } from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 export function RepLegalWidget(props: {
   leadId: string;
@@ -29,7 +30,8 @@ export function RepLegalWidget(props: {
 }) {
   const record = useAction(recordRepLegalMutation);
 
-  const canEdit = () => props.data.lead.stage === "SETUP_EXECUTION";
+  const canEdit = () =>
+    props.data.lead.stage === "SETUP_EXECUTION" && !repLegal();
   const repLegal = () => props.data.repLegal;
 
   const [nombres, setNombres] = createSignal(repLegal()?.nombres ?? "");
@@ -60,6 +62,7 @@ export function RepLegalWidget(props: {
         telefono: telefono().trim(),
         email: email().trim(),
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(
         toAppError(err, "Error al guardar representante legal").publicMessage,

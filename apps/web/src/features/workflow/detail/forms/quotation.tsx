@@ -23,7 +23,8 @@ import {
 } from "~/features/side-panel/components/widget-card";
 import { toAppError } from "~/lib/app-errors";
 
-import { createQuotationMutation } from "../../data/mutations";
+import { createQuotationMutation } from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 import styles from "./quotation.module.css";
 
@@ -74,6 +75,7 @@ export function QuotationSection(props: QuotationSectionProps) {
         fee: Number(fee()),
         moneda: moneda(),
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al crear cotización").publicMessage);
     } finally {

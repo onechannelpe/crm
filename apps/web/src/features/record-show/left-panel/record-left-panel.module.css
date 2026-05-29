@@ -14,3 +14,10 @@
 .scrollBody {
   overflow-y: auto;
 }
+
+.helperText {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 12px;
+}

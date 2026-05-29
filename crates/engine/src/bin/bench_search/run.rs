@@ -1,5 +1,5 @@
-use engine::bench_support::{BenchmarkMode, BenchmarkSummary, QueryMetrics, Workload, percentile};
-use search::contracts::{SearchRequest, SearchType};
+use engine::benchmark::{BenchmarkMode, BenchmarkSummary, QueryMetrics, Workload, percentile};
+use search::contracts::{SearchIntent, SearchRequest};
 use search::service::SearchService;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -61,7 +61,8 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
         "dni".to_string(),
         bench_query(
             &service,
-            SearchType::Dni,
+            "dni",
+            SearchIntent::Mixed,
             &workload.dni,
             iterations,
             max_limit,
@@ -71,7 +72,8 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
         "ruc".to_string(),
         bench_query(
             &service,
-            SearchType::Ruc,
+            "ruc",
+            SearchIntent::Mixed,
             &workload.ruc,
             iterations,
             max_limit,
@@ -81,7 +83,8 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
         "phone".to_string(),
         bench_query(
             &service,
-            SearchType::Phone,
+            "phone",
+            SearchIntent::Mixed,
             &workload.phone,
             iterations,
             max_limit,
@@ -91,7 +94,8 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
         "phone_enriched".to_string(),
         bench_query(
             &service,
-            SearchType::PhoneEnriched,
+            "phone_enriched",
+            SearchIntent::Mixed,
             &workload.phone_enriched,
             iterations,
             max_limit,
@@ -101,7 +105,8 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
         "person_name".to_string(),
         bench_query(
             &service,
-            SearchType::PersonName,
+            "person_name",
+            SearchIntent::People,
             &workload.person_name,
             iterations,
             max_limit,
@@ -111,7 +116,8 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
         "company_name".to_string(),
         bench_query(
             &service,
-            SearchType::CompanyName,
+            "company_name",
+            SearchIntent::Companies,
             &workload.company_name,
             iterations,
             max_limit,
@@ -119,7 +125,7 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
     );
 
     Ok(BenchmarkSummary {
-        contract_version: engine::bench_support::CONTRACT_VERSION,
+        contract_version: engine::benchmark::CONTRACT_VERSION,
         mode,
         git_sha,
         dataset_id,
@@ -134,30 +140,29 @@ pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, Strin
 
 fn bench_query(
     service: &SearchService,
-    search_type: SearchType,
+    metric_name: &str,
+    intent: SearchIntent,
     values: &[String],
     iterations: usize,
     max_limit: usize,
 ) -> Result<QueryMetrics, String> {
     if values.is_empty() {
-        return Err(format!(
-            "workload list is empty for search type '{search_type:?}'"
-        ));
+        return Err(format!("workload list is empty for metric '{metric_name}'"));
     }
 
     let mut times = Vec::with_capacity(iterations);
     let mut hits = 0usize;
     for idx in 0..iterations {
         let req = SearchRequest {
-            search_type,
-            value: values[idx % values.len()].clone(),
+            intent,
+            query: values[idx % values.len()].clone(),
             limit: max_limit,
         };
 
         let start = Instant::now();
         let response = service
             .search(&req)
-            .map_err(|e| format!("search failed for '{search_type:?}': {e}"))?;
+            .map_err(|e| format!("search failed for '{metric_name}': {e}"))?;
         let elapsed_ms = start.elapsed().as_secs_f64() * 1000.0;
         times.push(elapsed_ms);
         hits += response.count;

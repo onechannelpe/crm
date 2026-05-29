@@ -18,7 +18,7 @@
   <a href="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml/badge.svg?branch=master" alt="contracts"></a>
 </p>
 
-This monorepo is built around a shared search dataset (`contacts.sqlite`).
+This monorepo is built around a shared contact dataset (`contacts.sqlite`).
 
 ```mermaid
 flowchart LR
@@ -35,9 +35,20 @@ flowchart LR
     click ext "https://github.com/onechannelpe/crm/tree/master/apps/extension"
 ```
 
-The pipeline builds a SQLite snapshot from source files and shared contracts. The engine serves that snapshot through `/v1/search` and `/v1/health`. The web application serves the CRM UI, keeps application state in its own SQLite database, and calls the engine through HMAC-signed HTTP. The browser extension receives signed handoff messages from the web application and syncs call state through extension API routes.
+The pipeline builds a SQLite snapshot from source files and shared contracts.
+The engine serves that snapshot through signed HTTP endpoints for search, record
+candidates, record imports, and health checks. The web application serves the CRM
+UI, keeps application state in its own SQLite database, and calls the engine
+through its shared engine adapter. The browser extension receives signed handoff
+messages from the web application and syncs call state through extension API
+routes.
 
-The contract between web and engine is [`contracts/engine-api.json`](contracts/engine-api.json). The generated bindings in the web application and the engine request and response checks are derived from that file. If this file changes, regenerate bindings with `bun run generate`. Validate generated artifacts with `bun run check:contract`. Validate projection and search compatibility with `bun run check:projection-contract` and `bun run check:search-contract`.
+The engine HTTP and projection contracts live under
+[`contracts/engine/`](contracts/engine/). Generated bindings in the web,
+`search`, and `leads` crates are derived from those files. If a contract changes,
+regenerate bindings with `bun run generate`. Validate generated artifacts with
+`bun run check:contracts` and search compatibility with
+`bun run check:search-contract`.
 
 ## Applications
 
@@ -69,7 +80,7 @@ bun run dev
 
 - Web request and auth flow: [`apps/web/src/middleware.ts`](apps/web/src/middleware.ts), [`apps/web/src/lib/auth/access/request-auth.ts`](apps/web/src/lib/auth/access/request-auth.ts)
 - Web service wiring: [`apps/web/src/server/shared/context.ts`](apps/web/src/server/shared/context.ts), [`apps/web/src/server/shared/registry.ts`](apps/web/src/server/shared/registry.ts)
-- Engine startup and request handling: [`crates/engine/src/main.rs`](crates/engine/src/main.rs), [`crates/engine/src/api/handlers.rs`](crates/engine/src/api/handlers.rs)
+- Engine startup and request handling: [`crates/engine/src/runtime.rs`](crates/engine/src/runtime.rs), [`crates/search/src/api.rs`](crates/search/src/api.rs), [`crates/leads/src/api.rs`](crates/leads/src/api.rs)
 - Pipeline orchestration: [`crates/pipeline/src/pipeline.rs`](crates/pipeline/src/pipeline.rs), [`crates/pipeline/src/cli.rs`](crates/pipeline/src/cli.rs)
 - Extension runtime and handoff flow: [`apps/extension/src/background/runtime.ts`](apps/extension/src/background/runtime.ts), [`apps/extension/src/services/external-auth.ts`](apps/extension/src/services/external-auth.ts)
 
@@ -79,7 +90,6 @@ bun run dev
 bun run check
 bun run check:web
 bun run check:engine
-bun run check:contract
+bun run check:contracts
 bun run check:search-contract
-bun run check:projection-contract
 ```

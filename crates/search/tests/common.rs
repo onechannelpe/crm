@@ -7,9 +7,10 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
     let conn = Connection::open(file.path()).expect("open");
     conn.execute_batch(
         "
-        CREATE TABLE search_projection (
-            id                  INTEGER PRIMARY KEY,
-            dni                 TEXT NOT NULL,
+        CREATE TABLE doc_projection (
+            doc_id              INTEGER PRIMARY KEY,
+            doc_type            TEXT NOT NULL,
+            doc_number          TEXT NOT NULL,
             name                TEXT,
             birth_date          TEXT,
             birth_place         TEXT,
@@ -44,46 +45,97 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
             phone_primary       TEXT,
             phone_secondary     TEXT
         );
-        CREATE TABLE search_projection_phone_index (
-            phone         TEXT    NOT NULL,
-            projection_id INTEGER NOT NULL
+        CREATE TABLE company_projection (
+            company_id          INTEGER PRIMARY KEY,
+            ruc                 TEXT NOT NULL,
+            legal_name          TEXT,
+            trade_name          TEXT,
+            company_type        TEXT,
+            org_status          TEXT,
+            org_condition       TEXT,
+            fiscal_address      TEXT,
+            registration_date   TEXT,
+            activity_start_date TEXT,
+            line_of_business    TEXT,
+            economic_activity   TEXT,
+            org_ubigeo_code     TEXT,
+            org_department      TEXT,
+            org_province        TEXT,
+            org_district        TEXT,
+            rep_doc_type        TEXT,
+            rep_doc_number      TEXT,
+            rep_name            TEXT,
+            role_name           TEXT,
+            role_start_date     TEXT,
+            phone_primary       TEXT,
+            phone_secondary     TEXT
         );
-        CREATE VIRTUAL TABLE search_projection_fts USING fts5(person_name, company_name);
+        CREATE TABLE doc_projection_phone_index (
+            phone   TEXT    NOT NULL,
+            doc_id  INTEGER NOT NULL,
+            UNIQUE(phone, doc_id)
+        );
+        CREATE TABLE company_projection_phone_index (
+            phone       TEXT    NOT NULL,
+            company_id  INTEGER NOT NULL,
+            UNIQUE(phone, company_id)
+        );
+        CREATE VIRTUAL TABLE doc_projection_fts USING fts5(
+            doc_name,
+            tokenize='unicode61 remove_diacritics 1'
+        );
+        CREATE VIRTUAL TABLE company_projection_fts USING fts5(
+            company_name,
+            tokenize='unicode61 remove_diacritics 1'
+        );
         CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
-        CREATE TABLE dni_phone_agg (dni     TEXT PRIMARY KEY, phones TEXT NOT NULL);
+        CREATE TABLE doc_phone_agg (doc_id INTEGER PRIMARY KEY, phones TEXT NOT NULL);
 
-        INSERT INTO search_projection(
-            id, dni, name, birth_date, sex,
+        INSERT INTO doc_projection(
+            doc_id, doc_type, doc_number, name, birth_date, sex,
             org_ruc, org_name, trade_name, org_status, fiscal_address,
-            role_name, role_start_date, rep_doc_type, rep_doc_number, rep_name,
-            phone_primary, phone_secondary
+            role_name, role_start_date, phone_primary, phone_secondary
         ) VALUES
-            (1,'12345678','JUAN PEREZ','1980-05-10','M',
+            (1,'DNI','12345678','JUAN PEREZ','1980-05-10','M',
              '20100011111','ACME SAC','ACME','ACTIVO','AV. LIMA 123',
-             'GERENTE GENERAL','2020-01-01','','','',
+             'GERENTE GENERAL','2020-01-01',
              '999111222','999333444'),
-            (2,'87654321','MARIA LOPEZ',NULL,'F',
+            (2,'DNI','87654321','MARIA LOPEZ',NULL,'F',
              '20100011111','ACME SAC','ACME','ACTIVO','AV. LIMA 123',
-             'SOCIO','2020-01-01','','','',
+             'SOCIO','2020-01-01',
              '988777666',NULL),
-            (3,'11223344','CARLOS DIAZ',NULL,NULL,
-             '','',NULL,NULL,NULL,
-             NULL,NULL,'','','',
+            (3,'DNI','11223344','CARLOS DIAZ',NULL,NULL,
+             NULL,NULL,NULL,NULL,NULL,
+             NULL,NULL,
              '977000111',NULL);
 
-        INSERT INTO search_projection_phone_index(phone, projection_id) VALUES
+        INSERT INTO company_projection(
+            company_id, ruc, legal_name, trade_name, org_status, fiscal_address,
+            rep_name, role_name, role_start_date, phone_primary, phone_secondary
+        ) VALUES
+            (1,'20100011111','ACME SAC','ACME','ACTIVO','AV. LIMA 123',
+             'JUAN PEREZ','GERENTE GENERAL','2020-01-01',
+             '999111222','999333444');
+
+        INSERT INTO doc_projection_phone_index(phone, doc_id) VALUES
             ('999111222',1),('999333444',1),('988777666',2),('977000111',3);
+
+        INSERT INTO company_projection_phone_index(phone, company_id) VALUES
+            ('999111222',1),('999333444',1),('988777666',1);
 
         INSERT INTO ruc_phone_agg(org_ruc, phones) VALUES
             ('20100011111','999111222;999333444;988777666');
 
-        INSERT INTO dni_phone_agg(dni, phones) VALUES
-            ('12345678','999111222;999333444'),
-            ('87654321','988777666'),
-            ('11223344','977000111');
+        INSERT INTO doc_phone_agg(doc_id, phones) VALUES
+            (1,'999111222;999333444'),
+            (2,'988777666'),
+            (3,'977000111');
 
-        INSERT INTO search_projection_fts(rowid, person_name, company_name)
-        SELECT id, COALESCE(name,''), COALESCE(org_name,'') FROM search_projection;
+        INSERT INTO doc_projection_fts(rowid, doc_name)
+        SELECT doc_id, COALESCE(name,'') FROM doc_projection;
+
+        INSERT INTO company_projection_fts(rowid, company_name)
+        SELECT company_id, COALESCE(legal_name,'') FROM company_projection;
         ",
     )
     .expect("seed db");

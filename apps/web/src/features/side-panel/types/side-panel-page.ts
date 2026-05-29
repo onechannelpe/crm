@@ -13,7 +13,7 @@ import {
   DEFAULT_LEAD_RECORD_DRAFT_STATE,
   type LeadRecordDraftState,
   type ViewRecordTabId,
-} from "~/features/side-panel/pages/record-page/model";
+} from "~/features/side-panel/pages/record-page/tab-ids";
 
 export type SidePanelIcon = Component<{
   class?: string;
@@ -150,7 +150,10 @@ type CreateSearchCompanyDetailSidePanelPageInput = {
 export function createSearchCompanyDetailSidePanelPage(
   input: CreateSearchCompanyDetailSidePanelPageInput,
 ): SidePanelPageDefinition {
-  const pageId = createSidePanelPageId();
+  const pageId = createEntitySidePanelPageId(
+    "search-company-detail",
+    String(input.company.id),
+  );
 
   return {
     entry: {
@@ -211,7 +214,7 @@ export function createLeadRecordDetailSidePanelPage(
       leadId: input.leadId,
       title: input.title,
       subtitle: input.subtitle ?? `Cliente ${input.leadId}`,
-      activeTab: "home",
+      activeTab: "workflow",
     },
   };
 }

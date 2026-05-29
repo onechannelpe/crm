@@ -1,4 +1,4 @@
-use engine::bench_support::{BenchmarkDecision, BenchmarkSummary};
+use engine::benchmark::{BenchmarkDecision, BenchmarkSummary};
 use std::fs;
 use std::path::Path;
 

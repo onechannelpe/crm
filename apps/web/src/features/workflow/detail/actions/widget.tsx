@@ -28,7 +28,8 @@ import { toAppError } from "~/lib/app-errors";
 import {
   approveForSaleMutation,
   startSetupExecutionMutation,
-} from "../../data/mutations";
+} from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 import { ReviewLeadModal } from "./review-modal";
 import { mapLeadActionsToUi } from "./workflow-ui";
 
@@ -67,6 +68,7 @@ export function LeadActionsWidget(props: {
     setApproving(true);
     try {
       await approve({ leadId: props.leadId });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al aprobar").publicMessage);
     } finally {
@@ -80,6 +82,7 @@ export function LeadActionsWidget(props: {
     setStartingSetupExecution(true);
     try {
       await startSetupExecution({ leadId: props.leadId });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al iniciar afiliación").publicMessage);
     } finally {

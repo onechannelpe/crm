@@ -5,12 +5,13 @@ import {
   addOptimisticLead,
   createOptimisticLeadRow,
 } from "~/features/workflow/data/optimistic-leads";
+import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
 import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";
-import type { CreateLeadTabId } from "../record-page/model";
+import type { CreateLeadTabId } from "../record-page/tab-ids";
 
 type BootstrapPreview = {
   razonSocial: string | null;
@@ -76,6 +77,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
 
     try {
       const result = await createCommand.run({ ruc });
+      await revalidateWorkflowLeadList();
       optimisticTransactions.commit(txId);
       input.onLeadCreated({ leadId: result.leadId, ruc });
     } catch (submitError) {

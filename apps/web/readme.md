@@ -8,7 +8,19 @@ Authenticated pages live under [`src/routes/(app).tsx`](src/routes/%28app%29.tsx
 
 Most feature work follows the same path. A route calls a server function in [`src/actions/`](src/actions/). The action calls a service under [`src/server/`](src/server/), and the service uses repositories from [`src/server/shared/registry.ts`](src/server/shared/registry.ts). Database access starts in [`src/lib/db/client.ts`](src/lib/db/client.ts) and [`src/lib/db/db.ts`](src/lib/db/db.ts). Schema modules live under [`src/lib/db/schema/`](src/lib/db/schema/).
 
-Search and candidate discovery are the main cross-service dependencies. Engine integration is configured in [`src/server/shared/engine/index.ts`](src/server/shared/engine/index.ts) and implemented in [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts). Direct search flows through [`src/actions/search/use.ts`](src/actions/search/use.ts) and [`src/server/engine-gateway/search-service.ts`](src/server/engine-gateway/search-service.ts). Lead refill flows through [`src/actions/lead-operations/refill.ts`](src/actions/lead-operations/refill.ts), [`src/server/lead-operations/refill-service.ts`](src/server/lead-operations/refill-service.ts), and [`src/server/engine-gateway/lead-candidate-service.ts`](src/server/engine-gateway/lead-candidate-service.ts). Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
+Search and candidate discovery are the main cross-service dependencies. Engine
+configuration is built in
+[`src/server/shared/engine/config.ts`](src/server/shared/engine/config.ts), the
+runtime-facing client interface is in
+[`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts), and
+the HTTP adapter is implemented in
+[`src/server/adapters/engine/client.ts`](src/server/adapters/engine/client.ts).
+Direct search flows through [`src/actions/search/run.ts`](src/actions/search/run.ts)
+and [`src/server/search-workflow/run-search.ts`](src/server/search-workflow/run-search.ts).
+Candidate assignment flows through
+[`src/server/contact-assignments/application/assign-contacts.ts`](src/server/contact-assignments/application/assign-contacts.ts)
+and [`src/server/workflow/infrastructure/engine-gateway.ts`](src/server/workflow/infrastructure/engine-gateway.ts).
+Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
 
 Configuration is loaded from env files selected by the script or passed by the caller.
 
@@ -93,6 +105,22 @@ Request tracing defaults to useful traffic only: document navigations, `/_server
 
 ## First reads
 
-The engine contract is [`engine-api.json (contracts)`](../../contracts/engine-api.json). Generated bindings live in [`src/server/shared/engine/contract.ts`](src/server/shared/engine/contract.ts).
+The engine contracts live under [`../../contracts/engine/`](../../contracts/engine/).
+Generated bindings live in
+[`src/server/shared/engine/contract.ts`](src/server/shared/engine/contract.ts),
+[`src/server/shared/engine/record-contract.ts`](src/server/shared/engine/record-contract.ts),
+[`src/server/shared/engine/doc-projection-contract.ts`](src/server/shared/engine/doc-projection-contract.ts),
+and
+[`src/server/shared/engine/company-projection-contract.ts`](src/server/shared/engine/company-projection-contract.ts).
 
-Start with [`src/middleware.ts`](src/middleware.ts) and [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts) for request and session flow. Then read [`src/actions/auth/login.ts`](src/actions/auth/login.ts), [`src/server/shared/context.ts`](src/server/shared/context.ts), and [`src/server/shared/registry.ts`](src/server/shared/registry.ts). For search or lead refill, continue with [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts), [`src/server/engine-gateway/search-service.ts`](src/server/engine-gateway/search-service.ts), and [`src/server/engine-gateway/lead-candidate-service.ts`](src/server/engine-gateway/lead-candidate-service.ts).
+Start with [`src/middleware.ts`](src/middleware.ts) and
+[`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts) for
+request and session flow. Then read [`src/actions/auth/login.ts`](src/actions/auth/login.ts),
+[`src/server/shared/context.ts`](src/server/shared/context.ts), and
+[`src/server/shared/registry.ts`](src/server/shared/registry.ts). For engine-backed
+search or candidate assignment, continue with
+[`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts),
+[`src/server/adapters/engine/client.ts`](src/server/adapters/engine/client.ts),
+[`src/server/search-workflow/run-search.ts`](src/server/search-workflow/run-search.ts),
+and
+[`src/server/contact-assignments/application/assign-contacts.ts`](src/server/contact-assignments/application/assign-contacts.ts).

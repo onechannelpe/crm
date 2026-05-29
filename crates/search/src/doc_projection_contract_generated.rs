@@ -1,0 +1,270 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: contracts/engine/doc-projection.json
+// Generator: tools/codegen/bin/generate.ts
+
+pub struct ProjectionStorageMapping {
+    pub path: &'static str,
+    pub table: &'static str,
+    pub column: &'static str,
+}
+
+pub const DOC_PROJECTION_NAME: &str = "doc_projection";
+
+pub const DOC_PROJECTION_PATHS: &[&str] = &[
+    "doc.doc_type",
+    "doc.doc_number",
+    "doc.name",
+    "doc.ruc",
+    "doc.birth_date",
+    "doc.birth_place",
+    "doc.sex",
+    "doc.marital_status",
+    "doc.location_text",
+    "doc.ubigeo_code",
+    "doc.mother_name",
+    "doc.father_name",
+    "doc.email",
+    "org.ruc",
+    "org.name",
+    "org.trade_name",
+    "org.company_type",
+    "org.status",
+    "org.condition",
+    "org.fiscal_address",
+    "org.registration_date",
+    "org.activity_start_date",
+    "org.line_of_business",
+    "org.economic_activity",
+    "org.ubigeo_code",
+    "org.department",
+    "org.province",
+    "org.district",
+    "role.name",
+    "role.start_date",
+    "role.rep_doc_type",
+    "role.rep_doc_number",
+    "role.rep_name",
+    "phones.primary",
+    "phones.secondary",
+    "phones.siblings",
+];
+
+pub const DOC_PROJECTION_NULLABLE_PATHS: &[&str] = &[
+    "doc.name",
+    "doc.ruc",
+    "doc.birth_date",
+    "doc.birth_place",
+    "doc.sex",
+    "doc.marital_status",
+    "doc.location_text",
+    "doc.ubigeo_code",
+    "doc.mother_name",
+    "doc.father_name",
+    "doc.email",
+    "org.ruc",
+    "org.name",
+    "org.trade_name",
+    "org.company_type",
+    "org.status",
+    "org.condition",
+    "org.fiscal_address",
+    "org.registration_date",
+    "org.activity_start_date",
+    "org.line_of_business",
+    "org.economic_activity",
+    "org.ubigeo_code",
+    "org.department",
+    "org.province",
+    "org.district",
+    "role.name",
+    "role.start_date",
+    "role.rep_doc_type",
+    "role.rep_doc_number",
+    "role.rep_name",
+    "phones.primary",
+    "phones.secondary",
+    "phones.siblings",
+];
+
+pub const DOC_PROJECTION_STORAGE_MAPPINGS: &[ProjectionStorageMapping] = &[
+    ProjectionStorageMapping {
+        path: "doc.doc_type",
+        table: "doc_projection",
+        column: "doc_type",
+    },
+    ProjectionStorageMapping {
+        path: "doc.doc_number",
+        table: "doc_projection",
+        column: "doc_number",
+    },
+    ProjectionStorageMapping {
+        path: "doc.name",
+        table: "doc_projection",
+        column: "name",
+    },
+    ProjectionStorageMapping {
+        path: "doc.ruc",
+        table: "doc_projection",
+        column: "person_ruc",
+    },
+    ProjectionStorageMapping {
+        path: "doc.birth_date",
+        table: "doc_projection",
+        column: "birth_date",
+    },
+    ProjectionStorageMapping {
+        path: "doc.birth_place",
+        table: "doc_projection",
+        column: "birth_place",
+    },
+    ProjectionStorageMapping {
+        path: "doc.sex",
+        table: "doc_projection",
+        column: "sex",
+    },
+    ProjectionStorageMapping {
+        path: "doc.marital_status",
+        table: "doc_projection",
+        column: "marital_status",
+    },
+    ProjectionStorageMapping {
+        path: "doc.location_text",
+        table: "doc_projection",
+        column: "location_text",
+    },
+    ProjectionStorageMapping {
+        path: "doc.ubigeo_code",
+        table: "doc_projection",
+        column: "ubigeo_code",
+    },
+    ProjectionStorageMapping {
+        path: "doc.mother_name",
+        table: "doc_projection",
+        column: "mother_name",
+    },
+    ProjectionStorageMapping {
+        path: "doc.father_name",
+        table: "doc_projection",
+        column: "father_name",
+    },
+    ProjectionStorageMapping {
+        path: "doc.email",
+        table: "doc_projection",
+        column: "email",
+    },
+    ProjectionStorageMapping {
+        path: "org.ruc",
+        table: "doc_projection",
+        column: "org_ruc",
+    },
+    ProjectionStorageMapping {
+        path: "org.name",
+        table: "doc_projection",
+        column: "org_name",
+    },
+    ProjectionStorageMapping {
+        path: "org.trade_name",
+        table: "doc_projection",
+        column: "trade_name",
+    },
+    ProjectionStorageMapping {
+        path: "org.company_type",
+        table: "doc_projection",
+        column: "company_type",
+    },
+    ProjectionStorageMapping {
+        path: "org.status",
+        table: "doc_projection",
+        column: "org_status",
+    },
+    ProjectionStorageMapping {
+        path: "org.condition",
+        table: "doc_projection",
+        column: "org_condition",
+    },
+    ProjectionStorageMapping {
+        path: "org.fiscal_address",
+        table: "doc_projection",
+        column: "fiscal_address",
+    },
+    ProjectionStorageMapping {
+        path: "org.registration_date",
+        table: "doc_projection",
+        column: "registration_date",
+    },
+    ProjectionStorageMapping {
+        path: "org.activity_start_date",
+        table: "doc_projection",
+        column: "activity_start_date",
+    },
+    ProjectionStorageMapping {
+        path: "org.line_of_business",
+        table: "doc_projection",
+        column: "line_of_business",
+    },
+    ProjectionStorageMapping {
+        path: "org.economic_activity",
+        table: "doc_projection",
+        column: "economic_activity",
+    },
+    ProjectionStorageMapping {
+        path: "org.ubigeo_code",
+        table: "doc_projection",
+        column: "org_ubigeo_code",
+    },
+    ProjectionStorageMapping {
+        path: "org.department",
+        table: "doc_projection",
+        column: "org_department",
+    },
+    ProjectionStorageMapping {
+        path: "org.province",
+        table: "doc_projection",
+        column: "org_province",
+    },
+    ProjectionStorageMapping {
+        path: "org.district",
+        table: "doc_projection",
+        column: "org_district",
+    },
+    ProjectionStorageMapping {
+        path: "role.name",
+        table: "doc_projection",
+        column: "role_name",
+    },
+    ProjectionStorageMapping {
+        path: "role.start_date",
+        table: "doc_projection",
+        column: "role_start_date",
+    },
+    ProjectionStorageMapping {
+        path: "role.rep_doc_type",
+        table: "doc_projection",
+        column: "rep_doc_type",
+    },
+    ProjectionStorageMapping {
+        path: "role.rep_doc_number",
+        table: "doc_projection",
+        column: "rep_doc_number",
+    },
+    ProjectionStorageMapping {
+        path: "role.rep_name",
+        table: "doc_projection",
+        column: "rep_name",
+    },
+    ProjectionStorageMapping {
+        path: "phones.primary",
+        table: "doc_projection",
+        column: "phone_primary",
+    },
+    ProjectionStorageMapping {
+        path: "phones.secondary",
+        table: "doc_projection",
+        column: "phone_secondary",
+    },
+    ProjectionStorageMapping {
+        path: "phones.siblings",
+        table: "doc_phone_agg",
+        column: "phones",
+    },
+];

@@ -1,10 +1,10 @@
 import type { ProjectionField } from "./parse.ts";
 
 // Objects whose container is nullable in the SearchRow/SearchResult types.
-export const NULLABLE_OBJECTS = new Set(["org", "role"]);
+export const NULLABLE_OBJECTS = new Set(["org", "role", "rep"]);
 
 // Preferred display order; any object not in this list is appended alphabetically.
-const PREFERRED_ORDER = ["person", "org", "role", "phones"];
+const PREFERRED_ORDER = ["doc", "company", "org", "rep", "role", "phones"];
 
 export type ObjectGroup = {
   objectName: string;

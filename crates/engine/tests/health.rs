@@ -10,9 +10,8 @@ async fn health_returns_ok_with_minimal_schema() {
 }
 
 #[tokio::test]
-async fn search_endpoint_exists_and_requires_auth() {
+async fn search_endpoint_is_mounted_and_requires_auth() {
     let (server, _db) = common::make_test_server();
-    // No auth headers, should return 401 not 404, confirms the route is wired.
     let response = server
         .post("/v1/search")
         .json(&serde_json::json!({"type":"dni","value":"12345678"}))

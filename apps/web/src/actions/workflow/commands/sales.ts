@@ -4,70 +4,63 @@ import {
   type AddVenueAccountsInput,
   type CreateVenueInput,
 } from "~/contracts/workflow/inputs";
+import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { parseRequiredLeadText } from "~/server/workflow/parsers";
 
+function assertParsed<T>(
+  parsed: { ok: true; value: T } | { ok: false; error: { message: string } },
+): T {
+  if (!parsed.ok) {
+    throw validationError(parsed.error.message);
+  }
+  return parsed.value;
+}
+
 export async function requestVenueCreation(input: CreateVenueInput) {
-  const nombreComercial = parseRequiredLeadText(
-    input.nombreComercial,
-    "nombre_comercial_required",
-    "Nombre comercial is required",
+  const nombreComercial = assertParsed(
+    parseRequiredLeadText(
+      input.nombreComercial,
+      "nombre_comercial_required",
+      "Nombre comercial is required",
+    ),
   );
-
-  if (!nombreComercial.ok) {
-    return nombreComercial;
-  }
-
-  const direccion = parseRequiredLeadText(
-    input.direccion,
-    "direccion_required",
-    "Direccion is required",
+  const direccion = assertParsed(
+    parseRequiredLeadText(
+      input.direccion,
+      "direccion_required",
+      "Direccion is required",
+    ),
   );
-
-  if (!direccion.ok) {
-    return direccion;
-  }
-
-  const referencia = parseRequiredLeadText(
-    input.referencia,
-    "referencia_required",
-    "Referencia is required",
+  const referencia = assertParsed(
+    parseRequiredLeadText(
+      input.referencia,
+      "referencia_required",
+      "Referencia is required",
+    ),
   );
-
-  if (!referencia.ok) {
-    return referencia;
-  }
-
-  const distrito = parseRequiredLeadText(
-    input.distrito,
-    "distrito_required",
-    "Distrito is required",
+  const distrito = assertParsed(
+    parseRequiredLeadText(
+      input.distrito,
+      "distrito_required",
+      "Distrito is required",
+    ),
   );
-
-  if (!distrito.ok) {
-    return distrito;
-  }
-
-  const provincia = parseRequiredLeadText(
-    input.provincia,
-    "provincia_required",
-    "Provincia is required",
+  const provincia = assertParsed(
+    parseRequiredLeadText(
+      input.provincia,
+      "provincia_required",
+      "Provincia is required",
+    ),
   );
-
-  if (!provincia.ok) {
-    return provincia;
-  }
-
-  const departamento = parseRequiredLeadText(
-    input.departamento,
-    "departamento_required",
-    "Departamento is required",
+  const departamento = assertParsed(
+    parseRequiredLeadText(
+      input.departamento,
+      "departamento_required",
+      "Departamento is required",
+    ),
   );
-
-  if (!departamento.ok) {
-    return departamento;
-  }
 
   return runAction({
     actionName: "workflow.create_venue",
@@ -82,14 +75,14 @@ export async function requestVenueCreation(input: CreateVenueInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        nombreComercial: nombreComercial.value,
+        nombreComercial,
         posQuantity: input.posQuantity,
         digitalConfig: input.digitalConfig,
-        direccion: direccion.value,
-        referencia: referencia.value,
-        distrito: distrito.value,
-        provincia: provincia.value,
-        departamento: departamento.value,
+        direccion,
+        referencia,
+        distrito,
+        provincia,
+        departamento,
       }),
   });
 }
@@ -97,27 +90,23 @@ export async function requestVenueCreation(input: CreateVenueInput) {
 export async function requestVenueAccountsAddition(
   input: AddVenueAccountsInput,
 ) {
-  const solesNroCuenta = parseRequiredLeadText(
-    input.solesAccount.nroCuenta,
-    "soles_account_number_required",
-    "Soles account number is required",
+  const solesNroCuenta = assertParsed(
+    parseRequiredLeadText(
+      input.solesAccount.nroCuenta,
+      "soles_account_number_required",
+      "Soles account number is required",
+    ),
   );
 
-  if (!solesNroCuenta.ok) {
-    return solesNroCuenta;
-  }
-
   const dollarNroCuenta = input.dollarAccount
-    ? parseRequiredLeadText(
-        input.dollarAccount.nroCuenta,
-        "dollar_account_number_required",
-        "Dollar account number is required",
+    ? assertParsed(
+        parseRequiredLeadText(
+          input.dollarAccount.nroCuenta,
+          "dollar_account_number_required",
+          "Dollar account number is required",
+        ),
       )
     : null;
-
-  if (dollarNroCuenta && !dollarNroCuenta.ok) {
-    return dollarNroCuenta;
-  }
 
   return runAction({
     actionName: "workflow.add_venue_accounts",
@@ -135,13 +124,13 @@ export async function requestVenueAccountsAddition(
         venueId: input.venueId,
         solesAccount: {
           ...input.solesAccount,
-          nroCuenta: solesNroCuenta.value,
+          nroCuenta: solesNroCuenta,
         },
-        ...(input.dollarAccount && dollarNroCuenta?.ok
+        ...(input.dollarAccount && dollarNroCuenta
           ? {
               dollarAccount: {
                 ...input.dollarAccount,
-                nroCuenta: dollarNroCuenta.value,
+                nroCuenta: dollarNroCuenta,
               },
             }
           : {}),
