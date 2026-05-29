@@ -15,7 +15,7 @@ ON CONFLICT(doc_id) DO UPDATE SET
     natural_ruc10 = COALESCE(excluded.natural_ruc10, document_attribute.natural_ruc10)
 WHERE
     (excluded.full_name <> '' AND excluded.full_name <> document_attribute.full_name)
-    OR (excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 <> document_attribute.natural_ruc10);
+    OR (excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 IS NOT document_attribute.natural_ruc10);
 
 INSERT INTO company(ruc, legal_name, status, condition, company_type, economic_activity, ubigeo_code, department, province, district)
 SELECT

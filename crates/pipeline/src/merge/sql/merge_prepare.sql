@@ -30,28 +30,37 @@ CREATE INDEX tmp_stage_company_ruc_idx ON tmp_stage(company_ruc);
 CREATE INDEX tmp_stage_role_lookup_idx
     ON tmp_stage(company_ruc, rep_doc_type, rep_doc_number, role_name, role_start_date);
 
--- Deduplicate documents from rep doc rows and DNI-only rows.
+-- Deduplicate documents: rep docs from branch 1, all person DNIs from branch 2.
+-- The outer GROUP BY owns deduplication; the branches define what data each
+-- source contributes (rep_name priority for rep docs, person_full_name for DNIs).
 CREATE TEMP TABLE tmp_doc_dedup AS
 SELECT
-    rep_doc_type AS doc_type,
-    rep_doc_number AS doc_number,
-    MAX(CASE WHEN rep_name <> '' THEN rep_name
-             WHEN person_full_name <> '' THEN person_full_name
-             ELSE '' END) AS full_name,
-    MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS natural_ruc
-FROM tmp_stage
-WHERE NULLIF(rep_doc_type, '') IS NOT NULL AND NULLIF(rep_doc_number, '') IS NOT NULL
-GROUP BY rep_doc_type, rep_doc_number
-UNION ALL
-SELECT
-    'DNI' AS doc_type,
-    person_dni AS doc_number,
-    MAX(CASE WHEN person_full_name <> '' THEN person_full_name ELSE '' END) AS full_name,
-    MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS natural_ruc
-FROM tmp_stage
-WHERE person_dni IS NOT NULL
-  AND (NULLIF(rep_doc_type, '') IS NULL OR NULLIF(rep_doc_number, '') IS NULL)
-GROUP BY person_dni;
+    doc_type,
+    doc_number,
+    MAX(CASE WHEN full_name <> '' THEN full_name ELSE '' END) AS full_name,
+    MAX(CASE WHEN natural_ruc <> '' THEN natural_ruc ELSE '' END) AS natural_ruc
+FROM (
+    SELECT
+        rep_doc_type AS doc_type,
+        rep_doc_number AS doc_number,
+        MAX(CASE WHEN rep_name <> '' THEN rep_name
+                 WHEN person_full_name <> '' THEN person_full_name
+                 ELSE '' END) AS full_name,
+        MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS natural_ruc
+    FROM tmp_stage
+    WHERE NULLIF(rep_doc_type, '') IS NOT NULL AND NULLIF(rep_doc_number, '') IS NOT NULL
+    GROUP BY rep_doc_type, rep_doc_number
+    UNION ALL
+    SELECT
+        'DNI' AS doc_type,
+        person_dni AS doc_number,
+        MAX(CASE WHEN person_full_name <> '' THEN person_full_name ELSE '' END) AS full_name,
+        MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS natural_ruc
+    FROM tmp_stage
+    WHERE person_dni IS NOT NULL
+    GROUP BY person_dni
+)
+GROUP BY doc_type, doc_number;
 
 CREATE INDEX tmp_doc_dedup_idx ON tmp_doc_dedup(doc_type, doc_number);
 
