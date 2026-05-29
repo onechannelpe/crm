@@ -1,3 +1,4 @@
+use crate::domain::QueryStrategy;
 use crate::result_contract_generated::{
     CompanyInfo, CompanyRow, DocInfo, DocumentRow, OrgInfo, PhoneInfo, RepInfo, RoleInfo,
     SearchResult,
@@ -5,91 +6,6 @@ use crate::result_contract_generated::{
 use rusqlite::{Connection, Row, params};
 use shared::error::ApiError;
 use std::sync::LazyLock;
-
-pub trait SearchRepository: Send + Sync {
-    fn search_by_document(
-        &self,
-        conn: &Connection,
-        doc_type: &str,
-        doc_number: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError>;
-    fn search_by_ruc(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError>;
-    fn search_by_phone(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError>;
-    fn search_by_person_name(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError>;
-    fn search_by_company_name(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError>;
-}
-
-#[derive(Default)]
-pub struct SqliteSearchRepository;
-
-impl SearchRepository for SqliteSearchRepository {
-    fn search_by_document(
-        &self,
-        conn: &Connection,
-        doc_type: &str,
-        doc_number: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError> {
-        search_by_document(conn, doc_type, doc_number, limit)
-    }
-
-    fn search_by_ruc(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError> {
-        search_by_ruc(conn, value, limit)
-    }
-
-    fn search_by_phone(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError> {
-        search_by_phone(conn, value, limit)
-    }
-
-    fn search_by_person_name(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError> {
-        search_by_person_name(conn, value, limit)
-    }
-
-    fn search_by_company_name(
-        &self,
-        conn: &Connection,
-        value: &str,
-        limit: usize,
-    ) -> Result<Vec<SearchResult>, ApiError> {
-        search_by_company_name(conn, value, limit)
-    }
-}
 
 const DOC_SELECT_COLUMNS: &str = "
   c.doc_type,
@@ -216,9 +132,25 @@ static SQL_FTS_COMPANY: LazyLock<String> = LazyLock::new(|| {
     )
 });
 
-// public query functions
+pub fn search(
+    conn: &Connection,
+    strategy: QueryStrategy,
+    limit: usize,
+) -> Result<Vec<SearchResult>, ApiError> {
+    match strategy {
+        QueryStrategy::Document {
+            doc_type,
+            doc_number,
+        } => search_by_document(conn, &doc_type, &doc_number, limit),
+        QueryStrategy::Ruc(value) => search_by_ruc(conn, &value, limit),
+        QueryStrategy::Phone(value) => search_by_phone(conn, &value, limit),
+        QueryStrategy::PersonName(value) => search_by_person_name(conn, &value, limit),
+        QueryStrategy::CompanyName(value) => search_by_company_name(conn, &value, limit),
+        QueryStrategy::MixedName(value) => search_by_name(conn, &value, limit),
+    }
+}
 
-pub fn search_by_document(
+fn search_by_document(
     conn: &Connection,
     doc_type: &str,
     doc_number: &str,
@@ -231,7 +163,7 @@ pub fn search_by_document(
     )
 }
 
-pub fn search_by_ruc(
+fn search_by_ruc(
     conn: &Connection,
     value: &str,
     limit: usize,
@@ -243,7 +175,7 @@ pub fn search_by_ruc(
         .map_err(db_err)
 }
 
-pub fn search_by_phone(
+fn search_by_phone(
     conn: &Connection,
     value: &str,
     limit: usize,
@@ -257,21 +189,29 @@ pub fn search_by_phone(
         .collect::<Result<Vec<_>, _>>()
         .map_err(db_err)?;
 
-    let mut company_stmt = conn
-        .prepare_cached(&SQL_PHONE_ENRICHED_COMPANY)
-        .map_err(db_err)?;
-    let mut companies = company_stmt
-        .query_map(params![value, limit as i64], map_company_row_with_siblings)
-        .map_err(db_err)?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(db_err)?;
+    let remaining = limit.saturating_sub(docs.len());
+    let companies = if remaining > 0 {
+        let mut company_stmt = conn
+            .prepare_cached(&SQL_PHONE_ENRICHED_COMPANY)
+            .map_err(db_err)?;
+        company_stmt
+            .query_map(
+                params![value, remaining as i64],
+                map_company_row_with_siblings,
+            )
+            .map_err(db_err)?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(db_err)?
+    } else {
+        vec![]
+    };
 
     let mut results = docs;
-    results.append(&mut companies);
+    results.extend(companies);
     Ok(results)
 }
 
-pub fn search_by_person_name(
+fn search_by_person_name(
     conn: &Connection,
     text: &str,
     limit: usize,
@@ -283,7 +223,7 @@ pub fn search_by_person_name(
     )
 }
 
-pub fn search_by_company_name(
+fn search_by_company_name(
     conn: &Connection,
     text: &str,
     limit: usize,
@@ -295,7 +235,22 @@ pub fn search_by_company_name(
     )
 }
 
-// internals
+fn search_by_name(
+    conn: &Connection,
+    text: &str,
+    limit: usize,
+) -> Result<Vec<SearchResult>, ApiError> {
+    let people = search_by_person_name(conn, text, limit)?;
+    let remaining = limit.saturating_sub(people.len());
+    let companies = if remaining > 0 {
+        search_by_company_name(conn, text, remaining)?
+    } else {
+        vec![]
+    };
+    let mut results = people;
+    results.extend(companies);
+    Ok(results)
+}
 
 fn query_doc_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchResult>, ApiError>
 where
@@ -500,7 +455,6 @@ fn map_company_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchResult
     Ok(result)
 }
 
-/// Builds an FTS5 AND-prefix query from a validated text input.
 fn fts_query(field: &str, text: &str) -> String {
     let tokens: Vec<String> = text
         .split_whitespace()
