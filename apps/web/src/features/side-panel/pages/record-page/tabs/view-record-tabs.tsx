@@ -21,22 +21,6 @@ export type TabDefinition<TTabId extends string> = {
   component: TabComponent;
 };
 
-function WorkflowTabContent(props: { data: LeadDetailView }) {
-  return <WorkflowTab data={props.data} />;
-}
-
-function ActivityTabContent(props: { data: LeadDetailView }) {
-  return <ActivityTab data={props.data} />;
-}
-
-function FilesTabContent(props: { data: LeadDetailView }) {
-  return <FilesTab data={props.data} />;
-}
-
-function DataTabContent(props: { data: LeadDetailView }) {
-  return <DataTab data={props.data} />;
-}
-
 export const VIEW_RECORD_TABS_BY_ID: Record<
   ViewRecordTabId,
   TabDefinition<ViewRecordTabId>
@@ -45,25 +29,25 @@ export const VIEW_RECORD_TABS_BY_ID: Record<
     id: "workflow",
     icon: Checkbox,
     label: "Flujo",
-    component: WorkflowTabContent,
+    component: WorkflowTab,
   },
   activity: {
     id: "activity",
     icon: TimelineEvent,
     label: "Actividad",
-    component: ActivityTabContent,
+    component: ActivityTab,
   },
   files: {
     id: "files",
     icon: Paperclip,
     label: "Archivos",
-    component: FilesTabContent,
+    component: FilesTab,
   },
   data: {
     id: "data",
     icon: HomeTabler,
     label: "Datos",
-    component: DataTabContent,
+    component: DataTab,
   },
 };
 

@@ -8,11 +8,7 @@ import { groupEventsByMonth } from "~/features/side-panel/pages/record-page/tabs
 
 import styles from "~/features/side-panel/pages/record-page/tabs/timeline/styles.module.css";
 
-type ActivityTabProps = {
-  data: LeadDetailView;
-};
-
-export function ActivityTab(props: ActivityTabProps) {
+export function ActivityTab(props: { data: LeadDetailView }) {
   const groups = createMemo(() => {
     const normalized = props.data.timeline
       .toSorted((a, b) => b.occurredAt - a.occurredAt)

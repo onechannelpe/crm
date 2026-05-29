@@ -6,11 +6,7 @@ import { WorkflowStageSections } from "~/features/workflow/detail/sections/workf
 
 import { SetupWorkspace } from "../sections/setup-workspace";
 
-type WorkflowTabProps = {
-  data: LeadDetailView;
-};
-
-export function WorkflowTab(props: WorkflowTabProps) {
+export function WorkflowTab(props: { data: LeadDetailView }) {
   return (
     <>
       <WorkflowStageSections leadId={props.data.lead.id} data={props.data} />
