@@ -7,33 +7,41 @@ proptest! {
 
     #[test]
     fn doc_query_dni_accepts_8_digits(s in "[0-9]{8}") {
-        prop_assert!(plan_query(SearchIntent::People, &format!("DNI:{s}")).is_ok());
+        let query = format!("DNI:{s}");
+        prop_assert!(plan_query(SearchIntent::People, &query).is_ok());
     }
 
     #[test]
     fn doc_query_dni_rejects_wrong_length(s in prop_oneof!["[0-9]{1,7}", "[0-9]{9,15}"]) {
-        prop_assert!(plan_query(SearchIntent::People, &format!("DNI:{s}")).is_err());
+        let query = format!("DNI:{s}");
+        prop_assert!(plan_query(SearchIntent::People, &query).is_err());
     }
 
     #[test]
     fn doc_query_ce_accepts_4_to_11_alnum(s in "[A-Za-z0-9]{4,11}") {
-        prop_assert!(plan_query(SearchIntent::People, &format!("CE:{s}")).is_ok());
+        let query = format!("CE:{s}");
+        prop_assert!(plan_query(SearchIntent::People, &query).is_ok());
     }
 
     #[test]
     fn doc_query_ce_rejects_short(s in "[A-Za-z0-9]{1,3}") {
-        prop_assert!(plan_query(SearchIntent::People, &format!("CE:{s}")).is_err());
+        let query = format!("CE:{s}");
+        prop_assert!(plan_query(SearchIntent::People, &query).is_err());
     }
 
     #[test]
     fn doc_query_ce_rejects_long(s in "[A-Za-z0-9]{12,20}") {
-        prop_assert!(plan_query(SearchIntent::People, &format!("CE:{s}")).is_err());
+        let query = format!("CE:{s}");
+        prop_assert!(plan_query(SearchIntent::People, &query).is_err());
     }
 
     #[test]
     fn doc_query_rejects_unsupported_types(s in "[0-9]{8}") {
-        prop_assert!(plan_query(SearchIntent::People, &format!("PASAPORTE:{s}")).is_err());
-        prop_assert!(plan_query(SearchIntent::People, &format!("DIE:{s}")).is_err());
+        let passport_query = format!("PASAPORTE:{s}");
+        prop_assert!(plan_query(SearchIntent::People, &passport_query).is_err());
+
+        let die_query = format!("DIE:{s}");
+        prop_assert!(plan_query(SearchIntent::People, &die_query).is_err());
     }
 
     // RUC

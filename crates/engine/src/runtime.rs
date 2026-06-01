@@ -1,10 +1,8 @@
 use axum::Router;
 use axum::routing::get;
 use leads::api::{RecordState, router as record_router};
-use leads::repo::SqliteLeadsRepository;
 use leads::service::{CandidateService, ImportService};
 use search::api::{SearchState, router as search_router};
-use search::query::sqlite::SqliteSearchRepository;
 use search::service::SearchService;
 use shared::error::StartupError;
 use shared::hmac::HmacVerifier;
@@ -55,24 +53,13 @@ pub async fn run() -> Result<(), StartupError> {
     let limiter = Arc::new(RateLimiter::new(cfg.rate_limit_per_key));
 
     let search_state = Arc::new(SearchState {
-        service: Arc::new(SearchService::with_repo(
-            contacts_pool.clone(),
-            cfg.max_limit,
-            Arc::new(SqliteSearchRepository),
-        )),
+        service: Arc::new(SearchService::new(contacts_pool.clone(), cfg.max_limit)),
         hmac: hmac.clone(),
         limiter: limiter.clone(),
     });
     let record_state = Arc::new(RecordState {
-        service: Arc::new(CandidateService::with_repo(
-            leads_pool.clone(),
-            cfg.max_limit,
-            Arc::new(SqliteLeadsRepository),
-        )),
-        import_service: Arc::new(ImportService::with_repo(
-            leads_pool.clone(),
-            Arc::new(SqliteLeadsRepository),
-        )),
+        service: Arc::new(CandidateService::new(leads_pool.clone(), cfg.max_limit)),
+        import_service: Arc::new(ImportService::new(leads_pool.clone())),
         hmac,
         limiter,
     });
