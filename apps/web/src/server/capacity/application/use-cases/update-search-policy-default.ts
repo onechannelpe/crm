@@ -10,11 +10,18 @@ import type { CapacityPolicyDeps } from "./shared";
 export async function updateSearchPolicyDefault(
   ctx: AppContext,
   deps: CapacityPolicyDeps,
-  input: { scope: ScopeRef; monthlyLimit: number },
+  input: {
+    scope: ScopeRef;
+    monthlyLimit: number;
+  },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
     const check = await canManageScope(ctx.actor, input.scope, tx);
-    if (isErr(check)) return check;
+
+    if (isErr(check)) {
+      return check;
+    }
+
     const result = await setSearchScopeDefault(
       {
         scopeType: input.scope.kind,
@@ -23,7 +30,11 @@ export async function updateSearchPolicyDefault(
       },
       tx,
     );
-    if (isErr(result)) return result;
+
+    if (isErr(result)) {
+      return result;
+    }
+
     return Ok({ success: true });
   });
 }
