@@ -379,6 +379,21 @@ export async function persistUsersAndTeams(
         is_active: 1,
         created_at: now,
       },
+      {
+        id: 45,
+        branch_id: 4,
+        team_id: 5,
+        username: "victor.tineo",
+        email: "victor.tineo@culqinegocios.com",
+        password_hash: realPasswordHash,
+        names: "VICTOR RAUL",
+        first_surname: "TINEO",
+        second_surname: "AYALA",
+        onboarding_completed_at: null,
+        role: "executive",
+        is_active: 1,
+        created_at: now,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
