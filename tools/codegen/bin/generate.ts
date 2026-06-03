@@ -37,16 +37,6 @@ const check = Bun.argv.includes("--check");
 const recordSpec = parseRecordApiSpec(
   await loadJson("contracts/engine/record-api.json"),
 );
-await writeOrCheck(
-  "crates/leads/src/contracts_generated.rs",
-  renderRecordContractRust(recordSpec),
-  check,
-);
-await writeOrCheck(
-  "apps/web/src/server/shared/engine/record-contract.ts",
-  renderRecordContractTs(recordSpec),
-  check,
-);
 
 // doc and company are independent projection contracts. Each drives one Rust
 // and one TS path set.
@@ -71,29 +61,36 @@ const projections = [
     ts: "apps/web/src/server/shared/engine/company-projection-contract.ts",
   },
 ];
-for (const p of projections) {
-  await writeOrCheck(
-    p.rust,
-    renderProjectionContractRust(p.spec, p.prefix, p.source),
-    check,
-  );
-  await writeOrCheck(
-    p.ts,
-    renderProjectionContractTs(p.spec, p.prefix, p.source),
-    check,
-  );
-}
 
-// result contracts combine both projections into the SearchResult union
-await writeOrCheck(
-  "crates/search/src/result_contract_generated.rs",
-  renderResultContractRust(docProjSpec, companyProjSpec),
-  check,
-);
-await writeOrCheck(
-  "apps/web/src/server/shared/engine/result-contract.ts",
-  renderResultContractTs(docProjSpec, companyProjSpec),
-  check,
-);
+const artifacts: { path: string; content: string }[] = [
+  {
+    path: "crates/leads/src/contracts_generated.rs",
+    content: renderRecordContractRust(recordSpec),
+  },
+  {
+    path: "apps/web/src/server/shared/engine/record-contract.ts",
+    content: renderRecordContractTs(recordSpec),
+  },
+  ...projections.flatMap((p) => [
+    {
+      path: p.rust,
+      content: renderProjectionContractRust(p.spec, p.prefix, p.source),
+    },
+    {
+      path: p.ts,
+      content: renderProjectionContractTs(p.spec, p.prefix, p.source),
+    },
+  ]),
+  {
+    path: "crates/search/src/result_contract_generated.rs",
+    content: renderResultContractRust(docProjSpec, companyProjSpec),
+  },
+  {
+    path: "apps/web/src/server/shared/engine/result-contract.ts",
+    content: renderResultContractTs(docProjSpec, companyProjSpec),
+  },
+];
+
+await Promise.all(artifacts.map((a) => writeOrCheck(a.path, a.content, check)));
 
 console.log(check ? "all contracts are up to date" : "all contracts generated");
