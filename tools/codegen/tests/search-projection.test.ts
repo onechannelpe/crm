@@ -120,16 +120,9 @@ describe("groupByObject", () => {
 });
 
 describe("renderProjectionContract", () => {
-  test("renders nullable path sets and storage mappings for Rust + TS", () => {
-    const spec = parseProjectionSpec(SPEC);
-
+  test("Rust emits nullable paths and storage mappings", () => {
     const rust = renderProjectionContractRust(
-      spec,
-      "SEARCH_PROJECTION",
-      "contracts/engine/search-projection.json",
-    );
-    const ts = renderProjectionContractTs(
-      spec,
+      parseProjectionSpec(SPEC),
       "SEARCH_PROJECTION",
       "contracts/engine/search-projection.json",
     );
@@ -138,11 +131,24 @@ describe("renderProjectionContract", () => {
     expect(rust).toContain('"ruc_phone_agg"');
     expect(rust).toContain('"dni_phone_agg"');
 
-    const nullableSection = ts.slice(
-      ts.indexOf("SEARCH_PROJECTION_NULLABLE_PATHS"),
-    );
+    const start = rust.indexOf("SEARCH_PROJECTION_NULLABLE_PATHS");
+    const nullableSection = rust.slice(start, rust.indexOf("];", start));
     expect(nullableSection).toContain('"person.name"');
     expect(nullableSection).not.toContain('"person.dni"');
+  });
+
+  test("TS emits only the path list (no NAME or NULLABLE sets)", () => {
+    const ts = renderProjectionContractTs(
+      parseProjectionSpec(SPEC),
+      "SEARCH_PROJECTION",
+      "contracts/engine/search-projection.json",
+    );
+
+    expect(ts).toContain("SEARCH_PROJECTION_PATHS");
+    expect(ts).toContain('"person.name"');
+    expect(ts).toContain('"person.dni"');
+    expect(ts).not.toContain("SEARCH_PROJECTION_NAME");
+    expect(ts).not.toContain("SEARCH_PROJECTION_NULLABLE_PATHS");
   });
 });
 

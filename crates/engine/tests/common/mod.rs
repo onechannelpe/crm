@@ -135,10 +135,7 @@ pub fn make_test_server() -> (TestServer, tempfile::NamedTempFile) {
 
     let health_pool = pool.clone();
     let app = Router::new()
-        .route(
-            "/v1/health",
-            get(move || health::handler(health_pool.clone())),
-        )
+        .route("/health", get(move || health::handler(health_pool.clone())))
         .merge(search_router(search_state))
         .merge(record_router(record_state));
 

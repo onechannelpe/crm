@@ -47,7 +47,8 @@ export function fieldProp(field: ProjectionField): string {
 
 /** Derives the Info struct/interface name for an object group. */
 export function infoTypeName(objectName: string): string {
-  if (objectName === "org") return "OrgInfo";
+  // "phones" is the only group whose type name is singular; everything else
+  // is just PascalCase + "Info" (e.g. "org" -> "OrgInfo").
   if (objectName === "phones") return "PhoneInfo";
   return `${pascalCase(objectName)}Info`;
 }

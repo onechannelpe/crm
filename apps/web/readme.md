@@ -107,7 +107,6 @@ Request tracing defaults to useful traffic only: document navigations, `/_server
 
 The engine contracts live under [`../../contracts/engine/`](../../contracts/engine/).
 Generated bindings live in
-[`src/server/shared/engine/contract.ts`](src/server/shared/engine/contract.ts),
 [`src/server/shared/engine/record-contract.ts`](src/server/shared/engine/record-contract.ts),
 [`src/server/shared/engine/doc-projection-contract.ts`](src/server/shared/engine/doc-projection-contract.ts),
 and

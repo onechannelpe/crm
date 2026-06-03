@@ -3,6 +3,7 @@ import {
   groupByObject,
   infoTypeName,
   NULLABLE_OBJECTS,
+  type ObjectGroup,
 } from "./group.ts";
 import type { ProjectionField, ProjectionSpec } from "./parse.ts";
 
@@ -61,7 +62,9 @@ export function renderResultContractRust(
 ): string {
   const docGroups = groupByObject(docSpec.fields);
   const companyGroups = groupByObject(companySpec.fields);
-  const definedStructs = new Set<string>();
+  // doc and company projections share object types. Track what we have emitted
+  // so the second projection does not redefine them.
+  const defined = new Set<string>();
 
   const lines = [
     "// GENERATED FILE. DO NOT EDIT.",
@@ -69,63 +72,12 @@ export function renderResultContractRust(
     "// Generator: tools/codegen/bin/generate.ts",
     "use serde::Serialize;",
     "",
+    ...emitInfoStructs(docGroups, defined),
+    ...emitRow("DocumentRow", docGroups),
+    ...emitInfoStructs(companyGroups, defined),
+    ...emitRow("CompanyRow", companyGroups),
   ];
 
-  // Generate info structs for doc projection
-  for (const { objectName, fields } of docGroups) {
-    const typeName = infoTypeName(objectName);
-    if (definedStructs.has(typeName)) continue;
-    definedStructs.add(typeName);
-    lines.push("#[derive(Debug, Serialize)]");
-    lines.push(`pub struct ${typeName} {`);
-    for (const field of fields) {
-      lines.push(`    pub ${fieldProp(field)}: ${rustFieldType(field)},`);
-    }
-    lines.push("}");
-    lines.push("");
-  }
-
-  // Generate DocumentRow
-  lines.push("#[derive(Debug, Serialize)]");
-  lines.push("pub struct DocumentRow {");
-  for (const { objectName } of docGroups) {
-    const container = infoTypeName(objectName);
-    const rustType = NULLABLE_OBJECTS.has(objectName)
-      ? `Option<${container}>`
-      : container;
-    lines.push(`    pub ${objectName}: ${rustType},`);
-  }
-  lines.push("}");
-  lines.push("");
-
-  // Generate info structs for company projection (skip already defined)
-  for (const { objectName, fields } of companyGroups) {
-    const typeName = infoTypeName(objectName);
-    if (definedStructs.has(typeName)) continue;
-    definedStructs.add(typeName);
-    lines.push("#[derive(Debug, Serialize)]");
-    lines.push(`pub struct ${typeName} {`);
-    for (const field of fields) {
-      lines.push(`    pub ${fieldProp(field)}: ${rustFieldType(field)},`);
-    }
-    lines.push("}");
-    lines.push("");
-  }
-
-  // Generate CompanyRow
-  lines.push("#[derive(Debug, Serialize)]");
-  lines.push("pub struct CompanyRow {");
-  for (const { objectName } of companyGroups) {
-    const container = infoTypeName(objectName);
-    const rustType = NULLABLE_OBJECTS.has(objectName)
-      ? `Option<${container}>`
-      : container;
-    lines.push(`    pub ${objectName}: ${rustType},`);
-  }
-  lines.push("}");
-  lines.push("");
-
-  // Generate discriminated union enum
   lines.push("#[derive(Debug, Serialize)]");
   lines.push('#[serde(tag = "kind", rename_all = "snake_case")]');
   lines.push("pub enum SearchResult {");
@@ -135,6 +87,38 @@ export function renderResultContractRust(
   lines.push("");
 
   return lines.join("\n");
+}
+
+function emitInfoStructs(
+  groups: ObjectGroup[],
+  defined: Set<string>,
+): string[] {
+  const lines: string[] = [];
+  for (const { objectName, fields } of groups) {
+    const typeName = infoTypeName(objectName);
+    if (defined.has(typeName)) continue;
+    defined.add(typeName);
+    lines.push("#[derive(Debug, Serialize)]");
+    lines.push(`pub struct ${typeName} {`);
+    for (const field of fields) {
+      lines.push(`    pub ${fieldProp(field)}: ${rustFieldType(field)},`);
+    }
+    lines.push("}", "");
+  }
+  return lines;
+}
+
+function emitRow(name: string, groups: ObjectGroup[]): string[] {
+  const lines = ["#[derive(Debug, Serialize)]", `pub struct ${name} {`];
+  for (const { objectName } of groups) {
+    const container = infoTypeName(objectName);
+    const rustType = NULLABLE_OBJECTS.has(objectName)
+      ? `Option<${container}>`
+      : container;
+    lines.push(`    pub ${objectName}: ${rustType},`);
+  }
+  lines.push("}", "");
+  return lines;
 }
 
 function rustFieldType(field: ProjectionField): string {

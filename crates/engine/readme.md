@@ -47,10 +47,10 @@ when the goal is to regenerate the full `contacts.sqlite`.
 The mounted endpoints are:
 
 ```http
-GET  /v1/health
-POST /v1/search
-POST /v1/records/candidates
-POST /v1/records/imports
+GET  /health
+POST /search
+POST /records/candidates
+POST /records/imports
 ```
 
 Every `POST` endpoint requires `x-key-id`, `x-timestamp`, and `x-signature`. The
@@ -58,7 +58,7 @@ signature is `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret))`. Requests
 that pass HMAC verification are then charged against endpoint-specific rate
 limit keys.
 
-`POST /v1/search` accepts:
+`POST /search` accepts:
 
 ```json
 {
@@ -71,7 +71,7 @@ limit keys.
 `limit` defaults to `20`, is clamped to at least `1`, and is capped by
 `ENGINE_MAX_LIMIT`.
 
-`POST /v1/records/candidates` accepts:
+`POST /records/candidates` accepts:
 
 ```json
 {
@@ -88,7 +88,7 @@ limit keys.
 contains normalized candidate rows with `ruc`, `organization_name`, `dni`,
 `person_name`, and `phone_primary`.
 
-`POST /v1/records/imports` accepts:
+`POST /records/imports` accepts:
 
 ```json
 {

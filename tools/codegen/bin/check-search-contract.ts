@@ -1,12 +1,14 @@
 import {
   checkSearchContract,
+  type LoadedSource,
+} from "../src/search-contract/check.ts";
+import {
   parseCanonicalContract,
   parseSourceContract,
   parseSourceManifest,
   parseSourceMapping,
-  type LoadedSource,
-} from "../src/search-contract/index.ts";
-import { parseProjectionSpec } from "../src/search-projection/index.ts";
+} from "../src/search-contract/parse.ts";
+import { parseProjectionSpec } from "../src/search-projection/parse.ts";
 import { loadJson } from "../src/shared.ts";
 
 const MANIFEST_PATH = "crates/pipeline/data/mappings/source-manifest.json";

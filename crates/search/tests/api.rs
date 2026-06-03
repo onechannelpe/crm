@@ -42,13 +42,13 @@ fn make_server(tokens_per_minute: u32) -> TestServer {
     TestServer::new(router(state))
 }
 
-/// Signs `body`, sends POST /v1/search, and returns the response.
+/// Signs `body`, sends POST /search, and returns the response.
 async fn signed_request(body: &serde_json::Value, server: &TestServer) -> axum_test::TestResponse {
     let bytes = serde_json::to_vec(body).expect("json");
     let (ts, sig) = sign_body(SECRET, &bytes);
 
     server
-        .post("/v1/search")
+        .post("/search")
         .add_header(
             HeaderName::from_static("x-key-id"),
             HeaderValue::from_static(KEY_ID),
@@ -131,7 +131,7 @@ async fn search_by_phone_returns_siblings() {
 async fn missing_signature_headers_returns_401() {
     let server = make_server(100);
     let response = server
-        .post("/v1/search")
+        .post("/search")
         .json(&json!({"intent":"people","query":"12345678"}))
         .await;
     response.assert_status_unauthorized();
@@ -145,7 +145,7 @@ async fn unknown_key_id_returns_401() {
     let (ts, sig) = sign_body(SECRET, &bytes);
 
     server
-        .post("/v1/search")
+        .post("/search")
         .add_header(
             HeaderName::from_static("x-key-id"),
             HeaderValue::from_static("unknown"),

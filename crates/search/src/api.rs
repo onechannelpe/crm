@@ -23,7 +23,7 @@ pub struct SearchState {
 
 pub fn router(state: Arc<SearchState>) -> Router {
     Router::new()
-        .route("/v1/search", post(handle_search))
+        .route("/search", post(handle_search))
         .with_state(state)
 }
 

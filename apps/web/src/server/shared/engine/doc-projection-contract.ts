@@ -2,7 +2,6 @@
 // Source: contracts/engine/doc-projection.json
 // Generator: tools/codegen/bin/generate.ts
 
-export const DOC_PROJECTION_NAME = "doc_projection" as const;
 export const DOC_PROJECTION_PATHS = [
   "doc.doc_type",
   "doc.doc_number",
@@ -41,43 +40,3 @@ export const DOC_PROJECTION_PATHS = [
   "phones.secondary",
   "phones.siblings",
 ] as const;
-export type DOC_PROJECTION_PATH = (typeof DOC_PROJECTION_PATHS)[number];
-
-export const DOC_PROJECTION_NULLABLE_PATHS = [
-  "doc.name",
-  "doc.ruc",
-  "doc.birth_date",
-  "doc.birth_place",
-  "doc.sex",
-  "doc.marital_status",
-  "doc.location_text",
-  "doc.ubigeo_code",
-  "doc.mother_name",
-  "doc.father_name",
-  "doc.email",
-  "org.ruc",
-  "org.name",
-  "org.trade_name",
-  "org.company_type",
-  "org.status",
-  "org.condition",
-  "org.fiscal_address",
-  "org.registration_date",
-  "org.activity_start_date",
-  "org.line_of_business",
-  "org.economic_activity",
-  "org.ubigeo_code",
-  "org.department",
-  "org.province",
-  "org.district",
-  "role.name",
-  "role.start_date",
-  "role.rep_doc_type",
-  "role.rep_doc_number",
-  "role.rep_name",
-  "phones.primary",
-  "phones.secondary",
-  "phones.siblings",
-] as const;
-export type DOC_PROJECTION_NULLABLE_PATH =
-  (typeof DOC_PROJECTION_NULLABLE_PATHS)[number];
