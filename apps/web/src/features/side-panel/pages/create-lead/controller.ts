@@ -1,6 +1,7 @@
 import { createEffect, createSignal, on, type Accessor } from "solid-js";
 
 import type { CurrentUserView } from "~/actions/auth/contracts";
+import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import {
   addOptimisticLead,
   createOptimisticLeadRow,
@@ -11,7 +12,6 @@ import { shortName } from "~/lib/users/display-name";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";
-import type { CreateLeadTabId } from "../record-page/tab-ids";
 
 type BootstrapPreview = {
   razonSocial: string | null;
@@ -29,7 +29,7 @@ type CreateLeadControllerInput = {
   latestBootstrapPreview: Accessor<BootstrapPreview | null>;
   createLead: (input: { ruc: string }) => Promise<CreateLeadResult>;
   onLeadCreated: (input: { leadId: string; ruc: string }) => void;
-  setActiveTab: (tab: CreateLeadTabId) => void;
+  setActiveTab: (tab: RecordTabId) => void;
 };
 
 export function createCreateLeadController(input: CreateLeadControllerInput) {

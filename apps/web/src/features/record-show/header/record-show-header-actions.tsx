@@ -1,4 +1,4 @@
-import { createAsync, useAction, useNavigate } from "@solidjs/router";
+import { createAsync, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal, onMount } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
@@ -8,19 +8,15 @@ import Mail from "~/components/icons/mail";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
+import { useRecordActions } from "~/features/record-show/use-record-actions";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import {
-  addLeadToFavoritesMutation,
-  removeLeadFromFavoritesMutation,
-} from "~/features/workflow/data/command-mutations";
-import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
-import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
 import styles from "./record-show-header.module.css";
@@ -37,8 +33,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const leadList = createAsync(() =>
     leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
   );
-  const addFavorite = useAction(addLeadToFavoritesMutation);
-  const removeFavorite = useAction(removeLeadFromFavoritesMutation);
+  const { favoriteBusy, setFavorite } = useRecordActions();
 
   const currentIndex = createMemo(() => {
     const rows = leadList()?.rows;
@@ -70,7 +65,6 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   });
 
   const [modKey, setModKey] = createSignal("Ctrl");
-  const [favoriteBusy, setFavoriteBusy] = createSignal(false);
   const { isOpen, openPanel, closePanel } = useSidePanel();
 
   const isFavorite = () => detail()?.lead.isFavorite ?? false;
@@ -100,25 +94,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     navigate(`/records/${leadId}`);
   };
 
-  const toggleFavorite = async () => {
-    if (favoriteBusy()) {
-      return;
-    }
-
-    setFavoriteBusy(true);
-    try {
-      if (isFavorite()) {
-        await removeFavorite({ leadId: props.leadId });
-        await revalidateWorkflowLead(props.leadId);
-        return;
-      }
-
-      await addFavorite({ leadId: props.leadId });
-      await revalidateWorkflowLead(props.leadId);
-    } finally {
-      setFavoriteBusy(false);
-    }
-  };
+  const toggleFavorite = () => void setFavorite(props.leadId, isFavorite());
 
   return (
     <>
@@ -154,7 +130,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
           iconOnly
           disabled={favoriteBusy()}
           pressed={isFavorite()}
-          onClick={() => void toggleFavorite()}
+          onClick={toggleFavorite}
           class={styles.desktopAction}
         >
           <Heart size={16} color={isFavorite() ? "var(--accent)" : undefined} />

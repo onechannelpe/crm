@@ -1,17 +1,18 @@
 import { Show, createMemo } from "solid-js";
 
+import type { RecordContext } from "~/features/record-show/model/record-context";
+import { FilesCard } from "~/features/record-show/tabs/files/files-card";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { ActivityTabContainer } from "~/features/side-panel/components/activity-tabs/primitives";
 
-import type { TabContentProps } from "./content-props";
-import { FilesCard } from "./files-card";
-
-export function FilesTab(props: TabContentProps) {
-  const viewProps = createMemo(() => (props.mode === "view" ? props : null));
+export function FilesTab(props: { context: RecordContext }) {
+  const lead = createMemo(() =>
+    props.context.kind === "lead" ? props.context.data : null,
+  );
 
   return (
     <Show
-      when={viewProps()}
+      when={lead()}
       keyed
       fallback={
         <ActivityTabContainer>
@@ -23,11 +24,11 @@ export function FilesTab(props: TabContentProps) {
         </ActivityTabContainer>
       }
     >
-      {(view) => (
+      {(data) => (
         <FilesCard
-          leadId={view.data.lead.id}
-          canUpload={view.data.lead.stage === "LIVE"}
-          negotiationRequests={view.data.negotiationRequests}
+          leadId={data.lead.id}
+          canUpload={data.lead.stage === "LIVE"}
+          negotiationRequests={data.negotiationRequests}
         />
       )}
     </Show>

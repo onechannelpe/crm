@@ -25,13 +25,13 @@ import {
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { toAppError } from "~/lib/app-errors";
 
-import { AccountsForm } from "./setup/components/accounts-form";
-import { VenueCard } from "./setup/components/card";
-import { VenueForm } from "./setup/components/venue-form";
-import { useAccountsFormState } from "./setup/model/accounts-form-state";
-import { buildAccountsSubmitInput } from "./setup/model/accounts-submit-input";
-import { useVenueFormState } from "./setup/model/venue-form-state";
-import { buildVenueSubmitInput } from "./setup/model/venue-submit-input";
+import { AccountsForm } from "./components/accounts-form";
+import { VenueCard } from "./components/card";
+import { VenueForm } from "./components/venue-form";
+import { useAccountsFormState } from "./model/accounts-form-state";
+import { buildAccountsSubmitInput } from "./model/accounts-submit-input";
+import { useVenueFormState } from "./model/venue-form-state";
+import { buildVenueSubmitInput } from "./model/venue-submit-input";
 
 const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
   SUSCRIPCIONES: "Suscripciones",

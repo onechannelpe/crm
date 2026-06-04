@@ -16,7 +16,7 @@ import { blockingFieldLabel } from "~/features/workflow/detail/actions/workflow-
 
 import { formatAmount, formatRate } from "./format";
 
-export function WorkflowWidget(props: { data: LeadDetailView }) {
+export function WorkflowProgressWidget(props: { data: LeadDetailView }) {
   const negotiationCount = () => props.data.negotiationRequests.length;
 
   return (

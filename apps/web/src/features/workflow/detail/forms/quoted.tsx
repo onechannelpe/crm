@@ -13,6 +13,10 @@ import type {
   LeadDetailQuotationView,
 } from "~/contracts/workflow/views";
 import {
+  formatAmount,
+  formatRate,
+} from "~/features/record-show/widgets/workflow/format";
+import {
   FieldIcon,
   FieldLabel,
   FieldLabelText,
@@ -30,10 +34,6 @@ import {
   WidgetHeader,
   WidgetTitle,
 } from "~/features/side-panel/components/widget-card";
-import {
-  formatAmount,
-  formatRate,
-} from "~/features/side-panel/pages/record-page/widgets/workflow/format";
 import { toAppError } from "~/lib/app-errors";
 
 import {

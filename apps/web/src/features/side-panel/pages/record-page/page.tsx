@@ -1,30 +1,19 @@
-import {
-  createAsync,
-  revalidate,
-  useAction,
-  useNavigate,
-} from "@solidjs/router";
+import { createAsync, revalidate, useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo } from "solid-js";
-import { Dynamic } from "solid-js/web";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { addLeadToFavoritesMutation } from "~/features/workflow/data/command-mutations";
+import { createRecordPageController } from "~/features/record-show/record-page-controller";
+import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
+import { useRecordActions } from "~/features/record-show/use-record-actions";
 import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
-import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 
 import { PanelList } from "../../components/list";
-import { TabStrip } from "../../components/tab-strip";
-import { createRecordPageController } from "./controller";
 import { Footer } from "./footer";
 import { useLeadRecordPageState } from "./state";
-import {
-  VIEW_RECORD_TABS,
-  VIEW_RECORD_TABS_BY_ID,
-} from "./tabs/view-record-tabs";
 
 import styles from "./page.module.css";
 
@@ -32,7 +21,7 @@ const POLL_INTERVAL_MS = 3_500;
 const POLL_TIMEOUT_MS = 60_000;
 export function RecordPage() {
   const navigate = useNavigate();
-  const addToFavorites = useAction(addLeadToFavoritesMutation);
+  const { setFavorite, exportLead } = useRecordActions();
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar, enqueueInfoSnackBar } =
     useSnackBar();
   const { currentUser } = useAuthenticatedSession();
@@ -68,12 +57,6 @@ export function RecordPage() {
     <div class={styles.pageShell}>
       <PanelList>
         <div class={styles.page}>
-          <TabStrip
-            tabs={VIEW_RECORD_TABS}
-            activeTab={activeTab()}
-            onTabSelect={setActiveTab}
-          />
-
           <Show
             when={detailData()}
             fallback={
@@ -81,9 +64,10 @@ export function RecordPage() {
             }
           >
             {(detail) => (
-              <Dynamic
-                component={VIEW_RECORD_TABS_BY_ID[activeTab()].component}
-                data={detail()}
+              <RecordTabs
+                context={{ kind: "lead", data: detail() }}
+                activeTab={activeTab()}
+                onTabSelect={setActiveTab}
               />
             )}
           </Show>
@@ -100,8 +84,10 @@ export function RecordPage() {
               onAddToFavorites: () => {
                 void (async () => {
                   try {
-                    await addToFavorites({ leadId: detail().lead.id });
-                    await revalidateWorkflowLead(detail().lead.id);
+                    await setFavorite(
+                      detail().lead.id,
+                      detail().lead.isFavorite,
+                    );
                     enqueueSuccessSnackBar("Empresa agregada a favoritos");
                   } catch {
                     enqueueErrorSnackBar("No se pudo agregar a favoritos");
@@ -109,20 +95,7 @@ export function RecordPage() {
                 })();
               },
               onExportCompany: () => {
-                const payload = {
-                  empresa: detail().lead,
-                  exportadoEn: new Date().toISOString(),
-                };
-                const json = JSON.stringify(payload, null, 2);
-                const blob = new Blob([json], {
-                  type: "application/json;charset=utf-8",
-                });
-                const url = URL.createObjectURL(blob);
-                const anchor = document.createElement("a");
-                anchor.href = url;
-                anchor.download = `empresa-${detail().lead.id}.json`;
-                anchor.click();
-                URL.revokeObjectURL(url);
+                exportLead(detail().lead);
                 enqueueSuccessSnackBar("Empresa exportada");
               },
               onDeleteCompany: () => {

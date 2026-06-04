@@ -5,6 +5,7 @@ import Info from "~/components/icons/info";
 import Search from "~/components/icons/search";
 import User from "~/components/icons/user";
 import Users from "~/components/icons/users";
+import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import type {
   CompanyGroup,
   PersonGroup,
@@ -12,8 +13,7 @@ import type {
 import {
   DEFAULT_LEAD_RECORD_DRAFT_STATE,
   type LeadRecordDraftState,
-  type ViewRecordTabId,
-} from "~/features/side-panel/pages/record-page/tab-ids";
+} from "~/features/side-panel/pages/create-lead/draft-state";
 
 export type SidePanelIcon = Component<{
   class?: string;
@@ -66,7 +66,7 @@ export type ViewRecordSidePanelPageState = {
   leadId: string;
   title: string;
   subtitle: string;
-  activeTab: ViewRecordTabId;
+  activeTab: RecordTabId;
 };
 
 export type DataGridDetailSidePanelItem = {

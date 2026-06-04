@@ -1,6 +1,6 @@
 import { createEffect, createMemo, type Accessor } from "solid-js";
 
-import { createPollingController } from "../../core/polling/create-polling-controller";
+import { createPollingController } from "~/features/side-panel/core/polling/create-polling-controller";
 
 const POLLING_STATUSES = new Set(["queued", "running"]);
 
