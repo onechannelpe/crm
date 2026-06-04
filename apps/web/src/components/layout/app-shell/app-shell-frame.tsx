@@ -1,6 +1,7 @@
 import { useLocation } from "@solidjs/router";
 import type { ParentProps } from "solid-js";
 
+import { MobileNavigationBar } from "~/features/navigation-drawer/mobile/mobile-navigation-bar";
 import { NavigationDrawerHost } from "~/features/navigation-drawer/shell/navigation-drawer-host";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
 import { cn } from "~/lib/utils";
@@ -22,6 +23,7 @@ export function AppShellFrame(props: ParentProps) {
         <NavigationDrawerHost />
         {props.children}
       </div>
+      <MobileNavigationBar />
     </div>
   );
 }

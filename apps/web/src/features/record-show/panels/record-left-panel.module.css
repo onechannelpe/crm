@@ -1,5 +1,5 @@
 .panel {
-  background: var(--secondary, var(--background-transparent-lighter));
+  background: var(--secondary);
   border-bottom-left-radius: var(--radius-md);
   border-right: 1px solid var(--border);
   border-top-left-radius: var(--radius-md);
@@ -15,9 +15,24 @@
   overflow-y: auto;
 }
 
+/* Mobile record pages use the parent page as the scroll owner. */
+@media (max-width: 768px) {
+  .panel {
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    border-right: none;
+    height: auto;
+    overflow: visible;
+  }
+
+  .scrollBody {
+    overflow-y: visible;
+  }
+}
+
 .helperText {
-  color: var(--text-secondary);
-  font-size: 12px;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
   line-height: 1.4;
-  margin: 12px;
+  margin: var(--spacing-3);
 }

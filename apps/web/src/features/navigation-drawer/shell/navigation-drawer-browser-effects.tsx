@@ -1,12 +1,12 @@
 import { createEffect, onMount } from "solid-js";
 
-import { useMobileBreakpoint } from "~/components/ui/layout/resizable-panel/use-mobile-breakpoint";
+import { useIsMobile } from "~/components/ui/layout/responsive/use-is-mobile";
 
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 export function NavigationDrawerBrowserEffects() {
   const { setIsMobile } = useNavigationDrawerState();
-  const mobileBreakpointMatches = useMobileBreakpoint();
+  const mobileBreakpointMatches = useIsMobile();
 
   onMount(() => {
     createEffect(() => {

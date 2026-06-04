@@ -77,7 +77,9 @@ export function getSidebarChildren(
 }
 
 export function getNavigableRoutes(role: Role): SidebarEntry[] {
-  return SIDEBAR_ENTRIES.filter((entry) => canAccessPath(role, entry.href));
+  return SIDEBAR_ENTRIES.filter((entry) =>
+    canAccessPath(role, entry.href),
+  ).toSorted(sortByOrder);
 }
 
 export function getHeaderRoute(pathname: string): HeaderDescriptor {

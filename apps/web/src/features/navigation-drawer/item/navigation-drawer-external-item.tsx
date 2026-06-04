@@ -25,6 +25,7 @@ export function NavigationDrawerExternalItem(
       indentationLevel={props.indentationLevel}
       subItemState={props.subItemState}
       Icon={props.Icon}
+      tileColor={props.tileColor}
       active={props.active}
       modifier={props.modifier}
       rightOptions={props.rightOptions}

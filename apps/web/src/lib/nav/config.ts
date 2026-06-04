@@ -1,3 +1,5 @@
+import type { TileColor } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
+
 export type RouteIcon =
   | "search"
   | "settings"
@@ -23,12 +25,11 @@ export interface SidebarChild {
 export interface SidebarEntry {
   id: string;
   href: string;
-  /** Paths that mark this entry active in the sidebar. */
   activePrefixes: string[];
   label: string;
-  /** Display label in sidebar/command palette. Defaults to label. */
   navLabel?: string;
   icon: RouteIcon;
+  tileColor?: TileColor;
   section: SidebarSection;
   order: number;
   group?: string;
@@ -41,14 +42,12 @@ export interface HeaderDescriptor {
 }
 
 export interface PageHeaderRule {
-  /** Exact path string or RegExp. String uses strict equality; RegExp uses test(). */
   match: string | RegExp;
   header: HeaderDescriptor;
 }
 
-// Ordered: more specific rules (exact paths, longer prefixes) before broader patterns.
+// More specific rules must appear before broader patterns.
 export const PAGE_HEADERS: PageHeaderRule[] = [
-  // Dynamic patterns first
   {
     match: /^\/records\/[^/]+$/,
     header: { label: "Registros", icon: "leads" },
@@ -57,8 +56,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: /^\/team\/members\/[^/]+\/capacity$/,
     header: { label: "Capacidad del ejecutivo", icon: "team" },
   },
-
-  // Exact paths
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
   { match: "/records", header: { label: "Registros", icon: "leads" } },
@@ -99,13 +96,13 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
 ];
 
 export const SIDEBAR_ENTRIES: SidebarEntry[] = [
-  // Primary
   {
     id: "dashboard",
     href: "/dashboard",
     activePrefixes: ["/dashboard"],
     label: "Inicio",
     icon: "dashboard",
+    tileColor: "blue",
     section: "primary",
     order: 1,
   },
@@ -116,11 +113,10 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Agenda",
     navLabel: "Agenda",
     icon: "schedule",
+    tileColor: "purple",
     section: "primary",
     order: 2,
   },
-
-  // Secondary › Comercial
   {
     id: "records",
     href: "/records",
@@ -128,6 +124,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Registros",
     navLabel: "Registros",
     icon: "leads",
+    tileColor: "blue",
     section: "secondary",
     order: 1,
     group: "Comercial",
@@ -139,6 +136,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Simulador de tasas",
     navLabel: "Simulador de tasas",
     icon: "rate-simulator",
+    tileColor: "green",
     section: "secondary",
     order: 2,
     group: "Comercial",
@@ -150,12 +148,11 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Mi capacidad",
     navLabel: "Mi capacidad",
     icon: "capacity",
+    tileColor: "turquoise",
     section: "secondary",
     order: 3,
     group: "Comercial",
   },
-
-  // Secondary › Operaciones
   {
     id: "inventory",
     href: "/inventory",
@@ -163,6 +160,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Inventario",
     navLabel: "Inventario",
     icon: "inventory",
+    tileColor: "orange",
     section: "secondary",
     order: 4,
     group: "Operaciones",
@@ -174,6 +172,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Equipo",
     navLabel: "Equipo",
     icon: "team",
+    tileColor: "turquoise",
     section: "secondary",
     order: 5,
     group: "Operaciones",
@@ -184,8 +183,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
       { href: "/team/import", label: "Importar", order: 4 },
     ],
   },
-
-  // Secondary › Administración
   {
     id: "audit",
     href: "/audit/log",
@@ -193,6 +190,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Auditoría",
     navLabel: "Auditoría",
     icon: "audit",
+    tileColor: "red",
     section: "secondary",
     order: 7,
     group: "Administración",
@@ -208,6 +206,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     label: "Monitoreo",
     navLabel: "Monitoreo",
     icon: "monitoring",
+    tileColor: "yellow",
     section: "secondary",
     order: 8,
     group: "Administración",

@@ -107,7 +107,7 @@
   text-align: center;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .shell {
     padding: 16px 12px;
   }
