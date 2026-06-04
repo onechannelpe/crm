@@ -26,6 +26,12 @@ export type RecordIndexToolbarAction = {
   onClick: () => void | Promise<void>;
 };
 
+export type RecordIndexAnyFieldFilter = {
+  value: Accessor<string>;
+  placeholder: string;
+  setValue: (value: string) => void;
+};
+
 export type RecordIndexViewDefinition = {
   readonly id: string;
   readonly label: string;
@@ -55,12 +61,11 @@ export type RecordIndexEmptyState = {
   description?: string;
 };
 
-export type RecordIndexOption<TValue extends string = string> = {
-  label: string;
-  value: TValue;
-};
-
 export type RecordIndexMenu = "filter" | "sort" | "options" | "views" | null;
+export type RecordIndexFilterPanel =
+  | { kind: "field-list" }
+  | { kind: "field-value"; fieldId: string }
+  | { kind: "any-field-search" };
 
 export type RecordIndexAdapter<
   T extends { id: string },
@@ -82,38 +87,13 @@ export type RecordIndexAdapter<
   emptyState: RecordIndexEmptyState;
   createAction?: RecordIndexCreateAction;
   pagination?: RecordIndexPagination;
+  anyFieldFilter?: RecordIndexAnyFieldFilter;
   onFilterValueChange?: (value: string | undefined) => void;
   onSortValueChange?: (value: string | undefined) => void;
   views?: RecordIndexViews;
   actions?: ReadonlyArray<RecordIndexToolbarAction>;
   filter?: RecordIndexFilterDefinition<T, TFilterValue>;
   sort?: RecordIndexSortDefinition<T, TSortValue>;
-};
-
-export type RecordIndexSetup = {
-  id: string;
-  title: Accessor<string>;
-  ariaLabel: string;
-  class?: string;
-  selectable: boolean;
-  columns: ReadonlyArray<{
-    key: string;
-    label: string;
-  }>;
-  views?: RecordIndexViews;
-  actions?: ReadonlyArray<RecordIndexToolbarAction>;
-  filter?: {
-    label: string;
-    menuId: string;
-    defaultValue: string;
-    options: ReadonlyArray<RecordIndexOption>;
-  };
-  sort?: {
-    label: string;
-    menuId: string;
-    defaultValue: string;
-    options: ReadonlyArray<RecordIndexOption>;
-  };
 };
 
 export type RecordIndexColumnsState<T> = {
@@ -130,6 +110,8 @@ export type RecordIndexFilteringState<T> = {
   setFilterValue: (value: string | undefined) => void;
   filteredRows: Accessor<T[]>;
   isActive: Accessor<boolean>;
+  panel: Accessor<RecordIndexFilterPanel>;
+  setPanel: Setter<RecordIndexFilterPanel>;
 };
 
 export type RecordIndexSortingState<T> = {
@@ -146,6 +128,8 @@ export type RecordIndexViewState = {
   setVisibleColumnKeys: Setter<Set<string>>;
   filterValue: Accessor<string | undefined>;
   setFilterValue: Setter<string | undefined>;
+  filterPanel: Accessor<RecordIndexFilterPanel>;
+  setFilterPanel: Setter<RecordIndexFilterPanel>;
   sortValue: Accessor<string | undefined>;
   setSortValue: Setter<string | undefined>;
 };
@@ -167,7 +151,10 @@ export type RecordIndexModel = {
     filterValue: Accessor<string | undefined>;
     setFilterValue: (value: string | undefined) => void;
     isActive: Accessor<boolean>;
+    panel: Accessor<RecordIndexFilterPanel>;
+    setPanel: Setter<RecordIndexFilterPanel>;
   };
+  anyFieldFilter?: RecordIndexAnyFieldFilter;
   loading: {
     status: Accessor<RecordIndexSource<unknown>["status"]>;
   };
@@ -204,5 +191,6 @@ export type RecordIndexScreenModel<
     recordIndex: Accessor<RecordIndexSource<T>>;
   };
   sorting: RecordIndexSortingState<T>;
+  anyFieldFilter?: RecordIndexAnyFieldFilter;
   selection?: DataGridSelectionModel;
 };

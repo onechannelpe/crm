@@ -23,6 +23,7 @@ function normalizeLeadListFilters(
     status: filters.status,
     prioridad: filters.prioridad,
     executiveId: filters.executiveId,
+    anyFieldSearch: filters.anyFieldSearch,
     updatedSinceMs: filters.updatedSinceMs,
     updatedUntilMs: filters.updatedUntilMs,
     sortBy: filters.sortBy,

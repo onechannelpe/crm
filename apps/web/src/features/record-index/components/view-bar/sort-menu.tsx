@@ -1,17 +1,13 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 
-import Building2 from "~/components/icons/building-2";
-import CalendarClock from "~/components/icons/calendar-clock";
-import CalendarDays from "~/components/icons/calendar-days";
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
-import User from "~/components/icons/user";
 import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
 
 import { useRecordIndexModelContext } from "../../context/model-context";
 import { useRecordIndexSetup } from "../../context/setup-context";
 import { DropdownMenuHeader, parseSortDirection } from "./menu-primitives";
-import type { SortDirection, SortFieldPrefix } from "./types";
+import type { SortDirection } from "./types";
 
 import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
@@ -34,34 +30,8 @@ export function SortMenu(props: SortMenuProps) {
 
   const sortOptions = createMemo(() => setup.sort?.options ?? []);
 
-  const sortFields = createMemo(
-    () =>
-      [
-        {
-          prefix: "createdAt",
-          label: "Fecha de registro",
-          icon: CalendarDays,
-        },
-        {
-          prefix: "updatedAt",
-          label: "Ultima modificacion",
-          icon: CalendarClock,
-        },
-        {
-          prefix: "registeredBy",
-          label: "Registrado por",
-          icon: User,
-        },
-        {
-          prefix: "ruc",
-          label: "RUC",
-          icon: Building2,
-        },
-      ] as const,
-  );
-
   const filteredSortFields = createMemo(() =>
-    sortFields().filter((field) =>
+    (setup.sort?.fields ?? []).filter((field) =>
       field.label.toLocaleLowerCase().includes(normalizedSortSearch()),
     ),
   );
@@ -76,7 +46,7 @@ export function SortMenu(props: SortMenuProps) {
     props.onDismiss();
   }
 
-  function selectSortField(prefix: SortFieldPrefix) {
+  function selectSortField(prefix: string) {
     const directionSuffix = sortDirection() === "asc" ? "_asc" : "_desc";
     const target = sortOptions().find(
       (option) => option.value === `${prefix}${directionSuffix}`,

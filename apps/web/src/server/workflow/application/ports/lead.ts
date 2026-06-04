@@ -90,6 +90,7 @@ export type LeadListFilters = {
   prioridad?: LeadPriority;
   updatedSinceMs?: number;
   updatedUntilMs?: number;
+  anyFieldSearch?: string;
   sortBy: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
   sortDirection: "asc" | "desc";
   limit: number;

@@ -1,52 +1,9 @@
-import type { SelectQueryBuilder } from "kysely";
-
 import type { DatabaseExecutor } from "../../shared/db-executor";
-import type {
-  LeadListFilters,
-  LeadQueries,
-  RecordExportFilters,
-} from "../application/ports/lead";
-import type { LeadQueryDatabase } from "./lead-query-types";
-
-type VisibilityQuery = SelectQueryBuilder<
-  LeadQueryDatabase,
-  "lead" | "executive",
-  any
->;
+import type { LeadQueries } from "../application/ports/lead";
+import { applyLeadListFilters, applyLeadVisibility } from "./lead-list-filters";
 
 function toFullName(names: string, firstSurname: string): string {
   return `${names} ${firstSurname}`;
-}
-
-function applyVisibility(
-  query: VisibilityQuery,
-  filters: LeadListFilters | RecordExportFilters,
-): VisibilityQuery {
-  if (filters.actorRole === "superuser") return query;
-
-  if (filters.actorRole === "supervisor") {
-    return query.where("executive.branch_id", "in", (eb) =>
-      eb
-        .selectFrom("branch_supervisors")
-        .select("branch_id")
-        .where("user_id", "=", filters.actorUserId),
-    );
-  }
-
-  if (filters.actorRole === "back_office") {
-    return query.where("executive.team_id", "in", (eb) =>
-      eb
-        .selectFrom("back_office_assignments")
-        .select("team_id")
-        .where("back_office_user_id", "=", filters.actorUserId),
-    );
-  }
-
-  if (filters.actorRole === "executive") {
-    return query.where("lead.executive_id", "=", filters.actorUserId);
-  }
-
-  return query.where("executive.branch_id", "=", filters.actorBranchId);
 }
 
 export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
@@ -56,7 +13,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id");
 
-      let q = applyVisibility(base, filters)
+      let q = applyLeadVisibility(base, filters)
         .innerJoin("users as creator", "creator.id", "lead.created_by")
         .innerJoin("organizations as org", "org.id", "lead.organization_id")
         .select([
@@ -77,22 +34,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.updated_at",
         ]);
 
-      if (filters.executiveId !== undefined) {
-        q = q.where("lead.executive_id", "=", filters.executiveId);
-      }
-      if (filters.stage !== undefined)
-        q = q.where("lead.stage", "=", filters.stage);
-      if (filters.status !== undefined)
-        q = q.where("lead.status", "=", filters.status);
-      if (filters.prioridad !== undefined) {
-        q = q.where("lead.prioridad", "=", filters.prioridad);
-      }
-      if (filters.updatedSinceMs !== undefined) {
-        q = q.where("lead.updated_at", ">=", filters.updatedSinceMs);
-      }
-      if (filters.updatedUntilMs !== undefined) {
-        q = q.where("lead.updated_at", "<", filters.updatedUntilMs);
-      }
+      q = applyLeadListFilters(q, filters);
 
       if (filters.sortBy === "createdAt")
         q = q.orderBy("lead.created_at", filters.sortDirection);
@@ -131,30 +73,17 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
     },
 
     async count(filters) {
-      let q = applyVisibility(
+      let q = applyLeadVisibility(
         db
           .selectFrom("workflow_leads as lead")
           .innerJoin("users as executive", "executive.id", "lead.executive_id")
+          .innerJoin("users as creator", "creator.id", "lead.created_by")
+          .innerJoin("organizations as org", "org.id", "lead.organization_id")
           .select((eb) => eb.fn.countAll<number>().as("count")),
         filters,
       );
 
-      if (filters.executiveId !== undefined) {
-        q = q.where("lead.executive_id", "=", filters.executiveId);
-      }
-      if (filters.stage !== undefined)
-        q = q.where("lead.stage", "=", filters.stage);
-      if (filters.status !== undefined)
-        q = q.where("lead.status", "=", filters.status);
-      if (filters.prioridad !== undefined) {
-        q = q.where("lead.prioridad", "=", filters.prioridad);
-      }
-      if (filters.updatedSinceMs !== undefined) {
-        q = q.where("lead.updated_at", ">=", filters.updatedSinceMs);
-      }
-      if (filters.updatedUntilMs !== undefined) {
-        q = q.where("lead.updated_at", "<", filters.updatedUntilMs);
-      }
+      q = applyLeadListFilters(q, filters);
 
       const row = await q.executeTakeFirstOrThrow();
       return Number(row.count);
@@ -164,7 +93,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       const base = db
         .selectFrom("workflow_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id");
-      let q = applyVisibility(base, filters)
+      let q = applyLeadVisibility(base, filters)
         .innerJoin("organizations as org", "org.id", "lead.organization_id")
         .select([
           "lead.id",

@@ -1,13 +1,25 @@
-export type RecordIndexFilterOption<TValue extends string = string> = {
+import type { DataGridIcon } from "~/features/data-grid/model/types";
+
+import type { RecordIndexOption } from "./catalog";
+
+export type RecordIndexFilterField<TValue extends string = string> = {
+  id: string;
   label: string;
-  value: TValue;
+  icon: DataGridIcon;
+  options: ReadonlyArray<RecordIndexOption<TValue>>;
 };
 
-export type RecordIndexFilterDefinition<T, TValue extends string = string> = {
+export type RecordIndexFilterCatalog<TValue extends string = string> = {
   label: string;
   menuId: string;
-  options: ReadonlyArray<RecordIndexFilterOption<TValue>>;
   defaultValue: TValue;
-  apply: (rows: T[], value: TValue) => T[];
+  fields: ReadonlyArray<RecordIndexFilterField<TValue>>;
+};
+
+export type RecordIndexFilterDefinition<
+  T,
+  TValue extends string = string,
+> = RecordIndexFilterCatalog<TValue> & {
+  apply?: (rows: T[], value: TValue) => T[];
   isActive?: (value: TValue) => boolean;
 };

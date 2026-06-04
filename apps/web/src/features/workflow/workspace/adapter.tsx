@@ -1,11 +1,17 @@
 import { createAsync } from "@solidjs/router";
-import { createEffect, createMemo, createSignal, on } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
 
 import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import type { LeadListRowView } from "~/contracts/workflow/views";
+import type { LeadListRowView, LeadListView } from "~/contracts/workflow/views";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
   RecordIndexAdapter,
@@ -37,6 +43,7 @@ import { defaultViewIdForRole, viewsForRole } from "./views";
 import styles from "./styles.module.css";
 
 const LEAD_PAGE_SIZE = 100;
+const LEAD_SEARCH_DEBOUNCE_MS = 250;
 
 export function LeadsWorkspace() {
   const { currentUser } = useAuthenticatedSession();
@@ -55,17 +62,52 @@ export function LeadsWorkspace() {
   const [selectedSort, setSelectedSort] = createSignal<string | undefined>(
     LEAD_WORKSPACE_SORT.defaultValue,
   );
+  const [anyFieldSearch, setAnyFieldSearch] = createSignal("");
+  const [debouncedAnyFieldSearch, setDebouncedAnyFieldSearch] =
+    createSignal("");
+
+  const [lastResolvedLeads, setLastResolvedLeads] =
+    createSignal<LeadListView>();
 
   createEffect(
-    on([activeView, selectedFilter, selectedSort], () => {
+    on(activeView, () => {
+      setAnyFieldSearch("");
+      setDebouncedAnyFieldSearch("");
+      setLastResolvedLeads(undefined);
       setPageIndex(0);
     }),
   );
 
+  createEffect(
+    on(anyFieldSearch, (value) => {
+      const normalized = value.trim();
+      if (!normalized) {
+        setDebouncedAnyFieldSearch("");
+        return;
+      }
+
+      const timeout = setTimeout(() => {
+        setDebouncedAnyFieldSearch(normalized);
+      }, LEAD_SEARCH_DEBOUNCE_MS);
+
+      onCleanup(() => clearTimeout(timeout));
+    }),
+  );
+
+  createEffect(
+    on([selectedFilter, selectedSort, debouncedAnyFieldSearch], () => {
+      setPageIndex(0);
+    }),
+  );
+
+  const anyFieldSearchQuery = createMemo(
+    () => debouncedAnyFieldSearch() || undefined,
+  );
   const queryFilters = createMemo(() => ({
     ...activeView().filters(user.id),
     ...resolveLeadWorkspaceFilterQuery(selectedFilter()),
     ...resolveLeadWorkspaceSortQuery(selectedSort()),
+    anyFieldSearch: anyFieldSearchQuery(),
   }));
 
   const leads = createAsync(() =>
@@ -76,14 +118,22 @@ export function LeadsWorkspace() {
     }),
   );
 
-  const totalCount = createMemo(() => leads()?.totalCount ?? 0);
+  createEffect(() => {
+    const data = leads();
+    if (data !== undefined) {
+      setLastResolvedLeads(() => data);
+    }
+  });
+
+  const effectiveLeads = createMemo(() => leads() ?? lastResolvedLeads());
+  const totalCount = createMemo(() => effectiveLeads()?.totalCount ?? 0);
   const hasPreviousPage = createMemo(() => pageIndex() > 0);
   const hasNextPage = createMemo(
     () => (pageIndex() + 1) * LEAD_PAGE_SIZE < totalCount(),
   );
 
   const source = (): RecordIndexSource<LeadListRowView> => {
-    const data = leads();
+    const data = effectiveLeads();
     const serverRows = data?.rows ?? [];
     const rows = mergeLeadRows(
       serverRows,
@@ -121,6 +171,11 @@ export function LeadsWorkspace() {
     source,
     serverManagedFiltering: true,
     serverManagedSorting: true,
+    anyFieldFilter: {
+      value: anyFieldSearch,
+      placeholder: "RUC, cliente, dirección o ejecutivo",
+      setValue: setAnyFieldSearch,
+    },
     onFilterValueChange: setSelectedFilter,
     onSortValueChange: setSelectedSort,
     pagination: {

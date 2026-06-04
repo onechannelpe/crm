@@ -1,13 +1,25 @@
-export type RecordIndexSortOption<TValue extends string = string> = {
+import type { DataGridIcon } from "~/features/data-grid/model/types";
+
+import type { RecordIndexOption } from "./catalog";
+
+export type RecordIndexSortField = {
+  prefix: string;
   label: string;
-  value: TValue;
+  icon: DataGridIcon;
 };
 
-export type RecordIndexSortDefinition<T, TValue extends string = string> = {
+export type RecordIndexSortCatalog<TValue extends string = string> = {
   label: string;
   menuId: string;
-  options: ReadonlyArray<RecordIndexSortOption<TValue>>;
+  fields: ReadonlyArray<RecordIndexSortField>;
+  options: ReadonlyArray<RecordIndexOption<TValue>>;
   defaultValue: TValue;
-  apply: (rows: T[], value: TValue) => T[];
+};
+
+export type RecordIndexSortDefinition<
+  T,
+  TValue extends string = string,
+> = RecordIndexSortCatalog<TValue> & {
+  apply?: (rows: T[], value: TValue) => T[];
   isActive?: (value: TValue) => boolean;
 };

@@ -20,6 +20,7 @@ export type ListLeadsInput = {
     status?: LeadStatus;
     prioridad?: LeadPriority;
     executiveId?: number;
+    anyFieldSearch?: string;
     updatedSinceMs?: number;
     updatedUntilMs?: number;
     sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";

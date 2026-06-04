@@ -2,6 +2,8 @@ import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
 import { type LeadListRowView } from "~/contracts/workflow/views";
 import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
 
+import { LEAD_WORKSPACE_SORT_FIELDS } from "./sort-fields";
+
 export type LeadSortKey =
   | "createdAt_desc"
   | "createdAt_asc"
@@ -22,11 +24,6 @@ export const LEAD_WORKSPACE_SORTS = [
   { value: "ruc_asc", label: "A-Z" },
   { value: "ruc_desc", label: "Z-A" },
 ] as const satisfies ReadonlyArray<{ label: string; value: LeadSortKey }>;
-
-export function sortLeadRows(leads: LeadListRowView[], sortKey: LeadSortKey) {
-  void sortKey;
-  return leads;
-}
 
 export function resolveLeadWorkspaceSortQuery(
   value: string | undefined,
@@ -58,7 +55,7 @@ export const LEAD_WORKSPACE_SORT: RecordIndexSortDefinition<
 > = {
   label: "Ordenar",
   menuId: "lead-workspace-sort-menu",
+  fields: LEAD_WORKSPACE_SORT_FIELDS,
   options: LEAD_WORKSPACE_SORTS,
   defaultValue: "createdAt_desc",
-  apply: sortLeadRows,
 };

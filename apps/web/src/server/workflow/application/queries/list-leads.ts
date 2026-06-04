@@ -17,6 +17,10 @@ type LeadListQueryDeps = {
   leads: LeadQueries;
 };
 
+function normalizeLeadAnyFieldSearch(value: string | undefined) {
+  return value?.trim().toLowerCase() || undefined;
+}
+
 export async function listLeads(
   deps: LeadListQueryDeps,
   input: {
@@ -52,6 +56,7 @@ export async function listLeads(
     stage: input.filters.stage,
     status: input.filters.status,
     prioridad: input.filters.prioridad,
+    anyFieldSearch: normalizeLeadAnyFieldSearch(input.filters.anyFieldSearch),
     updatedSinceMs: input.filters.updatedSinceMs,
     updatedUntilMs: input.filters.updatedUntilMs,
     sortBy,

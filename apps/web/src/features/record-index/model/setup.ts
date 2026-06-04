@@ -1,4 +1,5 @@
-import type { RecordIndexAdapter, RecordIndexSetup } from "./types";
+import type { RecordIndexSetup } from "./setup-types";
+import type { RecordIndexAdapter } from "./types";
 
 export function createRecordIndexSetup<
   T extends { id: string },
@@ -20,27 +21,10 @@ export function createRecordIndexSetup<
       key: column.key,
       label: column.label,
     })),
-    filter: adapter.filter
-      ? {
-          label: adapter.filter.label,
-          menuId: adapter.filter.menuId,
-          defaultValue: adapter.filter.defaultValue,
-          options: adapter.filter.options.map((option) => ({
-            label: option.label,
-            value: option.value,
-          })),
-        }
-      : undefined,
-    sort: adapter.sort
-      ? {
-          label: adapter.sort.label,
-          menuId: adapter.sort.menuId,
-          defaultValue: adapter.sort.defaultValue,
-          options: adapter.sort.options.map((option) => ({
-            label: option.label,
-            value: option.value,
-          })),
-        }
-      : undefined,
+    // The filter/sort catalog is render-free and non-generic already, so the
+    // setup view shares it by reference. Only the apply/isActive behavior is
+    // erased (structurally invisible through the RecordIndex*Catalog type).
+    filter: adapter.filter,
+    sort: adapter.sort,
   };
 }

@@ -7,6 +7,7 @@ import { useRecordIndexSetup } from "../context/setup-context";
 import {
   applyRecordIndexFilter,
   applyRecordIndexSort,
+  getRecordIndexFilterOptions,
   getVisibleRecordIndexColumns,
   hasHiddenRecordIndexColumns,
   isRecordIndexFilterActive,
@@ -120,7 +121,7 @@ export function useRecordIndexModel<
       filterValue: createMemo(() =>
         setup.filter
           ? resolveRecordIndexOptionValue(
-              setup.filter.options,
+              getRecordIndexFilterOptions(setup.filter?.fields),
               viewState.filterValue(),
             )
           : undefined,
@@ -128,7 +129,10 @@ export function useRecordIndexModel<
       setFilterValue: (value: string | undefined) =>
         viewState.setFilterValue(() => value),
       isActive: filterIsActive,
+      panel: viewState.filterPanel,
+      setPanel: viewState.setFilterPanel,
     },
+    anyFieldFilter: adapter.anyFieldFilter,
     loading: {
       status: createMemo(() => source().status),
     },
@@ -162,6 +166,7 @@ export function useRecordIndexModel<
       ...sharedModel.sorting,
       sortedRows,
     },
+    anyFieldFilter: sharedModel.anyFieldFilter,
     loading: sharedModel.loading,
     source: {
       grid: createMemo(() => ({

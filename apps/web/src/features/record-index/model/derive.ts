@@ -1,12 +1,15 @@
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 
-import type { RecordIndexFilterDefinition } from "./filter";
+import type {
+  RecordIndexFilterDefinition,
+  RecordIndexFilterField,
+} from "./filter";
+import type { RecordIndexSetup } from "./setup-types";
 import type { RecordIndexSortDefinition } from "./sort";
 import type {
   RecordIndexModel,
   RecordIndexMenu,
   RecordIndexScreenModel,
-  RecordIndexSetup,
 } from "./types";
 
 export function getVisibleRecordIndexColumns<T>(
@@ -51,14 +54,20 @@ export function applyRecordIndexFilter<T, TValue extends string>(
     return rows;
   }
 
-  const selectedOption = filter.options.find(
+  const selectedOption = getRecordIndexFilterOptions(filter.fields).find(
     (option) => option.value === value,
   );
   if (!selectedOption) {
     return rows;
   }
 
-  return filter.apply(rows, selectedOption.value);
+  return filter.apply ? filter.apply(rows, selectedOption.value) : rows;
+}
+
+export function getRecordIndexFilterOptions<TValue extends string>(
+  fields: ReadonlyArray<RecordIndexFilterField<TValue>> | undefined,
+) {
+  return fields?.flatMap((field) => field.options) ?? [];
 }
 
 export function resolveRecordIndexOptionValue<TValue extends string>(
@@ -76,7 +85,10 @@ export function isRecordIndexFilterActive<T, TValue extends string>(
     return false;
   }
 
-  const selectedOption = resolveRecordIndexOptionValue(filter.options, value);
+  const selectedOption = resolveRecordIndexOptionValue(
+    getRecordIndexFilterOptions(filter.fields),
+    value,
+  );
   if (!selectedOption) {
     return false;
   }
@@ -100,7 +112,7 @@ export function applyRecordIndexSort<T, TValue extends string>(
     return rows;
   }
 
-  return sort.apply(rows, selectedOption.value);
+  return sort.apply ? sort.apply(rows, selectedOption.value) : rows;
 }
 
 export function isRecordIndexSortActive<T, TValue extends string>(
@@ -184,7 +196,10 @@ export function createRecordIndexContextModel<
       filterValue: model.filtering.filterValue,
       setFilterValue: model.filtering.setFilterValue,
       isActive: model.filtering.isActive,
+      panel: model.filtering.panel,
+      setPanel: model.filtering.setPanel,
     },
+    anyFieldFilter: model.anyFieldFilter,
     loading: model.loading,
     sorting: {
       sortValue: model.sorting.sortValue,

@@ -1,8 +1,9 @@
 import { createSignal } from "solid-js";
 
+import type { RecordIndexSetup } from "./setup-types";
 import type {
+  RecordIndexFilterPanel,
   RecordIndexMenu,
-  RecordIndexSetup,
   RecordIndexViewState,
 } from "./types";
 
@@ -25,6 +26,9 @@ export function createRecordIndexViewState(
     options.visibleColumnKeys,
   );
   const [filterValue, setFilterValue] = createSignal(options.filterValue);
+  const [filterPanel, setFilterPanel] = createSignal<RecordIndexFilterPanel>({
+    kind: "field-list",
+  });
   const [sortValue, setSortValue] = createSignal(options.sortValue);
 
   return {
@@ -34,6 +38,8 @@ export function createRecordIndexViewState(
     setVisibleColumnKeys,
     filterValue,
     setFilterValue,
+    filterPanel,
+    setFilterPanel,
     sortValue,
     setSortValue,
   };

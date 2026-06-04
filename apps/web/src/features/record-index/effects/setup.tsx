@@ -3,6 +3,7 @@ import { createEffect } from "solid-js";
 import { useRecordIndexViewState } from "../context/instance-context";
 import { useRecordIndexSetup } from "../context/setup-context";
 import {
+  getRecordIndexFilterOptions,
   reconcileRecordIndexOpenMenu,
   reconcileRecordIndexOptionValue,
   reconcileVisibleRecordIndexColumnKeys,
@@ -25,7 +26,7 @@ export function RecordIndexSetupEffects() {
 
   createEffect(() => {
     const nextFilterValue = reconcileRecordIndexOptionValue(
-      setup.filter?.options,
+      getRecordIndexFilterOptions(setup.filter?.fields),
       viewState.filterValue(),
       setup.filter?.defaultValue,
     );
