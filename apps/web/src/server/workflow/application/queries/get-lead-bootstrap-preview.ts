@@ -5,12 +5,8 @@ import type { LeadBootstrapPreviewView } from "~/server/workflow/types";
 import type { PartyRepository } from "../ports/entities";
 import type { WorkflowEngineGateway } from "../ports/gateways";
 
-type LeadBootstrapPreviewQueryDeps = {
-  party: PartyRepository;
-};
-
 export async function getLeadBootstrapPreview(
-  deps: LeadBootstrapPreviewQueryDeps,
+  deps: { party: PartyRepository },
   engineGateway: WorkflowEngineGateway,
   input: { ruc: string },
 ): Promise<Result<LeadBootstrapPreviewView, DomainError>> {
