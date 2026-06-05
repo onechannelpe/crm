@@ -17,6 +17,15 @@ export const LEAD_STATUSES = [
   "STOCK",
 ] as const;
 export const LEAD_PRIORITIES = ["P1", "P2", "SIN RESULTADO"] as const;
+export const LEAD_NEXT_STEPS = [
+  "REVIEW_LEAD",
+  "NO_ACTION",
+  "SAVE_COMMERCIAL_SCOPE",
+  "CREATE_QUOTATION",
+  "APPROVE_FOR_SALE",
+  "DEFINE_DIGITAL_POLICY",
+  "REGISTER_VENUE_ACCOUNTS",
+] as const;
 const LEAD_CALL_OUTCOMES = [
   "answered",
   "no_answer",
@@ -46,6 +55,7 @@ export type ProductScope = (typeof PRODUCT_SCOPES)[number];
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
+export type LeadNextStep = (typeof LEAD_NEXT_STEPS)[number];
 export type LeadCallOutcome = (typeof LEAD_CALL_OUTCOMES)[number];
 export type Moneda = (typeof MONEDAS)[number];
 export type AbonoBank = (typeof ABONO_BANKS)[number];

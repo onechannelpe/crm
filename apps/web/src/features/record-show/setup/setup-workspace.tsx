@@ -1,7 +1,13 @@
 import { useAction } from "@solidjs/router";
 import { For, Show, createSignal } from "solid-js";
 
+import BrowserMaximize from "~/components/icons/browser-maximize";
+import LinkIcon from "~/components/icons/link";
+import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
+import { Radio, RadioGroup } from "~/components/ui/input/radio";
+import { TextInput } from "~/components/ui/input/text-input";
+import { Toggle } from "~/components/ui/input/toggle";
 import type {
   LeadDetailVenueView,
   LeadDetailView,
@@ -11,27 +17,41 @@ import {
   type ModalidadCobro,
   type ProductScope,
 } from "~/contracts/workflow/vocabulary";
+import { Card, CardContent } from "~/features/side-panel/components/card";
 import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  FieldInputValue,
+  FieldRow,
+  FieldTable,
+} from "~/features/side-panel/components/field-table";
+import {
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 import {
   addVenueAccountsMutation,
   createVenueMutation,
   saveDigitalPolicyMutation,
+  startSetupExecutionMutation,
+  updateVenueMutation,
 } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { toAppError } from "~/lib/app-errors";
 
 import { AccountsForm } from "./components/accounts-form";
-import { VenueCard } from "./components/card";
+import { VenueCard } from "./components/venue-card";
 import { VenueForm } from "./components/venue-form";
 import { useAccountsFormState } from "./model/accounts-form-state";
 import { buildAccountsSubmitInput } from "./model/accounts-submit-input";
-import { useVenueFormState } from "./model/venue-form-state";
+import {
+  useVenueFormState,
+  type VenueFormValues,
+} from "./model/venue-form-state";
 import { buildVenueSubmitInput } from "./model/venue-submit-input";
+
+import styles from "./setup-workspace.module.css";
 
 const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
   SUSCRIPCIONES: "Suscripciones",
@@ -43,6 +63,9 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
   const canAddVenue = () => props.data.lead.stage === "SETUP_EXECUTION";
   const canAddAccounts = () => props.data.lead.stage === "SETUP_EXECUTION";
   const canEditDigitalPolicy = () => props.data.lead.stage === "SETUP_PLAN";
+  const canEditVenue = () =>
+    props.data.availableActions.includes("update-venue");
+  const [editingVenueId, setEditingVenueId] = createSignal<string | null>(null);
 
   return (
     <div>
@@ -69,34 +92,101 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
         when={props.data.venues.length > 0}
         fallback={
           <Show when={!canAddVenue()}>
-            <Widget>
-              <WidgetBody>
-                <div
-                  style={{
-                    padding: "12px",
-                    "text-align": "center",
-                    color: "#666",
-                  }}
-                >
-                  No hay sedes registradas
-                </div>
-              </WidgetBody>
-            </Widget>
+            <Card fullWidth>
+              <CardContent>
+                <div class={styles.emptyState}>No hay sedes registradas</div>
+              </CardContent>
+            </Card>
           </Show>
         }
       >
         <For each={props.data.venues}>
           {(venue) => (
-            <>
-              <VenueCard venue={venue} />
-              <Show when={canAddAccounts() && !venue.solesAccount}>
-                <AccountsFormPanel leadId={props.data.lead.id} venue={venue} />
-              </Show>
-            </>
+            <Show
+              when={editingVenueId() === venue.id}
+              fallback={
+                <>
+                  <VenueCard
+                    venue={venue}
+                    canEdit={canEditVenue()}
+                    onEdit={() => setEditingVenueId(venue.id)}
+                  />
+                  <Show when={canAddAccounts() && !venue.solesAccount}>
+                    <AccountsFormPanel
+                      leadId={props.data.lead.id}
+                      venue={venue}
+                    />
+                  </Show>
+                </>
+              }
+            >
+              <VenueEditPanel
+                leadId={props.data.lead.id}
+                venue={venue}
+                linkScope={props.data.profile?.linkScope ?? "none"}
+                onlineScope={props.data.profile?.onlineScope ?? "none"}
+                onClose={() => setEditingVenueId(null)}
+              />
+            </Show>
           )}
         </For>
       </Show>
+
+      <Show
+        when={props.data.availableActions.includes("start-setup-execution")}
+      >
+        <StartSetupExecutionAction leadId={props.data.lead.id} />
+      </Show>
     </div>
+  );
+}
+
+// Primary transition that closes out the SETUP_PLAN stage. Lives at the foot of
+// the planning surface so it reads as "planning done, begin execution" rather
+// than a detached action in a generic bucket.
+function StartSetupExecutionAction(props: { leadId: string }) {
+  const startSetupExecution = useAction(startSetupExecutionMutation);
+  const [submitting, setSubmitting] = createSignal(false);
+  const [error, setError] = createSignal<string | null>(null);
+
+  async function handleStart() {
+    if (submitting()) return;
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await startSetupExecution({ leadId: props.leadId });
+      await revalidateWorkflowLead(props.leadId);
+    } catch (err) {
+      setError(toAppError(err, "Error al iniciar afiliación").publicMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Afiliación" />
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
+        <RecordDetailSectionActions align="start">
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            loading={submitting()}
+            onClick={() => void handleStart()}
+          >
+            Iniciar afiliación
+          </Button>
+        </RecordDetailSectionActions>
+        <Show when={error()}>
+          {(msg) => <p class={styles.error}>{msg()}</p>}
+        </Show>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }
 
@@ -190,132 +280,146 @@ function DigitalPolicyPanel(props: {
   }
 
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Política digital" />
-      </WidgetHeader>
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Política digital" />
+      </RecordDetailSectionHeader>
 
-      <WidgetBody>
+      <RecordDetailSectionBody>
         <form onSubmit={(event) => void handleSave(event)}>
-          <label>
-            <input
-              type="checkbox"
-              checked={linkEnabled()}
-              onChange={(event) => setLinkEnabled(event.currentTarget.checked)}
-            />{" "}
-            Activar CulqiLink
-          </label>
+          <FieldTable>
+            <FieldRow label="Activar CulqiLink" icon={LinkIcon}>
+              <FieldInputValue>
+                <Toggle
+                  ariaLabel="Activar CulqiLink"
+                  value={linkEnabled()}
+                  onChange={(checked) => setLinkEnabled(checked)}
+                />
+              </FieldInputValue>
+            </FieldRow>
 
-          <Show when={linkEnabled()}>
-            <label>
-              <input
-                type="radio"
-                name="linkScope"
-                checked={linkScope() === "shared"}
-                onChange={() => setLinkScope("shared")}
-              />{" "}
-              URL compartida
-            </label>
+            <Show when={linkEnabled()}>
+              <FieldRow label="Modalidad CulqiLink" icon={LinkIcon}>
+                <FieldInputValue>
+                  <RadioGroup>
+                    <Radio
+                      name="linkScope"
+                      label="URL compartida"
+                      checked={linkScope() === "shared"}
+                      onChange={() => setLinkScope("shared")}
+                    />
+                    <Radio
+                      name="linkScope"
+                      label="URL por local"
+                      checked={linkScope() === "per_venue"}
+                      onChange={() => setLinkScope("per_venue")}
+                    />
+                  </RadioGroup>
+                </FieldInputValue>
+              </FieldRow>
 
-            <label>
-              <input
-                type="radio"
-                name="linkScope"
-                checked={linkScope() === "per_venue"}
-                onChange={() => setLinkScope("per_venue")}
-              />{" "}
-              URL por local
-            </label>
-
-            <Show when={linkScope() === "shared"}>
-              <input
-                type="url"
-                value={linkUrl()}
-                onChange={(event) => setLinkUrl(event.currentTarget.value)}
-                placeholder="URL CulqiLink"
-              />
+              <Show when={linkScope() === "shared"}>
+                <FieldRow label="URL CulqiLink" icon={LinkIcon}>
+                  <FieldInputValue>
+                    <TextInput
+                      sizeVariant="sm"
+                      type="url"
+                      value={linkUrl()}
+                      onChange={setLinkUrl}
+                      placeholder="URL CulqiLink"
+                    />
+                  </FieldInputValue>
+                </FieldRow>
+              </Show>
             </Show>
-          </Show>
 
-          <label>
-            <input
-              type="checkbox"
-              checked={onlineEnabled()}
-              onChange={(event) => {
-                setOnlineEnabled(event.currentTarget.checked);
+            <FieldRow label="Activar CulqiOnline" icon={BrowserMaximize}>
+              <FieldInputValue>
+                <Toggle
+                  ariaLabel="Activar CulqiOnline"
+                  value={onlineEnabled()}
+                  onChange={(checked) => {
+                    setOnlineEnabled(checked);
+                    if (!checked) setOnlineModalidad("");
+                  }}
+                />
+              </FieldInputValue>
+            </FieldRow>
 
-                if (!event.currentTarget.checked) {
-                  setOnlineModalidad("");
-                }
-              }}
-            />{" "}
-            Activar CulqiOnline
-          </label>
+            <Show when={onlineEnabled()}>
+              <FieldRow label="Modalidad CulqiOnline" icon={BrowserMaximize}>
+                <FieldInputValue>
+                  <RadioGroup>
+                    <Radio
+                      name="onlineScope"
+                      label="URL compartida"
+                      checked={onlineScope() === "shared"}
+                      onChange={() => setOnlineScope("shared")}
+                    />
+                    <Radio
+                      name="onlineScope"
+                      label="URL por local"
+                      checked={onlineScope() === "per_venue"}
+                      onChange={() => {
+                        setOnlineScope("per_venue");
+                        setOnlineModalidad("");
+                      }}
+                    />
+                  </RadioGroup>
+                </FieldInputValue>
+              </FieldRow>
 
-          <Show when={onlineEnabled()}>
-            <label>
-              <input
-                type="radio"
-                name="onlineScope"
-                checked={onlineScope() === "shared"}
-                onChange={() => setOnlineScope("shared")}
-              />{" "}
-              URL compartida
-            </label>
+              <Show when={onlineScope() === "shared"}>
+                <FieldRow label="URL CulqiOnline" icon={BrowserMaximize}>
+                  <FieldInputValue>
+                    <TextInput
+                      sizeVariant="sm"
+                      type="url"
+                      value={onlineUrl()}
+                      onChange={setOnlineUrl}
+                      placeholder="URL CulqiOnline"
+                    />
+                  </FieldInputValue>
+                </FieldRow>
 
-            <label>
-              <input
-                type="radio"
-                name="onlineScope"
-                checked={onlineScope() === "per_venue"}
-                onChange={() => {
-                  setOnlineScope("per_venue");
-                  setOnlineModalidad("");
-                }}
-              />{" "}
-              URL por local
-            </label>
-
-            <Show when={onlineScope() === "shared"}>
-              <input
-                type="url"
-                value={onlineUrl()}
-                onChange={(event) => setOnlineUrl(event.currentTarget.value)}
-                placeholder="URL CulqiOnline"
-              />
-
-              <For each={MODALIDAD_COBRO_KINDS}>
-                {(value) => (
-                  <label>
-                    <input
-                      type="radio"
-                      name="onlineModalidad"
-                      value={value}
-                      checked={onlineModalidad() === value}
-                      onChange={() => setOnlineModalidad(value)}
-                    />{" "}
-                    {MODALIDAD_COBRO_LABELS[value]}
-                  </label>
-                )}
-              </For>
+                <FieldRow label="Modalidad de cobro" icon={Package}>
+                  <FieldInputValue>
+                    <RadioGroup>
+                      <For each={MODALIDAD_COBRO_KINDS}>
+                        {(value) => (
+                          <Radio
+                            name="onlineModalidad"
+                            value={value}
+                            label={MODALIDAD_COBRO_LABELS[value]}
+                            checked={onlineModalidad() === value}
+                            onChange={() => setOnlineModalidad(value)}
+                          />
+                        )}
+                      </For>
+                    </RadioGroup>
+                  </FieldInputValue>
+                </FieldRow>
+              </Show>
             </Show>
-          </Show>
+          </FieldTable>
 
           <Show when={error()}>
-            {(msg) => <p style={{ color: "red", margin: "8px 0" }}>{msg()}</p>}
+            {(msg) => <p class={styles.error}>{msg()}</p>}
           </Show>
 
-          <Button
-            type="submit"
-            variant="secondary"
-            size="sm"
-            loading={submitting()}
-          >
-            Guardar política digital
-          </Button>
+          <RecordDetailSectionActions>
+            <Button
+              type="submit"
+              variant="secondary"
+              size="sm"
+              loading={submitting()}
+            >
+              Guardar política digital
+            </Button>
+          </RecordDetailSectionActions>
         </form>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }
 
@@ -362,19 +466,28 @@ function VenueCreatePanel(props: {
     <Show
       when={showForm()}
       fallback={
-        <div style={{ padding: "var(--spacing-3) 0" }}>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowForm(true)}
-          >
-            + Agregar sede
-          </Button>
-        </div>
+        <RecordDetailSection>
+          <RecordDetailSectionHeader>
+            <RecordDetailSectionTitle text="Sedes" />
+          </RecordDetailSectionHeader>
+          <RecordDetailSectionBody>
+            <RecordDetailSectionActions align="start">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowForm(true)}
+              >
+                + Agregar sede
+              </Button>
+            </RecordDetailSectionActions>
+          </RecordDetailSectionBody>
+        </RecordDetailSection>
       }
     >
       <VenueForm
+        title="Agregar sede"
+        submitLabel="Guardar sede"
         form={form}
         linkScope={props.linkScope}
         onlineScope={props.onlineScope}
@@ -384,6 +497,89 @@ function VenueCreatePanel(props: {
       />
     </Show>
   );
+}
+
+function VenueEditPanel(props: {
+  leadId: string;
+  venue: LeadDetailVenueView;
+  linkScope: ProductScope;
+  onlineScope: ProductScope;
+  onClose: () => void;
+}) {
+  const updateVenue = useAction(updateVenueMutation);
+  const form = useVenueFormState(toVenueFormValues(props.venue));
+  const [submitting, setSubmitting] = createSignal(false);
+  const [error, setError] = createSignal<string | null>(null);
+
+  async function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
+
+    const parsed = buildVenueSubmitInput(form, {
+      linkScope: props.linkScope,
+      onlineScope: props.onlineScope,
+    });
+
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await updateVenue({
+        leadId: props.leadId,
+        venueId: props.venue.id,
+        ...parsed.value,
+      });
+      await revalidateWorkflowLead(props.leadId);
+      props.onClose();
+    } catch (err) {
+      setError(toAppError(err, "No se pudo actualizar la sede").publicMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <VenueForm
+      title={`Editar sede: ${props.venue.nombreComercial}`}
+      submitLabel="Guardar cambios"
+      form={form}
+      linkScope={props.linkScope}
+      onlineScope={props.onlineScope}
+      submitting={submitting()}
+      error={error()}
+      secondaryAction={
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={submitting()}
+          onClick={props.onClose}
+        >
+          Cancelar
+        </Button>
+      }
+      onSubmit={(event) => void handleSubmit(event)}
+    />
+  );
+}
+
+function toVenueFormValues(venue: LeadDetailVenueView): VenueFormValues {
+  return {
+    nombreComercial: venue.nombreComercial,
+    posQuantity: String(venue.posQuantity),
+    linkUrl: venue.linkUrl ?? "",
+    onlineUrl: venue.onlineUrl ?? "",
+    onlineModalidad: venue.onlineModalidad ?? "",
+    direccion: venue.direccion,
+    referencia: venue.referencia,
+    distrito: venue.distrito,
+    provincia: venue.provincia,
+    departamento: venue.departamento,
+  };
 }
 
 function AccountsFormPanel(props: {

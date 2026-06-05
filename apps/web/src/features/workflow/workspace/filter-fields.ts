@@ -2,10 +2,8 @@ import CalendarClock from "~/components/icons/calendar-clock";
 import Info from "~/components/icons/info";
 import Target from "~/components/icons/target";
 import type { RecordIndexFilterField } from "~/features/record-index/model/catalog";
-import {
-  leadStageLabel,
-  leadStatusLabel,
-} from "~/features/workflow/presentation/lead-display";
+import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
+import { capitalize } from "~/lib/utils";
 
 const LEAD_MODIFIED_FILTER_OPTIONS = [
   { value: "updated_today", label: "Hoy" },
@@ -27,10 +25,10 @@ const LEAD_STAGE_FILTER_OPTIONS = [
 ] as const;
 
 const LEAD_STATUS_FILTER_OPTIONS = [
-  { value: "status:DISPONIBLE", label: leadStatusLabel("DISPONIBLE") },
-  { value: "status:SIN RESULTADO", label: leadStatusLabel("SIN RESULTADO") },
-  { value: "status:CARTERIZADO", label: leadStatusLabel("CARTERIZADO") },
-  { value: "status:STOCK", label: leadStatusLabel("STOCK") },
+  { value: "status:DISPONIBLE", label: capitalize("DISPONIBLE") },
+  { value: "status:SIN RESULTADO", label: capitalize("SIN RESULTADO") },
+  { value: "status:CARTERIZADO", label: capitalize("CARTERIZADO") },
+  { value: "status:STOCK", label: capitalize("STOCK") },
 ] as const;
 
 export const LEAD_WORKSPACE_FILTER_FIELDS = [

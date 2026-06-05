@@ -14,6 +14,7 @@ export type LeadCapability =
   | "reassign"
   | "complete-scoping"
   | "create-venue"
+  | "update-venue"
   | "add-venue-accounts"
   | "create-quotation"
   | "approve-for-sale"
@@ -31,6 +32,7 @@ export type AssignableExecutivesScope =
 const OWNER_REQUIRED = new Set<LeadCapability>([
   "complete-scoping",
   "create-venue",
+  "update-venue",
   "add-venue-accounts",
   "approve-for-sale",
   "request-negotiation",
@@ -65,6 +67,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
   if (hasPermission(role, "lead:commercial-input:complete")) {
     caps.add("complete-scoping");
     caps.add("create-venue");
+    caps.add("update-venue");
     caps.add("add-venue-accounts");
     caps.add("approve-for-sale");
     caps.add("request-negotiation");
@@ -72,6 +75,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
   if (hasPermission(role, "lead:sale:create")) {
     caps.add("complete-scoping");
     caps.add("create-venue");
+    caps.add("update-venue");
     caps.add("add-venue-accounts");
     caps.add("approve-for-sale");
   }
@@ -165,6 +169,13 @@ export function resolveAvailableActions(
     state.stage === "SETUP_PLAN"
   ) {
     actions.push("start-setup-execution");
+  }
+  if (
+    caps.has("update-venue") &&
+    ownsLead &&
+    state.stage === "SETUP_EXECUTION"
+  ) {
+    actions.push("update-venue");
   }
   if (
     caps.has("request-negotiation") &&

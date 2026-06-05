@@ -9,6 +9,7 @@ import type {
   LeadVenue,
   LeadVenueAccounts,
   LeadVenueInsert,
+  LeadVenueUpdate,
 } from "~/server/workflow/application/ports/entities";
 
 type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
@@ -156,6 +157,25 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
         .insertInto("workflow_lead_venue_accounts")
         .values(accountRows)
         .execute();
+    },
+
+    async update(venueId: string, values: LeadVenueUpdate): Promise<void> {
+      await db
+        .updateTable("workflow_lead_venues")
+        .set({
+          nombre_comercial: values.nombreComercial,
+          pos_quantity: values.posQuantity,
+          link_url: values.linkUrl,
+          online_url: values.onlineUrl,
+          online_modalidad: values.onlineModalidad,
+          direccion: values.direccion,
+          referencia: values.referencia,
+          distrito: values.distrito,
+          provincia: values.provincia,
+          departamento: values.departamento,
+        })
+        .where("id", "=", venueId)
+        .executeTakeFirstOrThrow();
     },
 
     async findById(

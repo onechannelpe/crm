@@ -1,5 +1,6 @@
 import {
   type AbonoBank,
+  type LeadNextStep,
   type LeadStage,
 } from "~/contracts/workflow/vocabulary";
 
@@ -30,28 +31,28 @@ type ScopingProfileFields = {
 };
 
 export type LeadProgress = {
-  nextStep: string;
+  nextStep: LeadNextStep;
   blockingFields: LeadBlockingField[];
 };
 
-function resolveLeadNextStep(lead: { stage: LeadStage }): string {
+function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
   switch (lead.stage) {
     case "QUALIFYING":
-      return "Review lead";
+      return "REVIEW_LEAD";
     case "DISQUALIFIED":
-      return "No further action";
+      return "NO_ACTION";
     case "SCOPING":
-      return "Save commercial scope";
+      return "SAVE_COMMERCIAL_SCOPE";
     case "QUOTING":
-      return "Create quotation";
+      return "CREATE_QUOTATION";
     case "QUOTED":
-      return "Approve for sale";
+      return "APPROVE_FOR_SALE";
     case "SETUP_PLAN":
-      return "Define digital policy";
+      return "DEFINE_DIGITAL_POLICY";
     case "SETUP_EXECUTION":
-      return "Register venue accounts";
+      return "REGISTER_VENUE_ACCOUNTS";
     case "LIVE":
-      return "No further action";
+      return "NO_ACTION";
     default: {
       const exhaustive: never = lead.stage;
       return exhaustive;

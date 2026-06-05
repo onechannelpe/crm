@@ -45,6 +45,7 @@ export type {
   RecordRepLegalCommandInput,
   RequestRateNegotiationCommandInput,
   CreateVenueCommandInput,
+  UpdateVenueCommandInput,
   AddVenueAccountsCommandInput,
   UpdateSourcingPolicyCommandInput,
 } from "./commands";

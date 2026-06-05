@@ -3,25 +3,26 @@ import { For, Show, createSignal } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import Moneybag from "~/components/icons/moneybag";
+import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow/vocabulary";
 import {
-  FieldIcon,
   FieldInputValue,
-  FieldLabel,
-  FieldLabelText,
   FieldRow,
   FieldTable,
+  FieldTextValue,
+  RecordInlineCell,
 } from "~/features/side-panel/components/field-table";
 import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 import { toAppError } from "~/lib/app-errors";
 
 import {
@@ -30,7 +31,9 @@ import {
 } from "../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
-export function CommercialScopeWidget(props: {
+import formStyles from "./section-form.module.css";
+
+export function CommercialScopeSection(props: {
   leadId: string;
   data: LeadDetailView;
 }) {
@@ -134,73 +137,70 @@ export function CommercialScopeWidget(props: {
   }
 
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Alcance comercial" />
-      </WidgetHeader>
-      <WidgetBody>
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Alcance comercial" />
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
         <Show
           when={canEdit()}
           fallback={
             <FieldTable>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Proveedor actual</FieldLabelText>
-                </FieldLabel>
-                <span>{profile()?.proveedorActual ?? "—"}</span>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Tasa actual</FieldLabelText>
-                </FieldLabel>
-                <span>
-                  {profile()?.tasaActual != null
-                    ? `${profile()?.tasaActual}%`
-                    : "—"}
-                </span>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>GPV</FieldLabelText>
-                </FieldLabel>
-                <span>{profile()?.gpv ?? "—"}</span>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Ticket</FieldLabelText>
-                </FieldLabel>
-                <span>{profile()?.ticket ?? "—"}</span>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Giro de negocio</FieldLabelText>
-                </FieldLabel>
-                <span>{profile()?.giroNegocio ?? "—"}</span>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Banco de abono</FieldLabelText>
-                </FieldLabel>
-                <span>{profile()?.abonoBank ?? "—"}</span>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Cantidad de POS</FieldLabelText>
-                </FieldLabel>
-                <span>{profile()?.posTotal ?? "—"}</span>
-              </FieldRow>
+              <RecordInlineCell
+                label="Proveedor actual"
+                icon={Building2}
+                empty={!profile()?.proveedorActual}
+              >
+                <FieldTextValue>{profile()?.proveedorActual}</FieldTextValue>
+              </RecordInlineCell>
+              <RecordInlineCell
+                label="Tasa actual"
+                icon={Target}
+                empty={profile()?.tasaActual == null}
+              >
+                <FieldTextValue>{profile()?.tasaActual}%</FieldTextValue>
+              </RecordInlineCell>
+              <RecordInlineCell
+                label="GPV"
+                icon={Moneybag}
+                empty={profile()?.gpv == null}
+              >
+                <FieldTextValue>{profile()?.gpv}</FieldTextValue>
+              </RecordInlineCell>
+              <RecordInlineCell
+                label="Ticket"
+                icon={Moneybag}
+                empty={profile()?.ticket == null}
+              >
+                <FieldTextValue>{profile()?.ticket}</FieldTextValue>
+              </RecordInlineCell>
+              <RecordInlineCell
+                label="Giro de negocio"
+                icon={Building2}
+                empty={!profile()?.giroNegocio}
+              >
+                <FieldTextValue>{profile()?.giroNegocio}</FieldTextValue>
+              </RecordInlineCell>
+              <RecordInlineCell
+                label="Banco de abono"
+                icon={Moneybag}
+                empty={!profile()?.abonoBank}
+              >
+                <FieldTextValue>{profile()?.abonoBank}</FieldTextValue>
+              </RecordInlineCell>
+              <RecordInlineCell
+                label="Cantidad de POS"
+                icon={Package}
+                empty={profile()?.posTotal == null}
+              >
+                <FieldTextValue>{profile()?.posTotal}</FieldTextValue>
+              </RecordInlineCell>
             </FieldTable>
           }
         >
           <form onSubmit={(e) => void handleSave(e)}>
             <FieldTable>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <Building2 size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>Proveedor actual</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Proveedor actual" icon={Building2}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -210,13 +210,7 @@ export function CommercialScopeWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <Target size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>Tasa actual</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Tasa actual" icon={Target}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -229,13 +223,7 @@ export function CommercialScopeWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <Moneybag size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>GPV</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="GPV" icon={Moneybag}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -248,13 +236,7 @@ export function CommercialScopeWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <Moneybag size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>Ticket</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Ticket" icon={Moneybag}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -267,13 +249,7 @@ export function CommercialScopeWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <Building2 size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>Giro de negocio</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Giro de negocio" icon={Building2}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -283,10 +259,7 @@ export function CommercialScopeWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Banco de abono</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Banco de abono" icon={Moneybag}>
                 <FieldInputValue>
                   <select
                     value={abonoBank()}
@@ -303,10 +276,7 @@ export function CommercialScopeWidget(props: {
                   </select>
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Cantidad de POS</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Cantidad de POS" icon={Package}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -322,12 +292,10 @@ export function CommercialScopeWidget(props: {
             </FieldTable>
 
             <Show when={error()}>
-              {(msg) => (
-                <p style={{ color: "red", margin: "8px 0" }}>{msg()}</p>
-              )}
+              {(msg) => <p class={formStyles.error}>{msg()}</p>}
             </Show>
 
-            <div style={{ display: "flex", gap: "8px", padding: "8px 0" }}>
+            <RecordDetailSectionActions>
               <Button
                 type="submit"
                 variant="secondary"
@@ -347,10 +315,10 @@ export function CommercialScopeWidget(props: {
                   Solicitar cotización
                 </Button>
               </Show>
-            </div>
+            </RecordDetailSectionActions>
           </form>
         </Show>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }

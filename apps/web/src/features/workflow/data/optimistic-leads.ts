@@ -35,7 +35,7 @@ export function createOptimisticLeadRow(input: {
     stage: "QUALIFYING",
     status: null,
     prioridad: null,
-    nextStep: "Review lead",
+    nextStep: "REVIEW_LEAD",
     createdAt: now,
     updatedAt: now,
     optimisticClientKey: `new:${input.ruc}:${now}`,

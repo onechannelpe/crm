@@ -14,7 +14,7 @@ import { toAppError } from "~/lib/app-errors";
 import { reviewLeadMutation } from "../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
-import styles from "./widget.module.css";
+import styles from "./review-modal.module.css";
 
 export function ReviewLeadModal(props: {
   leadId: string;

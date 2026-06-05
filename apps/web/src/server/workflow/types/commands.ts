@@ -133,6 +133,10 @@ export type CreateVenueCommandInput = {
   departamento: string;
 };
 
+export type UpdateVenueCommandInput = CreateVenueCommandInput & {
+  venueId: string;
+};
+
 export type AddVenueAccountsCommandInput = {
   actor: WorkflowActor;
   leadId: string;

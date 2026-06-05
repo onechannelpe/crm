@@ -1,7 +1,4 @@
-import {
-  type LeadAvailableAction,
-  type LeadBlockingField,
-} from "~/contracts/workflow/views";
+import { type LeadBlockingField } from "~/contracts/workflow/views";
 
 const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   proveedorActual: "Proveedor actual",
@@ -15,70 +12,6 @@ const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   venueAccounts: "Cuentas de sedes",
 };
 
-const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
-  proveedorActual: "Completar proveedor actual",
-  tasaActual: "Completar tasa actual",
-  gpv: "Completar GPV",
-  ticket: "Completar ticket",
-  giroNegocio: "Completar giro de negocio",
-  abonoBank: "Completar banco de abono",
-  posTotal: "Completar cantidad de POS",
-  digitalPolicy: "Definir política digital",
-  venueAccounts: "Registrar cuentas en al menos una sede",
-};
-
-export type LeadActionUiItem =
-  | { id: LeadAvailableAction; label: string; href: string; kind: "link" }
-  | { id: LeadAvailableAction; label: string; kind: "button" };
-
 export function blockingFieldLabel(field: LeadBlockingField): string {
   return BLOCKING_FIELD_LABELS[field];
-}
-
-export function blockingTaskLabel(field: LeadBlockingField): string {
-  return BLOCKING_TASK_LABELS[field];
-}
-
-export function mapLeadActionsToUi(
-  actions: LeadAvailableAction[],
-): LeadActionUiItem[] {
-  const items: LeadActionUiItem[] = [];
-
-  for (const action of actions) {
-    switch (action) {
-      // create-quotation, approve-for-sale, and request-rate-negotiation
-      // are rendered as inline sections, not generic action buttons.
-      case "create-quotation":
-      case "approve-for-sale":
-      case "request-rate-negotiation":
-        break;
-      case "review-lead":
-        items.push({
-          id: action,
-          label: "Revisar cliente",
-          kind: "button",
-        });
-        break;
-      case "start-setup-execution":
-        items.push({
-          id: action,
-          label: "Iniciar afiliación",
-          kind: "button",
-        });
-        break;
-      // request-quotation is rendered inline in the commercial scope widget.
-      case "request-quotation":
-      // reassign-lead is handled inline via the RelationFieldRow edit button in the fields widget.
-      case "reassign-lead":
-      // Actions below have no implemented handler yet.
-      // They are intentionally omitted rather than shown as disabled.
-      case "log-call":
-      case "add-note":
-        break;
-      default:
-        break;
-    }
-  }
-
-  return items;
 }

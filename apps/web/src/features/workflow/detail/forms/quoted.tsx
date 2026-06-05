@@ -15,25 +15,19 @@ import type {
 import {
   formatAmount,
   formatRate,
-} from "~/features/record-show/widgets/workflow/format";
+} from "~/features/record-show/sections/workflow/format";
 import {
-  FieldIcon,
-  FieldLabel,
-  FieldLabelText,
-  FieldRow,
   FieldTable,
+  FieldTextValue,
+  RecordInlineCell,
 } from "~/features/side-panel/components/field-table";
 import {
-  RelationList,
-  RelationMeta,
-  RelationRow,
-} from "~/features/side-panel/components/relation-list";
-import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 import { toAppError } from "~/lib/app-errors";
 
 import {
@@ -179,81 +173,45 @@ export function QuotedSection(props: QuotedSectionProps) {
   let dragCount = 0;
 
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Propuesta recibida" />
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Propuesta recibida" />
         <Show when={isRenegotiation()}>
           <span class={styles.roundBadge}>Ronda {currentRound() + 1}</span>
         </Show>
-      </WidgetHeader>
-      <WidgetBody>
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
         <FieldTable>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Payback</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+          <RecordInlineCell label="Payback" icon={Moneybag}>
+            <FieldTextValue>
               {formatAmount(props.quotation.paybackPricing)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. debito</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="T. debito" icon={Target}>
+            <FieldTextValue>
               {formatRate(props.quotation.tarifaDebito)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. credito</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="T. credito" icon={Target}>
+            <FieldTextValue>
               {formatRate(props.quotation.tarifaCredito)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. foraneo</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="T. foraneo" icon={Target}>
+            <FieldTextValue>
               {formatRate(props.quotation.tarifaForaneo)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Fee</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>{formatAmount(props.quotation.fee)}</RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Package size={16} />
-              </FieldIcon>
-              <FieldLabelText>Moneda</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>{props.quotation.moneda}</RelationMeta>
-          </FieldRow>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="Fee" icon={Moneybag}>
+            <FieldTextValue>{formatAmount(props.quotation.fee)}</FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="Moneda" icon={Package}>
+            <FieldTextValue>{props.quotation.moneda}</FieldTextValue>
+          </RecordInlineCell>
         </FieldTable>
 
         <Show when={!showNegotiationForm()}>
-          <div class={styles.actions}>
+          <RecordDetailSectionActions stack>
             <Show when={props.canApprove}>
               <Button
                 type="button"
@@ -275,7 +233,7 @@ export function QuotedSection(props: QuotedSectionProps) {
                 Solicitar revision de tasa
               </Button>
             </Show>
-          </div>
+          </RecordDetailSectionActions>
         </Show>
 
         <Show when={showNegotiationForm()}>
@@ -397,8 +355,8 @@ export function QuotedSection(props: QuotedSectionProps) {
         <Show when={error() && !showNegotiationForm()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }
 
@@ -406,27 +364,4 @@ function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-type PreviousNegotiationsProps = {
-  requests: LeadDetailNegotiationRequestView[];
-};
-
-export function PreviousNegotiationsWidget(props: PreviousNegotiationsProps) {
-  return (
-    <RelationList>
-      <For each={props.requests}>
-        {(req) => (
-          <RelationRow>
-            <span>Ronda {req.round}</span>
-            <RelationMeta>
-              {req.files.length > 0
-                ? `${req.files.length} archivo${req.files.length > 1 ? "s" : ""}`
-                : "Sin archivos"}
-            </RelationMeta>
-          </RelationRow>
-        )}
-      </For>
-    </RelationList>
-  );
 }

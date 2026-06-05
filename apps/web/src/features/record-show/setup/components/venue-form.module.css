@@ -1,15 +1,3 @@
-.radioGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--spacing-3);
-}
-
 .error {
   color: var(--destructive);
   font-size: var(--font-size-sm);

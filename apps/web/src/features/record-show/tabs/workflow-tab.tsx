@@ -2,7 +2,6 @@ import { Show } from "solid-js";
 
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { SetupWorkspace } from "~/features/record-show/setup/setup-workspace";
-import { LeadActionsWidget } from "~/features/workflow/detail/actions/widget";
 import { WorkflowStageSections } from "~/features/workflow/detail/sections/workflow-stage-sections";
 
 export function WorkflowTab(props: { context: RecordContext }) {
@@ -23,10 +22,6 @@ export function WorkflowTab(props: { context: RecordContext }) {
           >
             <SetupWorkspace data={data} />
           </Show>
-          <LeadActionsWidget
-            leadId={data.lead.id}
-            availableActions={data.availableActions}
-          />
         </>
       )}
     </Show>

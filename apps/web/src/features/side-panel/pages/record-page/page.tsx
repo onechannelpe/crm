@@ -35,9 +35,7 @@ export function RecordPage() {
   createEffect(() => {
     const detail = detailData();
     if (!detail) return;
-    const { ruc, district, department } = detail.lead;
-    const geo = [district, department].filter(Boolean).join(", ");
-    setSubtitle([ruc, geo].filter(Boolean).join(" · "));
+    setSubtitle(detail.lead.ruc);
   });
 
   createRecordPageController({

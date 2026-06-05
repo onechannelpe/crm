@@ -155,6 +155,15 @@ export function presentTimelineItem(
         description: `${event.payload.nombreComercial} registrada por ${actorDisplayName}.`,
         actorDisplayName,
       };
+    case "venue_updated":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Sede actualizada",
+        description: `${event.payload.nombreComercial} actualizada por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
     case "venue_accounts_added":
       return {
         id: `history:${event.id}`,

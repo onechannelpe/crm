@@ -139,3 +139,22 @@ export function toVenueAddedEntry(
     },
   });
 }
+
+export function toVenueUpdatedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const venueId = requireString(payload, "venueId", row);
+  if (!venueId.ok) return venueId;
+  const nombreComercial = requireString(payload, "nombreComercial", row);
+  if (!nombreComercial.ok) return nombreComercial;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "venue_updated",
+    payload: {
+      venueId: venueId.value,
+      nombreComercial: nombreComercial.value,
+    },
+  });
+}

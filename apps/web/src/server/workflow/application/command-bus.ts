@@ -17,6 +17,7 @@ import type {
   SaveCommercialScopeCommandInput,
   SaveDigitalPolicyCommandInput,
   UpdateSourcingPolicyCommandInput,
+  UpdateVenueCommandInput,
 } from "~/server/workflow/types";
 import type { WorkflowActor } from "~/server/workflow/types";
 
@@ -42,6 +43,7 @@ import { saveCommercialScopeCommand } from "./commands/save-commercial-scope";
 import { saveDigitalPolicyCommand } from "./commands/save-digital-policy";
 import { startSetupExecutionCommand } from "./commands/start-setup-execution";
 import { updateSourcingPolicy } from "./commands/update-sourcing-policy";
+import { updateVenueCommand } from "./commands/update-venue";
 
 export function createWorkflowCommandBus(
   executor: DatabaseExecutor,
@@ -126,6 +128,11 @@ export function createWorkflowCommandBus(
 
     createVenue: (input: CreateVenueCommandInput) =>
       createVenueCommand(input, {
+        executor,
+      }),
+
+    updateVenue: (input: UpdateVenueCommandInput) =>
+      updateVenueCommand(input, {
         executor,
       }),
 

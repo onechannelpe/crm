@@ -17,6 +17,7 @@ import { requestSunatRefresh } from "~/server/workflow/application/commands/requ
 import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
 import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
+import { updateVenueCommand } from "~/server/workflow/application/commands/update-venue";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/gateways";
 import { createLeadStateRepo } from "~/server/workflow/infrastructure/lead-state-repo";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
@@ -35,6 +36,7 @@ import type {
   ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
   UpdateSourcingPolicyCommandInput,
+  UpdateVenueCommandInput,
   WorkflowActor,
 } from "~/server/workflow/types";
 
@@ -121,6 +123,11 @@ function buildCommandApi(
 
     createVenue: (input: CreateVenueCommandInput) =>
       createVenueCommand(input, {
+        executor,
+      }),
+
+    updateVenue: (input: UpdateVenueCommandInput) =>
+      updateVenueCommand(input, {
         executor,
       }),
 

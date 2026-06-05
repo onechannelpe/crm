@@ -1,6 +1,13 @@
 import { For, Show } from "solid-js";
+import type { JSX } from "solid-js";
 
+import BrowserMaximize from "~/components/icons/browser-maximize";
+import Building2 from "~/components/icons/building-2";
+import LinkIcon from "~/components/icons/link";
+import MapIcon from "~/components/icons/map";
+import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
+import { Radio, RadioGroup } from "~/components/ui/input/radio";
 import { TextInput } from "~/components/ui/input/text-input";
 import {
   MODALIDAD_COBRO_KINDS,
@@ -9,17 +16,16 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import {
   FieldInputValue,
-  FieldLabel,
-  FieldLabelText,
   FieldRow,
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 
 import type { VenueFormState } from "../model/venue-form-state";
 
@@ -33,6 +39,7 @@ const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
 
 function TextFieldRow(props: {
   label: string;
+  icon: (props: { size?: number }) => JSX.Element;
   value: string;
   onChange: (value: string) => void;
   type?: "text" | "number" | "url";
@@ -41,10 +48,7 @@ function TextFieldRow(props: {
   required?: boolean;
 }) {
   return (
-    <FieldRow>
-      <FieldLabel>
-        <FieldLabelText>{props.label}</FieldLabelText>
-      </FieldLabel>
+    <FieldRow label={props.label} icon={props.icon}>
       <FieldInputValue>
         <TextInput
           sizeVariant="sm"
@@ -61,24 +65,28 @@ function TextFieldRow(props: {
 }
 
 export function VenueForm(props: {
+  title: string;
+  submitLabel: string;
   form: VenueFormState;
   linkScope: ProductScope;
   onlineScope: ProductScope;
   submitting: boolean;
   error: string | null;
+  secondaryAction?: JSX.Element;
   onSubmit: (event: SubmitEvent) => void;
 }) {
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Agregar sede" />
-      </WidgetHeader>
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text={props.title} />
+      </RecordDetailSectionHeader>
 
-      <WidgetBody>
+      <RecordDetailSectionBody>
         <form onSubmit={props.onSubmit}>
           <FieldTable>
             <TextFieldRow
               label="Nombre comercial"
+              icon={Building2}
               value={props.form.nombreComercial()}
               onChange={props.form.setNombreComercial}
               required
@@ -86,6 +94,7 @@ export function VenueForm(props: {
 
             <TextFieldRow
               label="Cantidad POS"
+              icon={Package}
               type="number"
               min="1"
               step="1"
@@ -96,6 +105,7 @@ export function VenueForm(props: {
 
             <TextFieldRow
               label="Dirección"
+              icon={MapIcon}
               value={props.form.direccion()}
               onChange={props.form.setDireccion}
               required
@@ -103,6 +113,7 @@ export function VenueForm(props: {
 
             <TextFieldRow
               label="Referencia"
+              icon={MapIcon}
               value={props.form.referencia()}
               onChange={props.form.setReferencia}
               required
@@ -110,6 +121,7 @@ export function VenueForm(props: {
 
             <TextFieldRow
               label="Distrito"
+              icon={MapIcon}
               value={props.form.distrito()}
               onChange={props.form.setDistrito}
               required
@@ -117,6 +129,7 @@ export function VenueForm(props: {
 
             <TextFieldRow
               label="Provincia"
+              icon={MapIcon}
               value={props.form.provincia()}
               onChange={props.form.setProvincia}
               required
@@ -124,6 +137,7 @@ export function VenueForm(props: {
 
             <TextFieldRow
               label="Departamento"
+              icon={MapIcon}
               value={props.form.departamento()}
               onChange={props.form.setDepartamento}
               required
@@ -132,6 +146,7 @@ export function VenueForm(props: {
             <Show when={props.linkScope === "per_venue"}>
               <TextFieldRow
                 label="URL Culqi Link"
+                icon={LinkIcon}
                 type="url"
                 value={props.form.linkUrl()}
                 onChange={props.form.setLinkUrl}
@@ -142,35 +157,28 @@ export function VenueForm(props: {
             <Show when={props.onlineScope === "per_venue"}>
               <TextFieldRow
                 label="URL Culqi Online"
+                icon={BrowserMaximize}
                 type="url"
                 value={props.form.onlineUrl()}
                 onChange={props.form.setOnlineUrl}
                 required
               />
 
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Modalidad de cobro</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Modalidad de cobro" icon={Package}>
                 <FieldInputValue>
-                  <div class={styles.radioGroup}>
+                  <RadioGroup>
                     <For each={MODALIDAD_COBRO_KINDS}>
                       {(value) => (
-                        <label>
-                          <input
-                            type="radio"
-                            name="onlineModalidad"
-                            value={value}
-                            checked={props.form.onlineModalidad() === value}
-                            onChange={() =>
-                              props.form.setOnlineModalidad(value)
-                            }
-                          />{" "}
-                          {MODALIDAD_COBRO_LABELS[value]}
-                        </label>
+                        <Radio
+                          name="onlineModalidad"
+                          value={value}
+                          label={MODALIDAD_COBRO_LABELS[value]}
+                          checked={props.form.onlineModalidad() === value}
+                          onChange={() => props.form.setOnlineModalidad(value)}
+                        />
                       )}
                     </For>
-                  </div>
+                  </RadioGroup>
                 </FieldInputValue>
               </FieldRow>
             </Show>
@@ -180,18 +188,19 @@ export function VenueForm(props: {
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
 
-          <div class={styles.actions}>
+          <RecordDetailSectionActions>
+            {props.secondaryAction}
             <Button
               type="submit"
               variant="primary"
               size="sm"
               loading={props.submitting}
             >
-              Guardar sede
+              {props.submitLabel}
             </Button>
-          </div>
+          </RecordDetailSectionActions>
         </form>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }

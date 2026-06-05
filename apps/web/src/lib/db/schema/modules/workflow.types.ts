@@ -94,6 +94,7 @@ export interface WorkflowHistoryEventsTable {
     | "quotation_created"
     | "sale_approved"
     | "venue_added"
+    | "venue_updated"
     | "venue_accounts_added"
     | "call_logged"
     | "note_added";

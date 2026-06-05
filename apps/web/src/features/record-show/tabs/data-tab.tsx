@@ -1,8 +1,7 @@
 import { Show } from "solid-js";
 
 import type { RecordContext } from "~/features/record-show/model/record-context";
-import { DetailFieldsWidget } from "~/features/record-show/widgets/fields";
-import { SunatWidget } from "~/features/record-show/widgets/sunat";
+import { DetailFieldsSection } from "~/features/record-show/sections/fields";
 
 export function DataTab(props: { context: RecordContext }) {
   return (
@@ -10,12 +9,7 @@ export function DataTab(props: { context: RecordContext }) {
       when={props.context.kind === "lead" ? props.context.data : null}
       keyed
     >
-      {(data) => (
-        <>
-          <DetailFieldsWidget data={data} />
-          <SunatWidget data={data} />
-        </>
-      )}
+      {(data) => <DetailFieldsSection data={data} />}
     </Show>
   );
 }

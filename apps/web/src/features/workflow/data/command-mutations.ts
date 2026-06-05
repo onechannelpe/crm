@@ -29,10 +29,12 @@ import type {
 import {
   requestVenueAccountsAddition,
   requestVenueCreation,
+  requestVenueUpdate,
 } from "~/actions/workflow/commands/sales";
 import type {
   AddVenueAccountsInput,
   CreateVenueInput,
+  UpdateVenueInput,
 } from "~/actions/workflow/commands/sales";
 
 export const createLeadMutation = action(async (input: CreateLeadInput) => {
@@ -82,6 +84,11 @@ export const createQuotationMutation = action(
 export const createVenueMutation = action(
   async (input: CreateVenueInput) => requestVenueCreation(input),
   "workflow.createVenue",
+);
+
+export const updateVenueMutation = action(
+  async (input: UpdateVenueInput) => requestVenueUpdate(input),
+  "workflow.updateVenue",
 );
 
 export const addVenueAccountsMutation = action(

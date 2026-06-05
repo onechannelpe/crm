@@ -76,6 +76,11 @@ export type LeadVenueInsert = Omit<
   "id" | "solesAccount" | "dollarAccount"
 >;
 
+export type LeadVenueUpdate = Omit<
+  LeadVenue,
+  "id" | "leadId" | "solesAccount" | "dollarAccount" | "createdAt" | "createdBy"
+>;
+
 export type LeadVenueAccounts = {
   solesAccount: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
@@ -83,6 +88,7 @@ export type LeadVenueAccounts = {
 
 export type LeadVenueRepository = {
   insert(values: LeadVenueInsert): Promise<string>;
+  update(venueId: string, values: LeadVenueUpdate): Promise<void>;
   addAccounts(
     venueId: string,
     accounts: LeadVenueAccounts,

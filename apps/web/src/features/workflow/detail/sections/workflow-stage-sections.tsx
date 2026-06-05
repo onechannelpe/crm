@@ -2,10 +2,11 @@ import { Match, Switch } from "solid-js";
 
 import type { LeadDetailView } from "~/contracts/workflow/views";
 
-import { CommercialScopeWidget } from "../forms/commercial-scope-widget";
+import { ReviewSection } from "../actions/review-section";
+import { CommercialScopeSection } from "../forms/commercial-scope-section";
 import { QuotationSection } from "../forms/quotation";
 import { QuotedSection } from "../forms/quoted";
-import { RepLegalWidget } from "../forms/rep-legal-widget";
+import { RepLegalSection } from "../forms/rep-legal-section";
 
 type WorkflowStageSectionsProps = {
   leadId: string;
@@ -14,6 +15,7 @@ type WorkflowStageSectionsProps = {
 
 export function WorkflowStageSections(props: WorkflowStageSectionsProps) {
   const latestQuotation = () => props.data.quotations.at(-1);
+  const canReview = () => props.data.availableActions.includes("review-lead");
   const canCreateQuotation = () =>
     props.data.availableActions.includes("create-quotation");
   const canApprove = () =>
@@ -23,9 +25,12 @@ export function WorkflowStageSections(props: WorkflowStageSectionsProps) {
 
   return (
     <>
-      <CommercialScopeWidget leadId={props.leadId} data={props.data} />
+      <CommercialScopeSection leadId={props.leadId} data={props.data} />
 
       <Switch>
+        <Match when={props.data.lead.stage === "QUALIFYING" && canReview()}>
+          <ReviewSection leadId={props.leadId} />
+        </Match>
         <Match
           when={props.data.lead.stage === "QUOTING" && canCreateQuotation()}
         >
@@ -47,7 +52,7 @@ export function WorkflowStageSections(props: WorkflowStageSectionsProps) {
         </Match>
       </Switch>
 
-      <RepLegalWidget leadId={props.leadId} data={props.data} />
+      <RepLegalSection leadId={props.leadId} data={props.data} />
     </>
   );
 }

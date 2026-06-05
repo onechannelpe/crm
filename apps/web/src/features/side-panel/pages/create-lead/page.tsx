@@ -81,9 +81,6 @@ export function CreateLeadPage() {
     razonSocial: latestBootstrapPreview()?.razonSocial ?? null,
     address: latestBootstrapPreview()?.address ?? null,
     engineStatus: engineStatus(),
-    canCreate: validRuc() !== null,
-    submitting: submitting(),
-    onSubmit: () => void submit(),
   }));
   useScopedHotkey("Mod+Enter", () => void submit(), { allowInInputs: true });
 

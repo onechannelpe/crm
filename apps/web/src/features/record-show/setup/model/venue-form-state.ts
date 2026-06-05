@@ -2,31 +2,60 @@ import { createSignal } from "solid-js";
 
 import type { ModalidadCobro } from "~/contracts/workflow/vocabulary";
 
-export function useVenueFormState() {
-  const [nombreComercial, setNombreComercial] = createSignal("");
-  const [posQuantity, setPosQuantity] = createSignal("1");
-  const [linkUrl, setLinkUrl] = createSignal("");
-  const [onlineUrl, setOnlineUrl] = createSignal("");
+export type VenueFormValues = {
+  nombreComercial: string;
+  posQuantity: string;
+  linkUrl: string;
+  onlineUrl: string;
+  onlineModalidad: ModalidadCobro | "";
+  direccion: string;
+  referencia: string;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+};
+
+const EMPTY_VENUE_FORM_VALUES: VenueFormValues = {
+  nombreComercial: "",
+  posQuantity: "1",
+  linkUrl: "",
+  onlineUrl: "",
+  onlineModalidad: "",
+  direccion: "",
+  referencia: "",
+  distrito: "",
+  provincia: "",
+  departamento: "",
+};
+
+export function useVenueFormState(initialValues?: VenueFormValues) {
+  const initial = initialValues ?? EMPTY_VENUE_FORM_VALUES;
+  const [nombreComercial, setNombreComercial] = createSignal(
+    initial.nombreComercial,
+  );
+  const [posQuantity, setPosQuantity] = createSignal(initial.posQuantity);
+  const [linkUrl, setLinkUrl] = createSignal(initial.linkUrl);
+  const [onlineUrl, setOnlineUrl] = createSignal(initial.onlineUrl);
   const [onlineModalidad, setOnlineModalidad] = createSignal<
     ModalidadCobro | ""
-  >("");
-  const [direccion, setDireccion] = createSignal("");
-  const [referencia, setReferencia] = createSignal("");
-  const [distrito, setDistrito] = createSignal("");
-  const [provincia, setProvincia] = createSignal("");
-  const [departamento, setDepartamento] = createSignal("");
+  >(initial.onlineModalidad);
+  const [direccion, setDireccion] = createSignal(initial.direccion);
+  const [referencia, setReferencia] = createSignal(initial.referencia);
+  const [distrito, setDistrito] = createSignal(initial.distrito);
+  const [provincia, setProvincia] = createSignal(initial.provincia);
+  const [departamento, setDepartamento] = createSignal(initial.departamento);
 
-  function reset() {
-    setNombreComercial("");
-    setPosQuantity("1");
-    setLinkUrl("");
-    setOnlineUrl("");
-    setOnlineModalidad("");
-    setDireccion("");
-    setReferencia("");
-    setDistrito("");
-    setProvincia("");
-    setDepartamento("");
+  function reset(values: VenueFormValues = EMPTY_VENUE_FORM_VALUES) {
+    setNombreComercial(values.nombreComercial);
+    setPosQuantity(values.posQuantity);
+    setLinkUrl(values.linkUrl);
+    setOnlineUrl(values.onlineUrl);
+    setOnlineModalidad(values.onlineModalidad);
+    setDireccion(values.direccion);
+    setReferencia(values.referencia);
+    setDistrito(values.distrito);
+    setProvincia(values.provincia);
+    setDepartamento(values.departamento);
   }
 
   return {

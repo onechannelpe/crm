@@ -8,6 +8,7 @@ import {
   toRepLegalEntry,
   toRequestQuotationEntry,
   toVenueAddedEntry,
+  toVenueUpdatedEntry,
 } from "./history-commercial-parser";
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import { toCallEntry, toNoteEntry } from "./history-interaction-parser";
@@ -59,6 +60,8 @@ export function toHistoryEntry(
       });
     case "venue_added":
       return toVenueAddedEntry(row, payload.value);
+    case "venue_updated":
+      return toVenueUpdatedEntry(row, payload.value);
     case "venue_accounts_added": {
       const venueId = requireString(payload.value, "venueId", row);
       if (!venueId.ok) return venueId;

@@ -1,3 +1,5 @@
+import type { LeadNextStep } from "~/contracts/workflow/vocabulary";
+
 import {
   resolveLeadProgress,
   type LeadBlockingField,
@@ -7,7 +9,7 @@ import type { LeadProfile, OrganizationProfile } from "../ports/entities";
 
 export function presentLeadNextStep(input: {
   lead: Pick<LeadState, "stage">;
-}): string {
+}): LeadNextStep {
   return resolveLeadProgress({
     lead: input.lead,
   }).nextStep;

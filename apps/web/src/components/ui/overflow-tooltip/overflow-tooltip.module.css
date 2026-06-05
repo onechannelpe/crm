@@ -31,6 +31,7 @@
   padding: 4px 8px;
   pointer-events: none;
   position: absolute;
+  width: max-content;
   transform: translateX(-50%) translateY(4px);
   transition:
     opacity var(--motion-fast) var(--ease-standard),

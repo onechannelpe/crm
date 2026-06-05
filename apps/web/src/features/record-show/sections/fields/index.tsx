@@ -8,12 +8,8 @@ import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
-import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import {
-  FieldIcon,
-  FieldLabel,
-  FieldLabelText,
   FieldRow,
   FieldTable,
   FieldTextValue,
@@ -21,13 +17,13 @@ import {
   FieldValueDisplay,
 } from "~/features/side-panel/components/field-table";
 import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetSectionChevron,
-  WidgetSectionHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSubsectionChevron,
+  RecordDetailSubsectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 import {
   LEAD_DETAIL_FIELD_GROUPS,
   type FieldGroup,
@@ -55,32 +51,32 @@ const LEAD_CREATE_FIELD_ROWS: ReadonlyArray<LeadCreateFieldRow> = [
   { label: "Última actualización", icon: Clock, value: "" },
 ] as const;
 
-function WidgetFrame(props: { children: JSX.Element }) {
+function FieldsSectionFrame(props: { children: JSX.Element }) {
   const [isExpanded, setIsExpanded] = createSignal(true);
 
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Campos" />
-      </WidgetHeader>
-      <WidgetBody>
-        <WidgetSectionHeader
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Campos" />
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
+        <RecordDetailSubsectionHeader
           onClick={() => setIsExpanded((current) => !current)}
         >
           <span>General</span>
-          <WidgetSectionChevron isExpanded={isExpanded()}>
+          <RecordDetailSubsectionChevron isExpanded={isExpanded()}>
             <ChevronDown size={14} />
-          </WidgetSectionChevron>
-        </WidgetSectionHeader>
+          </RecordDetailSubsectionChevron>
+        </RecordDetailSubsectionHeader>
         <AnimatedExpandableContainer isExpanded={isExpanded()}>
           {props.children}
         </AnimatedExpandableContainer>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }
 
-export function CreateFieldsWidget(props: {
+export function CreateFieldsSection(props: {
   razonSocial?: string | null;
   address?: string | null;
 }) {
@@ -89,11 +85,13 @@ export function CreateFieldsWidget(props: {
   );
 
   return (
-    <WidgetFrame>
+    <FieldsSectionFrame>
       <FieldTable>
         <For each={LEAD_CREATE_FIELD_ROWS}>
           {(field) => (
             <FieldRow
+              label={field.label}
+              icon={field.icon}
               readonly
               hovered={hoveredFieldKey() === (field.key ?? field.label)}
               onMouseEnter={() => setHoveredFieldKey(field.key ?? field.label)}
@@ -101,17 +99,6 @@ export function CreateFieldsWidget(props: {
               onFocusIn={() => setHoveredFieldKey(field.key ?? field.label)}
               onFocusOut={() => setHoveredFieldKey(null)}
             >
-              <FieldLabel>
-                <FieldIcon>
-                  <field.icon size={16} />
-                </FieldIcon>
-                <FieldLabelText>
-                  <OverflowingText
-                    text={field.label}
-                    style={{ width: "100%" }}
-                  />
-                </FieldLabelText>
-              </FieldLabel>
               <FieldValue>
                 <FieldValueDisplay>
                   <FieldTextValue>
@@ -127,7 +114,7 @@ export function CreateFieldsWidget(props: {
           )}
         </For>
       </FieldTable>
-    </WidgetFrame>
+    </FieldsSectionFrame>
   );
 }
 
@@ -136,12 +123,12 @@ function FieldGroupSection(props: { group: FieldGroup; data: LeadDetailView }) {
 
   return (
     <>
-      <WidgetSectionHeader onClick={() => setIsExpanded((v) => !v)}>
+      <RecordDetailSubsectionHeader onClick={() => setIsExpanded((v) => !v)}>
         <span>{props.group.label}</span>
-        <WidgetSectionChevron isExpanded={isExpanded()}>
+        <RecordDetailSubsectionChevron isExpanded={isExpanded()}>
           <ChevronDown size={14} />
-        </WidgetSectionChevron>
-      </WidgetSectionHeader>
+        </RecordDetailSubsectionChevron>
+      </RecordDetailSubsectionHeader>
       <AnimatedExpandableContainer isExpanded={isExpanded()}>
         <FieldTable>
           <For each={props.group.fields}>
@@ -153,17 +140,17 @@ function FieldGroupSection(props: { group: FieldGroup; data: LeadDetailView }) {
   );
 }
 
-export function DetailFieldsWidget(props: { data: LeadDetailView }) {
+export function DetailFieldsSection(props: { data: LeadDetailView }) {
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Campos" />
-      </WidgetHeader>
-      <WidgetBody>
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Campos" />
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
         <For each={LEAD_DETAIL_FIELD_GROUPS}>
           {(group) => <FieldGroupSection group={group} data={props.data} />}
         </For>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }

@@ -13,9 +13,6 @@ export type DraftRecordContext = {
   razonSocial: string | null;
   address: string | null;
   engineStatus: string;
-  canCreate: boolean;
-  submitting: boolean;
-  onSubmit: () => void;
 };
 
 export type RecordContext = LeadRecordContext | DraftRecordContext;

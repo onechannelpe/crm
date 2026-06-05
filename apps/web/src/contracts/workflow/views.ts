@@ -1,6 +1,7 @@
 import type { SaleVenueAccount } from "./primitives";
 import type {
   AbonoBank,
+  LeadNextStep,
   LeadPriority,
   LeadStage,
   LeadStatus,
@@ -17,6 +18,7 @@ export type LeadAvailableAction =
   | "create-quotation"
   | "approve-for-sale"
   | "start-setup-execution"
+  | "update-venue"
   | "request-rate-negotiation"
   | "reassign-lead";
 
@@ -54,7 +56,7 @@ export type LeadListRowView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
-  nextStep: string;
+  nextStep: LeadNextStep;
   createdAt: number;
   updatedAt: number;
 };
@@ -90,7 +92,7 @@ export type LeadDetailLeadView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
-  nextStep: string;
+  nextStep: LeadNextStep;
   createdAt: number;
   updatedAt: number;
 };

@@ -20,6 +20,7 @@ export type LeadHistoryEventType =
   | "quotation_created"
   | "sale_approved"
   | "venue_added"
+  | "venue_updated"
   | "venue_accounts_added"
   | "call_logged"
   | "note_added";
@@ -84,6 +85,10 @@ export type LeadHistoryPayloadByEvent = {
   };
   sale_approved: null;
   venue_added: {
+    venueId: string;
+    nombreComercial: string;
+  };
+  venue_updated: {
     venueId: string;
     nombreComercial: string;
   };

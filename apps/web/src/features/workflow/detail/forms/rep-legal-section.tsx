@@ -1,30 +1,35 @@
 import { useAction } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 
+import Mail from "~/components/icons/mail";
+import Package from "~/components/icons/package";
+import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import {
-  FieldIcon,
   FieldInputValue,
-  FieldLabel,
-  FieldLabelText,
   FieldRow,
   FieldTable,
+  FieldTextValue,
+  RecordInlineCell,
 } from "~/features/side-panel/components/field-table";
 import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 import { toAppError } from "~/lib/app-errors";
 
 import { recordRepLegalMutation } from "../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
-export function RepLegalWidget(props: {
+import formStyles from "./section-form.module.css";
+
+export function RepLegalSection(props: {
   leadId: string;
   data: LeadDetailView;
 }) {
@@ -73,60 +78,50 @@ export function RepLegalWidget(props: {
   }
 
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Representante legal" />
-      </WidgetHeader>
-      <WidgetBody>
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Representante legal" />
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
         <Show
           when={canEdit()}
           fallback={
             <Show
               when={repLegal()}
               fallback={
-                <div style={{ padding: "8px", color: "#666" }}>
+                <div class={formStyles.emptyState}>
                   Sin datos de representante legal
                 </div>
               }
             >
               {(rl) => (
                 <FieldTable>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>Nombres</FieldLabelText>
-                    </FieldLabel>
-                    <span>{rl().nombres}</span>
-                  </FieldRow>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>Apellido paterno</FieldLabelText>
-                    </FieldLabel>
-                    <span>{rl().apellidoPaterno}</span>
-                  </FieldRow>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>Apellido materno</FieldLabelText>
-                    </FieldLabel>
-                    <span>{rl().apellidoMaterno}</span>
-                  </FieldRow>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>DNI</FieldLabelText>
-                    </FieldLabel>
-                    <span>{rl().dni}</span>
-                  </FieldRow>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>Telefono</FieldLabelText>
-                    </FieldLabel>
-                    <span>{rl().telefono ?? "—"}</span>
-                  </FieldRow>
-                  <FieldRow>
-                    <FieldLabel>
-                      <FieldLabelText>Email</FieldLabelText>
-                    </FieldLabel>
-                    <span>{rl().email ?? "—"}</span>
-                  </FieldRow>
+                  <RecordInlineCell label="Nombres" icon={User}>
+                    <FieldTextValue>{rl().nombres}</FieldTextValue>
+                  </RecordInlineCell>
+                  <RecordInlineCell label="Apellido paterno" icon={User}>
+                    <FieldTextValue>{rl().apellidoPaterno}</FieldTextValue>
+                  </RecordInlineCell>
+                  <RecordInlineCell label="Apellido materno" icon={User}>
+                    <FieldTextValue>{rl().apellidoMaterno}</FieldTextValue>
+                  </RecordInlineCell>
+                  <RecordInlineCell label="DNI" icon={Package}>
+                    <FieldTextValue>{rl().dni}</FieldTextValue>
+                  </RecordInlineCell>
+                  <RecordInlineCell
+                    label="Telefono"
+                    icon={Phone}
+                    empty={!rl().telefono}
+                  >
+                    <FieldTextValue>{rl().telefono}</FieldTextValue>
+                  </RecordInlineCell>
+                  <RecordInlineCell
+                    label="Email"
+                    icon={Mail}
+                    empty={!rl().email}
+                  >
+                    <FieldTextValue>{rl().email}</FieldTextValue>
+                  </RecordInlineCell>
                 </FieldTable>
               )}
             </Show>
@@ -134,13 +129,7 @@ export function RepLegalWidget(props: {
         >
           <form onSubmit={(e) => void handleSave(e)}>
             <FieldTable>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <User size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>Nombres</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Nombres" icon={User}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -150,13 +139,7 @@ export function RepLegalWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <User size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>Apellido paterno</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Apellido paterno" icon={User}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -166,13 +149,7 @@ export function RepLegalWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldIcon>
-                    <User size={16} />
-                  </FieldIcon>
-                  <FieldLabelText>Apellido materno</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Apellido materno" icon={User}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -182,12 +159,7 @@ export function RepLegalWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabel>
-                    <FieldLabelText>DNI</FieldLabelText>
-                  </FieldLabel>
-                </FieldLabel>
+              <FieldRow label="DNI" icon={Package}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -197,10 +169,7 @@ export function RepLegalWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Telefono</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Telefono" icon={Phone}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -210,10 +179,7 @@ export function RepLegalWidget(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Email</FieldLabelText>
-                </FieldLabel>
+              <FieldRow label="Email" icon={Mail}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -226,12 +192,10 @@ export function RepLegalWidget(props: {
             </FieldTable>
 
             <Show when={error()}>
-              {(msg) => (
-                <p style={{ color: "red", margin: "8px 0" }}>{msg()}</p>
-              )}
+              {(msg) => <p class={formStyles.error}>{msg()}</p>}
             </Show>
 
-            <div style={{ padding: "8px 0" }}>
+            <RecordDetailSectionActions align="start">
               <Button
                 type="submit"
                 variant="secondary"
@@ -240,10 +204,10 @@ export function RepLegalWidget(props: {
               >
                 Guardar datos
               </Button>
-            </div>
+            </RecordDetailSectionActions>
           </form>
         </Show>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }

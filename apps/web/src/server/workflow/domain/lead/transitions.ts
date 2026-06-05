@@ -379,6 +379,35 @@ export function createVenue(
   return finish(state, events, input.actor, input.now);
 }
 
+export function updateVenue(
+  state: LeadState,
+  input: {
+    actor: Actor;
+    venueId: string;
+    nombreComercial: string;
+    now: number;
+  },
+): TransitionResult {
+  const authz = authorizeLeadAction("update-venue", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
+
+  const events: LeadEvent[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "venue_updated",
+      actorUserId: input.actor.userId,
+      payload: {
+        venueId: input.venueId,
+        nombreComercial: input.nombreComercial,
+      },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
 export function addVenueAccounts(
   state: LeadState,
   input: {

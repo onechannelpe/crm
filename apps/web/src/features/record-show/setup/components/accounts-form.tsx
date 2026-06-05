@@ -1,24 +1,65 @@
-import { For, Show } from "solid-js";
+import { For, type JSX, Show } from "solid-js";
 
+import Moneybag from "~/components/icons/moneybag";
+import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
+import { Radio, RadioGroup } from "~/components/ui/input/radio";
 import { TextInput } from "~/components/ui/input/text-input";
+import { Toggle } from "~/components/ui/input/toggle";
 import { BankPicker } from "~/components/ui/pickers/bank-picker";
 import { ACCOUNT_TYPE_KINDS } from "~/contracts/workflow/vocabulary";
 import {
   FieldInputValue,
-  FieldLabel,
-  FieldLabelText,
   FieldRow,
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 
 import type { AccountsFormState } from "../model/accounts-form-state";
+
+import styles from "./accounts-form.module.css";
+
+function FormFieldRow(props: {
+  label: string;
+  icon: (props: { size?: number }) => JSX.Element;
+  children: JSX.Element;
+}) {
+  return (
+    <FieldRow label={props.label} icon={props.icon}>
+      <FieldInputValue>{props.children}</FieldInputValue>
+    </FieldRow>
+  );
+}
+
+function BankPickerRow(props: {
+  label: string;
+  value: string;
+  open: boolean;
+  onToggle: () => void;
+  onSelect: (bank: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <FormFieldRow label={props.label} icon={Moneybag}>
+      <button
+        type="button"
+        class={styles.pickerTrigger}
+        onClick={props.onToggle}
+      >
+        {props.value || "Seleccionar"}
+      </button>
+      <Show when={props.open}>
+        <BankPicker onSelect={props.onSelect} onClose={props.onClose} />
+      </Show>
+    </FormFieldRow>
+  );
+}
 
 export function AccountsForm(props: {
   venueName: string;
@@ -27,226 +68,146 @@ export function AccountsForm(props: {
   error: string | null;
   onSubmit: (event: SubmitEvent) => void;
 }) {
+  const { form } = props;
+
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text={`Cuentas: ${props.venueName}`} />
-      </WidgetHeader>
-      <WidgetBody>
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text={`Cuentas: ${props.venueName}`} />
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
         <form onSubmit={props.onSubmit}>
           <FieldTable>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Banco SOLES</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <button
-                  type="button"
-                  onClick={() =>
-                    props.form.setShowBancoSolesPicker(
-                      !props.form.showBancoSolesPicker(),
-                    )
-                  }
-                >
-                  {props.form.bancoSoles() || "Seleccionar"}
-                </button>
-                <Show when={props.form.showBancoSolesPicker()}>
-                  <BankPicker
-                    onSelect={props.form.setBancoSoles}
-                    onClose={() => props.form.setShowBancoSolesPicker(false)}
-                  />
-                </Show>
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Tipo cuenta SOLES</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <div>
-                  <For each={ACCOUNT_TYPE_KINDS}>
-                    {(kind) => (
-                      <label>
-                        <input
-                          type="radio"
-                          name="tipoCuentaSoles"
-                          checked={props.form.tipoCuentaSoles() === kind}
-                          onChange={() => props.form.setTipoCuentaSoles(kind)}
-                        />
-                        {kind}
-                      </label>
-                    )}
-                  </For>
-                </div>
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Nro cuenta SOLES</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
+            <BankPickerRow
+              label="Banco SOLES"
+              value={form.bancoSoles()}
+              open={form.showBancoSolesPicker()}
+              onToggle={() =>
+                form.setShowBancoSolesPicker(!form.showBancoSolesPicker())
+              }
+              onSelect={form.setBancoSoles}
+              onClose={() => form.setShowBancoSolesPicker(false)}
+            />
+
+            <FormFieldRow label="Tipo cuenta SOLES" icon={Package}>
+              <RadioGroup>
+                <For each={ACCOUNT_TYPE_KINDS}>
+                  {(kind) => (
+                    <Radio
+                      name="tipoCuentaSoles"
+                      label={kind}
+                      checked={form.tipoCuentaSoles() === kind}
+                      onChange={() => form.setTipoCuentaSoles(kind)}
+                    />
+                  )}
+                </For>
+              </RadioGroup>
+            </FormFieldRow>
+
+            <FormFieldRow label="Nro cuenta SOLES" icon={Package}>
+              <TextInput
+                sizeVariant="sm"
+                value={form.nroCuentaSoles()}
+                onChange={form.setNroCuentaSoles}
+                required
+              />
+            </FormFieldRow>
+
+            <Show when={form.requiresCciSoles()}>
+              <FormFieldRow label="CCI SOLES" icon={Package}>
                 <TextInput
                   sizeVariant="sm"
-                  value={props.form.nroCuentaSoles()}
-                  onChange={props.form.setNroCuentaSoles}
-                  required
+                  value={form.cciSoles()}
+                  onChange={form.setCciSoles}
+                  required={form.requiresCciSoles()}
                 />
-              </FieldInputValue>
-            </FieldRow>
-            <Show when={props.form.requiresCciSoles()}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>CCI SOLES</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  <TextInput
-                    sizeVariant="sm"
-                    value={props.form.cciSoles()}
-                    onChange={props.form.setCciSoles}
-                    required={props.form.requiresCciSoles()}
-                  />
-                </FieldInputValue>
-              </FieldRow>
+              </FormFieldRow>
             </Show>
 
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Cuenta en dolares</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={props.form.usarDolares()}
-                    onChange={(event) => {
-                      const checked = event.currentTarget.checked;
-                      props.form.setUsarDolares(checked);
-                      if (!checked) {
-                        props.form.setSettlementCurrency("PEN");
-                      }
-                    }}
-                  />
-                  Agregar cuenta USD
-                </label>
-              </FieldInputValue>
-            </FieldRow>
-            <Show when={props.form.usarDolares()}>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Banco USD</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      props.form.setShowBancoDolaresPicker(
-                        !props.form.showBancoDolaresPicker(),
-                      )
-                    }
-                  >
-                    {props.form.bancoDolares() || "Seleccionar"}
-                  </button>
-                  <Show when={props.form.showBancoDolaresPicker()}>
-                    <BankPicker
-                      onSelect={props.form.setBancoDolares}
-                      onClose={() =>
-                        props.form.setShowBancoDolaresPicker(false)
-                      }
-                    />
-                  </Show>
-                </FieldInputValue>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Tipo cuenta USD</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
-                  <div>
-                    <For each={ACCOUNT_TYPE_KINDS}>
-                      {(kind) => (
-                        <label>
-                          <input
-                            type="radio"
-                            name="tipoCuentaDolares"
-                            checked={props.form.tipoCuentaDolares() === kind}
-                            onChange={() =>
-                              props.form.setTipoCuentaDolares(kind)
-                            }
-                          />
-                          {kind}
-                        </label>
-                      )}
-                    </For>
-                  </div>
-                </FieldInputValue>
-              </FieldRow>
-              <FieldRow>
-                <FieldLabel>
-                  <FieldLabelText>Nro cuenta USD</FieldLabelText>
-                </FieldLabel>
-                <FieldInputValue>
+            <FormFieldRow label="Cuenta en dólares" icon={Moneybag}>
+              <Toggle
+                ariaLabel="Cuenta en dólares"
+                value={form.usarDolares()}
+                onChange={(checked) => {
+                  form.setUsarDolares(checked);
+                  if (!checked) form.setSettlementCurrency("PEN");
+                }}
+              />
+            </FormFieldRow>
+
+            <Show when={form.usarDolares()}>
+              <BankPickerRow
+                label="Banco USD"
+                value={form.bancoDolares()}
+                open={form.showBancoDolaresPicker()}
+                onToggle={() =>
+                  form.setShowBancoDolaresPicker(!form.showBancoDolaresPicker())
+                }
+                onSelect={form.setBancoDolares}
+                onClose={() => form.setShowBancoDolaresPicker(false)}
+              />
+
+              <FormFieldRow label="Tipo cuenta USD" icon={Package}>
+                <RadioGroup>
+                  <For each={ACCOUNT_TYPE_KINDS}>
+                    {(kind) => (
+                      <Radio
+                        name="tipoCuentaDolares"
+                        label={kind}
+                        checked={form.tipoCuentaDolares() === kind}
+                        onChange={() => form.setTipoCuentaDolares(kind)}
+                      />
+                    )}
+                  </For>
+                </RadioGroup>
+              </FormFieldRow>
+
+              <FormFieldRow label="Nro cuenta USD" icon={Package}>
+                <TextInput
+                  sizeVariant="sm"
+                  value={form.nroCuentaDolares()}
+                  onChange={form.setNroCuentaDolares}
+                  required={form.usarDolares()}
+                />
+              </FormFieldRow>
+
+              <Show when={form.requiresCciDolares()}>
+                <FormFieldRow label="CCI USD" icon={Package}>
                   <TextInput
                     sizeVariant="sm"
-                    value={props.form.nroCuentaDolares()}
-                    onChange={props.form.setNroCuentaDolares}
-                    required={props.form.usarDolares()}
+                    value={form.cciDolares()}
+                    onChange={form.setCciDolares}
+                    required={form.requiresCciDolares()}
                   />
-                </FieldInputValue>
-              </FieldRow>
-              <Show when={props.form.requiresCciDolares()}>
-                <FieldRow>
-                  <FieldLabel>
-                    <FieldLabelText>CCI USD</FieldLabelText>
-                  </FieldLabel>
-                  <FieldInputValue>
-                    <TextInput
-                      sizeVariant="sm"
-                      value={props.form.cciDolares()}
-                      onChange={props.form.setCciDolares}
-                      required={props.form.requiresCciDolares()}
-                    />
-                  </FieldInputValue>
-                </FieldRow>
+                </FormFieldRow>
               </Show>
             </Show>
 
-            <FieldRow>
-              <FieldLabel>
-                <FieldLabelText>Cuenta de abono</FieldLabelText>
-              </FieldLabel>
-              <FieldInputValue>
-                <label>
-                  <input
-                    type="radio"
+            <FormFieldRow label="Cuenta de abono" icon={Moneybag}>
+              <RadioGroup>
+                <Radio
+                  name="settlementCurrency"
+                  label="SOLES"
+                  checked={form.settlementCurrency() === "PEN"}
+                  onChange={() => form.setSettlementCurrency("PEN")}
+                />
+                <Show when={form.usarDolares()}>
+                  <Radio
                     name="settlementCurrency"
-                    checked={props.form.settlementCurrency() === "PEN"}
-                    onChange={() => props.form.setSettlementCurrency("PEN")}
+                    label="USD"
+                    checked={form.settlementCurrency() === "USD"}
+                    onChange={() => form.setSettlementCurrency("USD")}
                   />
-                  SOLES
-                </label>
-                <Show when={props.form.usarDolares()}>
-                  <label>
-                    <input
-                      type="radio"
-                      name="settlementCurrency"
-                      checked={props.form.settlementCurrency() === "USD"}
-                      onChange={() => props.form.setSettlementCurrency("USD")}
-                    />
-                    USD
-                  </label>
                 </Show>
-              </FieldInputValue>
-            </FieldRow>
+              </RadioGroup>
+            </FormFieldRow>
           </FieldTable>
 
-          <Show when={props.error}>{(message) => <p>{message()}</p>}</Show>
-          <div
-            style={{
-              display: "flex",
-              "justify-content": "flex-end",
-              "margin-top": "12px",
-            }}
-          >
+          <Show when={props.error}>
+            {(message) => <p class={styles.error}>{message()}</p>}
+          </Show>
+
+          <RecordDetailSectionActions>
             <Button
               type="submit"
               variant="primary"
@@ -255,9 +216,9 @@ export function AccountsForm(props: {
             >
               Guardar cuentas
             </Button>
-          </div>
+          </RecordDetailSectionActions>
         </form>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }

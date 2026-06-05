@@ -21,6 +21,10 @@ export type CreateVenueInput = {
   departamento: string;
 };
 
+export type UpdateVenueInput = CreateVenueInput & {
+  venueId: string;
+};
+
 export type AddVenueAccountsInput = {
   leadId: string;
   venueId: string;
@@ -94,6 +98,76 @@ export async function requestVenueCreation(input: CreateVenueInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
+        nombreComercial,
+        posQuantity: input.posQuantity,
+        digitalConfig: input.digitalConfig,
+        direccion,
+        referencia,
+        distrito,
+        provincia,
+        departamento,
+      }),
+  });
+}
+
+export async function requestVenueUpdate(input: UpdateVenueInput) {
+  const nombreComercial = assertParsed(
+    parseRequiredLeadText(
+      input.nombreComercial,
+      "nombre_comercial_required",
+      "Nombre comercial is required",
+    ),
+  );
+  const direccion = assertParsed(
+    parseRequiredLeadText(
+      input.direccion,
+      "direccion_required",
+      "Direccion is required",
+    ),
+  );
+  const referencia = assertParsed(
+    parseRequiredLeadText(
+      input.referencia,
+      "referencia_required",
+      "Referencia is required",
+    ),
+  );
+  const distrito = assertParsed(
+    parseRequiredLeadText(
+      input.distrito,
+      "distrito_required",
+      "Distrito is required",
+    ),
+  );
+  const provincia = assertParsed(
+    parseRequiredLeadText(
+      input.provincia,
+      "provincia_required",
+      "Provincia is required",
+    ),
+  );
+  const departamento = assertParsed(
+    parseRequiredLeadText(
+      input.departamento,
+      "departamento_required",
+      "Departamento is required",
+    ),
+  );
+
+  return runAction({
+    actionName: "workflow.update_venue",
+    access: { kind: "auth" },
+    input: { leadId: input.leadId, venueId: input.venueId },
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.updateVenue({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        leadId: input.leadId,
+        venueId: input.venueId,
         nombreComercial,
         posQuantity: input.posQuantity,
         digitalConfig: input.digitalConfig,
