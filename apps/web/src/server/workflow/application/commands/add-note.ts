@@ -10,13 +10,9 @@ import { addNote } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 
-type Ports = {
-  executor: DatabaseExecutor;
-};
-
 export async function addLeadNoteCommand(
   input: AddLeadNoteCommandInput,
-  ports: Ports,
+  ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ interactionId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);

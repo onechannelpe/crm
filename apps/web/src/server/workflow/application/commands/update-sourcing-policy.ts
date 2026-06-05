@@ -5,13 +5,9 @@ import type { UpdateSourcingPolicyCommandInput } from "~/server/workflow/types";
 
 import type { LeadSourcingPolicyRepository } from "../ports/entities";
 
-type Ports = {
-  sourcingPolicies: LeadSourcingPolicyRepository;
-};
-
 export async function updateSourcingPolicy(
   input: UpdateSourcingPolicyCommandInput,
-  ports: Ports,
+  ports: { sourcingPolicies: LeadSourcingPolicyRepository },
 ): Promise<
   Result<{ branchId: number; engineAssignmentEnabled: boolean }, DomainError>
 > {

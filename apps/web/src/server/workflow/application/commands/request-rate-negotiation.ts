@@ -11,13 +11,9 @@ import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
-type Ports = {
-  executor: DatabaseExecutor;
-};
-
 export async function requestRateNegotiationCommand(
   input: RequestRateNegotiationCommandInput,
-  ports: Ports,
+  ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   if (input.artifactIds.length === 0) {
     return Err(

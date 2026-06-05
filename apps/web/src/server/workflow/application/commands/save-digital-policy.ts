@@ -13,13 +13,9 @@ import {
   validateDigitalAggregate,
 } from "../services/digital-product-policy";
 
-type Ports = {
-  executor: DatabaseExecutor;
-};
-
 export async function saveDigitalPolicyCommand(
   input: SaveDigitalPolicyCommandInput,
-  ports: Ports,
+  ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);

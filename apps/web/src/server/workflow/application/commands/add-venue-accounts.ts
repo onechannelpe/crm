@@ -12,13 +12,9 @@ import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
-type Ports = {
-  executor: DatabaseExecutor;
-};
-
 export async function addVenueAccountsCommand(
   input: AddVenueAccountsCommandInput,
-  ports: Ports,
+  ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
   const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;

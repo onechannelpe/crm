@@ -10,13 +10,9 @@ import { applyImportedReview } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 
-type Ports = {
-  executor: DatabaseExecutor;
-};
-
 export async function applyImportedReviewCommand(
   input: ApplyImportedReviewCommandInput,
-  ports: Ports,
+  ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ applied: boolean; leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);

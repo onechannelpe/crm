@@ -6,14 +6,9 @@ import { resolveCapabilities } from "../../domain/lead/policy";
 import type { LeadEnrichmentQueue } from "../ports/gateways";
 import type { LeadReadRepository } from "../ports/lead";
 
-type Ports = {
-  leads: LeadReadRepository;
-  enrichmentQueue: LeadEnrichmentQueue;
-};
-
 export async function requestSunatRefresh(
   input: { actor: WorkflowActor; leadId: string },
-  ports: Ports,
+  ports: { leads: LeadReadRepository; enrichmentQueue: LeadEnrichmentQueue },
 ): Promise<Result<void, DomainError>> {
   if (!resolveCapabilities(input.actor.role).has("view")) {
     return Err(domainError("forbidden", "forbidden", "Access denied"));

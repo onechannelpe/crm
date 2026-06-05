@@ -25,14 +25,6 @@ import {
   resolveLeadRegistration,
 } from "./register-lead-resolution";
 
-type Ports = {
-  leads: LeadRepository;
-  leadStates: LeadStateRepository;
-  users: WorkflowUserRepository;
-  enrichmentQueue: LeadEnrichmentQueue;
-  executor: DatabaseExecutor;
-};
-
 export async function registerLead(
   input: {
     actorUserId: number;
@@ -40,7 +32,13 @@ export async function registerLead(
     executiveId: number;
     ruc: string;
   },
-  ports: Ports,
+  ports: {
+    leads: LeadRepository;
+    leadStates: LeadStateRepository;
+    users: WorkflowUserRepository;
+    enrichmentQueue: LeadEnrichmentQueue;
+    executor: DatabaseExecutor;
+  },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const canRegister = requireCapability("register", { role: input.actorRole });
   if (!canRegister.ok) return canRegister;

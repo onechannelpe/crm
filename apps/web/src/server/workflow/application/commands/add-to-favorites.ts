@@ -8,13 +8,9 @@ import { authorizeLeadAction } from "../../domain/lead/policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
-type Ports = {
-  executor: DatabaseExecutor;
-};
-
 export async function addToFavoritesCommand(
   input: { actor: WorkflowActor; leadId: string },
-  ports: Ports,
+  ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
