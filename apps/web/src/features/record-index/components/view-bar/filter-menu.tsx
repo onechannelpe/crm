@@ -17,7 +17,7 @@ export function FilterMenu(props: FilterMenuProps) {
   const setup = useRecordIndexSetup();
 
   function resetFilterPanel() {
-    model.filtering.setPanel({ kind: "field-list" });
+    model.filtering?.setPanel({ kind: "field-list" });
   }
 
   return (
@@ -25,8 +25,8 @@ export function FilterMenu(props: FilterMenuProps) {
       {(filter) => (
         <DataGridToolbarMenu
           active={
-            model.filtering.isActive() ||
-            Boolean(model.anyFieldFilter?.value().trim())
+            Boolean(model.filtering?.isActive()) ||
+            Boolean(model.search?.value().trim())
           }
           label={filter().label}
           menuId={filter().menuId}

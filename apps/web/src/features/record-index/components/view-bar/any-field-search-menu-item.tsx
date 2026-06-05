@@ -10,19 +10,21 @@ export function AnyFieldSearchMenuItem() {
   const model = useRecordIndexModelContext();
 
   return (
-    <Show when={model.anyFieldFilter}>
-      {(anyFieldFilter) => (
+    <Show when={model.search}>
+      {(search) => (
         <button
           type="button"
           role="menuitem"
           class={sharedStyles.menuItem}
-          onClick={() => model.filtering.setPanel({ kind: "any-field-search" })}
+          onClick={() =>
+            model.filtering?.setPanel({ kind: "any-field-search" })
+          }
         >
           <span class={sharedStyles.menuItemIcon}>
             <Search size={16} />
           </span>
           <span>Buscar en cualquier campo</span>
-          <Show when={anyFieldFilter().value().trim()}>
+          <Show when={search().value().trim()}>
             {(value) => (
               <span class={sharedStyles.menuItemContext}>· {value()}</span>
             )}

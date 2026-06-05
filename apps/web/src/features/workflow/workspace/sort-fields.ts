@@ -2,7 +2,7 @@ import Building2 from "~/components/icons/building-2";
 import CalendarClock from "~/components/icons/calendar-clock";
 import CalendarDays from "~/components/icons/calendar-days";
 import User from "~/components/icons/user";
-import type { RecordIndexSortField } from "~/features/record-index/model/sort";
+import type { RecordIndexSortField } from "~/features/record-index/model/catalog";
 
 export const LEAD_WORKSPACE_SORT_FIELDS = [
   {

@@ -16,7 +16,7 @@ import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
   RecordIndexAdapter,
   RecordIndexSource,
-} from "~/features/record-index/model/types";
+} from "~/features/record-index/model/adapter";
 import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
 import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads";
 import { leadListQuery } from "~/features/workflow/data/queries";
@@ -28,15 +28,10 @@ import { useCreateLeadRecordAction } from "./create-action";
 import {
   LEAD_WORKSPACE_FILTER,
   resolveLeadWorkspaceFilterQuery,
-  type LeadWorkspaceFilterValue,
 } from "./filter";
 import { ImportDropzone } from "./import-dropzone";
 import { useOpenLeadRecord } from "./open-row";
-import {
-  LEAD_WORKSPACE_SORT,
-  resolveLeadWorkspaceSortQuery,
-  type LeadSortKey,
-} from "./sort";
+import { LEAD_WORKSPACE_SORT, resolveLeadWorkspaceSortQuery } from "./sort";
 import { useRecordsImport } from "./use-records-import";
 import { defaultViewIdForRole, viewsForRole } from "./views";
 
@@ -50,7 +45,8 @@ export function LeadsWorkspace() {
   const user = currentUser();
 
   const available = viewsForRole(user.role);
-  const [activeId, setActiveId] = createSignal(defaultViewIdForRole(user.role));
+  const defaultViewId = defaultViewIdForRole(user.role);
+  const [activeId, setActiveId] = createSignal(defaultViewId);
 
   const activeView = createMemo(
     () => available.find((v) => v.id === activeId()) ?? available[0],
@@ -169,15 +165,11 @@ export function LeadsWorkspace() {
     pickerIcon: List,
     columns: workspaceColumnsForRole(user.role),
     source,
-    serverManagedFiltering: true,
-    serverManagedSorting: true,
-    anyFieldFilter: {
+    search: {
       value: anyFieldSearch,
       placeholder: "RUC, cliente, dirección o ejecutivo",
-      setValue: setAnyFieldSearch,
+      set: setAnyFieldSearch,
     },
-    onFilterValueChange: setSelectedFilter,
-    onSortValueChange: setSelectedSort,
     pagination: {
       currentPage: pageIndex,
       pageSize: LEAD_PAGE_SIZE,
@@ -198,9 +190,8 @@ export function LeadsWorkspace() {
       ? createAction
       : undefined,
     views: {
-      available,
-      active: activeView,
-      onSelect: setActiveId,
+      catalog: { available, defaultId: defaultViewId },
+      value: { value: activeId, set: setActiveId },
     },
     actions: canManageIntegrations
       ? [
@@ -216,13 +207,18 @@ export function LeadsWorkspace() {
           },
         ]
       : undefined,
-    filter: LEAD_WORKSPACE_FILTER,
-    sort: LEAD_WORKSPACE_SORT,
-  } satisfies RecordIndexAdapter<
-    LeadListRowView,
-    LeadWorkspaceFilterValue,
-    LeadSortKey
-  >;
+    filter: {
+      catalog: LEAD_WORKSPACE_FILTER,
+      value: {
+        value: selectedFilter,
+        set: (value) => setSelectedFilter(value),
+      },
+    },
+    sort: {
+      catalog: LEAD_WORKSPACE_SORT,
+      value: { value: selectedSort, set: (value) => setSelectedSort(value) },
+    },
+  } satisfies RecordIndexAdapter<LeadListRowView>;
 
   return (
     <ImportDropzone

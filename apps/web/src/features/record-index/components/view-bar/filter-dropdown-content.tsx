@@ -15,8 +15,8 @@ export function FilterDropdownContent(props: FilterDropdownContentProps) {
   const setup = useRecordIndexSetup();
 
   const selectedField = () => {
-    const panel = model.filtering.panel();
-    if (panel.kind !== "field-value") {
+    const panel = model.filtering?.panel();
+    if (panel?.kind !== "field-value") {
       return undefined;
     }
 
@@ -27,16 +27,13 @@ export function FilterDropdownContent(props: FilterDropdownContentProps) {
     <Switch>
       <Match
         when={
-          model.filtering.panel().kind === "any-field-search"
-            ? model.anyFieldFilter
+          model.filtering?.panel().kind === "any-field-search"
+            ? model.search
             : undefined
         }
       >
-        {(anyFieldFilter) => (
-          <AnyFieldSearchMenu
-            anyFieldFilter={anyFieldFilter()}
-            onClose={props.onClose}
-          />
+        {(search) => (
+          <AnyFieldSearchMenu search={search()} onClose={props.onClose} />
         )}
       </Match>
       <Match when={selectedField()}>

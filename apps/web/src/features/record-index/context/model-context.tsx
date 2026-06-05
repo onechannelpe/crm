@@ -1,6 +1,6 @@
 import { createContext, type JSX, useContext } from "solid-js";
 
-import type { RecordIndexModel } from "../model/types";
+import type { RecordIndexModel } from "../model/model";
 
 const RecordIndexModelContext = createContext<RecordIndexModel | undefined>(
   undefined,

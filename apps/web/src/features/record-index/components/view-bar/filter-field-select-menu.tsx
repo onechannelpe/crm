@@ -51,7 +51,7 @@ export function FilterFieldSelectMenu(props: FilterFieldSelectMenuProps) {
                   role="menuitem"
                   class={sharedStyles.menuItem}
                   onClick={() =>
-                    model.filtering.setPanel({
+                    model.filtering?.setPanel({
                       kind: "field-value",
                       fieldId: fieldOption.id,
                     })
@@ -78,9 +78,9 @@ export function FilterFieldSelectMenu(props: FilterFieldSelectMenuProps) {
             role="menuitem"
             class={sharedStyles.menuItem}
             onClick={() => {
-              model.filtering.setFilterValue(setup.filter?.defaultValue);
-              model.anyFieldFilter?.setValue("");
-              model.filtering.setPanel({ kind: "field-list" });
+              model.filtering?.set(setup.filter?.defaultValue);
+              model.search?.set("");
+              model.filtering?.setPanel({ kind: "field-list" });
               props.onClose();
             }}
           >

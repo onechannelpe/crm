@@ -1,6 +1,5 @@
 import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
-import { type LeadListRowView } from "~/contracts/workflow/views";
-import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
+import type { RecordIndexSortCatalog } from "~/features/record-index/model/catalog";
 
 import { LEAD_WORKSPACE_SORT_FIELDS } from "./sort-fields";
 
@@ -49,10 +48,7 @@ export function resolveLeadWorkspaceSortQuery(
   }
 }
 
-export const LEAD_WORKSPACE_SORT: RecordIndexSortDefinition<
-  LeadListRowView,
-  LeadSortKey
-> = {
+export const LEAD_WORKSPACE_SORT: RecordIndexSortCatalog<LeadSortKey> = {
   label: "Ordenar",
   menuId: "lead-workspace-sort-menu",
   fields: LEAD_WORKSPACE_SORT_FIELDS,

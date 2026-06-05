@@ -38,7 +38,7 @@ export function SortMenu(props: SortMenuProps) {
 
   function resetSortMenuState() {
     setSortSearch("");
-    const current = model.sorting.sortValue();
+    const current = model.sorting?.value();
     setSortDirection(parseSortDirection(current));
   }
 
@@ -53,7 +53,7 @@ export function SortMenu(props: SortMenuProps) {
     );
 
     if (target) {
-      model.sorting.setSortValue(target.value);
+      model.sorting?.set(target.value);
     }
 
     setSortSearch("");
@@ -64,7 +64,7 @@ export function SortMenu(props: SortMenuProps) {
     <Show when={setup.sort}>
       {(sort) => (
         <DataGridToolbarMenu
-          active={model.sorting.isActive()}
+          active={Boolean(model.sorting?.isActive())}
           label={sort().label}
           menuId={sort().menuId}
           open={props.isOpen}
@@ -129,7 +129,7 @@ export function SortMenu(props: SortMenuProps) {
                 {(fieldOption) => {
                   const FieldIcon = fieldOption.icon;
                   const isActive = () =>
-                    (model.sorting.sortValue() ?? "").startsWith(
+                    (model.sorting?.value() ?? "").startsWith(
                       `${fieldOption.prefix}_`,
                     );
 

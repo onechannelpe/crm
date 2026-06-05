@@ -1,7 +1,6 @@
 import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
-import { type LeadListRowView } from "~/contracts/workflow/views";
 import { LEAD_STAGES, LEAD_STATUSES } from "~/contracts/workflow/vocabulary";
-import type { RecordIndexFilterDefinition } from "~/features/record-index/model/filter";
+import type { RecordIndexFilterCatalog } from "~/features/record-index/model/catalog";
 
 import {
   LEAD_WORKSPACE_FILTER_FIELDS,
@@ -53,12 +52,10 @@ export function resolveLeadWorkspaceFilterQuery(
   return {};
 }
 
-export const LEAD_WORKSPACE_FILTER: RecordIndexFilterDefinition<
-  LeadListRowView,
-  LeadWorkspaceFilterValue
-> = {
-  label: "Filtrar",
-  menuId: "lead-workspace-filter-menu",
-  fields: LEAD_WORKSPACE_FILTER_FIELDS,
-  defaultValue: "all",
-};
+export const LEAD_WORKSPACE_FILTER: RecordIndexFilterCatalog<LeadWorkspaceFilterValue> =
+  {
+    label: "Filtrar",
+    menuId: "lead-workspace-filter-menu",
+    fields: LEAD_WORKSPACE_FILTER_FIELDS,
+    defaultValue: "all",
+  };

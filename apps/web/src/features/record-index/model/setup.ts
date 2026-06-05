@@ -1,11 +1,36 @@
-import type { RecordIndexSetup } from "./setup-types";
-import type { RecordIndexAdapter } from "./types";
+import type { Accessor } from "solid-js";
 
-export function createRecordIndexSetup<
-  T extends { id: string },
-  TFilterValue extends string = string,
-  TSortValue extends string = string,
->(adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>): RecordIndexSetup {
+import type { RecordIndexAdapter, RecordIndexToolbarAction } from "./adapter";
+import type {
+  RecordIndexFilterCatalog,
+  RecordIndexSortCatalog,
+  RecordIndexViews,
+} from "./catalog";
+
+export type RecordIndexSetupColumn = {
+  key: string;
+  label: string;
+};
+
+// Static catalog projection consumed by the view-bar via setup-context. Holds
+// only what is render-free and non-generic; the live values live on the adapter
+// controls and reach the view-bar through the model projection.
+export type RecordIndexSetup = {
+  id: string;
+  title: Accessor<string>;
+  ariaLabel: string;
+  class?: string;
+  selectable: boolean;
+  columns: ReadonlyArray<RecordIndexSetupColumn>;
+  filter?: RecordIndexFilterCatalog;
+  sort?: RecordIndexSortCatalog;
+  views?: RecordIndexViews;
+  actions?: ReadonlyArray<RecordIndexToolbarAction>;
+};
+
+export function createRecordIndexSetup<T extends { id: string }>(
+  adapter: RecordIndexAdapter<T>,
+): RecordIndexSetup {
   const rawTitle = adapter.title;
   const title = typeof rawTitle === "function" ? rawTitle : () => rawTitle;
 
@@ -15,16 +40,13 @@ export function createRecordIndexSetup<
     ariaLabel: adapter.ariaLabel,
     class: adapter.class,
     selectable: adapter.selectable ?? false,
-    views: adapter.views,
-    actions: adapter.actions,
     columns: adapter.columns.map((column) => ({
       key: column.key,
       label: column.label,
     })),
-    // The filter/sort catalog is render-free and non-generic already, so the
-    // setup view shares it by reference. Only the apply/isActive behavior is
-    // erased (structurally invisible through the RecordIndex*Catalog type).
-    filter: adapter.filter,
-    sort: adapter.sort,
+    filter: adapter.filter?.catalog,
+    sort: adapter.sort?.catalog,
+    views: adapter.views?.catalog,
+    actions: adapter.actions,
   };
 }
