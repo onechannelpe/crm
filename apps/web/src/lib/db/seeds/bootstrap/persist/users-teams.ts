@@ -394,6 +394,21 @@ export async function persistUsersAndTeams(
         is_active: 1,
         created_at: now,
       },
+      {
+        id: 46,
+        branch_id: 4,
+        team_id: 5,
+        username: "carlos.lazarte",
+        email: "carlos.lazarte@culqinegocios.com",
+        password_hash: realPasswordHash,
+        names: "CARLOS JHONATAN",
+        first_surname: "LAZARTE",
+        second_surname: "ARIZOLA",
+        onboarding_completed_at: null,
+        role: "executive",
+        is_active: 1,
+        created_at: now,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
