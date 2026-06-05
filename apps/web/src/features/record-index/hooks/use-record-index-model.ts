@@ -11,7 +11,6 @@ import {
 } from "../model/columns";
 import type { RecordIndexModel, RecordIndexScreenModel } from "../model/model";
 
-// A selection is active when it holds a concrete value other than its default.
 function isSelectionActive(
   value: string | undefined,
   defaultValue: string | undefined,

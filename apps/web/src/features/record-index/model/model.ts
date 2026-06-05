@@ -10,8 +10,8 @@ import type {
 } from "./adapter";
 import type { RecordIndexFilterPanel, RecordIndexMenu } from "./view-state";
 
-// Non-generic live projection consumed by the view-bar via model-context. Each
-// selection slice is present only when the adapter declares it.
+// RecordIndexModel is the non-generic view-bar contract. Optional slices exist
+// only when the adapter provides them.
 export type RecordIndexModel = {
   counts: {
     pickerMeta: Accessor<string>;
@@ -44,8 +44,7 @@ export type RecordIndexModel = {
   search?: RecordIndexSearchControl;
 };
 
-// Generic superset consumed by the table surface. `context` is the same object
-// provided through model-context; it is built once, not re-projected.
+// The table surface keeps typed adapter data while sharing the view-bar model.
 export type RecordIndexScreenModel<T extends { id: string }> = {
   adapter: RecordIndexAdapter<T>;
   context: RecordIndexModel;

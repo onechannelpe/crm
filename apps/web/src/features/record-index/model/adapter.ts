@@ -14,10 +14,8 @@ import type {
   RecordIndexViews,
 } from "./catalog";
 
-// A live read+write handle to a value the adapter owns and projects to the
-// view-bar. The adapter owns the signal, the view-bar reads `value` and calls
-// `set`, and the adapter's query reads `value` directly. Replaces the old
-// onXChange callbacks, which forced a second copy of the value in the adapter.
+// Adapters own selection signals. Record-index surfaces only this read/write
+// handle so queries and controls share one value.
 export type RecordIndexControl<TValue> = {
   value: Accessor<TValue>;
   set: (value: TValue) => void;
@@ -74,10 +72,8 @@ export type RecordIndexAdapter<T extends { id: string }> = {
   createAction?: RecordIndexCreateAction;
   pagination?: RecordIndexPagination;
   actions?: ReadonlyArray<RecordIndexToolbarAction>;
-  // Each selector bundles its static catalog with its live value so the two
-  // always travel together (present or absent as one unit). The value is a
-  // plain string: the catalog keeps the narrow union at its definition site,
-  // but selection flows through the non-generic view-bar as a string.
+  // Optional selectors expose their catalog and live value together. Selection
+  // values cross the non-generic view-bar boundary as strings.
   filter?: {
     catalog: RecordIndexFilterCatalog;
     value: RecordIndexControl<string | undefined>;

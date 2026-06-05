@@ -38,9 +38,6 @@ export type RecordIndexViewDefinition = {
   readonly label: string;
 };
 
-// Adapter-declared catalog: which views exist and which is the default. The
-// active selection is a live control owned by the adapter, not part of this
-// static catalog.
 export type RecordIndexViews = {
   readonly available: ReadonlyArray<RecordIndexViewDefinition>;
   readonly defaultId: string;

@@ -12,9 +12,8 @@ export type RecordIndexSetupColumn = {
   label: string;
 };
 
-// Static catalog projection consumed by the view-bar via setup-context. Holds
-// only what is render-free and non-generic; the live values live on the adapter
-// controls and reach the view-bar through the model projection.
+// Setup contains static view-bar configuration. Adapter controls carry live
+// values through RecordIndexModel.
 export type RecordIndexSetup = {
   id: string;
   title: Accessor<string>;
