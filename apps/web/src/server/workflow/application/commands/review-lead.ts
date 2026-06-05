@@ -15,7 +15,7 @@ type Ports = {
 };
 
 export async function reviewLeadCommand(
-  input: ReviewLeadCommandInput & { idempotencyKey?: string },
+  input: ReviewLeadCommandInput,
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
@@ -36,7 +36,7 @@ export async function reviewLeadCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
     });
     if (!committed.ok) return committed;
 

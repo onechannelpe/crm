@@ -1,11 +1,7 @@
-import type {
-  ModalidadCobro,
-  ProductScope,
-} from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { SaveDigitalPolicyCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { authorizeLeadAction } from "../../domain/lead/policy";
@@ -22,15 +18,7 @@ type Ports = {
 };
 
 export async function saveDigitalPolicyCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    linkScope: ProductScope;
-    linkUrl: string | null;
-    onlineScope: ProductScope;
-    onlineUrl: string | null;
-    onlineModalidad: ModalidadCobro | null;
-  },
+  input: SaveDigitalPolicyCommandInput,
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {

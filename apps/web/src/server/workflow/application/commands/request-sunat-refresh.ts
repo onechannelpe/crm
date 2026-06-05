@@ -12,10 +12,7 @@ type Ports = {
 };
 
 export async function requestSunatRefresh(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-  },
+  input: { actor: WorkflowActor; leadId: string },
   ports: Ports,
 ): Promise<Result<void, DomainError>> {
   if (!resolveCapabilities(input.actor.role).has("view")) {

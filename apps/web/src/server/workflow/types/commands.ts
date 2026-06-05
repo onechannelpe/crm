@@ -11,7 +11,7 @@ import type {
 
 import type { WorkflowActor } from "./actor";
 
-export type RegisterLeadInput = {
+export type RegisterLeadCommandInput = {
   actor: WorkflowActor;
   ruc: string;
   executiveId: number;
@@ -31,7 +31,7 @@ export type ReviewLeadCommandInput = {
   reason: string;
 };
 
-export type ApplyImportedReviewInput = {
+export type ApplyImportedReviewCommandInput = {
   actor: WorkflowActor;
   leadId: string;
   type: "import_status" | "import_prioridad";
@@ -39,17 +39,6 @@ export type ApplyImportedReviewInput = {
   prioridad?: LeadPriority;
   expectedUpdatedAt: number;
 };
-
-export type LeadIdWithActor = {
-  actor: WorkflowActor;
-  leadId: string;
-};
-
-export type AddLeadToFavoritesInput = LeadIdWithActor;
-export type RemoveLeadFromFavoritesInput = LeadIdWithActor;
-export type ApproveForSaleInput = LeadIdWithActor;
-export type StartSetupExecutionInput = LeadIdWithActor;
-export type RequestSunatRefreshInput = LeadIdWithActor;
 
 export type AddLeadNoteCommandInput = {
   actor: WorkflowActor;
@@ -97,7 +86,17 @@ export type SaveDigitalPolicyCommandInput = {
   onlineModalidad: ModalidadCobro | null;
 };
 
-export type RequestQuotationInput = SaveCommercialScopeCommandInput;
+export type RequestQuotationCommandInput = {
+  actor: WorkflowActor;
+  leadId: string;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  giroNegocio: string;
+  abonoBank: AbonoBank;
+  posTotal: number;
+};
 
 export type RecordRepLegalCommandInput = {
   actor: WorkflowActor;
@@ -142,13 +141,8 @@ export type AddVenueAccountsCommandInput = {
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
 };
 
-export type UpdateSourcingPolicyInput = {
+export type UpdateSourcingPolicyCommandInput = {
   actor: WorkflowActor;
   branchId: number;
   engineAssignmentEnabled: boolean;
-};
-
-export type GetLeadDetailInput = {
-  actor: WorkflowActor;
-  leadId: string;
 };

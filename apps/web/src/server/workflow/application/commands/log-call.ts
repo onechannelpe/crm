@@ -1,10 +1,9 @@
 import { randomUUIDv7 } from "bun";
 
-import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { LogLeadCallCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { logCall } from "../../domain/lead/transitions";
@@ -16,13 +15,7 @@ type Ports = {
 };
 
 export async function logLeadCallCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    outcome: LeadCallOutcome;
-    notes?: string | null;
-    idempotencyKey?: string;
-  },
+  input: LogLeadCallCommandInput,
   ports: Ports,
 ): Promise<Result<{ interactionId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
@@ -43,7 +36,7 @@ export async function logLeadCallCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
     });
     if (!committed.ok) return committed;
 

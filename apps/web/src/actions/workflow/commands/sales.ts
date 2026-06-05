@@ -1,13 +1,32 @@
 "use server";
 
-import {
-  type AddVenueAccountsInput,
-  type CreateVenueInput,
-} from "~/contracts/workflow/inputs";
+import type {
+  SaleVenueAccount,
+  VenueDigitalConfig,
+} from "~/contracts/workflow/primitives";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { parseRequiredLeadText } from "~/server/workflow/parsers";
+
+export type CreateVenueInput = {
+  leadId: string;
+  nombreComercial: string;
+  posQuantity: number;
+  digitalConfig?: VenueDigitalConfig;
+  direccion: string;
+  referencia: string;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+};
+
+export type AddVenueAccountsInput = {
+  leadId: string;
+  venueId: string;
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
+};
 
 function assertParsed<T>(
   parsed: { ok: true; value: T } | { ok: false; error: { message: string } },

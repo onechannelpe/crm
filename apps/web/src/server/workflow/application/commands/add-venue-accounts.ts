@@ -17,7 +17,7 @@ type Ports = {
 };
 
 export async function addVenueAccountsCommand(
-  input: AddVenueAccountsCommandInput & { idempotencyKey?: string },
+  input: AddVenueAccountsCommandInput,
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
@@ -135,7 +135,7 @@ export async function addVenueAccountsCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
     });
     if (!committed.ok) return committed;
 

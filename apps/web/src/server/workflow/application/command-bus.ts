@@ -3,26 +3,22 @@ import { createEnrichmentCommand } from "~/server/client-search/request";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   AddLeadNoteCommandInput,
-  AddLeadToFavoritesInput,
   AddVenueAccountsCommandInput,
-  ApplyImportedReviewInput,
-  ApproveForSaleInput,
+  ApplyImportedReviewCommandInput,
   CreateQuotationCommandInput,
   CreateVenueCommandInput,
   LogLeadCallCommandInput,
   ReassignLeadCommandInput,
   RecordRepLegalCommandInput,
-  RegisterLeadInput,
-  RemoveLeadFromFavoritesInput,
-  RequestQuotationInput,
+  RegisterLeadCommandInput,
+  RequestQuotationCommandInput,
   RequestRateNegotiationCommandInput,
-  RequestSunatRefreshInput,
   ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
   SaveDigitalPolicyCommandInput,
-  StartSetupExecutionInput,
-  UpdateSourcingPolicyInput,
+  UpdateSourcingPolicyCommandInput,
 } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/types";
 
 import { createLeadStateRepo } from "../infrastructure/lead-state-repo";
 import type { WorkflowRepos } from "../infrastructure/workflow-repos";
@@ -66,7 +62,7 @@ export function createWorkflowCommandBus(
   };
 
   return {
-    registerLead: (input: RegisterLeadInput) =>
+    registerLead: (input: RegisterLeadCommandInput) =>
       registerLead(
         {
           actorUserId: input.actor.userId,
@@ -95,10 +91,10 @@ export function createWorkflowCommandBus(
     logLeadCall: (input: LogLeadCallCommandInput) =>
       logLeadCallCommand(input, { executor }),
 
-    approveForSale: (input: ApproveForSaleInput) =>
+    approveForSale: (input: { actor: WorkflowActor; leadId: string }) =>
       approveForSaleCommand(input, { executor }),
 
-    startSetupExecution: (input: StartSetupExecutionInput) =>
+    startSetupExecution: (input: { actor: WorkflowActor; leadId: string }) =>
       startSetupExecutionCommand(input, {
         executor,
       }),
@@ -118,7 +114,7 @@ export function createWorkflowCommandBus(
         executor,
       }),
 
-    requestQuotation: (input: RequestQuotationInput) =>
+    requestQuotation: (input: RequestQuotationCommandInput) =>
       requestQuotationCommand(input, {
         executor,
       }),
@@ -141,22 +137,22 @@ export function createWorkflowCommandBus(
     requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
       requestRateNegotiationCommand(input, { executor }),
 
-    applyImportedReview: (input: ApplyImportedReviewInput) =>
+    applyImportedReview: (input: ApplyImportedReviewCommandInput) =>
       applyImportedReviewCommand(input, { executor }),
 
-    requestSunatRefresh: (input: RequestSunatRefreshInput) =>
+    requestSunatRefresh: (input: { actor: WorkflowActor; leadId: string }) =>
       requestSunatRefresh(input, {
         leads: repos.leads,
         enrichmentQueue,
       }),
 
-    addToFavorites: (input: AddLeadToFavoritesInput) =>
+    addToFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
       addToFavoritesCommand(input, { executor }),
 
-    removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
+    removeFromFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
       removeFromFavoritesCommand(input, { executor }),
 
-    updateSourcingPolicy: (input: UpdateSourcingPolicyInput) =>
+    updateSourcingPolicy: (input: UpdateSourcingPolicyCommandInput) =>
       updateSourcingPolicy(input, { sourcingPolicies: repos.sourcingPolicies }),
   };
 }

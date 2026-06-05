@@ -3,7 +3,7 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { RequestRateNegotiationCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requestRateNegotiation } from "../../domain/lead/transitions";
@@ -16,13 +16,7 @@ type Ports = {
 };
 
 export async function requestRateNegotiationCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    artifactIds: string[];
-    justification: string;
-    idempotencyKey?: string;
-  },
+  input: RequestRateNegotiationCommandInput,
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
   if (input.artifactIds.length === 0) {
@@ -94,7 +88,7 @@ export async function requestRateNegotiationCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
     });
     if (!committed.ok) return committed;
 

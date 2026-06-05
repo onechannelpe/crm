@@ -3,7 +3,7 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { ReassignLeadCommandInput } from "~/server/workflow/types";
 
 import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
 import { resolveAssignableExecutivesScope } from "../../domain/lead/policy";
@@ -17,12 +17,7 @@ type Ports = {
 };
 
 export async function reassignLeadCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    toExecutiveId: number;
-    idempotencyKey?: string;
-  },
+  input: ReassignLeadCommandInput,
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
@@ -60,7 +55,7 @@ export async function reassignLeadCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
       assignment: {
         toExecutiveId: input.toExecutiveId,
         assignedBy: input.actor.userId,

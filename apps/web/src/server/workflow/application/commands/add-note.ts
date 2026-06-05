@@ -3,7 +3,7 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { AddLeadNoteCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { addNote } from "../../domain/lead/transitions";
@@ -15,12 +15,7 @@ type Ports = {
 };
 
 export async function addLeadNoteCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    body: string;
-    idempotencyKey?: string;
-  },
+  input: AddLeadNoteCommandInput,
   ports: Ports,
 ): Promise<Result<{ interactionId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
@@ -40,7 +35,7 @@ export async function addLeadNoteCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
     });
     if (!committed.ok) return committed;
 

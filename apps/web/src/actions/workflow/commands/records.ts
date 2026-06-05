@@ -1,14 +1,10 @@
 "use server";
 
-import {
-  type CreateLeadInput,
-  type LeadReviewInput,
-  type RecordRepLegalInput,
-  type ReassignLeadInput,
-  type RequestQuotationInput,
-  type SaveCommercialScopeInput,
-  type SaveDigitalPolicyInput,
-} from "~/contracts/workflow/inputs";
+import type {
+  AbonoBank,
+  ModalidadCobro,
+  ProductScope,
+} from "~/contracts/workflow/vocabulary";
 import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -19,8 +15,66 @@ import {
 } from "~/server/workflow/parsers";
 import {
   type ReassignLeadCommandInput,
-  type RegisterLeadInput,
+  type RegisterLeadCommandInput,
 } from "~/server/workflow/types";
+
+export type CreateLeadInput = {
+  ruc: string;
+  executiveId?: number;
+};
+
+export type LeadReviewInput = {
+  leadId: string;
+  status: string;
+  prioridad: string;
+  reason: string;
+};
+
+export type SaveCommercialScopeInput = {
+  leadId: string;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  giroNegocio: string;
+  abonoBank: AbonoBank;
+  posTotal: number;
+};
+
+export type RequestQuotationInput = {
+  leadId: string;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  giroNegocio: string;
+  abonoBank: AbonoBank;
+  posTotal: number;
+};
+
+export type SaveDigitalPolicyInput = {
+  leadId: string;
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineModalidad: ModalidadCobro | null;
+};
+
+export type RecordRepLegalInput = {
+  leadId: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string;
+  email: string;
+};
+
+export type ReassignLeadInput = {
+  leadId: string;
+  newExecutiveId: number;
+};
 
 function assertParsed<T>(
   parsed: { ok: true; value: T } | { ok: false; error: { message: string } },
@@ -79,7 +133,7 @@ export async function requestLeadCreation(input: CreateLeadInput) {
         },
         ruc: input.ruc,
         executiveId: input.executiveId ?? actor.userId,
-      } satisfies RegisterLeadInput),
+      } satisfies RegisterLeadCommandInput),
   });
 }
 

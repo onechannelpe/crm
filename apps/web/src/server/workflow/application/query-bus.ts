@@ -7,9 +7,9 @@ import { listAssignableExecutives } from "~/server/workflow/application/queries/
 import { listLeads } from "~/server/workflow/application/queries/list-leads";
 import type { WorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {
-  GetLeadDetailInput,
   ListAssignableExecutivesInput,
   ListLeadsInput,
+  WorkflowActor,
 } from "~/server/workflow/types";
 
 export function createWorkflowQueryBus(
@@ -17,7 +17,7 @@ export function createWorkflowQueryBus(
   engineGateway: WorkflowEngineGateway,
 ) {
   return {
-    getLeadDetail: (input: GetLeadDetailInput) =>
+    getLeadDetail: (input: { actor: WorkflowActor; leadId: string }) =>
       getLeadDetail(
         {
           leads: repos.leads,

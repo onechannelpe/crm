@@ -22,23 +22,20 @@ import { createLeadStateRepo } from "~/server/workflow/infrastructure/lead-state
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {
   AddLeadNoteCommandInput,
-  AddLeadToFavoritesInput,
   AddVenueAccountsCommandInput,
-  ApplyImportedReviewInput,
-  ApproveForSaleInput,
+  ApplyImportedReviewCommandInput,
   CreateQuotationCommandInput,
   CreateVenueCommandInput,
   LogLeadCallCommandInput,
   ReassignLeadCommandInput,
   RecordRepLegalCommandInput,
-  RegisterLeadInput,
-  RemoveLeadFromFavoritesInput,
-  RequestQuotationInput,
+  RegisterLeadCommandInput,
+  RequestQuotationCommandInput,
   RequestRateNegotiationCommandInput,
-  RequestSunatRefreshInput,
   ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
-  UpdateSourcingPolicyInput,
+  UpdateSourcingPolicyCommandInput,
+  WorkflowActor,
 } from "~/server/workflow/types";
 
 import type { TestRuntime } from "../runtime/app";
@@ -61,7 +58,7 @@ function buildCommandApi(
     overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE;
 
   return {
-    registerLead: (input: RegisterLeadInput) =>
+    registerLead: (input: RegisterLeadCommandInput) =>
       registerLead(
         {
           actorUserId: input.actor.userId,
@@ -78,10 +75,10 @@ function buildCommandApi(
         },
       ),
 
-    addToFavorites: (input: AddLeadToFavoritesInput) =>
+    addToFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
       addToFavoritesCommand(input, { executor }),
 
-    removeFromFavorites: (input: RemoveLeadFromFavoritesInput) =>
+    removeFromFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
       removeFromFavoritesCommand(input, { executor }),
 
     reassignLead: (input: ReassignLeadCommandInput) =>
@@ -96,10 +93,10 @@ function buildCommandApi(
     logLeadCall: (input: LogLeadCallCommandInput) =>
       logLeadCallCommand(input, { executor }),
 
-    applyImportedReview: (input: ApplyImportedReviewInput) =>
+    applyImportedReview: (input: ApplyImportedReviewCommandInput) =>
       applyImportedReviewCommand(input, { executor }),
 
-    approveForSale: (input: ApproveForSaleInput) =>
+    approveForSale: (input: { actor: WorkflowActor; leadId: string }) =>
       approveForSaleCommand(input, { executor }),
 
     createQuotation: (input: CreateQuotationCommandInput) =>
@@ -112,7 +109,7 @@ function buildCommandApi(
         executor,
       }),
 
-    requestQuotation: (input: RequestQuotationInput) =>
+    requestQuotation: (input: RequestQuotationCommandInput) =>
       requestQuotationCommand(input, {
         executor,
       }),
@@ -135,13 +132,13 @@ function buildCommandApi(
     requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
       requestRateNegotiationCommand(input, { executor }),
 
-    requestSunatRefresh: (input: RequestSunatRefreshInput) =>
+    requestSunatRefresh: (input: { actor: WorkflowActor; leadId: string }) =>
       requestSunatRefresh(input, {
         leads: repos.leads,
         enrichmentQueue,
       }),
 
-    updateSourcingPolicy: (input: UpdateSourcingPolicyInput) =>
+    updateSourcingPolicy: (input: UpdateSourcingPolicyCommandInput) =>
       updateSourcingPolicy(input, {
         sourcingPolicies: repos.sourcingPolicies,
       }),

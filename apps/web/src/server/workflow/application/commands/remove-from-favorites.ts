@@ -13,10 +13,7 @@ type Ports = {
 };
 
 export async function removeFromFavoritesCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-  },
+  input: { actor: WorkflowActor; leadId: string },
   ports: Ports,
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {

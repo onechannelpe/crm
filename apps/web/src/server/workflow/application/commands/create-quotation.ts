@@ -1,10 +1,9 @@
 import { randomUUIDv7 } from "bun";
 
-import type { Moneda } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { CreateQuotationCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { createQuotation } from "../../domain/lead/transitions";
@@ -17,17 +16,7 @@ type Ports = {
 };
 
 export async function createQuotationCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    paybackPricing: number;
-    tarifaDebito: number;
-    tarifaCredito: number;
-    tarifaForaneo: number;
-    fee: number;
-    moneda: Moneda;
-    idempotencyKey?: string;
-  },
+  input: CreateQuotationCommandInput,
   ports: Ports,
 ): Promise<Result<{ id: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
@@ -71,7 +60,7 @@ export async function createQuotationCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
     });
     if (!committed.ok) return committed;
 

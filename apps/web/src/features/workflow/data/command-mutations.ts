@@ -1,8 +1,10 @@
 import { action } from "@solidjs/router";
 
 import { requestRateNegotiation } from "~/actions/workflow/commands/negotiation";
+import type { RequestRateNegotiationInput } from "~/actions/workflow/commands/negotiation";
 import { requestSaleApproval } from "~/actions/workflow/commands/quotations";
 import { requestQuotationCreation } from "~/actions/workflow/commands/quotations";
+import type { CreateQuotationInput } from "~/actions/workflow/commands/quotations";
 import {
   requestAddLeadToFavorites,
   requestLeadCreation,
@@ -15,23 +17,23 @@ import {
   requestSaveDigitalPolicy,
   requestStartSetupExecution,
 } from "~/actions/workflow/commands/records";
+import type {
+  CreateLeadInput,
+  LeadReviewInput,
+  ReassignLeadInput,
+  RecordRepLegalInput,
+  RequestQuotationInput,
+  SaveCommercialScopeInput,
+  SaveDigitalPolicyInput,
+} from "~/actions/workflow/commands/records";
 import {
   requestVenueAccountsAddition,
   requestVenueCreation,
 } from "~/actions/workflow/commands/sales";
 import type {
   AddVenueAccountsInput,
-  CreateLeadInput,
-  CreateQuotationInput,
   CreateVenueInput,
-  LeadReviewInput,
-  ReassignLeadInput,
-  RecordRepLegalInput,
-  RequestQuotationInput,
-  RequestRateNegotiationInput,
-  SaveCommercialScopeInput,
-  SaveDigitalPolicyInput,
-} from "~/contracts/workflow/inputs";
+} from "~/actions/workflow/commands/sales";
 
 export const createLeadMutation = action(async (input: CreateLeadInput) => {
   return requestLeadCreation(input);

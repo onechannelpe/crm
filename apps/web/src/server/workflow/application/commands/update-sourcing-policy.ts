@@ -1,7 +1,7 @@
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { UpdateSourcingPolicyCommandInput } from "~/server/workflow/types";
 
 import type { LeadSourcingPolicyRepository } from "../ports/entities";
 
@@ -10,11 +10,7 @@ type Ports = {
 };
 
 export async function updateSourcingPolicy(
-  input: {
-    actor: WorkflowActor;
-    branchId: number;
-    engineAssignmentEnabled: boolean;
-  },
+  input: UpdateSourcingPolicyCommandInput,
   ports: Ports,
 ): Promise<
   Result<{ branchId: number; engineAssignmentEnabled: boolean }, DomainError>

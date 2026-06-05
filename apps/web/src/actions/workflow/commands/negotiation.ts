@@ -1,8 +1,13 @@
 "use server";
 
-import { type RequestRateNegotiationInput } from "~/contracts/workflow/inputs";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+
+export type RequestRateNegotiationInput = {
+  leadId: string;
+  justification: string;
+  artifactIds: string[];
+};
 
 export async function requestRateNegotiation(
   input: RequestRateNegotiationInput,

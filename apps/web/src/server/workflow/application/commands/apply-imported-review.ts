@@ -1,10 +1,9 @@
 import { randomUUIDv7 } from "bun";
 
-import type { LeadPriority, LeadStatus } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { ApplyImportedReviewCommandInput } from "~/server/workflow/types";
 
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { applyImportedReview } from "../../domain/lead/transitions";
@@ -16,14 +15,7 @@ type Ports = {
 };
 
 export async function applyImportedReviewCommand(
-  input: {
-    actor: WorkflowActor;
-    leadId: string;
-    type: "import_status" | "import_prioridad";
-    status?: LeadStatus | null;
-    prioridad?: LeadPriority | null;
-    idempotencyKey?: string;
-  },
+  input: ApplyImportedReviewCommandInput,
   ports: Ports,
 ): Promise<Result<{ applied: boolean; leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
@@ -45,7 +37,7 @@ export async function applyImportedReviewCommand(
     const committed = await uow.commit({
       next: transition.value.next,
       events: transition.value.events,
-      idempotencyKey: input.idempotencyKey ?? randomUUIDv7(),
+      idempotencyKey: randomUUIDv7(),
     });
 
     if (!committed.ok) {
