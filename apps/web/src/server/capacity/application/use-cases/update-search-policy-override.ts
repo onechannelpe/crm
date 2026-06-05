@@ -9,16 +9,22 @@ import type { CapacityPolicyDeps } from "./shared";
 export async function updateSearchPolicyOverride(
   ctx: AppContext,
   deps: CapacityPolicyDeps,
-  input: { userId: number; monthlyLimit: number; expiresAt: number | null },
+  input: {
+    userId: number;
+    monthlyLimit: number;
+    expiresAt: number | null;
+  },
 ): Promise<Result<{ success: true }, DomainError>> {
   return deps.uow.run(async (tx) => {
-    const check = await canManageExecutive(ctx.actor, input.userId, tx);
-    if (!check.target) {
+    const access = await canManageExecutive(ctx.actor, input.userId, tx);
+
+    if (!access.target) {
       return Err(
         domainError("not_found", "executive_not_found", "Executive not found"),
       );
     }
-    if (!check.ok) {
+
+    if (!access.ok) {
       return Err(
         domainError(
           "forbidden",
@@ -27,6 +33,7 @@ export async function updateSearchPolicyOverride(
         ),
       );
     }
+
     const result = await setSearchUserOverride(
       {
         actorUserId: ctx.actor.userId,
@@ -36,7 +43,11 @@ export async function updateSearchPolicyOverride(
       },
       tx,
     );
-    if (isErr(result)) return result;
+
+    if (isErr(result)) {
+      return result;
+    }
+
     return Ok({ success: true });
   });
 }
