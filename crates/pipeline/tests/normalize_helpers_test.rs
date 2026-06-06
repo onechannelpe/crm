@@ -1,6 +1,6 @@
-use crm_pipeline::domain::normalize_helpers::{
-    PhoneKind, derive_dni_from_natural_ruc, normalize_ambiguous_doc,
-    normalize_person_document_with_natural_ruc, normalize_phone_with_kind,
+use crm_pipeline::normalize::{
+    PhoneKind, normalize_ambiguous_doc, normalize_person_document_with_natural_ruc,
+    normalize_phone_with_kind,
 };
 
 #[test]
@@ -31,15 +31,6 @@ fn classifies_mobile_and_fixed_phones() {
         Some(("3826193".to_owned(), PhoneKind::Fixed))
     );
     assert_eq!(normalize_phone_with_kind("51CID.814791"), None);
-}
-
-#[test]
-fn derives_dni_from_natural_ruc() {
-    assert_eq!(
-        derive_dni_from_natural_ruc("10123456789"),
-        Some("12345678".to_owned())
-    );
-    assert_eq!(derive_dni_from_natural_ruc("20123456789"), None);
 }
 
 #[test]

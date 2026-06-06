@@ -12,5 +12,6 @@
     "role_start_date": "bi_ul_fac"
   },
   "phone_columns": [],
-  "phone_prefixes": []
+  "phone_prefixes": [],
+  "doc_type_map": {"C": "CE", "PTP": "PTP"}
 }

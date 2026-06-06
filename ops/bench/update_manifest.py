@@ -45,29 +45,36 @@ def main() -> int:
     parser.add_argument("--db-path", required=True)
     parser.add_argument("--dataset-id", required=True)
     parser.add_argument("--dataset-version", required=True)
-    parser.add_argument("--projection-contract-path", required=True)
+    parser.add_argument("--doc-projection-contract-path", required=True)
+    parser.add_argument("--company-projection-contract-path", required=True)
     parser.add_argument("--workload-json-path", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
     db_path = Path(args.db_path)
-    contract_path = Path(args.projection_contract_path)
+    doc_contract_path = Path(args.doc_projection_contract_path)
+    company_contract_path = Path(args.company_projection_contract_path)
     workload_path = Path(args.workload_json_path)
     output_path = Path(args.output)
 
     if not db_path.exists():
         raise SystemExit(f"db path does not exist: {db_path}")
-    if not contract_path.exists():
-        raise SystemExit(f"projection contract path does not exist: {contract_path}")
+    if not doc_contract_path.exists():
+        raise SystemExit(f"doc projection contract path does not exist: {doc_contract_path}")
+    if not company_contract_path.exists():
+        raise SystemExit(
+            f"company projection contract path does not exist: {company_contract_path}"
+        )
     if not workload_path.exists():
         raise SystemExit(f"workload json path does not exist: {workload_path}")
 
-    projection_rows = query_scalar(db_path, "SELECT COUNT(*) FROM search_projection")
+    projection_rows = query_scalar(db_path, "SELECT COUNT(*) FROM company_projection")
     payload = {
         "dataset_id": args.dataset_id,
         "dataset_version": args.dataset_version,
         "db_path": str(db_path),
-        "contract_sha256": sha256_file(contract_path),
+        "doc_projection_contract_sha256": sha256_file(doc_contract_path),
+        "company_projection_contract_sha256": sha256_file(company_contract_path),
         "workload_sha256": sha256_file(workload_path),
         "projection_rows": projection_rows,
         "pipeline_build": query_pipeline_build(db_path),

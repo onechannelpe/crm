@@ -40,12 +40,12 @@ def main() -> int:
         dni = fetch_values(
             conn,
             """
-            SELECT dni
-            FROM search_projection
-            WHERE dni IS NOT NULL
-              AND dni GLOB '[0-9]*'
-              AND length(dni) BETWEEN 8 AND 12
-            GROUP BY dni
+            SELECT doc_number
+            FROM doc_projection
+            WHERE doc_type = 'DNI'
+              AND doc_number GLOB '[0-9]*'
+              AND length(doc_number) = 8
+            GROUP BY doc_number
             ORDER BY COUNT(*) DESC
             LIMIT :limit
             """,
@@ -54,12 +54,11 @@ def main() -> int:
         ruc = fetch_values(
             conn,
             """
-            SELECT org_ruc
-            FROM search_projection
-            WHERE org_ruc IS NOT NULL
-              AND org_ruc GLOB '[0-9]*'
-              AND length(org_ruc) = 11
-            GROUP BY org_ruc
+            SELECT ruc
+            FROM company_projection
+            WHERE ruc GLOB '[0-9]*'
+              AND length(ruc) = 11
+            GROUP BY ruc
             ORDER BY COUNT(*) DESC
             LIMIT :limit
             """,
@@ -69,7 +68,11 @@ def main() -> int:
             conn,
             """
             SELECT phone
-            FROM search_projection_phone_index
+            FROM (
+                SELECT phone FROM doc_projection_phone_index
+                UNION ALL
+                SELECT phone FROM company_projection_phone_index
+            )
             WHERE phone IS NOT NULL
               AND phone GLOB '[0-9]*'
               AND length(phone) BETWEEN 7 AND 15
@@ -83,7 +86,7 @@ def main() -> int:
             conn,
             """
             SELECT lower(substr(name, 1, instr(name || ' ', ' ') - 1)) AS token
-            FROM search_projection
+            FROM doc_projection
             WHERE name IS NOT NULL
               AND trim(name) <> ''
             GROUP BY token
@@ -96,10 +99,10 @@ def main() -> int:
         company_name = fetch_values(
             conn,
             """
-            SELECT lower(substr(org_name, 1, instr(org_name || ' ', ' ') - 1)) AS token
-            FROM search_projection
-            WHERE org_name IS NOT NULL
-              AND trim(org_name) <> ''
+            SELECT lower(substr(legal_name, 1, instr(legal_name || ' ', ' ') - 1)) AS token
+            FROM company_projection
+            WHERE legal_name IS NOT NULL
+              AND trim(legal_name) <> ''
             GROUP BY token
             HAVING length(token) >= 2
             ORDER BY COUNT(*) DESC
