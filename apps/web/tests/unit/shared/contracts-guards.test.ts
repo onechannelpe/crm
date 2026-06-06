@@ -5,7 +5,7 @@ import {
   assertFinitePositive,
   assertNonEmptyString,
   assertPositiveInt,
-} from "~/lib/contracts/guards";
+} from "~/contracts/guards";
 
 describe("contracts guards", () => {
   it("assertPositiveInt accepts positive integers", () => {
