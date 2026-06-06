@@ -1,10 +1,10 @@
+import {
+  type LeadPriority,
+  type LeadStage,
+  type LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { resolveReviewTransition } from "~/server/workflow/domain/workflow";
-import type {
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-} from "~/workflow/contracts/lead-schema";
 
 import type { ImportRowInput, LeadMutationResult, LoadedLead } from "./types";
 
@@ -18,23 +18,6 @@ function nextStageFor(
   }
 
   return resolveReviewTransition({
-    lead: {
-      id: current.id,
-      organizationId: current.organization_id,
-      ruc: current.ruc,
-      razonSocial: null,
-      address: null,
-      district: null,
-      department: null,
-      executiveId: current.executive_id,
-      createdBy: current.created_by,
-      updatedBy: current.updated_by ?? null,
-      stage: "QUALIFYING",
-      status: current.status,
-      prioridad: current.prioridad,
-      createdAt: 0,
-      updatedAt: 0,
-    },
     status: nextStatus,
     prioridad: nextPrioridad,
   });
