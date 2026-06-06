@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import type {
   AssignContactsTransactionRepos,
-  AssignContactsTransactionRunner,
+  AssignContactsUow,
 } from "~/server/contact-assignments/application/contact-assignment-writer";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
@@ -63,9 +63,10 @@ function makeRepos(activeAssignments = 0) {
 
 function makeTransaction(
   repos: AssignContactsTransactionRepos,
-): AssignContactsTransactionRunner {
-  return async <T>(op: (r: AssignContactsTransactionRepos) => Promise<T>) =>
-    op(repos);
+): AssignContactsUow {
+  return {
+    run: async (work) => work(repos),
+  };
 }
 
 const emptyEngine = {
@@ -83,7 +84,7 @@ describe("assignContacts", () => {
       { actorUserId: USER_ID, branchId: BRANCH_ID },
       {
         repos,
-        runInTransaction: makeTransaction(repos),
+        uow: makeTransaction(repos),
         engine: emptyEngine,
       },
     );
@@ -126,7 +127,7 @@ describe("assignContacts", () => {
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos), engine },
+      { repos, uow: makeTransaction(repos), engine },
     );
 
     expect(result.ok).toBe(true);
@@ -160,7 +161,7 @@ describe("assignContacts", () => {
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos), engine },
+      { repos, uow: makeTransaction(repos), engine },
     );
 
     expect(result.ok).toBe(true);
@@ -197,7 +198,7 @@ describe("assignContacts", () => {
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos), engine },
+      { repos, uow: makeTransaction(repos), engine },
     );
 
     expect(result.ok).toBe(false);
@@ -208,6 +209,29 @@ describe("assignContacts", () => {
       request_id: "req-leads-1",
       engine_error: "service unavailable",
     });
+    const reservations = repos.leadUsageReservations.rows;
+    expect(reservations).toHaveLength(1);
+    expect(reservations[0].status).toBe("cancelled");
+  });
+
+  it("cancels reservation when assignment persistence throws", async () => {
+    const repos = makeRepos(0);
+    repos.contactAssignments.createMany = async () => {
+      throw new Error("db write failed");
+    };
+    const engine = {
+      requestCandidates: async (): Promise<
+        Result<RecordCandidate[], DomainError>
+      > => Ok([makeCandidate(1)]),
+    };
+
+    await expect(
+      assignContacts(
+        { actorUserId: USER_ID, branchId: BRANCH_ID },
+        { repos, uow: makeTransaction(repos), engine },
+      ),
+    ).rejects.toThrow("db write failed");
+
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");

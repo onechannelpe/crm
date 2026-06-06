@@ -1,22 +1,17 @@
-import type {
-  LeadPriority,
-  LeadStatus,
-} from "~/workflow/contracts/lead-schema";
-
-import type { QualifyingLeadSubject } from "./lead-subjects";
+import {
+  type LeadPriority,
+  type LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 
 export function resolveReviewTransition(input: {
-  lead: QualifyingLeadSubject;
   status: LeadStatus;
   prioridad: LeadPriority;
 }): "DISQUALIFIED" | "SCOPING" | "QUOTING" {
   if (input.status === "CARTERIZADO" || input.status === "STOCK") {
     return "DISQUALIFIED";
   }
-
   if (input.prioridad === "SIN RESULTADO") {
     return "SCOPING";
   }
-
   return "QUOTING";
 }
