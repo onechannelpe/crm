@@ -39,7 +39,7 @@ export async function resetPassword(
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
   return resetPasswordService({
-    repos: getServerRuntime().auth.passwordReset.repos,
+    deps: getServerRuntime().auth.passwordReset,
     token,
     password,
     confirmPassword,

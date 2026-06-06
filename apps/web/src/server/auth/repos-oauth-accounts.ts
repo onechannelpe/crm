@@ -27,3 +27,5 @@ export function createOAuthAccountsRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type OAuthAccountsRepo = ReturnType<typeof createOAuthAccountsRepo>;

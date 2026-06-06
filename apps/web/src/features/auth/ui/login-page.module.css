@@ -4,7 +4,7 @@
   gap: 12px;
 }
 
-/* position: relative so LastUsedPill can bleed outside */
+/* LastUsedPill is positioned outside the SSO button bounds. */
 .ssoButtonContainer {
   position: relative;
   width: 100%;
@@ -63,7 +63,7 @@
   text-align: center;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .formStack {
     gap: 14px;
   }

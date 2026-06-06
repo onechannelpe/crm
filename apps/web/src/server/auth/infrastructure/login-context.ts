@@ -1,4 +1,5 @@
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
+import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -14,20 +15,6 @@ import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
-
-export type AuthLoginRepos = {
-  oauthAccounts: ReturnType<typeof createOAuthAccountsRepo>;
-  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
-  users: ReturnType<typeof createUsersRepo>;
-  sessions: ReturnType<typeof createSessionRepository>;
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
-  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
-  authEvents: ReturnType<typeof createAuthEventsRepo>;
-  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  userTotpRecoveryCodes: ReturnType<typeof createUserTotpRecoveryCodesRepo>;
-  passkeys: ReturnType<typeof createPasskeysRepo>;
-  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
-};
 
 export function createAuthLoginContext(
   executor: DatabaseExecutor,
@@ -49,7 +36,7 @@ export function createAuthLoginContext(
       userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(executor),
       passkeys: createPasskeysRepo(executor),
       webauthnChallenges: createWebauthnChallengesRepo(executor),
-    } satisfies AuthLoginRepos,
+    } satisfies AuthLoginDeps,
     privilegedLoginAlertSender: createPrivilegedLoginAlertSender(notifications),
   };
 }

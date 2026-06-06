@@ -5,13 +5,25 @@ import {
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
 import type { Phone } from "~/lib/phone/pe-mobile";
-import { isErr, Ok, type Result } from "~/server/shared/result";
-import {
-  completeAccountOnboardingWithRepos,
-  type CompleteOnboardingError,
-} from "~/server/users/service-account-onboarding";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 
 import type { AuthOnboardingContext } from "../../infrastructure/onboarding-context";
+
+function mapOnboardingError(error: {
+  kind: "not_found" | "conflict" | "unexpected";
+  code: string;
+  message: string;
+}) {
+  if (error.kind === "not_found") {
+    return domainError("not_found", error.code, error.message);
+  }
+  if (error.kind === "conflict") {
+    return domainError("conflict", error.code, error.message);
+  }
+  return domainError("external", error.code, error.message);
+}
 
 export async function completeOnboarding(
   deps: AuthOnboardingContext,
@@ -28,18 +40,28 @@ export async function completeOnboarding(
     userAgent: string | null;
     invalidateSession(sessionId: string): Promise<void>;
   },
-): Promise<Result<{ redirectTo: string }, CompleteOnboardingError>> {
-  const result = await deps.runInRepositoryTransaction((transactionRepos) =>
-    completeAccountOnboardingWithRepos(transactionRepos, {
-      userId: input.session.userId,
-      phone: input.phone,
-    }),
-  );
+): Promise<Result<{ redirectTo: string }, DomainError>> {
+  const result = await deps.uow.run(async (transactionRepos) => {
+    const onboarding = await completeAccountOnboardingWithRepos(
+      transactionRepos,
+      {
+        userId: input.session.userId,
+        phone: input.phone,
+      },
+    );
+
+    if (isErr(onboarding)) {
+      return Err(mapOnboardingError(onboarding.error));
+    }
+    return Ok(undefined);
+  });
+
   if (isErr(result)) {
     return result;
   }
 
   const user = await deps.repos.users.findById(input.session.userId);
+
   if (!user) {
     throw new Error("No se pudo completar el registro");
   }
