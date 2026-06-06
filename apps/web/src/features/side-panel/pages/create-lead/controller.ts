@@ -1,16 +1,17 @@
 import { createEffect, createSignal, on, type Accessor } from "solid-js";
 
 import type { CurrentUserView } from "~/actions/auth/contracts";
+import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import {
   addOptimisticLead,
   createOptimisticLeadRow,
 } from "~/features/workflow/data/optimistic-leads";
+import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
 import { toAppError } from "~/lib/app-errors";
 import { shortName } from "~/lib/users/display-name";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";
-import type { CreateLeadTabId } from "../record-page/model";
 
 type BootstrapPreview = {
   razonSocial: string | null;
@@ -28,7 +29,7 @@ type CreateLeadControllerInput = {
   latestBootstrapPreview: Accessor<BootstrapPreview | null>;
   createLead: (input: { ruc: string }) => Promise<CreateLeadResult>;
   onLeadCreated: (input: { leadId: string; ruc: string }) => void;
-  setActiveTab: (tab: CreateLeadTabId) => void;
+  setActiveTab: (tab: RecordTabId) => void;
 };
 
 export function createCreateLeadController(input: CreateLeadControllerInput) {
@@ -76,11 +77,12 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
 
     try {
       const result = await createCommand.run({ ruc });
+      await revalidateWorkflowLeadList();
       optimisticTransactions.commit(txId);
       input.onLeadCreated({ leadId: result.leadId, ruc });
     } catch (submitError) {
       optimisticTransactions.rollback(txId);
-      const appError = toAppError(submitError, "Error al registrar prospecto");
+      const appError = toAppError(submitError, "Error al registrar cliente");
       if (
         appError.code === "validation" &&
         appError.publicMessage.includes("RUC")

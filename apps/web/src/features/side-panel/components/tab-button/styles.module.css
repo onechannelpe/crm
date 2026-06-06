@@ -26,7 +26,7 @@
 }
 
 .tabButtonActive::after {
-  background-color: var(--border-inverted, var(--foreground));
+  background-color: var(--foreground);
 }
 
 .tabHover {
@@ -44,7 +44,7 @@
 }
 
 .tabHover:active {
-  background: var(--background-transparent-medium);
+  background: var(--quaternary);
 }
 
 .tabButton:focus-visible {

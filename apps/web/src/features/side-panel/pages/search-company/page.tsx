@@ -1,5 +1,3 @@
-import { For } from "solid-js";
-
 import Users from "~/components/icons/users";
 import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
@@ -29,27 +27,8 @@ export function SearchCompanyPage() {
         </section>
 
         <section class={styles.section}>
-          <div class={styles.sectionTitle}>Personas</div>
-          <div class={styles.list}>
-            <For each={pageState().company.people}>
-              {(person) => (
-                <div class={styles.row}>
-                  <div class={styles.rowTitle}>{person.name}</div>
-                  <div class={styles.rowMeta}>{person.dni}</div>
-                </div>
-              )}
-            </For>
-          </div>
-        </section>
-
-        <section class={styles.section}>
           <div class={styles.sectionTitle}>Teléfonos</div>
           <RecordChipList items={pageState().company.phones} shape="square" />
-        </section>
-
-        <section class={styles.section}>
-          <div class={styles.sectionTitle}>Correos</div>
-          <RecordChipList items={pageState().company.emails} shape="square" />
         </section>
       </div>
     </PanelList>

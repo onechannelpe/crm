@@ -1,0 +1,15 @@
+.panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Mobile record pages use the parent page as the scroll owner. */
+@media (max-width: 768px) {
+  .panel {
+    height: auto;
+    overflow: visible;
+  }
+}

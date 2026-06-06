@@ -1,6 +1,6 @@
 .card {
   align-items: center;
-  border-bottom: 1px solid var(--border-light, var(--border));
+  border-bottom: 1px solid var(--border-light);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

@@ -76,30 +76,32 @@ export function RootPage() {
 
   return (
     <PanelList>
-      <Show
-        when={hasResults()}
-        fallback={<EmptyState>No se encontraron resultados</EmptyState>}
-      >
-        <For each={filteredGroups()}>
-          {(group) => (
-            <PanelGroup label={group.label}>
-              <For each={group.items}>
-                {(item, index) => (
-                  <button
-                    type="button"
-                    class={styles.actionItem}
-                    data-index={index()}
-                    onClick={item.onAction}
-                  >
-                    <item.icon size={14} />
-                    {item.label}
-                  </button>
-                )}
-              </For>
-            </PanelGroup>
-          )}
-        </For>
-      </Show>
+      <div class={styles.commandList}>
+        <Show
+          when={hasResults()}
+          fallback={<EmptyState>No se encontraron resultados</EmptyState>}
+        >
+          <For each={filteredGroups()}>
+            {(group) => (
+              <PanelGroup label={group.label}>
+                <For each={group.items}>
+                  {(item, index) => (
+                    <button
+                      type="button"
+                      class={styles.actionItem}
+                      data-index={index()}
+                      onClick={item.onAction}
+                    >
+                      <item.icon size={16} />
+                      {item.label}
+                    </button>
+                  )}
+                </For>
+              </PanelGroup>
+            )}
+          </For>
+        </Show>
+      </div>
     </PanelList>
   );
 }

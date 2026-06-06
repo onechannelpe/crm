@@ -1,0 +1,38 @@
+.panel {
+  background: var(--secondary);
+  border-bottom-left-radius: var(--radius-md);
+  border-right: 1px solid var(--border);
+  border-top-left-radius: var(--radius-md);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scrollBody {
+  overflow-y: auto;
+}
+
+/* Mobile record pages use the parent page as the scroll owner. */
+@media (max-width: 768px) {
+  .panel {
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    border-right: none;
+    height: auto;
+    overflow: visible;
+  }
+
+  .scrollBody {
+    overflow-y: visible;
+  }
+}
+
+.helperText {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  margin: var(--spacing-3);
+}

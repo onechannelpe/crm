@@ -1,0 +1,12 @@
+.emptyState {
+  color: var(--foreground-tertiary);
+  padding: var(--spacing-3);
+  text-align: center;
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-2);
+  text-align: right;
+}

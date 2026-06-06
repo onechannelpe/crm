@@ -1,0 +1,35 @@
+.card {
+  border: 1px solid var(--t-border-color-medium);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  overflow: hidden;
+  width: auto;
+}
+
+.cardFullWidth {
+  width: 100%;
+}
+
+.cardHeader {
+  background: var(--t-background-primary);
+  border-bottom: 1px solid var(--t-border-color-medium);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-2) var(--spacing-4);
+}
+
+.cardContent {
+  background: var(--t-background-secondary);
+  padding: var(--spacing-4);
+}
+
+.cardFooter {
+  background: var(--t-background-primary);
+  border-top: 1px solid var(--t-border-color-medium);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-2) var(--spacing-4);
+}
+
+.cardFooterDividerless {
+  border-top: 0;
+}
