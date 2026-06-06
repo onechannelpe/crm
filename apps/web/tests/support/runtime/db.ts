@@ -3,15 +3,15 @@ import { join } from "node:path";
 
 import { sql, type Kysely } from "kysely";
 
-import { createDb } from "~/lib/db/client";
-import { migrateToLatest } from "~/lib/db/migrate";
-import type { Database } from "~/lib/db/types";
 import {
   ABONO_BANKS,
   ACCOUNT_TYPE_KINDS,
   MODALIDAD_COBRO_KINDS,
   MONEDAS,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow/vocabulary";
+import { createDb } from "~/lib/db/client";
+import { migrateToLatest } from "~/lib/db/migrate";
+import type { Database } from "~/lib/db/types";
 
 import {
   createTestRepositories,
@@ -149,31 +149,61 @@ async function seedTemplate(db: Kysely<Database>) {
     .execute();
 
   await db
-    .insertInto("contacts")
+    .insertInto("people")
     .values([
       {
         id: 1,
-        organization_id: TEST_ORG_ID_LIMA,
         dni: "70000001",
-        name: "Contacto Lima",
-        phone_primary: "999999111",
-        phone_secondary: null,
-        last_contacted_at: null,
-        last_contacted_by_user_id: null,
-        cooldown_until: null,
+        full_name: "Contacto Lima",
+        email: null,
         created_at: now,
+        updated_at: now,
       },
       {
         id: 2,
-        organization_id: TEST_ORG_ID_NORTE,
         dni: "70000002",
-        name: "Contacto Norte",
-        phone_primary: "999999222",
-        phone_secondary: null,
+        full_name: "Contacto Norte",
+        email: null,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .execute();
+
+  await db
+    .insertInto("organization_people")
+    .values([
+      {
+        id: 1,
+        person_id: 1,
+        organization_id: TEST_ORG_ID_LIMA,
+        dni: "70000001",
+        nombres: "Contacto",
+        apellido_paterno: "Lima",
+        apellido_materno: "",
+        telefono: "999999111",
+        email: null,
         last_contacted_at: null,
         last_contacted_by_user_id: null,
         cooldown_until: null,
         created_at: now,
+        updated_at: now,
+      },
+      {
+        id: 2,
+        person_id: 2,
+        organization_id: TEST_ORG_ID_NORTE,
+        dni: "70000002",
+        nombres: "Contacto",
+        apellido_paterno: "Norte",
+        apellido_materno: "",
+        telefono: "999999222",
+        email: null,
+        last_contacted_at: null,
+        last_contacted_by_user_id: null,
+        cooldown_until: null,
+        created_at: now,
+        updated_at: now,
       },
     ])
     .execute();

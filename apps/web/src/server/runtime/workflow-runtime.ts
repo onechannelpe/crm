@@ -1,40 +1,32 @@
-import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
-import { createWorkflowQueryApi } from "~/server/workflow/application/query-api";
+import type { EngineClient } from "~/server/shared/engine/client";
+import { createWorkflowCommandBus } from "~/server/workflow/application/command-bus";
+import { createWorkflowQueryBus } from "~/server/workflow/application/query-bus";
+import { createLeadArtifactsService } from "~/server/workflow/application/services/lead-artifacts";
+import { createEngineGateway } from "~/server/workflow/infrastructure/engine-gateway";
+import { createLeadRepo } from "~/server/workflow/infrastructure/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sunat-enrichment-writeback-queue";
 
+import type { FilesRuntime } from "./files-runtime";
 import type { ServerInfra } from "./infra";
 
 export function createWorkflowRuntime(
   infra: ServerInfra,
-  engineGateway: WorkflowEngineGateway,
+  engine: EngineClient,
+  files: Pick<FilesRuntime, "repo" | "storage">,
 ) {
+  const engineGateway = createEngineGateway(engine);
   const repos = createWorkflowRepos(infra.db);
 
-  const queryApi = createWorkflowQueryApi({
-    leadDetail: {
-      leads: repos.leads,
-      leadFavorites: repos.leadFavorites,
-      leadProfiles: repos.leadProfiles,
-      leadHistory: repos.leadHistory,
-      leadQuotations: repos.leadQuotations,
-      leadVenues: repos.leadVenues,
-      leadNegotiationRequests: repos.leadNegotiationRequests,
-      negotiationFiles: repos.negotiationFiles,
-      sourceStatuses: repos.sourceStatuses,
-      users: repos.users,
-      party: repos.party,
-    },
-    assignableExecutives: {
-      leads: repos.leads,
-      users: repos.users,
-    },
-  });
-
   return {
-    repos,
-    engineGateway,
-    queryApi,
+    commands: createWorkflowCommandBus(infra.db, repos),
+    queries: createWorkflowQueryBus(repos, engineGateway),
+    leadArtifacts: createLeadArtifactsService({
+      leadReader: createLeadRepo(infra.db),
+      leadQueries: repos.leadQueries,
+      filesRepo: files.repo,
+      filesStorage: files.storage,
+    }),
     createSunatEnrichmentWritebackQueue: (workerId: string) =>
       createSunatEnrichmentWritebackQueue(workerId, {
         executor: infra.db,

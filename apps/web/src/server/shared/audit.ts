@@ -1,4 +1,4 @@
-import { serializeAuditChanges } from "~/lib/contracts/audit";
+import { serializeAuditChanges } from "~/contracts/audit";
 
 interface AuditLogWriter {
   create(values: {
