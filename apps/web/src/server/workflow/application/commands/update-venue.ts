@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import type { UpdateVenueCommandInput } from "~/server/workflow/types";
 
 import { updateVenue } from "../../domain/lead/commands";
@@ -14,23 +14,11 @@ import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
 } from "../services/digital-product-policy";
-import { parseVenueTextFields } from "../services/venue-fields";
 
 export async function updateVenueCommand(
   input: UpdateVenueCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const fields = parseVenueTextFields(input);
-  if (isErr(fields)) return fields;
-  const {
-    nombreComercial,
-    direccion,
-    referencia,
-    distrito,
-    provincia,
-    departamento,
-  } = fields.value;
-
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -65,23 +53,23 @@ export async function updateVenueCommand(
     const transition = updateVenue(state, {
       actor: input.actor,
       venueId: input.venueId,
-      nombreComercial,
+      nombreComercial: input.nombreComercial,
       now,
     });
     if (!transition.ok) return transition;
 
     const digital = toVenueDigitalInsert(venueFields.value);
     await repos.leadVenues.update(input.venueId, {
-      nombreComercial,
+      nombreComercial: input.nombreComercial,
       posQuantity: input.posQuantity,
       linkUrl: digital.linkUrl,
       onlineUrl: digital.onlineUrl,
       onlineModalidad: digital.onlineModalidad,
-      direccion,
-      referencia,
-      distrito,
-      provincia,
-      departamento,
+      direccion: input.direccion,
+      referencia: input.referencia,
+      distrito: input.distrito,
+      provincia: input.provincia,
+      departamento: input.departamento,
     });
 
     const committed = await uow.commit({

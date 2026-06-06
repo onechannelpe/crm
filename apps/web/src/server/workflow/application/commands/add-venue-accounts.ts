@@ -1,10 +1,8 @@
 import { randomUUIDv7 } from "bun";
 
-import { isBcpBank } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import { parseRequiredLeadText } from "~/server/workflow/parsers";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import type { AddVenueAccountsCommandInput } from "~/server/workflow/types";
 
 import { addVenueAccounts } from "../../domain/lead/commands";
@@ -17,64 +15,6 @@ export async function addVenueAccountsCommand(
   input: AddVenueAccountsCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const solesNroCuenta = parseRequiredLeadText(
-    input.solesAccount.nroCuenta,
-    "soles_account_number_required",
-    "Soles account number is required",
-  );
-  if (isErr(solesNroCuenta)) return solesNroCuenta;
-
-  let dollarNroCuenta: string | null = null;
-  if (input.dollarAccount) {
-    const parsed = parseRequiredLeadText(
-      input.dollarAccount.nroCuenta,
-      "dollar_account_number_required",
-      "Dollar account number is required",
-    );
-    if (isErr(parsed)) return parsed;
-    dollarNroCuenta = parsed.value;
-  }
-
-  const isBcpSoles = isBcpBank(input.solesAccount.banco);
-  const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
-  if (!isBcpSoles && !cciSoles) {
-    return Err(
-      domainError(
-        "validation",
-        "missing_cci_soles",
-        "CCI is required for soles account when the bank is not BCP",
-      ),
-    );
-  }
-
-  const settlementCount =
-    (input.solesAccount.isSettlement ? 1 : 0) +
-    (input.dollarAccount?.isSettlement ? 1 : 0);
-  if (settlementCount !== 1) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_settlement_account",
-        "Exactly one settlement account must be selected",
-      ),
-    );
-  }
-
-  let cciDolares: string | null = null;
-  if (input.dollarAccount) {
-    const isBcpDolares = isBcpBank(input.dollarAccount.banco);
-    cciDolares = isBcpDolares ? null : input.dollarAccount.cci?.trim() || null;
-    if (!isBcpDolares && !cciDolares) {
-      return Err(
-        domainError(
-          "validation",
-          "missing_cci_dolares",
-          "CCI is required for dollar account when the bank is not BCP",
-        ),
-      );
-    }
-  }
-
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -127,18 +67,20 @@ export async function addVenueAccountsCommand(
           currency: "PEN",
           banco: input.solesAccount.banco,
           tipoCuenta: input.solesAccount.tipoCuenta,
-          nroCuenta: solesNroCuenta.value,
-          ...(cciSoles ? { cci: cciSoles } : {}),
+          nroCuenta: input.solesAccount.nroCuenta,
+          ...(input.solesAccount.cci ? { cci: input.solesAccount.cci } : {}),
           isSettlement: input.solesAccount.isSettlement,
         },
-        ...(input.dollarAccount && dollarNroCuenta
+        ...(input.dollarAccount
           ? {
               dollarAccount: {
                 currency: "USD",
                 banco: input.dollarAccount.banco,
                 tipoCuenta: input.dollarAccount.tipoCuenta,
-                nroCuenta: dollarNroCuenta,
-                ...(cciDolares ? { cci: cciDolares } : {}),
+                nroCuenta: input.dollarAccount.nroCuenta,
+                ...(input.dollarAccount.cci
+                  ? { cci: input.dollarAccount.cci }
+                  : {}),
                 isSettlement: input.dollarAccount.isSettlement,
               },
             }

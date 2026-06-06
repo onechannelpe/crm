@@ -2,8 +2,7 @@ import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
-import { isErr, Ok, type Result } from "~/server/shared/result";
-import { parseRequiredLeadText } from "~/server/workflow/parsers";
+import { Ok, type Result } from "~/server/shared/result";
 import type { SaveCommercialScopeCommandInput } from "~/server/workflow/types";
 
 import { saveCommercialScope } from "../../domain/lead/commands";
@@ -16,20 +15,6 @@ export async function saveCommercialScopeCommand(
   input: SaveCommercialScopeCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const proveedorActual = parseRequiredLeadText(
-    input.proveedorActual,
-    "proveedor_actual_required",
-    "Proveedor actual is required",
-  );
-  if (isErr(proveedorActual)) return proveedorActual;
-
-  const giroNegocio = parseRequiredLeadText(
-    input.giroNegocio,
-    "giro_negocio_required",
-    "Giro de negocio is required",
-  );
-  if (isErr(giroNegocio)) return giroNegocio;
-
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -42,11 +27,11 @@ export async function saveCommercialScopeCommand(
     const now = Date.now();
     const transition = saveCommercialScope(state, {
       actor: input.actor,
-      proveedorActual: proveedorActual.value,
+      proveedorActual: input.proveedorActual,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
-      giroNegocio: giroNegocio.value,
+      giroNegocio: input.giroNegocio,
       abonoBank: input.abonoBank,
       posTotal: input.posTotal,
       now,
@@ -55,7 +40,7 @@ export async function saveCommercialScopeCommand(
 
     await repos.leadProfiles.upsert({
       leadId: state.id,
-      proveedorActual: proveedorActual.value,
+      proveedorActual: input.proveedorActual,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
@@ -72,7 +57,7 @@ export async function saveCommercialScopeCommand(
 
     await repos.party.updateOrganizationCommercial({
       organizationId: state.organizationId,
-      giroNegocio: giroNegocio.value,
+      giroNegocio: input.giroNegocio,
     });
 
     const committed = await uow.commit({

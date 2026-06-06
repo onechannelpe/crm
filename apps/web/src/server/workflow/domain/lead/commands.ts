@@ -9,6 +9,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { domainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { RequiredLeadText } from "~/server/workflow/parsers";
 
 import { createHistoryEvent } from "../history";
 import { resolveReviewTransition } from "../workflow";
@@ -50,16 +51,12 @@ export function reviewLead(
     actor: Actor;
     status: LeadStatus;
     prioridad: LeadPriority;
-    reason: string;
+    reason: RequiredLeadText;
     now: number;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
   if (!authz.ok) return authz;
-  const reason = input.reason.trim();
-  if (!reason) {
-    return invalidLeadInput("empty_reason", "Reason cannot be empty");
-  }
   if (state.stage !== "QUALIFYING") return invalidLeadStage();
 
   const nextStage = resolveReviewTransition({
@@ -75,7 +72,7 @@ export function reviewLead(
       payload: {
         status: input.status,
         prioridad: input.prioridad,
-        reason,
+        reason: input.reason,
         fromStage: state.stage,
         toStage: nextStage,
       },
@@ -126,22 +123,17 @@ export function reassignLead(
 
 export function addNote(
   state: LeadState,
-  input: { actor: Actor; body: string; now: number },
+  input: { actor: Actor; body: RequiredLeadText; now: number },
 ): TransitionResult {
   const authz = authorizeLeadAction("interact", input.actor, state);
   if (!authz.ok) return authz;
-
-  const body = input.body.trim();
-  if (!body) {
-    return invalidLeadInput("empty_body", "Note body cannot be empty");
-  }
 
   const events: LeadEvent[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "note_added",
       actorUserId: input.actor.userId,
-      payload: { body },
+      payload: { body: input.body },
       occurredAt: input.now,
     }),
   ];
