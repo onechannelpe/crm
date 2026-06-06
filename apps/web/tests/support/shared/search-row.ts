@@ -1,7 +1,8 @@
 import type { SearchResult } from "~/server/shared/engine/types";
 
-export function makeSearchRow(partial: {
-  dni?: string;
+export function makeDocumentResult(partial: {
+  doc_type?: string;
+  doc_number?: string;
   name?: string;
   phone_primary?: string | null;
   phone_secondary?: string | null;
@@ -11,7 +12,8 @@ export function makeSearchRow(partial: {
   email?: string | null;
 }): SearchResult {
   const {
-    dni = "12345678",
+    doc_type = "DNI",
+    doc_number = "12345678",
     name = "RICARDO GARCIA PINCHI",
     phone_primary = null,
     phone_secondary = null,
@@ -22,8 +24,10 @@ export function makeSearchRow(partial: {
   } = partial;
 
   return {
-    person: {
-      dni,
+    kind: "document",
+    doc: {
+      doc_type,
+      doc_number,
       name,
       ruc: null,
       birth_date: null,
@@ -57,6 +61,53 @@ export function makeSearchRow(partial: {
           }
         : null,
     role: null,
+    phones: {
+      primary: phone_primary,
+      secondary: phone_secondary,
+      siblings: sibling_phones,
+    },
+  };
+}
+
+export function makeCompanyResult(partial: {
+  id?: number;
+  ruc?: string;
+  legal_name?: string | null;
+  phone_primary?: string | null;
+  phone_secondary?: string | null;
+  sibling_phones?: string[] | null;
+}): SearchResult {
+  const {
+    id,
+    ruc = "20100000001",
+    legal_name = "ACME SAC",
+    phone_primary = null,
+    phone_secondary = null,
+    sibling_phones = null,
+  } = partial;
+  const stableId = id ?? Number(ruc);
+
+  return {
+    kind: "company",
+    company: {
+      id: stableId,
+      ruc,
+      legal_name,
+      trade_name: null,
+      company_type: null,
+      status: null,
+      condition: null,
+      fiscal_address: null,
+      registration_date: null,
+      activity_start_date: null,
+      line_of_business: null,
+      economic_activity: null,
+      ubigeo_code: null,
+      department: null,
+      province: null,
+      district: null,
+    },
+    rep: null,
     phones: {
       primary: phone_primary,
       secondary: phone_secondary,
