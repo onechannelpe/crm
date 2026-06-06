@@ -1,28 +1,28 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import { notFoundError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
-import { requestArtifact } from "~/server/files/service/request-artifact";
-import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
-import {
-  detectRecordImportFile,
-  canAccessRecordImportJob,
-} from "~/server/records/imports/api";
+import { canAccessRecordImportJob } from "~/server/records/imports/api";
+import { parseImportFile } from "~/server/records/imports/intake";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,
 } from "~/server/records/imports/progress-events";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { isErr, Ok } from "~/server/shared/result";
+import { Ok } from "~/server/shared/result";
 
-function isCsvFile(file: File): boolean {
-  return file.name.toLowerCase().endsWith(".csv");
+function getExtension(filename: string): string | null {
+  const dot = filename.lastIndexOf(".");
+  if (dot === -1) return null;
+  return filename.slice(dot + 1).toLowerCase() || null;
 }
 
 async function getAuthorizedRecordImportJob(
@@ -51,7 +51,6 @@ async function getAuthorizedRecordImportJob(
 }
 
 export async function uploadRecordImportFile(formData: FormData): Promise<{
-  artifactId: string;
   jobId: string;
   importType: RecordImportType;
   rowsTotal: number;
@@ -61,9 +60,12 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
   if (!(file instanceof File)) {
     throw validationError("file is required");
   }
-  if (!isCsvFile(file)) {
-    throw validationError("only .csv files are supported");
+
+  const extension = getExtension(file.name);
+  if (extension !== "csv" && extension !== "xlsx") {
+    throw validationError("only .csv and .xlsx files are supported");
   }
+
   if (file.size > maxUploadBytesForArtifactType("integration_import")) {
     throw validationError("file_too_large");
   }
@@ -71,63 +73,40 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
   return runAction({
     actionName: "records.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
-    input: {
-      fileName: file.name,
-      fileSize: file.size,
-    },
+    input: { fileName: file.name, fileSize: file.size },
     execute: async (ctx) => {
-      const { repo, storage, syncExecutor } = getServerRuntime().files;
+      const { storage } = getServerRuntime().files;
       const { integration } = getServerRuntime().integrations;
-      const headerChunkText = await file.slice(0, 64 * 1024).text();
-      const detection = detectRecordImportFile({ fileText: headerChunkText });
-      if (!detection.ok) {
-        throw validationError(detection.message);
+
+      const buffer = await file.arrayBuffer();
+      let parsed;
+      try {
+        parsed = parseImportFile(buffer, extension);
+      } catch (err) {
+        throw validationError(
+          err instanceof Error ? err.message : "invalid_import_file",
+        );
       }
 
-      const artifactResult = await requestArtifact(
-        ctx,
-        {
-          artifactType: "integration_import",
-          executionMode: "async",
-          workflowContext: { importType: detection.importType },
-        },
-        { repo, storage, syncExecutor },
+      const { importType, validRows, invalidRows } = parsed;
+      const rowsTotal = validRows.length + invalidRows.length;
+      const storageKey = `imports/${randomUUID()}.json`;
+      await storage.putBytes(
+        storageKey,
+        new TextEncoder().encode(JSON.stringify({ validRows, invalidRows })),
       );
-      if (isErr(artifactResult)) {
-        return artifactResult;
-      }
-
-      const artifactId = artifactResult.value.artifact.id;
-
-      const uploadResult = await uploadArtifactFile(
-        ctx,
-        artifactId,
-        { name: file.name, sizeBytes: file.size, stream: file.stream() },
-        { repo, storage },
-      );
-      if (isErr(uploadResult)) {
-        return uploadResult;
-      }
-
-      const fileAsset = await repo.artifacts.findFileAssetForArtifact(
-        artifactId,
-        "source_upload",
-      );
-      if (!fileAsset) {
-        throw new Error("File asset missing after upload");
-      }
 
       const jobId = await integration.jobs.insert({
-        type: detection.importType,
+        type: importType,
         status: "PENDING",
         requested_by_user_id: ctx.actor.userId,
-        file_path: fileAsset.storageKey,
+        file_path: storageKey,
         max_attempts: 3,
         created_at: ctx.now(),
       });
 
       await integration.jobs.updateProgress(jobId, {
-        rowsTotal: 0,
+        rowsTotal,
         rowsApplied: 0,
         rowsFailed: 0,
       });
@@ -136,11 +115,11 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         buildRecordImportProgressEvent({
           job: {
             id: jobId,
-            type: detection.importType,
+            type: importType,
             status: "PENDING",
             rows_applied: 0,
             rows_failed: 0,
-            rows_total: 0,
+            rows_total: rowsTotal,
             error_message: null,
           },
         }),
@@ -148,12 +127,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 
       await publishJob(JOB_CHANNELS.RECORDS_IMPORT, jobId);
 
-      return Ok({
-        artifactId,
-        jobId,
-        importType: detection.importType,
-        rowsTotal: 0,
-      });
+      return Ok({ jobId, importType, rowsTotal });
     },
   });
 }

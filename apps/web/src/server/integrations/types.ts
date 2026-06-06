@@ -1,7 +1,7 @@
 import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadQueries } from "~/server/workflow/application/ports/lead-queries";
+import type { LeadQueries } from "~/server/workflow/application/ports/lead";
 
 export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
 export type IntegrationJobStatus = WorkflowIntegrationJobsTable["status"];
