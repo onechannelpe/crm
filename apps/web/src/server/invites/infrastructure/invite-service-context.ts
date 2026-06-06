@@ -1,3 +1,4 @@
+import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -6,26 +7,27 @@ import { createUsersRepo } from "~/server/users/repos-users";
 
 import { createInviteService } from "../application/invite-service";
 
-function createInviteRepos(executor: DatabaseExecutor) {
+export type InviteRepos = {
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  teams: ReturnType<typeof createTeamsRepo>;
+  userInvites: ReturnType<typeof createUserInvitesRepo>;
+  users: ReturnType<typeof createUsersRepo>;
+};
+
+export function bindInviteRepos(db: DatabaseExecutor): InviteRepos {
   return {
-    auditLogs: createAuditLogsRepo(executor),
-    teams: createTeamsRepo(executor),
-    userInvites: createUserInvitesRepo(executor),
-    users: createUsersRepo(executor),
+    auditLogs: createAuditLogsRepo(db),
+    teams: createTeamsRepo(db),
+    userInvites: createUserInvitesRepo(db),
+    users: createUsersRepo(db),
   };
 }
 
 export function createInviteServiceContext(executor: DatabaseExecutor) {
-  const repos = createInviteRepos(executor);
+  const repos = bindInviteRepos(executor);
 
   const inviteService = createInviteService(repos, {
-    runInTransaction(operation) {
-      return executor
-        .transaction()
-        .execute((transactionDb) =>
-          operation(createInviteRepos(transactionDb)),
-        );
-    },
+    uow: createExecutorUow(executor, bindInviteRepos),
   });
 
   return {
