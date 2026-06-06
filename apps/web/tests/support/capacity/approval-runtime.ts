@@ -17,7 +17,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { TestDbContext } from "../runtime/db";
 
 // Seeded users from the template DB (tests/support/runtime/db.ts).
-export const SUPERUSER_ID = 5; // superuser, branch 2 — can manage any executive
+export const SUPERUSER_ID = 5; // superuser, branch 2 (can manage any executive)
 export const EXECUTIVE_ID = 1; // executive, branch 1
 export const EXECUTIVE_OTHER_BRANCH_ID = 3; // executive, branch 2
 
@@ -54,9 +54,6 @@ export function makeApprovalContext(
   };
 }
 
-// Mirrors production's createCapacityRepos binding for the slice the approval
-// use-cases touch. Wired through the real UoW so tests exercise real SQL and a
-// real transaction (including rollback), not an in-memory reimplementation.
 export function makeApprovalDeps(
   ctx: TestDbContext,
   options: { failGrantInsert?: boolean } = {},
