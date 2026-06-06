@@ -1,4 +1,4 @@
-import { assertPositiveInt } from "~/lib/contracts/guards";
+import { assertPositiveInt } from "~/contracts/guards";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import {
