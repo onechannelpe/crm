@@ -1,6 +1,5 @@
 "use server";
 
-import { requestCapacity } from "~/server/capacity/application/commands";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -17,7 +16,7 @@ export async function requestMoreSearches(amount: number, reason: string) {
     access: { kind: "permission", permission: "capacity:request:self" },
     input: { amount: amountResult.value, reason: reasonResult.value },
     execute: (ctx) =>
-      requestCapacity(ctx, getServerRuntime().capacity.commands, {
+      getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "search_extra",
         amount: amountResult.value,
         reason: reasonResult.value,
@@ -36,7 +35,7 @@ export async function requestMoreLeadRefill(amount: number, reason: string) {
     access: { kind: "permission", permission: "capacity:request:self" },
     input: { amount: amountResult.value, reason: reasonResult.value },
     execute: (ctx) =>
-      requestCapacity(ctx, getServerRuntime().capacity.commands, {
+      getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "lead_refill",
         amount: amountResult.value,
         reason: reasonResult.value,
