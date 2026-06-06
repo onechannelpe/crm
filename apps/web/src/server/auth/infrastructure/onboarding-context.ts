@@ -5,9 +5,9 @@ import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors
 import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
-import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
@@ -26,10 +26,8 @@ export type AuthOnboardingRepos = {
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
-function createAuthOnboardingRepos(
-  executor: DatabaseExecutor,
-): AuthOnboardingRepos {
-  return {
+export function createAuthOnboardingContext(executor: DatabaseExecutor) {
+  const repos: AuthOnboardingRepos = {
     users: createUsersRepo(executor),
     sessions: createSessionRepository(executor),
     loginFlows: createLoginFlowsRepo(executor),
@@ -42,21 +40,25 @@ function createAuthOnboardingRepos(
     userChannelAddresses: createUserChannelAddressRepo(executor),
     notificationPreferences: createNotificationPreferenceRepo(executor),
   };
-}
-
-export function createAuthOnboardingContext(executor: DatabaseExecutor) {
-  const runInRepositoryTransaction: RepositoryTransactionRunner<
-    AuthOnboardingRepos
-  > = (operation) =>
-    executor
-      .transaction()
-      .execute((transactionDb) =>
-        operation(createAuthOnboardingRepos(transactionDb)),
-      );
 
   return {
-    repos: createAuthOnboardingRepos(executor),
-    runInRepositoryTransaction,
+    repos,
+    uow: createExecutorUow(
+      executor,
+      (txDb): AuthOnboardingRepos => ({
+        users: createUsersRepo(txDb),
+        sessions: createSessionRepository(txDb),
+        loginFlows: createLoginFlowsRepo(txDb),
+        passkeys: createPasskeysRepo(txDb),
+        webauthnChallenges: createWebauthnChallengesRepo(txDb),
+        auditLogs: createAuditLogsRepo(txDb),
+        authThrottle: createAuthThrottleRepo(txDb),
+        authEvents: createAuthEventsRepo(txDb),
+        userTotpFactors: createUserTotpFactorsRepo(txDb),
+        userChannelAddresses: createUserChannelAddressRepo(txDb),
+        notificationPreferences: createNotificationPreferenceRepo(txDb),
+      }),
+    ),
   };
 }
 

@@ -35,7 +35,9 @@ const ALL_PERMISSIONS: Permission[] = [
   "lead:view:all",
   "lead:review",
   "lead:reassign",
-  "quotation:manage",
+  "quotation:create",
+  "quotation:revise",
+  "quotation:view:all",
   "integration:manage",
 ];
 
@@ -91,19 +93,25 @@ describe("rbac boundaries", () => {
     expect(hasPermission("executive", "lead:workflow")).toBe(true);
     expect(hasPermission("executive", "lead:register")).toBe(true);
     expect(hasPermission("executive", "lead:review")).toBe(false);
-    expect(hasPermission("executive", "quotation:manage")).toBe(false);
+    expect(hasPermission("executive", "quotation:create")).toBe(false);
+    expect(hasPermission("executive", "quotation:revise")).toBe(false);
+    expect(hasPermission("executive", "quotation:view:all")).toBe(false);
 
     expect(hasPermission("back_office", "lead:workflow")).toBe(false);
     expect(hasPermission("back_office", "lead:view:all")).toBe(true);
     expect(hasPermission("back_office", "lead:review")).toBe(true);
-    expect(hasPermission("back_office", "quotation:manage")).toBe(true);
+    expect(hasPermission("back_office", "quotation:create")).toBe(true);
+    expect(hasPermission("back_office", "quotation:revise")).toBe(true);
+    expect(hasPermission("back_office", "quotation:view:all")).toBe(true);
     expect(hasPermission("back_office", "integration:manage")).toBe(true);
     expect(hasPermission("back_office", "lead:register")).toBe(false);
 
     expect(hasPermission("admin", "lead:workflow")).toBe(false);
     expect(hasPermission("admin", "lead:register")).toBe(true);
     expect(hasPermission("admin", "lead:reassign")).toBe(true);
-    expect(hasPermission("admin", "quotation:manage")).toBe(true);
+    expect(hasPermission("admin", "quotation:create")).toBe(true);
+    expect(hasPermission("admin", "quotation:revise")).toBe(true);
+    expect(hasPermission("admin", "quotation:view:all")).toBe(true);
     expect(hasPermission("admin", "integration:manage")).toBe(true);
 
     expect(hasPermission("supervisor", "lead:reassign")).toBe(false);
@@ -114,7 +122,9 @@ describe("rbac boundaries", () => {
     expect(hasPermission("superuser", "lead:workflow")).toBe(false);
     expect(hasPermission("superuser", "lead:register")).toBe(true);
     expect(hasPermission("superuser", "lead:review")).toBe(true);
-    expect(hasPermission("superuser", "quotation:manage")).toBe(true);
+    expect(hasPermission("superuser", "quotation:create")).toBe(true);
+    expect(hasPermission("superuser", "quotation:revise")).toBe(true);
+    expect(hasPermission("superuser", "quotation:view:all")).toBe(true);
     expect(hasPermission("superuser", "integration:manage")).toBe(true);
   });
 });

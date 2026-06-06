@@ -60,7 +60,7 @@
   color: var(--muted-foreground);
 }
 
-@media (max-width: 800px) {
+@media (max-width: 768px) {
   .choiceGrid {
     grid-template-columns: 1fr;
   }

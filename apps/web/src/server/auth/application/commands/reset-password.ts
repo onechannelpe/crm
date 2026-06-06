@@ -3,15 +3,16 @@ import {
   hashPasswordResetToken,
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
+import { Ok } from "~/server/shared/result";
 
-import type { PasswordResetRepos } from "../../infrastructure/password-reset-context";
+import type { PasswordResetRequestContext } from "../../infrastructure/password-reset-context";
 import type { ResetPasswordResult } from "../contracts";
 
 export async function resetPassword(input: {
   token: string;
   password: string;
   confirmPassword: string;
-  repos: PasswordResetRepos;
+  deps: PasswordResetRequestContext;
 }): Promise<ResetPasswordResult> {
   if (!isValidPasswordResetTokenFormat(input.token)) {
     return { ok: false, code: "invalid_token" };
@@ -24,7 +25,7 @@ export async function resetPassword(input: {
   }
 
   const now = Date.now();
-  const record = await input.repos.passwordResetTokens.findValidByHash(
+  const record = await input.deps.repos.passwordResetTokens.findValidByHash(
     hashPasswordResetToken(input.token),
     now,
   );
@@ -32,11 +33,12 @@ export async function resetPassword(input: {
     return { ok: false, code: "invalid_token" };
   }
 
-  await input.repos.passwordResetTokens.expireAllForUser(record.user_id, now);
-  await input.repos.users.updatePassword(
-    record.user_id,
-    await hashPassword(input.password),
-  );
+  const passwordHash = await hashPassword(input.password);
+  await input.deps.uow.run(async (repos) => {
+    await repos.passwordResetTokens.expireAllForUser(record.user_id, now);
+    await repos.users.updatePassword(record.user_id, passwordHash);
+    return Ok(undefined);
+  });
 
   return { ok: true };
 }

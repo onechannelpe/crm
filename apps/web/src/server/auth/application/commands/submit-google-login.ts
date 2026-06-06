@@ -1,6 +1,6 @@
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import type { AuthProof } from "~/server/auth/policy/types";
 import { Err, type Result } from "~/server/shared/result";
 
@@ -17,7 +17,7 @@ export async function submitGoogleLogin(
     userAgent: string | null;
     trustedFederatedMfa?: boolean;
   },
-  deps: AuthLoginRepos,
+  deps: AuthLoginDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const proof: Extract<AuthProof, { kind: "google" }> = {

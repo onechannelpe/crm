@@ -10,10 +10,10 @@ export async function completeOnboardingStep(): Promise<{
   redirectTo: string;
 }> {
   const currentUser = await getMe();
-  const persisted = parsePhone(currentUser?.phone);
-  if (!persisted) {
+  const phone = parsePhone(currentUser?.phone);
+  if (!phone) {
     throw validationError("El número debe tener 9 dígitos y empezar con 9");
   }
 
-  return completeOnboarding(persisted);
+  return completeOnboarding(phone);
 }

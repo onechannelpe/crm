@@ -1,4 +1,3 @@
-import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 import type { OnboardingRequirements } from "~/server/auth/policy/types";
 
 import type { Facts } from "../model/state";
@@ -6,15 +5,9 @@ import type { Facts } from "../model/state";
 export function deriveFacts(input: {
   requirements: OnboardingRequirements;
   userPhone: string | null;
-  phoneDraft: string | undefined;
-}): Facts & { phoneDraft: string } {
-  const phoneDraft = normalizePhoneInput(input.phoneDraft);
-  const hasValidDraft = isValidPhone(phoneDraft);
-  const hasPhone = hasValidDraft || input.userPhone !== null;
-
+}): Facts {
   return {
     requirements: input.requirements,
-    hasPhone,
-    phoneDraft,
+    hasPhone: input.userPhone !== null,
   };
 }

@@ -1,6 +1,6 @@
 import { authenticatePassword } from "~/lib/auth/providers/password-provider";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { Err, isErr, type Result } from "~/server/shared/result";
 
 import type {
@@ -16,7 +16,7 @@ export async function submitPasswordLogin(
     ipAddress: string;
     userAgent: string | null;
   },
-  deps: AuthLoginRepos,
+  deps: AuthLoginDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const safeIdentifier = input.identifier.trim();
