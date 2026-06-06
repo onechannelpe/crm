@@ -1,120 +1,44 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { createLogger } from "~/lib/observability/logger";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
+import type { LeadDetailView } from "~/server/workflow/types";
 
-import type { LeadDetailDeps } from "../deps/lead-queries";
-import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
-import { resolveAvailableActions } from "../policies/action-availability";
+import {
+  authorizeLeadAction,
+  canRevealFullTimeline,
+  resolveAvailableActions,
+} from "../../domain/lead/policy";
 import { presentLeadDetail } from "../presenters/lead-detail";
-import type { LeadDetailView } from "./views/lead-detail";
-
-const logger = createLogger("workflow-get-lead-detail");
-
-function isRecoverableSectionError(error: DomainError): boolean {
-  return error.kind === "external";
-}
-
-function reportSectionDegradation(section: string, error: DomainError): void {
-  logger.error("workflow_lead_detail_degraded_section", {
-    section,
-    domainKind: error.kind,
-    domainCode: error.code,
-    domainMessage: error.message,
-    domainDetails: error.details,
-  });
-}
+import {
+  loadLeadDetailSections,
+  type LeadDetailQueryDeps,
+} from "./load-lead-detail-sections";
 
 export async function getLeadDetail(
-  deps: LeadDetailDeps,
+  deps: LeadDetailQueryDeps,
   input: {
     actorUserId: number;
     actorRole: Role;
     leadId: string;
   },
 ): Promise<Result<LeadDetailView, DomainError>> {
-  const lead = await deps.leads.findById(input.leadId);
-  if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
-  }
-
-  const canAccessLead = requireLeadAccess({
+  const loaded = await loadLeadDetailSections(deps, {
+    leadId: input.leadId,
     actorUserId: input.actorUserId,
-    actorRole: input.actorRole,
-    executiveId: lead.executiveId,
   });
-  if (!canAccessLead.ok) {
-    return canAccessLead;
+  if (!loaded.ok) {
+    return loaded;
   }
+  const { lead } = loaded.value;
 
-  const [
-    isFavorite,
-    profile,
-    quotations,
-    venuesResult,
-    negotiationRequestRows,
-    historyResult,
-    sourceStatus,
-    userRows,
-    organization,
-    legalRepresentative,
-  ] = await Promise.all([
-    deps.leadFavorites.isFavoriteForUser({
-      leadId: input.leadId,
-      userId: input.actorUserId,
-    }),
-    deps.leadProfiles.findByLeadId(input.leadId),
-    deps.leadQuotations.listByLeadId(input.leadId),
-    deps.leadVenues.listByLeadId(input.leadId),
-    deps.leadNegotiationRequests.listByLeadId(input.leadId),
-    deps.leadHistory.listByLeadId(input.leadId),
-    deps.sourceStatuses.findByRuc(lead.ruc),
-    deps.users.findByIds([
-      lead.executiveId,
-      lead.createdBy,
-      ...(lead.updatedBy ? [lead.updatedBy] : []),
-    ]),
-    deps.party.findOrganizationById(lead.organizationId),
-    deps.party.findPrimaryLegalRepresentative(lead.organizationId),
-  ]);
-
-  if (!historyResult.ok && !isRecoverableSectionError(historyResult.error)) {
-    return historyResult;
-  }
-  if (!venuesResult.ok && !isRecoverableSectionError(venuesResult.error)) {
-    return venuesResult;
-  }
-  if (!organization) {
-    return Err(
-      domainError(
-        "not_found",
-        "lead_organization_not_found",
-        "Lead organization not found",
-        {
-          leadId: lead.id,
-          organizationId: lead.organizationId,
-        },
-      ),
-    );
-  }
-
-  const history = historyResult.ok ? historyResult.value : [];
-  const venues = venuesResult.ok ? venuesResult.value : [];
-  if (!historyResult.ok) {
-    reportSectionDegradation("history", historyResult.error);
-  }
-  if (!venuesResult.ok) {
-    reportSectionDegradation("venues", venuesResult.error);
-  }
-
-  const negotiationRequests = await Promise.all(
-    negotiationRequestRows.map(async (req) => ({
-      request: req,
-      files: await deps.negotiationFiles.listByNegotiationRequestId(req.id),
-    })),
+  const canAccess = authorizeLeadAction(
+    "view",
+    { userId: input.actorUserId, role: input.actorRole },
+    lead,
   );
+  if (!canAccess.ok) return canAccess;
 
-  const userMap = new Map(userRows.map((u) => [u.id, u.fullName]));
+  const userMap = new Map(loaded.value.userRows.map((u) => [u.id, u.fullName]));
   const executiveName = userMap.get(lead.executiveId) ?? "Desconocido";
   const createdByName = userMap.get(lead.createdBy) ?? "Desconocido";
   const updatedByName = lead.updatedBy
@@ -122,30 +46,29 @@ export async function getLeadDetail(
     : null;
 
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
-  const availableActions = resolveAvailableActions({
-    actorUserId: input.actorUserId,
-    actorRole: input.actorRole,
+  const availableActions = resolveAvailableActions(
+    { userId: input.actorUserId, role: input.actorRole },
     lead,
-    negotiationRequestCount: negotiationRequestRows.length,
-  });
+    { negotiationRequestCount: loaded.value.negotiationRequestRows.length },
+  );
 
   return Ok(
     presentLeadDetail({
       lead,
-      isFavorite,
+      isFavorite: loaded.value.isFavorite,
       executiveName,
       createdByName,
       updatedByName,
-      profile,
-      quotations,
-      venues,
-      negotiationRequests,
-      history,
+      profile: loaded.value.profile,
+      quotations: loaded.value.quotations,
+      venues: loaded.value.venues,
+      negotiationRequests: loaded.value.negotiationRequests,
+      history: loaded.value.history,
       canRevealFullTimeline: canRevealTimeline,
       availableActions,
-      sourceStatus,
-      organization,
-      legalRepresentative,
+      sourceStatus: loaded.value.sourceStatus,
+      organization: loaded.value.organization,
+      legalRepresentative: loaded.value.legalRepresentative,
     }),
   );
 }

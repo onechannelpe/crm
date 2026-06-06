@@ -26,7 +26,7 @@ describe("workflow read access", () => {
       stage: "QUALIFYING",
     });
 
-    const result = await runtime.workflow.queryApi.getLeadDetail({
+    const result = await runtime.workflow.queries.getLeadDetail({
       actor: scenario.actor.by("backOne"),
       leadId: lead.id,
     });
@@ -46,7 +46,7 @@ describe("workflow read access", () => {
         stage: "QUOTED",
       });
 
-      const result = await runtime.workflow.queryApi.getLeadDetail({
+      const result = await runtime.workflow.queries.getLeadDetail({
         actor: scenario.actor.withRole("backOne", role),
         leadId: lead.id,
       });
@@ -64,7 +64,7 @@ describe("workflow read access", () => {
       stage: "QUALIFYING",
     });
 
-    const result = await runtime.workflow.queryApi.getLeadDetail({
+    const result = await runtime.workflow.queries.getLeadDetail({
       actor: scenario.actor.by("execTwo"),
       leadId: lead.id,
     });

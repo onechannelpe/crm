@@ -1,40 +1,35 @@
 "use server";
 
+import {
+  type ListAssignableExecutivesInput,
+  type ListLeadsFiltersInput,
+} from "~/contracts/workflow/inputs";
+import {
+  type AssignableExecutiveView,
+  type LeadBootstrapPreviewView,
+  type LeadDetailView,
+  type LeadListView,
+} from "~/contracts/workflow/views";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
-import { listLeads } from "~/server/workflow/application/queries/list-leads";
-import type { AssignableExecutiveView } from "~/server/workflow/application/queries/views/assignable-executive";
-import type { LeadBootstrapPreviewView } from "~/server/workflow/application/queries/views/lead-bootstrap-preview";
-import type { LeadDetailView } from "~/server/workflow/application/queries/views/lead-detail";
-import type { LeadListView } from "~/server/workflow/application/queries/views/lead-list";
 
-export async function queryLeadList(filters: {
-  stage?: string;
-  status?: string;
-  prioridad?: string;
-  executiveId?: number;
-  updatedSinceMs?: number;
-  updatedUntilMs?: number;
-  sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
-  sortDirection?: "asc" | "desc";
-  limit?: number;
-  offset?: number;
-}): Promise<LeadListView> {
+export async function queryLeadList(
+  filters: ListLeadsFiltersInput,
+): Promise<LeadListView> {
   return runAction({
     actionName: "workflow.list_leads",
     access: { kind: "auth" },
     input: filters,
-    execute: (ctx) =>
-      listLeads(
-        { leads: getServerRuntime().workflow.repos.leadQueries },
-        {
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          actorBranchId: ctx.actor.branchId,
-          filters,
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.queries.listLeads({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
-      ),
+        filters,
+      }),
   });
 }
 
@@ -43,12 +38,13 @@ export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
     actionName: "workflow.get_lead_detail",
     access: { kind: "auth" },
     input: { leadId },
-    execute: (ctx) =>
-      getServerRuntime().workflow.queryApi.getLeadDetail({
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.queries.getLeadDetail({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
         leadId,
       }),
@@ -62,36 +58,28 @@ export async function queryLeadBootstrapPreview(
     actionName: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
     input: { ruc },
-    execute: () => {
-      const { workflow } = getServerRuntime();
-      return getLeadBootstrapPreview(
-        { party: workflow.repos.party },
-        workflow.engineGateway,
-        { ruc },
-      );
-    },
+
+    execute: () =>
+      getServerRuntime().workflow.queries.getLeadBootstrapPreview({ ruc }),
   });
 }
 
-export async function queryAssignableExecutives(input: {
-  leadId: string;
-  search?: string;
-  limit?: number;
-}): Promise<AssignableExecutiveView[]> {
+export async function queryAssignableExecutives(
+  input: ListAssignableExecutivesInput,
+): Promise<AssignableExecutiveView[]> {
   return runAction({
     actionName: "workflow.list_assignable_executives",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
-      getServerRuntime().workflow.queryApi.listAssignableExecutives({
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.queries.listAssignableExecutives({
         actor: {
-          userId: ctx.actor.userId,
-          role: ctx.actor.role,
-          branchId: ctx.actor.branchId,
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
         },
-        leadId: input.leadId,
-        search: input.search,
-        limit: input.limit,
+        ...input,
       }),
   });
 }

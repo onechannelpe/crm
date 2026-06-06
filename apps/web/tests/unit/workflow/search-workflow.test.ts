@@ -32,8 +32,10 @@ const successEngine = {
   search: async (): Promise<Result<SearchResult[], DomainError>> =>
     Ok([
       {
-        person: {
-          dni: "12345678",
+        kind: "document",
+        doc: {
+          doc_type: "DNI",
+          doc_number: "12345678",
           name: "Test Person",
           ruc: null,
           birth_date: null,
@@ -68,7 +70,12 @@ describe("runDirectSearch", () => {
   it("commits reservation when gateway succeeds", async () => {
     const repos = makeRepos();
     const result = await runDirectSearch(
-      { actorUserId: USER_ID, type: "dni", value: "12345678", limit: 10 },
+      {
+        actorUserId: USER_ID,
+        intent: "people",
+        query: "12345678",
+        limit: 10,
+      },
       repos,
       successEngine,
     );
@@ -83,7 +90,12 @@ describe("runDirectSearch", () => {
   it("cancels reservation when gateway fails", async () => {
     const repos = makeRepos();
     const result = await runDirectSearch(
-      { actorUserId: USER_ID, type: "dni", value: "12345678", limit: 10 },
+      {
+        actorUserId: USER_ID,
+        intent: "people",
+        query: "12345678",
+        limit: 10,
+      },
       repos,
       failEngine,
     );
@@ -132,7 +144,12 @@ describe("runDirectSearch", () => {
     };
 
     const result = await runDirectSearch(
-      { actorUserId: USER_ID, type: "dni", value: "12345678", limit: 10 },
+      {
+        actorUserId: USER_ID,
+        intent: "people",
+        query: "12345678",
+        limit: 10,
+      },
       repos,
       trackingEngine,
     );

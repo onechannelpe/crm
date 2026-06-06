@@ -20,10 +20,6 @@ export async function registerLead(input: {
   ruc: string;
   actor?: { userId: number; role: "admin" | "executive"; branchId: number };
   executiveId?: number;
-  enrichByRuc?: () => Promise<{
-    razonSocial: string | null;
-    address: string | null;
-  } | null>;
   commandOverrides?: TestCommandOverrides;
 }): Promise<RegisterLeadResult> {
   const actor = input.actor ?? { userId: 1, role: "admin", branchId: 1 };
@@ -36,16 +32,7 @@ export async function registerLead(input: {
         ruc: input.ruc,
         executiveId,
       }),
-    {
-      ...(input.enrichByRuc
-        ? {
-            engineGateway: {
-              enrichByRuc: input.enrichByRuc,
-            },
-          }
-        : {}),
-      ...input.commandOverrides,
-    },
+    input.commandOverrides,
   );
 
   if (!result.ok) {
@@ -88,10 +75,6 @@ export async function registerLead(input: {
 export async function registerLeadAndLoadSnapshot(input: {
   runtime: TestRuntime;
   ruc: string;
-  enrichByRuc?: () => Promise<{
-    razonSocial: string | null;
-    address: string | null;
-  } | null>;
 }): Promise<RegisteredLeadSnapshot> {
   const registered = await registerLead(input);
   return registered.snapshot;

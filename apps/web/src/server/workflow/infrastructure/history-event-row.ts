@@ -1,5 +1,7 @@
-import type { LeadHistoryPerson } from "~/server/workflow/domain/history";
-import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
+import type {
+  LeadHistoryEntry,
+  LeadHistoryPerson,
+} from "~/server/workflow/domain/history";
 
 export type HistoryEventRow = {
   id: string;

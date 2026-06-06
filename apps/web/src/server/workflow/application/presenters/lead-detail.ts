@@ -1,32 +1,34 @@
-import type { LeadHistoryEntry } from "../../domain/history";
-import type { LeadRecord } from "../../domain/lead-record";
-import type { LeadAvailableAction } from "../contracts/lead-available-action";
-import type { LeadProfile } from "../ports/lead-profile-repository";
 import type {
-  LeadNegotiationRequest,
-  LeadNegotiationFile,
-} from "../ports/negotiation-request-repository";
-import type {
-  LegalRepresentative,
-  OrganizationProfile,
-} from "../ports/party-repository";
-import type { LeadQuotation } from "../ports/quotation-repository";
-import type { LeadVenue } from "../ports/sale-repository";
-import type { LeadSourceStatus } from "../ports/source-status-repository";
-import type {
+  LeadAvailableAction,
   LeadDetailLeadView,
-  LeadDetailNegotiationFileView,
   LeadDetailNegotiationRequestView,
-  LeadDetailProfileView,
   LeadDetailQuotationView,
-  LeadDetailSourceStatusView,
   LeadDetailVenueView,
   LeadDetailView,
-} from "../queries/views/lead-detail";
+} from "~/server/workflow/types";
+
+import type { LeadHistoryEntry } from "../../domain/history";
 import {
-  presentLeadBlockingFields,
-  presentLeadNextStep,
-} from "./lead-progress";
+  resolveLeadBlockingFields,
+  resolveLeadNextStep,
+} from "../../domain/lead-progress";
+import type { LeadState } from "../../domain/lead/state";
+import type {
+  LeadProfile,
+  LeadNegotiationRequest,
+  LeadNegotiationFile,
+  LegalRepresentative,
+  OrganizationProfile,
+  LeadQuotation,
+  LeadVenue,
+  LeadSourceStatus,
+} from "../ports/entities";
+import type {
+  LeadDetailNegotiationFileView,
+  LeadDetailProfileView,
+  LeadDetailRepLegalView,
+  LeadDetailSourceStatusView,
+} from "./lead-detail-types";
 import { presentTimeline } from "./timeline";
 
 export type NegotiationRequestWithFiles = {
@@ -41,7 +43,7 @@ export type NegotiationRequestWithFiles = {
 };
 
 export type LeadDetailSource = {
-  lead: LeadRecord;
+  lead: LeadState;
   isFavorite: boolean;
   executiveName: string;
   createdByName: string;
@@ -76,7 +78,7 @@ function toLeadSourceStatus(
 }
 
 function toLeadDetailLead(
-  lead: LeadRecord,
+  lead: LeadState,
   organization: OrganizationProfile,
   isFavorite: boolean,
   executiveName: string,
@@ -100,7 +102,7 @@ function toLeadDetailLead(
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
-    nextStep: presentLeadNextStep({ lead }),
+    nextStep: resolveLeadNextStep(lead),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
@@ -109,7 +111,6 @@ function toLeadDetailLead(
 function toLeadDetailProfile(
   profile: LeadProfile,
   organization: OrganizationProfile | undefined,
-  legalRepresentative: LegalRepresentative | undefined,
 ): LeadDetailProfileView {
   return {
     leadId: profile.leadId,
@@ -118,19 +119,28 @@ function toLeadDetailProfile(
     gpv: profile.gpv,
     ticket: profile.ticket,
     giroNegocio: organization?.giroNegocio ?? null,
+    abonoBank: profile.abonoBank,
+    posTotal: profile.posTotal,
     linkScope: profile.linkScope,
     linkUrl: profile.linkUrl,
     onlineScope: profile.onlineScope,
     onlineUrl: profile.onlineUrl,
     onlineModalidad: profile.onlineModalidad,
-    repLegalNombres: legalRepresentative?.nombres ?? null,
-    repLegalApellidoPaterno: legalRepresentative?.apellidoPaterno ?? null,
-    repLegalApellidoMaterno: legalRepresentative?.apellidoMaterno ?? null,
-    repLegalDni: legalRepresentative?.dni ?? null,
-    repLegalTelefono: legalRepresentative?.telefono ?? null,
-    repLegalEmail: legalRepresentative?.email ?? null,
     updatedAt: profile.updatedAt,
     updatedBy: profile.updatedBy,
+  };
+}
+
+function toLeadDetailRepLegal(
+  legalRepresentative: LegalRepresentative,
+): LeadDetailRepLegalView {
+  return {
+    nombres: legalRepresentative.nombres,
+    apellidoPaterno: legalRepresentative.apellidoPaterno,
+    apellidoMaterno: legalRepresentative.apellidoMaterno,
+    dni: legalRepresentative.dni,
+    telefono: legalRepresentative.telefono ?? null,
+    email: legalRepresentative.email ?? null,
   };
 }
 
@@ -205,6 +215,10 @@ function toNegotiationRequestView(
 }
 
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
+  const profile = source.profile
+    ? toLeadDetailProfile(source.profile, source.organization)
+    : undefined;
+
   return {
     lead: toLeadDetailLead(
       source.lead,
@@ -214,12 +228,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       source.createdByName,
       source.updatedByName,
     ),
-    profile: source.profile
-      ? toLeadDetailProfile(
-          source.profile,
-          source.organization,
-          source.legalRepresentative,
-        )
+    profile,
+    repLegal: source.legalRepresentative
+      ? toLeadDetailRepLegal(source.legalRepresentative)
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
     venues: source.venues.map(toLeadDetailVenue),
@@ -228,8 +239,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     ),
     timeline: presentTimeline(source.history, source.canRevealFullTimeline),
     availableActions: source.availableActions,
-    blockingFields: presentLeadBlockingFields({
-      lead: source.lead,
+    blockingFields: resolveLeadBlockingFields({
+      stage: source.lead.stage,
+      profile,
       venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
         .length,
     }),

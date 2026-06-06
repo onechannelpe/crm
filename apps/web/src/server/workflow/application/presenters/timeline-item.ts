@@ -1,7 +1,9 @@
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
-import type { LeadCallOutcome } from "~/workflow/contracts/lead-schema";
+import type {
+  LeadCallOutcome,
+  LeadTimelineItem,
+} from "~/server/workflow/types";
 
-import type { LeadTimelineItem } from "../queries/views/lead-detail";
 import { formatTimelineActorName } from "./timeline-actor-name";
 
 function describeCallOutcome(outcome: LeadCallOutcome | null) {
@@ -36,7 +38,7 @@ export function presentTimelineItem(
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "system",
-        title: "Prospecto registrado",
+        title: "Cliente registrado",
         description: `Registrado por ${actorDisplayName}.`,
         actorDisplayName,
       };
@@ -84,7 +86,7 @@ export function presentTimelineItem(
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "assignment",
-        title: "Prospecto asignado",
+        title: "Cliente asignado",
         description: `${subjectDisplayName} asignado por ${actorDisplayName}.`,
         actorDisplayName,
       };
@@ -93,17 +95,35 @@ export function presentTimelineItem(
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "assignment",
-        title: "Prospecto reasignado",
+        title: "Cliente reasignado",
         description: `${subjectDisplayName} reasignado por ${actorDisplayName}.`,
         actorDisplayName,
       };
-    case "commercial_input_completed":
+    case "commercial_scope_saved":
       return {
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "system",
-        title: "Información comercial completada",
-        description: `Completada por ${actorDisplayName}.`,
+        title: "Alcance comercial guardado",
+        description: `Guardado por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "quotation_requested":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "stage-change",
+        title: "Cotización solicitada",
+        description: `Solicitada por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "rep_legal_recorded":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Representante legal registrado",
+        description: `Registrado por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "quotation_created":
@@ -133,6 +153,15 @@ export function presentTimelineItem(
         kind: "system",
         title: "Sede agregada",
         description: `${event.payload.nombreComercial} registrada por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "venue_updated":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Sede actualizada",
+        description: `${event.payload.nombreComercial} actualizada por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "venue_accounts_added":
