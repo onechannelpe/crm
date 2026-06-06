@@ -1,13 +1,10 @@
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";
 import { hashExtensionSecretToken } from "../crypto";
 import { upsertSyncHealth } from "./presence";
-import {
-  type ExtensionRepos,
-  type ExtensionServiceError,
-  hasActiveAuthSession,
-} from "./shared";
+import { type ExtensionRepos, hasActiveAuthSession } from "./shared";
 import {
   installationSessionExpiresAt,
   issueSessionCredentials,
@@ -29,15 +26,18 @@ export async function refreshInstallationSession(
     refreshToken: string;
     installationId: string;
   },
-): Promise<Result<RefreshExtensionSessionResponse, ExtensionServiceError>> {
+): Promise<Result<RefreshExtensionSessionResponse, DomainError>> {
   const { repos, now } = context;
 
   try {
     if (!isUuid(input.installationId)) {
-      return Err({
-        reason: "installation_invalid",
-        message: "Extension installation ID must be a UUID",
-      });
+      return Err(
+        domainError(
+          "validation",
+          "installation_invalid",
+          "Extension installation ID must be a UUID",
+        ),
+      );
     }
 
     const currentTime = now();
@@ -49,10 +49,13 @@ export async function refreshInstallationSession(
         currentTime,
       );
     if (!session) {
-      return Err({
-        reason: "session_invalid",
-        message: "Extension session refresh is invalid or expired",
-      });
+      return Err(
+        domainError(
+          "forbidden",
+          "session_invalid",
+          "Extension session refresh is invalid or expired",
+        ),
+      );
     }
 
     const authSessionActive = await hasActiveAuthSession(
@@ -70,10 +73,13 @@ export async function refreshInstallationSession(
         sync_health: "reauth_required",
         sync_updated_at: currentTime,
       });
-      return Err({
-        reason: "session_invalid",
-        message: "Extension session refresh is invalid or expired",
-      });
+      return Err(
+        domainError(
+          "forbidden",
+          "session_invalid",
+          "Extension session refresh is invalid or expired",
+        ),
+      );
     }
 
     const credentials = await issueSessionCredentials(session, currentTime);
@@ -92,24 +98,32 @@ export async function refreshInstallationSession(
     return Ok(credentials);
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
-      return Err({
-        reason: "misconfigured",
-        message: "Extension signing keys are not configured",
-      });
+      return Err(
+        domainError(
+          "external",
+          "misconfigured",
+          "Extension signing keys are not configured",
+        ),
+      );
     }
     if (isInvalidExtensionToken(error)) {
-      return Err({
-        reason: "session_invalid",
-        message: "Extension session token is invalid or expired",
-      });
+      return Err(
+        domainError(
+          "forbidden",
+          "session_invalid",
+          "Extension session token is invalid or expired",
+        ),
+      );
     }
 
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "external",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Unexpected extension session refresh failure",
-    });
+      ),
+    );
   }
 }

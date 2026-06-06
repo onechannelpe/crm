@@ -1,4 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { AppUow } from "~/server/shared/application/uow";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -11,11 +13,7 @@ import {
   upsertSyncHealth,
   withDerivedProjectionStatuses,
 } from "./presence";
-import {
-  type ExtensionRepos,
-  type ExtensionServiceError,
-  hasActiveAuthSession,
-} from "./shared";
+import { type ExtensionRepos, hasActiveAuthSession } from "./shared";
 import {
   isCryptoMisconfiguration,
   isExtensionInstallationSessionClaims,
@@ -24,22 +22,24 @@ import {
   parseSubjectUserId,
 } from "./validators";
 
-interface EventsMethodContext {
+interface EventsWriteContext {
   repos: ExtensionRepos;
   now: () => number;
-  runInTransaction?: <T>(
-    operation: (transactionRepos: ExtensionRepos) => Promise<T>,
-  ) => Promise<T>;
+  uow: AppUow<ExtensionRepos>;
+}
+interface EventsReadContext {
+  repos: ExtensionRepos;
+  now: () => number;
 }
 
 export async function ingestRuntimeEvent(
-  context: EventsMethodContext,
+  context: EventsWriteContext,
   input: {
     sessionToken: string;
     event: ExtensionRuntimeEventEnvelope;
   },
-): Promise<Result<void, ExtensionServiceError>> {
-  const { repos, now, runInTransaction } = context;
+): Promise<Result<void, DomainError>> {
+  const { now, uow } = context;
 
   try {
     const sessionClaims = await verifyExtensionToken(
@@ -48,10 +48,13 @@ export async function ingestRuntimeEvent(
     );
     const currentTime = now();
     if (isTokenExpired(sessionClaims.exp, currentTime)) {
-      return Err({
-        reason: "session_invalid",
-        message: "Extension session token is invalid or expired",
-      });
+      return Err(
+        domainError(
+          "forbidden",
+          "session_invalid",
+          "Extension session token is invalid or expired",
+        ),
+      );
     }
 
     const payloadText = JSON.stringify(input.event.payload);
@@ -71,12 +74,7 @@ export async function ingestRuntimeEvent(
         ? input.event.payload.sessionId
         : null;
 
-    const run =
-      runInTransaction ??
-      (async <T>(operation: (transactionRepos: ExtensionRepos) => Promise<T>) =>
-        operation(repos));
-
-    return await run(async (txRepos) => {
+    return await uow.run(async (txRepos) => {
       const subjectUserId = parseSubjectUserId(sessionClaims.sub);
       const session =
         await txRepos.extensionRuntime.findValidInstallationSession(
@@ -91,10 +89,13 @@ export async function ingestRuntimeEvent(
         session.auth_session_id !== sessionClaims.authSessionId ||
         session.installation_id !== sessionClaims.installationId
       ) {
-        return Err({
-          reason: "session_invalid",
-          message: "Extension session token is invalid or expired",
-        });
+        return Err(
+          domainError(
+            "forbidden",
+            "session_invalid",
+            "Extension session token is invalid or expired",
+          ),
+        );
       }
 
       const authSessionActive = await hasActiveAuthSession(
@@ -112,10 +113,13 @@ export async function ingestRuntimeEvent(
           sync_health: "reauth_required",
           sync_updated_at: currentTime,
         });
-        return Err({
-          reason: "session_invalid",
-          message: "Extension session token is invalid or expired",
-        });
+        return Err(
+          domainError(
+            "forbidden",
+            "session_invalid",
+            "Extension session token is invalid or expired",
+          ),
+        );
       }
 
       await txRepos.extensionRuntime.touchInstallationSession(
@@ -182,36 +186,44 @@ export async function ingestRuntimeEvent(
     });
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
-      return Err({
-        reason: "misconfigured",
-        message: "Extension signing keys are not configured",
-      });
+      return Err(
+        domainError(
+          "external",
+          "misconfigured",
+          "Extension signing keys are not configured",
+        ),
+      );
     }
     if (isInvalidExtensionToken(error)) {
-      return Err({
-        reason: "session_invalid",
-        message: "Extension session token is invalid or expired",
-      });
+      return Err(
+        domainError(
+          "forbidden",
+          "session_invalid",
+          "Extension session token is invalid or expired",
+        ),
+      );
     }
 
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "external",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Unexpected extension event ingest failure",
-    });
+      ),
+    );
   }
 }
 
 export async function listTeamExecutiveStatuses(
-  context: EventsMethodContext,
+  context: EventsReadContext,
   input: {
     role: Role;
     userId: number;
     branchId: number;
   },
-): Promise<Result<TeamExecutiveStatusView[], ExtensionServiceError>> {
+): Promise<Result<TeamExecutiveStatusView[], DomainError>> {
   const { repos, now } = context;
 
   try {
@@ -233,12 +245,14 @@ export async function listTeamExecutiveStatuses(
       ),
     );
   } catch (error: unknown) {
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "external",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Unexpected extension status read failure",
-    });
+      ),
+    );
   }
 }

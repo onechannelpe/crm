@@ -27,7 +27,7 @@ describe("extension runtime token validation", () => {
     });
 
     const error = expectErr(result);
-    expect(error.reason).toBe("handoff_invalid");
+    expect(error.code).toBe("handoff_invalid");
   });
 
   it("rejects handoff creation when assigned contact has no primary phone", async () => {
@@ -45,7 +45,7 @@ describe("extension runtime token validation", () => {
     });
 
     const error = expectErr(result);
-    expect(error.reason).toBe("assignment_inactive");
+    expect(error.code).toBe("assignment_inactive");
 
     const handoffs = await ctx.db
       .selectFrom("extension_handoffs")
@@ -70,6 +70,6 @@ describe("extension runtime token validation", () => {
     });
 
     const error = expectErr(result);
-    expect(error.reason).toBe("session_invalid");
+    expect(error.code).toBe("session_invalid");
   });
 });
