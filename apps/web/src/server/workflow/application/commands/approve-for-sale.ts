@@ -5,8 +5,8 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
+import { approveForSale } from "../../domain/lead/commands";
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import { approveForSale } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 

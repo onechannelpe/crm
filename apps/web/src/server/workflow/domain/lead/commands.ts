@@ -2,7 +2,6 @@ import type {
   AbonoBank,
   LeadCallOutcome,
   LeadPriority,
-  LeadStage,
   LeadStatus,
   Moneda,
 } from "~/contracts/workflow/vocabulary";
@@ -44,8 +43,6 @@ function finish(
     events,
   });
 }
-
-// --- Commands ---
 
 export function reviewLead(
   state: LeadState,
@@ -359,9 +356,7 @@ export function createVenue(
 ): TransitionResult {
   const authz = authorizeLeadAction("create-venue", input.actor, state);
   if (!authz.ok) return authz;
-
-  const validStages: LeadStage[] = ["SETUP_EXECUTION"];
-  if (!validStages.includes(state.stage)) return invalidLeadStage();
+  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
 
   const events: LeadEvent[] = [
     createHistoryEvent({

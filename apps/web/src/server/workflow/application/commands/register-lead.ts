@@ -5,10 +5,10 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
+import { reassignLead } from "../../domain/lead/commands";
 import { leadNotFound } from "../../domain/lead/lead-errors";
 import { requireCapability } from "../../domain/lead/policy";
 import { createLeadDraft } from "../../domain/lead/state";
-import { reassignLead } from "../../domain/lead/transitions";
 import {
   createLeadStateRepo,
   type LeadStateRepository,

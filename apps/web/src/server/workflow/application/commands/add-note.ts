@@ -5,8 +5,8 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { AddLeadNoteCommandInput } from "~/server/workflow/types";
 
+import { addNote } from "../../domain/lead/commands";
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import { addNote } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 

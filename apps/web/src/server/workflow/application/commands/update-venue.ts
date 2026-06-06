@@ -5,8 +5,8 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { UpdateVenueCommandInput } from "~/server/workflow/types";
 
+import { updateVenue } from "../../domain/lead/commands";
 import { leadNotFound } from "../../domain/lead/lead-errors";
-import { updateVenue } from "../../domain/lead/transitions";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
