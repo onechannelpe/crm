@@ -6,7 +6,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   LeadAssignment,
   LeadAssignmentDraft,
-} from "~/server/workflow/application/ports/assignment-repository";
+} from "~/server/workflow/application/ports/lead";
 
 type AssignmentRow = Selectable<Database["workflow_lead_assignments"]>;
 type NewAssignmentRow = Insertable<Database["workflow_lead_assignments"]>;

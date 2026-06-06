@@ -27,7 +27,8 @@ type LeadSeed = {
     | "SCOPING"
     | "QUOTING"
     | "QUOTED"
-    | "CLOSING"
+    | "SETUP_PLAN"
+    | "SETUP_EXECUTION"
     | "LIVE";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;

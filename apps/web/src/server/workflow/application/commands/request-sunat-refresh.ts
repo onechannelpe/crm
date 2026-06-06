@@ -1,42 +1,27 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
-import { Err, Ok } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
+import type { WorkflowActor } from "~/server/workflow/types";
 
-import { requireLeadReadAccess } from "../policies/access";
-import type { WorkflowAuditService } from "../ports/audit-service";
-import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
-import type { LeadRepository } from "../ports/lead-repository";
+import { resolveCapabilities } from "../../domain/lead/policy";
+import type { LeadEnrichmentQueue } from "../ports/gateways";
+import type { LeadReadRepository } from "../ports/lead";
 
-export async function requestSunatRefresh(input: {
-  actorUserId: number;
-  actorRole: Role;
-  leadId: string;
-  leadRepo: LeadRepository;
-  enrichmentQueue: LeadEnrichmentQueue;
-  auditService: WorkflowAuditService;
-}): Promise<Result<void, DomainError>> {
-  const canRead = requireLeadReadAccess(input.actorRole);
-  if (!canRead.ok) {
-    return canRead;
+export async function requestSunatRefresh(
+  input: { actor: WorkflowActor; leadId: string },
+  ports: { leads: LeadReadRepository; enrichmentQueue: LeadEnrichmentQueue },
+): Promise<Result<void, DomainError>> {
+  if (!resolveCapabilities(input.actor.role).has("view")) {
+    return Err(domainError("forbidden", "forbidden", "Access denied"));
   }
 
-  const lead = await input.leadRepo.findById(input.leadId);
+  const lead = await ports.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
 
-  await input.enrichmentQueue.enqueueRucVerification(
+  await ports.enrichmentQueue.enqueueRucVerification(
     lead.ruc,
-    input.actorUserId,
-  );
-
-  await input.auditService.log(
-    input.actorUserId,
-    "sunat_refresh_requested",
-    "lead",
-    input.leadId,
-    { ruc: lead.ruc },
+    input.actor.userId,
   );
 
   return Ok(void 0);

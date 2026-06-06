@@ -1,30 +1,30 @@
 "use server";
 
-import { AppError } from "~/lib/app-errors";
-import { runActionResult } from "~/server/shared/action-runtime";
-import type { Result } from "~/server/shared/result";
-import type { LeadCommandResult } from "~/server/workflow/application/contracts/command-results";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
+import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 
-export async function requestRateNegotiation(input: {
+export type RequestRateNegotiationInput = {
   leadId: string;
   justification: string;
   artifactIds: string[];
-}): Promise<Result<LeadCommandResult, AppError>> {
-  return runActionResult({
+};
+
+export async function requestRateNegotiation(
+  input: RequestRateNegotiationInput,
+) {
+  return runAction({
     actionName: "workflow.request_rate_negotiation",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.requestRateNegotiation({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          ...input,
-        }),
-      ),
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.requestRateNegotiation({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        ...input,
+      }),
   });
 }

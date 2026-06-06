@@ -2,19 +2,28 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
-import type { LeadDraft } from "../../domain/lead-record";
-import type { RegisterLeadDeps } from "../deps/register-lead";
-import type { WorkflowAuditService } from "../ports/audit-service";
+import type { LeadDraft } from "../../domain/lead/state";
+import type {
+  LeadAssignmentRepository,
+  LeadHistoryRepository,
+  LeadRepository,
+} from "../ports/lead";
+
+type EffectsDeps = {
+  leads: LeadRepository;
+  leadAssignments: LeadAssignmentRepository;
+  leadHistory: LeadHistoryRepository;
+};
 
 export async function writeLeadRegistrationEffects(input: {
-  deps: RegisterLeadDeps;
-  auditService: WorkflowAuditService;
+  deps: EffectsDeps;
   actorUserId: number;
   executiveId: number;
   draft: LeadDraft;
   now: number;
 }): Promise<Result<{ leadId: string }, DomainError>> {
   const leadId = await input.deps.leads.insert(input.draft);
+
   await input.deps.leadAssignments.insert({
     leadId,
     executiveId: input.executiveId,
@@ -22,6 +31,7 @@ export async function writeLeadRegistrationEffects(input: {
     isActive: true,
     assignedAt: input.now,
   });
+
   await input.deps.leadHistory.insert(
     createHistoryEvent({
       leadId,
@@ -31,6 +41,7 @@ export async function writeLeadRegistrationEffects(input: {
       occurredAt: input.now,
     }),
   );
+
   await input.deps.leadHistory.insert(
     createHistoryEvent({
       leadId,
@@ -40,13 +51,6 @@ export async function writeLeadRegistrationEffects(input: {
       payload: { executiveId: input.executiveId },
       occurredAt: input.now,
     }),
-  );
-  await input.auditService.log(
-    input.actorUserId,
-    "lead_registered",
-    "lead",
-    leadId,
-    { ruc: input.draft.ruc, stage: "QUALIFYING" },
   );
 
   return Ok({ leadId });

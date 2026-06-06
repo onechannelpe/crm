@@ -6,7 +6,7 @@ import {
   registerLead,
   registerLeadAndLoadSnapshot,
 } from "@tests/support/workflow/register";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("register lead", () => {
   let runtime: TestRuntime;
@@ -23,46 +23,31 @@ describe("register lead", () => {
     const snapshot = await registerLeadAndLoadSnapshot({
       runtime,
       ruc: "20100000001",
-      enrichByRuc: async () => ({
-        razonSocial: "Should Not Replace Existing Org",
-        address: "Should Not Replace Existing Address",
-      }),
     });
 
     expect(snapshot.organizationRuc).toBe("20100000001");
     expect(snapshot.organizationName).toBe("Org Lima");
   });
 
-  it("creates organization from enrichment when RUC is new", async () => {
-    const auditLog = vi.fn<() => Promise<void>>(async () => undefined);
-
+  it("creates organization with RUC as name when RUC is new", async () => {
     const result = await registerLead({
       runtime,
       ruc: "20912345671",
-      enrichByRuc: async () => ({
-        razonSocial: "Acme SAC",
-        address: "Av. Lima 123",
-      }),
-      commandOverrides: {
-        auditService: { log: auditLog },
-      },
     });
 
     expect(result.snapshot.organizationRuc).toBe("20912345671");
-    expect(result.snapshot.organizationName).toBe("Acme SAC");
-    expect(result.snapshot.organizationAddress).toBe("Av. Lima 123");
+    expect(result.snapshot.organizationName).toBe("20912345671");
+    expect(result.snapshot.organizationAddress).toBeNull();
     expect(result.historyEventTypes).toEqual([
       "lead_registered",
       "lead_assigned",
     ]);
-    expect(auditLog).toHaveBeenCalledTimes(1);
   });
 
   it("creates organization with RUC fallback when enrichment is unavailable", async () => {
     const snapshot = await registerLeadAndLoadSnapshot({
       runtime,
       ruc: "20912345672",
-      enrichByRuc: async () => null,
     });
 
     expect(snapshot.organizationRuc).toBe("20912345672");

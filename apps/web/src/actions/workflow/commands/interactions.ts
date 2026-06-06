@@ -1,7 +1,9 @@
 "use server";
+
+import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import type { LeadCallOutcome } from "~/workflow/contracts/lead-schema";
+import { parseRequiredLeadText } from "~/server/workflow/parsers";
 
 export async function recordLeadCall(input: {
   leadId: string;
@@ -12,38 +14,46 @@ export async function recordLeadCall(input: {
     actionName: "workflow.log_call",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.logLeadCall({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-          outcome: input.outcome,
-          notes: input.notes ?? null,
-        }),
-      ),
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.logLeadCall({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        leadId: input.leadId,
+        outcome: input.outcome,
+        notes: input.notes ?? null,
+      }),
   });
 }
 
 export async function addLeadNote(input: { leadId: string; body: string }) {
+  const parsedBody = parseRequiredLeadText(
+    input.body,
+    "note_body_required",
+    "Note body is required",
+  );
+
+  if (!parsedBody.ok) {
+    return parsedBody;
+  }
+
   return runAction({
     actionName: "workflow.add_note",
     access: { kind: "auth" },
     input,
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.addLeadNote({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId: input.leadId,
-          body: input.body,
-        }),
-      ),
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.addLeadNote({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        leadId: input.leadId,
+        body: parsedBody.value,
+      }),
   });
 }

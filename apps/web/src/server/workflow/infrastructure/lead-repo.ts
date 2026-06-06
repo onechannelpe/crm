@@ -1,21 +1,18 @@
 import { randomUUIDv7 } from "bun";
 import type { Insertable, Updateable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { OrganizationId } from "~/server/shared/ids";
-import type {
-  LeadDraft,
-  LeadPatch,
-  LeadRecord,
-} from "~/server/workflow/domain/lead-record";
 import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow/vocabulary";
+import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { OrganizationId } from "~/server/shared/ids";
+import type { LeadPatch } from "~/server/workflow/application/ports/lead";
+import type { LeadDraft, LeadState } from "~/server/workflow/domain/lead/state";
 
-export type LeadRow = {
+type LeadRow = {
   id: string;
   organization_id: OrganizationId;
   executive_id: number;
@@ -34,11 +31,12 @@ type LeadWithOrganizationRow = LeadRow & {
   address: string | null;
   district: string | null;
   department: string | null;
+  version: number;
 };
-export type NewLeadRow = Insertable<Database["workflow_leads"]>;
-export type LeadRowPatch = Updateable<Database["workflow_leads"]>;
+type NewLeadRow = Insertable<Database["workflow_leads"]>;
+type LeadRowPatch = Updateable<Database["workflow_leads"]>;
 
-function toLead(row: LeadWithOrganizationRow): LeadRecord {
+function toLead(row: LeadWithOrganizationRow): LeadState {
   return {
     id: row.id,
     organizationId: row.organization_id,
@@ -55,6 +53,7 @@ function toLead(row: LeadWithOrganizationRow): LeadRecord {
     prioridad: row.prioridad,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    version: row.version,
   };
 }
 
@@ -98,6 +97,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       "lead.prioridad",
       "lead.created_at",
       "lead.updated_at",
+      "lead.version",
       "org.ruc",
       "org.name as razon_social",
       "org.address",

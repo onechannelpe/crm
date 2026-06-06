@@ -1,10 +1,10 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type {
+  VenueDigitalConfig,
   ModalidadCobro,
   ProductScope,
-  VenueDigitalConfig,
-} from "~/workflow/contracts/lead-schema";
+} from "~/server/workflow/types";
 
 type LinkConfig = { url: string };
 type OnlineConfig = { url: string; modalidad: ModalidadCobro };

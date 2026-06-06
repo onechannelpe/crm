@@ -81,13 +81,13 @@ describe("workflow lead mutation metadata", () => {
       updatedBy: admin.id,
     });
 
-    const previousAccess = await runtime.workflow.queryApi.getLeadDetail({
+    const previousAccess = await runtime.workflow.queries.getLeadDetail({
       actor: scenario.actor.by("execOne"),
       leadId: lead.id,
     });
     expectErr(previousAccess);
 
-    const newAccess = await runtime.workflow.queryApi.getLeadDetail({
+    const newAccess = await runtime.workflow.queries.getLeadDetail({
       actor: scenario.actor.fromUser({
         id: executive.id,
         role: "executive",

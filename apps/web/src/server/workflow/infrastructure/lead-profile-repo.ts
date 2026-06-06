@@ -2,10 +2,10 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadProfile } from "~/server/workflow/application/ports/lead-profile-repository";
+import type { LeadProfile } from "~/server/workflow/application/ports/entities";
 
-export type LeadProfileRow = Selectable<Database["workflow_lead_profiles"]>;
-export type NewLeadProfileRow = Insertable<Database["workflow_lead_profiles"]>;
+type LeadProfileRow = Selectable<Database["workflow_lead_profiles"]>;
+type NewLeadProfileRow = Insertable<Database["workflow_lead_profiles"]>;
 
 function toLeadProfile(row: LeadProfileRow): LeadProfile {
   return {
@@ -19,6 +19,8 @@ function toLeadProfile(row: LeadProfileRow): LeadProfile {
     onlineScope: row.online_scope,
     onlineUrl: row.online_url,
     onlineModalidad: row.online_modalidad,
+    abonoBank: row.abono_bank,
+    posTotal: row.pos_total,
     updatedAt: row.updated_at,
     updatedBy: row.updated_by,
   };
@@ -50,6 +52,8 @@ export function createLeadProfileRepo(db: DatabaseExecutor) {
           online_scope: values.onlineScope,
           online_url: values.onlineUrl,
           online_modalidad: values.onlineModalidad,
+          abono_bank: values.abonoBank,
+          pos_total: values.posTotal,
           updated_at: values.updatedAt,
           updated_by: values.updatedBy,
         } satisfies NewLeadProfileRow)
@@ -64,6 +68,8 @@ export function createLeadProfileRepo(db: DatabaseExecutor) {
             online_scope: values.onlineScope,
             online_url: values.onlineUrl,
             online_modalidad: values.onlineModalidad,
+            abono_bank: values.abonoBank,
+            pos_total: values.posTotal,
             updated_at: values.updatedAt,
             updated_by: values.updatedBy,
           }),

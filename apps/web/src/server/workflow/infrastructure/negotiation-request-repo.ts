@@ -4,7 +4,7 @@ import type {
   LeadNegotiationFile,
   LeadNegotiationRequest,
   NegotiationRequestRepository,
-} from "../application/ports/negotiation-request-repository";
+} from "../application/ports/entities";
 
 export function createNegotiationRequestRepo(
   db: DatabaseExecutor,

@@ -1,10 +1,10 @@
 "use server";
 
+import type { Moneda } from "~/contracts/workflow/vocabulary";
+import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
-import type { Moneda } from "~/workflow/contracts/lead-schema";
 
-export async function requestQuotationCreation(input: {
+export type CreateQuotationInput = {
   leadId: string;
   paybackPricing: number;
   tarifaDebito: number;
@@ -12,40 +12,40 @@ export async function requestQuotationCreation(input: {
   tarifaForaneo: number;
   fee: number;
   moneda: Moneda;
-}) {
+};
+
+export async function requestQuotationCreation(input: CreateQuotationInput) {
   return runAction({
     actionName: "workflow.create_quotation",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.createQuotation({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          ...input,
-        }),
-      ),
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.createQuotation({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        ...input,
+      }),
   });
 }
 
-export async function requestSaleApproval(leadId: string) {
+export async function requestSaleApproval(input: { leadId: string }) {
   return runAction({
     actionName: "workflow.approve_for_sale",
     access: { kind: "auth" },
-    input: { leadId },
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.approveForSale({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          leadId,
-        }),
-      ),
+    input,
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.approveForSale({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        leadId: input.leadId,
+      }),
   });
 }

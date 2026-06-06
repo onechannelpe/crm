@@ -9,14 +9,13 @@ import type {
   LeadVenue,
   LeadVenueAccounts,
   LeadVenueInsert,
-} from "~/server/workflow/application/ports/sale-repository";
+  LeadVenueUpdate,
+} from "~/server/workflow/application/ports/entities";
 
-export type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
-export type NewLeadVenueRow = Insertable<Database["workflow_lead_venues"]>;
-export type LeadVenueAccountRow = Selectable<
-  Database["workflow_lead_venue_accounts"]
->;
-export type NewLeadVenueAccountRow = Insertable<
+type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
+type NewLeadVenueRow = Insertable<Database["workflow_lead_venues"]>;
+type LeadVenueAccountRow = Selectable<Database["workflow_lead_venue_accounts"]>;
+type NewLeadVenueAccountRow = Insertable<
   Database["workflow_lead_venue_accounts"]
 >;
 
@@ -158,6 +157,25 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
         .insertInto("workflow_lead_venue_accounts")
         .values(accountRows)
         .execute();
+    },
+
+    async update(venueId: string, values: LeadVenueUpdate): Promise<void> {
+      await db
+        .updateTable("workflow_lead_venues")
+        .set({
+          nombre_comercial: values.nombreComercial,
+          pos_quantity: values.posQuantity,
+          link_url: values.linkUrl,
+          online_url: values.onlineUrl,
+          online_modalidad: values.onlineModalidad,
+          direccion: values.direccion,
+          referencia: values.referencia,
+          distrito: values.distrito,
+          provincia: values.provincia,
+          departamento: values.departamento,
+        })
+        .where("id", "=", venueId)
+        .executeTakeFirstOrThrow();
     },
 
     async findById(

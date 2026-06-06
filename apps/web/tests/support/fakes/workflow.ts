@@ -1,17 +1,17 @@
 import { vi } from "vitest";
 
 import { Ok } from "~/server/shared/result";
+import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/entities";
 import type {
-  LeadMutationOutcome,
-  LeadMutationUow,
-} from "~/server/workflow/application/ports/lead-mutation-uow";
-import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/negotiation-request-repository";
-import type { LeadRecord } from "~/server/workflow/domain/lead-record";
-import type { LeadReadRepository } from "~/server/workflow/ports/lead-read-repository";
+  CommitResult,
+  LeadUnitOfWork,
+} from "~/server/workflow/application/ports/uow";
+import type { LeadState } from "~/server/workflow/domain/lead/state";
+import type { LeadStateRepository } from "~/server/workflow/infrastructure/lead-state-repo";
 
 export function makeWorkflowLead(
-  overrides: Partial<LeadRecord> = {},
-): LeadRecord {
+  overrides: Partial<LeadState> = {},
+): LeadState {
   return {
     id: "lead-1",
     organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963121",
@@ -28,42 +28,31 @@ export function makeWorkflowLead(
     prioridad: null,
     createdAt: 10,
     updatedAt: 10,
+    version: 1,
     ...overrides,
   };
 }
 
-export function makeLeadReader(lead: LeadRecord): LeadReadRepository {
+export function makeLeadStates(lead: LeadState): LeadStateRepository {
   return {
     findById: async () => lead,
   };
 }
 
-export function makeMutationUow(commit?: LeadMutationUow["commit"]) {
-  const defaultCommit = vi.fn<LeadMutationUow["commit"]>(async () =>
-    Ok({
-      events: {
-        history: [],
-        audit: { action: "test", entityId: "lead-1", changes: {} },
-      },
-      historyIds: [],
-    } satisfies LeadMutationOutcome),
-  );
-  const commitMock = commit ?? defaultCommit;
-  const commitChecked = vi.fn<LeadMutationUow["commitChecked"]>(async () =>
-    Ok({ applied: true }),
-  );
-  const derivePatch = vi.fn<LeadMutationUow["derivePatch"]>(() => Ok({}));
-
+export function makeUow(commit = makeCommitMock()) {
   return {
-    uow: {
-      commit: commitMock,
-      commitChecked,
-      derivePatch,
-    } satisfies LeadMutationUow,
-    commit: commitMock,
-    commitChecked,
-    derivePatch,
+    uow: { commit } satisfies LeadUnitOfWork,
+    commit,
   };
+}
+
+function makeCommitMock() {
+  return vi.fn<LeadUnitOfWork["commit"]>(async () =>
+    Ok({
+      eventIds: ["event-1"],
+      wasIdempotent: false,
+    } satisfies CommitResult),
+  );
 }
 
 export function makeNegotiationRequests(
@@ -81,15 +70,17 @@ export function makeNegotiationRequests(
     async () => [],
   );
 
+  const repo = {
+    insert,
+    insertFile,
+    findFileAssetIdForArtifact,
+    countByLeadId,
+    listByLeadId,
+    ...overrides,
+  } satisfies NegotiationRequestRepository;
+
   return {
-    repo: {
-      insert,
-      insertFile,
-      findFileAssetIdForArtifact,
-      countByLeadId,
-      listByLeadId,
-      ...overrides,
-    } satisfies NegotiationRequestRepository,
+    repo,
     insert,
     insertFile,
     findFileAssetIdForArtifact,

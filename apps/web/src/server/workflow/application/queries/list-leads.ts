@@ -1,108 +1,38 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
+import type { LeadListView, ListLeadsInput } from "~/server/workflow/types";
 
+import { resolveLeadNextStep } from "../../domain/lead-progress";
 import {
-  parseLeadPriority,
-  parseLeadStage,
-  parseLeadStatus,
-} from "../../domain/lead-schema-parser";
-import type { LeadListDeps } from "../deps/lead-queries";
-import {
-  requireLeadReadAccess,
+  requireCapability,
   resolveLeadListExecutiveScope,
-} from "../policies/access";
-import type { LeadListFilters } from "../ports/lead-queries";
-import { presentLeadNextStep } from "../presenters/lead-progress";
+} from "../../domain/lead/policy";
+import type { LeadListFilters, LeadQueries } from "../ports/lead";
 import { parsePageParams } from "./pagination";
-import type { LeadListView } from "./views/lead-list";
 
-const LEAD_SORT_FIELDS = [
-  "createdAt",
-  "updatedAt",
-  "registeredBy",
-  "ruc",
-] as const;
-type LeadSortField = (typeof LEAD_SORT_FIELDS)[number];
-const LEAD_SORT_DIRECTIONS = ["asc", "desc"] as const;
-type LeadSortDirection = (typeof LEAD_SORT_DIRECTIONS)[number];
+type LeadSortField = "createdAt" | "updatedAt" | "registeredBy" | "ruc";
+type LeadSortDirection = "asc" | "desc";
 
-function parseLeadSortField(
-  value: string | undefined,
-): Result<LeadSortField, DomainError> {
-  if (value === undefined) {
-    return Ok("createdAt");
-  }
+type LeadListQueryDeps = {
+  leads: LeadQueries;
+};
 
-  const parsed = LEAD_SORT_FIELDS.find((option) => option === value);
-  if (!parsed) {
-    return Err(
-      domainError("validation", "invalid_sort_by", "Invalid sort field"),
-    );
-  }
-
-  return Ok(parsed);
-}
-
-function parseLeadSortDirection(
-  value: string | undefined,
-): Result<LeadSortDirection, DomainError> {
-  if (value === undefined) {
-    return Ok("desc");
-  }
-
-  const parsed = LEAD_SORT_DIRECTIONS.find((option) => option === value);
-  if (!parsed) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_sort_direction",
-        "Invalid sort direction",
-      ),
-    );
-  }
-
-  return Ok(parsed);
+function normalizeLeadAnyFieldSearch(value: string | undefined) {
+  return value?.trim().toLowerCase() || undefined;
 }
 
 export async function listLeads(
-  deps: LeadListDeps,
+  deps: LeadListQueryDeps,
   input: {
     actorUserId: number;
-    actorRole: Role;
+    actorRole: ListLeadsInput["actor"]["role"];
     actorBranchId: number;
-    filters: {
-      stage?: string;
-      status?: string;
-      prioridad?: string;
-      executiveId?: number;
-      updatedSinceMs?: number;
-      updatedUntilMs?: number;
-      sortBy?: string;
-      sortDirection?: string;
-      limit?: number;
-      offset?: number;
-    };
+    filters: ListLeadsInput["filters"];
   },
 ): Promise<Result<LeadListView, DomainError>> {
-  const canRead = requireLeadReadAccess(input.actorRole);
+  const canRead = requireCapability("view", { role: input.actorRole });
   if (!canRead.ok) {
     return canRead;
-  }
-
-  const stage = parseLeadStage(input.filters.stage);
-  if (!stage.ok) {
-    return stage;
-  }
-
-  const status = parseLeadStatus(input.filters.status);
-  if (!status.ok) {
-    return status;
-  }
-
-  const prioridad = parseLeadPriority(input.filters.prioridad);
-  if (!prioridad.ok) {
-    return prioridad;
   }
 
   const page = parsePageParams(input.filters);
@@ -110,15 +40,9 @@ export async function listLeads(
     return page;
   }
 
-  const sortBy = parseLeadSortField(input.filters.sortBy);
-  if (!sortBy.ok) {
-    return sortBy;
-  }
-
-  const sortDirection = parseLeadSortDirection(input.filters.sortDirection);
-  if (!sortDirection.ok) {
-    return sortDirection;
-  }
+  const sortBy: LeadSortField = input.filters.sortBy ?? "createdAt";
+  const sortDirection: LeadSortDirection =
+    input.filters.sortDirection ?? "desc";
 
   const filters: LeadListFilters = {
     actorUserId: input.actorUserId,
@@ -129,13 +53,14 @@ export async function listLeads(
       actorRole: input.actorRole,
       requestedExecutiveId: input.filters.executiveId,
     }),
-    stage: stage.value,
-    status: status.value,
-    prioridad: prioridad.value,
+    stage: input.filters.stage,
+    status: input.filters.status,
+    prioridad: input.filters.prioridad,
+    anyFieldSearch: normalizeLeadAnyFieldSearch(input.filters.anyFieldSearch),
     updatedSinceMs: input.filters.updatedSinceMs,
     updatedUntilMs: input.filters.updatedUntilMs,
-    sortBy: sortBy.value,
-    sortDirection: sortDirection.value,
+    sortBy,
+    sortDirection,
     limit: page.value.limit,
     offset: page.value.offset,
   };
@@ -148,7 +73,7 @@ export async function listLeads(
   return Ok({
     rows: rows.map((row) =>
       Object.assign({}, row, {
-        nextStep: presentLeadNextStep({ lead: row }),
+        nextStep: resolveLeadNextStep(row),
       }),
     ),
     totalCount,

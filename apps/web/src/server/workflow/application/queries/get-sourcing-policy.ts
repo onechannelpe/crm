@@ -1,12 +1,12 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { hasPermission } from "~/lib/auth/access/rbac";
+import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-
-import type { SourcingPolicyDeps } from "../deps/sourcing-policy";
+import type { LeadSourcingPolicyRepository } from "~/server/workflow/application/ports/entities";
 
 export async function getSourcingPolicy(
-  deps: SourcingPolicyDeps,
+  deps: {
+    sourcingPolicies: LeadSourcingPolicyRepository;
+  },
   input: {
     actorRole: Role;
     branchId: number;

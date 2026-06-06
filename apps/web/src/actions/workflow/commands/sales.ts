@@ -1,15 +1,15 @@
 "use server";
 
-import { validationError } from "~/lib/app-errors";
-import { runAction } from "~/server/shared/action-runtime";
-import { runWorkflowCommand } from "~/server/workflow/infrastructure/command-runtime";
 import type {
-  AbonoBank,
-  AccountTypeKind,
+  SaleVenueAccount,
   VenueDigitalConfig,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow/primitives";
+import { validationError } from "~/lib/app-errors";
+import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
+import { parseRequiredLeadText } from "~/server/workflow/parsers";
 
-export async function requestVenueCreation(input: {
+export type CreateVenueInput = {
   leadId: string;
   nombreComercial: string;
   posQuantity: number;
@@ -19,87 +19,214 @@ export async function requestVenueCreation(input: {
   distrito: string;
   provincia: string;
   departamento: string;
-}) {
-  if (!input.nombreComercial.trim()) {
-    throw validationError("nombreComercial is required");
+};
+
+export type UpdateVenueInput = CreateVenueInput & {
+  venueId: string;
+};
+
+export type AddVenueAccountsInput = {
+  leadId: string;
+  venueId: string;
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
+};
+
+function assertParsed<T>(
+  parsed: { ok: true; value: T } | { ok: false; error: { message: string } },
+): T {
+  if (!parsed.ok) {
+    throw validationError(parsed.error.message);
   }
-  if (!input.direccion.trim()) {
-    throw validationError("direccion is required");
-  }
-  if (!input.distrito.trim()) {
-    throw validationError("distrito is required");
-  }
-  if (!input.provincia.trim()) {
-    throw validationError("provincia is required");
-  }
-  if (!input.departamento.trim()) {
-    throw validationError("departamento is required");
-  }
-  if (!input.referencia.trim()) {
-    throw validationError("referencia is required");
-  }
+  return parsed.value;
+}
+
+export async function requestVenueCreation(input: CreateVenueInput) {
+  const nombreComercial = assertParsed(
+    parseRequiredLeadText(
+      input.nombreComercial,
+      "nombre_comercial_required",
+      "Nombre comercial is required",
+    ),
+  );
+  const direccion = assertParsed(
+    parseRequiredLeadText(
+      input.direccion,
+      "direccion_required",
+      "Direccion is required",
+    ),
+  );
+  const referencia = assertParsed(
+    parseRequiredLeadText(
+      input.referencia,
+      "referencia_required",
+      "Referencia is required",
+    ),
+  );
+  const distrito = assertParsed(
+    parseRequiredLeadText(
+      input.distrito,
+      "distrito_required",
+      "Distrito is required",
+    ),
+  );
+  const provincia = assertParsed(
+    parseRequiredLeadText(
+      input.provincia,
+      "provincia_required",
+      "Provincia is required",
+    ),
+  );
+  const departamento = assertParsed(
+    parseRequiredLeadText(
+      input.departamento,
+      "departamento_required",
+      "Departamento is required",
+    ),
+  );
 
   return runAction({
     actionName: "workflow.create_venue",
     access: { kind: "auth" },
     input: { leadId: input.leadId },
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.createVenue({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          ...input,
-        }),
-      ),
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.createVenue({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        leadId: input.leadId,
+        nombreComercial,
+        posQuantity: input.posQuantity,
+        digitalConfig: input.digitalConfig,
+        direccion,
+        referencia,
+        distrito,
+        provincia,
+        departamento,
+      }),
   });
 }
 
-export async function requestVenueAccountsAddition(input: {
-  leadId: string;
-  venueId: string;
-  solesAccount: {
-    currency: "PEN";
-    banco: AbonoBank;
-    tipoCuenta: AccountTypeKind;
-    nroCuenta: string;
-    cci?: string;
-    isSettlement: boolean;
-  };
-  dollarAccount?:
-    | {
-        currency: "USD";
-        banco: AbonoBank;
-        tipoCuenta: AccountTypeKind;
-        nroCuenta: string;
-        cci?: string;
-        isSettlement: boolean;
-      }
-    | undefined;
-}) {
-  if (!input.solesAccount.nroCuenta.trim()) {
-    throw validationError("soles account number is required");
-  }
-  if (input.dollarAccount && !input.dollarAccount.nroCuenta.trim()) {
-    throw validationError("dollar account number is required");
-  }
+export async function requestVenueUpdate(input: UpdateVenueInput) {
+  const nombreComercial = assertParsed(
+    parseRequiredLeadText(
+      input.nombreComercial,
+      "nombre_comercial_required",
+      "Nombre comercial is required",
+    ),
+  );
+  const direccion = assertParsed(
+    parseRequiredLeadText(
+      input.direccion,
+      "direccion_required",
+      "Direccion is required",
+    ),
+  );
+  const referencia = assertParsed(
+    parseRequiredLeadText(
+      input.referencia,
+      "referencia_required",
+      "Referencia is required",
+    ),
+  );
+  const distrito = assertParsed(
+    parseRequiredLeadText(
+      input.distrito,
+      "distrito_required",
+      "Distrito is required",
+    ),
+  );
+  const provincia = assertParsed(
+    parseRequiredLeadText(
+      input.provincia,
+      "provincia_required",
+      "Provincia is required",
+    ),
+  );
+  const departamento = assertParsed(
+    parseRequiredLeadText(
+      input.departamento,
+      "departamento_required",
+      "Departamento is required",
+    ),
+  );
+
+  return runAction({
+    actionName: "workflow.update_venue",
+    access: { kind: "auth" },
+    input: { leadId: input.leadId, venueId: input.venueId },
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.updateVenue({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        leadId: input.leadId,
+        venueId: input.venueId,
+        nombreComercial,
+        posQuantity: input.posQuantity,
+        digitalConfig: input.digitalConfig,
+        direccion,
+        referencia,
+        distrito,
+        provincia,
+        departamento,
+      }),
+  });
+}
+
+export async function requestVenueAccountsAddition(
+  input: AddVenueAccountsInput,
+) {
+  const solesNroCuenta = assertParsed(
+    parseRequiredLeadText(
+      input.solesAccount.nroCuenta,
+      "soles_account_number_required",
+      "Soles account number is required",
+    ),
+  );
+
+  const dollarNroCuenta = input.dollarAccount
+    ? assertParsed(
+        parseRequiredLeadText(
+          input.dollarAccount.nroCuenta,
+          "dollar_account_number_required",
+          "Dollar account number is required",
+        ),
+      )
+    : null;
 
   return runAction({
     actionName: "workflow.add_venue_accounts",
     access: { kind: "auth" },
     input: { leadId: input.leadId, venueId: input.venueId },
-    execute: (ctx) =>
-      runWorkflowCommand(({ commandApi }) =>
-        commandApi.addVenueAccounts({
-          actor: {
-            userId: ctx.actor.userId,
-            role: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-          },
-          ...input,
-        }),
-      ),
+
+    execute: ({ actor }) =>
+      getServerRuntime().workflow.commands.addVenueAccounts({
+        actor: {
+          userId: actor.userId,
+          role: actor.role,
+          branchId: actor.branchId,
+        },
+        leadId: input.leadId,
+        venueId: input.venueId,
+        solesAccount: {
+          ...input.solesAccount,
+          nroCuenta: solesNroCuenta,
+        },
+        ...(input.dollarAccount && dollarNroCuenta
+          ? {
+              dollarAccount: {
+                ...input.dollarAccount,
+                nroCuenta: dollarNroCuenta,
+              },
+            }
+          : {}),
+      }),
   });
 }
