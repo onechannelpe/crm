@@ -2,9 +2,10 @@ import { createSessionService } from "~/server/auth/application/session-service"
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
+import { createFilesRuntime } from "~/server/runtime/files-runtime";
 import type { ServerInfra } from "~/server/runtime/infra";
 import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
-import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/engine-gateway";
+import type { EngineClient } from "~/server/shared/engine/client";
 
 import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
 
@@ -29,6 +30,7 @@ export interface TestRuntime {
 
 export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const ctx = await createIsolatedTestDb(prefix);
+
   let currentNow = Date.now();
 
   const now = {
@@ -42,6 +44,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     info() {},
     error() {},
   };
+
   const auth = {
     sessionService: createSessionService({
       sessions: createAuthSessionRepo(ctx.db),
@@ -51,19 +54,27 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     }),
   };
 
-  const engineGateway: WorkflowEngineGateway = {
-    async enrichByRuc() {
-      return null;
-    },
-  };
-
   const infra: ServerInfra = {
     db: ctx.db,
     now: now.get,
     logger,
   };
 
-  const workflow = createWorkflowRuntime(infra, engineGateway);
+  const files = createFilesRuntime(infra);
+
+  const emptyEngineResult = { ok: true as const, value: [] };
+
+  const engineClient: EngineClient = {
+    async search() {
+      return emptyEngineResult;
+    },
+
+    async requestCandidates() {
+      return emptyEngineResult;
+    },
+  };
+
+  const workflow = createWorkflowRuntime(infra, engineClient, files);
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
@@ -72,6 +83,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     auth,
     workflow,
     integrations,
+
     async dispose() {
       await cleanupTestDb(ctx);
     },
