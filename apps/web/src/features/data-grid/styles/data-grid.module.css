@@ -77,6 +77,7 @@
 }
 
 .viewActions {
+  align-items: center;
   display: flex;
   gap: 8px;
   font-weight: 400;
@@ -136,6 +137,10 @@
   display: inline-flex;
   flex-shrink: 0;
   justify-content: center;
+}
+
+.menuItemContext {
+  color: var(--foreground-tertiary);
 }
 
 .menuCheckbox {
@@ -675,14 +680,13 @@
   outline-offset: -1px;
 }
 
-/* Sticky header cells sit above normal header cells */
+/* Sticky controls stay above scrollable header cells while columns move under them. */
 .headerRow .checkboxCell,
 .headerRow .reorderCell,
 .headerRow .stickyCell {
   z-index: 14;
 }
 
-/* Column resize handle */
 .resizeHandle {
   background: transparent;
   bottom: 0;
@@ -724,7 +728,7 @@
   color: var(--t-font-color-secondary);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 768px) {
   .viewBar {
     margin-left: 0;
   }
@@ -739,5 +743,10 @@
 
   .tableContainer {
     margin-left: 0;
+  }
+
+  .emptyStateSurface {
+    justify-content: flex-start;
+    min-width: 100%;
   }
 }

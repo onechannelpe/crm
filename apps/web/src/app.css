@@ -11,7 +11,6 @@
 :root {
   --background-noisy: url(/images/light-noise.png);
 
-  /* font families */
   --font-sans:
     "Inter Variable", Inter, "Segoe UI", "Helvetica Neue", Helvetica, Arial,
     sans-serif;
@@ -23,17 +22,15 @@
     "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 
-  /* motion */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --motion-fast: 150ms;
   --motion-normal: 300ms;
 
-  /* focus ring */
   --focus-ring-shadow:
     0 0 0 1px color-mix(in oklab, var(--ring) 70%, transparent),
     0 0 0 3px color-mix(in oklab, var(--background) 75%, transparent);
 
-  /* typography — numeric primitives (rem = target-px ÷ 13, base: 13px) */
+  /* Rem values map to target pixel sizes with the 13px root font. */
   --font-10: 0.769rem; /* 10px */
   --font-11: 0.846rem; /* 11px */
   --font-12: 0.923rem; /* 12px */
@@ -46,16 +43,15 @@
   --font-36: 2.769rem; /* 36px */
   --font-48: 3.692rem; /* 48px */
 
-  /* typography — semantic tokens */
-  --font-size-tiny: var(--font-10); /* avatar initials, badge counts */
-  --font-size-xs: var(--font-11); /* chips, pills, small labels */
-  --font-size-label: var(--font-11); /* eyebrow, table headers */
-  --font-size-caption: var(--font-12); /* secondary/supporting text */
-  --font-size-sm: var(--font-12); /* secondary/supporting text */
-  --font-size-body: var(--font-13); /* primary body text */
-  --font-size-heading-sm: var(--font-16); /* card/section headings */
-  --font-size-heading-md: var(--font-20); /* page titles, auth titles */
-  --font-size-heading-lg: var(--font-24); /* stat/metric display numbers */
+  --font-size-tiny: var(--font-10);
+  --font-size-xs: var(--font-11);
+  --font-size-label: var(--font-11);
+  --font-size-caption: var(--font-12);
+  --font-size-sm: var(--font-12);
+  --font-size-body: var(--font-13);
+  --font-size-heading-sm: var(--font-16);
+  --font-size-heading-md: var(--font-20);
+  --font-size-heading-lg: var(--font-24);
   --font-size-3_5: 0.875rem;
   --font-size-4_5: 1.125rem;
   --font-size-5_5: 1.375rem;
@@ -66,13 +62,11 @@
   --font-size-15x: 3.75rem;
   --font-size-20x: 5rem;
 
-  /* font weight */
   --font-weight-light: 300;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
-  /* line height */
   --line-height-md: 1.1;
   --line-height-6: 1.2;
   --line-height-7: 1.27;
@@ -82,23 +76,19 @@
   --line-height-16_5: 1.13;
   --line-height-21_5: 1.08;
 
-  /* navigation */
   --navigation-drawer-width: 220px;
   --nav-drawer-collapsed-width: 40px;
   --topbar-height: 39px;
   --z-sticky-header: 80;
   --z-modal: 100;
 
-  /* table */
   --table-checkbox-width: 32px;
   --table-cell-padding-x: 8px;
 
-  /* panel */
   --panel-border: 1px solid var(--border);
   --panel-radius: var(--radius-md);
   --panel-bg: var(--surface);
 
-  /* side panel */
   --side-panel-width: 400px;
   --side-panel-width-min: 320px;
   --side-panel-width-max: 600px;
@@ -109,7 +99,6 @@
   --layout-sidebar-width: 132px;
   --layout-sidebar-gap: 40px;
 
-  /* spacing scale (1 unit = 4px) */
   --spacing-1: 4px;
   --spacing-2: 8px;
   --spacing-3: 12px;
@@ -123,12 +112,10 @@
   --spacing-11: 44px;
   --spacing-12: 48px;
 
-  /* translucent fills */
   --bg-translucent-subtle: color(display-p3 0 0 0 / 0.02);
   --bg-translucent: color(display-p3 0 0 0 / 0.039);
   --bg-translucent-medium: color(display-p3 0 0 0 / 0.078);
 
-  /* semantic aliases for translucent fills */
   --background-transparent-lighter: var(--bg-translucent-subtle);
   --background-transparent-light: color(display-p3 1 1 1 / 0.5);
   --background-transparent-medium: var(--bg-translucent-medium);
@@ -163,10 +150,32 @@
   --t-font-weight-semi-bold: 600;
   --t-font-family: var(--font-sans);
 
-  /* accent blue (focus rings, active borders) */
   --color-blue: color(display-p3 0.306 0.506 0.957);
+  --color-blue-5: color(display-p3 0.831 0.87 1);
+  --color-blue-6: color(display-p3 0.767 0.814 0.995);
+  --color-blue-11: color(display-p3 0.256 0.354 0.755);
+  --color-purple-5: color(display-p3 0.904 0.837 0.966);
+  --color-purple-6: color(display-p3 0.86 0.774 0.942);
+  --color-purple-11: color(display-p3 0.473 0.281 0.687);
+  --color-turquoise-5: color(display-p3 0.761 0.914 0.878);
+  --color-turquoise-6: color(display-p3 0.682 0.864 0.825);
+  --color-turquoise-11: color(display-p3 0.08 0.5 0.43);
+  --color-green-5: color(display-p3 0.796 0.907 0.826);
+  --color-green-6: color(display-p3 0.718 0.863 0.761);
+  --color-green-11: color(display-p3 0.19 0.5 0.32);
+  --color-orange-5: color(display-p3 1 0.821 0.583);
+  --color-orange-6: color(display-p3 0.975 0.767 0.545);
+  --color-orange-11: color(display-p3 0.76 0.34 0);
+  --color-red-5: color(display-p3 0.984 0.812 0.811);
+  --color-red-6: color(display-p3 0.955 0.751 0.749);
+  --color-red-11: color(display-p3 0.744 0.234 0.222);
+  --color-yellow-5: color(display-p3 0.984 0.91 0.51);
+  --color-yellow-6: color(display-p3 0.934 0.847 0.474);
+  --color-yellow-11: color(display-p3 0.6 0.44 0);
+  --color-pink-5: color(display-p3 0.939 0.815 0.899);
+  --color-pink-6: color(display-p3 0.907 0.756 0.859);
+  --color-pink-11: color(display-p3 0.698 0.219 0.528);
 
-  /* avatar */
   --avatar-bg: color(display-p3 0.913 0.854 0.971);
   --avatar-fg: color(display-p3 0.224 0.137 0.297);
 }
@@ -182,6 +191,7 @@
   --surface: color(display-p3 1 1 1);
   --surface-foreground: color(display-p3 0.4 0.4 0.4);
   --tertiary: color(display-p3 0.945 0.945 0.945);
+  --quaternary: color(display-p3 0.922 0.922 0.922);
   --foreground-secondary: color(display-p3 0.4 0.4 0.4);
   --foreground-tertiary: color(display-p3 0.6 0.6 0.6);
   --foreground-light: color(display-p3 0.75 0.75 0.75);
@@ -270,6 +280,7 @@
   --surface: color(display-p3 0.09 0.09 0.09);
   --surface-foreground: color(display-p3 0.702 0.702 0.702);
   --tertiary: color(display-p3 0.114 0.114 0.114);
+  --quaternary: color(display-p3 0.133 0.133 0.133);
   --foreground-secondary: color(display-p3 0.702 0.702 0.702);
   --foreground-tertiary: color(display-p3 0.506 0.506 0.506);
   --foreground-light: color(display-p3 0.35 0.35 0.35);
@@ -290,6 +301,31 @@
 
   --accent: color(display-p3 0.114 0.114 0.114);
   --accent-foreground: color(display-p3 0.922 0.922 0.922);
+
+  --color-blue-5: color(display-p3 0.163 0.22 0.439);
+  --color-blue-6: color(display-p3 0.203 0.262 0.5);
+  --color-blue-11: color(display-p3 0.63 0.69 1);
+  --color-purple-5: color(display-p3 0.264 0.167 0.349);
+  --color-purple-6: color(display-p3 0.311 0.208 0.406);
+  --color-purple-11: color(display-p3 0.8 0.62 1);
+  --color-turquoise-5: color(display-p3 0.12 0.277 0.261);
+  --color-turquoise-6: color(display-p3 0.162 0.335 0.314);
+  --color-turquoise-11: color(display-p3 0.388 0.835 0.719);
+  --color-green-5: color(display-p3 0.147 0.282 0.206);
+  --color-green-6: color(display-p3 0.185 0.338 0.25);
+  --color-green-11: color(display-p3 0.434 0.828 0.573);
+  --color-orange-5: color(display-p3 0.315 0.168 0.016);
+  --color-orange-6: color(display-p3 0.376 0.219 0.088);
+  --color-orange-11: color(display-p3 1 0.63 0.38);
+  --color-red-5: color(display-p3 0.348 0.11 0.142);
+  --color-red-6: color(display-p3 0.414 0.16 0.183);
+  --color-red-11: color(display-p3 1 0.57 0.55);
+  --color-yellow-5: color(display-p3 0.255 0.209 0);
+  --color-yellow-6: color(display-p3 0.31 0.261 0.07);
+  --color-yellow-11: color(display-p3 0.948 0.885 0.392);
+  --color-pink-5: color(display-p3 0.32 0.127 0.273);
+  --color-pink-6: color(display-p3 0.382 0.177 0.326);
+  --color-pink-11: color(display-p3 1 0.535 0.78);
 
   --destructive: color(display-p3 0.52 0.15 0.15);
   --destructive-foreground: color(display-p3 0.96 0.84 0.84);
@@ -344,16 +380,6 @@
   --bg-translucent-medium: color(display-p3 1 1 1 / 0.102);
   --avatar-bg: color(display-p3 0.298 0.298 0.298);
   --avatar-fg: color(display-p3 0.922 0.922 0.922);
-}
-
-@media (max-width: 640px) {
-  :root {
-    --font-size-caption: var(--font-13);
-    --font-size-sm: var(--font-14);
-    --font-size-body: var(--font-16);
-    --font-size-heading-sm: var(--font-20);
-    --font-size-heading-md: var(--font-24);
-  }
 }
 
 @layer reset {

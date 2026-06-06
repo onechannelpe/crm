@@ -1,6 +1,7 @@
 import type { Accessor, JSX } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
+import { TintedIconTile } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
 import { cn } from "~/lib/utils";
 
 import { NavigationDrawerAnimatedCollapseWrapper } from "./navigation-drawer-animated-collapse-wrapper";
@@ -51,7 +52,11 @@ export function NavigationDrawerItemFrame(
 
       {props.Icon ? (
         <span class={styles.iconWrap}>
-          <props.Icon size={16} />
+          {props.tileColor ? (
+            <TintedIconTile Icon={props.Icon} color={props.tileColor} />
+          ) : (
+            <props.Icon size={16} />
+          )}
         </span>
       ) : null}
 

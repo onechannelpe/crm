@@ -1,3 +1,5 @@
+export const MOBILE_VIEWPORT = 768;
+
 export const DS_Z_INDEX = {
   base: 1,
   sticky: 10,

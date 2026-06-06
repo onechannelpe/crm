@@ -78,7 +78,7 @@
   padding-left: 32px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .inviteForm {
     grid-template-columns: 1fr;
   }

@@ -115,8 +115,8 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
                   onLogout={logout}
                 />
 
-                <Show when={!isMobile()}>
-                  <div class={styles.headerActions}>
+                <div class={styles.headerActions}>
+                  <Show when={!isMobile()}>
                     <button
                       type="button"
                       class={styles.searchButton}
@@ -125,18 +125,18 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
                     >
                       <Search size={16} />
                     </button>
-                    <Show when={expanded()}>
-                      <button
-                        type="button"
-                        class={styles.collapseButton}
-                        onClick={() => setExpanded((value) => !value)}
-                        aria-label="Contraer barra lateral"
-                      >
-                        <LayoutSidebarLeftCollapse size={14} />
-                      </button>
-                    </Show>
-                  </div>
-                </Show>
+                  </Show>
+                  <Show when={expanded()}>
+                    <button
+                      type="button"
+                      class={styles.collapseButton}
+                      onClick={() => setExpanded((value) => !value)}
+                      aria-label="Contraer barra lateral"
+                    >
+                      <LayoutSidebarLeftCollapse size={14} />
+                    </button>
+                  </Show>
+                </div>
               </header>
             }
           >
