@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.fallow.tools/.fallowrc.json",
+  "entry": [
+    "src/app.tsx",
+    "src/entry-client.tsx",
+    "src/entry-server.tsx",
+    "src/middleware.ts",
+    "src/workers/maintenance-runner.ts",
+    "src/routes/**/*.{ts,tsx}",
+    "src/actions/**/*.{ts,tsx}",
+    "vite.config.ts",
+    "tracer.ts",
+    "vitest.bench.config.ts"
+  ],
+  "ignorePatterns": [
+    "**/*.generated.ts",
+    "**/*.generated.tsx",
+    "public/**",
+    ".output/**",
+    "stats.html",
+    "content/**"
+  ],
+  "ignoreUnresolvedImports": [
+    "~/*",
+    "@tests/*",
+    "virtual:*",
+    "@solidjs/start/*"
+  ],
+  "ignoreDependencies": [
+    "@crm/contracts",
+    "@crm/email-composer",
+    "@crm/message-channels",
+    "solid-mdx"
+  ],
+  "rules": {
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "warn"
+  }
+}
