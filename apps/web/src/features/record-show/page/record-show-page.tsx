@@ -1,14 +1,14 @@
 import { createAsync, revalidate } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import { createRecordPageController } from "~/features/side-panel/pages/record-page/controller";
+import { createRecordPageController } from "~/features/record-show/record-page-controller";
 import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
 
-import { RecordLeftPanel } from "../left-panel/record-left-panel";
-import { RecordRightPanel } from "../right-panel/record-right-panel";
+import { RecordLeftPanel } from "../panels/record-left-panel";
+import { RecordRightPanel } from "../panels/record-right-panel";
 
 import styles from "./record-show-page.module.css";
 

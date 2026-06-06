@@ -5,6 +5,7 @@ import Info from "~/components/icons/info";
 import Search from "~/components/icons/search";
 import User from "~/components/icons/user";
 import Users from "~/components/icons/users";
+import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import type {
   CompanyGroup,
   PersonGroup,
@@ -12,8 +13,7 @@ import type {
 import {
   DEFAULT_LEAD_RECORD_DRAFT_STATE,
   type LeadRecordDraftState,
-  type ViewRecordTabId,
-} from "~/features/side-panel/pages/record-page/model";
+} from "~/features/side-panel/pages/create-lead/draft-state";
 
 export type SidePanelIcon = Component<{
   class?: string;
@@ -66,7 +66,7 @@ export type ViewRecordSidePanelPageState = {
   leadId: string;
   title: string;
   subtitle: string;
-  activeTab: ViewRecordTabId;
+  activeTab: RecordTabId;
 };
 
 export type DataGridDetailSidePanelItem = {
@@ -150,7 +150,10 @@ type CreateSearchCompanyDetailSidePanelPageInput = {
 export function createSearchCompanyDetailSidePanelPage(
   input: CreateSearchCompanyDetailSidePanelPageInput,
 ): SidePanelPageDefinition {
-  const pageId = createSidePanelPageId();
+  const pageId = createEntitySidePanelPageId(
+    "search-company-detail",
+    String(input.company.id),
+  );
 
   return {
     entry: {
@@ -180,13 +183,13 @@ export function createLeadRecordCreateSidePanelPage(): SidePanelPageDefinition {
     entry: {
       page: "create-lead",
       pageId,
-      pageTitle: "Nuevo prospecto",
+      pageTitle: "Nuevo cliente",
       pageIcon: Building2,
     },
     state: {
       page: "create-lead",
       recordType: "lead",
-      title: "Nuevo prospecto",
+      title: "Nuevo cliente",
       subtitle: "Borrador",
       draft: DEFAULT_LEAD_RECORD_DRAFT_STATE,
     },
@@ -210,8 +213,8 @@ export function createLeadRecordDetailSidePanelPage(
       recordType: "lead",
       leadId: input.leadId,
       title: input.title,
-      subtitle: input.subtitle ?? `Prospecto ${input.leadId}`,
-      activeTab: "home",
+      subtitle: input.subtitle ?? `Cliente ${input.leadId}`,
+      activeTab: "workflow",
     },
   };
 }

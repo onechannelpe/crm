@@ -1,6 +1,6 @@
 import { Show, createSignal, onMount } from "solid-js";
 
-import { useMobileBreakpoint } from "~/components/ui/layout/resizable-panel/use-mobile-breakpoint";
+import { useIsMobile } from "~/components/ui/layout/responsive/use-is-mobile";
 
 import { Router } from "../router/router";
 import { DesktopSidePanelContent } from "./desktop-content";
@@ -33,7 +33,7 @@ function SidePanelDesktopController(props: {
 
 export function Host() {
   const [isHydrated, setIsHydrated] = createSignal(false);
-  const isMobile = useMobileBreakpoint();
+  const isMobile = useIsMobile();
 
   onMount(() => {
     setIsHydrated(true);

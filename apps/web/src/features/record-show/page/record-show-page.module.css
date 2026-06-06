@@ -4,9 +4,19 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   display: grid;
-  grid-template-columns: var(--record-left-panel-width, 280px) 1fr;
+  grid-template-columns: var(--record-left-panel-width) 1fr;
   grid-template-rows: minmax(0, 1fr);
   height: 100%;
   overflow: hidden;
   width: 100%;
+}
+
+/* Mobile record pages scroll as one surface instead of splitting scroll
+   ownership between the left rail and tab pane. */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    overflow-y: auto;
+  }
 }

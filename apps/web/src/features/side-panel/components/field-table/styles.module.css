@@ -38,6 +38,7 @@
   align-items: center;
   color: var(--foreground-tertiary);
   display: flex;
+  flex-shrink: 0;
   width: 16px;
 }
 
@@ -78,19 +79,11 @@
   cursor: pointer;
 }
 
-.fieldEmptyValue {
-  color: var(--foreground-light);
-  font-size: inherit;
-}
-
-.fieldInputControl {
-  width: 100%;
-}
-
 .fieldInputValue {
   display: flex;
   flex: 1;
   min-width: 0;
+  position: relative;
   width: 100%;
 }
 
@@ -103,4 +96,19 @@
   padding-block: 2px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.fieldEmptyValue {
+  align-items: center;
+  color: var(--foreground-light);
+  display: flex;
+  height: 20px;
+}
+
+.editWrapper {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-1);
+  margin-inline-start: auto;
+  position: relative;
 }

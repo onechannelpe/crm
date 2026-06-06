@@ -1,7 +1,7 @@
 import { createMemo, Show } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
-import type { LeadDetailLeadView } from "~/server/workflow/application/queries/views/lead-detail";
+import type { LeadDetailLeadView } from "~/contracts/workflow/views";
 
 import { formatPastRelativeDate } from "./format-relative-date";
 

@@ -1,21 +1,19 @@
-import { createMemo } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
+
+import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
+import { resolveActiveRecordTabId } from "~/features/record-show/tabs/record-tabs-registry";
 
 import { usePageInstanceId } from "../../router/page-instance-context";
 import { useSidePanelPageState } from "../../router/page-state";
 import { useSidePanel } from "../../state/use-side-panel";
-import type { ViewRecordTabId } from "./model";
-import {
-  VIEW_RECORD_TABS,
-  VIEW_RECORD_TABS_BY_ID,
-  resolveActiveTabId,
-} from "./tabs/tab-registry";
 
 export function useLeadRecordPageState() {
   const pageId = usePageInstanceId();
   const { updatePageState } = useSidePanel();
   const pageState = useSidePanelPageState("view-record");
+  const [subtitle, setSubtitle] = createSignal(pageState().subtitle);
 
-  function setActiveTab(activeTab: ViewRecordTabId) {
+  function setActiveTab(activeTab: RecordTabId) {
     updatePageState(pageId(), (state) => {
       if (state.page !== "view-record") return state;
       return { ...state, activeTab };
@@ -24,15 +22,11 @@ export function useLeadRecordPageState() {
 
   const leadId = createMemo(() => pageState().leadId);
 
-  const activeTab = createMemo<ViewRecordTabId>(() =>
-    resolveActiveTabId({
-      activeTabId: pageState().activeTab,
-      tabById: VIEW_RECORD_TABS_BY_ID,
-      defaultTabId: VIEW_RECORD_TABS[0].id,
-    }),
+  const activeTab = createMemo<RecordTabId>(() =>
+    resolveActiveRecordTabId(pageState().activeTab, "lead"),
   );
 
-  const label = createMemo(() => pageState().subtitle);
+  const label = createMemo(() => subtitle());
 
   return {
     pageState,
@@ -40,5 +34,6 @@ export function useLeadRecordPageState() {
     activeTab,
     label,
     setActiveTab,
+    setSubtitle,
   };
 }
