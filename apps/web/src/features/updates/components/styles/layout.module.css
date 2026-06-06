@@ -134,7 +134,7 @@
   line-height: 1.7;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .hero {
     margin-top: 0;
     padding: var(--spacing-7) var(--spacing-4) var(--spacing-6);

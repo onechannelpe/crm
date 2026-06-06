@@ -54,7 +54,7 @@
   margin-inline-start: calc(var(--sidebar-w) + var(--sidebar-gap));
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .entry {
     display: block;
   }
