@@ -7,7 +7,8 @@ FULL_DB_PATH="${FULL_DB_PATH:-/srv/crm/full/contacts.sqlite}"
 FULL_MANIFEST_PATH="${FULL_MANIFEST_PATH:-$BENCH_ROOT/manifests/full.json}"
 DATASET_VERSION="${DATASET_VERSION:-$(date +%Y%m%d-%H%M%S)}"
 WORKLOAD_PATH="${WORKLOAD_PATH:-$BENCH_ROOT/workloads/full.json}"
-PROJECTION_CONTRACT_PATH="${PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine/search-projection.json}"
+DOC_PROJECTION_CONTRACT_PATH="${DOC_PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine/doc-projection.json}"
+COMPANY_PROJECTION_CONTRACT_PATH="${COMPANY_PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine/company-projection.json}"
 
 if [[ ! -f "$FULL_DB_PATH" ]]; then
   echo "full db path not found: $FULL_DB_PATH" >&2
@@ -23,6 +24,7 @@ python3 "$ROOT_DIR/ops/bench/update_manifest.py" \
   --db-path "$FULL_DB_PATH" \
   --dataset-id "search-full" \
   --dataset-version "$DATASET_VERSION" \
-  --projection-contract-path "$PROJECTION_CONTRACT_PATH" \
+  --doc-projection-contract-path "$DOC_PROJECTION_CONTRACT_PATH" \
+  --company-projection-contract-path "$COMPANY_PROJECTION_CONTRACT_PATH" \
   --workload-json-path "$WORKLOAD_PATH" \
   --output "$FULL_MANIFEST_PATH"

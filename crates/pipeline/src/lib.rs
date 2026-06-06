@@ -1,10 +1,18 @@
 pub mod cli;
 pub mod config;
 pub mod contract_guard;
-pub mod db;
-pub mod domain;
 pub mod errors;
+pub mod gate;
+pub mod ingest;
+pub mod materialize;
+pub mod merge;
+pub mod normalize;
 pub mod pipeline;
-pub mod stages;
+pub mod promote;
+pub mod report;
+pub mod run;
+pub mod sample;
+pub mod storage;
+pub mod validate;
 
 pub use errors::PipelineError;

@@ -9,7 +9,8 @@ DATASET_VERSION="${DATASET_VERSION:-$(date +%Y%m%d-%H%M%S)}"
 SMOKE_DB_PATH="${SMOKE_DB_PATH:-$BENCH_ROOT/datasets/smoke/contacts.sqlite}"
 SMOKE_MANIFEST_PATH="${SMOKE_MANIFEST_PATH:-$BENCH_ROOT/manifests/smoke.json}"
 WORKLOAD_PATH="${WORKLOAD_PATH:-$BENCH_ROOT/workloads/smoke.json}"
-PROJECTION_CONTRACT_PATH="${PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine/search-projection.json}"
+DOC_PROJECTION_CONTRACT_PATH="${DOC_PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine/doc-projection.json}"
+COMPANY_PROJECTION_CONTRACT_PATH="${COMPANY_PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine/company-projection.json}"
 PIPELINE_MANIFEST_OUTPUT="${PIPELINE_MANIFEST_OUTPUT:-$BENCH_ROOT/pipeline/source-manifest.json}"
 PIPELINE_CONFIG_OUTPUT="${PIPELINE_CONFIG_OUTPUT:-$BENCH_ROOT/pipeline/pipeline.toml}"
 ENGINE_DB_PATH="${ENGINE_DB_PATH:-/srv/crm/full/contacts.sqlite}"
@@ -53,6 +54,7 @@ python3 "$ROOT_DIR/ops/bench/update_manifest.py" \
   --db-path "$SMOKE_DB_PATH" \
   --dataset-id "search-smoke" \
   --dataset-version "$DATASET_VERSION" \
-  --projection-contract-path "$PROJECTION_CONTRACT_PATH" \
+  --doc-projection-contract-path "$DOC_PROJECTION_CONTRACT_PATH" \
+  --company-projection-contract-path "$COMPANY_PROJECTION_CONTRACT_PATH" \
   --workload-json-path "$WORKLOAD_PATH" \
   --output "$SMOKE_MANIFEST_PATH"

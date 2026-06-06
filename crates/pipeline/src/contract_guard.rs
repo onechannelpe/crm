@@ -7,8 +7,9 @@ use std::collections::{HashMap, HashSet};
 const CANONICAL_CONTRACT_JSON: &str =
     include_str!("../../../contracts/pipeline/canonical-contract.json");
 const SOURCE_CONTRACT_JSON: &str = include_str!("../../../contracts/pipeline/source-contract.json");
-const SEARCH_PROJECTION_JSON: &str =
-    include_str!("../../../contracts/engine/search-projection.json");
+const DOC_PROJECTION_JSON: &str = include_str!("../../../contracts/engine/doc-projection.json");
+const COMPANY_PROJECTION_JSON: &str =
+    include_str!("../../../contracts/engine/company-projection.json");
 
 #[derive(Debug, Deserialize)]
 struct CanonicalContract {
@@ -47,14 +48,10 @@ pub fn validate_contracts(manifest_path: &str) -> Result<(), PipelineError> {
         load_json_embedded(CANONICAL_CONTRACT_JSON, "canonical-contract.json")?;
     let source_contract: SourceContract =
         load_json_embedded(SOURCE_CONTRACT_JSON, "source-contract.json")?;
-    let projection: ProjectionContract =
-        load_json_embedded(SEARCH_PROJECTION_JSON, "search-projection.json")?;
-
-    if projection.projection.trim().is_empty() {
-        return Err(PipelineError::Args(
-            "search-projection contract requires a non-empty projection name".into(),
-        ));
-    }
+    let doc_projection: ProjectionContract =
+        load_json_embedded(DOC_PROJECTION_JSON, "doc-projection.json")?;
+    let company_projection: ProjectionContract =
+        load_json_embedded(COMPANY_PROJECTION_JSON, "company-projection.json")?;
 
     let canonical_fields = canonical.fields.into_iter().collect::<HashSet<_>>();
     let source_contract_by_key = source_contract
@@ -73,9 +70,18 @@ pub fn validate_contracts(manifest_path: &str) -> Result<(), PipelineError> {
         validate_source_mappings(&enabled_sources, &canonical_fields, &source_contract_by_key);
     errors.extend(source_errors);
 
-    let projection_errors =
-        validate_projection_fields(&projection.fields, &canonical_fields, &mapped_by_enabled);
-    errors.extend(projection_errors);
+    errors.extend(validate_projection_contract(
+        &doc_projection,
+        "doc-projection",
+        &canonical_fields,
+        &mapped_by_enabled,
+    ));
+    errors.extend(validate_projection_contract(
+        &company_projection,
+        "company-projection",
+        &canonical_fields,
+        &mapped_by_enabled,
+    ));
 
     if errors.is_empty() {
         Ok(())
@@ -212,6 +218,26 @@ fn validate_projection_fields(
         }
     }
 
+    errors
+}
+
+fn validate_projection_contract(
+    projection: &ProjectionContract,
+    contract_label: &str,
+    canonical_fields: &HashSet<String>,
+    mapped_by_enabled: &HashSet<String>,
+) -> Vec<String> {
+    let mut errors = Vec::new();
+    if projection.projection.trim().is_empty() {
+        errors.push(format!(
+            "{contract_label} contract requires a non-empty projection name"
+        ));
+    }
+    errors.extend(validate_projection_fields(
+        &projection.fields,
+        canonical_fields,
+        mapped_by_enabled,
+    ));
     errors
 }
 
