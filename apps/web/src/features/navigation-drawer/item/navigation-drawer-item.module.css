@@ -176,6 +176,10 @@
 }
 
 @media (max-width: 768px) {
+  .item {
+    height: 32px;
+  }
+
   .itemLabelCollapsed {
     max-width: 220px;
     opacity: 1;

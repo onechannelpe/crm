@@ -1,0 +1,38 @@
+import type { JSX } from "solid-js";
+import { Dynamic } from "solid-js/web";
+
+import styles from "./tinted-icon-tile.module.css";
+
+export type TileColor =
+  | "blue"
+  | "purple"
+  | "turquoise"
+  | "green"
+  | "orange"
+  | "red"
+  | "yellow"
+  | "pink";
+
+type TileIcon = (props: { size?: number; color?: string }) => JSX.Element;
+
+export function TintedIconTile(props: {
+  Icon: TileIcon;
+  color: TileColor;
+  size?: number;
+}) {
+  return (
+    <div
+      class={styles.tile}
+      style={{
+        "background-color": `var(--color-${props.color}-5)`,
+        "border-color": `var(--color-${props.color}-6)`,
+      }}
+    >
+      <Dynamic
+        component={props.Icon}
+        size={props.size ?? 16}
+        color={`var(--color-${props.color}-11)`}
+      />
+    </div>
+  );
+}

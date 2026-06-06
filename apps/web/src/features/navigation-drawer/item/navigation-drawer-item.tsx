@@ -71,6 +71,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
               indentationLevel={indentationLevel()}
               subItemState={props.subItemState}
               Icon={props.Icon}
+              tileColor={props.tileColor}
               active={props.active}
               modifier={props.modifier}
               rightOptions={props.rightOptions}
@@ -94,6 +95,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
               indentationLevel={indentationLevel()}
               subItemState={props.subItemState}
               Icon={props.Icon}
+              tileColor={props.tileColor}
               active={props.active}
               modifier={props.modifier}
               rightOptions={props.rightOptions}
@@ -119,6 +121,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
           indentationLevel={indentationLevel()}
           subItemState={props.subItemState}
           Icon={props.Icon}
+          tileColor={props.tileColor}
           active={props.active}
           modifier={props.modifier}
           rightOptions={props.rightOptions}

@@ -17,6 +17,7 @@ export interface DrawerNavEntry {
   href: string;
   label: string;
   icon: SidebarEntry["icon"];
+  tileColor: SidebarEntry["tileColor"];
   children: DrawerNavChild[];
   activePrefixes: string[];
 }
@@ -33,6 +34,7 @@ export function getMainPrimaryEntries(role: Role): DrawerNavEntry[] {
     href: entry.href,
     label: entry.navLabel ?? entry.label,
     icon: entry.icon,
+    tileColor: entry.tileColor,
     children: [],
     activePrefixes: entry.activePrefixes,
   }));
@@ -49,6 +51,7 @@ export function getMainSecondaryGroups(role: Role): DrawerNavGroup[] {
       href: entry.href,
       label: entry.navLabel ?? entry.label,
       icon: entry.icon,
+      tileColor: entry.tileColor,
       children: getSidebarChildren(role, entry.id).map((child) => ({
         href: child.href,
         label: child.label,

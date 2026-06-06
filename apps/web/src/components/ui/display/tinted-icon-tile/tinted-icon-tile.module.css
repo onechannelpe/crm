@@ -1,0 +1,11 @@
+.tile {
+  align-items: center;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  height: var(--spacing-4);
+  justify-content: center;
+  width: var(--spacing-4);
+}

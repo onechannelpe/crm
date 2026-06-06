@@ -183,7 +183,7 @@
   }
 
   .drawerOpenMobile {
-    width: 100%;
+    width: 100vw;
   }
 
   .drawerClosedMobile {
@@ -191,18 +191,28 @@
   }
 
   .drawerInner {
+    background-image: var(--background-noisy);
+    background-blend-mode: overlay;
+    gap: var(--spacing-4);
     height: 100%;
+    padding-left: var(--spacing-2);
+    padding-right: var(--spacing-2);
     width: 100%;
-    background: var(--overlay);
-    border-right: 1px solid var(--border);
-    box-shadow: var(--shadow-elevation-2);
-    padding-left: 20px;
-    padding-right: 20px;
   }
 
   .scrollableSettings,
   .fixedContentSettings {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: var(--spacing-2);
+    padding-right: var(--spacing-2);
+  }
+
+  .header {
+    padding-left: var(--spacing-5);
+    padding-right: var(--spacing-5);
+  }
+
+  .collapseButton {
+    width: var(--spacing-8);
+    height: var(--spacing-8);
   }
 }
