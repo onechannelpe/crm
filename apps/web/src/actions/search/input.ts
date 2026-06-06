@@ -1,26 +1,26 @@
+import { isSearchIntent } from "~/contracts/search/vocabulary";
 import type { RunDirectSearchCommand } from "~/server/search-workflow/run-search";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { isSearchType } from "~/server/shared/workflow-types";
 
 export function parseSearchCommand(
   actorUserId: UserId,
-  type: unknown,
-  value: unknown,
+  intent: unknown,
+  query: unknown,
   limit: unknown,
 ): Result<RunDirectSearchCommand, DomainError> {
-  if (typeof type !== "string" || !isSearchType(type)) {
+  if (typeof intent !== "string" || !isSearchIntent(intent)) {
     return Err(
       domainError(
         "validation",
-        "search.type.invalid",
-        "type must be a valid search type",
+        "search.intent.invalid",
+        "intent must be a valid search intent",
       ),
     );
   }
 
-  if (typeof value !== "string" || value.trim().length === 0) {
+  if (typeof query !== "string" || query.trim().length === 0) {
     return Err(
       domainError(
         "validation",
@@ -41,5 +41,10 @@ export function parseSearchCommand(
     );
   }
 
-  return Ok({ actorUserId, type, value: value.trim(), limit: safeLimit });
+  return Ok({
+    actorUserId,
+    intent,
+    query: query.trim(),
+    limit: safeLimit,
+  });
 }
