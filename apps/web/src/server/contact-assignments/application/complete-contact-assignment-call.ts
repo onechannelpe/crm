@@ -1,32 +1,49 @@
-import { hasPermission } from "~/lib/auth/access/rbac";
+import type { AppUow } from "~/server/shared/application/uow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  ContactAssignmentInteractionRepos,
-  ContactAssignmentInteractionRunner,
-} from "../infrastructure/interaction-context";
-import type {
+  ContactAssignmentCallOutcome,
   CompleteContactAssignmentCallCommand,
   CompleteContactAssignmentCallResult,
 } from "./contracts";
 
-function rejectMismatchedAssignment(): never {
-  throw new Error(
-    "Contact assignment is not active or does not match the contact",
-  );
-}
+type CompleteContactAssignmentCallTxRepos = {
+  contactAssignments: {
+    findActiveByIdForUser(
+      assignmentId: number,
+      userId: number,
+    ): Promise<{ contact_id: number } | undefined>;
+    markCompleted(assignmentId: number, userId: number): Promise<unknown>;
+  };
+  interactionLogs: {
+    create(input: {
+      contact_id: number;
+      user_id: number;
+      outcome: ContactAssignmentCallOutcome;
+      notes: string | null;
+      duration_seconds: number | null;
+      created_at: number;
+    }): Promise<unknown>;
+  };
+};
 
 async function completeAssignmentInteraction(
   input: CompleteContactAssignmentCallCommand,
-  repos: ContactAssignmentInteractionRepos,
+  repos: CompleteContactAssignmentCallTxRepos,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
   const assignment = await repos.contactAssignments.findActiveByIdForUser(
     input.assignmentId,
     input.actorUserId,
   );
   if (!assignment || assignment.contact_id !== input.contactId) {
-    return rejectMismatchedAssignment();
+    return Err(
+      domainError(
+        "forbidden",
+        "assignment_inactive",
+        "Contact assignment is not active or does not match the contact",
+      ),
+    );
   }
 
   await repos.contactAssignments.markCompleted(
@@ -47,15 +64,7 @@ async function completeAssignmentInteraction(
 
 export function completeContactAssignmentCall(
   input: CompleteContactAssignmentCallCommand,
-  runInTransaction: ContactAssignmentInteractionRunner,
+  uow: AppUow<CompleteContactAssignmentCallTxRepos>,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
-  if (!hasPermission(input.actorRole, "lead:work")) {
-    return Promise.resolve(
-      Err(domainError("forbidden", "forbidden", "Access denied")),
-    );
-  }
-
-  return runInTransaction((repos) =>
-    completeAssignmentInteraction(input, repos),
-  );
+  return uow.run((repos) => completeAssignmentInteraction(input, repos));
 }

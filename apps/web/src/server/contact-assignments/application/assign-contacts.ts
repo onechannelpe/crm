@@ -1,44 +1,46 @@
+import { executeWithLeadUsageReservation } from "~/server/capacity-usage/lead-usage";
+import type {
+  LeadCapacityGrantsRepo,
+  LeadUsageCommitsRepo,
+  LeadUsageReservationsRepo,
+} from "~/server/capacity-usage/repos";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { LeadReservationId, OrganizationId } from "~/server/shared/ids";
+import type { OrganizationId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import {
-  cancelAssignmentReservation,
-  commitAssignmentReservation,
-  reserveAssignmentCapacity,
-  type AssignmentCapacityRepos,
-} from "./assignment-capacity";
 import {
   planContactAssignments,
   type AssignmentPlanRepos,
 } from "./assignment-plan";
 import {
   createContactAssignmentsFromCandidates,
-  type AssignContactsTransactionRunner,
+  type AssignContactsUow,
   type ContactRecord,
   type OrganizationRecord,
 } from "./contact-assignment-writer";
 import type { AssignContactsCommand, AssignContactsResult } from "./contracts";
 
-type AssignContactsRepos = AssignmentPlanRepos &
-  AssignmentCapacityRepos & {
-    organizations: {
-      findOrCreate(ruc: string, name: string): Promise<OrganizationRecord>;
-    };
-    contacts: {
-      findOrCreate(
-        organizationId: OrganizationId,
-        dni: string,
-        name: string,
-        phone: string,
-      ): Promise<ContactRecord>;
-    };
+type AssignContactsRepos = AssignmentPlanRepos & {
+  leadCapacityGrants: LeadCapacityGrantsRepo;
+  leadUsageReservations: LeadUsageReservationsRepo;
+  leadUsageCommits: LeadUsageCommitsRepo;
+  organizations: {
+    findOrCreate(ruc: string, name: string): Promise<OrganizationRecord>;
   };
+  contacts: {
+    findOrCreate(
+      organizationId: OrganizationId,
+      dni: string,
+      name: string,
+      phone: string,
+    ): Promise<ContactRecord>;
+  };
+};
 
 interface AssignContactsDeps {
   repos: AssignContactsRepos;
-  runInTransaction: AssignContactsTransactionRunner;
+  uow: AssignContactsUow;
   engine: Pick<EngineClient, "requestCandidates">;
 }
 
@@ -46,88 +48,63 @@ async function requestAssignableCandidates(input: {
   command: AssignContactsCommand;
   requested: number;
   engine: Pick<EngineClient, "requestCandidates">;
-  reservationId: LeadReservationId;
-  repos: AssignmentCapacityRepos;
 }) {
   const candidatesResult = await input.engine.requestCandidates({
     branchId: input.command.branchId,
     userId: input.command.actorUserId,
     amount: input.requested,
   });
-  if (isErr(candidatesResult)) {
-    await cancelAssignmentReservation(
-      input.reservationId,
-      "external_failure",
-      input.repos,
-    );
-  }
   return candidatesResult;
-}
-
-async function finalizeAssignmentReservation(input: {
-  reservationId: LeadReservationId;
-  assigned: number;
-  repos: AssignmentCapacityRepos;
-}) {
-  if (input.assigned === 0) {
-    await cancelAssignmentReservation(
-      input.reservationId,
-      "partial_use",
-      input.repos,
-    );
-    return;
-  }
-
-  await commitAssignmentReservation(
-    {
-      reservationId: input.reservationId,
-      assigned: input.assigned,
-    },
-    input.repos,
-  );
 }
 
 export async function assignContacts(
   command: AssignContactsCommand,
   deps: AssignContactsDeps,
 ): Promise<Result<AssignContactsResult, DomainError>> {
-  const { repos, runInTransaction, engine } = deps;
+  const { repos, uow, engine } = deps;
 
   const plan = await planContactAssignments(command.actorUserId, repos);
   if (isErr(plan)) return plan;
 
   if (plan.value.requested === 0) return Ok({ requested: 0, assigned: 0 });
 
-  const reservationResult = await reserveAssignmentCapacity(
+  const assignedResult = await executeWithLeadUsageReservation(
     {
       actorUserId: command.actorUserId,
       requested: plan.value.requested,
       remainingCapacity: plan.value.remainingCapacity,
+      reserveReason: "lead_refill",
+      failureReason: "workflow_cancelled",
     },
     repos,
+    async () => {
+      const candidatesResult = await requestAssignableCandidates({
+        command,
+        requested: plan.value.requested,
+        engine,
+      });
+      if (isErr(candidatesResult)) {
+        return candidatesResult;
+      }
+
+      const assigned = await createContactAssignmentsFromCandidates({
+        actorUserId: command.actorUserId,
+        candidates: candidatesResult.value,
+        uow,
+      });
+      if (isErr(assigned)) {
+        return assigned;
+      }
+
+      return Ok({ value: assigned.value, consumed: assigned.value });
+    },
   );
-  if (isErr(reservationResult)) return reservationResult;
-
-  const reservationId = reservationResult.value;
-
-  const candidatesResult = await requestAssignableCandidates({
-    command,
-    requested: plan.value.requested,
-    engine,
-    reservationId,
-    repos,
-  });
-  if (isErr(candidatesResult)) {
-    return candidatesResult;
+  if (isErr(assignedResult)) {
+    return assignedResult;
   }
 
-  const assigned = await createContactAssignmentsFromCandidates({
-    actorUserId: command.actorUserId,
-    candidates: candidatesResult.value,
-    runInTransaction,
+  return Ok({
+    requested: plan.value.requested,
+    assigned: assignedResult.value,
   });
-
-  await finalizeAssignmentReservation({ reservationId, assigned, repos });
-
-  return Ok({ requested: plan.value.requested, assigned });
 }
