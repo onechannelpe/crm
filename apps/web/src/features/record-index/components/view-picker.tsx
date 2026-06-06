@@ -99,7 +99,7 @@ export function RecordIndexViewPicker() {
                 <div class={sharedStyles.menuSectionLabel}>Vista</div>
                 <For each={safeViews().available}>
                   {(view) => {
-                    const isActive = () => safeViews().active().id === view.id;
+                    const isActive = () => model.view?.value() === view.id;
                     return (
                       <button
                         type="button"
@@ -108,7 +108,7 @@ export function RecordIndexViewPicker() {
                         aria-checked={isActive() ? "true" : "false"}
                         data-active={isActive() ? "true" : "false"}
                         onClick={() => {
-                          safeViews().onSelect(view.id);
+                          model.view?.set(view.id);
                           model.columns.setOpenMenu(null);
                         }}
                       >
