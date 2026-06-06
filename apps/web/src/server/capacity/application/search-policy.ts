@@ -3,10 +3,6 @@ import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { resolveSearchPolicy, type SearchPolicy } from "../domain/policy";
-import type {
-  SearchPolicyDefaultsRepo,
-  SearchPolicyOverridesRepo,
-} from "../infrastructure/policy-repos";
 import type { ActorScope } from "./actor-scope";
 
 export type SetSearchScopeDefaultCommand =
@@ -24,8 +20,41 @@ interface PolicyRepos {
   users: {
     findById(id: UserId): Promise<ActorScope | undefined>;
   };
-  searchPolicyDefaults: SearchPolicyDefaultsRepo;
-  searchPolicyOverrides: SearchPolicyOverridesRepo;
+  searchPolicyDefaults: {
+    findForScope(
+      scopeType: "branch" | "team",
+      scopeId: number,
+    ): Promise<{ search_limit: number } | undefined | null>;
+  };
+  searchPolicyOverrides: {
+    findActiveForUser(
+      userId: UserId,
+      now: number,
+    ): Promise<{ search_limit: number } | undefined | null>;
+  };
+}
+
+interface SearchPolicyDefaultsWriter {
+  searchPolicyDefaults: {
+    upsert(values: {
+      scope_type: "branch" | "team";
+      scope_id: number;
+      period_type: "month";
+      search_limit: number;
+    }): Promise<unknown>;
+  };
+}
+
+interface SearchPolicyOverridesWriter {
+  searchPolicyOverrides: {
+    replaceForUser(values: {
+      user_id: UserId;
+      search_limit: number;
+      effective_from: number;
+      expires_at: number | null;
+      set_by_user_id: UserId;
+    }): Promise<unknown>;
+  };
 }
 
 export async function getEffectiveSearchPolicy(
@@ -55,7 +84,7 @@ export async function getEffectiveSearchPolicy(
 
 export async function setSearchScopeDefault(
   command: SetSearchScopeDefaultCommand,
-  repos: Pick<PolicyRepos, "searchPolicyDefaults">,
+  repos: SearchPolicyDefaultsWriter,
 ): Promise<Result<void, DomainError>> {
   await repos.searchPolicyDefaults.upsert({
     scope_type: command.scopeType,
@@ -68,7 +97,7 @@ export async function setSearchScopeDefault(
 
 export async function setSearchUserOverride(
   command: SetSearchUserOverrideCommand,
-  repos: Pick<PolicyRepos, "searchPolicyOverrides">,
+  repos: SearchPolicyOverridesWriter,
 ): Promise<Result<void, DomainError>> {
   await repos.searchPolicyOverrides.replaceForUser({
     user_id: command.targetUserId,

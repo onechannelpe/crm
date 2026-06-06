@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -12,7 +13,7 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
     }): Promise<void> {
       return db
         .insertInto("search_capacity_grants")
-        .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -40,7 +41,7 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
 export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
   return {
     insert(values: { user_id: number; amount: number; reason: string }) {
-      const id = crypto.randomUUID();
+      const id = randomUUIDv7();
       const now = Date.now();
       return db
         .insertInto("search_usage_reservations")
@@ -100,7 +101,7 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
     insert(values: { reservation_id: string; amount: number }): Promise<void> {
       return db
         .insertInto("search_usage_commits")
-        .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -144,7 +145,7 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
     }): Promise<void> {
       return db
         .insertInto("lead_capacity_grants")
-        .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -164,7 +165,7 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
 export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
   return {
     insert(values: { user_id: number; amount: number; reason: string }) {
-      const id = crypto.randomUUID();
+      const id = randomUUIDv7();
       const now = Date.now();
       return db
         .insertInto("lead_usage_reservations")
@@ -229,7 +230,7 @@ export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
     insert(values: { reservation_id: string; amount: number }): Promise<void> {
       return db
         .insertInto("lead_usage_commits")
-        .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },

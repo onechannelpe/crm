@@ -2,13 +2,39 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { fromDbCapacityRequestKind } from "../domain/request-policy";
-import type { CapacityReadContext } from "../infrastructure/read-context";
-import type { PendingCapacityRequestView } from "./contracts";
+import { fromDbCapacityRequestKind } from "../../domain/request-policy";
+import type { PendingCapacityRequestView } from "../contracts";
+
+interface PendingRequestsDeps {
+  repos: {
+    capacityRequests: {
+      listPendingByBranch(branchId: number): Promise<
+        Array<{
+          id: number;
+          user_id: number;
+          kind: "search_extra" | "lead_refill_extra";
+          status: "pending" | "approved" | "rejected" | "canceled";
+          requested_amount: number;
+          reason: string;
+          decision_note: string | null;
+          reviewer_user_id: number | null;
+          created_at: number;
+          updated_at: number;
+          decided_at: number | null;
+          names: string;
+          first_surname: string;
+          second_surname: string;
+          team_id: number | null;
+          branch_id: number;
+        }>
+      >;
+    };
+  };
+}
 
 export async function listPendingRequests(
   ctx: AppContext,
-  deps: CapacityReadContext,
+  deps: PendingRequestsDeps,
 ): Promise<Result<PendingCapacityRequestView[], DomainError>> {
   const pending = await deps.repos.capacityRequests.listPendingByBranch(
     ctx.actor.branchId,

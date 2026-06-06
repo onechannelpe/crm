@@ -4,7 +4,7 @@ import {
   type LeadReservationId,
   type UserId,
 } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
   LeadCapacityGrantsRepo,
@@ -12,24 +12,24 @@ import type {
   LeadUsageReservationsRepo,
 } from "./repos";
 
-export interface ReserveLeadUsageCommand {
+interface ReserveLeadUsageCommand {
   actorUserId: UserId;
   amount: number;
   remainingCapacity: number;
   reason: "lead_refill" | "admin_grant_adjustment";
 }
 
-export interface CommitLeadUsageCommand {
+interface CommitLeadUsageCommand {
   reservationId: LeadReservationId;
   amount: number;
 }
 
-export interface CancelLeadUsageCommand {
+interface CancelLeadUsageCommand {
   reservationId: LeadReservationId;
   reason: "external_failure" | "partial_use" | "workflow_cancelled";
 }
 
-export interface GrantLeadCapacityCommand {
+interface GrantLeadCapacityCommand {
   actorUserId: UserId;
   targetUserId: UserId;
   amount: number;
@@ -42,7 +42,15 @@ interface UsageRepos {
   leadUsageCommits: LeadUsageCommitsRepo;
 }
 
-export async function reserveLeadUsage(
+interface ExecuteWithLeadUsageReservationCommand {
+  actorUserId: UserId;
+  requested: number;
+  remainingCapacity: number;
+  reserveReason: ReserveLeadUsageCommand["reason"];
+  failureReason: CancelLeadUsageCommand["reason"];
+}
+
+async function reserveLeadUsage(
   command: ReserveLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<LeadReservationId, DomainError>> {
@@ -59,7 +67,7 @@ export async function reserveLeadUsage(
   return Ok(asLeadReservationId(row.id));
 }
 
-export async function commitLeadUsage(
+async function commitLeadUsage(
   command: CommitLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations" | "leadUsageCommits">,
 ): Promise<Result<void, DomainError>> {
@@ -87,7 +95,7 @@ export async function commitLeadUsage(
   return Ok(undefined);
 }
 
-export async function cancelLeadUsage(
+async function cancelLeadUsage(
   command: CancelLeadUsageCommand,
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<void, DomainError>> {
@@ -121,4 +129,62 @@ export async function grantLeadCapacity(
     actor_user_id: command.actorUserId,
   });
   return Ok(undefined);
+}
+
+export async function executeWithLeadUsageReservation<T>(
+  command: ExecuteWithLeadUsageReservationCommand,
+  repos: Pick<UsageRepos, "leadUsageReservations" | "leadUsageCommits">,
+  run: (
+    reservationId: LeadReservationId,
+  ) => Promise<Result<{ value: T; consumed: number }, DomainError>>,
+): Promise<Result<T, DomainError>> {
+  const reservationResult = await reserveLeadUsage(
+    {
+      actorUserId: command.actorUserId,
+      amount: command.requested,
+      remainingCapacity: command.remainingCapacity,
+      reason: command.reserveReason,
+    },
+    repos,
+  );
+  if (isErr(reservationResult)) {
+    return reservationResult;
+  }
+
+  const reservationId = reservationResult.value;
+
+  let runResult: Result<{ value: T; consumed: number }, DomainError>;
+  try {
+    runResult = await run(reservationId);
+  } catch (error) {
+    await cancelLeadUsage(
+      { reservationId, reason: command.failureReason },
+      repos,
+    );
+    throw error;
+  }
+
+  if (isErr(runResult)) {
+    await cancelLeadUsage(
+      { reservationId, reason: command.failureReason },
+      repos,
+    );
+    return runResult;
+  }
+
+  const consumed = runResult.value.consumed;
+  if (consumed === 0) {
+    await cancelLeadUsage({ reservationId, reason: "partial_use" }, repos);
+    return Ok(runResult.value.value);
+  }
+
+  const commitResult = await commitLeadUsage(
+    { reservationId, amount: consumed },
+    repos,
+  );
+  if (isErr(commitResult)) {
+    return commitResult;
+  }
+
+  return Ok(runResult.value.value);
 }

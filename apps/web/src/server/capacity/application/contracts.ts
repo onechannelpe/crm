@@ -1,8 +1,8 @@
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 
 import type { CapacityRequestStatus } from "../domain/types";
-import type { LeadCapacitySnapshot } from "./get-lead-capacity-snapshot";
-import type { SearchCapacitySnapshot } from "./get-search-capacity-snapshot";
+import type { LeadCapacitySnapshot } from "./queries/get-lead-capacity-snapshot";
+import type { SearchCapacitySnapshot } from "./queries/get-search-capacity-snapshot";
 
 export type AuditChangeValue =
   | string
