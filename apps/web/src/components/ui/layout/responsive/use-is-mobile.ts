@@ -1,10 +1,14 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 
-export function useMobileBreakpoint(maxWidthPx = 768) {
+import { MOBILE_VIEWPORT } from "~/components/ui/theme/design-system";
+
+// Use this for structural switches that need a different DOM tree. Cosmetic
+// responsive changes belong in CSS so SSR can render the right layout.
+export function useIsMobile() {
   const [isMobile, setIsMobile] = createSignal(false);
 
   onMount(() => {
-    const mediaQuery = window.matchMedia(`(max-width: ${maxWidthPx}px)`);
+    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_VIEWPORT}px)`);
     setIsMobile(mediaQuery.matches);
 
     const handleChange = (event: MediaQueryListEvent) => {

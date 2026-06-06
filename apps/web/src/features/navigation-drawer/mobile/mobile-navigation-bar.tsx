@@ -1,18 +1,20 @@
 import { useLocation, useNavigate } from "@solidjs/router";
 import { createMemo, Show } from "solid-js";
 
-import ChevronRight from "~/components/icons/chevron-right";
+import List from "~/components/icons/list";
 import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
+import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import {
+  NavigationBar,
+  type NavigationBarItemDef,
+} from "~/components/ui/navigation/navigation-bar/navigation-bar";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import { cn } from "~/lib/utils";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useOpenSettingsMenu } from "../hooks/use-open-settings-menu";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
-
-import styles from "./mobile-navigation-bar.module.css";
 
 export function MobileNavigationBar() {
   const location = useLocation();
@@ -30,69 +32,65 @@ export function MobileNavigationBar() {
   const { openSettingsMenu } = useOpenSettingsMenu();
 
   const activeItemName = createMemo(() => {
-    if (!expanded()) {
-      return "main";
-    }
-
-    return currentMobileDrawer();
+    if (isSettingsPage()) return "settings";
+    if (expanded()) return currentMobileDrawer();
+    if (location.pathname.startsWith("/records")) return "records";
+    return "main";
   });
+
+  const items = createMemo<NavigationBarItemDef[]>(() => [
+    {
+      name: "main",
+      label: "Abrir navegacion",
+      Icon: List,
+      onClick: () => {
+        setCurrentMobileDrawer("main");
+        setExpanded((previous) => activeItemName() !== "main" || !previous);
+
+        if (isSettingsPage()) {
+          navigate(getDefaultAppPath(currentUser().role));
+        }
+      },
+    },
+    {
+      name: "records",
+      label: "Registros",
+      Icon: ICON_BY_ROUTE.leads,
+      onClick: () => {
+        setExpanded(false);
+        navigate("/records");
+      },
+    },
+    {
+      name: "search",
+      label: "Buscar",
+      Icon: Search,
+      onClick: () => {
+        setExpanded(false);
+        navigate("/search");
+      },
+    },
+    {
+      name: "settings",
+      label: "Abrir ajustes",
+      Icon: Settings,
+      onClick: () => {
+        memorizeNavigationState(
+          location.pathname + location.search,
+          expanded(),
+        );
+        openSettingsMenu();
+
+        if (!isSettingsPage()) {
+          navigate("/settings/profile");
+        }
+      },
+    },
+  ]);
 
   return (
     <Show when={isMobile()}>
-      <nav class={styles.mobileBar}>
-        <button
-          type="button"
-          class={cn(
-            styles.mobileBarItem,
-            activeItemName() === "main" && styles.mobileBarItemActive,
-          )}
-          onClick={() => {
-            setCurrentMobileDrawer("main");
-            setExpanded((previous) => activeItemName() !== "main" || !previous);
-
-            if (isSettingsPage()) {
-              navigate(getDefaultAppPath(currentUser().role));
-            }
-          }}
-          aria-label="Abrir navegacion"
-        >
-          <ChevronRight size={16} style={{ transform: "rotate(180deg)" }} />
-        </button>
-
-        <button
-          type="button"
-          class={styles.mobileBarItem}
-          onClick={() => {
-            setExpanded(false);
-            navigate("/search");
-          }}
-          aria-label="Buscar"
-        >
-          <Search size={16} />
-        </button>
-
-        <button
-          type="button"
-          class={cn(
-            styles.mobileBarItem,
-            activeItemName() === "settings" && styles.mobileBarItemActive,
-          )}
-          onClick={() => {
-            memorizeNavigationState(
-              location.pathname + location.search,
-              expanded(),
-            );
-            openSettingsMenu();
-
-            if (!isSettingsPage()) {
-              navigate("/settings/profile");
-            }
-          }}
-          aria-label="Abrir ajustes"
-        >
-          <Settings size={16} />
-        </button>
-      </nav>
+      <NavigationBar activeItemName={activeItemName()} items={items()} />
     </Show>
   );
 }

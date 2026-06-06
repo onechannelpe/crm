@@ -69,6 +69,7 @@ export function MainNavigationDrawer() {
                   label={entry.label}
                   to={entry.href}
                   Icon={getEntryIcon(entry.icon)}
+                  tileColor={entry.tileColor}
                   active={isEntryActive(location.pathname, entry)}
                   closeOnNavigate={closeOnNavigate}
                 />
@@ -109,6 +110,7 @@ export function MainNavigationDrawer() {
                               label={item.label}
                               to={hasChildren ? undefined : item.href}
                               Icon={getEntryIcon(item.icon)}
+                              tileColor={item.tileColor}
                               active={
                                 hasChildren
                                   ? selectedChildIndex() >= 0 && !childOpen()
@@ -130,6 +132,7 @@ export function MainNavigationDrawer() {
                               showChevron={hasChildren}
                               chevronExpanded={childOpen()}
                               alwaysShowRightOptions={hasChildren}
+                              preventCollapseOnMobile={hasChildren}
                             />
 
                             {hasChildren ? (

@@ -1,5 +1,7 @@
 import type { JSX } from "solid-js";
 
+import type { TileColor } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
+
 export type NavigationDrawerSubItemState =
   | "intermediate-before-selected"
   | "intermediate-selected"
@@ -30,6 +32,7 @@ export interface NavigationDrawerItemProps {
   to?: string;
   onClick?: () => void;
   Icon?: NavigationDrawerIcon;
+  tileColor?: TileColor;
   active?: boolean;
   modifier?: NavigationDrawerItemModifier;
   rightOptions?: JSX.Element;
@@ -48,6 +51,7 @@ export interface NavigationDrawerItemFrameBaseProps {
   indentationLevel: 1 | 2;
   subItemState?: NavigationDrawerSubItemState;
   Icon?: NavigationDrawerIcon;
+  tileColor?: TileColor;
   active?: boolean;
   modifier?: NavigationDrawerItemModifier;
   rightOptions?: JSX.Element;
