@@ -4,7 +4,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   AddLeadNoteCommandInput,
   AddVenueAccountsCommandInput,
-  ApplyImportedReviewCommandInput,
   CreateQuotationCommandInput,
   CreateVenueCommandInput,
   LogLeadCallCommandInput,
@@ -26,7 +25,6 @@ import type { WorkflowRepos } from "../infrastructure/workflow-repos";
 import { addLeadNoteCommand } from "./commands/add-note";
 import { addToFavoritesCommand } from "./commands/add-to-favorites";
 import { addVenueAccountsCommand } from "./commands/add-venue-accounts";
-import { applyImportedReviewCommand } from "./commands/apply-imported-review";
 import { approveForSaleCommand } from "./commands/approve-for-sale";
 import { createQuotationCommand } from "./commands/create-quotation";
 import { createVenueCommand } from "./commands/create-venue";
@@ -143,9 +141,6 @@ export function createWorkflowCommandBus(
 
     requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
       requestRateNegotiationCommand(input, { executor }),
-
-    applyImportedReview: (input: ApplyImportedReviewCommandInput) =>
-      applyImportedReviewCommand(input, { executor }),
 
     requestSunatRefresh: (input: { actor: WorkflowActor; leadId: string }) =>
       requestSunatRefresh(input, {

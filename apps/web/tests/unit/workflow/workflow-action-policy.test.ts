@@ -7,6 +7,7 @@ import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { requestRateNegotiation } from "~/server/workflow/domain/lead/commands";
 import {
   authorizeLeadAction,
   MAX_NEGOTIATION_FILES,
@@ -14,7 +15,6 @@ import {
   resolveAvailableActions,
 } from "~/server/workflow/domain/lead/policy";
 import type { LeadState } from "~/server/workflow/domain/lead/state";
-import { requestRateNegotiation } from "~/server/workflow/domain/lead/transitions";
 
 function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
   return {

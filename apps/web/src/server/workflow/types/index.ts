@@ -35,7 +35,6 @@ export type {
   RegisterLeadCommandInput,
   ReassignLeadCommandInput,
   ReviewLeadCommandInput,
-  ApplyImportedReviewCommandInput,
   AddLeadNoteCommandInput,
   LogLeadCallCommandInput,
   CreateQuotationCommandInput,

@@ -31,15 +31,6 @@ export type ReviewLeadCommandInput = {
   reason: string;
 };
 
-export type ApplyImportedReviewCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  type: "import_status" | "import_prioridad";
-  status?: LeadStatus;
-  prioridad?: LeadPriority;
-  expectedUpdatedAt: number;
-};
-
 export type AddLeadNoteCommandInput = {
   actor: WorkflowActor;
   leadId: string;

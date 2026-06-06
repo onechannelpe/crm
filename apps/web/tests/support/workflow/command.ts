@@ -2,7 +2,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
 import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
-import { applyImportedReviewCommand } from "~/server/workflow/application/commands/apply-imported-review";
 import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
 import { createQuotationCommand } from "~/server/workflow/application/commands/create-quotation";
 import { createVenueCommand } from "~/server/workflow/application/commands/create-venue";
@@ -24,7 +23,6 @@ import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-r
 import type {
   AddLeadNoteCommandInput,
   AddVenueAccountsCommandInput,
-  ApplyImportedReviewCommandInput,
   CreateQuotationCommandInput,
   CreateVenueCommandInput,
   LogLeadCallCommandInput,
@@ -94,9 +92,6 @@ function buildCommandApi(
 
     logLeadCall: (input: LogLeadCallCommandInput) =>
       logLeadCallCommand(input, { executor }),
-
-    applyImportedReview: (input: ApplyImportedReviewCommandInput) =>
-      applyImportedReviewCommand(input, { executor }),
 
     approveForSale: (input: { actor: WorkflowActor; leadId: string }) =>
       approveForSaleCommand(input, { executor }),
