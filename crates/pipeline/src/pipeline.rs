@@ -3,11 +3,11 @@ use crate::cli::Command;
 use crate::config::manifest::verify_manifest;
 use crate::config::runtime::{PipelineRuntimeConfig, ProfileMode};
 use crate::contract_guard::validate_contracts;
-use crate::db::schema::open_rw;
-use crate::stages::gate;
-use crate::stages::normalize;
-use crate::stages::promote;
-use crate::stages::verify;
+use crate::gate;
+use crate::promote;
+use crate::report;
+use crate::run;
+use crate::storage::db::open_rw;
 use rusqlite::params;
 use std::path::Path;
 use std::time::SystemTime;
@@ -23,7 +23,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
             validate_contracts(&runtime.paths.manifest)?;
             let resolved = runtime.resolve_profile(&profile)?;
-            normalize::normalize_matrix(
+            report::normalize_matrix(
                 &runtime.paths.manifest,
                 resolved.row_cap,
                 &runtime.paths.normalized_dir,
@@ -38,16 +38,16 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-{}", profile));
 
-            verify::run_matrix(
-                &bench_db.to_string_lossy(),
-                &bench_build_dir.to_string_lossy(),
-                &runtime.paths.manifest,
-                resolved.workers,
-                resolved.row_cap,
-                resolved.include_osiptel,
-                resolved.batch_size,
-                &resolved.source_row_caps,
-            )
+            run::matrix::run(run::matrix::Config {
+                db_path: &bench_db.to_string_lossy(),
+                build_dir: &bench_build_dir.to_string_lossy(),
+                manifest_path: &runtime.paths.manifest,
+                workers: resolved.workers,
+                row_cap: resolved.row_cap,
+                run_osiptel_sample: resolved.include_osiptel,
+                batch_size: resolved.batch_size,
+                source_row_caps: &resolved.source_row_caps,
+            })
         }
         Command::BenchMap { config, profile } => {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
@@ -56,7 +56,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-map-{}", profile));
 
-            verify::run_matrix_map_only(
+            run::matrix::map_only(
                 &bench_build_dir.to_string_lossy(),
                 &runtime.paths.manifest,
                 resolved.row_cap,
@@ -75,7 +75,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
                 )));
             }
 
-            verify::run_full(
+            run::full::run(
                 &runtime.paths.staged_db,
                 &runtime.paths.manifest,
                 resolved.workers,
@@ -106,16 +106,16 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let refresh_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("refresh-{}", profile));
 
-            verify::run_matrix(
-                &refresh_db.to_string_lossy(),
-                &refresh_build_dir.to_string_lossy(),
-                &runtime.paths.manifest,
-                resolved.workers,
-                resolved.row_cap,
-                resolved.include_osiptel,
-                resolved.batch_size,
-                &resolved.source_row_caps,
-            )?;
+            run::matrix::run(run::matrix::Config {
+                db_path: &refresh_db.to_string_lossy(),
+                build_dir: &refresh_build_dir.to_string_lossy(),
+                manifest_path: &runtime.paths.manifest,
+                workers: resolved.workers,
+                row_cap: resolved.row_cap,
+                run_osiptel_sample: resolved.include_osiptel,
+                batch_size: resolved.batch_size,
+                source_row_caps: &resolved.source_row_caps,
+            })?;
 
             let to = to.unwrap_or(runtime.paths.engine_db);
             publish_with_gate_and_metadata(&refresh_db.to_string_lossy(), &to)
@@ -156,7 +156,6 @@ fn publish_with_gate_and_metadata(from: &str, to: &str) -> Result<(), PipelineEr
             );
         }
     }
-    // Stamp promoted-build metadata into the staging database before VACUUM INTO.
     {
         let conn = open_rw(from)?;
         let now_duration = SystemTime::now()
@@ -167,10 +166,9 @@ fn publish_with_gate_and_metadata(from: &str, to: &str) -> Result<(), PipelineEr
         let now_millis = now_duration.as_millis() as i64;
         let now_nanos = now_duration.as_nanos();
         let build_id = format!("build-{now_nanos}");
-        let rows: i64 =
-            conn.query_row("SELECT COUNT(*) FROM search_projection", params![], |r| {
-                r.get(0)
-            })?;
+        let rows: i64 = conn.query_row("SELECT COUNT(*) FROM doc_projection", params![], |r| {
+            r.get(0)
+        })?;
         println!(
             "[pipeline] build metadata: build_id={} gate_passed={} built_at={} rows={}",
             build_id, gate_passed, now_millis, rows

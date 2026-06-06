@@ -11,5 +11,6 @@
     "role_start_date": "fechacreacion"
   },
   "phone_columns": [],
-  "phone_prefixes": []
+  "phone_prefixes": [],
+  "doc_type_map": {"01": "DNI", "02": "CE"}
 }
