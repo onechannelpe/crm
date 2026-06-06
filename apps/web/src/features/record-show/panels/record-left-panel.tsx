@@ -7,11 +7,7 @@ import { RecordSummaryCard } from "../summary-card/record-summary-card";
 
 import styles from "./record-left-panel.module.css";
 
-type RecordLeftPanelProps = {
-  data: LeadDetailView;
-};
-
-export function RecordLeftPanel(props: RecordLeftPanelProps) {
+export function RecordLeftPanel(props: { data: LeadDetailView }) {
   return (
     <div class={styles.panel}>
       <RecordSummaryCard lead={props.data.lead} />
