@@ -12,19 +12,15 @@ import {
 import { refreshInstallationSession } from "./service/session";
 import type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
 
-export type {
-  ExtensionRepos,
-  ExtensionServiceDeps,
-  ExtensionServiceError,
-} from "./service/shared";
+export type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
 export { hasActiveAuthSession } from "./service/shared";
 
 export function createExtensionService(
   repos: ExtensionRepos,
-  deps: ExtensionServiceDeps = {},
+  deps: ExtensionServiceDeps,
 ) {
   const now = deps.now ?? (() => Date.now());
-  const runInTransaction = deps.runInTransaction;
+  const uow = deps.uow;
 
   return {
     createHandoffToken: (input: {
@@ -38,7 +34,7 @@ export function createExtensionService(
         {
           repos,
           now,
-          runInTransaction,
+          uow,
         },
         input,
       ),
@@ -51,7 +47,7 @@ export function createExtensionService(
         {
           repos,
           now,
-          runInTransaction,
+          uow,
         },
         input,
       ),
@@ -76,7 +72,7 @@ export function createExtensionService(
         {
           repos,
           now,
-          runInTransaction,
+          uow,
         },
         input,
       ),
