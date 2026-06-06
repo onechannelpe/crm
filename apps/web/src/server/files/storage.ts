@@ -53,6 +53,13 @@ function toUint8Array(value: unknown): Uint8Array {
   throw new Error("Unsupported stream chunk type");
 }
 
+export async function readStoredFile(
+  baseDir: string,
+  key: string,
+): Promise<Uint8Array> {
+  return readFile(join(baseDir, WORKFLOW_FILES_DIR, key));
+}
+
 export function openStoredFileStream(
   baseDir: string,
   key: string,

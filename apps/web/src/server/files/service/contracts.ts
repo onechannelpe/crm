@@ -5,6 +5,7 @@ import type { Result } from "~/server/shared/result";
 import type { createArtifactsRepo } from "../repo/artifacts";
 import type { createAssetsRepo } from "../repo/assets";
 import type { createEventsRepo } from "../repo/events";
+import type { createNegotiationFilesRepo } from "../repo/negotiation";
 import type { createSalesRepo } from "../repo/sales";
 import type { createTokensRepo } from "../repo/tokens";
 import type { FileStorage } from "../storage";
@@ -22,16 +23,7 @@ export interface ArtifactRepos {
   events: ReturnType<typeof createEventsRepo>;
   tokens: ReturnType<typeof createTokensRepo>;
   sales: ReturnType<typeof createSalesRepo>;
-}
-
-export interface SyncExecutor {
-  run(
-    artifactType: ArtifactType,
-    context: Record<string, unknown>,
-  ): Promise<{
-    bytes: Uint8Array;
-    filename: string;
-  }>;
+  negotiation: ReturnType<typeof createNegotiationFilesRepo>;
 }
 
 export type ArtifactEventRepo = Pick<ArtifactRepos, "events">;
@@ -68,8 +60,6 @@ export type ListArtifactsRepo = Pick<ArtifactRepos, "artifacts">;
 
 export interface RequestArtifactDeps {
   repo: RequestArtifactRepo;
-  storage: FileStorage;
-  syncExecutor: SyncExecutor;
 }
 
 export interface UploadArtifactDeps {
@@ -105,7 +95,7 @@ export interface ArtifactServiceApi {
     ctx: AppContext,
     input: RequestArtifactInput,
     deps: RequestArtifactDeps,
-  ) => Promise<Result<ArtifactWithAsset, DomainError>>;
+  ) => Promise<Result<WorkflowArtifact, DomainError>>;
   uploadArtifactFile: (
     ctx: AppContext,
     artifactId: string,
