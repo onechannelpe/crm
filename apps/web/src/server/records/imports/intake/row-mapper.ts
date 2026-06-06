@@ -1,10 +1,7 @@
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { CsvDelimiter } from "~/server/csv/core";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import {
-  parseLeadPriority,
-  parseLeadStatus,
-} from "~/server/workflow/domain/lead-schema-parser";
+import { parseLeadPriority, parseLeadStatus } from "~/server/workflow/parsers";
 
 export interface RecordImportInvalidRow {
   row: number;
@@ -41,7 +38,7 @@ export function mapRecordImportRow(input: {
   | { ok: true; row: ImportRowInput }
   | { ok: false; row: RecordImportInvalidRow } {
   const record = readRecord(input.headers, input.cells);
-  const ruc = record.documento ?? "";
+  const ruc = (record.documento ?? record.documento_a_consultar ?? "").trim();
 
   if (!/^\d+$/.test(ruc)) {
     return {

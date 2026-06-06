@@ -20,7 +20,7 @@ interface RecordImportRunner {
 
 interface RecordsImportQueueDeps {
   runtime: IntegrationRuntime;
-  openFileStream: (filePath: string) => ReadableStream<Uint8Array>;
+  readFile: (filePath: string) => Promise<Uint8Array>;
   runner?: RecordImportRunner;
 }
 
@@ -37,7 +37,7 @@ export function createRecordsImportQueue(
     deps.runner ??
     createRecordImportRunner({
       executor: deps.runtime.executor,
-      openFileStream: deps.openFileStream,
+      readFile: deps.readFile,
       updateProgress: (progress) =>
         runtime.jobs.updateProgress(progress.jobId, progress),
     });
