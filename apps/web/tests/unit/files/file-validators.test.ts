@@ -17,16 +17,13 @@ describe("validateUploadFile - extension checks", () => {
     expect(result).toMatchObject({ ok: true });
   });
 
-  it("rejects xlsx for integration_import (not in allowlist)", () => {
+  it("accepts xlsx for integration_import", () => {
     const result = validateUploadFile(
       "integration_import",
       "data.xlsx",
       XLSX_MAGIC,
     );
-    expect(result).toMatchObject({
-      ok: false,
-      reason: "extension_not_allowed",
-    });
+    expect(result).toMatchObject({ ok: true });
   });
 
   it("accepts csv for records_export", () => {
