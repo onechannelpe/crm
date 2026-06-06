@@ -5,14 +5,8 @@ import type {
   ModalidadCobro,
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
-import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import {
-  parseRequiredLeadPriority,
-  parseRequiredLeadStatus,
-  parseRequiredLeadText,
-} from "~/server/workflow/parsers";
 import {
   type ReassignLeadCommandInput,
   type RegisterLeadCommandInput,
@@ -76,48 +70,6 @@ export type ReassignLeadInput = {
   newExecutiveId: number;
 };
 
-function assertParsed<T>(
-  parsed: { ok: true; value: T } | { ok: false; error: { message: string } },
-): T {
-  if (!parsed.ok) {
-    throw validationError(parsed.error.message);
-  }
-  return parsed.value;
-}
-
-function parseCommercialScope(input: {
-  proveedorActual: string;
-  giroNegocio: string;
-}) {
-  const proveedorActual = parseRequiredLeadText(
-    input.proveedorActual,
-    "proveedor_actual_required",
-    "Proveedor actual is required",
-  );
-
-  if (!proveedorActual.ok) {
-    return proveedorActual;
-  }
-
-  const giroNegocio = parseRequiredLeadText(
-    input.giroNegocio,
-    "giro_negocio_required",
-    "Giro de negocio is required",
-  );
-
-  if (!giroNegocio.ok) {
-    return giroNegocio;
-  }
-
-  return {
-    ok: true,
-    value: {
-      proveedorActual: proveedorActual.value,
-      giroNegocio: giroNegocio.value,
-    },
-  } as const;
-}
-
 export async function requestLeadCreation(input: CreateLeadInput) {
   return runAction({
     actionName: "workflow.register_lead",
@@ -138,16 +90,6 @@ export async function requestLeadCreation(input: CreateLeadInput) {
 }
 
 export async function requestLeadReview(input: LeadReviewInput) {
-  const status = assertParsed(parseRequiredLeadStatus(input.status));
-  const prioridad = assertParsed(parseRequiredLeadPriority(input.prioridad));
-  const reason = assertParsed(
-    parseRequiredLeadText(
-      input.reason,
-      "review_reason_required",
-      "Reason is required",
-    ),
-  );
-
   return runAction({
     actionName: "workflow.review_lead",
     access: { kind: "auth" },
@@ -161,9 +103,9 @@ export async function requestLeadReview(input: LeadReviewInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        status,
-        prioridad,
-        reason,
+        status: input.status,
+        prioridad: input.prioridad,
+        reason: input.reason,
       }),
   });
 }
@@ -171,8 +113,6 @@ export async function requestLeadReview(input: LeadReviewInput) {
 export async function requestSaveCommercialScope(
   input: SaveCommercialScopeInput,
 ) {
-  const commercialScope = assertParsed(parseCommercialScope(input));
-
   return runAction({
     actionName: "workflow.save_commercial_scope",
     access: { kind: "auth" },
@@ -186,11 +126,11 @@ export async function requestSaveCommercialScope(
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        proveedorActual: commercialScope.proveedorActual,
+        proveedorActual: input.proveedorActual,
         tasaActual: input.tasaActual,
         gpv: input.gpv,
         ticket: input.ticket,
-        giroNegocio: commercialScope.giroNegocio,
+        giroNegocio: input.giroNegocio,
         abonoBank: input.abonoBank,
         posTotal: input.posTotal,
       }),
@@ -198,8 +138,6 @@ export async function requestSaveCommercialScope(
 }
 
 export async function requestQuotation(input: RequestQuotationInput) {
-  const commercialScope = assertParsed(parseCommercialScope(input));
-
   return runAction({
     actionName: "workflow.request_quotation",
     access: { kind: "auth" },
@@ -213,11 +151,11 @@ export async function requestQuotation(input: RequestQuotationInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        proveedorActual: commercialScope.proveedorActual,
+        proveedorActual: input.proveedorActual,
         tasaActual: input.tasaActual,
         gpv: input.gpv,
         ticket: input.ticket,
-        giroNegocio: commercialScope.giroNegocio,
+        giroNegocio: input.giroNegocio,
         abonoBank: input.abonoBank,
         posTotal: input.posTotal,
       }),
@@ -243,41 +181,6 @@ export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
 }
 
 export async function requestRecordRepLegal(input: RecordRepLegalInput) {
-  const nombres = assertParsed(
-    parseRequiredLeadText(
-      input.nombres,
-      "nombres_required",
-      "Nombres is required",
-    ),
-  );
-  const apellidoPaterno = assertParsed(
-    parseRequiredLeadText(
-      input.apellidoPaterno,
-      "apellido_paterno_required",
-      "Apellido paterno is required",
-    ),
-  );
-  const apellidoMaterno = assertParsed(
-    parseRequiredLeadText(
-      input.apellidoMaterno,
-      "apellido_materno_required",
-      "Apellido materno is required",
-    ),
-  );
-  const dni = assertParsed(
-    parseRequiredLeadText(input.dni, "dni_required", "DNI is required"),
-  );
-  const telefono = assertParsed(
-    parseRequiredLeadText(
-      input.telefono,
-      "telefono_required",
-      "Telefono is required",
-    ),
-  );
-  const email = assertParsed(
-    parseRequiredLeadText(input.email, "email_required", "Email is required"),
-  );
-
   return runAction({
     actionName: "workflow.record_rep_legal",
     access: { kind: "auth" },
@@ -291,12 +194,12 @@ export async function requestRecordRepLegal(input: RecordRepLegalInput) {
           branchId: actor.branchId,
         },
         leadId: input.leadId,
-        nombres,
-        apellidoPaterno,
-        apellidoMaterno,
-        dni,
-        telefono,
-        email,
+        nombres: input.nombres,
+        apellidoPaterno: input.apellidoPaterno,
+        apellidoMaterno: input.apellidoMaterno,
+        dni: input.dni,
+        telefono: input.telefono,
+        email: input.email,
       }),
   });
 }

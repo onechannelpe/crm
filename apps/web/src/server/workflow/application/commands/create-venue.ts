@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 import type { CreateVenueCommandInput } from "~/server/workflow/types";
 
 import { createVenue } from "../../domain/lead/commands";
@@ -14,11 +14,23 @@ import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
 } from "../services/digital-product-policy";
+import { parseVenueTextFields } from "../services/venue-fields";
 
 export async function createVenueCommand(
   input: CreateVenueCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
+  const fields = parseVenueTextFields(input);
+  if (isErr(fields)) return fields;
+  const {
+    nombreComercial,
+    direccion,
+    referencia,
+    distrito,
+    provincia,
+    departamento,
+  } = fields.value;
+
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -42,13 +54,13 @@ export async function createVenueCommand(
     const transition = createVenue(state, {
       actor: input.actor,
       venueId,
-      nombreComercial: input.nombreComercial,
+      nombreComercial,
       posQuantity: input.posQuantity,
-      direccion: input.direccion,
-      referencia: input.referencia,
-      distrito: input.distrito,
-      provincia: input.provincia,
-      departamento: input.departamento,
+      direccion,
+      referencia,
+      distrito,
+      provincia,
+      departamento,
       now,
     });
     if (!transition.ok) return transition;
@@ -59,16 +71,16 @@ export async function createVenueCommand(
       .values({
         id: venueId,
         lead_id: input.leadId,
-        nombre_comercial: input.nombreComercial,
+        nombre_comercial: nombreComercial,
         pos_quantity: input.posQuantity,
         link_url: digital.linkUrl,
         online_url: digital.onlineUrl,
         online_modalidad: digital.onlineModalidad,
-        direccion: input.direccion,
-        referencia: input.referencia,
-        distrito: input.distrito,
-        provincia: input.provincia,
-        departamento: input.departamento,
+        direccion,
+        referencia,
+        distrito,
+        provincia,
+        departamento,
         created_at: now,
         created_by: input.actor.userId,
       })

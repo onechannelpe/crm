@@ -2,7 +2,8 @@ import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/server/shared/result";
+import { parseRequiredLeadText } from "~/server/workflow/parsers";
 import type { RequestQuotationCommandInput } from "~/server/workflow/types";
 
 import { requestQuotation } from "../../domain/lead/commands";
@@ -15,6 +16,20 @@ export async function requestQuotationCommand(
   input: RequestQuotationCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
+  const proveedorActual = parseRequiredLeadText(
+    input.proveedorActual,
+    "proveedor_actual_required",
+    "Proveedor actual is required",
+  );
+  if (isErr(proveedorActual)) return proveedorActual;
+
+  const giroNegocio = parseRequiredLeadText(
+    input.giroNegocio,
+    "giro_negocio_required",
+    "Giro de negocio is required",
+  );
+  if (isErr(giroNegocio)) return giroNegocio;
+
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -30,7 +45,7 @@ export async function requestQuotationCommand(
 
     await repos.leadProfiles.upsert({
       leadId: state.id,
-      proveedorActual: input.proveedorActual,
+      proveedorActual: proveedorActual.value,
       tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
@@ -47,7 +62,7 @@ export async function requestQuotationCommand(
 
     await repos.party.updateOrganizationCommercial({
       organizationId: state.organizationId,
-      giroNegocio: input.giroNegocio,
+      giroNegocio: giroNegocio.value,
     });
 
     const committed = await uow.commit({

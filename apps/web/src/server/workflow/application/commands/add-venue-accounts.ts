@@ -3,7 +3,8 @@ import { randomUUIDv7 } from "bun";
 import { isBcpBank } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { parseRequiredLeadText } from "~/server/workflow/parsers";
 import type { AddVenueAccountsCommandInput } from "~/server/workflow/types";
 
 import { addVenueAccounts } from "../../domain/lead/commands";
@@ -16,6 +17,24 @@ export async function addVenueAccountsCommand(
   input: AddVenueAccountsCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
+  const solesNroCuenta = parseRequiredLeadText(
+    input.solesAccount.nroCuenta,
+    "soles_account_number_required",
+    "Soles account number is required",
+  );
+  if (isErr(solesNroCuenta)) return solesNroCuenta;
+
+  let dollarNroCuenta: string | null = null;
+  if (input.dollarAccount) {
+    const parsed = parseRequiredLeadText(
+      input.dollarAccount.nroCuenta,
+      "dollar_account_number_required",
+      "Dollar account number is required",
+    );
+    if (isErr(parsed)) return parsed;
+    dollarNroCuenta = parsed.value;
+  }
+
   const isBcpSoles = isBcpBank(input.solesAccount.banco);
   const cciSoles = isBcpSoles ? null : input.solesAccount.cci?.trim() || null;
   if (!isBcpSoles && !cciSoles) {
@@ -108,17 +127,17 @@ export async function addVenueAccountsCommand(
           currency: "PEN",
           banco: input.solesAccount.banco,
           tipoCuenta: input.solesAccount.tipoCuenta,
-          nroCuenta: input.solesAccount.nroCuenta,
+          nroCuenta: solesNroCuenta.value,
           ...(cciSoles ? { cci: cciSoles } : {}),
           isSettlement: input.solesAccount.isSettlement,
         },
-        ...(input.dollarAccount
+        ...(input.dollarAccount && dollarNroCuenta
           ? {
               dollarAccount: {
                 currency: "USD",
                 banco: input.dollarAccount.banco,
                 tipoCuenta: input.dollarAccount.tipoCuenta,
-                nroCuenta: input.dollarAccount.nroCuenta,
+                nroCuenta: dollarNroCuenta,
                 ...(cciDolares ? { cci: cciDolares } : {}),
                 isSettlement: input.dollarAccount.isSettlement,
               },

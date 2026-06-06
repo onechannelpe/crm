@@ -2,7 +2,11 @@ import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/server/shared/result";
+import {
+  parseRequiredLeadPriority,
+  parseRequiredLeadStatus,
+} from "~/server/workflow/parsers";
 import type { ReviewLeadCommandInput } from "~/server/workflow/types";
 
 import { reviewLead } from "../../domain/lead/commands";
@@ -14,6 +18,12 @@ export async function reviewLeadCommand(
   input: ReviewLeadCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
+  const status = parseRequiredLeadStatus(input.status);
+  if (isErr(status)) return status;
+
+  const prioridad = parseRequiredLeadPriority(input.prioridad);
+  if (isErr(prioridad)) return prioridad;
+
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
     const uow = createLeadUow(tx);
@@ -22,8 +32,8 @@ export async function reviewLeadCommand(
 
     const transition = reviewLead(state, {
       actor: input.actor,
-      status: input.status,
-      prioridad: input.prioridad,
+      status: status.value,
+      prioridad: prioridad.value,
       reason: input.reason,
       now: Date.now(),
     });

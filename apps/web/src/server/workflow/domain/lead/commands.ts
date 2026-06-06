@@ -56,6 +56,10 @@ export function reviewLead(
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
   if (!authz.ok) return authz;
+  const reason = input.reason.trim();
+  if (!reason) {
+    return invalidLeadInput("empty_reason", "Reason cannot be empty");
+  }
   if (state.stage !== "QUALIFYING") return invalidLeadStage();
 
   const nextStage = resolveReviewTransition({
@@ -71,7 +75,7 @@ export function reviewLead(
       payload: {
         status: input.status,
         prioridad: input.prioridad,
-        reason: input.reason,
+        reason,
         fromStage: state.stage,
         toStage: nextStage,
       },
@@ -127,7 +131,8 @@ export function addNote(
   const authz = authorizeLeadAction("interact", input.actor, state);
   if (!authz.ok) return authz;
 
-  if (!input.body.trim()) {
+  const body = input.body.trim();
+  if (!body) {
     return invalidLeadInput("empty_body", "Note body cannot be empty");
   }
 
@@ -136,7 +141,7 @@ export function addNote(
       leadId: state.id,
       eventType: "note_added",
       actorUserId: input.actor.userId,
-      payload: { body: input.body },
+      payload: { body },
       occurredAt: input.now,
     }),
   ];

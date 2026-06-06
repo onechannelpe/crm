@@ -2,8 +2,6 @@ import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import type {
   AbonoBank,
   LeadCallOutcome,
-  LeadPriority,
-  LeadStatus,
   ModalidadCobro,
   Moneda,
   ProductScope,
@@ -23,11 +21,13 @@ export type ReassignLeadCommandInput = {
   toExecutiveId: number;
 };
 
+// Raw wire values. reviewLeadCommand narrows status/prioridad to their
+// vocabulary types and owns validation, so every caller is checked once.
 export type ReviewLeadCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  status: LeadStatus;
-  prioridad: LeadPriority;
+  status: string;
+  prioridad: string;
   reason: string;
 };
 
