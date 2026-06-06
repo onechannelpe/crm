@@ -79,32 +79,26 @@ describe("user invite lifecycle", () => {
     expect(await kit.expect.inviteStatus(created.inviteId)).toBe("revoked");
   });
 
-  it("handles raced user creation without escaping the Result contract", async () => {
+  it("recovers the invite when a concurrent insert wins the email race", async () => {
     ctx = await createIsolatedTestDb("user-invites-race");
-    let shouldSimulateRace = true;
+    let raceTriggered = false;
     const kit = createInviteTestKit(ctx, {
       now: () => 1_700_000_000_000,
       createRepos(db) {
         const repos = createTestRepositories(db);
-        type CreateUserInput = Parameters<typeof repos.users.create>[0];
         return {
           ...repos,
           users: {
             ...repos.users,
-            async create(values: CreateUserInput): Promise<number> {
-              if (!shouldSimulateRace) {
+            // Simulate a concurrent transaction: the first create wins the
+            // insert, then this one fails on the unique email. Production must
+            // recover by reusing the row the competitor just inserted.
+            async create(values) {
+              if (raceTriggered) {
                 return repos.users.create(values);
               }
-              shouldSimulateRace = false;
-              const racedUserId = await repos.users.create(values);
-              await repos.users.updateInviteProvisioning(racedUserId, {
-                team_id: null,
-                names: values.names,
-                first_surname: values.first_surname,
-                second_surname: values.second_surname,
-                role: values.role,
-                is_active: 0,
-              });
+              raceTriggered = true;
+              await repos.users.create(values);
               throw new Error(
                 "SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: users.email",
               );
@@ -114,7 +108,7 @@ describe("user invite lifecycle", () => {
       },
     });
 
-    expectOk(
+    const created = expectOk(
       await kit.commands.create({
         actorUserId: 5,
         actorRole: "superuser",
@@ -129,6 +123,14 @@ describe("user invite lifecycle", () => {
       }),
     );
 
-    expect(shouldSimulateRace).toBe(false);
+    expect(raceTriggered).toBe(true);
+
+    const racedUser = await ctx.repos.users.findByEmail("race-user@test.local");
+    expect(racedUser?.is_active).toBe(0);
+    expect(racedUser?.branch_id).toBe(2);
+
+    const invite = await ctx.repos.userInvites.findById(created.inviteId);
+    expect(invite?.status).toBe("pending");
+    expect(invite?.user_id).toBe(racedUser?.id);
   });
 });
