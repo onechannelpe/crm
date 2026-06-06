@@ -2,6 +2,7 @@ import type { Generated } from "kysely";
 
 export interface OrganizationPeopleTable {
   id: Generated<number>;
+  person_id: number;
   organization_id: string;
   dni: string;
   nombres: string;
@@ -9,6 +10,9 @@ export interface OrganizationPeopleTable {
   apellido_materno: string;
   telefono: string | null;
   email: string | null;
+  last_contacted_at: number | null;
+  last_contacted_by_user_id: number | null;
+  cooldown_until: number | null;
   created_at: number;
   updated_at: number;
 }
@@ -20,19 +24,6 @@ export interface OrganizationPersonRolesTable {
   is_primary: 0 | 1;
   effective_from: number;
   effective_to: number | null;
-}
-
-export interface ContactsTable {
-  id: Generated<number>;
-  organization_id: string;
-  dni: string;
-  name: string;
-  phone_primary: string | null;
-  phone_secondary: string | null;
-  last_contacted_at: number | null;
-  last_contacted_by_user_id: number | null;
-  cooldown_until: number | null;
-  created_at: number;
 }
 
 export interface LeadAssignmentsTable {

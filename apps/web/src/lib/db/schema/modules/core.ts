@@ -51,6 +51,22 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("people")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("dni", "varchar(20)", (col) => col.notNull().unique())
+    .addColumn("full_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("email", "varchar(255)")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_people_dni")
+    .on("people")
+    .column("dni")
+    .execute();
+
+  await db.schema
     .createTable("organizations")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("ruc", "varchar(20)", (col) => col.notNull().unique())

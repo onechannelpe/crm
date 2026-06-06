@@ -68,7 +68,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("assignment_id", "integer", (col) =>
       col.references("lead_assignments.id"),
     )
-    .addColumn("contact_id", "integer", (col) => col.references("contacts.id"))
+    .addColumn("contact_id", "integer", (col) =>
+      col.references("organization_people.id"),
+    )
     .addColumn("call_session_id", "varchar(255)")
     .addColumn("type", "varchar(32)", (col) => col.notNull())
     .addColumn("payload_json", "text", (col) => col.notNull())
@@ -99,7 +101,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("assignment_id", "integer", (col) =>
       col.references("lead_assignments.id"),
     )
-    .addColumn("contact_id", "integer", (col) => col.references("contacts.id"))
+    .addColumn("contact_id", "integer", (col) =>
+      col.references("organization_people.id"),
+    )
     .addColumn("call_session_id", "varchar(255)")
     .addColumn("presence_status", "varchar(20)")
     .addColumn("presence_updated_at", "integer")

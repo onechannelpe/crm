@@ -19,6 +19,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("updated_by", "integer", (col) => col.references("users.id"))
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("version", "integer", (col) => col.notNull().defaultTo(0))
     .execute();
 
   await db.schema
@@ -49,6 +50,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("workflow_idempotency_keys")
+    .addColumn("key", "text", (col) => col.primaryKey())
+    .addColumn("result_json", "text", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
     .createTable("workflow_modalidad_cobro_kinds")
     .addColumn("value", "varchar(20)", (col) => col.primaryKey())
     .execute();
@@ -69,6 +77,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("online_modalidad", "varchar(20)", (col) =>
       col.references("workflow_modalidad_cobro_kinds.value"),
     )
+    .addColumn("abono_bank", "varchar(50)", (col) =>
+      col.references("workflow_abono_banks.value"),
+    )
+    .addColumn("pos_total", "integer")
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
       col.notNull().references("users.id"),

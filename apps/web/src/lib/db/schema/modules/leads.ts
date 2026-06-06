@@ -4,6 +4,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("organization_people")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("person_id", "integer", (col) =>
+      col.notNull().references("people.id").onDelete("cascade"),
+    )
     .addColumn("organization_id", "text", (col) =>
       col.notNull().references("organizations.id").onDelete("cascade"),
     )
@@ -13,11 +16,20 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("apellido_materno", "varchar(255)", (col) => col.notNull())
     .addColumn("telefono", "varchar(20)")
     .addColumn("email", "varchar(255)")
+    .addColumn("last_contacted_at", "integer")
+    .addColumn("last_contacted_by_user_id", "integer", (col) =>
+      col.references("users.id"),
+    )
+    .addColumn("cooldown_until", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addUniqueConstraint("idx_organization_people_org_dni_unique", [
       "organization_id",
       "dni",
+    ])
+    .addUniqueConstraint("idx_organization_people_org_person_unique", [
+      "organization_id",
+      "person_id",
     ])
     .execute();
 
@@ -39,37 +51,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("contacts")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("organization_id", "text", (col) =>
-      col.notNull().references("organizations.id"),
-    )
-    .addColumn("dni", "varchar(20)", (col) => col.notNull())
-    .addColumn("name", "varchar(255)", (col) => col.notNull())
-    .addColumn("phone_primary", "varchar(20)")
-    .addColumn("phone_secondary", "varchar(20)")
-    .addColumn("last_contacted_at", "integer")
-    .addColumn("last_contacted_by_user_id", "integer", (col) =>
-      col.references("users.id"),
-    )
-    .addColumn("cooldown_until", "integer")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_contacts_dni")
-    .on("contacts")
-    .column("dni")
-    .execute();
-
-  await db.schema
     .createTable("lead_assignments")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("contact_id", "integer", (col) =>
-      col.notNull().references("contacts.id"),
+      col.notNull().references("organization_people.id"),
     )
     .addColumn("assigned_at", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
@@ -86,7 +74,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("interaction_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("contact_id", "integer", (col) =>
-      col.notNull().references("contacts.id"),
+      col.notNull().references("organization_people.id"),
     )
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),

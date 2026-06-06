@@ -90,7 +90,7 @@ export async function persistWorkflowLeadsAndAssignments(
         id: idForSale,
         organization_id: getOrganizationId("forSale"),
         executive_id: EXEC_RENATO,
-        stage: "CLOSING",
+        stage: "SETUP_PLAN",
         status: "DISPONIBLE",
         prioridad: "P1",
         created_by: SUP1,
