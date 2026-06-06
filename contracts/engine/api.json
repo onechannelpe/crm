@@ -1,9 +1,0 @@
-{
-  "version": "v1",
-  "endpoints": {
-    "search": "/search",
-    "recordCandidates": "/records/candidates",
-    "recordImports": "/records/imports",
-    "health": "/health"
-  }
-}

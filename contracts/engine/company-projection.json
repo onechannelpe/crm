@@ -1,0 +1,182 @@
+{
+  "projection": "company_projection",
+  "fields": [
+    {
+      "path": "company.id",
+      "canonical_fields": ["company_id"],
+      "nullable": false,
+      "value_type": "integer",
+      "derivation": "company_entity_surrogate_key",
+      "storage": [{ "table": "company_projection", "column": "company_id" }]
+    },
+    {
+      "path": "company.ruc",
+      "canonical_fields": ["company_ruc"],
+      "nullable": false,
+      "storage": [{ "table": "company_projection", "column": "ruc" }]
+    },
+    {
+      "path": "company.legal_name",
+      "canonical_fields": ["company_name"],
+      "nullable": true,
+      "storage": [{ "table": "company_projection", "column": "legal_name" }]
+    },
+    {
+      "path": "company.trade_name",
+      "canonical_fields": ["trade_name"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "trade_name" }]
+    },
+    {
+      "path": "company.company_type",
+      "canonical_fields": ["company_type"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "company_type" }]
+    },
+    {
+      "path": "company.status",
+      "canonical_fields": ["company_status"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "org_status" }]
+    },
+    {
+      "path": "company.condition",
+      "canonical_fields": ["company_condition"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "org_condition" }]
+    },
+    {
+      "path": "company.fiscal_address",
+      "canonical_fields": ["fiscal_address"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "fiscal_address" }]
+    },
+    {
+      "path": "company.registration_date",
+      "canonical_fields": ["registration_date"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [
+        { "table": "company_projection", "column": "registration_date" }
+      ]
+    },
+    {
+      "path": "company.activity_start_date",
+      "canonical_fields": ["activity_start_date"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [
+        { "table": "company_projection", "column": "activity_start_date" }
+      ]
+    },
+    {
+      "path": "company.line_of_business",
+      "canonical_fields": ["line_of_business"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [
+        { "table": "company_projection", "column": "line_of_business" }
+      ]
+    },
+    {
+      "path": "company.economic_activity",
+      "canonical_fields": ["economic_activity"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [
+        { "table": "company_projection", "column": "economic_activity" }
+      ]
+    },
+    {
+      "path": "company.ubigeo_code",
+      "canonical_fields": ["company_ubigeo"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [
+        { "table": "company_projection", "column": "org_ubigeo_code" }
+      ]
+    },
+    {
+      "path": "company.department",
+      "canonical_fields": ["company_department"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "org_department" }]
+    },
+    {
+      "path": "company.province",
+      "canonical_fields": ["company_province"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "org_province" }]
+    },
+    {
+      "path": "company.district",
+      "canonical_fields": ["company_district"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{ "table": "company_projection", "column": "org_district" }]
+    },
+    {
+      "path": "rep.doc_type",
+      "canonical_fields": ["rep_doc_type"],
+      "nullable": true,
+      "storage": [{ "table": "company_projection", "column": "rep_doc_type" }]
+    },
+    {
+      "path": "rep.doc_number",
+      "canonical_fields": ["rep_doc_number"],
+      "nullable": true,
+      "storage": [{ "table": "company_projection", "column": "rep_doc_number" }]
+    },
+    {
+      "path": "rep.name",
+      "canonical_fields": ["rep_name"],
+      "nullable": true,
+      "storage": [{ "table": "company_projection", "column": "rep_name" }]
+    },
+    {
+      "path": "rep.role_name",
+      "canonical_fields": ["role_name"],
+      "nullable": true,
+      "storage": [{ "table": "company_projection", "column": "role_name" }]
+    },
+    {
+      "path": "rep.role_start_date",
+      "canonical_fields": ["role_start_date"],
+      "nullable": true,
+      "storage": [
+        { "table": "company_projection", "column": "role_start_date" }
+      ]
+    },
+    {
+      "path": "phones.primary",
+      "canonical_fields": ["phone"],
+      "nullable": true,
+      "derivation": "ranked_top_phone_per_company",
+      "storage": [{ "table": "company_projection", "column": "phone_primary" }]
+    },
+    {
+      "path": "phones.secondary",
+      "canonical_fields": ["phone"],
+      "nullable": true,
+      "derivation": "ranked_second_phone_per_company",
+      "storage": [
+        { "table": "company_projection", "column": "phone_secondary" }
+      ]
+    },
+    {
+      "path": "phones.siblings",
+      "canonical_fields": ["phone"],
+      "nullable": true,
+      "value_type": "string_array",
+      "derivation": "grouped_phone_aggregate_per_ruc",
+      "storage": [{ "table": "ruc_phone_agg", "column": "phones" }]
+    }
+  ]
+}
