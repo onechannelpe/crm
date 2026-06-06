@@ -1,3 +1,5 @@
+import type { SearchDirectResult } from "~/contracts/search/results";
+import type { SearchIntent } from "~/contracts/search/vocabulary";
 import type {
   SearchCapacityGrantsRepo,
   SearchUsageCommitsRepo,
@@ -9,7 +11,7 @@ import {
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
-import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
@@ -18,14 +20,11 @@ import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
-import type { SearchType } from "~/server/shared/workflow-types";
-
-import { mapToSearchResult, type SearchResult_ } from "./domain";
 
 export interface RunDirectSearchCommand {
   actorUserId: UserId;
-  type: SearchType;
-  value: string;
+  intent: SearchIntent;
+  query: string;
   limit: number;
 }
 
@@ -44,7 +43,7 @@ export async function runDirectSearch(
   command: RunDirectSearchCommand,
   repos: SearchRepos,
   engine: Pick<EngineClient, "search">,
-): Promise<Result<SearchResult_, DomainError>> {
+): Promise<Result<SearchDirectResult, DomainError>> {
   const snapshotResult = await getSearchCapacitySnapshot(
     command.actorUserId,
     repos,
@@ -65,8 +64,8 @@ export async function runDirectSearch(
   const reservationId = reservationResult.value;
 
   const searchResult = await engine.search(
-    command.type,
-    command.value,
+    command.intent,
+    command.query,
     command.limit,
   );
 
@@ -84,5 +83,5 @@ export async function runDirectSearch(
   );
   if (isErr(commitResult)) return commitResult;
 
-  return Ok(mapToSearchResult(searchResult.value));
+  return Ok({ rows: searchResult.value });
 }
