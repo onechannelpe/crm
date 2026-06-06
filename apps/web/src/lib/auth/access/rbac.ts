@@ -40,7 +40,9 @@ export type Permission =
   | "lead:view:all"
   | "lead:review"
   | "lead:reassign"
-  | "quotation:manage"
+  | "quotation:create"
+  | "quotation:revise"
+  | "quotation:view:all"
   | "integration:manage"
   | "file:artifact:request"
   | "file:artifact:upload"
@@ -101,7 +103,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "audit:read",
     "lead:view:all",
     "lead:review",
-    "quotation:manage",
+    "quotation:create",
+    "quotation:revise",
+    "quotation:view:all",
     "integration:manage",
     "file:artifact:request",
     "file:artifact:upload",
@@ -146,7 +150,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:view:all",
     "lead:review",
     "lead:reassign",
-    "quotation:manage",
+    "quotation:create",
+    "quotation:revise",
+    "quotation:view:all",
     "integration:manage",
     "capacity:read:self",
     "capacity:request:self",
@@ -183,7 +189,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:view:all",
     "lead:review",
     "lead:reassign",
-    "quotation:manage",
+    "quotation:create",
+    "quotation:revise",
+    "quotation:view:all",
     "integration:manage",
     "search:use",
     "capacity:read:self",
