@@ -114,7 +114,7 @@ describe("extension runtime event idempotency", () => {
     });
 
     const oldSessionError = expectErr(oldSessionResult);
-    expect(oldSessionError.reason).toBe("session_invalid");
+    expect(oldSessionError.code).toBe("session_invalid");
     expectOk(newSessionResult);
   });
 });

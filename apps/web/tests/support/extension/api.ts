@@ -1,15 +1,38 @@
 import { createExtensionService } from "~/server/extension/service";
+import { Err, type Result } from "~/server/shared/result";
 
 import type { TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";
 
 export function createTransactionRunner(ctx: TestDbContext) {
-  return <T>(
-    operation: (transactionRepos: TestDbContext["repos"]) => Promise<T>,
-  ) =>
-    ctx.db.transaction().execute((transactionDb) => {
-      return operation(createTestRepositories(transactionDb));
-    });
+  class TestRollbackError<TError> extends Error {
+    constructor(readonly error: TError) {
+      super("rollback");
+    }
+  }
+
+  return {
+    async run<T, TError>(
+      work: (
+        transactionRepos: TestDbContext["repos"],
+      ) => Promise<Result<T, TError>>,
+    ): Promise<Result<T, TError>> {
+      try {
+        return await ctx.db.transaction().execute(async (transactionDb) => {
+          const result = await work(createTestRepositories(transactionDb));
+          if (!result.ok) {
+            throw new TestRollbackError(result.error);
+          }
+          return result;
+        });
+      } catch (error) {
+        if (error instanceof TestRollbackError) {
+          return Err(error.error);
+        }
+        throw error;
+      }
+    },
+  };
 }
 
 export function createExtensionScenario(
@@ -17,7 +40,7 @@ export function createExtensionScenario(
   now: () => number = () => Date.now(),
 ) {
   const service = createExtensionService(ctx.repos, {
-    runInTransaction: createTransactionRunner(ctx),
+    uow: createTransactionRunner(ctx),
     now,
   });
 
@@ -61,18 +84,43 @@ export function createExtensionScenario(
     },
     async contactWithoutPhone(sequence: number) {
       const nowMs = now();
-      const result = await ctx.db
-        .insertInto("contacts")
+      const dni = `7999${sequence.toString().padStart(4, "0")}`;
+      const person = await ctx.db
+        .insertInto("people")
         .values({
+          dni,
+          full_name: "Contacto sin telefono",
+          email: null,
+          created_at: nowMs,
+          updated_at: nowMs,
+        })
+        .onConflict((oc) => oc.column("dni").doNothing())
+        .executeTakeFirstOrThrow();
+      const personId =
+        Number(person.insertId) ||
+        (
+          await ctx.db
+            .selectFrom("people")
+            .select("id")
+            .where("dni", "=", dni)
+            .executeTakeFirstOrThrow()
+        ).id;
+      const result = await ctx.db
+        .insertInto("organization_people")
+        .values({
+          person_id: personId,
           organization_id: ctx.fixtures.organizations.lima.id,
-          dni: `7999${sequence.toString().padStart(4, "0")}`,
-          name: "Contacto sin telefono",
-          phone_primary: null,
-          phone_secondary: null,
+          dni,
+          nombres: "Contacto",
+          apellido_paterno: "Sin",
+          apellido_materno: "Telefono",
+          telefono: null,
+          email: null,
           last_contacted_at: null,
           last_contacted_by_user_id: null,
           cooldown_until: null,
           created_at: nowMs,
+          updated_at: nowMs,
         })
         .executeTakeFirstOrThrow();
       return Number(result.insertId);

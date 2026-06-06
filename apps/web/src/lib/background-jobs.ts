@@ -3,7 +3,7 @@ import { startQueueDoorbellSubscriber } from "~/lib/job-queue/doorbell-subscribe
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
-import { openStoredFileStream } from "~/server/files/storage";
+import { readStoredFile } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import { getServerRuntime } from "~/server/runtime";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
@@ -18,8 +18,8 @@ export function startBackgroundJobs() {
 
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
-    openFileStream: (filePath) =>
-      openStoredFileStream(config.uploads.storageRoot, filePath),
+    readFile: (filePath) =>
+      readStoredFile(config.uploads.storageRoot, filePath),
   });
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);

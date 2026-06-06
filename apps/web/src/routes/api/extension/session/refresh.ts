@@ -26,11 +26,11 @@ export async function POST(event: APIEvent): Promise<Response> {
       );
     if (isErr(result)) {
       const status =
-        result.error.reason === "installation_invalid"
+        result.error.code === "installation_invalid"
           ? 400
-          : result.error.reason === "session_invalid"
+          : result.error.code === "session_invalid"
             ? 401
-            : result.error.reason === "misconfigured"
+            : result.error.code === "misconfigured"
               ? 503
               : 500;
       return Response.json({ error: result.error.message }, { status });

@@ -377,3 +377,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type ExtensionRuntimeRepo = ReturnType<
+  typeof createExtensionRuntimeRepo
+>;
