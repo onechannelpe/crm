@@ -1,6 +1,6 @@
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
+import type { LeadTimelineItem } from "~/server/workflow/types";
 
-import type { LeadTimelineItem } from "../queries/views/lead-detail";
 import { presentTimelineItem } from "./timeline-item";
 
 export function presentTimeline(

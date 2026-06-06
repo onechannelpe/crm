@@ -1,5 +1,9 @@
-import type { Database } from "~/lib/db/types";
-import type { UsersTable, WorkflowLeadsTable } from "~/lib/db/types";
+import type {
+  Database,
+  OrganizationsTable,
+  UsersTable,
+  WorkflowLeadsTable,
+} from "~/lib/db/types";
 
 export interface LeadAlias {
   lead: WorkflowLeadsTable;
@@ -13,4 +17,12 @@ export interface CreatorAlias {
   creator: UsersTable;
 }
 
-export type LeadQueryDatabase = Database & LeadAlias & ExecutiveAlias;
+export interface OrganizationAlias {
+  org: OrganizationsTable;
+}
+
+export type LeadQueryDatabase = Database &
+  LeadAlias &
+  ExecutiveAlias &
+  CreatorAlias &
+  OrganizationAlias;

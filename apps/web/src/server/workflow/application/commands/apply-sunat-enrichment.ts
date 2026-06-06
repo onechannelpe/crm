@@ -1,4 +1,4 @@
-import type { PartyRepository } from "../ports/party-repository";
+import type { PartyRepository } from "../ports/entities";
 
 export type SunatLeadOverlay = {
   documentType: "dni" | "ruc";

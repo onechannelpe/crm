@@ -3,12 +3,14 @@ import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 
 import {
-  toCommercialInputEntry,
+  toCommercialScopeEntry,
   toQuotationEntry,
+  toRepLegalEntry,
+  toRequestQuotationEntry,
   toVenueAddedEntry,
+  toVenueUpdatedEntry,
 } from "./history-commercial-parser";
-import type { HistoryEventRow } from "./history-event-row";
-import { toHistoryEntryBase } from "./history-event-row";
+import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import { toCallEntry, toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,
@@ -20,8 +22,6 @@ import {
   toStageChangeEntry,
 } from "./history-lifecycle-parser";
 import { parsePayload, requireString } from "./history-payload-fields";
-
-export type { HistoryEventRow };
 
 export function toHistoryEntry(
   row: HistoryEventRow,
@@ -44,8 +44,12 @@ export function toHistoryEntry(
       return toAssignmentEntry(row, payload.value);
     case "lead_reassigned":
       return toReassignmentEntry(row, payload.value);
-    case "commercial_input_completed":
-      return toCommercialInputEntry(row, payload.value);
+    case "commercial_scope_saved":
+      return toCommercialScopeEntry(row, payload.value);
+    case "quotation_requested":
+      return toRequestQuotationEntry(row);
+    case "rep_legal_recorded":
+      return toRepLegalEntry(row, payload.value);
     case "quotation_created":
       return toQuotationEntry(row, payload.value);
     case "sale_approved":
@@ -56,6 +60,8 @@ export function toHistoryEntry(
       });
     case "venue_added":
       return toVenueAddedEntry(row, payload.value);
+    case "venue_updated":
+      return toVenueUpdatedEntry(row, payload.value);
     case "venue_accounts_added": {
       const venueId = requireString(payload.value, "venueId", row);
       if (!venueId.ok) return venueId;

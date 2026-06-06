@@ -1,5 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
+import type { SearchIntent } from "~/contracts/search/vocabulary";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type {
@@ -7,7 +8,6 @@ import type {
   SearchResult,
 } from "~/server/shared/engine/types";
 import { Ok, type Result } from "~/server/shared/result";
-import type { SearchType } from "~/server/shared/workflow-types";
 
 import { BENCH_NOW } from "../_shared/constants";
 
@@ -62,14 +62,16 @@ export async function seedLeadsRequestFixtures(
 
   const engineClient = {
     async search(
-      _type: SearchType,
-      value: string,
+      _intent: SearchIntent,
+      query: string,
     ): Promise<Result<SearchResult[], DomainError>> {
       return Ok([
         {
-          person: {
-            dni: `bench-${value}`,
-            name: `Bench Contact ${value}`,
+          kind: "document",
+          doc: {
+            doc_type: "DNI",
+            doc_number: `bench-${query}`,
+            name: `Bench Contact ${query}`,
             ruc: null,
             birth_date: null,
             birth_place: null,
@@ -82,8 +84,8 @@ export async function seedLeadsRequestFixtures(
             email: null,
           },
           org: {
-            ruc: value,
-            name: `Bench Org ${value}`,
+            ruc: query,
+            name: `Bench Org ${query}`,
             trade_name: null,
             company_type: null,
             status: null,

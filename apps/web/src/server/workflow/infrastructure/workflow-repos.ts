@@ -7,6 +7,7 @@ import { createLeadFavoriteRepo } from "./lead-favorite-repo";
 import { createLeadProfileRepo } from "./lead-profile-repo";
 import { createLeadQueries } from "./lead-queries";
 import { createLeadRepo } from "./lead-repo";
+import { createLeadStateRepo } from "./lead-state-repo";
 import { createLeadVenueRepo } from "./lead-venue-repo";
 import { createNegotiationRequestRepo } from "./negotiation-request-repo";
 import { createPartyRepo } from "./party-repo";
@@ -18,6 +19,7 @@ import { createWorkflowUsersRepo } from "./users-repo";
 export function createWorkflowRepos(executor: DatabaseExecutor) {
   return {
     leads: createLeadRepo(executor),
+    leadStates: createLeadStateRepo(executor),
     leadQueries: createLeadQueries(executor),
     leadFavorites: createLeadFavoriteRepo(executor),
     leadAssignments: createAssignmentRepo(executor),
