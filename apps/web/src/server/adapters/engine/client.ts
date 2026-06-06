@@ -4,10 +4,7 @@ import type {
   RecordCandidatesRequest,
 } from "~/server/shared/engine/client";
 import type { EngineClientConfig } from "~/server/shared/engine/config";
-import {
-  ENGINE_ENDPOINTS,
-  engineApiPath,
-} from "~/server/shared/engine/contract";
+import { ENGINE_ENDPOINTS } from "~/server/shared/engine/endpoints";
 import { signRequest } from "~/server/shared/engine/signature";
 import { Err, Ok } from "~/server/shared/result";
 
@@ -48,28 +45,22 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
   }
 
   return {
-    async search(type, value, limit = 20) {
+    async search(intent, query, limit = 20) {
       const requestId = crypto.randomUUID();
-      const body = JSON.stringify({ type, value, limit });
+      const body = JSON.stringify({ intent, query, limit });
 
       let response: Response;
       try {
-        response = await post(
-          engineApiPath(ENGINE_ENDPOINTS.search),
-          body,
-          requestId,
-        );
+        response = await post(ENGINE_ENDPOINTS.search, body, requestId);
       } catch (error) {
         return Err(mapEngineNetworkError(error, requestId));
       }
 
-      // Handle non-OK response
       if (!response.ok) {
         const domainErr = await mapEngineErrorResponse(response, requestId);
         return Err(domainErr);
       }
 
-      // Decode response
       let responseJson: unknown;
       try {
         responseJson = await response.json();
@@ -84,7 +75,6 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
         );
       }
 
-      // Validate response shape
       try {
         const decoded = decodeSearchResponse(responseJson);
         return Ok(decoded.results);
@@ -114,7 +104,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       let response: Response;
       try {
         response = await post(
-          engineApiPath(ENGINE_ENDPOINTS.recordCandidates),
+          ENGINE_ENDPOINTS.recordCandidates,
           body,
           requestId,
         );
