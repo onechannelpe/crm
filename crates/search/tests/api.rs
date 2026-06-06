@@ -42,13 +42,13 @@ fn make_server(tokens_per_minute: u32) -> TestServer {
     TestServer::new(router(state))
 }
 
-/// Signs `body`, sends POST /v1/search, and returns the response.
+/// Signs `body`, sends POST /search, and returns the response.
 async fn signed_request(body: &serde_json::Value, server: &TestServer) -> axum_test::TestResponse {
     let bytes = serde_json::to_vec(body).expect("json");
     let (ts, sig) = sign_body(SECRET, &bytes);
 
     server
-        .post("/v1/search")
+        .post("/search")
         .add_header(
             HeaderName::from_static("x-key-id"),
             HeaderValue::from_static(KEY_ID),
@@ -70,20 +70,8 @@ async fn signed_request(body: &serde_json::Value, server: &TestServer) -> axum_t
 #[tokio::test]
 async fn search_by_dni_returns_matching_row() {
     let server = make_server(100);
-    let response =
-        signed_request(&json!({"type":"dni","value":"12345678","limit":5}), &server).await;
-
-    response.assert_status_ok();
-    let payload = response.json::<serde_json::Value>();
-    assert_eq!(payload["count"], 1);
-    assert_eq!(payload["results"][0]["person"]["dni"], "12345678");
-}
-
-#[tokio::test]
-async fn search_by_phone_enriched_returns_siblings() {
-    let server = make_server(100);
     let response = signed_request(
-        &json!({"type":"phone_enriched","value":"999111222","limit":20}),
+        &json!({"intent":"people","query":"12345678","limit":5}),
         &server,
     )
     .await;
@@ -91,7 +79,43 @@ async fn search_by_phone_enriched_returns_siblings() {
     response.assert_status_ok();
     let payload = response.json::<serde_json::Value>();
     assert_eq!(payload["count"], 1);
-    assert_eq!(payload["results"][0]["person"]["dni"], "12345678");
+    assert_eq!(payload["results"][0]["kind"], "document");
+    assert_eq!(payload["results"][0]["doc"]["doc_number"], "12345678");
+}
+
+#[tokio::test]
+async fn search_by_document_returns_matching_row() {
+    let server = make_server(100);
+    let response = signed_request(
+        &json!({"intent":"people","query":"DNI:12345678","limit":5}),
+        &server,
+    )
+    .await;
+
+    response.assert_status_ok();
+    let payload = response.json::<serde_json::Value>();
+    assert_eq!(payload["count"], 1);
+    assert_eq!(payload["results"][0]["kind"], "document");
+    assert_eq!(payload["results"][0]["doc"]["doc_type"], "DNI");
+    assert_eq!(payload["results"][0]["doc"]["doc_number"], "12345678");
+}
+
+#[tokio::test]
+async fn search_by_phone_returns_siblings() {
+    let server = make_server(100);
+    let response = signed_request(
+        &json!({"intent":"people","query":"999111222","limit":20}),
+        &server,
+    )
+    .await;
+
+    response.assert_status_ok();
+    let payload = response.json::<serde_json::Value>();
+    // doc_id=1 and company_id=1 both have phone 999111222 indexed
+    assert_eq!(payload["count"], 2);
+    // docs come first in the concatenation
+    assert_eq!(payload["results"][0]["kind"], "document");
+    assert_eq!(payload["results"][0]["doc"]["doc_number"], "12345678");
     assert_eq!(payload["results"][0]["org"]["name"], "ACME SAC");
     assert_eq!(payload["results"][0]["role"]["name"], "GERENTE GENERAL");
     assert!(
@@ -107,8 +131,8 @@ async fn search_by_phone_enriched_returns_siblings() {
 async fn missing_signature_headers_returns_401() {
     let server = make_server(100);
     let response = server
-        .post("/v1/search")
-        .json(&json!({"type":"dni","value":"12345678"}))
+        .post("/search")
+        .json(&json!({"intent":"people","query":"12345678"}))
         .await;
     response.assert_status_unauthorized();
 }
@@ -116,12 +140,12 @@ async fn missing_signature_headers_returns_401() {
 #[tokio::test]
 async fn unknown_key_id_returns_401() {
     let server = make_server(100);
-    let body = json!({"type":"dni","value":"12345678","limit":5});
+    let body = json!({"intent":"people","query":"12345678","limit":5});
     let bytes = serde_json::to_vec(&body).expect("json");
     let (ts, sig) = sign_body(SECRET, &bytes);
 
     server
-        .post("/v1/search")
+        .post("/search")
         .add_header(
             HeaderName::from_static("x-key-id"),
             HeaderValue::from_static("unknown"),
@@ -142,11 +166,8 @@ async fn unknown_key_id_returns_401() {
 #[tokio::test]
 async fn short_text_query_returns_400() {
     let server = make_server(100);
-    let response = signed_request(
-        &json!({"type":"person_name","value":"ro","limit":20}),
-        &server,
-    )
-    .await;
+    let response =
+        signed_request(&json!({"intent":"people","query":"ro","limit":20}), &server).await;
     response.assert_status_bad_request();
 }
 
@@ -156,7 +177,7 @@ async fn short_text_query_returns_400() {
 async fn rate_limit_is_enforced_after_capacity_exhausted() {
     // 1 token available, DNI costs 1, second call is rejected.
     let server = make_server(1);
-    let body = json!({"type":"dni","value":"12345678","limit":5});
+    let body = json!({"intent":"people","query":"12345678","limit":5});
 
     signed_request(&body, &server).await.assert_status_ok();
     signed_request(&body, &server)
@@ -168,7 +189,7 @@ async fn rate_limit_is_enforced_after_capacity_exhausted() {
 async fn name_search_costs_more_tokens_than_dni() {
     // 3 tokens available, person_name costs 3, second call is rejected.
     let server = make_server(3);
-    let body = json!({"type":"person_name","value":"juan","limit":20});
+    let body = json!({"intent":"people","query":"juan","limit":20});
 
     signed_request(&body, &server).await.assert_status_ok();
     signed_request(&body, &server)

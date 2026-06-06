@@ -25,8 +25,8 @@ pub struct RecordState {
 
 pub fn router(state: Arc<RecordState>) -> Router {
     Router::new()
-        .route("/v1/records/candidates", post(handle_record_candidates))
-        .route("/v1/records/imports", post(handle_record_imports))
+        .route("/records/candidates", post(handle_record_candidates))
+        .route("/records/imports", post(handle_record_imports))
         .with_state(state)
 }
 

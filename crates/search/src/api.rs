@@ -23,7 +23,7 @@ pub struct SearchState {
 
 pub fn router(state: Arc<SearchState>) -> Router {
     Router::new()
-        .route("/v1/search", post(handle_search))
+        .route("/search", post(handle_search))
         .with_state(state)
 }
 
@@ -50,7 +50,8 @@ async fn handle_search_with_request_id(
         ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
     })?;
 
-    let cost = domain::search_cost(request.search_type);
+    let cost = domain::search_cost(request.intent, &request.query)
+        .map_err(|e| e.with_request_id(request_id.clone()))?;
     let limiter_key = format!("search:{key_id}");
     if !state.limiter.allow(&limiter_key, cost) {
         return Err(ApiError::RateLimit.with_request_id(request_id));
