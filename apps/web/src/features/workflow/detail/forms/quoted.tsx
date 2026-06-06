@@ -1,45 +1,40 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, createUniqueId, For, Show } from "solid-js";
 
-import { uploadLeadNegotiationFile } from "~/actions/workflow/negotiation-files";
+import { uploadLeadNegotiationFile } from "~/actions/workflow/files";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Paperclip from "~/components/icons/paperclip";
 import Target from "~/components/icons/target";
 import Trash from "~/components/icons/trash";
 import { Button } from "~/components/ui/input/button";
-import {
-  FieldIcon,
-  FieldLabel,
-  FieldLabelText,
-  FieldRow,
-  FieldTable,
-} from "~/features/side-panel/components/field-table";
-import {
-  RelationList,
-  RelationMeta,
-  RelationRow,
-} from "~/features/side-panel/components/relation-list";
-import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
-import {
-  formatAmount,
-  formatRate,
-} from "~/features/side-panel/pages/record-page/widgets/workflow/format";
-import { toAppError } from "~/lib/app-errors";
 import type {
   LeadDetailNegotiationRequestView,
   LeadDetailQuotationView,
-} from "~/server/workflow/application/queries/views/lead-detail";
+} from "~/contracts/workflow/views";
+import {
+  formatAmount,
+  formatRate,
+} from "~/features/record-show/sections/workflow/format";
+import {
+  FieldTable,
+  FieldTextValue,
+  RecordInlineCell,
+} from "~/features/side-panel/components/field-table";
+import {
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
+import { toAppError } from "~/lib/app-errors";
 
 import {
   approveForSaleMutation,
   requestRateNegotiationMutation,
-} from "../../data/mutations";
+} from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 import styles from "./quoted.module.css";
 
@@ -82,6 +77,7 @@ export function QuotedSection(props: QuotedSectionProps) {
     setApproving(true);
     try {
       await approve({ leadId: props.leadId });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al aprobar").publicMessage);
     } finally {
@@ -154,6 +150,10 @@ export function QuotedSection(props: QuotedSectionProps) {
       setError("El fundamento es requerido");
       return;
     }
+    if (stagedFiles().length === 0) {
+      setError("Se requiere al menos un documento de soporte");
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
@@ -162,6 +162,7 @@ export function QuotedSection(props: QuotedSectionProps) {
         justification: justification().trim(),
         artifactIds: stagedFiles().map((f) => f.artifactId),
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
       setError(toAppError(err, "Error al enviar solicitud").publicMessage);
     } finally {
@@ -172,81 +173,45 @@ export function QuotedSection(props: QuotedSectionProps) {
   let dragCount = 0;
 
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Propuesta recibida" />
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Propuesta recibida" />
         <Show when={isRenegotiation()}>
           <span class={styles.roundBadge}>Ronda {currentRound() + 1}</span>
         </Show>
-      </WidgetHeader>
-      <WidgetBody>
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
         <FieldTable>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Payback</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+          <RecordInlineCell label="Payback" icon={Moneybag}>
+            <FieldTextValue>
               {formatAmount(props.quotation.paybackPricing)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. debito</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="T. debito" icon={Target}>
+            <FieldTextValue>
               {formatRate(props.quotation.tarifaDebito)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. credito</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="T. credito" icon={Target}>
+            <FieldTextValue>
               {formatRate(props.quotation.tarifaCredito)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Target size={16} />
-              </FieldIcon>
-              <FieldLabelText>T. foraneo</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="T. foraneo" icon={Target}>
+            <FieldTextValue>
               {formatRate(props.quotation.tarifaForaneo)}
-            </RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Moneybag size={16} />
-              </FieldIcon>
-              <FieldLabelText>Fee</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>{formatAmount(props.quotation.fee)}</RelationMeta>
-          </FieldRow>
-          <FieldRow>
-            <FieldLabel>
-              <FieldIcon>
-                <Package size={16} />
-              </FieldIcon>
-              <FieldLabelText>Moneda</FieldLabelText>
-            </FieldLabel>
-            <RelationMeta>{props.quotation.moneda}</RelationMeta>
-          </FieldRow>
+            </FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="Fee" icon={Moneybag}>
+            <FieldTextValue>{formatAmount(props.quotation.fee)}</FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="Moneda" icon={Package}>
+            <FieldTextValue>{props.quotation.moneda}</FieldTextValue>
+          </RecordInlineCell>
         </FieldTable>
 
         <Show when={!showNegotiationForm()}>
-          <div class={styles.actions}>
+          <RecordDetailSectionActions stack>
             <Show when={props.canApprove}>
               <Button
                 type="button"
@@ -268,7 +233,7 @@ export function QuotedSection(props: QuotedSectionProps) {
                 Solicitar revision de tasa
               </Button>
             </Show>
-          </div>
+          </RecordDetailSectionActions>
         </Show>
 
         <Show when={showNegotiationForm()}>
@@ -291,7 +256,7 @@ export function QuotedSection(props: QuotedSectionProps) {
 
               <div class={styles.fileSection}>
                 <span class={styles.fileSectionLabel}>
-                  Documentos de soporte (opcional)
+                  Documentos de soporte
                 </span>
                 <label
                   for={fileInputId}
@@ -390,8 +355,8 @@ export function QuotedSection(props: QuotedSectionProps) {
         <Show when={error() && !showNegotiationForm()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }
 
@@ -399,27 +364,4 @@ function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-type PreviousNegotiationsProps = {
-  requests: LeadDetailNegotiationRequestView[];
-};
-
-export function PreviousNegotiationsWidget(props: PreviousNegotiationsProps) {
-  return (
-    <RelationList>
-      <For each={props.requests}>
-        {(req) => (
-          <RelationRow>
-            <span>Ronda {req.round}</span>
-            <RelationMeta>
-              {req.files.length > 0
-                ? `${req.files.length} archivo${req.files.length > 1 ? "s" : ""}`
-                : "Sin archivos"}
-            </RelationMeta>
-          </RelationRow>
-        )}
-      </For>
-    </RelationList>
-  );
 }

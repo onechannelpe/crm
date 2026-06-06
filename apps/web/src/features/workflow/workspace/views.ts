@@ -1,37 +1,38 @@
+import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import type { Permission } from "~/lib/auth/access/rbac";
-
-import type { LeadListFilters } from "../data/types";
 
 export type WorkspaceView = {
   readonly id: string;
   readonly label: string;
-  readonly filters: (actorUserId: number) => LeadListFilters;
+  readonly filters: (actorUserId: number) => ListLeadsFiltersInput;
   readonly permission?: Permission;
 };
 
 export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   {
     id: "mine",
-    label: "Mis prospectos",
-    filters: (userId: number): LeadListFilters => ({ executiveId: userId }),
+    label: "Mis clientes",
+    filters: (userId: number): ListLeadsFiltersInput => ({
+      executiveId: userId,
+    }),
   },
   {
     id: "review",
     label: "Revisión",
-    filters: (): LeadListFilters => ({ stage: "QUALIFYING" }),
+    filters: (): ListLeadsFiltersInput => ({ stage: "QUALIFYING" }),
     permission: "lead:review",
   },
   {
     id: "quotation",
     label: "Cotización",
-    filters: (): LeadListFilters => ({ stage: "QUOTING" }),
-    permission: "quotation:manage",
+    filters: (): ListLeadsFiltersInput => ({ stage: "QUOTING" }),
+    permission: "quotation:create",
   },
   {
     id: "all",
     label: "Todos",
-    filters: (): LeadListFilters => ({}),
+    filters: (): ListLeadsFiltersInput => ({}),
     permission: "lead:view:all",
   },
 ];
