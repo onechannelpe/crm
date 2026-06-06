@@ -13,12 +13,9 @@ export type FieldChipItem = {
   tooltip?: string;
 };
 
-export function FieldChipList(props: {
-  items: readonly FieldChipItem[];
-  emptyLabel?: string;
-}) {
+export function FieldChipList(props: { items: readonly FieldChipItem[] }) {
   return (
-    <Show when={props.items.length > 0} fallback={props.emptyLabel ?? "—"}>
+    <Show when={props.items.length > 0}>
       <div class={styles.container}>
         <div class={styles.list}>
           <For each={props.items}>

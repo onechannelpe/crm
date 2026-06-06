@@ -1,22 +1,17 @@
 import { useAction } from "@solidjs/router";
 import { createMemo, createResource, Show } from "solid-js";
-import { Dynamic } from "solid-js/web";
 
 import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { createLeadMutation } from "~/features/workflow/data/mutations";
+import type { RecordContext } from "~/features/record-show/model/record-context";
+import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
+import { createLeadMutation } from "~/features/workflow/data/command-mutations";
 
 import { PanelList } from "../../components/list";
-import { TabStrip } from "../../components/tab-strip";
 import { useScopedHotkey } from "../../core/hotkeys/create-scoped-hotkey";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadRecordDetailSidePanelPage } from "../../types/side-panel-page";
 import { Footer } from "../record-page/footer";
-import type { CreateTabContentProps } from "../record-page/tabs/content-props";
-import {
-  CREATE_LEAD_TABS_BY_ID,
-  CREATE_LEAD_TABS,
-} from "../record-page/tabs/tab-registry";
 import { createCreateLeadController } from "./controller";
 import { useCreateLeadPageState } from "./state";
 
@@ -80,15 +75,12 @@ export function CreateLeadPage() {
       : "Sin datos";
   });
 
-  const createTabProps = createMemo<CreateTabContentProps>(() => ({
-    mode: "create",
+  const recordContext = createMemo<RecordContext>(() => ({
+    kind: "draft",
     ruc: draftRuc(),
     razonSocial: latestBootstrapPreview()?.razonSocial ?? null,
     address: latestBootstrapPreview()?.address ?? null,
     engineStatus: engineStatus(),
-    canCreate: validRuc() !== null,
-    submitting: submitting(),
-    onSubmit: () => void submit(),
   }));
   useScopedHotkey("Mod+Enter", () => void submit(), { allowInInputs: true });
 
@@ -96,15 +88,10 @@ export function CreateLeadPage() {
     <div class={styles.pageShell}>
       <PanelList>
         <div class={styles.page}>
-          <TabStrip
-            tabs={CREATE_LEAD_TABS}
+          <RecordTabs
+            context={recordContext()}
             activeTab={activeTab()}
             onTabSelect={setActiveTab}
-          />
-
-          <Dynamic
-            component={CREATE_LEAD_TABS_BY_ID[activeTab()].component}
-            {...createTabProps()}
           />
 
           <Show when={error()}>

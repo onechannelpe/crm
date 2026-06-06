@@ -1,3 +1,7 @@
+.commandList {
+  padding: var(--spacing-2) var(--spacing-2) 0;
+}
+
 .emptyState {
   color: var(--foreground-tertiary);
   font-size: var(--font-size-body);
@@ -10,12 +14,12 @@
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--foreground);
+  color: var(--foreground-secondary);
   cursor: pointer;
   display: flex;
   font-size: var(--font-size-body);
   gap: 8px;
-  padding: 6px 8px;
+  padding: 8px 4px;
   text-align: left;
   width: 100%;
 }

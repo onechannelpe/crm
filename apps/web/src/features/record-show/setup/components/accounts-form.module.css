@@ -1,0 +1,24 @@
+.pickerTrigger {
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--font-size-sm);
+  padding: 4px var(--spacing-2);
+  text-align: left;
+  width: 100%;
+}
+
+.pickerTrigger:hover {
+  background-color: var(--background-transparent-light);
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-2);
+  text-align: right;
+}
