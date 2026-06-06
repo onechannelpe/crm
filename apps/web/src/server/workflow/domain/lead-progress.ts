@@ -1,6 +1,8 @@
-import type { LeadStage } from "~/workflow/contracts/lead-schema";
-
-import type { LeadRecord } from "./lead-record";
+import {
+  type AbonoBank,
+  type LeadNextStep,
+  type LeadStage,
+} from "~/contracts/workflow/vocabulary";
 
 export type LeadBlockingField =
   | "proveedorActual"
@@ -8,29 +10,44 @@ export type LeadBlockingField =
   | "gpv"
   | "ticket"
   | "giroNegocio"
+  | "abonoBank"
+  | "posTotal"
+  | "digitalPolicy"
   | "venueAccounts";
 
-export type LeadProgress = {
-  nextStep: string;
-  blockingFields: LeadBlockingField[];
+export type ScopingProfileFields = {
+  proveedorActual?: string | null;
+  tasaActual?: number | null;
+  gpv?: number | null;
+  ticket?: number | null;
+  giroNegocio?: string | null;
+  abonoBank?: AbonoBank | null;
+  posTotal?: number | null;
+  linkScope?: "none" | "shared" | "per_venue";
+  linkUrl?: string | null;
+  onlineScope?: "none" | "shared" | "per_venue";
+  onlineUrl?: string | null;
+  onlineModalidad?: string | null;
 };
 
-export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
+export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
   switch (lead.stage) {
     case "QUALIFYING":
-      return "Review lead";
+      return "REVIEW_LEAD";
     case "DISQUALIFIED":
-      return "No further action";
+      return "NO_ACTION";
     case "SCOPING":
-      return "Complete scoping";
+      return "SAVE_COMMERCIAL_SCOPE";
     case "QUOTING":
-      return "Create quotation";
+      return "CREATE_QUOTATION";
     case "QUOTED":
-      return "Approve for sale";
-    case "CLOSING":
-      return "Register venue accounts";
+      return "APPROVE_FOR_SALE";
+    case "SETUP_PLAN":
+      return "DEFINE_DIGITAL_POLICY";
+    case "SETUP_EXECUTION":
+      return "REGISTER_VENUE_ACCOUNTS";
     case "LIVE":
-      return "No further action";
+      return "NO_ACTION";
     default: {
       const exhaustive: never = lead.stage;
       return exhaustive;
@@ -40,6 +57,7 @@ export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
 
 export function resolveLeadBlockingFields(input: {
   stage: LeadStage;
+  profile?: ScopingProfileFields | null;
   venuesWithAccountsCount?: number;
 }): LeadBlockingField[] {
   switch (input.stage) {
@@ -49,9 +67,28 @@ export function resolveLeadBlockingFields(input: {
     case "QUOTED":
     case "LIVE":
       return [];
-    case "SCOPING":
-      return ["proveedorActual", "tasaActual", "gpv", "ticket", "giroNegocio"];
-    case "CLOSING": {
+    case "SCOPING": {
+      const p = input.profile;
+      const blocking: LeadBlockingField[] = [];
+      if (!p?.proveedorActual) blocking.push("proveedorActual");
+      if (p?.tasaActual == null) blocking.push("tasaActual");
+      if (p?.gpv == null) blocking.push("gpv");
+      if (p?.ticket == null) blocking.push("ticket");
+      if (!p?.giroNegocio) blocking.push("giroNegocio");
+      if (!p?.abonoBank) blocking.push("abonoBank");
+      if (p?.posTotal == null) blocking.push("posTotal");
+      return blocking;
+    }
+    case "SETUP_PLAN": {
+      const p = input.profile;
+      if (!p) return ["digitalPolicy"];
+      if (p.linkScope === "shared" && !p.linkUrl) return ["digitalPolicy"];
+      if (p.onlineScope === "shared" && (!p.onlineUrl || !p.onlineModalidad)) {
+        return ["digitalPolicy"];
+      }
+      return [];
+    }
+    case "SETUP_EXECUTION": {
       const withAccounts = input.venuesWithAccountsCount ?? 0;
       return withAccounts === 0 ? ["venueAccounts"] : [];
     }
@@ -60,17 +97,4 @@ export function resolveLeadBlockingFields(input: {
       return exhaustive;
     }
   }
-}
-
-export function resolveLeadProgress(input: {
-  lead: Pick<LeadRecord, "stage">;
-  venuesWithAccountsCount?: number;
-}): LeadProgress {
-  return {
-    nextStep: resolveLeadNextStep(input.lead),
-    blockingFields: resolveLeadBlockingFields({
-      stage: input.lead.stage,
-      venuesWithAccountsCount: input.venuesWithAccountsCount,
-    }),
-  };
 }

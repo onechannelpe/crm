@@ -1,8 +1,6 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import {
-  LEAD_PRIORITIES,
   LEAD_STAGES,
+  LEAD_PRIORITIES,
   LEAD_STATUSES,
   MONEDAS,
   ABONO_BANKS,
@@ -11,7 +9,9 @@ import {
   type LeadStatus,
   type Moneda,
   type AbonoBank,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow/vocabulary";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));
@@ -27,6 +27,18 @@ export function normalizeLeadRuc(ruc: string): Result<string, DomainError> {
   }
 
   return Ok(normalizedRuc);
+}
+
+export function parseRequiredLeadText(
+  value: string,
+  errorCode: string,
+  message: string,
+): Result<string, DomainError> {
+  const normalized = value.trim();
+  if (!normalized) {
+    return fail(errorCode, message);
+  }
+  return Ok(normalized);
 }
 
 function parseOptionalLeadValue<TValue extends string>(
