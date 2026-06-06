@@ -9,9 +9,9 @@ import type { InviteDeps, InviteService, InviteServiceDeps } from "./types";
 
 export function createInviteService(
   deps: InviteDeps,
-  runtimeOverrides: InviteServiceDeps = {},
+  runtimeOverrides: InviteServiceDeps,
 ): InviteService {
-  const runtime = createInviteRuntime(deps, runtimeOverrides);
+  const runtime = createInviteRuntime(runtimeOverrides);
 
   return {
     listPendingInvites(branchId) {

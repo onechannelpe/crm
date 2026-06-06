@@ -38,7 +38,7 @@ export async function createInvite(
 
   const normalizedEmail = normalizeInviteEmail(input.email);
 
-  return runtime.runInTransaction(async (transactionRepos) => {
+  return runtime.uow.run(async (transactionRepos) => {
     if (input.teamId !== null) {
       const team = await transactionRepos.teams.findById(input.teamId);
       if (!team || team.branch_id !== input.branchId) {
