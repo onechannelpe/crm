@@ -12,8 +12,8 @@ import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import { currentDailyPeriod } from "~/server/shared/time";
 
-import type { ActorScope } from "./actor-scope";
-import { getEffectiveLeadPolicy } from "./lead-policy";
+import type { ActorScope } from "../actor-scope";
+import { getEffectiveLeadPolicy } from "../lead-policy";
 
 interface SnapshotRepos {
   users: {

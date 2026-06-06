@@ -89,16 +89,14 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
       expires_at: number | null;
       set_by_user_id: number;
     }): Promise<void> {
-      await db.transaction().execute(async (trx) => {
-        await trx
-          .deleteFrom("search_policy_overrides")
-          .where("user_id", "=", values.user_id)
-          .execute();
-        await trx
-          .insertInto("search_policy_overrides")
-          .values({ ...values, created_at: Date.now() })
-          .executeTakeFirstOrThrow();
-      });
+      await db
+        .deleteFrom("search_policy_overrides")
+        .where("user_id", "=", values.user_id)
+        .execute();
+      await db
+        .insertInto("search_policy_overrides")
+        .values({ ...values, created_at: Date.now() })
+        .executeTakeFirstOrThrow();
     },
   };
 }
@@ -189,16 +187,14 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
       expires_at: number | null;
       set_by_user_id: number;
     }): Promise<void> {
-      await db.transaction().execute(async (trx) => {
-        await trx
-          .deleteFrom("lead_policy_overrides")
-          .where("user_id", "=", values.user_id)
-          .execute();
-        await trx
-          .insertInto("lead_policy_overrides")
-          .values({ ...values, created_at: Date.now() })
-          .executeTakeFirstOrThrow();
-      });
+      await db
+        .deleteFrom("lead_policy_overrides")
+        .where("user_id", "=", values.user_id)
+        .execute();
+      await db
+        .insertInto("lead_policy_overrides")
+        .values({ ...values, created_at: Date.now() })
+        .executeTakeFirstOrThrow();
     },
   };
 }
