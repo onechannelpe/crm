@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseRecordApiSpec } from "../src/record-api/parse.ts";
-import { renderRecordContractRust } from "../src/record-api/render-rust.ts";
-import { renderRecordContractTs } from "../src/record-api/render-ts.ts";
+import {
+  parseRecordApiSpec,
+  renderRecordContractRust,
+  renderRecordContractTs,
+} from "../src/record-api.ts";
 
 // fixture
 
@@ -72,7 +74,7 @@ describe("parseRecordApiSpec", () => {
           candidate: { fields: [{ name: "x", type: "float" }] },
         },
       }),
-    ).toThrow("string | i32 | i64");
+    ).toThrow('"string" | "i32" | "i64"');
   });
 
   test("rejects non-boolean optional", () => {

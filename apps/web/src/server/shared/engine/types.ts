@@ -1,7 +1,11 @@
 export type {
+  CompanyInfo,
+  CompanyRow,
+  DocInfo,
+  DocumentRow,
   OrgInfo,
-  PersonInfo,
   PhoneInfo,
+  RepInfo,
   RoleInfo,
   SearchResponse,
   SearchResult,

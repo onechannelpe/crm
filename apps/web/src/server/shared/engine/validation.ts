@@ -1,4 +1,5 @@
-import { SEARCH_PROJECTION_PATHS } from "~/server/shared/engine/projection-contract";
+import { COMPANY_PROJECTION_PATHS } from "~/server/shared/engine/company-projection-contract";
+import { DOC_PROJECTION_PATHS } from "~/server/shared/engine/doc-projection-contract";
 import type {
   RecordCandidate,
   RecordCandidatesResponse,
@@ -10,80 +11,26 @@ function prop(source: object, key: string): unknown {
   return Reflect.get(source, key);
 }
 
-function isNullableString(value: unknown): value is string | null {
-  return value === null || typeof value === "string";
-}
-
 function isSearchResult(value: unknown): value is SearchResult {
   if (typeof value !== "object" || value === null) return false;
-  const person = prop(value, "person");
-  const org = prop(value, "org");
-  const role = prop(value, "role");
-  const phones = prop(value, "phones");
+  const kind = prop(value, "kind");
 
-  if (typeof person !== "object" || person === null) return false;
-  if (typeof prop(person, "dni") !== "string") return false;
-  const personNullableFields = [
-    "name",
-    "ruc",
-    "birth_date",
-    "birth_place",
-    "sex",
-    "marital_status",
-    "location_text",
-    "ubigeo_code",
-    "mother_name",
-    "father_name",
-    "email",
-  ] as const;
-  for (const field of personNullableFields) {
-    if (!isNullableString(prop(person, field))) return false;
+  if (kind === "document") {
+    const doc = prop(value, "doc");
+    if (typeof doc !== "object" || doc === null) return false;
+    return (
+      typeof prop(doc, "doc_type") === "string" &&
+      typeof prop(doc, "doc_number") === "string"
+    );
   }
 
-  if (org !== null) {
-    if (typeof org !== "object") return false;
-    const orgNullableFields = [
-      "ruc",
-      "name",
-      "trade_name",
-      "company_type",
-      "status",
-      "condition",
-      "fiscal_address",
-      "registration_date",
-      "activity_start_date",
-      "line_of_business",
-      "economic_activity",
-    ] as const;
-    for (const field of orgNullableFields) {
-      if (!isNullableString(prop(org, field))) return false;
-    }
+  if (kind === "company") {
+    const company = prop(value, "company");
+    if (typeof company !== "object" || company === null) return false;
+    return typeof prop(company, "ruc") === "string";
   }
 
-  if (role !== null) {
-    if (typeof role !== "object") return false;
-    const roleNullableFields = [
-      "name",
-      "start_date",
-      "rep_doc_type",
-      "rep_doc_number",
-      "rep_name",
-    ] as const;
-    for (const field of roleNullableFields) {
-      if (!isNullableString(prop(role, field))) return false;
-    }
-  }
-
-  if (typeof phones !== "object" || phones === null) return false;
-  if (!isNullableString(prop(phones, "primary"))) return false;
-  if (!isNullableString(prop(phones, "secondary"))) return false;
-
-  const siblings = prop(phones, "siblings");
-  return (
-    siblings === null ||
-    (Array.isArray(siblings) &&
-      siblings.every((item) => typeof item === "string"))
-  );
+  return false;
 }
 
 function isRecordCandidate(value: unknown): value is RecordCandidate {
@@ -130,7 +77,9 @@ export function assertSearchResponse(value: unknown): SearchResponse {
   }
 
   for (const row of results) {
-    for (const path of SEARCH_PROJECTION_PATHS) {
+    const paths =
+      row.kind === "document" ? DOC_PROJECTION_PATHS : COMPANY_PROJECTION_PATHS;
+    for (const path of paths) {
       if (!hasPath(row, path)) {
         throw new Error(`Engine result missing projection field: ${path}`);
       }
