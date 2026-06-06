@@ -13,14 +13,10 @@ export async function finishPasskeyOnboardingStep(input: {
   response: RegistrationResponseJSON;
 }): Promise<{ redirectTo: string }> {
   const currentUser = await getMe();
-  const persisted = parsePhone(currentUser?.phone);
-  if (!persisted) {
+  const phone = parsePhone(currentUser?.phone);
+  if (!phone) {
     throw validationError("El número debe tener 9 dígitos y empezar con 9");
   }
 
-  return completePasskeyOnboarding(
-    persisted,
-    input.challengeId,
-    input.response,
-  );
+  return completePasskeyOnboarding(phone, input.challengeId, input.response);
 }

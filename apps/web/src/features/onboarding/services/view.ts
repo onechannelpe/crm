@@ -7,18 +7,13 @@ import { deriveFacts } from "./fact";
 export function buildView(input: {
   requirements: OnboardingRequirements;
   userPhone: string | null;
-  phoneDraft: string | undefined;
   requestedStep: RequestedStep;
 }) {
   const facts = deriveFacts({
     requirements: input.requirements,
     userPhone: input.userPhone,
-    phoneDraft: input.phoneDraft,
   });
   const state = resolveViewState(facts, input.requestedStep);
 
-  return {
-    state,
-    phoneDraft: facts.phoneDraft,
-  };
+  return { state };
 }

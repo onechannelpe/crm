@@ -3,7 +3,7 @@ import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { createPasskeyLoginFinishAuthService } from "~/server/auth/passkey/service";
 
-import type { AuthLoginRepos } from "../../infrastructure/login-context";
+import type { AuthLoginDeps } from "../login-deps";
 
 type PasskeyFinishProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginFinishAuthService>[1]
@@ -11,7 +11,7 @@ type PasskeyFinishProviderFactory = NonNullable<
 
 export async function finishPasskeyLogin(
   deps: {
-    repos: AuthLoginRepos;
+    repos: AuthLoginDeps;
     sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
   },
   input: {

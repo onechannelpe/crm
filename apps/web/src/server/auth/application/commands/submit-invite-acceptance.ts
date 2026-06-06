@@ -1,18 +1,18 @@
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import type { InviteService } from "~/server/invites/application/types";
-import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { AuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { isErr, Ok, type Result } from "~/server/shared/result";
-import type { createUsersRepo } from "~/server/users/repos-users";
+import type { UsersRepo } from "~/server/users/repos-users";
 
 export async function submitInviteAcceptance(
   deps: {
     inviteService: InviteService;
     repos: {
-      users: ReturnType<typeof createUsersRepo>;
-      sessions: ReturnType<typeof createSessionRepository>;
-      auditLogs: ReturnType<typeof createAuditLogsRepo>;
+      users: UsersRepo;
+      sessions: SessionRepository;
+      auditLogs: AuditLogsRepo;
     };
   },
   request: {

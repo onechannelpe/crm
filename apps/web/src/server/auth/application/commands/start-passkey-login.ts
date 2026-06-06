@@ -3,7 +3,7 @@ import {
   type BeginPasskeyLoginInput,
 } from "~/server/auth/passkey/service";
 
-import type { AuthLoginRepos } from "../../infrastructure/login-context";
+import type { AuthLoginDeps } from "../login-deps";
 
 type PasskeyStartProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginStartAuthService>[1]
@@ -11,7 +11,7 @@ type PasskeyStartProviderFactory = NonNullable<
 
 export async function startPasskeyLogin(
   input: BeginPasskeyLoginInput,
-  repos: AuthLoginRepos,
+  repos: AuthLoginDeps,
   deps: {
     createWebauthnProvider: PasskeyStartProviderFactory;
   },

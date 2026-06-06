@@ -1,3 +1,4 @@
+import { assertPositiveInt } from "~/contracts/guards";
 import { verifyTotpStepUp } from "~/lib/auth/factors/totp-verifier";
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
@@ -6,8 +7,7 @@ import {
   issueSessionTransition,
   type SessionRequestMetadata,
 } from "~/lib/auth/session/session-transition";
-import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { LoginFlowLoginResult, SubmitTotpLoginError } from "../contracts";
@@ -17,7 +17,7 @@ export async function submitTotpForLoginFlow(
     flowId: number;
     totpCode: string;
   } & SessionRequestMetadata,
-  deps: AuthLoginRepos,
+  deps: AuthLoginDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
 ): Promise<
   Result<
