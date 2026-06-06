@@ -1,4 +1,4 @@
-use engine::bench_support::BenchmarkMode;
+use engine::benchmark::BenchmarkMode;
 use std::env;
 use std::path::PathBuf;
 
@@ -8,7 +8,8 @@ pub struct Config {
     pub db_path: Option<PathBuf>,
     pub dataset_manifest_json: Option<PathBuf>,
     pub workload_json: PathBuf,
-    pub projection_contract_path: PathBuf,
+    pub doc_projection_contract_path: PathBuf,
+    pub company_projection_contract_path: PathBuf,
     pub baseline_json: Option<PathBuf>,
     pub output_json: PathBuf,
     pub iterations: usize,
@@ -30,8 +31,10 @@ pub fn parse_args() -> Result<Config, String> {
     let mut mode = BenchmarkMode::Smoke;
     let mut db_path: Option<PathBuf> = None;
     let mut dataset_manifest_json: Option<PathBuf> = None;
-    let mut workload_json = PathBuf::from("crates/engine/bench/workloads/default.json");
-    let mut projection_contract_path = PathBuf::from("contracts/engine/search-projection.json");
+    let mut workload_json = PathBuf::from("crates/engine/benches/workloads/default.json");
+    let mut doc_projection_contract_path = PathBuf::from("contracts/engine/doc-projection.json");
+    let mut company_projection_contract_path =
+        PathBuf::from("contracts/engine/company-projection.json");
     let mut baseline_json: Option<PathBuf> = None;
     let mut output_json = PathBuf::from("target/bench-search/report.json");
     let mut iterations: Option<usize> = None;
@@ -51,8 +54,11 @@ pub fn parse_args() -> Result<Config, String> {
                 dataset_manifest_json = Some(PathBuf::from(next_arg(&mut args, &flag)?))
             }
             "--workload-json" => workload_json = PathBuf::from(next_arg(&mut args, &flag)?),
-            "--projection-contract-path" => {
-                projection_contract_path = PathBuf::from(next_arg(&mut args, &flag)?)
+            "--doc-projection-contract-path" => {
+                doc_projection_contract_path = PathBuf::from(next_arg(&mut args, &flag)?)
+            }
+            "--company-projection-contract-path" => {
+                company_projection_contract_path = PathBuf::from(next_arg(&mut args, &flag)?)
             }
             "--baseline-json" => baseline_json = Some(PathBuf::from(next_arg(&mut args, &flag)?)),
             "--output-json" => output_json = PathBuf::from(next_arg(&mut args, &flag)?),
@@ -91,10 +97,16 @@ pub fn parse_args() -> Result<Config, String> {
             workload_json.display()
         ));
     }
-    if !projection_contract_path.exists() {
+    if !doc_projection_contract_path.exists() {
         return Err(format!(
-            "contract path does not exist: {}",
-            projection_contract_path.display()
+            "doc projection contract path does not exist: {}",
+            doc_projection_contract_path.display()
+        ));
+    }
+    if !company_projection_contract_path.exists() {
+        return Err(format!(
+            "company projection contract path does not exist: {}",
+            company_projection_contract_path.display()
         ));
     }
 
@@ -117,7 +129,8 @@ pub fn parse_args() -> Result<Config, String> {
         db_path,
         dataset_manifest_json,
         workload_json,
-        projection_contract_path,
+        doc_projection_contract_path,
+        company_projection_contract_path,
         baseline_json,
         output_json,
         iterations,
@@ -158,7 +171,8 @@ pub fn usage() -> String {
         "  --db-path <path>                SQLite path to benchmark",
         "  --dataset-manifest-json <path>  Dataset manifest path",
         "  --workload-json <path>          Workload json path",
-        "  --projection-contract-path <path>  Search projection contract path",
+        "  --doc-projection-contract-path <path>      Doc projection contract path",
+        "  --company-projection-contract-path <path>  Company projection contract path",
         "  --baseline-json <path>          Baseline report json path",
         "  --output-json <path>            Output report json path",
         "  --iterations <int>              Iterations per query type",

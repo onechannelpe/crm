@@ -14,9 +14,7 @@ pub struct HealthResponse {
     pub rows: Option<i64>,
 }
 
-/// Queries the pipeline build metadata table and returns 200 OK with build
-/// info, or 503 if the contacts database is unreachable or unpopulated.
-pub async fn health_handler(pool: SqlitePool) -> impl IntoResponse {
+pub async fn handler(pool: SqlitePool) -> impl IntoResponse {
     let result = tokio::task::spawn_blocking(move || probe_db(&pool))
         .await
         .unwrap_or(None);
@@ -43,16 +41,12 @@ pub async fn health_handler(pool: SqlitePool) -> impl IntoResponse {
     }
 }
 
-/// Returns `Some((build_id, built_at, rows))` on success, `None` on any error.
-/// Keeping this as a synchronous function makes it straightforward to test
-/// without an async runtime.
 fn probe_db(pool: &SqlitePool) -> Option<(Option<String>, i64, i64)> {
     let conn = pool.get().ok()?;
 
-    // Confirm the projection table exists and has at least one row.
     let _: i64 = conn
         .query_row(
-            "SELECT EXISTS(SELECT 1 FROM search_projection LIMIT 1)",
+            "SELECT EXISTS(SELECT 1 FROM doc_projection LIMIT 1)",
             [],
             |r| r.get(0),
         )
