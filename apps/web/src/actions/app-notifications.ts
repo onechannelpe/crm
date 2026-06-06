@@ -1,7 +1,7 @@
 "use server";
 
+import { assertPositiveInt } from "~/contracts/guards";
 import { requireAuth } from "~/lib/auth/access/session";
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import { getServerRuntime } from "~/server/runtime";
 
 export interface HeaderNotification {
