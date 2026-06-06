@@ -11,7 +11,7 @@ export async function revokeInvite(
   runtime: InviteRuntime,
   input: RevokeInviteInput,
 ): Promise<Result<void, DomainError>> {
-  return runtime.runInTransaction(async (transactionRepos) => {
+  return runtime.uow.run(async (transactionRepos) => {
     const invite = await transactionRepos.userInvites.findById(input.inviteId);
     if (!invite) {
       return Err(inviteError("invite_not_found", "Invite not found"));
