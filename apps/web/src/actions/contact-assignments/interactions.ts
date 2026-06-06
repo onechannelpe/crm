@@ -1,70 +1,37 @@
 "use server";
 
-import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/actions/contact-assignments/contracts";
-import type { CompleteContactAssignmentCallResult } from "~/actions/contact-assignments/contracts";
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
+import type {
+  CompleteContactAssignmentCallResult,
+  ContactAssignmentCallOutcome,
+} from "~/server/contact-assignments/application/contracts";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-type CallOutcome = (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
-
-function parseCallOutcome(value: string): CallOutcome {
-  for (const outcome of CONTACT_ASSIGNMENT_CALL_OUTCOMES) {
-    if (outcome === value) {
-      return outcome;
-    }
-  }
-  throw new Error("Invalid call outcome");
-}
-
-function parseCompleteContactAssignmentCallInput(input: {
+export type CompleteContactAssignmentCallInput = {
   assignmentId: number;
   contactId: number;
-  outcome: string;
-}): {
-  assignmentId: number;
-  contactId: number;
-  outcome: CallOutcome;
-} {
-  return {
-    assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
-    contactId: assertPositiveInt(input.contactId, "contactId"),
-    outcome: parseCallOutcome(input.outcome),
-  };
-}
+  outcome: ContactAssignmentCallOutcome;
+  notes?: string | null;
+};
 
 export async function completeContactAssignmentCall(
-  assignmentId: number,
-  contactId: number,
-  outcome: string,
-  notes?: string,
+  input: CompleteContactAssignmentCallInput,
 ): Promise<CompleteContactAssignmentCallResult> {
-  const parsedInput = parseCompleteContactAssignmentCallInput({
-    assignmentId,
-    contactId,
-    outcome,
-  });
   return runAction({
     actionName: "contact_assignments.complete_call",
     access: { kind: "permission", permission: "lead:work" },
-    input: {
-      assignmentId: parsedInput.assignmentId,
-      contactId: parsedInput.contactId,
-      outcome: parsedInput.outcome,
-    },
+    input,
     execute: (ctx) =>
       completeContactAssignmentCallUseCase(
         {
           actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          branchId: ctx.actor.branchId,
-          assignmentId: parsedInput.assignmentId,
-          contactId: parsedInput.contactId,
-          outcome: parsedInput.outcome,
-          notes: notes?.trim() ? notes : null,
+          assignmentId: input.assignmentId,
+          contactId: input.contactId,
+          outcome: input.outcome,
+          notes: input.notes?.trim() ? input.notes : null,
         },
-        getServerRuntime().contactAssignments.interactionRunner,
+        getServerRuntime().contactAssignments.interactionUow,
       ),
   });
 }
