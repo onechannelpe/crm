@@ -5,15 +5,16 @@ import { Portal } from "solid-js/web";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
-import { toAppError } from "~/lib/app-errors";
 import {
   LEAD_PRIORITIES,
   LEAD_STATUSES,
-} from "~/workflow/contracts/lead-schema";
+} from "~/contracts/workflow/vocabulary";
+import { toAppError } from "~/lib/app-errors";
 
-import { reviewLeadMutation } from "../../data/mutations";
+import { reviewLeadMutation } from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
-import styles from "./widget.module.css";
+import styles from "./review-modal.module.css";
 
 export function ReviewLeadModal(props: {
   leadId: string;
@@ -38,6 +39,7 @@ export function ReviewLeadModal(props: {
         prioridad: prioridad(),
         reason: reason(),
       });
+      await revalidateWorkflowLead(props.leadId);
       props.onClose();
     } catch (err) {
       setError(toAppError(err, "Error al revisar").publicMessage);
@@ -58,7 +60,7 @@ export function ReviewLeadModal(props: {
         onClick={handleOverlayClick}
       >
         <dialog open class={styles.dialog} aria-modal="true">
-          <h3 class={styles.dialogTitle}>Revisar prospecto</h3>
+          <h3 class={styles.dialogTitle}>Revisar cliente</h3>
           <form class={styles.form} onSubmit={(e) => void handleSubmit(e)}>
             <Select
               label="Estado"

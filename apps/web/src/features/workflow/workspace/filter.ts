@@ -1,61 +1,26 @@
-import type { RecordIndexFilterDefinition } from "~/features/record-index/model/filter";
+import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
+import { LEAD_STAGES, LEAD_STATUSES } from "~/contracts/workflow/vocabulary";
+import type { RecordIndexFilterCatalog } from "~/features/record-index/model/catalog";
+
 import {
-  leadStageLabel,
-  leadStatusLabel,
-} from "~/features/workflow/presentation/lead-display";
-import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
-import { isLeadStage, isLeadStatus } from "~/workflow/contracts/lead-schema";
+  LEAD_WORKSPACE_FILTER_FIELDS,
+  type LeadWorkspaceFilterValue,
+} from "./filter-fields";
 
-import type { LeadListFilters } from "../data/types";
+export type { LeadWorkspaceFilterValue } from "./filter-fields";
 
-export const LEAD_WORKSPACE_FILTERS = [
-  { value: "all", label: "Todos" },
-  { value: "updated_today", label: "Hoy" },
-  {
-    value: "stage:QUALIFYING",
-    label: leadStageLabel("QUALIFYING"),
-  },
-  {
-    value: "stage:SCOPING",
-    label: leadStageLabel("SCOPING"),
-  },
-  {
-    value: "stage:QUOTING",
-    label: leadStageLabel("QUOTING"),
-  },
-  { value: "stage:QUOTED", label: leadStageLabel("QUOTED") },
-  { value: "stage:CLOSING", label: leadStageLabel("CLOSING") },
-  { value: "stage:LIVE", label: leadStageLabel("LIVE") },
-  {
-    value: "stage:DISQUALIFIED",
-    label: leadStageLabel("DISQUALIFIED"),
-  },
-  { value: "status:DISPONIBLE", label: leadStatusLabel("DISPONIBLE") },
-  { value: "status:SIN RESULTADO", label: leadStatusLabel("SIN RESULTADO") },
-  { value: "status:CARTERIZADO", label: leadStatusLabel("CARTERIZADO") },
-  { value: "status:STOCK", label: leadStatusLabel("STOCK") },
-] as const;
+function isLeadStage(value: string): value is (typeof LEAD_STAGES)[number] {
+  return (LEAD_STAGES as readonly string[]).includes(value);
+}
 
-export type LeadWorkspaceFilterValue =
-  (typeof LEAD_WORKSPACE_FILTERS)[number]["value"];
-
-export function applyLeadWorkspaceFilter(
-  rows: LeadListRowView[],
-  filterValue: LeadWorkspaceFilterValue,
-) {
-  switch (filterValue) {
-    case "all":
-    case "updated_today":
-      return rows;
-    default:
-      return rows;
-  }
+function isLeadStatus(value: string): value is (typeof LEAD_STATUSES)[number] {
+  return (LEAD_STATUSES as readonly string[]).includes(value);
 }
 
 export function resolveLeadWorkspaceFilterQuery(
   value: string | undefined,
 ): Pick<
-  LeadListFilters,
+  ListLeadsFiltersInput,
   "stage" | "status" | "updatedSinceMs" | "updatedUntilMs"
 > {
   if (value === "updated_today") {
@@ -87,13 +52,10 @@ export function resolveLeadWorkspaceFilterQuery(
   return {};
 }
 
-export const LEAD_WORKSPACE_FILTER: RecordIndexFilterDefinition<
-  LeadListRowView,
-  LeadWorkspaceFilterValue
-> = {
-  label: "Filtrar",
-  menuId: "lead-workspace-filter-menu",
-  options: LEAD_WORKSPACE_FILTERS,
-  defaultValue: "all",
-  apply: applyLeadWorkspaceFilter,
-};
+export const LEAD_WORKSPACE_FILTER: RecordIndexFilterCatalog<LeadWorkspaceFilterValue> =
+  {
+    label: "Filtrar",
+    menuId: "lead-workspace-filter-menu",
+    fields: LEAD_WORKSPACE_FILTER_FIELDS,
+    defaultValue: "all",
+  };

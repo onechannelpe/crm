@@ -5,29 +5,24 @@ import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import type { LeadDetailQuotationView } from "~/contracts/workflow/views";
+import { MONEDAS, type Moneda } from "~/contracts/workflow/vocabulary";
 import {
-  FieldIcon,
   FieldInputValue,
-  FieldLabel,
-  FieldLabelText,
   FieldRow,
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import {
-  Widget,
-  WidgetBody,
-  WidgetHeader,
-  WidgetTitle,
-} from "~/features/side-panel/components/widget-card";
+  RecordDetailSectionActions,
+  RecordDetailSection,
+  RecordDetailSectionBody,
+  RecordDetailSectionHeader,
+  RecordDetailSectionTitle,
+} from "~/features/side-panel/components/record-detail-section";
 import { toAppError } from "~/lib/app-errors";
-import type { LeadDetailQuotationView } from "~/server/workflow/application/queries/views/lead-detail";
-import {
-  isMoneda,
-  MONEDAS,
-  type Moneda,
-} from "~/workflow/contracts/lead-schema";
 
-import { createQuotationMutation } from "../../data/mutations";
+import { createQuotationMutation } from "../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 import styles from "./quotation.module.css";
 
@@ -35,6 +30,10 @@ type QuotationSectionProps = {
   leadId: string;
   existingQuotation?: LeadDetailQuotationView;
 };
+
+function isMoneda(value: string): value is Moneda {
+  return (MONEDAS as readonly string[]).includes(value);
+}
 
 export function QuotationSection(props: QuotationSectionProps) {
   const create = useAction(createQuotationMutation);
@@ -74,28 +73,23 @@ export function QuotationSection(props: QuotationSectionProps) {
         fee: Number(fee()),
         moneda: moneda(),
       });
+      await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(toAppError(err, "Error al crear cotizacion").publicMessage);
+      setError(toAppError(err, "Error al crear cotización").publicMessage);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <Widget>
-      <WidgetHeader>
-        <WidgetTitle text="Cotizacion" />
-      </WidgetHeader>
-      <WidgetBody>
+    <RecordDetailSection>
+      <RecordDetailSectionHeader>
+        <RecordDetailSectionTitle text="Cotizacion" />
+      </RecordDetailSectionHeader>
+      <RecordDetailSectionBody>
         <form onSubmit={(e) => void handleSubmit(e)}>
           <FieldTable>
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <Moneybag size={16} />
-                </FieldIcon>
-                <FieldLabelText>Payback</FieldLabelText>
-              </FieldLabel>
+            <FieldRow label="Payback" icon={Moneybag}>
               <FieldInputValue>
                 <TextInput
                   sizeVariant="sm"
@@ -108,13 +102,7 @@ export function QuotationSection(props: QuotationSectionProps) {
                 />
               </FieldInputValue>
             </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <Moneybag size={16} />
-                </FieldIcon>
-                <FieldLabelText>T. debito</FieldLabelText>
-              </FieldLabel>
+            <FieldRow label="T. debito" icon={Moneybag}>
               <FieldInputValue>
                 <TextInput
                   sizeVariant="sm"
@@ -127,13 +115,7 @@ export function QuotationSection(props: QuotationSectionProps) {
                 />
               </FieldInputValue>
             </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <Moneybag size={16} />
-                </FieldIcon>
-                <FieldLabelText>T. credito</FieldLabelText>
-              </FieldLabel>
+            <FieldRow label="T. credito" icon={Moneybag}>
               <FieldInputValue>
                 <TextInput
                   sizeVariant="sm"
@@ -146,13 +128,7 @@ export function QuotationSection(props: QuotationSectionProps) {
                 />
               </FieldInputValue>
             </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <Moneybag size={16} />
-                </FieldIcon>
-                <FieldLabelText>T. foraneo</FieldLabelText>
-              </FieldLabel>
+            <FieldRow label="T. foraneo" icon={Moneybag}>
               <FieldInputValue>
                 <TextInput
                   sizeVariant="sm"
@@ -165,13 +141,7 @@ export function QuotationSection(props: QuotationSectionProps) {
                 />
               </FieldInputValue>
             </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <Moneybag size={16} />
-                </FieldIcon>
-                <FieldLabelText>Fee</FieldLabelText>
-              </FieldLabel>
+            <FieldRow label="Fee" icon={Moneybag}>
               <FieldInputValue>
                 <TextInput
                   sizeVariant="sm"
@@ -184,13 +154,7 @@ export function QuotationSection(props: QuotationSectionProps) {
                 />
               </FieldInputValue>
             </FieldRow>
-            <FieldRow>
-              <FieldLabel>
-                <FieldIcon>
-                  <Package size={16} />
-                </FieldIcon>
-                <FieldLabelText>Moneda</FieldLabelText>
-              </FieldLabel>
+            <FieldRow label="Moneda" icon={Package}>
               <FieldInputValue>
                 <select
                   class={styles.select}
@@ -210,18 +174,18 @@ export function QuotationSection(props: QuotationSectionProps) {
             </FieldRow>
           </FieldTable>
           {error() && <p class={styles.error}>{error()}</p>}
-          <div class={styles.actions}>
+          <RecordDetailSectionActions>
             <Button
               type="submit"
               variant="primary"
               size="sm"
               loading={submitting()}
             >
-              Crear cotizacion
+              Crear cotización
             </Button>
-          </div>
+          </RecordDetailSectionActions>
         </form>
-      </WidgetBody>
-    </Widget>
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }

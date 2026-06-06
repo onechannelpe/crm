@@ -1,0 +1,9 @@
+.emptyState {
+  color: var(--foreground-tertiary);
+  padding: var(--spacing-2);
+}
+
+.error {
+  color: var(--destructive);
+  margin: var(--spacing-2) 0;
+}

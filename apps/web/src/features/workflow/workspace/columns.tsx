@@ -11,16 +11,14 @@ import {
   RecordChip,
   RecordLinkChip,
 } from "~/components/ui/record-chip/record-chip";
+import type { LeadListRowView } from "~/contracts/workflow/views";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   leadNextStepLabel,
-  leadPriorityLabel,
   leadStageLabel,
-  leadStatusLabel,
 } from "~/features/workflow/presentation/lead-display";
 import type { Role } from "~/lib/auth/access/rbac";
-import { formatDate } from "~/lib/utils";
-import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import { capitalize, formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
@@ -62,7 +60,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     renderCell: (lead) => (
       <Badge
         variant={
-          lead.stage === "CLOSING"
+          lead.stage === "SETUP_EXECUTION"
             ? "success"
             : lead.stage === "SCOPING"
               ? "warning"
@@ -78,18 +76,20 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     label: "Estado",
     icon: Info,
     width: 168,
-    renderCell: (lead) => (
-      <Badge variant="outline">{leadStatusLabel(lead.status)}</Badge>
-    ),
+    renderCell: (lead) =>
+      lead.status ? (
+        <Badge variant="outline">{capitalize(lead.status)}</Badge>
+      ) : null,
   },
   {
     key: "prioridad",
     label: "Prioridad",
     icon: Package,
     width: 152,
-    renderCell: (lead) => (
-      <Badge variant="secondary">{leadPriorityLabel(lead.prioridad)}</Badge>
-    ),
+    renderCell: (lead) =>
+      lead.prioridad ? (
+        <Badge variant="secondary">{capitalize(lead.prioridad)}</Badge>
+      ) : null,
   },
   {
     key: "nextStep",
