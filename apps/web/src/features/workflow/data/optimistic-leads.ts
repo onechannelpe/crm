@@ -1,7 +1,7 @@
 import type { Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import type { LeadListRowView } from "~/server/workflow/application/queries/views/lead-list";
+import type { LeadListRowView } from "~/contracts/workflow/views";
 
 export type OptimisticLeadRow = LeadListRowView & {
   optimisticClientKey: string;
@@ -35,7 +35,7 @@ export function createOptimisticLeadRow(input: {
     stage: "QUALIFYING",
     status: null,
     prioridad: null,
-    nextStep: "Review lead",
+    nextStep: "REVIEW_LEAD",
     createdAt: now,
     updatedAt: now,
     optimisticClientKey: `new:${input.ruc}:${now}`,
