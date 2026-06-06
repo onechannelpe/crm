@@ -2,12 +2,12 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadListView, ListLeadsInput } from "~/server/workflow/types";
 
+import { resolveLeadNextStep } from "../../domain/lead-progress";
 import {
   requireCapability,
   resolveLeadListExecutiveScope,
 } from "../../domain/lead/policy";
 import type { LeadListFilters, LeadQueries } from "../ports/lead";
-import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
 
 type LeadSortField = "createdAt" | "updatedAt" | "registeredBy" | "ruc";
@@ -73,7 +73,7 @@ export async function listLeads(
   return Ok({
     rows: rows.map((row) =>
       Object.assign({}, row, {
-        nextStep: presentLeadNextStep({ lead: row }),
+        nextStep: resolveLeadNextStep(row),
       }),
     ),
     totalCount,

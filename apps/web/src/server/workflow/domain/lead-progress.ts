@@ -15,7 +15,7 @@ export type LeadBlockingField =
   | "digitalPolicy"
   | "venueAccounts";
 
-type ScopingProfileFields = {
+export type ScopingProfileFields = {
   proveedorActual?: string | null;
   tasaActual?: number | null;
   gpv?: number | null;
@@ -30,12 +30,7 @@ type ScopingProfileFields = {
   onlineModalidad?: string | null;
 };
 
-export type LeadProgress = {
-  nextStep: LeadNextStep;
-  blockingFields: LeadBlockingField[];
-};
-
-function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
+export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
   switch (lead.stage) {
     case "QUALIFYING":
       return "REVIEW_LEAD";
@@ -102,19 +97,4 @@ export function resolveLeadBlockingFields(input: {
       return exhaustive;
     }
   }
-}
-
-export function resolveLeadProgress(input: {
-  lead: { stage: LeadStage };
-  profile?: ScopingProfileFields | null;
-  venuesWithAccountsCount?: number;
-}): LeadProgress {
-  return {
-    nextStep: resolveLeadNextStep(input.lead),
-    blockingFields: resolveLeadBlockingFields({
-      stage: input.lead.stage,
-      profile: input.profile,
-      venuesWithAccountsCount: input.venuesWithAccountsCount,
-    }),
-  };
 }

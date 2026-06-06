@@ -8,6 +8,10 @@ import type {
 } from "~/server/workflow/types";
 
 import type { LeadHistoryEntry } from "../../domain/history";
+import {
+  resolveLeadBlockingFields,
+  resolveLeadNextStep,
+} from "../../domain/lead-progress";
 import type { LeadState } from "../../domain/lead/state";
 import type {
   LeadProfile,
@@ -25,10 +29,6 @@ import type {
   LeadDetailRepLegalView,
   LeadDetailSourceStatusView,
 } from "./lead-detail-types";
-import {
-  presentLeadBlockingFields,
-  presentLeadNextStep,
-} from "./lead-progress";
 import { presentTimeline } from "./timeline";
 
 export type NegotiationRequestWithFiles = {
@@ -102,7 +102,7 @@ function toLeadDetailLead(
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
-    nextStep: presentLeadNextStep({ lead }),
+    nextStep: resolveLeadNextStep(lead),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
@@ -215,6 +215,10 @@ function toNegotiationRequestView(
 }
 
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
+  const profile = source.profile
+    ? toLeadDetailProfile(source.profile, source.organization)
+    : undefined;
+
   return {
     lead: toLeadDetailLead(
       source.lead,
@@ -224,9 +228,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       source.createdByName,
       source.updatedByName,
     ),
-    profile: source.profile
-      ? toLeadDetailProfile(source.profile, source.organization)
-      : undefined,
+    profile,
     repLegal: source.legalRepresentative
       ? toLeadDetailRepLegal(source.legalRepresentative)
       : undefined,
@@ -237,10 +239,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     ),
     timeline: presentTimeline(source.history, source.canRevealFullTimeline),
     availableActions: source.availableActions,
-    blockingFields: presentLeadBlockingFields({
-      lead: source.lead,
-      profile: source.profile,
-      organization: source.organization,
+    blockingFields: resolveLeadBlockingFields({
+      stage: source.lead.stage,
+      profile,
       venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
         .length,
     }),
