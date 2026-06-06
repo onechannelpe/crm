@@ -1,6 +1,6 @@
 import { createEffect } from "solid-js";
 
-import { springTransform } from "~/lib/motion";
+import { springTransform } from "~/components/ui/animation/spring-transform";
 import { cn } from "~/lib/utils";
 
 import styles from "./toggle.module.css";
@@ -16,7 +16,7 @@ export function Toggle(props: {
 
   createEffect(() => {
     const on = props.value ?? false;
-    if (circle) void springTransform(circle, `translateX(${on ? 14 : 2}px)`);
+    if (circle) springTransform(circle, `translateX(${on ? 14 : 2}px)`);
   });
 
   return (

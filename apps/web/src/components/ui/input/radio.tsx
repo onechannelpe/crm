@@ -1,6 +1,6 @@
 import { createEffect, type JSX, type ParentProps } from "solid-js";
 
-import { springTransform } from "~/lib/motion";
+import { springTransform } from "~/components/ui/animation/spring-transform";
 import { cn } from "~/lib/utils";
 
 import styles from "./radio.module.css";
@@ -21,7 +21,7 @@ export function Radio(props: {
 
   createEffect(() => {
     const checked = props.checked;
-    if (input) void springTransform(input, `scale(${checked ? 1.05 : 0.95})`);
+    if (input) springTransform(input, `scale(${checked ? 1.05 : 0.95})`);
   });
 
   return (
