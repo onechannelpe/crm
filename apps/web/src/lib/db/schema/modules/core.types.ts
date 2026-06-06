@@ -27,6 +27,15 @@ export interface BackOfficeAssignmentsTable {
   assigned_at: number;
 }
 
+export interface PeopleTable {
+  id: Generated<number>;
+  dni: string;
+  full_name: string;
+  email: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface OrganizationsTable {
   id: string;
   ruc: string;

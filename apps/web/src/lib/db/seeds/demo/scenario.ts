@@ -128,7 +128,7 @@ export const LEADS = [
     key: "forSale",
     organizationKey: "forSale",
     executiveId: EXEC_RENATO,
-    stage: "CLOSING",
+    stage: "SETUP_PLAN",
     status: "DISPONIBLE",
     prioridad: "P1",
     createdBy: SUP1,
