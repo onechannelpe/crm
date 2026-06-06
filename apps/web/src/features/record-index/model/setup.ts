@@ -1,10 +1,35 @@
-import type { RecordIndexAdapter, RecordIndexSetup } from "./types";
+import type { Accessor } from "solid-js";
 
-export function createRecordIndexSetup<
-  T extends { id: string },
-  TFilterValue extends string = string,
-  TSortValue extends string = string,
->(adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>): RecordIndexSetup {
+import type { RecordIndexAdapter, RecordIndexToolbarAction } from "./adapter";
+import type {
+  RecordIndexFilterCatalog,
+  RecordIndexSortCatalog,
+  RecordIndexViews,
+} from "./catalog";
+
+export type RecordIndexSetupColumn = {
+  key: string;
+  label: string;
+};
+
+// Setup contains static view-bar configuration. Adapter controls carry live
+// values through RecordIndexModel.
+export type RecordIndexSetup = {
+  id: string;
+  title: Accessor<string>;
+  ariaLabel: string;
+  class?: string;
+  selectable: boolean;
+  columns: ReadonlyArray<RecordIndexSetupColumn>;
+  filter?: RecordIndexFilterCatalog;
+  sort?: RecordIndexSortCatalog;
+  views?: RecordIndexViews;
+  actions?: ReadonlyArray<RecordIndexToolbarAction>;
+};
+
+export function createRecordIndexSetup<T extends { id: string }>(
+  adapter: RecordIndexAdapter<T>,
+): RecordIndexSetup {
   const rawTitle = adapter.title;
   const title = typeof rawTitle === "function" ? rawTitle : () => rawTitle;
 
@@ -14,33 +39,13 @@ export function createRecordIndexSetup<
     ariaLabel: adapter.ariaLabel,
     class: adapter.class,
     selectable: adapter.selectable ?? false,
-    views: adapter.views,
-    actions: adapter.actions,
     columns: adapter.columns.map((column) => ({
       key: column.key,
       label: column.label,
     })),
-    filter: adapter.filter
-      ? {
-          label: adapter.filter.label,
-          menuId: adapter.filter.menuId,
-          defaultValue: adapter.filter.defaultValue,
-          options: adapter.filter.options.map((option) => ({
-            label: option.label,
-            value: option.value,
-          })),
-        }
-      : undefined,
-    sort: adapter.sort
-      ? {
-          label: adapter.sort.label,
-          menuId: adapter.sort.menuId,
-          defaultValue: adapter.sort.defaultValue,
-          options: adapter.sort.options.map((option) => ({
-            label: option.label,
-            value: option.value,
-          })),
-        }
-      : undefined,
+    filter: adapter.filter?.catalog,
+    sort: adapter.sort?.catalog,
+    views: adapter.views?.catalog,
+    actions: adapter.actions,
   };
 }

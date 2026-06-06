@@ -2,7 +2,7 @@ import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-men
 
 import { useRecordIndexModelContext } from "../context/model-context";
 import { useRecordIndexSetup } from "../context/setup-context";
-import type { RecordIndexMenu } from "../model/types";
+import type { RecordIndexMenu } from "../model/view-state";
 import { FilterMenu } from "./view-bar/filter-menu";
 import { OptionsDropdown } from "./view-bar/options-dropdown";
 import { SortMenu } from "./view-bar/sort-menu";
