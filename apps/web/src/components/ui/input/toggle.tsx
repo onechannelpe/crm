@@ -1,5 +1,3 @@
-import { createEffect } from "solid-js";
-
 import { springTransform } from "~/components/ui/animation/spring-transform";
 import { cn } from "~/lib/utils";
 
@@ -12,12 +10,8 @@ export function Toggle(props: {
   ariaLabel: string;
   onChange?: (value: boolean) => void;
 }) {
-  let circle: HTMLSpanElement | undefined;
-
-  createEffect(() => {
-    const on = props.value ?? false;
-    if (circle) springTransform(circle, `translateX(${on ? 14 : 2}px)`);
-  });
+  const circleTransform = () => `translateX(${props.value ? 14 : 2}px)`;
+  const initialCircleTransform = circleTransform();
 
   return (
     <label
@@ -36,7 +30,11 @@ export function Toggle(props: {
         disabled={props.disabled}
         onChange={(event) => props.onChange?.(event.currentTarget.checked)}
       />
-      <span ref={(el) => (circle = el)} class={styles.circle} />
+      <span
+        ref={springTransform(circleTransform)}
+        class={styles.circle}
+        style={{ transform: initialCircleTransform }}
+      />
     </label>
   );
 }

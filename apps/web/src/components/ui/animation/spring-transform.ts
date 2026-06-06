@@ -1,3 +1,5 @@
+import { createEffect, onCleanup, type Accessor } from "solid-js";
+
 const SPRING = {
   stiffness: 300,
   damping: 20,
@@ -13,6 +15,8 @@ type TransformAnimation = {
   cancel: () => void;
 };
 
+type CancelAnimation = () => void;
+
 type TransformTarget =
   | {
       kind: "scale";
@@ -27,11 +31,27 @@ const activeAnimations = new WeakMap<Element, TransformAnimation>();
 const normalizedSpringConstants = createSpringConstants(NORMALIZED_TARGET);
 const springDurationMs = calculateSpringDuration();
 
-export function springTransform(element: Element, transform: string): void {
-  if (!(element instanceof HTMLElement)) return;
+export function springTransform(
+  transform: Accessor<string>,
+): (element: Element) => void {
+  return (element: Element) => {
+    createEffect(() => {
+      const cancel = animateSpringTransform(element, transform());
+      onCleanup(cancel);
+    });
+  };
+}
+
+function animateSpringTransform(
+  element: Element,
+  transform: string,
+): CancelAnimation {
+  if (typeof window === "undefined") return noop;
+  if (typeof HTMLElement === "undefined") return noop;
+  if (!(element instanceof HTMLElement)) return noop;
 
   const target = parseTransformTarget(transform);
-  if (!target) return;
+  if (!target) return noop;
 
   const activeAnimation = activeAnimations.get(element);
   activeAnimation?.cancel();
@@ -39,26 +59,30 @@ export function springTransform(element: Element, transform: string): void {
 
   if (prefersReducedMotion()) {
     applyTransformTarget(element, target);
-    return;
+    return noop;
   }
 
   const origin = readCurrentTransformValue(element, target.kind);
-  if (origin === target.value) return;
+  if (origin === target.value) return noop;
 
-  activeAnimations.set(
-    element,
-    animateSpring({
-      origin,
-      target,
-      onUpdate: (value) => {
-        applyTransformTarget(element, { ...target, value });
-      },
-      onComplete: () => {
-        applyTransformTarget(element, target);
-        activeAnimations.delete(element);
-      },
-    }),
-  );
+  const animation = animateSpring({
+    origin,
+    target,
+    onUpdate: (value) => {
+      applyTransformTarget(element, { ...target, value });
+    },
+    onComplete: () => {
+      applyTransformTarget(element, target);
+      activeAnimations.delete(element);
+    },
+  });
+
+  activeAnimations.set(element, animation);
+
+  return () => {
+    animation.cancel();
+    activeAnimations.delete(element);
+  };
 }
 
 function parseTransformTarget(transform: string): TransformTarget | null {
@@ -227,3 +251,5 @@ function prefersReducedMotion(): boolean {
 function formatNumber(value: number): string {
   return value.toFixed(3).replace(/\.?0+$/, "");
 }
+
+function noop() {}

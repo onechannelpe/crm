@@ -1,4 +1,4 @@
-import { createEffect, type JSX, type ParentProps } from "solid-js";
+import { type JSX, type ParentProps } from "solid-js";
 
 import { springTransform } from "~/components/ui/animation/spring-transform";
 import { cn } from "~/lib/utils";
@@ -17,19 +17,16 @@ export function Radio(props: {
   value?: string;
   onChange?: JSX.ChangeEventHandlerUnion<HTMLInputElement, Event>;
 }) {
-  let input: HTMLInputElement | undefined;
-
-  createEffect(() => {
-    const checked = props.checked;
-    if (input) springTransform(input, `scale(${checked ? 1.05 : 0.95})`);
-  });
+  const inputTransform = () => `scale(${props.checked ? 1.05 : 0.95})`;
+  const initialInputTransform = inputTransform();
 
   return (
     <label class={cn(styles.container, props.disabled && styles.disabled)}>
       <input
-        ref={(el) => (input = el)}
+        ref={springTransform(inputTransform)}
         type="radio"
         class={styles.input}
+        style={{ transform: initialInputTransform }}
         name={props.name}
         value={props.value ?? props.label}
         checked={props.checked}
