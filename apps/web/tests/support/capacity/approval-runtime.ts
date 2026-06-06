@@ -31,7 +31,9 @@ type GrantRow = {
 };
 
 export function makeApprovalContext(
-  overrides: Partial<Pick<AppContext["actor"], "userId" | "role" | "branchId">> = {},
+  overrides: Partial<
+    Pick<AppContext["actor"], "userId" | "role" | "branchId">
+  > = {},
 ): AppContext {
   return {
     actor: {
