@@ -4,7 +4,7 @@ import type {
   LeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
-import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
