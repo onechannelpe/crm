@@ -9,7 +9,7 @@ export const LEAD_STAGES = [
   "LIVE",
 ] as const;
 
-const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
+export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
 export const LEAD_STATUSES = [
   "DISPONIBLE",
   "SIN RESULTADO",

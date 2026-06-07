@@ -1,68 +1,21 @@
 "use server";
 
-import type {
-  AbonoBank,
-  ModalidadCobro,
-  ProductScope,
-} from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
   type ReassignLeadCommandInput,
   type RegisterLeadCommandInput,
 } from "~/server/workflow/types";
-
+import {
+  parseLeadReviewInput,
+  parseRecordRepLegalInput,
+  parseRequestQuotationInput,
+  parseSaveCommercialScopeInput,
+  parseSaveDigitalPolicyInput,
+} from "./input";
 export type CreateLeadInput = {
   ruc: string;
   executiveId?: number;
-};
-
-export type LeadReviewInput = {
-  leadId: string;
-  status: string;
-  prioridad: string;
-  reason: string;
-};
-
-export type SaveCommercialScopeInput = {
-  leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: AbonoBank;
-  posTotal: number;
-};
-
-export type RequestQuotationInput = {
-  leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: AbonoBank;
-  posTotal: number;
-};
-
-export type SaveDigitalPolicyInput = {
-  leadId: string;
-  linkScope: ProductScope;
-  linkUrl: string | null;
-  onlineScope: ProductScope;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-};
-
-export type RecordRepLegalInput = {
-  leadId: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  dni: string;
-  telefono: string;
-  email: string;
 };
 
 export type ReassignLeadInput = {
@@ -89,118 +42,143 @@ export async function requestLeadCreation(input: CreateLeadInput) {
   });
 }
 
-export async function requestLeadReview(input: LeadReviewInput) {
+export async function requestLeadReview(input: unknown) {
   return runAction({
     actionName: "workflow.review_lead",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.reviewLead({
+    execute: async ({ actor }) => {
+      const parsedInput = parseLeadReviewInput(input);
+      if (!parsedInput.ok) return parsedInput;
+
+      return getServerRuntime().workflow.commands.reviewLead({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        leadId: input.leadId,
-        status: input.status,
-        prioridad: input.prioridad,
-        reason: input.reason,
-      }),
+        leadId: parsedInput.value.leadId,
+        status: parsedInput.value.status,
+        prioridad: parsedInput.value.prioridad,
+        reason: parsedInput.value.reason,
+      });
+    },
   });
 }
 
 export async function requestSaveCommercialScope(
-  input: SaveCommercialScopeInput,
+  input: unknown,
 ) {
   return runAction({
     actionName: "workflow.save_commercial_scope",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.saveCommercialScope({
+    execute: async ({ actor }) => {
+      const parsedInput = parseSaveCommercialScopeInput(input);
+      if (!parsedInput.ok) return parsedInput;
+
+      return getServerRuntime().workflow.commands.saveCommercialScope({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        leadId: input.leadId,
-        proveedorActual: input.proveedorActual,
-        tasaActual: input.tasaActual,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        giroNegocio: input.giroNegocio,
-        abonoBank: input.abonoBank,
-        posTotal: input.posTotal,
-      }),
+        leadId: parsedInput.value.leadId,
+        proveedorActual: parsedInput.value.proveedorActual,
+        tasaActual: parsedInput.value.tasaActual,
+        gpv: parsedInput.value.gpv,
+        ticket: parsedInput.value.ticket,
+        giroNegocio: parsedInput.value.giroNegocio,
+        abonoBank: parsedInput.value.abonoBank,
+        posTotal: parsedInput.value.posTotal,
+      });
+    },
   });
 }
 
-export async function requestQuotation(input: RequestQuotationInput) {
+export async function requestQuotation(input: unknown) {
   return runAction({
     actionName: "workflow.request_quotation",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.requestQuotation({
+    execute: async ({ actor }) => {
+      const parsedInput = parseRequestQuotationInput(input);
+      if (!parsedInput.ok) return parsedInput;
+
+      return getServerRuntime().workflow.commands.requestQuotation({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        leadId: input.leadId,
-        proveedorActual: input.proveedorActual,
-        tasaActual: input.tasaActual,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        giroNegocio: input.giroNegocio,
-        abonoBank: input.abonoBank,
-        posTotal: input.posTotal,
-      }),
+        leadId: parsedInput.value.leadId,
+        proveedorActual: parsedInput.value.proveedorActual,
+        tasaActual: parsedInput.value.tasaActual,
+        gpv: parsedInput.value.gpv,
+        ticket: parsedInput.value.ticket,
+        giroNegocio: parsedInput.value.giroNegocio,
+        abonoBank: parsedInput.value.abonoBank,
+        posTotal: parsedInput.value.posTotal,
+      });
+    },
   });
 }
 
-export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
+export async function requestSaveDigitalPolicy(input: unknown) {
   return runAction({
     actionName: "workflow.save_digital_policy",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.saveDigitalPolicy({
+    execute: async ({ actor }) => {
+      const parsedInput = parseSaveDigitalPolicyInput(input);
+      if (!parsedInput.ok) return parsedInput;
+
+      return getServerRuntime().workflow.commands.saveDigitalPolicy({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        ...input,
-      }),
+        leadId: parsedInput.value.leadId,
+        linkScope: parsedInput.value.linkScope,
+        linkUrl: parsedInput.value.linkUrl,
+        onlineScope: parsedInput.value.onlineScope,
+        onlineUrl: parsedInput.value.onlineUrl,
+        onlineModalidad: parsedInput.value.onlineModalidad,
+      });
+    },
   });
 }
 
-export async function requestRecordRepLegal(input: RecordRepLegalInput) {
+export async function requestRecordRepLegal(input: unknown) {
   return runAction({
     actionName: "workflow.record_rep_legal",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.recordRepLegal({
+    execute: async ({ actor }) => {
+      const parsedInput = parseRecordRepLegalInput(input);
+      if (!parsedInput.ok) return parsedInput;
+
+      return getServerRuntime().workflow.commands.recordRepLegal({
         actor: {
           userId: actor.userId,
           role: actor.role,
           branchId: actor.branchId,
         },
-        leadId: input.leadId,
-        nombres: input.nombres,
-        apellidoPaterno: input.apellidoPaterno,
-        apellidoMaterno: input.apellidoMaterno,
-        dni: input.dni,
-        telefono: input.telefono,
-        email: input.email,
-      }),
+        leadId: parsedInput.value.leadId,
+        nombres: parsedInput.value.nombres,
+        apellidoPaterno: parsedInput.value.apellidoPaterno,
+        apellidoMaterno: parsedInput.value.apellidoMaterno,
+        dni: parsedInput.value.dni,
+        telefono: parsedInput.value.telefono,
+        email: parsedInput.value.email,
+      });
+    },
   });
 }
 

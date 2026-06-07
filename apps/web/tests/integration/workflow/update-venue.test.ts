@@ -4,6 +4,7 @@ import {
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { runTestWorkflowCommand } from "@tests/support/workflow/command";
+import { requiredLeadText } from "@tests/support/workflow/required-lead-text";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -38,13 +39,13 @@ describe("update venue", () => {
         actor: scenario.actor.by("execOne"),
         leadId: lead.id,
         venueId: "venue-update-1",
-        nombreComercial: "Local corregido",
+        nombreComercial: requiredLeadText("Local corregido"),
         posQuantity: 3,
-        direccion: "Av. Nueva 123",
-        referencia: "Frente al parque",
-        distrito: "Miraflores",
-        provincia: "Lima",
-        departamento: "Lima",
+        direccion: requiredLeadText("Av. Nueva 123"),
+        referencia: requiredLeadText("Frente al parque"),
+        distrito: requiredLeadText("Miraflores"),
+        provincia: requiredLeadText("Lima"),
+        departamento: requiredLeadText("Lima"),
       }),
     );
 
@@ -94,13 +95,13 @@ describe("update venue", () => {
         actor: scenario.actor.by("execOne"),
         leadId: lead.id,
         venueId: "venue-update-live-1",
-        nombreComercial: "Local cambiado",
+        nombreComercial: requiredLeadText("Local cambiado"),
         posQuantity: 4,
-        direccion: "Av. Cambio 456",
-        referencia: "Esquina",
-        distrito: "San Isidro",
-        provincia: "Lima",
-        departamento: "Lima",
+        direccion: requiredLeadText("Av. Cambio 456"),
+        referencia: requiredLeadText("Esquina"),
+        distrito: requiredLeadText("San Isidro"),
+        provincia: requiredLeadText("Lima"),
+        departamento: requiredLeadText("Lima"),
       }),
     );
 

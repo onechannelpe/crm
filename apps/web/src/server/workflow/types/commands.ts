@@ -2,10 +2,13 @@ import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import type {
   AbonoBank,
   LeadCallOutcome,
+  LeadPriority,
+  LeadStatus,
   ModalidadCobro,
   Moneda,
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
+import type { RequiredLeadText } from "~/server/workflow/parsers";
 
 import type { WorkflowActor } from "./actor";
 
@@ -21,20 +24,18 @@ export type ReassignLeadCommandInput = {
   toExecutiveId: number;
 };
 
-// Raw wire values. reviewLeadCommand narrows status/prioridad to their
-// vocabulary types and owns validation, so every caller is checked once.
 export type ReviewLeadCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  status: string;
-  prioridad: string;
-  reason: string;
+  status: LeadStatus;
+  prioridad: LeadPriority;
+  reason: RequiredLeadText;
 };
 
 export type AddLeadNoteCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  body: string;
+  body: RequiredLeadText;
 };
 
 export type LogLeadCallCommandInput = {
@@ -58,11 +59,11 @@ export type CreateQuotationCommandInput = {
 export type SaveCommercialScopeCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  proveedorActual: string;
+  proveedorActual: RequiredLeadText;
   tasaActual: number;
   gpv: number;
   ticket: number;
-  giroNegocio: string;
+  giroNegocio: RequiredLeadText;
   abonoBank: AbonoBank;
   posTotal: number;
 };
@@ -80,11 +81,11 @@ export type SaveDigitalPolicyCommandInput = {
 export type RequestQuotationCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  proveedorActual: string;
+  proveedorActual: RequiredLeadText;
   tasaActual: number;
   gpv: number;
   ticket: number;
-  giroNegocio: string;
+  giroNegocio: RequiredLeadText;
   abonoBank: AbonoBank;
   posTotal: number;
 };
@@ -92,12 +93,12 @@ export type RequestQuotationCommandInput = {
 export type RecordRepLegalCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  dni: string;
-  telefono: string;
-  email: string;
+  nombres: RequiredLeadText;
+  apellidoPaterno: RequiredLeadText;
+  apellidoMaterno: RequiredLeadText;
+  dni: RequiredLeadText;
+  telefono: RequiredLeadText;
+  email: RequiredLeadText;
 };
 
 export type RequestRateNegotiationCommandInput = {
@@ -110,18 +111,18 @@ export type RequestRateNegotiationCommandInput = {
 export type CreateVenueCommandInput = {
   actor: WorkflowActor;
   leadId: string;
-  nombreComercial: string;
+  nombreComercial: RequiredLeadText;
   posQuantity: number;
   digitalConfig?: {
     linkUrl?: string | null;
     onlineUrl?: string | null;
     onlineModalidad?: ModalidadCobro | null;
   };
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  direccion: RequiredLeadText;
+  referencia: RequiredLeadText;
+  distrito: RequiredLeadText;
+  provincia: RequiredLeadText;
+  departamento: RequiredLeadText;
 };
 
 export type UpdateVenueCommandInput = CreateVenueCommandInput & {

@@ -9,6 +9,7 @@ import {
   expectLeadMetadata,
   expectLeadStatus,
 } from "@tests/support/workflow/expect";
+import { requiredLeadText } from "@tests/support/workflow/required-lead-text";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -38,7 +39,7 @@ describe("workflow lead mutation metadata", () => {
       commandApi.addLeadNote({
         actor: scenario.actor.by("execOne"),
         leadId: lead.id,
-        body: "Test note",
+        body: requiredLeadText("Test note"),
       }),
     );
 
