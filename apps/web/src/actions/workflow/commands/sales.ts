@@ -2,6 +2,7 @@
 
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+
 import {
   parseAddVenueAccountsInput,
   parseCreateVenueInput,
@@ -69,9 +70,7 @@ export async function requestVenueUpdate(input: unknown) {
   });
 }
 
-export async function requestVenueAccountsAddition(
-  input: unknown,
-) {
+export async function requestVenueAccountsAddition(input: unknown) {
   return runAction({
     actionName: "workflow.add_venue_accounts",
     access: { kind: "auth" },

@@ -300,7 +300,9 @@ function parseCommercialScopeFields(
   });
 }
 
-function parseVenueFields(input: unknown): Result<ParsedVenueInput, DomainError> {
+function parseVenueFields(
+  input: unknown,
+): Result<ParsedVenueInput, DomainError> {
   const record = readRecord(input);
   if (!record.ok) return record;
 
@@ -708,7 +710,10 @@ export function parseAddVenueAccountsInput(
   );
   if (!solesAccount.ok) return solesAccount;
 
-  if (record.value.dollarAccount === undefined || record.value.dollarAccount === null) {
+  if (
+    record.value.dollarAccount === undefined ||
+    record.value.dollarAccount === null
+  ) {
     return Ok({
       leadId: leadId.value,
       venueId: venueId.value,

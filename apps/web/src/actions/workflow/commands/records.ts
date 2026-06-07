@@ -6,6 +6,7 @@ import {
   type ReassignLeadCommandInput,
   type RegisterLeadCommandInput,
 } from "~/server/workflow/types";
+
 import {
   parseLeadReviewInput,
   parseRecordRepLegalInput,
@@ -67,9 +68,7 @@ export async function requestLeadReview(input: unknown) {
   });
 }
 
-export async function requestSaveCommercialScope(
-  input: unknown,
-) {
+export async function requestSaveCommercialScope(input: unknown) {
   return runAction({
     actionName: "workflow.save_commercial_scope",
     access: { kind: "auth" },
