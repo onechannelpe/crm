@@ -3,12 +3,12 @@
 import { randomUUIDv7 } from "bun";
 
 import { isRole } from "~/lib/auth/access/rbac";
+import type { NotificationAudience } from "~/server/notifications/types";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import type { NotificationAudience } from "~/server/notifications/types";
 
 const AUDIENCE_TYPES = ["user_ids", "global_roles", "team"] as const;
 
@@ -57,7 +57,10 @@ function parseBroadcast(params: unknown): Result<BroadcastInput, DomainError> {
   }));
   if (isErr(shape)) return shape;
 
-  const audience = resolveAudience(shape.value.audienceType, shape.value.audienceRef);
+  const audience = resolveAudience(
+    shape.value.audienceType,
+    shape.value.audienceRef,
+  );
   if (isErr(audience)) return audience;
 
   return Ok({
@@ -67,7 +70,9 @@ function parseBroadcast(params: unknown): Result<BroadcastInput, DomainError> {
   });
 }
 
-export async function sendBroadcastNotification(params: unknown): Promise<void> {
+export async function sendBroadcastNotification(
+  params: unknown,
+): Promise<void> {
   await runAction({
     actionName: "notifications.broadcast",
     access: { kind: "role", role: "admin" },

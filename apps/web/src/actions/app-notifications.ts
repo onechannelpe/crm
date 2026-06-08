@@ -26,7 +26,8 @@ export async function getHeaderNotifications(): Promise<HeaderNotificationFeed> 
     actionName: "notifications.header.read",
     access: { kind: "auth" },
     execute: async (ctx) => {
-      const appNotifications = getServerRuntime().notifications.appNotifications;
+      const appNotifications =
+        getServerRuntime().notifications.appNotifications;
       const [unreadCount, notifications] = await Promise.all([
         appNotifications.countUnreadByUser(ctx.actor.userId),
         appNotifications.listByUser(ctx.actor.userId, 20),

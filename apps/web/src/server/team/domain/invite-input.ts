@@ -37,10 +37,16 @@ export function validateTeamInviteInput(
     return invalid("invalid_email", "El correo no es válido.");
   }
 
-  const category = resolveExecutiveCategory(input.role, input.executiveCategory);
+  const category = resolveExecutiveCategory(
+    input.role,
+    input.executiveCategory,
+  );
   if (!category.ok) return category;
 
-  if (input.teamId !== null && (!Number.isInteger(input.teamId) || input.teamId < 1)) {
+  if (
+    input.teamId !== null &&
+    (!Number.isInteger(input.teamId) || input.teamId < 1)
+  ) {
     return invalid("invalid_team_id", "El equipo seleccionado no es válido.");
   }
 

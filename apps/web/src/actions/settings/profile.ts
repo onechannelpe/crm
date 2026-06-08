@@ -8,7 +8,9 @@ import { domainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok } from "~/server/shared/result";
 
-export async function updateUserProfile(phone: unknown): Promise<ActionSuccess> {
+export async function updateUserProfile(
+  phone: unknown,
+): Promise<ActionSuccess> {
   return runAction({
     actionName: "settings.profile.update_phone",
     access: { kind: "session" },

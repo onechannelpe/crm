@@ -8,9 +8,9 @@ import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import type { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
-import type { UserId } from "~/server/shared/ids";
 
 async function requireCurrentUserWithStrongAuthState(userId: UserId) {
   const repos = getServerRuntime().security;
