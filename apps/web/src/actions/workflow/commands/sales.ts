@@ -19,7 +19,6 @@ import {
   validationFail,
   type Reader,
 } from "~/server/shared/parsing";
-import type { Result } from "~/server/shared/result";
 
 import { workflowActor } from "./actor";
 
@@ -43,51 +42,28 @@ function venueFields(r: Reader<DomainError>): CreateVenueInput {
 }
 
 function accountFields<TCurrency extends "PEN" | "USD">(
-  a: Reader<DomainError>,
+  r: Reader<DomainError>,
   currency: TCurrency,
 ): SaleVenueAccount & { currency: TCurrency } {
   return {
     currency,
-    banco: a.enum("banco", ABONO_BANKS),
-    tipoCuenta: a.enum("tipoCuenta", ACCOUNT_TYPE_KINDS),
-    nroCuenta: a.str("nroCuenta"),
-    cci: a.optStr("cci") ?? undefined,
-    isSettlement: a.bool("isSettlement"),
+    banco: r.enum("banco", ABONO_BANKS),
+    tipoCuenta: r.enum("tipoCuenta", ACCOUNT_TYPE_KINDS),
+    nroCuenta: r.str("nroCuenta"),
+    cci: r.optStr("cci") ?? undefined,
+    isSettlement: r.bool("isSettlement"),
   };
-}
-
-function parseCreateVenue(
-  input: unknown,
-): Result<CreateVenueInput, DomainError> {
-  return parseObject(input, validationFail, venueFields);
-}
-
-function parseUpdateVenue(
-  input: unknown,
-): Result<UpdateVenueInput, DomainError> {
-  return parseObject(input, validationFail, (r) => ({
-    ...venueFields(r),
-    venueId: r.str("venueId"),
-  }));
-}
-
-function parseAddVenueAccounts(
-  input: unknown,
-): Result<AddVenueAccountsInput, DomainError> {
-  return parseObject(input, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-    venueId: r.str("venueId"),
-    solesAccount: r.obj("solesAccount", (a) => accountFields(a, "PEN")),
-    dollarAccount: r.optObj("dollarAccount", (a) => accountFields(a, "USD")),
-  }));
 }
 
 export async function requestVenueCreation(input: unknown) {
   return runAction({
     actionName: "workflow.create_venue",
     access: { kind: "auth" },
-    parse: () => parseCreateVenue(input),
+
+    parse: () => parseObject(input, validationFail, venueFields),
+
     audit: ({ leadId }) => ({ leadId }),
+
     execute: ({ actor }, payload) =>
       getServerRuntime().workflow.commands.createVenue({
         actor: workflowActor(actor),
@@ -100,8 +76,19 @@ export async function requestVenueUpdate(input: unknown) {
   return runAction({
     actionName: "workflow.update_venue",
     access: { kind: "auth" },
-    parse: () => parseUpdateVenue(input),
+
+    parse: () =>
+      parseObject(
+        input,
+        validationFail,
+        (r): UpdateVenueInput => ({
+          ...venueFields(r),
+          venueId: r.str("venueId"),
+        }),
+      ),
+
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+
     execute: ({ actor }, payload) =>
       getServerRuntime().workflow.commands.updateVenue({
         actor: workflowActor(actor),
@@ -114,8 +101,23 @@ export async function requestVenueAccountsAddition(input: unknown) {
   return runAction({
     actionName: "workflow.add_venue_accounts",
     access: { kind: "auth" },
-    parse: () => parseAddVenueAccounts(input),
+
+    parse: () =>
+      parseObject(
+        input,
+        validationFail,
+        (r): AddVenueAccountsInput => ({
+          leadId: r.str("leadId"),
+          venueId: r.str("venueId"),
+          solesAccount: r.obj("solesAccount", (a) => accountFields(a, "PEN")),
+          dollarAccount: r.optObj("dollarAccount", (a) =>
+            accountFields(a, "USD"),
+          ),
+        }),
+      ),
+
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+
     execute: ({ actor }, payload) =>
       getServerRuntime().workflow.commands.addVenueAccounts({
         actor: workflowActor(actor),
