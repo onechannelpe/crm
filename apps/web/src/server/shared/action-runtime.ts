@@ -29,19 +29,23 @@ import {
 export { createAppContext, type AppContext } from "./action-runtime/context";
 
 /**
- * Every action is an RPC trust boundary, so its wire input is `unknown` and is
- * validated here exactly once. `parse` narrows that input to TIn (or returns a
- * DomainError), `audit` projects the parsed value down to the scalar fields
- * that are safe to record, and `execute` runs the command with the trusted
- * value. The raw input is never handed to telemetry, only `audit(parsed)`.
+ * Every action is an RPC trust boundary. `parse` validates the untrusted wire
+ * payload and yields the trusted value (or a DomainError), running inside the
+ * action so a parse failure is recorded like any other and the raw value stays
+ * in the action's closure. `audit` projects that value down to the scalar
+ * fields safe to record. `execute` runs the command with the trusted value.
+ * Raw input never reaches `execute` or telemetry, only `audit(value)`.
+ *
+ * `execute` receives `ctx` first, matching the service convention
+ * (`service(ctx, input)`). No-input actions omit `parse` and write
+ * `execute: (ctx) => ...`, ignoring the trailing input argument.
  */
 type RunActionParams<TIn, TOut, E extends DomainError> = {
   actionName: string;
   access: ActionAccess;
-  input: unknown;
-  parse: (input: unknown) => Result<TIn, DomainError>;
+  parse?: () => Result<TIn, DomainError>;
   audit?: (input: TIn) => AuditFields;
-  execute: (input: TIn, ctx: AppContext) => Promise<Result<TOut, E>>;
+  execute: (ctx: AppContext, input: TIn) => Promise<Result<TOut, E>>;
 } & ActionStepUpRequirement;
 
 function domainToAppError(error: DomainError): AppError {
@@ -101,18 +105,31 @@ export async function runActionResult<TIn, TOut, E extends DomainError>(
     audit: {},
   };
 
-  const parsed = params.parse(params.input);
-  if (isErr(parsed)) {
-    const appError = domainToAppError(parsed.error);
-    recordActionError(telemetry, toTelemetryError(appError));
-    return Err(sanitize(appError));
+  let value: TIn;
+  if (params.parse) {
+    const parsed = params.parse();
+    if (isErr(parsed)) {
+      const appError = domainToAppError(parsed.error);
+      recordActionError(telemetry, toTelemetryError(appError));
+      return Err(sanitize(appError));
+    }
+    value = parsed.value;
+    telemetry.audit = params.audit?.(value) ?? {};
+  } else {
+    // No-input actions have nothing to validate; execute reads only the actor.
+    value = undefined as TIn;
   }
 
-  telemetry.audit = params.audit?.(parsed.value) ?? {};
+  return finishAction(telemetry, () => params.execute(ctx, value));
+}
 
+async function finishAction<TOut, E extends DomainError>(
+  telemetry: ActionTelemetryInput,
+  run: () => Promise<Result<TOut, E>>,
+): Promise<Result<TOut, AppError>> {
   let result: Result<TOut, E>;
   try {
-    result = await params.execute(parsed.value, ctx);
+    result = await run();
   } catch (error) {
     if (error instanceof Response) throw error;
     if (error instanceof AppError) {
