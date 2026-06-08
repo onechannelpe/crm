@@ -10,13 +10,16 @@ export async function updateSearchPolicyOverride(input: unknown) {
   return runAction({
     actionName: "capacity.search_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
+
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         userId: r.posInt("userId"),
         monthlyLimit: r.num("monthlySearchLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
+
     audit: ({ userId }) => ({ userId }),
+
     execute: (ctx, override) =>
       getServerRuntime().capacity.useCases.updateSearchPolicyOverride(
         ctx,
@@ -29,6 +32,7 @@ export async function updateLeadPolicyOverride(input: unknown) {
   return runAction({
     actionName: "capacity.lead_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
+
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         userId: r.posInt("userId"),
@@ -36,7 +40,9 @@ export async function updateLeadPolicyOverride(input: unknown) {
         dailyLimit: r.num("dailyRefillLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
+
     audit: ({ userId }) => ({ userId }),
+
     execute: (ctx, override) =>
       getServerRuntime().capacity.useCases.updateLeadPolicyOverride(
         ctx,
@@ -49,6 +55,7 @@ export async function updateSearchPolicyDefault(input: unknown) {
   return runAction({
     actionName: "capacity.search_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
+
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         scope: {
@@ -57,7 +64,12 @@ export async function updateSearchPolicyDefault(input: unknown) {
         },
         monthlyLimit: r.num("monthlySearchLimit"),
       })),
-    audit: ({ scope }) => ({ scopeKind: scope.kind, scopeId: scope.scopeId }),
+
+    audit: ({ scope }) => ({
+      scopeKind: scope.kind,
+      scopeId: scope.scopeId,
+    }),
+
     execute: (ctx, params) =>
       getServerRuntime().capacity.useCases.updateSearchPolicyDefault(
         ctx,
@@ -70,6 +82,7 @@ export async function updateLeadPolicyDefault(input: unknown) {
   return runAction({
     actionName: "capacity.lead_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
+
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         scope: {
@@ -79,7 +92,12 @@ export async function updateLeadPolicyDefault(input: unknown) {
         bufferTarget: r.num("activeBufferTarget"),
         dailyLimit: r.num("dailyRefillLimit"),
       })),
-    audit: ({ scope }) => ({ scopeKind: scope.kind, scopeId: scope.scopeId }),
+
+    audit: ({ scope }) => ({
+      scopeKind: scope.kind,
+      scopeId: scope.scopeId,
+    }),
+
     execute: (ctx, params) =>
       getServerRuntime().capacity.useCases.updateLeadPolicyDefault(ctx, params),
   });
