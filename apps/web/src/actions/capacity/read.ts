@@ -32,7 +32,7 @@ export async function getExecutiveDetail(
 
     parse: () =>
       parseObject({ userId }, validationFail, (r) => ({
-        userId: r.num("userId"),
+        userId: r.posInt("userId"),
       })),
 
     audit: ({ userId }) => ({ userId }),
