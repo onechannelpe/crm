@@ -18,6 +18,7 @@ export type LeadHistoryEventType =
   | "quotation_requested"
   | "rep_legal_recorded"
   | "quotation_created"
+  | "rate_negotiation_requested"
   | "sale_approved"
   | "venue_added"
   | "venue_updated"
@@ -82,6 +83,11 @@ export type LeadHistoryPayloadByEvent = {
     quotationId: string;
     version: number;
     moneda: Moneda;
+  };
+  rate_negotiation_requested: {
+    negotiationRequestId: string;
+    round: number;
+    justification: string;
   };
   sale_approved: null;
   venue_added: {

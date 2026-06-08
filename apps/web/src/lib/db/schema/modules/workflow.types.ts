@@ -92,6 +92,7 @@ export interface WorkflowHistoryEventsTable {
     | "quotation_requested"
     | "rep_legal_recorded"
     | "quotation_created"
+    | "rate_negotiation_requested"
     | "sale_approved"
     | "venue_added"
     | "venue_updated"

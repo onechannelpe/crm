@@ -1,3 +1,7 @@
+import {
+  MAX_NEGOTIATION_FILES,
+  MAX_NEGOTIATION_ROUNDS,
+} from "~/contracts/workflow/limits";
 import type {
   AbonoBank,
   LeadCallOutcome,
@@ -14,11 +18,7 @@ import { createHistoryEvent } from "../history";
 import { resolveReviewTransition } from "../workflow";
 import type { LeadEvent } from "./events";
 import { invalidLeadInput, invalidLeadStage } from "./lead-errors";
-import {
-  authorizeLeadAction,
-  MAX_NEGOTIATION_FILES,
-  MAX_NEGOTIATION_ROUNDS,
-} from "./policy";
+import { authorizeLeadAction } from "./policy";
 import { applyEvents } from "./reducer";
 import type { LeadState } from "./state";
 
@@ -464,8 +464,8 @@ export function requestRateNegotiation(
     actor: Actor;
     negotiationRequestId: string;
     round: number;
-    negotiationRequestCount: number;
-    artifactCount: number;
+    justification: string;
+    artifactIds: string[];
     now: number;
   },
 ): TransitionResult {
@@ -473,13 +473,22 @@ export function requestRateNegotiation(
   if (!authz.ok) return authz;
   if (state.stage !== "QUOTED") return invalidLeadStage();
 
-  if (input.negotiationRequestCount >= MAX_NEGOTIATION_ROUNDS) {
+  if (input.round > MAX_NEGOTIATION_ROUNDS) {
     return conflict(
       "max_negotiation_rounds_reached",
       `Maximum of ${MAX_NEGOTIATION_ROUNDS} negotiation rounds allowed`,
     );
   }
-  if (input.artifactCount > MAX_NEGOTIATION_FILES) {
+  if (input.artifactIds.length < 1) {
+    return Err(
+      domainError(
+        "validation",
+        "negotiation_files_required",
+        "At least one document is required for rate negotiation",
+      ),
+    );
+  }
+  if (input.artifactIds.length > MAX_NEGOTIATION_FILES) {
     return Err(
       domainError(
         "validation",
@@ -488,8 +497,28 @@ export function requestRateNegotiation(
       ),
     );
   }
+  if (new Set(input.artifactIds).size !== input.artifactIds.length) {
+    return Err(
+      domainError(
+        "validation",
+        "duplicate_negotiation_file",
+        "Negotiation files must be unique",
+      ),
+    );
+  }
 
   const events: LeadEvent[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "rate_negotiation_requested",
+      actorUserId: input.actor.userId,
+      payload: {
+        negotiationRequestId: input.negotiationRequestId,
+        round: input.round,
+        justification: input.justification,
+      },
+      occurredAt: input.now,
+    }),
     createHistoryEvent({
       leadId: state.id,
       eventType: "workflow_stage_changed",

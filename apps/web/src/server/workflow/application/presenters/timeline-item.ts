@@ -137,6 +137,15 @@ export function presentTimelineItem(
           : `Creada por ${actorDisplayName}.`,
         actorDisplayName,
       };
+    case "rate_negotiation_requested":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "stage-change",
+        title: "Revisión de tasa solicitada",
+        description: `Ronda ${event.payload.round}: ${event.payload.justification}`,
+        actorDisplayName,
+      };
     case "sale_approved":
       return {
         id: `history:${event.id}`,

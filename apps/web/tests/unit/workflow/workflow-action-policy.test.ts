@@ -7,11 +7,13 @@ import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  MAX_NEGOTIATION_FILES,
+  MAX_NEGOTIATION_ROUNDS,
+} from "~/contracts/workflow/limits";
 import { requestRateNegotiation } from "~/server/workflow/domain/lead/commands";
 import {
   authorizeLeadAction,
-  MAX_NEGOTIATION_FILES,
-  MAX_NEGOTIATION_ROUNDS,
   resolveAvailableActions,
 } from "~/server/workflow/domain/lead/policy";
 import type { LeadState } from "~/server/workflow/domain/lead/state";
@@ -36,6 +38,113 @@ function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
     version: 0,
     ...overrides,
   };
+}
+
+async function seedNegotiationArtifact(
+  runtime: TestRuntime,
+  input: {
+    artifactId: string;
+    leadId: string;
+    requestedByUserId: number;
+    status?: "ready" | "requested";
+    linked?: boolean;
+  },
+): Promise<void> {
+  const now = runtime.now.get();
+  await runtime.ctx.db
+    .insertInto("workflow_artifacts")
+    .values({
+      id: input.artifactId,
+      artifact_type: "negotiation_file",
+      direction: "upload",
+      execution_mode: "async",
+      status: input.status ?? "ready",
+      requested_by_user_id: input.requestedByUserId,
+      scope_branch_id: 1,
+      scope_team_id: null,
+      policy_snapshot_json: "{}",
+      workflow_context_json: JSON.stringify({
+        kind: "negotiation_file",
+        leadId: input.leadId,
+      }),
+      error_code: null,
+      error_message: null,
+      expires_at: null,
+      created_at: now,
+      updated_at: now,
+    })
+    .executeTakeFirstOrThrow();
+
+  const fileAsset = await runtime.ctx.db
+    .insertInto("file_assets")
+    .values({
+      storage_key: `test/${input.artifactId}.xlsx`,
+      original_filename: "support.xlsx",
+      safe_display_filename: "support.xlsx",
+      detected_mime:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      extension: "xlsx",
+      size_bytes: 4,
+      sha256_hex:
+        "0000000000000000000000000000000000000000000000000000000000000000",
+      signature_kind: "xlsx",
+      scan_status: "clean",
+      scan_engine: null,
+      scan_reference: null,
+      created_at: now,
+    })
+    .executeTakeFirstOrThrow();
+  const fileAssetId = Number(fileAsset.insertId);
+
+  await runtime.ctx.db
+    .insertInto("artifact_file_bindings")
+    .values({
+      artifact_id: input.artifactId,
+      file_asset_id: fileAssetId,
+      binding_role: "source_upload",
+      version_no: 1,
+      created_at: now,
+    })
+    .executeTakeFirstOrThrow();
+
+  if (!input.linked) return;
+
+  const requestId = `request-${input.artifactId}`;
+  await runtime.ctx.db
+    .insertInto("workflow_negotiation_requests")
+    .values({
+      id: requestId,
+      lead_id: input.leadId,
+      round: 1,
+      justification: "Existing request",
+      requested_by: input.requestedByUserId,
+      requested_at: now,
+    })
+    .executeTakeFirstOrThrow();
+
+  await runtime.ctx.db
+    .insertInto("workflow_negotiation_files")
+    .values({
+      lead_id: input.leadId,
+      negotiation_request_id: requestId,
+      artifact_id: input.artifactId,
+      file_asset_id: fileAssetId,
+      uploaded_by_user_id: input.requestedByUserId,
+      created_at: now,
+    })
+    .executeTakeFirstOrThrow();
+}
+
+async function expectNoNegotiationRequests(
+  runtime: TestRuntime,
+  leadId: string,
+): Promise<void> {
+  const rows = await runtime.ctx.db
+    .selectFrom("workflow_negotiation_requests")
+    .select(["id"])
+    .where("lead_id", "=", leadId)
+    .execute();
+  expect(rows).toHaveLength(0);
 }
 
 describe("lead action policy", () => {
@@ -69,9 +178,8 @@ describe("lead action policy", () => {
       } as const,
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
-    expect(result.error.kind).toBe("forbidden");
+    const error = expectErr(result);
+    expect(error.kind).toBe("forbidden");
   });
 
   it("enforces negotiation round limit via transition", () => {
@@ -79,13 +187,12 @@ describe("lead action policy", () => {
       actor: { userId: 1, role: "executive" },
       negotiationRequestId: "req-1",
       round: MAX_NEGOTIATION_ROUNDS + 1,
-      negotiationRequestCount: MAX_NEGOTIATION_ROUNDS,
-      artifactCount: 1,
+      justification: "Need better rate",
+      artifactIds: ["artifact-1"],
       now: 100,
     });
-    expect(maxRounds.ok).toBe(false);
-    if (maxRounds.ok) throw new Error("Expected failure");
-    expect(maxRounds.error.code).toBe("max_negotiation_rounds_reached");
+    const error = expectErr(maxRounds);
+    expect(error.code).toBe("max_negotiation_rounds_reached");
   });
 
   it("enforces negotiation file limit via transition", () => {
@@ -93,13 +200,41 @@ describe("lead action policy", () => {
       actor: { userId: 1, role: "executive" },
       negotiationRequestId: "req-1",
       round: 1,
-      negotiationRequestCount: 0,
-      artifactCount: MAX_NEGOTIATION_FILES + 1,
+      justification: "Need better rate",
+      artifactIds: Array.from(
+        { length: MAX_NEGOTIATION_FILES + 1 },
+        (_, index) => `artifact-${index}`,
+      ),
       now: 100,
     });
-    expect(maxFiles.ok).toBe(false);
-    if (maxFiles.ok) throw new Error("Expected failure");
-    expect(maxFiles.error.code).toBe("max_negotiation_files_exceeded");
+    const error = expectErr(maxFiles);
+    expect(error.code).toBe("max_negotiation_files_exceeded");
+  });
+
+  it("rejects duplicate negotiation files via transition", () => {
+    const duplicate = requestRateNegotiation(makeLeadState(), {
+      actor: { userId: 1, role: "executive" },
+      negotiationRequestId: "req-1",
+      round: 1,
+      justification: "Need better rate",
+      artifactIds: ["artifact-1", "artifact-1"],
+      now: 100,
+    });
+    const error = expectErr(duplicate);
+    expect(error.code).toBe("duplicate_negotiation_file");
+  });
+
+  it("rejects an empty document set via transition", () => {
+    const empty = requestRateNegotiation(makeLeadState(), {
+      actor: { userId: 1, role: "executive" },
+      negotiationRequestId: "req-1",
+      round: 1,
+      justification: "Need better rate",
+      artifactIds: [],
+      now: 100,
+    });
+    const error = expectErr(empty);
+    expect(error.code).toBe("negotiation_files_required");
   });
 
   it("hides request negotiation when the round limit is reached", () => {
@@ -177,5 +312,213 @@ describe("workflow action commands", () => {
       .where("lead_id", "=", lead.id)
       .execute();
     expect(rows).toHaveLength(0);
+  });
+
+  it("creates a rate negotiation with ready staged artifacts", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation-ready",
+      organization: { key: "policy-negotiation-ready" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+    await seedNegotiationArtifact(runtime, {
+      artifactId: "artifact-ready-1",
+      leadId: lead.id,
+      requestedByUserId: actor.userId,
+    });
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.requestRateNegotiation({
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-ready-1"],
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    const request = await runtime.ctx.db
+      .selectFrom("workflow_negotiation_requests")
+      .select(["id"])
+      .where("lead_id", "=", lead.id)
+      .executeTakeFirstOrThrow();
+    const files = await runtime.ctx.db
+      .selectFrom("workflow_negotiation_files")
+      .select(["artifact_id", "uploaded_by_user_id"])
+      .where("negotiation_request_id", "=", request.id)
+      .execute();
+    expect(files).toEqual([
+      {
+        artifact_id: "artifact-ready-1",
+        uploaded_by_user_id: actor.userId,
+      },
+    ]);
+  });
+
+  it("rejects duplicate rate negotiation artifact ids and does not persist requests", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation-duplicate",
+      organization: { key: "policy-negotiation-duplicate" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+    await seedNegotiationArtifact(runtime, {
+      artifactId: "artifact-dup",
+      leadId: lead.id,
+      requestedByUserId: actor.userId,
+    });
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.requestRateNegotiation({
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-dup", "artifact-dup"],
+      }),
+    );
+
+    const error = expectErr(result);
+    expect(error.code).toBe("duplicate_negotiation_file");
+    await expectNoNegotiationRequests(runtime, lead.id);
+  });
+
+  it("rejects staged negotiation artifacts uploaded by another user", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation-owner",
+      organization: { key: "policy-negotiation-owner" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+    await seedNegotiationArtifact(runtime, {
+      artifactId: "artifact-other-user",
+      leadId: lead.id,
+      requestedByUserId: scenario.actor.by("execTwo").userId,
+    });
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.requestRateNegotiation({
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-other-user"],
+      }),
+    );
+
+    const error = expectErr(result);
+    expect(error.code).toBe("negotiation_file_not_submit_ready");
+    await expectNoNegotiationRequests(runtime, lead.id);
+  });
+
+  it("rejects staged negotiation artifacts for another lead", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation-lead",
+      organization: { key: "policy-negotiation-lead" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+    const otherLead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation-other-lead",
+      organization: { key: "policy-negotiation-other-lead" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+    await seedNegotiationArtifact(runtime, {
+      artifactId: "artifact-other-lead",
+      leadId: otherLead.id,
+      requestedByUserId: actor.userId,
+    });
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.requestRateNegotiation({
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-other-lead"],
+      }),
+    );
+
+    const error = expectErr(result);
+    expect(error.code).toBe("negotiation_file_not_submit_ready");
+    await expectNoNegotiationRequests(runtime, lead.id);
+  });
+
+  it("rejects non-ready staged negotiation artifacts", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation-status",
+      organization: { key: "policy-negotiation-status" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+    await seedNegotiationArtifact(runtime, {
+      artifactId: "artifact-not-ready",
+      leadId: lead.id,
+      requestedByUserId: actor.userId,
+      status: "requested",
+    });
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.requestRateNegotiation({
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-not-ready"],
+      }),
+    );
+
+    const error = expectErr(result);
+    expect(error.code).toBe("negotiation_file_not_submit_ready");
+    await expectNoNegotiationRequests(runtime, lead.id);
+  });
+
+  it("rejects already linked staged negotiation artifacts", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "policy-negotiation-linked",
+      organization: { key: "policy-negotiation-linked" },
+      stage: "QUOTED",
+      createdAt: 10,
+      updatedAt: 10,
+    });
+    await seedNegotiationArtifact(runtime, {
+      artifactId: "artifact-linked",
+      leadId: lead.id,
+      requestedByUserId: actor.userId,
+      linked: true,
+    });
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.requestRateNegotiation({
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-linked"],
+      }),
+    );
+
+    const error = expectErr(result);
+    expect(error.code).toBe("negotiation_file_not_submit_ready");
+    const rows = await runtime.ctx.db
+      .selectFrom("workflow_negotiation_requests")
+      .select(["id"])
+      .where("lead_id", "=", lead.id)
+      .execute();
+    expect(rows).toHaveLength(1);
   });
 });

@@ -5,6 +5,7 @@ import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 import {
   toCommercialScopeEntry,
   toQuotationEntry,
+  toRateNegotiationRequestedEntry,
   toRepLegalEntry,
   toRequestQuotationEntry,
   toVenueAddedEntry,
@@ -52,6 +53,8 @@ export function toHistoryEntry(
       return toRepLegalEntry(row, payload.value);
     case "quotation_created":
       return toQuotationEntry(row, payload.value);
+    case "rate_negotiation_requested":
+      return toRateNegotiationRequestedEntry(row, payload.value);
     case "sale_approved":
       return Ok({
         ...toHistoryEntryBase(row),

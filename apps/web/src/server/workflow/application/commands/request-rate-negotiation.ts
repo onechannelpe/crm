@@ -10,21 +10,12 @@ import { leadNotFound } from "../../domain/lead/lead-errors";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+import type { SubmitReadyNegotiationFile } from "../ports/entities";
 
 export async function requestRateNegotiationCommand(
   input: RequestRateNegotiationCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  if (input.artifactIds.length === 0) {
-    return Err(
-      domainError(
-        "validation",
-        "negotiation_files_required",
-        "At least one document is required for rate negotiation",
-      ),
-    );
-  }
-
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
     const uow = createLeadUow(tx);
@@ -36,35 +27,30 @@ export async function requestRateNegotiationCommand(
       state.id,
     );
 
-    const artifacts = await Promise.all(
+    const resolved = await Promise.all(
       input.artifactIds.map(async (artifactId) => {
-        const fileAssetId =
-          await repos.leadNegotiationRequests.findFileAssetIdForArtifact(
+        const file =
+          await repos.leadNegotiationRequests.findSubmitReadyNegotiationFile({
             artifactId,
-            state.id,
-          );
-        return { artifactId, fileAssetId };
+            leadId: state.id,
+            uploadedByUserId: input.actor.userId,
+          });
+        return { artifactId, file };
       }),
     );
 
-    const validatedArtifacts: Array<{
-      artifactId: string;
-      fileAssetId: number;
-    }> = [];
-    for (const art of artifacts) {
-      if (!art.fileAssetId) {
+    const validatedArtifacts: SubmitReadyNegotiationFile[] = [];
+    for (const { artifactId, file } of resolved) {
+      if (!file) {
         return Err(
           domainError(
             "conflict",
-            "artifact_not_found",
-            `Artifact ${art.artifactId} not found or not ready`,
+            "negotiation_file_not_submit_ready",
+            `Artifact ${artifactId} is not ready for negotiation submission`,
           ),
         );
       }
-      validatedArtifacts.push({
-        artifactId: art.artifactId,
-        fileAssetId: art.fileAssetId,
-      });
+      validatedArtifacts.push(file);
     }
 
     const negotiationRequestId = randomUUIDv7();
@@ -75,8 +61,8 @@ export async function requestRateNegotiationCommand(
       actor: input.actor,
       negotiationRequestId,
       round,
-      negotiationRequestCount: existingCount,
-      artifactCount: validatedArtifacts.length,
+      justification: input.justification,
+      artifactIds: input.artifactIds,
       now,
     });
     if (!transition.ok) return transition;

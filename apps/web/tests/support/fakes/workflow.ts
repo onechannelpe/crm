@@ -60,9 +60,9 @@ export function makeNegotiationRequests(
 ) {
   const insert = vi.fn<NegotiationRequestRepository["insert"]>();
   const insertFile = vi.fn<NegotiationRequestRepository["insertFile"]>();
-  const findFileAssetIdForArtifact = vi.fn<
-    NegotiationRequestRepository["findFileAssetIdForArtifact"]
-  >(async () => 10);
+  const findSubmitReadyNegotiationFile = vi.fn<
+    NegotiationRequestRepository["findSubmitReadyNegotiationFile"]
+  >(async ({ artifactId }) => ({ artifactId, fileAssetId: 10 }));
   const countByLeadId = vi.fn<NegotiationRequestRepository["countByLeadId"]>(
     async () => 0,
   );
@@ -73,7 +73,7 @@ export function makeNegotiationRequests(
   const repo = {
     insert,
     insertFile,
-    findFileAssetIdForArtifact,
+    findSubmitReadyNegotiationFile,
     countByLeadId,
     listByLeadId,
     ...overrides,
@@ -83,7 +83,7 @@ export function makeNegotiationRequests(
     repo,
     insert,
     insertFile,
-    findFileAssetIdForArtifact,
+    findSubmitReadyNegotiationFile,
     countByLeadId,
     listByLeadId,
   };

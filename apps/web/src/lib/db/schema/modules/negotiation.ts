@@ -18,6 +18,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_negotiation_requests_lead")
     .on("workflow_negotiation_requests")
+    .unique()
     .columns(["lead_id", "round"])
     .execute();
 

@@ -121,6 +121,34 @@ export function toQuotationEntry(
   });
 }
 
+export function toRateNegotiationRequestedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const negotiationRequestId = requireString(
+    payload,
+    "negotiationRequestId",
+    row,
+  );
+  if (!negotiationRequestId.ok) return negotiationRequestId;
+
+  const round = requireNumber(payload, "round", row);
+  if (!round.ok) return round;
+
+  const justification = requireString(payload, "justification", row);
+  if (!justification.ok) return justification;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "rate_negotiation_requested",
+    payload: {
+      negotiationRequestId: negotiationRequestId.value,
+      round: round.value,
+      justification: justification.value,
+    },
+  });
+}
+
 export function toVenueAddedEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,

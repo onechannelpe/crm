@@ -1,3 +1,4 @@
+import { MAX_NEGOTIATION_ROUNDS } from "~/contracts/workflow/limits";
 import type { LeadAvailableAction } from "~/contracts/workflow/views";
 import { type LeadStage } from "~/contracts/workflow/vocabulary";
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
@@ -37,9 +38,6 @@ const OWNER_REQUIRED = new Set<LeadCapability>([
   "approve-for-sale",
   "request-negotiation",
 ]);
-
-export const MAX_NEGOTIATION_ROUNDS = 3;
-export const MAX_NEGOTIATION_FILES = 3;
 
 export function resolveCapabilities(role: Role): Set<LeadCapability> {
   const caps = new Set<LeadCapability>();

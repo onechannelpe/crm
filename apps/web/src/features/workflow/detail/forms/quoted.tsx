@@ -8,6 +8,7 @@ import Paperclip from "~/components/icons/paperclip";
 import Target from "~/components/icons/target";
 import Trash from "~/components/icons/trash";
 import { Button } from "~/components/ui/input/button";
+import { MAX_NEGOTIATION_FILES } from "~/contracts/workflow/limits";
 import type {
   LeadDetailNegotiationRequestView,
   LeadDetailQuotationView,
@@ -43,8 +44,6 @@ type StagedFile = {
   filename: string;
   sizeBytes: number;
 };
-
-const MAX_NEGOTIATION_FILES = 3;
 
 type QuotedSectionProps = {
   leadId: string;

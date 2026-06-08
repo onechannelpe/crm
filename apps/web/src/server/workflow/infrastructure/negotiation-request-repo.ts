@@ -37,14 +37,14 @@ export function createNegotiationRequestRepo(
           uploaded_by_user_id: values.uploadedByUserId,
           created_at: values.createdAt,
         })
-        .onConflict((oc) => oc.column("artifact_id").doNothing())
         .executeTakeFirstOrThrow();
     },
 
-    async findFileAssetIdForArtifact(
-      artifactId: string,
-      leadId: string,
-    ): Promise<number | null> {
+    async findSubmitReadyNegotiationFile(input: {
+      artifactId: string;
+      leadId: string;
+      uploadedByUserId: number;
+    }) {
       const row = await db
         .selectFrom("artifact_file_bindings")
         .innerJoin(
@@ -52,10 +52,19 @@ export function createNegotiationRequestRepo(
           "workflow_artifacts.id",
           "artifact_file_bindings.artifact_id",
         )
-        .select("artifact_file_bindings.file_asset_id")
-        .where("artifact_file_bindings.artifact_id", "=", artifactId)
+        .select([
+          "artifact_file_bindings.artifact_id as artifactId",
+          "artifact_file_bindings.file_asset_id as fileAssetId",
+        ])
+        .where("artifact_file_bindings.artifact_id", "=", input.artifactId)
         .where("artifact_file_bindings.binding_role", "=", "source_upload")
         .where("workflow_artifacts.artifact_type", "=", "negotiation_file")
+        .where("workflow_artifacts.status", "=", "ready")
+        .where(
+          "workflow_artifacts.requested_by_user_id",
+          "=",
+          input.uploadedByUserId,
+        )
         .where(
           (eb) =>
             eb.fn("json_extract", [
@@ -63,10 +72,27 @@ export function createNegotiationRequestRepo(
               eb.val("$.leadId"),
             ]),
           "=",
-          leadId,
+          input.leadId,
+        )
+        .where((eb) =>
+          eb.not(
+            eb.exists(
+              eb
+                .selectFrom("workflow_negotiation_files")
+                .select("id")
+                .whereRef(
+                  "workflow_negotiation_files.artifact_id",
+                  "=",
+                  "artifact_file_bindings.artifact_id",
+                ),
+            ),
+          ),
         )
         .executeTakeFirst();
-      return row?.file_asset_id ?? null;
+
+      return row
+        ? { artifactId: row.artifactId, fileAssetId: row.fileAssetId }
+        : null;
     },
 
     async countByLeadId(leadId: string): Promise<number> {

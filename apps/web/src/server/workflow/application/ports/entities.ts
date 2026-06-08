@@ -117,13 +117,19 @@ export type LeadNegotiationFile = {
   createdAt: number;
 };
 
+export type SubmitReadyNegotiationFile = {
+  artifactId: string;
+  fileAssetId: number;
+};
+
 export type NegotiationRequestRepository = {
   insert(values: LeadNegotiationRequest): Promise<void>;
   insertFile(values: LeadNegotiationFile & { leadId: string }): Promise<void>;
-  findFileAssetIdForArtifact(
-    artifactId: string,
-    leadId: string,
-  ): Promise<number | null>;
+  findSubmitReadyNegotiationFile(input: {
+    artifactId: string;
+    leadId: string;
+    uploadedByUserId: number;
+  }): Promise<SubmitReadyNegotiationFile | null>;
   countByLeadId(leadId: string): Promise<number>;
   listByLeadId(leadId: string): Promise<LeadNegotiationRequest[]>;
 };
