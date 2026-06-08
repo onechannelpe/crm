@@ -21,23 +21,34 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+const IMPORT_JOB_MAX_ATTEMPTS = 3;
+
 function getExtension(filename: string): string | null {
   const dot = filename.lastIndexOf(".");
-  if (dot === -1) return null;
+
+  if (dot === -1) {
+    return null;
+  }
+
   return filename.slice(dot + 1).toLowerCase() || null;
 }
 
-type ImportUpload = { file: File; extension: "csv" | "xlsx" };
+type ImportUpload = {
+  file: File;
+  extension: "csv" | "xlsx";
+};
 
 function parseImportUpload(
   formData: FormData,
 ): Result<ImportUpload, DomainError> {
   const file = formData.get("file");
+
   if (!(file instanceof File)) {
     return Err(domainError("validation", "file_required", "file is required"));
   }
 
   const extension = getExtension(file.name);
+
   if (extension !== "csv" && extension !== "xlsx") {
     return Err(
       domainError(
@@ -56,11 +67,17 @@ function parseImportUpload(
 }
 
 async function getAuthorizedRecordImportJob(
-  actor: { userId: number; branchId: number; role: Role },
+  actor: {
+    userId: number;
+    branchId: number;
+    role: Role;
+  },
   jobId: string,
 ): Promise<IntegrationJobRow> {
-  const job =
-    await getServerRuntime().integrations.integration.jobs.findById(jobId);
+  const { integration } = getServerRuntime().integrations;
+
+  const job = await integration.jobs.findById(jobId);
+
   if (
     !job ||
     (job.type !== "import_status" && job.type !== "import_prioridad")
@@ -68,11 +85,8 @@ async function getAuthorizedRecordImportJob(
     throw notFoundError("Import job not found");
   }
 
-  const authorized = await canAccessRecordImportJob(
-    actor,
-    job,
-    getServerRuntime().integrations.integration,
-  );
+  const authorized = await canAccessRecordImportJob(actor, job, integration);
+
   if (!authorized) {
     throw notFoundError("Import job not found");
   }
@@ -90,12 +104,16 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
     access: { kind: "permission", permission: "integration:manage" },
     parse: () => parseImportUpload(formData),
     audit: ({ file }) => ({ fileName: file.name, fileSize: file.size }),
+
     execute: async (ctx, { file, extension }) => {
-      const { storage } = getServerRuntime().files;
-      const { integration } = getServerRuntime().integrations;
+      const runtime = getServerRuntime();
+      const { storage } = runtime.files;
+      const { integration } = runtime.integrations;
 
       const buffer = await file.arrayBuffer();
+
       let parsed;
+
       try {
         parsed = parseImportFile(buffer, extension);
       } catch (err) {
@@ -107,17 +125,18 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
       const { importType, validRows, invalidRows } = parsed;
       const rowsTotal = validRows.length + invalidRows.length;
       const storageKey = `imports/${randomUUID()}.json`;
-      await storage.putBytes(
-        storageKey,
-        new TextEncoder().encode(JSON.stringify({ validRows, invalidRows })),
+      const storagePayload = new TextEncoder().encode(
+        JSON.stringify({ validRows, invalidRows }),
       );
+
+      await storage.putBytes(storageKey, storagePayload);
 
       const jobId = await integration.jobs.insert({
         type: importType,
         status: "PENDING",
         requested_by_user_id: ctx.actor.userId,
         file_path: storageKey,
-        max_attempts: 3,
+        max_attempts: IMPORT_JOB_MAX_ATTEMPTS,
         created_at: ctx.now(),
       });
 
@@ -154,13 +173,17 @@ export async function getRecordImportJob(
   return runAction({
     actionName: "records.import.get_job",
     access: { kind: "permission", permission: "integration:manage" },
+
     parse: () =>
       parseObject({ jobId }, validationFail, (r) => ({
         jobId: r.str("jobId"),
       })),
+
     audit: ({ jobId }) => ({ jobId }),
+
     execute: async (ctx, { jobId }) => {
       const job = await getAuthorizedRecordImportJob(ctx.actor, jobId);
+
       return Ok(job);
     },
   });
