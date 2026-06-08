@@ -22,11 +22,12 @@ export async function requestMoreSearches(amount: unknown, reason: unknown) {
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(amount, reason),
     audit: ({ amount }) => ({ amount }),
-    execute: (ctx, request) =>
+
+    execute: (ctx, { amount, reason }) =>
       getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "search_extra",
-        amount: request.amount,
-        reason: request.reason,
+        amount,
+        reason,
       }),
   });
 }
@@ -37,11 +38,12 @@ export async function requestMoreLeadRefill(amount: unknown, reason: unknown) {
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(amount, reason),
     audit: ({ amount }) => ({ amount }),
-    execute: (ctx, request) =>
+
+    execute: (ctx, { amount, reason }) =>
       getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "lead_refill",
-        amount: request.amount,
-        reason: request.reason,
+        amount,
+        reason,
       }),
   });
 }
