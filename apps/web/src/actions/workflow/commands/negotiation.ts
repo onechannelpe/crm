@@ -2,48 +2,38 @@
 
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { domainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, Ok, type Result } from "~/server/shared/result";
-
-type RequestRateNegotiationPayload = {
-  leadId: string;
-  justification: string;
-  artifactIds: string[];
-};
-
-function parseRequestRateNegotiation(
-  input: unknown,
-): Result<RequestRateNegotiationPayload, DomainError> {
-  const parsed = parseObject(input, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-    justification: r.str("justification"),
-    artifactIds: r.strList("artifactIds"),
-  }));
-
-  if (!parsed.ok) {
-    return parsed;
-  }
-
-  if (parsed.value.artifactIds.some((artifactId) => !artifactId)) {
-    return Err(
-      domainError(
-        "validation",
-        "artifact_id_required",
-        "Artifact id is required",
-      ),
-    );
-  }
-
-  return Ok(parsed.value);
-}
+import { Err, Ok } from "~/server/shared/result";
 
 export async function requestRateNegotiation(input: unknown) {
   return runAction({
     actionName: "workflow.request_rate_negotiation",
     access: { kind: "auth" },
 
-    parse: () => parseRequestRateNegotiation(input),
+    parse: () => {
+      const parsed = parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        justification: r.str("justification"),
+        artifactIds: r.strList("artifactIds"),
+      }));
+
+      if (!parsed.ok) {
+        return parsed;
+      }
+
+      if (parsed.value.artifactIds.some((artifactId) => !artifactId)) {
+        return Err(
+          domainError(
+            "validation",
+            "artifact_id_required",
+            "Artifact id is required",
+          ),
+        );
+      }
+
+      return Ok(parsed.value);
+    },
 
     audit: ({ leadId }) => ({ leadId }),
 
