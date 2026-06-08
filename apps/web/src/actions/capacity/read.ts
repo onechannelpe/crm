@@ -17,6 +17,7 @@ export async function getManagedExecutivesList(): Promise<
   return runAction({
     actionName: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
+
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.listManagedExecutives(ctx),
   });
@@ -28,11 +29,14 @@ export async function getExecutiveDetail(
   return runAction({
     actionName: "capacity.executive_detail.read",
     access: { kind: "permission", permission: "capacity:read:team" },
+
     parse: () =>
       parseObject({ userId }, validationFail, (r) => ({
         userId: r.num("userId"),
       })),
+
     audit: ({ userId }) => ({ userId }),
+
     execute: (ctx, params) =>
       getServerRuntime().capacity.useCases.getExecutiveDetail(ctx, params),
   });
@@ -44,6 +48,7 @@ export async function getPendingRequests(): Promise<
   return runAction({
     actionName: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
+
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.listPendingRequests(ctx),
   });
@@ -53,6 +58,7 @@ export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
   return runAction({
     actionName: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
+
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.getPolicyDefaults(ctx),
   });
@@ -64,10 +70,12 @@ export async function getAuditEvents(
   return runAction({
     actionName: "capacity.audit.read",
     access: { kind: "permission", permission: "capacity:audit:read" },
+
     parse: () =>
       parseObject({ limit }, validationFail, (r) => ({
         limit: r.optNum("limit") ?? undefined,
       })),
+
     execute: (ctx, params) =>
       getServerRuntime().capacity.useCases.getAuditEvents(ctx, params),
   });
