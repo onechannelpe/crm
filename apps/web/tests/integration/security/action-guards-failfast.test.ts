@@ -18,7 +18,10 @@ async function rejectionDomainCode(run: Promise<unknown>): Promise<unknown> {
   try {
     await run;
   } catch (error) {
-    return (error as { domainCode?: string }).domainCode;
+    if (error && typeof error === "object" && "domainCode" in error) {
+      return error.domainCode;
+    }
+    return undefined;
   }
   throw new Error("expected the action to reject");
 }

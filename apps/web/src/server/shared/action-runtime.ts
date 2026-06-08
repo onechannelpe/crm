@@ -102,6 +102,8 @@ export async function runActionResult<TIn, TOut, E extends DomainError>(
 
   // Validate first: reject a malformed payload before any session or database
   // work. There is no actor yet, so the rejection is surfaced without a row.
+  // No-input actions have no payload; TIn is undefined for them by construction.
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const parsed = params.parse ? params.parse() : Ok(undefined as TIn);
   if (isErr(parsed)) {
     return Err(sanitize(domainToAppError(parsed.error)));
