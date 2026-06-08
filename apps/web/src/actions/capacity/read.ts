@@ -31,11 +31,12 @@ export async function getExecutiveDetail(
     access: { kind: "permission", permission: "capacity:read:team" },
 
     parse: () =>
-      parseObject({ userId }, validationFail, (r) => ({
-        userId: r.posInt("userId"),
-      })),
+      parseObject({ userId }, validationFail, (r) => {
+        const parsedUserId = r.posInt("userId");
+        return { userId: parsedUserId };
+      }),
 
-    audit: ({ userId }) => ({ userId }),
+    audit: (params) => ({ userId: params.userId }),
 
     execute: (ctx, params) =>
       getServerRuntime().capacity.useCases.getExecutiveDetail(ctx, params),
@@ -73,7 +74,7 @@ export async function getAuditEvents(
 
     parse: () =>
       parseObject({ limit }, validationFail, (r) => ({
-        limit: r.optNum("limit") ?? undefined,
+        limit: limit === undefined ? undefined : r.posInt("limit"),
       })),
 
     execute: (ctx, params) =>
