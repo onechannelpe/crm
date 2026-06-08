@@ -2,72 +2,96 @@
 
 import { randomUUIDv7 } from "bun";
 
-import { assertNonEmptyString } from "~/contracts/guards";
-import { validationError } from "~/lib/app-errors";
 import { isRole } from "~/lib/auth/access/rbac";
-import { requireRole } from "~/lib/auth/access/session";
-import type { NotificationAudience } from "~/server/notifications/types";
 import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import type { NotificationAudience } from "~/server/notifications/types";
 
-function assertAudienceType(
-  value: string,
-): "user_ids" | "global_roles" | "team" {
-  if (value === "user_ids" || value === "global_roles" || value === "team") {
-    return value;
-  }
-  throw validationError("Invalid audience type");
-}
+const AUDIENCE_TYPES = ["user_ids", "global_roles", "team"] as const;
 
-function parseAudience(
-  audienceType: "user_ids" | "global_roles" | "team",
-  value: string,
-): NotificationAudience {
-  const ref = assertNonEmptyString(value, "audienceRef");
+type BroadcastInput = {
+  title: string;
+  bodyText: string;
+  audience: NotificationAudience;
+};
+
+function resolveAudience(
+  audienceType: (typeof AUDIENCE_TYPES)[number],
+  ref: string,
+): Result<NotificationAudience, DomainError> {
   if (audienceType === "user_ids") {
     const userId = Number(ref);
     if (!Number.isInteger(userId) || userId <= 0) {
-      throw validationError("Invalid user audience");
+      return Err(
+        domainError("validation", "invalid_user_audience", "Invalid audience"),
+      );
     }
-    return { kind: "user_ids", userIds: [userId] };
+    return Ok({ kind: "user_ids", userIds: [userId] });
   }
   if (audienceType === "team") {
     const teamId = Number(ref);
     if (!Number.isInteger(teamId) || teamId <= 0) {
-      throw validationError("Invalid team audience");
+      return Err(
+        domainError("validation", "invalid_team_audience", "Invalid audience"),
+      );
     }
-    return { kind: "team_id", teamId };
+    return Ok({ kind: "team_id", teamId });
   }
   if (!isRole(ref)) {
-    throw validationError("Invalid global role audience");
+    return Err(
+      domainError("validation", "invalid_role_audience", "Invalid audience"),
+    );
   }
-  return { kind: "global_role", role: ref };
+  return Ok({ kind: "global_role", role: ref });
 }
 
-export async function sendBroadcastNotification(params: {
-  title: string;
-  bodyText: string;
-  audienceType: string;
-  audienceRef: string;
-}): Promise<void> {
-  const session = await requireRole("admin");
-  const audienceType = assertAudienceType(params.audienceType);
-  const audience = parseAudience(audienceType, params.audienceRef);
-  const now = Date.now();
+function parseBroadcast(params: unknown): Result<BroadcastInput, DomainError> {
+  const shape = parseObject(params, validationFail, (r) => ({
+    title: r.str("title"),
+    bodyText: r.str("bodyText"),
+    audienceType: r.enum("audienceType", AUDIENCE_TYPES),
+    audienceRef: r.str("audienceRef"),
+  }));
+  if (isErr(shape)) return shape;
 
-  await getServerRuntime().notifications.enqueue(
-    [
-      {
-        id: `broadcast:${session.userId}:${randomUUIDv7()}`,
-        eventType: "broadcast.general",
-        audience,
-        channels: ["in_app", "email", "whatsapp"],
-        priority: "normal",
-        title: assertNonEmptyString(params.title, "title"),
-        bodyText: assertNonEmptyString(params.bodyText, "bodyText"),
-        actionUrl: null,
-      },
-    ],
-    now,
-  );
-  await getServerRuntime().notifications.dispatchPendingJobs();
+  const audience = resolveAudience(shape.value.audienceType, shape.value.audienceRef);
+  if (isErr(audience)) return audience;
+
+  return Ok({
+    title: shape.value.title,
+    bodyText: shape.value.bodyText,
+    audience: audience.value,
+  });
+}
+
+export async function sendBroadcastNotification(params: unknown): Promise<void> {
+  await runAction({
+    actionName: "notifications.broadcast",
+    access: { kind: "role", role: "admin" },
+    parse: () => parseBroadcast(params),
+    audit: ({ audience }) => ({ audienceKind: audience.kind }),
+    execute: async (ctx, input) => {
+      const now = Date.now();
+      await getServerRuntime().notifications.enqueue(
+        [
+          {
+            id: `broadcast:${ctx.actor.userId}:${randomUUIDv7()}`,
+            eventType: "broadcast.general",
+            audience: input.audience,
+            channels: ["in_app", "email", "whatsapp"],
+            priority: "normal",
+            title: input.title,
+            bodyText: input.bodyText,
+            actionUrl: null,
+          },
+        ],
+        now,
+      );
+      await getServerRuntime().notifications.dispatchPendingJobs();
+      return Ok(undefined);
+    },
+  });
 }

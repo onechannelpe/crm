@@ -1,14 +1,15 @@
 "use server";
 
 import type { ActionSuccess } from "~/contracts/common";
-import { assertNonEmptyString } from "~/contracts/guards";
 import { conflictError, forbiddenError, notFoundError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
-import { requireSession } from "~/lib/auth/access/session";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { Ok } from "~/server/shared/result";
 import type { UserId } from "~/server/shared/ids";
 
 async function requireCurrentUserWithStrongAuthState(userId: UserId) {
@@ -45,85 +46,105 @@ function assertProtectedRoleKeepsStrongAuth(input: {
 }
 
 export async function changePassword(
-  currentPassword: string,
-  newPassword: string,
+  currentPassword: unknown,
+  newPassword: unknown,
 ): Promise<ActionSuccess> {
-  const { users, auditLogs } = getServerRuntime().security;
-  const safeCurrent = assertNonEmptyString(currentPassword, "currentPassword");
-  const safeNew = assertNonEmptyString(newPassword, "newPassword");
-  const session = await requireSession();
+  return runAction({
+    actionName: "settings.security.change_password",
+    access: { kind: "session" },
+    parse: () =>
+      parseObject({ currentPassword, newPassword }, validationFail, (r) => ({
+        currentPassword: r.str("currentPassword"),
+        newPassword: r.str("newPassword"),
+      })),
+    execute: async (ctx, input) => {
+      const { users, auditLogs } = getServerRuntime().security;
+      const user = await users.findById(ctx.actor.userId);
+      if (!user) throw notFoundError("User not found");
 
-  const user = await users.findById(session.userId);
-  if (!user) throw notFoundError("User not found");
+      const valid = await verifyPassword(
+        user.password_hash,
+        input.currentPassword,
+      );
+      if (!valid) throw forbiddenError("Current password is incorrect");
 
-  const valid = await verifyPassword(user.password_hash, safeCurrent);
-  if (!valid) throw forbiddenError("Current password is incorrect");
+      const newHash = await hashPassword(input.newPassword);
+      await users.updatePassword(ctx.actor.userId, newHash);
 
-  const newHash = await hashPassword(safeNew);
-  await users.updatePassword(session.userId, newHash);
+      await auditLogs.create({
+        user_id: ctx.actor.userId,
+        action: "password_changed",
+        entity_type: "user",
+        entity_id: ctx.actor.userId,
+        changes: null,
+        created_at: Date.now(),
+      });
 
-  await auditLogs.create({
-    user_id: session.userId,
-    action: "password_changed",
-    entity_type: "user",
-    entity_id: session.userId,
-    changes: null,
-    created_at: Date.now(),
+      return Ok({ success: true });
+    },
   });
-
-  return { success: true };
 }
 
 export async function removeAllPasskeys(): Promise<ActionSuccess> {
-  const { passkeys, auditLogs } = getServerRuntime().security;
-  const session = await requireSession();
-  const { user, strongAuthStatus } =
-    await requireCurrentUserWithStrongAuthState(session.userId);
-  assertProtectedRoleKeepsStrongAuth({
-    role: user.role,
-    removingTotp: false,
-    removingPasskeys: true,
-    hasTotp: strongAuthStatus.hasTotp,
-    hasPasskey: strongAuthStatus.hasPasskey,
-  });
+  return runAction({
+    actionName: "settings.security.remove_passkeys",
+    access: { kind: "session" },
+    execute: async (ctx) => {
+      const { passkeys, auditLogs } = getServerRuntime().security;
+      const { user, strongAuthStatus } =
+        await requireCurrentUserWithStrongAuthState(ctx.actor.userId);
+      assertProtectedRoleKeepsStrongAuth({
+        role: user.role,
+        removingTotp: false,
+        removingPasskeys: true,
+        hasTotp: strongAuthStatus.hasTotp,
+        hasPasskey: strongAuthStatus.hasPasskey,
+      });
 
-  await passkeys.deleteAllByUser(session.userId);
-  await auditLogs.create({
-    user_id: session.userId,
-    action: "passkeys_removed",
-    entity_type: "user",
-    entity_id: session.userId,
-    changes: null,
-    created_at: Date.now(),
-  });
+      await passkeys.deleteAllByUser(ctx.actor.userId);
+      await auditLogs.create({
+        user_id: ctx.actor.userId,
+        action: "passkeys_removed",
+        entity_type: "user",
+        entity_id: ctx.actor.userId,
+        changes: null,
+        created_at: Date.now(),
+      });
 
-  return { success: true };
+      return Ok({ success: true });
+    },
+  });
 }
 
 export async function disableTotp(): Promise<ActionSuccess> {
-  const { userTotpFactors, userTotpRecoveryCodes, auditLogs } =
-    getServerRuntime().security;
-  const session = await requireSession();
-  const { user, strongAuthStatus } =
-    await requireCurrentUserWithStrongAuthState(session.userId);
-  assertProtectedRoleKeepsStrongAuth({
-    role: user.role,
-    removingTotp: true,
-    removingPasskeys: false,
-    hasTotp: strongAuthStatus.hasTotp,
-    hasPasskey: strongAuthStatus.hasPasskey,
-  });
+  return runAction({
+    actionName: "settings.security.disable_totp",
+    access: { kind: "session" },
+    execute: async (ctx) => {
+      const { userTotpFactors, userTotpRecoveryCodes, auditLogs } =
+        getServerRuntime().security;
+      const { user, strongAuthStatus } =
+        await requireCurrentUserWithStrongAuthState(ctx.actor.userId);
+      assertProtectedRoleKeepsStrongAuth({
+        role: user.role,
+        removingTotp: true,
+        removingPasskeys: false,
+        hasTotp: strongAuthStatus.hasTotp,
+        hasPasskey: strongAuthStatus.hasPasskey,
+      });
 
-  await userTotpFactors.disable(session.userId);
-  await userTotpRecoveryCodes.deleteAllByUser(session.userId);
-  await auditLogs.create({
-    user_id: session.userId,
-    action: "totp_disabled",
-    entity_type: "user",
-    entity_id: session.userId,
-    changes: null,
-    created_at: Date.now(),
-  });
+      await userTotpFactors.disable(ctx.actor.userId);
+      await userTotpRecoveryCodes.deleteAllByUser(ctx.actor.userId);
+      await auditLogs.create({
+        user_id: ctx.actor.userId,
+        action: "totp_disabled",
+        entity_type: "user",
+        entity_id: ctx.actor.userId,
+        changes: null,
+        created_at: Date.now(),
+      });
 
-  return { success: true };
+      return Ok({ success: true });
+    },
+  });
 }

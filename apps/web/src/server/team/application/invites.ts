@@ -5,10 +5,6 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import {
-  validateTeamInviteInput,
-  type TeamInviteShape,
-} from "../domain/invite-input";
 import type {
   TeamInviteCreateContext,
   TeamInviteProvisioningContext,
@@ -21,6 +17,7 @@ import {
 } from "../infrastructure/invite-delivery";
 import type {
   BulkImportSetup,
+  CreateTeamInviteCommand,
   InviteInfo,
   InviteManagement,
 } from "./contracts";
@@ -74,12 +71,8 @@ export async function getBulkImportSetup(
 export async function createTeamInvite(
   ctx: AppContext,
   deps: TeamInviteCreateContext,
-  rawInput: TeamInviteShape,
+  input: CreateTeamInviteCommand,
 ): Promise<Result<{ inviteId: number }, DomainError>> {
-  const validated = validateTeamInviteInput(rawInput);
-  if (isErr(validated)) return validated;
-  const input = validated.value;
-
   await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
 
   const result = await deps.inviteService.createInvite({

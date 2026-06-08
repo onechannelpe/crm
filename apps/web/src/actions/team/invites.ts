@@ -5,13 +5,14 @@ import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
-import type { Result } from "~/server/shared/result";
+import { isErr, type Result } from "~/server/shared/result";
+import type { CreateTeamInviteCommand } from "~/server/team/application/contracts";
 import {
   createTeamInvite as createTeamInviteService,
   resendTeamInvite as resendTeamInviteService,
   revokeTeamInvite as revokeTeamInviteService,
 } from "~/server/team/application/invites";
-import type { TeamInviteShape } from "~/server/team/domain/invite-input";
+import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
 
 function parseInviteId(
   inviteId: unknown,
@@ -27,8 +28,8 @@ export async function createTeamInvite(
   return runAction({
     actionName: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
-    parse: (): Result<TeamInviteShape, DomainError> =>
-      parseObject(input, validationFail, (r) => ({
+    parse: (): Result<CreateTeamInviteCommand, DomainError> => {
+      const shape = parseObject(input, validationFail, (r) => ({
         names: r.str("names"),
         firstSurname: r.str("firstSurname"),
         secondSurname: r.str("secondSurname"),
@@ -37,7 +38,10 @@ export async function createTeamInvite(
         executiveCategory: r.optStr("executiveCategory"),
         teamId: r.optNum("teamId"),
         expiresAt: r.optNum("expiresAt"),
-      })),
+      }));
+      if (isErr(shape)) return shape;
+      return validateTeamInviteInput(shape.value);
+    },
     audit: ({ role, teamId }) => ({ role, hasTeamId: teamId !== null }),
     execute: (ctx, shape) =>
       createTeamInviteService(ctx, getServerRuntime().team.invites, shape),

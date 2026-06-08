@@ -30,14 +30,19 @@ export { createAppContext, type AppContext } from "./action-runtime/context";
 const GENERIC_ERROR = "An unexpected error occurred";
 
 /**
- * Every action is an RPC trust boundary with three concerns, in order: resolve
- * the actor (`access`/`stepUp`), validate the untrusted payload (`parse`), run
- * the command (`execute`). `parse` yields the trusted value or a DomainError;
- * it runs inside the action so a parse failure is one audited attempt and the
- * raw value stays in the action's closure, never reaching `execute` or
+ * Every action is an RPC trust boundary with three concerns, in fail-fast
+ * order (inputs -> auth -> business): validate the untrusted payload (`parse`),
+ * resolve the actor (`access`/`stepUp`), run the command (`execute`). Parsing
+ * first means malformed input is rejected before any session or database work,
+ * and the raw value stays in the action's closure, never reaching `execute` or
  * telemetry. `audit` projects the trusted value down to the scalar fields safe
  * to record. No-input actions omit `parse` and ignore the trailing argument
  * (`execute: (ctx) => ...`).
+ *
+ * A telemetry row is written once an actor is resolved (success or business
+ * failure). Failures before that point, a bad payload or a rejected actor, are
+ * surfaced sanitized without a row, since there is no authenticated actor to
+ * attribute one to.
  */
 type RunActionParams<TIn, TOut, E extends DomainError> = {
   actionName: string;
@@ -95,6 +100,13 @@ export async function runActionResult<TIn, TOut, E extends DomainError>(
 ): Promise<Result<TOut, AppError>> {
   const startedAt = Date.now();
 
+  // Validate first: reject a malformed payload before any session or database
+  // work. There is no actor yet, so the rejection is surfaced without a row.
+  const parsed = params.parse ? params.parse() : Ok(undefined as TIn);
+  if (isErr(parsed)) {
+    return Err(sanitize(domainToAppError(parsed.error)));
+  }
+
   let ctx: AppContext;
   try {
     ctx = await resolveActionContext(params);
@@ -102,14 +114,6 @@ export async function runActionResult<TIn, TOut, E extends DomainError>(
     // Auth or step-up failed before we have an actor, so there is no one to
     // attribute a telemetry row to. Sanitize and surface.
     return Err(sanitize(toAppError(error, GENERIC_ERROR)));
-  }
-
-  const parsed = params.parse ? params.parse() : Ok(undefined as TIn);
-  if (isErr(parsed)) {
-    // Malformed payload: the raw value never reached the trusted side, so the
-    // attempt is audited with empty fields.
-    const error = Err(domainToAppError(parsed.error));
-    return finish(ctx, params.actionName, startedAt, {}, error);
   }
 
   const audit = params.audit?.(parsed.value) ?? {};
