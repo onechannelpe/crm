@@ -12,7 +12,7 @@ export async function updateSearchPolicyOverride(input: unknown) {
     access: { kind: "permission", permission: "capacity:policy:manage" },
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: r.num("userId"),
+        userId: r.posInt("userId"),
         monthlyLimit: r.num("monthlySearchLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
@@ -31,7 +31,7 @@ export async function updateLeadPolicyOverride(input: unknown) {
     access: { kind: "permission", permission: "capacity:policy:manage" },
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: r.num("userId"),
+        userId: r.posInt("userId"),
         bufferTarget: r.num("activeBufferTarget"),
         dailyLimit: r.num("dailyRefillLimit"),
         expiresAt: r.optNum("expiresAt"),
@@ -53,7 +53,7 @@ export async function updateSearchPolicyDefault(input: unknown) {
       parseObject(input, validationFail, (r) => ({
         scope: {
           kind: r.enum("scopeType", SCOPE_TYPES),
-          scopeId: r.num("scopeId"),
+          scopeId: r.posInt("scopeId"),
         },
         monthlyLimit: r.num("monthlySearchLimit"),
       })),
@@ -74,7 +74,7 @@ export async function updateLeadPolicyDefault(input: unknown) {
       parseObject(input, validationFail, (r) => ({
         scope: {
           kind: r.enum("scopeType", SCOPE_TYPES),
-          scopeId: r.num("scopeId"),
+          scopeId: r.posInt("scopeId"),
         },
         bufferTarget: r.num("activeBufferTarget"),
         dailyLimit: r.num("dailyRefillLimit"),

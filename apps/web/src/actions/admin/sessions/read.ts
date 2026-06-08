@@ -6,16 +6,18 @@ import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
-import { parseUserSessionsInput } from "./input";
-
-export async function listUserSessions(userId: number) {
+export async function listUserSessions(userId: unknown) {
   return runAction({
     actionName: "admin.sessions.user.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
-    parse: () => parseUserSessionsInput(userId),
+    parse: () =>
+      parseObject({ userId }, validationFail, (r) => ({
+        userId: r.posInt("userId"),
+      })),
     audit: ({ userId }) => ({ userId }),
     execute: async (ctx, parsed) =>
       Ok(

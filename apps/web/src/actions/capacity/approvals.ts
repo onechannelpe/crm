@@ -13,7 +13,7 @@ function parseCapacityDecision(
   note: unknown,
 ): Result<CapacityDecision, DomainError> {
   return parseObject({ requestId, note }, validationFail, (r) => ({
-    requestId: r.num("requestId"),
+    requestId: r.posInt("requestId"),
     note: r.optStr("note"),
   }));
 }
@@ -24,7 +24,7 @@ function parseCapacityGrant(
   reason: unknown,
 ): Result<{ userId: number; amount: number; reason: string }, DomainError> {
   return parseObject({ userId, amount, reason }, validationFail, (r) => ({
-    userId: r.num("userId"),
+    userId: r.posInt("userId"),
     amount: r.num("amount"),
     reason: r.str("reason"),
   }));

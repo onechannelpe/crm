@@ -17,7 +17,7 @@ function parseInviteId(
   inviteId: unknown,
 ): Result<{ inviteId: number }, DomainError> {
   return parseObject({ inviteId }, validationFail, (r) => ({
-    inviteId: r.num("inviteId"),
+    inviteId: r.posInt("inviteId"),
   }));
 }
 

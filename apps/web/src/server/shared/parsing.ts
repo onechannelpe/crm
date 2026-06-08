@@ -24,6 +24,7 @@ export type FieldFail<E> = (field: string, reason: "required" | "invalid") => E;
 export interface Reader<E> {
   str(field: string): string;
   num(field: string): number;
+  posInt(field: string): number;
   bool(field: string): boolean;
   enum<T extends string>(field: string, options: readonly T[]): T;
   strList(field: string): string[];
@@ -62,6 +63,16 @@ class RecordReader<E> implements Reader<E> {
   num(field: string): number {
     const value = this.present(field);
     if (typeof value !== "number" || !Number.isFinite(value)) {
+      this.reject(field, "invalid");
+    }
+    return value;
+  }
+
+  // Positive integer: the common shape for ids and counts. A present value that
+  // is not an integer >= 1 is "invalid"; absent is "required".
+  posInt(field: string): number {
+    const value = this.present(field);
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
       this.reject(field, "invalid");
     }
     return value;

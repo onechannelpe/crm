@@ -2,12 +2,12 @@
 
 import type { Selectable } from "kysely";
 
-import { assertNonEmptyString } from "~/contracts/guards";
-import { requireRole } from "~/lib/auth/access/session";
-import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import type { Database } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { Ok } from "~/server/shared/result";
 
 type AuthEventRow = Selectable<Database["auth_events"]>;
 
@@ -25,32 +25,40 @@ export interface UserLoginRetryReport {
 }
 
 export async function getUserLoginRetryReport(
-  username: string,
+  username: unknown,
 ): Promise<UserLoginRetryReport | null> {
-  const { users, authEvents } = getServerRuntime().auth.login.repos;
-  const safeUsername = assertNonEmptyString(username, "username").toLowerCase();
-  const session = await requireRole("admin");
-  assertRecentStrongAuth(session);
-  const user = await users.findByUsername(safeUsername);
-  if (!user) return null;
+  return runAction({
+    actionName: "admin.auth.login_retry_report.read",
+    access: { kind: "role", role: "admin" },
+    stepUp: "recent_strong_auth",
+    parse: () =>
+      parseObject({ username }, validationFail, (r) => ({
+        username: r.str("username"),
+      })),
+    execute: async (_ctx, input) => {
+      const { users, authEvents } = getServerRuntime().auth.login.repos;
+      const user = await users.findByUsername(input.username.toLowerCase());
+      if (!user) return Ok(null);
 
-  const now = Date.now();
-  const [retryCount15m, retryCount24h, recentRetries] = await Promise.all([
-    authEvents.countLoginRetriesSince(user.id, now - 15 * 60_000),
-    authEvents.countLoginRetriesSince(user.id, now - 24 * 60 * 60_000),
-    authEvents.findRecentLoginRetriesByUser(user.id, 25),
-  ]);
+      const now = Date.now();
+      const [retryCount15m, retryCount24h, recentRetries] = await Promise.all([
+        authEvents.countLoginRetriesSince(user.id, now - 15 * 60_000),
+        authEvents.countLoginRetriesSince(user.id, now - 24 * 60 * 60_000),
+        authEvents.findRecentLoginRetriesByUser(user.id, 25),
+      ]);
 
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      fullName: longName(user),
-      role: user.role,
-      isActive: user.is_active === 1,
+      return Ok({
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: longName(user),
+          role: user.role,
+          isActive: user.is_active === 1,
+        },
+        retryCount15m,
+        retryCount24h,
+        recentRetries,
+      });
     },
-    retryCount15m,
-    retryCount24h,
-    recentRetries,
-  };
+  });
 }
