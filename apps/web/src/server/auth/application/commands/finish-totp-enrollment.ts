@@ -1,7 +1,7 @@
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
-import type { AppContext } from "~/server/shared/action-runtime";
+import type { AppContext } from "~/server/shared/action-runtime/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

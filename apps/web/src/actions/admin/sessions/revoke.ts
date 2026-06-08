@@ -4,7 +4,7 @@ import type { ActionSuccess } from "~/contracts/common";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/application/commands/revoke-all-user-sessions";
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/application/commands/revoke-user-session";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function revokeUserSession(
@@ -12,7 +12,7 @@ export async function revokeUserSession(
   targetUserId: unknown,
 ): Promise<ActionSuccess> {
   return runAction({
-    actionName: "admin.sessions.revoke",
+    name: "admin.sessions.revoke",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     parse: () =>
@@ -34,7 +34,7 @@ export async function revokeAllUserSessions(
   targetUserId: unknown,
 ): Promise<ActionSuccess> {
   return runAction({
-    actionName: "admin.sessions.revoke_all",
+    name: "admin.sessions.revoke_all",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     parse: () =>

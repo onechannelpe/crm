@@ -1,8 +1,8 @@
 "use server";
 
-import { internalError, validationError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
+import { internalFault, validationFault } from "~/server/shared/domain-error";
 import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
 
 function mapAvatarErrorToMessage(code: AvatarDomainErrorCode): string {
@@ -65,16 +65,16 @@ export async function uploadUserAvatar(
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    throw validationError("Missing profile picture file.");
+    throw validationFault("Missing profile picture file.");
   }
 
   const result = await profilePictureService.upload(session.userId, file);
   if (!result.ok) {
     const message = mapAvatarErrorToMessage(result.error.code);
     if (isValidationAvatarError(result.error.code)) {
-      throw validationError(message);
+      throw validationFault(message);
     }
-    throw internalError(message);
+    throw internalFault(message);
   }
 
   return {
@@ -91,9 +91,9 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
   if (!result.ok) {
     const message = mapAvatarErrorToMessage(result.error.code);
     if (isValidationAvatarError(result.error.code)) {
-      throw validationError(message);
+      throw validationFault(message);
     }
-    throw internalError(message);
+    throw internalFault(message);
   }
 
   return {

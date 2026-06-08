@@ -6,7 +6,7 @@ import type {
 } from "~/contracts/team/bulk-import";
 import { ROLES } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import {
   applyBulkImport as applyBulkImportService,
@@ -18,7 +18,7 @@ export async function previewBulkCsv(
   role: unknown,
 ): Promise<BulkPreviewResult> {
   const parsed = await runAction({
-    actionName: "team.bulk_import.preview",
+    name: "team.bulk_import.preview",
     access: { kind: "permission", permission: "admin:manage" },
 
     parse: () =>
@@ -41,7 +41,7 @@ export async function applyBulkImport(
   role: unknown,
 ): Promise<BulkApplyResult> {
   return runAction({
-    actionName: "team.bulk_import.apply",
+    name: "team.bulk_import.apply",
     access: { kind: "permission", permission: "admin:manage" },
 
     parse: () =>

@@ -2,7 +2,6 @@
 
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
-import { internalError } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
@@ -12,6 +11,7 @@ import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/a
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import type { FinishPasskeyLoginError } from "~/server/auth/passkey/service";
 import { getServerRuntime } from "~/server/runtime";
+import { internalFault } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
@@ -19,7 +19,7 @@ function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
   code: "flow_expired" | "invalid_credentials";
 } {
   if (error.kind === "unexpected") {
-    throw internalError(error.message);
+    throw internalFault(error.message);
   }
 
   return {

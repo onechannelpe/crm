@@ -20,7 +20,7 @@ import type {
   BulkApplyResult,
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
-import { getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 import { readFileText } from "~/lib/file/read-file-text";
 import { APP_LOCALE } from "~/lib/locale";
 import { bulkImportSetupQuery } from "~/lib/queries/team";
@@ -58,7 +58,7 @@ export function BulkImportSection() {
       setPreview(data);
     } catch (err: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(err, "Error al procesar el archivo"),
+        actionErrorMessage(err, "Error al procesar el archivo"),
       );
     } finally {
       setIsPreviewing(false);
@@ -76,7 +76,9 @@ export function BulkImportSection() {
       setCsvFile(null);
       setPreview(null);
     } catch (err: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(err, "Error al importar usuarios"));
+      enqueueErrorSnackBar(
+        actionErrorMessage(err, "Error al importar usuarios"),
+      );
     } finally {
       setIsImporting(false);
     }

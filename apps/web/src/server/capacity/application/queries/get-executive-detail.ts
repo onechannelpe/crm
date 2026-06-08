@@ -1,7 +1,7 @@
 import { longName } from "~/lib/users/display-name";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
-import type { AppContext } from "~/server/shared/action-runtime";
+import type { AppContext } from "~/server/shared/action-runtime/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 

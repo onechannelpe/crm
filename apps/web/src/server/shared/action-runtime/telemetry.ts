@@ -1,6 +1,5 @@
-import { isAppError, type AppErrorCode } from "~/lib/app-errors";
-import { getErrorMessage } from "~/lib/errors";
-import { getServerRuntime } from "~/server/runtime";
+import type { WireError } from "~/lib/wire-error";
+import type { RecordActionObservationInput } from "~/server/observability/service";
 
 import type { AppContext } from "./context";
 
@@ -12,66 +11,43 @@ import type { AppContext } from "./context";
  */
 export type AuditFields = Record<string, string | number | boolean | null>;
 
-export type ActionTelemetryInput = {
+// The observability service owns the persisted shape; the runtime just fills it.
+export type TelemetryRow = RecordActionObservationInput;
+
+export type TelemetryContext = {
   actionName: string;
   ctx: AppContext;
   startedAt: number;
   audit: AuditFields;
 };
 
-type ActionTelemetryError = {
-  code: AppErrorCode | null;
-  message: string | null;
-};
-
-export function toTelemetryError(error: unknown): ActionTelemetryError {
-  if (isAppError(error)) {
-    return { code: error.code, message: error.publicMessage };
-  }
-  return { code: null, message: getErrorMessage(error, "Unknown error") };
+function baseRow(
+  t: TelemetryContext,
+): Omit<TelemetryRow, "status" | "errorCode" | "errorMessage"> {
+  const at = t.ctx.now();
+  return {
+    traceId: t.ctx.traceId,
+    requestId: t.ctx.requestId,
+    routePath: null,
+    httpMethod: null,
+    actionName: t.actionName,
+    actorUserId: t.ctx.actor.userId,
+    actorRole: t.ctx.actor.role,
+    durationMs: at - t.startedAt,
+    input: t.audit,
+    createdAt: at,
+  };
 }
 
-export function recordActionSuccess(input: ActionTelemetryInput) {
-  const { observabilityService } = getServerRuntime().observability;
-  void observabilityService
-    .recordAction({
-      traceId: input.ctx.traceId,
-      requestId: input.ctx.requestId,
-      routePath: null,
-      httpMethod: null,
-      actionName: input.actionName,
-      actorUserId: input.ctx.actor.userId,
-      actorRole: input.ctx.actor.role,
-      status: "ok",
-      durationMs: input.ctx.now() - input.startedAt,
-      errorCode: null,
-      errorMessage: null,
-      input: input.audit,
-      createdAt: input.ctx.now(),
-    })
-    .catch(() => {});
+export function successRow(t: TelemetryContext): TelemetryRow {
+  return { ...baseRow(t), status: "ok", errorCode: null, errorMessage: null };
 }
 
-export function recordActionError(
-  input: ActionTelemetryInput,
-  error: ActionTelemetryError,
-) {
-  const { observabilityService } = getServerRuntime().observability;
-  void observabilityService
-    .recordAction({
-      traceId: input.ctx.traceId,
-      requestId: input.ctx.requestId,
-      routePath: null,
-      httpMethod: null,
-      actionName: input.actionName,
-      actorUserId: input.ctx.actor.userId,
-      actorRole: input.ctx.actor.role,
-      status: "error",
-      durationMs: input.ctx.now() - input.startedAt,
-      errorCode: error.code,
-      errorMessage: error.message,
-      input: input.audit,
-      createdAt: input.ctx.now(),
-    })
-    .catch(() => {});
+export function errorRow(t: TelemetryContext, error: WireError): TelemetryRow {
+  return {
+    ...baseRow(t),
+    status: "error",
+    errorCode: error.kind,
+    errorMessage: error.message,
+  };
 }

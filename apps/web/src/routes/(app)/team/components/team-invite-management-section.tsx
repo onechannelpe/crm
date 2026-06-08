@@ -32,12 +32,13 @@ import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
-import { getErrorCode, getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 import {
   resendTeamInviteMutation,
   revokeTeamInviteMutation,
 } from "~/lib/mutations/team";
 import { inviteManagementQuery } from "~/lib/queries/team";
+import { parseWireError } from "~/lib/wire-error";
 
 import {
   getInviteExpiryFieldError,
@@ -103,7 +104,7 @@ export function TeamInviteManagementSection() {
       enqueueSuccessSnackBar("Invitación reenviada");
     } catch (err: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(err, "No se pudo reenviar la invitación"),
+        actionErrorMessage(err, "No se pudo reenviar la invitación"),
       );
     }
   }
@@ -114,7 +115,7 @@ export function TeamInviteManagementSection() {
       enqueueSuccessSnackBar("Invitación revocada");
     } catch (err: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(err, "No se pudo revocar la invitación"),
+        actionErrorMessage(err, "No se pudo revocar la invitación"),
       );
     }
   }
@@ -152,15 +153,13 @@ export function TeamInviteManagementSection() {
         await revalidateQuery(inviteManagementQuery.key);
         enqueueSuccessSnackBar("Invitación enviada");
       } catch (err: unknown) {
-        if (getErrorCode(err) === "validation") {
-          const message = getErrorMessage(err, INVITE_EXPIRY_ERROR_TEXT);
-          if (message.includes("expiresAt")) {
-            setExpiresAtError(INVITE_EXPIRY_ERROR_TEXT);
-            return;
-          }
+        const { code } = parseWireError(err);
+        if (code === "invalid_expires_at" || code === "expires_at_too_soon") {
+          setExpiresAtError(INVITE_EXPIRY_ERROR_TEXT);
+          return;
         }
         enqueueErrorSnackBar(
-          getErrorMessage(err, "No se pudo crear la invitación"),
+          actionErrorMessage(err, "No se pudo crear la invitación"),
         );
       }
     },

@@ -1,43 +1,78 @@
-import { captureException } from "@sentry/bun";
 import { describe, expect, it, vi } from "vitest";
 
-import { runActionResult } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { authenticate, authorizePermission } from "~/lib/auth/access/session";
+import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { AppContext } from "~/server/shared/action-runtime/context";
+import { createActionRunner } from "~/server/shared/action-runtime/runtime";
+import { domainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok } from "~/server/shared/result";
 
-vi.mock("@sentry/bun", () => ({
-  captureException: vi.fn<(error: unknown) => void>(),
+vi.mock("~/lib/auth/access/session", () => ({
+  authenticate: vi.fn<() => Promise<unknown>>(),
+  authenticateSession: vi.fn<() => Promise<unknown>>(),
+  authorizePermission: vi.fn<() => unknown>(),
+  authorizeRole: vi.fn<() => unknown>(),
 }));
 
+vi.mock("~/server/shared/action-runtime/context", () => ({
+  createAppContext: vi.fn<
+    (actor: AuthSession, now: () => number) => AppContext
+  >((actor, now) => ({
+    actor,
+    requestId: "req",
+    traceId: "trace",
+    ipAddress: "127.0.0.1",
+    userAgent: null,
+    publicOrigin: "http://localhost",
+    now,
+  })),
+}));
+
+// oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+const actor = { userId: 7, role: "executive" } as unknown as AuthSession;
+
+function ports() {
+  const report = vi.fn<(error: unknown) => void>();
+  const record = vi.fn<(row: unknown) => void>();
+  return { now: (): number => 1_000, report, record };
+}
+
+const okExecute = () =>
+  vi.fn<() => Promise<ReturnType<typeof Ok<string>>>>(async () => Ok("x"));
+
 describe("action runtime", () => {
-  it("returns sanitized validation errors from parse before auth", async () => {
+  it("returns a validation wire error from parse before auth, with no telemetry row", async () => {
+    const p = ports();
+    const { runActionResult } = createActionRunner(p);
+
     const result = await runActionResult({
-      actionName: "test.parse.validation",
-      access: { kind: "session" },
+      name: "test.parse.validation",
+      access: { kind: "auth" },
       parse: () => Err(domainError("validation", "bad_input", "Bad input")),
       execute: async () => Ok("unreachable"),
     });
 
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) return;
-
-    expect(result.error).toMatchObject({
-      code: "validation",
-      publicMessage: "Bad input",
-      domainCode: "bad_input",
+    expect(result.error).toEqual({
+      kind: "validation",
+      code: "bad_input",
+      message: "Bad input",
     });
-    expect(result.error.stack).toBeUndefined();
+    expect(authenticate).not.toHaveBeenCalled();
+    expect(p.record).not.toHaveBeenCalled();
+    expect(p.report).not.toHaveBeenCalled();
   });
 
-  it("sanitizes unexpected parse throws before auth", async () => {
+  it("reports an unexpected parse throw and surfaces a generic internal error, no row", async () => {
+    const p = ports();
+    const { runActionResult } = createActionRunner(p);
     const parserError = new Error("raw parser detail");
-    const execute = vi.fn<() => Promise<ReturnType<typeof Ok<string>>>>(
-      async () => Ok("unreachable"),
-    );
+    const execute = okExecute();
 
-    const result = await runActionResult<unknown, string, DomainError>({
-      actionName: "test.parse.throw",
-      access: { kind: "session" },
+    const result = await runActionResult({
+      name: "test.parse.throw",
+      access: { kind: "auth" },
       parse: () => {
         throw parserError;
       },
@@ -45,17 +80,142 @@ describe("action runtime", () => {
     });
 
     expect(execute).not.toHaveBeenCalled();
-    expect(captureException).toHaveBeenCalledWith(parserError);
+    expect(p.report).toHaveBeenCalledWith(parserError);
+    expect(p.record).not.toHaveBeenCalled();
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) return;
-
-    expect(result.error).toMatchObject({
+    expect(result.error).toEqual({
+      kind: "internal",
       code: "internal",
-      publicMessage: "An unexpected error occurred",
-      domainCode: null,
-      internalMessage: null,
+      message: "An unexpected error occurred",
     });
-    expect(result.error.message).toBe("An unexpected error occurred");
-    expect(result.error.stack).toBeUndefined();
+  });
+
+  it("distinguishes unauthenticated from forbidden", async () => {
+    vi.mocked(authenticate).mockResolvedValueOnce(
+      Err(domainError("unauthenticated", "unauthenticated", "Unauthorized")),
+    );
+    const p = ports();
+    const { runActionResult } = createActionRunner(p);
+
+    const result = await runActionResult({
+      name: "test.unauthenticated",
+      access: { kind: "permission", permission: "lead:work" },
+      execute: async () => Ok("x"),
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) return;
+    expect(result.error.kind).toBe("unauthenticated");
+    // No actor was established, so no telemetry row.
+    expect(p.record).not.toHaveBeenCalled();
+  });
+
+  it("records a telemetry row for a forbidden attempt by an authenticated actor", async () => {
+    vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
+    vi.mocked(authorizePermission).mockReturnValueOnce(
+      Err(domainError("forbidden", "forbidden", "Forbidden")),
+    );
+    const p = ports();
+    const { runActionResult } = createActionRunner(p);
+    const execute = okExecute();
+
+    const result = await runActionResult({
+      name: "test.forbidden",
+      access: { kind: "permission", permission: "lead:work" },
+      execute,
+    });
+
+    expect(execute).not.toHaveBeenCalled();
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) return;
+    expect(result.error.kind).toBe("forbidden");
+    expect(p.record).toHaveBeenCalledTimes(1);
+    expect(p.record).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "error", errorCode: "forbidden" }),
+    );
+  });
+
+  it("hides an external fault behind a generic internal wire error and reports it", async () => {
+    vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
+    const p = ports();
+    const { runActionResult } = createActionRunner(p);
+    const fault = domainError("external", "provider_down", "Stripe 500", {
+      secret: "leak",
+    });
+
+    const result = await runActionResult({
+      name: "test.external",
+      access: { kind: "auth" },
+      execute: async () => Err(fault),
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) return;
+    expect(result.error).toEqual({
+      kind: "internal",
+      code: "provider_down",
+      message: "An unexpected error occurred",
+    });
+    // details/cause never reach the wire.
+    expect(result.error).not.toHaveProperty("details");
+    expect(p.report).toHaveBeenCalledWith(fault);
+    expect(p.record).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "error", errorCode: "internal" }),
+    );
+  });
+
+  it("carries retryAfterSeconds through a rate-limited failure and records a row", async () => {
+    vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
+    const p = ports();
+    const { runActionResult } = createActionRunner(p);
+
+    const result = await runActionResult({
+      name: "test.rate_limited",
+      access: { kind: "auth" },
+      execute: async () =>
+        Err({
+          kind: "rate_limited",
+          code: "rate_limited",
+          message: "slow down",
+          retryAfterSeconds: 42,
+        }),
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) return;
+    expect(result.error).toEqual({
+      kind: "rate_limit",
+      code: "rate_limited",
+      message: "slow down",
+      retryAfterSeconds: 42,
+    });
+    expect(p.record).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "error", errorCode: "rate_limit" }),
+    );
+  });
+
+  it("records a success row and returns the value", async () => {
+    vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
+    const p = ports();
+    const { runActionResult } = createActionRunner(p);
+
+    const result = await runActionResult({
+      name: "test.ok",
+      access: { kind: "auth" },
+      audit: () => ({ leadId: "L1" }),
+      execute: async () => Ok({ done: true }),
+    });
+
+    expect(isErr(result)).toBe(false);
+    if (isErr(result)) return;
+    expect(result.value).toEqual({ done: true });
+    expect(p.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "ok",
+        errorCode: null,
+        input: { leadId: "L1" },
+      }),
+    );
   });
 });

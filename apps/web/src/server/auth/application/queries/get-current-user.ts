@@ -1,7 +1,7 @@
 import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import type { AppContext } from "~/server/shared/action-runtime";
+import type { AppContext } from "~/server/shared/action-runtime/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 

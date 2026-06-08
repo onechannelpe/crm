@@ -1,7 +1,7 @@
 "use server";
 
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import type { Result } from "~/server/shared/result";
@@ -41,7 +41,7 @@ function parseCapacityGrant(
 
 export async function approveCapacity(requestId: unknown, note?: unknown) {
   return runAction({
-    actionName: "capacity.approve",
+    name: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(requestId, note),
     audit: ({ requestId }) => ({ requestId }),
@@ -55,7 +55,7 @@ export async function approveCapacity(requestId: unknown, note?: unknown) {
 
 export async function rejectCapacity(requestId: unknown, note: unknown) {
   return runAction({
-    actionName: "capacity.reject",
+    name: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(requestId, note),
     audit: ({ requestId }) => ({ requestId }),
@@ -70,7 +70,7 @@ export async function grantMoreSearches(
   reason: unknown,
 ) {
   return runAction({
-    actionName: "capacity.grant_search",
+    name: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(userId, amount, reason),
     audit: ({ userId, amount }) => ({ userId, amount }),
@@ -89,7 +89,7 @@ export async function grantMoreLeadRefill(
   reason: unknown,
 ) {
   return runAction({
-    actionName: "capacity.grant_lead",
+    name: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(userId, amount, reason),
     audit: ({ userId, amount }) => ({ userId, amount }),

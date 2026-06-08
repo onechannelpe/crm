@@ -3,7 +3,7 @@
 import type { ActionSuccess } from "~/contracts/common";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { domainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok } from "~/server/shared/result";
@@ -12,7 +12,7 @@ export async function updateUserProfile(
   phone: unknown,
 ): Promise<ActionSuccess> {
   return runAction({
-    actionName: "settings.profile.update_phone",
+    name: "settings.profile.update_phone",
     access: { kind: "session" },
 
     parse: () => {

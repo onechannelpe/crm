@@ -3,7 +3,6 @@
 import { randomUUID } from "node:crypto";
 
 import type { RecordImportType } from "~/features/records-imports/contracts";
-import { notFoundError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
@@ -16,8 +15,13 @@ import {
   publishRecordImportProgress,
 } from "~/server/records/imports/progress-events";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { runAction } from "~/server/shared/action-runtime/runtime";
+import {
+  domainError,
+  type DomainError,
+  notFoundFault,
+  validationFault,
+} from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -82,13 +86,13 @@ async function getAuthorizedRecordImportJob(
     !job ||
     (job.type !== "import_status" && job.type !== "import_prioridad")
   ) {
-    throw notFoundError("Import job not found");
+    throw notFoundFault("Import job not found");
   }
 
   const authorized = await canAccessRecordImportJob(actor, job, integration);
 
   if (!authorized) {
-    throw notFoundError("Import job not found");
+    throw notFoundFault("Import job not found");
   }
 
   return job;
@@ -100,7 +104,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
   rowsTotal: number;
 }> {
   return runAction({
-    actionName: "records.import.upload",
+    name: "records.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
     parse: () => parseImportUpload(formData),
     audit: ({ file }) => ({ fileName: file.name, fileSize: file.size }),
@@ -117,7 +121,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
       try {
         parsed = parseImportFile(buffer, extension);
       } catch (err) {
-        throw validationError(
+        throw validationFault(
           err instanceof Error ? err.message : "invalid_import_file",
         );
       }
@@ -171,7 +175,7 @@ export async function getRecordImportJob(
   jobId: string,
 ): Promise<IntegrationJobRow> {
   return runAction({
-    actionName: "records.import.get_job",
+    name: "records.import.get_job",
     access: { kind: "permission", permission: "integration:manage" },
 
     parse: () =>

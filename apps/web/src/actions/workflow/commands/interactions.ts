@@ -2,14 +2,14 @@
 
 import { LEAD_CALL_OUTCOMES } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 import { workflowActor } from "./actor";
 
 export async function recordLeadCall(input: unknown) {
   return runAction({
-    actionName: "workflow.log_call",
+    name: "workflow.log_call",
     access: { kind: "auth" },
 
     parse: () =>
@@ -31,7 +31,7 @@ export async function recordLeadCall(input: unknown) {
 
 export async function addLeadNote(input: unknown) {
   return runAction({
-    actionName: "workflow.add_note",
+    name: "workflow.add_note",
     access: { kind: "auth" },
 
     parse: () =>

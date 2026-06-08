@@ -17,7 +17,7 @@ import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment"
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
-import { getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import styles from "./security.module.css";
 import base from "./settings-page.module.css";
@@ -64,7 +64,7 @@ export default function SecurityPage() {
       enqueueSuccessSnackBar("Claves de acceso eliminadas");
     } catch (err: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(err, "No se pudieron eliminar las claves de acceso"),
+        actionErrorMessage(err, "No se pudieron eliminar las claves de acceso"),
       );
     }
     removePasskeysDialog.close();
@@ -78,7 +78,7 @@ export default function SecurityPage() {
       enqueueSuccessSnackBar("Aplicación de autenticación desactivada");
     } catch (err: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
+        actionErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
       );
     }
     disableTotpDialog.close();
@@ -104,7 +104,7 @@ export default function SecurityPage() {
         setConfirmPassword("");
       } catch (err: unknown) {
         enqueueErrorSnackBar(
-          getErrorMessage(err, "No se pudo cambiar la contraseña"),
+          actionErrorMessage(err, "No se pudo cambiar la contraseña"),
         );
       }
     },

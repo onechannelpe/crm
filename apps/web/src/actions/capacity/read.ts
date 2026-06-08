@@ -8,14 +8,14 @@ import type {
   PendingCapacityRequestView,
 } from "~/actions/capacity/contracts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
 > {
   return runAction({
-    actionName: "capacity.managed_executives.read",
+    name: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
     execute: (ctx) =>
@@ -27,7 +27,7 @@ export async function getExecutiveDetail(
   userId: number,
 ): Promise<ExecutiveCapacityDetailView> {
   return runAction({
-    actionName: "capacity.executive_detail.read",
+    name: "capacity.executive_detail.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
     parse: () =>
@@ -47,7 +47,7 @@ export async function getPendingRequests(): Promise<
   PendingCapacityRequestView[]
 > {
   return runAction({
-    actionName: "capacity.pending_requests.read",
+    name: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
     execute: (ctx) =>
@@ -57,7 +57,7 @@ export async function getPendingRequests(): Promise<
 
 export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
   return runAction({
-    actionName: "capacity.policy_defaults.read",
+    name: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
     execute: (ctx) =>
@@ -69,7 +69,7 @@ export async function getAuditEvents(
   limit?: number,
 ): Promise<CapacityAuditEvent[]> {
   return runAction({
-    actionName: "capacity.audit.read",
+    name: "capacity.audit.read",
     access: { kind: "permission", permission: "capacity:audit:read" },
 
     parse: () =>

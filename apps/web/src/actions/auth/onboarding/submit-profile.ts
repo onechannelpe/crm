@@ -1,9 +1,9 @@
 "use server";
 
-import { conflictError, validationError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import { getServerRuntime } from "~/server/runtime";
+import { conflictFault, validationFault } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 import { getOnboardingRequirements } from "../policy";
@@ -14,7 +14,7 @@ export async function submitOnboardingProfile(input: {
 }): Promise<{ redirectTo: string }> {
   const phone = parsePhone(input.phone);
   if (!phone) {
-    throw validationError("El número debe tener 9 dígitos");
+    throw validationFault("El número debe tener 9 dígitos");
   }
   const session = await requireSession();
   const updated = await getServerRuntime().users.updatePhone(
@@ -22,7 +22,7 @@ export async function submitOnboardingProfile(input: {
     phone,
   );
   if (isErr(updated)) {
-    throw conflictError("Este número de WhatsApp ya está en uso");
+    throw conflictFault("Este número de WhatsApp ya está en uso");
   }
 
   const requirements = await getOnboardingRequirements();

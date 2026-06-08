@@ -6,11 +6,11 @@ import {
 import { createSecurityTestKit } from "@tests/support/security/kit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppError } from "~/lib/app-errors";
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "~/lib/security/action-rate-limit";
+import { ActionError } from "~/lib/wire-error";
 
 describe("rate limit policy enforcement", () => {
   let ctx: TestDbContext;
@@ -41,7 +41,7 @@ describe("rate limit policy enforcement", () => {
 
     await expect(
       checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
-    ).rejects.toBeInstanceOf(AppError);
+    ).rejects.toBeInstanceOf(ActionError);
   });
 
   it("enforces longer hourly window for team invites", async () => {
@@ -54,6 +54,6 @@ describe("rate limit policy enforcement", () => {
     vi.setSystemTime(Date.now() + 30 * 60_000);
     await expect(
       checkActionRateLimit("team.invite.create", 1, ctx.repos, "198.51.100.1"),
-    ).rejects.toBeInstanceOf(AppError);
+    ).rejects.toBeInstanceOf(ActionError);
   });
 });

@@ -5,13 +5,13 @@ import { countActiveSessions as countActiveSessionsService } from "~/server/auth
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
 export async function listUserSessions(userId: unknown) {
   return runAction({
-    actionName: "admin.sessions.user.read",
+    name: "admin.sessions.user.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     parse: () =>
@@ -32,7 +32,7 @@ export async function listUserSessions(userId: unknown) {
 
 export async function getActiveSessionsCount(): Promise<number> {
   return runAction({
-    actionName: "admin.sessions.count.read",
+    name: "admin.sessions.count.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     execute: async () =>
@@ -46,7 +46,7 @@ export async function getActiveSessionsCount(): Promise<number> {
 
 export async function listAllActiveSessions(): Promise<SessionInfo[]> {
   return runAction({
-    actionName: "admin.sessions.active.read",
+    name: "admin.sessions.active.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     execute: async () =>

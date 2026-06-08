@@ -1,13 +1,17 @@
 "use server";
 
 import type { ActionSuccess } from "~/contracts/common";
-import { conflictError, forbiddenError, notFoundError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
+import {
+  conflictFault,
+  forbiddenFault,
+  notFoundFault,
+} from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
@@ -17,7 +21,7 @@ async function requireCurrentUserWithStrongAuthState(userId: UserId) {
   const user = await repos.users.findById(userId);
 
   if (!user) {
-    throw notFoundError("User not found");
+    throw notFoundFault("User not found");
   }
 
   const strongAuthStatus = await getStrongAuthStatus(userId, repos);
@@ -44,7 +48,7 @@ function assertProtectedRoleKeepsStrongAuth(input: {
     return;
   }
 
-  throw conflictError(
+  throw conflictFault(
     "Tu rol requiere mantener al menos un método fuerte configurado",
   );
 }
@@ -54,7 +58,7 @@ export async function changePassword(
   newPassword: unknown,
 ): Promise<ActionSuccess> {
   return runAction({
-    actionName: "settings.security.change_password",
+    name: "settings.security.change_password",
     access: { kind: "session" },
 
     parse: () =>
@@ -70,7 +74,7 @@ export async function changePassword(
       const user = await users.findById(userId);
 
       if (!user) {
-        throw notFoundError("User not found");
+        throw notFoundFault("User not found");
       }
 
       const valid = await verifyPassword(
@@ -79,7 +83,7 @@ export async function changePassword(
       );
 
       if (!valid) {
-        throw forbiddenError("Current password is incorrect");
+        throw forbiddenFault("Current password is incorrect");
       }
 
       const newHash = await hashPassword(input.newPassword);
@@ -102,7 +106,7 @@ export async function changePassword(
 
 export async function removeAllPasskeys(): Promise<ActionSuccess> {
   return runAction({
-    actionName: "settings.security.remove_passkeys",
+    name: "settings.security.remove_passkeys",
     access: { kind: "session" },
 
     execute: async ({ actor }) => {
@@ -137,7 +141,7 @@ export async function removeAllPasskeys(): Promise<ActionSuccess> {
 
 export async function disableTotp(): Promise<ActionSuccess> {
   return runAction({
-    actionName: "settings.security.disable_totp",
+    name: "settings.security.disable_totp",
     access: { kind: "session" },
 
     execute: async ({ actor }) => {

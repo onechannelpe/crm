@@ -1,9 +1,12 @@
 "use server";
 
 import { type LeadNegotiationFileView } from "~/contracts/workflow/results";
-import { type AppError } from "~/lib/app-errors";
+import { type WireError } from "~/lib/wire-error";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction, runActionResult } from "~/server/shared/action-runtime";
+import {
+  runAction,
+  runActionResult,
+} from "~/server/shared/action-runtime/runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -71,7 +74,7 @@ function parseLeadArtifactRef(
 
 export async function listLeadSaleProofFiles(rawLeadId: string) {
   return runAction({
-    actionName: "workflow.list_sale_proof_files",
+    name: "workflow.list_sale_proof_files",
     access: { kind: "auth" },
 
     parse: () =>
@@ -93,7 +96,7 @@ export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
   token: string;
 }> {
   return runAction({
-    actionName: "workflow.request_leads_export_download_token",
+    name: "workflow.request_leads_export_download_token",
     access: { kind: "auth" },
 
     execute: (ctx) =>
@@ -108,7 +111,7 @@ export async function uploadLeadSaleProofFile(
   formData: FormData,
 ) {
   return runAction({
-    actionName: "workflow.upload_sale_proof_file",
+    name: "workflow.upload_sale_proof_file",
     access: { kind: "auth" },
     parse: () => parseLeadUpload(rawLeadId, formData),
 
@@ -132,7 +135,7 @@ export async function requestLeadSaleProofDownloadToken(input: {
   artifactId: string;
 }) {
   return runAction({
-    actionName: "workflow.request_sale_proof_download_token",
+    name: "workflow.request_sale_proof_download_token",
     access: { kind: "auth" },
     parse: () => parseLeadArtifactRef(input),
     audit: ({ leadId, artifactId }) => ({ leadId, artifactId }),
@@ -149,9 +152,9 @@ export async function requestLeadSaleProofDownloadToken(input: {
 export async function uploadLeadNegotiationFile(
   rawLeadId: string,
   formData: FormData,
-): Promise<Result<LeadNegotiationFileView, AppError>> {
+): Promise<Result<LeadNegotiationFileView, WireError>> {
   return runActionResult({
-    actionName: "workflow.upload_negotiation_file",
+    name: "workflow.upload_negotiation_file",
     access: { kind: "auth" },
     parse: () => parseLeadUpload(rawLeadId, formData),
 
@@ -175,7 +178,7 @@ export async function requestNegotiationFileDownloadToken(input: {
   artifactId: string;
 }) {
   return runActionResult({
-    actionName: "workflow.request_negotiation_download_token",
+    name: "workflow.request_negotiation_download_token",
     access: { kind: "auth" },
     parse: () => parseLeadArtifactRef(input),
     audit: ({ leadId, artifactId }) => ({ leadId, artifactId }),

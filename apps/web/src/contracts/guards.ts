@@ -1,7 +1,7 @@
-import { validationError } from "~/lib/app-errors";
+import { validationFault } from "~/server/shared/domain-error";
 
 function fail(message: string): never {
-  throw validationError(message);
+  throw validationFault(message);
 }
 
 export function assertPositiveInt(value: number, name: string): number {

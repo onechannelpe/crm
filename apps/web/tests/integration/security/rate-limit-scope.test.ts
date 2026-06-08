@@ -6,11 +6,11 @@ import {
 import { createSecurityTestKit } from "@tests/support/security/kit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppError } from "~/lib/app-errors";
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "~/lib/security/action-rate-limit";
+import { ActionError } from "~/lib/wire-error";
 
 describe("rate limit scope isolation", () => {
   let ctx: TestDbContext;
@@ -41,7 +41,7 @@ describe("rate limit scope isolation", () => {
 
     await expect(
       checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.2"),
-    ).rejects.toBeInstanceOf(AppError);
+    ).rejects.toBeInstanceOf(ActionError);
   });
 
   it("blocks single ip when ip limit is exceeded across users", async () => {
@@ -50,7 +50,7 @@ describe("rate limit scope isolation", () => {
 
     await expect(
       checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.99"),
-    ).rejects.toBeInstanceOf(AppError);
+    ).rejects.toBeInstanceOf(ActionError);
   });
 
   it("isolates counters by action name", async () => {

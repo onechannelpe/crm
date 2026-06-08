@@ -7,13 +7,13 @@ import type {
   PasswordLoginSubmissionResult,
 } from "~/actions/auth/contracts";
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
-import { internalError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import type { SubmitPrimaryLoginError } from "~/server/auth/application/contracts";
 import type { BeginPasskeyLoginError } from "~/server/auth/passkey/service";
 import { getServerRuntime } from "~/server/runtime";
+import { internalFault } from "~/server/shared/domain-error";
 
 export function readPasskeyStartMode(
   formData: FormData,
@@ -57,7 +57,7 @@ export function normalizePasskeyStartError(
   error: BeginPasskeyLoginError,
 ): PasskeyStartSubmissionResult {
   if (error.kind === "unexpected") {
-    throw internalError(error.message);
+    throw internalFault(error.message);
   }
 
   return {
@@ -76,7 +76,7 @@ export function normalizePasswordLoginError(
   error: SubmitPrimaryLoginError,
 ): PasswordLoginSubmissionResult {
   if (error.kind === "unexpected") {
-    throw internalError(error.message ?? "Unexpected password login failure");
+    throw internalFault(error.message ?? "Unexpected password login failure");
   }
 
   return {

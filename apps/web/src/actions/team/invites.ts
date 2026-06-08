@@ -2,7 +2,7 @@
 
 import { ROLES } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, type Result } from "~/server/shared/result";
@@ -18,7 +18,7 @@ export async function createTeamInvite(
   input: unknown,
 ): Promise<{ inviteId: number }> {
   return runAction({
-    actionName: "team.invite.create",
+    name: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
 
     parse: (): Result<CreateTeamInviteCommand, DomainError> => {
@@ -52,7 +52,7 @@ export async function createTeamInvite(
 
 export async function resendTeamInvite(inviteId: unknown): Promise<void> {
   await runAction({
-    actionName: "team.invite.resend",
+    name: "team.invite.resend",
     access: { kind: "permission", permission: "hr:manage" },
 
     parse: () =>
@@ -69,7 +69,7 @@ export async function resendTeamInvite(inviteId: unknown): Promise<void> {
 
 export async function revokeTeamInvite(inviteId: unknown): Promise<void> {
   await runAction({
-    actionName: "team.invite.revoke",
+    name: "team.invite.revoke",
     access: { kind: "permission", permission: "hr:manage" },
 
     parse: () =>

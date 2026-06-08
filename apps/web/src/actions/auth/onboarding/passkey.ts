@@ -2,7 +2,6 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
 import { requireSession } from "~/lib/auth/access/session";
 import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/types";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
@@ -10,6 +9,7 @@ import { beginPasskeyOnboarding as beginPasskeyRegistrationService } from "~/ser
 import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
+import { throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
@@ -25,7 +25,7 @@ export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChall
     },
   );
   if (isErr(result)) {
-    throwDomainError(result.error);
+    throwDomain(result.error);
   }
   return result.value;
 }
@@ -51,6 +51,6 @@ export async function finishPasskeyRegistration(
     },
   );
   if (isErr(result)) {
-    throwDomainError(result.error);
+    throwDomain(result.error);
   }
 }

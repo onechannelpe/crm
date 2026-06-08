@@ -6,7 +6,6 @@ import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
 } from "~/actions/auth/contracts";
-import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -15,6 +14,7 @@ import { submitPasswordLogin } from "~/server/auth/application/commands/submit-p
 import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
+import { internalFault } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 import {
@@ -106,7 +106,7 @@ export async function passkeyStart(
 ): Promise<PasskeyStartSubmissionResult> {
   const mode = readPasskeyStartMode(formData);
   if (!mode) {
-    throw internalError("Invalid passkey login mode");
+    throw internalFault("Invalid passkey login mode");
   }
 
   const request = getRequestClientMetadata();

@@ -4,7 +4,7 @@ import {
   beginTotpEnrollment,
   finishTotpEnrollment,
 } from "~/actions/auth/security/totp";
-import { getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 export interface TotpEnrollmentState {
   qrCodeDataUrl: string;
@@ -40,7 +40,7 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       }
     } catch (error: unknown) {
       options.enqueueErrorSnackBar(
-        getErrorMessage(
+        actionErrorMessage(
           error,
           options.beginFailureMessage ??
             "No se pudo iniciar la configuración del 2FA",
@@ -65,7 +65,7 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       );
     } catch (error: unknown) {
       options.enqueueErrorSnackBar(
-        getErrorMessage(
+        actionErrorMessage(
           error,
           options.verifyFailureMessage ?? "Código de verificación inválido",
         ),

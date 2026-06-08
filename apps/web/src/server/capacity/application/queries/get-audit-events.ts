@@ -1,6 +1,6 @@
 import { isPlainRecord } from "~/lib/type-guards";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
-import type { AppContext } from "~/server/shared/action-runtime";
+import type { AppContext } from "~/server/shared/action-runtime/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 

@@ -1,6 +1,5 @@
 "use server";
 
-import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { isAuthAnalyticsScreen } from "~/lib/auth/auth-analytics";
 import {
@@ -14,6 +13,7 @@ import {
   type AuthFunnelScreen,
 } from "~/lib/observability/auth-funnel";
 import { getServerRuntime } from "~/server/runtime";
+import { validationFault } from "~/server/shared/domain-error";
 
 import { resolveBoundedPositiveInt } from "./analytics-input";
 
@@ -51,7 +51,7 @@ function assertEventName(
   if (isAuthFunnelEventName(value)) {
     return value;
   }
-  throw validationError("eventName is invalid");
+  throw validationFault("eventName is invalid");
 }
 
 function assertMethod(
@@ -61,7 +61,7 @@ function assertMethod(
   if (isAuthFunnelMethod(value)) {
     return value;
   }
-  throw validationError("method is invalid");
+  throw validationFault("method is invalid");
 }
 
 function assertOutcome(
@@ -71,12 +71,12 @@ function assertOutcome(
   if (isAuthFunnelOutcome(value)) {
     return value;
   }
-  throw validationError("outcome is invalid");
+  throw validationFault("outcome is invalid");
 }
 
 function assertScreen(value: string | null): AuthFunnelScreen | null {
   if (value === null) return null;
-  if (!isAuthAnalyticsScreen(value)) throw validationError("screen is invalid");
+  if (!isAuthAnalyticsScreen(value)) throw validationFault("screen is invalid");
   return value;
 }
 

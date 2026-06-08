@@ -1,14 +1,14 @@
 "use server";
 
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 import { workflowActor } from "../commands/actor";
 
 export async function querySourcingPolicy(branchId: number) {
   return runAction({
-    actionName: "workflow.get_sourcing_policy",
+    name: "workflow.get_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -31,7 +31,7 @@ export async function saveSourcingPolicy(input: {
   engineAssignmentEnabled: boolean;
 }) {
   return runAction({
-    actionName: "workflow.update_sourcing_policy",
+    name: "workflow.update_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>

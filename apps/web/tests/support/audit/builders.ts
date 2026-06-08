@@ -1,6 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
-import type { AppErrorCode } from "~/lib/app-errors";
+import type { WireKind } from "~/lib/wire-error";
 
 export async function seedAuditLog(
   ctx: TestDbContext,
@@ -33,7 +33,7 @@ export type ActionObservationSeed = {
   status: "ok" | "error";
   durationMs: number;
   createdAt: number;
-  errorCode?: AppErrorCode | null;
+  errorCode?: WireKind | null;
   errorMessage?: string | null;
   input?: Record<string, unknown>;
 };

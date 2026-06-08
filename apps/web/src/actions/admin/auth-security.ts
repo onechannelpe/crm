@@ -5,7 +5,7 @@ import type { Selectable } from "kysely";
 import type { Database } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
@@ -28,7 +28,7 @@ export async function getUserLoginRetryReport(
   username: unknown,
 ): Promise<UserLoginRetryReport | null> {
   return runAction({
-    actionName: "admin.auth.login_retry_report.read",
+    name: "admin.auth.login_retry_report.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
 

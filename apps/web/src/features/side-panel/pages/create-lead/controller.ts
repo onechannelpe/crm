@@ -7,9 +7,9 @@ import {
   createOptimisticLeadRow,
 } from "~/features/workflow/data/optimistic-leads";
 import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
-import { toAppError } from "~/lib/app-errors";
 import { actionErrorMessage } from "~/lib/error-messages";
 import { shortName } from "~/lib/users/display-name";
+import { parseWireError } from "~/lib/wire-error";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";
@@ -84,12 +84,9 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     } catch (submitError) {
       optimisticTransactions.rollback(txId);
       const fallback = "Error al registrar cliente";
-      const appError = toAppError(submitError, fallback);
-      const message = actionErrorMessage(appError, fallback);
-      if (
-        appError.domainCode === "invalid_ruc" ||
-        appError.domainCode === "ruc_required"
-      ) {
+      const wire = parseWireError(submitError);
+      const message = actionErrorMessage(submitError, fallback);
+      if (wire.code === "invalid_ruc" || wire.code === "ruc_required") {
         setError(message);
         input.setActiveTab("home");
         return;

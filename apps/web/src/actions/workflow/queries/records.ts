@@ -16,7 +16,7 @@ import {
   LEAD_STATUSES,
 } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 import { workflowActor } from "../commands/actor";
@@ -28,7 +28,7 @@ export async function queryLeadList(
   filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
   return runAction({
-    actionName: "workflow.list_leads",
+    name: "workflow.list_leads",
     access: { kind: "auth" },
 
     parse: () =>
@@ -61,7 +61,7 @@ export async function queryLeadList(
 
 export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
   return runAction({
-    actionName: "workflow.get_lead_detail",
+    name: "workflow.get_lead_detail",
     access: { kind: "auth" },
 
     parse: () =>
@@ -83,7 +83,7 @@ export async function queryLeadBootstrapPreview(
   ruc: string,
 ): Promise<LeadBootstrapPreviewView> {
   return runAction({
-    actionName: "workflow.get_lead_bootstrap_preview",
+    name: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
 
     parse: () =>
@@ -102,7 +102,7 @@ export async function queryAssignableExecutives(
   input: ListAssignableExecutivesInput,
 ): Promise<AssignableExecutiveView[]> {
   return runAction({
-    actionName: "workflow.list_assignable_executives",
+    name: "workflow.list_assignable_executives",
     access: { kind: "auth" },
 
     parse: () =>

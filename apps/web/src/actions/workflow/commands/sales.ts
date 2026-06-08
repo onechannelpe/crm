@@ -12,7 +12,7 @@ import {
   MODALIDAD_COBRO_KINDS,
 } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import {
   parseObject,
@@ -57,7 +57,7 @@ function accountFields<TCurrency extends "PEN" | "USD">(
 
 export async function requestVenueCreation(input: unknown) {
   return runAction({
-    actionName: "workflow.create_venue",
+    name: "workflow.create_venue",
     access: { kind: "auth" },
 
     parse: () => parseObject(input, validationFail, venueFields),
@@ -74,7 +74,7 @@ export async function requestVenueCreation(input: unknown) {
 
 export async function requestVenueUpdate(input: unknown) {
   return runAction({
-    actionName: "workflow.update_venue",
+    name: "workflow.update_venue",
     access: { kind: "auth" },
 
     parse: () =>
@@ -99,7 +99,7 @@ export async function requestVenueUpdate(input: unknown) {
 
 export async function requestVenueAccountsAddition(input: unknown) {
   return runAction({
-    actionName: "workflow.add_venue_accounts",
+    name: "workflow.add_venue_accounts",
     access: { kind: "auth" },
 
     parse: () =>

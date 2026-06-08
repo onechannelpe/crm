@@ -5,7 +5,7 @@ import type {
   InviteManagement,
 } from "~/actions/team/contracts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
@@ -13,7 +13,7 @@ import {
 
 export async function getInviteManagement(): Promise<InviteManagement> {
   return runAction({
-    actionName: "team.invite_management.read",
+    name: "team.invite_management.read",
     access: { kind: "permission", permission: "hr:manage" },
     execute: (ctx) =>
       getInviteManagementService(ctx, getServerRuntime().team.inviteManagement),
@@ -22,7 +22,7 @@ export async function getInviteManagement(): Promise<InviteManagement> {
 
 export async function getBulkImportSetup(): Promise<BulkImportSetup> {
   return runAction({
-    actionName: "team.bulk_import_setup.read",
+    name: "team.bulk_import_setup.read",
     access: { kind: "permission", permission: "admin:manage" },
     execute: getBulkImportSetupService,
   });

@@ -8,7 +8,7 @@ import {
   PRODUCT_SCOPES,
 } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 import { workflowActor } from "./actor";
@@ -34,7 +34,7 @@ function parseCommercialScope(input: unknown) {
 
 export async function requestLeadCreation(input: unknown) {
   return runAction({
-    actionName: "workflow.register_lead",
+    name: "workflow.register_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -54,7 +54,7 @@ export async function requestLeadCreation(input: unknown) {
 
 export async function requestLeadReview(input: unknown) {
   return runAction({
-    actionName: "workflow.review_lead",
+    name: "workflow.review_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -77,7 +77,7 @@ export async function requestLeadReview(input: unknown) {
 
 export async function requestSaveCommercialScope(input: unknown) {
   return runAction({
-    actionName: "workflow.save_commercial_scope",
+    name: "workflow.save_commercial_scope",
     access: { kind: "auth" },
     parse: () => parseCommercialScope(input),
     audit: ({ leadId }) => ({ leadId }),
@@ -92,7 +92,7 @@ export async function requestSaveCommercialScope(input: unknown) {
 
 export async function requestQuotation(input: unknown) {
   return runAction({
-    actionName: "workflow.request_quotation",
+    name: "workflow.request_quotation",
     access: { kind: "auth" },
     parse: () => parseCommercialScope(input),
     audit: ({ leadId }) => ({ leadId }),
@@ -107,7 +107,7 @@ export async function requestQuotation(input: unknown) {
 
 export async function requestSaveDigitalPolicy(input: unknown) {
   return runAction({
-    actionName: "workflow.save_digital_policy",
+    name: "workflow.save_digital_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -133,7 +133,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
 
 export async function requestRecordRepLegal(input: unknown) {
   return runAction({
-    actionName: "workflow.record_rep_legal",
+    name: "workflow.record_rep_legal",
     access: { kind: "auth" },
 
     parse: () =>
@@ -159,7 +159,7 @@ export async function requestRecordRepLegal(input: unknown) {
 
 export async function requestStartSetupExecution(input: unknown) {
   return runAction({
-    actionName: "workflow.start_setup_execution",
+    name: "workflow.start_setup_execution",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
@@ -174,7 +174,7 @@ export async function requestStartSetupExecution(input: unknown) {
 
 export async function requestLeadReassignment(input: unknown) {
   return runAction({
-    actionName: "workflow.reassign_lead",
+    name: "workflow.reassign_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -196,7 +196,7 @@ export async function requestLeadReassignment(input: unknown) {
 
 export async function requestAddLeadToFavorites(input: unknown) {
   return runAction({
-    actionName: "workflow.add_lead_to_favorites",
+    name: "workflow.add_lead_to_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
@@ -211,7 +211,7 @@ export async function requestAddLeadToFavorites(input: unknown) {
 
 export async function requestRemoveLeadFromFavorites(input: unknown) {
   return runAction({
-    actionName: "workflow.remove_lead_from_favorites",
+    name: "workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
@@ -226,7 +226,7 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
 
 export async function requestLeadSunatRefresh(input: unknown) {
   return runAction({
-    actionName: "workflow.request_sunat_refresh",
+    name: "workflow.request_sunat_refresh",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),

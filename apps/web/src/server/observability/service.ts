@@ -1,5 +1,4 @@
 import { serializeAuditChanges } from "~/contracts/audit";
-import type { AppErrorCode } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import type {
   AuthFunnelEventName,
@@ -8,6 +7,7 @@ import type {
   AuthFunnelScreen,
   AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
+import type { WireKind } from "~/lib/wire-error";
 
 import type { createActionObservationsRepo } from "./repos-action-observations";
 import type { createAuthFunnelEventsRepo } from "./repos-auth-funnel-events";
@@ -27,7 +27,7 @@ export interface RecordActionObservationInput {
   actorRole: Role | null;
   status: "ok" | "error";
   durationMs: number;
-  errorCode: AppErrorCode | null;
+  errorCode: WireKind | null;
   errorMessage: string | null;
   input: unknown;
   createdAt: number;
@@ -69,7 +69,15 @@ interface ErrorDetails {
   isSensitive: number;
 }
 
-function mapCodeToDetails(code: AppErrorCode): ErrorDetails {
+function mapCodeToDetails(code: WireKind): ErrorDetails {
+  if (code === "unauthenticated") {
+    return {
+      code: "authentication_required",
+      category: "authorization",
+      publicError: "Authentication required",
+      isSensitive: 0,
+    };
+  }
   if (code === "forbidden") {
     return {
       code: "authorization_denied",
@@ -120,7 +128,7 @@ function mapCodeToDetails(code: AppErrorCode): ErrorDetails {
 
 function resolveErrorDetails(
   status: "ok" | "error",
-  appErrorCode: AppErrorCode | null,
+  errorCode: WireKind | null,
 ): ErrorDetails {
   if (status === "ok") {
     return {
@@ -130,8 +138,8 @@ function resolveErrorDetails(
       isSensitive: 0,
     };
   }
-  if (appErrorCode) {
-    return mapCodeToDetails(appErrorCode);
+  if (errorCode) {
+    return mapCodeToDetails(errorCode);
   }
   return {
     code: "internal_error",

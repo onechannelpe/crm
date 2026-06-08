@@ -1,8 +1,8 @@
 "use server";
 
-import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
+import { validationFault } from "~/server/shared/domain-error";
 
 import { resolveBoundedPositiveInt, trimOrUndefined } from "./analytics-input";
 
@@ -42,7 +42,7 @@ function assertStatus(
 ): ObservationStatus | undefined {
   if (!value) return undefined;
   if (value === "ok" || value === "error") return value;
-  throw validationError("status is invalid");
+  throw validationFault("status is invalid");
 }
 
 export async function getObservabilitySnapshot(params?: {

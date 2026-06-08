@@ -4,7 +4,7 @@ import type {
 } from "~/contracts/team/bulk-import";
 import type { Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
-import type { AppContext } from "~/server/shared/action-runtime";
+import type { AppContext } from "~/server/shared/action-runtime/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import {

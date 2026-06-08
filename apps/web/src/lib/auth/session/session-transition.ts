@@ -1,6 +1,5 @@
 import type { Selectable } from "kysely";
 
-import { forbiddenError } from "~/lib/app-errors";
 import type {
   PrimaryAuthMethod,
   SessionClass,
@@ -12,6 +11,7 @@ import type { UsersTable } from "~/lib/db/types";
 import { createSessionService } from "~/server/auth/application/session-service";
 import type { LoginDecision } from "~/server/auth/policy/types";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { forbiddenFault } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createUsersRepo } from "~/server/users/repos-users";
@@ -63,7 +63,7 @@ async function transitionSession(
 ): Promise<IssuedSessionResult> {
   const { user } = params;
   if (!user) {
-    throw forbiddenError("Invalid credentials");
+    throw forbiddenFault("Invalid credentials");
   }
 
   const identity = mapUserToSessionIdentity(user);

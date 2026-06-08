@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { getAuditEvents } from "~/actions/capacity/read";
-import { AppError } from "~/lib/app-errors";
+import type { WireError } from "~/lib/wire-error";
 
 async function expectInvalidLimit(limit: number) {
   await expect(getAuditEvents(limit)).rejects.toMatchObject({
-    code: "validation",
-    domainCode: "invalid_limit",
-  } satisfies Partial<AppError>);
+    kind: "validation",
+    code: "invalid_limit",
+  } satisfies Partial<WireError>);
 }
 
 describe("capacity actions", () => {

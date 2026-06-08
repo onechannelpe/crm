@@ -9,7 +9,7 @@ import { ProfileImageInput } from "~/components/settings/ProfileImageInput";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
@@ -20,7 +20,7 @@ import { shortName } from "~/lib/users/display-name";
 import styles from "./settings-page.module.css";
 
 function toMessage(error: unknown, fallback: string): string {
-  return getErrorMessage(error, fallback);
+  return actionErrorMessage(error, fallback);
 }
 
 export default function ProfilePage() {

@@ -33,7 +33,7 @@ import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/registration-client";
-import { getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
@@ -137,7 +137,7 @@ function OnboardingContent() {
       .then((enrollment) => setTotpEnrollment(enrollment))
       .catch((error: unknown) =>
         enqueueErrorSnackBar(
-          getErrorMessage(error, "No se pudo iniciar la configuración TOTP"),
+          actionErrorMessage(error, "No se pudo iniciar la configuración TOTP"),
         ),
       )
       .finally(() => setTotpLoading(false));
@@ -159,7 +159,7 @@ function OnboardingContent() {
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(error, "No se pudo continuar con el registro"),
+        actionErrorMessage(error, "No se pudo continuar con el registro"),
       );
     } finally {
       setSubmitting(false);
@@ -173,7 +173,10 @@ function OnboardingContent() {
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(error, "No se pudo seleccionar el método de seguridad"),
+        actionErrorMessage(
+          error,
+          "No se pudo seleccionar el método de seguridad",
+        ),
       );
     } finally {
       setSubmitting(false);
@@ -200,7 +203,7 @@ function OnboardingContent() {
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(error, "No se pudo configurar la clave de acceso"),
+        actionErrorMessage(error, "No se pudo configurar la clave de acceso"),
       );
     } finally {
       setPasskeyPhase("idle");
@@ -218,7 +221,7 @@ function OnboardingContent() {
       await refetchRequirements();
     } catch (error: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(error, "No se pudo verificar el código"),
+        actionErrorMessage(error, "No se pudo verificar el código"),
       );
     } finally {
       setTotpLoading(false);
@@ -232,7 +235,7 @@ function OnboardingContent() {
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(
-        getErrorMessage(error, "No se pudo completar el registro"),
+        actionErrorMessage(error, "No se pudo completar el registro"),
       );
     } finally {
       setSubmitting(false);

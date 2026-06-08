@@ -1,7 +1,7 @@
 "use server";
 
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import type { Result } from "~/server/shared/result";
@@ -18,7 +18,7 @@ function parseCapacityRequest(
 
 export async function requestMoreSearches(amount: unknown, reason: unknown) {
   return runAction({
-    actionName: "capacity.request_search",
+    name: "capacity.request_search",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(amount, reason),
     audit: ({ amount }) => ({ amount }),
@@ -34,7 +34,7 @@ export async function requestMoreSearches(amount: unknown, reason: unknown) {
 
 export async function requestMoreLeadRefill(amount: unknown, reason: unknown) {
   return runAction({
-    actionName: "capacity.request_lead_refill",
+    name: "capacity.request_lead_refill",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(amount, reason),
     audit: ({ amount }) => ({ amount }),

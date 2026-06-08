@@ -2,13 +2,13 @@
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 
 import { parseAssignContactsCommand } from "./input";
 
 export async function assignCurrentUserContacts() {
   return runAction({
-    actionName: "contact_assignments.assign_current_user",
+    name: "contact_assignments.assign_current_user",
     access: { kind: "permission", permission: "lead:work" },
     execute: (ctx) => {
       const cmdResult = parseAssignContactsCommand(

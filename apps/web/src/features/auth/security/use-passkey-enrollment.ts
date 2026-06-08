@@ -8,7 +8,7 @@ import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/registration-client";
-import { getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 interface PasskeyEnrollmentOptions {
   enqueueSuccessSnackBar: (message: string) => void;
@@ -41,7 +41,7 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
       );
     } catch (error: unknown) {
       options.enqueueErrorSnackBar(
-        getErrorMessage(
+        actionErrorMessage(
           error,
           options.failureMessage ?? "No se pudo configurar la clave de acceso",
         ),

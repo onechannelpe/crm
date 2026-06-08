@@ -1,14 +1,14 @@
 "use server";
 
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
 
 export async function updateSearchPolicyOverride(input: unknown) {
   return runAction({
-    actionName: "capacity.search_policy_override.update",
+    name: "capacity.search_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
     parse: () =>
@@ -30,7 +30,7 @@ export async function updateSearchPolicyOverride(input: unknown) {
 
 export async function updateLeadPolicyOverride(input: unknown) {
   return runAction({
-    actionName: "capacity.lead_policy_override.update",
+    name: "capacity.lead_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
     parse: () =>
@@ -53,7 +53,7 @@ export async function updateLeadPolicyOverride(input: unknown) {
 
 export async function updateSearchPolicyDefault(input: unknown) {
   return runAction({
-    actionName: "capacity.search_policy_default.update",
+    name: "capacity.search_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
     parse: () =>
@@ -80,7 +80,7 @@ export async function updateSearchPolicyDefault(input: unknown) {
 
 export async function updateLeadPolicyDefault(input: unknown) {
   return runAction({
-    actionName: "capacity.lead_policy_default.update",
+    name: "capacity.lead_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
     parse: () =>

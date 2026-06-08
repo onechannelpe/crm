@@ -2,7 +2,6 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { conflictError, internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import type { Phone } from "~/lib/phone/pe-mobile";
@@ -10,6 +9,7 @@ import { completeOnboarding as completeOnboardingService } from "~/server/auth/a
 import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
+import { conflictFault, internalFault } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 export interface OnboardingRedirectResponse {
@@ -19,13 +19,13 @@ export interface OnboardingRedirectResponse {
 function mapOnboardingError(error: { code: string; message: string }): never {
   switch (error.code) {
     case "user_not_found":
-      throw internalError("No se pudo completar el registro");
+      throw internalFault("No se pudo completar el registro");
     case "strong_auth_required":
-      throw conflictError(error.message);
+      throw conflictFault(error.message);
     case "address_already_claimed":
-      throw conflictError(error.message);
+      throw conflictFault(error.message);
     default:
-      throw internalError(error.message);
+      throw internalFault(error.message);
   }
 }
 
@@ -71,7 +71,7 @@ export async function completePasskeyOnboarding(
     },
   );
   if (isErr(registrationResult)) {
-    throw internalError(registrationResult.error.message);
+    throw internalFault(registrationResult.error.message);
   }
   const result = await completeOnboardingService(onboardingContext, {
     session: {

@@ -5,7 +5,7 @@ import { randomUUIDv7 } from "bun";
 import { isRole } from "~/lib/auth/access/rbac";
 import type { NotificationAudience } from "~/server/notifications/types";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -53,7 +53,7 @@ export async function sendBroadcastNotification(
   params: unknown,
 ): Promise<void> {
   await runAction({
-    actionName: "notifications.broadcast",
+    name: "notifications.broadcast",
     access: { kind: "role", role: "admin" },
 
     parse: () => {

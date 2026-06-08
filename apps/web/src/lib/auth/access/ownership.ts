@@ -1,4 +1,4 @@
-import { forbiddenError, notFoundError } from "~/lib/app-errors";
+import { forbiddenFault, notFoundFault } from "~/server/shared/domain-error";
 
 import type { Role } from "./rbac";
 import type { AuthSession } from "./session-types";
@@ -6,8 +6,8 @@ import type { AuthSession } from "./session-types";
 /**
  * Asserts that a fetched record is non-null and owned by the session user.
  *
- * - Throws notFoundError if record is null/undefined.
- * - Throws forbiddenError if getOwnerId(record) !== session.userId,
+ * - Throws notFoundFault if record is null/undefined.
+ * - Throws forbiddenFault if getOwnerId(record) !== session.userId,
  *   unless session.role is in bypassRoles.
  * - Returns the narrowed non-null record for use in continuation code.
  *
@@ -27,12 +27,12 @@ export function assertOwnedRecord<T>(
   const name = options?.resourceName ?? "Resource";
 
   if (record == null) {
-    throw notFoundError(`${name} not found`);
+    throw notFoundFault(`${name} not found`);
   }
 
   const bypass = options?.bypassRoles ?? ADMIN_BYPASS;
   if (!bypass.has(session.role) && getOwnerId(record) !== session.userId) {
-    throw forbiddenError(
+    throw forbiddenFault(
       `You do not have access to this ${name.toLowerCase()}`,
     );
   }

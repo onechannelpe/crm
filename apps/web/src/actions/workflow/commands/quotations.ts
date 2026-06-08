@@ -2,14 +2,14 @@
 
 import { MONEDAS } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 import { workflowActor } from "./actor";
 
 export async function requestQuotationCreation(input: unknown) {
   return runAction({
-    actionName: "workflow.create_quotation",
+    name: "workflow.create_quotation",
     access: { kind: "auth" },
 
     parse: () =>
@@ -35,7 +35,7 @@ export async function requestQuotationCreation(input: unknown) {
 
 export async function requestSaleApproval(input: unknown) {
   return runAction({
-    actionName: "workflow.approve_for_sale",
+    name: "workflow.approve_for_sale",
     access: { kind: "auth" },
 
     parse: () =>

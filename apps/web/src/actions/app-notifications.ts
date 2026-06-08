@@ -1,13 +1,13 @@
 "use server";
 
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
 export async function getHeaderNotifications() {
   return runAction({
-    actionName: "notifications.header.read",
+    name: "notifications.header.read",
     access: { kind: "auth" },
 
     execute: async ({ actor }) => {
@@ -40,7 +40,7 @@ export async function markNotificationRead(
   notificationId: unknown,
 ): Promise<void> {
   await runAction({
-    actionName: "notifications.mark_read",
+    name: "notifications.mark_read",
     access: { kind: "auth" },
 
     parse: () =>
@@ -63,7 +63,7 @@ export async function markNotificationRead(
 
 export async function markAllNotificationsRead(): Promise<void> {
   await runAction({
-    actionName: "notifications.mark_all_read",
+    name: "notifications.mark_all_read",
     access: { kind: "auth" },
 
     execute: async ({ actor }) => {

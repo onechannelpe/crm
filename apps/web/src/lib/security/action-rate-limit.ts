@@ -1,10 +1,10 @@
 import type { Insertable } from "kysely";
 import { getRequestEvent } from "solid-js/web";
 
-import { rateLimitError } from "~/lib/app-errors";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { Database } from "~/lib/db/types";
+import { rateLimitFault } from "~/server/shared/domain-error";
 type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 
@@ -96,7 +96,7 @@ async function blockWithAudit(params: {
     created_at: now,
   });
 
-  throw rateLimitError(
+  throw rateLimitFault(
     `Too many requests for ${actionName}. Try again in ${retryAfterSeconds}s.`,
     retryAfterSeconds,
   );

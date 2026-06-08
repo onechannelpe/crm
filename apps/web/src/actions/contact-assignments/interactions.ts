@@ -4,14 +4,14 @@ import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignment
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/shared/action-runtime/runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function completeContactAssignmentCall(
   input: unknown,
 ): Promise<CompleteContactAssignmentCallResult> {
   return runAction({
-    actionName: "contact_assignments.complete_call",
+    name: "contact_assignments.complete_call",
     access: { kind: "permission", permission: "lead:work" },
 
     parse: () =>
