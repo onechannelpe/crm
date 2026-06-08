@@ -1,8 +1,11 @@
+import type {
+  BulkApplyResult,
+  BulkImportRow,
+  BulkParseResult,
+  BulkRowError,
+} from "~/contracts/team/bulk-import";
 import type { Role } from "~/lib/auth/access/rbac";
-import {
-  isExecutiveCategoryValue,
-  type ExecutiveCategoryValue,
-} from "~/lib/db/types";
+import { isExecutiveCategoryValue } from "~/lib/db/types";
 import {
   parseCsvRows,
   readFirstNonEmptyCsvRow,
@@ -17,35 +20,10 @@ type ProvisioningInterface = Pick<
   "createInvite" | "markInviteDelivered"
 >;
 
-export interface BulkImportRow {
-  firstSurname: string;
-  secondSurname: string;
-  names: string;
-  email: string;
-  expiresAt: number | null;
-  executiveCategory: ExecutiveCategoryValue | null;
-}
-
 export type BulkImportError = {
   reason: "parse_error";
   message: string;
 };
-
-export type BulkRowError = {
-  row: number;
-  message: string;
-};
-
-export interface BulkParseResult {
-  valid: BulkImportRow[];
-  errors: BulkRowError[];
-}
-
-export interface BulkApplyResult {
-  created: number;
-  skipped: number;
-  rowErrors: string[];
-}
 
 const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -297,7 +275,7 @@ export function parseAndValidateCsvRows(
       expiresAt = parsed;
     }
 
-    let executiveCategory: ExecutiveCategoryValue | null = null;
+    let executiveCategory: BulkImportRow["executiveCategory"] = null;
     if (isExecutive) {
       if (!isExecutiveCategoryValue(rawCategory)) {
         errors.push({

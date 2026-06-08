@@ -1,3 +1,7 @@
+import type {
+  BulkApplyResult,
+  BulkParseResult,
+} from "~/contracts/team/bulk-import";
 import type { Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime";
@@ -6,8 +10,6 @@ import { Ok, type Result } from "~/server/shared/result";
 import {
   applyImport,
   parseAndValidateCsvRows,
-  type BulkApplyResult,
-  type BulkParseResult,
 } from "~/server/users/service-bulk-import";
 
 import type { TeamInviteProvisioningContext } from "../infrastructure/invite-context";
@@ -85,5 +87,3 @@ export async function applyBulkImport(
 
   return Ok(result);
 }
-
-export type { BulkApplyResult, BulkParseResult };

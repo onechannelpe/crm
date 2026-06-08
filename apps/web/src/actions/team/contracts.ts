@@ -1,34 +1,8 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { RoleOption } from "~/lib/auth/access/role-display";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
 
 export interface BulkImportSetup {
   assignableRoles: RoleOption[];
-}
-
-export interface BulkImportRow {
-  firstSurname: string;
-  secondSurname: string;
-  names: string;
-  email: string;
-  expiresAt: number | null;
-  executiveCategory: ExecutiveCategoryValue | null;
-}
-
-export type BulkRowError = {
-  row: number;
-  message: string;
-};
-
-export interface BulkParseResult {
-  valid: BulkImportRow[];
-  errors: BulkRowError[];
-}
-
-export interface BulkApplyResult {
-  created: number;
-  skipped: number;
-  rowErrors: string[];
 }
 
 export interface TeamInvite {

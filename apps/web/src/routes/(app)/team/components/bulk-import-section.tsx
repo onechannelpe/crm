@@ -1,12 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
-import {
-  applyBulkImport,
-  previewBulkCsv,
-  type BulkApplyResult,
-  type BulkPreviewResult,
-} from "~/actions/team/bulk-import";
+import { applyBulkImport, previewBulkCsv } from "~/actions/team/bulk-import";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
@@ -21,6 +16,10 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import type {
+  BulkApplyResult,
+  BulkPreviewResult,
+} from "~/contracts/team/bulk-import";
 import { getErrorMessage } from "~/lib/errors";
 import { readFileText } from "~/lib/file/read-file-text";
 import { APP_LOCALE } from "~/lib/locale";
