@@ -100,13 +100,9 @@ export async function runActionResult<TIn, TOut, E extends DomainError>(
 ): Promise<Result<TOut, AppError>> {
   const startedAt = Date.now();
 
-  // Validate first: reject a malformed payload before any session or database
-  // work. There is no actor yet, so the rejection is surfaced without a row.
-  // No-input actions have no payload; TIn is undefined for them by construction.
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
-  const parsed = params.parse ? params.parse() : Ok(undefined as TIn);
+  const parsed = runParse(params.parse);
   if (isErr(parsed)) {
-    return Err(sanitize(domainToAppError(parsed.error)));
+    return Err(parsed.error);
   }
 
   let ctx: AppContext;
@@ -123,9 +119,31 @@ export async function runActionResult<TIn, TOut, E extends DomainError>(
   return finish(ctx, params.actionName, startedAt, audit, result);
 }
 
+// Validate first: reject a malformed payload before any session or database
+// work. There is no actor yet, so any rejection is surfaced without a row.
+// No-input actions have no payload; TIn is undefined for them by construction.
+function runParse<TIn>(
+  parse: (() => Result<TIn, DomainError>) | undefined,
+): Result<TIn, AppError> {
+  if (!parse) {
+    // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+    return Ok(undefined as TIn);
+  }
+
+  try {
+    const parsed = parse();
+    if (isErr(parsed)) return Err(sanitize(domainToAppError(parsed.error)));
+    return Ok(parsed.value);
+  } catch (error) {
+    if (error instanceof Response) throw error;
+    if (error instanceof AppError) return Err(sanitize(error));
+    captureException(error);
+    return Err(sanitize(internalError(GENERIC_ERROR)));
+  }
+}
+
 // Runs the command and folds both thrown errors and domain failures into one
-// Result<TOut, AppError>. This is the only place an error becomes an AppError,
-// so the rest of the pipeline has a single shape to record and return.
+// Result<TOut, AppError>, so the telemetry path has a single shape to record.
 async function runExecute<TIn, TOut, E extends DomainError>(
   ctx: AppContext,
   input: TIn,
