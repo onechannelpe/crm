@@ -1,9 +1,7 @@
 import { action, json } from "@solidjs/router";
 
-import {
-  completeContactAssignmentCall,
-  type CompleteContactAssignmentCallInput,
-} from "~/actions/contact-assignments/interactions";
+import { completeContactAssignmentCall } from "~/actions/contact-assignments/interactions";
+import type { CompleteContactAssignmentCallInput } from "~/contracts/contact-assignments/inputs";
 import { activeContactAssignmentsQuery } from "~/lib/queries/contact-assignments";
 
 export const completeContactAssignmentCallMutation = action(

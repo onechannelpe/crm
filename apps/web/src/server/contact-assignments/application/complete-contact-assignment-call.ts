@@ -1,9 +1,9 @@
+import type { ContactAssignmentCallOutcome } from "~/contracts/contact-assignments/vocabulary";
 import type { AppUow } from "~/server/shared/application/uow";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  ContactAssignmentCallOutcome,
   CompleteContactAssignmentCallCommand,
   CompleteContactAssignmentCallResult,
 } from "./contracts";

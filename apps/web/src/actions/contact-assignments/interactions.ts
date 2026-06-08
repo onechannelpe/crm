@@ -1,21 +1,11 @@
 "use server";
 
+import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignments/vocabulary";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
-import {
-  CONTACT_ASSIGNMENT_CALL_OUTCOMES,
-  type CompleteContactAssignmentCallResult,
-  type ContactAssignmentCallOutcome,
-} from "~/server/contact-assignments/application/contracts";
+import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
-
-export type CompleteContactAssignmentCallInput = {
-  assignmentId: number;
-  contactId: number;
-  outcome: ContactAssignmentCallOutcome;
-  notes: string | null;
-};
 
 export async function completeContactAssignmentCall(
   input: unknown,
