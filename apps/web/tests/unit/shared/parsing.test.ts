@@ -1,0 +1,76 @@
+import { describe, expect, it } from "vitest";
+
+import { parseObject, validationFail } from "~/server/shared/parsing";
+
+function expectErrCode(
+  result: { ok: true; value: unknown } | { ok: false; error: { code: string } },
+  code: string,
+) {
+  expect(result.ok).toBe(false);
+  if (result.ok) throw new Error("expected err");
+  expect(result.error.code).toBe(code);
+}
+
+describe("parseObject", () => {
+  it("trims string values", () => {
+    const result = parseObject(
+      { reason: "  Reviewed by executive  " },
+      validationFail,
+      (r) => ({ reason: r.str("reason") }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.value.reason).toBe("Reviewed by executive");
+  });
+
+  it("derives a required code from the field name", () => {
+    const result = parseObject({}, validationFail, (r) => ({
+      reason: r.str("reason"),
+    }));
+
+    expectErrCode(result, "reason_required");
+  });
+
+  it("treats a non-finite number as missing", () => {
+    const result = parseObject(
+      { tasaActual: Number.NaN },
+      validationFail,
+      (r) => ({ tasaActual: r.num("tasaActual") }),
+    );
+
+    expectErrCode(result, "tasa_actual_required");
+  });
+
+  it("reports a missing nested object on its own path", () => {
+    const result = parseObject({}, validationFail, (r) => ({
+      solesAccount: r.obj("solesAccount", (a) => ({
+        nroCuenta: a.str("nroCuenta"),
+      })),
+    }));
+
+    expectErrCode(result, "soles_account_required");
+  });
+
+  it("derives a dotted snake_case code for a nested field", () => {
+    const result = parseObject(
+      { dollarAccount: { isSettlement: false } },
+      validationFail,
+      (r) => ({
+        dollarAccount: r.optObj("dollarAccount", (a) => ({
+          nroCuenta: a.str("nroCuenta"),
+        })),
+      }),
+    );
+
+    expectErrCode(result, "dollar_account_nro_cuenta_required");
+  });
+
+  it("reports a non-object root as invalid_input", () => {
+    const result = parseObject(null, validationFail, (r) => ({
+      reason: r.str("reason"),
+    }));
+
+    expectErrCode(result, "invalid_input");
+  });
+});
