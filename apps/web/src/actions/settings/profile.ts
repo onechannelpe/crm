@@ -14,14 +14,18 @@ export async function updateUserProfile(
   return runAction({
     actionName: "settings.profile.update_phone",
     access: { kind: "session" },
-    // Normalize and validate the phone at the boundary so the command receives
-    // a canonical local number.
+
     parse: () => {
       const shape = parseObject({ phone }, validationFail, (r) => ({
         phone: r.str("phone"),
       }));
-      if (isErr(shape)) return shape;
+
+      if (isErr(shape)) {
+        return shape;
+      }
+
       const localPhone = parsePhone(shape.value.phone);
+
       if (!localPhone) {
         return Err(
           domainError(
@@ -31,13 +35,16 @@ export async function updateUserProfile(
           ),
         );
       }
+
       return Ok({ phone: localPhone });
     },
-    execute: async (ctx, input) => {
+
+    execute: async (ctx, { phone }) => {
       const result = await getServerRuntime().users.updatePhone(
         ctx.actor.userId,
-        input.phone,
+        phone,
       );
+
       if (isErr(result)) {
         return Err(
           domainError(
@@ -47,6 +54,7 @@ export async function updateUserProfile(
           ),
         );
       }
+
       return Ok({ success: true });
     },
   });
