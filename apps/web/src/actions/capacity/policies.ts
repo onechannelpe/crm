@@ -2,70 +2,20 @@
 
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { parseObject, validationFail } from "~/server/shared/parsing";
 
-import {
-  parseLeadPolicyOverrideInput,
-  parseLeadPolicyValues,
-  parseScopeDefaultInput,
-  parseSearchPolicyLimit,
-  parseSearchPolicyOverrideInput,
-} from "./input";
+const SCOPE_TYPES = ["branch", "team"] as const;
 
-type ScopeDefault = { scope: { kind: "branch" | "team"; scopeId: number } };
-
-function parseSearchScopeDefault(input: {
-  scopeType: "branch" | "team";
-  scopeId: number;
-  monthlySearchLimit: number;
-}): Result<ScopeDefault & { monthlyLimit: number }, DomainError> {
-  const scope = parseScopeDefaultInput(input);
-  if (!scope.ok) return scope;
-
-  const limit = parseSearchPolicyLimit(input.monthlySearchLimit);
-  if (!limit.ok) return limit;
-
-  return Ok({
-    scope: { kind: scope.value.scopeType, scopeId: scope.value.scopeId },
-    monthlyLimit: limit.value,
-  });
-}
-
-function parseLeadScopeDefault(input: {
-  scopeType: "branch" | "team";
-  scopeId: number;
-  activeBufferTarget: number;
-  dailyRefillLimit: number;
-}): Result<
-  ScopeDefault & { bufferTarget: number; dailyLimit: number },
-  DomainError
-> {
-  const scope = parseScopeDefaultInput(input);
-  if (!scope.ok) return scope;
-
-  const values = parseLeadPolicyValues({
-    activeBufferTarget: input.activeBufferTarget,
-    dailyRefillLimit: input.dailyRefillLimit,
-  });
-  if (!values.ok) return values;
-
-  return Ok({
-    scope: { kind: scope.value.scopeType, scopeId: scope.value.scopeId },
-    bufferTarget: values.value.activeBufferTarget,
-    dailyLimit: values.value.dailyRefillLimit,
-  });
-}
-
-export async function updateSearchPolicyOverride(input: {
-  userId: number;
-  monthlySearchLimit: number;
-  expiresAt: number | null;
-}) {
+export async function updateSearchPolicyOverride(input: unknown) {
   return runAction({
     actionName: "capacity.search_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    parse: () => parseSearchPolicyOverrideInput(input),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        userId: r.num("userId"),
+        monthlyLimit: r.num("monthlySearchLimit"),
+        expiresAt: r.optNum("expiresAt"),
+      })),
     audit: ({ userId }) => ({ userId }),
     execute: (ctx, override) =>
       getServerRuntime().capacity.useCases.updateSearchPolicyOverride(
@@ -75,16 +25,17 @@ export async function updateSearchPolicyOverride(input: {
   });
 }
 
-export async function updateLeadPolicyOverride(input: {
-  userId: number;
-  activeBufferTarget: number;
-  dailyRefillLimit: number;
-  expiresAt: number | null;
-}) {
+export async function updateLeadPolicyOverride(input: unknown) {
   return runAction({
     actionName: "capacity.lead_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    parse: () => parseLeadPolicyOverrideInput(input),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        userId: r.num("userId"),
+        bufferTarget: r.num("activeBufferTarget"),
+        dailyLimit: r.num("dailyRefillLimit"),
+        expiresAt: r.optNum("expiresAt"),
+      })),
     audit: ({ userId }) => ({ userId }),
     execute: (ctx, override) =>
       getServerRuntime().capacity.useCases.updateLeadPolicyOverride(
@@ -94,15 +45,18 @@ export async function updateLeadPolicyOverride(input: {
   });
 }
 
-export async function updateSearchPolicyDefault(input: {
-  scopeType: "branch" | "team";
-  scopeId: number;
-  monthlySearchLimit: number;
-}) {
+export async function updateSearchPolicyDefault(input: unknown) {
   return runAction({
     actionName: "capacity.search_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    parse: () => parseSearchScopeDefault(input),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        scope: {
+          kind: r.enum("scopeType", SCOPE_TYPES),
+          scopeId: r.num("scopeId"),
+        },
+        monthlyLimit: r.num("monthlySearchLimit"),
+      })),
     audit: ({ scope }) => ({ scopeKind: scope.kind, scopeId: scope.scopeId }),
     execute: (ctx, params) =>
       getServerRuntime().capacity.useCases.updateSearchPolicyDefault(
@@ -112,16 +66,19 @@ export async function updateSearchPolicyDefault(input: {
   });
 }
 
-export async function updateLeadPolicyDefault(input: {
-  scopeType: "branch" | "team";
-  scopeId: number;
-  activeBufferTarget: number;
-  dailyRefillLimit: number;
-}) {
+export async function updateLeadPolicyDefault(input: unknown) {
   return runAction({
     actionName: "capacity.lead_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    parse: () => parseLeadScopeDefault(input),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        scope: {
+          kind: r.enum("scopeType", SCOPE_TYPES),
+          scopeId: r.num("scopeId"),
+        },
+        bufferTarget: r.num("activeBufferTarget"),
+        dailyLimit: r.num("dailyRefillLimit"),
+      })),
     audit: ({ scope }) => ({ scopeKind: scope.kind, scopeId: scope.scopeId }),
     execute: (ctx, params) =>
       getServerRuntime().capacity.useCases.updateLeadPolicyDefault(ctx, params),

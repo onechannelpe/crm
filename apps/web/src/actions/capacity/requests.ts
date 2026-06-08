@@ -3,24 +3,20 @@
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
-
-import { parseCapacityAmount, parseCapacityReason } from "./input";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import type { Result } from "~/server/shared/result";
 
 function parseCapacityRequest(
-  amount: number,
-  reason: string,
+  amount: unknown,
+  reason: unknown,
 ): Result<{ amount: number; reason: string }, DomainError> {
-  const amountResult = parseCapacityAmount(amount);
-  if (!amountResult.ok) return amountResult;
-
-  const reasonResult = parseCapacityReason(reason);
-  if (!reasonResult.ok) return reasonResult;
-
-  return Ok({ amount: amountResult.value, reason: reasonResult.value });
+  return parseObject({ amount, reason }, validationFail, (r) => ({
+    amount: r.num("amount"),
+    reason: r.str("reason"),
+  }));
 }
 
-export async function requestMoreSearches(amount: number, reason: string) {
+export async function requestMoreSearches(amount: unknown, reason: unknown) {
   return runAction({
     actionName: "capacity.request_search",
     access: { kind: "permission", permission: "capacity:request:self" },
@@ -35,7 +31,7 @@ export async function requestMoreSearches(amount: number, reason: string) {
   });
 }
 
-export async function requestMoreLeadRefill(amount: number, reason: string) {
+export async function requestMoreLeadRefill(amount: unknown, reason: unknown) {
   return runAction({
     actionName: "capacity.request_lead_refill",
     access: { kind: "permission", permission: "capacity:request:self" },

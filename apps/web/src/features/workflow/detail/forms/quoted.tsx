@@ -28,7 +28,7 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import {
   approveForSaleMutation,
@@ -79,7 +79,7 @@ export function QuotedSection(props: QuotedSectionProps) {
       await approve({ leadId: props.leadId });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(toAppError(err, "Error al aprobar").publicMessage);
+      setError(actionErrorMessage(err, "Error al aprobar"));
     } finally {
       setApproving(false);
     }
@@ -117,7 +117,9 @@ export function QuotedSection(props: QuotedSectionProps) {
             sizeBytes: result.value.sizeBytes,
           });
         } else {
-          failures.push(result.error.publicMessage);
+          failures.push(
+            actionErrorMessage(result.error, "Error al subir archivo"),
+          );
         }
       });
 
@@ -133,7 +135,7 @@ export function QuotedSection(props: QuotedSectionProps) {
         setStagedFiles((prev) => [...prev, ...successes]);
       }
     } catch (err) {
-      setError(toAppError(err, "Error al subir archivo").publicMessage);
+      setError(actionErrorMessage(err, "Error al subir archivo"));
     } finally {
       setUploading(false);
     }
@@ -164,7 +166,7 @@ export function QuotedSection(props: QuotedSectionProps) {
       });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(toAppError(err, "Error al enviar solicitud").publicMessage);
+      setError(actionErrorMessage(err, "Error al enviar solicitud"));
     } finally {
       setSubmitting(false);
     }

@@ -3,6 +3,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageScope } from "../../domain/access-policy";
+import { validateSearchLimit } from "../../domain/limits";
 import type { ScopeRef } from "../../domain/types";
 import { setSearchScopeDefault } from "../search-policy";
 import type { CapacityPolicyDeps } from "./shared";
@@ -15,6 +16,9 @@ export async function updateSearchPolicyDefault(
     monthlyLimit: number;
   },
 ): Promise<Result<{ success: true }, DomainError>> {
+  const monthlyLimit = validateSearchLimit(input.monthlyLimit);
+  if (!monthlyLimit.ok) return monthlyLimit;
+
   return deps.uow.run(async (tx) => {
     const check = await canManageScope(ctx.actor, input.scope, tx);
 

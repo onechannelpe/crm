@@ -38,7 +38,7 @@ import {
   updateVenueMutation,
 } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import { AccountsForm } from "./components/accounts-form";
 import { VenueCard } from "./components/venue-card";
@@ -159,7 +159,7 @@ function StartSetupExecutionAction(props: { leadId: string }) {
       await startSetupExecution({ leadId: props.leadId });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(toAppError(err, "Error al iniciar afiliación").publicMessage);
+      setError(actionErrorMessage(err, "Error al iniciar afiliación"));
     } finally {
       setSubmitting(false);
     }
@@ -271,9 +271,7 @@ function DigitalPolicyPanel(props: {
 
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(
-        toAppError(err, "No se pudo guardar política digital").publicMessage,
-      );
+      setError(actionErrorMessage(err, "No se pudo guardar política digital"));
     } finally {
       setSubmitting(false);
     }
@@ -456,7 +454,7 @@ function VenueCreatePanel(props: {
       form.reset();
       setShowForm(false);
     } catch (err) {
-      setError(toAppError(err, "No se pudo registrar la sede").publicMessage);
+      setError(actionErrorMessage(err, "No se pudo registrar la sede"));
     } finally {
       setSubmitting(false);
     }
@@ -536,7 +534,7 @@ function VenueEditPanel(props: {
       await revalidateWorkflowLead(props.leadId);
       props.onClose();
     } catch (err) {
-      setError(toAppError(err, "No se pudo actualizar la sede").publicMessage);
+      setError(actionErrorMessage(err, "No se pudo actualizar la sede"));
     } finally {
       setSubmitting(false);
     }
@@ -614,9 +612,7 @@ function AccountsFormPanel(props: {
       await revalidateWorkflowLead(props.leadId);
       form.reset();
     } catch (err) {
-      setError(
-        toAppError(err, "No se pudieron registrar las cuentas").publicMessage,
-      );
+      setError(actionErrorMessage(err, "No se pudieron registrar las cuentas"));
     } finally {
       setSubmitting(false);
     }

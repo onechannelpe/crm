@@ -22,7 +22,7 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import { recordRepLegalMutation } from "../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
@@ -69,9 +69,7 @@ export function RepLegalSection(props: {
       });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(
-        toAppError(err, "Error al guardar representante legal").publicMessage,
-      );
+      setError(actionErrorMessage(err, "Error al guardar representante legal"));
     } finally {
       setSaving(false);
     }

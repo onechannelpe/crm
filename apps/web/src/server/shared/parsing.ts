@@ -52,35 +52,40 @@ class RecordReader<E> implements Reader<E> {
   ) {}
 
   str(field: string): string {
-    const value = this.record[field];
-    if (typeof value !== "string") this.reject(field, "required");
+    const value = this.present(field);
+    if (typeof value !== "string") this.reject(field, "invalid");
     const trimmed = value.trim();
     if (!trimmed) this.reject(field, "required");
     return trimmed;
   }
 
   num(field: string): number {
-    const value = this.record[field];
+    const value = this.present(field);
     if (typeof value !== "number" || !Number.isFinite(value)) {
-      this.reject(field, "required");
+      this.reject(field, "invalid");
     }
     return value;
   }
 
   bool(field: string): boolean {
-    const value = this.record[field];
-    if (typeof value !== "boolean") this.reject(field, "required");
+    const value = this.present(field);
+    if (typeof value !== "boolean") this.reject(field, "invalid");
     return value;
   }
 
   enum<T extends string>(field: string, options: readonly T[]): T {
-    const value = this.optEnum(field, options);
-    if (value === undefined) this.reject(field, "invalid");
-    return value;
+    const value = this.record[field];
+    if (value === undefined || value === null || value === "") {
+      this.reject(field, "required");
+    }
+    if (typeof value !== "string") this.reject(field, "invalid");
+    const match = options.find((option) => option === value);
+    if (match === undefined) this.reject(field, "invalid");
+    return match;
   }
 
   strList(field: string): string[] {
-    const value = this.record[field];
+    const value = this.present(field);
     if (!Array.isArray(value)) this.reject(field, "invalid");
     const items: string[] = [];
     for (const item of value) {
@@ -134,6 +139,15 @@ class RecordReader<E> implements Reader<E> {
 
   private pathOf(field: string): string {
     return this.path ? `${this.path}.${field}` : field;
+  }
+
+  // Absent (undefined/null) is "required"; a present value of the wrong type is
+  // the caller's "invalid" to report. Splitting the two keeps the failure code
+  // honest, so telemetry can tell a missing field from a malformed one.
+  private present(field: string): unknown {
+    const value = this.record[field];
+    if (value === undefined || value === null) this.reject(field, "required");
+    return value;
   }
 
   private reject(field: string, reason: "required" | "invalid"): never {

@@ -19,7 +19,7 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import { createQuotationMutation } from "../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
@@ -75,7 +75,7 @@ export function QuotationSection(props: QuotationSectionProps) {
       });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(toAppError(err, "Error al crear cotización").publicMessage);
+      setError(actionErrorMessage(err, "Error al crear cotización"));
     } finally {
       setSubmitting(false);
     }

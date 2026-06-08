@@ -10,7 +10,7 @@ import type { CapacityApprovalDeps } from "./shared";
 export async function rejectCapacityRequest(
   ctx: AppContext,
   deps: CapacityApprovalDeps,
-  input: { requestId: number; note: string },
+  input: { requestId: number; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   await checkActionRateLimit(
     "capacity.approve",

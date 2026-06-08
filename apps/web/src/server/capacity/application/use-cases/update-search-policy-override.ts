@@ -3,6 +3,10 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
+import {
+  validateOverrideExpiry,
+  validateSearchLimit,
+} from "../../domain/limits";
 import { setSearchUserOverride } from "../search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
@@ -15,6 +19,11 @@ export async function updateSearchPolicyOverride(
     expiresAt: number | null;
   },
 ): Promise<Result<{ success: true }, DomainError>> {
+  const monthlyLimit = validateSearchLimit(input.monthlyLimit);
+  if (!monthlyLimit.ok) return monthlyLimit;
+  const expiresAt = validateOverrideExpiry(input.expiresAt);
+  if (!expiresAt.ok) return expiresAt;
+
   return deps.uow.run(async (tx) => {
     const access = await canManageExecutive(ctx.actor, input.userId, tx);
 
@@ -38,8 +47,8 @@ export async function updateSearchPolicyOverride(
       {
         actorUserId: ctx.actor.userId,
         targetUserId: input.userId,
-        monthlyLimit: input.monthlyLimit,
-        expiresAt: input.expiresAt,
+        monthlyLimit: monthlyLimit.value,
+        expiresAt: expiresAt.value,
       },
       tx,
     );

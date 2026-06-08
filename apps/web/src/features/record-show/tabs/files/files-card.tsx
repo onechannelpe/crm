@@ -17,6 +17,7 @@ import {
   ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal } from "./preview-modal";
@@ -120,7 +121,9 @@ export function FilesCard(props: FilesCardProps) {
     if (result.ok) {
       window.location.href = `/api/files/download/${result.value.token}`;
     } else {
-      setError(result.error.publicMessage);
+      setError(
+        actionErrorMessage(result.error, "No se pudo descargar el archivo"),
+      );
     }
   }
 

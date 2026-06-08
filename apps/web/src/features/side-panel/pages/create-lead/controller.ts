@@ -8,6 +8,7 @@ import {
 } from "~/features/workflow/data/optimistic-leads";
 import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
 import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 import { shortName } from "~/lib/users/display-name";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
@@ -82,17 +83,19 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
       input.onLeadCreated({ leadId: result.leadId, ruc });
     } catch (submitError) {
       optimisticTransactions.rollback(txId);
-      const appError = toAppError(submitError, "Error al registrar cliente");
+      const fallback = "Error al registrar cliente";
+      const appError = toAppError(submitError, fallback);
+      const message = actionErrorMessage(appError, fallback);
       if (
-        appError.code === "validation" &&
-        appError.publicMessage.includes("RUC")
+        appError.domainCode === "invalid_ruc" ||
+        appError.domainCode === "ruc_required"
       ) {
-        setError(appError.publicMessage);
+        setError(message);
         input.setActiveTab("home");
         return;
       }
 
-      setError(appError.publicMessage);
+      setError(message);
     }
   }
 

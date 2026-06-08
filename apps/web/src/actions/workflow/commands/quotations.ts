@@ -24,12 +24,6 @@ function parseCreateQuotation(
   }));
 }
 
-function parseLeadRef(input: unknown): Result<{ leadId: string }, DomainError> {
-  return parseObject(input, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-  }));
-}
-
 export async function requestQuotationCreation(input: unknown) {
   return runAction({
     actionName: "workflow.create_quotation",
@@ -48,7 +42,8 @@ export async function requestSaleApproval(input: unknown) {
   return runAction({
     actionName: "workflow.approve_for_sale",
     access: { kind: "auth" },
-    parse: () => parseLeadRef(input),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({ leadId: r.str("leadId") })),
     audit: ({ leadId }) => ({ leadId }),
     execute: ({ actor }, { leadId }) =>
       getServerRuntime().workflow.commands.approveForSale({

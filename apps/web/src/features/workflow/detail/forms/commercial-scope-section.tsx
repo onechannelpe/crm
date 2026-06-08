@@ -23,7 +23,7 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import {
   requestQuotationMutation,
@@ -101,7 +101,7 @@ export function CommercialScopeSection(props: {
       });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(toAppError(err, "Error al guardar").publicMessage);
+      setError(actionErrorMessage(err, "Error al guardar"));
     } finally {
       setSaving(false);
     }
@@ -130,7 +130,7 @@ export function CommercialScopeSection(props: {
       });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(toAppError(err, "Error al solicitar cotización").publicMessage);
+      setError(actionErrorMessage(err, "Error al solicitar cotización"));
     } finally {
       setRequesting(false);
     }

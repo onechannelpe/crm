@@ -11,7 +11,7 @@ import {
   type LeadPriority,
   type LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/error-messages";
 
 import { reviewLeadMutation } from "../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
@@ -46,7 +46,7 @@ export function ReviewLeadModal(props: {
       await revalidateWorkflowLead(props.leadId);
       props.onClose();
     } catch (err) {
-      setError(toAppError(err, "Error al revisar").publicMessage);
+      setError(actionErrorMessage(err, "Error al revisar"));
     } finally {
       setSubmitting(false);
     }

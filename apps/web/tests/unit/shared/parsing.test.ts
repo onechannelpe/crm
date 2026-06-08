@@ -32,14 +32,30 @@ describe("parseObject", () => {
     expectErrCode(result, "reason_required");
   });
 
-  it("treats a non-finite number as missing", () => {
+  it("reports a non-finite number as invalid, not missing", () => {
     const result = parseObject(
       { tasaActual: Number.NaN },
       validationFail,
       (r) => ({ tasaActual: r.num("tasaActual") }),
     );
 
-    expectErrCode(result, "tasa_actual_required");
+    expectErrCode(result, "invalid_tasa_actual");
+  });
+
+  it("reports a present wrong-typed field as invalid", () => {
+    const result = parseObject({ reason: 42 }, validationFail, (r) => ({
+      reason: r.str("reason"),
+    }));
+
+    expectErrCode(result, "invalid_reason");
+  });
+
+  it("reports a missing required enum as required", () => {
+    const result = parseObject({}, validationFail, (r) => ({
+      status: r.enum("status", ["OPEN", "CLOSED"] as const),
+    }));
+
+    expectErrCode(result, "status_required");
   });
 
   it("reports a missing nested object on its own path", () => {

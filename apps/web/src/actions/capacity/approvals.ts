@@ -2,66 +2,65 @@
 
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import type { Result } from "~/server/shared/result";
 
-import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
+type CapacityDecision = { requestId: number; note: string | null };
 
-function parseRejection(
-  requestId: number,
-  note: string,
-): Result<{ requestId: number; note: string }, DomainError> {
-  const decision = parseCapacityDecisionInput({ requestId, note });
-  if (!decision.ok) return decision;
-  if (!decision.value.note) {
-    return Err(
-      domainError(
-        "validation",
-        "capacity.reject.note_required",
-        "note is required",
-      ),
-    );
-  }
-  return Ok({ requestId: decision.value.requestId, note: decision.value.note });
+function parseCapacityDecision(
+  requestId: unknown,
+  note: unknown,
+): Result<CapacityDecision, DomainError> {
+  return parseObject({ requestId, note }, validationFail, (r) => ({
+    requestId: r.num("requestId"),
+    note: r.optStr("note"),
+  }));
 }
 
-export async function approveCapacity(requestId: number, note?: string) {
+function parseCapacityGrant(
+  userId: unknown,
+  amount: unknown,
+  reason: unknown,
+): Result<{ userId: number; amount: number; reason: string }, DomainError> {
+  return parseObject({ userId, amount, reason }, validationFail, (r) => ({
+    userId: r.num("userId"),
+    amount: r.num("amount"),
+    reason: r.str("reason"),
+  }));
+}
+
+export async function approveCapacity(requestId: unknown, note?: unknown) {
   return runAction({
     actionName: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
-    parse: () => parseCapacityDecisionInput({ requestId, note }),
+    parse: () => parseCapacityDecision(requestId, note),
     audit: ({ requestId }) => ({ requestId }),
     execute: (ctx, decision) =>
-      getServerRuntime().capacity.useCases.approveCapacityRequest(
-        ctx,
-        decision,
-      ),
+      getServerRuntime().capacity.useCases.approveCapacityRequest(ctx, decision),
   });
 }
 
-export async function rejectCapacity(requestId: number, note: string) {
+export async function rejectCapacity(requestId: unknown, note: unknown) {
   return runAction({
     actionName: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
-    parse: () => parseRejection(requestId, note),
+    parse: () => parseCapacityDecision(requestId, note),
     audit: ({ requestId }) => ({ requestId }),
-    execute: (ctx, rejection) =>
-      getServerRuntime().capacity.useCases.rejectCapacityRequest(
-        ctx,
-        rejection,
-      ),
+    execute: (ctx, decision) =>
+      getServerRuntime().capacity.useCases.rejectCapacityRequest(ctx, decision),
   });
 }
 
 export async function grantMoreSearches(
-  userId: number,
-  amount: number,
-  reason: string,
+  userId: unknown,
+  amount: unknown,
+  reason: unknown,
 ) {
   return runAction({
     actionName: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
-    parse: () => parseCapacityGrantInput({ userId, amount, reason }),
+    parse: () => parseCapacityGrant(userId, amount, reason),
     audit: ({ userId, amount }) => ({ userId, amount }),
     execute: (ctx, grant) =>
       getServerRuntime().capacity.useCases.grantSearchCapacityDirect(ctx, {
@@ -73,14 +72,14 @@ export async function grantMoreSearches(
 }
 
 export async function grantMoreLeadRefill(
-  userId: number,
-  amount: number,
-  reason: string,
+  userId: unknown,
+  amount: unknown,
+  reason: unknown,
 ) {
   return runAction({
     actionName: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },
-    parse: () => parseCapacityGrantInput({ userId, amount, reason }),
+    parse: () => parseCapacityGrant(userId, amount, reason),
     audit: ({ userId, amount }) => ({ userId, amount }),
     execute: (ctx, grant) =>
       getServerRuntime().capacity.useCases.grantLeadCapacityDirect(ctx, {
