@@ -12,62 +12,41 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 const AUDIENCE_TYPES = ["user_ids", "global_roles", "team"] as const;
 
-type BroadcastInput = {
-  title: string;
-  bodyText: string;
-  audience: NotificationAudience;
-};
-
 function resolveAudience(
   audienceType: (typeof AUDIENCE_TYPES)[number],
   ref: string,
 ): Result<NotificationAudience, DomainError> {
   if (audienceType === "user_ids") {
     const userId = Number(ref);
+
     if (!Number.isInteger(userId) || userId <= 0) {
       return Err(
         domainError("validation", "invalid_user_audience", "Invalid audience"),
       );
     }
+
     return Ok({ kind: "user_ids", userIds: [userId] });
   }
+
   if (audienceType === "team") {
     const teamId = Number(ref);
+
     if (!Number.isInteger(teamId) || teamId <= 0) {
       return Err(
         domainError("validation", "invalid_team_audience", "Invalid audience"),
       );
     }
+
     return Ok({ kind: "team_id", teamId });
   }
+
   if (!isRole(ref)) {
     return Err(
       domainError("validation", "invalid_role_audience", "Invalid audience"),
     );
   }
+
   return Ok({ kind: "global_role", role: ref });
-}
-
-function parseBroadcast(params: unknown): Result<BroadcastInput, DomainError> {
-  const shape = parseObject(params, validationFail, (r) => ({
-    title: r.str("title"),
-    bodyText: r.str("bodyText"),
-    audienceType: r.enum("audienceType", AUDIENCE_TYPES),
-    audienceRef: r.str("audienceRef"),
-  }));
-  if (isErr(shape)) return shape;
-
-  const audience = resolveAudience(
-    shape.value.audienceType,
-    shape.value.audienceRef,
-  );
-  if (isErr(audience)) return audience;
-
-  return Ok({
-    title: shape.value.title,
-    bodyText: shape.value.bodyText,
-    audience: audience.value,
-  });
 }
 
 export async function sendBroadcastNotification(
@@ -76,14 +55,45 @@ export async function sendBroadcastNotification(
   await runAction({
     actionName: "notifications.broadcast",
     access: { kind: "role", role: "admin" },
-    parse: () => parseBroadcast(params),
+
+    parse: () => {
+      const parsed = parseObject(params, validationFail, (r) => ({
+        title: r.str("title"),
+        bodyText: r.str("bodyText"),
+        audienceType: r.enum("audienceType", AUDIENCE_TYPES),
+        audienceRef: r.str("audienceRef"),
+      }));
+
+      if (isErr(parsed)) {
+        return parsed;
+      }
+
+      const audience = resolveAudience(
+        parsed.value.audienceType,
+        parsed.value.audienceRef,
+      );
+
+      if (isErr(audience)) {
+        return audience;
+      }
+
+      return Ok({
+        title: parsed.value.title,
+        bodyText: parsed.value.bodyText,
+        audience: audience.value,
+      });
+    },
+
     audit: ({ audience }) => ({ audienceKind: audience.kind }),
-    execute: async (ctx, input) => {
+
+    execute: async ({ actor }, input) => {
+      const notifications = getServerRuntime().notifications;
       const now = Date.now();
-      await getServerRuntime().notifications.enqueue(
+
+      await notifications.enqueue(
         [
           {
-            id: `broadcast:${ctx.actor.userId}:${randomUUIDv7()}`,
+            id: `broadcast:${actor.userId}:${randomUUIDv7()}`,
             eventType: "broadcast.general",
             audience: input.audience,
             channels: ["in_app", "email", "whatsapp"],
@@ -95,7 +105,9 @@ export async function sendBroadcastNotification(
         ],
         now,
       );
-      await getServerRuntime().notifications.dispatchPendingJobs();
+
+      await notifications.dispatchPendingJobs();
+
       return Ok(undefined);
     },
   });
