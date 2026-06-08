@@ -74,7 +74,7 @@ export async function getAuditEvents(
 
     parse: () =>
       parseObject({ limit }, validationFail, (r) => ({
-        limit: limit === undefined ? undefined : r.posInt("limit"),
+        limit: limit != null ? r.posInt("limit") : undefined,
       })),
 
     execute: (ctx, params) =>
