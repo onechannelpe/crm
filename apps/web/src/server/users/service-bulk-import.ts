@@ -20,7 +20,7 @@ type ProvisioningInterface = Pick<
   "createInvite" | "markInviteDelivered"
 >;
 
-export type BulkImportError = {
+type BulkImportError = {
   reason: "parse_error";
   message: string;
 };
@@ -69,6 +69,7 @@ export async function applyImport(
         } else {
           rowErrors.push(`${row.email}: ${result.error.message}`);
         }
+
         continue;
       }
 
@@ -79,6 +80,7 @@ export async function applyImport(
         token: result.value.token,
         expiresAt: result.value.expiresAt,
       });
+
       created++;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -104,6 +106,14 @@ function normalizeBulkHeader(header: string): string {
   return header.trim().toUpperCase().replace(/\s+/g, "_");
 }
 
+function getRequiredColumns(role: Role): readonly string[] {
+  if (role === "executive") {
+    return CSV_COLUMNS;
+  }
+
+  return CSV_COLUMNS.slice(0, 4);
+}
+
 function resolveBulkImportLayout(
   csv: string,
   role: Role,
@@ -118,30 +128,29 @@ function resolveBulkImportLayout(
       ok: false;
       message: string;
     } {
-  const isExecutive = role === "executive";
-  const requiredColumns = isExecutive
-    ? `${CSV_COLUMNS.slice(0, 4).join(",")},DATE_EXPIRY,EXECUTIVE_CATEGORY`
-    : CSV_COLUMNS.slice(0, 4).join(",");
+  const requiredColumns = getRequiredColumns(role);
 
   for (const delimiter of BULK_IMPORT_DELIMITERS) {
     const headerRow = readFirstNonEmptyCsvRow(csv, delimiter);
+
     if (!headerRow) {
       continue;
     }
 
     const header = headerRow.cells.map(normalizeBulkHeader);
+
     if (
-      !header
-        .slice(0, 4)
-        .every((column, index) => column === CSV_COLUMNS[index])
+      !requiredColumns.every((column, index) =>
+        column === "EXECUTIVE_CATEGORY"
+          ? header.includes(column)
+          : header[index] === column,
+      )
     ) {
-      continue;
-    }
-    if (isExecutive && !header.includes("EXECUTIVE_CATEGORY")) {
       continue;
     }
 
     const columnIndex: Record<string, number> = {};
+
     for (let index = 0; index < header.length; index++) {
       columnIndex[header[index]] = index;
     }
@@ -154,16 +163,9 @@ function resolveBulkImportLayout(
     };
   }
 
-  if (isExecutive) {
-    return {
-      ok: false,
-      message: `Encabezado inválido. Se esperaba: ${requiredColumns}`,
-    };
-  }
-
   return {
     ok: false,
-    message: `Encabezado inválido. Se esperaba: ${requiredColumns}`,
+    message: `Encabezado inválido. Se esperaba: ${requiredColumns.join(",")}`,
   };
 }
 
@@ -173,9 +175,11 @@ function readCell(
   column: string,
 ): string {
   const index = columnIndex[column];
+
   if (index === undefined) {
     return "";
   }
+
   return (row[index] ?? "").trim();
 }
 
@@ -189,6 +193,7 @@ export function parseAndValidateCsvRows(
 
   const isExecutive = role === "executive";
   const layout = resolveBulkImportLayout(csv, role);
+
   if (!layout.ok) {
     return Err({
       reason: "parse_error",
@@ -199,6 +204,7 @@ export function parseAndValidateCsvRows(
   const rows = parseCsvRows(csv, layout.delimiter);
   const valid: BulkImportRow[] = [];
   const errors: BulkRowError[] = [];
+  const minimumExpiresAt = Date.now() + MIN_EXPIRY_OFFSET_MS;
 
   for (const row of rows) {
     if (row.rowNumber <= layout.headerRowNumber) {
@@ -232,6 +238,7 @@ export function parseAndValidateCsvRows(
       errors.push({ row: row.rowNumber, message: "Primer apellido requerido" });
       continue;
     }
+
     if (!secondSurname) {
       errors.push({
         row: row.rowNumber,
@@ -239,14 +246,17 @@ export function parseAndValidateCsvRows(
       });
       continue;
     }
+
     if (!names) {
       errors.push({ row: row.rowNumber, message: "Nombres requeridos" });
       continue;
     }
+
     if (!rawEmail) {
       errors.push({ row: row.rowNumber, message: "Correo requerido" });
       continue;
     }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
       errors.push({
         row: row.rowNumber,
@@ -256,8 +266,10 @@ export function parseAndValidateCsvRows(
     }
 
     let expiresAt: number | null = null;
+
     if (rawDate) {
       const parsed = Date.parse(rawDate);
+
       if (isNaN(parsed)) {
         errors.push({
           row: row.rowNumber,
@@ -265,17 +277,20 @@ export function parseAndValidateCsvRows(
         });
         continue;
       }
-      if (parsed <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
+
+      if (parsed <= minimumExpiresAt) {
         errors.push({
           row: row.rowNumber,
           message: `La fecha de vencimiento debe ser al menos 7 días en el futuro: ${rawDate}`,
         });
         continue;
       }
+
       expiresAt = parsed;
     }
 
     let executiveCategory: BulkImportRow["executiveCategory"] = null;
+
     if (isExecutive) {
       if (!isExecutiveCategoryValue(rawCategory)) {
         errors.push({
@@ -284,6 +299,7 @@ export function parseAndValidateCsvRows(
         });
         continue;
       }
+
       executiveCategory = rawCategory;
     }
 
