@@ -14,22 +14,15 @@ import {
 } from "~/server/team/application/invites";
 import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
 
-function parseInviteId(
-  inviteId: unknown,
-): Result<{ inviteId: number }, DomainError> {
-  return parseObject({ inviteId }, validationFail, (r) => ({
-    inviteId: r.posInt("inviteId"),
-  }));
-}
-
 export async function createTeamInvite(
   input: unknown,
 ): Promise<{ inviteId: number }> {
   return runAction({
     actionName: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
+
     parse: (): Result<CreateTeamInviteCommand, DomainError> => {
-      const shape = parseObject(input, validationFail, (r) => ({
+      const command = parseObject(input, validationFail, (r) => ({
         names: r.str("names"),
         firstSurname: r.str("firstSurname"),
         secondSurname: r.str("secondSurname"),
@@ -39,12 +32,21 @@ export async function createTeamInvite(
         teamId: r.optNum("teamId"),
         expiresAt: r.optNum("expiresAt"),
       }));
-      if (isErr(shape)) return shape;
-      return validateTeamInviteInput(shape.value);
+
+      if (isErr(command)) {
+        return command;
+      }
+
+      return validateTeamInviteInput(command.value);
     },
-    audit: ({ role, teamId }) => ({ role, hasTeamId: teamId !== null }),
-    execute: (ctx, shape) =>
-      createTeamInviteService(ctx, getServerRuntime().team.invites, shape),
+
+    audit: ({ role, teamId }) => ({
+      role,
+      hasTeamId: teamId !== null,
+    }),
+
+    execute: (ctx, command) =>
+      createTeamInviteService(ctx, getServerRuntime().team.invites, command),
   });
 }
 
@@ -52,8 +54,14 @@ export async function resendTeamInvite(inviteId: unknown): Promise<void> {
   await runAction({
     actionName: "team.invite.resend",
     access: { kind: "permission", permission: "hr:manage" },
-    parse: () => parseInviteId(inviteId),
+
+    parse: () =>
+      parseObject({ inviteId }, validationFail, (r) => ({
+        inviteId: r.posInt("inviteId"),
+      })),
+
     audit: ({ inviteId }) => ({ inviteId }),
+
     execute: (ctx, invite) =>
       resendTeamInviteService(ctx, getServerRuntime().team.invites, invite),
   });
@@ -63,8 +71,14 @@ export async function revokeTeamInvite(inviteId: unknown): Promise<void> {
   await runAction({
     actionName: "team.invite.revoke",
     access: { kind: "permission", permission: "hr:manage" },
-    parse: () => parseInviteId(inviteId),
+
+    parse: () =>
+      parseObject({ inviteId }, validationFail, (r) => ({
+        inviteId: r.posInt("inviteId"),
+      })),
+
     audit: ({ inviteId }) => ({ inviteId }),
+
     execute: (ctx, invite) =>
       revokeTeamInviteService(ctx, getServerRuntime().team.invites, invite),
   });
