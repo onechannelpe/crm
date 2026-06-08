@@ -37,7 +37,10 @@ export async function approveCapacity(requestId: unknown, note?: unknown) {
     parse: () => parseCapacityDecision(requestId, note),
     audit: ({ requestId }) => ({ requestId }),
     execute: (ctx, decision) =>
-      getServerRuntime().capacity.useCases.approveCapacityRequest(ctx, decision),
+      getServerRuntime().capacity.useCases.approveCapacityRequest(
+        ctx,
+        decision,
+      ),
   });
 }
 

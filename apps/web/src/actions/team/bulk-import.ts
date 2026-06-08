@@ -4,11 +4,12 @@ import type {
   BulkApplyResult,
   BulkParseResult,
 } from "~/actions/team/contracts";
-import { isRole, type Role } from "~/lib/auth/access/rbac";
+import { ROLES, type Role } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import type { Result } from "~/server/shared/result";
 import {
   applyBulkImport as applyBulkImportService,
   previewBulkImport as previewBulkImportService,
@@ -21,28 +22,18 @@ export interface BulkPreviewResult {
 type BulkImportInput = { csvContent: string; role: Role };
 
 function parseBulkImport(
-  csvContent: string,
-  role: string,
+  csvContent: unknown,
+  role: unknown,
 ): Result<BulkImportInput, DomainError> {
-  const trimmed = csvContent.trim();
-  if (!trimmed) {
-    return Err(
-      domainError(
-        "validation",
-        "csv_content_required",
-        "CSV content is required",
-      ),
-    );
-  }
-  if (!isRole(role)) {
-    return Err(domainError("validation", "invalid_role", "role is invalid"));
-  }
-  return Ok({ csvContent: trimmed, role });
+  return parseObject({ csvContent, role }, validationFail, (r) => ({
+    csvContent: r.str("csvContent"),
+    role: r.enum("role", ROLES),
+  }));
 }
 
 export async function previewBulkCsv(
-  csvContent: string,
-  role: string,
+  csvContent: unknown,
+  role: unknown,
 ): Promise<BulkPreviewResult> {
   const parsed = await runAction({
     actionName: "team.bulk_import.preview",
@@ -56,8 +47,8 @@ export async function previewBulkCsv(
 }
 
 export async function applyBulkImport(
-  csvContent: string,
-  role: string,
+  csvContent: unknown,
+  role: unknown,
 ): Promise<BulkApplyResult> {
   return runAction({
     actionName: "team.bulk_import.apply",
