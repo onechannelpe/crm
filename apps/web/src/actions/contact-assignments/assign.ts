@@ -10,7 +10,6 @@ export async function assignCurrentUserContacts() {
   return runAction({
     actionName: "contact_assignments.assign_current_user",
     access: { kind: "permission", permission: "lead:work" },
-    input: {},
     execute: (ctx) => {
       const cmdResult = parseAssignContactsCommand(
         ctx.actor.userId,

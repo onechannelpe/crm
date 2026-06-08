@@ -4,11 +4,19 @@ import { getServerRuntime } from "~/server/runtime";
 
 import type { AppContext } from "./context";
 
+/**
+ * The subset of an action's input that is safe to persist for observability.
+ * Restricted to scalar identifiers (lead ids, venue ids, counts, flags) so a
+ * raw request payload, which may carry PII or bank data, cannot be assigned
+ * here and reach the telemetry store.
+ */
+export type AuditFields = Record<string, string | number | boolean | null>;
+
 export type ActionTelemetryInput = {
   actionName: string;
   ctx: AppContext;
   startedAt: number;
-  input: unknown;
+  audit: AuditFields;
 };
 
 type ActionTelemetryError = {
@@ -38,7 +46,7 @@ export function recordActionSuccess(input: ActionTelemetryInput) {
       durationMs: input.ctx.now() - input.startedAt,
       errorCode: null,
       errorMessage: null,
-      input: input.input ?? null,
+      input: input.audit,
       createdAt: input.ctx.now(),
     })
     .catch(() => {});
@@ -62,7 +70,7 @@ export function recordActionError(
       durationMs: input.ctx.now() - input.startedAt,
       errorCode: error.code,
       errorMessage: error.message,
-      input: input.input ?? null,
+      input: input.audit,
       createdAt: input.ctx.now(),
     })
     .catch(() => {});

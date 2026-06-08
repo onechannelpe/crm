@@ -9,7 +9,6 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { domainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { RequiredLeadText } from "~/server/workflow/parsers";
 
 import { createHistoryEvent } from "../history";
 import { resolveReviewTransition } from "../workflow";
@@ -51,7 +50,7 @@ export function reviewLead(
     actor: Actor;
     status: LeadStatus;
     prioridad: LeadPriority;
-    reason: RequiredLeadText;
+    reason: string;
     now: number;
   },
 ): TransitionResult {
@@ -123,7 +122,7 @@ export function reassignLead(
 
 export function addNote(
   state: LeadState,
-  input: { actor: Actor; body: RequiredLeadText; now: number },
+  input: { actor: Actor; body: string; now: number },
 ): TransitionResult {
   const authz = authorizeLeadAction("interact", input.actor, state);
   if (!authz.ok) return authz;

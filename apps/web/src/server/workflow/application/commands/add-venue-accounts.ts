@@ -7,6 +7,7 @@ import type { AddVenueAccountsCommandInput } from "~/server/workflow/types";
 
 import { addVenueAccounts } from "../../domain/lead/commands";
 import { leadNotFound } from "../../domain/lead/lead-errors";
+import { buildVenueAccounts } from "../../domain/venue/accounts";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -15,6 +16,9 @@ export async function addVenueAccountsCommand(
   input: AddVenueAccountsCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
+  const accounts = buildVenueAccounts(input);
+  if (!accounts.ok) return accounts;
+
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -60,34 +64,7 @@ export async function addVenueAccountsCommand(
     });
     if (!transition.ok) return transition;
 
-    await repos.leadVenues.addAccounts(
-      input.venueId,
-      {
-        solesAccount: {
-          currency: "PEN",
-          banco: input.solesAccount.banco,
-          tipoCuenta: input.solesAccount.tipoCuenta,
-          nroCuenta: input.solesAccount.nroCuenta,
-          ...(input.solesAccount.cci ? { cci: input.solesAccount.cci } : {}),
-          isSettlement: input.solesAccount.isSettlement,
-        },
-        ...(input.dollarAccount
-          ? {
-              dollarAccount: {
-                currency: "USD",
-                banco: input.dollarAccount.banco,
-                tipoCuenta: input.dollarAccount.tipoCuenta,
-                nroCuenta: input.dollarAccount.nroCuenta,
-                ...(input.dollarAccount.cci
-                  ? { cci: input.dollarAccount.cci }
-                  : {}),
-                isSettlement: input.dollarAccount.isSettlement,
-              },
-            }
-          : {}),
-      },
-      now,
-    );
+    await repos.leadVenues.addAccounts(input.venueId, accounts.value, now);
 
     const committed = await uow.commit({
       next: transition.value.next,

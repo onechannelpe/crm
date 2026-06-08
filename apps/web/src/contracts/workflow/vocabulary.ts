@@ -26,7 +26,7 @@ export const LEAD_NEXT_STEPS = [
   "DEFINE_DIGITAL_POLICY",
   "REGISTER_VENUE_ACCOUNTS",
 ] as const;
-const LEAD_CALL_OUTCOMES = [
+export const LEAD_CALL_OUTCOMES = [
   "answered",
   "no_answer",
   "wrong_number",

@@ -1,45 +1,115 @@
 "use server";
 
+import type {
+  CreateLeadInput,
+  ReassignLeadInput,
+  RecordRepLegalInput,
+  ReviewLeadInput,
+  SaveCommercialScopeInput,
+  SaveDigitalPolicyInput,
+} from "~/contracts/workflow/inputs";
+import {
+  ABONO_BANKS,
+  LEAD_PRIORITIES,
+  LEAD_STATUSES,
+  MODALIDAD_COBRO_KINDS,
+  PRODUCT_SCOPES,
+} from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import {
-  type ReassignLeadCommandInput,
-  type RegisterLeadCommandInput,
-} from "~/server/workflow/types";
+import type { DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import type { Result } from "~/server/shared/result";
 
-import {
-  parseLeadReviewInput,
-  parseRecordRepLegalInput,
-  parseRequestQuotationInput,
-  parseSaveCommercialScopeInput,
-  parseSaveDigitalPolicyInput,
-} from "./input";
-export type CreateLeadInput = {
-  ruc: string;
-  executiveId?: number;
-};
+import { workflowActor } from "./actor";
 
-export type ReassignLeadInput = {
-  leadId: string;
-  newExecutiveId: number;
-};
+type LeadRef = { leadId: string };
 
-export async function requestLeadCreation(input: CreateLeadInput) {
+function parseLeadRef(input: unknown): Result<LeadRef, DomainError> {
+  return parseObject(input, validationFail, (r) => ({
+    leadId: r.str("leadId"),
+  }));
+}
+
+function parseCreateLead(input: unknown): Result<CreateLeadInput, DomainError> {
+  return parseObject(input, validationFail, (r) => ({
+    ruc: r.str("ruc"),
+    executiveId: r.optNum("executiveId") ?? undefined,
+  }));
+}
+
+function parseReassignLead(
+  input: unknown,
+): Result<ReassignLeadInput, DomainError> {
+  return parseObject(input, validationFail, (r) => ({
+    leadId: r.str("leadId"),
+    newExecutiveId: r.num("newExecutiveId"),
+  }));
+}
+
+function parseReviewLead(input: unknown): Result<ReviewLeadInput, DomainError> {
+  return parseObject(input, validationFail, (r) => ({
+    leadId: r.str("leadId"),
+    status: r.enum("status", LEAD_STATUSES),
+    prioridad: r.enum("prioridad", LEAD_PRIORITIES),
+    reason: r.str("reason"),
+  }));
+}
+
+function parseCommercialScope(
+  input: unknown,
+): Result<SaveCommercialScopeInput, DomainError> {
+  return parseObject(input, validationFail, (r) => ({
+    leadId: r.str("leadId"),
+    proveedorActual: r.str("proveedorActual"),
+    tasaActual: r.num("tasaActual"),
+    gpv: r.num("gpv"),
+    ticket: r.num("ticket"),
+    giroNegocio: r.str("giroNegocio"),
+    abonoBank: r.enum("abonoBank", ABONO_BANKS),
+    posTotal: r.num("posTotal"),
+  }));
+}
+
+function parseSaveDigitalPolicy(
+  input: unknown,
+): Result<SaveDigitalPolicyInput, DomainError> {
+  return parseObject(input, validationFail, (r) => ({
+    leadId: r.str("leadId"),
+    linkScope: r.enum("linkScope", PRODUCT_SCOPES),
+    linkUrl: r.optStr("linkUrl"),
+    onlineScope: r.enum("onlineScope", PRODUCT_SCOPES),
+    onlineUrl: r.optStr("onlineUrl"),
+    onlineModalidad:
+      r.optEnum("onlineModalidad", MODALIDAD_COBRO_KINDS) ?? null,
+  }));
+}
+
+function parseRecordRepLegal(
+  input: unknown,
+): Result<RecordRepLegalInput, DomainError> {
+  return parseObject(input, validationFail, (r) => ({
+    leadId: r.str("leadId"),
+    nombres: r.str("nombres"),
+    apellidoPaterno: r.str("apellidoPaterno"),
+    apellidoMaterno: r.str("apellidoMaterno"),
+    dni: r.str("dni"),
+    telefono: r.str("telefono"),
+    email: r.str("email"),
+  }));
+}
+
+export async function requestLeadCreation(input: unknown) {
   return runAction({
     actionName: "workflow.register_lead",
     access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
+    parse: () => parseCreateLead(input),
+    execute: ({ actor }, payload) =>
       getServerRuntime().workflow.commands.registerLead({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        ruc: input.ruc,
-        executiveId: input.executiveId ?? actor.userId,
-      } satisfies RegisterLeadCommandInput),
+        actor: workflowActor(actor),
+        ruc: payload.ruc,
+        executiveId: payload.executiveId ?? actor.userId,
+      }),
   });
 }
 
@@ -47,24 +117,13 @@ export async function requestLeadReview(input: unknown) {
   return runAction({
     actionName: "workflow.review_lead",
     access: { kind: "auth" },
-    input,
-
-    execute: async ({ actor }) => {
-      const parsedInput = parseLeadReviewInput(input);
-      if (!parsedInput.ok) return parsedInput;
-
-      return getServerRuntime().workflow.commands.reviewLead({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: parsedInput.value.leadId,
-        status: parsedInput.value.status,
-        prioridad: parsedInput.value.prioridad,
-        reason: parsedInput.value.reason,
-      });
-    },
+    parse: () => parseReviewLead(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, payload) =>
+      getServerRuntime().workflow.commands.reviewLead({
+        actor: workflowActor(actor),
+        ...payload,
+      }),
   });
 }
 
@@ -72,28 +131,13 @@ export async function requestSaveCommercialScope(input: unknown) {
   return runAction({
     actionName: "workflow.save_commercial_scope",
     access: { kind: "auth" },
-    input,
-
-    execute: async ({ actor }) => {
-      const parsedInput = parseSaveCommercialScopeInput(input);
-      if (!parsedInput.ok) return parsedInput;
-
-      return getServerRuntime().workflow.commands.saveCommercialScope({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: parsedInput.value.leadId,
-        proveedorActual: parsedInput.value.proveedorActual,
-        tasaActual: parsedInput.value.tasaActual,
-        gpv: parsedInput.value.gpv,
-        ticket: parsedInput.value.ticket,
-        giroNegocio: parsedInput.value.giroNegocio,
-        abonoBank: parsedInput.value.abonoBank,
-        posTotal: parsedInput.value.posTotal,
-      });
-    },
+    parse: () => parseCommercialScope(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, payload) =>
+      getServerRuntime().workflow.commands.saveCommercialScope({
+        actor: workflowActor(actor),
+        ...payload,
+      }),
   });
 }
 
@@ -101,28 +145,13 @@ export async function requestQuotation(input: unknown) {
   return runAction({
     actionName: "workflow.request_quotation",
     access: { kind: "auth" },
-    input,
-
-    execute: async ({ actor }) => {
-      const parsedInput = parseRequestQuotationInput(input);
-      if (!parsedInput.ok) return parsedInput;
-
-      return getServerRuntime().workflow.commands.requestQuotation({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: parsedInput.value.leadId,
-        proveedorActual: parsedInput.value.proveedorActual,
-        tasaActual: parsedInput.value.tasaActual,
-        gpv: parsedInput.value.gpv,
-        ticket: parsedInput.value.ticket,
-        giroNegocio: parsedInput.value.giroNegocio,
-        abonoBank: parsedInput.value.abonoBank,
-        posTotal: parsedInput.value.posTotal,
-      });
-    },
+    parse: () => parseCommercialScope(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, payload) =>
+      getServerRuntime().workflow.commands.requestQuotation({
+        actor: workflowActor(actor),
+        ...payload,
+      }),
   });
 }
 
@@ -130,26 +159,13 @@ export async function requestSaveDigitalPolicy(input: unknown) {
   return runAction({
     actionName: "workflow.save_digital_policy",
     access: { kind: "auth" },
-    input,
-
-    execute: async ({ actor }) => {
-      const parsedInput = parseSaveDigitalPolicyInput(input);
-      if (!parsedInput.ok) return parsedInput;
-
-      return getServerRuntime().workflow.commands.saveDigitalPolicy({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: parsedInput.value.leadId,
-        linkScope: parsedInput.value.linkScope,
-        linkUrl: parsedInput.value.linkUrl,
-        onlineScope: parsedInput.value.onlineScope,
-        onlineUrl: parsedInput.value.onlineUrl,
-        onlineModalidad: parsedInput.value.onlineModalidad,
-      });
-    },
+    parse: () => parseSaveDigitalPolicy(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, payload) =>
+      getServerRuntime().workflow.commands.saveDigitalPolicy({
+        actor: workflowActor(actor),
+        ...payload,
+      }),
   });
 }
 
@@ -157,119 +173,83 @@ export async function requestRecordRepLegal(input: unknown) {
   return runAction({
     actionName: "workflow.record_rep_legal",
     access: { kind: "auth" },
-    input,
-
-    execute: async ({ actor }) => {
-      const parsedInput = parseRecordRepLegalInput(input);
-      if (!parsedInput.ok) return parsedInput;
-
-      return getServerRuntime().workflow.commands.recordRepLegal({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: parsedInput.value.leadId,
-        nombres: parsedInput.value.nombres,
-        apellidoPaterno: parsedInput.value.apellidoPaterno,
-        apellidoMaterno: parsedInput.value.apellidoMaterno,
-        dni: parsedInput.value.dni,
-        telefono: parsedInput.value.telefono,
-        email: parsedInput.value.email,
-      });
-    },
+    parse: () => parseRecordRepLegal(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, payload) =>
+      getServerRuntime().workflow.commands.recordRepLegal({
+        actor: workflowActor(actor),
+        ...payload,
+      }),
   });
 }
 
-export async function requestStartSetupExecution(input: { leadId: string }) {
+export async function requestStartSetupExecution(input: unknown) {
   return runAction({
     actionName: "workflow.start_setup_execution",
     access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, { leadId }) =>
       getServerRuntime().workflow.commands.startSetupExecution({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
+        actor: workflowActor(actor),
+        leadId,
       }),
   });
 }
 
-export async function requestLeadReassignment(input: ReassignLeadInput) {
+export async function requestLeadReassignment(input: unknown) {
   return runAction({
     actionName: "workflow.reassign_lead",
     access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
+    parse: () => parseReassignLead(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, payload) =>
       getServerRuntime().workflow.commands.reassignLead({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        toExecutiveId: input.newExecutiveId,
-      } satisfies ReassignLeadCommandInput),
+        actor: workflowActor(actor),
+        leadId: payload.leadId,
+        toExecutiveId: payload.newExecutiveId,
+      }),
   });
 }
 
-export async function requestAddLeadToFavorites(input: { leadId: string }) {
+export async function requestAddLeadToFavorites(input: unknown) {
   return runAction({
     actionName: "workflow.add_lead_to_favorites",
     access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, { leadId }) =>
       getServerRuntime().workflow.commands.addToFavorites({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
+        actor: workflowActor(actor),
+        leadId,
       }),
   });
 }
 
-export async function requestRemoveLeadFromFavorites(input: {
-  leadId: string;
-}) {
+export async function requestRemoveLeadFromFavorites(input: unknown) {
   return runAction({
     actionName: "workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, { leadId }) =>
       getServerRuntime().workflow.commands.removeFromFavorites({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
+        actor: workflowActor(actor),
+        leadId,
       }),
   });
 }
 
-export async function requestLeadSunatRefresh(input: { leadId: string }) {
+export async function requestLeadSunatRefresh(input: unknown) {
   return runAction({
     actionName: "workflow.request_sunat_refresh",
     access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, { leadId }) =>
       getServerRuntime().workflow.commands.requestSunatRefresh({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
+        actor: workflowActor(actor),
+        leadId,
       }),
   });
 }

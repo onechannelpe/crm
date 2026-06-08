@@ -19,11 +19,6 @@ import {
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-declare const requiredLeadTextBrand: unique symbol;
-export type RequiredLeadText = string & {
-  readonly [requiredLeadTextBrand]: true;
-};
-
 function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));
 }
@@ -45,23 +40,6 @@ export function normalizeLeadRuc(ruc: unknown): Result<string, DomainError> {
   }
 
   return Ok(normalizedRuc);
-}
-
-export function parseRequiredLeadText(
-  value: unknown,
-  errorCode: string,
-  message: string,
-): Result<RequiredLeadText, DomainError> {
-  if (typeof value !== "string") {
-    return fail(errorCode, message);
-  }
-
-  const normalized = value.trim();
-  if (!normalized) {
-    return fail(errorCode, message);
-  }
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
-  return Ok(normalized as RequiredLeadText);
 }
 
 function parseOptionalLeadValue<TValue extends string>(

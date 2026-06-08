@@ -24,37 +24,25 @@ import {
   recordActionSuccess,
   toTelemetryError,
   type ActionTelemetryInput,
+  type AuditFields,
 } from "./action-runtime/telemetry";
 export { createAppContext, type AppContext } from "./action-runtime/context";
 
-type ActionMeta = {
+/**
+ * Every action is an RPC trust boundary, so its wire input is `unknown` and is
+ * validated here exactly once. `parse` narrows that input to TIn (or returns a
+ * DomainError), `audit` projects the parsed value down to the scalar fields
+ * that are safe to record, and `execute` runs the command with the trusted
+ * value. The raw input is never handed to telemetry, only `audit(parsed)`.
+ */
+type RunActionParams<TIn, TOut, E extends DomainError> = {
   actionName: string;
-  input?: unknown;
-};
-
-type RunActionParams<T, E extends DomainError> = {
   access: ActionAccess;
-} & ActionStepUpRequirement &
-  ActionMeta & {
-    execute: (ctx: AppContext) => Promise<Result<T, E>>;
-  };
-
-type ActionTelemetryParams = Pick<
-  RunActionParams<unknown, DomainError>,
-  "access" | "stepUp" | "actionName" | "input"
->;
-
-async function createActionTelemetry(
-  params: ActionTelemetryParams,
-): Promise<ActionTelemetryInput> {
-  const ctx = await resolveActionContext(params);
-  return {
-    actionName: params.actionName,
-    ctx,
-    startedAt: Date.now(),
-    input: params.input,
-  };
-}
+  input: unknown;
+  parse: (input: unknown) => Result<TIn, DomainError>;
+  audit?: (input: TIn) => AuditFields;
+  execute: (input: TIn, ctx: AppContext) => Promise<Result<TOut, E>>;
+} & ActionStepUpRequirement;
 
 function domainToAppError(error: DomainError): AppError {
   switch (error.kind) {
@@ -86,9 +74,9 @@ function sanitize(error: AppError): AppError {
   return safe;
 }
 
-export async function runAction<T, E extends DomainError>(
-  params: RunActionParams<T, E>,
-): Promise<T> {
+export async function runAction<TIn, TOut, E extends DomainError>(
+  params: RunActionParams<TIn, TOut, E>,
+): Promise<TOut> {
   const result = await runActionResult(params);
   if (isErr(result)) {
     throw result.error;
@@ -96,19 +84,35 @@ export async function runAction<T, E extends DomainError>(
   return result.value;
 }
 
-export async function runActionResult<T, E extends DomainError>(
-  params: RunActionParams<T, E>,
-): Promise<Result<T, AppError>> {
-  let telemetry!: ActionTelemetryInput;
+export async function runActionResult<TIn, TOut, E extends DomainError>(
+  params: RunActionParams<TIn, TOut, E>,
+): Promise<Result<TOut, AppError>> {
+  let ctx: AppContext;
   try {
-    telemetry = await createActionTelemetry(params);
+    ctx = await resolveActionContext(params);
   } catch (error) {
     return Err(sanitize(toAppError(error, "An unexpected error occurred")));
   }
 
-  let result: Result<T, E>;
+  const telemetry: ActionTelemetryInput = {
+    actionName: params.actionName,
+    ctx,
+    startedAt: Date.now(),
+    audit: {},
+  };
+
+  const parsed = params.parse(params.input);
+  if (isErr(parsed)) {
+    const appError = domainToAppError(parsed.error);
+    recordActionError(telemetry, toTelemetryError(appError));
+    return Err(sanitize(appError));
+  }
+
+  telemetry.audit = params.audit?.(parsed.value) ?? {};
+
+  let result: Result<TOut, E>;
   try {
-    result = await params.execute(telemetry.ctx);
+    result = await params.execute(parsed.value, ctx);
   } catch (error) {
     if (error instanceof Response) throw error;
     if (error instanceof AppError) {

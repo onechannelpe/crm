@@ -4,33 +4,53 @@ import type {
   BulkApplyResult,
   BulkParseResult,
 } from "~/actions/team/contracts";
-import { validationError } from "~/lib/app-errors";
+import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   applyBulkImport as applyBulkImportService,
   previewBulkImport as previewBulkImportService,
 } from "~/server/team/application/bulk-import";
 
-import { assertRole } from "./validators";
-
 export interface BulkPreviewResult {
   parsed: BulkParseResult;
+}
+
+type BulkImportInput = { csvContent: string; role: Role };
+
+function parseBulkImport(
+  csvContent: string,
+  role: string,
+): Result<BulkImportInput, DomainError> {
+  const trimmed = csvContent.trim();
+  if (!trimmed) {
+    return Err(
+      domainError(
+        "validation",
+        "csv_content_required",
+        "CSV content is required",
+      ),
+    );
+  }
+  if (!isRole(role)) {
+    return Err(domainError("validation", "invalid_role", "role is invalid"));
+  }
+  return Ok({ csvContent: trimmed, role });
 }
 
 export async function previewBulkCsv(
   csvContent: string,
   role: string,
 ): Promise<BulkPreviewResult> {
-  if (!csvContent || csvContent.trim().length === 0) {
-    throw validationError("CSV content is required");
-  }
-  const safeRole = assertRole(role);
   const parsed = await runAction({
     actionName: "team.bulk_import.preview",
     access: { kind: "permission", permission: "admin:manage" },
-    input: { role: safeRole },
-    execute: () => previewBulkImportService(csvContent, safeRole),
+    parse: () => parseBulkImport(csvContent, role),
+    audit: ({ role }) => ({ role }),
+    execute: (_ctx, input) =>
+      previewBulkImportService(input.csvContent, input.role),
   });
   return { parsed };
 }
@@ -39,18 +59,15 @@ export async function applyBulkImport(
   csvContent: string,
   role: string,
 ): Promise<BulkApplyResult> {
-  const safeRole = assertRole(role);
-  if (!csvContent || csvContent.trim().length === 0) {
-    throw validationError("CSV content is required");
-  }
   return runAction({
     actionName: "team.bulk_import.apply",
     access: { kind: "permission", permission: "admin:manage" },
-    input: { role: safeRole },
-    execute: (ctx) =>
+    parse: () => parseBulkImport(csvContent, role),
+    audit: ({ role }) => ({ role }),
+    execute: (ctx, input) =>
       applyBulkImportService(ctx, getServerRuntime().team.invites, {
-        csvContent,
-        role: safeRole,
+        csvContent: input.csvContent,
+        role: input.role,
       }),
   });
 }

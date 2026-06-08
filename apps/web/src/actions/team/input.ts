@@ -13,6 +13,17 @@ import {
   assertRole,
 } from "./validators";
 
+export type TeamInviteInput = {
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
+  email: string;
+  role: Role;
+  executiveCategory: ExecutiveCategoryValue | null;
+  teamId: TeamId | null;
+  expiresAt: number | null;
+};
+
 export function parseCreateTeamInviteInput(input: {
   names: string;
   firstSurname: string;
@@ -22,27 +33,28 @@ export function parseCreateTeamInviteInput(input: {
   executiveCategory?: string | null;
   teamId?: number | null;
   expiresAt?: number | null;
-}): {
-  names: string;
-  firstSurname: string;
-  secondSurname: string;
-  email: string;
-  role: Role;
-  executiveCategory: ExecutiveCategoryValue | null;
-  teamId: TeamId | null;
-  expiresAt: number | null;
-} {
-  const role = assertRole(input.role);
-  return {
-    names: assertNonEmptyString(input.names, "names"),
-    firstSurname: assertNonEmptyString(input.firstSurname, "firstSurname"),
-    secondSurname: assertNonEmptyString(input.secondSurname, "secondSurname"),
-    email: assertEmail(input.email),
-    role,
-    executiveCategory: assertExecutiveCategory(input.executiveCategory, role),
-    teamId: assertOptionalTeamId(input.teamId),
-    expiresAt: assertOptionalExpiresAt(input.expiresAt),
-  };
+}): Result<TeamInviteInput, DomainError> {
+  try {
+    const role = assertRole(input.role);
+    return Ok({
+      names: assertNonEmptyString(input.names, "names"),
+      firstSurname: assertNonEmptyString(input.firstSurname, "firstSurname"),
+      secondSurname: assertNonEmptyString(input.secondSurname, "secondSurname"),
+      email: assertEmail(input.email),
+      role,
+      executiveCategory: assertExecutiveCategory(input.executiveCategory, role),
+      teamId: assertOptionalTeamId(input.teamId),
+      expiresAt: assertOptionalExpiresAt(input.expiresAt),
+    });
+  } catch (error) {
+    return Err(
+      domainError(
+        "validation",
+        "team.invite.invalid",
+        error instanceof Error ? error.message : "Invalid invite",
+      ),
+    );
+  }
 }
 
 export function parseInviteIdInput(

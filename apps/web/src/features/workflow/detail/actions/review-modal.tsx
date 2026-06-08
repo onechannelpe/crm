@@ -8,6 +8,8 @@ import { Textarea } from "~/components/ui/input/textarea";
 import {
   LEAD_PRIORITIES,
   LEAD_STATUSES,
+  type LeadPriority,
+  type LeadStatus,
 } from "~/contracts/workflow/vocabulary";
 import { toAppError } from "~/lib/app-errors";
 
@@ -21,8 +23,10 @@ export function ReviewLeadModal(props: {
   onClose: () => void;
 }) {
   const review = useAction(reviewLeadMutation);
-  const [status, setStatus] = createSignal(LEAD_STATUSES[0] as string);
-  const [prioridad, setPrioridad] = createSignal(LEAD_PRIORITIES[0] as string);
+  const [status, setStatus] = createSignal<LeadStatus>(LEAD_STATUSES[0]);
+  const [prioridad, setPrioridad] = createSignal<LeadPriority>(
+    LEAD_PRIORITIES[0],
+  );
   const [reason, setReason] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -65,7 +69,7 @@ export function ReviewLeadModal(props: {
             <Select
               label="Estado"
               value={status()}
-              onChange={(e) => setStatus(e.currentTarget.value)}
+              onChange={(e) => setStatus(e.currentTarget.value as LeadStatus)}
               required
             >
               <For each={LEAD_STATUSES}>
@@ -75,7 +79,9 @@ export function ReviewLeadModal(props: {
             <Select
               label="Prioridad"
               value={prioridad()}
-              onChange={(e) => setPrioridad(e.currentTarget.value)}
+              onChange={(e) =>
+                setPrioridad(e.currentTarget.value as LeadPriority)
+              }
               required
             >
               <For each={LEAD_PRIORITIES}>

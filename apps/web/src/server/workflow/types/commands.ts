@@ -1,17 +1,28 @@
-import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import type {
-  AbonoBank,
-  LeadCallOutcome,
-  LeadPriority,
-  LeadStatus,
-  ModalidadCobro,
-  Moneda,
-  ProductScope,
-} from "~/contracts/workflow/vocabulary";
-import type { RequiredLeadText } from "~/server/workflow/parsers";
+  AddLeadNoteInput,
+  AddVenueAccountsInput,
+  CreateQuotationInput,
+  CreateVenueInput,
+  LogLeadCallInput,
+  RecordRepLegalInput,
+  RequestQuotationInput,
+  RequestRateNegotiationInput,
+  ReviewLeadInput,
+  SaveCommercialScopeInput,
+  SaveDigitalPolicyInput,
+  UpdateVenueInput,
+} from "~/contracts/workflow/inputs";
 
 import type { WorkflowActor } from "./actor";
 
+// A command input is the client payload plus the authenticated actor that the
+// action injects server-side. The payload is the contract; the actor never
+// crosses the wire.
+type WithActor<TPayload> = TPayload & { actor: WorkflowActor };
+
+// Register and reassign do not mirror their client payloads: register resolves
+// a concrete executiveId and reassign renames the target field, so both keep an
+// explicit shape.
 export type RegisterLeadCommandInput = {
   actor: WorkflowActor;
   ruc: string;
@@ -24,118 +35,31 @@ export type ReassignLeadCommandInput = {
   toExecutiveId: number;
 };
 
-export type ReviewLeadCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  status: LeadStatus;
-  prioridad: LeadPriority;
-  reason: RequiredLeadText;
-};
+export type ReviewLeadCommandInput = WithActor<ReviewLeadInput>;
 
-export type AddLeadNoteCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  body: RequiredLeadText;
-};
+export type AddLeadNoteCommandInput = WithActor<AddLeadNoteInput>;
 
-export type LogLeadCallCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
-};
+export type LogLeadCallCommandInput = WithActor<LogLeadCallInput>;
 
-export type CreateQuotationCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: Moneda;
-};
+export type CreateQuotationCommandInput = WithActor<CreateQuotationInput>;
 
-export type SaveCommercialScopeCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  proveedorActual: RequiredLeadText;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: RequiredLeadText;
-  abonoBank: AbonoBank;
-  posTotal: number;
-};
+export type SaveCommercialScopeCommandInput =
+  WithActor<SaveCommercialScopeInput>;
 
-export type SaveDigitalPolicyCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  linkScope: ProductScope;
-  linkUrl: string | null;
-  onlineScope: ProductScope;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-};
+export type SaveDigitalPolicyCommandInput = WithActor<SaveDigitalPolicyInput>;
 
-export type RequestQuotationCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  proveedorActual: RequiredLeadText;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: RequiredLeadText;
-  abonoBank: AbonoBank;
-  posTotal: number;
-};
+export type RequestQuotationCommandInput = WithActor<RequestQuotationInput>;
 
-export type RecordRepLegalCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  nombres: RequiredLeadText;
-  apellidoPaterno: RequiredLeadText;
-  apellidoMaterno: RequiredLeadText;
-  dni: RequiredLeadText;
-  telefono: RequiredLeadText;
-  email: RequiredLeadText;
-};
+export type RecordRepLegalCommandInput = WithActor<RecordRepLegalInput>;
 
-export type RequestRateNegotiationCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  justification: string;
-  artifactIds: string[];
-};
+export type RequestRateNegotiationCommandInput =
+  WithActor<RequestRateNegotiationInput>;
 
-export type CreateVenueCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  nombreComercial: RequiredLeadText;
-  posQuantity: number;
-  digitalConfig?: {
-    linkUrl?: string | null;
-    onlineUrl?: string | null;
-    onlineModalidad?: ModalidadCobro | null;
-  };
-  direccion: RequiredLeadText;
-  referencia: RequiredLeadText;
-  distrito: RequiredLeadText;
-  provincia: RequiredLeadText;
-  departamento: RequiredLeadText;
-};
+export type CreateVenueCommandInput = WithActor<CreateVenueInput>;
 
-export type UpdateVenueCommandInput = CreateVenueCommandInput & {
-  venueId: string;
-};
+export type UpdateVenueCommandInput = WithActor<UpdateVenueInput>;
 
-export type AddVenueAccountsCommandInput = {
-  actor: WorkflowActor;
-  leadId: string;
-  venueId: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
-  dollarAccount?: SaleVenueAccount & { currency: "USD" };
-};
+export type AddVenueAccountsCommandInput = WithActor<AddVenueAccountsInput>;
 
 export type UpdateSourcingPolicyCommandInput = {
   actor: WorkflowActor;

@@ -1,40 +1,55 @@
 "use server";
 
-import { validationError } from "~/lib/app-errors";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
 
+function parseRejection(
+  requestId: number,
+  note: string,
+): Result<{ requestId: number; note: string }, DomainError> {
+  const decision = parseCapacityDecisionInput({ requestId, note });
+  if (!decision.ok) return decision;
+  if (!decision.value.note) {
+    return Err(
+      domainError(
+        "validation",
+        "capacity.reject.note_required",
+        "note is required",
+      ),
+    );
+  }
+  return Ok({ requestId: decision.value.requestId, note: decision.value.note });
+}
+
 export async function approveCapacity(requestId: number, note?: string) {
-  const decisionInput = parseCapacityDecisionInput({ requestId, note });
-  if (!decisionInput.ok) throw decisionInput.error;
   return runAction({
     actionName: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
-    input: decisionInput.value,
-    execute: (ctx) =>
+    parse: () => parseCapacityDecisionInput({ requestId, note }),
+    audit: ({ requestId }) => ({ requestId }),
+    execute: (ctx, decision) =>
       getServerRuntime().capacity.useCases.approveCapacityRequest(
         ctx,
-        decisionInput.value,
+        decision,
       ),
   });
 }
 
 export async function rejectCapacity(requestId: number, note: string) {
-  const decisionInput = parseCapacityDecisionInput({ requestId, note });
-  if (!decisionInput.ok) throw decisionInput.error;
-  if (!decisionInput.value.note) throw validationError("note is required");
-  const safeNote = decisionInput.value.note;
   return runAction({
     actionName: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
-    input: { requestId: decisionInput.value.requestId, note: safeNote },
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.rejectCapacityRequest(ctx, {
-        requestId: decisionInput.value.requestId,
-        note: safeNote,
-      }),
+    parse: () => parseRejection(requestId, note),
+    audit: ({ requestId }) => ({ requestId }),
+    execute: (ctx, rejection) =>
+      getServerRuntime().capacity.useCases.rejectCapacityRequest(
+        ctx,
+        rejection,
+      ),
   });
 }
 
@@ -43,17 +58,16 @@ export async function grantMoreSearches(
   amount: number,
   reason: string,
 ) {
-  const grantInput = parseCapacityGrantInput({ userId, amount, reason });
-  if (!grantInput.ok) throw grantInput.error;
   return runAction({
     actionName: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
-    input: grantInput.value,
-    execute: (ctx) =>
+    parse: () => parseCapacityGrantInput({ userId, amount, reason }),
+    audit: ({ userId, amount }) => ({ userId, amount }),
+    execute: (ctx, grant) =>
       getServerRuntime().capacity.useCases.grantSearchCapacityDirect(ctx, {
-        targetUserId: grantInput.value.userId,
-        amount: grantInput.value.amount,
-        reason: grantInput.value.reason,
+        targetUserId: grant.userId,
+        amount: grant.amount,
+        reason: grant.reason,
       }),
   });
 }
@@ -63,17 +77,16 @@ export async function grantMoreLeadRefill(
   amount: number,
   reason: string,
 ) {
-  const grantInput = parseCapacityGrantInput({ userId, amount, reason });
-  if (!grantInput.ok) throw grantInput.error;
   return runAction({
     actionName: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },
-    input: grantInput.value,
-    execute: (ctx) =>
+    parse: () => parseCapacityGrantInput({ userId, amount, reason }),
+    audit: ({ userId, amount }) => ({ userId, amount }),
+    execute: (ctx, grant) =>
       getServerRuntime().capacity.useCases.grantLeadCapacityDirect(ctx, {
-        targetUserId: grantInput.value.userId,
-        amount: grantInput.value.amount,
-        reason: grantInput.value.reason,
+        targetUserId: grant.userId,
+        amount: grant.amount,
+        reason: grant.reason,
       }),
   });
 }

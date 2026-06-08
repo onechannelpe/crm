@@ -17,12 +17,42 @@ import {
 } from "~/server/records/imports/progress-events";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { Ok } from "~/server/shared/result";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 function getExtension(filename: string): string | null {
   const dot = filename.lastIndexOf(".");
   if (dot === -1) return null;
   return filename.slice(dot + 1).toLowerCase() || null;
+}
+
+type ImportUpload = { file: File; extension: "csv" | "xlsx" };
+
+function parseImportUpload(
+  formData: FormData,
+): Result<ImportUpload, DomainError> {
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    return Err(domainError("validation", "file_required", "file is required"));
+  }
+
+  const extension = getExtension(file.name);
+  if (extension !== "csv" && extension !== "xlsx") {
+    return Err(
+      domainError(
+        "validation",
+        "unsupported_file_type",
+        "only .csv and .xlsx files are supported",
+      ),
+    );
+  }
+
+  if (file.size > maxUploadBytesForArtifactType("integration_import")) {
+    return Err(domainError("validation", "file_too_large", "file_too_large"));
+  }
+
+  return Ok({ file, extension });
 }
 
 async function getAuthorizedRecordImportJob(
@@ -55,26 +85,12 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
   importType: RecordImportType;
   rowsTotal: number;
 }> {
-  const file = formData.get("file");
-
-  if (!(file instanceof File)) {
-    throw validationError("file is required");
-  }
-
-  const extension = getExtension(file.name);
-  if (extension !== "csv" && extension !== "xlsx") {
-    throw validationError("only .csv and .xlsx files are supported");
-  }
-
-  if (file.size > maxUploadBytesForArtifactType("integration_import")) {
-    throw validationError("file_too_large");
-  }
-
   return runAction({
     actionName: "records.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
-    input: { fileName: file.name, fileSize: file.size },
-    execute: async (ctx) => {
+    parse: () => parseImportUpload(formData),
+    audit: ({ file }) => ({ fileName: file.name, fileSize: file.size }),
+    execute: async (ctx, { file, extension }) => {
       const { storage } = getServerRuntime().files;
       const { integration } = getServerRuntime().integrations;
 
@@ -138,8 +154,12 @@ export async function getRecordImportJob(
   return runAction({
     actionName: "records.import.get_job",
     access: { kind: "permission", permission: "integration:manage" },
-    input: { jobId },
-    execute: async (ctx) => {
+    parse: () =>
+      parseObject({ jobId }, validationFail, (r) => ({
+        jobId: r.str("jobId"),
+      })),
+    audit: ({ jobId }) => ({ jobId }),
+    execute: async (ctx, { jobId }) => {
       const job = await getAuthorizedRecordImportJob(ctx.actor, jobId);
       return Ok(job);
     },

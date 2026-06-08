@@ -2,11 +2,15 @@ import type { ActionSuccess } from "~/contracts/common";
 import type { ContactAssignmentStatus } from "~/server/contact-assignments/domain/assignment";
 import type { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 
+export const CONTACT_ASSIGNMENT_CALL_OUTCOMES = [
+  "no_answer",
+  "callback_scheduled",
+  "sale_made",
+  "invalid_data",
+] as const;
+
 export type ContactAssignmentCallOutcome =
-  | "no_answer"
-  | "callback_scheduled"
-  | "sale_made"
-  | "invalid_data";
+  (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
 
 export interface AssignContactsCommand {
   actorUserId: UserId;
