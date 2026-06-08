@@ -13,7 +13,7 @@ export async function querySourcingPolicy(branchId: number) {
 
     parse: () =>
       parseObject({ branchId }, validationFail, (r) => ({
-        branchId: r.num("branchId"),
+        branchId: r.posInt("branchId"),
       })),
 
     audit: ({ branchId }) => ({ branchId }),
@@ -36,7 +36,7 @@ export async function saveSourcingPolicy(input: {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        branchId: r.num("branchId"),
+        branchId: r.posInt("branchId"),
         engineAssignmentEnabled: r.bool("engineAssignmentEnabled"),
       })),
 
