@@ -6,7 +6,16 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import type { Result } from "~/server/shared/result";
 
-type CapacityDecision = { requestId: number; note: string | null };
+type CapacityDecision = {
+  requestId: number;
+  note: string | null;
+};
+
+type CapacityGrant = {
+  userId: number;
+  amount: number;
+  reason: string;
+};
 
 function parseCapacityDecision(
   requestId: unknown,
@@ -22,7 +31,7 @@ function parseCapacityGrant(
   userId: unknown,
   amount: unknown,
   reason: unknown,
-): Result<{ userId: number; amount: number; reason: string }, DomainError> {
+): Result<CapacityGrant, DomainError> {
   return parseObject({ userId, amount, reason }, validationFail, (r) => ({
     userId: r.posInt("userId"),
     amount: r.num("amount"),
