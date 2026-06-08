@@ -12,6 +12,7 @@ export async function beginTotpEnrollment(): Promise<{
   qrCodeDataUrl: string;
 }> {
   const totpContext = getServerRuntime().auth.totp;
+
   return runAction({
     actionName: "auth.totp.begin",
     access: { kind: "session" },
@@ -20,19 +21,26 @@ export async function beginTotpEnrollment(): Promise<{
 }
 
 export async function finishTotpEnrollment(code: string): Promise<string[]> {
-  const totpContext = getServerRuntime().auth.totp;
+  const runtime = getServerRuntime();
   const result = await runAction({
     actionName: "auth.totp.finish",
     access: { kind: "session" },
+
     // The TOTP code is a secret in flight; parse validates presence but no
     // audit projection records it.
     parse: () =>
-      parseObject({ code }, validationFail, (r) => ({ code: r.str("code") })),
+      parseObject({ code }, validationFail, (r) => ({
+        code: r.str("code"),
+      })),
+
     execute: (ctx, { code }) =>
-      finishTotpEnrollmentService(ctx, totpContext, { code }),
+      finishTotpEnrollmentService(ctx, runtime.auth.totp, { code }),
   });
-  await replaceCurrentSession(result.sessionToken, (id) =>
-    getServerRuntime().auth.sessionService.invalidateSession(id),
+
+  await replaceCurrentSession(
+    result.sessionToken,
+    runtime.auth.sessionService.invalidateSession,
   );
+
   return result.recoveryCodes;
 }
