@@ -14,7 +14,7 @@ interface AppErrorInit {
   publicMessage: string;
   internalMessage?: string;
   /**
-   * The granular domain failure code (for example "ruc_invalid" or
+   * The granular domain failure code (for example "invalid_ruc" or
    * "missing_cci_soles"). The coarse `code` groups errors for HTTP-style
    * handling; `domainCode` is the stable key the client localizes on, so UI
    * copy never has to parse `publicMessage`. Null when the error did not

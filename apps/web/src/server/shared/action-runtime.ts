@@ -154,8 +154,8 @@ async function runExecute<TIn, TOut, E extends DomainError>(
   return Err(sanitize(domainToAppError(result.error)));
 }
 
-// The single telemetry write for an action: exactly one row per attempt,
-// success or failure, carrying the audited scalar projection of the input.
+// The telemetry write for an authenticated action attempt: exactly one row after
+// actor resolution, success or failure, carrying the audited scalar projection.
 function finish<TOut>(
   ctx: AppContext,
   actionName: string,

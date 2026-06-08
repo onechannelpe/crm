@@ -30,11 +30,9 @@ export type ListAssignableExecutivesInput = {
   limit?: number;
 };
 
-// Command payloads are the single source of truth for what a client may send to
-// a workflow command. The client builds them, the action validates an unknown
-// request into them, and the server command input is this payload plus the
-// server-injected actor. Fields stay as plain strings because presence and
-// shape are enforced once, at the action boundary, by the parsing toolkit.
+// Command payloads define the client-sendable shape for workflow commands.
+// Actions validate unknown request values into these contracts, then add the
+// authenticated actor before calling server commands.
 
 export type CreateLeadInput = {
   ruc: string;
