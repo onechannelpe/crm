@@ -1,5 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadHistoryEntry } from "../../domain/history";
@@ -34,7 +34,8 @@ function reportSectionDegradation(section: string, error: DomainError): void {
     section,
     domainKind: error.kind,
     domainCode: error.code,
-    domainMessage: error.message,
+    domainInternalMessage:
+      "internalMessage" in error ? error.internalMessage : undefined,
     domainDetails: error.details,
   });
 }
@@ -98,7 +99,7 @@ export async function loadLeadDetailSections(
 ): Promise<Result<LeadDetailLoadedSections, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+    return Err(fail("lead_not_found"));
   }
 
   const [
@@ -140,15 +141,12 @@ export async function loadLeadDetailSections(
   }
   if (!organization) {
     return Err(
-      domainError(
-        "not_found",
-        "lead_organization_not_found",
-        "Lead organization not found",
-        {
+      fail("lead_organization_not_found", {
+        details: {
           leadId: lead.id,
           organizationId: lead.organizationId,
         },
-      ),
+      }),
     );
   }
 

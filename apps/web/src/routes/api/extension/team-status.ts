@@ -1,5 +1,6 @@
 import { requirePermission } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
+import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 export async function GET(): Promise<Response> {
@@ -12,7 +13,10 @@ export async function GET(): Promise<Response> {
       branchId: session.branchId,
     });
     if (isErr(result)) {
-      return Response.json({ error: result.error.message }, { status: 500 });
+      return Response.json(
+        { error: toWire(result.error).message },
+        { status: 500 },
+      );
     }
 
     return Response.json({ items: result.value }, { status: 200 });

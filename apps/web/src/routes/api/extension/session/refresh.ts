@@ -2,6 +2,7 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { isRefreshExtensionSessionRequest } from "~/server/extension/contracts";
 import { getServerRuntime } from "~/server/runtime";
+import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "../json-body";
@@ -33,7 +34,7 @@ export async function POST(event: APIEvent): Promise<Response> {
             : result.error.code === "misconfigured"
               ? 503
               : 500;
-      return Response.json({ error: result.error.message }, { status });
+      return Response.json({ error: toWire(result.error).message }, { status });
     }
 
     return Response.json(result.value, { status: 200 });

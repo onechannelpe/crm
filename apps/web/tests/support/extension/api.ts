@@ -136,14 +136,14 @@ export function createExtensionScenario(
         origin: "http://localhost:3000",
       });
       if (!handoffResult.ok) {
-        throw new Error(handoffResult.error.message);
+        throw new Error(handoffResult.error.code ?? handoffResult.error.kind);
       }
       const claimResult = await service.claimInstallationSession({
         handoffToken: handoffResult.value.handoffToken,
         installationId,
       });
       if (!claimResult.ok) {
-        throw new Error(claimResult.error.message);
+        throw new Error(claimResult.error.code ?? claimResult.error.kind);
       }
       return {
         authSessionId,
