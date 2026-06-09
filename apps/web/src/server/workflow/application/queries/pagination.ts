@@ -1,4 +1,4 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 const DEFAULT_LIMIT = 50;
@@ -16,24 +16,12 @@ export function parsePageParams(input: {
 }): Result<PageParams, DomainError> {
   const limit = input.limit ?? DEFAULT_LIMIT;
   if (!Number.isInteger(limit) || limit < 1) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_limit",
-        "Limit must be a positive integer",
-      ),
-    );
+    return Err(invalid({ code: "invalid_limit" }));
   }
 
   const offset = input.offset ?? DEFAULT_OFFSET;
   if (!Number.isInteger(offset) || offset < 0) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_offset",
-        "Offset must be a non-negative integer",
-      ),
-    );
+    return Err(invalid({ code: "invalid_offset" }));
   }
 
   return Ok({

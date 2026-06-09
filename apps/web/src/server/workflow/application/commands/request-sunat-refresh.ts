@@ -1,4 +1,8 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  fail,
+  forbidden,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/types";
 
@@ -11,12 +15,12 @@ export async function requestSunatRefresh(
   ports: { leads: LeadReadRepository; enrichmentQueue: LeadEnrichmentQueue },
 ): Promise<Result<void, DomainError>> {
   if (!resolveCapabilities(input.actor.role).has("view")) {
-    return Err(domainError("forbidden", null, "Access denied"));
+    return Err(forbidden());
   }
 
   const lead = await ports.leads.findById(input.leadId);
   if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+    return Err(fail("lead_not_found"));
   }
 
   await ports.enrichmentQueue.enqueueRucVerification(

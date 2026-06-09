@@ -1,9 +1,8 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { SaveDigitalPolicyCommandInput } from "~/server/workflow/types";
 
-import { leadNotFound } from "../../domain/lead/lead-errors";
 import { authorizeLeadAction } from "../../domain/lead/policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -22,18 +21,12 @@ export async function saveDigitalPolicyCommand(
     const leads = createLeadStateRepo(tx);
 
     const state = await leads.findById(input.leadId);
-    if (!state) return leadNotFound();
+    if (!state) return Err(fail("lead_not_found"));
 
     const authz = authorizeLeadAction("complete-scoping", input.actor, state);
     if (!authz.ok) return authz;
     if (state.stage !== "SETUP_PLAN") {
-      return Err(
-        domainError(
-          "validation",
-          "invalid_digital_policy_stage",
-          "Digital policy can only be updated in setup plan stage",
-        ),
-      );
+      return Err(fail("invalid_digital_policy_stage"));
     }
 
     const policy = parseDigitalPolicy({

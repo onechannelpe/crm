@@ -3,7 +3,7 @@ import { randomUUIDv7 } from "bun";
 import { serializeAuditChanges } from "~/contracts/audit";
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { domainError } from "~/server/shared/domain-error";
+import { fail } from "~/server/shared/domain-error";
 import { Err, Ok } from "~/server/shared/result";
 import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
 import type {
@@ -82,13 +82,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         .executeTakeFirst();
 
       if (Number(updateResult.numUpdatedRows) === 0) {
-        return Err(
-          domainError(
-            "conflict",
-            "concurrency_conflict",
-            "Lead was modified concurrently",
-          ),
-        );
+        return Err(fail("concurrency_conflict"));
       }
 
       // 3. Assignment replacement (for reassign)

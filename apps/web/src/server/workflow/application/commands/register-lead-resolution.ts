@@ -1,4 +1,4 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -24,13 +24,7 @@ export async function ensureActiveExecutive(input: {
 }): Promise<Result<void, DomainError>> {
   const targetExecutive = await input.deps.users.findById(input.executiveId);
   if (!targetExecutive || !targetExecutive.isActive) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_executive",
-        "Target executive not found or inactive",
-      ),
-    );
+    return Err(fail("invalid_executive"));
   }
 
   return Ok(undefined);
@@ -55,13 +49,7 @@ export async function resolveLeadRegistration(input: {
   });
 
   if (decision === "conflict") {
-    return Err(
-      domainError(
-        "conflict",
-        "ruc_conflict",
-        "A lead with this RUC already exists",
-      ),
-    );
+    return Err(fail("ruc_conflict"));
   }
 
   const canReassign = ensureCanReassignLead({

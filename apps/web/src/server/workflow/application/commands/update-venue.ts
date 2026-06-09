@@ -1,12 +1,11 @@
 import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { UpdateVenueCommandInput } from "~/server/workflow/types";
 
 import { updateVenue } from "../../domain/lead/commands";
-import { leadNotFound } from "../../domain/lead/lead-errors";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -25,18 +24,12 @@ export async function updateVenueCommand(
     const uow = createLeadUow(tx);
 
     const state = await leads.findById(input.leadId);
-    if (!state) return leadNotFound();
+    if (!state) return Err(fail("lead_not_found"));
 
     const venue = await repos.leadVenues.findById(input.venueId);
     if (!venue.ok) return venue;
     if (!venue.value || venue.value.leadId !== input.leadId) {
-      return Err(
-        domainError(
-          "not_found",
-          "venue_not_found",
-          "Venue not found for this lead",
-        ),
-      );
+      return Err(fail("venue_not_found"));
     }
 
     const profile = await repos.leadProfiles.findByLeadId(input.leadId);

@@ -1,12 +1,11 @@
 import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { RequestRateNegotiationCommandInput } from "~/server/workflow/types";
 
 import { requestRateNegotiation } from "../../domain/lead/commands";
-import { leadNotFound } from "../../domain/lead/lead-errors";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -21,7 +20,7 @@ export async function requestRateNegotiationCommand(
     const uow = createLeadUow(tx);
     const repos = createWorkflowRepos(tx);
     const state = await leads.findById(input.leadId);
-    if (!state) return leadNotFound();
+    if (!state) return Err(fail("lead_not_found"));
 
     const existingCount = await repos.leadNegotiationRequests.countByLeadId(
       state.id,
@@ -43,11 +42,9 @@ export async function requestRateNegotiationCommand(
     for (const { artifactId, file } of resolved) {
       if (!file) {
         return Err(
-          domainError(
-            "conflict",
-            "negotiation_file_not_submit_ready",
-            `Artifact ${artifactId} is not ready for negotiation submission`,
-          ),
+          fail("negotiation_file_not_submit_ready", {
+            details: { artifactId },
+          }),
         );
       }
       validatedArtifacts.push(file);

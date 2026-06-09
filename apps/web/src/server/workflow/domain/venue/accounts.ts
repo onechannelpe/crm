@@ -1,6 +1,6 @@
 import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import { isBcpBank } from "~/contracts/workflow/vocabulary";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export type VenueAccounts = {
@@ -30,13 +30,7 @@ export function buildVenueAccounts(input: {
     (input.solesAccount.isSettlement ? 1 : 0) +
     (input.dollarAccount?.isSettlement ? 1 : 0);
   if (settlementCount !== 1) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_settlement_account",
-        "Exactly one settlement account must be selected",
-      ),
-    );
+    return Err(fail("invalid_settlement_account"));
   }
 
   const soles = normalizeAccount(input.solesAccount, "soles");
@@ -71,11 +65,7 @@ function normalizeAccount<TCurrency extends "PEN" | "USD">(
   const cci = account.cci?.trim() || null;
   if (!cci) {
     return Err(
-      domainError(
-        "validation",
-        `missing_cci_${label}`,
-        `CCI is required for ${label} account when the bank is not BCP`,
-      ),
+      fail(label === "soles" ? "missing_cci_soles" : "missing_cci_dolares"),
     );
   }
 

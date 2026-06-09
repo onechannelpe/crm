@@ -1,5 +1,5 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { LeadSourcingPolicyRepository } from "~/server/workflow/application/ports/entities";
 
@@ -21,7 +21,7 @@ export async function getSourcingPolicy(
   >
 > {
   if (!hasPermission(input.actorRole, "capacity:policy:manage")) {
-    return Err(domainError("forbidden", null, "Access denied"));
+    return Err(forbidden());
   }
 
   const current = await deps.sourcingPolicies.findByBranchId(input.branchId);
