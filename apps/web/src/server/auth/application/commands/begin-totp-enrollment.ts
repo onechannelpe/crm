@@ -34,9 +34,7 @@ export async function beginTotpEnrollment(
 
   const existing = await deps.repos.userTotpFactors.findByUserId(user.id);
   if (existing?.is_enabled === 1) {
-    return Err(
-      fail("totp_already_enabled"),
-    );
+    return Err(fail("totp_already_enabled"));
   }
 
   const secret = generateTotpSecret();

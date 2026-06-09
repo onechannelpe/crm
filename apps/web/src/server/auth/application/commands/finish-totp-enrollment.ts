@@ -26,9 +26,7 @@ export async function finishTotpEnrollment(
     await import("~/lib/auth/totp/recovery-codes");
   const secret = await decryptTotpSecret(factor.secret_encrypted);
   if (!verifyTotpCode(secret, input.code)) {
-    return Err(
-      fail("totp_code_invalid"),
-    );
+    return Err(fail("totp_code_invalid"));
   }
 
   await deps.repos.userTotpFactors.markEnabled(user.id);

@@ -45,14 +45,17 @@ export async function mapEngineErrorResponse(
   const bodyRequestId = payload?.request_id;
   const correlationId = headerRequestId ?? bodyRequestId ?? requestId;
 
-  return external(payload?.error ?? `Engine returned status ${response.status}`, {
-    code: "engine_request_failed",
-    details: {
-      request_id: correlationId,
-      http_status: response.status,
-      engine_error: payload?.error,
+  return external(
+    payload?.error ?? `Engine returned status ${response.status}`,
+    {
+      code: "engine_request_failed",
+      details: {
+        request_id: correlationId,
+        http_status: response.status,
+        engine_error: payload?.error,
+      },
     },
-  });
+  );
 }
 
 export function mapEngineNetworkError(

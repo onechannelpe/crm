@@ -132,7 +132,8 @@ export const ERROR_CATALOG = {
   },
   download_artifact_requires_generated_payload: {
     kind: "conflict",
-    message: "El archivo de descarga debe generarlo el servicio correspondiente.",
+    message:
+      "El archivo de descarga debe generarlo el servicio correspondiente.",
   },
   concurrency_conflict: {
     kind: "conflict",
@@ -328,7 +329,8 @@ export const ERROR_CATALOG = {
   },
   missing_link_venue_url: {
     kind: "validation",
-    message: "La URL del enlace de la sede es obligatoria para el alcance por sede.",
+    message:
+      "La URL del enlace de la sede es obligatoria para el alcance por sede.",
   },
   missing_link_shared_url: {
     kind: "validation",
@@ -336,15 +338,18 @@ export const ERROR_CATALOG = {
   },
   invalid_online_venue_config: {
     kind: "validation",
-    message: "La configuración online de la sede no corresponde al alcance elegido.",
+    message:
+      "La configuración online de la sede no corresponde al alcance elegido.",
   },
   invalid_online_policy: {
     kind: "validation",
-    message: "Los campos online compartidos no corresponden al alcance elegido.",
+    message:
+      "Los campos online compartidos no corresponden al alcance elegido.",
   },
   invalid_link_venue_config: {
     kind: "validation",
-    message: "La configuración del enlace de la sede no corresponde al alcance elegido.",
+    message:
+      "La configuración del enlace de la sede no corresponde al alcance elegido.",
   },
   invalid_link_policy: {
     kind: "validation",

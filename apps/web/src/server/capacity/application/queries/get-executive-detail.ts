@@ -45,9 +45,7 @@ export async function getExecutiveDetail(
 ): Promise<Result<ExecutiveCapacityDetailView, DomainError>> {
   const managed = await canManageExecutive(ctx.actor, input.userId, deps.repos);
   if (!managed.target) {
-    return Err(
-      fail("executive_not_found"),
-    );
+    return Err(fail("executive_not_found"));
   }
   if (!managed.ok) {
     return Err(forbidden());

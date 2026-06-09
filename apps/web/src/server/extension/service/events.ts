@@ -175,9 +175,7 @@ export async function ingestRuntimeEvent(
       );
     }
     if (isInvalidExtensionToken(error)) {
-      return Err(
-        fail("extension_session_invalid"),
-      );
+      return Err(fail("extension_session_invalid"));
     }
 
     return Err(

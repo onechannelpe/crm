@@ -131,8 +131,7 @@ export function requireCapability(
   capability: LeadCapability,
   actor: { role: Role },
 ): Result<void, DomainError> {
-  if (!resolveCapabilities(actor.role).has(capability))
-    return Err(forbidden());
+  if (!resolveCapabilities(actor.role).has(capability)) return Err(forbidden());
   return Ok(undefined);
 }
 

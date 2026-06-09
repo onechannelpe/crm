@@ -78,10 +78,13 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
         return Ok(decoded.results);
       } catch (err) {
         return Err(
-          external(err instanceof Error ? err.message : "Invalid response shape", {
-            code: "engine_response_invalid",
-            details: { request_id: requestId },
-          }),
+          external(
+            err instanceof Error ? err.message : "Invalid response shape",
+            {
+              code: "engine_response_invalid",
+              details: { request_id: requestId },
+            },
+          ),
         );
       }
     },
@@ -130,10 +133,13 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
         return Ok(decoded.candidates);
       } catch (err) {
         return Err(
-          external(err instanceof Error ? err.message : "Invalid response shape", {
-            code: "engine_response_invalid",
-            details: { request_id: requestId },
-          }),
+          external(
+            err instanceof Error ? err.message : "Invalid response shape",
+            {
+              code: "engine_response_invalid",
+              details: { request_id: requestId },
+            },
+          ),
         );
       }
     },

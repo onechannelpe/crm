@@ -1,5 +1,5 @@
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { checkArtifactPolicy } from "../policy";
@@ -31,9 +31,7 @@ export async function uploadArtifactFile(
 
   const artifact = await repo.artifacts.findById(artifactId);
   if (!artifact) {
-    return Err(
-      domainError("not_found", "artifact_not_found", "Artifact not found"),
-    );
+    return Err(fail("artifact_not_found"));
   }
 
   const policyResult = checkArtifactPolicy(actor, artifact, "artifact.upload");
@@ -75,7 +73,7 @@ export async function uploadArtifactFile(
     if (!staticValidation.ok) {
       const message = `File validation failed: ${staticValidation.reason}`;
       await failArtifact(staticValidation.reason, message);
-      return Err(domainError("validation", staticValidation.reason, message));
+      return Err(invalid({ code: staticValidation.reason }));
     }
 
     await transitionTo("scanning");
@@ -107,7 +105,7 @@ export async function uploadArtifactFile(
         await storage.delete(storageKey);
         const message = `File validation failed: ${streamValidation.reason}`;
         await failArtifact(streamValidation.reason, message);
-        return Err(domainError("validation", streamValidation.reason, message));
+        return Err(invalid({ code: streamValidation.reason }));
       }
 
       const metadata = buildUploadMetadata(
@@ -155,7 +153,7 @@ export async function uploadArtifactFile(
       if (err instanceof UploadValidationError) {
         const message = `File validation failed: ${err.reason}`;
         await failArtifact(err.reason, message);
-        return Err(domainError("validation", err.reason, message));
+        return Err(invalid({ code: err.reason }));
       }
       throw err;
     }
