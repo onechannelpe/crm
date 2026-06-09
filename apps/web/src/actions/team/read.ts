@@ -5,7 +5,7 @@ import type {
   InviteManagement,
 } from "~/actions/team/contracts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,

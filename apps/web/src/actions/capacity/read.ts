@@ -8,7 +8,7 @@ import type {
   PendingCapacityRequestView,
 } from "~/actions/capacity/contracts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getManagedExecutivesList(): Promise<

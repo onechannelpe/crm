@@ -4,7 +4,7 @@ import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/application/commands/begin-totp-enrollment";
 import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/application/commands/finish-totp-enrollment";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function beginTotpEnrollment(): Promise<{

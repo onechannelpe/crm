@@ -5,7 +5,7 @@ import type { ActiveContactAssignmentView } from "~/contracts/contact-assignment
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
 export async function getActiveContactAssignments(): Promise<

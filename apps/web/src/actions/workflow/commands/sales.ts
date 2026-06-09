@@ -12,7 +12,7 @@ import {
   MODALIDAD_COBRO_KINDS,
 } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import {
   parseObject,

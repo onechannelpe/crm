@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { fail, throwDomain } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";

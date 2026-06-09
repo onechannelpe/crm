@@ -2,7 +2,7 @@
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 
 import { parseAssignContactsCommand } from "./input";
 

@@ -6,7 +6,7 @@ import type {
 } from "~/contracts/team/bulk-import";
 import { ROLES } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import {
   applyBulkImport as applyBulkImportService,

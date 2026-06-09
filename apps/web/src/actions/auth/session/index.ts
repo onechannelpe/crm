@@ -5,7 +5,7 @@ import { logoutUser } from "~/server/auth/application/commands/logout-user";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function getLoginFlow(flowId: number) {
   return getLoginFlowState(flowId, getServerRuntime().auth.login.repos);

@@ -5,7 +5,7 @@ import { countActiveSessions as countActiveSessionsService } from "~/server/auth
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 

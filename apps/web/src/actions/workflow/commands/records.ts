@@ -8,7 +8,7 @@ import {
   PRODUCT_SCOPES,
 } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 import { workflowActor } from "./actor";

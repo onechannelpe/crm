@@ -2,7 +2,7 @@
 
 import { ROLES } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, type Result } from "~/server/shared/result";

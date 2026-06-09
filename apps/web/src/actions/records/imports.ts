@@ -15,7 +15,7 @@ import {
   publishRecordImportProgress,
 } from "~/server/records/imports/progress-events";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import {
   fail,
   invalid,

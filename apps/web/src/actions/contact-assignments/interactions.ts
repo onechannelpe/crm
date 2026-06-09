@@ -4,7 +4,7 @@ import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignment
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function completeContactAssignmentCall(
