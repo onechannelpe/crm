@@ -2,9 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 
 import { authenticate, authorizePermission } from "~/lib/auth/access/session";
 import type { AuthSession } from "~/lib/auth/access/session-types";
+import { createActionRunner } from "~/server/shared/action-runtime";
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import { createActionRunner } from "~/server/shared/action-runtime/runtime";
-import { domainError } from "~/server/shared/domain-error";
+import {
+  external,
+  forbidden,
+  invalid,
+  rateLimited,
+  unauthenticated,
+} from "~/server/shared/domain-error";
 import { Err, isErr, Ok } from "~/server/shared/result";
 
 vi.mock("~/lib/auth/access/session", () => ({
@@ -48,7 +54,7 @@ describe("action runtime", () => {
     const result = await runActionResult({
       name: "test.parse.validation",
       access: { kind: "auth" },
-      parse: () => Err(domainError("validation", "bad_input", "Bad input")),
+      parse: () => Err(invalid({ code: "bad_input" })),
       execute: async () => Ok("unreachable"),
     });
 
@@ -57,7 +63,7 @@ describe("action runtime", () => {
     expect(result.error).toEqual({
       kind: "validation",
       code: "bad_input",
-      message: "Bad input",
+      message: "Revisa los datos ingresados.",
     });
     expect(authenticate).not.toHaveBeenCalled();
     expect(p.record).not.toHaveBeenCalled();
@@ -87,14 +93,12 @@ describe("action runtime", () => {
     expect(result.error).toEqual({
       kind: "internal",
       code: null,
-      message: "An unexpected error occurred",
+      message: "Ocurrió un error inesperado.",
     });
   });
 
   it("distinguishes unauthenticated from forbidden", async () => {
-    vi.mocked(authenticate).mockResolvedValueOnce(
-      Err(domainError("unauthenticated", "unauthenticated", "Unauthorized")),
-    );
+    vi.mocked(authenticate).mockResolvedValueOnce(Err(unauthenticated()));
     const p = ports();
     const { runActionResult } = createActionRunner(p);
 
@@ -113,9 +117,7 @@ describe("action runtime", () => {
 
   it("records a telemetry row for a forbidden attempt by an authenticated actor", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
-    vi.mocked(authorizePermission).mockReturnValueOnce(
-      Err(domainError("forbidden", "forbidden", "Forbidden")),
-    );
+    vi.mocked(authorizePermission).mockReturnValueOnce(Err(forbidden()));
     const p = ports();
     const { runActionResult } = createActionRunner(p);
     const execute = okExecute();
@@ -140,8 +142,9 @@ describe("action runtime", () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
     const p = ports();
     const { runActionResult } = createActionRunner(p);
-    const fault = domainError("external", "provider_down", "Stripe 500", {
-      secret: "leak",
+    const fault = external("Stripe 500", {
+      code: "provider_down",
+      details: { secret: "leak" },
     });
 
     const result = await runActionResult({
@@ -155,7 +158,7 @@ describe("action runtime", () => {
     expect(result.error).toEqual({
       kind: "internal",
       code: "provider_down",
-      message: "An unexpected error occurred",
+      message: "Ocurrió un error inesperado.",
     });
     // details/cause never reach the wire.
     expect(result.error).not.toHaveProperty("details");
@@ -173,13 +176,7 @@ describe("action runtime", () => {
     const result = await runActionResult({
       name: "test.rate_limited",
       access: { kind: "auth" },
-      execute: async () =>
-        Err({
-          kind: "rate_limit",
-          code: null,
-          message: "slow down",
-          retryAfterSeconds: 42,
-        }),
+      execute: async () => Err(rateLimited(42)),
     });
 
     expect(isErr(result)).toBe(true);
@@ -187,7 +184,7 @@ describe("action runtime", () => {
     expect(result.error).toEqual({
       kind: "rate_limit",
       code: null,
-      message: "slow down",
+      message: "Demasiados intentos. Inténtalo de nuevo en unos momentos.",
       retryAfterSeconds: 42,
     });
     expect(p.record).toHaveBeenCalledWith(

@@ -64,7 +64,7 @@ describe("passkey onboarding flow", () => {
         });
         if (isErr(passkeyResult)) {
           throw new Error(
-            `Passkey enrollment failed: ${passkeyResult.error.message}`,
+            `Passkey enrollment failed: ${passkeyResult.error.code ?? passkeyResult.error.kind}`,
           );
         }
 

@@ -11,7 +11,7 @@ import type {
   AssignContactsTransactionRepos,
   AssignContactsUow,
 } from "~/server/contact-assignments/application/contact-assignment-writer";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -183,16 +183,14 @@ describe("assignContacts", () => {
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> =>
         Err(
-          domainError(
-            "external",
-            "engine_request_failed",
-            "service unavailable",
-            {
+          external("service unavailable", {
+            code: "engine_request_failed",
+            details: {
               status: 503,
               request_id: "req-leads-1",
               engine_error: "service unavailable",
             },
-          ),
+          }),
         ),
     };
 

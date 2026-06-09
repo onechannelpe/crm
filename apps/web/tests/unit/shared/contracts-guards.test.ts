@@ -1,11 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  assertBoolean,
-  assertFinitePositive,
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/contracts/guards";
+import { assertNonEmptyString, assertPositiveInt } from "~/contracts/guards";
+import { parseWireError } from "~/lib/wire-error";
+
+function expectValidationCode(fn: () => unknown, code: string): void {
+  try {
+    fn();
+  } catch (error) {
+    expect(parseWireError(error)).toEqual({
+      kind: "validation",
+      code,
+      message: "Revisa los datos ingresados.",
+    });
+    return;
+  }
+
+  throw new Error("Expected guard to throw");
+}
 
 describe("contracts guards", () => {
   it("assertPositiveInt accepts positive integers", () => {
@@ -14,43 +25,23 @@ describe("contracts guards", () => {
   });
 
   it("assertPositiveInt rejects invalid integers", () => {
-    expect(() => assertPositiveInt(0, "x")).toThrow(
-      "x must be a positive integer",
+    expectValidationCode(() => assertPositiveInt(0, "x"), "x_positive_integer");
+    expectValidationCode(
+      () => assertPositiveInt(-1, "x"),
+      "x_positive_integer",
     );
-    expect(() => assertPositiveInt(-1, "x")).toThrow(
-      "x must be a positive integer",
+    expectValidationCode(
+      () => assertPositiveInt(1.5, "x"),
+      "x_positive_integer",
     );
-    expect(() => assertPositiveInt(1.5, "x")).toThrow(
-      "x must be a positive integer",
-    );
-    expect(() => assertPositiveInt(Number.NaN, "x")).toThrow(
-      "x must be a positive integer",
-    );
-  });
-
-  it("assertFinitePositive validates finite positive values", () => {
-    expect(assertFinitePositive(1, "x")).toBe(1);
-    expect(assertFinitePositive(0, "x", true)).toBe(0);
-    expect(() => assertFinitePositive(0, "x")).toThrow(
-      "x must be greater than 0",
-    );
-    expect(() => assertFinitePositive(-1, "x")).toThrow(
-      "x must be greater than 0",
-    );
-    expect(() => assertFinitePositive(Number.POSITIVE_INFINITY, "x")).toThrow(
-      "x must be a finite number",
+    expectValidationCode(
+      () => assertPositiveInt(Number.NaN, "x"),
+      "x_positive_integer",
     );
   });
 
   it("assertNonEmptyString trims and validates", () => {
     expect(assertNonEmptyString("  ok  ", "x")).toBe("ok");
-    expect(() => assertNonEmptyString("   ", "x")).toThrow("x is required");
-  });
-
-  it("assertBoolean validates booleans", () => {
-    expect(assertBoolean(true, "x")).toBe(true);
-    expect(assertBoolean(false, "x")).toBe(false);
-    // @ts-expect-error runtime validation path for untrusted input
-    expect(() => assertBoolean("true", "x")).toThrow("x must be a boolean");
+    expectValidationCode(() => assertNonEmptyString("   ", "x"), "x_required");
   });
 });

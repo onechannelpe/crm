@@ -7,7 +7,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/server/shared/domain-error";
 import type { SearchResult } from "~/server/shared/engine/types";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -58,10 +58,13 @@ const successEngine = {
 const failEngine = {
   search: async (): Promise<Result<SearchResult[], DomainError>> =>
     Err(
-      domainError("external", "engine_request_failed", "service unavailable", {
-        status: 503,
-        request_id: "req-search-1",
-        engine_error: "service unavailable",
+      external("service unavailable", {
+        code: "engine_request_failed",
+        details: {
+          status: 503,
+          request_id: "req-search-1",
+          engine_error: "service unavailable",
+        },
       }),
     ),
 };

@@ -1,6 +1,7 @@
 import { makeActor, makeAppContext } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
+import { external } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok } from "~/server/shared/result";
 import { getInviteManagement } from "~/server/team/application/invites";
@@ -79,11 +80,11 @@ describe("getInviteManagement", () => {
     const port = {
       listTeamsByBranch: async () => [{ id: 11, name: "Operaciones" }],
       listPendingInvites: async () =>
-        Err({
-          kind: "external" as const,
-          code: "invite_read_failed",
-          message: "Invite service unavailable",
-        }),
+        Err(
+          external("Invite service unavailable", {
+            code: "invite_read_failed",
+          }),
+        ),
     } satisfies InviteManagementQueryPort;
 
     const result = await getInviteManagement(makeHrContext(), port);
