@@ -17,7 +17,7 @@ export type DomainErrorKind =
   | "forbidden"
   | "not_found"
   | "conflict"
-  | "rate_limited"
+  | "rate_limit"
   | "external"
   | "internal";
 
@@ -31,7 +31,7 @@ export interface DomainError {
   details?: unknown;
   /** Underlying thrown cause, for reporting. Internal only. */
   cause?: unknown;
-  /** Seconds until retry. Only meaningful for kind === "rate_limited". */
+  /** Seconds until retry. Only meaningful for kind === "rate_limit". */
   retryAfterSeconds?: number;
 }
 
@@ -50,16 +50,17 @@ export function unexpectedFault(cause: unknown): DomainError {
   return { kind: "internal", code: "internal", message: GENERIC_ERROR, cause };
 }
 
-// The coarse wire class for each internal kind. External faults collapse to
-// "internal" so a third-party failure is indistinguishable from a server fault
-// on the wire; both still keep their granular code for log correlation.
+// The coarse wire class for each internal kind. Every kind maps to the wire
+// name it shares; only `external` collapses to "internal" so a third-party
+// failure is indistinguishable from a server fault on the wire (both still keep
+// their granular code for log correlation).
 const DOMAIN_TO_WIRE: Record<DomainErrorKind, WireKind> = {
   validation: "validation",
   unauthenticated: "unauthenticated",
   forbidden: "forbidden",
   not_found: "not_found",
   conflict: "conflict",
-  rate_limited: "rate_limit",
+  rate_limit: "rate_limit",
   external: "internal",
   internal: "internal",
 };
@@ -139,10 +140,10 @@ export function internalFault(message: string, code = "internal"): ActionError {
 export function rateLimitFault(
   message: string,
   retryAfterSeconds: number,
-  code = "rate_limited",
+  code = "rate_limit",
 ): ActionError {
   return actionErrorFrom({
-    kind: "rate_limited",
+    kind: "rate_limit",
     code,
     message,
     retryAfterSeconds,

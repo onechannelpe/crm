@@ -37,7 +37,7 @@ describe("rate limit retry after", () => {
       if (error instanceof ActionError) blocked = error;
     }
 
-    expect(blocked?.code).toBe("rate_limit");
+    expect(blocked?.kind).toBe("rate_limit");
     const retryAfter = blocked?.retryAfterSeconds ?? 0;
     expect(retryAfter).toBeGreaterThan(0);
     expect(retryAfter).toBeLessThanOrEqual(

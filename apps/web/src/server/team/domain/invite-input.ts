@@ -34,7 +34,7 @@ export function validateTeamInviteInput(
   input: TeamInviteShape,
 ): Result<CreateTeamInviteCommand, DomainError> {
   if (!EMAIL_PATTERN.test(input.email)) {
-    return invalid("invalid_email", "El correo no es válido.");
+    return invalid("invalid_email", "Invalid email format");
   }
 
   const category = resolveExecutiveCategory(
@@ -50,7 +50,7 @@ export function validateTeamInviteInput(
     input.teamId !== null &&
     (!Number.isInteger(input.teamId) || input.teamId < 1)
   ) {
-    return invalid("invalid_team_id", "El equipo seleccionado no es válido.");
+    return invalid("invalid_team_id", "Invalid team id");
   }
 
   const expiresAt = validateExpiry(input.expiresAt);
@@ -84,7 +84,7 @@ function resolveExecutiveCategory(
   if (!executiveCategory || !isExecutiveCategoryValue(executiveCategory)) {
     return invalid(
       "invalid_executive_category",
-      "Selecciona una categoría válida para el ejecutivo.",
+      "Invalid or missing executive category",
     );
   }
 
@@ -99,13 +99,13 @@ function validateExpiry(
   }
 
   if (!Number.isInteger(expiresAt) || expiresAt < 1) {
-    return invalid("invalid_expires_at", "La fecha de expiración es inválida.");
+    return invalid("invalid_expires_at", "Invalid expiry timestamp");
   }
 
   if (expiresAt <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
     return invalid(
       "expires_at_too_soon",
-      "La expiración debe ser al menos 7 días en el futuro.",
+      "Expiry must be at least 7 days in the future",
     );
   }
 

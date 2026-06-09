@@ -57,9 +57,7 @@ export async function rejectCapacityRequest(
       );
     }
     if (!managed.ok) {
-      return Err(
-        domainError("forbidden", "forbidden", "Cannot reject this request"),
-      );
+      return Err(domainError("forbidden", null, "Cannot reject this request"));
     }
 
     const rejectedResult = await tx.capacityRequests.markRejected(

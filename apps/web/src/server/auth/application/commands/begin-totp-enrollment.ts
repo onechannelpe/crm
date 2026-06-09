@@ -25,7 +25,7 @@ export async function beginTotpEnrollment(
 > {
   const user = await deps.repos.users.findById(ctx.actor.userId);
   if (!user) {
-    return Err(domainError("forbidden", "forbidden", "Unauthorized"));
+    return Err(domainError("forbidden", null, "Unauthorized"));
   }
 
   const existing = await deps.repos.userTotpFactors.findByUserId(user.id);

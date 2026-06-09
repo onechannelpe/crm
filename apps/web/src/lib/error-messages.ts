@@ -27,9 +27,19 @@ const DOMAIN_MESSAGES_ES: Record<string, string> = {
   max_negotiation_files_exceeded: "Se superó el máximo de archivos permitidos.",
   invalid_email: "El correo no es válido.",
   invalid_team_id: "El equipo seleccionado no es válido.",
-  invalid_executive_category: "La categoría del ejecutivo no es válida.",
+  invalid_executive_category:
+    "Selecciona una categoría válida para el ejecutivo.",
   invalid_expires_at: "La fecha de expiración es inválida.",
   expires_at_too_soon: "La expiración debe ser al menos 7 días en el futuro.",
+  invalid_amount: "El monto debe ser un entero positivo.",
+  amount_exceeds_max: "El monto supera el máximo permitido.",
+  invalid_search_limit: "El límite mensual debe ser mayor que cero.",
+  search_limit_exceeds_max: "El límite mensual supera el máximo permitido.",
+  invalid_buffer_target: "El objetivo de buffer debe ser mayor que cero.",
+  buffer_target_exceeds_max:
+    "El objetivo de buffer supera el máximo permitido.",
+  invalid_daily_refill: "El límite diario debe ser mayor que cero.",
+  daily_refill_exceeds_max: "El límite diario supera el máximo permitido.",
 };
 
 // Generic copy per coarse class. Null means the class has no good generic line,

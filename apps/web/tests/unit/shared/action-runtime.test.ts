@@ -86,7 +86,7 @@ describe("action runtime", () => {
     if (!isErr(result)) return;
     expect(result.error).toEqual({
       kind: "internal",
-      code: "internal",
+      code: null,
       message: "An unexpected error occurred",
     });
   });
@@ -175,8 +175,8 @@ describe("action runtime", () => {
       access: { kind: "auth" },
       execute: async () =>
         Err({
-          kind: "rate_limited",
-          code: "rate_limited",
+          kind: "rate_limit",
+          code: null,
           message: "slow down",
           retryAfterSeconds: 42,
         }),
@@ -186,7 +186,7 @@ describe("action runtime", () => {
     if (!isErr(result)) return;
     expect(result.error).toEqual({
       kind: "rate_limit",
-      code: "rate_limited",
+      code: null,
       message: "slow down",
       retryAfterSeconds: 42,
     });

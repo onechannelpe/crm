@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 function expectErrCode(
-  result: { ok: true; value: unknown } | { ok: false; error: { code: string } },
+  result:
+    | { ok: true; value: unknown }
+    | { ok: false; error: { code: string | null } },
   code: string,
 ) {
   expect(result.ok).toBe(false);

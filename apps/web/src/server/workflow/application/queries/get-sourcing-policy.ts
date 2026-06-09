@@ -21,7 +21,7 @@ export async function getSourcingPolicy(
   >
 > {
   if (!hasPermission(input.actorRole, "capacity:policy:manage")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+    return Err(domainError("forbidden", null, "Access denied"));
   }
 
   const current = await deps.sourcingPolicies.findByBranchId(input.branchId);

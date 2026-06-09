@@ -16,7 +16,10 @@ export interface OnboardingRedirectResponse {
   redirectTo: string;
 }
 
-function mapOnboardingError(error: { code: string; message: string }): never {
+function mapOnboardingError(error: {
+  code: string | null;
+  message: string;
+}): never {
   switch (error.code) {
     case "user_not_found":
       throw internalFault("No se pudo completar el registro");

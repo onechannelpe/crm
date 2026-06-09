@@ -2,7 +2,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, type Result } from "~/server/shared/result";
 
 export function forbiddenLeadAccess(): Result<never, DomainError> {
-  return Err(domainError("forbidden", "forbidden", "Access denied"));
+  return Err(domainError("forbidden", null, "Access denied"));
 }
 
 export function leadNotFound(): Result<never, DomainError> {

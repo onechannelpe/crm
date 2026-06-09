@@ -11,7 +11,7 @@ export async function requestSunatRefresh(
   ports: { leads: LeadReadRepository; enrichmentQueue: LeadEnrichmentQueue },
 ): Promise<Result<void, DomainError>> {
   if (!resolveCapabilities(input.actor.role).has("view")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+    return Err(domainError("forbidden", null, "Access denied"));
   }
 
   const lead = await ports.leads.findById(input.leadId);

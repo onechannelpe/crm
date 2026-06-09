@@ -82,7 +82,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       ctx: AppContext;
     }): Promise<Result<{ token: string }, DomainError>> {
       if (!hasPermission(input.ctx.actor.role, "integration:manage")) {
-        return Err(domainError("forbidden", "forbidden", "Access denied"));
+        return Err(domainError("forbidden", null, "Access denied"));
       }
 
       const rows = await deps.leadQueries.export({
@@ -157,7 +157,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         );
       }
       if (!hasPermission(input.ctx.actor.role, "lead:sale:upload-proof")) {
-        return Err(domainError("forbidden", "forbidden", "Access denied"));
+        return Err(domainError("forbidden", null, "Access denied"));
       }
 
       const requested = await requestArtifact(
@@ -271,7 +271,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         );
       }
       if (lead.value.executiveId !== input.ctx.actor.userId) {
-        return Err(domainError("forbidden", "forbidden", "Access denied"));
+        return Err(domainError("forbidden", null, "Access denied"));
       }
 
       const requested = await requestArtifact(

@@ -1,35 +1,46 @@
 import { getRequestContext } from "~/lib/http/request-context";
+import {
+  actionErrorFrom,
+  domainError,
+  type DomainError,
+} from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { hasPermission, type Permission, type Role } from "./rbac";
 import type { AuthSession } from "./session-types";
 
 export async function getSession(): Promise<AuthSession | null> {
-  const session = await getRequestContext().getAuthSession();
-  if (!session) return null;
-
-  return session;
+  return getRequestContext().getAuthSession();
 }
 
-export async function requireAuth(): Promise<AuthSession> {
+// Result-returning core. The action runtime consumes these so that an auth
+// denial is an outcome in the same Result channel as parsing and execution, not
+// a thrown exception that loses its kind. The throwing facades below wrap these
+// for the raw (non-runAction) callers in routes and standalone actions.
+
+export async function authenticate(): Promise<
+  Result<AuthSession, DomainError>
+> {
   const session = await getSession();
-
   if (!session) {
-    throw new Error("Unauthorized");
+    return Err(domainError("unauthenticated", null, "Unauthorized"));
   }
-
   if (session.sessionClass !== "app" || !session.onboardingCompleted) {
-    throw new Error("Onboarding required");
+    return Err(
+      domainError("forbidden", "onboarding_required", "Onboarding required"),
+    );
   }
-
-  return session;
+  return Ok(session);
 }
 
-export async function requireSession(): Promise<AuthSession> {
+export async function authenticateSession(): Promise<
+  Result<AuthSession, DomainError>
+> {
   const session = await getSession();
   if (!session) {
-    throw new Error("Unauthorized");
+    return Err(domainError("unauthenticated", null, "Unauthorized"));
   }
-  return session;
+  return Ok(session);
 }
 
 const ROLE_HIERARCHY: Record<Role, number> = {
@@ -49,18 +60,55 @@ export function hasRole(userRole: Role, requiredRole: Role): boolean {
   return userLevel >= requiredLevel;
 }
 
-export async function requireRole(role: Role) {
-  const session = await requireAuth();
+export function authorizeRole(
+  session: AuthSession,
+  role: Role,
+): Result<AuthSession, DomainError> {
   if (!hasRole(session.role, role)) {
-    throw new Error("Forbidden");
+    return Err(domainError("forbidden", null, "Forbidden"));
   }
-  return session;
+  return Ok(session);
 }
 
-export async function requirePermission(permission: Permission) {
-  const session = await requireAuth();
+export function authorizePermission(
+  session: AuthSession,
+  permission: Permission,
+): Result<AuthSession, DomainError> {
   if (!hasPermission(session.role, permission)) {
-    throw new Error("Forbidden");
+    return Err(domainError("forbidden", null, "Forbidden"));
   }
-  return session;
+  return Ok(session);
+}
+
+// Throwing facades for raw callers (routes, standalone actions). They throw a
+// typed ActionError carrying the wire failure, so even outside runAction a
+// denial reaches the client as forbidden/unauthenticated rather than a raw
+// Error or a generic internal fault.
+
+export async function requireAuth(): Promise<AuthSession> {
+  const result = await authenticate();
+  if (isErr(result)) throw actionErrorFrom(result.error);
+  return result.value;
+}
+
+export async function requireSession(): Promise<AuthSession> {
+  const result = await authenticateSession();
+  if (isErr(result)) throw actionErrorFrom(result.error);
+  return result.value;
+}
+
+export async function requireRole(role: Role): Promise<AuthSession> {
+  const session = await requireAuth();
+  const result = authorizeRole(session, role);
+  if (isErr(result)) throw actionErrorFrom(result.error);
+  return result.value;
+}
+
+export async function requirePermission(
+  permission: Permission,
+): Promise<AuthSession> {
+  const session = await requireAuth();
+  const result = authorizePermission(session, permission);
+  if (isErr(result)) throw actionErrorFrom(result.error);
+  return result.value;
 }

@@ -48,9 +48,7 @@ export async function approveCapacityRequest(
       );
     }
     if (!managed.ok) {
-      return Err(
-        domainError("forbidden", "forbidden", "Cannot approve this request"),
-      );
+      return Err(domainError("forbidden", null, "Cannot approve this request"));
     }
 
     const note = normalizeDecisionNote(input.note);

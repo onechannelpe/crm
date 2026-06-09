@@ -12,7 +12,7 @@ export async function updateSourcingPolicy(
   Result<{ branchId: number; engineAssignmentEnabled: boolean }, DomainError>
 > {
   if (!hasPermission(input.actor.role, "capacity:policy:manage")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+    return Err(domainError("forbidden", null, "Access denied"));
   }
 
   await ports.sourcingPolicies.upsert({

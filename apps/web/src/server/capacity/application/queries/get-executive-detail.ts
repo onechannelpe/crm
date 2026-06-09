@@ -46,7 +46,7 @@ export async function getExecutiveDetail(
     );
   }
   if (!managed.ok) {
-    return Err(domainError("forbidden", "forbidden", "Forbidden"));
+    return Err(domainError("forbidden", null, "Forbidden"));
   }
 
   const [searchStatus, leadStatus, requests] = await Promise.all([
