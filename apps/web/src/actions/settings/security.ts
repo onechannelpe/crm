@@ -7,11 +7,7 @@ import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime/runtime";
-import {
-  conflictFault,
-  forbiddenFault,
-  notFoundFault,
-} from "~/server/shared/domain-error";
+import { fail, throwDomain } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
@@ -21,7 +17,7 @@ async function requireCurrentUserWithStrongAuthState(userId: UserId) {
   const user = await repos.users.findById(userId);
 
   if (!user) {
-    throw notFoundFault("User not found");
+    throwDomain(fail("user_not_found"));
   }
 
   const strongAuthStatus = await getStrongAuthStatus(userId, repos);
@@ -48,9 +44,7 @@ function assertProtectedRoleKeepsStrongAuth(input: {
     return;
   }
 
-  throw conflictFault(
-    "Tu rol requiere mantener al menos un método fuerte configurado",
-  );
+  throwDomain(fail("strong_method_required"));
 }
 
 export async function changePassword(
@@ -74,7 +68,7 @@ export async function changePassword(
       const user = await users.findById(userId);
 
       if (!user) {
-        throw notFoundFault("User not found");
+        throwDomain(fail("user_not_found"));
       }
 
       const valid = await verifyPassword(
@@ -83,7 +77,7 @@ export async function changePassword(
       );
 
       if (!valid) {
-        throw forbiddenFault("Current password is incorrect");
+        throwDomain(fail("current_password_incorrect"));
       }
 
       const newHash = await hashPassword(input.newPassword);

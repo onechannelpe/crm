@@ -7,7 +7,7 @@ import {
   runAction,
   runActionResult,
 } from "~/server/shared/action-runtime/runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -44,13 +44,13 @@ function parseLeadUpload(
   }
 
   if (!(formData instanceof FormData)) {
-    return Err(domainError("validation", "invalid_input", "Invalid input"));
+    return Err(invalid({ code: "invalid_input" }));
   }
 
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    return Err(domainError("validation", "file_required", "file is required"));
+    return Err(fail("file_required"));
   }
 
   return Ok({

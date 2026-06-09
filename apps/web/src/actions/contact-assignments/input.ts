@@ -1,5 +1,5 @@
 import type { AssignContactsCommand } from "~/server/contact-assignments/application/contracts";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseAssignContactsCommand(
@@ -11,13 +11,7 @@ export function parseAssignContactsCommand(
     !Number.isInteger(branchId) ||
     branchId <= 0
   ) {
-    return Err(
-      domainError(
-        "validation",
-        "lead.branch_id.invalid",
-        "branchId must be a positive integer",
-      ),
-    );
+    return Err(invalid({ code: "lead.branch_id.invalid" }));
   }
   return Ok({ actorUserId, branchId });
 }

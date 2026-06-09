@@ -2,7 +2,7 @@
 
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime/runtime";
-import { domainError } from "~/server/shared/domain-error";
+import { fail } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok } from "~/server/shared/result";
 
@@ -23,13 +23,7 @@ export async function requestRateNegotiation(input: unknown) {
       }
 
       if (parsed.value.artifactIds.some((artifactId) => !artifactId)) {
-        return Err(
-          domainError(
-            "validation",
-            "artifact_id_required",
-            "Artifact id is required",
-          ),
-        );
+        return Err(fail("artifact_id_required"));
       }
 
       return Ok(parsed.value);

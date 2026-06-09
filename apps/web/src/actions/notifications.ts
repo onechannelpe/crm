@@ -6,7 +6,7 @@ import { isRole } from "~/lib/auth/access/rbac";
 import type { NotificationAudience } from "~/server/notifications/types";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime/runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -20,9 +20,7 @@ function resolveAudience(
     const userId = Number(ref);
 
     if (!Number.isInteger(userId) || userId <= 0) {
-      return Err(
-        domainError("validation", "invalid_user_audience", "Invalid audience"),
-      );
+      return Err(invalid({ code: "invalid_user_audience" }));
     }
 
     return Ok({ kind: "user_ids", userIds: [userId] });
@@ -32,18 +30,14 @@ function resolveAudience(
     const teamId = Number(ref);
 
     if (!Number.isInteger(teamId) || teamId <= 0) {
-      return Err(
-        domainError("validation", "invalid_team_audience", "Invalid audience"),
-      );
+      return Err(invalid({ code: "invalid_team_audience" }));
     }
 
     return Ok({ kind: "team_id", teamId });
   }
 
   if (!isRole(ref)) {
-    return Err(
-      domainError("validation", "invalid_role_audience", "Invalid audience"),
-    );
+    return Err(invalid({ code: "invalid_role_audience" }));
   }
 
   return Ok({ kind: "global_role", role: ref });

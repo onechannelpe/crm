@@ -13,7 +13,7 @@ import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import type { SubmitPrimaryLoginError } from "~/server/auth/application/contracts";
 import type { BeginPasskeyLoginError } from "~/server/auth/passkey/service";
 import { getServerRuntime } from "~/server/runtime";
-import { internalFault } from "~/server/shared/domain-error";
+import { internal, throwDomain } from "~/server/shared/domain-error";
 
 export function readPasskeyStartMode(
   formData: FormData,
@@ -57,7 +57,7 @@ export function normalizePasskeyStartError(
   error: BeginPasskeyLoginError,
 ): PasskeyStartSubmissionResult {
   if (error.kind === "unexpected") {
-    throw internalFault(error.message);
+    throwDomain(internal(error.message));
   }
 
   return {
@@ -76,7 +76,7 @@ export function normalizePasswordLoginError(
   error: SubmitPrimaryLoginError,
 ): PasswordLoginSubmissionResult {
   if (error.kind === "unexpected") {
-    throw internalFault(error.message ?? "Unexpected password login failure");
+    throwDomain(internal(error.message ?? "Unexpected password login failure"));
   }
 
   return {

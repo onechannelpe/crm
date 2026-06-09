@@ -1,7 +1,7 @@
 "use server";
 
 import { assertPositiveInt } from "~/contracts/guards";
-import { validationFault } from "~/server/shared/domain-error";
+import { invalid, throwDomain } from "~/server/shared/domain-error";
 
 export function resolveBoundedPositiveInt(params: {
   value: number | undefined;
@@ -15,7 +15,7 @@ export function resolveBoundedPositiveInt(params: {
     params.name,
   );
   if (resolved > params.max) {
-    throw validationFault(params.maxMessage);
+    throwDomain(invalid({ details: { message: params.maxMessage } }));
   }
   return resolved;
 }

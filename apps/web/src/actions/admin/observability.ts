@@ -2,7 +2,7 @@
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
-import { validationFault } from "~/server/shared/domain-error";
+import { invalid, throwDomain } from "~/server/shared/domain-error";
 
 import { resolveBoundedPositiveInt, trimOrUndefined } from "./analytics-input";
 
@@ -42,7 +42,7 @@ function assertStatus(
 ): ObservationStatus | undefined {
   if (!value) return undefined;
   if (value === "ok" || value === "error") return value;
-  throw validationFault("status is invalid");
+  throwDomain(invalid({ code: "invalid_status" }));
 }
 
 export async function getObservabilitySnapshot(params?: {

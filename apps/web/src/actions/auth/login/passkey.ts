@@ -11,7 +11,7 @@ import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/a
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import type { FinishPasskeyLoginError } from "~/server/auth/passkey/service";
 import { getServerRuntime } from "~/server/runtime";
-import { internalFault } from "~/server/shared/domain-error";
+import { internal, throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
@@ -19,7 +19,7 @@ function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
   code: "flow_expired" | "invalid_credentials";
 } {
   if (error.kind === "unexpected") {
-    throw internalFault(error.message);
+    throwDomain(internal(error.message));
   }
 
   return {

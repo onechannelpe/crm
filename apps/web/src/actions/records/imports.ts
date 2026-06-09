@@ -17,10 +17,10 @@ import {
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime/runtime";
 import {
-  domainError,
+  fail,
+  invalid,
   type DomainError,
-  notFoundFault,
-  validationFault,
+  throwDomain,
 } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -48,23 +48,17 @@ function parseImportUpload(
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    return Err(domainError("validation", "file_required", "file is required"));
+    return Err(fail("file_required"));
   }
 
   const extension = getExtension(file.name);
 
   if (extension !== "csv" && extension !== "xlsx") {
-    return Err(
-      domainError(
-        "validation",
-        "unsupported_file_type",
-        "only .csv and .xlsx files are supported",
-      ),
-    );
+    return Err(fail("unsupported_file_type"));
   }
 
   if (file.size > maxUploadBytesForArtifactType("integration_import")) {
-    return Err(domainError("validation", "file_too_large", "file_too_large"));
+    return Err(fail("file_too_large"));
   }
 
   return Ok({ file, extension });
@@ -86,13 +80,13 @@ async function getAuthorizedRecordImportJob(
     !job ||
     (job.type !== "import_status" && job.type !== "import_prioridad")
   ) {
-    throw notFoundFault("Import job not found");
+    throwDomain(fail("import_job_not_found"));
   }
 
   const authorized = await canAccessRecordImportJob(actor, job, integration);
 
   if (!authorized) {
-    throw notFoundFault("Import job not found");
+    throwDomain(fail("import_job_not_found"));
   }
 
   return job;
@@ -121,8 +115,11 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
       try {
         parsed = parseImportFile(buffer, extension);
       } catch (err) {
-        throw validationFault(
-          err instanceof Error ? err.message : "invalid_import_file",
+        throwDomain(
+          invalid({
+            code: "invalid_import_file",
+            details: err instanceof Error ? err.message : err,
+          }),
         );
       }
 

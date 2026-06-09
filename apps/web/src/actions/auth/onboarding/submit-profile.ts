@@ -3,7 +3,7 @@
 import { requireSession } from "~/lib/auth/access/session";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import { getServerRuntime } from "~/server/runtime";
-import { conflictFault, validationFault } from "~/server/shared/domain-error";
+import { fail, throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 import { getOnboardingRequirements } from "../policy";
@@ -14,7 +14,7 @@ export async function submitOnboardingProfile(input: {
 }): Promise<{ redirectTo: string }> {
   const phone = parsePhone(input.phone);
   if (!phone) {
-    throw validationFault("El número debe tener 9 dígitos");
+    throwDomain(fail("invalid_phone"));
   }
   const session = await requireSession();
   const updated = await getServerRuntime().users.updatePhone(
@@ -22,7 +22,7 @@ export async function submitOnboardingProfile(input: {
     phone,
   );
   if (isErr(updated)) {
-    throw conflictFault("Este número de WhatsApp ya está en uso");
+    throwDomain(fail("phone_in_use"));
   }
 
   const requirements = await getOnboardingRequirements();

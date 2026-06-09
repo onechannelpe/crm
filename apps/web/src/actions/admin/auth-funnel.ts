@@ -13,7 +13,7 @@ import {
   type AuthFunnelScreen,
 } from "~/lib/observability/auth-funnel";
 import { getServerRuntime } from "~/server/runtime";
-import { validationFault } from "~/server/shared/domain-error";
+import { invalid, throwDomain } from "~/server/shared/domain-error";
 
 import { resolveBoundedPositiveInt } from "./analytics-input";
 
@@ -51,7 +51,7 @@ function assertEventName(
   if (isAuthFunnelEventName(value)) {
     return value;
   }
-  throw validationFault("eventName is invalid");
+  throwDomain(invalid({ code: "invalid_event_name" }));
 }
 
 function assertMethod(
@@ -61,7 +61,7 @@ function assertMethod(
   if (isAuthFunnelMethod(value)) {
     return value;
   }
-  throw validationFault("method is invalid");
+  throwDomain(invalid({ code: "invalid_method" }));
 }
 
 function assertOutcome(
@@ -71,12 +71,14 @@ function assertOutcome(
   if (isAuthFunnelOutcome(value)) {
     return value;
   }
-  throw validationFault("outcome is invalid");
+  throwDomain(invalid({ code: "invalid_outcome" }));
 }
 
 function assertScreen(value: string | null): AuthFunnelScreen | null {
   if (value === null) return null;
-  if (!isAuthAnalyticsScreen(value)) throw validationFault("screen is invalid");
+  if (!isAuthAnalyticsScreen(value)) {
+    throwDomain(invalid({ code: "invalid_screen" }));
+  }
   return value;
 }
 

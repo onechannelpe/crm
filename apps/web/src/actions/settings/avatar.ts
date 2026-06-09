@@ -2,7 +2,12 @@
 
 import { requireSession } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
-import { internalFault, validationFault } from "~/server/shared/domain-error";
+import {
+  external,
+  fail,
+  invalid,
+  throwDomain,
+} from "~/server/shared/domain-error";
 import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
 
 function mapAvatarErrorToMessage(code: AvatarDomainErrorCode): string {
@@ -65,16 +70,16 @@ export async function uploadUserAvatar(
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    throw validationFault("Missing profile picture file.");
+    throwDomain(fail("profile_picture_required"));
   }
 
   const result = await profilePictureService.upload(session.userId, file);
   if (!result.ok) {
     const message = mapAvatarErrorToMessage(result.error.code);
     if (isValidationAvatarError(result.error.code)) {
-      throw validationFault(message);
+      throwDomain(invalid({ code: result.error.code, details: { message } }));
     }
-    throw internalFault(message);
+    throwDomain(external(message, { code: result.error.code }));
   }
 
   return {
@@ -91,9 +96,9 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
   if (!result.ok) {
     const message = mapAvatarErrorToMessage(result.error.code);
     if (isValidationAvatarError(result.error.code)) {
-      throw validationFault(message);
+      throwDomain(invalid({ code: result.error.code, details: { message } }));
     }
-    throw internalFault(message);
+    throwDomain(external(message, { code: result.error.code }));
   }
 
   return {
