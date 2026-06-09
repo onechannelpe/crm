@@ -10,14 +10,13 @@ import type {
   Moneda,
 } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
-import type { DomainError } from "~/server/shared/domain-error";
-import { domainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../history";
 import { resolveReviewTransition } from "../workflow";
 import type { LeadEvent } from "./events";
-import { invalidLeadInput, invalidLeadStage } from "./lead-errors";
+import { invalidLeadStage } from "./lead-errors";
 import { authorizeLeadAction } from "./policy";
 import { applyEvents } from "./reducer";
 import type { LeadState } from "./state";
@@ -27,10 +26,6 @@ type TransitionResult = Result<
   { next: LeadState; events: LeadEvent[] },
   DomainError
 >;
-
-function conflict(code: string, message: string): Result<never, DomainError> {
-  return Err(domainError("conflict", code, message));
-}
 
 function finish(
   state: LeadState,
@@ -97,10 +92,7 @@ export function reassignLead(
   if (!authz.ok) return authz;
 
   if (state.executiveId === input.toExecutiveId) {
-    return invalidLeadInput(
-      "same_executive",
-      "Lead is already assigned to the selected executive",
-    );
+    return Err(fail("same_executive"));
   }
 
   const events: LeadEvent[] = [
@@ -474,37 +466,16 @@ export function requestRateNegotiation(
   if (state.stage !== "QUOTED") return invalidLeadStage();
 
   if (input.round > MAX_NEGOTIATION_ROUNDS) {
-    return conflict(
-      "max_negotiation_rounds_reached",
-      `Maximum of ${MAX_NEGOTIATION_ROUNDS} negotiation rounds allowed`,
-    );
+    return Err(fail("max_negotiation_rounds_reached"));
   }
   if (input.artifactIds.length < 1) {
-    return Err(
-      domainError(
-        "validation",
-        "negotiation_files_required",
-        "At least one document is required for rate negotiation",
-      ),
-    );
+    return Err(fail("negotiation_files_required"));
   }
   if (input.artifactIds.length > MAX_NEGOTIATION_FILES) {
-    return Err(
-      domainError(
-        "validation",
-        "max_negotiation_files_exceeded",
-        `Maximum of ${MAX_NEGOTIATION_FILES} negotiation files allowed`,
-      ),
-    );
+    return Err(fail("max_negotiation_files_exceeded"));
   }
   if (new Set(input.artifactIds).size !== input.artifactIds.length) {
-    return Err(
-      domainError(
-        "validation",
-        "duplicate_negotiation_file",
-        "Negotiation files must be unique",
-      ),
-    );
+    return Err(fail("duplicate_negotiation_file"));
   }
 
   const events: LeadEvent[] = [

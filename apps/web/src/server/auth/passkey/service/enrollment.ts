@@ -4,12 +4,10 @@ import { assertPositiveInt } from "~/contracts/guards";
 import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 import { config } from "~/lib/config";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
-import { domainError } from "~/server/shared/domain-error";
-import type { DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
-import { INVALID_PASSKEY_REQUEST } from "./shared";
 import type { PasskeyEnrollmentChallenge } from "./types";
 
 interface PasskeyEnrollmentServiceDeps {
@@ -53,9 +51,7 @@ export function createPasskeyEnrollmentService(
         input.ipAddress,
       );
       if (!throttle.allowed) {
-        return Err(
-          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
-        );
+        return Err(fail("invalid_passkey_request"));
       }
 
       const options = await deps.webauthnService.getRegistrationOptions(
@@ -81,9 +77,7 @@ export function createPasskeyEnrollmentService(
       try {
         safeChallengeId = assertPositiveInt(input.challengeId, "challengeId");
       } catch {
-        return Err(
-          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
-        );
+        return Err(fail("invalid_passkey_request"));
       }
 
       const throttle = await throttleService.checkPasskeyVerifyThrottle(
@@ -91,9 +85,7 @@ export function createPasskeyEnrollmentService(
         input.ipAddress,
       );
       if (!throttle.allowed) {
-        return Err(
-          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
-        );
+        return Err(fail("invalid_passkey_request"));
       }
 
       const challenge =
@@ -107,9 +99,7 @@ export function createPasskeyEnrollmentService(
           identifier,
           input.ipAddress,
         );
-        return Err(
-          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
-        );
+        return Err(fail("invalid_passkey_request"));
       }
 
       await repos.webauthnChallenges.delete(challenge.id);
@@ -118,9 +108,7 @@ export function createPasskeyEnrollmentService(
           identifier,
           input.ipAddress,
         );
-        return Err(
-          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
-        );
+        return Err(fail("invalid_passkey_request"));
       }
 
       try {
@@ -138,9 +126,7 @@ export function createPasskeyEnrollmentService(
           identifier,
           input.ipAddress,
         );
-        return Err(
-          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
-        );
+        return Err(fail("invalid_passkey_request"));
       }
 
       await throttleService.clearPasskeyVerifyFailureState(

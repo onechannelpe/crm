@@ -1,9 +1,8 @@
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { createAuditService } from "~/server/shared/audit";
-import type { DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { inviteError } from "../domain/errors";
 import { mapAcceptedInviteResult } from "./runtime";
 import type {
   AcceptInviteInput,
@@ -27,20 +26,10 @@ export async function acceptInvite(
     );
 
     if (!invite) {
-      return Err(
-        inviteError(
-          "invite_invalid_or_expired",
-          "Invite is invalid or expired",
-        ),
-      );
+      return Err(fail("invite_invalid_or_expired"));
     }
     if (invite.user_is_active === 1) {
-      return Err(
-        inviteError(
-          "invite_target_active",
-          "Invite target user is already active",
-        ),
-      );
+      return Err(fail("invite_target_active"));
     }
 
     const passwordHash = await runtime.hashPassword(input.password);

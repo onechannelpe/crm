@@ -1,12 +1,12 @@
 import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import type { ReassignLeadCommandInput } from "~/server/workflow/types";
 
 import { reassignLead } from "../../domain/lead/commands";
-import { invalidLeadInput, leadNotFound } from "../../domain/lead/lead-errors";
+import { leadNotFound } from "../../domain/lead/lead-errors";
 import { resolveAssignableExecutivesScope } from "../../domain/lead/policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
@@ -31,10 +31,7 @@ export async function reassignLeadCommand(
       input.toExecutiveId,
     );
     if (!isAssignable) {
-      return invalidLeadInput(
-        "invalid_executive",
-        "Target executive is not assignable for this actor scope",
-      );
+      return Err(fail("invalid_executive"));
     }
 
     const state = await leads.findById(input.leadId);
