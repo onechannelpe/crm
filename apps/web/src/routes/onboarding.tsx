@@ -33,8 +33,8 @@ import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/registration-client";
-import { actionErrorMessage } from "~/lib/error-messages";
 import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 
@@ -136,9 +136,7 @@ function OnboardingContent() {
     void startTotpOnboardingStep()
       .then((enrollment) => setTotpEnrollment(enrollment))
       .catch((error: unknown) =>
-        enqueueErrorSnackBar(
-          actionErrorMessage(error, "No se pudo iniciar la configuración TOTP"),
-        ),
+        enqueueErrorSnackBar(actionErrorMessage(error)),
       )
       .finally(() => setTotpLoading(false));
   });
@@ -158,9 +156,7 @@ function OnboardingContent() {
       await refreshCurrentUser();
       navigate(result.redirectTo);
     } catch (error: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(error, "No se pudo continuar con el registro"),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -172,12 +168,7 @@ function OnboardingContent() {
       const result = await chooseSecurity({ method });
       navigate(result.redirectTo);
     } catch (error: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(
-          error,
-          "No se pudo seleccionar el método de seguridad",
-        ),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -202,9 +193,7 @@ function OnboardingContent() {
       });
       navigate(result.redirectTo);
     } catch (error: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(error, "No se pudo configurar la clave de acceso"),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setPasskeyPhase("idle");
     }
@@ -220,9 +209,7 @@ function OnboardingContent() {
       await refreshCurrentUser();
       await refetchRequirements();
     } catch (error: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(error, "No se pudo verificar el código"),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setTotpLoading(false);
     }
@@ -234,9 +221,7 @@ function OnboardingContent() {
       const result = await completeOnboardingStep();
       navigate(result.redirectTo);
     } catch (error: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(error, "No se pudo completar el registro"),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setSubmitting(false);
     }

@@ -38,7 +38,7 @@ import {
   updateVenueMutation,
 } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { actionErrorMessage } from "~/lib/error-messages";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { AccountsForm } from "./components/accounts-form";
 import { VenueCard } from "./components/venue-card";
@@ -159,7 +159,7 @@ function StartSetupExecutionAction(props: { leadId: string }) {
       await startSetupExecution({ leadId: props.leadId });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(actionErrorMessage(err, "Error al iniciar afiliación"));
+      setError(actionErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -271,7 +271,7 @@ function DigitalPolicyPanel(props: {
 
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
-      setError(actionErrorMessage(err, "No se pudo guardar política digital"));
+      setError(actionErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -454,7 +454,7 @@ function VenueCreatePanel(props: {
       form.reset();
       setShowForm(false);
     } catch (err) {
-      setError(actionErrorMessage(err, "No se pudo registrar la sede"));
+      setError(actionErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -534,7 +534,7 @@ function VenueEditPanel(props: {
       await revalidateWorkflowLead(props.leadId);
       props.onClose();
     } catch (err) {
-      setError(actionErrorMessage(err, "No se pudo actualizar la sede"));
+      setError(actionErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -612,7 +612,7 @@ function AccountsFormPanel(props: {
       await revalidateWorkflowLead(props.leadId);
       form.reset();
     } catch (err) {
-      setError(actionErrorMessage(err, "No se pudieron registrar las cuentas"));
+      setError(actionErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

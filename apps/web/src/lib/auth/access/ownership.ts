@@ -1,4 +1,4 @@
-import { forbiddenFault, notFoundFault } from "~/server/shared/domain-error";
+import { fail, forbidden, throwDomain } from "~/server/shared/domain-error";
 
 import type { Role } from "./rbac";
 import type { AuthSession } from "./session-types";
@@ -6,8 +6,8 @@ import type { AuthSession } from "./session-types";
 /**
  * Asserts that a fetched record is non-null and owned by the session user.
  *
- * - Throws notFoundFault if record is null/undefined.
- * - Throws forbiddenFault if getOwnerId(record) !== session.userId,
+ * - Throws a not_found ActionError if record is null/undefined.
+ * - Throws a forbidden ActionError if getOwnerId(record) !== session.userId,
  *   unless session.role is in bypassRoles.
  * - Returns the narrowed non-null record for use in continuation code.
  *
@@ -27,14 +27,12 @@ export function assertOwnedRecord<T>(
   const name = options?.resourceName ?? "Resource";
 
   if (record == null) {
-    throw notFoundFault(`${name} not found`);
+    throwDomain(fail("resource_not_found"));
   }
 
   const bypass = options?.bypassRoles ?? ADMIN_BYPASS;
   if (!bypass.has(session.role) && getOwnerId(record) !== session.userId) {
-    throw forbiddenFault(
-      `You do not have access to this ${name.toLowerCase()}`,
-    );
+    throwDomain(forbidden({ code: "ownership_forbidden" }));
   }
 
   return record;

@@ -1,7 +1,7 @@
 import { useAction } from "@solidjs/router";
 
 import { UserPicker } from "~/components/ui/pickers/user-picker";
-import { actionErrorMessage } from "~/lib/error-messages";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { reassignLeadMutation } from "../../data/command-mutations";
 import { assignableExecutivesQuery } from "../../data/queries";
@@ -23,7 +23,7 @@ export function ExecutivePicker(props: ExecutivePickerProps) {
       await revalidateWorkflowLead(props.leadId);
       props.onSelect();
     } catch (err) {
-      throw new Error(actionErrorMessage(err, "Error al reasignar"), {
+      throw new Error(actionErrorMessage(err), {
         cause: err,
       });
     }

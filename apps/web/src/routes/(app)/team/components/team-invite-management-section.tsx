@@ -32,12 +32,12 @@ import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
-import { actionErrorMessage } from "~/lib/error-messages";
 import {
   resendTeamInviteMutation,
   revokeTeamInviteMutation,
 } from "~/lib/mutations/team";
 import { inviteManagementQuery } from "~/lib/queries/team";
+import { actionErrorMessage } from "~/lib/wire-error";
 import { parseWireError } from "~/lib/wire-error";
 
 import {
@@ -103,9 +103,7 @@ export function TeamInviteManagementSection() {
       await resendInvite(inviteId);
       enqueueSuccessSnackBar("Invitación reenviada");
     } catch (err: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(err, "No se pudo reenviar la invitación"),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(err));
     }
   }
 
@@ -114,9 +112,7 @@ export function TeamInviteManagementSection() {
       await revokeInvite(inviteId);
       enqueueSuccessSnackBar("Invitación revocada");
     } catch (err: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(err, "No se pudo revocar la invitación"),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(err));
     }
   }
 
@@ -158,9 +154,7 @@ export function TeamInviteManagementSection() {
           setExpiresAtError(INVITE_EXPIRY_ERROR_TEXT);
           return;
         }
-        enqueueErrorSnackBar(
-          actionErrorMessage(err, "No se pudo crear la invitación"),
-        );
+        enqueueErrorSnackBar(actionErrorMessage(err));
       }
     },
   );

@@ -11,8 +11,8 @@ import {
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/features/records-imports/contracts";
-import { actionErrorMessage } from "~/lib/error-messages";
 import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4000;
@@ -260,9 +260,7 @@ export function useRecordsImport() {
       schedulePolling(session, 0);
       connectWebsocket(session);
     } catch (error: unknown) {
-      enqueueErrorSnackBar(
-        actionErrorMessage(error, "No se pudo importar el archivo"),
-      );
+      enqueueErrorSnackBar(actionErrorMessage(error));
     }
   }
 
