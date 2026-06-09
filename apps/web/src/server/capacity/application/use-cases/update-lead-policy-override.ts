@@ -1,5 +1,5 @@
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
@@ -28,18 +28,10 @@ export async function updateLeadPolicyOverride(
   return deps.uow.run(async (tx) => {
     const check = await canManageExecutive(ctx.actor, input.userId, tx);
     if (!check.target) {
-      return Err(
-        domainError("not_found", "executive_not_found", "Executive not found"),
-      );
+      return Err(fail("executive_not_found"));
     }
     if (!check.ok) {
-      return Err(
-        domainError(
-          "forbidden",
-          "cannot_manage_executive",
-          "Cannot manage this executive",
-        ),
-      );
+      return Err(fail("cannot_manage_executive"));
     }
     const result = await setLeadUserOverride(
       {

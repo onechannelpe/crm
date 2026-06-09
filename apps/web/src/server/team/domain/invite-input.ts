@@ -3,7 +3,7 @@ import {
   isExecutiveCategoryValue,
   type ExecutiveCategoryValue,
 } from "~/lib/db/types";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CreateTeamInviteCommand } from "../application/contracts";
@@ -26,15 +26,11 @@ export type TeamInviteShape = {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
 
-function invalid(code: string, message: string): Result<never, DomainError> {
-  return Err(domainError("validation", code, message));
-}
-
 export function validateTeamInviteInput(
   input: TeamInviteShape,
 ): Result<CreateTeamInviteCommand, DomainError> {
   if (!EMAIL_PATTERN.test(input.email)) {
-    return invalid("invalid_email", "Invalid email format");
+    return Err(fail("invalid_email"));
   }
 
   const category = resolveExecutiveCategory(
@@ -50,7 +46,7 @@ export function validateTeamInviteInput(
     input.teamId !== null &&
     (!Number.isInteger(input.teamId) || input.teamId < 1)
   ) {
-    return invalid("invalid_team_id", "Invalid team id");
+    return Err(fail("invalid_team_id"));
   }
 
   const expiresAt = validateExpiry(input.expiresAt);
@@ -82,10 +78,7 @@ function resolveExecutiveCategory(
   }
 
   if (!executiveCategory || !isExecutiveCategoryValue(executiveCategory)) {
-    return invalid(
-      "invalid_executive_category",
-      "Invalid or missing executive category",
-    );
+    return Err(fail("invalid_executive_category"));
   }
 
   return Ok(executiveCategory);
@@ -99,14 +92,11 @@ function validateExpiry(
   }
 
   if (!Number.isInteger(expiresAt) || expiresAt < 1) {
-    return invalid("invalid_expires_at", "Invalid expiry timestamp");
+    return Err(fail("invalid_expires_at"));
   }
 
   if (expiresAt <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
-    return invalid(
-      "expires_at_too_soon",
-      "Expiry must be at least 7 days in the future",
-    );
+    return Err(fail("expires_at_too_soon"));
   }
 
   return Ok(expiresAt);

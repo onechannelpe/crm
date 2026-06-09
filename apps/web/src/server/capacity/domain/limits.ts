@@ -1,5 +1,5 @@
 import { config } from "~/lib/config";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 /**
@@ -12,18 +12,14 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
 
-function invalid(code: string, message: string): Result<never, DomainError> {
-  return Err(domainError("validation", code, message));
-}
-
 export function validateRequestAmount(
   amount: number,
 ): Result<number, DomainError> {
   if (!Number.isInteger(amount) || amount < 1) {
-    return invalid("invalid_amount", "Amount must be a positive integer");
+    return Err(fail("invalid_amount"));
   }
   if (amount > config.capacityRequests.maxRequestAmount) {
-    return invalid("amount_exceeds_max", "Amount exceeds the maximum allowed");
+    return Err(fail("amount_exceeds_max"));
   }
   return Ok(amount);
 }
@@ -32,16 +28,10 @@ export function validateSearchLimit(
   monthlyLimit: number,
 ): Result<number, DomainError> {
   if (!Number.isFinite(monthlyLimit) || monthlyLimit <= 0) {
-    return invalid(
-      "invalid_search_limit",
-      "Monthly limit must be greater than zero",
-    );
+    return Err(fail("invalid_search_limit"));
   }
   if (monthlyLimit > config.searchAccess.maxMonthlyLimit) {
-    return invalid(
-      "search_limit_exceeds_max",
-      "Monthly limit exceeds the maximum allowed",
-    );
+    return Err(fail("search_limit_exceeds_max"));
   }
   return Ok(monthlyLimit);
 }
@@ -51,28 +41,16 @@ export function validateLeadPolicyValues(values: {
   dailyLimit: number;
 }): Result<{ bufferTarget: number; dailyLimit: number }, DomainError> {
   if (!Number.isFinite(values.bufferTarget) || values.bufferTarget <= 0) {
-    return invalid(
-      "invalid_buffer_target",
-      "Buffer target must be greater than zero",
-    );
+    return Err(fail("invalid_buffer_target"));
   }
   if (values.bufferTarget > config.leadAssignment.maxBufferTarget) {
-    return invalid(
-      "buffer_target_exceeds_max",
-      "Buffer target exceeds the maximum allowed",
-    );
+    return Err(fail("buffer_target_exceeds_max"));
   }
   if (!Number.isFinite(values.dailyLimit) || values.dailyLimit <= 0) {
-    return invalid(
-      "invalid_daily_refill",
-      "Daily limit must be greater than zero",
-    );
+    return Err(fail("invalid_daily_refill"));
   }
   if (values.dailyLimit > config.capacityRequests.maxRequestAmount) {
-    return invalid(
-      "daily_refill_exceeds_max",
-      "Daily limit exceeds the maximum allowed",
-    );
+    return Err(fail("daily_refill_exceeds_max"));
   }
   return Ok({
     bufferTarget: values.bufferTarget,
@@ -85,13 +63,10 @@ export function validateOverrideExpiry(
 ): Result<number | null, DomainError> {
   if (expiresAt === null) return Ok(null);
   if (!Number.isInteger(expiresAt) || expiresAt < 1) {
-    return invalid("invalid_expires_at", "Invalid expiry timestamp");
+    return Err(fail("invalid_expires_at"));
   }
   if (expiresAt <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
-    return invalid(
-      "expires_at_too_soon",
-      "Expiry must be at least 7 days in the future",
-    );
+    return Err(fail("expires_at_too_soon"));
   }
   return Ok(expiresAt);
 }

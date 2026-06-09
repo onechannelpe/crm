@@ -2,7 +2,11 @@ import { longName } from "~/lib/users/display-name";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  fail,
+  forbidden,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
@@ -42,11 +46,11 @@ export async function getExecutiveDetail(
   const managed = await canManageExecutive(ctx.actor, input.userId, deps.repos);
   if (!managed.target) {
     return Err(
-      domainError("not_found", "executive_not_found", "Executive not found"),
+      fail("executive_not_found"),
     );
   }
   if (!managed.ok) {
-    return Err(domainError("forbidden", null, "Forbidden"));
+    return Err(forbidden());
   }
 
   const [searchStatus, leadStatus, requests] = await Promise.all([

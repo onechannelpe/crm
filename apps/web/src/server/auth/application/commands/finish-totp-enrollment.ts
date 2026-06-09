@@ -2,7 +2,7 @@ import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { TotpEnrollmentContext } from "../../infrastructure/totp-context";
@@ -19,13 +19,7 @@ export async function finishTotpEnrollment(
     ctx.actor.userId,
   );
   if (!user || !factor) {
-    return Err(
-      domainError(
-        "validation",
-        "totp_setup_invalid",
-        "Invalid TOTP setup request",
-      ),
-    );
+    return Err(fail("totp_setup_invalid"));
   }
 
   const { generateRecoveryCodes, hashRecoveryCodes } =
@@ -33,7 +27,7 @@ export async function finishTotpEnrollment(
   const secret = await decryptTotpSecret(factor.secret_encrypted);
   if (!verifyTotpCode(secret, input.code)) {
     return Err(
-      domainError("validation", "totp_code_invalid", "Invalid TOTP code"),
+      fail("totp_code_invalid"),
     );
   }
 
