@@ -5,8 +5,8 @@ import type {
 import type { Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   applyImport,
   parseAndValidateCsvRows,
@@ -24,14 +24,12 @@ export async function previewBulkImport(
 ): Promise<Result<BulkParseResult, DomainError>> {
   const parsed = parseAndValidateCsvRows(csvContent, role);
   if (!parsed.ok) {
-    return {
-      ok: false,
-      error: {
-        kind: "validation",
+    return Err(
+      invalid({
         code: "team.bulk_import.csv_invalid",
-        message: parsed.error.message,
-      },
-    };
+        details: { parseError: parsed.error.message },
+      }),
+    );
   }
   return Ok(parsed.value);
 }
@@ -50,14 +48,7 @@ export async function applyBulkImport(
   }
 
   if (parsed.value.valid.length === 0) {
-    return {
-      ok: false,
-      error: {
-        kind: "validation",
-        code: "team.bulk_import.no_valid_rows",
-        message: "No valid rows to import",
-      },
-    };
+    return Err(invalid({ code: "team.bulk_import.no_valid_rows" }));
   }
 
   const result = await applyImport(
