@@ -9,27 +9,11 @@ import { completeOnboarding as completeOnboardingService } from "~/server/auth/a
 import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
-import { conflictFault, internalFault } from "~/server/shared/domain-error";
+import { throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 export interface OnboardingRedirectResponse {
   redirectTo: string;
-}
-
-function mapOnboardingError(error: {
-  code: string | null;
-  message: string;
-}): never {
-  switch (error.code) {
-    case "user_not_found":
-      throw internalFault("No se pudo completar el registro");
-    case "strong_auth_required":
-      throw conflictFault(error.message);
-    case "address_already_claimed":
-      throw conflictFault(error.message);
-    default:
-      throw internalFault(error.message);
-  }
 }
 
 export async function completeOnboarding(
@@ -47,7 +31,7 @@ export async function completeOnboarding(
       getServerRuntime().auth.sessionService.invalidateSession(sessionId),
   });
   if (isErr(result)) {
-    mapOnboardingError(result.error);
+    throwDomain(result.error);
   }
   return result.value;
 }
@@ -74,7 +58,7 @@ export async function completePasskeyOnboarding(
     },
   );
   if (isErr(registrationResult)) {
-    throw internalFault(registrationResult.error.message);
+    throwDomain(registrationResult.error);
   }
   const result = await completeOnboardingService(onboardingContext, {
     session: {
@@ -89,7 +73,7 @@ export async function completePasskeyOnboarding(
       getServerRuntime().auth.sessionService.invalidateSession(sessionId),
   });
   if (isErr(result)) {
-    mapOnboardingError(result.error);
+    throwDomain(result.error);
   }
   return result.value;
 }

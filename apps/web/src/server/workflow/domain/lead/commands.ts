@@ -16,7 +16,6 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import { createHistoryEvent } from "../history";
 import { resolveReviewTransition } from "../workflow";
 import type { LeadEvent } from "./events";
-import { invalidLeadStage } from "./lead-errors";
 import { authorizeLeadAction } from "./policy";
 import { applyEvents } from "./reducer";
 import type { LeadState } from "./state";
@@ -51,7 +50,7 @@ export function reviewLead(
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "QUALIFYING") return invalidLeadStage();
+  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
 
   const nextStage = resolveReviewTransition({
     status: input.status,
@@ -163,7 +162,7 @@ export function approveForSale(
 ): TransitionResult {
   const authz = authorizeLeadAction("approve-for-sale", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "QUOTED") return invalidLeadStage();
+  if (state.stage !== "QUOTED") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -191,7 +190,7 @@ export function requestQuotation(
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-scoping", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SCOPING") return invalidLeadStage();
+  if (state.stage !== "SCOPING") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -225,7 +224,7 @@ export function createQuotation(
 ): TransitionResult {
   const authz = authorizeLeadAction("create-quotation", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "QUOTING") return invalidLeadStage();
+  if (state.stage !== "QUOTING") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -267,7 +266,7 @@ export function saveCommercialScope(
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-scoping", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SCOPING") return invalidLeadStage();
+  if (state.stage !== "SCOPING") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -305,7 +304,7 @@ export function recordRepLegal(
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-scoping", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
+  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -344,7 +343,7 @@ export function createVenue(
 ): TransitionResult {
   const authz = authorizeLeadAction("create-venue", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
+  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -373,7 +372,7 @@ export function updateVenue(
 ): TransitionResult {
   const authz = authorizeLeadAction("update-venue", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
+  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -402,7 +401,7 @@ export function addVenueAccounts(
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return invalidLeadStage();
+  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -435,7 +434,7 @@ export function startSetupExecution(
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-scoping", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_PLAN") return invalidLeadStage();
+  if (state.stage !== "SETUP_PLAN") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -463,7 +462,7 @@ export function requestRateNegotiation(
 ): TransitionResult {
   const authz = authorizeLeadAction("request-negotiation", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "QUOTED") return invalidLeadStage();
+  if (state.stage !== "QUOTED") return Err(fail("invalid_stage"));
 
   if (input.round > MAX_NEGOTIATION_ROUNDS) {
     return Err(fail("max_negotiation_rounds_reached"));

@@ -6,7 +6,6 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { ReassignLeadCommandInput } from "~/server/workflow/types";
 
 import { reassignLead } from "../../domain/lead/commands";
-import { leadNotFound } from "../../domain/lead/lead-errors";
 import { resolveAssignableExecutivesScope } from "../../domain/lead/policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
@@ -35,7 +34,7 @@ export async function reassignLeadCommand(
     }
 
     const state = await leads.findById(input.leadId);
-    if (!state) return leadNotFound();
+    if (!state) return Err(fail("lead_not_found"));
 
     const now = Date.now();
     const transition = reassignLead(state, {

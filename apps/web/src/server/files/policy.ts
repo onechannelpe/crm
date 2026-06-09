@@ -1,5 +1,5 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { ArtifactType, WorkflowArtifact } from "./types";
@@ -27,8 +27,8 @@ const ARTIFACT_DIRECTIONS: Record<
   negotiation_file: "upload",
 };
 
-function deny(code: string, message: string): Result<void, DomainError> {
-  return Err(domainError("forbidden", code, message));
+function deny(code: string): Result<void, DomainError> {
+  return Err(forbidden({ code }));
 }
 
 function allow(): Result<void, DomainError> {
@@ -47,17 +47,11 @@ function canRequest(
   }
 
   if (!hasPermission(actor.role, "file:artifact:request")) {
-    return deny(
-      "artifact_request_forbidden",
-      "Not authorized to request artifacts",
-    );
+    return deny("artifact_request_forbidden");
   }
 
   if (artifactType === "records_export" && actor.role === "executive") {
-    return deny(
-      "executive_cross_scope_denied",
-      "Executives cannot request exports",
-    );
+    return deny("executive_cross_scope_denied");
   }
 
   return allow();
@@ -73,19 +67,13 @@ function canUpload(
     actor.role === "executive";
   if (!isExecutiveOwnedUpload) {
     if (!hasPermission(actor.role, "file:artifact:upload")) {
-      return deny(
-        "artifact_upload_forbidden",
-        "Not authorized to upload artifacts",
-      );
+      return deny("artifact_upload_forbidden");
     }
   }
 
   const dir = ARTIFACT_DIRECTIONS[artifact.artifactType];
   if (dir === "download") {
-    return deny(
-      "artifact_not_uploadable",
-      "This artifact type does not accept uploads",
-    );
+    return deny("artifact_not_uploadable");
   }
 
   if (
@@ -93,17 +81,11 @@ function canUpload(
     actor.role !== "admin" &&
     actor.role !== "superuser"
   ) {
-    return deny(
-      "artifact_upload_not_owner",
-      "Only the requester may upload to this artifact",
-    );
+    return deny("artifact_upload_not_owner");
   }
 
   if (artifact.status !== "requested") {
-    return deny(
-      "artifact_upload_wrong_status",
-      "Artifact is not in uploadable state",
-    );
+    return deny("artifact_upload_wrong_status");
   }
 
   return allow();
@@ -121,11 +103,11 @@ function canRead(
     !isExecutiveReadable &&
     !hasPermission(actor.role, "file:artifact:read")
   ) {
-    return deny("artifact_read_forbidden", "Not authorized to read artifacts");
+    return deny("artifact_read_forbidden");
   }
 
   if (artifact.status === "revoked" || artifact.status === "expired") {
-    return deny("artifact_unavailable", "Artifact is no longer available");
+    return deny("artifact_unavailable");
   }
 
   if (actor.role === "superuser" || actor.role === "admin") {
@@ -137,14 +119,11 @@ function canRead(
   }
 
   if (artifact.scopeBranchId === null) {
-    return deny(
-      "artifact_read_not_owner",
-      "Only requester or elevated roles may read this artifact",
-    );
+    return deny("artifact_read_not_owner");
   }
 
   if (artifact.scopeBranchId !== actor.branchId) {
-    return deny("artifact_scope_mismatch", "Artifact is outside your scope");
+    return deny("artifact_scope_mismatch");
   }
 
   return allow();
@@ -155,17 +134,11 @@ function canRevoke(
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
   if (actor.role !== "admin" && actor.role !== "superuser") {
-    return deny(
-      "artifact_revoke_forbidden",
-      "Not authorized to revoke artifacts",
-    );
+    return deny("artifact_revoke_forbidden");
   }
 
   if (artifact.status === "revoked" || artifact.status === "expired") {
-    return deny(
-      "artifact_already_terminal",
-      "Artifact is already in a terminal state",
-    );
+    return deny("artifact_already_terminal");
   }
 
   return allow();
@@ -173,10 +146,7 @@ function canRevoke(
 
 function canReadAudit(actor: PolicyActor): Result<void, DomainError> {
   if (!hasPermission(actor.role, "file:artifact:audit:read")) {
-    return deny(
-      "artifact_audit_forbidden",
-      "Not authorized to read artifact audit history",
-    );
+    return deny("artifact_audit_forbidden");
   }
 
   return allow();
@@ -196,24 +166,24 @@ export function checkArtifactPolicy(
       );
     case "artifact.upload":
       if (!artifact) {
-        return deny("artifact_not_found", "Artifact not found");
+        return deny("artifact_not_found");
       }
       return canUpload(actor, artifact);
     case "artifact.read":
       if (!artifact) {
-        return deny("artifact_not_found", "Artifact not found");
+        return deny("artifact_not_found");
       }
       return canRead(actor, artifact);
     case "artifact.revoke":
       if (!artifact) {
-        return deny("artifact_not_found", "Artifact not found");
+        return deny("artifact_not_found");
       }
       return canRevoke(actor, artifact);
     case "artifact.audit.read":
       return canReadAudit(actor);
     default: {
       action satisfies never;
-      return deny("unknown_action", `Unknown action: ${String(action)}`);
+      return deny("unknown_action");
     }
   }
 }

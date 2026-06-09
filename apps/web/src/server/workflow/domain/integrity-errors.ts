@@ -1,4 +1,4 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/server/shared/domain-error";
 import { Err, type Result } from "~/server/shared/result";
 
 function integrityError(
@@ -6,7 +6,7 @@ function integrityError(
   message: string,
   details?: unknown,
 ): Result<never, DomainError> {
-  return Err(domainError("external", code, message, details));
+  return Err(external(message, { code, details }));
 }
 
 export function invalidHistoryPayload(

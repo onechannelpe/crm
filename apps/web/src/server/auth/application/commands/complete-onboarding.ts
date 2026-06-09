@@ -5,25 +5,11 @@ import {
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
 import type { Phone } from "~/lib/phone/pe-mobile";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { type DomainError } from "~/server/shared/domain-error";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 
 import type { AuthOnboardingContext } from "../../infrastructure/onboarding-context";
-
-function mapOnboardingError(error: {
-  kind: "not_found" | "conflict" | "unexpected";
-  code: string;
-  message: string;
-}) {
-  if (error.kind === "not_found") {
-    return domainError("not_found", error.code, error.message);
-  }
-  if (error.kind === "conflict") {
-    return domainError("conflict", error.code, error.message);
-  }
-  return domainError("external", error.code, error.message);
-}
 
 export async function completeOnboarding(
   deps: AuthOnboardingContext,
@@ -51,7 +37,7 @@ export async function completeOnboarding(
     );
 
     if (isErr(onboarding)) {
-      return Err(mapOnboardingError(onboarding.error));
+      return onboarding;
     }
     return Ok(undefined);
   });

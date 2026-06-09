@@ -2,10 +2,9 @@ import { MAX_NEGOTIATION_ROUNDS } from "~/contracts/workflow/limits";
 import type { LeadAvailableAction } from "~/contracts/workflow/views";
 import { type LeadStage } from "~/contracts/workflow/vocabulary";
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { forbidden, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { forbiddenLeadAccess } from "./lead-errors";
 import type { LeadState } from "./state";
 
 export type LeadCapability =
@@ -108,22 +107,22 @@ export function authorizeLeadAction(
 ): Result<void, DomainError> {
   const caps = resolveCapabilities(actor.role);
 
-  if (!caps.has("view")) return forbiddenLeadAccess();
+  if (!caps.has("view")) return Err(forbidden());
 
   const ownsLead = state.executiveId === actor.userId;
-  if (!ownsLead && !canViewAllLeads(actor.role)) return forbiddenLeadAccess();
+  if (!ownsLead && !canViewAllLeads(actor.role)) return Err(forbidden());
 
-  if (!caps.has(capability)) return forbiddenLeadAccess();
+  if (!caps.has(capability)) return Err(forbidden());
 
   if (
     (capability === "approve-for-sale" ||
       capability === "request-negotiation") &&
     actor.role !== "executive"
   ) {
-    return forbiddenLeadAccess();
+    return Err(forbidden());
   }
 
-  if (OWNER_REQUIRED.has(capability) && !ownsLead) return forbiddenLeadAccess();
+  if (OWNER_REQUIRED.has(capability) && !ownsLead) return Err(forbidden());
 
   return Ok(undefined);
 }
@@ -133,7 +132,7 @@ export function requireCapability(
   actor: { role: Role },
 ): Result<void, DomainError> {
   if (!resolveCapabilities(actor.role).has(capability))
-    return forbiddenLeadAccess();
+    return Err(forbidden());
   return Ok(undefined);
 }
 
@@ -217,5 +216,5 @@ export function resolveAssignableExecutivesScope(input: {
       actorBranchId: input.actorBranchId,
     });
   }
-  return forbiddenLeadAccess();
+  return Err(forbidden());
 }

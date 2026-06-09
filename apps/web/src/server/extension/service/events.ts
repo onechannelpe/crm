@@ -1,6 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { AppUow } from "~/server/shared/application/uow";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { external, fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -48,13 +48,7 @@ export async function ingestRuntimeEvent(
     );
     const currentTime = now();
     if (isTokenExpired(sessionClaims.exp, currentTime)) {
-      return Err(
-        domainError(
-          "forbidden",
-          "session_invalid",
-          "Extension session token is invalid or expired",
-        ),
-      );
+      return Err(fail("extension_session_invalid"));
     }
 
     const payloadText = JSON.stringify(input.event.payload);
@@ -89,13 +83,7 @@ export async function ingestRuntimeEvent(
         session.auth_session_id !== sessionClaims.authSessionId ||
         session.installation_id !== sessionClaims.installationId
       ) {
-        return Err(
-          domainError(
-            "forbidden",
-            "session_invalid",
-            "Extension session token is invalid or expired",
-          ),
-        );
+        return Err(fail("extension_session_invalid"));
       }
 
       const authSessionActive = await hasActiveAuthSession(
@@ -113,13 +101,7 @@ export async function ingestRuntimeEvent(
           sync_health: "reauth_required",
           sync_updated_at: currentTime,
         });
-        return Err(
-          domainError(
-            "forbidden",
-            "session_invalid",
-            "Extension session token is invalid or expired",
-          ),
-        );
+        return Err(fail("extension_session_invalid"));
       }
 
       await txRepos.extensionRuntime.touchInstallationSession(
@@ -187,30 +169,23 @@ export async function ingestRuntimeEvent(
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
       return Err(
-        domainError(
-          "external",
-          "misconfigured",
-          "Extension signing keys are not configured",
-        ),
+        external("Extension signing keys are not configured", {
+          code: "misconfigured",
+        }),
       );
     }
     if (isInvalidExtensionToken(error)) {
       return Err(
-        domainError(
-          "forbidden",
-          "session_invalid",
-          "Extension session token is invalid or expired",
-        ),
+        fail("extension_session_invalid"),
       );
     }
 
     return Err(
-      domainError(
-        "external",
-        "unexpected",
+      external(
         error instanceof Error
           ? error.message
           : "Unexpected extension event ingest failure",
+        { code: "unexpected" },
       ),
     );
   }
@@ -246,12 +221,11 @@ export async function listTeamExecutiveStatuses(
     );
   } catch (error: unknown) {
     return Err(
-      domainError(
-        "external",
-        "unexpected",
+      external(
         error instanceof Error
           ? error.message
           : "Unexpected extension status read failure",
+        { code: "unexpected" },
       ),
     );
   }

@@ -100,9 +100,16 @@ export function unauthenticated(): DomainError {
   };
 }
 
-/** A session exists but lacks the required role/permission. */
-export function forbidden(): DomainError {
-  return { kind: "forbidden", code: null, message: CLASS_MESSAGE_ES.forbidden };
+/**
+ * A session exists but lacks the required role/permission. `code` is carried for
+ * telemetry and client branching; the user always sees the generic message.
+ */
+export function forbidden(opts?: { code?: string }): DomainError {
+  return {
+    kind: "forbidden",
+    code: opts?.code ?? null,
+    message: CLASS_MESSAGE_ES.forbidden,
+  };
 }
 
 /**
