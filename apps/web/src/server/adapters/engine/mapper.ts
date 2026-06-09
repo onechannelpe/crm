@@ -1,5 +1,4 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import { domainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/server/shared/domain-error";
 
 interface EngineErrorPayload {
   error?: string;
@@ -46,16 +45,14 @@ export async function mapEngineErrorResponse(
   const bodyRequestId = payload?.request_id;
   const correlationId = headerRequestId ?? bodyRequestId ?? requestId;
 
-  return domainError(
-    "external",
-    "engine_request_failed",
-    payload?.error ?? `Engine returned status ${response.status}`,
-    {
+  return external(payload?.error ?? `Engine returned status ${response.status}`, {
+    code: "engine_request_failed",
+    details: {
       request_id: correlationId,
       http_status: response.status,
       engine_error: payload?.error,
     },
-  );
+  });
 }
 
 export function mapEngineNetworkError(
@@ -65,8 +62,8 @@ export function mapEngineNetworkError(
   const message =
     error instanceof Error ? error.message : "Engine communication failed";
 
-  return domainError("external", "engine_communication_failed", message, {
-    request_id: requestId,
-    http_status: 0,
+  return external(message, {
+    code: "engine_communication_failed",
+    details: { request_id: requestId, http_status: 0 },
   });
 }

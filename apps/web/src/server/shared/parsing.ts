@@ -1,5 +1,6 @@
 import { isPlainRecord } from "~/lib/type-guards";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/server/shared/domain-error";
+import { ERROR_CATALOG } from "~/server/shared/error-catalog";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 /**
@@ -200,12 +201,6 @@ function fieldCode(field: string): string {
   return field.split(".").map(camelToSnake).join("_");
 }
 
-function fieldLabel(field: string): string {
-  const last = field.split(".").at(-1) ?? field;
-  const words = camelToSnake(last).replace(/_/g, " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
-}
-
 /**
  * FieldFail binding that turns a path plus reason into a validation
  * DomainError. The code is the snake_case field path, so "tasaActual" yields
@@ -213,20 +208,32 @@ function fieldLabel(field: string): string {
  * "soles_account_nro_cuenta_required". Telemetry and tests can assert on a
  * stable, derivable code without hand-maintained strings. The root failure
  * reports "invalid_input".
+ *
+ * The user message is the catalog copy when the derived code is curated there
+ * (for example "ruc_required"); otherwise it falls back to a generic Spanish
+ * line, keeping the long tail of field codes off the catalog.
  */
 export const validationFail: FieldFail<DomainError> = (field, reason) => {
   if (!field) {
-    return domainError("validation", "invalid_input", "Invalid input");
+    return {
+      kind: "validation",
+      code: "invalid_input",
+      message: "Revisa los datos ingresados.",
+    };
   }
 
   const code =
     reason === "required"
       ? `${fieldCode(field)}_required`
       : `invalid_${fieldCode(field)}`;
+  const entry = (
+    ERROR_CATALOG as Record<string, { kind: string; message: string }>
+  )[code];
   const message =
-    reason === "required"
-      ? `${fieldLabel(field)} is required`
-      : `Invalid ${fieldLabel(field)}`;
+    entry?.message ??
+    (reason === "required"
+      ? "Completa este campo."
+      : "El valor ingresado no es válido.");
 
-  return domainError("validation", code, message);
+  return { kind: "validation", code, message };
 };

@@ -1,4 +1,4 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { hashToken } from "../token";
@@ -15,63 +15,37 @@ export async function executeDownload(
 
   const tokenRow = await repo.tokens.findByHash(tokenHash);
   if (!tokenRow) {
-    return Err(
-      domainError("not_found", "token_not_found", "Download token not found"),
-    );
+    return Err(fail("token_not_found"));
   }
 
   if (tokenRow.usedAt !== null) {
-    return Err(
-      domainError(
-        "conflict",
-        "token_already_used",
-        "Download token has already been used",
-      ),
-    );
+    return Err(fail("token_already_used"));
   }
 
   if (tokenRow.expiresAt < now) {
-    return Err(
-      domainError("conflict", "token_expired", "Download token has expired"),
-    );
+    return Err(fail("token_expired"));
   }
 
   const artifact = await repo.artifacts.findById(tokenRow.artifactId);
   if (!artifact) {
-    return Err(
-      domainError("not_found", "artifact_not_found", "Artifact not found"),
-    );
+    return Err(fail("artifact_not_found"));
   }
 
   const fileAsset = await repo.assets.findById(tokenRow.fileAssetId);
   if (!fileAsset) {
-    return Err(
-      domainError("not_found", "file_asset_not_found", "File asset not found"),
-    );
+    return Err(fail("file_asset_not_found"));
   }
 
   let bytes: Uint8Array;
   try {
     bytes = await storage.getBytes(fileAsset.storageKey);
   } catch {
-    return Err(
-      domainError(
-        "not_found",
-        "file_storage_missing",
-        "File not found in storage",
-      ),
-    );
+    return Err(fail("file_storage_missing"));
   }
 
   const tokenConsumed = await repo.tokens.markUsed(tokenHash, now);
   if (!tokenConsumed) {
-    return Err(
-      domainError(
-        "conflict",
-        "token_already_used",
-        "Download token has already been used",
-      ),
-    );
+    return Err(fail("token_already_used"));
   }
 
   await repo.events.insert({

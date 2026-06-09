@@ -44,13 +44,16 @@ type ActionDef<TIn, TOut, E extends DomainError> = {
   execute: (ctx: AppContext, input: TIn) => Promise<Result<TOut, E>>;
 } & ActionStepUpRequirement;
 
-// Reports third-party (`external`) faults, then projects to the wire. Expected
-// failures (validation, forbidden, ...) are not reported.
+// Reports unexpected faults (server bugs and third-party failures), then
+// projects to the wire. Expected failures (validation, forbidden, not_found,
+// conflict, rate_limit, unauthenticated) are not reported.
 function domainFailureToWire(
   error: DomainError,
   ports: RuntimePorts,
 ): WireError {
-  if (error.kind === "external") ports.report(error);
+  if (error.kind === "external" || error.kind === "internal") {
+    ports.report(error);
+  }
   return toWire(error);
 }
 

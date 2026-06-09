@@ -1,7 +1,12 @@
 import { assertPositiveInt } from "~/contracts/guards";
 import { getEnvFor } from "~/lib/env";
 import type { AppUow } from "~/server/shared/application/uow";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  external,
+  fail,
+  invalid,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -51,18 +56,10 @@ export async function createHandoffToken(
   try {
     const assignmentId = assertPositiveInt(input.assignmentId, "assignmentId");
     if (!input.origin) {
-      return Err(
-        domainError("validation", "invalid_origin", "Missing request origin"),
-      );
+      return Err(invalid({ code: "origin_required" }));
     }
     if (input.origin !== getEnvFor("extension").extensionExpectedOrigin) {
-      return Err(
-        domainError(
-          "forbidden",
-          "invalid_origin",
-          "Request origin is not allowed for extension handoff",
-        ),
-      );
+      return Err(fail("handoff_origin_not_allowed"));
     }
 
     const assignment = await repos.contactAssignments.findActiveByIdForUser(
@@ -70,33 +67,15 @@ export async function createHandoffToken(
       input.userId,
     );
     if (!assignment) {
-      return Err(
-        domainError(
-          "not_found",
-          "assignment_not_found",
-          "Assigned client not found for current executive",
-        ),
-      );
+      return Err(fail("assignment_not_found"));
     }
 
     const contact = await repos.contacts.findById(assignment.contact_id);
     if (!contact) {
-      return Err(
-        domainError(
-          "conflict",
-          "assignment_inactive",
-          "Assigned contact is unavailable",
-        ),
-      );
+      return Err(fail("assignment_inactive"));
     }
     if (!contact.phone_primary || contact.phone_primary.trim() === "") {
-      return Err(
-        domainError(
-          "conflict",
-          "assignment_inactive",
-          "Assigned contact does not have a callable primary phone",
-        ),
-      );
+      return Err(fail("assignment_inactive"));
     }
 
     const organization = await repos.organizations.findById(
@@ -142,21 +121,18 @@ export async function createHandoffToken(
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
       return Err(
-        domainError(
-          "external",
-          "misconfigured",
-          "Extension signing keys are not configured",
-        ),
+        external("Extension signing keys are not configured", {
+          code: "misconfigured",
+        }),
       );
     }
 
     return Err(
-      domainError(
-        "external",
-        "unexpected",
+      external(
         error instanceof Error
           ? error.message
           : "Unexpected extension handoff failure",
+        { code: "unexpected" },
       ),
     );
   }
@@ -171,31 +147,13 @@ export async function claimInstallationSession(
 ): Promise<Result<ClaimExtensionSessionResponse, DomainError>> {
   const { now, uow } = context;
   const invalidHandoff = (): Result<never, DomainError> =>
-    Err(
-      domainError(
-        "forbidden",
-        "handoff_invalid",
-        "Extension handoff token is invalid or expired",
-      ),
-    );
+    Err(fail("handoff_invalid"));
   const claimedByOtherInstallation = (): Result<never, DomainError> =>
-    Err(
-      domainError(
-        "forbidden",
-        "handoff_invalid",
-        "Extension handoff token has already been claimed by another installation",
-      ),
-    );
+    Err(fail("handoff_invalid"));
 
   try {
     if (!isUuid(input.installationId)) {
-      return Err(
-        domainError(
-          "validation",
-          "installation_invalid",
-          "Extension installation ID must be a UUID",
-        ),
-      );
+      return Err(invalid({ code: "installation_invalid" }));
     }
 
     const handoffClaims = await verifyExtensionToken(
@@ -356,11 +314,9 @@ export async function claimInstallationSession(
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
       return Err(
-        domainError(
-          "external",
-          "misconfigured",
-          "Extension signing keys are not configured",
-        ),
+        external("Extension signing keys are not configured", {
+          code: "misconfigured",
+        }),
       );
     }
     if (isInvalidExtensionToken(error)) {
@@ -368,12 +324,11 @@ export async function claimInstallationSession(
     }
 
     return Err(
-      domainError(
-        "external",
-        "unexpected",
+      external(
         error instanceof Error
           ? error.message
           : "Unexpected extension session claim failure",
+        { code: "unexpected" },
       ),
     );
   }

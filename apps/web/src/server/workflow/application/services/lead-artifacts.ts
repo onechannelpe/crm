@@ -7,7 +7,12 @@ import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import type { FileStorage } from "~/server/files/storage";
 import { buildRecordExportCsv } from "~/server/integrations/infrastructure/lead-export-builder";
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  external,
+  fail,
+  forbidden,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type {
   LeadNegotiationFileView,
@@ -35,7 +40,7 @@ async function requireReadableLead(
 > {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+    return Err(fail("lead_not_found"));
   }
   const access = authorizeLeadAction(
     "view",
@@ -82,7 +87,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       ctx: AppContext;
     }): Promise<Result<{ token: string }, DomainError>> {
       if (!hasPermission(input.ctx.actor.role, "integration:manage")) {
-        return Err(domainError("forbidden", null, "Access denied"));
+        return Err(forbidden());
       }
 
       const rows = await deps.leadQueries.export({
@@ -148,16 +153,10 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       if (!lead.ok) return lead;
 
       if (lead.value.stage !== "LIVE") {
-        return Err(
-          domainError(
-            "conflict",
-            "lead_not_live",
-            "Sale proof uploads are only allowed when the lead is live",
-          ),
-        );
+        return Err(fail("lead_not_live"));
       }
       if (!hasPermission(input.ctx.actor.role, "lead:sale:upload-proof")) {
-        return Err(domainError("forbidden", null, "Access denied"));
+        return Err(forbidden());
       }
 
       const requested = await requestArtifact(
@@ -192,11 +191,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!fileAsset) {
         return Err(
-          domainError(
-            "external",
-            "file_asset_not_found",
-            "File asset not found",
-          ),
+          external("File asset not found", { code: "file_asset_unavailable" }),
         );
       }
 
@@ -235,13 +230,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         input.artifactId,
       );
       if (!saleProof || saleProof.leadId !== input.leadId) {
-        return Err(
-          domainError(
-            "not_found",
-            "sale_proof_not_found",
-            "Sale proof not found",
-          ),
-        );
+        return Err(fail("sale_proof_not_found"));
       }
 
       return requestDownloadToken(input.ctx, input.artifactId, {
@@ -262,16 +251,10 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       if (!lead.ok) return lead;
 
       if (lead.value.stage !== "QUOTED") {
-        return Err(
-          domainError(
-            "conflict",
-            "lead_not_quoted",
-            "Negotiation files can only be uploaded when the lead is in QUOTED stage",
-          ),
-        );
+        return Err(fail("lead_not_quoted"));
       }
       if (lead.value.executiveId !== input.ctx.actor.userId) {
-        return Err(domainError("forbidden", null, "Access denied"));
+        return Err(forbidden());
       }
 
       const requested = await requestArtifact(
@@ -306,11 +289,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!fileAsset) {
         return Err(
-          domainError(
-            "external",
-            "file_asset_not_found",
-            "File asset not found",
-          ),
+          external("File asset not found", { code: "file_asset_unavailable" }),
         );
       }
 
@@ -334,13 +313,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         input.artifactId,
       );
       if (!record || record.leadId !== input.leadId) {
-        return Err(
-          domainError(
-            "not_found",
-            "file_not_found",
-            "Negotiation file not found",
-          ),
-        );
+        return Err(fail("file_not_found"));
       }
 
       return requestDownloadToken(input.ctx, input.artifactId, {

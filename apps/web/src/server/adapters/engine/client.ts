@@ -1,4 +1,4 @@
-import { domainError } from "~/server/shared/domain-error";
+import { external } from "~/server/shared/domain-error";
 import type {
   EngineClient,
   RecordCandidatesRequest,
@@ -66,12 +66,10 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
         responseJson = await response.json();
       } catch {
         return Err(
-          domainError(
-            "external",
-            "engine_response_parse_failed",
-            "Failed to parse Engine response JSON",
-            { request_id: requestId },
-          ),
+          external("Failed to parse Engine response JSON", {
+            code: "engine_response_parse_failed",
+            details: { request_id: requestId },
+          }),
         );
       }
 
@@ -80,12 +78,10 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
         return Ok(decoded.results);
       } catch (err) {
         return Err(
-          domainError(
-            "external",
-            "engine_response_invalid",
-            err instanceof Error ? err.message : "Invalid response shape",
-            { request_id: requestId },
-          ),
+          external(err instanceof Error ? err.message : "Invalid response shape", {
+            code: "engine_response_invalid",
+            details: { request_id: requestId },
+          }),
         );
       }
     },
@@ -122,12 +118,10 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
         responseJson = await response.json();
       } catch {
         return Err(
-          domainError(
-            "external",
-            "engine_response_parse_failed",
-            "Failed to parse Engine response JSON",
-            { request_id: requestId },
-          ),
+          external("Failed to parse Engine response JSON", {
+            code: "engine_response_parse_failed",
+            details: { request_id: requestId },
+          }),
         );
       }
 
@@ -136,12 +130,10 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
         return Ok(decoded.candidates);
       } catch (err) {
         return Err(
-          domainError(
-            "external",
-            "engine_response_invalid",
-            err instanceof Error ? err.message : "Invalid response shape",
-            { request_id: requestId },
-          ),
+          external(err instanceof Error ? err.message : "Invalid response shape", {
+            code: "engine_response_invalid",
+            details: { request_id: requestId },
+          }),
         );
       }
     },

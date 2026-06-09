@@ -2,7 +2,11 @@ import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  fail,
+  forbidden,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
@@ -23,32 +27,18 @@ export async function approveCapacityRequest(
   return deps.uow.run(async (tx) => {
     const request = await tx.capacityRequests.findById(input.requestId);
     if (!request) {
-      return Err(
-        domainError("not_found", "request_not_found", "Request not found"),
-      );
+      return Err(fail("request_not_found"));
     }
     if (request.status !== "pending") {
-      return Err(
-        domainError(
-          "conflict",
-          "request_not_pending",
-          "Request is no longer pending",
-        ),
-      );
+      return Err(fail("request_not_pending"));
     }
 
     const managed = await canManageExecutive(ctx.actor, request.user_id, tx);
     if (!managed.target) {
-      return Err(
-        domainError(
-          "not_found",
-          "request_target_not_found",
-          "Request target not found",
-        ),
-      );
+      return Err(fail("request_target_not_found"));
     }
     if (!managed.ok) {
-      return Err(domainError("forbidden", null, "Cannot approve this request"));
+      return Err(forbidden());
     }
 
     const note = normalizeDecisionNote(input.note);
@@ -58,13 +48,7 @@ export async function approveCapacityRequest(
       note,
     );
     if (!approvedResult?.numUpdatedRows) {
-      return Err(
-        domainError(
-          "conflict",
-          "request_not_pending",
-          "Request is no longer pending",
-        ),
-      );
+      return Err(fail("request_not_pending"));
     }
 
     if (request.kind === "search_extra") {

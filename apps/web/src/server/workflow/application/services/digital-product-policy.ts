@@ -1,4 +1,4 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type {
   VenueDigitalConfig,
@@ -50,35 +50,17 @@ export function parseDigitalPolicy(raw: {
   let link: LinkPolicy;
   if (raw.linkScope === "none") {
     if (linkUrl !== null) {
-      return Err(
-        domainError(
-          "validation",
-          "invalid_link_policy",
-          "Link URL must be empty when link scope is none",
-        ),
-      );
+      return Err(fail("invalid_link_policy"));
     }
     link = { scope: "none" };
   } else if (raw.linkScope === "shared") {
     if (!linkUrl) {
-      return Err(
-        domainError(
-          "validation",
-          "missing_link_shared_url",
-          "Link URL is required when link scope is shared",
-        ),
-      );
+      return Err(fail("missing_link_shared_url"));
     }
     link = { scope: "shared", config: { url: linkUrl } };
   } else {
     if (linkUrl !== null) {
-      return Err(
-        domainError(
-          "validation",
-          "invalid_link_policy",
-          "Link shared URL must be empty when link scope is per_venue",
-        ),
-      );
+      return Err(fail("invalid_link_policy"));
     }
     link = { scope: "per_venue" };
   }
@@ -86,24 +68,12 @@ export function parseDigitalPolicy(raw: {
   let online: OnlinePolicy;
   if (raw.onlineScope === "none") {
     if (onlineUrl !== null || raw.onlineModalidad !== null) {
-      return Err(
-        domainError(
-          "validation",
-          "invalid_online_policy",
-          "Online shared fields must be empty when online scope is none",
-        ),
-      );
+      return Err(fail("invalid_online_policy"));
     }
     online = { scope: "none" };
   } else if (raw.onlineScope === "shared") {
     if (!onlineUrl || raw.onlineModalidad === null) {
-      return Err(
-        domainError(
-          "validation",
-          "missing_online_shared_config",
-          "Online shared URL and modalidad are required when online scope is shared",
-        ),
-      );
+      return Err(fail("missing_online_shared_config"));
     }
     online = {
       scope: "shared",
@@ -111,13 +81,7 @@ export function parseDigitalPolicy(raw: {
     };
   } else {
     if (onlineUrl !== null || raw.onlineModalidad !== null) {
-      return Err(
-        domainError(
-          "validation",
-          "invalid_online_policy",
-          "Online shared fields must be empty when online scope is per_venue",
-        ),
-      );
+      return Err(fail("invalid_online_policy"));
     }
     online = { scope: "per_venue" };
   }
@@ -134,47 +98,23 @@ export function parseVenueDigitalFields(
   const onlineModalidad = raw?.onlineModalidad ?? null;
 
   if (scopes.linkScope !== "per_venue" && linkUrl !== null) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_link_venue_config",
-        "Venue link URL is only allowed when link scope is per_venue",
-      ),
-    );
+    return Err(fail("invalid_link_venue_config"));
   }
   if (scopes.linkScope === "per_venue" && linkUrl === null) {
-    return Err(
-      domainError(
-        "validation",
-        "missing_link_venue_url",
-        "Venue link URL is required when link scope is per_venue",
-      ),
-    );
+    return Err(fail("missing_link_venue_url"));
   }
 
   if (
     scopes.onlineScope !== "per_venue" &&
     (onlineUrl !== null || onlineModalidad !== null)
   ) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_online_venue_config",
-        "Venue online config is only allowed when online scope is per_venue",
-      ),
-    );
+    return Err(fail("invalid_online_venue_config"));
   }
   if (
     scopes.onlineScope === "per_venue" &&
     (onlineUrl === null || onlineModalidad === null)
   ) {
-    return Err(
-      domainError(
-        "validation",
-        "missing_online_venue_config",
-        "Venue online URL and modalidad are required when online scope is per_venue",
-      ),
-    );
+    return Err(fail("missing_online_venue_config"));
   }
 
   return Ok({
@@ -202,12 +142,9 @@ export function validateDigitalAggregate(input: {
     });
     if (!check.ok) {
       return Err(
-        domainError(
-          "validation",
-          "invalid_existing_venue_digital_config",
-          `Venue "${venue.nombreComercial}" is incompatible with the selected digital scope policy`,
-          { venueId: venue.id, cause: check.error.code },
-        ),
+        fail("invalid_existing_venue_digital_config", {
+          details: { venueId: venue.id, cause: check.error.code },
+        }),
       );
     }
   }

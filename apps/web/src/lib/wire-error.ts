@@ -5,9 +5,9 @@
  * the rich internal failure (`DomainError`) is projected into this once, at the
  * boundary, via `toWire`.
  *
- * The client localizes on `kind` (coarse class) and `code` (granular domain
- * code); see `lib/error-messages.ts`. `message` is a fallback only and is never
- * shown when a `kind`/`code` mapping exists.
+ * `message` is render-ready Spanish, authored on the server (catalog copy, a
+ * class default, or the generic line). The client renders it verbatim and owns
+ * no copy. `kind` and `code` are for client behavior (branching), never display.
  */
 export const WIRE_KINDS = [
   "validation",
@@ -23,15 +23,19 @@ export type WireKind = (typeof WIRE_KINDS)[number];
 
 export interface WireError {
   kind: WireKind;
-  /** Granular domain code the client localizes on. Null when none. */
+  /** Granular domain code for client branching. Null when none. */
   code: string | null;
-  /** Public fallback message. Generic for hidden (internal) failures. */
+  /** Render-ready Spanish shown to the user. Generic for internal failures. */
   message: string;
   /** Seconds until the client may retry. Only set for kind === "rate_limit". */
   retryAfterSeconds?: number;
 }
 
-export const GENERIC_ERROR = "An unexpected error occurred";
+// Last-resort copy shown when a caught value is not a recognizable wire error
+// (a network failure, a serialization glitch, a raw throw). This is the
+// client's own fallback, distinct from the server's internal-fault copy: they
+// read alike today but change for different reasons, so they stay separate.
+const FALLBACK_MESSAGE = "Ocurrió un error inesperado.";
 
 /**
  * Thrown at the public action edge (`runAction`). Its enumerable own fields are
@@ -101,5 +105,24 @@ export function parseWireError(error: unknown): WireError {
       ...(typeof retryAfterSeconds === "number" ? { retryAfterSeconds } : {}),
     };
   }
-  return { kind: "internal", code: null, message: GENERIC_ERROR };
+  return { kind: "internal", code: null, message: FALLBACK_MESSAGE };
+}
+
+/**
+ * The user-facing message for a caught action error. Copy is authored on the
+ * server (catalog entry, class default, or the generic line) and rides on the
+ * wire, so the client renders it verbatim and owns no copy table.
+ */
+export function actionErrorMessage(error: unknown): string {
+  return parseWireError(error).message;
+}
+
+/**
+ * True when a caught action error matches a granular code or coarse class. For
+ * behavioral branching only (field-error placement, recovery flows), never for
+ * display.
+ */
+export function isActionErrorCode(error: unknown, code: string): boolean {
+  const wire = parseWireError(error);
+  return wire.code === code || wire.kind === code;
 }
