@@ -2,7 +2,7 @@ import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime/context";
-import type { DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
@@ -132,11 +132,7 @@ export async function resendTeamInvite(
   const invite = await deps.repos.userInvites.findById(result.value.inviteId);
   const user = invite ? await deps.repos.users.findById(invite.user_id) : null;
   if (!user) {
-    return Err({
-      kind: "not_found",
-      code: "invite_target_missing",
-      message: "Invite target user was not found",
-    });
+    return Err(fail("invite_target_missing"));
   }
 
   await sendInviteEmail({

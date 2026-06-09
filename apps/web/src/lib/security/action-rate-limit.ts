@@ -4,7 +4,7 @@ import { getRequestEvent } from "solid-js/web";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { Database } from "~/lib/db/types";
-import { rateLimitFault } from "~/server/shared/domain-error";
+import { rateLimited, throwDomain } from "~/server/shared/domain-error";
 type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 
@@ -96,9 +96,10 @@ async function blockWithAudit(params: {
     created_at: now,
   });
 
-  throw rateLimitFault(
-    `Too many requests for ${actionName}. Try again in ${retryAfterSeconds}s.`,
-    retryAfterSeconds,
+  throwDomain(
+    rateLimited(retryAfterSeconds, {
+      code: "action_rate_limited",
+    }),
   );
 }
 

@@ -9,18 +9,18 @@ import { ProfileImageInput } from "~/components/settings/ProfileImageInput";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { actionErrorMessage } from "~/lib/error-messages";
 import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
 } from "~/lib/mutations/profile";
 import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 import { shortName } from "~/lib/users/display-name";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-page.module.css";
 
 function toMessage(error: unknown, fallback: string): string {
-  return actionErrorMessage(error, fallback);
+  return actionErrorMessage(error);
 }
 
 export default function ProfilePage() {

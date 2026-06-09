@@ -67,7 +67,9 @@ export async function applyImport(
         ) {
           skipped++;
         } else {
-          rowErrors.push(`${row.email}: ${result.error.message}`);
+          rowErrors.push(
+            `${row.email}: ${result.error.code ?? result.error.kind}`,
+          );
         }
 
         continue;

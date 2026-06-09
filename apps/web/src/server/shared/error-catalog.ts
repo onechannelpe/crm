@@ -82,6 +82,10 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró el proceso de importación.",
   },
+  resource_not_found: {
+    kind: "not_found",
+    message: "No se encontró el recurso solicitado.",
+  },
 
   // conflict
   request_not_pending: {

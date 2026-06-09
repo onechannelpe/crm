@@ -2,7 +2,7 @@ import type { AuthSession } from "~/lib/auth/access/session-types";
 import { config } from "~/lib/config";
 import {
   actionErrorFrom,
-  domainError,
+  fail,
   type DomainError,
 } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -20,23 +20,11 @@ export function checkRecentStrongAuth(
   }
 
   if (!session.strongAuthAt) {
-    return Err(
-      domainError(
-        "forbidden",
-        "strong_auth_required",
-        "Strong authentication required",
-      ),
-    );
+    return Err(fail("strong_auth_required"));
   }
 
   if (Date.now() - session.strongAuthAt > maxAgeMs) {
-    return Err(
-      domainError(
-        "forbidden",
-        "strong_auth_expired",
-        "Strong authentication expired",
-      ),
-    );
+    return Err(fail("strong_auth_expired"));
   }
 
   return Ok(undefined);

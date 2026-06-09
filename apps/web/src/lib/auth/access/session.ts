@@ -1,7 +1,9 @@
 import { getRequestContext } from "~/lib/http/request-context";
 import {
   actionErrorFrom,
-  domainError,
+  fail,
+  forbidden,
+  unauthenticated,
   type DomainError,
 } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -23,12 +25,10 @@ export async function authenticate(): Promise<
 > {
   const session = await getSession();
   if (!session) {
-    return Err(domainError("unauthenticated", null, "Unauthorized"));
+    return Err(unauthenticated());
   }
   if (session.sessionClass !== "app" || !session.onboardingCompleted) {
-    return Err(
-      domainError("forbidden", "onboarding_required", "Onboarding required"),
-    );
+    return Err(fail("onboarding_required"));
   }
   return Ok(session);
 }
@@ -38,7 +38,7 @@ export async function authenticateSession(): Promise<
 > {
   const session = await getSession();
   if (!session) {
-    return Err(domainError("unauthenticated", null, "Unauthorized"));
+    return Err(unauthenticated());
   }
   return Ok(session);
 }
@@ -65,7 +65,7 @@ export function authorizeRole(
   role: Role,
 ): Result<AuthSession, DomainError> {
   if (!hasRole(session.role, role)) {
-    return Err(domainError("forbidden", null, "Forbidden"));
+    return Err(forbidden());
   }
   return Ok(session);
 }
@@ -75,7 +75,7 @@ export function authorizePermission(
   permission: Permission,
 ): Result<AuthSession, DomainError> {
   if (!hasPermission(session.role, permission)) {
-    return Err(domainError("forbidden", null, "Forbidden"));
+    return Err(forbidden());
   }
   return Ok(session);
 }
