@@ -2,7 +2,7 @@ import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
-import { createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
+import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
 import { isErr } from "~/server/shared/result";
 
 describe("login flow service", () => {
@@ -103,27 +103,24 @@ describe("login flow service", () => {
     );
   });
 
-  it("returns unexpected when password login cannot create the required passkey flow", async () => {
+  it("throws when password login cannot create the required passkey flow", async () => {
     await scenario.enablePasskey("superuser", "pk-login-required-failure");
 
-    const result = await scenario.loginPassword(
-      "superuser",
-      "SuperSecret123!",
-      { ipAddress: "198.51.100.77", userAgent: "vitest-agent" },
-      {
-        ...scenario.ctx.repos,
-        loginFlows: {
-          ...scenario.ctx.repos.loginFlows,
-          async create() {
-            throw new Error("boom");
+    await expect(
+      scenario.loginPassword(
+        "superuser",
+        "SuperSecret123!",
+        { ipAddress: "198.51.100.77", userAgent: "vitest-agent" },
+        {
+          ...scenario.ctx.repos,
+          loginFlows: {
+            ...scenario.ctx.repos.loginFlows,
+            async create() {
+              throw new Error("boom");
+            },
           },
         },
-      },
-    );
-
-    expect(isErr(result)).toBe(true);
-    if (!isErr(result))
-      throw new Error("expected unexpected password login failure");
-    expect(result.error.kind).toBe("unexpected");
+      ),
+    ).rejects.toThrow("boom");
   });
 });

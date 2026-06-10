@@ -1,4 +1,8 @@
 import {
+  LEAD_PRIORITIES,
+  LEAD_STAGES,
+  LEAD_STATUSES,
+  MONEDAS,
   type LeadCallOutcome,
   type LeadPriority,
   type LeadStage,
@@ -9,12 +13,7 @@ import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
-import {
-  parseRequiredLeadPriority,
-  parseRequiredLeadStage,
-  parseRequiredLeadStatus,
-  parseRequiredMoneda,
-} from "~/server/workflow/parsers";
+import { parseVocabularyValue } from "~/server/workflow/parsers";
 
 import type { HistoryEventRow } from "./history-event-row";
 
@@ -126,7 +125,11 @@ export function requireLeadStage(
     return value;
   }
 
-  const parsed = parseRequiredLeadStage(value.value);
+  const parsed = parseVocabularyValue(
+    value.value,
+    LEAD_STAGES,
+    "invalid_stage",
+  );
   if (!parsed.ok) {
     return parsed;
   }
@@ -143,7 +146,11 @@ export function requireLeadStatus(
     return value;
   }
 
-  const parsed = parseRequiredLeadStatus(value.value);
+  const parsed = parseVocabularyValue(
+    value.value,
+    LEAD_STATUSES,
+    "invalid_status",
+  );
   if (!parsed.ok) {
     return parsed;
   }
@@ -163,7 +170,7 @@ export function optionalLeadStatus(
     return invalidPayload(row, key);
   }
 
-  const parsed = parseRequiredLeadStatus(value);
+  const parsed = parseVocabularyValue(value, LEAD_STATUSES, "invalid_status");
   if (!parsed.ok) {
     return parsed;
   }
@@ -180,7 +187,11 @@ export function requireLeadPriority(
     return value;
   }
 
-  const parsed = parseRequiredLeadPriority(value.value);
+  const parsed = parseVocabularyValue(
+    value.value,
+    LEAD_PRIORITIES,
+    "invalid_prioridad",
+  );
   if (!parsed.ok) {
     return parsed;
   }
@@ -200,7 +211,11 @@ export function optionalLeadPriority(
     return invalidPayload(row, key);
   }
 
-  const parsed = parseRequiredLeadPriority(value);
+  const parsed = parseVocabularyValue(
+    value,
+    LEAD_PRIORITIES,
+    "invalid_prioridad",
+  );
   if (!parsed.ok) {
     return parsed;
   }
@@ -231,5 +246,5 @@ export function requireMoneda(
 ): Result<Moneda, DomainError> {
   const value = requireString(payload, "moneda", row);
   if (!value.ok) return value;
-  return parseRequiredMoneda(value.value);
+  return parseVocabularyValue(value.value, MONEDAS, "invalid_moneda");
 }

@@ -2,25 +2,26 @@ import { createRoot } from "solid-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
+import { ActionError } from "~/lib/wire-error";
 
 const {
-  beginPasskeyRegistration,
-  finishPasskeyRegistration,
+  beginPasskeyEnrollment,
+  finishPasskeyEnrollment,
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 } = vi.hoisted(() => ({
-  beginPasskeyRegistration:
+  beginPasskeyEnrollment:
     vi.fn<
       () => Promise<{ challengeId: string; options: { challenge: string } }>
     >(),
-  finishPasskeyRegistration: vi.fn<() => Promise<void>>(),
+  finishPasskeyEnrollment: vi.fn<() => Promise<{ message: string }>>(),
   createRegistrationResponse: vi.fn<() => Promise<{ id: string }>>(),
   isPasskeyRegistrationSupported: vi.fn<() => boolean>(),
 }));
 
-vi.mock("~/actions/auth/onboarding/passkey", () => ({
-  beginPasskeyRegistration,
-  finishPasskeyRegistration,
+vi.mock("~/actions/auth/security/passkey", () => ({
+  beginPasskeyEnrollment,
+  finishPasskeyEnrollment,
 }));
 
 vi.mock("~/lib/auth/passkey/registration-client", () => ({
@@ -34,11 +35,13 @@ function noopDispose(): void {
 
 describe("usePasskeyEnrollment", () => {
   beforeEach(() => {
-    beginPasskeyRegistration.mockResolvedValue({
+    beginPasskeyEnrollment.mockResolvedValue({
       challengeId: "challenge-1",
       options: { challenge: "abc" },
     });
-    finishPasskeyRegistration.mockResolvedValue(undefined);
+    finishPasskeyEnrollment.mockResolvedValue({
+      message: "Clave de acceso configurada",
+    });
     createRegistrationResponse.mockResolvedValue({ id: "credential-1" });
     isPasskeyRegistrationSupported.mockReturnValue(true);
   });
@@ -61,19 +64,18 @@ describe("usePasskeyEnrollment", () => {
         enqueueSuccessSnackBar,
         enqueueErrorSnackBar,
         refreshStatus,
-        successMessage: "Clave de acceso añadida",
       });
     });
 
-    await enrollment.registerPasskey();
+    await enrollment.enrollPasskey();
     dispose();
 
-    expect(beginPasskeyRegistration).toHaveBeenCalledOnce();
+    expect(beginPasskeyEnrollment).toHaveBeenCalledOnce();
     expect(createRegistrationResponse).toHaveBeenCalledOnce();
-    expect(finishPasskeyRegistration).toHaveBeenCalledOnce();
+    expect(finishPasskeyEnrollment).toHaveBeenCalledOnce();
     expect(refreshStatus).toHaveBeenCalledOnce();
     expect(enqueueSuccessSnackBar).toHaveBeenCalledWith(
-      "Clave de acceso añadida",
+      "Clave de acceso configurada",
     );
   });
 
@@ -81,7 +83,13 @@ describe("usePasskeyEnrollment", () => {
     const enqueueSuccessSnackBar = vi.fn<(message: string) => void>();
     const enqueueErrorSnackBar = vi.fn<(message: string) => void>();
     const refreshStatus = vi.fn<() => void>();
-    finishPasskeyRegistration.mockRejectedValue(new Error("boom"));
+    finishPasskeyEnrollment.mockRejectedValue(
+      new ActionError({
+        kind: "validation",
+        code: "invalid_passkey_request",
+        message: "La solicitud de acceso no es válida.",
+      }),
+    );
 
     let dispose: () => void = noopDispose;
     const enrollment = createRoot((rootDispose) => {
@@ -90,15 +98,14 @@ describe("usePasskeyEnrollment", () => {
         enqueueSuccessSnackBar,
         enqueueErrorSnackBar,
         refreshStatus,
-        failureMessage: "No se pudo añadir la clave de acceso",
       });
     });
 
-    await enrollment.registerPasskey();
+    await enrollment.enrollPasskey();
     dispose();
 
     expect(enqueueErrorSnackBar).toHaveBeenCalledWith(
-      "No se pudo añadir la clave de acceso",
+      "La solicitud de acceso no es válida.",
     );
   });
 });
