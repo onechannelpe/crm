@@ -3,16 +3,14 @@ import { createMemo, createSignal, onMount } from "solid-js";
 
 import { finishPasskeyLogin } from "~/actions/auth/login/passkey";
 import {
-  passkeyFinishUiMessage,
-  passkeyStartUiMessage,
-} from "~/features/auth/model/login-ui";
-import {
   createAuthenticationResponse,
   isPasskeyAuthenticationSupported,
 } from "~/lib/auth/passkey/authentication-client";
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 import { passkeyStartMutation } from "~/lib/mutations/auth";
 import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
+import { actionErrorMessage, parseWireError } from "~/lib/wire-error";
+import { codeIs } from "~/lib/wire-error-codes";
 
 export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
 export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
@@ -89,16 +87,8 @@ export function usePasskeyLogin() {
       const response = await createAuthenticationResponse(flow.requestOptions);
       setPhase("verifying");
 
-      const result = await finishPasskeyLogin(flow.id, response);
-      if (!result.ok) {
-        setError(passkeyFinishUiMessage(result.code));
-        if (result.code === "flow_expired") {
-          setActiveFlow(undefined);
-        }
-        return false;
-      }
-
-      navigate(result.redirectTo);
+      const { redirectTo } = await finishPasskeyLogin(flow.id, response);
+      navigate(redirectTo);
       return true;
     } catch (caughtError: unknown) {
       if (caughtError instanceof DOMException) {
@@ -118,10 +108,23 @@ export function usePasskeyLogin() {
         }
       }
 
+      // ActionError from finishPasskeyLogin (flow_expired, invalid_credentials).
+      // May arrive as a plain wire-shaped object after RPC deserialization.
+      const wire = parseWireError(caughtError);
+      if (wire.kind !== "internal") {
+        setError(wire.message);
+        if (codeIs(wire, "flow_expired")) {
+          setActiveFlow(undefined);
+        }
+        return false;
+      }
+
+      // The browser WebAuthn call already succeeded above, so an internal wire
+      // error here is a server fault or network failure, not a browser error.
       await trackAuthClientEvent({
         kind: "passkey_result",
         outcome: "failed",
-        code: "browser_error",
+        code: "server_error",
       });
       setError("No se pudo iniciar sesión con la clave de acceso.");
       return false;
@@ -140,18 +143,16 @@ export function usePasskeyLogin() {
     setPhase("starting");
 
     try {
-      const result = await beginPasskeyLogin(
+      const { flow } = await beginPasskeyLogin(
         buildPasskeyStartFormData({
           mode: "identified",
           identifier: safeIdentifier,
         }),
       );
-      if (!result.ok) {
-        setError(passkeyStartUiMessage(result.code));
-        return false;
-      }
-
-      return await runFlow(result.flow);
+      return await runFlow(flow);
+    } catch (err: unknown) {
+      setError(actionErrorMessage(err));
+      return false;
     } finally {
       if (phase() === "starting") {
         setPhase("idle");
@@ -168,15 +169,13 @@ export function usePasskeyLogin() {
     setPhase("starting");
 
     try {
-      const result = await beginPasskeyLogin(
+      const { flow } = await beginPasskeyLogin(
         buildPasskeyStartFormData({ mode: "discoverable" }),
       );
-      if (!result.ok) {
-        setError(passkeyStartUiMessage(result.code));
-        return false;
-      }
-
-      return await runFlow(result.flow);
+      return await runFlow(flow);
+    } catch (err: unknown) {
+      setError(actionErrorMessage(err));
+      return false;
     } finally {
       if (phase() === "starting") {
         setPhase("idle");
