@@ -29,7 +29,9 @@ export type LeadState = {
   version: number;
 };
 
-export type LeadDraft = Omit<LeadState, "id" | "version">;
+// deletedAt is a lifecycle column set only by the delete command; a freshly
+// created lead is never deleted, so it is not part of the creation draft.
+export type LeadDraft = Omit<LeadState, "id" | "version" | "deletedAt">;
 
 export function createLeadDraft(input: {
   organizationId: OrganizationId;
@@ -58,6 +60,5 @@ export function createLeadDraft(input: {
     prioridad: null,
     createdAt: input.now,
     updatedAt: input.now,
-    deletedAt: null,
   });
 }
