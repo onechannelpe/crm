@@ -22,6 +22,9 @@ export function applyLeadVisibility(
   query: VisibilityQuery,
   filters: LeadListFilters | RecordExportFilters,
 ): VisibilityQuery {
+  // Soft-deleted leads stay out of every active read path (list, count, export).
+  query = query.where("lead.deleted_at", "is", null);
+
   if (filters.actorRole === "superuser") return query;
 
   if (filters.actorRole === "supervisor") {

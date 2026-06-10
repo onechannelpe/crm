@@ -31,6 +31,7 @@ type LeadWithOrganizationRow = LeadRow & {
   address: string | null;
   district: string | null;
   department: string | null;
+  deleted_at: number | null;
   version: number;
 };
 type NewLeadRow = Insertable<Database["workflow_leads"]>;
@@ -53,6 +54,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
     prioridad: row.prioridad,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    deletedAt: row.deleted_at,
     version: row.version,
   };
 }
@@ -97,6 +99,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       "lead.prioridad",
       "lead.created_at",
       "lead.updated_at",
+      "lead.deleted_at",
       "lead.version",
       "org.ruc",
       "org.name as razon_social",
@@ -119,6 +122,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
     async findById(id: string) {
       const row = await selectLeadWithOrganization
         .where("lead.id", "=", id)
+        .where("lead.deleted_at", "is", null)
         .executeTakeFirst();
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
     },

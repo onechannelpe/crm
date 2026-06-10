@@ -35,6 +35,7 @@ function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
     prioridad: null,
     createdAt: 100,
     updatedAt: 100,
+    deletedAt: null,
     version: 0,
     ...overrides,
   };
@@ -180,6 +181,46 @@ describe("lead action policy", () => {
 
     const error = expectErr(result);
     expect(error.kind).toBe("forbidden");
+  });
+
+  it("blocks the owning executive from deleting their own lead", () => {
+    const result = authorizeLeadAction(
+      "delete",
+      { userId: 1, role: "executive" },
+      { executiveId: 1, stage: "QUOTED" } as const,
+    );
+
+    expect(expectErr(result).kind).toBe("forbidden");
+  });
+
+  it("blocks back_office from deleting despite view-all access", () => {
+    const result = authorizeLeadAction(
+      "delete",
+      { userId: 2, role: "back_office" },
+      { executiveId: 1, stage: "QUOTED" } as const,
+    );
+
+    expect(expectErr(result).kind).toBe("forbidden");
+  });
+
+  it("lets a sales_manager delete any lead", () => {
+    const result = authorizeLeadAction(
+      "delete",
+      { userId: 2, role: "sales_manager" },
+      { executiveId: 1, stage: "QUOTED" } as const,
+    );
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("lets a supervisor delete any lead", () => {
+    const result = authorizeLeadAction(
+      "delete",
+      { userId: 2, role: "supervisor" },
+      { executiveId: 1, stage: "QUOTED" } as const,
+    );
+
+    expect(result.ok).toBe(true);
   });
 
   it("enforces negotiation round limit via transition", () => {

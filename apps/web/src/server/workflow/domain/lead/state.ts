@@ -25,6 +25,7 @@ export type LeadState = {
   prioridad: LeadPriority | null;
   createdAt: number;
   updatedAt: number;
+  deletedAt: number | null;
   version: number;
 };
 
@@ -57,5 +58,6 @@ export function createLeadDraft(input: {
     prioridad: null,
     createdAt: input.now,
     updatedAt: input.now,
+    deletedAt: null,
   });
 }

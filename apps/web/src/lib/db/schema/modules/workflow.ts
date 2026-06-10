@@ -19,6 +19,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("updated_by", "integer", (col) => col.references("users.id"))
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("deleted_at", "integer")
     .addColumn("version", "integer", (col) => col.notNull().defaultTo(0))
     .execute();
 
@@ -47,6 +48,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_workflow_leads_stage")
     .on("workflow_leads")
     .column("stage")
+    .execute();
+  await db.schema
+    .createIndex("idx_workflow_leads_deleted_at")
+    .on("workflow_leads")
+    .column("deleted_at")
     .execute();
 
   await db.schema

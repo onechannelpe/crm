@@ -4,9 +4,13 @@ import { createSignal } from "solid-js";
 import type { LeadDetailLeadView } from "~/contracts/workflow/views";
 import {
   addLeadToFavoritesMutation,
+  deleteLeadMutation,
   removeLeadFromFavoritesMutation,
 } from "~/features/workflow/data/command-mutations";
-import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
+import {
+  revalidateWorkflowLead,
+  revalidateWorkflowLeadList,
+} from "~/features/workflow/data/revalidate-workflow";
 
 function exportLeadAsJson(lead: LeadDetailLeadView) {
   const payload = {
@@ -35,8 +39,27 @@ function exportLeadAsJson(lead: LeadDetailLeadView) {
 export function useLeadActions() {
   const addFavorite = useAction(addLeadToFavoritesMutation);
   const removeFavorite = useAction(removeLeadFromFavoritesMutation);
+  const deleteLeadAction = useAction(deleteLeadMutation);
 
   const [favoriteBusy, setFavoriteBusy] = createSignal(false);
+  const [deleteBusy, setDeleteBusy] = createSignal(false);
+
+  // Soft-deletes the lead and refreshes the list so it drops out of active
+  // views. Callers own the post-delete navigation away from the record.
+  async function deleteLead(leadId: string): Promise<void> {
+    if (deleteBusy()) {
+      return;
+    }
+
+    setDeleteBusy(true);
+
+    try {
+      await deleteLeadAction({ leadId });
+      await revalidateWorkflowLeadList();
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   async function setFavorite(
     leadId: string,
@@ -64,6 +87,8 @@ export function useLeadActions() {
   return {
     favoriteBusy,
     setFavorite,
+    deleteBusy,
+    deleteLead,
     exportLead: exportLeadAsJson,
   };
 }

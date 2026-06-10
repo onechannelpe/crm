@@ -1,5 +1,5 @@
 import { createAsync, useNavigate } from "@solidjs/router";
-import { createMemo, createSignal, onMount } from "solid-js";
+import { Show, createMemo, createSignal, onMount } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
@@ -8,6 +8,8 @@ import Mail from "~/components/icons/mail";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { useLeadActions } from "~/features/record-show/use-record-actions";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
@@ -17,7 +19,11 @@ import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
+import { hasPermission } from "~/lib/auth/access/rbac";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
+import { actionErrorMessage } from "~/lib/wire-error";
+
+import { RecordShowDeleteMenu } from "./record-show-delete-menu";
 
 import styles from "./record-show-header.module.css";
 
@@ -33,7 +39,29 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const leadList = createAsync(() =>
     leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
   );
-  const { favoriteBusy, setFavorite } = useLeadActions();
+  const { favoriteBusy, setFavorite, deleteBusy, deleteLead } =
+    useLeadActions();
+  const { currentUser } = useAuthenticatedSession();
+  const user = currentUser();
+
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = createSignal(false);
+  const [deleteError, setDeleteError] = createSignal<string | null>(null);
+
+  const canDelete = createMemo(
+    () => detail()?.lead != null && hasPermission(user.role, "lead:delete"),
+  );
+
+  async function handleConfirmDelete() {
+    setDeleteError(null);
+
+    try {
+      await deleteLead(props.leadId);
+      setConfirmDeleteOpen(false);
+      navigate("/records");
+    } catch (err) {
+      setDeleteError(actionErrorMessage(err));
+    }
+  }
 
   const currentIndex = createMemo(() => {
     const rows = leadList()?.rows;
@@ -148,12 +176,37 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
         </TopBarActionButton>
       </TopBarTooltip>
 
+      <Show when={canDelete()}>
+        <RecordShowDeleteMenu
+          disabled={deleteBusy()}
+          onDelete={() => {
+            setDeleteError(null);
+            setConfirmDeleteOpen(true);
+          }}
+        />
+      </Show>
+
       <TopBarCommandButton
         isOpen={isOpen()}
         modKey={modKey()}
         onClick={toggleSidePanel}
         dataClickOutsideId={PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID}
       />
+
+      <ConfirmDialog
+        isOpen={confirmDeleteOpen()}
+        title="Eliminar empresa"
+        description="Se quitará de tus listas de clientes. Esta acción no se puede deshacer desde la aplicación."
+        confirmLabel="Eliminar"
+        variant="destructive"
+        loading={deleteBusy()}
+        onConfirm={() => void handleConfirmDelete()}
+        onClose={() => setConfirmDeleteOpen(false)}
+      >
+        <Show when={deleteError()}>
+          {(message) => <p class={styles.deleteError}>{message()}</p>}
+        </Show>
+      </ConfirmDialog>
     </>
   );
 }

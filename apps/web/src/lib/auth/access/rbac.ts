@@ -38,6 +38,7 @@ export type Permission =
   | "lead:sale:create"
   | "lead:sale:upload-proof"
   | "lead:view:all"
+  | "lead:delete"
   | "lead:review"
   | "lead:reassign"
   | "quotation:create"
@@ -76,6 +77,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:upload-proof",
   ],
   supervisor: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "lead:view:all",
@@ -113,6 +115,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:upload-proof",
   ],
   sales_manager: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "lead:view:all",
@@ -139,6 +142,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
   admin: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "sales:review",
@@ -176,6 +180,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "file:artifact:audit:read",
   ],
   superuser: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "sales:create",

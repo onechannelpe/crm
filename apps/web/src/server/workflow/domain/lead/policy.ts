@@ -9,6 +9,7 @@ import type { LeadState } from "./state";
 
 export type LeadCapability =
   | "view"
+  | "delete"
   | "interact"
   | "review"
   | "reassign"
@@ -55,6 +56,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
     hasPermission(role, "lead:reassign");
 
   if (canRead) caps.add("view");
+  if (hasPermission(role, "lead:delete")) caps.add("delete");
   if (hasPermission(role, "lead:workflow")) caps.add("interact");
   if (hasPermission(role, "lead:review")) caps.add("review");
   if (hasPermission(role, "lead:reassign")) {

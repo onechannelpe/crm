@@ -18,6 +18,7 @@ export interface WorkflowLeadsTable {
   updated_by: number | null;
   created_at: number;
   updated_at: number;
+  deleted_at: number | null;
   version: Generated<number>;
 }
 

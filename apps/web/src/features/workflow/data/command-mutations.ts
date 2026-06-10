@@ -8,6 +8,7 @@ import {
 import {
   requestAddLeadToFavorites,
   requestLeadCreation,
+  requestLeadDeletion,
   requestLeadReassignment,
   requestLeadReview,
   requestQuotation,
@@ -115,4 +116,9 @@ export const addLeadToFavoritesMutation = action(
 export const removeLeadFromFavoritesMutation = action(
   (input: { leadId: string }) => requestRemoveLeadFromFavorites(input),
   "workflow.removeLeadFromFavorites",
+);
+
+export const deleteLeadMutation = action(
+  (input: { leadId: string }) => requestLeadDeletion(input),
+  "workflow.deleteLead",
 );

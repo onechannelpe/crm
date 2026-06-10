@@ -28,6 +28,7 @@ export function makeWorkflowLead(
     prioridad: null,
     createdAt: 10,
     updatedAt: 10,
+    deletedAt: null,
     version: 1,
     ...overrides,
   };

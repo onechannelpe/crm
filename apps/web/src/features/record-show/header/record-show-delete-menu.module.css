@@ -1,0 +1,40 @@
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+.menu {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-elevation-2);
+  min-width: 180px;
+  padding: var(--spacing-1);
+  position: fixed;
+  transform: translateX(-100%);
+  z-index: 90;
+}
+
+.dangerItem {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--destructive);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-size-body);
+  gap: var(--spacing-2);
+  justify-content: flex-start;
+  padding: var(--spacing-1) var(--spacing-2);
+  width: 100%;
+}
+
+.dangerItem:hover {
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+
+.dangerItem:disabled {
+  color: var(--foreground-light);
+  cursor: default;
+}

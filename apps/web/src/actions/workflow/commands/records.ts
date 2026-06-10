@@ -240,6 +240,21 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
   });
 }
 
+export async function requestLeadDeletion(input: unknown) {
+  return runAction({
+    name: "workflow.delete_lead",
+    access: { kind: "auth" },
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, { leadId }) =>
+      getServerRuntime().workflow.commands.deleteLead({
+        actor: workflowActor(actor),
+        leadId,
+      }),
+  });
+}
+
 export async function requestLeadSunatRefresh(input: unknown) {
   return runAction({
     name: "workflow.request_sunat_refresh",

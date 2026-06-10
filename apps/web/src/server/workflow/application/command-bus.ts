@@ -28,6 +28,7 @@ import { addVenueAccountsCommand } from "./commands/add-venue-accounts";
 import { approveForSaleCommand } from "./commands/approve-for-sale";
 import { createQuotationCommand } from "./commands/create-quotation";
 import { createVenueCommand } from "./commands/create-venue";
+import { deleteLeadCommand } from "./commands/delete-lead";
 import { logLeadCallCommand } from "./commands/log-call";
 import { reassignLeadCommand } from "./commands/reassign-lead";
 import { recordRepLegalCommand } from "./commands/record-rep-legal";
@@ -153,6 +154,9 @@ export function createWorkflowCommandBus(
 
     removeFromFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
       removeFromFavoritesCommand(input, { executor }),
+
+    deleteLead: (input: { actor: WorkflowActor; leadId: string }) =>
+      deleteLeadCommand(input, { executor }),
 
     updateSourcingPolicy: (input: UpdateSourcingPolicyCommandInput) =>
       updateSourcingPolicy(input, { sourcingPolicies: repos.sourcingPolicies }),
