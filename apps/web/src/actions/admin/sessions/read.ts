@@ -14,11 +14,14 @@ export async function listUserSessions(userId: unknown) {
     name: "admin.sessions.user.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
+
     parse: () =>
       parseObject({ userId }, validationFail, (r) => ({
         userId: r.posInt("userId"),
       })),
+
     audit: ({ userId }) => ({ userId }),
+
     execute: async (ctx, parsed) =>
       Ok(
         await listUserSessionsService(
@@ -35,6 +38,7 @@ export async function getActiveSessionsCount(): Promise<number> {
     name: "admin.sessions.count.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
+
     execute: async () =>
       Ok(
         await countActiveSessionsService(
@@ -49,6 +53,7 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     name: "admin.sessions.active.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
+
     execute: async () =>
       Ok(
         await listAllActiveSessionsService(

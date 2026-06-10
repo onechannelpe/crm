@@ -15,17 +15,20 @@ export async function revokeUserSession(
     name: "admin.sessions.revoke",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
+
     parse: () =>
       parseObject({ sessionId, targetUserId }, validationFail, (r) => ({
         sessionId: r.str("sessionId"),
         targetUserId: r.posInt("targetUserId"),
       })),
+
     audit: ({ targetUserId }) => ({ targetUserId }),
-    execute: (ctx, parsed) =>
+
+    execute: (ctx, input) =>
       revokeUserSessionService(
         ctx,
         getServerRuntime().auth.adminSessionRevocation,
-        parsed,
+        input,
       ),
   });
 }
@@ -37,16 +40,19 @@ export async function revokeAllUserSessions(
     name: "admin.sessions.revoke_all",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
+
     parse: () =>
       parseObject({ targetUserId }, validationFail, (r) => ({
         targetUserId: r.posInt("targetUserId"),
       })),
+
     audit: ({ targetUserId }) => ({ targetUserId }),
-    execute: (ctx, parsed) =>
+
+    execute: (ctx, input) =>
       revokeAllUserSessionsService(
         ctx,
         getServerRuntime().auth.adminSessionRevocation,
-        parsed,
+        input,
       ),
   });
 }
