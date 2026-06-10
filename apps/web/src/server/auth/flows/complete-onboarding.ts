@@ -1,15 +1,12 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import {
-  issueSessionTransition,
-  replaceCurrentSession,
-} from "~/lib/auth/session/session-transition";
 import type { Phone } from "~/lib/phone/pe-mobile";
+import { createSessionService } from "~/server/auth/session/session.service";
 import { type DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 
-import type { AuthOnboardingContext } from "../../infrastructure/onboarding-context";
+import type { AuthOnboardingContext } from "../infrastructure/onboarding-context";
 
 export async function completeOnboarding(
   deps: AuthOnboardingContext,
@@ -24,9 +21,8 @@ export async function completeOnboarding(
     phone: Phone;
     ipAddress: string;
     userAgent: string | null;
-    invalidateSession(sessionId: string): Promise<void>;
   },
-): Promise<Result<{ redirectTo: string }, DomainError>> {
+): Promise<Result<{ redirectTo: string; sessionToken: string }, DomainError>> {
   const result = await deps.uow.run(async (transactionRepos) => {
     const onboarding = await completeAccountOnboardingWithRepos(
       transactionRepos,
@@ -58,7 +54,7 @@ export async function completeOnboarding(
       ? null
       : (input.session.strongAuthAt ?? Date.now());
 
-  const issued = await issueSessionTransition({
+  const issued = await createSessionService(deps.repos).establish({
     user,
     sessionClass: "app",
     request: {
@@ -68,10 +64,9 @@ export async function completeOnboarding(
     primaryAuthMethod: input.session.primaryAuthMethod,
     strongAuthMethod,
     strongAuthAt,
-    deps: deps.repos,
   });
-  await replaceCurrentSession(issued.token, (sessionId) =>
-    input.invalidateSession(sessionId),
-  );
-  return Ok({ redirectTo: getDefaultAppPath(user.role) });
+  return Ok({
+    redirectTo: getDefaultAppPath(user.role),
+    sessionToken: issued.token,
+  });
 }

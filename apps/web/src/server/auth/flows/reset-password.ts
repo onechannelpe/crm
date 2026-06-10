@@ -3,25 +3,25 @@ import {
   hashPasswordResetToken,
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
-import { Ok } from "~/server/shared/result";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { PasswordResetRequestContext } from "../../infrastructure/password-reset-context";
-import type { ResetPasswordResult } from "../contracts";
+import type { PasswordResetRequestContext } from "../infrastructure/password-reset-context";
 
 export async function resetPassword(input: {
   token: string;
   password: string;
   confirmPassword: string;
   deps: PasswordResetRequestContext;
-}): Promise<ResetPasswordResult> {
+}): Promise<Result<{ ok: true }, DomainError>> {
   if (!isValidPasswordResetTokenFormat(input.token)) {
-    return { ok: false, code: "invalid_token" };
+    return Err(fail("invalid_token"));
   }
   if (input.password.length < 8) {
-    return { ok: false, code: "password_too_short" };
+    return Err(fail("password_too_short"));
   }
   if (input.password !== input.confirmPassword) {
-    return { ok: false, code: "password_mismatch" };
+    return Err(fail("password_mismatch"));
   }
 
   const now = Date.now();
@@ -30,7 +30,7 @@ export async function resetPassword(input: {
     now,
   );
   if (!record) {
-    return { ok: false, code: "invalid_token" };
+    return Err(fail("invalid_token"));
   }
 
   const passwordHash = await hashPassword(input.password);
@@ -40,5 +40,5 @@ export async function resetPassword(input: {
     return Ok(undefined);
   });
 
-  return { ok: true };
+  return Ok({ ok: true });
 }

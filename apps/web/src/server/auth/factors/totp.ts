@@ -1,5 +1,6 @@
 import type { Selectable } from "kysely";
 
+import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { matchesRecoveryCode } from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
@@ -12,8 +13,6 @@ import type {
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
 import { Err, Ok, type Result } from "~/server/shared/result";
-
-import { recordAuthEvent } from "../security/auth-events";
 
 type UserRow = Selectable<UsersTable>;
 

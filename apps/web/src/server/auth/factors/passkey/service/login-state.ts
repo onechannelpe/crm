@@ -1,10 +1,9 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
+import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
-
-import type { PasskeyLoginFlowState } from "./types";
 
 type PasskeyLoginStateRepos = {
   loginFlows: ReturnType<typeof createLoginFlowsRepo>;

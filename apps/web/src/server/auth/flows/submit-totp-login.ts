@@ -1,16 +1,15 @@
-import { assertPositiveInt } from "~/contracts/guards";
-import { verifyTotpStepUp } from "~/lib/auth/factors/totp-verifier";
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import {
-  issueSessionTransition,
-  type SessionRequestMetadata,
-} from "~/lib/auth/session/session-transition";
-import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
+import type {
+  LoginFlowLoginResult,
+  SubmitTotpLoginError,
+} from "~/server/auth/application/contracts";
+import { verifyTotpStepUp } from "~/server/auth/factors/totp";
+import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
+import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
+import { createSessionService } from "~/server/auth/session/session.service";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-
-import type { LoginFlowLoginResult, SubmitTotpLoginError } from "../contracts";
 
 export async function submitTotpForLoginFlow(
   input: {
@@ -25,8 +24,7 @@ export async function submitTotpForLoginFlow(
     SubmitTotpLoginError
   >
 > {
-  const safeFlowId = assertPositiveInt(input.flowId, "flowId");
-  const flow = await deps.loginFlows.findById(safeFlowId);
+  const flow = await deps.loginFlows.findById(input.flowId);
 
   if (!flow || flow.state !== "totp" || flow.expires_at < Date.now()) {
     await deleteLoginFlow(flow, deps);
@@ -63,7 +61,7 @@ export async function submitTotpForLoginFlow(
     deps,
     sendPrivilegedLoginAlert,
   });
-  const result = await issueSessionTransition({
+  const result = await createSessionService(deps).establish({
     user,
     sessionClass: "app",
     request: {
@@ -74,7 +72,6 @@ export async function submitTotpForLoginFlow(
     strongAuthMethod: stepUp.value.strongAuthMethod,
     strongAuthAt: stepUp.value.strongAuthAt,
     auditAction: "login",
-    deps,
   });
   await deps.loginFlows.delete(flow.id);
 

@@ -1,4 +1,4 @@
-import { issueSessionTransition } from "~/lib/auth/session/session-transition";
+import { createSessionService } from "~/server/auth/session/session.service";
 import type { InviteService } from "~/server/invites/application/types";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { DomainError } from "~/server/shared/domain-error";
@@ -34,14 +34,13 @@ export async function submitInviteAcceptance(
     throw new Error("No se pudo activar la cuenta");
   }
 
-  const issued = await issueSessionTransition({
+  const issued = await createSessionService(deps.repos).establish({
     user,
     sessionClass: "pre_auth",
     request,
     primaryAuthMethod: "password",
     strongAuthMethod: null,
     strongAuthAt: null,
-    deps: deps.repos,
   });
 
   return Ok({

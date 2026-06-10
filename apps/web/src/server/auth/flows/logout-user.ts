@@ -1,8 +1,7 @@
+import type { AuthSessionLogoutPort } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-
-import type { AuthSessionLogoutPort } from "../ports";
 
 export async function logoutUser(
   ctx: AppContext,
@@ -11,7 +10,7 @@ export async function logoutUser(
   const { id, userId } = ctx.actor;
   const now = ctx.now();
 
-  await port.invalidateSession(id);
+  await port.revokeSession(id);
   await port.revokeInstallationSessionsByAuthSession(id, now);
   await port.updateExecutiveSyncHealth({
     userId,

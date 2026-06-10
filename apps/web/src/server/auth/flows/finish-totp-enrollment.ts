@@ -1,11 +1,11 @@
-import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
+import { createSessionService } from "~/server/auth/session/session.service";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { TotpEnrollmentContext } from "../../infrastructure/totp-context";
+import type { TotpEnrollmentContext } from "../infrastructure/totp-context";
 
 export async function finishTotpEnrollment(
   ctx: AppContext,
@@ -42,7 +42,7 @@ export async function finishTotpEnrollment(
     created_at: ctx.now(),
   });
 
-  const issued = await issueSessionTransition({
+  const issued = await createSessionService(deps.repos).establish({
     user,
     sessionClass: ctx.actor.sessionClass,
     request: {
@@ -52,7 +52,6 @@ export async function finishTotpEnrollment(
     primaryAuthMethod: ctx.actor.primaryAuthMethod,
     strongAuthMethod: "totp",
     strongAuthAt: ctx.now(),
-    deps: deps.repos,
   });
 
   return Ok({

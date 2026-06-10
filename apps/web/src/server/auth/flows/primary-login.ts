@@ -2,22 +2,19 @@ import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
 import type { AuthContext } from "~/lib/auth/context/auth-context";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import {
-  issueLoginSession,
-  type SessionRequestMetadata,
-} from "~/lib/auth/session/session-transition";
 import { config } from "~/lib/config";
-import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
-import { createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
-import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
-import type { AuthProof } from "~/server/auth/policy/types";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-
 import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
   TotpLoginFlowState,
-} from "../contracts";
+} from "~/server/auth/application/contracts";
+import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
+import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
+import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
+import type { AuthProof } from "~/server/auth/policy/types";
+import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
+import { createSessionService } from "~/server/auth/session/session.service";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 async function createTotpLoginFlow(
   identifier: string,
@@ -87,10 +84,6 @@ export async function completePrimaryAuthProof(params: {
       primaryAuthMethod: params.proof.kind,
     });
     if (isErr(flow)) {
-      if (flow.error.kind === "unexpected") {
-        return Err(flow.error);
-      }
-
       return Err({ kind: "invalid_credentials" });
     }
 
@@ -108,13 +101,14 @@ export async function completePrimaryAuthProof(params: {
     sendPrivilegedLoginAlert: params.sendPrivilegedLoginAlert,
   });
 
-  const issued = await issueLoginSession({
+  const issued = await createSessionService(params.deps).establish({
     user: context.user,
-    decision,
+    sessionClass: decision.sessionClass,
     request: params.request,
     primaryAuthMethod: params.proof.kind,
+    strongAuthMethod: decision.strongAuthMethod,
+    strongAuthAt: decision.strongAuthAt,
     auditAction: params.proof.kind === "passkey" ? "login_passkey" : "login",
-    deps: params.deps,
   });
 
   return Ok({

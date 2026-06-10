@@ -1,14 +1,13 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { assertPositiveInt } from "~/contracts/guards";
-import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
+import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/types";
 import { config } from "~/lib/config";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { isPasskeyRequestError } from "~/server/auth/factors/passkey-provider";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
-import type { PasskeyEnrollmentChallenge } from "./types";
 
 interface PasskeyEnrollmentServiceDeps {
   webauthnService: {
@@ -46,10 +45,12 @@ export function createPasskeyEnrollmentService(
       input: BeginPasskeyEnrollmentInput,
     ): Promise<Result<PasskeyEnrollmentChallenge, DomainError>> {
       const identifier = `user:${input.userId}`;
+
       const throttle = await throttleService.checkPasskeyChallengeThrottle(
         identifier,
         input.ipAddress,
       );
+
       if (!throttle.allowed) {
         return Err(fail("invalid_passkey_request"));
       }
@@ -73,10 +74,7 @@ export function createPasskeyEnrollmentService(
     ): Promise<Result<void, DomainError>> {
       const identifier = `user:${input.userId}`;
 
-      let safeChallengeId: number;
-      try {
-        safeChallengeId = assertPositiveInt(input.challengeId, "challengeId");
-      } catch {
+      if (!Number.isInteger(input.challengeId) || input.challengeId < 1) {
         return Err(fail("invalid_passkey_request"));
       }
 
@@ -84,12 +82,15 @@ export function createPasskeyEnrollmentService(
         identifier,
         input.ipAddress,
       );
+
       if (!throttle.allowed) {
         return Err(fail("invalid_passkey_request"));
       }
 
-      const challenge =
-        await repos.webauthnChallenges.findById(safeChallengeId);
+      const challenge = await repos.webauthnChallenges.findById(
+        input.challengeId,
+      );
+
       if (
         !challenge ||
         challenge.type !== "registration" ||
@@ -99,24 +100,36 @@ export function createPasskeyEnrollmentService(
           identifier,
           input.ipAddress,
         );
+
         return Err(fail("invalid_passkey_request"));
       }
 
       await repos.webauthnChallenges.delete(challenge.id);
+
       if (challenge.expires_at < Date.now()) {
         await throttleService.recordPasskeyVerifyFailure(
           identifier,
           input.ipAddress,
         );
+
         return Err(fail("invalid_passkey_request"));
       }
 
       try {
-        await deps.webauthnService.verifyRegistration(
+        const registration = await deps.webauthnService.verifyRegistration(
           input.userId,
           input.response,
           challenge.challenge,
         );
+
+        if (!registration.verified) {
+          await throttleService.recordPasskeyVerifyFailure(
+            identifier,
+            input.ipAddress,
+          );
+
+          return Err(fail("invalid_passkey_request"));
+        }
       } catch (error: unknown) {
         if (!isPasskeyRequestError(error)) {
           throw error;
@@ -126,6 +139,7 @@ export function createPasskeyEnrollmentService(
           identifier,
           input.ipAddress,
         );
+
         return Err(fail("invalid_passkey_request"));
       }
 
@@ -133,6 +147,7 @@ export function createPasskeyEnrollmentService(
         identifier,
         input.ipAddress,
       );
+
       await repos.auditLogs.create({
         user_id: input.userId,
         action: "passkey_registered",
@@ -141,6 +156,7 @@ export function createPasskeyEnrollmentService(
         changes: null,
         created_at: Date.now(),
       });
+
       return Ok(undefined);
     },
   };

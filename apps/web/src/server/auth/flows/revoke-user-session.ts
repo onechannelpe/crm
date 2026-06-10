@@ -2,11 +2,10 @@ import {
   serializeAuditChanges,
   sessionRevokedByAdminChanges,
 } from "~/contracts/audit";
+import type { AdminSessionRevocationPort } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-
-import type { AdminSessionRevocationPort } from "../ports";
 
 export async function revokeUserSession(
   ctx: AppContext,
@@ -14,7 +13,7 @@ export async function revokeUserSession(
   input: { sessionId: string; targetUserId: number },
 ): Promise<Result<{ success: true }, DomainError>> {
   const now = ctx.now();
-  await port.invalidateSession(input.sessionId);
+  await port.revokeSession(input.sessionId);
   await port.revokeInstallationSessionsByAuthSession(input.sessionId, now);
   await port.updateExecutiveSyncHealth({
     userId: input.targetUserId,

@@ -2,9 +2,10 @@ import {
   generatePasswordResetToken,
   hashPasswordResetToken,
 } from "~/lib/auth/password/reset-tokens";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { PasswordResetRequestContext } from "../../infrastructure/password-reset-context";
-import type { RequestPasswordResetResult } from "../contracts";
+import type { PasswordResetRequestContext } from "../infrastructure/password-reset-context";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;
@@ -13,16 +14,16 @@ export async function requestPasswordReset(input: {
   email: string;
   origin: string;
   deps: PasswordResetRequestContext;
-}): Promise<RequestPasswordResetResult> {
+}): Promise<Result<{ ok: true }, DomainError>> {
   const email = input.email.trim().toLowerCase();
   if (!email) {
-    return { ok: false, code: "email_required" };
+    return Err(fail("email_required"));
   }
 
   const now = Date.now();
   const user = await input.deps.repos.users.findByEmail(email);
   if (!user || !user.is_active) {
-    return { ok: true };
+    return Ok({ ok: true });
   }
 
   const recentCount =
@@ -31,7 +32,7 @@ export async function requestPasswordReset(input: {
       now - TOKEN_TTL_MS,
     );
   if (recentCount >= MAX_REQUESTS_PER_HOUR) {
-    return { ok: false, code: "rate_limited" };
+    return Err(fail("rate_limited"));
   }
 
   const token = generatePasswordResetToken();
@@ -53,5 +54,5 @@ export async function requestPasswordReset(input: {
     throw new Error(sent.error.message);
   }
 
-  return { ok: true };
+  return Ok({ ok: true });
 }

@@ -1,9 +1,9 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { createPasskeyLoginFinishAuthService } from "~/server/auth/passkey/service";
+import { createPasskeyLoginFinishAuthService } from "~/server/auth/factors/passkey/service";
 
-import type { AuthLoginDeps } from "../login-deps";
+import type { AuthLoginDeps } from "./login-deps";
 
 type PasskeyFinishProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginFinishAuthService>[1]

@@ -6,8 +6,8 @@ import type { AdminSessionRevocationPort } from "../application/ports";
 
 interface AdminSessionRevocationRuntimeDeps {
   executor: DatabaseExecutor;
-  invalidateSession(sessionId: string): Promise<void>;
-  invalidateUserSessions(userId: number): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
+  revokeUserSessions(userId: number): Promise<void>;
 }
 
 export function createAdminSessionRevocationContext(
@@ -18,11 +18,11 @@ export function createAdminSessionRevocationContext(
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
-    invalidateSession(sessionId) {
-      return deps.invalidateSession(sessionId);
+    revokeSession(sessionId) {
+      return deps.revokeSession(sessionId);
     },
-    invalidateUserSessions(userId) {
-      return deps.invalidateUserSessions(userId);
+    revokeUserSessions(userId) {
+      return deps.revokeUserSessions(userId);
     },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(

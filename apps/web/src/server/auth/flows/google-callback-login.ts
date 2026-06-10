@@ -1,5 +1,6 @@
+import { authenticateGoogleAuthorizationCode } from "~/lib/auth/google/google-oauth";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { submitGoogleLogin } from "~/server/auth/application/commands/submit-google-login";
+import { submitGoogleLogin } from "~/server/auth/flows/submit-google-login";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -14,8 +15,6 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createUsersRepo } from "~/server/users/repos-users";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
-
-import { authenticateGoogleAuthorizationCode } from "./google-oauth";
 
 type GoogleCallbackDeps = {
   oauthAccounts: ReturnType<typeof createOAuthAccountsRepo>;
@@ -107,10 +106,6 @@ export async function completeGoogleOAuthCallback(
   );
 
   if (isErr(loginResult)) {
-    if (loginResult.error.kind === "unexpected") {
-      throw new Error(loginResult.error.message);
-    }
-
     return Err({
       kind: "redirect_to_login",
       error:

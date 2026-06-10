@@ -1,9 +1,9 @@
 import {
   createPasskeyLoginStartAuthService,
   type BeginPasskeyLoginInput,
-} from "~/server/auth/passkey/service";
+} from "~/server/auth/factors/passkey/service";
 
-import type { AuthLoginDeps } from "../login-deps";
+import type { AuthLoginDeps } from "./login-deps";
 
 type PasskeyStartProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginStartAuthService>[1]

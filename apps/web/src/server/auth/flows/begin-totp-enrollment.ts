@@ -13,7 +13,7 @@ import {
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { TotpEnrollmentContext } from "../../infrastructure/totp-context";
+import type { TotpEnrollmentContext } from "../infrastructure/totp-context";
 
 export async function beginTotpEnrollment(
   ctx: AppContext,
