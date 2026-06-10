@@ -10,6 +10,7 @@ import {
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
+import { isErr, Ok } from "~/server/shared/result";
 
 import { workflowActor } from "./actor";
 
@@ -201,11 +202,18 @@ export async function requestAddLeadToFavorites(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, { leadId }) =>
-      getServerRuntime().workflow.commands.addToFavorites({
+    execute: async ({ actor }, { leadId }) => {
+      const result = await getServerRuntime().workflow.commands.addToFavorites({
         actor: workflowActor(actor),
         leadId,
-      }),
+      });
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Empresa agregada a favoritos" });
+    },
   });
 }
 
@@ -216,11 +224,19 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, { leadId }) =>
-      getServerRuntime().workflow.commands.removeFromFavorites({
-        actor: workflowActor(actor),
-        leadId,
-      }),
+    execute: async ({ actor }, { leadId }) => {
+      const result =
+        await getServerRuntime().workflow.commands.removeFromFavorites({
+          actor: workflowActor(actor),
+          leadId,
+        });
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Empresa quitada de favoritos" });
+    },
   });
 }
 

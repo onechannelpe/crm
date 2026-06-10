@@ -3,10 +3,8 @@
 import { ROLES } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
-import { isErr, type Result } from "~/server/shared/result";
-import type { CreateTeamInviteCommand } from "~/server/team/application/contracts";
+import { isErr, Ok } from "~/server/shared/result";
 import {
   createTeamInvite as createTeamInviteService,
   resendTeamInvite as resendTeamInviteService,
@@ -16,12 +14,12 @@ import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
 
 export async function createTeamInvite(
   input: unknown,
-): Promise<{ inviteId: number }> {
+): Promise<{ inviteId: number; message: string }> {
   return runAction({
     name: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
 
-    parse: (): Result<CreateTeamInviteCommand, DomainError> => {
+    parse: () => {
       const command = parseObject(input, validationFail, (r) => ({
         names: r.str("names"),
         firstSurname: r.str("firstSurname"),
@@ -45,13 +43,26 @@ export async function createTeamInvite(
       hasTeamId: teamId !== null,
     }),
 
-    execute: (ctx, command) =>
-      createTeamInviteService(ctx, getServerRuntime().team.invites, command),
+    execute: async (ctx, command) => {
+      const result = await createTeamInviteService(
+        ctx,
+        getServerRuntime().team.invites,
+        command,
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ ...result.value, message: "Invitación enviada" });
+    },
   });
 }
 
-export async function resendTeamInvite(inviteId: unknown): Promise<void> {
-  await runAction({
+export async function resendTeamInvite(
+  inviteId: unknown,
+): Promise<{ message: string }> {
+  return runAction({
     name: "team.invite.resend",
     access: { kind: "permission", permission: "hr:manage" },
 
@@ -62,13 +73,26 @@ export async function resendTeamInvite(inviteId: unknown): Promise<void> {
 
     audit: ({ inviteId }) => ({ inviteId }),
 
-    execute: (ctx, invite) =>
-      resendTeamInviteService(ctx, getServerRuntime().team.invites, invite),
+    execute: async (ctx, command) => {
+      const result = await resendTeamInviteService(
+        ctx,
+        getServerRuntime().team.invites,
+        command,
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Invitación reenviada" });
+    },
   });
 }
 
-export async function revokeTeamInvite(inviteId: unknown): Promise<void> {
-  await runAction({
+export async function revokeTeamInvite(
+  inviteId: unknown,
+): Promise<{ message: string }> {
+  return runAction({
     name: "team.invite.revoke",
     access: { kind: "permission", permission: "hr:manage" },
 
@@ -79,7 +103,18 @@ export async function revokeTeamInvite(inviteId: unknown): Promise<void> {
 
     audit: ({ inviteId }) => ({ inviteId }),
 
-    execute: (ctx, invite) =>
-      revokeTeamInviteService(ctx, getServerRuntime().team.invites, invite),
+    execute: async (ctx, command) => {
+      const result = await revokeTeamInviteService(
+        ctx,
+        getServerRuntime().team.invites,
+        command,
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Invitación revocada" });
+    },
   });
 }
