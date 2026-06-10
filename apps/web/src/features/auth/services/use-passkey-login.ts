@@ -27,9 +27,11 @@ function buildPasskeyStartFormData(
 ): FormData {
   const formData = new FormData();
   formData.set("mode", input.mode);
+
   if (input.mode === "identified") {
     formData.set("identifier", input.identifier);
   }
+
   return formData;
 }
 
@@ -66,6 +68,7 @@ export function usePasskeyLogin() {
 
   async function markUnsupported() {
     setError("Este navegador no admite claves de acceso.");
+
     await trackAuthClientEvent({
       kind: "passkey_result",
       outcome: "failed",
@@ -73,7 +76,7 @@ export function usePasskeyLogin() {
     });
   }
 
-  async function runFlow(flow: PasskeyLoginFlowState): Promise<boolean> {
+  async function continueFlow(flow: PasskeyLoginFlowState): Promise<boolean> {
     setActiveFlow(flow);
     setError(undefined);
 
@@ -83,49 +86,52 @@ export function usePasskeyLogin() {
     }
 
     setPhase("device");
+
     try {
       const response = await createAuthenticationResponse(flow.requestOptions);
+
       setPhase("verifying");
 
       const { redirectTo } = await finishPasskeyLogin(flow.id, response);
+
       navigate(redirectTo);
       return true;
-    } catch (caughtError: unknown) {
-      if (caughtError instanceof DOMException) {
-        if (
-          caughtError.name === "NotAllowedError" ||
-          caughtError.name === "AbortError"
-        ) {
-          await trackAuthClientEvent({
-            kind: "passkey_result",
-            outcome: "failed",
-            code: "cancelled",
-          });
-          setError(
-            "La verificación con clave de acceso se canceló. Intenta de nuevo.",
-          );
-          return false;
-        }
-      }
+    } catch (err: unknown) {
+      if (
+        err instanceof DOMException &&
+        (err.name === "NotAllowedError" || err.name === "AbortError")
+      ) {
+        await trackAuthClientEvent({
+          kind: "passkey_result",
+          outcome: "failed",
+          code: "cancelled",
+        });
 
-      // ActionError from finishPasskeyLogin (flow_expired, invalid_credentials).
-      // May arrive as a plain wire-shaped object after RPC deserialization.
-      const wire = parseWireError(caughtError);
-      if (wire.kind !== "internal") {
-        setError(wire.message);
-        if (codeIs(wire, "flow_expired")) {
-          setActiveFlow(undefined);
-        }
+        setError(
+          "La verificación con clave de acceso se canceló. Intenta de nuevo.",
+        );
+
         return false;
       }
 
-      // The browser WebAuthn call already succeeded above, so an internal wire
-      // error here is a server fault or network failure, not a browser error.
+      const wire = parseWireError(err);
+
+      if (wire.kind !== "internal") {
+        setError(wire.message);
+
+        if (codeIs(wire, "flow_expired")) {
+          setActiveFlow(undefined);
+        }
+
+        return false;
+      }
+
       await trackAuthClientEvent({
         kind: "passkey_result",
         outcome: "failed",
         code: "server_error",
       });
+
       setError("No se pudo iniciar sesión con la clave de acceso.");
       return false;
     } finally {
@@ -135,6 +141,7 @@ export function usePasskeyLogin() {
 
   async function start(identifier: string): Promise<boolean> {
     const safeIdentifier = identifier.trim();
+
     if (!safeIdentifier || busy()) {
       return false;
     }
@@ -149,7 +156,8 @@ export function usePasskeyLogin() {
           identifier: safeIdentifier,
         }),
       );
-      return await runFlow(flow);
+
+      return continueFlow(flow);
     } catch (err: unknown) {
       setError(actionErrorMessage(err));
       return false;
@@ -172,7 +180,8 @@ export function usePasskeyLogin() {
       const { flow } = await beginPasskeyLogin(
         buildPasskeyStartFormData({ mode: "discoverable" }),
       );
-      return await runFlow(flow);
+
+      return continueFlow(flow);
     } catch (err: unknown) {
       setError(actionErrorMessage(err));
       return false;
@@ -185,11 +194,12 @@ export function usePasskeyLogin() {
 
   async function retry(): Promise<boolean> {
     const flow = activeFlow();
+
     if (!flow || busy()) {
       return false;
     }
 
-    return await runFlow(flow);
+    return continueFlow(flow);
   }
 
   return {
@@ -203,7 +213,7 @@ export function usePasskeyLogin() {
     start,
     startDiscoverable,
     retry,
-    runFlow,
+    continueFlow,
     resetError,
     clear,
   };
