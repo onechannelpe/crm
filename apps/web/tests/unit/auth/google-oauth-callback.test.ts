@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   completeGoogleOAuthCallback: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("~/lib/auth/google/google-callback-login", () => ({
+vi.mock("~/server/auth/flows/google-callback-login", () => ({
   completeGoogleOAuthCallback: mocks.completeGoogleOAuthCallback,
 }));
 

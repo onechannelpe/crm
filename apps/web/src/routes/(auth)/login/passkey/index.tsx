@@ -104,7 +104,7 @@ export default function LoginPasskeyPage() {
                     class={styles.full}
                     loading={passkeyLogin.busy()}
                     onClick={() => {
-                      void passkeyLogin.runFlow(flow());
+                      void passkeyLogin.continueFlow(flow());
                     }}
                   >
                     Reintentar con clave de acceso

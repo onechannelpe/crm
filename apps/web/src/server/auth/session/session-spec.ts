@@ -87,11 +87,16 @@ export interface SessionUsersPort {
   deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
 }
 
-/** Only the audit write `establish` needs; the full repo satisfies it. */
-export type SessionAuditPort = Pick<
-  ReturnType<typeof createAuditLogsRepo>,
-  "create"
->;
+/**
+ * Only the audit write `establish` needs. The params stay tied to the repo so
+ * call sites match the real schema, but the result is ignored, so the port does
+ * not demand the repo's kysely `InsertResult` (a fake `Promise<void>` suffices).
+ */
+export interface SessionAuditPort {
+  create(
+    values: Parameters<ReturnType<typeof createAuditLogsRepo>["create"]>[0],
+  ): Promise<unknown>;
+}
 
 export interface SessionServiceDeps {
   sessions: SessionRepositoryPort;
