@@ -9,13 +9,11 @@ import {
   type AuthFunnelEventName,
   type AuthFunnelMethod,
   type AuthFunnelOutcome,
-  type AuthFunnelSource,
   type AuthFunnelScreen,
+  type AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
 import { getServerRuntime } from "~/server/runtime";
 import { invalid, throwDomain } from "~/server/shared/domain-error";
-
-import { resolveBoundedPositiveInt } from "./analytics-input";
 
 export interface AuthFunnelSummaryRow {
   eventName: AuthFunnelEventName;
@@ -44,13 +42,45 @@ export interface AuthFunnelSnapshot {
   recent: AuthFunnelRecentEvent[];
 }
 
+function assertPositiveIntegerAtMost(
+  value: number,
+  field: string,
+  code: string,
+  max: number,
+) {
+  if (!Number.isInteger(value) || value < 1) {
+    throwDomain(
+      invalid({
+        code,
+        details: { field, rule: "positive_integer" },
+      }),
+    );
+  }
+
+  if (value > max) {
+    throwDomain(
+      invalid({
+        code,
+        details: {
+          field,
+          rule: "max",
+          max,
+          actual: value,
+        },
+      }),
+    );
+  }
+}
+
 function assertEventName(
   value: string | undefined,
 ): AuthFunnelEventName | undefined {
   if (!value) return undefined;
+
   if (isAuthFunnelEventName(value)) {
     return value;
   }
+
   throwDomain(invalid({ code: "invalid_event_name" }));
 }
 
@@ -58,9 +88,11 @@ function assertMethod(
   value: string | undefined,
 ): Exclude<AuthFunnelMethod, null> | undefined {
   if (!value) return undefined;
+
   if (isAuthFunnelMethod(value)) {
     return value;
   }
+
   throwDomain(invalid({ code: "invalid_method" }));
 }
 
@@ -68,17 +100,21 @@ function assertOutcome(
   value: string | undefined,
 ): AuthFunnelOutcome | undefined {
   if (!value) return undefined;
+
   if (isAuthFunnelOutcome(value)) {
     return value;
   }
+
   throwDomain(invalid({ code: "invalid_outcome" }));
 }
 
 function assertScreen(value: string | null): AuthFunnelScreen | null {
   if (value === null) return null;
+
   if (!isAuthAnalyticsScreen(value)) {
     throwDomain(invalid({ code: "invalid_screen" }));
   }
+
   return value;
 }
 
@@ -91,26 +127,24 @@ export async function getAuthFunnelSnapshot(params?: {
 }): Promise<AuthFunnelSnapshot> {
   await requirePermission("audit:read");
 
-  const windowMinutes = resolveBoundedPositiveInt({
-    value: params?.windowMinutes,
-    fallback: 60,
-    name: "windowMinutes",
-    max: 24 * 60,
-    maxMessage: "windowMinutes must be <= 1440",
-  });
-  const limit = resolveBoundedPositiveInt({
-    value: params?.limit,
-    fallback: 50,
-    name: "limit",
-    max: 200,
-    maxMessage: "limit must be <= 200",
-  });
+  const windowMinutes = params?.windowMinutes ?? 60;
+  const limit = params?.limit ?? 50;
+
+  assertPositiveIntegerAtMost(
+    windowMinutes,
+    "window_minutes",
+    "invalid_window_minutes",
+    24 * 60,
+  );
+  assertPositiveIntegerAtMost(limit, "limit", "invalid_limit", 200);
 
   const now = Date.now();
-  const fromInclusive = now - windowMinutes * 60 * 1000;
+  const fromInclusive = now - windowMinutes * 60_000;
+
   const eventName = assertEventName(params?.eventName);
   const method = assertMethod(params?.method);
   const outcome = assertOutcome(params?.outcome);
+
   const { observabilityService } = getServerRuntime().observability;
 
   const [summary, recent] = await Promise.all([

@@ -10,18 +10,21 @@ import {
 } from "~/server/shared/domain-error";
 import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
 
-function mapAvatarErrorToMessage(code: AvatarDomainErrorCode): string {
+type ValidationAvatarErrorCode = Extract<
+  AvatarDomainErrorCode,
+  | "invalid_file"
+  | "too_large"
+  | "unsupported_mime"
+  | "avatar_not_found"
+  | "user_not_found"
+>;
+type ExternalAvatarErrorCode = Exclude<
+  AvatarDomainErrorCode,
+  ValidationAvatarErrorCode
+>;
+
+function avatarExternalMessage(code: ExternalAvatarErrorCode): string {
   switch (code) {
-    case "invalid_file":
-      return "Profile picture file is invalid.";
-    case "too_large":
-      return "Profile picture must be 10MB or less.";
-    case "unsupported_mime":
-      return "Only PNG, JPEG, and GIF are supported.";
-    case "avatar_not_found":
-      return "Profile picture not found.";
-    case "user_not_found":
-      return "User not found.";
     case "storage_unavailable":
     case "repository_unavailable":
       return "Profile picture service is unavailable.";
@@ -31,7 +34,9 @@ function mapAvatarErrorToMessage(code: AvatarDomainErrorCode): string {
   return exhaustiveCheck;
 }
 
-function isValidationAvatarError(code: AvatarDomainErrorCode): boolean {
+function isValidationAvatarError(
+  code: AvatarDomainErrorCode,
+): code is ValidationAvatarErrorCode {
   switch (code) {
     case "invalid_file":
     case "too_large":
@@ -55,11 +60,13 @@ function avatarUrl(version: number): string {
 export interface UpdateAvatarResult {
   avatarVersion: number;
   avatarUrl: string;
+  message: string;
 }
 
 export interface RemoveAvatarResult {
   avatarVersion: number;
   avatarUrl: null;
+  message: string;
 }
 
 export async function uploadUserAvatar(
@@ -75,16 +82,20 @@ export async function uploadUserAvatar(
 
   const result = await profilePictureService.upload(session.userId, file);
   if (!result.ok) {
-    const message = mapAvatarErrorToMessage(result.error.code);
     if (isValidationAvatarError(result.error.code)) {
-      throwDomain(invalid({ code: result.error.code, details: { message } }));
+      throwDomain(invalid({ code: result.error.code }));
     }
-    throwDomain(external(message, { code: result.error.code }));
+    throwDomain(
+      external(avatarExternalMessage(result.error.code), {
+        code: result.error.code,
+      }),
+    );
   }
 
   return {
     avatarVersion: result.value.avatarVersion,
     avatarUrl: avatarUrl(result.value.avatarVersion),
+    message: "Foto de perfil actualizada",
   };
 }
 
@@ -94,15 +105,19 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
   const result = await profilePictureService.remove(session.userId);
 
   if (!result.ok) {
-    const message = mapAvatarErrorToMessage(result.error.code);
     if (isValidationAvatarError(result.error.code)) {
-      throwDomain(invalid({ code: result.error.code, details: { message } }));
+      throwDomain(invalid({ code: result.error.code }));
     }
-    throwDomain(external(message, { code: result.error.code }));
+    throwDomain(
+      external(avatarExternalMessage(result.error.code), {
+        code: result.error.code,
+      }),
+    );
   }
 
   return {
     avatarVersion: result.value.avatarVersion,
     avatarUrl: null,
+    message: "Foto de perfil eliminada",
   };
 }

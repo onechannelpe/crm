@@ -1,9 +1,9 @@
 "use server";
 
+import { installSession } from "~/actions/auth/install-session";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
-import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
-import { submitInviteAcceptance } from "~/server/auth/application/commands/submit-invite-acceptance";
+import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
 import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 import { getInviteInfo as getInviteInfoService } from "~/server/team/application/invites";
@@ -158,6 +158,6 @@ export async function acceptInvitePasswordStep(input: {
     }
   }
 
-  setSessionCookie(result.value.sessionToken);
+  await installSession(result.value.sessionToken);
   return { ok: true, redirectTo: result.value.redirectTo };
 }

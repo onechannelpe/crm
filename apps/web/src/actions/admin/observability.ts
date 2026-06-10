@@ -4,8 +4,6 @@ import { requirePermission } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
 import { invalid, throwDomain } from "~/server/shared/domain-error";
 
-import { resolveBoundedPositiveInt, trimOrUndefined } from "./analytics-input";
-
 type ObservationStatus = "ok" | "error";
 
 export interface ObservabilityActionSummary {
@@ -42,7 +40,51 @@ function assertStatus(
 ): ObservationStatus | undefined {
   if (!value) return undefined;
   if (value === "ok" || value === "error") return value;
+
   throwDomain(invalid({ code: "invalid_status" }));
+}
+
+function trimOrUndefined(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+
+  return trimmed || undefined;
+}
+
+function assertPositiveIntegerLimit(
+  value: number,
+  options: {
+    code: string;
+    field: string;
+    max: number;
+  },
+): number {
+  if (!Number.isInteger(value) || value < 1) {
+    throwDomain(
+      invalid({
+        code: options.code,
+        details: {
+          field: options.field,
+          rule: "positive_integer",
+        },
+      }),
+    );
+  }
+
+  if (value > options.max) {
+    throwDomain(
+      invalid({
+        code: options.code,
+        details: {
+          field: options.field,
+          rule: "max",
+          max: options.max,
+          actual: value,
+        },
+      }),
+    );
+  }
+
+  return value;
 }
 
 export async function getObservabilitySnapshot(params?: {
@@ -53,25 +95,27 @@ export async function getObservabilitySnapshot(params?: {
 }): Promise<ObservabilitySnapshot> {
   await requirePermission("audit:read");
 
-  const windowMinutes = resolveBoundedPositiveInt({
-    value: params?.windowMinutes,
-    fallback: 60,
-    name: "windowMinutes",
-    max: 24 * 60,
-    maxMessage: "windowMinutes must be <= 1440",
-  });
-  const limit = resolveBoundedPositiveInt({
-    value: params?.limit,
-    fallback: 50,
-    name: "limit",
+  const windowMinutes = assertPositiveIntegerLimit(
+    params?.windowMinutes ?? 60,
+    {
+      code: "invalid_window_minutes",
+      field: "window_minutes",
+      max: 24 * 60,
+    },
+  );
+
+  const limit = assertPositiveIntegerLimit(params?.limit ?? 50, {
+    code: "invalid_limit",
+    field: "limit",
     max: 200,
-    maxMessage: "limit must be <= 200",
   });
 
-  const now = Date.now();
-  const fromInclusive = now - windowMinutes * 60 * 1000;
   const status = assertStatus(params?.status);
   const actionName = trimOrUndefined(params?.actionName);
+
+  const now = Date.now();
+  const fromInclusive = now - windowMinutes * 60_000;
+
   const { observabilityService } = getServerRuntime().observability;
 
   const [summary, recent] = await Promise.all([

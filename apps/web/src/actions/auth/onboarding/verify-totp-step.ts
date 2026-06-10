@@ -4,7 +4,6 @@ import { finishTotpEnrollment } from "../security/totp";
 
 export async function verifyTotpOnboardingStep(input: {
   code: string;
-}): Promise<{ recoveryCodes: string[] }> {
-  const recoveryCodes = await finishTotpEnrollment(input.code);
-  return { recoveryCodes };
+}): Promise<{ recoveryCodes: string[]; message: string }> {
+  return finishTotpEnrollment(input.code);
 }

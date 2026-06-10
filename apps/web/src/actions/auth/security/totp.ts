@@ -1,27 +1,29 @@
 "use server";
 
-import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
-import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/application/commands/begin-totp-enrollment";
-import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/application/commands/finish-totp-enrollment";
+import { installSession } from "~/actions/auth/install-session";
+import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/flows/begin-totp-enrollment";
+import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/flows/finish-totp-enrollment";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
+import { isErr, Ok } from "~/server/shared/result";
 
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
-  const totpContext = getServerRuntime().auth.totp;
-
   return runAction({
     name: "auth.totp.begin",
     access: { kind: "session" },
-    execute: (ctx) => beginTotpEnrollmentService(ctx, totpContext),
+
+    execute: (ctx) =>
+      beginTotpEnrollmentService(ctx, getServerRuntime().auth.totp),
   });
 }
 
-export async function finishTotpEnrollment(code: string): Promise<string[]> {
-  const runtime = getServerRuntime();
+export async function finishTotpEnrollment(
+  code: string,
+): Promise<{ recoveryCodes: string[]; message: string }> {
   const result = await runAction({
     name: "auth.totp.finish",
     access: { kind: "session" },
@@ -33,14 +35,28 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
         code: r.str("code"),
       })),
 
-    execute: (ctx, { code }) =>
-      finishTotpEnrollmentService(ctx, runtime.auth.totp, { code }),
+    execute: async (ctx, { code }) => {
+      const enrollment = await finishTotpEnrollmentService(
+        ctx,
+        getServerRuntime().auth.totp,
+        { code },
+      );
+
+      if (isErr(enrollment)) {
+        return enrollment;
+      }
+
+      return Ok({
+        ...enrollment.value,
+        message: "Aplicación de autenticación configurada",
+      });
+    },
   });
 
-  await replaceCurrentSession(
-    result.sessionToken,
-    runtime.auth.sessionService.invalidateSession,
-  );
+  await installSession(result.sessionToken);
 
-  return result.recoveryCodes;
+  return {
+    recoveryCodes: result.recoveryCodes,
+    message: result.message,
+  };
 }

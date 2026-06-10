@@ -1,6 +1,5 @@
 "use server";
 
-import type { ActionSuccess } from "~/contracts/common";
 import type { Role } from "~/lib/auth/access/rbac";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
@@ -50,7 +49,7 @@ function assertProtectedRoleKeepsStrongAuth(input: {
 export async function changePassword(
   currentPassword: unknown,
   newPassword: unknown,
-): Promise<ActionSuccess> {
+): Promise<{ message: string }> {
   return runAction({
     name: "settings.security.change_password",
     access: { kind: "session" },
@@ -93,12 +92,12 @@ export async function changePassword(
         created_at: Date.now(),
       });
 
-      return Ok({ success: true });
+      return Ok({ message: "Contraseña actualizada" });
     },
   });
 }
 
-export async function removeAllPasskeys(): Promise<ActionSuccess> {
+export async function removeAllPasskeys(): Promise<{ message: string }> {
   return runAction({
     name: "settings.security.remove_passkeys",
     access: { kind: "session" },
@@ -128,12 +127,12 @@ export async function removeAllPasskeys(): Promise<ActionSuccess> {
         created_at: Date.now(),
       });
 
-      return Ok({ success: true });
+      return Ok({ message: "Claves de acceso eliminadas" });
     },
   });
 }
 
-export async function disableTotp(): Promise<ActionSuccess> {
+export async function disableTotp(): Promise<{ message: string }> {
   return runAction({
     name: "settings.security.disable_totp",
     access: { kind: "session" },
@@ -165,7 +164,7 @@ export async function disableTotp(): Promise<ActionSuccess> {
         created_at: Date.now(),
       });
 
-      return Ok({ success: true });
+      return Ok({ message: "Aplicación de autenticación desactivada" });
     },
   });
 }

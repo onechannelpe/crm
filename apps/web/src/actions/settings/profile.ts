@@ -1,6 +1,5 @@
 "use server";
 
-import type { ActionSuccess } from "~/contracts/common";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -10,7 +9,7 @@ import { Err, isErr, Ok } from "~/server/shared/result";
 
 export async function updateUserProfile(
   phone: unknown,
-): Promise<ActionSuccess> {
+): Promise<{ message: string }> {
   return runAction({
     name: "settings.profile.update_phone",
     access: { kind: "session" },
@@ -43,7 +42,7 @@ export async function updateUserProfile(
         return Err(fail("phone_in_use"));
       }
 
-      return Ok({ success: true });
+      return Ok({ message: "Perfil actualizado" });
     },
   });
 }
