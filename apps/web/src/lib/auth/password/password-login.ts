@@ -46,6 +46,10 @@ export async function verifyPasswordLoginCredentials(
   );
 
   if (!throttle.allowed) {
+    // Resolve the user even on the blocked path so lockout events stay
+    // attributable in per-user security analytics
+    // (findRecentLoginRetriesByUser); the identifier hash alone cannot be
+    // grouped by account.
     const blockedUser = await resolvedDeps.users.findByUsername(safeUsername);
     await recordAuthEvent(resolvedDeps, {
       userId: blockedUser?.id ?? null,

@@ -8,8 +8,8 @@ import {
 } from "~/features/workflow/data/optimistic-leads";
 import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
 import { shortName } from "~/lib/users/display-name";
-import { actionErrorMessage } from "~/lib/wire-error";
 import { parseWireError } from "~/lib/wire-error";
+import { codeIs } from "~/lib/wire-error-codes";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";
@@ -84,14 +84,13 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     } catch (submitError) {
       optimisticTransactions.rollback(txId);
       const wire = parseWireError(submitError);
-      const message = actionErrorMessage(submitError);
-      if (wire.code === "invalid_ruc" || wire.code === "ruc_required") {
-        setError(message);
+      if (codeIs(wire, "invalid_ruc") || codeIs(wire, "ruc_required")) {
+        setError(wire.message);
         input.setActiveTab("home");
         return;
       }
 
-      setError(message);
+      setError(wire.message);
     }
   }
 

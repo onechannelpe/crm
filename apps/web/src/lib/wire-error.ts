@@ -116,13 +116,3 @@ export function parseWireError(error: unknown): WireError {
 export function actionErrorMessage(error: unknown): string {
   return parseWireError(error).message;
 }
-
-/**
- * True when a caught action error matches a granular code or coarse class. For
- * behavioral branching only (field-error placement, recovery flows), never for
- * display.
- */
-export function isActionErrorCode(error: unknown, code: string): boolean {
-  const wire = parseWireError(error);
-  return wire.code === code || wire.kind === code;
-}

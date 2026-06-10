@@ -205,7 +205,7 @@ function OnboardingContent() {
     try {
       const result = await verifyTotpOnboardingStep({ code: totpCode() });
       setRecoveryCodes(result.recoveryCodes);
-      enqueueSuccessSnackBar("Autenticación en dos pasos configurada");
+      enqueueSuccessSnackBar(result.message);
       await refreshCurrentUser();
       await refetchRequirements();
     } catch (error: unknown) {

@@ -19,10 +19,6 @@ import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-page.module.css";
 
-function toMessage(error: unknown, fallback: string): string {
-  return actionErrorMessage(error);
-}
-
 export default function ProfilePage() {
   const { currentUser, updateCurrentUser } = useAuthenticatedSession();
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
@@ -48,31 +44,41 @@ export default function ProfilePage() {
   const avatarMutationPending = () => isUploadingAvatar() || isRemovingAvatar();
   const phoneFormId = "settings-profile-phone-form";
 
-  onCleanup(() => {
+  function clearAvatarPreview() {
     const preview = avatarPreviewUrl();
+
     if (preview) {
       URL.revokeObjectURL(preview);
+      setAvatarPreviewUrl(null);
     }
-  });
+  }
 
-  const saveProfile = async (e: Event) => {
-    e.preventDefault();
+  onCleanup(clearAvatarPreview);
+
+  const savePhone = async (event: SubmitEvent) => {
+    event.preventDefault();
+
     const localPhone = normalizePhoneInput(profilePhone());
     setProfilePhone(localPhone);
+
     if (!isValidPhone(localPhone)) {
       enqueueErrorSnackBar("Ingresa 9 dígitos y que empiece con 9");
       return;
     }
+
     setSavingProfile(true);
+
     try {
-      await updateUserProfile(localPhone);
+      const { message } = await updateUserProfile(localPhone);
+
       updateCurrentUser((existing) => ({
         ...existing,
         phone: localPhone,
       }));
-      enqueueSuccessSnackBar("Perfil actualizado");
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(toMessage(err, "No se pudo actualizar el perfil"));
+
+      enqueueSuccessSnackBar(message);
+    } catch (error: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setSavingProfile(false);
     }
@@ -80,11 +86,7 @@ export default function ProfilePage() {
 
   const uploadProfilePicture = async (file: File) => {
     setAvatarError(null);
-
-    const previousPreview = avatarPreviewUrl();
-    if (previousPreview) {
-      URL.revokeObjectURL(previousPreview);
-    }
+    clearAvatarPreview();
 
     const optimisticPreview = URL.createObjectURL(file);
     setAvatarPreviewUrl(optimisticPreview);
@@ -92,6 +94,7 @@ export default function ProfilePage() {
     try {
       const formData = new FormData();
       formData.set("file", file);
+
       const updated = await uploadAvatar(formData);
 
       setAvatarUrl(updated.avatarUrl);
@@ -100,15 +103,12 @@ export default function ProfilePage() {
         avatarUrl: updated.avatarUrl,
         avatarVersion: updated.avatarVersion,
       }));
-      enqueueSuccessSnackBar("Foto de perfil actualizada");
-
-      URL.revokeObjectURL(optimisticPreview);
-      setAvatarPreviewUrl(null);
+      enqueueSuccessSnackBar(updated.message);
+      clearAvatarPreview();
     } catch (error: unknown) {
-      URL.revokeObjectURL(optimisticPreview);
-      setAvatarPreviewUrl(null);
+      clearAvatarPreview();
 
-      const message = toMessage(error, "No se pudo subir la foto de perfil");
+      const message = actionErrorMessage(error);
       setAvatarError(message);
       enqueueErrorSnackBar(message);
     }
@@ -116,24 +116,20 @@ export default function ProfilePage() {
 
   const removeProfilePicture = async () => {
     setAvatarError(null);
-
-    const previousPreview = avatarPreviewUrl();
-    if (previousPreview) {
-      URL.revokeObjectURL(previousPreview);
-      setAvatarPreviewUrl(null);
-    }
+    clearAvatarPreview();
 
     try {
       const updated = await removeAvatar();
+
       setAvatarUrl(updated.avatarUrl);
       updateCurrentUser((existing) => ({
         ...existing,
         avatarUrl: null,
         avatarVersion: updated.avatarVersion,
       }));
-      enqueueSuccessSnackBar("Foto de perfil eliminada");
+      enqueueSuccessSnackBar(updated.message);
     } catch (error: unknown) {
-      const message = toMessage(error, "No se pudo eliminar la foto de perfil");
+      const message = actionErrorMessage(error);
       setAvatarError(message);
       enqueueErrorSnackBar(message);
     }
@@ -169,16 +165,16 @@ export default function ProfilePage() {
       >
         <form
           id={phoneFormId}
-          onSubmit={(e) => {
-            void saveProfile(e);
+          onSubmit={(event) => {
+            void savePhone(event);
           }}
         >
           <div class={styles.formGrid}>
             <Input
               label="Teléfono"
               value={profilePhone()}
-              onInput={(e) =>
-                setProfilePhone(normalizePhoneInput(e.currentTarget.value))
+              onInput={(event) =>
+                setProfilePhone(normalizePhoneInput(event.currentTarget.value))
               }
               placeholder="987654321"
             />

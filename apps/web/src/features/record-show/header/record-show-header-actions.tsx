@@ -8,7 +8,7 @@ import Mail from "~/components/icons/mail";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
-import { useRecordActions } from "~/features/record-show/use-record-actions";
+import { useLeadActions } from "~/features/record-show/use-record-actions";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
@@ -33,7 +33,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const leadList = createAsync(() =>
     leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
   );
-  const { favoriteBusy, setFavorite } = useRecordActions();
+  const { favoriteBusy, setFavorite } = useLeadActions();
 
   const currentIndex = createMemo(() => {
     const rows = leadList()?.rows;

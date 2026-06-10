@@ -50,7 +50,7 @@ export type AuthFunnelClientEventPayload =
   | {
       kind: "passkey_result";
       outcome: "failed";
-      code: "cancelled" | "unsupported" | "browser_error";
+      code: "cancelled" | "unsupported" | "server_error";
     };
 
 export type AuthFunnelServerEventPayload =
@@ -90,7 +90,7 @@ export type AuthFunnelServerEventPayload =
         | "internal"
         | "cancelled"
         | "unsupported"
-        | "browser_error";
+        | "server_error";
     }
   | {
       kind: "passkey_result";

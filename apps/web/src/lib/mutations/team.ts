@@ -4,11 +4,13 @@ import { resendTeamInvite, revokeTeamInvite } from "~/actions/team/invites";
 import { inviteManagementQuery } from "~/lib/queries/team";
 
 export const resendTeamInviteMutation = action(async (inviteId: number) => {
-  await resendTeamInvite(inviteId);
-  return json({}, { revalidate: inviteManagementQuery.key });
+  const { message } = await resendTeamInvite(inviteId);
+
+  return json({ message }, { revalidate: inviteManagementQuery.key });
 }, "resendTeamInvite");
 
 export const revokeTeamInviteMutation = action(async (inviteId: number) => {
-  await revokeTeamInvite(inviteId);
-  return json({}, { revalidate: inviteManagementQuery.key });
+  const { message } = await revokeTeamInvite(inviteId);
+
+  return json({ message }, { revalidate: inviteManagementQuery.key });
 }, "revokeTeamInvite");

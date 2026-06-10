@@ -85,9 +85,7 @@ async function loadRequestSession(): Promise<AuthSession | null> {
     return null;
   }
 
-  const { session } =
-    await getServerRuntime().auth.sessionService.validateSessionToken(token);
-  return session;
+  return getServerRuntime().auth.sessionService.resolve(token);
 }
 
 async function loadRequestSessionState(

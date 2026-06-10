@@ -44,7 +44,7 @@ export function startBackgroundJobs() {
     executor: getServerRuntime().infra.db,
     messaging: getServerRuntime().notifications.messaging,
     invalidateUserSessions: (userId) =>
-      getServerRuntime().auth.sessionService.invalidateUserSessions(userId),
+      getServerRuntime().auth.sessionService.revokeAllForUser(userId),
   });
 
   // Start recovery scanner
