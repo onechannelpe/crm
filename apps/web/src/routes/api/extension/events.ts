@@ -40,7 +40,7 @@ export async function POST(event: APIEvent): Promise<Response> {
       });
     if (isErr(result)) {
       const status =
-        result.error.code === "session_invalid"
+        result.error.code === "extension_session_invalid"
           ? 401
           : result.error.code === "misconfigured"
             ? 503

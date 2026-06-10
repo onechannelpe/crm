@@ -8,7 +8,7 @@ import {
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
 import { isErr } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 

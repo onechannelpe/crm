@@ -12,7 +12,7 @@ import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-lo
 import {
   createPasskeyLoginFinishAuthService,
   createPasskeyLoginStartAuthService,
-} from "~/server/auth/passkey/service";
+} from "~/server/auth/factors/passkey/service";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 

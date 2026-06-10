@@ -1,11 +1,12 @@
-import { createSessionService } from "~/server/auth/application/session-service";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
+import { createSessionService } from "~/server/auth/session/session.service";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createFilesRuntime } from "~/server/runtime/files-runtime";
 import type { ServerInfra } from "~/server/runtime/infra";
 import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
 import type { EngineClient } from "~/server/shared/engine/client";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
 
@@ -49,6 +50,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     sessionService: createSessionService({
       sessions: createAuthSessionRepo(ctx.db),
       users: createAuthUsersRepo(ctx.db),
+      auditLogs: createAuditLogsRepo(ctx.db),
       now: now.get,
       logger,
     }),

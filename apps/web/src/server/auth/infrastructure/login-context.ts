@@ -1,5 +1,5 @@
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
+import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";

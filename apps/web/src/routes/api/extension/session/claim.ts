@@ -31,7 +31,7 @@ export async function POST(event: APIEvent): Promise<Response> {
           ? 400
           : result.error.code === "handoff_invalid"
             ? 401
-            : result.error.code === "session_invalid"
+            : result.error.code === "extension_session_invalid"
               ? 401
               : result.error.code === "misconfigured"
                 ? 503

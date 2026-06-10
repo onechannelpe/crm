@@ -1,5 +1,5 @@
-import { createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
-import type { PasskeyLoginFlowState } from "~/server/auth/passkey/service";
+import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
+import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
 import { isErr } from "~/server/shared/result";
 
 import type { BrowserDbRuntime } from "../runtime";

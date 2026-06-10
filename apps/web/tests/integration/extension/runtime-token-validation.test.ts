@@ -55,7 +55,7 @@ describe("extension runtime token validation", () => {
     expect(handoffs).toHaveLength(0);
   });
 
-  it("classifies malformed session tokens as session_invalid", async () => {
+  it("classifies malformed session tokens as extension_session_invalid", async () => {
     const scenario = createExtensionScenario(ctx);
 
     const result = await scenario.service.ingestRuntimeEvent({
@@ -70,6 +70,6 @@ describe("extension runtime token validation", () => {
     });
 
     const error = expectErr(result);
-    expect(error.code).toBe("session_invalid");
+    expect(error.code).toBe("extension_session_invalid");
   });
 });

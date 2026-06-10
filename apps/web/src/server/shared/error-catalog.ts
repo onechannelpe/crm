@@ -255,6 +255,10 @@ export const ERROR_CATALOG = {
   },
 
   // validation
+  flow_expired: {
+    kind: "validation",
+    message: "La sesión de inicio expiró. Intenta de nuevo.",
+  },
   invalid_passkey_request: {
     kind: "validation",
     message: "La solicitud de acceso no es válida.",
@@ -430,6 +434,27 @@ export const ERROR_CATALOG = {
   daily_refill_exceeds_max: {
     kind: "validation",
     message: "El límite diario supera el máximo permitido.",
+  },
+  // password reset
+  email_required: {
+    kind: "validation",
+    message: "Ingresa tu correo electrónico.",
+  },
+  rate_limited: {
+    kind: "validation",
+    message: "Demasiados intentos. Espera un momento e intenta de nuevo.",
+  },
+  invalid_token: {
+    kind: "validation",
+    message: "El enlace no es válido o ya venció. Solicita uno nuevo.",
+  },
+  password_too_short: {
+    kind: "validation",
+    message: "La contraseña debe tener al menos 8 caracteres.",
+  },
+  password_mismatch: {
+    kind: "validation",
+    message: "Las contraseñas no coinciden.",
   },
 } as const satisfies Record<string, { kind: DomainErrorKind; message: string }>;
 

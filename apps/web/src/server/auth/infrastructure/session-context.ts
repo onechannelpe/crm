@@ -14,7 +14,7 @@ import type { AuthSessionLogoutPort } from "../application/ports";
 
 interface AuthSessionRuntimeDeps {
   executor: DatabaseExecutor;
-  invalidateSession(sessionId: string): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
 }
 
 export function createAuthSessionReadContext(deps: AuthSessionRuntimeDeps) {
@@ -40,8 +40,8 @@ export function createAuthSessionLogoutContext(
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
-    invalidateSession(sessionId) {
-      return deps.invalidateSession(sessionId);
+    revokeSession(sessionId) {
+      return deps.revokeSession(sessionId);
     },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(

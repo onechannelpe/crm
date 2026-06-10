@@ -11,7 +11,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
-import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
 
 describe("passkey registration", () => {
   const scenario = createAuthScenario("passkey-registration");
@@ -56,7 +56,7 @@ describe("passkey registration", () => {
     ).beginEnrollment({ userId: execOne.userId, ipAddress });
 
     const error = expectErr(result);
-    expect(error.code).toBe("invalid_request");
+    expect(error.code).toBe("invalid_passkey_request");
   });
 
   it("rejects challenge ownership mismatch", async () => {
@@ -76,7 +76,7 @@ describe("passkey registration", () => {
     });
 
     const error = expectErr(result);
-    expect(error.code).toBe("invalid_request");
+    expect(error.code).toBe("invalid_passkey_request");
   });
 
   it("returns invalid request when verification fails", async () => {
@@ -99,7 +99,7 @@ describe("passkey registration", () => {
     });
 
     const error = expectErr(result);
-    expect(error.code).toBe("invalid_request");
+    expect(error.code).toBe("invalid_passkey_request");
   });
 
   it("propagates provider errors during option and verification generation", async () => {

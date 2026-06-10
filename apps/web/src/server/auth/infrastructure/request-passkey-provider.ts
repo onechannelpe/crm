@@ -5,7 +5,7 @@ import { getRequestEvent } from "solid-js/web";
 import {
   createPasskeyProvider,
   resolveWebauthnRelyingParty,
-} from "~/lib/auth/providers/passkey-provider";
+} from "~/server/auth/factors/passkey-provider";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 

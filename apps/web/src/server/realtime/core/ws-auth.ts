@@ -75,19 +75,17 @@ export async function resolvePeerSession(
     return null;
   }
 
-  const validation =
-    await getServerRuntime().auth.sessionService.validateSessionToken(
-      sessionToken,
-    );
-  if (!validation.session) {
+  const session =
+    await getServerRuntime().auth.sessionService.resolve(sessionToken);
+  if (!session) {
     return null;
   }
 
   return {
-    userId: validation.session.userId,
-    branchId: validation.session.branchId,
-    role: validation.session.role,
-    sessionClass: validation.session.sessionClass,
-    onboardingCompleted: validation.session.onboardingCompleted,
+    userId: session.userId,
+    branchId: session.branchId,
+    role: session.role,
+    sessionClass: session.sessionClass,
+    onboardingCompleted: session.onboardingCompleted,
   };
 }

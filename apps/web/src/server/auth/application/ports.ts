@@ -1,6 +1,6 @@
 export interface AdminSessionRevocationPort {
-  invalidateSession(sessionId: string): Promise<void>;
-  invalidateUserSessions(userId: number): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
+  revokeUserSessions(userId: number): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
     now: number,
@@ -22,7 +22,7 @@ export interface AdminSessionRevocationPort {
 }
 
 export interface AuthSessionLogoutPort {
-  invalidateSession(sessionId: string): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
     now: number,

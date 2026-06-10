@@ -1,6 +1,5 @@
 import { isPlainRecord } from "~/lib/type-guards";
-import type { DomainError } from "~/server/shared/domain-error";
-import { ERROR_CATALOG } from "~/server/shared/error-catalog";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 /**
@@ -209,31 +208,17 @@ function fieldCode(field: string): string {
  * stable, derivable code without hand-maintained strings. The root failure
  * reports "invalid_input".
  *
- * The user message is the catalog copy when the derived code is curated there
- * (for example "ruc_required"); otherwise it falls back to a generic Spanish
- * line, keeping the long tail of field codes off the catalog.
+ * Specific user copy must use `fail(catalogCode)` at the domain boundary.
+ * Derived field codes stay technical and render the generic validation copy.
  */
 export const validationFail: FieldFail<DomainError> = (field, reason) => {
   if (!field) {
-    return {
-      kind: "validation",
-      code: "invalid_input",
-      message: "Revisa los datos ingresados.",
-    };
+    return invalid({ code: "invalid_input" });
   }
 
   const code =
     reason === "required"
       ? `${fieldCode(field)}_required`
       : `invalid_${fieldCode(field)}`;
-  const entry = (
-    ERROR_CATALOG as Record<string, { kind: string; message: string }>
-  )[code];
-  const message =
-    entry?.message ??
-    (reason === "required"
-      ? "Completa este campo."
-      : "El valor ingresado no es válido.");
-
-  return { kind: "validation", code, message };
+  return invalid({ code });
 };

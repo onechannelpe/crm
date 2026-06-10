@@ -1,6 +1,6 @@
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/server";
 
-import { PasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
+import { PasskeyRequestError } from "~/server/auth/factors/passkey-provider";
 
 import type { TestDbContext } from "../runtime/db";
 

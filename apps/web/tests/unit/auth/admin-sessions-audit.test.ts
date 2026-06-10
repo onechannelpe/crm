@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { revokeAllUserSessions } from "~/server/auth/application/commands/revoke-all-user-sessions";
-import { revokeUserSession } from "~/server/auth/application/commands/revoke-user-session";
 import type { AdminSessionRevocationPort } from "~/server/auth/application/ports";
+import { revokeAllUserSessions } from "~/server/auth/flows/revoke-all-user-sessions";
+import { revokeUserSession } from "~/server/auth/flows/revoke-user-session";
 
 type AuditPayload = {
   userId: number;
@@ -45,10 +45,10 @@ function makeDeps() {
 
   return {
     port: {
-      invalidateSession: async (sessionId: string) => {
+      revokeSession: async (sessionId: string) => {
         invalidatedSessions.push(sessionId);
       },
-      invalidateUserSessions: async (userId: number) => {
+      revokeUserSessions: async (userId: number) => {
         invalidatedUsers.push(userId);
       },
       revokeInstallationSessionsByAuthSession: async (

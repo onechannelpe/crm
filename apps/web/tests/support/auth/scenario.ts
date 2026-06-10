@@ -16,8 +16,8 @@ import { vi } from "vitest";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { generateCurrentTotpCode } from "~/lib/auth/totp/totp";
-import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
-import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
+import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
+import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
 
 const NOOP_PRIVILEGED_ALERT: SendPrivilegedLoginAlert = async () => {};
 

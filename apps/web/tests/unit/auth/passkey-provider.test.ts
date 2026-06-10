@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
-import { resolveWebauthnRelyingParty } from "~/lib/auth/providers/passkey-provider";
+import { resolveWebauthnRelyingParty } from "~/server/auth/factors/passkey-provider";
 
 describe("passkey relying party resolution", () => {
   afterEach(() => {

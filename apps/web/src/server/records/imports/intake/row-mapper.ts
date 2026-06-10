@@ -1,7 +1,11 @@
+import {
+  LEAD_PRIORITIES,
+  LEAD_STATUSES,
+} from "~/contracts/workflow/vocabulary";
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { CsvDelimiter } from "~/server/csv/core";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import { parseLeadPriority, parseLeadStatus } from "~/server/workflow/parsers";
+import { parseOptionalVocabularyValue } from "~/server/workflow/parsers";
 
 export interface RecordImportInvalidRow {
   row: number;
@@ -53,7 +57,11 @@ export function mapRecordImportRow(input: {
 
   if (input.importType === "import_status") {
     const statusRaw = (record.resultado ?? "").trim().toUpperCase();
-    const status = parseLeadStatus(statusRaw);
+    const status = parseOptionalVocabularyValue(
+      statusRaw,
+      LEAD_STATUSES,
+      "invalid_status",
+    );
     if (!status.ok || status.value === undefined) {
       return {
         ok: false,
@@ -82,7 +90,11 @@ export function mapRecordImportRow(input: {
     priorityToken === "P1" || priorityToken === "P2"
       ? priorityToken
       : priorityRaw;
-  const prioridad = parseLeadPriority(priorityInput);
+  const prioridad = parseOptionalVocabularyValue(
+    priorityInput,
+    LEAD_PRIORITIES,
+    "invalid_prioridad",
+  );
 
   if (!prioridad.ok || prioridad.value === undefined) {
     return {

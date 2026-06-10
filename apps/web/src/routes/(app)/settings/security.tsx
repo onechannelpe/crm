@@ -299,7 +299,7 @@ export default function SecurityPage() {
                   variant="secondary"
                   onClick={disableTotpDialog.open}
                 >
-                  Restablecer
+                  Desactivar
                 </Button>
               </div>
             }

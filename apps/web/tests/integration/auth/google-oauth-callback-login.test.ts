@@ -1,8 +1,8 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { completeGoogleOAuthCallback } from "~/lib/auth/google/google-callback-login";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
 import { Err, Ok, isErr } from "~/server/shared/result";
 
 const mocks = vi.hoisted(() => ({
