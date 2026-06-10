@@ -1,5 +1,6 @@
-import { assertPositiveInt } from "~/contracts/guards";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
   AUDIT_READER_DEFAULT_LIMIT,
@@ -20,32 +21,92 @@ function trimOrUndefined(value: string | undefined): string | undefined {
   return trimmed;
 }
 
+function parseWindowMinutes(value: number): Result<number, DomainError> {
+  if (!Number.isInteger(value) || value < 1) {
+    return Err(
+      invalid({
+        code: "invalid_window_minutes",
+        details: { field: "window_minutes", rule: "positive_integer" },
+      }),
+    );
+  }
+  if (value > AUDIT_READER_MAX_WINDOW_MINUTES) {
+    return Err(
+      invalid({
+        code: "invalid_window_minutes",
+        details: {
+          field: "window_minutes",
+          rule: "max",
+          max: AUDIT_READER_MAX_WINDOW_MINUTES,
+          actual: value,
+        },
+      }),
+    );
+  }
+  return Ok(value);
+}
+
+function parseLimit(value: number): Result<number, DomainError> {
+  if (!Number.isInteger(value) || value < 1) {
+    return Err(
+      invalid({
+        code: "invalid_limit",
+        details: { field: "limit", rule: "positive_integer" },
+      }),
+    );
+  }
+  if (value > AUDIT_READER_MAX_LIMIT) {
+    return Err(
+      invalid({
+        code: "invalid_limit",
+        details: {
+          field: "limit",
+          rule: "max",
+          max: AUDIT_READER_MAX_LIMIT,
+          actual: value,
+        },
+      }),
+    );
+  }
+  return Ok(value);
+}
+
+function parseActorUserId(value: number): Result<number, DomainError> {
+  if (!Number.isInteger(value) || value < 1) {
+    return Err(
+      invalid({
+        code: "invalid_actor_user_id",
+        details: { field: "actor_user_id", rule: "positive_integer" },
+      }),
+    );
+  }
+  return Ok(value);
+}
+
 export function createAuditReaderService(deps: AuditReaderDeps) {
   return {
     async getSnapshot(
       params?: AuditReaderFilterInput,
-    ): Promise<AuditReaderSnapshot> {
-      const windowMinutes = assertPositiveInt(
+    ): Promise<Result<AuditReaderSnapshot, DomainError>> {
+      const parsedWindowMinutes = parseWindowMinutes(
         params?.windowMinutes ?? AUDIT_READER_DEFAULT_WINDOW_MINUTES,
-        "windowMinutes",
       );
-      if (windowMinutes > AUDIT_READER_MAX_WINDOW_MINUTES) {
-        throw new Error("windowMinutes must be <= 43200");
-      }
+      if (isErr(parsedWindowMinutes)) return parsedWindowMinutes;
 
-      const limit = assertPositiveInt(
+      const parsedLimit = parseLimit(
         params?.limit ?? AUDIT_READER_DEFAULT_LIMIT,
-        "limit",
       );
-      if (limit > AUDIT_READER_MAX_LIMIT) {
-        throw new Error("limit must be <= 200");
-      }
+      if (isErr(parsedLimit)) return parsedLimit;
 
       let actorUserId: number | undefined;
       if (params?.actorUserId !== undefined) {
-        actorUserId = assertPositiveInt(params.actorUserId, "actorUserId");
+        const parsedActorUserId = parseActorUserId(params.actorUserId);
+        if (isErr(parsedActorUserId)) return parsedActorUserId;
+        actorUserId = parsedActorUserId.value;
       }
 
+      const windowMinutes = parsedWindowMinutes.value;
+      const limit = parsedLimit.value;
       const now = Date.now();
       const fromInclusive = now - windowMinutes * 60 * 1000;
       const action = trimOrUndefined(params?.action);
@@ -61,7 +122,7 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
         onlyHighRisk: params?.onlyHighRisk ?? false,
       });
 
-      return {
+      return Ok({
         windowMinutes,
         events: events.map((row) => ({
           id: row.id,
@@ -72,7 +133,7 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
           entityId: row.entity_id,
           changes: row.changes,
         })),
-      };
+      });
     },
   };
 }
