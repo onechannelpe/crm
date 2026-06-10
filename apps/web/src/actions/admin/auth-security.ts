@@ -34,7 +34,7 @@ export async function getUserLoginRetryReport(
 
     parse: () =>
       parseObject({ username }, validationFail, (r) => ({
-        username: r.str("username").toLowerCase(),
+        username: r.str("username").trim().toLowerCase(),
       })),
 
     execute: async (_ctx, input) => {
