@@ -20,7 +20,35 @@ import type {
 } from "~/server/workflow/types";
 
 import { authorizeLeadAction } from "../../domain/lead/policy";
-import type { LeadQueries, LeadReadRepository } from "../ports/lead";
+import type {
+  LeadQueries,
+  LeadReadRepository,
+  RecordExportRow,
+} from "../ports/lead";
+
+const LEAD_EXPORT_COLUMNS: {
+  header: string;
+  value: (row: RecordExportRow) => unknown;
+}[] = [
+  { header: "RUC", value: (row) => row.ruc },
+  { header: "Razón social", value: (row) => row.razonSocial ?? "" },
+  { header: "ID ejecutivo", value: (row) => row.executiveId },
+  { header: "Ejecutivo", value: (row) => row.executiveName },
+  {
+    header: "Fecha de registro",
+    value: (row) => new Date(row.createdAt).toISOString().slice(0, 10),
+  },
+  { header: "Etapa", value: (row) => row.stage },
+  { header: "Dirección", value: (row) => row.address ?? "" },
+  { header: "Estado", value: (row) => row.status ?? "" },
+  { header: "Prioridad", value: (row) => row.prioridad ?? "" },
+  { header: "Competencia", value: (row) => row.proveedorActual ?? "" },
+  { header: "Tasa comp.", value: (row) => row.tasaActual ?? "" },
+  { header: "Tasa Culqi TD", value: (row) => row.tarifaDebitoCulqi ?? "" },
+  { header: "Tasa Culqi TC", value: (row) => row.tarifaCreditoCulqi ?? "" },
+  { header: "Proyectado", value: (row) => row.gpv ?? "" },
+  { header: "Observación", value: () => "" },
+];
 
 type LeadArtifactDeps = {
   leadReader: LeadReadRepository;
@@ -96,17 +124,10 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         actorBranchId: input.ctx.actor.branchId,
       });
       const csv = buildRecordExportCsv(
-        rows.map((lead) => ({
-          ruc: lead.ruc,
-          razon_social: lead.razonSocial ?? "",
-          executive_id: lead.executiveId,
-          executive_name: lead.executiveName,
-          created_at: new Date(lead.createdAt).toISOString().slice(0, 10),
-          stage: lead.stage,
-          address: lead.address ?? "",
-          status: lead.status ?? "",
-          prioridad: lead.prioridad ?? "",
-        })),
+        LEAD_EXPORT_COLUMNS.map((column) => column.header),
+        rows.map((row) =>
+          LEAD_EXPORT_COLUMNS.map((column) => column.value(row)),
+        ),
       );
       const bytes = new TextEncoder().encode(csv);
 

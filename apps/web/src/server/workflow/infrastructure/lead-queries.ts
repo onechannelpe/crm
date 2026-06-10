@@ -95,6 +95,30 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .innerJoin("users as executive", "executive.id", "lead.executive_id");
       let q = applyLeadVisibility(base, filters)
         .innerJoin("organizations as org", "org.id", "lead.organization_id")
+        .leftJoin(
+          "workflow_lead_profiles as profile",
+          "profile.lead_id",
+          "lead.id",
+        )
+        // Join only the highest-version quotation per lead: a derived table of
+        // MAX(version) keeps one row even when older quotations exist.
+        .leftJoin(
+          (eb) =>
+            eb
+              .selectFrom("workflow_quotations")
+              .select((e) => [
+                "workflow_quotations.lead_id as lead_id",
+                e.fn.max("workflow_quotations.version").as("version"),
+              ])
+              .groupBy("workflow_quotations.lead_id")
+              .as("latest_quote"),
+          (join) => join.onRef("latest_quote.lead_id", "=", "lead.id"),
+        )
+        .leftJoin("workflow_quotations as quote", (join) =>
+          join
+            .onRef("quote.lead_id", "=", "latest_quote.lead_id")
+            .onRef("quote.version", "=", "latest_quote.version"),
+        )
         .select([
           "lead.id",
           "org.ruc",
@@ -107,6 +131,11 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.status",
           "lead.prioridad",
           "lead.created_at",
+          "profile.proveedor_actual",
+          "profile.tasa_actual",
+          "profile.gpv",
+          "quote.tarifa_debito as tarifa_debito_culqi",
+          "quote.tarifa_credito as tarifa_credito_culqi",
         ]);
 
       if (filters.executiveId !== undefined) {
@@ -129,6 +158,11 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         status: row.status,
         prioridad: row.prioridad,
         createdAt: row.created_at,
+        proveedorActual: row.proveedor_actual,
+        tasaActual: row.tasa_actual,
+        gpv: row.gpv,
+        tarifaDebitoCulqi: row.tarifa_debito_culqi,
+        tarifaCreditoCulqi: row.tarifa_credito_culqi,
       }));
     },
   };

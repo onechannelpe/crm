@@ -131,6 +131,13 @@ export type RecordExportRow = {
   createdAt: number;
   executiveId: number;
   executiveName: string;
+  // Commercial profile (single competitor rate; the model has no debit/credit split).
+  proveedorActual: string | null;
+  tasaActual: number | null;
+  gpv: number | null;
+  // Latest quotation, i.e. what Culqi currently offers. Null when no quotation exists yet.
+  tarifaDebitoCulqi: number | null;
+  tarifaCreditoCulqi: number | null;
 };
 
 export type LeadQueries = {
