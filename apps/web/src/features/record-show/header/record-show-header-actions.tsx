@@ -5,6 +5,7 @@ import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
 import Heart from "~/components/icons/heart";
 import Mail from "~/components/icons/mail";
+import Trash from "~/components/icons/trash";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
@@ -23,7 +24,10 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { actionErrorMessage } from "~/lib/wire-error";
 
-import { RecordShowDeleteMenu } from "./record-show-delete-menu";
+import {
+  RecordShowActionsMenu,
+  type RecordShowMenuItem,
+} from "./record-show-actions-menu";
 
 import styles from "./record-show-header.module.css";
 
@@ -50,6 +54,29 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const canDelete = createMemo(
     () => detail()?.lead != null && hasPermission(user.role, "lead:delete"),
   );
+
+  // The overflow menu shows only when it has at least one option. Permission
+  // maps to an option here, in one place; the menu hides its trigger when the
+  // list is empty.
+  const menuItems = createMemo<RecordShowMenuItem[]>(() => {
+    const items: RecordShowMenuItem[] = [];
+
+    if (canDelete()) {
+      items.push({
+        id: "delete",
+        label: "Eliminar empresa",
+        icon: Trash,
+        danger: true,
+        disabled: deleteBusy(),
+        onSelect: () => {
+          setDeleteError(null);
+          setConfirmDeleteOpen(true);
+        },
+      });
+    }
+
+    return items;
+  });
 
   async function handleConfirmDelete() {
     setDeleteError(null);
@@ -176,15 +203,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
         </TopBarActionButton>
       </TopBarTooltip>
 
-      <Show when={canDelete()}>
-        <RecordShowDeleteMenu
-          disabled={deleteBusy()}
-          onDelete={() => {
-            setDeleteError(null);
-            setConfirmDeleteOpen(true);
-          }}
-        />
-      </Show>
+      <RecordShowActionsMenu items={menuItems()} />
 
       <TopBarCommandButton
         isOpen={isOpen()}

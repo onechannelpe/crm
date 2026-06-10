@@ -15,12 +15,12 @@
   z-index: 90;
 }
 
-.dangerItem {
+.item {
   align-items: center;
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--destructive);
+  color: var(--foreground);
   cursor: pointer;
   display: flex;
   font-size: var(--font-size-body);
@@ -30,11 +30,19 @@
   width: 100%;
 }
 
-.dangerItem:hover {
-  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+.item:hover {
+  background: var(--background-transparent-light);
 }
 
-.dangerItem:disabled {
+.item:disabled {
   color: var(--foreground-light);
   cursor: default;
+}
+
+.dangerItem {
+  color: var(--destructive);
+}
+
+.dangerItem:hover {
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
