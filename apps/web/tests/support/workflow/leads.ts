@@ -21,15 +21,7 @@ export type ScenarioLeadSeed = {
     name?: string;
   };
   executive: ScenarioActorKey | number;
-  stage:
-    | "QUALIFYING"
-    | "DISQUALIFIED"
-    | "SCOPING"
-    | "QUOTING"
-    | "QUOTED"
-    | "SETUP_PLAN"
-    | "SETUP_EXECUTION"
-    | "LIVE";
+  stage: "QUALIFYING" | "DISQUALIFIED" | "PRICING" | "SETUP" | "LIVE";
   status?: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad?: "P1" | "P2" | "SIN RESULTADO" | null;
   createdBy?: number;

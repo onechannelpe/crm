@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
 import { Ok } from "~/server/shared/result";
-import type { NegotiationRequestRepository } from "~/server/workflow/application/ports/entities";
+import type { RateRevisionRepository } from "~/server/workflow/application/ports/entities";
 import type {
   CommitResult,
   LeadUnitOfWork,
@@ -23,7 +23,7 @@ export function makeWorkflowLead(
     executiveId: 1,
     createdBy: 1,
     updatedBy: null,
-    stage: "QUOTED",
+    stage: "PRICING",
     status: null,
     prioridad: null,
     createdAt: 10,
@@ -56,35 +56,35 @@ function makeCommitMock() {
   );
 }
 
-export function makeNegotiationRequests(
-  overrides: Partial<NegotiationRequestRepository> = {},
+export function makeRateRevisions(
+  overrides: Partial<RateRevisionRepository> = {},
 ) {
-  const insert = vi.fn<NegotiationRequestRepository["insert"]>();
-  const insertFile = vi.fn<NegotiationRequestRepository["insertFile"]>();
-  const findSubmitReadyNegotiationFile = vi.fn<
-    NegotiationRequestRepository["findSubmitReadyNegotiationFile"]
+  const insert = vi.fn<RateRevisionRepository["insert"]>();
+  const insertFile = vi.fn<RateRevisionRepository["insertFile"]>();
+  const findSubmitReadyRevisionFile = vi.fn<
+    RateRevisionRepository["findSubmitReadyRevisionFile"]
   >(async ({ artifactId }) => ({ artifactId, fileAssetId: 10 }));
-  const countByLeadId = vi.fn<NegotiationRequestRepository["countByLeadId"]>(
+  const countByLeadId = vi.fn<RateRevisionRepository["countByLeadId"]>(
     async () => 0,
   );
-  const listByLeadId = vi.fn<NegotiationRequestRepository["listByLeadId"]>(
+  const listByLeadId = vi.fn<RateRevisionRepository["listByLeadId"]>(
     async () => [],
   );
 
   const repo = {
     insert,
     insertFile,
-    findSubmitReadyNegotiationFile,
+    findSubmitReadyRevisionFile,
     countByLeadId,
     listByLeadId,
     ...overrides,
-  } satisfies NegotiationRequestRepository;
+  } satisfies RateRevisionRepository;
 
   return {
     repo,
     insert,
     insertFile,
-    findSubmitReadyNegotiationFile,
+    findSubmitReadyRevisionFile,
     countByLeadId,
     listByLeadId,
   };

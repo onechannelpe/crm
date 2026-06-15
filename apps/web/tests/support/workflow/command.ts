@@ -1,36 +1,37 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { acceptRateCommand } from "~/server/workflow/application/commands/accept-rate";
 import { addLeadNoteCommand } from "~/server/workflow/application/commands/add-note";
 import { addToFavoritesCommand } from "~/server/workflow/application/commands/add-to-favorites";
 import { addVenueAccountsCommand } from "~/server/workflow/application/commands/add-venue-accounts";
-import { approveForSaleCommand } from "~/server/workflow/application/commands/approve-for-sale";
-import { createQuotationCommand } from "~/server/workflow/application/commands/create-quotation";
 import { createVenueCommand } from "~/server/workflow/application/commands/create-venue";
+import { editCommercialScopeCommand } from "~/server/workflow/application/commands/edit-commercial-scope";
 import { logLeadCallCommand } from "~/server/workflow/application/commands/log-call";
+import { proposeRateCommand } from "~/server/workflow/application/commands/propose-rate";
 import { reassignLeadCommand } from "~/server/workflow/application/commands/reassign-lead";
 import { recordRepLegalCommand } from "~/server/workflow/application/commands/record-rep-legal";
 import { registerLead } from "~/server/workflow/application/commands/register-lead";
 import { removeFromFavoritesCommand } from "~/server/workflow/application/commands/remove-from-favorites";
-import { requestQuotationCommand } from "~/server/workflow/application/commands/request-quotation";
-import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
+import { requestRateRevisionCommand } from "~/server/workflow/application/commands/request-rate-revision";
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
-import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
+import { saveDigitalPolicyCommand } from "~/server/workflow/application/commands/save-digital-policy";
 import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
 import { updateVenueCommand } from "~/server/workflow/application/commands/update-venue";
 import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/gateways";
 import { createLeadStateRepo } from "~/server/workflow/infrastructure/lead-state-repo";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {
+  AcceptRateCommandInput,
   AddLeadNoteCommandInput,
   AddVenueAccountsCommandInput,
-  CreateQuotationCommandInput,
   CreateVenueCommandInput,
+  EditCommercialScopeCommandInput,
   LogLeadCallCommandInput,
+  ProposeRateCommandInput,
   ReassignLeadCommandInput,
   RecordRepLegalCommandInput,
   RegisterLeadCommandInput,
-  RequestQuotationCommandInput,
-  RequestRateNegotiationCommandInput,
-  SaveCommercialScopeCommandInput,
+  RequestRateRevisionCommandInput,
+  SaveDigitalPolicyCommandInput,
   UpdateSourcingPolicyCommandInput,
   UpdateVenueCommandInput,
   WorkflowActor,
@@ -96,23 +97,17 @@ function buildCommandApi(
     logLeadCall: (input: LogLeadCallCommandInput) =>
       logLeadCallCommand(input, { executor }),
 
-    approveForSale: (input: { actor: WorkflowActor; leadId: string }) =>
-      approveForSaleCommand(input, { executor }),
+    acceptRate: (input: AcceptRateCommandInput) =>
+      acceptRateCommand(input, { executor }),
 
-    createQuotation: (input: CreateQuotationCommandInput) =>
-      createQuotationCommand(input, {
-        executor,
-      }),
+    proposeRate: (input: ProposeRateCommandInput) =>
+      proposeRateCommand(input, { executor }),
 
-    saveCommercialScope: (input: SaveCommercialScopeCommandInput) =>
-      saveCommercialScopeCommand(input, {
-        executor,
-      }),
+    editCommercialScope: (input: EditCommercialScopeCommandInput) =>
+      editCommercialScopeCommand(input, { executor }),
 
-    requestQuotation: (input: RequestQuotationCommandInput) =>
-      requestQuotationCommand(input, {
-        executor,
-      }),
+    saveDigitalPolicy: (input: SaveDigitalPolicyCommandInput) =>
+      saveDigitalPolicyCommand(input, { executor }),
 
     recordRepLegal: (input: RecordRepLegalCommandInput) =>
       recordRepLegalCommand(input, {
@@ -134,8 +129,8 @@ function buildCommandApi(
         executor,
       }),
 
-    requestRateNegotiation: (input: RequestRateNegotiationCommandInput) =>
-      requestRateNegotiationCommand(input, { executor }),
+    requestRateRevision: (input: RequestRateRevisionCommandInput) =>
+      requestRateRevisionCommand(input, { executor }),
 
     requestSunatRefresh: (input: { actor: WorkflowActor; leadId: string }) =>
       requestSunatRefresh(input, {

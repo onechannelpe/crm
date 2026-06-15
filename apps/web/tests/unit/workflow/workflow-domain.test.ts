@@ -12,21 +12,21 @@ describe("workflow domain", () => {
     expect(result).toBe("DISQUALIFIED");
   });
 
-  it("moves to scoping when prioridad is SIN RESULTADO", () => {
+  it("moves to pricing when prioridad is SIN RESULTADO", () => {
     const result = resolveReviewTransition({
       status: "DISPONIBLE",
       prioridad: "SIN RESULTADO",
     });
 
-    expect(result).toBe("SCOPING");
+    expect(result).toBe("PRICING");
   });
 
-  it("moves to quoting when status and prioridad are valid", () => {
+  it("moves to pricing when status and prioridad are valid", () => {
     const result = resolveReviewTransition({
       status: "DISPONIBLE",
       prioridad: "P1",
     });
 
-    expect(result).toBe("QUOTING");
+    expect(result).toBe("PRICING");
   });
 });

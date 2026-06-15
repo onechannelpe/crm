@@ -39,22 +39,22 @@ describe("checkArtifactPolicy role matrix", () => {
       requestArtifactType: "records_export",
     });
 
-    it("allows executive special cases for sale_proof and negotiation_file", () => {
+    it("allows executive special cases for sale_proof and rate_revision_file", () => {
       const saleProof = checkArtifactPolicy(
         makeActor({ role: "executive" }),
         null,
         "artifact.request",
         "sale_proof",
       );
-      const negotiationFile = checkArtifactPolicy(
+      const revisionFile = checkArtifactPolicy(
         makeActor({ role: "executive" }),
         null,
         "artifact.request",
-        "negotiation_file",
+        "rate_revision_file",
       );
 
       expect(saleProof.ok).toBe(true);
-      expect(negotiationFile.ok).toBe(true);
+      expect(revisionFile.ok).toBe(true);
     });
   });
 

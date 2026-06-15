@@ -43,7 +43,7 @@ describe("workflow read access", () => {
       const lead = await scenario.lead.assignedTo("execOne", {
         key: `read-access-${role}`,
         organization: { key: `read-access-${role}` },
-        stage: "QUOTED",
+        stage: "PRICING",
       });
 
       const result = await runtime.workflow.queries.getLeadDetail({

@@ -18,12 +18,12 @@ describe("update venue", () => {
     await runtime.dispose();
   });
 
-  it("updates venue fields during setup execution", async () => {
+  it("updates venue fields during setup", async () => {
     const scenario = createWorkflowScenario(runtime);
     const lead = await scenario.lead.assignedTo("execOne", {
       key: "venue-update",
       organization: { key: "venue-update" },
-      stage: "SETUP_EXECUTION",
+      stage: "SETUP",
       createdAt: 10,
       updatedAt: 10,
     });
@@ -67,7 +67,7 @@ describe("update venue", () => {
     expect(event.payload_json).toContain("Local corregido");
   });
 
-  it("blocks venue updates after setup execution", async () => {
+  it("blocks venue updates after setup", async () => {
     const scenario = createWorkflowScenario(runtime);
     const lead = await scenario.lead.assignedTo("execOne", {
       key: "venue-update-live",

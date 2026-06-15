@@ -24,7 +24,7 @@ describe("integration record export columns", () => {
     const withData = await scenario.lead.assignedTo("execOne", {
       key: "export-with-data",
       organization: { key: "export-with-data" },
-      stage: "QUOTED",
+      stage: "PRICING",
     });
     const withoutData = await scenario.lead.assignedTo("execOne", {
       key: "export-without-data",
@@ -49,7 +49,7 @@ describe("integration record export columns", () => {
 
     // Two versions: the export must surface the highest-version (latest) rates.
     await runtime.ctx.db
-      .insertInto("workflow_quotations")
+      .insertInto("workflow_rate_proposals")
       .values([
         {
           id: "quote-old",
@@ -60,9 +60,11 @@ describe("integration record export columns", () => {
           tarifa_foraneo: 3.0,
           fee: 0.5,
           moneda: "PEN",
-          version: 1,
-          created_at: 1_000,
-          created_by: executiveId,
+          round: 1,
+          proposed_at: 1_000,
+          proposed_by: executiveId,
+          outcome: "revision_requested",
+          decided_at: 1_200,
         },
         {
           id: "quote-latest",
@@ -73,9 +75,11 @@ describe("integration record export columns", () => {
           tarifa_foraneo: 3.5,
           fee: 0.6,
           moneda: "PEN",
-          version: 2,
-          created_at: 1_500,
-          created_by: executiveId,
+          round: 2,
+          proposed_at: 1_500,
+          proposed_by: executiveId,
+          outcome: "pending",
+          decided_at: null,
         },
       ])
       .execute();
