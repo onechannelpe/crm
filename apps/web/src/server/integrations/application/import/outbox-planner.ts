@@ -17,7 +17,7 @@ export async function planOutboxForMutation(input: {
   if (!mutation.stageChanged || mutation.executiveId <= 0) return;
 
   let branchId: number | null = null;
-  if (mutation.nextStage === "QUOTING") {
+  if (mutation.nextStage === "PRICING") {
     const user = await input.executor
       .selectFrom("users")
       .select("branch_id")

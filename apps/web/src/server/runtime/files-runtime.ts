@@ -2,7 +2,7 @@ import { config } from "~/lib/config";
 import { createArtifactsRepo } from "~/server/files/repo/artifacts";
 import { createAssetsRepo } from "~/server/files/repo/assets";
 import { createEventsRepo } from "~/server/files/repo/events";
-import { createNegotiationFilesRepo } from "~/server/files/repo/negotiation";
+import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
 import { createSalesRepo } from "~/server/files/repo/sales";
 import { createTokensRepo } from "~/server/files/repo/tokens";
 import type { ArtifactRepos } from "~/server/files/service/contracts";
@@ -23,7 +23,7 @@ export function createFilesRuntime(infra: ServerInfra) {
     events: createEventsRepo(infra.db),
     tokens: createTokensRepo(infra.db),
     sales: createSalesRepo(infra.db),
-    negotiation: createNegotiationFilesRepo(infra.db),
+    rateRevision: createRateRevisionFilesRepo(infra.db),
   };
   const storage = createFileStorage(config.uploads.storageRoot);
 

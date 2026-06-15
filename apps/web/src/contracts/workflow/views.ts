@@ -13,13 +13,10 @@ import type {
 export type LeadAvailableAction =
   | "log-call"
   | "add-note"
-  | "request-quotation"
-  | "review-lead"
-  | "create-quotation"
-  | "approve-for-sale"
-  | "start-setup-execution"
+  | "propose-rate"
+  | "accept-rate"
+  | "request-rate-revision"
   | "update-venue"
-  | "request-rate-negotiation"
   | "reassign-lead";
 
 export type LeadBlockingField =
@@ -97,18 +94,20 @@ export type LeadDetailLeadView = {
   updatedAt: number;
 };
 
-export type LeadDetailQuotationView = {
+export type LeadDetailRateProposalView = {
   id: string;
   leadId: string;
-  version: number;
+  round: number;
   moneda: Moneda;
   fee: number;
   paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
   tarifaForaneo: number;
-  createdAt: number;
-  createdBy: number;
+  outcome: "pending" | "accepted" | "revision_requested";
+  proposedBy: number;
+  proposedAt: number;
+  decidedAt: number | null;
 };
 
 export type LeadDetailVenueView = {
@@ -130,29 +129,29 @@ export type LeadDetailVenueView = {
   createdBy: number;
 };
 
-export type LeadDetailNegotiationRequestView = {
+export type LeadDetailRateRevisionView = {
   id: string;
+  proposalId: string;
   round: number;
   justification: string;
   requestedBy: number;
   requestedAt: number;
-  files: LeadDetailNegotiationFileView[];
+  files: LeadDetailRateRevisionFileView[];
 };
 
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
   profile: LeadDetailProfileView | undefined;
   repLegal: LeadDetailRepLegalView | undefined;
-  quotations: LeadDetailQuotationView[];
+  rateProposals: LeadDetailRateProposalView[];
   venues: LeadDetailVenueView[];
-  negotiationRequests: LeadDetailNegotiationRequestView[];
+  rateRevisions: LeadDetailRateRevisionView[];
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];
   sourceStatus: LeadDetailSourceStatusView;
 };
 
-// Internal detail helpers kept local to this contract file.
 type LeadDetailProfileView = {
   leadId: string;
   proveedorActual: string | null;
@@ -199,7 +198,7 @@ type LeadDetailSourceStatusView = {
   };
 };
 
-type LeadDetailNegotiationFileView = {
+type LeadDetailRateRevisionFileView = {
   artifactId: string;
   filename: string;
   detectedMime: string;

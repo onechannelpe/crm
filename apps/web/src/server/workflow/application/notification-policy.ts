@@ -8,26 +8,12 @@ export function deriveLeadStageNotifications(input: {
   executiveId: number;
   branchId: number | null;
 }): NotificationIntent[] {
-  if (input.toStage === "SCOPING") {
-    return [
-      {
-        id: `${input.eventId}:needs_exec`,
-        eventType: "lead.needs_executive_input",
-        audience: { kind: "user_ids", userIds: [input.executiveId] },
-        channels: ["in_app"],
-        priority: "high",
-        title: "Acción requerida",
-        bodyText: `El cliente RUC ${input.ruc} requiere tu información comercial`,
-        actionUrl: "/records",
-      },
-    ];
-  }
-
-  if (input.toStage === "QUOTING") {
+  // Availability qualification cleared the lead: back office now proposes a rate.
+  if (input.toStage === "PRICING") {
     if (input.branchId === null) return [];
     return [
       {
-        id: `${input.eventId}:ready_quote`,
+        id: `${input.eventId}:ready_pricing`,
         eventType: "lead.ready_for_quotation",
         audience: {
           kind: "branch_role",
@@ -36,23 +22,24 @@ export function deriveLeadStageNotifications(input: {
         },
         channels: ["in_app"],
         priority: "normal",
-        title: "Cliente listo para cotización",
-        bodyText: `El cliente RUC ${input.ruc} está listo para cotizar`,
+        title: "Cliente listo para tarifa",
+        bodyText: `El cliente RUC ${input.ruc} está listo para proponer tarifa`,
         actionUrl: `/records/${input.leadId}`,
       },
     ];
   }
 
-  if (input.toStage === "SETUP_PLAN") {
+  // The executive accepted the rate: time to set up the affiliation.
+  if (input.toStage === "SETUP") {
     return [
       {
-        id: `${input.eventId}:ready_sale`,
+        id: `${input.eventId}:ready_setup`,
         eventType: "lead.ready_for_sale",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
         channels: ["in_app"],
         priority: "high",
         title: "Cliente listo para afiliación",
-        bodyText: `El cliente RUC ${input.ruc} fue aprobado. Define la política digital para continuar.`,
+        bodyText: `El cliente RUC ${input.ruc} aceptó la tarifa. Define la política digital para continuar.`,
         actionUrl: `/records/${input.leadId}`,
       },
     ];

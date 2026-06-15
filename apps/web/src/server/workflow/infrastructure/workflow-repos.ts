@@ -1,4 +1,4 @@
-import { createNegotiationFilesRepo } from "~/server/files/repo/negotiation";
+import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { createAssignmentRepo } from "./assignment-repo";
@@ -9,9 +9,9 @@ import { createLeadQueries } from "./lead-queries";
 import { createLeadRepo } from "./lead-repo";
 import { createLeadStateRepo } from "./lead-state-repo";
 import { createLeadVenueRepo } from "./lead-venue-repo";
-import { createNegotiationRequestRepo } from "./negotiation-request-repo";
 import { createPartyRepo } from "./party-repo";
-import { createQuotationRepo } from "./quotation-repo";
+import { createRateProposalRepo } from "./rate-proposal-repo";
+import { createRateRevisionRepo } from "./rate-revision-repo";
 import { createSourceStatusRepo } from "./source-status-repo";
 import { createSourcingPolicyRepo } from "./sourcing-policy-repo";
 import { createWorkflowUsersRepo } from "./users-repo";
@@ -25,10 +25,10 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leadAssignments: createAssignmentRepo(executor),
     leadProfiles: createLeadProfileRepo(executor),
     leadHistory: createHistoryRepo(executor),
-    leadQuotations: createQuotationRepo(executor),
+    rateProposals: createRateProposalRepo(executor),
     leadVenues: createLeadVenueRepo(executor),
-    leadNegotiationRequests: createNegotiationRequestRepo(executor),
-    negotiationFiles: createNegotiationFilesRepo(executor),
+    rateRevisions: createRateRevisionRepo(executor),
+    rateRevisionFiles: createRateRevisionFilesRepo(executor),
     sourceStatuses: createSourceStatusRepo(executor),
     sourcingPolicies: createSourcingPolicyRepo(executor),
     users: createWorkflowUsersRepo(executor),

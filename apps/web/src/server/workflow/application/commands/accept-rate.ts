@@ -3,30 +3,42 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { ReviewLeadCommandInput } from "~/server/workflow/types";
+import type { AcceptRateCommandInput } from "~/server/workflow/types";
 
-import { reviewLead } from "../../domain/lead/commands";
+import { acceptRate } from "../../domain/lead/commands";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
+import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
-export async function reviewLeadCommand(
-  input: ReviewLeadCommandInput,
+export async function acceptRateCommand(
+  input: AcceptRateCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
+    const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
     const uow = createLeadUow(tx);
+
     const state = await leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const transition = reviewLead(state, {
+    const latest = await repos.rateProposals.findLatest(state.id);
+    if (!latest || latest.id !== input.proposalId) {
+      return Err(fail("rate_proposal_not_found"));
+    }
+    if (latest.outcome !== "pending") {
+      return Err(fail("rate_proposal_not_pending"));
+    }
+
+    const now = Date.now();
+    const transition = acceptRate(state, {
       actor: input.actor,
-      status: input.status,
-      prioridad: input.prioridad,
-      reason: input.reason,
-      now: Date.now(),
+      proposalId: input.proposalId,
+      now,
     });
     if (!transition.ok) return transition;
+
+    await repos.rateProposals.markOutcome(input.proposalId, "accepted", now);
 
     const committed = await uow.commit({
       next: transition.value.next,

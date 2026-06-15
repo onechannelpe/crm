@@ -35,8 +35,7 @@ export function RepLegalSection(props: {
 }) {
   const record = useAction(recordRepLegalMutation);
 
-  const canEdit = () =>
-    props.data.lead.stage === "SETUP_EXECUTION" && !repLegal();
+  const canEdit = () => props.data.lead.stage === "SETUP" && !repLegal();
   const repLegal = () => props.data.repLegal;
 
   const [nombres, setNombres] = createSignal(repLegal()?.nombres ?? "");

@@ -1,4 +1,4 @@
-import { MAX_NEGOTIATION_ROUNDS } from "~/contracts/workflow/limits";
+import { MAX_RATE_REVISION_ROUNDS } from "~/contracts/workflow/limits";
 import type { LeadAvailableAction } from "~/contracts/workflow/views";
 import { type LeadStage } from "~/contracts/workflow/vocabulary";
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
@@ -11,15 +11,15 @@ export type LeadCapability =
   | "view"
   | "delete"
   | "interact"
-  | "review"
   | "reassign"
-  | "complete-scoping"
+  | "edit-commercial-scope"
+  | "record-rep-legal"
   | "create-venue"
   | "update-venue"
   | "add-venue-accounts"
-  | "create-quotation"
-  | "approve-for-sale"
-  | "request-negotiation"
+  | "propose-rate"
+  | "accept-rate"
+  | "request-rate-revision"
   | "register"
   | "list-assignable-executives";
 
@@ -31,12 +31,13 @@ export type AssignableExecutivesScope =
     };
 
 const OWNER_REQUIRED = new Set<LeadCapability>([
-  "complete-scoping",
+  "edit-commercial-scope",
+  "record-rep-legal",
   "create-venue",
   "update-venue",
   "add-venue-accounts",
-  "approve-for-sale",
-  "request-negotiation",
+  "accept-rate",
+  "request-rate-revision",
 ]);
 
 export function resolveCapabilities(role: Role): Set<LeadCapability> {
@@ -58,31 +59,32 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
   if (canRead) caps.add("view");
   if (hasPermission(role, "lead:delete")) caps.add("delete");
   if (hasPermission(role, "lead:workflow")) caps.add("interact");
-  if (hasPermission(role, "lead:review")) caps.add("review");
   if (hasPermission(role, "lead:reassign")) {
     caps.add("reassign");
     caps.add("list-assignable-executives");
   }
   if (hasPermission(role, "lead:commercial-input:complete")) {
-    caps.add("complete-scoping");
+    caps.add("edit-commercial-scope");
+    caps.add("record-rep-legal");
     caps.add("create-venue");
     caps.add("update-venue");
     caps.add("add-venue-accounts");
-    caps.add("approve-for-sale");
-    caps.add("request-negotiation");
+    caps.add("accept-rate");
+    caps.add("request-rate-revision");
   }
   if (hasPermission(role, "lead:sale:create")) {
-    caps.add("complete-scoping");
+    caps.add("edit-commercial-scope");
+    caps.add("record-rep-legal");
     caps.add("create-venue");
     caps.add("update-venue");
     caps.add("add-venue-accounts");
-    caps.add("approve-for-sale");
+    caps.add("accept-rate");
   }
   if (
     hasPermission(role, "quotation:create") ||
     hasPermission(role, "quotation:revise")
   ) {
-    caps.add("create-quotation");
+    caps.add("propose-rate");
   }
   if (hasPermission(role, "lead:register")) caps.add("register");
 
@@ -117,8 +119,7 @@ export function authorizeLeadAction(
   if (!caps.has(capability)) return Err(forbidden());
 
   if (
-    (capability === "approve-for-sale" ||
-      capability === "request-negotiation") &&
+    (capability === "accept-rate" || capability === "request-rate-revision") &&
     actor.role !== "executive"
   ) {
     return Err(forbidden());
@@ -140,48 +141,40 @@ export function requireCapability(
 export function resolveAvailableActions(
   actor: { userId: number; role: Role },
   state: LeadState,
-  meta: { negotiationRequestCount: number },
+  meta: { hasPendingProposal: boolean; rateRevisionCount: number },
 ): LeadAvailableAction[] {
   const caps = resolveCapabilities(actor.role);
   const ownsLead = state.executiveId === actor.userId;
+  const inPricing = state.stage === "PRICING";
   const actions: LeadAvailableAction[] = [];
 
   if (caps.has("interact")) {
     actions.push("log-call", "add-note");
   }
-  if (caps.has("complete-scoping") && ownsLead && state.stage === "SCOPING") {
-    actions.push("request-quotation");
-  }
-  if (caps.has("review") && state.stage === "QUALIFYING") {
-    actions.push("review-lead");
-  }
-  if (caps.has("create-quotation") && state.stage === "QUOTING") {
-    actions.push("create-quotation");
-  }
-  if (caps.has("approve-for-sale") && ownsLead && state.stage === "QUOTED") {
-    actions.push("approve-for-sale");
+  // Back office proposes when the lead is in pricing and there is no proposal
+  // currently awaiting the executive's response.
+  if (caps.has("propose-rate") && inPricing && !meta.hasPendingProposal) {
+    actions.push("propose-rate");
   }
   if (
-    caps.has("complete-scoping") &&
+    caps.has("accept-rate") &&
     ownsLead &&
-    state.stage === "SETUP_PLAN"
+    inPricing &&
+    meta.hasPendingProposal
   ) {
-    actions.push("start-setup-execution");
+    actions.push("accept-rate");
   }
   if (
-    caps.has("update-venue") &&
+    caps.has("request-rate-revision") &&
     ownsLead &&
-    state.stage === "SETUP_EXECUTION"
+    inPricing &&
+    meta.hasPendingProposal &&
+    meta.rateRevisionCount < MAX_RATE_REVISION_ROUNDS
   ) {
+    actions.push("request-rate-revision");
+  }
+  if (caps.has("update-venue") && ownsLead && state.stage === "SETUP") {
     actions.push("update-venue");
-  }
-  if (
-    caps.has("request-negotiation") &&
-    ownsLead &&
-    state.stage === "QUOTED" &&
-    meta.negotiationRequestCount < MAX_NEGOTIATION_ROUNDS
-  ) {
-    actions.push("request-rate-negotiation");
   }
   if (caps.has("reassign")) {
     actions.push("reassign-lead");

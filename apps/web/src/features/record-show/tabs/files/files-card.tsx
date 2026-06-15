@@ -2,12 +2,12 @@ import { createSignal, For, Show } from "solid-js";
 
 import {
   requestLeadSaleProofDownloadToken,
-  requestNegotiationFileDownloadToken,
+  requestRateRevisionFileDownloadToken,
 } from "~/actions/workflow/files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
-import { type LeadDetailNegotiationRequestView } from "~/contracts/workflow/views";
+import { type LeadDetailRateRevisionView } from "~/contracts/workflow/views";
 import {
   ActivitySection,
   ActivityListCard,
@@ -29,7 +29,7 @@ import styles from "./files.module.css";
 type FilesCardProps = {
   leadId: string;
   canUpload: boolean;
-  negotiationRequests?: LeadDetailNegotiationRequestView[];
+  rateRevisions?: LeadDetailRateRevisionView[];
 };
 
 function hasDraggedFiles(event: DragEvent): boolean {
@@ -105,15 +105,15 @@ export function FilesCard(props: FilesCardProps) {
     }
   }
 
-  const negotiationRequests = () => props.negotiationRequests ?? [];
-  const allNegotiationFiles = () =>
-    negotiationRequests().flatMap((req) =>
+  const rateRevisions = () => props.rateRevisions ?? [];
+  const allRevisionFiles = () =>
+    rateRevisions().flatMap((req) =>
       req.files.map((f) => ({ ...f, round: req.round, requestId: req.id })),
     );
 
-  async function handleNegotiationDownload(leadId: string, artifactId: string) {
+  async function handleRevisionDownload(leadId: string, artifactId: string) {
     setError(null);
-    const result = await requestNegotiationFileDownloadToken({
+    const result = await requestRateRevisionFileDownloadToken({
       leadId,
       artifactId,
     });
@@ -127,19 +127,19 @@ export function FilesCard(props: FilesCardProps) {
 
   return (
     <ActivityTabContainer>
-      <Show when={allNegotiationFiles().length > 0}>
+      <Show when={allRevisionFiles().length > 0}>
         <ActivitySection
-          title="Revisiones de tasa"
-          count={allNegotiationFiles().length}
+          title="Revisiones de tarifa"
+          count={allRevisionFiles().length}
         >
           <ActivityListCard>
-            <For each={negotiationRequests()}>
+            <For each={rateRevisions()}>
               {(req) => (
                 <For each={req.files}>
                   {(file) => (
                     <ActivityListRow
                       onClick={() =>
-                        void handleNegotiationDownload(
+                        void handleRevisionDownload(
                           props.leadId,
                           file.artifactId,
                         )

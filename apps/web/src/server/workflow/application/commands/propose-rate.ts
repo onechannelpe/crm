@@ -3,17 +3,17 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { CreateQuotationCommandInput } from "~/server/workflow/types";
+import type { ProposeRateCommandInput } from "~/server/workflow/types";
 
-import { createQuotation } from "../../domain/lead/commands";
+import { proposeRate } from "../../domain/lead/commands";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
-export async function createQuotationCommand(
-  input: CreateQuotationCommandInput,
+export async function proposeRateCommand(
+  input: ProposeRateCommandInput,
   ports: { executor: DatabaseExecutor },
-): Promise<Result<{ id: string }, DomainError>> {
+): Promise<Result<{ proposalId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
     const leads = createLeadStateRepo(tx);
@@ -23,34 +23,33 @@ export async function createQuotationCommand(
     if (!state) return Err(fail("lead_not_found"));
 
     const now = Date.now();
-    const version = await repos.leadQuotations.nextVersion(state.id);
-    const quotationId = randomUUIDv7();
+    const round = await repos.rateProposals.nextRound(state.id);
+    const proposalId = randomUUIDv7();
 
-    const transition = createQuotation(state, {
+    const transition = proposeRate(state, {
       actor: input.actor,
-      quotationId,
-      version,
+      proposalId,
+      round,
       moneda: input.moneda,
       now,
     });
     if (!transition.ok) return transition;
 
-    await tx
-      .insertInto("workflow_quotations")
-      .values({
-        id: quotationId,
-        lead_id: state.id,
-        payback_pricing: input.paybackPricing,
-        tarifa_debito: input.tarifaDebito,
-        tarifa_credito: input.tarifaCredito,
-        tarifa_foraneo: input.tarifaForaneo,
-        fee: input.fee,
-        moneda: input.moneda,
-        version,
-        created_at: now,
-        created_by: input.actor.userId,
-      })
-      .executeTakeFirstOrThrow();
+    await repos.rateProposals.insert({
+      id: proposalId,
+      leadId: state.id,
+      round,
+      tarifaDebito: input.tarifaDebito,
+      tarifaCredito: input.tarifaCredito,
+      tarifaForaneo: input.tarifaForaneo,
+      fee: input.fee,
+      paybackPricing: input.paybackPricing,
+      moneda: input.moneda,
+      proposedBy: input.actor.userId,
+      proposedAt: now,
+      outcome: "pending",
+      decidedAt: null,
+    });
 
     const committed = await uow.commit({
       next: transition.value.next,
@@ -59,6 +58,6 @@ export async function createQuotationCommand(
     });
     if (!committed.ok) return committed;
 
-    return Ok({ id: quotationId });
+    return Ok({ proposalId });
   });
 }

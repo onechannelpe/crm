@@ -2,8 +2,6 @@
 
 import {
   ABONO_BANKS,
-  LEAD_PRIORITIES,
-  LEAD_STATUSES,
   MODALIDAD_COBRO_KINDS,
   PRODUCT_SCOPES,
 } from "~/contracts/workflow/vocabulary";
@@ -41,65 +39,34 @@ export async function requestLeadCreation(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         ruc: r.str("ruc"),
-        executiveId: r.optNum("executiveId") ?? undefined,
+        razonSocial: r.str("razonSocial"),
+        address: r.str("address"),
+        proveedorActual: r.str("proveedorActual"),
+        tasaActual: r.num("tasaActual"),
+        gpv: r.num("gpv"),
+        ticket: r.num("ticket"),
+        giroNegocio: r.str("giroNegocio"),
+        abonoBank: r.enum("abonoBank", ABONO_BANKS),
+        posTotal: r.num("posTotal"),
       })),
 
     execute: ({ actor }, payload) =>
       getServerRuntime().workflow.commands.registerLead({
         actor: workflowActor(actor),
-        ruc: payload.ruc,
-        executiveId: payload.executiveId ?? actor.userId,
-      }),
-  });
-}
-
-export async function requestLeadReview(input: unknown) {
-  return runAction({
-    name: "workflow.review_lead",
-    access: { kind: "auth" },
-
-    parse: () =>
-      parseObject(input, validationFail, (r) => ({
-        leadId: r.str("leadId"),
-        status: r.enum("status", LEAD_STATUSES),
-        prioridad: r.enum("prioridad", LEAD_PRIORITIES),
-        reason: r.str("reason"),
-      })),
-
-    audit: ({ leadId }) => ({ leadId }),
-
-    execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.reviewLead({
-        actor: workflowActor(actor),
         ...payload,
       }),
   });
 }
 
-export async function requestSaveCommercialScope(input: unknown) {
+export async function requestEditCommercialScope(input: unknown) {
   return runAction({
-    name: "workflow.save_commercial_scope",
+    name: "workflow.edit_commercial_scope",
     access: { kind: "auth" },
     parse: () => parseCommercialScope(input),
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.saveCommercialScope({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
-  });
-}
-
-export async function requestQuotation(input: unknown) {
-  return runAction({
-    name: "workflow.request_quotation",
-    access: { kind: "auth" },
-    parse: () => parseCommercialScope(input),
-    audit: ({ leadId }) => ({ leadId }),
-
-    execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.requestQuotation({
+      getServerRuntime().workflow.commands.editCommercialScope({
         actor: workflowActor(actor),
         ...payload,
       }),
@@ -154,21 +121,6 @@ export async function requestRecordRepLegal(input: unknown) {
       getServerRuntime().workflow.commands.recordRepLegal({
         actor: workflowActor(actor),
         ...payload,
-      }),
-  });
-}
-
-export async function requestStartSetupExecution(input: unknown) {
-  return runAction({
-    name: "workflow.start_setup_execution",
-    access: { kind: "auth" },
-    parse: () => parseLeadRef(input),
-    audit: ({ leadId }) => ({ leadId }),
-
-    execute: ({ actor }, { leadId }) =>
-      getServerRuntime().workflow.commands.startSetupExecution({
-        actor: workflowActor(actor),
-        leadId,
       }),
   });
 }

@@ -1,8 +1,8 @@
 import type {
   LeadAvailableAction,
   LeadDetailLeadView,
-  LeadDetailNegotiationRequestView,
-  LeadDetailQuotationView,
+  LeadDetailRateProposalView,
+  LeadDetailRateRevisionView,
   LeadDetailVenueView,
   LeadDetailView,
 } from "~/server/workflow/types";
@@ -15,26 +15,26 @@ import {
 import type { LeadState } from "../../domain/lead/state";
 import type {
   LeadProfile,
-  LeadNegotiationRequest,
-  LeadNegotiationFile,
+  RateRevision,
+  RateRevisionFile,
   LegalRepresentative,
   OrganizationProfile,
-  LeadQuotation,
+  RateProposal,
   LeadVenue,
   LeadSourceStatus,
 } from "../ports/entities";
 import type {
-  LeadDetailNegotiationFileView,
+  LeadDetailRateRevisionFileView,
   LeadDetailProfileView,
   LeadDetailRepLegalView,
   LeadDetailSourceStatusView,
 } from "./lead-detail-types";
 import { presentTimeline } from "./timeline";
 
-export type NegotiationRequestWithFiles = {
-  request: LeadNegotiationRequest;
+export type RateRevisionWithFiles = {
+  revision: RateRevision;
   files: Array<
-    LeadNegotiationFile & {
+    RateRevisionFile & {
       safeDisplayFilename: string;
       detectedMime: string;
       sizeBytes: number;
@@ -49,9 +49,9 @@ export type LeadDetailSource = {
   createdByName: string;
   updatedByName: string | null;
   profile: LeadProfile | undefined;
-  quotations: LeadQuotation[];
+  rateProposals: RateProposal[];
   venues: LeadVenue[];
-  negotiationRequests: NegotiationRequestWithFiles[];
+  rateRevisions: RateRevisionWithFiles[];
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
   availableActions: LeadAvailableAction[];
@@ -144,21 +144,23 @@ function toLeadDetailRepLegal(
   };
 }
 
-function toLeadDetailQuotation(
-  quotation: LeadQuotation,
-): LeadDetailQuotationView {
+function toRateProposalView(
+  proposal: RateProposal,
+): LeadDetailRateProposalView {
   return {
-    id: quotation.id,
-    leadId: quotation.leadId,
-    version: quotation.version,
-    moneda: quotation.moneda,
-    fee: quotation.fee,
-    paybackPricing: quotation.paybackPricing,
-    tarifaDebito: quotation.tarifaDebito,
-    tarifaCredito: quotation.tarifaCredito,
-    tarifaForaneo: quotation.tarifaForaneo,
-    createdAt: quotation.createdAt,
-    createdBy: quotation.createdBy,
+    id: proposal.id,
+    leadId: proposal.leadId,
+    round: proposal.round,
+    moneda: proposal.moneda,
+    fee: proposal.fee,
+    paybackPricing: proposal.paybackPricing,
+    tarifaDebito: proposal.tarifaDebito,
+    tarifaCredito: proposal.tarifaCredito,
+    tarifaForaneo: proposal.tarifaForaneo,
+    outcome: proposal.outcome,
+    proposedBy: proposal.proposedBy,
+    proposedAt: proposal.proposedAt,
+    decidedAt: proposal.decidedAt,
   };
 }
 
@@ -186,13 +188,13 @@ function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
   return result;
 }
 
-function toNegotiationFileView(
-  file: LeadNegotiationFile & {
+function toRateRevisionFileView(
+  file: RateRevisionFile & {
     safeDisplayFilename: string;
     detectedMime: string;
     sizeBytes: number;
   },
-): LeadDetailNegotiationFileView {
+): LeadDetailRateRevisionFileView {
   return {
     artifactId: file.artifactId,
     filename: file.safeDisplayFilename,
@@ -201,16 +203,17 @@ function toNegotiationFileView(
   };
 }
 
-function toNegotiationRequestView(
-  item: NegotiationRequestWithFiles,
-): LeadDetailNegotiationRequestView {
+function toRateRevisionView(
+  item: RateRevisionWithFiles,
+): LeadDetailRateRevisionView {
   return {
-    id: item.request.id,
-    round: item.request.round,
-    justification: item.request.justification,
-    requestedBy: item.request.requestedBy,
-    requestedAt: item.request.requestedAt,
-    files: item.files.map(toNegotiationFileView),
+    id: item.revision.id,
+    proposalId: item.revision.proposalId,
+    round: item.revision.round,
+    justification: item.revision.justification,
+    requestedBy: item.revision.requestedBy,
+    requestedAt: item.revision.requestedAt,
+    files: item.files.map(toRateRevisionFileView),
   };
 }
 
@@ -232,11 +235,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     repLegal: source.legalRepresentative
       ? toLeadDetailRepLegal(source.legalRepresentative)
       : undefined,
-    quotations: source.quotations.map(toLeadDetailQuotation),
+    rateProposals: source.rateProposals.map(toRateProposalView),
     venues: source.venues.map(toLeadDetailVenue),
-    negotiationRequests: source.negotiationRequests.map(
-      toNegotiationRequestView,
-    ),
+    rateRevisions: source.rateRevisions.map(toRateRevisionView),
     timeline: presentTimeline(source.history, source.canRevealFullTimeline),
     availableActions: source.availableActions,
     blockingFields: resolveLeadBlockingFields({

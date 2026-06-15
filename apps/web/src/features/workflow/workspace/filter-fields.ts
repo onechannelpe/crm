@@ -12,14 +12,8 @@ const LEAD_MODIFIED_FILTER_OPTIONS = [
 
 const LEAD_STAGE_FILTER_OPTIONS = [
   { value: "stage:QUALIFYING", label: leadStageLabel("QUALIFYING") },
-  { value: "stage:SCOPING", label: leadStageLabel("SCOPING") },
-  { value: "stage:QUOTING", label: leadStageLabel("QUOTING") },
-  { value: "stage:QUOTED", label: leadStageLabel("QUOTED") },
-  { value: "stage:SETUP_PLAN", label: leadStageLabel("SETUP_PLAN") },
-  {
-    value: "stage:SETUP_EXECUTION",
-    label: leadStageLabel("SETUP_EXECUTION"),
-  },
+  { value: "stage:PRICING", label: leadStageLabel("PRICING") },
+  { value: "stage:SETUP", label: leadStageLabel("SETUP") },
   { value: "stage:LIVE", label: leadStageLabel("LIVE") },
   { value: "stage:DISQUALIFIED", label: leadStageLabel("DISQUALIFIED") },
 ] as const;

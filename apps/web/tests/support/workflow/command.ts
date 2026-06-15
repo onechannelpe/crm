@@ -13,7 +13,6 @@ import { removeFromFavoritesCommand } from "~/server/workflow/application/comman
 import { requestQuotationCommand } from "~/server/workflow/application/commands/request-quotation";
 import { requestRateNegotiationCommand } from "~/server/workflow/application/commands/request-rate-negotiation";
 import { requestSunatRefresh } from "~/server/workflow/application/commands/request-sunat-refresh";
-import { reviewLeadCommand } from "~/server/workflow/application/commands/review-lead";
 import { saveCommercialScopeCommand } from "~/server/workflow/application/commands/save-commercial-scope";
 import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
 import { updateVenueCommand } from "~/server/workflow/application/commands/update-venue";
@@ -31,7 +30,6 @@ import type {
   RegisterLeadCommandInput,
   RequestQuotationCommandInput,
   RequestRateNegotiationCommandInput,
-  ReviewLeadCommandInput,
   SaveCommercialScopeCommandInput,
   UpdateSourcingPolicyCommandInput,
   UpdateVenueCommandInput,
@@ -63,8 +61,16 @@ function buildCommandApi(
         {
           actorUserId: input.actor.userId,
           actorRole: input.actor.role,
-          executiveId: input.executiveId,
           ruc: input.ruc,
+          razonSocial: input.razonSocial,
+          address: input.address,
+          proveedorActual: input.proveedorActual,
+          tasaActual: input.tasaActual,
+          gpv: input.gpv,
+          ticket: input.ticket,
+          giroNegocio: input.giroNegocio,
+          abonoBank: input.abonoBank,
+          posTotal: input.posTotal,
         },
         {
           leads: repos.leads,
@@ -83,9 +89,6 @@ function buildCommandApi(
 
     reassignLead: (input: ReassignLeadCommandInput) =>
       reassignLeadCommand(input, { executor }),
-
-    reviewLead: (input: ReviewLeadCommandInput) =>
-      reviewLeadCommand(input, { executor }),
 
     addLeadNote: (input: AddLeadNoteCommandInput) =>
       addLeadNoteCommand(input, { executor }),

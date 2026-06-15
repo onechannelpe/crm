@@ -6,11 +6,11 @@ import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadState } from "../../domain/lead/state";
 import type {
   LeadProfileRepository,
-  LeadNegotiationRequest,
-  NegotiationRequestRepository,
+  RateRevision,
+  RateRevisionRepository,
   PartyRepository,
-  LeadQuotation,
-  LeadQuotationRepository,
+  RateProposal,
+  RateProposalRepository,
   LeadVenue,
   LeadVenueRepository,
   SourceStatusRepository,
@@ -40,11 +40,11 @@ function reportSectionDegradation(section: string, error: DomainError): void {
   });
 }
 
-export type NegotiationFilesQuery = {
-  listByNegotiationRequestId(requestId: string): Promise<
+export type RateRevisionFilesQuery = {
+  listByRevisionId(revisionId: string): Promise<
     Array<{
       artifactId: string;
-      negotiationRequestId: string;
+      revisionId: string;
       fileAssetId: number;
       uploadedByUserId: number;
       createdAt: number;
@@ -60,10 +60,10 @@ export type LeadDetailQueryDeps = {
   leadFavorites: LeadFavoriteRepository;
   leadProfiles: LeadProfileRepository;
   leadHistory: LeadHistoryRepository;
-  leadQuotations: LeadQuotationRepository;
+  rateProposals: RateProposalRepository;
   leadVenues: LeadVenueRepository;
-  leadNegotiationRequests: NegotiationRequestRepository;
-  negotiationFiles: NegotiationFilesQuery;
+  rateRevisions: RateRevisionRepository;
+  rateRevisionFiles: RateRevisionFilesQuery;
   sourceStatuses: SourceStatusRepository;
   users: WorkflowUserRepository;
   party: PartyRepository;
@@ -73,9 +73,9 @@ export type LeadDetailLoadedSections = {
   lead: LeadState;
   isFavorite: boolean;
   profile: Awaited<ReturnType<LeadProfileRepository["findByLeadId"]>>;
-  quotations: LeadQuotation[];
+  rateProposals: RateProposal[];
   venues: LeadVenue[];
-  negotiationRequestRows: LeadNegotiationRequest[];
+  rateRevisionRows: RateRevision[];
   history: LeadHistoryEntry[];
   sourceStatus: Awaited<ReturnType<SourceStatusRepository["findByRuc"]>>;
   userRows: LeadUserWithName[];
@@ -85,11 +85,9 @@ export type LeadDetailLoadedSections = {
   legalRepresentative: Awaited<
     ReturnType<PartyRepository["findPrimaryLegalRepresentative"]>
   >;
-  negotiationRequests: Array<{
-    request: LeadNegotiationRequest;
-    files: Awaited<
-      ReturnType<NegotiationFilesQuery["listByNegotiationRequestId"]>
-    >;
+  rateRevisions: Array<{
+    revision: RateRevision;
+    files: Awaited<ReturnType<RateRevisionFilesQuery["listByRevisionId"]>>;
   }>;
 };
 
@@ -105,9 +103,9 @@ export async function loadLeadDetailSections(
   const [
     isFavorite,
     profile,
-    quotations,
+    rateProposals,
     venuesResult,
-    negotiationRequestRows,
+    rateRevisionRows,
     historyResult,
     sourceStatus,
     userRows,
@@ -119,9 +117,9 @@ export async function loadLeadDetailSections(
       userId: input.actorUserId,
     }),
     deps.leadProfiles.findByLeadId(input.leadId),
-    deps.leadQuotations.listByLeadId(input.leadId),
+    deps.rateProposals.listByLeadId(input.leadId),
     deps.leadVenues.listByLeadId(input.leadId),
-    deps.leadNegotiationRequests.listByLeadId(input.leadId),
+    deps.rateRevisions.listByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
     deps.sourceStatuses.findByRuc(lead.ruc),
     deps.users.findByIds([
@@ -159,10 +157,10 @@ export async function loadLeadDetailSections(
     reportSectionDegradation("venues", venuesResult.error);
   }
 
-  const negotiationRequests = await Promise.all(
-    negotiationRequestRows.map(async (req) => ({
-      request: req,
-      files: await deps.negotiationFiles.listByNegotiationRequestId(req.id),
+  const rateRevisions = await Promise.all(
+    rateRevisionRows.map(async (revision) => ({
+      revision,
+      files: await deps.rateRevisionFiles.listByRevisionId(revision.id),
     })),
   );
 
@@ -170,14 +168,14 @@ export async function loadLeadDetailSections(
     lead,
     isFavorite,
     profile,
-    quotations,
+    rateProposals,
     venues,
-    negotiationRequestRows,
+    rateRevisionRows,
     history,
     sourceStatus,
     userRows,
     organization,
     legalRepresentative,
-    negotiationRequests,
+    rateRevisions,
   });
 }

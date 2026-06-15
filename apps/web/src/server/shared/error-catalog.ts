@@ -6,11 +6,6 @@ import type { DomainErrorKind } from "~/server/shared/domain-error";
  * projects this onto the wire; the client renders `message` verbatim and never
  * owns copy.
  *
- * `as const satisfies` makes two guarantees the compiler enforces:
- *  - every entry declares both a valid `kind` and a `message` (no code ships
- *    without copy);
- *  - `fail(code)` only accepts a key that exists here (typos do not compile).
- *
  * Only displayed codes belong here. Server faults (`internal`) and third-party
  * faults (`external`) always render the generic message, so they carry no
  * catalog entry; their granular code rides along on `logMessage`/telemetry
@@ -120,14 +115,22 @@ export const ERROR_CATALOG = {
     kind: "conflict",
     message: "Este número de WhatsApp ya está en uso.",
   },
-  negotiation_file_not_submit_ready: {
+  rate_revision_file_not_submit_ready: {
     kind: "conflict",
-    message: "El documento no está listo para enviarse a negociación.",
+    message: "El documento no está listo para enviarse con la revisión.",
   },
-  lead_not_quoted: {
+  lead_not_in_pricing: {
     kind: "conflict",
     message:
-      "Los archivos de negociación solo pueden subirse cuando el lead está en etapa cotizado.",
+      "Los archivos de revisión solo pueden subirse cuando el lead está en etapa de tarifa.",
+  },
+  rate_proposal_not_found: {
+    kind: "conflict",
+    message: "No hay una propuesta de tarifa para este lead.",
+  },
+  rate_proposal_not_pending: {
+    kind: "conflict",
+    message: "La propuesta de tarifa ya fue resuelta.",
   },
   lead_not_live: {
     kind: "conflict",
@@ -159,9 +162,9 @@ export const ERROR_CATALOG = {
     kind: "conflict",
     message: "El cliente ya está asignado a ese ejecutivo.",
   },
-  max_negotiation_rounds_reached: {
+  max_rate_revision_rounds_reached: {
     kind: "conflict",
-    message: "Se alcanzó el máximo de rondas de negociación.",
+    message: "Se alcanzó el máximo de rondas de revisión de tarifa.",
   },
   strong_method_required: {
     kind: "conflict",
@@ -288,17 +291,17 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "Solo se permiten archivos .csv y .xlsx.",
   },
-  negotiation_files_required: {
+  rate_revision_files_required: {
     kind: "validation",
-    message: "Se requiere al menos un documento para la negociación.",
+    message: "Se requiere al menos un documento para la revisión.",
   },
-  max_negotiation_files_exceeded: {
+  max_rate_revision_files_exceeded: {
     kind: "validation",
     message: "Se superó el máximo de archivos permitidos.",
   },
-  duplicate_negotiation_file: {
+  duplicate_rate_revision_file: {
     kind: "validation",
-    message: "Los archivos de negociación deben ser únicos.",
+    message: "Los archivos de revisión deben ser únicos.",
   },
   invalid_stage: {
     kind: "validation",
@@ -435,6 +438,7 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "El límite diario supera el máximo permitido.",
   },
+
   // password reset
   email_required: {
     kind: "validation",

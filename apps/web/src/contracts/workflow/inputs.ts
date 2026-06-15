@@ -30,25 +30,27 @@ export type ListAssignableExecutivesInput = {
   limit?: number;
 };
 
-// Command payloads define the client-sendable shape for workflow commands.
-// Actions validate unknown request values into these contracts, then add the
-// authenticated actor before calling server commands.
+export type CommercialScope = {
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  giroNegocio: string;
+  abonoBank: AbonoBank;
+  posTotal: number;
+};
 
 export type CreateLeadInput = {
   ruc: string;
-  executiveId?: number;
-};
+  razonSocial: string;
+  address: string;
+} & CommercialScope;
+
+export type EditCommercialScopeInput = { leadId: string } & CommercialScope;
 
 export type ReassignLeadInput = {
   leadId: string;
   newExecutiveId: number;
-};
-
-export type ReviewLeadInput = {
-  leadId: string;
-  status: LeadStatus;
-  prioridad: LeadPriority;
-  reason: string;
 };
 
 export type AddLeadNoteInput = {
@@ -62,29 +64,19 @@ export type LogLeadCallInput = {
   notes?: string | null;
 };
 
-export type SaveCommercialScopeInput = {
+export type ProposeRateInput = {
   leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: AbonoBank;
-  posTotal: number;
-};
-
-// Requesting a quotation carries the same commercial scope the lead saves, so
-// the request reuses that payload rather than restating every field.
-export type RequestQuotationInput = SaveCommercialScopeInput;
-
-export type CreateQuotationInput = {
-  leadId: string;
-  paybackPricing: number;
   tarifaDebito: number;
   tarifaCredito: number;
   tarifaForaneo: number;
   fee: number;
+  paybackPricing: number;
   moneda: Moneda;
+};
+
+export type AcceptRateInput = {
+  leadId: string;
+  proposalId: string;
 };
 
 export type SaveDigitalPolicyInput = {
@@ -129,7 +121,7 @@ export type AddVenueAccountsInput = {
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
 };
 
-export type RequestRateNegotiationInput = {
+export type RequestRateRevisionInput = {
   leadId: string;
   justification: string;
   artifactIds: string[];

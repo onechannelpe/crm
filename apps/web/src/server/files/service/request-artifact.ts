@@ -14,7 +14,7 @@ const DIRECTION_MAP: Record<
   records_export: "download",
   integration_import: "upload",
   sale_proof: "upload",
-  negotiation_file: "upload",
+  rate_revision_file: "upload",
 };
 
 export async function requestArtifact(

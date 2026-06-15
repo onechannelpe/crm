@@ -49,20 +49,6 @@ export interface WorkflowModalidadCobroKindsTable {
   value: ModalidadCobro;
 }
 
-export interface WorkflowQuotationsTable {
-  id: Generated<string>;
-  lead_id: string;
-  payback_pricing: number;
-  tarifa_debito: number;
-  tarifa_credito: number;
-  tarifa_foraneo: number;
-  fee: number;
-  moneda: "PEN" | "USD";
-  version: number;
-  created_at: number;
-  created_by: number;
-}
-
 export interface WorkflowLeadAssignmentsTable {
   id: Generated<string>;
   lead_id: string;
@@ -89,12 +75,10 @@ export interface WorkflowHistoryEventsTable {
     | "workflow_stage_changed"
     | "lead_assigned"
     | "lead_reassigned"
-    | "commercial_scope_saved"
-    | "quotation_requested"
     | "rep_legal_recorded"
-    | "quotation_created"
-    | "rate_negotiation_requested"
-    | "sale_approved"
+    | "rate_proposed"
+    | "rate_revision_requested"
+    | "rate_accepted"
     | "venue_added"
     | "venue_updated"
     | "venue_accounts_added"

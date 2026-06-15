@@ -35,25 +35,19 @@ export function createOptimisticLeadRow(input: {
     stage: "QUALIFYING",
     status: null,
     prioridad: null,
-    nextStep: "REVIEW_LEAD",
+    nextStep: "NO_ACTION",
     createdAt: now,
     updatedAt: now,
     optimisticClientKey: `new:${input.ruc}:${now}`,
   };
 }
 
-/**
- * Read optimistic rows for a given key reactively.
- * Safe to call inside source() or other reactive contexts.
- */
+/** Reactive read for source() and other tracking contexts. */
 export function getOptimisticLeadRows(key: string): OptimisticLeadRow[] {
   return state[key] ?? [];
 }
 
-/**
- * Returns a stable accessor for a given key.
- * Use this when you need a fixed Accessor<T> reference outside a reactive context.
- */
+/** Stable accessor for callers that need a fixed Accessor<T> reference. */
 export function useOptimisticLeadRows(
   key: string,
 ): Accessor<OptimisticLeadRow[]> {

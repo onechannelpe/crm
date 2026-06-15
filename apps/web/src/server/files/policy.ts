@@ -24,7 +24,7 @@ const ARTIFACT_DIRECTIONS: Record<
   records_export: "download",
   integration_import: "upload",
   sale_proof: "upload",
-  negotiation_file: "upload",
+  rate_revision_file: "upload",
 };
 
 function deny(code: string): Result<void, DomainError> {
@@ -40,7 +40,7 @@ function canRequest(
   artifactType: ArtifactType,
 ): Result<void, DomainError> {
   if (
-    (artifactType === "sale_proof" || artifactType === "negotiation_file") &&
+    (artifactType === "sale_proof" || artifactType === "rate_revision_file") &&
     actor.role === "executive"
   ) {
     return allow();
@@ -63,7 +63,7 @@ function canUpload(
 ): Result<void, DomainError> {
   const isExecutiveOwnedUpload =
     (artifact.artifactType === "sale_proof" ||
-      artifact.artifactType === "negotiation_file") &&
+      artifact.artifactType === "rate_revision_file") &&
     actor.role === "executive";
   if (!isExecutiveOwnedUpload) {
     if (!hasPermission(actor.role, "file:artifact:upload")) {
@@ -97,7 +97,7 @@ function canRead(
 ): Result<void, DomainError> {
   const isExecutiveReadable =
     (artifact.artifactType === "sale_proof" ||
-      artifact.artifactType === "negotiation_file") &&
+      artifact.artifactType === "rate_revision_file") &&
     actor.role === "executive";
   if (
     !isExecutiveReadable &&

@@ -23,9 +23,13 @@ export async function saveDigitalPolicyCommand(
     const state = await leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const authz = authorizeLeadAction("complete-scoping", input.actor, state);
+    const authz = authorizeLeadAction(
+      "edit-commercial-scope",
+      input.actor,
+      state,
+    );
     if (!authz.ok) return authz;
-    if (state.stage !== "SETUP_PLAN") {
+    if (state.stage !== "SETUP") {
       return Err(fail("invalid_digital_policy_stage"));
     }
 

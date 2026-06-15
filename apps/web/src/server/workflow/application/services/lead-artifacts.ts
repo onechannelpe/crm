@@ -15,7 +15,7 @@ import {
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type {
-  LeadNegotiationFileView,
+  LeadRateRevisionFileView,
   LeadSaleProofFileView,
 } from "~/server/workflow/types";
 
@@ -259,7 +259,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       });
     },
 
-    async uploadNegotiationFile(input: {
+    async uploadRateRevisionFile(input: {
       ctx: AppContext;
       leadId: string;
       file: {
@@ -267,12 +267,12 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
         sizeBytes: number;
         stream: ReadableStream<Uint8Array>;
       };
-    }): Promise<Result<LeadNegotiationFileView, DomainError>> {
+    }): Promise<Result<LeadRateRevisionFileView, DomainError>> {
       const lead = await requireReadableLead(deps, input);
       if (!lead.ok) return lead;
 
-      if (lead.value.stage !== "QUOTED") {
-        return Err(fail("lead_not_quoted"));
+      if (lead.value.stage !== "PRICING") {
+        return Err(fail("lead_not_in_pricing"));
       }
       if (lead.value.executiveId !== input.ctx.actor.userId) {
         return Err(forbidden());
@@ -281,9 +281,9 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       const requested = await requestArtifact(
         input.ctx,
         {
-          artifactType: "negotiation_file",
+          artifactType: "rate_revision_file",
           executionMode: "async",
-          workflowContext: { kind: "negotiation_file", leadId: input.leadId },
+          workflowContext: { kind: "rate_revision_file", leadId: input.leadId },
         },
         {
           repo: deps.filesRepo,
@@ -322,7 +322,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       });
     },
 
-    async requestNegotiationDownloadToken(input: {
+    async requestRateRevisionDownloadToken(input: {
       ctx: AppContext;
       leadId: string;
       artifactId: string;
@@ -330,7 +330,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       const lead = await requireReadableLead(deps, input);
       if (!lead.ok) return lead;
 
-      const record = await deps.filesRepo.negotiation.findByArtifactId(
+      const record = await deps.filesRepo.rateRevision.findByArtifactId(
         input.artifactId,
       );
       if (!record || record.leadId !== input.leadId) {

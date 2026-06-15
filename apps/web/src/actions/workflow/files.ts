@@ -1,6 +1,6 @@
 "use server";
 
-import { type LeadNegotiationFileView } from "~/contracts/workflow/results";
+import { type LeadRateRevisionFileView } from "~/contracts/workflow/results";
 import { type WireError } from "~/lib/wire-error";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction, runActionResult } from "~/server/shared/action-runtime";
@@ -146,12 +146,12 @@ export async function requestLeadSaleProofDownloadToken(input: {
   });
 }
 
-export async function uploadLeadNegotiationFile(
+export async function uploadLeadRateRevisionFile(
   rawLeadId: string,
   formData: FormData,
-): Promise<Result<LeadNegotiationFileView, WireError>> {
+): Promise<Result<LeadRateRevisionFileView, WireError>> {
   return runActionResult({
-    name: "workflow.upload_negotiation_file",
+    name: "workflow.upload_rate_revision_file",
     access: { kind: "auth" },
     parse: () => parseLeadUpload(rawLeadId, formData),
 
@@ -162,7 +162,7 @@ export async function uploadLeadNegotiationFile(
     }),
 
     execute: (ctx, { leadId, file }) =>
-      getServerRuntime().workflow.leadArtifacts.uploadNegotiationFile({
+      getServerRuntime().workflow.leadArtifacts.uploadRateRevisionFile({
         ctx,
         leadId,
         file,
@@ -170,18 +170,18 @@ export async function uploadLeadNegotiationFile(
   });
 }
 
-export async function requestNegotiationFileDownloadToken(input: {
+export async function requestRateRevisionFileDownloadToken(input: {
   leadId: string;
   artifactId: string;
 }) {
   return runActionResult({
-    name: "workflow.request_negotiation_download_token",
+    name: "workflow.request_rate_revision_download_token",
     access: { kind: "auth" },
     parse: () => parseLeadArtifactRef(input),
     audit: ({ leadId, artifactId }) => ({ leadId, artifactId }),
 
     execute: (ctx, { leadId, artifactId }) =>
-      getServerRuntime().workflow.leadArtifacts.requestNegotiationDownloadToken(
+      getServerRuntime().workflow.leadArtifacts.requestRateRevisionDownloadToken(
         {
           ctx,
           leadId,

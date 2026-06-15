@@ -94,31 +94,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("workflow_quotations")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("lead_id", "text", (col) =>
-      col.notNull().references("workflow_leads.id").onDelete("cascade"),
-    )
-    .addColumn("payback_pricing", "real", (col) => col.notNull())
-    .addColumn("tarifa_debito", "real", (col) => col.notNull())
-    .addColumn("tarifa_credito", "real", (col) => col.notNull())
-    .addColumn("tarifa_foraneo", "real", (col) => col.notNull())
-    .addColumn("fee", "real", (col) => col.notNull())
-    .addColumn("moneda", "varchar(3)", (col) => col.notNull())
-    .addColumn("version", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("created_by", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_quotations_lead")
-    .on("workflow_quotations")
-    .columns(["lead_id", "version"])
-    .execute();
-
-  await db.schema
     .createTable("workflow_lead_assignments")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>

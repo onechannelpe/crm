@@ -99,24 +99,6 @@ export function presentTimelineItem(
         description: `${subjectDisplayName} reasignado por ${actorDisplayName}.`,
         actorDisplayName,
       };
-    case "commercial_scope_saved":
-      return {
-        id: `history:${event.id}`,
-        occurredAt: event.occurredAt,
-        kind: "system",
-        title: "Alcance comercial guardado",
-        description: `Guardado por ${actorDisplayName}.`,
-        actorDisplayName,
-      };
-    case "quotation_requested":
-      return {
-        id: `history:${event.id}`,
-        occurredAt: event.occurredAt,
-        kind: "stage-change",
-        title: "Cotización solicitada",
-        description: `Solicitada por ${actorDisplayName}.`,
-        actorDisplayName,
-      };
     case "rep_legal_recorded":
       return {
         id: `history:${event.id}`,
@@ -126,33 +108,31 @@ export function presentTimelineItem(
         description: `Registrado por ${actorDisplayName}.`,
         actorDisplayName,
       };
-    case "quotation_created":
+    case "rate_proposed":
       return {
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "system",
-        title: "Cotización creada",
-        description: event.payload
-          ? `Cotización #${event.payload.quotationId} creada por ${actorDisplayName}.`
-          : `Creada por ${actorDisplayName}.`,
+        title: "Tarifa propuesta",
+        description: `Ronda ${event.payload.round} propuesta por ${actorDisplayName}.`,
         actorDisplayName,
       };
-    case "rate_negotiation_requested":
+    case "rate_revision_requested":
       return {
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
-        kind: "stage-change",
-        title: "Revisión de tasa solicitada",
+        kind: "system",
+        title: "Revisión de tarifa solicitada",
         description: `Ronda ${event.payload.round}: ${event.payload.justification}`,
         actorDisplayName,
       };
-    case "sale_approved":
+    case "rate_accepted":
       return {
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "stage-change",
-        title: "Lista para venta",
-        description: `Aprobada por ${actorDisplayName}.`,
+        title: "Tarifa aceptada",
+        description: `Aceptada por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "venue_added":

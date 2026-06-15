@@ -2,7 +2,7 @@ export const ARTIFACT_TYPES = [
   "records_export",
   "integration_import",
   "sale_proof",
-  "negotiation_file",
+  "rate_revision_file",
 ] as const;
 export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 

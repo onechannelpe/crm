@@ -54,4 +54,27 @@ describe("register lead", () => {
     expect(snapshot.organizationName).toBe("20912345672");
     expect(snapshot.organizationAddress).toBeNull();
   });
+
+  it("seeds the commercial profile so the lead is qualifiable from the export", async () => {
+    const result = await registerLead({
+      runtime,
+      ruc: "20912345673",
+      proveedorActual: "Izipay",
+      tasaActual: 2.9,
+      gpv: 80000,
+      ticket: 150,
+      giroNegocio: "Gastronomía",
+      posTotal: 4,
+    });
+
+    expect(result.profile).toEqual({
+      proveedorActual: "Izipay",
+      tasaActual: 2.9,
+      gpv: 80000,
+      ticket: 150,
+      abonoBank: expect.any(String),
+      posTotal: 4,
+    });
+    expect(result.snapshot.organizationGiroNegocio).toBe("Gastronomía");
+  });
 });

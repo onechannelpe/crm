@@ -1,14 +1,14 @@
 import type {
+  AcceptRateInput,
   AddLeadNoteInput,
   AddVenueAccountsInput,
-  CreateQuotationInput,
+  CreateLeadInput,
   CreateVenueInput,
+  EditCommercialScopeInput,
   LogLeadCallInput,
+  ProposeRateInput,
   RecordRepLegalInput,
-  RequestQuotationInput,
-  RequestRateNegotiationInput,
-  ReviewLeadInput,
-  SaveCommercialScopeInput,
+  RequestRateRevisionInput,
   SaveDigitalPolicyInput,
   UpdateVenueInput,
 } from "~/contracts/workflow/inputs";
@@ -20,14 +20,7 @@ import type { WorkflowActor } from "./actor";
 // crosses the wire.
 type WithActor<TPayload> = TPayload & { actor: WorkflowActor };
 
-// Register and reassign do not mirror their client payloads: register resolves
-// a concrete executiveId and reassign renames the target field, so both keep an
-// explicit shape.
-export type RegisterLeadCommandInput = {
-  actor: WorkflowActor;
-  ruc: string;
-  executiveId: number;
-};
+export type RegisterLeadCommandInput = WithActor<CreateLeadInput>;
 
 export type ReassignLeadCommandInput = {
   actor: WorkflowActor;
@@ -35,25 +28,23 @@ export type ReassignLeadCommandInput = {
   toExecutiveId: number;
 };
 
-export type ReviewLeadCommandInput = WithActor<ReviewLeadInput>;
-
 export type AddLeadNoteCommandInput = WithActor<AddLeadNoteInput>;
 
 export type LogLeadCallCommandInput = WithActor<LogLeadCallInput>;
 
-export type CreateQuotationCommandInput = WithActor<CreateQuotationInput>;
+export type ProposeRateCommandInput = WithActor<ProposeRateInput>;
 
-export type SaveCommercialScopeCommandInput =
-  WithActor<SaveCommercialScopeInput>;
+export type AcceptRateCommandInput = WithActor<AcceptRateInput>;
+
+export type EditCommercialScopeCommandInput =
+  WithActor<EditCommercialScopeInput>;
 
 export type SaveDigitalPolicyCommandInput = WithActor<SaveDigitalPolicyInput>;
 
-export type RequestQuotationCommandInput = WithActor<RequestQuotationInput>;
-
 export type RecordRepLegalCommandInput = WithActor<RecordRepLegalInput>;
 
-export type RequestRateNegotiationCommandInput =
-  WithActor<RequestRateNegotiationInput>;
+export type RequestRateRevisionCommandInput =
+  WithActor<RequestRateRevisionInput>;
 
 export type CreateVenueCommandInput = WithActor<CreateVenueInput>;
 

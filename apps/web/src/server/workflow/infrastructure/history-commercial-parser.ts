@@ -4,62 +4,10 @@ import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import {
-  nullableNumber,
-  nullableString,
   requireMoneda,
   requireNumber,
   requireString,
 } from "./history-payload-fields";
-
-export function toCommercialScopeEntry(
-  row: HistoryEventRow,
-  payload: Record<string, unknown> | null,
-): Result<LeadHistoryEntry, DomainError> {
-  const proveedorActual = requireString(payload, "proveedorActual", row);
-  if (!proveedorActual.ok) return proveedorActual;
-
-  const tasaActual = requireNumber(payload, "tasaActual", row);
-  if (!tasaActual.ok) return tasaActual;
-
-  const gpv = requireNumber(payload, "gpv", row);
-  if (!gpv.ok) return gpv;
-
-  const ticket = requireNumber(payload, "ticket", row);
-  if (!ticket.ok) return ticket;
-
-  const giroNegocio = requireString(payload, "giroNegocio", row);
-  if (!giroNegocio.ok) return giroNegocio;
-
-  const abonoBank = nullableString(payload, "abonoBank", row);
-  if (!abonoBank.ok) return abonoBank;
-
-  const posTotal = nullableNumber(payload, "posTotal", row);
-  if (!posTotal.ok) return posTotal;
-
-  return Ok({
-    ...toHistoryEntryBase(row),
-    eventType: "commercial_scope_saved",
-    payload: {
-      proveedorActual: proveedorActual.value,
-      tasaActual: tasaActual.value,
-      gpv: gpv.value,
-      ticket: ticket.value,
-      giroNegocio: giroNegocio.value,
-      abonoBank: abonoBank.value,
-      posTotal: posTotal.value,
-    },
-  });
-}
-
-export function toRequestQuotationEntry(
-  row: HistoryEventRow,
-): Result<LeadHistoryEntry, DomainError> {
-  return Ok({
-    ...toHistoryEntryBase(row),
-    eventType: "quotation_requested",
-    payload: null,
-  });
-}
 
 export function toRepLegalEntry(
   row: HistoryEventRow,
@@ -97,40 +45,36 @@ export function toRepLegalEntry(
   });
 }
 
-export function toQuotationEntry(
+export function toRateProposedEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const quotationId = requireString(payload, "quotationId", row);
-  if (!quotationId.ok) return quotationId;
+  const proposalId = requireString(payload, "proposalId", row);
+  if (!proposalId.ok) return proposalId;
 
-  const version = requireNumber(payload, "version", row);
-  if (!version.ok) return version;
+  const round = requireNumber(payload, "round", row);
+  if (!round.ok) return round;
 
   const moneda = requireMoneda(payload, row);
   if (!moneda.ok) return moneda;
 
   return Ok({
     ...toHistoryEntryBase(row),
-    eventType: "quotation_created",
+    eventType: "rate_proposed",
     payload: {
-      quotationId: quotationId.value,
-      version: version.value,
+      proposalId: proposalId.value,
+      round: round.value,
       moneda: moneda.value,
     },
   });
 }
 
-export function toRateNegotiationRequestedEntry(
+export function toRateRevisionRequestedEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const negotiationRequestId = requireString(
-    payload,
-    "negotiationRequestId",
-    row,
-  );
-  if (!negotiationRequestId.ok) return negotiationRequestId;
+  const revisionId = requireString(payload, "revisionId", row);
+  if (!revisionId.ok) return revisionId;
 
   const round = requireNumber(payload, "round", row);
   if (!round.ok) return round;
@@ -140,11 +84,27 @@ export function toRateNegotiationRequestedEntry(
 
   return Ok({
     ...toHistoryEntryBase(row),
-    eventType: "rate_negotiation_requested",
+    eventType: "rate_revision_requested",
     payload: {
-      negotiationRequestId: negotiationRequestId.value,
+      revisionId: revisionId.value,
       round: round.value,
       justification: justification.value,
+    },
+  });
+}
+
+export function toRateAcceptedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const proposalId = requireString(payload, "proposalId", row);
+  if (!proposalId.ok) return proposalId;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "rate_accepted",
+    payload: {
+      proposalId: proposalId.value,
     },
   });
 }

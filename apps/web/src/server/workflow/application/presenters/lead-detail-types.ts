@@ -47,7 +47,7 @@ export type LeadDetailRepLegalView = {
   email: string | null;
 };
 
-export type LeadDetailNegotiationFileView = {
+export type LeadDetailRateRevisionFileView = {
   artifactId: string;
   filename: string;
   detectedMime: string;

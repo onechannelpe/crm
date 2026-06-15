@@ -45,11 +45,15 @@ export async function getLeadDetail(
     ? (userMap.get(lead.updatedBy) ?? null)
     : null;
 
+  const latestProposal = loaded.value.rateProposals.at(-1);
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions(
     { userId: input.actorUserId, role: input.actorRole },
     lead,
-    { negotiationRequestCount: loaded.value.negotiationRequestRows.length },
+    {
+      hasPendingProposal: latestProposal?.outcome === "pending",
+      rateRevisionCount: loaded.value.rateRevisionRows.length,
+    },
   );
 
   return Ok(
@@ -60,9 +64,9 @@ export async function getLeadDetail(
       createdByName,
       updatedByName,
       profile: loaded.value.profile,
-      quotations: loaded.value.quotations,
+      rateProposals: loaded.value.rateProposals,
       venues: loaded.value.venues,
-      negotiationRequests: loaded.value.negotiationRequests,
+      rateRevisions: loaded.value.rateRevisions,
       history: loaded.value.history,
       canRevealFullTimeline: canRevealTimeline,
       availableActions,

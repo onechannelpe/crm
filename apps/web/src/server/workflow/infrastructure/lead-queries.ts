@@ -100,24 +100,25 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "profile.lead_id",
           "lead.id",
         )
-        // Join only the highest-version quotation per lead: a derived table of
-        // MAX(version) keeps one row even when older quotations exist.
+        // Join only the latest rate proposal per lead: a derived table of
+        // MAX(round) keeps one row even when earlier rounds exist. The proposal
+        // is what back office offered, so its rates are the lead's Culqi rates.
         .leftJoin(
           (eb) =>
             eb
-              .selectFrom("workflow_quotations")
+              .selectFrom("workflow_rate_proposals")
               .select((e) => [
-                "workflow_quotations.lead_id as lead_id",
-                e.fn.max("workflow_quotations.version").as("version"),
+                "workflow_rate_proposals.lead_id as lead_id",
+                e.fn.max("workflow_rate_proposals.round").as("round"),
               ])
-              .groupBy("workflow_quotations.lead_id")
-              .as("latest_quote"),
-          (join) => join.onRef("latest_quote.lead_id", "=", "lead.id"),
+              .groupBy("workflow_rate_proposals.lead_id")
+              .as("latest_rate"),
+          (join) => join.onRef("latest_rate.lead_id", "=", "lead.id"),
         )
-        .leftJoin("workflow_quotations as quote", (join) =>
+        .leftJoin("workflow_rate_proposals as rate", (join) =>
           join
-            .onRef("quote.lead_id", "=", "latest_quote.lead_id")
-            .onRef("quote.version", "=", "latest_quote.version"),
+            .onRef("rate.lead_id", "=", "latest_rate.lead_id")
+            .onRef("rate.round", "=", "latest_rate.round"),
         )
         .select([
           "lead.id",
@@ -134,8 +135,8 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "profile.proveedor_actual",
           "profile.tasa_actual",
           "profile.gpv",
-          "quote.tarifa_debito as tarifa_debito_culqi",
-          "quote.tarifa_credito as tarifa_credito_culqi",
+          "rate.tarifa_debito as tarifa_debito_culqi",
+          "rate.tarifa_credito as tarifa_credito_culqi",
         ]);
 
       if (filters.executiveId !== undefined) {

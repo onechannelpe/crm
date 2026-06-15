@@ -32,20 +32,16 @@ export type ScopingProfileFields = {
 
 export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
   switch (lead.stage) {
+    // Awaiting availability qualification, which happens via the export/import
+    // round-trip, not an in-app action. So there is no agent next step here.
     case "QUALIFYING":
-      return "REVIEW_LEAD";
+      return "NO_ACTION";
     case "DISQUALIFIED":
       return "NO_ACTION";
-    case "SCOPING":
-      return "SAVE_COMMERCIAL_SCOPE";
-    case "QUOTING":
-      return "CREATE_QUOTATION";
-    case "QUOTED":
-      return "APPROVE_FOR_SALE";
-    case "SETUP_PLAN":
+    case "PRICING":
+      return "PROPOSE_RATE";
+    case "SETUP":
       return "DEFINE_DIGITAL_POLICY";
-    case "SETUP_EXECUTION":
-      return "REGISTER_VENUE_ACCOUNTS";
     case "LIVE":
       return "NO_ACTION";
     default: {
@@ -63,32 +59,16 @@ export function resolveLeadBlockingFields(input: {
   switch (input.stage) {
     case "QUALIFYING":
     case "DISQUALIFIED":
-    case "QUOTING":
-    case "QUOTED":
+    case "PRICING":
     case "LIVE":
       return [];
-    case "SCOPING": {
-      const p = input.profile;
-      const blocking: LeadBlockingField[] = [];
-      if (!p?.proveedorActual) blocking.push("proveedorActual");
-      if (p?.tasaActual == null) blocking.push("tasaActual");
-      if (p?.gpv == null) blocking.push("gpv");
-      if (p?.ticket == null) blocking.push("ticket");
-      if (!p?.giroNegocio) blocking.push("giroNegocio");
-      if (!p?.abonoBank) blocking.push("abonoBank");
-      if (p?.posTotal == null) blocking.push("posTotal");
-      return blocking;
-    }
-    case "SETUP_PLAN": {
+    case "SETUP": {
       const p = input.profile;
       if (!p) return ["digitalPolicy"];
       if (p.linkScope === "shared" && !p.linkUrl) return ["digitalPolicy"];
       if (p.onlineScope === "shared" && (!p.onlineUrl || !p.onlineModalidad)) {
         return ["digitalPolicy"];
       }
-      return [];
-    }
-    case "SETUP_EXECUTION": {
       const withAccounts = input.venuesWithAccountsCount ?? 0;
       return withAccounts === 0 ? ["venueAccounts"] : [];
     }

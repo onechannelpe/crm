@@ -36,6 +36,10 @@ export type DataGridInteractionModel = {
   clearActiveRow: () => void;
   clearSelection: () => void;
   hasFocusedCell: Accessor<boolean>;
+  hasEditingCell: Accessor<boolean>;
+  isCellEditing: (rowId: string, columnIndex: number) => boolean;
+  openCellEditor: (rowId: string, columnIndex: number) => void;
+  closeCellEditor: () => void;
   clearPendingRowOpenSuppression: () => void;
   clearFocus: () => void;
   getCellTabIndex: (rowId: string, columnIndex: number) => number;
@@ -81,6 +85,9 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
       options.columnCount(),
     ),
   );
+  const [editingCell, setEditingCell] = createSignal<
+    { rowId: string; columnIndex: number } | undefined
+  >(undefined);
   const [reorderActiveRowId, setReorderActiveRowId] = createSignal<
     string | undefined
   >();
@@ -108,6 +115,14 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
       !currentRowIds.includes(currentActiveRowId)
     ) {
       setActiveRowId(undefined);
+    }
+
+    const currentEditingCell = editingCell();
+    if (
+      currentEditingCell !== undefined &&
+      !currentRowIds.includes(currentEditingCell.rowId)
+    ) {
+      setEditingCell(undefined);
     }
 
     if (options.rowOpenMode() === "none" || options.rows().length === 0) {
@@ -281,6 +296,25 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
       options.selection?.clear();
     },
     hasFocusedCell: createMemo(() => focusedCell() !== undefined),
+    // Plain derived accessor (not a memo): a trivial boolean that must read
+    // current even outside a reactive scope, e.g. imperative checks and tests.
+    hasEditingCell: () => editingCell() !== undefined,
+    isCellEditing(rowId: string, columnIndex: number) {
+      const cell = editingCell();
+      return cell?.rowId === rowId && cell.columnIndex === columnIndex;
+    },
+    openCellEditor(rowId: string, columnIndex: number) {
+      setFocusedCell({ rowId, columnIndex });
+      setEditingCell({ rowId, columnIndex });
+    },
+    closeCellEditor() {
+      const cell = editingCell();
+      setEditingCell(undefined);
+      // Return focus to the cell so keyboard navigation continues from here.
+      if (cell) {
+        focusRegisteredCell(cell.rowId, cell.columnIndex);
+      }
+    },
     clearPendingRowOpenSuppression() {
       setPendingRowOpenSuppression(false);
     },
@@ -326,6 +360,28 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
 
       if (pendingRowOpenSuppression()) {
         event.preventDefault();
+        return;
+      }
+
+      // Horizontal navigation changes columns. Vertical navigation below keeps
+      // the column fixed.
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        const lastColumnIndex = options.columnCount() - 1;
+        if (lastColumnIndex < 0) {
+          return;
+        }
+
+        const nextColumnIndex =
+          event.key === "ArrowLeft"
+            ? Math.max(0, columnIndex - 1)
+            : Math.min(lastColumnIndex, columnIndex + 1);
+        if (nextColumnIndex === columnIndex) {
+          return;
+        }
+
+        event.preventDefault();
+        setFocusedCell({ rowId, columnIndex: nextColumnIndex });
+        focusRegisteredCell(rowId, nextColumnIndex);
         return;
       }
 

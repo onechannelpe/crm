@@ -14,12 +14,10 @@ export type LeadHistoryEventType =
   | "workflow_stage_changed"
   | "lead_assigned"
   | "lead_reassigned"
-  | "commercial_scope_saved"
-  | "quotation_requested"
   | "rep_legal_recorded"
-  | "quotation_created"
-  | "rate_negotiation_requested"
-  | "sale_approved"
+  | "rate_proposed"
+  | "rate_revision_requested"
+  | "rate_accepted"
   | "venue_added"
   | "venue_updated"
   | "venue_accounts_added"
@@ -61,16 +59,6 @@ export type LeadHistoryPayloadByEvent = {
     toExecutiveId: number;
     reason?: string;
   };
-  commercial_scope_saved: {
-    proveedorActual: string;
-    tasaActual: number;
-    gpv: number;
-    ticket: number;
-    giroNegocio: string;
-    abonoBank: string | null;
-    posTotal: number | null;
-  };
-  quotation_requested: null;
   rep_legal_recorded: {
     nombres: string;
     apellidoPaterno: string;
@@ -79,17 +67,19 @@ export type LeadHistoryPayloadByEvent = {
     telefono: string;
     email: string;
   };
-  quotation_created: {
-    quotationId: string;
-    version: number;
+  rate_proposed: {
+    proposalId: string;
+    round: number;
     moneda: Moneda;
   };
-  rate_negotiation_requested: {
-    negotiationRequestId: string;
+  rate_revision_requested: {
+    revisionId: string;
     round: number;
     justification: string;
   };
-  sale_approved: null;
+  rate_accepted: {
+    proposalId: string;
+  };
   venue_added: {
     venueId: string;
     nombreComercial: string;

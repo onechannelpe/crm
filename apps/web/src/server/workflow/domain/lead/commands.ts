@@ -1,20 +1,13 @@
 import {
-  MAX_NEGOTIATION_FILES,
-  MAX_NEGOTIATION_ROUNDS,
+  MAX_RATE_REVISION_FILES,
+  MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
-import type {
-  AbonoBank,
-  LeadCallOutcome,
-  LeadPriority,
-  LeadStatus,
-  Moneda,
-} from "~/contracts/workflow/vocabulary";
+import type { LeadCallOutcome, Moneda } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../history";
-import { resolveReviewTransition } from "../workflow";
 import type { LeadEvent } from "./events";
 import { authorizeLeadAction } from "./policy";
 import { applyEvents } from "./reducer";
@@ -36,51 +29,6 @@ function finish(
     next: applyEvents(state, events, { actorUserId: actor.userId, now }),
     events,
   });
-}
-
-export function reviewLead(
-  state: LeadState,
-  input: {
-    actor: Actor;
-    status: LeadStatus;
-    prioridad: LeadPriority;
-    reason: string;
-    now: number;
-  },
-): TransitionResult {
-  const authz = authorizeLeadAction("review", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
-
-  const nextStage = resolveReviewTransition({
-    status: input.status,
-    prioridad: input.prioridad,
-  });
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "lead_reviewed",
-      actorUserId: input.actor.userId,
-      payload: {
-        status: input.status,
-        prioridad: input.prioridad,
-        reason: input.reason,
-        fromStage: state.stage,
-        toStage: nextStage,
-      },
-      occurredAt: input.now,
-    }),
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actor.userId,
-      payload: { from: state.stage, to: nextStage },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
 }
 
 export function reassignLead(
@@ -156,93 +104,32 @@ export function logCall(
   return finish(state, events, input.actor, input.now);
 }
 
-export function approveForSale(
-  state: LeadState,
-  input: { actor: Actor; now: number },
-): TransitionResult {
-  const authz = authorizeLeadAction("approve-for-sale", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "QUOTED") return Err(fail("invalid_stage"));
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "sale_approved",
-      actorUserId: input.actor.userId,
-      payload: null,
-      occurredAt: input.now,
-    }),
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actor.userId,
-      payload: { from: state.stage, to: "SETUP_PLAN" },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
-}
-
-export function requestQuotation(
-  state: LeadState,
-  input: { actor: Actor; now: number },
-): TransitionResult {
-  const authz = authorizeLeadAction("complete-scoping", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SCOPING") return Err(fail("invalid_stage"));
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "quotation_requested",
-      actorUserId: input.actor.userId,
-      payload: null,
-      occurredAt: input.now,
-    }),
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actor.userId,
-      payload: { from: state.stage, to: "QUOTING" },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
-}
-
-export function createQuotation(
+// Back office proposes the Culqi rate. The lead stays in PRICING; the proposal
+// row carries the numbers. The executive then accepts or requests a revision.
+export function proposeRate(
   state: LeadState,
   input: {
     actor: Actor;
-    quotationId: string;
-    version: number;
+    proposalId: string;
+    round: number;
     moneda: Moneda;
     now: number;
   },
 ): TransitionResult {
-  const authz = authorizeLeadAction("create-quotation", input.actor, state);
+  const authz = authorizeLeadAction("propose-rate", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "QUOTING") return Err(fail("invalid_stage"));
+  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
       leadId: state.id,
-      eventType: "quotation_created",
+      eventType: "rate_proposed",
       actorUserId: input.actor.userId,
       payload: {
-        quotationId: input.quotationId,
-        version: input.version,
+        proposalId: input.proposalId,
+        round: input.round,
         moneda: input.moneda,
       },
-      occurredAt: input.now,
-    }),
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actor.userId,
-      payload: { from: state.stage, to: "QUOTED" },
       occurredAt: input.now,
     }),
   ];
@@ -250,38 +137,29 @@ export function createQuotation(
   return finish(state, events, input.actor, input.now);
 }
 
-export function saveCommercialScope(
+// The executive accepts the current proposal: the client said yes, so the lead
+// moves on to setup.
+export function acceptRate(
   state: LeadState,
-  input: {
-    actor: Actor;
-    proveedorActual: string;
-    tasaActual: number;
-    gpv: number;
-    ticket: number;
-    giroNegocio: string;
-    abonoBank: AbonoBank;
-    posTotal: number;
-    now: number;
-  },
+  input: { actor: Actor; proposalId: string; now: number },
 ): TransitionResult {
-  const authz = authorizeLeadAction("complete-scoping", input.actor, state);
+  const authz = authorizeLeadAction("accept-rate", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SCOPING") return Err(fail("invalid_stage"));
+  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
       leadId: state.id,
-      eventType: "commercial_scope_saved",
+      eventType: "rate_accepted",
       actorUserId: input.actor.userId,
-      payload: {
-        proveedorActual: input.proveedorActual,
-        tasaActual: input.tasaActual,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        giroNegocio: input.giroNegocio,
-        abonoBank: input.abonoBank,
-        posTotal: input.posTotal,
-      },
+      payload: { proposalId: input.proposalId },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "SETUP" },
       occurredAt: input.now,
     }),
   ];
@@ -302,9 +180,9 @@ export function recordRepLegal(
     now: number;
   },
 ): TransitionResult {
-  const authz = authorizeLeadAction("complete-scoping", input.actor, state);
+  const authz = authorizeLeadAction("record-rep-legal", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
+  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -343,7 +221,7 @@ export function createVenue(
 ): TransitionResult {
   const authz = authorizeLeadAction("create-venue", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
+  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -372,7 +250,7 @@ export function updateVenue(
 ): TransitionResult {
   const authz = authorizeLeadAction("update-venue", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
+  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -401,7 +279,7 @@ export function addVenueAccounts(
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
   if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_EXECUTION") return Err(fail("invalid_stage"));
+  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
 
   const events: LeadEvent[] = [
     createHistoryEvent({
@@ -428,72 +306,50 @@ export function addVenueAccounts(
   return finish(state, events, input.actor, input.now);
 }
 
-export function startSetupExecution(
-  state: LeadState,
-  input: { actor: Actor; now: number },
-): TransitionResult {
-  const authz = authorizeLeadAction("complete-scoping", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP_PLAN") return Err(fail("invalid_stage"));
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actor.userId,
-      payload: { from: state.stage, to: "SETUP_EXECUTION" },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
-}
-
-export function requestRateNegotiation(
+// The executive rejects the current proposal and asks for a new rate. The lead
+// stays in PRICING (no stage bounce); back office will propose another round.
+export function requestRateRevision(
   state: LeadState,
   input: {
     actor: Actor;
-    negotiationRequestId: string;
+    revisionId: string;
     round: number;
     justification: string;
     artifactIds: string[];
     now: number;
   },
 ): TransitionResult {
-  const authz = authorizeLeadAction("request-negotiation", input.actor, state);
+  const authz = authorizeLeadAction(
+    "request-rate-revision",
+    input.actor,
+    state,
+  );
   if (!authz.ok) return authz;
-  if (state.stage !== "QUOTED") return Err(fail("invalid_stage"));
+  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
-  if (input.round > MAX_NEGOTIATION_ROUNDS) {
-    return Err(fail("max_negotiation_rounds_reached"));
+  if (input.round > MAX_RATE_REVISION_ROUNDS) {
+    return Err(fail("max_rate_revision_rounds_reached"));
   }
   if (input.artifactIds.length < 1) {
-    return Err(fail("negotiation_files_required"));
+    return Err(fail("rate_revision_files_required"));
   }
-  if (input.artifactIds.length > MAX_NEGOTIATION_FILES) {
-    return Err(fail("max_negotiation_files_exceeded"));
+  if (input.artifactIds.length > MAX_RATE_REVISION_FILES) {
+    return Err(fail("max_rate_revision_files_exceeded"));
   }
   if (new Set(input.artifactIds).size !== input.artifactIds.length) {
-    return Err(fail("duplicate_negotiation_file"));
+    return Err(fail("duplicate_rate_revision_file"));
   }
 
   const events: LeadEvent[] = [
     createHistoryEvent({
       leadId: state.id,
-      eventType: "rate_negotiation_requested",
+      eventType: "rate_revision_requested",
       actorUserId: input.actor.userId,
       payload: {
-        negotiationRequestId: input.negotiationRequestId,
+        revisionId: input.revisionId,
         round: input.round,
         justification: input.justification,
       },
-      occurredAt: input.now,
-    }),
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actor.userId,
-      payload: { from: state.stage, to: "QUOTING" },
       occurredAt: input.now,
     }),
   ];

@@ -3,11 +3,10 @@ import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 
 import {
-  toCommercialScopeEntry,
-  toQuotationEntry,
-  toRateNegotiationRequestedEntry,
+  toRateAcceptedEntry,
+  toRateProposedEntry,
+  toRateRevisionRequestedEntry,
   toRepLegalEntry,
-  toRequestQuotationEntry,
   toVenueAddedEntry,
   toVenueUpdatedEntry,
 } from "./history-commercial-parser";
@@ -45,22 +44,14 @@ export function toHistoryEntry(
       return toAssignmentEntry(row, payload.value);
     case "lead_reassigned":
       return toReassignmentEntry(row, payload.value);
-    case "commercial_scope_saved":
-      return toCommercialScopeEntry(row, payload.value);
-    case "quotation_requested":
-      return toRequestQuotationEntry(row);
     case "rep_legal_recorded":
       return toRepLegalEntry(row, payload.value);
-    case "quotation_created":
-      return toQuotationEntry(row, payload.value);
-    case "rate_negotiation_requested":
-      return toRateNegotiationRequestedEntry(row, payload.value);
-    case "sale_approved":
-      return Ok({
-        ...toHistoryEntryBase(row),
-        eventType: "sale_approved",
-        payload: null,
-      });
+    case "rate_proposed":
+      return toRateProposedEntry(row, payload.value);
+    case "rate_revision_requested":
+      return toRateRevisionRequestedEntry(row, payload.value);
+    case "rate_accepted":
+      return toRateAcceptedEntry(row, payload.value);
     case "venue_added":
       return toVenueAddedEntry(row, payload.value);
     case "venue_updated":

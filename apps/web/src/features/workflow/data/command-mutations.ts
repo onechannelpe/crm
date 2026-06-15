@@ -1,22 +1,19 @@
 import { action } from "@solidjs/router";
 
-import { requestRateNegotiation } from "~/actions/workflow/commands/negotiation";
 import {
-  requestQuotationCreation,
-  requestSaleApproval,
-} from "~/actions/workflow/commands/quotations";
+  requestRateAcceptance,
+  requestRateProposal,
+  requestRateRevision,
+} from "~/actions/workflow/commands/rate";
 import {
   requestAddLeadToFavorites,
+  requestEditCommercialScope,
   requestLeadCreation,
   requestLeadDeletion,
   requestLeadReassignment,
-  requestLeadReview,
-  requestQuotation,
   requestRecordRepLegal,
   requestRemoveLeadFromFavorites,
-  requestSaveCommercialScope,
   requestSaveDigitalPolicy,
-  requestStartSetupExecution,
 } from "~/actions/workflow/commands/records";
 import {
   requestVenueAccountsAddition,
@@ -24,16 +21,15 @@ import {
   requestVenueUpdate,
 } from "~/actions/workflow/commands/sales";
 import type {
+  AcceptRateInput,
   AddVenueAccountsInput,
   CreateLeadInput,
-  CreateQuotationInput,
   CreateVenueInput,
+  EditCommercialScopeInput,
+  ProposeRateInput,
   ReassignLeadInput,
   RecordRepLegalInput,
-  RequestQuotationInput,
-  RequestRateNegotiationInput,
-  ReviewLeadInput,
-  SaveCommercialScopeInput,
+  RequestRateRevisionInput,
   SaveDigitalPolicyInput,
   UpdateVenueInput,
 } from "~/contracts/workflow/inputs";
@@ -43,24 +39,24 @@ export const createLeadMutation = action(
   "workflow.createLead",
 );
 
-export const approveForSaleMutation = action(
-  (input: { leadId: string }) => requestSaleApproval(input),
-  "workflow.approveForSale",
+export const proposeRateMutation = action(
+  (input: ProposeRateInput) => requestRateProposal(input),
+  "workflow.proposeRate",
 );
 
-export const reviewLeadMutation = action(
-  (input: ReviewLeadInput) => requestLeadReview(input),
-  "workflow.reviewLead",
+export const acceptRateMutation = action(
+  (input: AcceptRateInput) => requestRateAcceptance(input),
+  "workflow.acceptRate",
 );
 
-export const saveCommercialScopeMutation = action(
-  (input: SaveCommercialScopeInput) => requestSaveCommercialScope(input),
-  "workflow.saveCommercialScope",
+export const requestRateRevisionMutation = action(
+  (input: RequestRateRevisionInput) => requestRateRevision(input),
+  "workflow.requestRateRevision",
 );
 
-export const requestQuotationMutation = action(
-  (input: RequestQuotationInput) => requestQuotation(input),
-  "workflow.requestQuotation",
+export const editCommercialScopeMutation = action(
+  (input: EditCommercialScopeInput) => requestEditCommercialScope(input),
+  "workflow.editCommercialScope",
 );
 
 export const saveDigitalPolicyMutation = action(
@@ -68,19 +64,9 @@ export const saveDigitalPolicyMutation = action(
   "workflow.saveDigitalPolicy",
 );
 
-export const startSetupExecutionMutation = action(
-  (input: { leadId: string }) => requestStartSetupExecution(input),
-  "workflow.startSetupExecution",
-);
-
 export const recordRepLegalMutation = action(
   (input: RecordRepLegalInput) => requestRecordRepLegal(input),
   "workflow.recordRepLegal",
-);
-
-export const createQuotationMutation = action(
-  (input: CreateQuotationInput) => requestQuotationCreation(input),
-  "workflow.createQuotation",
 );
 
 export const createVenueMutation = action(
@@ -96,11 +82,6 @@ export const updateVenueMutation = action(
 export const addVenueAccountsMutation = action(
   (input: AddVenueAccountsInput) => requestVenueAccountsAddition(input),
   "workflow.addVenueAccounts",
-);
-
-export const requestRateNegotiationMutation = action(
-  (input: RequestRateNegotiationInput) => requestRateNegotiation(input),
-  "workflow.requestRateNegotiation",
 );
 
 export const reassignLeadMutation = action(

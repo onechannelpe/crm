@@ -32,24 +32,34 @@ export type LeadProfileRepository = {
   upsert(values: LeadProfile): Promise<void>;
 };
 
-export type LeadQuotation = {
+export type RateProposalOutcome = "pending" | "accepted" | "revision_requested";
+
+export type RateProposal = {
   id: string;
   leadId: string;
-  paybackPricing: number;
+  round: number;
   tarifaDebito: number;
   tarifaCredito: number;
   tarifaForaneo: number;
   fee: number;
+  paybackPricing: number;
   moneda: Moneda;
-  version: number;
-  createdAt: number;
-  createdBy: number;
+  proposedBy: number;
+  proposedAt: number;
+  outcome: RateProposalOutcome;
+  decidedAt: number | null;
 };
 
-export type LeadQuotationRepository = {
-  insert(values: Omit<LeadQuotation, "id">): Promise<string>;
-  listByLeadId(leadId: string): Promise<LeadQuotation[]>;
-  nextVersion(leadId: string): Promise<number>;
+export type RateProposalRepository = {
+  insert(values: RateProposal): Promise<void>;
+  listByLeadId(leadId: string): Promise<RateProposal[]>;
+  findLatest(leadId: string): Promise<RateProposal | undefined>;
+  nextRound(leadId: string): Promise<number>;
+  markOutcome(
+    id: string,
+    outcome: RateProposalOutcome,
+    decidedAt: number,
+  ): Promise<void>;
 };
 
 export type LeadVenue = {
@@ -100,38 +110,39 @@ export type LeadVenueRepository = {
   countWithAccounts(leadId: string): Promise<number>;
 };
 
-export type LeadNegotiationRequest = {
+export type RateRevision = {
   id: string;
   leadId: string;
+  proposalId: string;
   round: number;
   justification: string;
   requestedBy: number;
   requestedAt: number;
 };
 
-export type LeadNegotiationFile = {
-  negotiationRequestId: string;
+export type RateRevisionFile = {
+  revisionId: string;
   artifactId: string;
   fileAssetId: number;
   uploadedByUserId: number;
   createdAt: number;
 };
 
-export type SubmitReadyNegotiationFile = {
+export type SubmitReadyRevisionFile = {
   artifactId: string;
   fileAssetId: number;
 };
 
-export type NegotiationRequestRepository = {
-  insert(values: LeadNegotiationRequest): Promise<void>;
-  insertFile(values: LeadNegotiationFile & { leadId: string }): Promise<void>;
-  findSubmitReadyNegotiationFile(input: {
+export type RateRevisionRepository = {
+  insert(values: RateRevision): Promise<void>;
+  insertFile(values: RateRevisionFile & { leadId: string }): Promise<void>;
+  findSubmitReadyRevisionFile(input: {
     artifactId: string;
     leadId: string;
     uploadedByUserId: number;
-  }): Promise<SubmitReadyNegotiationFile | null>;
+  }): Promise<SubmitReadyRevisionFile | null>;
   countByLeadId(leadId: string): Promise<number>;
-  listByLeadId(leadId: string): Promise<LeadNegotiationRequest[]>;
+  listByLeadId(leadId: string): Promise<RateRevision[]>;
 };
 
 export type OrganizationProfile = {

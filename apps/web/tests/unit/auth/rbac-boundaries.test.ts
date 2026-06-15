@@ -107,7 +107,7 @@ describe("rbac boundaries", () => {
     expect(hasPermission("back_office", "lead:register")).toBe(false);
 
     expect(hasPermission("admin", "lead:workflow")).toBe(false);
-    expect(hasPermission("admin", "lead:register")).toBe(true);
+    expect(hasPermission("admin", "lead:register")).toBe(false);
     expect(hasPermission("admin", "lead:reassign")).toBe(true);
     expect(hasPermission("admin", "quotation:create")).toBe(true);
     expect(hasPermission("admin", "quotation:revise")).toBe(true);
@@ -120,7 +120,7 @@ describe("rbac boundaries", () => {
     expect(hasPermission("sales_manager", "lead:view:all")).toBe(true);
 
     expect(hasPermission("superuser", "lead:workflow")).toBe(false);
-    expect(hasPermission("superuser", "lead:register")).toBe(true);
+    expect(hasPermission("superuser", "lead:register")).toBe(false);
     expect(hasPermission("superuser", "lead:review")).toBe(true);
     expect(hasPermission("superuser", "quotation:create")).toBe(true);
     expect(hasPermission("superuser", "quotation:revise")).toBe(true);

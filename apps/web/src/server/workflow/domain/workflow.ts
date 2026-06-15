@@ -6,12 +6,9 @@ import {
 export function resolveReviewTransition(input: {
   status: LeadStatus;
   prioridad: LeadPriority;
-}): "DISQUALIFIED" | "SCOPING" | "QUOTING" {
+}): "DISQUALIFIED" | "PRICING" {
   if (input.status === "CARTERIZADO" || input.status === "STOCK") {
     return "DISQUALIFIED";
   }
-  if (input.prioridad === "SIN RESULTADO") {
-    return "SCOPING";
-  }
-  return "QUOTING";
+  return "PRICING";
 }

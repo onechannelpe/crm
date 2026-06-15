@@ -1,4 +1,4 @@
-import { For, Match, Switch } from "solid-js";
+import { createSignal, For, Match, Show, Switch } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
@@ -9,6 +9,7 @@ import { useDataGridInteractionReady } from "../context/interaction-context";
 import type { DataGridRowOpen, DataGridRowOpenMode } from "../model/row-open";
 import type { DataGridColumn } from "../model/types";
 import { DataGridCell } from "./cell";
+import { DataGridCellEditor } from "./cell-editor";
 
 import styles from "../styles/data-grid.module.css";
 
@@ -96,85 +97,154 @@ export function DataGridRow<T extends { id: string }>(props: {
       )}
       <For each={props.columns}>
         {(column, index) => (
-          <DataGridCell
-            sticky={index() === props.stickyColumnIndex}
+          <DataGridRowCell
+            column={column}
+            columnIndex={index()}
+            row={props.row}
+            rowOpen={props.rowOpen}
+            stickyColumnIndex={props.stickyColumnIndex}
             stickyLeft={props.stickyLeft}
-          >
-            {props.rowOpen.mode === "none" ? (
-              <div class={styles.rowContent}>
-                {column.renderCell(props.row)}
-              </div>
-            ) : (
-              <div
-                ref={(element) =>
-                  interaction.registerCellElement(
-                    props.row.id,
-                    index(),
-                    element,
-                  )
-                }
-                class={styles.rowButton}
-                data-grid-focusable-cell={`${props.row.id}:${index()}`}
-                data-open-mode={props.rowOpen.mode}
-                // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
-                role="button"
-                aria-disabled={isInteractive() ? undefined : "true"}
-                onClick={() => {
-                  if (!isInteractive()) {
-                    return;
-                  }
-
-                  if (interaction.hasPendingRowOpenSuppression()) {
-                    interaction.clearPendingRowOpenSuppression();
-                    return;
-                  }
-
-                  interaction.activateRow(props.row.id);
-                  props.rowOpen.open(props.row);
-                }}
-                onFocus={() => interaction.focusCell(props.row.id, index())}
-                onKeyDown={(event) => {
-                  interaction.handleCellKeyDown(event, props.row.id, index());
-
-                  if (!isInteractive()) {
-                    return;
-                  }
-
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-
-                    if (interaction.hasPendingRowOpenSuppression()) {
-                      interaction.clearPendingRowOpenSuppression();
-                      return;
-                    }
-
-                    interaction.activateRow(props.row.id);
-                    props.rowOpen.open(props.row);
-                  }
-                }}
-                tabIndex={
-                  isInteractive()
-                    ? interaction.getCellTabIndex(props.row.id, index())
-                    : -1
-                }
-              >
-                <span class={styles.rowButtonContent}>
-                  <span class={styles.rowButtonLabel}>
-                    {column.renderCell(props.row)}
-                  </span>
-                  {index() ===
-                  (props.stickyColumnIndex >= 0
-                    ? props.stickyColumnIndex
-                    : 0) ? (
-                    <DataGridRowOpenHint mode={props.rowOpen.mode} />
-                  ) : null}
-                </span>
-              </div>
-            )}
-          </DataGridCell>
+          />
         )}
       </For>
     </div>
+  );
+}
+
+function DataGridRowCell<T extends { id: string }>(props: {
+  column: DataGridColumn<T>;
+  columnIndex: number;
+  row: T;
+  rowOpen: DataGridRowOpen<T>;
+  stickyColumnIndex: number;
+  stickyLeft: number;
+}) {
+  const interaction = useDataGridInstance();
+  const isInteractive = useDataGridInteractionReady();
+  const [cellRef, setCellRef] = createSignal<HTMLElement | undefined>();
+
+  const editable = () => props.column.edit !== undefined;
+  const isEditing = () =>
+    interaction.isCellEditing(props.row.id, props.columnIndex);
+  // The row-open chevron belongs to the identifier column, never to an editable
+  // one (editable cells edit on click rather than open the record).
+  const showOpenHint = () =>
+    !editable() &&
+    props.columnIndex ===
+      (props.stickyColumnIndex >= 0 ? props.stickyColumnIndex : 0);
+
+  function openRow() {
+    if (interaction.hasPendingRowOpenSuppression()) {
+      interaction.clearPendingRowOpenSuppression();
+      return;
+    }
+
+    interaction.activateRow(props.row.id);
+    props.rowOpen.open(props.row);
+  }
+
+  // The same gesture, click or Enter, routes by column kind.
+  function activateCell() {
+    if (editable()) {
+      interaction.openCellEditor(props.row.id, props.columnIndex);
+      return;
+    }
+
+    openRow();
+  }
+
+  return (
+    <DataGridCell
+      sticky={props.columnIndex === props.stickyColumnIndex}
+      stickyLeft={props.stickyLeft}
+    >
+      {props.rowOpen.mode === "none" ? (
+        <div class={styles.rowContent}>
+          {props.column.renderCell(props.row)}
+        </div>
+      ) : (
+        <div
+          ref={(element) => {
+            setCellRef(element);
+            interaction.registerCellElement(
+              props.row.id,
+              props.columnIndex,
+              element,
+            );
+          }}
+          class={styles.rowButton}
+          data-grid-focusable-cell={`${props.row.id}:${props.columnIndex}`}
+          data-open-mode={props.rowOpen.mode}
+          data-editable={editable() ? "true" : undefined}
+          // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
+          role="button"
+          aria-disabled={isInteractive() ? undefined : "true"}
+          onClick={() => {
+            if (!isInteractive()) {
+              return;
+            }
+
+            if (interaction.hasPendingRowOpenSuppression()) {
+              interaction.clearPendingRowOpenSuppression();
+              return;
+            }
+
+            activateCell();
+          }}
+          onFocus={() => interaction.focusCell(props.row.id, props.columnIndex)}
+          onKeyDown={(event) => {
+            interaction.handleCellKeyDown(
+              event,
+              props.row.id,
+              props.columnIndex,
+            );
+
+            if (!isInteractive()) {
+              return;
+            }
+
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+
+              if (interaction.hasPendingRowOpenSuppression()) {
+                interaction.clearPendingRowOpenSuppression();
+                return;
+              }
+
+              activateCell();
+            }
+          }}
+          tabIndex={
+            isInteractive()
+              ? interaction.getCellTabIndex(props.row.id, props.columnIndex)
+              : -1
+          }
+        >
+          <span class={styles.rowButtonContent}>
+            <span class={styles.rowButtonLabel}>
+              {props.column.renderCell(props.row)}
+            </span>
+            {showOpenHint() ? (
+              <DataGridRowOpenHint mode={props.rowOpen.mode} />
+            ) : null}
+          </span>
+
+          <Show when={isEditing() && props.column.edit}>
+            {(edit) => (
+              <DataGridCellEditor
+                anchor={cellRef}
+                onClose={() => interaction.closeCellEditor()}
+              >
+                {edit().renderEditor({
+                  row: props.row,
+                  close: () => interaction.closeCellEditor(),
+                })}
+              </DataGridCellEditor>
+            )}
+          </Show>
+        </div>
+      )}
+    </DataGridCell>
   );
 }
 

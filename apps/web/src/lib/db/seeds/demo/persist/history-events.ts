@@ -65,7 +65,6 @@ export async function persistWorkflowHistoryEvents(
   await db
     .insertInto("workflow_history_events")
     .values([
-      // Lead: QUALIFYING
       {
         id: randomUUIDv7(),
         lead_id: idPending,
@@ -88,7 +87,6 @@ export async function persistWorkflowHistoryEvents(
         occurred_at: now - day + 1_000,
       },
 
-      // Lead: SCOPING
       {
         id: randomUUIDv7(),
         lead_id: idNeeds,
@@ -118,11 +116,10 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           status: "DISPONIBLE",
-          prioridad: "SIN RESULTADO",
-          reason:
-            "Cliente sin resultado en primera llamada, requiere seguimiento del ejecutivo",
+          prioridad: "P2",
+          reason: "Disponible según la consulta de cartera de Culqi",
           fromStage: "QUALIFYING",
-          toStage: "SCOPING",
+          toStage: "PRICING",
         }),
         occurred_at: now - 3 * day,
       },
@@ -134,12 +131,11 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUALIFYING",
-          to: "SCOPING",
+          to: "PRICING",
         }),
         occurred_at: now - 3 * day + 100,
       },
 
-      // Lead: QUOTING
       {
         id: randomUUIDv7(),
         lead_id: idReady,
@@ -170,10 +166,9 @@ export async function persistWorkflowHistoryEvents(
         payload_json: JSON.stringify({
           status: "DISPONIBLE",
           prioridad: "P1",
-          reason:
-            "Cliente activo con alto volumen de operaciones, excelente candidato",
+          reason: "Cliente disponible con alto volumen, excelente candidato",
           fromStage: "QUALIFYING",
-          toStage: "SCOPING",
+          toStage: "PRICING",
         }),
         occurred_at: now - 6 * day,
       },
@@ -185,44 +180,11 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUALIFYING",
-          to: "SCOPING",
+          to: "PRICING",
         }),
         occurred_at: now - 6 * day + 100,
       },
-      {
-        id: randomUUIDv7(),
-        lead_id: idReady,
-        event_type: "commercial_scope_saved",
-        actor_user_id: EXEC_ROBERTO,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          proveedorActual: "Izipay",
-          tasaActual: 3.2,
-          gpv: 42000,
-          ticket: 185,
-          giroNegocio: "Venta de electrodomesticos",
-          abonoBank: "BCP",
-          posTotal: 3,
-          linkScope: "none",
-          onlineScope: "none",
-          onlineModalidad: null,
-        }),
-        occurred_at: now - 6 * day + 200,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idReady,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "SCOPING",
-          to: "QUOTING",
-        }),
-        occurred_at: now - 6 * day + 300,
-      },
 
-      // Lead: QUOTED
       {
         id: randomUUIDv7(),
         lead_id: idQuoted,
@@ -253,10 +215,9 @@ export async function persistWorkflowHistoryEvents(
         payload_json: JSON.stringify({
           status: "DISPONIBLE",
           prioridad: "P2",
-          reason:
-            "Cliente interesado, solicito cotizacion competitiva frente a proveedor actual",
+          reason: "Cliente disponible, listo para proponer tarifa competitiva",
           fromStage: "QUALIFYING",
-          toStage: "SCOPING",
+          toStage: "PRICING",
         }),
         occurred_at: now - 13 * day,
       },
@@ -268,69 +229,24 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUALIFYING",
-          to: "SCOPING",
+          to: "PRICING",
         }),
         occurred_at: now - 13 * day + 100,
       },
       {
         id: randomUUIDv7(),
         lead_id: idQuoted,
-        event_type: "commercial_scope_saved",
-        actor_user_id: EXEC_ANDREA,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          proveedorActual: "BBVA",
-          tasaActual: 2.5,
-          gpv: 68000,
-          ticket: 310,
-          giroNegocio: "Restaurantes y servicios de comida",
-          abonoBank: "BBVA",
-          posTotal: 5,
-          linkScope: "shared",
-          onlineScope: "none",
-          onlineModalidad: null,
-        }),
-        occurred_at: now - 12 * day,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idQuoted,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "SCOPING",
-          to: "QUOTING",
-        }),
-        occurred_at: now - 12 * day + 100,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idQuoted,
-        event_type: "quotation_created",
+        event_type: "rate_proposed",
         actor_user_id: BO2,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          quotationId: qidQuoted,
-          version: 1,
+          proposalId: qidQuoted,
+          round: 1,
           moneda: "PEN",
         }),
         occurred_at: now - 10 * day,
       },
-      {
-        id: randomUUIDv7(),
-        lead_id: idQuoted,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "QUOTING",
-          to: "QUOTED",
-        }),
-        occurred_at: now - 10 * day + 100,
-      },
 
-      // Lead: SETUP_PLAN
       {
         id: randomUUIDv7(),
         lead_id: idForSale,
@@ -361,10 +277,9 @@ export async function persistWorkflowHistoryEvents(
         payload_json: JSON.stringify({
           status: "DISPONIBLE",
           prioridad: "P1",
-          reason:
-            "Empresa con alta facturacion mensual, perfil ideal para conversion",
+          reason: "Empresa con alta facturación, perfil ideal para conversión",
           fromStage: "QUALIFYING",
-          toStage: "SCOPING",
+          toStage: "PRICING",
         }),
         occurred_at: now - 20 * day,
       },
@@ -376,51 +291,19 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUALIFYING",
-          to: "SCOPING",
+          to: "PRICING",
         }),
         occurred_at: now - 20 * day + 100,
       },
       {
         id: randomUUIDv7(),
         lead_id: idForSale,
-        event_type: "commercial_scope_saved",
-        actor_user_id: EXEC_RENATO,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          proveedorActual: "Niubiz",
-          tasaActual: 2.9,
-          gpv: 120000,
-          ticket: 450,
-          giroNegocio: "Comercio al por mayor de productos textiles",
-          abonoBank: "SCOTIABANK",
-          posTotal: 8,
-          linkScope: "none",
-          onlineScope: "shared",
-          onlineModalidad: "CARGO_UNICO",
-        }),
-        occurred_at: now - 19 * day,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idForSale,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "SCOPING",
-          to: "QUOTING",
-        }),
-        occurred_at: now - 19 * day + 100,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idForSale,
-        event_type: "quotation_created",
+        event_type: "rate_proposed",
         actor_user_id: BO1,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          quotationId: qidForSale,
-          version: 1,
+          proposalId: qidForSale,
+          round: 1,
           moneda: "PEN",
         }),
         occurred_at: now - 18 * day,
@@ -428,23 +311,11 @@ export async function persistWorkflowHistoryEvents(
       {
         id: randomUUIDv7(),
         lead_id: idForSale,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
+        event_type: "rate_accepted",
+        actor_user_id: EXEC_RENATO,
         subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "QUOTING",
-          to: "QUOTED",
-        }),
-        occurred_at: now - 18 * day + 100,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idForSale,
-        event_type: "sale_approved",
-        actor_user_id: BO1,
-        subject_user_id: null,
-        payload_json: null,
-        occurred_at: now - 15 * day,
+        payload_json: JSON.stringify({ proposalId: qidForSale }),
+        occurred_at: now - 16 * day,
       },
       {
         id: randomUUIDv7(),
@@ -453,13 +324,12 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "QUOTED",
-          to: "SETUP_PLAN",
+          from: "PRICING",
+          to: "SETUP",
         }),
-        occurred_at: now - 15 * day + 100,
+        occurred_at: now - 16 * day + 100,
       },
 
-      // Lead: LIVE
       {
         id: randomUUIDv7(),
         lead_id: idConverted,
@@ -490,10 +360,9 @@ export async function persistWorkflowHistoryEvents(
         payload_json: JSON.stringify({
           status: "DISPONIBLE",
           prioridad: "P1",
-          reason:
-            "Empresa constructora consolidada con gran volumen potencial y apertura al cambio",
+          reason: "Empresa constructora consolidada con gran volumen potencial",
           fromStage: "QUALIFYING",
-          toStage: "SCOPING",
+          toStage: "PRICING",
         }),
         occurred_at: now - 29 * day,
       },
@@ -505,51 +374,19 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: null,
         payload_json: JSON.stringify({
           from: "QUALIFYING",
-          to: "SCOPING",
+          to: "PRICING",
         }),
         occurred_at: now - 29 * day + 100,
       },
       {
         id: randomUUIDv7(),
         lead_id: idConverted,
-        event_type: "commercial_scope_saved",
-        actor_user_id: EXEC_DANIELA,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          proveedorActual: "BBVA",
-          tasaActual: 2.8,
-          gpv: 85000,
-          ticket: 245.5,
-          giroNegocio: "Construccion de edificios residenciales",
-          abonoBank: "INTERBANK",
-          posTotal: 4,
-          linkScope: "none",
-          onlineScope: "none",
-          onlineModalidad: null,
-        }),
-        occurred_at: now - 28 * day,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idConverted,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "SCOPING",
-          to: "QUOTING",
-        }),
-        occurred_at: now - 28 * day + 100,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idConverted,
-        event_type: "quotation_created",
+        event_type: "rate_proposed",
         actor_user_id: BO1,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          quotationId: qidConverted,
-          version: 1,
+          proposalId: qidConverted,
+          round: 1,
           moneda: "PEN",
         }),
         occurred_at: now - 27 * day,
@@ -557,22 +394,10 @@ export async function persistWorkflowHistoryEvents(
       {
         id: randomUUIDv7(),
         lead_id: idConverted,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
+        event_type: "rate_accepted",
+        actor_user_id: EXEC_DANIELA,
         subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "QUOTING",
-          to: "QUOTED",
-        }),
-        occurred_at: now - 27 * day + 100,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idConverted,
-        event_type: "sale_approved",
-        actor_user_id: BO1,
-        subject_user_id: null,
-        payload_json: null,
+        payload_json: JSON.stringify({ proposalId: qidConverted }),
         occurred_at: now - 25 * day,
       },
       {
@@ -582,22 +407,10 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "QUOTED",
-          to: "SETUP_PLAN",
+          from: "PRICING",
+          to: "SETUP",
         }),
         occurred_at: now - 25 * day + 100,
-      },
-      {
-        id: randomUUIDv7(),
-        lead_id: idConverted,
-        event_type: "workflow_stage_changed",
-        actor_user_id: null,
-        subject_user_id: null,
-        payload_json: JSON.stringify({
-          from: "SETUP_PLAN",
-          to: "SETUP_EXECUTION",
-        }),
-        occurred_at: now - 24 * day + 100,
       },
       {
         id: randomUUIDv7(),
@@ -627,13 +440,12 @@ export async function persistWorkflowHistoryEvents(
         actor_user_id: null,
         subject_user_id: null,
         payload_json: JSON.stringify({
-          from: "SETUP_EXECUTION",
+          from: "SETUP",
           to: "LIVE",
         }),
         occurred_at: now - 20 * day + 100,
       },
 
-      // Lead: DISQUALIFIED
       {
         id: randomUUIDv7(),
         lead_id: idRejected,
@@ -664,8 +476,7 @@ export async function persistWorkflowHistoryEvents(
         payload_json: JSON.stringify({
           status: "CARTERIZADO",
           prioridad: "SIN RESULTADO",
-          reason:
-            "Empresa ya tiene contrato activo con otro proveedor sin apertura a negociar",
+          reason: "Empresa ya carterizada por otro dealer según Culqi",
           fromStage: "QUALIFYING",
           toStage: "DISQUALIFIED",
         }),

@@ -1,11 +1,8 @@
 export const LEAD_STAGES = [
   "QUALIFYING",
   "DISQUALIFIED",
-  "SCOPING",
-  "QUOTING",
-  "QUOTED",
-  "SETUP_PLAN",
-  "SETUP_EXECUTION",
+  "PRICING",
+  "SETUP",
   "LIVE",
 ] as const;
 
@@ -18,11 +15,9 @@ export const LEAD_STATUSES = [
 ] as const;
 export const LEAD_PRIORITIES = ["P1", "P2", "SIN RESULTADO"] as const;
 export const LEAD_NEXT_STEPS = [
-  "REVIEW_LEAD",
   "NO_ACTION",
-  "SAVE_COMMERCIAL_SCOPE",
-  "CREATE_QUOTATION",
-  "APPROVE_FOR_SALE",
+  "PROPOSE_RATE",
+  "ACCEPT_RATE",
   "DEFINE_DIGITAL_POLICY",
   "REGISTER_VENUE_ACCOUNTS",
 ] as const;

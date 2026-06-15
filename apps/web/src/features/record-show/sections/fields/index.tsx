@@ -2,14 +2,16 @@ import { createSignal, For } from "solid-js";
 import type { JSX } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
-import Clock from "~/components/icons/calendar-clock";
 import ChevronDown from "~/components/icons/chevron-down";
 import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
+import { TextInput } from "~/components/ui/input/text-input";
 import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { CommercialScopeBinding } from "~/features/record-show/model/record-context";
 import {
+  FieldInputValue,
   FieldRow,
   FieldTable,
   FieldTextValue,
@@ -28,28 +30,10 @@ import {
   LEAD_DETAIL_FIELD_GROUPS,
   type FieldGroup,
 } from "~/features/workflow/fields/lead-field-layout";
+import { CommercialScopeFields } from "~/features/workflow/forms/commercial-scope/fields";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
 
-type IconComponent = (props: { size?: number }) => JSX.Element;
-
-type LeadCreateFieldRow = {
-  label: string;
-  icon: IconComponent;
-  key?: "razonSocial" | "address";
-  value?: string;
-};
-
-const LEAD_CREATE_FIELD_ROWS: ReadonlyArray<LeadCreateFieldRow> = [
-  { label: "Razón social", icon: Building2, key: "razonSocial" },
-  { label: "Dirección", icon: MapIcon, key: "address" },
-  { label: "Ejecutivo asignado", icon: User, value: "Actual" },
-  {
-    label: "Etapa inicial",
-    icon: Package,
-    value: leadStageLabel("QUALIFYING"),
-  },
-  { label: "Última actualización", icon: Clock, value: "" },
-] as const;
+type FieldIcon = (props: { size?: number }) => JSX.Element;
 
 function FieldsSectionFrame(props: { children: JSX.Element }) {
   const [isExpanded, setIsExpanded] = createSignal(true);
@@ -76,43 +60,84 @@ function FieldsSectionFrame(props: { children: JSX.Element }) {
   );
 }
 
-export function CreateFieldsSection(props: {
-  razonSocial?: string | null;
-  address?: string | null;
+function EditableFieldRow(props: {
+  label: string;
+  icon: FieldIcon;
+  value: string;
+  placeholder: string;
+  onInput: (value: string) => void;
 }) {
-  const [hoveredFieldKey, setHoveredFieldKey] = createSignal<string | null>(
-    null,
+  return (
+    <FieldRow label={props.label} icon={props.icon}>
+      <FieldValue>
+        <FieldInputValue>
+          <TextInput
+            sizeVariant="sm"
+            value={props.value}
+            onChange={props.onInput}
+            placeholder={props.placeholder}
+            aria-label={props.label}
+          />
+        </FieldInputValue>
+      </FieldValue>
+    </FieldRow>
   );
+}
 
+function ReadonlyFieldRow(props: {
+  label: string;
+  icon: FieldIcon;
+  value: string;
+}) {
+  return (
+    <FieldRow label={props.label} icon={props.icon} readonly>
+      <FieldValue>
+        <FieldValueDisplay>
+          <FieldTextValue>{props.value}</FieldTextValue>
+        </FieldValueDisplay>
+      </FieldValue>
+    </FieldRow>
+  );
+}
+
+export function CreateFieldsSection(props: {
+  razonSocial: string;
+  address: string;
+  onRazonSocialInput: (value: string) => void;
+  onAddressInput: (value: string) => void;
+  commercialScope: CommercialScopeBinding;
+}) {
   return (
     <FieldsSectionFrame>
       <FieldTable>
-        <For each={LEAD_CREATE_FIELD_ROWS}>
-          {(field) => (
-            <FieldRow
-              label={field.label}
-              icon={field.icon}
-              readonly
-              hovered={hoveredFieldKey() === (field.key ?? field.label)}
-              onMouseEnter={() => setHoveredFieldKey(field.key ?? field.label)}
-              onMouseLeave={() => setHoveredFieldKey(null)}
-              onFocusIn={() => setHoveredFieldKey(field.key ?? field.label)}
-              onFocusOut={() => setHoveredFieldKey(null)}
-            >
-              <FieldValue>
-                <FieldValueDisplay>
-                  <FieldTextValue>
-                    {field.key === "razonSocial"
-                      ? (props.razonSocial ?? "")
-                      : field.key === "address"
-                        ? (props.address ?? "")
-                        : (field.value ?? "")}
-                  </FieldTextValue>
-                </FieldValueDisplay>
-              </FieldValue>
-            </FieldRow>
-          )}
-        </For>
+        <EditableFieldRow
+          label="Razón social"
+          icon={Building2}
+          value={props.razonSocial}
+          placeholder="Razón social (SUNAT)"
+          onInput={props.onRazonSocialInput}
+        />
+        <EditableFieldRow
+          label="Dirección"
+          icon={MapIcon}
+          value={props.address}
+          placeholder="Dirección (SUNAT)"
+          onInput={props.onAddressInput}
+        />
+        <CommercialScopeFields
+          values={props.commercialScope.values}
+          onChange={props.commercialScope.setField}
+        />
+        <ReadonlyFieldRow
+          label="Ejecutivo asignado"
+          icon={User}
+          value="Actual"
+        />
+        <ReadonlyFieldRow
+          label="Etapa inicial"
+          icon={Package}
+          value={leadStageLabel("QUALIFYING")}
+        />
       </FieldTable>
     </FieldsSectionFrame>
   );

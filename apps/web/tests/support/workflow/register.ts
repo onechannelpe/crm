@@ -1,3 +1,5 @@
+import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow/vocabulary";
+
 import type { TestRuntime } from "../runtime/app";
 import { runTestWorkflowCommand, type TestCommandOverrides } from "./command";
 
@@ -7,30 +9,56 @@ export type RegisteredLeadSnapshot = {
   organizationRuc: string;
   organizationName: string;
   organizationAddress: string | null;
+  organizationGiroNegocio: string | null;
+};
+
+export type RegisteredLeadProfile = {
+  proveedorActual: string | null;
+  tasaActual: number | null;
+  gpv: number | null;
+  ticket: number | null;
+  abonoBank: string | null;
+  posTotal: number | null;
 };
 
 export type RegisterLeadResult = {
   leadId: string;
   snapshot: RegisteredLeadSnapshot;
+  profile: RegisteredLeadProfile | null;
   historyEventTypes: string[];
 };
 
 export async function registerLead(input: {
   runtime: TestRuntime;
   ruc: string;
-  actor?: { userId: number; role: "admin" | "executive"; branchId: number };
-  executiveId?: number;
+  razonSocial?: string;
+  address?: string;
+  actor?: { userId: number; role: "executive" | "admin"; branchId: number };
+  proveedorActual?: string;
+  tasaActual?: number;
+  gpv?: number;
+  ticket?: number;
+  giroNegocio?: string;
+  abonoBank?: AbonoBank;
+  posTotal?: number;
   commandOverrides?: TestCommandOverrides;
 }): Promise<RegisterLeadResult> {
-  const actor = input.actor ?? { userId: 1, role: "admin", branchId: 1 };
-  const executiveId = input.executiveId ?? 1;
+  const actor = input.actor ?? { userId: 1, role: "executive", branchId: 1 };
   const result = await runTestWorkflowCommand(
     input.runtime,
     (commandApi) =>
       commandApi.registerLead({
         actor,
         ruc: input.ruc,
-        executiveId,
+        razonSocial: input.razonSocial ?? input.ruc,
+        address: input.address ?? "",
+        proveedorActual: input.proveedorActual ?? "Niubiz",
+        tasaActual: input.tasaActual ?? 3.5,
+        gpv: input.gpv ?? 50000,
+        ticket: input.ticket ?? 120,
+        giroNegocio: input.giroNegocio ?? "Retail",
+        abonoBank: input.abonoBank ?? ABONO_BANKS[0],
+        posTotal: input.posTotal ?? 2,
       }),
     input.commandOverrides,
   );
@@ -48,9 +76,23 @@ export async function registerLead(input: {
       "org.ruc",
       "org.name",
       "org.address",
+      "org.giro_negocio",
     ])
     .where("lead.id", "=", result.value.leadId)
     .executeTakeFirstOrThrow();
+
+  const profileRow = await input.runtime.ctx.db
+    .selectFrom("workflow_lead_profiles")
+    .select([
+      "proveedor_actual",
+      "tasa_actual",
+      "gpv",
+      "ticket",
+      "abono_bank",
+      "pos_total",
+    ])
+    .where("lead_id", "=", result.value.leadId)
+    .executeTakeFirst();
 
   const history = await input.runtime.ctx.db
     .selectFrom("workflow_history_events")
@@ -67,7 +109,18 @@ export async function registerLead(input: {
       organizationRuc: row.ruc,
       organizationName: row.name,
       organizationAddress: row.address,
+      organizationGiroNegocio: row.giro_negocio,
     },
+    profile: profileRow
+      ? {
+          proveedorActual: profileRow.proveedor_actual,
+          tasaActual: profileRow.tasa_actual,
+          gpv: profileRow.gpv,
+          ticket: profileRow.ticket,
+          abonoBank: profileRow.abono_bank,
+          posTotal: profileRow.pos_total,
+        }
+      : null,
     historyEventTypes: history.map((event) => event.event_type),
   };
 }

@@ -135,7 +135,7 @@ export type RecordExportRow = {
   proveedorActual: string | null;
   tasaActual: number | null;
   gpv: number | null;
-  // Latest quotation, i.e. what Culqi currently offers. Null when no quotation exists yet.
+  // Latest rate proposal back office offered. Null until a rate is proposed.
   tarifaDebitoCulqi: number | null;
   tarifaCreditoCulqi: number | null;
 };

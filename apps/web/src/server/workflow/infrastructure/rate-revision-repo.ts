@@ -1,21 +1,22 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type {
-  LeadNegotiationFile,
-  LeadNegotiationRequest,
-  NegotiationRequestRepository,
+  RateRevision,
+  RateRevisionFile,
+  RateRevisionRepository,
 } from "../application/ports/entities";
 
-export function createNegotiationRequestRepo(
+export function createRateRevisionRepo(
   db: DatabaseExecutor,
-): NegotiationRequestRepository {
+): RateRevisionRepository {
   return {
-    async insert(values: LeadNegotiationRequest): Promise<void> {
+    async insert(values: RateRevision): Promise<void> {
       await db
-        .insertInto("workflow_negotiation_requests")
+        .insertInto("workflow_rate_revisions")
         .values({
           id: values.id,
           lead_id: values.leadId,
+          proposal_id: values.proposalId,
           round: values.round,
           justification: values.justification,
           requested_by: values.requestedBy,
@@ -25,13 +26,13 @@ export function createNegotiationRequestRepo(
     },
 
     async insertFile(
-      values: LeadNegotiationFile & { leadId: string },
+      values: RateRevisionFile & { leadId: string },
     ): Promise<void> {
       await db
-        .insertInto("workflow_negotiation_files")
+        .insertInto("workflow_rate_revision_files")
         .values({
           lead_id: values.leadId,
-          negotiation_request_id: values.negotiationRequestId,
+          revision_id: values.revisionId,
           artifact_id: values.artifactId,
           file_asset_id: values.fileAssetId,
           uploaded_by_user_id: values.uploadedByUserId,
@@ -40,7 +41,7 @@ export function createNegotiationRequestRepo(
         .executeTakeFirstOrThrow();
     },
 
-    async findSubmitReadyNegotiationFile(input: {
+    async findSubmitReadyRevisionFile(input: {
       artifactId: string;
       leadId: string;
       uploadedByUserId: number;
@@ -58,7 +59,7 @@ export function createNegotiationRequestRepo(
         ])
         .where("artifact_file_bindings.artifact_id", "=", input.artifactId)
         .where("artifact_file_bindings.binding_role", "=", "source_upload")
-        .where("workflow_artifacts.artifact_type", "=", "negotiation_file")
+        .where("workflow_artifacts.artifact_type", "=", "rate_revision_file")
         .where("workflow_artifacts.status", "=", "ready")
         .where(
           "workflow_artifacts.requested_by_user_id",
@@ -78,10 +79,10 @@ export function createNegotiationRequestRepo(
           eb.not(
             eb.exists(
               eb
-                .selectFrom("workflow_negotiation_files")
+                .selectFrom("workflow_rate_revision_files")
                 .select("id")
                 .whereRef(
-                  "workflow_negotiation_files.artifact_id",
+                  "workflow_rate_revision_files.artifact_id",
                   "=",
                   "artifact_file_bindings.artifact_id",
                 ),
@@ -97,16 +98,16 @@ export function createNegotiationRequestRepo(
 
     async countByLeadId(leadId: string): Promise<number> {
       const row = await db
-        .selectFrom("workflow_negotiation_requests")
+        .selectFrom("workflow_rate_revisions")
         .select((eb) => eb.fn.countAll<number>().as("count"))
         .where("lead_id", "=", leadId)
         .executeTakeFirstOrThrow();
       return row.count;
     },
 
-    async listByLeadId(leadId: string): Promise<LeadNegotiationRequest[]> {
+    async listByLeadId(leadId: string): Promise<RateRevision[]> {
       const rows = await db
-        .selectFrom("workflow_negotiation_requests")
+        .selectFrom("workflow_rate_revisions")
         .selectAll()
         .where("lead_id", "=", leadId)
         .orderBy("round", "asc")
@@ -115,6 +116,7 @@ export function createNegotiationRequestRepo(
       return rows.map((row) => ({
         id: row.id,
         leadId: row.lead_id,
+        proposalId: row.proposal_id,
         round: row.round,
         justification: row.justification,
         requestedBy: row.requested_by,

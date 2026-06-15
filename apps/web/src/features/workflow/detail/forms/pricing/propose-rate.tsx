@@ -5,7 +5,7 @@ import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
-import type { LeadDetailQuotationView } from "~/contracts/workflow/views";
+import type { LeadDetailRateProposalView } from "~/contracts/workflow/views";
 import { MONEDAS, type Moneda } from "~/contracts/workflow/vocabulary";
 import {
   FieldInputValue,
@@ -21,40 +21,42 @@ import {
 } from "~/features/side-panel/components/record-detail-section";
 import { actionErrorMessage } from "~/lib/wire-error";
 
-import { createQuotationMutation } from "../../data/command-mutations";
-import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
+import { proposeRateMutation } from "../../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";
 
-import styles from "./quotation.module.css";
+import styles from "../quotation.module.css";
 
-type QuotationSectionProps = {
+type ProposeRateSectionProps = {
   leadId: string;
-  existingQuotation?: LeadDetailQuotationView;
+  // The latest proposal, when present, seeds the form so back office can adjust
+  // the previous round after a revision request.
+  latestProposal?: LeadDetailRateProposalView;
 };
 
 function isMoneda(value: string): value is Moneda {
   return (MONEDAS as readonly string[]).includes(value);
 }
 
-export function QuotationSection(props: QuotationSectionProps) {
-  const create = useAction(createQuotationMutation);
+export function ProposeRateSection(props: ProposeRateSectionProps) {
+  const propose = useAction(proposeRateMutation);
 
   const [paybackPricing, setPaybackPricing] = createSignal(
-    props.existingQuotation?.paybackPricing?.toString() ?? "",
+    props.latestProposal?.paybackPricing?.toString() ?? "",
   );
   const [tarifaDebito, setTarifaDebito] = createSignal(
-    props.existingQuotation?.tarifaDebito?.toString() ?? "",
+    props.latestProposal?.tarifaDebito?.toString() ?? "",
   );
   const [tarifaCredito, setTarifaCredito] = createSignal(
-    props.existingQuotation?.tarifaCredito?.toString() ?? "",
+    props.latestProposal?.tarifaCredito?.toString() ?? "",
   );
   const [tarifaForaneo, setTarifaForaneo] = createSignal(
-    props.existingQuotation?.tarifaForaneo?.toString() ?? "",
+    props.latestProposal?.tarifaForaneo?.toString() ?? "",
   );
   const [fee, setFee] = createSignal(
-    props.existingQuotation?.fee?.toString() ?? "",
+    props.latestProposal?.fee?.toString() ?? "",
   );
   const [moneda, setMoneda] = createSignal<Moneda>(
-    props.existingQuotation?.moneda ?? "PEN",
+    props.latestProposal?.moneda ?? "PEN",
   );
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -64,7 +66,7 @@ export function QuotationSection(props: QuotationSectionProps) {
     setError(null);
     setSubmitting(true);
     try {
-      await create({
+      await propose({
         leadId: props.leadId,
         paybackPricing: Number(paybackPricing()),
         tarifaDebito: Number(tarifaDebito()),
@@ -84,7 +86,7 @@ export function QuotationSection(props: QuotationSectionProps) {
   return (
     <RecordDetailSection>
       <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Cotizacion" />
+        <RecordDetailSectionTitle text="Proponer tarifa" />
       </RecordDetailSectionHeader>
       <RecordDetailSectionBody>
         <form onSubmit={(e) => void handleSubmit(e)}>
@@ -181,7 +183,7 @@ export function QuotationSection(props: QuotationSectionProps) {
               size="sm"
               loading={submitting()}
             >
-              Crear cotización
+              Proponer tarifa
             </Button>
           </RecordDetailSectionActions>
         </form>

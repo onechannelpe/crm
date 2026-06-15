@@ -34,7 +34,6 @@ import {
   addVenueAccountsMutation,
   createVenueMutation,
   saveDigitalPolicyMutation,
-  startSetupExecutionMutation,
   updateVenueMutation,
 } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
@@ -60,9 +59,9 @@ const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
 };
 
 export function SetupWorkspace(props: { data: LeadDetailView }) {
-  const canAddVenue = () => props.data.lead.stage === "SETUP_EXECUTION";
-  const canAddAccounts = () => props.data.lead.stage === "SETUP_EXECUTION";
-  const canEditDigitalPolicy = () => props.data.lead.stage === "SETUP_PLAN";
+  const canAddVenue = () => props.data.lead.stage === "SETUP";
+  const canAddAccounts = () => props.data.lead.stage === "SETUP";
+  const canEditDigitalPolicy = () => props.data.lead.stage === "SETUP";
   const canEditVenue = () =>
     props.data.availableActions.includes("update-venue");
   const [editingVenueId, setEditingVenueId] = createSignal<string | null>(null);
@@ -131,62 +130,7 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
           )}
         </For>
       </Show>
-
-      <Show
-        when={props.data.availableActions.includes("start-setup-execution")}
-      >
-        <StartSetupExecutionAction leadId={props.data.lead.id} />
-      </Show>
     </div>
-  );
-}
-
-// Primary transition that closes out the SETUP_PLAN stage. Lives at the foot of
-// the planning surface so it reads as "planning done, begin execution" rather
-// than a detached action in a generic bucket.
-function StartSetupExecutionAction(props: { leadId: string }) {
-  const startSetupExecution = useAction(startSetupExecutionMutation);
-  const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
-
-  async function handleStart() {
-    if (submitting()) return;
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      await startSetupExecution({ leadId: props.leadId });
-      await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(actionErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Afiliación" />
-      </RecordDetailSectionHeader>
-      <RecordDetailSectionBody>
-        <RecordDetailSectionActions align="start">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            loading={submitting()}
-            onClick={() => void handleStart()}
-          >
-            Iniciar afiliación
-          </Button>
-        </RecordDetailSectionActions>
-        <Show when={error()}>
-          {(msg) => <p class={styles.error}>{msg()}</p>}
-        </Show>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
   );
 }
 

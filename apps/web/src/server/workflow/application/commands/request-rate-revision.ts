@@ -3,16 +3,16 @@ import { randomUUIDv7 } from "bun";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { RequestRateNegotiationCommandInput } from "~/server/workflow/types";
+import type { RequestRateRevisionCommandInput } from "~/server/workflow/types";
 
-import { requestRateNegotiation } from "../../domain/lead/commands";
+import { requestRateRevision } from "../../domain/lead/commands";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
-import type { SubmitReadyNegotiationFile } from "../ports/entities";
+import type { SubmitReadyRevisionFile } from "../ports/entities";
 
-export async function requestRateNegotiationCommand(
-  input: RequestRateNegotiationCommandInput,
+export async function requestRateRevisionCommand(
+  input: RequestRateRevisionCommandInput,
   ports: { executor: DatabaseExecutor },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
@@ -22,27 +22,30 @@ export async function requestRateNegotiationCommand(
     const state = await leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const existingCount = await repos.leadNegotiationRequests.countByLeadId(
-      state.id,
-    );
+    const proposal = await repos.rateProposals.findLatest(state.id);
+    if (!proposal) return Err(fail("rate_proposal_not_found"));
+    if (proposal.outcome !== "pending") {
+      return Err(fail("rate_proposal_not_pending"));
+    }
+
+    const existingCount = await repos.rateRevisions.countByLeadId(state.id);
 
     const resolved = await Promise.all(
       input.artifactIds.map(async (artifactId) => {
-        const file =
-          await repos.leadNegotiationRequests.findSubmitReadyNegotiationFile({
-            artifactId,
-            leadId: state.id,
-            uploadedByUserId: input.actor.userId,
-          });
+        const file = await repos.rateRevisions.findSubmitReadyRevisionFile({
+          artifactId,
+          leadId: state.id,
+          uploadedByUserId: input.actor.userId,
+        });
         return { artifactId, file };
       }),
     );
 
-    const validatedArtifacts: SubmitReadyNegotiationFile[] = [];
+    const validatedArtifacts: SubmitReadyRevisionFile[] = [];
     for (const { artifactId, file } of resolved) {
       if (!file) {
         return Err(
-          fail("negotiation_file_not_submit_ready", {
+          fail("rate_revision_file_not_submit_ready", {
             details: { artifactId },
           }),
         );
@@ -50,13 +53,13 @@ export async function requestRateNegotiationCommand(
       validatedArtifacts.push(file);
     }
 
-    const negotiationRequestId = randomUUIDv7();
+    const revisionId = randomUUIDv7();
     const round = existingCount + 1;
     const now = Date.now();
 
-    const transition = requestRateNegotiation(state, {
+    const transition = requestRateRevision(state, {
       actor: input.actor,
-      negotiationRequestId,
+      revisionId,
       round,
       justification: input.justification,
       artifactIds: input.artifactIds,
@@ -64,16 +67,16 @@ export async function requestRateNegotiationCommand(
     });
     if (!transition.ok) return transition;
 
-    const committed = await uow.commit({
-      next: transition.value.next,
-      events: transition.value.events,
-      idempotencyKey: randomUUIDv7(),
-    });
-    if (!committed.ok) return committed;
+    await repos.rateProposals.markOutcome(
+      proposal.id,
+      "revision_requested",
+      now,
+    );
 
-    await repos.leadNegotiationRequests.insert({
-      id: negotiationRequestId,
+    await repos.rateRevisions.insert({
+      id: revisionId,
       leadId: state.id,
+      proposalId: proposal.id,
       round,
       justification: input.justification,
       requestedBy: input.actor.userId,
@@ -82,9 +85,9 @@ export async function requestRateNegotiationCommand(
 
     await Promise.all(
       validatedArtifacts.map((art) =>
-        repos.leadNegotiationRequests.insertFile({
+        repos.rateRevisions.insertFile({
           leadId: state.id,
-          negotiationRequestId,
+          revisionId,
           artifactId: art.artifactId,
           fileAssetId: art.fileAssetId,
           uploadedByUserId: input.actor.userId,
@@ -92,6 +95,13 @@ export async function requestRateNegotiationCommand(
         }),
       ),
     );
+
+    const committed = await uow.commit({
+      next: transition.value.next,
+      events: transition.value.events,
+      idempotencyKey: randomUUIDv7(),
+    });
+    if (!committed.ok) return committed;
 
     return Ok({ leadId: state.id });
   });

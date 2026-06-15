@@ -13,11 +13,12 @@ import {
 } from "~/components/ui/record-chip/record-chip";
 import type { LeadListRowView } from "~/contracts/workflow/views";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import {
   leadNextStepLabel,
   leadStageLabel,
 } from "~/features/workflow/presentation/lead-display";
-import type { Role } from "~/lib/auth/access/rbac";
+import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { capitalize, formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
@@ -60,9 +61,9 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     renderCell: (lead) => (
       <Badge
         variant={
-          lead.stage === "SETUP_EXECUTION"
+          lead.stage === "SETUP" || lead.stage === "LIVE"
             ? "success"
-            : lead.stage === "SCOPING"
+            : lead.stage === "PRICING"
               ? "warning"
               : "secondary"
         }
@@ -113,24 +114,55 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
   },
 ];
 
-const BACK_OFFICE_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
-  ...COMMON_COLUMNS,
-  {
-    key: "createdBy",
-    label: "Registrado por",
+const CREATED_BY_COLUMN: DataGridColumn<LeadListRowView> = {
+  key: "createdBy",
+  label: "Registrado por",
+  icon: User,
+  width: 150,
+  renderCell: (lead) => <RecordChip name={lead.createdByName} shape="round" />,
+};
+
+// Assigned executive. Inline-editable for roles that can reassign; reassignment
+// runs through the same ExecutivePicker the record detail uses, so the list and
+// the detail share one editor and one mutation.
+function executiveColumn(
+  canReassign: boolean,
+): DataGridColumn<LeadListRowView> {
+  return {
+    key: "executive",
+    label: "Ejecutivo",
     icon: User,
-    width: 150,
+    width: 170,
     renderCell: (lead) => (
-      <RecordChip name={lead.createdByName} shape="round" />
+      <RecordChip name={lead.executiveName} shape="round" />
     ),
-  },
-];
+    edit: canReassign
+      ? {
+          ariaLabel: "Reasignar ejecutivo",
+          renderEditor: (editor) => (
+            <ExecutivePicker
+              leadId={editor.row.id}
+              currentUserId={editor.row.executiveId}
+              onSelect={editor.close}
+              onClose={editor.close}
+            />
+          ),
+        }
+      : undefined,
+  };
+}
 
 export function workspaceColumnsForRole(
   role: Role,
 ): ReadonlyArray<DataGridColumn<LeadListRowView>> {
+  const columns: DataGridColumn<LeadListRowView>[] = [
+    ...COMMON_COLUMNS,
+    executiveColumn(hasPermission(role, "lead:reassign")),
+  ];
+
   if (role === "back_office") {
-    return BACK_OFFICE_COLUMNS;
+    columns.push(CREATED_BY_COLUMN);
   }
-  return COMMON_COLUMNS;
+
+  return columns;
 }
