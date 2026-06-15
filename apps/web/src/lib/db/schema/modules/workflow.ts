@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -35,8 +35,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("workflow_leads")
     .column("organization_id")
     .unique()
-    .where("deleted_at", "is", null)
-    .where("stage", "!=", "EXPIRED")
+    // sql.ref bypasses createIndex().where typing, which only accepts the
+    // indexed column literal. Same pattern as the search-outbox partial index.
+    .where(sql.ref("deleted_at"), "is", null)
+    .where(sql.ref("stage"), "!=", "EXPIRED")
     .execute();
   await db.schema
     .createIndex("idx_workflow_leads_reservation")
