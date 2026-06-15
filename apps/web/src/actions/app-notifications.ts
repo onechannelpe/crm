@@ -37,24 +37,32 @@ export async function getHeaderNotifications() {
 }
 
 export async function markNotificationRead(
-  notificationId: unknown,
+  rawNotificationId: unknown,
 ): Promise<void> {
   await runAction({
     name: "notifications.mark_read",
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject({ notificationId }, validationFail, (r) => ({
-        notificationId: r.posInt("notificationId"),
-      })),
+      parseObject(
+        { notificationId: rawNotificationId },
+        validationFail,
+        (r) => ({
+          notificationId: r.posInt("notificationId"),
+        }),
+      ),
 
-    audit: ({ notificationId }) => ({ notificationId }),
+    audit: (command) => ({ notificationId: command.notificationId }),
 
-    execute: async ({ actor }, { notificationId }) => {
+    execute: async ({ actor }, command) => {
       const appNotifications =
         getServerRuntime().notifications.appNotifications;
 
-      await appNotifications.markRead(actor.userId, notificationId, Date.now());
+      await appNotifications.markRead(
+        actor.userId,
+        command.notificationId,
+        Date.now(),
+      );
 
       return Ok(undefined);
     },

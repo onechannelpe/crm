@@ -6,22 +6,22 @@ import { parseObject, validationFail } from "~/server/shared/parsing";
 
 import { workflowActor } from "../commands/actor";
 
-export async function querySourcingPolicy(branchId: number) {
+export async function querySourcingPolicy(rawBranchId: number) {
   return runAction({
     name: "workflow.get_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject({ branchId }, validationFail, (r) => ({
+      parseObject({ branchId: rawBranchId }, validationFail, (r) => ({
         branchId: r.posInt("branchId"),
       })),
 
-    audit: ({ branchId }) => ({ branchId }),
+    audit: (query) => ({ branchId: query.branchId }),
 
-    execute: ({ actor }, { branchId }) =>
+    execute: ({ actor }, query) =>
       getServerRuntime().workflow.queries.getSourcingPolicy({
         actorRole: actor.role,
-        branchId,
+        branchId: query.branchId,
       }),
   });
 }
@@ -40,7 +40,7 @@ export async function saveSourcingPolicy(input: {
         engineAssignmentEnabled: r.bool("engineAssignmentEnabled"),
       })),
 
-    audit: ({ branchId }) => ({ branchId }),
+    audit: (command) => ({ branchId: command.branchId }),
 
     execute: ({ actor }, payload) =>
       getServerRuntime().workflow.commands.updateSourcingPolicy({

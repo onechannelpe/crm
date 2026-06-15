@@ -59,17 +59,19 @@ export async function queryLeadList(
   });
 }
 
-export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
+export async function queryLeadDetail(
+  rawLeadId: string,
+): Promise<LeadDetailView> {
   return runAction({
     name: "workflow.get_lead_detail",
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject({ leadId }, validationFail, (r) => ({
+      parseObject({ leadId: rawLeadId }, validationFail, (r) => ({
         leadId: r.str("leadId"),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    audit: (query) => ({ leadId: query.leadId }),
 
     execute: ({ actor }, parsed) =>
       getServerRuntime().workflow.queries.getLeadDetail({
@@ -80,21 +82,23 @@ export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
 }
 
 export async function queryLeadBootstrapPreview(
-  ruc: string,
+  rawRuc: string,
 ): Promise<LeadBootstrapPreviewView> {
   return runAction({
     name: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject({ ruc }, validationFail, (r) => ({
+      parseObject({ ruc: rawRuc }, validationFail, (r) => ({
         ruc: r.str("ruc"),
       })),
 
-    audit: ({ ruc }) => ({ ruc }),
+    audit: (query) => ({ ruc: query.ruc }),
 
-    execute: (_ctx, { ruc }) =>
-      getServerRuntime().workflow.queries.getLeadBootstrapPreview({ ruc }),
+    execute: (_ctx, query) =>
+      getServerRuntime().workflow.queries.getLeadBootstrapPreview({
+        ruc: query.ruc,
+      }),
   });
 }
 
@@ -112,7 +116,7 @@ export async function queryAssignableExecutives(
         limit: r.optNum("limit") ?? undefined,
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    audit: (query) => ({ leadId: query.leadId }),
 
     execute: ({ actor }, parsed) =>
       getServerRuntime().workflow.queries.listAssignableExecutives({

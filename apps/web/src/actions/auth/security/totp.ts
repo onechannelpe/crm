@@ -22,7 +22,7 @@ export async function beginTotpEnrollment(): Promise<{
 }
 
 export async function finishTotpEnrollment(
-  code: string,
+  rawCode: string,
 ): Promise<{ recoveryCodes: string[]; message: string }> {
   const result = await runAction({
     name: "auth.totp.finish",
@@ -31,15 +31,15 @@ export async function finishTotpEnrollment(
     // The TOTP code is a secret in flight; parse validates presence but no
     // audit projection records it.
     parse: () =>
-      parseObject({ code }, validationFail, (r) => ({
+      parseObject({ code: rawCode }, validationFail, (r) => ({
         code: r.str("code"),
       })),
 
-    execute: async (ctx, { code }) => {
+    execute: async (ctx, command) => {
       const enrollment = await finishTotpEnrollmentService(
         ctx,
         getServerRuntime().auth.totp,
-        { code },
+        { code: command.code },
       );
 
       if (isErr(enrollment)) {

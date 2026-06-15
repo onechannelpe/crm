@@ -169,21 +169,21 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 }
 
 export async function getRecordImportJob(
-  jobId: string,
+  rawJobId: string,
 ): Promise<IntegrationJobRow> {
   return runAction({
     name: "records.import.get_job",
     access: { kind: "permission", permission: "integration:manage" },
 
     parse: () =>
-      parseObject({ jobId }, validationFail, (r) => ({
+      parseObject({ jobId: rawJobId }, validationFail, (r) => ({
         jobId: r.str("jobId"),
       })),
 
-    audit: ({ jobId }) => ({ jobId }),
+    audit: (query) => ({ jobId: query.jobId }),
 
-    execute: async (ctx, { jobId }) => {
-      const job = await getAuthorizedRecordImportJob(ctx.actor, jobId);
+    execute: async (ctx, query) => {
+      const job = await getAuthorizedRecordImportJob(ctx.actor, query.jobId);
 
       return Ok(job);
     },

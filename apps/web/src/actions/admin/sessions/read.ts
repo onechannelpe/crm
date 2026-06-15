@@ -9,18 +9,18 @@ import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
-export async function listUserSessions(userId: unknown) {
+export async function listUserSessions(rawUserId: unknown) {
   return runAction({
     name: "admin.sessions.user.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
 
     parse: () =>
-      parseObject({ userId }, validationFail, (r) => ({
+      parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.posInt("userId"),
       })),
 
-    audit: ({ userId }) => ({ userId }),
+    audit: (query) => ({ userId: query.userId }),
 
     execute: async (ctx, parsed) =>
       Ok(

@@ -8,8 +8,8 @@ import { runAction } from "~/server/shared/action-runtime";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function revokeUserSession(
-  sessionId: unknown,
-  targetUserId: unknown,
+  rawSessionId: unknown,
+  rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
   return runAction({
     name: "admin.sessions.revoke",
@@ -17,12 +17,16 @@ export async function revokeUserSession(
     stepUp: "recent_strong_auth",
 
     parse: () =>
-      parseObject({ sessionId, targetUserId }, validationFail, (r) => ({
-        sessionId: r.str("sessionId"),
-        targetUserId: r.posInt("targetUserId"),
-      })),
+      parseObject(
+        { sessionId: rawSessionId, targetUserId: rawTargetUserId },
+        validationFail,
+        (r) => ({
+          sessionId: r.str("sessionId"),
+          targetUserId: r.posInt("targetUserId"),
+        }),
+      ),
 
-    audit: ({ targetUserId }) => ({ targetUserId }),
+    audit: (command) => ({ targetUserId: command.targetUserId }),
 
     execute: (ctx, input) =>
       revokeUserSessionService(
@@ -34,7 +38,7 @@ export async function revokeUserSession(
 }
 
 export async function revokeAllUserSessions(
-  targetUserId: unknown,
+  rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
   return runAction({
     name: "admin.sessions.revoke_all",
@@ -42,11 +46,11 @@ export async function revokeAllUserSessions(
     stepUp: "recent_strong_auth",
 
     parse: () =>
-      parseObject({ targetUserId }, validationFail, (r) => ({
+      parseObject({ targetUserId: rawTargetUserId }, validationFail, (r) => ({
         targetUserId: r.posInt("targetUserId"),
       })),
 
-    audit: ({ targetUserId }) => ({ targetUserId }),
+    audit: (command) => ({ targetUserId: command.targetUserId }),
 
     execute: (ctx, input) =>
       revokeAllUserSessionsService(

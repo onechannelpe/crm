@@ -7,43 +7,53 @@ import { parseObject, validationFail } from "~/server/shared/parsing";
 import type { Result } from "~/server/shared/result";
 
 function parseCapacityRequest(
-  amount: unknown,
-  reason: unknown,
+  rawAmount: unknown,
+  rawReason: unknown,
 ): Result<{ amount: number; reason: string }, DomainError> {
-  return parseObject({ amount, reason }, validationFail, (r) => ({
-    amount: r.num("amount"),
-    reason: r.str("reason"),
-  }));
+  return parseObject(
+    { amount: rawAmount, reason: rawReason },
+    validationFail,
+    (r) => ({
+      amount: r.num("amount"),
+      reason: r.str("reason"),
+    }),
+  );
 }
 
-export async function requestMoreSearches(amount: unknown, reason: unknown) {
+export async function requestMoreSearches(
+  rawAmount: unknown,
+  rawReason: unknown,
+) {
   return runAction({
     name: "capacity.request_search",
     access: { kind: "permission", permission: "capacity:request:self" },
-    parse: () => parseCapacityRequest(amount, reason),
-    audit: ({ amount }) => ({ amount }),
+    parse: () => parseCapacityRequest(rawAmount, rawReason),
+    audit: (request) => ({ amount: request.amount }),
 
-    execute: (ctx, { amount, reason }) =>
+    execute: (ctx, request) =>
       getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "search_extra",
-        amount,
-        reason,
+        amount: request.amount,
+        reason: request.reason,
       }),
   });
 }
 
-export async function requestMoreLeadRefill(amount: unknown, reason: unknown) {
+export async function requestMoreLeadRefill(
+  rawAmount: unknown,
+  rawReason: unknown,
+) {
   return runAction({
     name: "capacity.request_lead_refill",
     access: { kind: "permission", permission: "capacity:request:self" },
-    parse: () => parseCapacityRequest(amount, reason),
-    audit: ({ amount }) => ({ amount }),
+    parse: () => parseCapacityRequest(rawAmount, rawReason),
+    audit: (request) => ({ amount: request.amount }),
 
-    execute: (ctx, { amount, reason }) =>
+    execute: (ctx, request) =>
       getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "lead_refill",
-        amount,
-        reason,
+        amount: request.amount,
+        reason: request.reason,
       }),
   });
 }

@@ -8,14 +8,14 @@ import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok } from "~/server/shared/result";
 
 export async function updateUserProfile(
-  phone: unknown,
+  rawPhone: unknown,
 ): Promise<{ message: string }> {
   return runAction({
     name: "settings.profile.update_phone",
     access: { kind: "session" },
 
     parse: () => {
-      const shape = parseObject({ phone }, validationFail, (r) => ({
+      const shape = parseObject({ phone: rawPhone }, validationFail, (r) => ({
         phone: r.str("phone"),
       }));
 
@@ -32,10 +32,10 @@ export async function updateUserProfile(
       return Ok({ phone: localPhone });
     },
 
-    execute: async (ctx, { phone }) => {
+    execute: async (ctx, command) => {
       const result = await getServerRuntime().users.updatePhone(
         ctx.actor.userId,
-        phone,
+        command.phone,
       );
 
       if (isErr(result)) {

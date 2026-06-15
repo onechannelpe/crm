@@ -12,39 +12,50 @@ type CapacityDecision = {
 };
 
 type CapacityGrant = {
-  userId: number;
+  targetUserId: number;
   amount: number;
   reason: string;
 };
 
 function parseCapacityDecision(
-  requestId: unknown,
-  note: unknown,
+  rawRequestId: unknown,
+  rawNote: unknown,
 ): Result<CapacityDecision, DomainError> {
-  return parseObject({ requestId, note }, validationFail, (r) => ({
-    requestId: r.posInt("requestId"),
-    note: r.optStr("note"),
-  }));
+  return parseObject(
+    { requestId: rawRequestId, note: rawNote },
+    validationFail,
+    (r) => ({
+      requestId: r.posInt("requestId"),
+      note: r.optStr("note"),
+    }),
+  );
 }
 
 function parseCapacityGrant(
-  userId: unknown,
-  amount: unknown,
-  reason: unknown,
+  rawUserId: unknown,
+  rawAmount: unknown,
+  rawReason: unknown,
 ): Result<CapacityGrant, DomainError> {
-  return parseObject({ userId, amount, reason }, validationFail, (r) => ({
-    userId: r.posInt("userId"),
-    amount: r.num("amount"),
-    reason: r.str("reason"),
-  }));
+  return parseObject(
+    { userId: rawUserId, amount: rawAmount, reason: rawReason },
+    validationFail,
+    (r) => ({
+      targetUserId: r.posInt("userId"),
+      amount: r.num("amount"),
+      reason: r.str("reason"),
+    }),
+  );
 }
 
-export async function approveCapacity(requestId: unknown, note?: unknown) {
+export async function approveCapacity(
+  rawRequestId: unknown,
+  rawNote?: unknown,
+) {
   return runAction({
     name: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
-    parse: () => parseCapacityDecision(requestId, note),
-    audit: ({ requestId }) => ({ requestId }),
+    parse: () => parseCapacityDecision(rawRequestId, rawNote),
+    audit: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
       getServerRuntime().capacity.useCases.approveCapacityRequest(
         ctx,
@@ -53,30 +64,33 @@ export async function approveCapacity(requestId: unknown, note?: unknown) {
   });
 }
 
-export async function rejectCapacity(requestId: unknown, note: unknown) {
+export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
   return runAction({
     name: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
-    parse: () => parseCapacityDecision(requestId, note),
-    audit: ({ requestId }) => ({ requestId }),
+    parse: () => parseCapacityDecision(rawRequestId, rawNote),
+    audit: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
       getServerRuntime().capacity.useCases.rejectCapacityRequest(ctx, decision),
   });
 }
 
 export async function grantMoreSearches(
-  userId: unknown,
-  amount: unknown,
-  reason: unknown,
+  rawUserId: unknown,
+  rawAmount: unknown,
+  rawReason: unknown,
 ) {
   return runAction({
     name: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
-    parse: () => parseCapacityGrant(userId, amount, reason),
-    audit: ({ userId, amount }) => ({ userId, amount }),
+    parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),
+    audit: (grant) => ({
+      targetUserId: grant.targetUserId,
+      amount: grant.amount,
+    }),
     execute: (ctx, grant) =>
       getServerRuntime().capacity.useCases.grantSearchCapacityDirect(ctx, {
-        targetUserId: grant.userId,
+        targetUserId: grant.targetUserId,
         amount: grant.amount,
         reason: grant.reason,
       }),
@@ -84,18 +98,21 @@ export async function grantMoreSearches(
 }
 
 export async function grantMoreLeadRefill(
-  userId: unknown,
-  amount: unknown,
-  reason: unknown,
+  rawUserId: unknown,
+  rawAmount: unknown,
+  rawReason: unknown,
 ) {
   return runAction({
     name: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },
-    parse: () => parseCapacityGrant(userId, amount, reason),
-    audit: ({ userId, amount }) => ({ userId, amount }),
+    parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),
+    audit: (grant) => ({
+      targetUserId: grant.targetUserId,
+      amount: grant.amount,
+    }),
     execute: (ctx, grant) =>
       getServerRuntime().capacity.useCases.grantLeadCapacityDirect(ctx, {
-        targetUserId: grant.userId,
+        targetUserId: grant.targetUserId,
         amount: grant.amount,
         reason: grant.reason,
       }),

@@ -60,18 +60,18 @@ export async function createTeamInvite(
 }
 
 export async function resendTeamInvite(
-  inviteId: unknown,
+  rawInviteId: unknown,
 ): Promise<{ message: string }> {
   return runAction({
     name: "team.invite.resend",
     access: { kind: "permission", permission: "hr:manage" },
 
     parse: () =>
-      parseObject({ inviteId }, validationFail, (r) => ({
+      parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
         inviteId: r.posInt("inviteId"),
       })),
 
-    audit: ({ inviteId }) => ({ inviteId }),
+    audit: (command) => ({ inviteId: command.inviteId }),
 
     execute: async (ctx, command) => {
       const result = await resendTeamInviteService(
@@ -90,18 +90,18 @@ export async function resendTeamInvite(
 }
 
 export async function revokeTeamInvite(
-  inviteId: unknown,
+  rawInviteId: unknown,
 ): Promise<{ message: string }> {
   return runAction({
     name: "team.invite.revoke",
     access: { kind: "permission", permission: "hr:manage" },
 
     parse: () =>
-      parseObject({ inviteId }, validationFail, (r) => ({
+      parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
         inviteId: r.posInt("inviteId"),
       })),
 
-    audit: ({ inviteId }) => ({ inviteId }),
+    audit: (command) => ({ inviteId: command.inviteId }),
 
     execute: async (ctx, command) => {
       const result = await revokeTeamInviteService(

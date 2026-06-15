@@ -29,9 +29,9 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
     setLoading(true);
 
     try {
-      const enrollment = await beginTotpEnrollment();
+      const enrollmentState = await beginTotpEnrollment();
 
-      setEnrollment(enrollment);
+      setEnrollment(enrollmentState);
     } catch (error) {
       options.enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
