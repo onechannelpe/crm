@@ -65,6 +65,15 @@ async function seedPendingProposal(
       decided_at: null,
     })
     .execute();
+
+  await runtime.ctx.db
+    .updateTable("workflow_leads")
+    .set({
+      reservation_expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    })
+    .where("id", "=", input.leadId)
+    .execute();
+
   return proposalId;
 }
 
