@@ -9,7 +9,7 @@ import type {
 } from "~/lib/auth/core/session-contract";
 import type { UserSessionRow } from "~/lib/auth/types";
 import type { UsersTable } from "~/lib/db/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 type UserRow = Selectable<UsersTable>;

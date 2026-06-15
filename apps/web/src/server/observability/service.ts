@@ -1,14 +1,30 @@
 import { serializeAuditChanges } from "~/contracts/audit";
 import type { Role } from "~/lib/auth/access/rbac";
-import type {
-  AuthFunnelEventName,
-  AuthFunnelMethod,
-  AuthFunnelOutcome,
-  AuthFunnelScreen,
-  AuthFunnelSource,
+import {
+  isAuthFunnelEventName,
+  isAuthFunnelMethod,
+  isAuthFunnelOutcome,
+  type AuthFunnelEventName,
+  type AuthFunnelMethod,
+  type AuthFunnelOutcome,
+  type AuthFunnelScreen,
+  type AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
 import type { WireKind } from "~/lib/wire-error";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
+import {
+  OBSERVABILITY_DEFAULT_LIMIT,
+  OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
+  OBSERVABILITY_MAX_LIMIT,
+  OBSERVABILITY_MAX_WINDOW_MINUTES,
+  type AuthFunnelSnapshot,
+  type AuthFunnelSnapshotInput,
+  type ObservationStatus,
+  type ObservabilitySnapshot,
+  type ObservabilitySnapshotInput,
+} from "./contracts";
 import type { createActionObservationsRepo } from "./repos-action-observations";
 import type { createAuthFunnelEventsRepo } from "./repos-auth-funnel-events";
 
@@ -25,7 +41,7 @@ export interface RecordActionObservationInput {
   actionName: string;
   actorUserId: number | null;
   actorRole: Role | null;
-  status: "ok" | "error";
+  status: ObservationStatus;
   durationMs: number;
   errorCode: WireKind | null;
   errorMessage: string | null;
@@ -127,7 +143,7 @@ function mapCodeToDetails(code: WireKind): ErrorDetails {
 }
 
 function resolveErrorDetails(
-  status: "ok" | "error",
+  status: ObservationStatus,
   errorCode: WireKind | null,
 ): ErrorDetails {
   if (status === "ok") {
@@ -147,6 +163,186 @@ function resolveErrorDetails(
     publicError: "Unexpected error",
     isSensitive: 1,
   };
+}
+
+interface ActionSnapshotFilter {
+  windowMinutes: number;
+  limit: number;
+  fromInclusive: number;
+  toInclusive: number;
+  actionName?: string;
+  status?: ObservationStatus;
+}
+
+interface AuthFunnelSnapshotFilter {
+  windowMinutes: number;
+  limit: number;
+  fromInclusive: number;
+  toInclusive: number;
+  eventName?: AuthFunnelEventName;
+  method?: AuthFunnelMethod;
+  outcome?: AuthFunnelOutcome;
+}
+
+function trimOrUndefined(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  return trimmed;
+}
+
+function parsePositiveIntegerAtMost(
+  value: number,
+  options: {
+    code: string;
+    field: string;
+    max: number;
+  },
+): Result<number, DomainError> {
+  if (!Number.isInteger(value) || value < 1) {
+    return Err(
+      invalid({
+        code: options.code,
+        details: { field: options.field, rule: "positive_integer" },
+      }),
+    );
+  }
+
+  if (value > options.max) {
+    return Err(
+      invalid({
+        code: options.code,
+        details: {
+          field: options.field,
+          rule: "max",
+          max: options.max,
+          actual: value,
+        },
+      }),
+    );
+  }
+
+  return Ok(value);
+}
+
+function parseObservationStatus(
+  value: string | undefined,
+): Result<ObservationStatus | undefined, DomainError> {
+  if (!value) return Ok(undefined);
+  if (value === "ok" || value === "error") return Ok(value);
+
+  return Err(invalid({ code: "invalid_status" }));
+}
+
+function parseAuthFunnelEventName(
+  value: string | undefined,
+): Result<AuthFunnelEventName | undefined, DomainError> {
+  if (!value) return Ok(undefined);
+  if (isAuthFunnelEventName(value)) return Ok(value);
+
+  return Err(invalid({ code: "invalid_event_name" }));
+}
+
+function parseAuthFunnelMethod(
+  value: string | undefined,
+): Result<AuthFunnelMethod | undefined, DomainError> {
+  if (!value) return Ok(undefined);
+  if (isAuthFunnelMethod(value)) return Ok(value);
+
+  return Err(invalid({ code: "invalid_method" }));
+}
+
+function parseAuthFunnelOutcome(
+  value: string | undefined,
+): Result<AuthFunnelOutcome | undefined, DomainError> {
+  if (!value) return Ok(undefined);
+  if (isAuthFunnelOutcome(value)) return Ok(value);
+
+  return Err(invalid({ code: "invalid_outcome" }));
+}
+
+function parseActionSnapshotFilter(
+  input: ObservabilitySnapshotInput | undefined,
+): Result<ActionSnapshotFilter, DomainError> {
+  const parsedWindowMinutes = parsePositiveIntegerAtMost(
+    input?.windowMinutes ?? OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
+    {
+      code: "invalid_window_minutes",
+      field: "window_minutes",
+      max: OBSERVABILITY_MAX_WINDOW_MINUTES,
+    },
+  );
+  if (isErr(parsedWindowMinutes)) return parsedWindowMinutes;
+
+  const parsedLimit = parsePositiveIntegerAtMost(
+    input?.limit ?? OBSERVABILITY_DEFAULT_LIMIT,
+    {
+      code: "invalid_limit",
+      field: "limit",
+      max: OBSERVABILITY_MAX_LIMIT,
+    },
+  );
+  if (isErr(parsedLimit)) return parsedLimit;
+
+  const parsedStatus = parseObservationStatus(input?.status);
+  if (isErr(parsedStatus)) return parsedStatus;
+
+  const windowMinutes = parsedWindowMinutes.value;
+  const now = Date.now();
+
+  return Ok({
+    windowMinutes,
+    limit: parsedLimit.value,
+    fromInclusive: now - windowMinutes * 60_000,
+    toInclusive: now,
+    actionName: trimOrUndefined(input?.actionName),
+    status: parsedStatus.value,
+  });
+}
+
+function parseAuthFunnelSnapshotFilter(
+  input: AuthFunnelSnapshotInput | undefined,
+): Result<AuthFunnelSnapshotFilter, DomainError> {
+  const parsedWindowMinutes = parsePositiveIntegerAtMost(
+    input?.windowMinutes ?? OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
+    {
+      code: "invalid_window_minutes",
+      field: "window_minutes",
+      max: OBSERVABILITY_MAX_WINDOW_MINUTES,
+    },
+  );
+  if (isErr(parsedWindowMinutes)) return parsedWindowMinutes;
+
+  const parsedLimit = parsePositiveIntegerAtMost(
+    input?.limit ?? OBSERVABILITY_DEFAULT_LIMIT,
+    {
+      code: "invalid_limit",
+      field: "limit",
+      max: OBSERVABILITY_MAX_LIMIT,
+    },
+  );
+  if (isErr(parsedLimit)) return parsedLimit;
+
+  const parsedEventName = parseAuthFunnelEventName(input?.eventName);
+  if (isErr(parsedEventName)) return parsedEventName;
+
+  const parsedMethod = parseAuthFunnelMethod(input?.method);
+  if (isErr(parsedMethod)) return parsedMethod;
+
+  const parsedOutcome = parseAuthFunnelOutcome(input?.outcome);
+  if (isErr(parsedOutcome)) return parsedOutcome;
+
+  const windowMinutes = parsedWindowMinutes.value;
+  const now = Date.now();
+
+  return Ok({
+    windowMinutes,
+    limit: parsedLimit.value,
+    fromInclusive: now - windowMinutes * 60_000,
+    toInclusive: now,
+    eventName: parsedEventName.value,
+    method: parsedMethod.value,
+    outcome: parsedOutcome.value,
+  });
 }
 
 export function createObservabilityService(repos: ObservabilityRepos) {
@@ -186,6 +382,104 @@ export function createObservabilityService(repos: ObservabilityRepos) {
         outcome: input.outcome,
         code: input.code,
         created_at: input.createdAt,
+      });
+    },
+
+    async getActionSnapshot(
+      input?: ObservabilitySnapshotInput,
+    ): Promise<Result<ObservabilitySnapshot, DomainError>> {
+      const parsed = parseActionSnapshotFilter(input);
+      if (isErr(parsed)) return parsed;
+
+      const filter = parsed.value;
+      const [summary, recent] = await Promise.all([
+        repos.actionObservations.summarizeByAction({
+          fromInclusive: filter.fromInclusive,
+          toInclusive: filter.toInclusive,
+          actionName: filter.actionName,
+          status: filter.status,
+        }),
+        repos.actionObservations.findRecent({
+          fromInclusive: filter.fromInclusive,
+          toInclusive: filter.toInclusive,
+          actionName: filter.actionName,
+          status: filter.status,
+          limit: filter.limit,
+        }),
+      ]);
+
+      return Ok({
+        windowMinutes: filter.windowMinutes,
+        summary: summary.map((row) => ({
+          actionName: row.action_name,
+          count: row.count ?? 0,
+          errorCount: row.error_count ?? 0,
+          avgDurationMs: row.avg_duration_ms ?? 0,
+          maxDurationMs: row.max_duration_ms ?? 0,
+        })),
+        recent: recent.map((row) => ({
+          id: row.id,
+          createdAt: row.created_at,
+          actionName: row.action_name,
+          status: row.status,
+          durationMs: row.duration_ms,
+          actorUserId: row.actor_user_id,
+          actorRole: row.actor_role,
+          routePath: row.route_path,
+          errorCode: row.error_code,
+          errorCategory: row.error_category,
+          publicError: row.public_error,
+          isSensitive: row.is_sensitive === 1,
+        })),
+      });
+    },
+
+    async getAuthFunnelSnapshot(
+      input?: AuthFunnelSnapshotInput,
+    ): Promise<Result<AuthFunnelSnapshot, DomainError>> {
+      const parsed = parseAuthFunnelSnapshotFilter(input);
+      if (isErr(parsed)) return parsed;
+
+      const filter = parsed.value;
+      const [summary, recent] = await Promise.all([
+        repos.authFunnelEvents.summarize({
+          fromInclusive: filter.fromInclusive,
+          toInclusive: filter.toInclusive,
+          eventName: filter.eventName,
+          method: filter.method,
+          outcome: filter.outcome,
+        }),
+        repos.authFunnelEvents.findRecent({
+          fromInclusive: filter.fromInclusive,
+          toInclusive: filter.toInclusive,
+          eventName: filter.eventName,
+          method: filter.method,
+          outcome: filter.outcome,
+          limit: filter.limit,
+        }),
+      ]);
+
+      return Ok({
+        windowMinutes: filter.windowMinutes,
+        summary: summary.map((row) => ({
+          eventName: row.event_name,
+          screen: row.screen,
+          method: row.method,
+          outcome: row.outcome,
+          source: row.source,
+          count: row.count ?? 0,
+        })),
+        recent: recent.map((row) => ({
+          id: row.id,
+          createdAt: row.created_at,
+          eventName: row.event_name,
+          screen: row.screen,
+          method: row.method,
+          outcome: row.outcome,
+          source: row.source,
+          routePath: row.route_path,
+          code: row.code,
+        })),
       });
     },
 

@@ -24,8 +24,6 @@ export function assertOwnedRecord<T>(
     bypassRoles?: ReadonlySet<Role>;
   },
 ): T {
-  const name = options?.resourceName ?? "Resource";
-
   if (record == null) {
     throwDomain(fail("resource_not_found"));
   }
