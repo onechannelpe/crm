@@ -9,6 +9,7 @@ const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   PRICING: "Definición de tarifa",
   SETUP: "Afiliación",
   LIVE: "Activo",
+  EXPIRED: "Vencido",
 };
 
 const LEAD_NEXT_STEP_LABELS: Record<LeadNextStep, string> = {

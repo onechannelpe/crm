@@ -18,6 +18,8 @@ export function applyEvent(state: LeadState, event: LeadEvent): LeadState {
       return { ...state, status: event.payload.toStatus };
     case "lead_priority_updated":
       return { ...state, prioridad: event.payload.toPrioridad };
+    case "lead_reservation_expired":
+      return { ...state, stage: "EXPIRED" };
     default:
       return state;
   }
@@ -26,7 +28,7 @@ export function applyEvent(state: LeadState, event: LeadEvent): LeadState {
 export function applyEvents(
   state: LeadState,
   events: LeadEvent[],
-  meta: { actorUserId: number; now: number },
+  meta: { actorUserId: number | null; now: number },
 ): LeadState {
   const next = events.reduce(applyEvent, state);
   return {

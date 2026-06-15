@@ -49,6 +49,7 @@ type StagedFile = {
 type RateProposalSectionProps = {
   leadId: string;
   proposal: LeadDetailRateProposalView;
+  reservationExpiresAt: number | null;
   rateRevisions: LeadDetailRateRevisionView[];
   canRequestRevision: boolean;
   canAccept: boolean;
@@ -73,7 +74,8 @@ export function RateProposalSection(props: RateProposalSectionProps) {
   const isRenegotiation = () => currentRound() > 0;
   const isExpired = () =>
     props.proposal.outcome === "pending" &&
-    props.proposal.expiresAt <= Date.now();
+    props.reservationExpiresAt !== null &&
+    props.reservationExpiresAt <= Date.now();
 
   async function handleAccept() {
     setError(null);
@@ -211,13 +213,17 @@ export function RateProposalSection(props: RateProposalSectionProps) {
           <RecordInlineCell label="Moneda" icon={Package}>
             <FieldTextValue>{props.proposal.moneda}</FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="Vigencia" icon={Package}>
-            <FieldTextValue>
-              {isExpired()
-                ? `Vencio el ${formatDate(props.proposal.expiresAt)}`
-                : `Hasta el ${formatDate(props.proposal.expiresAt)}`}
-            </FieldTextValue>
-          </RecordInlineCell>
+          <Show when={props.reservationExpiresAt}>
+            {(expiresAt) => (
+              <RecordInlineCell label="Vigencia" icon={Package}>
+                <FieldTextValue>
+                  {isExpired()
+                    ? `Vencio el ${formatDate(expiresAt())}`
+                    : `Hasta el ${formatDate(expiresAt())}`}
+                </FieldTextValue>
+              </RecordInlineCell>
+            )}
+          </Show>
         </FieldTable>
 
         <Show when={!showRevisionForm()}>

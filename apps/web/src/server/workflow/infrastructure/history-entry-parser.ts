@@ -17,6 +17,7 @@ import {
   toPriorityUpdatedEntry,
   toReassignmentEntry,
   toRegisteredEntry,
+  toReservationExpiredEntry,
   toReviewedEntry,
   toStatusUpdatedEntry,
   toStageChangeEntry,
@@ -52,6 +53,8 @@ export function toHistoryEntry(
       return toRateRevisionRequestedEntry(row, payload.value);
     case "rate_accepted":
       return toRateAcceptedEntry(row, payload.value);
+    case "lead_reservation_expired":
+      return toReservationExpiredEntry(row, payload.value);
     case "venue_added":
       return toVenueAddedEntry(row, payload.value);
     case "venue_updated":

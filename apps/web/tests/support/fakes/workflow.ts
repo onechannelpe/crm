@@ -29,6 +29,7 @@ export function makeWorkflowLead(
     createdAt: 10,
     updatedAt: 10,
     deletedAt: null,
+    reservationExpiresAt: null,
     version: 1,
     ...overrides,
   };

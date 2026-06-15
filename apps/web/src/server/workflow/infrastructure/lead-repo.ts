@@ -32,6 +32,7 @@ type LeadWithOrganizationRow = LeadRow & {
   district: string | null;
   department: string | null;
   deleted_at: number | null;
+  reservation_expires_at: number | null;
   version: number;
 };
 type NewLeadRow = Insertable<Database["workflow_leads"]>;
@@ -55,6 +56,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
+    reservationExpiresAt: row.reservation_expires_at,
     version: row.version,
   };
 }
@@ -70,6 +72,7 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
     prioridad: values.prioridad,
     created_at: values.createdAt,
     updated_at: values.updatedAt,
+    reservation_expires_at: values.reservationExpiresAt,
   };
 }
 
@@ -100,6 +103,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       "lead.created_at",
       "lead.updated_at",
       "lead.deleted_at",
+      "lead.reservation_expires_at",
       "lead.version",
       "org.ruc",
       "org.name as razon_social",
@@ -127,11 +131,28 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
     },
 
+    // Returns the lead that currently holds this RUC.
+    // EXPIRED and deleted leads are excluded.
     async findByRuc(ruc: string) {
       const row = await selectLeadWithOrganization
         .where("org.ruc", "=", ruc)
+        .where("lead.deleted_at", "is", null)
+        .where("lead.stage", "!=", "EXPIRED")
         .executeTakeFirst();
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
+    },
+
+    // Leads whose RUC hold has lapsed but that the sweep has not yet retired.
+    async findLapsedReservations(now: number): Promise<string[]> {
+      const rows = await db
+        .selectFrom("workflow_leads")
+        .select("id")
+        .where("reservation_expires_at", "is not", null)
+        .where("reservation_expires_at", "<=", now)
+        .where("deleted_at", "is", null)
+        .where("stage", "=", "PRICING")
+        .execute();
+      return rows.map((row) => row.id);
     },
 
     async findByRucMany(rucs: string[]) {

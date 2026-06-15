@@ -18,6 +18,7 @@ export type LeadHistoryEventType =
   | "rate_proposed"
   | "rate_revision_requested"
   | "rate_accepted"
+  | "lead_reservation_expired"
   | "venue_added"
   | "venue_updated"
   | "venue_accounts_added"
@@ -79,6 +80,9 @@ export type LeadHistoryPayloadByEvent = {
   };
   rate_accepted: {
     proposalId: string;
+  };
+  lead_reservation_expired: {
+    fromStage: LeadStage;
   };
   venue_added: {
     venueId: string;

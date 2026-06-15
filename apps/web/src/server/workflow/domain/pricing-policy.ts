@@ -1,11 +1,9 @@
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { RateProposal } from "~/server/workflow/application/ports/entities";
 
 export const DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS = 7;
 const MIN_RATE_PROPOSAL_VALIDITY_DAYS = 1;
 const MAX_RATE_PROPOSAL_VALIDITY_DAYS = 90;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type RateProposalPolicy = {
   validityDays: number;
@@ -33,18 +31,4 @@ export function resolveRateProposalPolicy(input: {
     validityDays:
       input.branchPolicy?.validityDays ?? DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS,
   };
-}
-
-export function computeRateProposalExpiration(input: {
-  proposedAt: number;
-  validityDays: number;
-}): number {
-  return input.proposedAt + input.validityDays * DAY_MS;
-}
-
-export function isRateProposalActionable(
-  proposal: Pick<RateProposal, "outcome" | "expiresAt">,
-  now: number,
-): boolean {
-  return proposal.outcome === "pending" && proposal.expiresAt > now;
 }

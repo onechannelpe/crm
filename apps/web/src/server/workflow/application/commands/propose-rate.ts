@@ -6,10 +6,8 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { ProposeRateCommandInput } from "~/server/workflow/types";
 
 import { proposeRate } from "../../domain/lead/commands";
-import {
-  computeRateProposalExpiration,
-  resolveRateProposalPolicy,
-} from "../../domain/pricing-policy";
+import { computeReservationExpiry } from "../../domain/lead/reservation";
+import { resolveRateProposalPolicy } from "../../domain/pricing-policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -34,8 +32,8 @@ export async function proposeRateCommand(
         input.actor.branchId,
       ),
     });
-    const expiresAt = computeRateProposalExpiration({
-      proposedAt: now,
+    const reservationExpiresAt = computeReservationExpiry({
+      now,
       validityDays: policy.validityDays,
     });
 
@@ -44,6 +42,7 @@ export async function proposeRateCommand(
       proposalId,
       round,
       moneda: input.moneda,
+      reservationExpiresAt,
       now,
     });
     if (!transition.ok) return transition;
@@ -60,8 +59,6 @@ export async function proposeRateCommand(
       moneda: input.moneda,
       proposedBy: input.actor.userId,
       proposedAt: now,
-      validityDays: policy.validityDays,
-      expiresAt,
       outcome: "pending",
       decidedAt: null,
     });

@@ -8,6 +8,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { reassignLead } from "../../domain/lead/commands";
 import { requireCapability } from "../../domain/lead/policy";
+import { isReservationLapsed } from "../../domain/lead/reservation";
 import { createLeadDraft } from "../../domain/lead/state";
 import {
   createLeadStateRepo,
@@ -19,6 +20,7 @@ import { normalizeLeadRuc } from "../../parsers";
 import type { WorkflowUserRepository } from "../ports/entities";
 import type { LeadEnrichmentQueue } from "../ports/gateways";
 import type { LeadRepository } from "../ports/lead";
+import { expireLeadReservation } from "./expire-reservation";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {
   ensureActiveExecutive,
@@ -60,14 +62,27 @@ export async function registerLead(
   });
   if (!activeExecutive.ok) return activeExecutive;
 
+  const now = Date.now();
+
+  // Lazy release: if the RUC is still held by a lapsed lead the sweep has not
+  // retired yet, expire it now so this registration sees the RUC as available
+  // instead of waiting for the next sweep tick.
+  const heldLead = await ports.leads.findByRuc(ruc.value);
+  if (heldLead && isReservationLapsed(heldLead, now)) {
+    const released = await expireLeadReservation(
+      ports.executor,
+      heldLead.id,
+      now,
+    );
+    if (!released.ok) return released;
+  }
+
   const resolution = await resolveLeadRegistration({
     deps: { leads: ports.leads, users: ports.users },
     ruc: ruc.value,
     executiveId: input.actorUserId,
   });
   if (!resolution.ok) return resolution;
-
-  const now = Date.now();
 
   if (resolution.value.kind === "reassign") {
     const leadId = resolution.value.lead.id;

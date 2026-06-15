@@ -16,8 +16,6 @@ export interface WorkflowRateProposalsTable {
   moneda: Moneda;
   proposed_by: number;
   proposed_at: number;
-  validity_days: number;
-  expires_at: number;
   outcome: "pending" | "accepted" | "revision_requested";
   decided_at: number | null;
 }

@@ -46,8 +46,6 @@ export type RateProposal = {
   moneda: Moneda;
   proposedBy: number;
   proposedAt: number;
-  validityDays: number;
-  expiresAt: number;
   outcome: RateProposalOutcome;
   decidedAt: number | null;
 };

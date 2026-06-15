@@ -85,6 +85,9 @@ export async function persistWorkflowLeadsAndAssignments(
         updated_by: BO2,
         created_at: now - 14 * day,
         updated_at: now - 10 * day,
+        // Quoted lead with a live hold: the pending proposal is still
+        // actionable until this date.
+        reservation_expires_at: now + 4 * day,
       },
       {
         id: idForSale,
@@ -134,6 +137,7 @@ export async function persistWorkflowLeadsAndAssignments(
         updated_by: eb.ref("excluded.updated_by"),
         created_at: eb.ref("excluded.created_at"),
         updated_at: eb.ref("excluded.updated_at"),
+        reservation_expires_at: eb.ref("excluded.reservation_expires_at"),
       })),
     )
     .execute();

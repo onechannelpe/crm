@@ -105,6 +105,7 @@ function toLeadDetailLead(
     nextStep: resolveLeadNextStep(lead),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
+    reservationExpiresAt: lead.reservationExpiresAt,
   };
 }
 
@@ -160,8 +161,6 @@ function toRateProposalView(
     outcome: proposal.outcome,
     proposedBy: proposal.proposedBy,
     proposedAt: proposal.proposedAt,
-    validityDays: proposal.validityDays,
-    expiresAt: proposal.expiresAt,
     decidedAt: proposal.decidedAt,
   };
 }

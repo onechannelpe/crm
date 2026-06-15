@@ -18,8 +18,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("users.id"),
     )
     .addColumn("proposed_at", "integer", (col) => col.notNull())
-    .addColumn("validity_days", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
     .addColumn("outcome", "varchar(20)", (col) => col.notNull())
     .addColumn("decided_at", "integer")
     .execute();

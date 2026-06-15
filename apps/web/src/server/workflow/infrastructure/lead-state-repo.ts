@@ -19,6 +19,7 @@ type LeadWithOrgRow = {
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
+  reservation_expires_at: number | null;
   version: number;
   ruc: string;
   razon_social: string | null;
@@ -45,6 +46,7 @@ function toLeadState(row: LeadWithOrgRow): LeadState {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
+    reservationExpiresAt: row.reservation_expires_at,
     version: row.version,
   };
 }
@@ -71,6 +73,7 @@ export function createLeadStateRepo(db: DatabaseExecutor): LeadStateRepository {
           "lead.created_at",
           "lead.updated_at",
           "lead.deleted_at",
+          "lead.reservation_expires_at",
           "lead.version",
           "org.ruc",
           "org.name as razon_social",

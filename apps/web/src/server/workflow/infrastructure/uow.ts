@@ -75,6 +75,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
           executive_id: next.executiveId,
           updated_by: next.updatedBy,
           updated_at: next.updatedAt,
+          reservation_expires_at: next.reservationExpiresAt,
           version: next.version,
         })
         .where("id", "=", next.id)
@@ -130,7 +131,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         })
         .execute();
 
-      // 6. Notifications (inside transaction for atomicity)
+      // 6. Notifications: enqueue inside the commit transaction
       const stageChangedEvents = events
         .map((e, i) => ({ event: e, id: eventIds[i] }))
         .filter(({ event }) => event.eventType === "workflow_stage_changed");

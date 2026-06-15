@@ -19,14 +19,22 @@ type TransitionResult = Result<
   DomainError
 >;
 
+// reservationExpiresAt is an explicit override: `undefined` leaves the existing
+// hold untouched, a number re-stamps it (a fresh quotation round), and `null`
+// clears it (the lead left the priced phase).
 function finish(
   state: LeadState,
   events: LeadEvent[],
   actor: Actor,
   now: number,
+  reservationExpiresAt?: number | null,
 ): TransitionResult {
+  const next = applyEvents(state, events, { actorUserId: actor.userId, now });
   return Ok({
-    next: applyEvents(state, events, { actorUserId: actor.userId, now }),
+    next:
+      reservationExpiresAt === undefined
+        ? next
+        : { ...next, reservationExpiresAt },
     events,
   });
 }
@@ -113,6 +121,7 @@ export function proposeRate(
     proposalId: string;
     round: number;
     moneda: Moneda;
+    reservationExpiresAt: number;
     now: number;
   },
 ): TransitionResult {
@@ -134,11 +143,17 @@ export function proposeRate(
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  // Each quotation round resets the RUC hold.
+  return finish(
+    state,
+    events,
+    input.actor,
+    input.now,
+    input.reservationExpiresAt,
+  );
 }
 
-// The executive accepts the current proposal: the client said yes, so the lead
-// moves on to setup.
+// The executive confirms the client agreed to the proposed rate.
 export function acceptRate(
   state: LeadState,
   input: { actor: Actor; proposalId: string; now: number },
@@ -164,7 +179,33 @@ export function acceptRate(
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.now, null);
+}
+
+// The sweep (or the registration guard) expires a lapsed hold: the lead becomes
+// terminal EXPIRED and releases its RUC. Runs as the system, so there is no
+// actor and no authorization check.
+export function expireReservation(
+  state: LeadState,
+  input: { now: number },
+): TransitionResult {
+  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+
+  const events: LeadEvent[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_reservation_expired",
+      actorUserId: null,
+      payload: { fromStage: state.stage },
+      occurredAt: input.now,
+    }),
+  ];
+
+  const next = applyEvents(state, events, {
+    actorUserId: null,
+    now: input.now,
+  });
+  return Ok({ next: { ...next, reservationExpiresAt: null }, events });
 }
 
 export function recordRepLegal(
@@ -316,6 +357,7 @@ export function requestRateRevision(
     round: number;
     justification: string;
     artifactIds: string[];
+    reservationExpiresAt: number;
     now: number;
   },
 ): TransitionResult {
@@ -354,5 +396,12 @@ export function requestRateRevision(
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  // Requesting a revision is a fresh round, so it resets the RUC hold.
+  return finish(
+    state,
+    events,
+    input.actor,
+    input.now,
+    input.reservationExpiresAt,
+  );
 }

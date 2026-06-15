@@ -23,6 +23,7 @@ export function WorkflowStageSections(props: WorkflowStageSectionsProps) {
             <RateProposalSection
               leadId={props.leadId}
               proposal={proposal()}
+              reservationExpiresAt={props.data.lead.reservationExpiresAt}
               rateRevisions={props.data.rateRevisions}
               canAccept={props.data.availableActions.includes("accept-rate")}
               canRequestRevision={props.data.availableActions.includes(

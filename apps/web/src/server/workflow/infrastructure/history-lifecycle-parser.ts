@@ -60,6 +60,20 @@ export function toReviewedEntry(
   });
 }
 
+export function toReservationExpiredEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const fromStage = requireLeadStage(payload, "fromStage", row);
+  if (!fromStage.ok) return fromStage;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "lead_reservation_expired",
+    payload: { fromStage: fromStage.value },
+  });
+}
+
 export function toStatusUpdatedEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,

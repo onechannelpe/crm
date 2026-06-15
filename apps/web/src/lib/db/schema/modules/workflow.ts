@@ -20,14 +20,29 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("deleted_at", "integer")
+    // When set, the lead holds its RUC until this timestamp.
+    // Null for stages that are not time-boxed (pre-quotation QUALIFYING,
+    // won SETUP/LIVE, and terminal stages).
+    .addColumn("reservation_expires_at", "integer")
     .addColumn("version", "integer", (col) => col.notNull().defaultTo(0))
     .execute();
 
+  // Only one *active* lead may hold a given RUC at a time. Released leads
+  // (EXPIRED) and soft-deleted leads drop out of the constraint so the RUC can
+  // be registered fresh while the old lead and its evidence stay as history.
   await db.schema
     .createIndex("idx_workflow_leads_organization")
     .on("workflow_leads")
     .column("organization_id")
     .unique()
+    .where("deleted_at", "is", null)
+    .where("stage", "!=", "EXPIRED")
+    .execute();
+  await db.schema
+    .createIndex("idx_workflow_leads_reservation")
+    .on("workflow_leads")
+    .column("reservation_expires_at")
+    .where("reservation_expires_at", "is not", null)
     .execute();
   await db.schema
     .createIndex("idx_workflow_leads_executive")

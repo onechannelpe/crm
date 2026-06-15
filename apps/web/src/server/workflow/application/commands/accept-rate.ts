@@ -6,7 +6,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { AcceptRateCommandInput } from "~/server/workflow/types";
 
 import { acceptRate } from "../../domain/lead/commands";
-import { isRateProposalActionable } from "../../domain/pricing-policy";
+import { isReservationActive } from "../../domain/lead/reservation";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -31,7 +31,7 @@ export async function acceptRateCommand(
     if (latest.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
     }
-    if (!isRateProposalActionable(latest, now)) {
+    if (!isReservationActive(state, now)) {
       return Err(fail("rate_proposal_expired"));
     }
 

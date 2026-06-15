@@ -26,6 +26,7 @@ export type LeadState = {
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
+  reservationExpiresAt: number | null;
   version: number;
 };
 
@@ -60,5 +61,6 @@ export function createLeadDraft(input: {
     prioridad: null,
     createdAt: input.now,
     updatedAt: input.now,
+    reservationExpiresAt: null,
   });
 }

@@ -4,6 +4,7 @@ export const LEAD_STAGES = [
   "PRICING",
   "SETUP",
   "LIVE",
+  "EXPIRED",
 ] as const;
 
 export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;

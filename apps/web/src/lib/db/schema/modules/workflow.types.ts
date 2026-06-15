@@ -19,6 +19,7 @@ export interface WorkflowLeadsTable {
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
+  reservation_expires_at: number | null;
   version: Generated<number>;
 }
 
@@ -79,6 +80,7 @@ export interface WorkflowHistoryEventsTable {
     | "rate_proposed"
     | "rate_revision_requested"
     | "rate_accepted"
+    | "lead_reservation_expired"
     | "venue_added"
     | "venue_updated"
     | "venue_accounts_added"
