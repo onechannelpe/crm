@@ -47,8 +47,8 @@ describe("outbox delivery", () => {
     const notifications = await scenario.notifications.list();
     expect(notifications).toEqual([
       {
-        user_id: 1,
-        event_type: "lead.needs_executive_input",
+        user_id: 2,
+        event_type: "lead.ready_for_quotation",
         source_event_id: expect.stringContaining(`${leadOne.id}:stage_changed`),
       },
       {
