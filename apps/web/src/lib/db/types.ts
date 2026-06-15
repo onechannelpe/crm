@@ -91,6 +91,7 @@ export interface Database {
   workflow_modalidad_cobro_kinds: workflow.WorkflowModalidadCobroKindsTable;
   workflow_lead_profiles: workflow.WorkflowLeadProfilesTable;
   workflow_rate_proposals: pricing.WorkflowRateProposalsTable;
+  workflow_rate_proposal_policies: pricing.WorkflowRateProposalPoliciesTable;
   workflow_rate_revisions: pricing.WorkflowRateRevisionsTable;
   workflow_rate_revision_files: pricing.WorkflowRateRevisionFilesTable;
   workflow_lead_assignments: workflow.WorkflowLeadAssignmentsTable;

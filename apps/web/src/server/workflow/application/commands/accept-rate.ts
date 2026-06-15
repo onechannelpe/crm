@@ -6,6 +6,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { AcceptRateCommandInput } from "~/server/workflow/types";
 
 import { acceptRate } from "../../domain/lead/commands";
+import { isRateProposalActionable } from "../../domain/pricing-policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -26,11 +27,14 @@ export async function acceptRateCommand(
     if (!latest || latest.id !== input.proposalId) {
       return Err(fail("rate_proposal_not_found"));
     }
+    const now = Date.now();
     if (latest.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
     }
+    if (!isRateProposalActionable(latest, now)) {
+      return Err(fail("rate_proposal_expired"));
+    }
 
-    const now = Date.now();
     const transition = acceptRate(state, {
       actor: input.actor,
       proposalId: input.proposalId,

@@ -46,6 +46,8 @@ export type RateProposal = {
   moneda: Moneda;
   proposedBy: number;
   proposedAt: number;
+  validityDays: number;
+  expiresAt: number;
   outcome: RateProposalOutcome;
   decidedAt: number | null;
 };
@@ -60,6 +62,20 @@ export type RateProposalRepository = {
     outcome: RateProposalOutcome,
     decidedAt: number,
   ): Promise<void>;
+};
+
+export type RateProposalPolicyDefault = {
+  branchId: number;
+  validityDays: number;
+  updatedAt: number;
+  updatedByUserId: number;
+};
+
+export type RateProposalPolicyRepository = {
+  findByBranchId(
+    branchId: number,
+  ): Promise<RateProposalPolicyDefault | undefined>;
+  upsert(values: RateProposalPolicyDefault): Promise<unknown>;
 };
 
 export type LeadVenue = {

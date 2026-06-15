@@ -6,6 +6,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { RequestRateRevisionCommandInput } from "~/server/workflow/types";
 
 import { requestRateRevision } from "../../domain/lead/commands";
+import { isRateProposalActionable } from "../../domain/pricing-policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -26,6 +27,10 @@ export async function requestRateRevisionCommand(
     if (!proposal) return Err(fail("rate_proposal_not_found"));
     if (proposal.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
+    }
+    const now = Date.now();
+    if (!isRateProposalActionable(proposal, now)) {
+      return Err(fail("rate_proposal_expired"));
     }
 
     const existingCount = await repos.rateRevisions.countByLeadId(state.id);
@@ -55,7 +60,6 @@ export async function requestRateRevisionCommand(
 
     const revisionId = randomUUIDv7();
     const round = existingCount + 1;
-    const now = Date.now();
 
     const transition = requestRateRevision(state, {
       actor: input.actor,

@@ -8,6 +8,7 @@ import {
   canRevealFullTimeline,
   resolveAvailableActions,
 } from "../../domain/lead/policy";
+import { isRateProposalActionable } from "../../domain/pricing-policy";
 import { presentLeadDetail } from "../presenters/lead-detail";
 import {
   loadLeadDetailSections,
@@ -46,12 +47,15 @@ export async function getLeadDetail(
     : null;
 
   const latestProposal = loaded.value.rateProposals.at(-1);
+  const now = Date.now();
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions(
     { userId: input.actorUserId, role: input.actorRole },
     lead,
     {
-      hasPendingProposal: latestProposal?.outcome === "pending",
+      hasActivePendingProposal: latestProposal
+        ? isRateProposalActionable(latestProposal, now)
+        : false,
       rateRevisionCount: loaded.value.rateRevisionRows.length,
     },
   );

@@ -60,6 +60,8 @@ async function seedPendingProposal(
       moneda: "PEN",
       proposed_by: input.proposedBy,
       proposed_at: runtime.now.get(),
+      validity_days: 7,
+      expires_at: runtime.now.get() + 7 * 24 * 60 * 60 * 1000,
       outcome: "pending",
       decided_at: null,
     })
@@ -277,14 +279,14 @@ describe("lead action policy", () => {
       resolveAvailableActions(
         { userId: 2, role: "back_office" },
         makeLeadState(),
-        { hasPendingProposal: false, rateRevisionCount: 0 },
+        { hasActivePendingProposal: false, rateRevisionCount: 0 },
       ),
     ).toContain("propose-rate");
 
     const executiveActions = resolveAvailableActions(
       { userId: 1, role: "executive" },
       makeLeadState(),
-      { hasPendingProposal: true, rateRevisionCount: 0 },
+      { hasActivePendingProposal: true, rateRevisionCount: 0 },
     );
     expect(executiveActions).toContain("accept-rate");
     expect(executiveActions).toContain("request-rate-revision");
@@ -294,7 +296,7 @@ describe("lead action policy", () => {
         { userId: 1, role: "executive" },
         makeLeadState(),
         {
-          hasPendingProposal: true,
+          hasActivePendingProposal: true,
           rateRevisionCount: MAX_RATE_REVISION_ROUNDS,
         },
       ),

@@ -18,6 +18,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("users.id"),
     )
     .addColumn("proposed_at", "integer", (col) => col.notNull())
+    .addColumn("validity_days", "integer", (col) => col.notNull())
+    .addColumn("expires_at", "integer", (col) => col.notNull())
     .addColumn("outcome", "varchar(20)", (col) => col.notNull())
     .addColumn("decided_at", "integer")
     .execute();
@@ -27,6 +29,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("workflow_rate_proposals")
     .unique()
     .columns(["lead_id", "round"])
+    .execute();
+
+  await db.schema
+    .createTable("workflow_rate_proposal_policies")
+    .addColumn("branch_id", "integer", (col) =>
+      col.primaryKey().references("branches.id").onDelete("cascade"),
+    )
+    .addColumn("validity_days", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("updated_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
     .execute();
 
   await db.schema

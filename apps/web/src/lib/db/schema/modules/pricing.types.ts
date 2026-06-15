@@ -16,8 +16,17 @@ export interface WorkflowRateProposalsTable {
   moneda: Moneda;
   proposed_by: number;
   proposed_at: number;
+  validity_days: number;
+  expires_at: number;
   outcome: "pending" | "accepted" | "revision_requested";
   decided_at: number | null;
+}
+
+export interface WorkflowRateProposalPoliciesTable {
+  branch_id: number;
+  validity_days: number;
+  updated_at: number;
+  updated_by_user_id: number;
 }
 
 // Revision requests stay linked to the proposal round they reject.

@@ -132,6 +132,18 @@ export const ERROR_CATALOG = {
     kind: "conflict",
     message: "La propuesta de tarifa ya fue resuelta.",
   },
+  rate_proposal_expired: {
+    kind: "conflict",
+    message: "La propuesta de tarifa ya venció.",
+  },
+  invalid_rate_proposal_validity_days: {
+    kind: "validation",
+    message: "La vigencia de la propuesta debe ser un número entero.",
+  },
+  rate_proposal_validity_days_out_of_range: {
+    kind: "validation",
+    message: "La vigencia de la propuesta debe estar entre 1 y 90 días.",
+  },
   lead_not_live: {
     kind: "conflict",
     message:

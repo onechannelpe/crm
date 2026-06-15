@@ -57,3 +57,8 @@ export type UpdateSourcingPolicyCommandInput = {
   branchId: number;
   engineAssignmentEnabled: boolean;
 };
+
+export type UpdateRateProposalPolicyCommandInput = {
+  actor: WorkflowActor;
+  validityDays: number;
+};

@@ -29,6 +29,7 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
+import { formatDate } from "~/lib/utils";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
@@ -70,6 +71,9 @@ export function RateProposalSection(props: RateProposalSectionProps) {
 
   const currentRound = () => props.rateRevisions.length;
   const isRenegotiation = () => currentRound() > 0;
+  const isExpired = () =>
+    props.proposal.outcome === "pending" &&
+    props.proposal.expiresAt <= Date.now();
 
   async function handleAccept() {
     setError(null);
@@ -206,6 +210,13 @@ export function RateProposalSection(props: RateProposalSectionProps) {
           </RecordInlineCell>
           <RecordInlineCell label="Moneda" icon={Package}>
             <FieldTextValue>{props.proposal.moneda}</FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="Vigencia" icon={Package}>
+            <FieldTextValue>
+              {isExpired()
+                ? `Vencio el ${formatDate(props.proposal.expiresAt)}`
+                : `Hasta el ${formatDate(props.proposal.expiresAt)}`}
+            </FieldTextValue>
           </RecordInlineCell>
         </FieldTable>
 

@@ -14,6 +14,7 @@ import type {
   RegisterLeadCommandInput,
   RequestRateRevisionCommandInput,
   SaveDigitalPolicyCommandInput,
+  UpdateRateProposalPolicyCommandInput,
   UpdateSourcingPolicyCommandInput,
   UpdateVenueCommandInput,
 } from "~/server/workflow/types";
@@ -37,6 +38,7 @@ import { removeFromFavoritesCommand } from "./commands/remove-from-favorites";
 import { requestRateRevisionCommand } from "./commands/request-rate-revision";
 import { requestSunatRefresh } from "./commands/request-sunat-refresh";
 import { saveDigitalPolicyCommand } from "./commands/save-digital-policy";
+import { updateRateProposalPolicy } from "./commands/update-rate-proposal-policy";
 import { updateSourcingPolicy } from "./commands/update-sourcing-policy";
 import { updateVenueCommand } from "./commands/update-venue";
 
@@ -151,5 +153,10 @@ export function createWorkflowCommandBus(
 
     updateSourcingPolicy: (input: UpdateSourcingPolicyCommandInput) =>
       updateSourcingPolicy(input, { sourcingPolicies: repos.sourcingPolicies }),
+
+    updateRateProposalPolicy: (input: UpdateRateProposalPolicyCommandInput) =>
+      updateRateProposalPolicy(input, {
+        rateProposalPolicies: repos.rateProposalPolicies,
+      }),
   };
 }

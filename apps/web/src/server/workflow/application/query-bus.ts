@@ -2,6 +2,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { WorkflowEngineGateway } from "~/server/workflow/application/ports/gateways";
 import { getLeadBootstrapPreview } from "~/server/workflow/application/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/application/queries/get-lead-detail";
+import { getRateProposalPolicy } from "~/server/workflow/application/queries/get-rate-proposal-policy";
 import { getSourcingPolicy } from "~/server/workflow/application/queries/get-sourcing-policy";
 import { listAssignableExecutives } from "~/server/workflow/application/queries/list-assignable-executives";
 import { listLeads } from "~/server/workflow/application/queries/list-leads";
@@ -67,5 +68,10 @@ export function createWorkflowQueryBus(
       getLeadBootstrapPreview({ party: repos.party }, engineGateway, input),
     getSourcingPolicy: (input: { actorRole: Role; branchId: number }) =>
       getSourcingPolicy({ sourcingPolicies: repos.sourcingPolicies }, input),
+    getRateProposalPolicy: (input: { actorRole: Role; branchId: number }) =>
+      getRateProposalPolicy(
+        { rateProposalPolicies: repos.rateProposalPolicies },
+        input,
+      ),
   };
 }

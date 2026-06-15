@@ -107,6 +107,8 @@ export type LeadDetailRateProposalView = {
   outcome: "pending" | "accepted" | "revision_requested";
   proposedBy: number;
   proposedAt: number;
+  validityDays: number;
+  expiresAt: number;
   decidedAt: number | null;
 };
 

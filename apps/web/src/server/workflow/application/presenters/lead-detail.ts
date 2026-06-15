@@ -160,6 +160,8 @@ function toRateProposalView(
     outcome: proposal.outcome,
     proposedBy: proposal.proposedBy,
     proposedAt: proposal.proposedAt,
+    validityDays: proposal.validityDays,
+    expiresAt: proposal.expiresAt,
     decidedAt: proposal.decidedAt,
   };
 }

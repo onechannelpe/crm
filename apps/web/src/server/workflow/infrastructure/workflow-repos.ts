@@ -10,6 +10,7 @@ import { createLeadRepo } from "./lead-repo";
 import { createLeadStateRepo } from "./lead-state-repo";
 import { createLeadVenueRepo } from "./lead-venue-repo";
 import { createPartyRepo } from "./party-repo";
+import { createRateProposalPolicyRepo } from "./rate-proposal-policy-repo";
 import { createRateProposalRepo } from "./rate-proposal-repo";
 import { createRateRevisionRepo } from "./rate-revision-repo";
 import { createSourceStatusRepo } from "./source-status-repo";
@@ -26,6 +27,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leadProfiles: createLeadProfileRepo(executor),
     leadHistory: createHistoryRepo(executor),
     rateProposals: createRateProposalRepo(executor),
+    rateProposalPolicies: createRateProposalPolicyRepo(executor),
     leadVenues: createLeadVenueRepo(executor),
     rateRevisions: createRateRevisionRepo(executor),
     rateRevisionFiles: createRateRevisionFilesRepo(executor),

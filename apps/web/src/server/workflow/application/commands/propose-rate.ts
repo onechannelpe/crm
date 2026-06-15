@@ -6,6 +6,10 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { ProposeRateCommandInput } from "~/server/workflow/types";
 
 import { proposeRate } from "../../domain/lead/commands";
+import {
+  computeRateProposalExpiration,
+  resolveRateProposalPolicy,
+} from "../../domain/pricing-policy";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
@@ -25,6 +29,15 @@ export async function proposeRateCommand(
     const now = Date.now();
     const round = await repos.rateProposals.nextRound(state.id);
     const proposalId = randomUUIDv7();
+    const policy = resolveRateProposalPolicy({
+      branchPolicy: await repos.rateProposalPolicies.findByBranchId(
+        input.actor.branchId,
+      ),
+    });
+    const expiresAt = computeRateProposalExpiration({
+      proposedAt: now,
+      validityDays: policy.validityDays,
+    });
 
     const transition = proposeRate(state, {
       actor: input.actor,
@@ -47,6 +60,8 @@ export async function proposeRateCommand(
       moneda: input.moneda,
       proposedBy: input.actor.userId,
       proposedAt: now,
+      validityDays: policy.validityDays,
+      expiresAt,
       outcome: "pending",
       decidedAt: null,
     });

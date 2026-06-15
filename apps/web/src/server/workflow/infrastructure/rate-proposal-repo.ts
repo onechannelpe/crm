@@ -24,6 +24,8 @@ function toRateProposal(row: RateProposalRow): RateProposal {
     moneda: row.moneda,
     proposedBy: row.proposed_by,
     proposedAt: row.proposed_at,
+    validityDays: row.validity_days,
+    expiresAt: row.expires_at,
     outcome: row.outcome,
     decidedAt: row.decided_at,
   };
@@ -48,6 +50,8 @@ export function createRateProposalRepo(
           moneda: values.moneda,
           proposed_by: values.proposedBy,
           proposed_at: values.proposedAt,
+          validity_days: values.validityDays,
+          expires_at: values.expiresAt,
           outcome: values.outcome,
           decided_at: values.decidedAt,
         } satisfies NewRateProposalRow)

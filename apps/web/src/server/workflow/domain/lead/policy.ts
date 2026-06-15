@@ -141,7 +141,7 @@ export function requireCapability(
 export function resolveAvailableActions(
   actor: { userId: number; role: Role },
   state: LeadState,
-  meta: { hasPendingProposal: boolean; rateRevisionCount: number },
+  meta: { hasActivePendingProposal: boolean; rateRevisionCount: number },
 ): LeadAvailableAction[] {
   const caps = resolveCapabilities(actor.role);
   const ownsLead = state.executiveId === actor.userId;
@@ -153,14 +153,14 @@ export function resolveAvailableActions(
   }
   // Back office proposes when the lead is in pricing and there is no proposal
   // currently awaiting the executive's response.
-  if (caps.has("propose-rate") && inPricing && !meta.hasPendingProposal) {
+  if (caps.has("propose-rate") && inPricing && !meta.hasActivePendingProposal) {
     actions.push("propose-rate");
   }
   if (
     caps.has("accept-rate") &&
     ownsLead &&
     inPricing &&
-    meta.hasPendingProposal
+    meta.hasActivePendingProposal
   ) {
     actions.push("accept-rate");
   }
@@ -168,7 +168,7 @@ export function resolveAvailableActions(
     caps.has("request-rate-revision") &&
     ownsLead &&
     inPricing &&
-    meta.hasPendingProposal &&
+    meta.hasActivePendingProposal &&
     meta.rateRevisionCount < MAX_RATE_REVISION_ROUNDS
   ) {
     actions.push("request-rate-revision");

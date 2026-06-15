@@ -46,5 +46,6 @@ export type {
   UpdateVenueCommandInput,
   AddVenueAccountsCommandInput,
   UpdateSourcingPolicyCommandInput,
+  UpdateRateProposalPolicyCommandInput,
 } from "./commands";
 export type { ListAssignableExecutivesInput, ListLeadsInput } from "./queries";
