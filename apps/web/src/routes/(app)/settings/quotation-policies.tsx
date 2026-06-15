@@ -52,7 +52,10 @@ export default function QuotationPoliciesPage() {
 
       <Show when={policy()} keyed>
         {(snapshot) => (
-          <form class="space-y-4 rounded border p-4" onSubmit={handleSubmit}>
+          <form
+            class="space-y-4 rounded border p-4"
+            onSubmit={(e) => void handleSubmit(e)}
+          >
             <Input
               type="number"
               min="1"
