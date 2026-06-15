@@ -158,7 +158,7 @@ async function countRateRevisions(
     .select((eb) => eb.fn.countAll<number>().as("count"))
     .where("lead_id", "=", leadId)
     .executeTakeFirstOrThrow();
-  return Number(row.count);
+  return row.count;
 }
 
 describe("lead action policy", () => {
