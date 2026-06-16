@@ -8,11 +8,17 @@ import Paperclip from "~/components/icons/paperclip";
 import Target from "~/components/icons/target";
 import Trash from "~/components/icons/trash";
 import { Button } from "~/components/ui/input/button";
+import {
+  InlineFieldEditor,
+  InlineOptionsEditor,
+} from "~/components/ui/input/inline-field-editor";
+import type { EditRateProposalInput } from "~/contracts/workflow/inputs";
 import { MAX_RATE_REVISION_FILES } from "~/contracts/workflow/limits";
 import type {
   LeadDetailRateProposalView,
   LeadDetailRateRevisionView,
 } from "~/contracts/workflow/views";
+import { MONEDAS } from "~/contracts/workflow/vocabulary";
 import {
   formatAmount,
   formatRate,
@@ -34,6 +40,7 @@ import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
   acceptRateMutation,
+  editRateProposalMutation,
   requestRateRevisionMutation,
 } from "../../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";
@@ -53,11 +60,13 @@ type RateProposalSectionProps = {
   rateRevisions: LeadDetailRateRevisionView[];
   canRequestRevision: boolean;
   canAccept: boolean;
+  canEdit: boolean;
 };
 
 export function RateProposalSection(props: RateProposalSectionProps) {
   const accept = useAction(acceptRateMutation);
   const requestRevision = useAction(requestRateRevisionMutation);
+  const edit = useAction(editRateProposalMutation);
 
   const [accepting, setAccepting] = createSignal(false);
   const [showRevisionForm, setShowRevisionForm] = createSignal(false);
@@ -89,6 +98,63 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       setAccepting(false);
     }
   }
+
+  async function submitField(patch: Partial<EditRateProposalInput>) {
+    try {
+      await edit({
+        leadId: props.leadId,
+        proposalId: props.proposal.id,
+        tarifaDebito: props.proposal.tarifaDebito,
+        tarifaCredito: props.proposal.tarifaCredito,
+        tarifaForaneo: props.proposal.tarifaForaneo,
+        fee: props.proposal.fee,
+        paybackPricing: props.proposal.paybackPricing,
+        moneda: props.proposal.moneda,
+        ...patch,
+      });
+      await revalidateWorkflowLead(props.leadId);
+    } catch (err) {
+      throw new Error(actionErrorMessage(err), { cause: err });
+    }
+  }
+
+  const numberFieldEdit = (
+    label: string,
+    current: number,
+    toPatch: (value: number) => Partial<EditRateProposalInput>,
+  ) =>
+    props.canEdit
+      ? {
+          ariaLabel: `Editar ${label}`,
+          renderEditor: (onClose: () => void) => (
+            <InlineFieldEditor
+              initialValue={String(current)}
+              ariaLabel={label}
+              type="number"
+              step="0.01"
+              min="0"
+              onSubmit={(value) => submitField(toPatch(Number(value)))}
+              onClose={onClose}
+            />
+          ),
+        }
+      : undefined;
+
+  const monedaFieldEdit = () =>
+    props.canEdit
+      ? {
+          ariaLabel: "Editar Moneda",
+          renderEditor: (onClose: () => void) => (
+            <InlineOptionsEditor
+              options={MONEDAS}
+              selected={props.proposal.moneda}
+              ariaLabel="Moneda"
+              onSubmit={(value) => submitField({ moneda: value })}
+              onClose={onClose}
+            />
+          ),
+        }
+      : undefined;
 
   async function handleUploadFiles(files: File[]) {
     if (files.length === 0 || uploading()) return;
@@ -187,30 +253,72 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       </RecordDetailSectionHeader>
       <RecordDetailSectionBody>
         <FieldTable>
-          <RecordInlineCell label="Payback" icon={Moneybag}>
+          <RecordInlineCell
+            label="Payback"
+            icon={Moneybag}
+            edit={numberFieldEdit(
+              "Payback",
+              props.proposal.paybackPricing,
+              (value) => ({ paybackPricing: value }),
+            )}
+          >
             <FieldTextValue>
               {formatAmount(props.proposal.paybackPricing)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="T. debito" icon={Target}>
+          <RecordInlineCell
+            label="T. debito"
+            icon={Target}
+            edit={numberFieldEdit(
+              "T. debito",
+              props.proposal.tarifaDebito,
+              (value) => ({ tarifaDebito: value }),
+            )}
+          >
             <FieldTextValue>
               {formatRate(props.proposal.tarifaDebito)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="T. credito" icon={Target}>
+          <RecordInlineCell
+            label="T. credito"
+            icon={Target}
+            edit={numberFieldEdit(
+              "T. credito",
+              props.proposal.tarifaCredito,
+              (value) => ({ tarifaCredito: value }),
+            )}
+          >
             <FieldTextValue>
               {formatRate(props.proposal.tarifaCredito)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="T. foraneo" icon={Target}>
+          <RecordInlineCell
+            label="T. foraneo"
+            icon={Target}
+            edit={numberFieldEdit(
+              "T. foraneo",
+              props.proposal.tarifaForaneo,
+              (value) => ({ tarifaForaneo: value }),
+            )}
+          >
             <FieldTextValue>
               {formatRate(props.proposal.tarifaForaneo)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="Fee" icon={Moneybag}>
+          <RecordInlineCell
+            label="Fee"
+            icon={Moneybag}
+            edit={numberFieldEdit("Fee", props.proposal.fee, (value) => ({
+              fee: value,
+            }))}
+          >
             <FieldTextValue>{formatAmount(props.proposal.fee)}</FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="Moneda" icon={Package}>
+          <RecordInlineCell
+            label="Moneda"
+            icon={Package}
+            edit={monedaFieldEdit()}
+          >
             <FieldTextValue>{props.proposal.moneda}</FieldTextValue>
           </RecordInlineCell>
           <Show when={props.reservationExpiresAt}>

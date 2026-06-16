@@ -80,6 +80,7 @@ export interface WorkflowHistoryEventsTable {
     | "rate_proposed"
     | "rate_revision_requested"
     | "rate_accepted"
+    | "lead_corrected"
     | "lead_reservation_expired"
     | "venue_added"
     | "venue_updated"

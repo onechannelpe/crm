@@ -35,6 +35,33 @@ export async function requestRateProposal(input: unknown) {
   });
 }
 
+export async function requestRateProposalEdit(input: unknown) {
+  return runAction({
+    name: "workflow.edit_rate_proposal",
+    access: { kind: "auth" },
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        proposalId: r.str("proposalId"),
+        tarifaDebito: r.num("tarifaDebito"),
+        tarifaCredito: r.num("tarifaCredito"),
+        tarifaForaneo: r.num("tarifaForaneo"),
+        fee: r.num("fee"),
+        paybackPricing: r.num("paybackPricing"),
+        moneda: r.enum("moneda", MONEDAS),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      getServerRuntime().workflow.commands.editRateProposal({
+        actor: workflowActor(actor),
+        ...payload,
+      }),
+  });
+}
+
 export async function requestRateAcceptance(input: unknown) {
   return runAction({
     name: "workflow.accept_rate",

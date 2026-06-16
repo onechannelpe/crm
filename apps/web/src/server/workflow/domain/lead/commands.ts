@@ -153,6 +153,62 @@ export function proposeRate(
   );
 }
 
+export function editRateProposal(
+  state: LeadState,
+  input: {
+    actor: Actor;
+    proposalId: string;
+    round: number;
+    now: number;
+  },
+): TransitionResult {
+  const authz = authorizeLeadAction("propose-rate", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+
+  const events: LeadEvent[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_corrected",
+      actorUserId: input.actor.userId,
+      payload: {
+        target: "rate_proposal",
+        proposalId: input.proposalId,
+        round: input.round,
+      },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
+// Inline correction of the commercial scope captured at registration. No stage
+// transition; the owning executive rewrites the profile fields.
+export function editCommercialScope(
+  state: LeadState,
+  input: { actor: Actor; now: number },
+): TransitionResult {
+  const authz = authorizeLeadAction(
+    "edit-commercial-scope",
+    input.actor,
+    state,
+  );
+  if (!authz.ok) return authz;
+
+  const events: LeadEvent[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_corrected",
+      actorUserId: input.actor.userId,
+      payload: { target: "commercial_scope" },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
 // The executive confirms the client agreed to the proposed rate.
 export function acceptRate(
   state: LeadState,

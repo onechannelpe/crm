@@ -1,6 +1,7 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
+import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
 
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import {
@@ -107,6 +108,42 @@ export function toRateAcceptedEntry(
       proposalId: proposalId.value,
     },
   });
+}
+
+export function toLeadCorrectedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const target = payload?.target;
+  if (target === "rate_proposal") {
+    const proposalId = requireString(payload, "proposalId", row);
+    if (!proposalId.ok) return proposalId;
+
+    const round = requireNumber(payload, "round", row);
+    if (!round.ok) return round;
+
+    return Ok({
+      ...toHistoryEntryBase(row),
+      eventType: "lead_corrected",
+      payload: {
+        target: "rate_proposal",
+        proposalId: proposalId.value,
+        round: round.value,
+      },
+    });
+  }
+  if (target === "commercial_scope") {
+    return Ok({
+      ...toHistoryEntryBase(row),
+      eventType: "lead_corrected",
+      payload: { target: "commercial_scope" },
+    });
+  }
+
+  return invalidHistoryPayload(
+    { id: row.id, eventType: row.event_type },
+    "target",
+  );
 }
 
 export function toVenueAddedEntry(

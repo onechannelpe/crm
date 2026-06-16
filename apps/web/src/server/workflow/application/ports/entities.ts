@@ -50,11 +50,21 @@ export type RateProposal = {
   decidedAt: number | null;
 };
 
+export type RateProposalNumbers = {
+  tarifaDebito: number;
+  tarifaCredito: number;
+  tarifaForaneo: number;
+  fee: number;
+  paybackPricing: number;
+  moneda: Moneda;
+};
+
 export type RateProposalRepository = {
   insert(values: RateProposal): Promise<void>;
   listByLeadId(leadId: string): Promise<RateProposal[]>;
   findLatest(leadId: string): Promise<RateProposal | undefined>;
   nextRound(leadId: string): Promise<number>;
+  updateNumbers(id: string, values: RateProposalNumbers): Promise<void>;
   markOutcome(
     id: string,
     outcome: RateProposalOutcome,

@@ -4,6 +4,7 @@ import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   RateProposal,
+  RateProposalNumbers,
   RateProposalOutcome,
   RateProposalRepository,
 } from "~/server/workflow/application/ports/entities";
@@ -75,6 +76,24 @@ export function createRateProposalRepo(
         .executeTakeFirst();
 
       return row ? toRateProposal(row) : undefined;
+    },
+
+    async updateNumbers(
+      id: string,
+      values: RateProposalNumbers,
+    ): Promise<void> {
+      await db
+        .updateTable("workflow_rate_proposals")
+        .set({
+          tarifa_debito: values.tarifaDebito,
+          tarifa_credito: values.tarifaCredito,
+          tarifa_foraneo: values.tarifaForaneo,
+          fee: values.fee,
+          payback_pricing: values.paybackPricing,
+          moneda: values.moneda,
+        })
+        .where("id", "=", id)
+        .execute();
     },
 
     async nextRound(leadId: string): Promise<number> {

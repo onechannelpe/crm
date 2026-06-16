@@ -3,6 +3,7 @@ import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 
 import {
+  toLeadCorrectedEntry,
   toRateAcceptedEntry,
   toRateProposedEntry,
   toRateRevisionRequestedEntry,
@@ -53,6 +54,8 @@ export function toHistoryEntry(
       return toRateRevisionRequestedEntry(row, payload.value);
     case "rate_accepted":
       return toRateAcceptedEntry(row, payload.value);
+    case "lead_corrected":
+      return toLeadCorrectedEntry(row, payload.value);
     case "lead_reservation_expired":
       return toReservationExpiredEntry(row, payload.value);
     case "venue_added":

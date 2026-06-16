@@ -5,6 +5,7 @@ import type {
   CreateLeadInput,
   CreateVenueInput,
   EditCommercialScopeInput,
+  EditRateProposalInput,
   LogLeadCallInput,
   ProposeRateInput,
   RecordRepLegalInput,
@@ -32,6 +33,8 @@ export type LogLeadCallCommandInput = WithActor<LogLeadCallInput>;
 export type ProposeRateCommandInput = WithActor<ProposeRateInput>;
 
 export type AcceptRateCommandInput = WithActor<AcceptRateInput>;
+
+export type EditRateProposalCommandInput = WithActor<EditRateProposalInput>;
 
 export type EditCommercialScopeCommandInput =
   WithActor<EditCommercialScopeInput>;

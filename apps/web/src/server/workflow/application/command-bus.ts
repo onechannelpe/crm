@@ -7,6 +7,7 @@ import type {
   AddVenueAccountsCommandInput,
   CreateVenueCommandInput,
   EditCommercialScopeCommandInput,
+  EditRateProposalCommandInput,
   LogLeadCallCommandInput,
   ProposeRateCommandInput,
   ReassignLeadCommandInput,
@@ -29,6 +30,7 @@ import { addVenueAccountsCommand } from "./commands/add-venue-accounts";
 import { createVenueCommand } from "./commands/create-venue";
 import { deleteLeadCommand } from "./commands/delete-lead";
 import { editCommercialScopeCommand } from "./commands/edit-commercial-scope";
+import { editRateProposalCommand } from "./commands/edit-rate-proposal";
 import { logLeadCallCommand } from "./commands/log-call";
 import { proposeRateCommand } from "./commands/propose-rate";
 import { reassignLeadCommand } from "./commands/reassign-lead";
@@ -102,6 +104,9 @@ export function createWorkflowCommandBus(
 
     proposeRate: (input: ProposeRateCommandInput) =>
       proposeRateCommand(input, { executor, now: now() }),
+
+    editRateProposal: (input: EditRateProposalCommandInput) =>
+      editRateProposalCommand(input, { executor, now: now() }),
 
     editCommercialScope: (input: EditCommercialScopeCommandInput) =>
       editCommercialScopeCommand(input, { executor, now: now() }),

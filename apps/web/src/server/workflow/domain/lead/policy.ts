@@ -156,6 +156,12 @@ export function resolveAvailableActions(
   if (caps.has("propose-rate") && inPricing && !meta.hasActivePendingProposal) {
     actions.push("propose-rate");
   }
+  // While a proposal is awaiting the executive, back office can still correct it
+  // in place (same permission as proposing). This is the escape hatch for a
+  // typo, so it does not need the executive to bounce the round back.
+  if (caps.has("propose-rate") && inPricing && meta.hasActivePendingProposal) {
+    actions.push("edit-rate-proposal");
+  }
   if (
     caps.has("accept-rate") &&
     ownsLead &&

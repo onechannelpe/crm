@@ -152,6 +152,7 @@ export function RecordInlineCell(
                 <LightIconButton
                   Icon={Pencil}
                   aria-label={edit().ariaLabel}
+                  title={edit().ariaLabel}
                   onClick={(event) => {
                     event.stopPropagation();
                     setEditing(true);

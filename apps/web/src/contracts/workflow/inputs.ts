@@ -79,6 +79,17 @@ export type AcceptRateInput = {
   proposalId: string;
 };
 
+export type EditRateProposalInput = {
+  leadId: string;
+  proposalId: string;
+  tarifaDebito: number;
+  tarifaCredito: number;
+  tarifaForaneo: number;
+  fee: number;
+  paybackPricing: number;
+  moneda: Moneda;
+};
+
 export type SaveDigitalPolicyInput = {
   leadId: string;
   linkScope: ProductScope;

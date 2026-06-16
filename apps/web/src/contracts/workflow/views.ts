@@ -14,6 +14,7 @@ export type LeadAvailableAction =
   | "log-call"
   | "add-note"
   | "propose-rate"
+  | "edit-rate-proposal"
   | "accept-rate"
   | "request-rate-revision"
   | "update-venue"

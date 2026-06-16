@@ -29,6 +29,9 @@ export function WorkflowStageSections(props: WorkflowStageSectionsProps) {
               canRequestRevision={props.data.availableActions.includes(
                 "request-rate-revision",
               )}
+              canEdit={props.data.availableActions.includes(
+                "edit-rate-proposal",
+              )}
             />
           )}
         </Show>

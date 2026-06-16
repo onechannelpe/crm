@@ -38,6 +38,7 @@ export type {
   LogLeadCallCommandInput,
   ProposeRateCommandInput,
   AcceptRateCommandInput,
+  EditRateProposalCommandInput,
   EditCommercialScopeCommandInput,
   SaveDigitalPolicyCommandInput,
   RecordRepLegalCommandInput,

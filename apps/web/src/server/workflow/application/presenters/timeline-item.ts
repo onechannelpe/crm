@@ -135,6 +135,18 @@ export function presentTimelineItem(
         description: `Aceptada por ${actorDisplayName}.`,
         actorDisplayName,
       };
+    case "lead_corrected":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title:
+          event.payload.target === "rate_proposal"
+            ? "Tarifa corregida"
+            : "Información comercial corregida",
+        description: `Corregida por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
     case "lead_reservation_expired":
       return {
         id: `history:${event.id}`,
