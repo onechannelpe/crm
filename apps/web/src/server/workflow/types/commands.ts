@@ -15,9 +15,6 @@ import type {
 
 import type { WorkflowActor } from "./actor";
 
-// A command input is the client payload plus the authenticated actor that the
-// action injects server-side. The payload is the contract; the actor never
-// crosses the wire.
 type WithActor<TPayload> = TPayload & { actor: WorkflowActor };
 
 export type RegisterLeadCommandInput = WithActor<CreateLeadInput>;

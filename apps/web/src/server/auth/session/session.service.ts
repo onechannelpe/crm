@@ -35,7 +35,7 @@ const noopLogger = {
  * The single owner of the session lifecycle. `establish` is the only place that
  * mints a session row + token; `resolve` is the only place that turns a cookie
  * token into an `AuthSession`; `revoke`/`revokeAllForUser` are the only places
- * that destroy sessions. Every auth flow funnels through these — no flow builds,
+ * that destroy sessions. Every auth flow funnels through these. No flow builds,
  * reads, or deletes a session row directly.
  */
 export function createSessionService(deps: SessionServiceDeps) {

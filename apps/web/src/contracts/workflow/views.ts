@@ -92,8 +92,6 @@ export type LeadDetailLeadView = {
   nextStep: LeadNextStep;
   createdAt: number;
   updatedAt: number;
-  // The timestamp at which this lead's RUC hold lapses.
-  // Null when the lead is not in a time-boxed stage.
   reservationExpiresAt: number | null;
 };
 

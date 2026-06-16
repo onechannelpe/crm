@@ -1,14 +1,3 @@
-/**
- * The wire failure DTO. This is the only error shape that crosses the RPC
- * boundary to the client. It carries nothing internal by construction (no
- * stack, no cause, no dev message), so there is no "sanitize" step to forget:
- * the rich internal failure (`DomainError`) is projected into this once, at the
- * boundary, via `toWire`.
- *
- * `message` is render-ready Spanish, authored on the server (catalog copy, a
- * class default, or the generic line). The client renders it verbatim and owns
- * no copy. `kind` and `code` are for client behavior (branching), never display.
- */
 export const WIRE_KINDS = [
   "validation",
   "unauthenticated",
@@ -31,18 +20,10 @@ export interface WireError {
   retryAfterSeconds?: number;
 }
 
-// Last-resort copy shown when a caught value is not a recognizable wire error
-// (a network failure, a serialization glitch, a raw throw). This is the
-// client's own fallback, distinct from the server's internal-fault copy: they
-// read alike today but change for different reasons, so they stay separate.
+// Client fallback for failures that never reached the server wire projection.
 const FALLBACK_MESSAGE = "Ocurrió un error inesperado.";
 
-/**
- * Thrown at the public action edge (`runAction`). Its enumerable own fields are
- * the `WireError`, so it serializes cleanly across the RPC boundary and the
- * client reconstructs it with `parseWireError`. It is intentionally not a
- * carrier of internal data.
- */
+// Enumerable wire fields make ActionError survive RPC serialization.
 export class ActionError extends Error {
   readonly kind: WireKind;
   readonly code: string | null;
@@ -108,11 +89,6 @@ export function parseWireError(error: unknown): WireError {
   return { kind: "internal", code: null, message: FALLBACK_MESSAGE };
 }
 
-/**
- * The user-facing message for a caught action error. Copy is authored on the
- * server (catalog entry, class default, or the generic line) and rides on the
- * wire, so the client renders it verbatim and owns no copy table.
- */
 export function actionErrorMessage(error: unknown): string {
   return parseWireError(error).message;
 }

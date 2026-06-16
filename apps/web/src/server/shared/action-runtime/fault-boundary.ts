@@ -5,14 +5,6 @@ import {
   unexpectedFault,
 } from "~/server/shared/domain-error";
 
-/**
- * The single internal-to-wire boundary, shared by every action surface. It owns
- * one rule: faults (server bugs, third-party failures) are reported and become
- * `internal`; expected domain failures project straight to the wire. It knows
- * nothing about actors, identity, or telemetry, so both the authenticated
- * pipeline (`runAction`) and the public/auth pipeline (`runPublicAction`) build
- * on it without duplicating the fold.
- */
 export type FaultPorts = {
   report: (error: unknown) => void;
 };

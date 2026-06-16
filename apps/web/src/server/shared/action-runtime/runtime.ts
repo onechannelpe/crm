@@ -19,20 +19,6 @@ import {
   type TelemetryContext,
 } from "./telemetry";
 
-/**
- * Every action is an RPC trust boundary. The pipeline runs fixed, named stages
- * in fail-fast order (inputs -> identity -> authorization -> business) and folds
- * every outcome into a single `WireError` channel:
- *
- *   parse -> authenticate -> [actor known] -> authorize/step-up -> execute
- *
- * `toWire` is the only internal-to-wire projection and runs once per failure;
- * there is no separate sanitize step because `WireError` has no internal fields
- * to strip. A telemetry row is written the moment an actor is authenticated, so
- * authorization, step-up, and business failures are all recorded and attributed
- * (a denied attempt by a known actor is auditable); failures before identity
- * (bad payload, no session) surface without a row.
- */
 type ActionCommon = {
   name: string;
   access: ActionAccess;
@@ -175,9 +161,8 @@ export function createActionRunner(ports: RuntimePorts) {
   return { runAction, runActionResult };
 }
 
-// The default runner wires production ports. `createActionRunner` is exported so
-// tests construct a runner with fake ports (clock, Sentry, telemetry); the
-// request-scoped reads (identity, request context) are still stubbed there.
+// The default runner wires production ports. Tests use createActionRunner with
+// fake ports while request-scoped reads remain stubbed at their module boundary.
 const runner = createActionRunner(defaultPorts);
 export const runAction = runner.runAction;
 export const runActionResult = runner.runActionResult;
