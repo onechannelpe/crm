@@ -16,7 +16,7 @@ export async function getAuditReaderSnapshot(
   await requirePermission("audit:read");
 
   const service = createAuditReaderService({
-    auditLogs: getServerRuntime().admin.auditLogs,
+    events: getServerRuntime().admin.events,
   });
 
   const result = await service.getSnapshot(params);

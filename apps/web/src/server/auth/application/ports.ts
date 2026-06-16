@@ -11,13 +11,13 @@ export interface AdminSessionRevocationPort {
     syncHealth: "ok" | "stale" | "reauth_required";
     syncUpdatedAt: number;
   }): Promise<void>;
-  createAuditLog(input: {
-    userId: number;
-    action: string;
+  appendEvent(input: {
+    type: string;
     entityType: string;
-    entityId: number;
-    changes: string | null;
-    createdAt: number;
+    entityId: string | number;
+    actorUserId: number;
+    payload?: unknown;
+    occurredAt: number;
   }): Promise<void>;
 }
 
@@ -33,12 +33,12 @@ export interface AuthSessionLogoutPort {
     syncUpdatedAt: number;
   }): Promise<void>;
   clearSessionCookie(): void;
-  createAuditLog(input: {
-    userId: number;
-    action: string;
+  appendEvent(input: {
+    type: string;
     entityType: string;
-    entityId: number;
-    changes: string | null;
-    createdAt: number;
+    entityId: string | number;
+    actorUserId: number;
+    payload?: unknown;
+    occurredAt: number;
   }): Promise<void>;
 }

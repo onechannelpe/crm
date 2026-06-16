@@ -1,7 +1,3 @@
-import {
-  serializeAuditChanges,
-  sessionRevokedByAdminChanges,
-} from "~/contracts/audit";
 import type { AdminSessionRevocationPort } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import type { DomainError } from "~/server/shared/domain-error";
@@ -20,15 +16,13 @@ export async function revokeUserSession(
     syncHealth: "reauth_required",
     syncUpdatedAt: now,
   });
-  await port.createAuditLog({
-    userId: ctx.actor.userId,
-    action: "session_revoked_by_admin",
+  await port.appendEvent({
+    type: "session_revoked_by_admin",
     entityType: "user_session",
     entityId: input.targetUserId,
-    changes: serializeAuditChanges(
-      sessionRevokedByAdminChanges(input.sessionId, ctx.actor.userId),
-    ),
-    createdAt: now,
+    actorUserId: ctx.actor.userId,
+    payload: { sessionId: input.sessionId, revokedBy: ctx.actor.userId },
+    occurredAt: now,
   });
   return Ok({ success: true });
 }

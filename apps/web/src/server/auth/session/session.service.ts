@@ -71,13 +71,12 @@ export function createSessionService(deps: SessionServiceDeps) {
       });
 
       if (spec.auditAction) {
-        await deps.auditLogs.create({
-          user_id: spec.user.id,
-          action: spec.auditAction,
-          entity_type: "user",
-          entity_id: spec.user.id,
-          changes: null,
-          created_at: nowTs,
+        await deps.events.append({
+          type: spec.auditAction,
+          entityType: "user",
+          entityId: spec.user.id,
+          actorUserId: spec.user.id,
+          occurredAt: nowTs,
         });
       }
 

@@ -65,47 +65,9 @@ export interface WorkflowLeadFavoritesTable {
   created_at: number;
 }
 
-export interface WorkflowHistoryEventsTable {
-  id: Generated<string>;
-  lead_id: string;
-  event_type:
-    | "lead_registered"
-    | "lead_status_updated"
-    | "lead_priority_updated"
-    | "lead_reviewed"
-    | "workflow_stage_changed"
-    | "lead_assigned"
-    | "lead_reassigned"
-    | "rep_legal_recorded"
-    | "rate_proposed"
-    | "rate_revision_requested"
-    | "rate_accepted"
-    | "lead_corrected"
-    | "lead_reservation_expired"
-    | "venue_added"
-    | "venue_updated"
-    | "venue_accounts_added"
-    | "call_logged"
-    | "note_added";
-  actor_user_id: number | null;
-  subject_user_id: number | null;
-  payload_json: string | null;
-  occurred_at: number;
-}
-
 export interface LeadSourcingPoliciesTable {
   branch_id: number;
   engine_assignment_enabled: number;
   updated_at: number;
   updated_by_user_id: number;
-}
-
-export interface WorkflowAuditLogsTable {
-  id: Generated<string>;
-  user_id: number;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  changes: string | null;
-  created_at: number;
 }

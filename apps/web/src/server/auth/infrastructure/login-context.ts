@@ -11,7 +11,7 @@ import {
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
@@ -29,7 +29,7 @@ export function createAuthLoginContext(
       loginFlows: createLoginFlowsRepo(executor),
       users: createUsersRepo(executor),
       sessions: createSessionRepository(executor),
-      auditLogs: createAuditLogsRepo(executor),
+      events: createEventsRepo(executor),
       authThrottle: createAuthThrottleRepo(executor),
       authEvents: createAuthEventsRepo(executor),
       userTotpFactors: createUserTotpFactorsRepo(executor),

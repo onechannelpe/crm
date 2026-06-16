@@ -1,6 +1,6 @@
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import type { AdminSessionRevocationPort } from "../application/ports";
 
@@ -14,7 +14,7 @@ export function createAdminSessionRevocationContext(
   deps: AdminSessionRevocationRuntimeDeps,
 ): AdminSessionRevocationPort {
   const executor = deps.executor;
-  const auditLogs = createAuditLogsRepo(executor);
+  const events = createEventsRepo(executor);
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
@@ -40,15 +40,8 @@ export function createAdminSessionRevocationContext(
         sync_updated_at: input.syncUpdatedAt,
       });
     },
-    async createAuditLog(input) {
-      await auditLogs.create({
-        user_id: input.userId,
-        action: input.action,
-        entity_type: input.entityType,
-        entity_id: input.entityId,
-        changes: input.changes,
-        created_at: input.createdAt,
-      });
+    async appendEvent(input) {
+      await events.append(input);
     },
   };
 }

@@ -18,13 +18,12 @@ export async function logoutUser(
     syncUpdatedAt: now,
   });
   port.clearSessionCookie();
-  await port.createAuditLog({
-    userId,
-    action: "logout",
+  await port.appendEvent({
+    type: "logout",
     entityType: "user",
     entityId: userId,
-    changes: null,
-    createdAt: now,
+    actorUserId: userId,
+    occurredAt: now,
   });
 
   return Ok(undefined);

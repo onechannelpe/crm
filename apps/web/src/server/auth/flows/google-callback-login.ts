@@ -10,7 +10,7 @@ import type {
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createUsersRepo } from "~/server/users/repos-users";
@@ -21,7 +21,7 @@ type GoogleCallbackDeps = {
   users: ReturnType<typeof createUsersRepo>;
   loginFlows: ReturnType<typeof createLoginFlowsRepo>;
   sessions: ReturnType<typeof createSessionRepository>;
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
   authEvents: ReturnType<typeof createAuthEventsRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;

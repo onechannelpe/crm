@@ -77,7 +77,7 @@ export interface Database {
   search_enrichment_jobs: search.SearchEnrichmentJobsTable;
   search_enrichment_overlays: search.SearchEnrichmentOverlaysTable;
   search_enrichment_completion_outbox: search.SearchEnrichmentCompletionOutboxTable;
-  audit_logs: platform.AuditLogsTable;
+  events: platform.EventsTable;
   audit_action_policies: platform.AuditActionPoliciesTable;
   report_export_jobs: platform.ReportExportJobsTable;
   report_export_downloads: platform.ReportExportDownloadsTable;
@@ -96,8 +96,6 @@ export interface Database {
   workflow_rate_revision_files: pricing.WorkflowRateRevisionFilesTable;
   workflow_lead_assignments: workflow.WorkflowLeadAssignmentsTable;
   workflow_lead_favorites: workflow.WorkflowLeadFavoritesTable;
-  workflow_history_events: workflow.WorkflowHistoryEventsTable;
-  workflow_audit_logs: workflow.WorkflowAuditLogsTable;
   lead_sourcing_policies: workflow.LeadSourcingPoliciesTable;
   workflow_integration_jobs: integrations.WorkflowIntegrationJobsTable;
   workflow_integration_import_rows: integrations.WorkflowIntegrationImportRowsTable;

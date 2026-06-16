@@ -1,3 +1,4 @@
+import { summarizeFieldChanges } from "~/contracts/events";
 import type { LeadHistoryEntry } from "~/server/workflow/domain/history";
 import type {
   LeadCallOutcome,
@@ -135,17 +136,31 @@ export function presentTimelineItem(
         description: `Aceptada por ${actorDisplayName}.`,
         actorDisplayName,
       };
-    case "lead_corrected":
+    case "rate_proposal_corrected":
       return {
         id: `history:${event.id}`,
         occurredAt: event.occurredAt,
         kind: "system",
-        title:
-          event.payload.target === "rate_proposal"
-            ? "Tarifa corregida"
-            : "Información comercial corregida",
-        description: `Corregida por ${actorDisplayName}.`,
+        title: "Tarifa corregida",
+        description:
+          event.changes.length > 0
+            ? summarizeFieldChanges(event.changes)
+            : `Corregida por ${actorDisplayName}.`,
         actorDisplayName,
+        changes: event.changes,
+      };
+    case "commercial_scope_corrected":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Información comercial corregida",
+        description:
+          event.changes.length > 0
+            ? summarizeFieldChanges(event.changes)
+            : `Corregida por ${actorDisplayName}.`,
+        actorDisplayName,
+        changes: event.changes,
       };
     case "lead_reservation_expired":
       return {

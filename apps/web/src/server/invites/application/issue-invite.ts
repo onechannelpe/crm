@@ -1,5 +1,4 @@
 import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
-import { createAuditService } from "~/server/shared/audit";
 
 import type {
   InviteDeps,
@@ -13,7 +12,6 @@ export async function issueInvite(
   runtime: InviteRuntime,
   input: IssueInviteInput,
 ): Promise<InviteIssueResult> {
-  const inviteAudit = createAuditService(repos);
   const issuedAt = runtime.now();
   const expiresAt = input.expiresAt ?? issuedAt + runtime.inviteTtlMs;
 
@@ -35,18 +33,14 @@ export async function issueInvite(
     sent_at: null,
   });
 
-  await inviteAudit.log(
-    input.actorUserId,
-    "user_invite_issued",
-    "user",
-    input.userId,
-    {
-      inviteId,
-      email: input.email,
-      role: input.role,
-      expiresAt,
-    },
-  );
+  await repos.events.append({
+    type: "user_invite_issued",
+    entityType: "user",
+    entityId: input.userId,
+    actorUserId: input.actorUserId,
+    payload: { inviteId, email: input.email, role: input.role, expiresAt },
+    occurredAt: issuedAt,
+  });
 
   return { inviteId, token, expiresAt };
 }

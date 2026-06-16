@@ -33,7 +33,7 @@ import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignment
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
 import type { ServerInfra } from "./infra";
@@ -43,7 +43,7 @@ function createCapacityRepos(executor: DatabaseExecutor) {
     users: createCapacityUsersRepo(executor),
     teams: createCapacityTeamsRepo(executor),
     branchSupervisors: createBranchSupervisorsRepo(executor),
-    auditLogs: createAuditLogsRepo(executor),
+    events: createEventsRepo(executor),
     capacityRequests: createCapacityRequestsRepo(executor),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),
     searchPolicyOverrides: createSearchPolicyOverridesRepo(executor),
@@ -64,7 +64,7 @@ export function createCapacityRuntime(infra: ServerInfra) {
   const uow = createExecutorUow(infra.db, (txDb) => createCapacityRepos(txDb));
   const rateLimitDeps = {
     actionRateLimits: createActionRateLimitsRepo(infra.db),
-    auditLogs: readRepos.auditLogs,
+    events: readRepos.events,
   };
 
   return {

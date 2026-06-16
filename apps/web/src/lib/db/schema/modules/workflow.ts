@@ -162,46 +162,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("workflow_history_events")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("lead_id", "text", (col) =>
-      col.notNull().references("workflow_leads.id").onDelete("cascade"),
-    )
-    .addColumn("event_type", "varchar(40)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
-    .addColumn("subject_user_id", "integer", (col) =>
-      col.references("users.id"),
-    )
-    .addColumn("payload_json", "text")
-    .addColumn("occurred_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_history_events_lead")
-    .on("workflow_history_events")
-    .columns(["lead_id", "occurred_at"])
-    .execute();
-
-  await db.schema
-    .createTable("workflow_audit_logs")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("action", "varchar(255)", (col) => col.notNull())
-    .addColumn("entity_type", "varchar(100)", (col) => col.notNull())
-    .addColumn("entity_id", "text", (col) => col.notNull())
-    .addColumn("changes", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_audit_entity_created")
-    .on("workflow_audit_logs")
-    .columns(["entity_type", "entity_id", "created_at"])
-    .execute();
-
-  await db.schema
     .createTable("lead_sourcing_policies")
     .addColumn("branch_id", "integer", (col) =>
       col.primaryKey().references("branches.id").onDelete("cascade"),

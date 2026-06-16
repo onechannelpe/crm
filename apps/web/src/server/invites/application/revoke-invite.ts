@@ -1,5 +1,4 @@
 import { canAssignRole } from "~/lib/auth/access/rbac";
-import { createAuditService } from "~/server/shared/audit";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -30,19 +29,19 @@ export async function revokeInvite(
       return Err(fail("role_not_assignable"));
     }
 
+    const revokedAt = runtime.now();
     await transactionRepos.userInvites.revokePendingByUser(
       invite.user_id,
-      runtime.now(),
+      revokedAt,
     );
-    await createAuditService(transactionRepos).log(
-      input.actorUserId,
-      "user_invite_revoked",
-      "user",
-      invite.user_id,
-      {
-        inviteId: invite.id,
-      },
-    );
+    await transactionRepos.events.append({
+      type: "user_invite_revoked",
+      entityType: "user",
+      entityId: invite.user_id,
+      actorUserId: input.actorUserId,
+      payload: { inviteId: invite.id },
+      occurredAt: revokedAt,
+    });
 
     return Ok(undefined);
   });

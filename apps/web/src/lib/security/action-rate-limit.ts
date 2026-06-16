@@ -1,12 +1,10 @@
-import type { Insertable } from "kysely";
 import { getRequestEvent } from "solid-js/web";
 
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { Database } from "~/lib/db/types";
-import { rateLimited, throwDomain } from "~/server/shared/domain-error";
-type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { rateLimited, throwDomain } from "~/server/shared/domain-error";
+import type { EventsRepo } from "~/server/shared/repos-events";
 
 interface ActionRateLimitPolicy {
   /** Max requests per authenticated user per window. */
@@ -28,9 +26,7 @@ export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
 
 export type RateLimitDeps = {
   actionRateLimits: ActionRateLimitsRepo;
-  auditLogs: {
-    create(values: NewAuditLogRow): unknown;
-  };
+  events: Pick<EventsRepo, "append">;
 };
 
 function resolveRequestIp(): string {
@@ -81,19 +77,13 @@ async function blockWithAudit(params: {
     String(retryAfterSeconds),
   );
 
-  await deps.auditLogs.create({
-    user_id: userId,
-    action: "rate_limit_exceeded",
-    entity_type: "user",
-    entity_id: userId,
-    changes: JSON.stringify({
-      actionName,
-      scope,
-      limit,
-      windowMs,
-      retryAfterMs,
-    }),
-    created_at: now,
+  await deps.events.append({
+    type: "rate_limit_exceeded",
+    entityType: "user",
+    entityId: userId,
+    actorUserId: userId,
+    payload: { actionName, scope, limit, windowMs, retryAfterMs },
+    occurredAt: now,
   });
 
   throwDomain(

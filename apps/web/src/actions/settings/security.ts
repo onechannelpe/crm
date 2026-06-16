@@ -62,7 +62,7 @@ export async function changePassword(
 
     execute: async ({ actor }, input) => {
       const userId = actor.userId;
-      const { users, auditLogs } = getServerRuntime().security;
+      const { users, events } = getServerRuntime().security;
 
       const user = await users.findById(userId);
 
@@ -83,13 +83,12 @@ export async function changePassword(
 
       await users.updatePassword(userId, newHash);
 
-      await auditLogs.create({
-        user_id: userId,
-        action: "password_changed",
-        entity_type: "user",
-        entity_id: userId,
-        changes: null,
-        created_at: Date.now(),
+      await events.append({
+        type: "password_changed",
+        entityType: "user",
+        entityId: userId,
+        actorUserId: userId,
+        occurredAt: Date.now(),
       });
 
       return Ok({ message: "Contraseña actualizada" });
@@ -104,7 +103,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { passkeys, auditLogs } = getServerRuntime().security;
+      const { passkeys, events } = getServerRuntime().security;
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
 
@@ -118,13 +117,12 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 
       await passkeys.deleteAllByUser(userId);
 
-      await auditLogs.create({
-        user_id: userId,
-        action: "passkeys_removed",
-        entity_type: "user",
-        entity_id: userId,
-        changes: null,
-        created_at: Date.now(),
+      await events.append({
+        type: "passkeys_removed",
+        entityType: "user",
+        entityId: userId,
+        actorUserId: userId,
+        occurredAt: Date.now(),
       });
 
       return Ok({ message: "Claves de acceso eliminadas" });
@@ -139,7 +137,7 @@ export async function disableTotp(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { userTotpFactors, userTotpRecoveryCodes, auditLogs } =
+      const { userTotpFactors, userTotpRecoveryCodes, events } =
         getServerRuntime().security;
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
@@ -155,13 +153,12 @@ export async function disableTotp(): Promise<{ message: string }> {
       await userTotpFactors.disable(userId);
       await userTotpRecoveryCodes.deleteAllByUser(userId);
 
-      await auditLogs.create({
-        user_id: userId,
-        action: "totp_disabled",
-        entity_type: "user",
-        entity_id: userId,
-        changes: null,
-        created_at: Date.now(),
+      await events.append({
+        type: "totp_disabled",
+        entityType: "user",
+        entityId: userId,
+        actorUserId: userId,
+        occurredAt: Date.now(),
       });
 
       return Ok({ message: "Aplicación de autenticación desactivada" });

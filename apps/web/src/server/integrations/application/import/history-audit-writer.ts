@@ -51,14 +51,14 @@ export async function writeHistoryAndAudit(input: {
       actor_user_id: primaryHistory.actorUserId,
       subject_user_id: primaryHistory.subjectUserId,
       payload_json: serializePayload(primaryHistory.payload),
+      changes_json: null,
       occurred_at: primaryHistory.occurredAt,
     })
     .execute();
 
   await input.executor
-    .insertInto("workflow_audit_logs")
+    .insertInto("audit_logs")
     .values({
-      id: randomUUIDv7("hex", mutation.changedAt),
       user_id: input.actorId,
       action:
         row.type === "import_status"
@@ -122,6 +122,7 @@ export async function writeHistoryAndAudit(input: {
         actor_user_id: reviewedHistory.actorUserId,
         subject_user_id: reviewedHistory.subjectUserId,
         payload_json: serializePayload(reviewedHistory.payload),
+        changes_json: null,
         occurred_at: reviewedHistory.occurredAt,
       },
       {
@@ -131,15 +132,15 @@ export async function writeHistoryAndAudit(input: {
         actor_user_id: stageHistory.actorUserId,
         subject_user_id: stageHistory.subjectUserId,
         payload_json: serializePayload(stageHistory.payload),
+        changes_json: null,
         occurred_at: stageHistory.occurredAt,
       },
     ])
     .execute();
 
   await input.executor
-    .insertInto("workflow_audit_logs")
+    .insertInto("audit_logs")
     .values({
-      id: randomUUIDv7("hex", mutation.changedAt),
       user_id: input.actorId,
       action: "lead_reviewed",
       entity_type: "lead",

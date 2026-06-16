@@ -1,3 +1,4 @@
+import type { FieldChange } from "~/contracts/events";
 import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
@@ -11,6 +12,7 @@ import { createHistoryEvent } from "../history";
 import type { LeadEvent } from "./events";
 import { authorizeLeadAction } from "./policy";
 import { applyEvents } from "./reducer";
+import { isReservationActive } from "./reservation";
 import type { LeadState } from "./state";
 
 type Actor = { userId: number; role: Role };
@@ -153,29 +155,38 @@ export function proposeRate(
   );
 }
 
+// Back office corrects a pending proposal's numbers in place. The command layer
+// owns the proposal entity (it resolves the latest pending proposal and diffs
+// old vs new); the domain owns every lead-state rule: who may correct, the
+// stage, and that the RUC hold is still live. The field-level changes ride on
+// the event so the activity feed and the audit log both show exactly what moved.
 export function editRateProposal(
   state: LeadState,
   input: {
     actor: Actor;
     proposalId: string;
     round: number;
+    changes: FieldChange[];
     now: number;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
   if (!authz.ok) return authz;
   if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!isReservationActive(state, input.now)) {
+    return Err(fail("rate_proposal_expired"));
+  }
 
   const events: LeadEvent[] = [
     createHistoryEvent({
       leadId: state.id,
-      eventType: "lead_corrected",
+      eventType: "rate_proposal_corrected",
       actorUserId: input.actor.userId,
       payload: {
-        target: "rate_proposal",
         proposalId: input.proposalId,
         round: input.round,
       },
+      changes: input.changes,
       occurredAt: input.now,
     }),
   ];
@@ -187,7 +198,7 @@ export function editRateProposal(
 // transition; the owning executive rewrites the profile fields.
 export function editCommercialScope(
   state: LeadState,
-  input: { actor: Actor; now: number },
+  input: { actor: Actor; changes: FieldChange[]; now: number },
 ): TransitionResult {
   const authz = authorizeLeadAction(
     "edit-commercial-scope",
@@ -199,9 +210,10 @@ export function editCommercialScope(
   const events: LeadEvent[] = [
     createHistoryEvent({
       leadId: state.id,
-      eventType: "lead_corrected",
+      eventType: "commercial_scope_corrected",
       actorUserId: input.actor.userId,
-      payload: { target: "commercial_scope" },
+      payload: {},
+      changes: input.changes,
       occurredAt: input.now,
     }),
   ];

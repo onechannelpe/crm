@@ -1,7 +1,7 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
@@ -9,7 +9,7 @@ type PasskeyLoginStateRepos = {
   loginFlows: ReturnType<typeof createLoginFlowsRepo>;
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
 };
 
 type PasskeyFlowRecord = Awaited<

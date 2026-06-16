@@ -1,3 +1,4 @@
+import type { FieldChange } from "~/contracts/events";
 import type {
   LeadCallOutcome,
   LeadPriority,
@@ -18,7 +19,8 @@ export type LeadHistoryEventType =
   | "rate_proposed"
   | "rate_revision_requested"
   | "rate_accepted"
-  | "lead_corrected"
+  | "rate_proposal_corrected"
+  | "commercial_scope_corrected"
   | "lead_reservation_expired"
   | "venue_added"
   | "venue_updated"
@@ -82,9 +84,11 @@ export type LeadHistoryPayloadByEvent = {
   rate_accepted: {
     proposalId: string;
   };
-  lead_corrected:
-    | { target: "rate_proposal"; proposalId: string; round: number }
-    | { target: "commercial_scope" };
+  rate_proposal_corrected: {
+    proposalId: string;
+    round: number;
+  };
+  commercial_scope_corrected: Record<string, never>;
   lead_reservation_expired: {
     fromStage: LeadStage;
   };
@@ -115,6 +119,7 @@ export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
     actorUserId: number | null;
     subjectUserId: number | null;
     payload: LeadHistoryPayloadByEvent[TEventType];
+    changes: FieldChange[];
     occurredAt: number;
   };
 
@@ -137,6 +142,7 @@ export type LeadHistoryEntryFor<
   actorUserId: number | null;
   subjectUserId: number | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
+  changes: FieldChange[];
   occurredAt: number;
   actor: LeadHistoryPerson | null;
   subject: LeadHistoryPerson | null;
@@ -154,6 +160,7 @@ export function createHistoryEvent<
   actorUserId?: number | null;
   subjectUserId?: number | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
+  changes?: FieldChange[];
   occurredAt: number;
 }): LeadHistoryEventDraftFor<TEventType> {
   return {
@@ -162,6 +169,7 @@ export function createHistoryEvent<
     actorUserId: input.actorUserId ?? null,
     subjectUserId: input.subjectUserId ?? null,
     payload: input.payload,
+    changes: input.changes ?? [],
     occurredAt: input.occurredAt,
   };
 }

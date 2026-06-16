@@ -10,7 +10,7 @@ import type {
 import type { UserSessionRow } from "~/lib/auth/types";
 import type { UsersTable } from "~/lib/db/types";
 import type { UserId } from "~/server/shared/ids";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { EventsRepo } from "~/server/shared/repos-events";
 
 type UserRow = Selectable<UsersTable>;
 
@@ -88,20 +88,18 @@ export interface SessionUsersPort {
 }
 
 /**
- * Only the audit write `establish` needs. The params stay tied to the repo so
- * call sites match the real schema, but the result is ignored, so the port does
- * not demand the repo's kysely `InsertResult` (a fake `Promise<void>` suffices).
+ * Only the event append `establish` needs. The input stays tied to the repo so
+ * call sites match the real shape, but the result is ignored, so the port does
+ * not demand the repo's id array (a fake `Promise<void>` suffices).
  */
 export interface SessionAuditPort {
-  create(
-    values: Parameters<ReturnType<typeof createAuditLogsRepo>["create"]>[0],
-  ): Promise<unknown>;
+  append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
 }
 
 export interface SessionServiceDeps {
   sessions: SessionRepositoryPort;
   users: SessionUsersPort;
-  auditLogs: SessionAuditPort;
+  events: SessionAuditPort;
   now?: () => number;
   logger?: {
     error(message: string, meta?: unknown): void;

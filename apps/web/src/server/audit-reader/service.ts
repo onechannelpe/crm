@@ -1,5 +1,6 @@
+import { parseFieldChanges } from "~/contracts/events";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -12,7 +13,7 @@ import {
 } from "./contracts";
 
 interface AuditReaderDeps {
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
 }
 
 function trimOrUndefined(value: string | undefined): string | undefined {
@@ -112,7 +113,7 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
       const action = trimOrUndefined(params?.action);
       const entityType = trimOrUndefined(params?.entityType);
 
-      const events = await deps.auditLogs.listRecent({
+      const events = await deps.events.listRecent({
         fromInclusive,
         toInclusive: now,
         limit,
@@ -126,12 +127,13 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
         windowMinutes,
         events: events.map((row) => ({
           id: row.id,
-          createdAt: row.created_at,
-          userId: row.user_id,
-          action: row.action,
+          occurredAt: row.occurred_at,
+          actorUserId: row.actor_user_id,
+          type: row.type,
           entityType: row.entity_type,
           entityId: row.entity_id,
-          changes: row.changes,
+          changes: parseFieldChanges(row.changes_json),
+          payload: row.payload_json,
         })),
       });
     },

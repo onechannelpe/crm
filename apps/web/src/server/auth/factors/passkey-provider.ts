@@ -12,7 +12,7 @@ import {
 
 import { getEnvFor } from "~/lib/env";
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
 const rpName = "CRM OneChannel";
@@ -97,7 +97,7 @@ function parseStoredTransports(
 
 type PasskeyProviderDeps = {
   passkeys: ReturnType<typeof createPasskeysRepo>;
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
 };
 
 export function createPasskeyProvider(
@@ -157,13 +157,12 @@ export function createPasskeyProvider(
         },
       });
 
-      await repos.auditLogs.create({
-        user_id: userId,
-        action: "passkey_registration_started",
-        entity_type: "passkey",
-        entity_id: userId,
-        changes: null,
-        created_at: Date.now(),
+      await repos.events.append({
+        type: "passkey_registration_started",
+        entityType: "passkey",
+        entityId: userId,
+        actorUserId: userId,
+        occurredAt: Date.now(),
       });
 
       return options;

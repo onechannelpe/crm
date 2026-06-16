@@ -1,9 +1,9 @@
 import { randomUUIDv7 } from "bun";
 
-import { serializeAuditChanges } from "~/contracts/audit";
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail } from "~/server/shared/domain-error";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, Ok } from "~/server/shared/result";
 import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
 import type {
@@ -11,11 +11,6 @@ import type {
   CommitResult,
   LeadUnitOfWork,
 } from "~/server/workflow/application/ports/uow";
-import type { LeadEvent } from "~/server/workflow/domain/lead/events";
-
-function deriveAuditAction(events: LeadEvent[]): string {
-  return events[0]?.eventType ?? "lead_updated";
-}
 
 async function replaceActiveAssignment(
   db: DatabaseExecutor,
@@ -96,42 +91,23 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         });
       }
 
-      // 4. Insert domain events into history
-      const eventIds: string[] = [];
-      for (const event of events) {
-        const id = randomUUIDv7();
-        // eslint-disable-next-line no-await-in-loop
-        await db
-          .insertInto("workflow_history_events")
-          .values({
-            id,
-            lead_id: event.leadId,
-            event_type: event.eventType,
-            actor_user_id: event.actorUserId,
-            subject_user_id: event.subjectUserId,
-            payload_json: event.payload ? JSON.stringify(event.payload) : null,
-            occurred_at: event.occurredAt,
-          })
-          .execute();
-        eventIds.push(id);
-      }
+      // 4. Append each lead event to the events spine in one write. The per-lead
+      // activity feed and the cross-entity audit explorer are both read
+      // projections of these rows.
+      const eventIds = await createEventsRepo(db).append(
+        events.map((event) => ({
+          entityType: "lead",
+          entityId: event.leadId,
+          type: event.eventType,
+          actorUserId: event.actorUserId,
+          subjectUserId: event.subjectUserId,
+          payload: event.payload,
+          changes: event.changes,
+          occurredAt: event.occurredAt,
+        })),
+      );
 
-      // 5. Audit log
-      const auditId = randomUUIDv7("hex", next.updatedAt);
-      await db
-        .insertInto("workflow_audit_logs")
-        .values({
-          id: auditId,
-          user_id: next.updatedBy ?? next.createdBy,
-          action: deriveAuditAction(events),
-          entity_type: "lead",
-          entity_id: next.id,
-          changes: serializeAuditChanges({}),
-          created_at: next.updatedAt,
-        })
-        .execute();
-
-      // 6. Notifications: enqueue inside the commit transaction
+      // 5. Notifications: enqueue inside the commit transaction
       const stageChangedEvents = events
         .map((e, i) => ({ event: e, id: eventIds[i] }))
         .filter(({ event }) => event.eventType === "workflow_stage_changed");
@@ -159,7 +135,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         await enqueueNotifications(db, intents, next.updatedAt);
       }
 
-      // 7. Record idempotency key
+      // 6. Record idempotency key
       const commitResult: CommitResult = { eventIds, wasIdempotent: false };
       await db
         .insertInto("workflow_idempotency_keys")

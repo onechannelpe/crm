@@ -1,15 +1,25 @@
 import { randomUUIDv7 } from "bun";
 
+import { diffFields } from "~/contracts/events";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { RateProposalNumbers } from "~/server/workflow/application/ports/entities";
 import type { EditRateProposalCommandInput } from "~/server/workflow/types";
 
 import { editRateProposal } from "../../domain/lead/commands";
-import { isReservationActive } from "../../domain/lead/reservation";
 import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+
+const RATE_FIELD_KEYS = [
+  "paybackPricing",
+  "tarifaDebito",
+  "tarifaCredito",
+  "tarifaForaneo",
+  "fee",
+  "moneda",
+] as const satisfies ReadonlyArray<keyof RateProposalNumbers>;
 
 export async function editRateProposalCommand(
   input: EditRateProposalCommandInput,
@@ -31,26 +41,34 @@ export async function editRateProposalCommand(
     if (latest.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
     }
-    if (!isReservationActive(state, now)) {
-      return Err(fail("rate_proposal_expired"));
-    }
 
-    const transition = editRateProposal(state, {
-      actor: input.actor,
-      proposalId: latest.id,
-      round: latest.round,
-      now,
-    });
-    if (!transition.ok) return transition;
-
-    await repos.rateProposals.updateNumbers(latest.id, {
+    const nextNumbers: RateProposalNumbers = {
       tarifaDebito: input.tarifaDebito,
       tarifaCredito: input.tarifaCredito,
       tarifaForaneo: input.tarifaForaneo,
       fee: input.fee,
       paybackPricing: input.paybackPricing,
       moneda: input.moneda,
+    };
+
+    // The whole proposal arrives, but only the moved fields become the
+    // correction. No movement means no correction: skip the write, the event,
+    // and the version bump entirely.
+    const changes = diffFields(latest, nextNumbers, RATE_FIELD_KEYS);
+    if (changes.length === 0) {
+      return Ok({ proposalId: latest.id });
+    }
+
+    const transition = editRateProposal(state, {
+      actor: input.actor,
+      proposalId: latest.id,
+      round: latest.round,
+      changes,
+      now,
     });
+    if (!transition.ok) return transition;
+
+    await repos.rateProposals.updateNumbers(latest.id, nextNumbers);
 
     const committed = await uow.commit({
       next: transition.value.next,

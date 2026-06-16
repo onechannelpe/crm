@@ -4,7 +4,7 @@ import type {
   SessionSpec,
 } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
 import { createPasskeyEnrollmentService } from "./enrollment";
@@ -17,7 +17,7 @@ export type { BeginPasskeyLoginInput } from "./login-start";
 interface PasskeyServiceDeps {
   createWebauthnProvider?: (repos: {
     passkeys: ReturnType<typeof createPasskeysRepo>;
-    auditLogs: ReturnType<typeof createAuditLogsRepo>;
+    events: ReturnType<typeof createEventsRepo>;
   }) => ReturnType<typeof createPasskeyProvider>;
   establishSession?: (spec: SessionSpec) => Promise<IssuedSession>;
 }

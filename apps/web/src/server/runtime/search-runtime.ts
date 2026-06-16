@@ -9,7 +9,7 @@ import {
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import type { ServerInfra } from "./infra";
 
@@ -25,7 +25,7 @@ export function createSearchRuntime(infra: ServerInfra) {
     },
     rateLimitDeps: {
       actionRateLimits: createActionRateLimitsRepo(infra.db),
-      auditLogs: createAuditLogsRepo(infra.db),
+      events: createEventsRepo(infra.db),
     },
   };
 }

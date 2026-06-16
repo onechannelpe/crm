@@ -33,13 +33,12 @@ export async function finishTotpEnrollment(
   const recoveryCodes = generateRecoveryCodes();
   const hashes = await hashRecoveryCodes(recoveryCodes);
   await deps.repos.userTotpRecoveryCodes.replaceForUser(user.id, hashes);
-  await deps.repos.auditLogs.create({
-    user_id: user.id,
-    action: "totp_enabled",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: ctx.now(),
+  await deps.repos.events.append({
+    type: "totp_enabled",
+    entityType: "user",
+    entityId: user.id,
+    actorUserId: user.id,
+    occurredAt: ctx.now(),
   });
 
   const issued = await createSessionService(deps.repos).establish({

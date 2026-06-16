@@ -1,6 +1,6 @@
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
 import { createUsersRepo } from "~/server/users/repos-users";
@@ -8,7 +8,7 @@ import { createUsersRepo } from "~/server/users/repos-users";
 import { createInviteService } from "../application/invite-service";
 
 export type InviteRepos = {
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
   teams: ReturnType<typeof createTeamsRepo>;
   userInvites: ReturnType<typeof createUserInvitesRepo>;
   users: ReturnType<typeof createUsersRepo>;
@@ -16,7 +16,7 @@ export type InviteRepos = {
 
 export function bindInviteRepos(db: DatabaseExecutor): InviteRepos {
   return {
-    auditLogs: createAuditLogsRepo(db),
+    events: createEventsRepo(db),
     teams: createTeamsRepo(db),
     userInvites: createUserInvitesRepo(db),
     users: createUsersRepo(db),

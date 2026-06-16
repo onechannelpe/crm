@@ -16,7 +16,7 @@ import { createSessionService } from "~/server/auth/session/session.service";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
 import type { NotificationIntent } from "~/server/notifications/types";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import type { ServerInfra } from "./infra";
 
@@ -31,7 +31,7 @@ export function createAuthRuntime(
   const sessionService = createSessionService({
     sessions: createAuthSessionRepo(infra.db),
     users: createAuthUsersRepo(infra.db),
-    auditLogs: createAuditLogsRepo(infra.db),
+    events: createEventsRepo(infra.db),
     now: infra.now,
     logger: infra.logger,
   });
@@ -56,7 +56,7 @@ export function createAuthRuntime(
       repos: {
         users: onboarding.repos.users,
         sessions: onboarding.repos.sessions,
-        auditLogs: onboarding.repos.auditLogs,
+        events: onboarding.repos.events,
       },
     },
     totp: createTotpEnrollmentContext(infra.db),

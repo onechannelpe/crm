@@ -1,5 +1,6 @@
 import { randomUUIDv7 } from "bun";
 
+import { diffFields } from "~/contracts/events";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -10,9 +11,30 @@ import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
+type CommercialSnapshot = {
+  proveedorActual: string | null;
+  tasaActual: number | null;
+  gpv: number | null;
+  ticket: number | null;
+  abonoBank: string | null;
+  posTotal: number | null;
+  giroNegocio: string | null;
+};
+
+const COMMERCIAL_FIELD_KEYS = [
+  "proveedorActual",
+  "tasaActual",
+  "gpv",
+  "ticket",
+  "abonoBank",
+  "posTotal",
+  "giroNegocio",
+] as const satisfies ReadonlyArray<keyof CommercialSnapshot>;
+
 // Inline correction of the commercial scope captured at registration. There is
 // no stage transition: it rewrites the profile fields for the owning executive
-// and records the correction on the lead history like every other mutation.
+// and records the field-level correction on the lead history (and the audit
+// spine) like every other mutation. No movement means no correction.
 export async function editCommercialScopeCommand(
   input: EditCommercialScopeCommandInput,
   ports: { executor: DatabaseExecutor; now: number },
@@ -26,13 +48,39 @@ export async function editCommercialScopeCommand(
     if (!state) return Err(fail("lead_not_found"));
 
     const now = ports.now;
+    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
+    const org = await repos.party.findOrganizationById(state.organizationId);
+
+    const prev: CommercialSnapshot = {
+      proveedorActual: profile?.proveedorActual ?? null,
+      tasaActual: profile?.tasaActual ?? null,
+      gpv: profile?.gpv ?? null,
+      ticket: profile?.ticket ?? null,
+      abonoBank: profile?.abonoBank ?? null,
+      posTotal: profile?.posTotal ?? null,
+      giroNegocio: org?.giroNegocio ?? null,
+    };
+    const next: CommercialSnapshot = {
+      proveedorActual: input.proveedorActual,
+      tasaActual: input.tasaActual,
+      gpv: input.gpv,
+      ticket: input.ticket,
+      abonoBank: input.abonoBank,
+      posTotal: input.posTotal,
+      giroNegocio: input.giroNegocio,
+    };
+
+    const changes = diffFields(prev, next, COMMERCIAL_FIELD_KEYS);
+    if (changes.length === 0) {
+      return Ok({ leadId: state.id });
+    }
+
     const transition = editCommercialScope(state, {
       actor: input.actor,
+      changes,
       now,
     });
     if (!transition.ok) return transition;
-
-    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
 
     await repos.leadProfiles.upsert({
       leadId: state.id,

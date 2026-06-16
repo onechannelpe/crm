@@ -148,13 +148,12 @@ export function createPasskeyEnrollmentService(
         input.ipAddress,
       );
 
-      await repos.auditLogs.create({
-        user_id: input.userId,
-        action: "passkey_registered",
-        entity_type: "passkey",
-        entity_id: input.userId,
-        changes: null,
-        created_at: Date.now(),
+      await repos.events.append({
+        type: "passkey_registered",
+        entityType: "passkey",
+        entityId: input.userId,
+        actorUserId: input.userId,
+        occurredAt: Date.now(),
       });
 
       return Ok(undefined);

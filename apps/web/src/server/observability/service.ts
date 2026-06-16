@@ -1,4 +1,4 @@
-import { serializeAuditChanges } from "~/contracts/audit";
+import { serializeEventPayload } from "~/contracts/events";
 import type { Role } from "~/lib/auth/access/rbac";
 import {
   isAuthFunnelEventName,
@@ -63,7 +63,7 @@ export interface RecordAuthFunnelEventInput {
 }
 
 function summarizeInput(input: unknown): string | null {
-  const serialized = serializeAuditChanges(input);
+  const serialized = serializeEventPayload(input);
   if (!serialized) return null;
   if (serialized.length <= 400) return serialized;
   return `${serialized.slice(0, 400)}…`;

@@ -1,41 +1,52 @@
 import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
+  // The events spine: one append-only log of every meaningful domain
+  // occurrence (lead lifecycle, auth/security actions, invites, capacity
+  // decisions). The per-entity activity feed and the cross-entity audit
+  // explorer are two read projections of this table; nothing writes audit by
+  // hand. entity_id is text so it can key both numeric ids (users, branches)
+  // and uuids (leads) under one schema. changes_json holds a FieldChange[] for
+  // value corrections; payload_json holds heterogeneous per-type event data.
   await db.schema
-    .createTable("audit_logs")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
+    .createTable("events")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("entity_type", "varchar(40)", (col) => col.notNull())
+    .addColumn("entity_id", "text", (col) => col.notNull())
+    .addColumn("type", "varchar(64)", (col) => col.notNull())
+    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("subject_user_id", "integer", (col) =>
+      col.references("users.id"),
     )
-    .addColumn("action", "varchar(255)", (col) => col.notNull())
-    .addColumn("entity_type", "varchar(100)", (col) => col.notNull())
-    .addColumn("entity_id", "integer", (col) => col.notNull())
-    .addColumn("changes", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("payload_json", "text")
+    .addColumn("changes_json", "text")
+    .addColumn("occurred_at", "integer", (col) => col.notNull())
     .execute();
 
   await db.schema
-    .createIndex("idx_audit_created_at")
-    .on("audit_logs")
-    .column("created_at")
+    .createIndex("idx_events_occurred")
+    .on("events")
+    .column("occurred_at")
     .execute();
 
   await db.schema
-    .createIndex("idx_audit_action_created")
-    .on("audit_logs")
-    .columns(["action", "created_at"])
+    .createIndex("idx_events_type_occurred")
+    .on("events")
+    .columns(["type", "occurred_at"])
     .execute();
 
   await db.schema
-    .createIndex("idx_audit_user_created")
-    .on("audit_logs")
-    .columns(["user_id", "created_at"])
+    .createIndex("idx_events_actor_occurred")
+    .on("events")
+    .columns(["actor_user_id", "occurred_at"])
     .execute();
 
+  // Drives both the per-entity activity feed (lead timeline) and entity-scoped
+  // audit lookups.
   await db.schema
-    .createIndex("idx_audit_entity_created")
-    .on("audit_logs")
-    .columns(["entity_type", "entity_id", "created_at"])
+    .createIndex("idx_events_entity_occurred")
+    .on("events")
+    .columns(["entity_type", "entity_id", "occurred_at"])
     .execute();
 
   await db.schema

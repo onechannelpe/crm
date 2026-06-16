@@ -1,3 +1,5 @@
+import type { FieldChange } from "~/contracts/events";
+
 export const AUDIT_READER_MAX_LIMIT = 200;
 export const AUDIT_READER_DEFAULT_LIMIT = 80;
 export const AUDIT_READER_MAX_WINDOW_MINUTES = 60 * 24 * 30;
@@ -25,13 +27,14 @@ export interface AuditReaderQueryFilter {
 }
 
 export interface AuditReaderEvent {
-  id: number;
-  createdAt: number;
-  userId: number;
-  action: string;
+  id: string;
+  occurredAt: number;
+  actorUserId: number | null;
+  type: string;
   entityType: string;
-  entityId: number;
-  changes: string | null;
+  entityId: string;
+  changes: FieldChange[];
+  payload: string | null;
 }
 
 export interface AuditReaderSnapshot {

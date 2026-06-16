@@ -14,6 +14,7 @@ import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import { summarizeFieldChanges } from "~/contracts/events";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
@@ -25,22 +26,31 @@ import type { AuditReaderSnapshot } from "~/server/audit-reader/contracts";
 type AuditLogEvent = AuditReaderSnapshot["events"][number];
 type AuditLogGridRow = AuditLogEvent & { id: string };
 
+function formatEventDetail(row: AuditLogGridRow): string {
+  if (row.changes.length > 0) return summarizeFieldChanges(row.changes);
+  return row.payload ?? "—";
+}
+
+function formatActor(actorUserId: number | null): string {
+  return actorUserId === null ? "Sistema" : `#${actorUserId}`;
+}
+
 const AUDIT_LOG_COLUMNS = [
   {
-    key: "createdAt",
+    key: "occurredAt",
     label: "Hora",
     icon: CalendarDays,
     width: 180,
     sticky: true,
-    renderCell: (row) => formatDateTime(row.createdAt),
+    renderCell: (row) => formatDateTime(row.occurredAt),
   },
   {
-    key: "action",
+    key: "type",
     label: "Acción",
     icon: Activity,
     minWidth: 220,
     grow: true,
-    renderCell: (row) => row.action,
+    renderCell: (row) => row.type,
   },
   {
     key: "entity",
@@ -54,7 +64,7 @@ const AUDIT_LOG_COLUMNS = [
     label: "Actor",
     icon: UserRound,
     width: 120,
-    renderCell: (row) => `#${row.userId}`,
+    renderCell: (row) => formatActor(row.actorUserId),
   },
   {
     key: "changes",
@@ -63,7 +73,7 @@ const AUDIT_LOG_COLUMNS = [
     minWidth: 280,
     maxWidth: 520,
     grow: true,
-    renderCell: (row) => row.changes ?? "-",
+    renderCell: (row) => formatEventDetail(row),
   },
 ] satisfies ReadonlyArray<DataGridColumn<AuditLogGridRow>>;
 
@@ -127,20 +137,20 @@ export default function AuditLogPage() {
   const rows = createMemo<AuditLogGridRow[]>(() =>
     (latestSnapshot()?.events ?? []).map((event, index) =>
       Object.assign({}, event, {
-        id: `audit:${event.createdAt}:${index}`,
+        id: `audit:${event.occurredAt}:${index}`,
       }),
     ),
   );
 
   const rowOpen = useSidePanelRowOpen<AuditLogGridRow>((row) =>
     createDataGridDetailSidePanelPage({
-      title: row.action,
+      title: row.type,
       subtitle: `${row.entityType}#${row.entityId}`,
       items: [
-        { label: "Hora", value: formatDateTime(row.createdAt) },
+        { label: "Hora", value: formatDateTime(row.occurredAt) },
         { label: "Entidad", value: `${row.entityType}#${row.entityId}` },
-        { label: "Actor", value: `#${row.userId}` },
-        { label: "Cambios", value: row.changes ?? "-" },
+        { label: "Actor", value: formatActor(row.actorUserId) },
+        { label: "Cambios", value: formatEventDetail(row) },
       ],
     }),
   );

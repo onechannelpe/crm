@@ -1,3 +1,4 @@
+import { parseFieldChanges, type FieldChange } from "~/contracts/events";
 import type {
   LeadHistoryEntry,
   LeadHistoryPerson,
@@ -10,6 +11,7 @@ export type HistoryEventRow = {
   actor_user_id: number | null;
   subject_user_id: number | null;
   payload_json: string | null;
+  changes_json: string | null;
   occurred_at: number;
   actor_names: string | null;
   actor_first_surname: string | null;
@@ -24,6 +26,7 @@ export type HistoryEntryBase = {
   leadId: string;
   actorUserId: number | null;
   subjectUserId: number | null;
+  changes: FieldChange[];
   occurredAt: number;
   actor: LeadHistoryPerson | null;
   subject: LeadHistoryPerson | null;
@@ -55,6 +58,7 @@ export function toHistoryEntryBase(row: HistoryEventRow): HistoryEntryBase {
     leadId: row.lead_id,
     actorUserId: row.actor_user_id,
     subjectUserId: row.subject_user_id,
+    changes: parseFieldChanges(row.changes_json),
     occurredAt: row.occurred_at,
     actor: toHistoryPerson({
       names: row.actor_names,

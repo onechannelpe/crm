@@ -2,7 +2,7 @@ import { createSessionService } from "~/server/auth/session/session.service";
 import type { InviteService } from "~/server/invites/application/types";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { AuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { EventsRepo } from "~/server/shared/repos-events";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 import type { UsersRepo } from "~/server/users/repos-users";
 
@@ -12,7 +12,7 @@ export async function submitInviteAcceptance(
     repos: {
       users: UsersRepo;
       sessions: SessionRepository;
-      auditLogs: AuditLogsRepo;
+      events: EventsRepo;
     };
   },
   request: {

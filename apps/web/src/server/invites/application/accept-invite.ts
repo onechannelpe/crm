@@ -1,5 +1,4 @@
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
-import { createAuditService } from "~/server/shared/audit";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -47,15 +46,14 @@ export async function acceptInvite(
       invite.invite_id,
       currentTime,
     );
-    await createAuditService(transactionRepos).log(
-      invite.user_id,
-      "user_invite_accepted",
-      "user",
-      invite.user_id,
-      {
-        inviteId: invite.invite_id,
-      },
-    );
+    await transactionRepos.events.append({
+      type: "user_invite_accepted",
+      entityType: "user",
+      entityId: invite.user_id,
+      actorUserId: invite.user_id,
+      payload: { inviteId: invite.invite_id },
+      occurredAt: currentTime,
+    });
 
     return Ok(mapAcceptedInviteResult(invite));
   });

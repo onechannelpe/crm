@@ -1,30 +1,15 @@
-import { isPlainRecord } from "~/lib/type-guards";
+import { parseFieldChanges } from "~/contracts/events";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
 import type { AppContext } from "~/server/shared/action-runtime/context";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { EventsRepo } from "~/server/shared/repos-events";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { AuditChangeValue, CapacityAuditEvent } from "../contracts";
+import type { CapacityAuditEvent } from "../contracts";
 
 interface AuditReadDeps {
   repos: {
-    auditLogs: {
-      listRecent(input: {
-        fromInclusive: number;
-        toInclusive: number;
-        limit: number;
-      }): Promise<
-        Array<{
-          id: number;
-          created_at: number;
-          user_id: number;
-          action: string;
-          entity_type: string;
-          entity_id: number | null;
-          changes: unknown;
-        }>
-      >;
-    };
+    events: Pick<EventsRepo, "listRecent">;
     users: {
       findByBranchIncludingInactive(
         branchId: number,
@@ -36,44 +21,6 @@ interface AuditReadDeps {
   };
 }
 
-function isAuditScalar(
-  value: unknown,
-): value is string | number | boolean | null {
-  return (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  );
-}
-
-function isAuditChangeValue(value: unknown): value is AuditChangeValue {
-  if (isAuditScalar(value)) return true;
-  if (Array.isArray(value)) return value.every(isAuditChangeValue);
-  if (isPlainRecord(value)) {
-    return Object.values(value).every(isAuditChangeValue);
-  }
-  return false;
-}
-
-function parseAuditChanges(raw: unknown): AuditChangeValue {
-  if (isAuditScalar(raw)) return raw;
-  if (typeof raw !== "string") {
-    try {
-      const parsed: unknown = JSON.parse(JSON.stringify(raw));
-      return isAuditChangeValue(parsed) ? parsed : JSON.stringify(raw);
-    } catch {
-      return "[unserializable_changes]";
-    }
-  }
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return isAuditChangeValue(parsed) ? parsed : raw;
-  } catch {
-    return raw;
-  }
-}
-
 export async function getAuditEvents(
   ctx: AppContext,
   deps: AuditReadDeps,
@@ -82,7 +29,7 @@ export async function getAuditEvents(
   const effectiveLimit = Math.max(1, input.limit ?? AUDIT_READER_DEFAULT_LIMIT);
   const now = Date.now();
   const [recent, branchUsers, branchTeams] = await Promise.all([
-    deps.repos.auditLogs.listRecent({
+    deps.repos.events.listRecent({
       fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
       toInclusive: now,
       limit: effectiveLimit,
@@ -100,32 +47,33 @@ export async function getAuditEvents(
   const filtered = recent
     .filter(
       (event) =>
-        event.action.startsWith("search_") ||
-        event.action.startsWith("lead_") ||
-        event.action.startsWith("capacity_"),
+        event.type.startsWith("search_") ||
+        event.type.startsWith("lead_") ||
+        event.type.startsWith("capacity_"),
     )
     .filter((event) => {
       if (ctx.actor.role === "superuser") return true;
       if (ctx.actor.role !== "admin") return false;
       if (event.entity_type === "branch") {
-        return event.entity_id === ctx.actor.branchId;
+        return event.entity_id === String(ctx.actor.branchId);
       }
       if (event.entity_type === "team") {
-        return event.entity_id != null && branchTeamIds.has(event.entity_id);
+        return branchTeamIds.has(Number(event.entity_id));
       }
       if (event.entity_type === "user") {
-        return event.entity_id != null && branchUserIds.has(event.entity_id);
+        return branchUserIds.has(Number(event.entity_id));
       }
       return false;
     })
     .map((event) => ({
       id: event.id,
-      createdAt: event.created_at,
-      userId: event.user_id,
-      action: event.action,
+      createdAt: event.occurred_at,
+      actorUserId: event.actor_user_id,
+      type: event.type,
       entityType: event.entity_type,
       entityId: event.entity_id,
-      changes: parseAuditChanges(event.changes),
+      changes: parseFieldChanges(event.changes_json),
+      payload: event.payload_json,
     }));
 
   return Ok(filtered);
