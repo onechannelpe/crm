@@ -1,4 +1,4 @@
-import type { FieldChange } from "../audit";
+import type { FieldChange } from "../events";
 import type { SaleVenueAccount } from "./primitives";
 import type {
   AbonoBank,

@@ -7,13 +7,13 @@ import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
+import { summarizeFieldChanges } from "~/contracts/events";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { capacityAuditEventsQuery } from "~/lib/queries/capacity";
 
-type CapacityAuditChange = CapacityAuditEvent["changes"];
 type CapacityAuditGridRow = CapacityAuditEvent & { id: string };
 
 const EMPTY_EVENTS: CapacityAuditEvent[] = [];
@@ -27,19 +27,19 @@ const CAPACITY_AUDIT_COLUMNS = [
     renderCell: (event) => formatTime(event.createdAt),
   },
   {
-    key: "action",
+    key: "type",
     label: "Action",
     icon: Activity,
     minWidth: 220,
     grow: true,
-    renderCell: (event) => event.action,
+    renderCell: (event) => event.type,
   },
   {
-    key: "userId",
+    key: "actor",
     label: "Actor",
     icon: UserRound,
     width: 120,
-    renderCell: (event) => String(event.userId),
+    renderCell: (event) => formatActor(event.actorUserId),
   },
   {
     key: "entity",
@@ -55,7 +55,7 @@ const CAPACITY_AUDIT_COLUMNS = [
     minWidth: 280,
     maxWidth: 480,
     grow: true,
-    renderCell: (event) => formatChanges(event.changes),
+    renderCell: (event) => formatDetail(event),
   },
 ] satisfies ReadonlyArray<DataGridColumn<CapacityAuditGridRow>>;
 
@@ -63,14 +63,13 @@ function formatTime(value: number): string {
   return new Date(value).toLocaleString();
 }
 
-function formatChanges(value: CapacityAuditChange): string {
-  if (value == null) return "-";
-  if (typeof value === "string") return value;
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return "[unserializable_changes]";
-  }
+function formatActor(actorUserId: number | null): string {
+  return actorUserId === null ? "System" : String(actorUserId);
+}
+
+function formatDetail(event: CapacityAuditEvent): string {
+  if (event.changes.length > 0) return summarizeFieldChanges(event.changes);
+  return event.payload ?? "-";
 }
 
 export default function CapacityAuditPage() {
