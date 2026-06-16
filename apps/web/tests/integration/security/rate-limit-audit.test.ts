@@ -47,14 +47,20 @@ describe("rate limit audit", () => {
       // expected block
     }
 
-    const logs = await ctx.repos.auditLogs.findByUser(userId);
-    const entry = logs.find((log) => log.action === "rate_limit_exceeded");
+    const now = Date.now();
+    const logs = await ctx.repos.events.listRecent({
+      fromInclusive: now - 1000,
+      toInclusive: now + 1000,
+      limit: 10,
+      actorUserId: userId,
+    });
+    const entry = logs.find((log) => log.type === "rate_limit_exceeded");
     expect(entry).toBeDefined();
     expect(entry?.entity_type).toBe("user");
-    expect(entry?.entity_id).toBe(userId);
-    expect(entry?.changes).toContain('"actionName":"leads.request"');
-    expect(entry?.changes).toContain('"scope":"user"');
-    expect(entry?.changes).toContain('"retryAfterMs"');
+    expect(entry?.entity_id).toBe(String(userId));
+    expect(entry?.payload_json).toContain('"actionName":"leads.request"');
+    expect(entry?.payload_json).toContain('"scope":"user"');
+    expect(entry?.payload_json).toContain('"retryAfterMs"');
   });
 
   it("cleans up stale counters", async () => {

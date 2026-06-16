@@ -95,9 +95,10 @@ export async function registerLead(input: {
     .executeTakeFirst();
 
   const history = await input.runtime.ctx.db
-    .selectFrom("workflow_history_events")
-    .select(["event_type"])
-    .where("lead_id", "=", result.value.leadId)
+    .selectFrom("events")
+    .select(["type"])
+    .where("entity_type", "=", "lead")
+    .where("entity_id", "=", result.value.leadId)
     .orderBy("occurred_at", "asc")
     .execute();
 
@@ -121,7 +122,7 @@ export async function registerLead(input: {
           posTotal: profileRow.pos_total,
         }
       : null,
-    historyEventTypes: history.map((event) => event.event_type),
+    historyEventTypes: history.map((event) => event.type),
   };
 }
 

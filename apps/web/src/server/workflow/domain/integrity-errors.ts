@@ -9,6 +9,17 @@ function integrityError(
   return Err(external(message, { code, details }));
 }
 
+export function unknownLeadEventType(event: {
+  id: string;
+  type: string;
+}): Result<never, DomainError> {
+  return integrityError(
+    "workflow_lead_event_type_unknown",
+    `Unknown lead event type "${event.type}" for event ${event.id}`,
+    { eventId: event.id, type: event.type },
+  );
+}
+
 export function invalidHistoryPayload(
   event: { id: string; eventType: string },
   key?: string,

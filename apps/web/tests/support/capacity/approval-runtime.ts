@@ -63,7 +63,7 @@ export function makeApprovalDeps(
   return {
     rateLimitDeps: {
       actionRateLimits: ctx.repos.actionRateLimits,
-      auditLogs: ctx.repos.auditLogs,
+      events: ctx.repos.events,
     },
     uow: createExecutorUow<ApprovalTx>(ctx.db, (txDb): ApprovalTx => {
       const repos = bindApprovalRepos(txDb);

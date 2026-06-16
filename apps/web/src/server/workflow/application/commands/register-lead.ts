@@ -146,7 +146,7 @@ export async function registerLead(
       deps: {
         leads: txRepos.leads,
         leadAssignments: txRepos.leadAssignments,
-        leadHistory: txRepos.leadHistory,
+        events: txRepos.events,
       },
       actorUserId: input.actorUserId,
       executiveId: input.actorUserId,

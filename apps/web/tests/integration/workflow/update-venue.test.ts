@@ -59,10 +59,11 @@ describe("update venue", () => {
     expect(venue.direccion).toBe("Av. Nueva 123");
 
     const event = await runtime.ctx.db
-      .selectFrom("workflow_history_events")
-      .select(["event_type", "payload_json"])
-      .where("lead_id", "=", lead.id)
-      .where("event_type", "=", "venue_updated")
+      .selectFrom("events")
+      .select(["type", "payload_json"])
+      .where("entity_type", "=", "lead")
+      .where("entity_id", "=", lead.id)
+      .where("type", "=", "venue_updated")
       .executeTakeFirstOrThrow();
     expect(event.payload_json).toContain("Local corregido");
   });

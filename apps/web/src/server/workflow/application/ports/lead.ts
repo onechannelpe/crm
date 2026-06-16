@@ -7,10 +7,7 @@ import type {
   LeadStatus,
 } from "~/server/workflow/types";
 
-import type {
-  LeadHistoryEntry,
-  LeadHistoryEventDraft,
-} from "../../domain/history";
+import type { LeadHistoryEntry } from "../../domain/history";
 import type { LeadDraft, LeadState } from "../../domain/lead/state";
 
 export type LeadPatch = Partial<
@@ -48,7 +45,6 @@ export type LeadAssignmentRepository = {
 };
 
 export type LeadHistoryRepository = {
-  insert(values: LeadHistoryEventDraft): Promise<string>;
   listByLeadId(
     leadId: string,
   ): Promise<Result<LeadHistoryEntry[], DomainError>>;

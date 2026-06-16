@@ -6,7 +6,7 @@ import { createFilesRuntime } from "~/server/runtime/files-runtime";
 import type { ServerInfra } from "~/server/runtime/infra";
 import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
 
@@ -50,7 +50,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     sessionService: createSessionService({
       sessions: createAuthSessionRepo(ctx.db),
       users: createAuthUsersRepo(ctx.db),
-      auditLogs: createAuditLogsRepo(ctx.db),
+      events: createEventsRepo(ctx.db),
       now: now.get,
       logger,
     }),

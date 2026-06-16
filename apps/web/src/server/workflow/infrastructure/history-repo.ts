@@ -1,10 +1,13 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { type LeadHistoryEntry } from "~/server/workflow/domain/history";
+import {
+  isLeadHistoryEventType,
+  type LeadHistoryEntry,
+} from "~/server/workflow/domain/history";
+import { unknownLeadEventType } from "~/server/workflow/domain/integrity-errors";
 
 import { toHistoryEntry } from "./history-entry-parser";
-import type { HistoryEventRow } from "./history-event-row";
 
 export function createHistoryRepo(db: DatabaseExecutor) {
   return {
@@ -38,7 +41,10 @@ export function createHistoryRepo(db: DatabaseExecutor) {
 
       const entries: LeadHistoryEntry[] = [];
       for (const row of rows) {
-        const entry = toHistoryEntry(row as HistoryEventRow);
+        if (!isLeadHistoryEventType(row.event_type)) {
+          return unknownLeadEventType({ id: row.id, type: row.event_type });
+        }
+        const entry = toHistoryEntry({ ...row, event_type: row.event_type });
         if (!entry.ok) {
           return Err(entry.error);
         }

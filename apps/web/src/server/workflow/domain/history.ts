@@ -28,6 +28,34 @@ export type LeadHistoryEventType =
   | "call_logged"
   | "note_added";
 
+const LEAD_HISTORY_EVENT_TYPES = {
+  lead_registered: true,
+  lead_status_updated: true,
+  lead_priority_updated: true,
+  lead_reviewed: true,
+  workflow_stage_changed: true,
+  lead_assigned: true,
+  lead_reassigned: true,
+  rep_legal_recorded: true,
+  rate_proposed: true,
+  rate_revision_requested: true,
+  rate_accepted: true,
+  rate_proposal_corrected: true,
+  commercial_scope_corrected: true,
+  lead_reservation_expired: true,
+  venue_added: true,
+  venue_updated: true,
+  venue_accounts_added: true,
+  call_logged: true,
+  note_added: true,
+} satisfies Record<LeadHistoryEventType, true>;
+
+export function isLeadHistoryEventType(
+  value: string,
+): value is LeadHistoryEventType {
+  return value in LEAD_HISTORY_EVENT_TYPES;
+}
+
 export type LeadHistoryPayloadByEvent = {
   lead_registered: {
     ruc: string;

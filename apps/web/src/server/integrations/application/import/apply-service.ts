@@ -1,6 +1,6 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { writeHistoryAndAudit } from "./history-audit-writer";
+import { appendImportLeadEvents } from "./import-events-writer";
 import { applyLeadMutation } from "./lead-mutation-writer";
 import {
   createEmptyOutboxPlan,
@@ -93,7 +93,7 @@ export async function applyImportRows(
         continue;
       }
 
-      await writeHistoryAndAudit({
+      await appendImportLeadEvents({
         executor: trx,
         actorId: input.actorId,
         mutation: mutationResult.mutation,

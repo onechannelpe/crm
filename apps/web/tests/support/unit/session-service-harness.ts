@@ -2,7 +2,7 @@ import { vi } from "vitest";
 
 import type { UserSessionRow } from "~/lib/auth/types";
 import type {
-  SessionAuditPort,
+  SessionEventPort,
   SessionRepositoryPort,
   SessionUsersPort,
 } from "~/server/auth/session/session-spec";
@@ -58,14 +58,16 @@ export function createSessionServiceHarness(
     deactivateIfExpired: usersDeactivateIfExpired,
   };
 
-  const auditLogs: SessionAuditPort = {
-    async create() {},
+  const events: SessionEventPort = {
+    async append() {
+      return [];
+    },
   };
 
   const service = createSessionService({
     sessions,
     users,
-    auditLogs,
+    events,
     now: () => nowTs,
     logger: { error() {} },
   });

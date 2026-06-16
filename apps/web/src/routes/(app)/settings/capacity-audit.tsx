@@ -84,13 +84,13 @@ export default function CapacityAuditPage() {
 
   const rowOpen = useSidePanelRowOpen<CapacityAuditGridRow>((event) =>
     createDataGridDetailSidePanelPage({
-      title: event.action,
+      title: event.type,
       subtitle: `${event.entityType}:${event.entityId}`,
       items: [
         { label: "Time", value: formatTime(event.createdAt) },
-        { label: "Actor", value: String(event.userId) },
+        { label: "Actor", value: formatActor(event.actorUserId) },
         { label: "Entity", value: `${event.entityType}:${event.entityId}` },
-        { label: "Changes", value: formatChanges(event.changes) },
+        { label: "Changes", value: formatDetail(event) },
       ],
     }),
   );

@@ -1,21 +1,19 @@
+import { makeActor, makeAppContext } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
 import type { AdminSessionRevocationPort } from "~/server/auth/application/ports";
 import { revokeAllUserSessions } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession } from "~/server/auth/flows/revoke-user-session";
-
-type AuditPayload = {
-  userId: number;
-  action: string;
-  entityType: string;
-  entityId: number;
-  changes: string;
-  createdAt: number;
-};
-
-import { makeActor, makeAppContext } from "@tests/support/unit/factories";
-
 import type { UserId } from "~/server/shared/ids";
+
+type AppendedEvent = {
+  type: string;
+  entityType: string;
+  entityId: string | number;
+  actorUserId: number;
+  payload?: unknown;
+  occurredAt: number;
+};
 
 function makeTestContext() {
   return makeAppContext({
@@ -32,7 +30,7 @@ function makeTestContext() {
 }
 
 function makeDeps() {
-  const auditLogs: AuditPayload[] = [];
+  const events: AppendedEvent[] = [];
   const invalidatedSessions: string[] = [];
   const invalidatedUsers: number[] = [];
   const authSessionRevocations: Array<{ sessionId: string; now: number }> = [];
@@ -63,11 +61,11 @@ function makeDeps() {
       updateExecutiveSyncHealth: async (payload) => {
         syncUpdates.push(payload);
       },
-      createAuditLog: async (payload: AuditPayload) => {
-        auditLogs.push(payload);
+      appendEvent: async (event: AppendedEvent) => {
+        events.push(event);
       },
     } satisfies AdminSessionRevocationPort,
-    auditLogs,
+    events,
     invalidatedSessions,
     invalidatedUsers,
     authSessionRevocations,
@@ -77,7 +75,7 @@ function makeDeps() {
 }
 
 describe("admin session revocation", () => {
-  it("revokes one session and writes an audit record for the target user", async () => {
+  it("revokes one session and appends an event for the target user", async () => {
     const harness = makeDeps();
 
     const result = await revokeUserSession(makeTestContext(), harness.port, {
@@ -98,21 +96,21 @@ describe("admin session revocation", () => {
         syncUpdatedAt: 1_700_000_100_000,
       },
     ]);
-    expect(harness.auditLogs).toHaveLength(1);
-    expect(harness.auditLogs[0]).toMatchObject({
-      userId: 9001,
-      action: "session_revoked_by_admin",
+    expect(harness.events).toHaveLength(1);
+    expect(harness.events[0]).toMatchObject({
+      type: "session_revoked_by_admin",
       entityType: "user_session",
       entityId: 42,
-      createdAt: 1_700_000_100_000,
+      actorUserId: 9001,
+      occurredAt: 1_700_000_100_000,
     });
-    expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
+    expect(harness.events[0].payload).toEqual({
       sessionId: "session-abc",
       revokedBy: 9001,
     });
   });
 
-  it("revokes all user sessions and writes a single audit record", async () => {
+  it("revokes all user sessions and appends a single event", async () => {
     const harness = makeDeps();
 
     const result = await revokeAllUserSessions(
@@ -136,15 +134,15 @@ describe("admin session revocation", () => {
         syncUpdatedAt: 1_700_000_100_000,
       },
     ]);
-    expect(harness.auditLogs).toHaveLength(1);
-    expect(harness.auditLogs[0]).toMatchObject({
-      userId: 9001,
-      action: "all_sessions_revoked",
+    expect(harness.events).toHaveLength(1);
+    expect(harness.events[0]).toMatchObject({
+      type: "all_sessions_revoked",
       entityType: "user",
       entityId: 77,
-      createdAt: 1_700_000_100_000,
+      actorUserId: 9001,
+      occurredAt: 1_700_000_100_000,
     });
-    expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
+    expect(harness.events[0].payload).toEqual({
       revokedBy: 9001,
     });
   });

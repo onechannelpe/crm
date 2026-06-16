@@ -5,6 +5,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail } from "~/server/shared/domain-error";
 import { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, Ok } from "~/server/shared/result";
+import { toLeadEventAppend } from "~/server/workflow/application/lead-events";
 import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
 import type {
   CommitInput,
@@ -95,16 +96,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
       // activity feed and the cross-entity audit explorer are both read
       // projections of these rows.
       const eventIds = await createEventsRepo(db).append(
-        events.map((event) => ({
-          entityType: "lead",
-          entityId: event.leadId,
-          type: event.eventType,
-          actorUserId: event.actorUserId,
-          subjectUserId: event.subjectUserId,
-          payload: event.payload,
-          changes: event.changes,
-          occurredAt: event.occurredAt,
-        })),
+        events.map(toLeadEventAppend),
       );
 
       // 5. Notifications: enqueue inside the commit transaction

@@ -92,14 +92,14 @@ export interface SessionUsersPort {
  * call sites match the real shape, but the result is ignored, so the port does
  * not demand the repo's id array (a fake `Promise<void>` suffices).
  */
-export interface SessionAuditPort {
+export interface SessionEventPort {
   append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
 }
 
 export interface SessionServiceDeps {
   sessions: SessionRepositoryPort;
   users: SessionUsersPort;
-  events: SessionAuditPort;
+  events: SessionEventPort;
   now?: () => number;
   logger?: {
     error(message: string, meta?: unknown): void;

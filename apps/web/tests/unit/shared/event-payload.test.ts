@@ -1,0 +1,40 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  parseFieldChanges,
+  serializeEventPayload,
+  serializeFieldChanges,
+  type FieldChange,
+} from "~/contracts/events";
+
+describe("event payload serialization", () => {
+  it("serializes undefined or null payload as null", () => {
+    expect(serializeEventPayload()).toBeNull();
+    expect(serializeEventPayload(null)).toBeNull();
+  });
+
+  it("serializes falsey but valid values", () => {
+    expect(serializeEventPayload(false)).toBe("false");
+    expect(serializeEventPayload(0)).toBe("0");
+    expect(serializeEventPayload("")).toBe('""');
+  });
+});
+
+describe("field change serialization", () => {
+  it("serializes empty changes as null", () => {
+    expect(serializeFieldChanges([])).toBeNull();
+  });
+
+  it("round-trips structured field changes", () => {
+    const changes: FieldChange[] = [
+      { field: "status", from: "DISPONIBLE", to: "CARTERIZADO" },
+      { field: "tarifaDebito", from: 1.2, to: null },
+    ];
+    expect(parseFieldChanges(serializeFieldChanges(changes))).toEqual(changes);
+  });
+
+  it("parses null and malformed input as empty", () => {
+    expect(parseFieldChanges(null)).toEqual([]);
+    expect(parseFieldChanges("not json")).toEqual([]);
+  });
+});

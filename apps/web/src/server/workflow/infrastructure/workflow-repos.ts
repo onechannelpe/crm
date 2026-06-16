@@ -1,5 +1,6 @@
 import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import { createAssignmentRepo } from "./assignment-repo";
 import { createHistoryRepo } from "./history-repo";
@@ -26,6 +27,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leadAssignments: createAssignmentRepo(executor),
     leadProfiles: createLeadProfileRepo(executor),
     leadHistory: createHistoryRepo(executor),
+    events: createEventsRepo(executor),
     rateProposals: createRateProposalRepo(executor),
     rateProposalPolicies: createRateProposalPolicyRepo(executor),
     leadVenues: createLeadVenueRepo(executor),

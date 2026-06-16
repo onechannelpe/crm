@@ -41,7 +41,7 @@ import { createRequestSessionsRepo } from "~/server/security/repos-request-sessi
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createAgentStatusRepo } from "~/server/shared/repos-agent-status";
 import { createAuditActionPoliciesRepo } from "~/server/shared/repos-audit-action-policies";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -84,7 +84,7 @@ export function createTestRepositories(db: Kysely<Database>) {
     actionObservations: createActionObservationsRepo(db),
     authFunnelEvents: createAuthFunnelEventsRepo(db),
     extensionRuntime: createExtensionRuntimeRepo(db),
-    auditLogs: createAuditLogsRepo(db),
+    events: createEventsRepo(db),
     auditActionPolicies: createAuditActionPoliciesRepo(db),
     agentStatus: createAgentStatusRepo(db),
     passkeys: createPasskeysRepo(db),
