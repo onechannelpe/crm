@@ -18,7 +18,7 @@ import type { SubmitReadyRevisionFile } from "../ports/entities";
 
 export async function requestRateRevisionCommand(
   input: RequestRateRevisionCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
@@ -32,7 +32,7 @@ export async function requestRateRevisionCommand(
     if (proposal.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
     }
-    const now = Date.now();
+    const now = ports.now;
     if (!isReservationActive(state, now)) {
       return Err(fail("rate_proposal_expired"));
     }

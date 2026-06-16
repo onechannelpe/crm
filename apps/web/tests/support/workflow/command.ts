@@ -49,6 +49,7 @@ export type TestCommandOverrides = {
 
 function buildCommandApi(
   executor: DatabaseExecutor,
+  now: () => number,
   overrides?: TestCommandOverrides,
 ) {
   const repos = createWorkflowRepos(executor);
@@ -79,58 +80,51 @@ function buildCommandApi(
           users: repos.users,
           enrichmentQueue,
           executor,
+          now: now(),
         },
       ),
 
     addToFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
-      addToFavoritesCommand(input, { executor }),
+      addToFavoritesCommand(input, { executor, now: now() }),
 
     removeFromFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
       removeFromFavoritesCommand(input, { executor }),
 
     reassignLead: (input: ReassignLeadCommandInput) =>
-      reassignLeadCommand(input, { executor }),
+      reassignLeadCommand(input, { executor, now: now() }),
 
     addLeadNote: (input: AddLeadNoteCommandInput) =>
-      addLeadNoteCommand(input, { executor }),
+      addLeadNoteCommand(input, { executor, now: now() }),
 
     logLeadCall: (input: LogLeadCallCommandInput) =>
-      logLeadCallCommand(input, { executor }),
+      logLeadCallCommand(input, { executor, now: now() }),
 
     acceptRate: (input: AcceptRateCommandInput) =>
-      acceptRateCommand(input, { executor }),
+      acceptRateCommand(input, { executor, now: now() }),
 
     proposeRate: (input: ProposeRateCommandInput) =>
-      proposeRateCommand(input, { executor }),
+      proposeRateCommand(input, { executor, now: now() }),
 
     editCommercialScope: (input: EditCommercialScopeCommandInput) =>
-      editCommercialScopeCommand(input, { executor }),
+      editCommercialScopeCommand(input, { executor, now: now() }),
 
     saveDigitalPolicy: (input: SaveDigitalPolicyCommandInput) =>
-      saveDigitalPolicyCommand(input, { executor }),
+      saveDigitalPolicyCommand(input, { executor, now: now() }),
 
     recordRepLegal: (input: RecordRepLegalCommandInput) =>
-      recordRepLegalCommand(input, {
-        executor,
-      }),
+      recordRepLegalCommand(input, { executor, now: now() }),
 
     createVenue: (input: CreateVenueCommandInput) =>
-      createVenueCommand(input, {
-        executor,
-      }),
+      createVenueCommand(input, { executor, now: now() }),
 
     updateVenue: (input: UpdateVenueCommandInput) =>
-      updateVenueCommand(input, {
-        executor,
-      }),
+      updateVenueCommand(input, { executor, now: now() }),
 
     addVenueAccounts: (input: AddVenueAccountsCommandInput) =>
-      addVenueAccountsCommand(input, {
-        executor,
-      }),
+      addVenueAccountsCommand(input, { executor, now: now() }),
 
     requestRateRevision: (input: RequestRateRevisionCommandInput) =>
-      requestRateRevisionCommand(input, { executor }),
+      requestRateRevisionCommand(input, { executor, now: now() }),
 
     requestSunatRefresh: (input: { actor: WorkflowActor; leadId: string }) =>
       requestSunatRefresh(input, {
@@ -141,6 +135,7 @@ function buildCommandApi(
     updateSourcingPolicy: (input: UpdateSourcingPolicyCommandInput) =>
       updateSourcingPolicy(input, {
         sourcingPolicies: repos.sourcingPolicies,
+        now: now(),
       }),
   };
 }
@@ -150,5 +145,7 @@ export function runTestWorkflowCommand<T>(
   operation: (commandApi: ReturnType<typeof buildCommandApi>) => Promise<T>,
   overrides?: TestCommandOverrides,
 ): Promise<T> {
-  return operation(buildCommandApi(runtime.ctx.db, overrides));
+  return operation(
+    buildCommandApi(runtime.ctx.db, () => runtime.now.get(), overrides),
+  );
 }

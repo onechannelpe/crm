@@ -14,7 +14,7 @@ import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 export async function proposeRateCommand(
   input: ProposeRateCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ proposalId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
@@ -24,7 +24,7 @@ export async function proposeRateCommand(
     const state = await leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const now = Date.now();
+    const now = ports.now;
     const round = await repos.rateProposals.nextRound(state.id);
     const proposalId = randomUUIDv7();
     const policy = resolveRateProposalPolicy({

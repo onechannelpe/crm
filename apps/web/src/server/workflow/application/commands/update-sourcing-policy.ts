@@ -7,7 +7,7 @@ import type { LeadSourcingPolicyRepository } from "../ports/entities";
 
 export async function updateSourcingPolicy(
   input: UpdateSourcingPolicyCommandInput,
-  ports: { sourcingPolicies: LeadSourcingPolicyRepository },
+  ports: { sourcingPolicies: LeadSourcingPolicyRepository; now: number },
 ): Promise<
   Result<{ branchId: number; engineAssignmentEnabled: boolean }, DomainError>
 > {
@@ -18,7 +18,7 @@ export async function updateSourcingPolicy(
   await ports.sourcingPolicies.upsert({
     branchId: input.branchId,
     engineAssignmentEnabled: input.engineAssignmentEnabled,
-    updatedAt: Date.now(),
+    updatedAt: ports.now,
     updatedByUserId: input.actor.userId,
   });
 

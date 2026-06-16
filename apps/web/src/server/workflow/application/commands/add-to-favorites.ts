@@ -9,7 +9,7 @@ import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 export async function addToFavoritesCommand(
   input: { actor: WorkflowActor; leadId: string },
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
@@ -23,7 +23,7 @@ export async function addToFavoritesCommand(
     await repos.leadFavorites.addForUser({
       leadId: input.leadId,
       userId: input.actor.userId,
-      createdAt: Date.now(),
+      createdAt: ports.now,
     });
 
     return Ok({ leadId: input.leadId });

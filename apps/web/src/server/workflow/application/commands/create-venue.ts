@@ -16,7 +16,7 @@ import {
 
 export async function createVenueCommand(
   input: CreateVenueCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
@@ -36,7 +36,7 @@ export async function createVenueCommand(
     );
     if (!venueFields.ok) return venueFields;
 
-    const now = Date.now();
+    const now = ports.now;
     const venueId = randomUUIDv7();
     const transition = createVenue(state, {
       actor: input.actor,

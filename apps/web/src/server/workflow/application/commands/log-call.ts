@@ -11,7 +11,7 @@ import { createLeadUow } from "../../infrastructure/uow";
 
 export async function logLeadCallCommand(
   input: LogLeadCallCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ interactionId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
@@ -19,7 +19,7 @@ export async function logLeadCallCommand(
     const state = await leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const now = Date.now();
+    const now = ports.now;
     const transition = logCall(state, {
       actor: input.actor,
       outcome: input.outcome,

@@ -13,7 +13,7 @@ import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 export async function acceptRateCommand(
   input: AcceptRateCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
@@ -27,7 +27,7 @@ export async function acceptRateCommand(
     if (!latest || latest.id !== input.proposalId) {
       return Err(fail("rate_proposal_not_found"));
     }
-    const now = Date.now();
+    const now = ports.now;
     if (latest.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
     }

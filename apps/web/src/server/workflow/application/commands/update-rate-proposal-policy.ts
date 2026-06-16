@@ -8,7 +8,7 @@ import type { RateProposalPolicyRepository } from "../ports/entities";
 
 export async function updateRateProposalPolicy(
   input: UpdateRateProposalPolicyCommandInput,
-  ports: { rateProposalPolicies: RateProposalPolicyRepository },
+  ports: { rateProposalPolicies: RateProposalPolicyRepository; now: number },
 ): Promise<Result<{ branchId: number; validityDays: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
@@ -20,7 +20,7 @@ export async function updateRateProposalPolicy(
   await ports.rateProposalPolicies.upsert({
     branchId: input.actor.branchId,
     validityDays: validityDays.value,
-    updatedAt: Date.now(),
+    updatedAt: ports.now,
     updatedByUserId: input.actor.userId,
   });
 

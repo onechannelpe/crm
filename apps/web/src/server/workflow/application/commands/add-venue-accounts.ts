@@ -13,7 +13,7 @@ import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 export async function addVenueAccountsCommand(
   input: AddVenueAccountsCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const accounts = buildVenueAccounts(input);
   if (!accounts.ok) return accounts;
@@ -35,7 +35,7 @@ export async function addVenueAccountsCommand(
       return Err(fail("accounts_already_added"));
     }
 
-    const now = Date.now();
+    const now = ports.now;
     const [totalVenues, venuesWithAccounts] = await Promise.all([
       repos.leadVenues.countByLeadId(input.leadId),
       repos.leadVenues.countWithAccounts(input.leadId),

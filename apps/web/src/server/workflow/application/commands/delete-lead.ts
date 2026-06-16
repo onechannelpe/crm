@@ -8,7 +8,7 @@ import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 
 export async function deleteLeadCommand(
   input: { actor: WorkflowActor; leadId: string },
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const leads = createLeadStateRepo(tx);
@@ -21,7 +21,7 @@ export async function deleteLeadCommand(
     // Idempotent: deleting an already-deleted lead is a no-op, not an error.
     if (state.deletedAt !== null) return Ok({ leadId: input.leadId });
 
-    const now = Date.now();
+    const now = ports.now;
     await tx
       .updateTable("workflow_leads")
       .set({

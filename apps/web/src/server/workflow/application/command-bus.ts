@@ -45,6 +45,7 @@ import { updateVenueCommand } from "./commands/update-venue";
 export function createWorkflowCommandBus(
   executor: DatabaseExecutor,
   repos: WorkflowRepos,
+  now: () => number,
 ) {
   const leadStates = createLeadStateRepo(executor);
 
@@ -83,58 +84,45 @@ export function createWorkflowCommandBus(
           users: repos.users,
           enrichmentQueue,
           executor,
+          now: now(),
         },
       ),
 
     reassignLead: (input: ReassignLeadCommandInput) =>
-      reassignLeadCommand(input, { executor }),
+      reassignLeadCommand(input, { executor, now: now() }),
 
     addLeadNote: (input: AddLeadNoteCommandInput) =>
-      addLeadNoteCommand(input, { executor }),
+      addLeadNoteCommand(input, { executor, now: now() }),
 
     logLeadCall: (input: LogLeadCallCommandInput) =>
-      logLeadCallCommand(input, { executor }),
+      logLeadCallCommand(input, { executor, now: now() }),
 
     acceptRate: (input: AcceptRateCommandInput) =>
-      acceptRateCommand(input, { executor }),
+      acceptRateCommand(input, { executor, now: now() }),
 
     proposeRate: (input: ProposeRateCommandInput) =>
-      proposeRateCommand(input, {
-        executor,
-      }),
+      proposeRateCommand(input, { executor, now: now() }),
 
     editCommercialScope: (input: EditCommercialScopeCommandInput) =>
-      editCommercialScopeCommand(input, {
-        executor,
-      }),
+      editCommercialScopeCommand(input, { executor, now: now() }),
 
     saveDigitalPolicy: (input: SaveDigitalPolicyCommandInput) =>
-      saveDigitalPolicyCommand(input, {
-        executor,
-      }),
+      saveDigitalPolicyCommand(input, { executor, now: now() }),
 
     recordRepLegal: (input: RecordRepLegalCommandInput) =>
-      recordRepLegalCommand(input, {
-        executor,
-      }),
+      recordRepLegalCommand(input, { executor, now: now() }),
 
     createVenue: (input: CreateVenueCommandInput) =>
-      createVenueCommand(input, {
-        executor,
-      }),
+      createVenueCommand(input, { executor, now: now() }),
 
     updateVenue: (input: UpdateVenueCommandInput) =>
-      updateVenueCommand(input, {
-        executor,
-      }),
+      updateVenueCommand(input, { executor, now: now() }),
 
     addVenueAccounts: (input: AddVenueAccountsCommandInput) =>
-      addVenueAccountsCommand(input, {
-        executor,
-      }),
+      addVenueAccountsCommand(input, { executor, now: now() }),
 
     requestRateRevision: (input: RequestRateRevisionCommandInput) =>
-      requestRateRevisionCommand(input, { executor }),
+      requestRateRevisionCommand(input, { executor, now: now() }),
 
     requestSunatRefresh: (input: { actor: WorkflowActor; leadId: string }) =>
       requestSunatRefresh(input, {
@@ -143,20 +131,24 @@ export function createWorkflowCommandBus(
       }),
 
     addToFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
-      addToFavoritesCommand(input, { executor }),
+      addToFavoritesCommand(input, { executor, now: now() }),
 
     removeFromFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
       removeFromFavoritesCommand(input, { executor }),
 
     deleteLead: (input: { actor: WorkflowActor; leadId: string }) =>
-      deleteLeadCommand(input, { executor }),
+      deleteLeadCommand(input, { executor, now: now() }),
 
     updateSourcingPolicy: (input: UpdateSourcingPolicyCommandInput) =>
-      updateSourcingPolicy(input, { sourcingPolicies: repos.sourcingPolicies }),
+      updateSourcingPolicy(input, {
+        sourcingPolicies: repos.sourcingPolicies,
+        now: now(),
+      }),
 
     updateRateProposalPolicy: (input: UpdateRateProposalPolicyCommandInput) =>
       updateRateProposalPolicy(input, {
         rateProposalPolicies: repos.rateProposalPolicies,
+        now: now(),
       }),
   };
 }

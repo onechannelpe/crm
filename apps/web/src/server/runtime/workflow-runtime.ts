@@ -19,7 +19,7 @@ export function createWorkflowRuntime(
   const repos = createWorkflowRepos(infra.db);
 
   return {
-    commands: createWorkflowCommandBus(infra.db, repos),
+    commands: createWorkflowCommandBus(infra.db, repos, infra.now),
     queries: createWorkflowQueryBus(repos, engineGateway),
     leadArtifacts: createLeadArtifactsService({
       leadReader: createLeadRepo(infra.db),

@@ -11,6 +11,7 @@ import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
+import { expireLapsedReservations } from "~/server/workflow/application/commands/expire-reservation";
 import { requestRateRevision } from "~/server/workflow/domain/lead/commands";
 import {
   authorizeLeadAction,
@@ -66,10 +67,12 @@ async function seedPendingProposal(
     })
     .execute();
 
+  // A pending proposal means the lead holds its RUC, so arm the lead's
+  // reservation the way proposeRate does in production.
   await runtime.ctx.db
     .updateTable("workflow_leads")
     .set({
-      reservation_expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      reservation_expires_at: runtime.now.get() + 7 * 24 * 60 * 60 * 1000,
     })
     .where("id", "=", input.leadId)
     .execute();
@@ -550,5 +553,86 @@ describe("request rate revision command", () => {
 
     expect(expectErr(result).code).toBe("rate_revision_file_not_submit_ready");
     expect(await countRateRevisions(runtime, lead.id)).toBe(1);
+  });
+});
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function readLead(runtime: TestRuntime, leadId: string) {
+  return runtime.ctx.db
+    .selectFrom("workflow_leads")
+    .select(["stage", "reservation_expires_at"])
+    .where("id", "=", leadId)
+    .executeTakeFirstOrThrow();
+}
+
+// The injected clock (runtime.now) governs the commands, so these tests can
+// arm a hold, travel past its window, and observe expiry deterministically.
+describe("lead reservation expiry", () => {
+  let runtime: TestRuntime;
+
+  beforeEach(async () => {
+    runtime = await createTestRuntime("workflow-reservation-expiry");
+    runtime.now.set(1_000);
+  });
+
+  afterEach(async () => {
+    await runtime.dispose();
+  });
+
+  it("retires a lead to EXPIRED once its hold lapses and the sweep runs", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "expiry-sweep",
+      organization: { key: "expiry-sweep" },
+      stage: "PRICING",
+    });
+    await seedPendingProposal(runtime, {
+      leadId: lead.id,
+      proposedBy: scenario.actor.by("backOne").userId,
+    });
+
+    // Within the window the sweep leaves the hold untouched.
+    expect(
+      await expireLapsedReservations(
+        { executor: runtime.ctx.db },
+        runtime.now.get(),
+      ),
+    ).toBe(0);
+
+    // Travel past the window; now the sweep retires the lead and frees the RUC.
+    runtime.now.set(runtime.now.get() + SEVEN_DAYS_MS + 1);
+    expect(
+      await expireLapsedReservations(
+        { executor: runtime.ctx.db },
+        runtime.now.get(),
+      ),
+    ).toBe(1);
+
+    const row = await readLead(runtime, lead.id);
+    expect(row.stage).toBe("EXPIRED");
+    expect(row.reservation_expires_at).toBeNull();
+  });
+
+  it("rejects accepting a rate after the hold has lapsed", async () => {
+    const scenario = createWorkflowScenario(runtime);
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.assignedTo("execOne", {
+      key: "expiry-accept",
+      organization: { key: "expiry-accept" },
+      stage: "PRICING",
+    });
+    const proposalId = await seedPendingProposal(runtime, {
+      leadId: lead.id,
+      proposedBy: scenario.actor.by("backOne").userId,
+    });
+
+    runtime.now.set(runtime.now.get() + SEVEN_DAYS_MS + 1);
+
+    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
+      commandApi.acceptRate({ actor, leadId: lead.id, proposalId }),
+    );
+
+    expect(expectErr(result).code).toBe("rate_proposal_expired");
   });
 });

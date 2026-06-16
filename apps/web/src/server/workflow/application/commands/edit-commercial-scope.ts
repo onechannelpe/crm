@@ -12,7 +12,7 @@ import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 // executive.
 export async function editCommercialScopeCommand(
   input: EditCommercialScopeCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
@@ -29,7 +29,7 @@ export async function editCommercialScopeCommand(
     if (!authz.ok) return authz;
 
     const profile = await repos.leadProfiles.findByLeadId(input.leadId);
-    const now = Date.now();
+    const now = ports.now;
 
     await repos.leadProfiles.upsert({
       leadId: state.id,

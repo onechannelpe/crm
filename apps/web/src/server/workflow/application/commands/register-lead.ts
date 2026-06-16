@@ -48,6 +48,7 @@ export async function registerLead(
     users: WorkflowUserRepository;
     enrichmentQueue: LeadEnrichmentQueue;
     executor: DatabaseExecutor;
+    now: number;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const canRegister = requireCapability("register", { role: input.actorRole });
@@ -62,7 +63,7 @@ export async function registerLead(
   });
   if (!activeExecutive.ok) return activeExecutive;
 
-  const now = Date.now();
+  const now = ports.now;
 
   // Lazy release: if the RUC is still held by a lapsed lead the sweep has not
   // retired yet, expire it now so this registration sees the RUC as available

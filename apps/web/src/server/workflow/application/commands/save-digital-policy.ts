@@ -14,7 +14,7 @@ import {
 
 export async function saveDigitalPolicyCommand(
   input: SaveDigitalPolicyCommandInput,
-  ports: { executor: DatabaseExecutor },
+  ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return ports.executor.transaction().execute(async (tx) => {
     const repos = createWorkflowRepos(tx);
@@ -53,7 +53,7 @@ export async function saveDigitalPolicyCommand(
 
     const profile = await repos.leadProfiles.findByLeadId(input.leadId);
     const digitalFields = toProfileDigitalFields(policy.value);
-    const now = Date.now();
+    const now = ports.now;
 
     await repos.leadProfiles.upsert({
       leadId: state.id,
