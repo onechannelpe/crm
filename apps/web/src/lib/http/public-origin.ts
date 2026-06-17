@@ -1,3 +1,5 @@
+import { serverEnv } from "~/lib/env";
+
 function getForwardedOrigin(headers: Headers): string | null {
   const forwarded = headers.get("forwarded");
   if (forwarded) {
@@ -26,7 +28,7 @@ function stripForwardedValue(value: string | undefined): string | null {
 }
 
 export function getRequestPublicOrigin(request: Request): string {
-  if (process.env.TRUSTED_PROXY === "true") {
+  if (serverEnv().security.trustedProxy === "true") {
     const forwardedOrigin = getForwardedOrigin(request.headers);
     if (forwardedOrigin) {
       return forwardedOrigin;

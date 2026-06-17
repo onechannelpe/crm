@@ -106,6 +106,16 @@ function parseSecurityEnv(source: EnvSource) {
   } as const;
 }
 
+function parseUploadsEnv(source: EnvSource) {
+  return {
+    storageRoot: optional(
+      source,
+      "WEB_UPLOADS_ROOT",
+      ".local-storage/documents",
+    ),
+  } as const;
+}
+
 function parseEngineEnv(source: EnvSource) {
   return {
     engineConnectMode: optionalEnum(
@@ -167,62 +177,29 @@ function parseSentryEnv(source: EnvSource) {
   } as const;
 }
 
-type EnvByCapability = {
-  session: ReturnType<typeof parseSessionEnv>;
-  totp: ReturnType<typeof parseTotpEnv>;
-  extension: ReturnType<typeof parseExtensionEnv>;
-  security: ReturnType<typeof parseSecurityEnv>;
-  engine: ReturnType<typeof parseEngineEnv>;
-  passkey: ReturnType<typeof parsePasskeyEnv>;
-  googleOAuth: ReturnType<typeof parseGoogleOAuthEnv>;
-  notifications: ReturnType<typeof parseNotificationsEnv>;
-  sentry: ReturnType<typeof parseSentryEnv>;
-};
-
-export type EnvCapability = keyof EnvByCapability;
-
-const envParsers: {
-  [K in EnvCapability]: (source: EnvSource) => EnvByCapability[K];
-} = {
-  session: parseSessionEnv,
-  totp: parseTotpEnv,
-  extension: parseExtensionEnv,
-  security: parseSecurityEnv,
-  engine: parseEngineEnv,
-  passkey: parsePasskeyEnv,
-  googleOAuth: parseGoogleOAuthEnv,
-  notifications: parseNotificationsEnv,
-  sentry: parseSentryEnv,
-};
-
-let envCache: {
-  [K in EnvCapability]?: EnvByCapability[K];
-} = {};
-
-function shouldCacheEnv(): boolean {
-  return process.env.NODE_ENV !== "test";
+export function loadServerEnv(source: EnvSource) {
+  return {
+    session: parseSessionEnv(source),
+    totp: parseTotpEnv(source),
+    extension: parseExtensionEnv(source),
+    security: parseSecurityEnv(source),
+    uploads: parseUploadsEnv(source),
+    engine: parseEngineEnv(source),
+    passkey: parsePasskeyEnv(source),
+    googleOAuth: parseGoogleOAuthEnv(source),
+    notifications: parseNotificationsEnv(source),
+    sentry: parseSentryEnv(source),
+  } as const;
 }
 
-export function parseEnvFor<C extends EnvCapability>(
-  capability: C,
-  source: EnvSource,
-): EnvByCapability[C] {
-  return envParsers[capability](source);
-}
+export type ServerEnv = ReturnType<typeof loadServerEnv>;
 
-export function getEnvFor<C extends EnvCapability>(
-  capability: C,
-): EnvByCapability[C] {
-  if (!shouldCacheEnv()) {
-    return parseEnvFor(capability, process.env);
+let cached: ServerEnv | undefined;
+
+export function serverEnv(): ServerEnv {
+  if (process.env.NODE_ENV === "test") {
+    return loadServerEnv(process.env);
   }
-
-  const cached = envCache[capability];
-  if (cached) {
-    return cached;
-  }
-
-  const parsed = parseEnvFor(capability, process.env);
-  envCache[capability] = parsed;
-  return parsed;
+  cached ??= loadServerEnv(process.env);
+  return cached;
 }

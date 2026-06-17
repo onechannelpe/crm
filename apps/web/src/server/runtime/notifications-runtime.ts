@@ -1,9 +1,9 @@
 import { createEmailComposer } from "@crm/email-composer";
 import { createMessageChannels } from "@crm/message-channels";
 
-import { getEnvFor } from "~/lib/env";
+import { serverEnv } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishJob } from "~/lib/redis/publisher";
+import { publishMessage } from "~/lib/redis/publisher";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import { createNotificationProcessor } from "~/server/notifications/processor";
@@ -13,7 +13,7 @@ import type { NotificationIntent } from "~/server/notifications/types";
 import type { ServerInfra } from "./infra";
 
 export function createNotificationsRuntime(infra: ServerInfra) {
-  const env = getEnvFor("notifications");
+  const env = serverEnv().notifications;
   const channels = createMessageChannels({
     resendApiKey: env.resendApiKey || undefined,
     fromEmail: env.emailFrom || undefined,
@@ -33,7 +33,7 @@ export function createNotificationsRuntime(infra: ServerInfra) {
       runOnce: () => runProcessor(workerId, 50),
     }),
     async dispatchPendingJobs(): Promise<void> {
-      await publishJob(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
+      await publishMessage(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
     },
     async enqueue(
       intents: NotificationIntent[],

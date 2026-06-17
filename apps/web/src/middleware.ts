@@ -2,11 +2,11 @@ import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 
 import { enforceAuthRequest } from "~/lib/auth/access/request-auth";
-import { getEnvFor } from "~/lib/env";
+import { serverEnv } from "~/lib/env";
 import { buildRequestContext } from "~/lib/http/request-context";
 import { generateRequestId, generateTraceId } from "~/lib/observability/ids";
 
-const { sentryIngestHost } = getEnvFor("sentry");
+const { sentryIngestHost } = serverEnv().sentry;
 
 export default createMiddleware({
   onRequest: async (event) => {

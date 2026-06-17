@@ -36,7 +36,7 @@ export function createSiteWebGlRenderer(
     try {
       onContextLost?.(event);
     } catch (callbackError) {
-      if (process.env.NODE_ENV !== "production") {
+      if (import.meta.env.DEV) {
         console.error("onContextLost callback threw:", callbackError);
       }
     }
@@ -60,7 +60,7 @@ export type SiteWebGlRendererCreationFailureHandler = (error: unknown) => void;
 
 export const reportSiteWebGlRendererCreationFailure: SiteWebGlRendererCreationFailureHandler =
   (error) => {
-    if (process.env.NODE_ENV !== "production") {
+    if (import.meta.env.DEV) {
       console.error("WebGL renderer creation failed:", error);
     }
   };

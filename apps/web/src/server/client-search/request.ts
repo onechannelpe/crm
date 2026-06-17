@@ -1,5 +1,5 @@
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishJob } from "~/lib/redis/publisher";
+import { publishJobId } from "~/lib/redis/publisher";
 
 import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
@@ -41,7 +41,7 @@ export function createEnrichmentCommand(
         max_attempts: 5,
       });
 
-      await publishJob(JOB_CHANNELS.ENRICHMENT, jobId);
+      await publishJobId(JOB_CHANNELS.ENRICHMENT, jobId);
 
       return jobId;
     },

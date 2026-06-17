@@ -1,5 +1,7 @@
-import { traceHydrationEvent } from "~/lib/observability/diagnostics/client";
-import { isHydrationMismatchError } from "~/lib/observability/diagnostics/core";
+import {
+  isHydrationMismatchError,
+  traceHydrationEvent,
+} from "~/lib/observability/diagnostics/hydration";
 
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim().length > 0) {

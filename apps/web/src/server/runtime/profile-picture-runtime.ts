@@ -1,4 +1,4 @@
-import { config } from "~/lib/config";
+import { serverEnv } from "~/lib/env";
 import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
 import { createProfilePictureService } from "~/server/users/profile-picture-service";
 import { createUsersRepo } from "~/server/users/repos-users";
@@ -9,7 +9,7 @@ export function createProfilePictureRuntime(infra: ServerInfra) {
   return {
     profilePictureService: createProfilePictureService(
       { users: createUsersRepo(infra.db) },
-      createProfilePictureBlobStore(config.uploads.storageRoot),
+      createProfilePictureBlobStore(serverEnv().uploads.storageRoot),
     ),
   };
 }

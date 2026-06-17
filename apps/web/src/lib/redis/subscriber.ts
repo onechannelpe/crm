@@ -9,9 +9,7 @@ type RedisMessageHandler = (message: string, channel: string) => void;
 const handlersByChannel = new Map<string, Set<RedisMessageHandler>>();
 const subscribedChannels = new Set<string>();
 
-let subscriberStarted = false;
-
-function subscribeFn() {
+function resolveSubscribe() {
   const client = getRedisSubscriberClient();
   const subscribe = Reflect.get(client, "subscribe");
   if (typeof subscribe !== "function") {
@@ -20,60 +18,23 @@ function subscribeFn() {
   return { client, subscribe };
 }
 
-async function ensureSubscriberLoop(): Promise<void> {
-  if (subscriberStarted) {
+function dispatchToHandlers(message: string, channel: string): void {
+  const handlers = handlersByChannel.get(channel);
+  if (!handlers || handlers.size === 0) {
     return;
   }
-  subscriberStarted = true;
-
-  try {
-    const { client, subscribe } = subscribeFn();
-    const channels = Array.from(handlersByChannel.keys()).filter(
-      (channel) => !subscribedChannels.has(channel),
-    );
-    await Promise.all(
-      channels.map(async (channel) => {
-        await subscribe.call(
-          client,
-          [channel],
-          (message: string, from: string) => {
-            const handlers = handlersByChannel.get(from);
-            if (!handlers || handlers.size === 0) {
-              return;
-            }
-            for (const handler of handlers) {
-              handler(message, from);
-            }
-          },
-        );
-        subscribedChannels.add(channel);
-      }),
-    );
-  } catch (error: unknown) {
-    subscriberStarted = false;
-    logger.error("subscriber_failed", {
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-    throw error;
+  for (const handler of handlers) {
+    handler(message, channel);
   }
 }
 
 async function ensureChannelSubscription(channel: string): Promise<void> {
-  await ensureSubscriberLoop();
   if (subscribedChannels.has(channel)) {
     return;
   }
 
-  const { client, subscribe } = subscribeFn();
-  await subscribe.call(client, [channel], (message: string, from: string) => {
-    const handlers = handlersByChannel.get(from);
-    if (!handlers || handlers.size === 0) {
-      return;
-    }
-    for (const handler of handlers) {
-      handler(message, from);
-    }
-  });
+  const { client, subscribe } = resolveSubscribe();
+  await subscribe.call(client, [channel], dispatchToHandlers);
   subscribedChannels.add(channel);
 }
 

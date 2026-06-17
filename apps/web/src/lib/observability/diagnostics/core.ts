@@ -1,34 +1,12 @@
 import { createLogger } from "../logger";
+import { readRuntimeEnv } from "../runtime-env";
 
-const DIAGNOSTIC_CHANNELS = ["requests", "ssr", "hydration"] as const;
+const DIAGNOSTIC_CHANNELS = ["ssr", "hydration"] as const;
 
 export type DiagnosticChannel = (typeof DIAGNOSTIC_CHANNELS)[number];
 export type DiagnosticMeta = Record<string, unknown>;
 
 const loggerByScope = new Map<string, ReturnType<typeof createLogger>>();
-
-function readImportMetaEnv(): Record<string, unknown> | undefined {
-  const metaEnv = (import.meta as { env?: Record<string, unknown> }).env;
-  return metaEnv && typeof metaEnv === "object" ? metaEnv : undefined;
-}
-
-function readServerEnv(key: string): string | undefined {
-  if (typeof process === "undefined" || typeof process.env === "undefined") {
-    return undefined;
-  }
-
-  const value = process.env[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function readClientEnv(key: string): string | undefined {
-  const value = readImportMetaEnv()?.[`VITE_${key}`];
-  return typeof value === "string" ? value : undefined;
-}
-
-function readRuntimeEnv(key: string): string | undefined {
-  return readServerEnv(key) ?? readClientEnv(key);
-}
 
 function parseCsv(raw: string | undefined): Set<string> {
   if (!raw) return new Set();
@@ -163,10 +141,4 @@ export async function traceDiagnosticAsync<T>(
     });
     throw error;
   }
-}
-
-export function isHydrationMismatchError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-
-  return error.message.toLowerCase().includes("hydration mismatch");
 }

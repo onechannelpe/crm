@@ -16,3 +16,9 @@ export function traceHydrationEvent(
   if (!import.meta.env.DEV) return;
   traceDiagnostic(scope, "hydration", event, meta);
 }
+
+export function isHydrationMismatchError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+
+  return error.message.toLowerCase().includes("hydration mismatch");
+}

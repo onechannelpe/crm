@@ -1,5 +1,5 @@
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import { getEnvFor } from "~/lib/env";
+import { serverEnv } from "~/lib/env";
 import { createEngineAdapter } from "~/server/adapters/engine/client";
 import type { DomainError } from "~/server/shared/domain-error";
 import { buildEngineClientConfig } from "~/server/shared/engine/config";
@@ -30,6 +30,6 @@ export interface EngineClient {
 }
 
 export function createDefaultEngineClient(): EngineClient {
-  const engineConfig = buildEngineClientConfig(getEnvFor("engine"));
+  const engineConfig = buildEngineClientConfig(serverEnv().engine);
   return createEngineAdapter(engineConfig);
 }

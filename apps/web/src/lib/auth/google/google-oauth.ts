@@ -1,13 +1,13 @@
 import { decodeIdToken, Google } from "arctic";
 
-import { getEnvFor } from "~/lib/env";
+import { serverEnv } from "~/lib/env";
 import { isPlainRecord } from "~/lib/type-guards";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 let googleOAuth: Google | undefined;
 
 export function getGoogleOAuth(): Google {
-  const env = getEnvFor("googleOAuth");
+  const env = serverEnv().googleOAuth;
   googleOAuth ??= new Google(
     env.googleClientId,
     env.googleClientSecret,

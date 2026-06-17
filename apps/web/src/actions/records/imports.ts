@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { Role } from "~/lib/auth/access/rbac";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishJob } from "~/lib/redis/publisher";
+import { publishJobId } from "~/lib/redis/publisher";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
@@ -161,7 +161,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         }),
       );
 
-      await publishJob(JOB_CHANNELS.RECORDS_IMPORT, jobId);
+      await publishJobId(JOB_CHANNELS.RECORDS_IMPORT, jobId);
 
       return Ok({ jobId, importType, rowsTotal });
     },

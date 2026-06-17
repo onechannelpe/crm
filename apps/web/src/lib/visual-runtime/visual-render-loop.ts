@@ -49,7 +49,7 @@ export type CreateVisualRenderLoopOptions = {
 
 export const reportVisualRenderLoopErrorInDevelopment: VisualRenderLoopErrorHandler =
   (error) => {
-    if (process.env.NODE_ENV !== "production") {
+    if (import.meta.env.DEV) {
       console.error("Visual render loop failed:", error);
     }
   };

@@ -3,7 +3,7 @@ import {
   type RecordImportType,
 } from "~/features/records-imports/contracts";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishJson } from "~/lib/redis/publisher";
+import { publishMessage } from "~/lib/redis/publisher";
 import type {
   IntegrationJobRow,
   IntegrationJobStatus,
@@ -49,5 +49,5 @@ export function buildRecordImportProgressEvent(input: {
 export async function publishRecordImportProgress(
   event: RecordImportProgressEvent,
 ): Promise<void> {
-  await publishJson(JOB_CHANNELS.RECORDS_IMPORT_PROGRESS, event);
+  await publishMessage(JOB_CHANNELS.RECORDS_IMPORT_PROGRESS, event);
 }

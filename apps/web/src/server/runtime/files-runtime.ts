@@ -1,4 +1,4 @@
-import { config } from "~/lib/config";
+import { serverEnv } from "~/lib/env";
 import { createArtifactsRepo } from "~/server/files/repo/artifacts";
 import { createAssetsRepo } from "~/server/files/repo/assets";
 import { createEventsRepo } from "~/server/files/repo/events";
@@ -25,7 +25,7 @@ export function createFilesRuntime(infra: ServerInfra) {
     sales: createSalesRepo(infra.db),
     rateRevision: createRateRevisionFilesRepo(infra.db),
   };
-  const storage = createFileStorage(config.uploads.storageRoot);
+  const storage = createFileStorage(serverEnv().uploads.storageRoot);
 
   const runtime: FilesRuntime = {
     repo,

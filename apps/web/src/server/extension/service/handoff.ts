@@ -1,4 +1,4 @@
-import { getEnvFor } from "~/lib/env";
+import { serverEnv } from "~/lib/env";
 import type { AppUow } from "~/server/shared/application/uow";
 import {
   external,
@@ -65,7 +65,7 @@ export async function createHandoffToken(
     return Err(invalid({ code: "origin_required" }));
   }
 
-  const expectedOrigin = getEnvFor("extension").extensionExpectedOrigin;
+  const expectedOrigin = serverEnv().extension.extensionExpectedOrigin;
 
   if (input.origin !== expectedOrigin) {
     return Err(fail("handoff_origin_not_allowed"));
