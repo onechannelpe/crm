@@ -1,4 +1,4 @@
-export const WIRE_KINDS = [
+const WIRE_KINDS = [
   "validation",
   "unauthenticated",
   "forbidden",

@@ -1,8 +1,8 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
+import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import { isErr } from "~/server/shared/result";
 
 describe("privileged password login", () => {

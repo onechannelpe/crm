@@ -44,5 +44,3 @@ export function readSnapshot(html: string): ConsultaRucSnapshot {
     fields,
   };
 }
-
-export { readFields };

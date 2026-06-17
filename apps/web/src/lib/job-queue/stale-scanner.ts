@@ -32,7 +32,7 @@ const JOB_TABLES = [
   },
 ] as const;
 
-export async function resetStalledJobs(
+async function resetStalledJobs(
   executor: DatabaseExecutor = getServerRuntime().infra.db,
 ) {
   const now = Date.now();

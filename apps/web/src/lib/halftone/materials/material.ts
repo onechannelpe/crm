@@ -470,7 +470,7 @@ export function createHalftoneMaterial() {
   return material;
 }
 
-export function initHalftoneGlassState(material: HalftoneTransmissionMaterial) {
+function initHalftoneGlassState(material: HalftoneTransmissionMaterial) {
   halftoneGlassState.set(material, {
     backsideEnvMapIntensity: 0,
     backsideThickness: 0,

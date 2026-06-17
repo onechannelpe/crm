@@ -2,7 +2,6 @@ import type { DataGridColumn } from "../model/types";
 
 export const REORDER_COLUMN_WIDTH = 32;
 export const SELECTION_COLUMN_WIDTH = 32;
-export const ADD_COLUMN_BUTTON_WIDTH = 100;
 
 function toTrack<T>(column: DataGridColumn<T>) {
   if (column.width) return `${column.width}px`;

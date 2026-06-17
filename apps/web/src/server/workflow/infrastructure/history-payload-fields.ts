@@ -99,22 +99,6 @@ export function requireNumber(
   return invalidPayload(row, key);
 }
 
-export function nullableNumber(
-  payload: Record<string, unknown> | null,
-  key: string,
-  row: HistoryEventRow,
-): Result<number | null, DomainError> {
-  const value = payload?.[key];
-  if (value === null || value === undefined) {
-    return Ok(null);
-  }
-  if (typeof value === "number") {
-    return Ok(value);
-  }
-
-  return invalidPayload(row, key);
-}
-
 export function requireLeadStage(
   payload: Record<string, unknown> | null,
   key: string,

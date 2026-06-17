@@ -1,13 +1,8 @@
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import { config } from "~/lib/config";
-import {
-  actionErrorFrom,
-  fail,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-
-import { requiresStrongAuthRole } from "./strong-auth-status";
+import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 const DEFAULT_MAX_AGE_MS = config.auth.strongAuthMaxAgeMs;
 
@@ -28,12 +23,4 @@ export function checkRecentStrongAuth(
   }
 
   return Ok(undefined);
-}
-
-export function assertRecentStrongAuth(
-  session: AuthSession,
-  maxAgeMs = DEFAULT_MAX_AGE_MS,
-): void {
-  const result = checkRecentStrongAuth(session, maxAgeMs);
-  if (isErr(result)) throw actionErrorFrom(result.error);
 }

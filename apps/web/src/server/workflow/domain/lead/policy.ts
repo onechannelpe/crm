@@ -91,7 +91,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
   return caps;
 }
 
-export function canViewAllLeads(role: Role): boolean {
+function canViewAllLeads(role: Role): boolean {
   return (
     hasPermission(role, "lead:view:all") ||
     hasPermission(role, "lead:review") ||

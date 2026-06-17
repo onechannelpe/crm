@@ -11,8 +11,6 @@ import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
-import { sessionCache } from "./session-cache";
-
 const logger = createLogger("session-cleanup");
 function createCleanupRepos(executor: DatabaseExecutor) {
   return {
@@ -27,7 +25,7 @@ function createCleanupRepos(executor: DatabaseExecutor) {
   };
 }
 
-export async function cleanupExpiredSessions(): Promise<void> {
+async function cleanupExpiredSessions(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.sessions.deleteExpired();
   if (deleted > 0) {
@@ -35,7 +33,7 @@ export async function cleanupExpiredSessions(): Promise<void> {
   }
 }
 
-export async function cleanupExpiredRequestSessions(): Promise<void> {
+async function cleanupExpiredRequestSessions(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.requestSessions.deleteExpired();
   if (deleted > 0) {
@@ -43,7 +41,7 @@ export async function cleanupExpiredRequestSessions(): Promise<void> {
   }
 }
 
-export async function cleanupExpiredWebauthnChallenges(): Promise<void> {
+async function cleanupExpiredWebauthnChallenges(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.webauthnChallenges.deleteExpired();
   if (deleted > 0) {
@@ -51,7 +49,7 @@ export async function cleanupExpiredWebauthnChallenges(): Promise<void> {
   }
 }
 
-export async function cleanupStaleAuthThrottle(): Promise<void> {
+async function cleanupStaleAuthThrottle(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const expiredBlocks = await repos.authThrottle.deleteExpiredBlocks();
   const stale = await repos.authThrottle.deleteUpdatedBefore(
@@ -63,7 +61,7 @@ export async function cleanupStaleAuthThrottle(): Promise<void> {
   }
 }
 
-export async function cleanupStaleAuthEvents(): Promise<void> {
+async function cleanupStaleAuthEvents(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.authEvents.deleteCreatedBefore(
     Date.now() - config.auth.eventsRetentionMs,
@@ -73,7 +71,7 @@ export async function cleanupStaleAuthEvents(): Promise<void> {
   }
 }
 
-export async function cleanupStaleActionObservations(): Promise<void> {
+async function cleanupStaleActionObservations(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.actionObservations.deleteCreatedBefore(
     Date.now() - config.observability.retentionMs,
@@ -83,7 +81,7 @@ export async function cleanupStaleActionObservations(): Promise<void> {
   }
 }
 
-export async function cleanupStaleAuthFunnelEvents(): Promise<void> {
+async function cleanupStaleAuthFunnelEvents(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.authFunnelEvents.deleteCreatedBefore(
     Date.now() - config.observability.retentionMs,
@@ -93,7 +91,7 @@ export async function cleanupStaleAuthFunnelEvents(): Promise<void> {
   }
 }
 
-export async function cleanupStaleActionRateLimits(): Promise<void> {
+async function cleanupStaleActionRateLimits(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.actionRateLimits.deleteUpdatedBefore(
     Date.now() - config.security.rateLimitRetentionMs,
@@ -101,10 +99,6 @@ export async function cleanupStaleActionRateLimits(): Promise<void> {
   if (deleted > 0) {
     logger.info("stale_rate_limit_counters_deleted", { deleted });
   }
-}
-
-export function getCacheStats() {
-  return sessionCache.getStats();
 }
 
 export function startSessionCleanupScheduler(intervalMs = 60 * 60 * 1000) {

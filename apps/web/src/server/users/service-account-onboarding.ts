@@ -1,8 +1,6 @@
-import {
-  getStrongAuthStatus,
-  requiresStrongAuthRole,
-} from "~/lib/auth/security/strong-auth-status";
+import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { Phone } from "~/lib/phone/pe-mobile";
+import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";

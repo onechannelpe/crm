@@ -9,7 +9,7 @@ export type WorkspaceView = {
   readonly permission?: Permission;
 };
 
-export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
+const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   {
     id: "mine",
     label: "Mis clientes",

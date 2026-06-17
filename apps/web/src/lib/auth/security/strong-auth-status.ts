@@ -1,5 +1,3 @@
-import type { UsersTable } from "~/lib/db/types";
-import { requiresStrongAuthRole as requiresStrongAuthRoleFromPolicy } from "~/server/auth/policy/rules/role";
 import type { UserId } from "~/server/shared/ids";
 
 export interface StrongAuthPasskeysPort {
@@ -22,14 +20,6 @@ export interface StrongAuthStatus {
   hasPasskey: boolean;
   passkeyCount: number;
   hasVerifiedStrongAuth: boolean;
-}
-
-export function deriveStrongAuthRequired(role: UsersTable["role"]): boolean {
-  return requiresStrongAuthRoleFromPolicy(role);
-}
-
-export function requiresStrongAuthRole(role: UsersTable["role"]) {
-  return deriveStrongAuthRequired(role);
 }
 
 export async function getStrongAuthStatus(

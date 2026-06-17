@@ -13,7 +13,6 @@ export {
   type SiteWebGlRendererParameters,
 } from "./create-site-webgl-renderer";
 export { loadVisualImage } from "./load-visual-image";
-export { useWebGlPolicy } from "./use-webgl-policy";
 export {
   createVisualRenderLoop,
   reportVisualRenderLoopErrorInDevelopment,

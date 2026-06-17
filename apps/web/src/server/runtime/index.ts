@@ -18,7 +18,7 @@ import { createTeamRuntime } from "./team-runtime";
 import { createUsersRuntime } from "./users-runtime";
 import { createWorkflowRuntime } from "./workflow-runtime";
 
-export function createServerRuntime() {
+function createServerRuntime() {
   const infra = createServerInfra();
   const engine = createDefaultEngineClient();
   const notifications = createNotificationsRuntime(infra);

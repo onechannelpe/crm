@@ -76,7 +76,7 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
   };
 }
 
-export function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
+function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
   return {
     executive_id: values.executiveId,
     updated_by: values.updatedBy,

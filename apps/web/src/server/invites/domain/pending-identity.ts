@@ -4,7 +4,7 @@ import type { ExecutiveCategoryValue } from "~/lib/db/types";
 
 // Pending invite users do not authenticate until acceptance flips is_active to 1
 // and sets a real password hash. This placeholder avoids expensive hashing on create.
-export const PENDING_INVITE_PASSWORD_PLACEHOLDER = `pending:${generateInviteToken()}`;
+const PENDING_INVITE_PASSWORD_PLACEHOLDER = `pending:${generateInviteToken()}`;
 
 export function normalizeInviteEmail(email: string): string {
   return email.trim().toLowerCase();

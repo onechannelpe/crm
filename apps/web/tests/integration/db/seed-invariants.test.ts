@@ -4,13 +4,11 @@ import { join } from "node:path";
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  getStrongAuthStatus,
-  requiresStrongAuthRole,
-} from "~/lib/auth/security/strong-auth-status";
+import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
 import { seedIfEmpty } from "~/lib/db/seed";
+import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 
 describe("seed invariants", () => {
   const artifactDir = join(process.cwd(), ".vitest-db");

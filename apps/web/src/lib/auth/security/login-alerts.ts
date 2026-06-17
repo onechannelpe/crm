@@ -1,11 +1,11 @@
 import { createLogger } from "~/lib/observability/logger";
+import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import type { NotificationIntent } from "~/server/notifications/types";
 
 import type {
   PrivilegedLoginAlertPayload,
   SendPrivilegedLoginAlert,
 } from "./privileged-login-alert";
-import { requiresStrongAuthRole } from "./strong-auth-status";
 
 interface AlertNotifications {
   enqueue(intents: NotificationIntent[], now: number): Promise<void>;

@@ -1,7 +1,7 @@
 import type { LeadEvent } from "./events";
 import type { LeadState } from "./state";
 
-export function applyEvent(state: LeadState, event: LeadEvent): LeadState {
+function applyEvent(state: LeadState, event: LeadEvent): LeadState {
   switch (event.eventType) {
     case "lead_reviewed":
       return {

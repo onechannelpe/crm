@@ -39,10 +39,6 @@ export const leadListQuery = query(
   "workflow.leadList",
 );
 
-export function leadListKeyFor(filters: ListLeadsFiltersInput): string {
-  return leadListQuery.keyFor(normalizeLeadListFilters(filters));
-}
-
 export const leadDetailQuery = query(
   (leadId: string): Promise<LeadDetailView> => queryLeadDetail(leadId),
   "workflow.leadDetail",

@@ -3,7 +3,6 @@ import {
   LEAD_STATUSES,
 } from "~/contracts/workflow/vocabulary";
 import type { RecordImportType } from "~/features/records-imports/contracts";
-import type { CsvDelimiter } from "~/server/csv/core";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import { parseOptionalVocabularyValue } from "~/server/workflow/parsers";
 
@@ -24,13 +23,6 @@ function readRecord(
   }
 
   return record;
-}
-
-export function splitLeadCsvLine(
-  line: string,
-  delimiter: CsvDelimiter,
-): string[] {
-  return line.split(delimiter).map((cell) => cell.trim());
 }
 
 export function mapRecordImportRow(input: {

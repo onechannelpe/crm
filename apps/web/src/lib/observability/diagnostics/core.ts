@@ -87,7 +87,7 @@ function normalizeMeta(meta: DiagnosticMeta): DiagnosticMeta {
   );
 }
 
-export function getDiagnosticRuntime(): "server" | "client" {
+function getDiagnosticRuntime(): "server" | "client" {
   return typeof window === "undefined" ? "server" : "client";
 }
 

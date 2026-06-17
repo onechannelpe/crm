@@ -8,7 +8,6 @@ import {
 } from "~/actions/workflow/commands/rate";
 import {
   requestAddLeadToFavorites,
-  requestEditCommercialScope,
   requestLeadCreation,
   requestLeadDeletion,
   requestLeadReassignment,
@@ -26,7 +25,6 @@ import type {
   AddVenueAccountsInput,
   CreateLeadInput,
   CreateVenueInput,
-  EditCommercialScopeInput,
   EditRateProposalInput,
   ProposeRateInput,
   ReassignLeadInput,
@@ -59,11 +57,6 @@ export const acceptRateMutation = action(
 export const requestRateRevisionMutation = action(
   (input: RequestRateRevisionInput) => requestRateRevision(input),
   "workflow.requestRateRevision",
-);
-
-export const editCommercialScopeMutation = action(
-  (input: EditCommercialScopeInput) => requestEditCommercialScope(input),
-  "workflow.editCommercialScope",
 );
 
 export const saveDigitalPolicyMutation = action(

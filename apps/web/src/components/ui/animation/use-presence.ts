@@ -33,8 +33,3 @@ export function usePresence(subscribe = true): PresenceTuple {
 
   return [isPresent, subscribe ? safeToRemove : null];
 }
-
-export function useIsPresent(): boolean {
-  const context = useContext(PresenceContext);
-  return context === null ? true : context.isPresent();
-}

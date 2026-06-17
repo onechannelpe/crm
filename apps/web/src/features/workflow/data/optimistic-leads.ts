@@ -1,4 +1,3 @@
-import type { Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import type { LeadListRowView } from "~/contracts/workflow/views";
@@ -45,13 +44,6 @@ export function createOptimisticLeadRow(input: {
 /** Reactive read for source() and other tracking contexts. */
 export function getOptimisticLeadRows(key: string): OptimisticLeadRow[] {
   return state[key] ?? [];
-}
-
-/** Stable accessor for callers that need a fixed Accessor<T> reference. */
-export function useOptimisticLeadRows(
-  key: string,
-): Accessor<OptimisticLeadRow[]> {
-  return () => state[key] ?? [];
 }
 
 export function addOptimisticLead(

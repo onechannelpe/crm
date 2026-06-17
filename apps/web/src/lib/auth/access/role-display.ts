@@ -1,7 +1,7 @@
 import type { Role } from "./rbac";
 import { canAssignRole } from "./rbac";
 
-export const ROLE_LABELS: Record<Role, string> = {
+const ROLE_LABELS: Record<Role, string> = {
   executive: "Ejecutivo",
   supervisor: "Supervisor",
   back_office: "Validación de ventas",

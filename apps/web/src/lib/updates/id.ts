@@ -1,6 +1,6 @@
 import type { UpdateCadence, UpdateKind } from "~/lib/updates/types";
 
-export function slugifyTitle(value: string): string {
+function slugifyTitle(value: string): string {
   return value
     .toLowerCase()
     .normalize("NFD")

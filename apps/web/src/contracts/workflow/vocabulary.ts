@@ -15,7 +15,7 @@ export const LEAD_STATUSES = [
   "STOCK",
 ] as const;
 export const LEAD_PRIORITIES = ["P1", "P2", "SIN RESULTADO"] as const;
-export const LEAD_NEXT_STEPS = [
+const LEAD_NEXT_STEPS = [
   "NO_ACTION",
   "PROPOSE_RATE",
   "ACCEPT_RATE",

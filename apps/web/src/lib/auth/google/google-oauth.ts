@@ -23,7 +23,7 @@ export interface GoogleIdTokenClaims {
   picture?: string;
 }
 
-export function parseGoogleClaims(claims: unknown): GoogleIdTokenClaims {
+function parseGoogleClaims(claims: unknown): GoogleIdTokenClaims {
   if (!isPlainRecord(claims)) {
     throw new Error("Invalid Google ID token claims");
   }
