@@ -9,7 +9,7 @@ import { getActionRequestContext } from "~/lib/observability/context";
 import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
 import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
 import { runPublicAction } from "~/server/shared/action-runtime";
 import { fail, internal, throwDomain } from "~/server/shared/domain-error";
@@ -41,6 +41,7 @@ export async function passwordLogin(
       },
       loginContext.repos,
       loginContext.privilegedLoginAlertSender,
+      createRequestPasskeyProvider(loginContext.repos),
     );
 
     if (isErr(result)) {
@@ -125,9 +126,11 @@ export async function passkeyStart(
             mode,
           };
 
-    const result = await startPasskeyLogin(command, loginContext.repos, {
-      createWebauthnProvider: createRequestPasskeyProviderFactory(),
-    });
+    const result = await startPasskeyLogin(
+      command,
+      loginContext.repos,
+      createRequestPasskeyProvider(loginContext.repos),
+    );
 
     if (isErr(result)) {
       await recordAuthAnalyticsEvent(

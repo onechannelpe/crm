@@ -28,12 +28,11 @@ Configuration is loaded from env files selected by the script or passed by the c
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Core auth           | `SESSION_SECRET`, `TOTP_ENCRYPTION_KEY`, `ENGINE_HMAC_KEY_ID`, `ENGINE_HMAC_SECRET`                                                          |
 | Engine client       | `ENGINE_CONNECT_MODE`, `ENGINE_URL`                                                                                                          |
-| WebAuthn            | `WEBAUTHN_RP_ID`, `WEBAUTHN_ORIGIN`                                                                                                          |
 | Storage and proxy   | `WEB_DB_PATH`, `WEB_UPLOADS_ROOT`, `TRUSTED_PROXY`                                                                                           |
 | Extension and OAuth | `EXTENSION_EXPECTED_ORIGIN`, `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` |
 | Notifications       | `RESEND_API_KEY`, `EMAIL_FROM`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_GRAPH_API_VERSION`                            |
 
-The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. WebAuthn defaults are `WEBAUTHN_RP_ID=localhost` and `WEBAUTHN_ORIGIN=http://localhost:5173`. Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
+The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. The WebAuthn relying party is derived per request from the public origin (`requestContext.publicOrigin`). Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
 
 ## Running
 

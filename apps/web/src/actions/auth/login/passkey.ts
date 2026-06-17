@@ -8,7 +8,7 @@ import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/flows/finish-passkey-login";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
 import { runPublicAction } from "~/server/shared/action-runtime";
 import { fail, throwDomain } from "~/server/shared/domain-error";
@@ -33,7 +33,9 @@ export async function finishPasskeyLogin(
         response,
         ipAddress: clientMetadata.ipAddress,
         userAgent: clientMetadata.userAgent,
-        createWebauthnProvider: createRequestPasskeyProviderFactory(),
+        webauthnProvider: createRequestPasskeyProvider(
+          runtime.auth.login.repos,
+        ),
       },
     );
 

@@ -8,13 +8,13 @@ import {
   beginPasskeyEnrollment as beginPasskeyEnrollmentCommand,
   finishPasskeyEnrollment as finishPasskeyEnrollmentCommand,
 } from "~/server/auth/flows/passkey-enrollment";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
   const { repos } = getServerRuntime().auth.onboarding;
-  const createWebauthnProvider = createRequestPasskeyProviderFactory();
+  const webauthnProvider = createRequestPasskeyProvider(repos);
 
   return runAction({
     name: "auth.passkey.enroll.begin",
@@ -24,7 +24,7 @@ export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallen
       beginPasskeyEnrollmentCommand(repos, {
         userId: actor.userId,
         ipAddress,
-        createWebauthnProvider,
+        webauthnProvider,
       }),
   });
 }
@@ -34,7 +34,7 @@ export async function finishPasskeyEnrollment(
   response: RegistrationResponseJSON,
 ): Promise<{ message: string }> {
   const { repos } = getServerRuntime().auth.onboarding;
-  const createWebauthnProvider = createRequestPasskeyProviderFactory();
+  const webauthnProvider = createRequestPasskeyProvider(repos);
 
   const result = await runAction({
     name: "auth.passkey.enroll.finish",
@@ -51,7 +51,7 @@ export async function finishPasskeyEnrollment(
         response,
         ipAddress,
         userAgent,
-        createWebauthnProvider,
+        webauthnProvider,
       }),
   });
 

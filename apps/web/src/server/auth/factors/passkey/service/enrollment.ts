@@ -10,7 +10,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { PasskeyAuthRepos } from "./shared";
 
 interface PasskeyEnrollmentServiceDeps {
-  webauthnService: {
+  webauthnProvider: {
     getRegistrationOptions(
       userId: number,
     ): Promise<PasskeyEnrollmentChallenge["options"]>;
@@ -55,7 +55,7 @@ export function createPasskeyEnrollmentService(
         return Err(fail("invalid_passkey_request"));
       }
 
-      const options = await deps.webauthnService.getRegistrationOptions(
+      const options = await deps.webauthnProvider.getRegistrationOptions(
         input.userId,
       );
 
@@ -116,7 +116,7 @@ export function createPasskeyEnrollmentService(
       }
 
       try {
-        const registration = await deps.webauthnService.verifyRegistration(
+        const registration = await deps.webauthnProvider.verifyRegistration(
           input.userId,
           input.response,
           challenge.challenge,

@@ -4,6 +4,7 @@ import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
 } from "~/server/auth/application/contracts";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import type { AuthProof } from "~/server/auth/policy/types";
 import { Err, type Result } from "~/server/shared/result";
@@ -19,6 +20,7 @@ export async function submitGoogleLogin(
   },
   deps: AuthLoginDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
+  webauthnProvider: WebauthnProvider,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const proof: Extract<AuthProof, { kind: "google" }> = {
     kind: "google",
@@ -40,5 +42,6 @@ export async function submitGoogleLogin(
     context,
     deps,
     sendPrivilegedLoginAlert,
+    webauthnProvider,
   });
 }

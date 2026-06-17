@@ -7,6 +7,7 @@ import {
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { appendSessionCookie } from "~/lib/auth/session/cookies";
 import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -44,6 +45,7 @@ export async function GET(event: APIEvent): Promise<Response> {
     },
     runtime.repos,
     runtime.privilegedLoginAlertSender,
+    createRequestPasskeyProvider(runtime.repos),
   );
   if (isErr(result)) {
     if (result.error.kind === "bad_request") {

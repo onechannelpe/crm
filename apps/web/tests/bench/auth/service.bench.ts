@@ -1,3 +1,4 @@
+import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
@@ -67,6 +68,7 @@ describe("auth login service benchmark", () => {
         },
         ctx.repos,
         sendPrivilegedLoginAlert,
+        createTestPasskeyProvider(ctx.repos),
       );
 
       if (

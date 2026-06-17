@@ -27,9 +27,9 @@ describe("auth middleware routing", () => {
     const decision = await enforceAuthRequest(event);
 
     expect(decision.kind).toBe("allow");
-    await expect(
-      event.locals.requestContext?.getAuthSession(),
-    ).resolves.toEqual(session);
+    await expect(event.locals.requestContext.getAuthSession()).resolves.toEqual(
+      session,
+    );
   });
 
   it("redirects to onboarding when session is not onboarded", async () => {

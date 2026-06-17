@@ -11,6 +11,10 @@ vi.mock("~/server/auth/flows/google-callback-login", () => ({
   completeGoogleOAuthCallback: mocks.completeGoogleOAuthCallback,
 }));
 
+vi.mock("~/server/auth/infrastructure/request-passkey-provider", () => ({
+  createRequestPasskeyProvider: () => ({}),
+}));
+
 vi.mock("~/server/runtime", () => ({
   getServerRuntime: () => ({
     auth: {

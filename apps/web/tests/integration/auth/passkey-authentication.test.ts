@@ -4,6 +4,7 @@ import { getSeededIdentity } from "@tests/support/identities/api";
 import {
   buildAssertionResponse,
   createAuthFlow,
+  createTestPasskeyProvider,
   createWebauthnProviderWithAuth,
 } from "@tests/support/passkey/api";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -33,6 +34,9 @@ describe("passkey authentication", () => {
   it("begin identified login creates authentication challenge", async () => {
     const result = await createPasskeyLoginStartAuthService(
       scenario.ctx.repos,
+      {
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     ).beginLogin({
       identifier: "exec.one",
       ipAddress,
@@ -53,6 +57,9 @@ describe("passkey authentication", () => {
   it("begin discoverable login creates unscoped challenge", async () => {
     const result = await createPasskeyLoginStartAuthService(
       scenario.ctx.repos,
+      {
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     ).beginLogin({ ipAddress, mode: "discoverable" });
     const value = expectOk(result);
 
@@ -75,11 +82,10 @@ describe("passkey authentication", () => {
     const result = await createPasskeyLoginFinishAuthService(
       scenario.ctx.repos,
       {
-        createWebauthnProvider: () =>
-          createWebauthnProviderWithAuth(async () => ({
-            verified: true,
-            userId: execOne.userId,
-          })),
+        webauthnProvider: createWebauthnProviderWithAuth(async () => ({
+          verified: true,
+          userId: execOne.userId,
+        })),
       },
     ).finishLogin({
       flowId,
@@ -106,11 +112,10 @@ describe("passkey authentication", () => {
     const result = await createPasskeyLoginFinishAuthService(
       scenario.ctx.repos,
       {
-        createWebauthnProvider: () =>
-          createWebauthnProviderWithAuth(async () => ({
-            verified: true,
-            userId: backOne.userId,
-          })),
+        webauthnProvider: createWebauthnProviderWithAuth(async () => ({
+          verified: true,
+          userId: backOne.userId,
+        })),
       },
     ).finishLogin({
       flowId,
@@ -127,6 +132,7 @@ describe("passkey authentication", () => {
   it("returns flow expired for invalid flow id", async () => {
     const result = await createPasskeyLoginFinishAuthService(
       scenario.ctx.repos,
+      { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
     ).finishLogin({
       flowId: 0,
       response: buildAssertionResponse("passkey-1"),

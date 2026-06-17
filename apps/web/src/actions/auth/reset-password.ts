@@ -1,8 +1,6 @@
 "use server";
 
-import { getRequestEvent } from "solid-js/web";
-
-import { getRequestPublicOrigin } from "~/lib/http/public-origin";
+import { getRequestContext } from "~/lib/http/request-context";
 import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/flows/request-password-reset";
 import { resetPassword as resetPasswordService } from "~/server/auth/flows/reset-password";
 import { getServerRuntime } from "~/server/runtime";
@@ -16,8 +14,7 @@ export async function requestPasswordReset(
   const rawEmail = formData.get("email");
   const email = typeof rawEmail === "string" ? rawEmail : "";
 
-  const event = getRequestEvent();
-  const origin = event?.request ? getRequestPublicOrigin(event.request) : "";
+  const origin = getRequestContext().publicOrigin;
 
   return runPublicAction(async () => {
     const result = await requestPasswordResetService({

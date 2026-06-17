@@ -10,7 +10,7 @@ declare namespace App {
   }
 
   interface RequestEventLocals {
-    requestContext?: RequestContext;
+    requestContext: RequestContext;
     nonce: string;
   }
 }

@@ -4,6 +4,7 @@ import { getSeededIdentity } from "@tests/support/identities/api";
 import {
   buildAssertionResponse,
   createAuthFlow,
+  createTestPasskeyProvider,
 } from "@tests/support/passkey/api";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -31,6 +32,9 @@ describe("passkey error mapping", () => {
   it("returns invalid credentials for empty identifier", async () => {
     const result = await createPasskeyLoginStartAuthService(
       scenario.ctx.repos,
+      {
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     ).beginLogin({ identifier: "   ", ipAddress, mode: "identified" });
 
     const error = expectErr(result);
@@ -47,15 +51,18 @@ describe("passkey error mapping", () => {
     });
 
     await expect(
-      createPasskeyLoginStartAuthService({
-        ...scenario.ctx.repos,
-        loginFlows: {
-          ...scenario.ctx.repos.loginFlows,
-          async create() {
-            throw new Error("boom");
+      createPasskeyLoginStartAuthService(
+        {
+          ...scenario.ctx.repos,
+          loginFlows: {
+            ...scenario.ctx.repos.loginFlows,
+            async create() {
+              throw new Error("boom");
+            },
           },
         },
-      }).beginLogin({ identifier: "exec.one", ipAddress, mode: "identified" }),
+        { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
+      ).beginLogin({ identifier: "exec.one", ipAddress, mode: "identified" }),
     ).rejects.toThrow("boom");
   });
 
@@ -68,6 +75,7 @@ describe("passkey error mapping", () => {
 
     const result = await createPasskeyLoginFinishAuthService(
       scenario.ctx.repos,
+      { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
     ).finishLogin({
       flowId,
       response: buildAssertionResponse("missing-passkey"),
@@ -103,7 +111,7 @@ describe("passkey error mapping", () => {
 
     await expect(
       createPasskeyLoginFinishAuthService(scenario.ctx.repos, {
-        createWebauthnProvider: () => ({
+        webauthnProvider: {
           async getRegistrationOptions() {
             throw new Error("not used");
           },
@@ -119,7 +127,7 @@ describe("passkey error mapping", () => {
           async verifyAuthentication() {
             return { verified: true, userId: execOne.userId };
           },
-        }),
+        },
         async establishSession() {
           throw new Error("boom");
         },

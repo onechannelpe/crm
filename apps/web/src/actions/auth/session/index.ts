@@ -4,11 +4,13 @@ import type { CurrentUserView } from "~/actions/auth/contracts";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { logoutUser } from "~/server/auth/flows/logout-user";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getLoginFlow(flowId: number) {
-  return getLoginFlowState(flowId, getServerRuntime().auth.login.repos);
+  const repos = getServerRuntime().auth.login.repos;
+  return getLoginFlowState(flowId, repos, createRequestPasskeyProvider(repos));
 }
 
 export async function logout(): Promise<void> {

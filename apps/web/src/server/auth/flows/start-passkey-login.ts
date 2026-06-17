@@ -1,3 +1,4 @@
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import {
   createPasskeyLoginStartAuthService,
   type BeginPasskeyLoginInput,
@@ -5,18 +6,12 @@ import {
 
 import type { AuthLoginDeps } from "./login-deps";
 
-type PasskeyStartProviderFactory = NonNullable<
-  Parameters<typeof createPasskeyLoginStartAuthService>[1]
->["createWebauthnProvider"];
-
 export async function startPasskeyLogin(
   input: BeginPasskeyLoginInput,
   repos: AuthLoginDeps,
-  deps: {
-    createWebauthnProvider: PasskeyStartProviderFactory;
-  },
+  webauthnProvider: WebauthnProvider,
 ) {
   return createPasskeyLoginStartAuthService(repos, {
-    createWebauthnProvider: deps.createWebauthnProvider,
+    webauthnProvider,
   }).beginLogin(input);
 }

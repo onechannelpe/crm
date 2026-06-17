@@ -1,5 +1,6 @@
 import { authenticateGoogleAuthorizationCode } from "~/lib/auth/google/google-oauth";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { submitGoogleLogin } from "~/server/auth/flows/submit-google-login";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
@@ -57,6 +58,7 @@ export async function completeGoogleOAuthCallback(
   },
   deps: GoogleCallbackDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
+  webauthnProvider: WebauthnProvider,
 ): Promise<
   Result<CompleteGoogleOAuthCallbackSuccess, CompleteGoogleOAuthCallbackError>
 > {
@@ -103,6 +105,7 @@ export async function completeGoogleOAuthCallback(
     },
     deps,
     sendPrivilegedLoginAlert,
+    webauthnProvider,
   );
 
   if (isErr(loginResult)) {

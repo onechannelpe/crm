@@ -1,5 +1,5 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
-import { createPasskeyProvider } from "~/server/auth/factors/passkey-provider";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyLoginStateService } from "~/server/auth/factors/passkey/service/login-state";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 
@@ -8,6 +8,7 @@ import type { LoginFlowState } from "../contracts";
 export async function getLoginFlowState(
   flowId: number,
   deps: AuthLoginDeps,
+  webauthnProvider: WebauthnProvider,
 ): Promise<LoginFlowState | null> {
   const flow = await deps.loginFlows.findById(flowId);
 
@@ -30,7 +31,7 @@ export async function getLoginFlowState(
 
     case "passkey":
       return createPasskeyLoginStateService(deps, {
-        webauthnService: createPasskeyProvider(deps),
+        webauthnProvider,
       }).hydrateLoginFlow(flow);
 
     default:

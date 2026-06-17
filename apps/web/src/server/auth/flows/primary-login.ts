@@ -8,6 +8,7 @@ import type {
   SubmitPrimaryLoginResult,
   TotpLoginFlowState,
 } from "~/server/auth/application/contracts";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
@@ -45,6 +46,7 @@ export async function completePrimaryAuthProof(params: {
   context?: AuthContext;
   deps: AuthLoginDeps;
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
+  webauthnProvider: WebauthnProvider;
 }): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const context =
     params.context ??
@@ -75,9 +77,9 @@ export async function completePrimaryAuthProof(params: {
   }
 
   if (decision.kind === "require_passkey") {
-    const flow = await createPasskeyLoginStartAuthService(
-      params.deps,
-    ).beginLogin({
+    const flow = await createPasskeyLoginStartAuthService(params.deps, {
+      webauthnProvider: params.webauthnProvider,
+    }).beginLogin({
       identifier: params.identifier,
       ipAddress: params.request.ipAddress,
       mode: "identified",

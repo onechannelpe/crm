@@ -10,8 +10,6 @@ import {
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 
-import { serverEnv } from "~/lib/env";
-import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
@@ -23,20 +21,11 @@ export interface WebauthnRelyingParty {
 }
 
 export function resolveWebauthnRelyingParty(
-  request?: Request,
+  publicOrigin: string,
 ): WebauthnRelyingParty {
-  if (!request) {
-    const env = serverEnv().passkey;
-    return {
-      rpID: env.webauthnRpId,
-      origin: env.webauthnOrigin,
-    };
-  }
-
-  const origin = getRequestPublicOrigin(request);
   return {
-    origin,
-    rpID: new URL(origin).hostname,
+    origin: publicOrigin,
+    rpID: new URL(publicOrigin).hostname,
   };
 }
 
@@ -95,14 +84,14 @@ function parseStoredTransports(
   return undefined;
 }
 
-type PasskeyProviderDeps = {
+export type PasskeyProviderDeps = {
   passkeys: ReturnType<typeof createPasskeysRepo>;
   events: ReturnType<typeof createEventsRepo>;
 };
 
 export function createPasskeyProvider(
   repos: PasskeyProviderDeps,
-  relyingParty = resolveWebauthnRelyingParty(),
+  relyingParty: WebauthnRelyingParty,
 ) {
   const { origin, rpID } = relyingParty;
 
@@ -259,3 +248,5 @@ export function createPasskeyProvider(
     },
   };
 }
+
+export type WebauthnProvider = ReturnType<typeof createPasskeyProvider>;

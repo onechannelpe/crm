@@ -6,7 +6,7 @@ import { installSession } from "~/actions/auth/install-session";
 import type { Phone } from "~/lib/phone/pe-mobile";
 import { completeOnboarding as completeOnboardingService } from "~/server/auth/flows/complete-onboarding";
 import { enrollPasskey } from "~/server/auth/flows/passkey-enrollment";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
@@ -55,7 +55,7 @@ export async function completePasskeyOnboarding(
         challengeId,
         response,
         ipAddress: ctx.ipAddress,
-        createWebauthnProvider: createRequestPasskeyProviderFactory(),
+        webauthnProvider: createRequestPasskeyProvider(onboarding.repos),
       });
 
       if (isErr(enrolled)) {

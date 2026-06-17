@@ -17,7 +17,7 @@ type PasskeyFlowRecord = Awaited<
 >;
 
 interface PasskeyLoginStateServiceDeps {
-  webauthnService: {
+  webauthnProvider: {
     getAuthenticationOptionsForChallenge(input: {
       userId: number;
       challenge: string;
@@ -67,7 +67,7 @@ export function createPasskeyLoginStateService(
       mode: "identified",
       state: "passkey",
       requestOptions:
-        await deps.webauthnService.getAuthenticationOptionsForChallenge({
+        await deps.webauthnProvider.getAuthenticationOptionsForChallenge({
           userId: flow.user_id,
           challenge: challenge.challenge,
           userVerification: "preferred",

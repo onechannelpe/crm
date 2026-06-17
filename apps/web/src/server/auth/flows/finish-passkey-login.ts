@@ -1,13 +1,10 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyLoginFinishAuthService } from "~/server/auth/factors/passkey/service";
 
 import type { AuthLoginDeps } from "./login-deps";
-
-type PasskeyFinishProviderFactory = NonNullable<
-  Parameters<typeof createPasskeyLoginFinishAuthService>[1]
->["createWebauthnProvider"];
 
 export async function finishPasskeyLogin(
   deps: {
@@ -19,11 +16,11 @@ export async function finishPasskeyLogin(
     response: AuthenticationResponseJSON;
     ipAddress: string;
     userAgent: string | null;
-    createWebauthnProvider: PasskeyFinishProviderFactory;
+    webauthnProvider: WebauthnProvider;
   },
 ) {
   const service = createPasskeyLoginFinishAuthService(deps.repos, {
-    createWebauthnProvider: input.createWebauthnProvider,
+    webauthnProvider: input.webauthnProvider,
   });
   return service.finishLogin({
     flowId: input.flowId,

@@ -1,7 +1,7 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
-import type { PasskeyWebauthnProviderFactory } from "~/server/auth/factors/passkey/service";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -11,11 +11,11 @@ import type { AuthOnboardingRepos } from "../infrastructure/onboarding-context";
 function createEnrollmentService(
   repos: AuthOnboardingRepos,
   input: {
-    createWebauthnProvider: PasskeyWebauthnProviderFactory;
+    webauthnProvider: WebauthnProvider;
   },
 ) {
   return createPasskeyEnrollmentAuthService(repos, {
-    createWebauthnProvider: input.createWebauthnProvider,
+    webauthnProvider: input.webauthnProvider,
   });
 }
 
@@ -24,7 +24,7 @@ export function beginPasskeyEnrollment(
   input: {
     userId: number;
     ipAddress: string;
-    createWebauthnProvider: PasskeyWebauthnProviderFactory;
+    webauthnProvider: WebauthnProvider;
   },
 ) {
   return createEnrollmentService(repos, input).beginEnrollment({
@@ -46,7 +46,7 @@ export async function enrollPasskey(
     challengeId: number;
     response: RegistrationResponseJSON;
     ipAddress: string;
-    createWebauthnProvider: PasskeyWebauthnProviderFactory;
+    webauthnProvider: WebauthnProvider;
   },
 ): Promise<Result<void, DomainError>> {
   const result = await createEnrollmentService(repos, input).finishEnrollment({
@@ -80,7 +80,7 @@ export async function finishPasskeyEnrollment(
     response: RegistrationResponseJSON;
     ipAddress: string;
     userAgent: string | null;
-    createWebauthnProvider: PasskeyWebauthnProviderFactory;
+    webauthnProvider: WebauthnProvider;
   },
 ): Promise<Result<{ sessionToken: string }, DomainError>> {
   const result = await enrollPasskey(repos, {
@@ -88,7 +88,7 @@ export async function finishPasskeyEnrollment(
     challengeId: input.challengeId,
     response: input.response,
     ipAddress: input.ipAddress,
-    createWebauthnProvider: input.createWebauthnProvider,
+    webauthnProvider: input.webauthnProvider,
   });
   if (isErr(result)) {
     return result;

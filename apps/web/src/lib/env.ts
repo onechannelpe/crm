@@ -131,17 +131,6 @@ function parseEngineEnv(source: EnvSource) {
   } as const;
 }
 
-function parsePasskeyEnv(source: EnvSource) {
-  return {
-    webauthnRpId: optional(source, "WEBAUTHN_RP_ID", "localhost"),
-    webauthnOrigin: optional(
-      source,
-      "WEBAUTHN_ORIGIN",
-      "http://localhost:5173",
-    ),
-  } as const;
-}
-
 function parseGoogleOAuthEnv(source: EnvSource) {
   return {
     googleClientId: required(source, "GOOGLE_CLIENT_ID"),
@@ -185,7 +174,6 @@ export function loadServerEnv(source: EnvSource) {
     security: parseSecurityEnv(source),
     uploads: parseUploadsEnv(source),
     engine: parseEngineEnv(source),
-    passkey: parsePasskeyEnv(source),
     googleOAuth: parseGoogleOAuthEnv(source),
     notifications: parseNotificationsEnv(source),
     sentry: parseSentryEnv(source),

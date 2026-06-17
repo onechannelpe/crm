@@ -4,6 +4,7 @@ import { getSeededIdentity } from "@tests/support/identities/api";
 import {
   buildRegistrationResponse,
   createRegistrationChallenge,
+  createTestPasskeyProvider,
   createWebauthnProvider,
   createWebauthnProviderWithRegistration,
   invalidRegistrationProvider,
@@ -30,6 +31,9 @@ describe("passkey registration", () => {
   it("begin enrollment creates registration challenge", async () => {
     const result = await createPasskeyEnrollmentAuthService(
       scenario.ctx.repos,
+      {
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     ).beginEnrollment({ userId: execOne.userId, ipAddress });
     const value = expectOk(result);
 
@@ -53,6 +57,9 @@ describe("passkey registration", () => {
 
     const result = await createPasskeyEnrollmentAuthService(
       scenario.ctx.repos,
+      {
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     ).beginEnrollment({ userId: execOne.userId, ipAddress });
 
     const error = expectErr(result);
@@ -68,6 +75,9 @@ describe("passkey registration", () => {
 
     const result = await createPasskeyEnrollmentAuthService(
       scenario.ctx.repos,
+      {
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     ).finishEnrollment({
       userId: backOne.userId,
       challengeId,
@@ -89,7 +99,7 @@ describe("passkey registration", () => {
     const result = await createPasskeyEnrollmentAuthService(
       scenario.ctx.repos,
       {
-        createWebauthnProvider: invalidRegistrationProvider,
+        webauthnProvider: invalidRegistrationProvider(),
       },
     ).finishEnrollment({
       userId: execOne.userId,
@@ -105,12 +115,11 @@ describe("passkey registration", () => {
   it("propagates provider errors during option and verification generation", async () => {
     await expect(
       createPasskeyEnrollmentAuthService(scenario.ctx.repos, {
-        createWebauthnProvider: () =>
-          createWebauthnProvider({
-            async getRegistrationOptions() {
-              throw new Error("boom");
-            },
-          }),
+        webauthnProvider: createWebauthnProvider({
+          async getRegistrationOptions() {
+            throw new Error("boom");
+          },
+        }),
       }).beginEnrollment({ userId: execOne.userId, ipAddress }),
     ).rejects.toThrow("boom");
 
@@ -122,10 +131,9 @@ describe("passkey registration", () => {
 
     await expect(
       createPasskeyEnrollmentAuthService(scenario.ctx.repos, {
-        createWebauthnProvider: () =>
-          createWebauthnProviderWithRegistration(async () => {
-            throw new Error("boom");
-          }),
+        webauthnProvider: createWebauthnProviderWithRegistration(async () => {
+          throw new Error("boom");
+        }),
       }).finishEnrollment({
         userId: execOne.userId,
         challengeId,

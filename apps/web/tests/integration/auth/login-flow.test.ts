@@ -1,4 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
@@ -83,6 +84,9 @@ describe("login flow service", () => {
 
     const result = await createPasskeyLoginStartAuthService(
       scenario.ctx.repos,
+      {
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     ).beginLogin({
       identifier: "exec.one",
       ipAddress: "198.51.100.55",
@@ -92,7 +96,11 @@ describe("login flow service", () => {
     expect(isErr(result)).toBe(false);
     if (isErr(result)) throw new Error("expected passkey flow");
 
-    const flow = await getLoginFlowState(result.value.id, scenario.ctx.repos);
+    const flow = await getLoginFlowState(
+      result.value.id,
+      scenario.ctx.repos,
+      createTestPasskeyProvider(scenario.ctx.repos),
+    );
     expect(flow?.state).toBe("passkey");
     if (!flow || flow.state !== "passkey")
       throw new Error("expected passkey state");

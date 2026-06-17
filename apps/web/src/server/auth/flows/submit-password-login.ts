@@ -3,6 +3,7 @@ import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
 } from "~/server/auth/application/contracts";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { authenticatePassword } from "~/server/auth/factors/password";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import { Err, isErr, type Result } from "~/server/shared/result";
@@ -18,6 +19,7 @@ export async function submitPasswordLogin(
   },
   deps: AuthLoginDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
+  webauthnProvider: WebauthnProvider,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const safeIdentifier = input.identifier.trim();
   const proof = await authenticatePassword(
@@ -41,5 +43,6 @@ export async function submitPasswordLogin(
     },
     deps,
     sendPrivilegedLoginAlert,
+    webauthnProvider,
   });
 }

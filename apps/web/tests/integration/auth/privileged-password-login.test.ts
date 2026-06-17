@@ -1,4 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
@@ -87,6 +88,7 @@ describe("privileged password login", () => {
     const flow = await getLoginFlowState(
       result.value.flow.id,
       scenario.ctx.repos,
+      createTestPasskeyProvider(scenario.ctx.repos),
     );
     expect(flow?.state).toBe("passkey");
   });
