@@ -25,8 +25,8 @@ export function createSiteWebGlRenderer(
       originalDispose();
     } catch {
       // Disposing a renderer whose context was already torn down can
-      // throw "delete: object does not belong to this context" — that's
-      // a no-op for us and must not bubble up to the consumer.
+      // throw "delete: object does not belong to this context". The renderer is
+      // already torn down, so the disposal failure must not reach the consumer.
     }
   };
 

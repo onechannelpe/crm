@@ -66,9 +66,6 @@ async function resetStalledJobs(
   );
 }
 
-/**
- * Starts the global stale job scanner.
- */
 export function startStaleScanner(intervalMs = 30_000) {
   logger.info("stale_scanner_started", { intervalMs });
   setInterval(() => {

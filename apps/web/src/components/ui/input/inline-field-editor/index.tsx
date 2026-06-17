@@ -113,7 +113,6 @@ export interface InlineOptionsEditorProps<T extends string> {
   onClose: () => void;
 }
 
-// Same popover shell for a small fixed set of choices (e.g. an enum field).
 export function InlineOptionsEditor<T extends string>(
   props: InlineOptionsEditorProps<T>,
 ) {

@@ -1,13 +1,9 @@
 import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
-  // The events spine: one append-only log of every meaningful domain
-  // occurrence (lead lifecycle, auth/security actions, invites, capacity
-  // decisions). The per-entity activity feed and the cross-entity audit
-  // explorer are two read projections of this table; nothing writes audit by
-  // hand. entity_id is text so it can key both numeric ids (users, branches)
-  // and uuids (leads) under one schema. changes_json holds a FieldChange[] for
-  // value corrections; payload_json holds heterogeneous per-type event data.
+  // entity_id is text so one append-only table can key numeric ids and UUIDs.
+  // changes_json holds FieldChange[] corrections; payload_json holds
+  // heterogeneous per-type event data.
   await db.schema
     .createTable("events")
     .addColumn("id", "text", (col) => col.primaryKey())
@@ -41,8 +37,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .columns(["actor_user_id", "occurred_at"])
     .execute();
 
-  // Drives both the per-entity activity feed (lead timeline) and entity-scoped
-  // audit lookups.
+  // Drives entity-scoped activity and audit lookups.
   await db.schema
     .createIndex("idx_events_entity_occurred")
     .on("events")

@@ -762,7 +762,6 @@
   display: flex;
 }
 
-/* Shared surface for the grid's own primitive editors (text, select). */
 .cellEditorInput,
 .cellEditorOptions {
   background: var(--t-background-primary);

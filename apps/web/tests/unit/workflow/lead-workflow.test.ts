@@ -100,14 +100,12 @@ describe("assignContacts", () => {
   it("commits assigned amount and cancels unused when partial assignment occurs", async () => {
     const repos = makeRepos(0);
 
-    // Gateway returns 2 candidates but contacts will all have cooldowns after first
     let contactCallCount = 0;
     repos.contacts.findOrCreate = async (): Promise<{
       id: number;
       cooldown_until: number | null;
     }> => {
       contactCallCount++;
-      // First contact is contactable, rest are on cooldown
       const cooldown_until = contactCallCount === 1 ? null : 1_700_000_099_999;
       return { id: contactCallCount, cooldown_until };
     };

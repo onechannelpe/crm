@@ -36,16 +36,9 @@ describe("rate limit audit", () => {
       );
     }
 
-    try {
-      await checkActionRateLimit(
-        "leads.request",
-        userId,
-        ctx.repos,
-        "198.51.100.1",
-      );
-    } catch {
-      // expected block
-    }
+    await expect(
+      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
+    ).rejects.toBeDefined();
 
     const now = Date.now();
     const logs = await ctx.repos.events.listRecent({

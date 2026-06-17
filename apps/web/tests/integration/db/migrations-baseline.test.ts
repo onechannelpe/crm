@@ -74,7 +74,6 @@ describe("schema baseline", () => {
         .values({ name: "Lima", created_at: Date.now() })
         .execute();
 
-      // Should not throw and should be no-op because hash matches
       await migrateToLatest(db);
 
       const branches = await db

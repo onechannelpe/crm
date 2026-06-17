@@ -48,7 +48,6 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
       const db = executor;
       const { next, events, idempotencyKey, assignment } = input;
 
-      // 1. Idempotency check
       const existing = await db
         .selectFrom("workflow_idempotency_keys")
         .select("result_json")
@@ -60,7 +59,6 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         return Ok({ ...prior, wasIdempotent: true });
       }
 
-      // 2. Optimistic concurrency update
       const expectedVersion = next.version - 1;
       const updateResult = await db
         .updateTable("workflow_leads")
@@ -82,7 +80,6 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         return Err(fail("concurrency_conflict"));
       }
 
-      // 3. Assignment replacement (for reassign)
       if (assignment) {
         await replaceActiveAssignment(db, {
           leadId: next.id,
@@ -92,14 +89,12 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         });
       }
 
-      // 4. Append each lead event to the events spine in one write. The per-lead
-      // activity feed and the cross-entity audit explorer are both read
-      // projections of these rows.
       const eventIds = await createEventsRepo(db).append(
         events.map(toLeadEventAppend),
       );
 
-      // 5. Notifications: enqueue inside the commit transaction
+      // Notification intents are committed with the lead update so delivery can
+      // retry without losing the stage-change trigger.
       const stageChangedEvents = events
         .map((e, i) => ({ event: e, id: eventIds[i] }))
         .filter(({ event }) => event.eventType === "workflow_stage_changed");
@@ -127,7 +122,6 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         await enqueueNotifications(db, intents, next.updatedAt);
       }
 
-      // 6. Record idempotency key
       const commitResult: CommitResult = { eventIds, wasIdempotent: false };
       await db
         .insertInto("workflow_idempotency_keys")

@@ -99,7 +99,7 @@ export function useRecordsImport() {
     try {
       s.socket?.close();
     } catch {
-      // no-op
+      // Closing an already-torn-down browser socket must not block local cleanup.
     }
   }
 
@@ -187,7 +187,7 @@ export function useRecordsImport() {
     try {
       s.socket?.close();
     } catch {
-      // no-op
+      // Reconnect replaces the socket even if the old browser handle is gone.
     }
     s.socket = null;
 

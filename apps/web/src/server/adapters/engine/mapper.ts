@@ -5,10 +5,6 @@ interface EngineErrorPayload {
   request_id?: string;
 }
 
-/**
- * Extract error details from response: parse JSON if present, extract correlation ID.
- * Returns {error, request_id} or null if no error payload found.
- */
 async function extractEngineErrorPayload(
   response: Response,
 ): Promise<EngineErrorPayload | null> {
@@ -25,22 +21,18 @@ async function extractEngineErrorPayload(
 
     return json as EngineErrorPayload;
   } catch {
-    // If body parsing fails, just return null; we'll use status code
+    // Malformed engine error bodies fall back to the HTTP status below.
     return null;
   }
 }
 
-/**
- * Map HTTP error response into DomainError.
- * Correlation ID (request_id) flows from response header, then body.
- * Details carry http status, request_id, and engine error message for debugging.
- */
 export async function mapEngineErrorResponse(
   response: Response,
   requestId: string,
 ): Promise<DomainError> {
   const payload = await extractEngineErrorPayload(response);
 
+  // Preserve the strongest available correlation id for downstream diagnostics.
   const headerRequestId = response.headers.get("x-request-id");
   const bodyRequestId = payload?.request_id;
   const correlationId = headerRequestId ?? bodyRequestId ?? requestId;
