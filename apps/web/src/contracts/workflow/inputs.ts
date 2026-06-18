@@ -32,7 +32,8 @@ export type ListAssignableExecutivesInput = {
 
 export type CommercialScope = {
   proveedorActual: string;
-  tasaActual: number;
+  tasaDebitoActual: number;
+  tasaCreditoActual: number;
   gpv: number;
   ticket: number;
   giroNegocio: string;

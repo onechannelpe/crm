@@ -58,7 +58,8 @@ export async function saveDigitalPolicyCommand(
     await repos.leadProfiles.upsert({
       leadId: state.id,
       proveedorActual: profile?.proveedorActual ?? null,
-      tasaActual: profile?.tasaActual ?? null,
+      tasaDebitoActual: profile?.tasaDebitoActual ?? null,
+      tasaCreditoActual: profile?.tasaCreditoActual ?? null,
       gpv: profile?.gpv ?? null,
       ticket: profile?.ticket ?? null,
       abonoBank: profile?.abonoBank ?? null,

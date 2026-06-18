@@ -2,7 +2,8 @@ import { type LeadBlockingField } from "~/contracts/workflow/views";
 
 const BLOCKING_FIELD_LABELS: Record<LeadBlockingField, string> = {
   proveedorActual: "Proveedor actual",
-  tasaActual: "Tasa actual",
+  tasaDebitoActual: "Tasa débito actual",
+  tasaCreditoActual: "Tasa crédito actual",
   gpv: "GPV",
   ticket: "Ticket",
   giroNegocio: "Giro de negocio",

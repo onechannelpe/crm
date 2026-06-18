@@ -13,7 +13,8 @@ import type {
 export type LeadProfile = {
   leadId: string;
   proveedorActual: string | null;
-  tasaActual: number | null;
+  tasaDebitoActual: number | null;
+  tasaCreditoActual: number | null;
   gpv: number | null;
   ticket: number | null;
   linkScope: ProductScope;

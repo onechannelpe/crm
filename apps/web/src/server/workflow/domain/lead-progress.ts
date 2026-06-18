@@ -6,7 +6,8 @@ import {
 
 export type LeadBlockingField =
   | "proveedorActual"
-  | "tasaActual"
+  | "tasaDebitoActual"
+  | "tasaCreditoActual"
   | "gpv"
   | "ticket"
   | "giroNegocio"
@@ -17,7 +18,8 @@ export type LeadBlockingField =
 
 export type ScopingProfileFields = {
   proveedorActual?: string | null;
-  tasaActual?: number | null;
+  tasaDebitoActual?: number | null;
+  tasaCreditoActual?: number | null;
   gpv?: number | null;
   ticket?: number | null;
   giroNegocio?: string | null;

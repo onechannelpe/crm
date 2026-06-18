@@ -11,7 +11,8 @@ function toLeadProfile(row: LeadProfileRow): LeadProfile {
   return {
     leadId: row.lead_id,
     proveedorActual: row.proveedor_actual,
-    tasaActual: row.tasa_actual,
+    tasaDebitoActual: row.tasa_debito_actual,
+    tasaCreditoActual: row.tasa_credito_actual,
     gpv: row.gpv,
     ticket: row.ticket,
     linkScope: row.link_scope,
@@ -44,7 +45,8 @@ export function createLeadProfileRepo(db: DatabaseExecutor) {
         .values({
           lead_id: values.leadId,
           proveedor_actual: values.proveedorActual,
-          tasa_actual: values.tasaActual,
+          tasa_debito_actual: values.tasaDebitoActual,
+          tasa_credito_actual: values.tasaCreditoActual,
           gpv: values.gpv,
           ticket: values.ticket,
           link_scope: values.linkScope,
@@ -60,7 +62,8 @@ export function createLeadProfileRepo(db: DatabaseExecutor) {
         .onConflict((oc) =>
           oc.column("lead_id").doUpdateSet({
             proveedor_actual: values.proveedorActual,
-            tasa_actual: values.tasaActual,
+            tasa_debito_actual: values.tasaDebitoActual,
+            tasa_credito_actual: values.tasaCreditoActual,
             gpv: values.gpv,
             ticket: values.ticket,
             link_scope: values.linkScope,

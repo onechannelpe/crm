@@ -34,15 +34,28 @@ export function CommercialScopeFields(props: {
           />
         </FieldInputValue>
       </FieldRow>
-      <FieldRow label="Tasa actual" icon={Target}>
+      <FieldRow label="Tasa débito actual" icon={Target}>
         <FieldInputValue>
           <TextInput
             sizeVariant="sm"
             type="number"
             step="0.01"
             min="0"
-            value={props.values.tasaActual}
-            onChange={(value) => props.onChange("tasaActual", value)}
+            value={props.values.tasaDebitoActual}
+            onChange={(value) => props.onChange("tasaDebitoActual", value)}
+            required
+          />
+        </FieldInputValue>
+      </FieldRow>
+      <FieldRow label="Tasa crédito actual" icon={Target}>
+        <FieldInputValue>
+          <TextInput
+            sizeVariant="sm"
+            type="number"
+            step="0.01"
+            min="0"
+            value={props.values.tasaCreditoActual}
+            onChange={(value) => props.onChange("tasaCreditoActual", value)}
             required
           />
         </FieldInputValue>

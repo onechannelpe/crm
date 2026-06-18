@@ -23,7 +23,8 @@ export type LeadAvailableAction =
 
 export type LeadBlockingField =
   | "proveedorActual"
-  | "tasaActual"
+  | "tasaDebitoActual"
+  | "tasaCreditoActual"
   | "gpv"
   | "ticket"
   | "giroNegocio"
@@ -160,7 +161,8 @@ export type LeadDetailView = {
 type LeadDetailProfileView = {
   leadId: string;
   proveedorActual: string | null;
-  tasaActual: number | null;
+  tasaDebitoActual: number | null;
+  tasaCreditoActual: number | null;
   gpv: number | null;
   ticket: number | null;
   giroNegocio: string | null;

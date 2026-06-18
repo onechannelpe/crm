@@ -32,7 +32,8 @@ export interface WorkflowIdempotencyKeysTable {
 export interface WorkflowLeadProfilesTable {
   lead_id: string;
   proveedor_actual: string | null;
-  tasa_actual: number | null;
+  tasa_debito_actual: number | null;
+  tasa_credito_actual: number | null;
   gpv: number | null;
   ticket: number | null;
   link_scope: ProductScope;

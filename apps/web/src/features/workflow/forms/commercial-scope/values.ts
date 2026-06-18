@@ -7,7 +7,8 @@ export type CommercialScopePayload = CommercialScope;
 
 export type CommercialScopeFormValues = {
   proveedorActual: string;
-  tasaActual: string;
+  tasaDebitoActual: string;
+  tasaCreditoActual: string;
   gpv: string;
   ticket: string;
   giroNegocio: string;
@@ -17,7 +18,8 @@ export type CommercialScopeFormValues = {
 
 export const EMPTY_COMMERCIAL_SCOPE_VALUES: CommercialScopeFormValues = {
   proveedorActual: "",
-  tasaActual: "",
+  tasaDebitoActual: "",
+  tasaCreditoActual: "",
   gpv: "",
   ticket: "",
   giroNegocio: "",
@@ -34,8 +36,10 @@ export function validateCommercialScope(
   values: CommercialScopeFormValues,
 ): string | null {
   if (!values.proveedorActual.trim()) return "Proveedor actual es requerido";
-  if (!isNonNegativeNumber(values.tasaActual))
-    return "Tasa actual es requerida";
+  if (!isNonNegativeNumber(values.tasaDebitoActual))
+    return "Tasa débito actual es requerida";
+  if (!isNonNegativeNumber(values.tasaCreditoActual))
+    return "Tasa crédito actual es requerida";
   if (!isNonNegativeNumber(values.gpv)) return "GPV es requerido";
   if (!isNonNegativeNumber(values.ticket)) return "Ticket es requerido";
   if (!values.giroNegocio.trim()) return "Giro de negocio es requerido";
@@ -55,7 +59,8 @@ export function toCommercialScopePayload(
   }
   return {
     proveedorActual: values.proveedorActual.trim(),
-    tasaActual: Number(values.tasaActual),
+    tasaDebitoActual: Number(values.tasaDebitoActual),
+    tasaCreditoActual: Number(values.tasaCreditoActual),
     gpv: Number(values.gpv),
     ticket: Number(values.ticket),
     giroNegocio: values.giroNegocio.trim(),

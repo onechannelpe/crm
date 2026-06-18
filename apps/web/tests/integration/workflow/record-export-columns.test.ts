@@ -37,7 +37,8 @@ describe("integration record export columns", () => {
       .values({
         lead_id: withData.id,
         proveedor_actual: "Niubiz",
-        tasa_actual: 3.5,
+        tasa_debito_actual: 3.5,
+        tasa_credito_actual: 4.2,
         gpv: 120_000,
         ticket: 80,
         link_scope: "none",
@@ -93,7 +94,8 @@ describe("integration record export columns", () => {
     const enriched = rows.find((row) => row.id === withData.id);
     expect(enriched).toMatchObject({
       proveedorActual: "Niubiz",
-      tasaActual: 3.5,
+      tasaDebitoActual: 3.5,
+      tasaCreditoActual: 4.2,
       gpv: 120_000,
       tarifaDebitoCulqi: 1.5,
       tarifaCreditoCulqi: 2.5,
@@ -102,7 +104,8 @@ describe("integration record export columns", () => {
     const bare = rows.find((row) => row.id === withoutData.id);
     expect(bare).toMatchObject({
       proveedorActual: null,
-      tasaActual: null,
+      tasaDebitoActual: null,
+      tasaCreditoActual: null,
       gpv: null,
       tarifaDebitoCulqi: null,
       tarifaCreditoCulqi: null,

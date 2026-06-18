@@ -14,7 +14,8 @@ export type RegisteredLeadSnapshot = {
 
 export type RegisteredLeadProfile = {
   proveedorActual: string | null;
-  tasaActual: number | null;
+  tasaDebitoActual: number | null;
+  tasaCreditoActual: number | null;
   gpv: number | null;
   ticket: number | null;
   abonoBank: string | null;
@@ -35,7 +36,8 @@ export async function registerLead(input: {
   address?: string;
   actor?: { userId: number; role: "executive" | "admin"; branchId: number };
   proveedorActual?: string;
-  tasaActual?: number;
+  tasaDebitoActual?: number;
+  tasaCreditoActual?: number;
   gpv?: number;
   ticket?: number;
   giroNegocio?: string;
@@ -53,7 +55,8 @@ export async function registerLead(input: {
         razonSocial: input.razonSocial ?? input.ruc,
         address: input.address ?? "",
         proveedorActual: input.proveedorActual ?? "Niubiz",
-        tasaActual: input.tasaActual ?? 3.5,
+        tasaDebitoActual: input.tasaDebitoActual ?? 3.5,
+        tasaCreditoActual: input.tasaCreditoActual ?? 4.0,
         gpv: input.gpv ?? 50000,
         ticket: input.ticket ?? 120,
         giroNegocio: input.giroNegocio ?? "Retail",
@@ -85,7 +88,8 @@ export async function registerLead(input: {
     .selectFrom("workflow_lead_profiles")
     .select([
       "proveedor_actual",
-      "tasa_actual",
+      "tasa_debito_actual",
+      "tasa_credito_actual",
       "gpv",
       "ticket",
       "abono_bank",
@@ -115,7 +119,8 @@ export async function registerLead(input: {
     profile: profileRow
       ? {
           proveedorActual: profileRow.proveedor_actual,
-          tasaActual: profileRow.tasa_actual,
+          tasaDebitoActual: profileRow.tasa_debito_actual,
+          tasaCreditoActual: profileRow.tasa_credito_actual,
           gpv: profileRow.gpv,
           ticket: profileRow.ticket,
           abonoBank: profileRow.abono_bank,

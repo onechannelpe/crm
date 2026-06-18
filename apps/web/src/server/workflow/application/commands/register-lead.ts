@@ -35,7 +35,8 @@ export async function registerLead(
     razonSocial: string;
     address: string;
     proveedorActual: string;
-    tasaActual: number;
+    tasaDebitoActual: number;
+    tasaCreditoActual: number;
     gpv: number;
     ticket: number;
     giroNegocio: string;
@@ -160,7 +161,8 @@ export async function registerLead(
     await txRepos.leadProfiles.upsert({
       leadId: effects.value.leadId,
       proveedorActual: input.proveedorActual,
-      tasaActual: input.tasaActual,
+      tasaDebitoActual: input.tasaDebitoActual,
+      tasaCreditoActual: input.tasaCreditoActual,
       gpv: input.gpv,
       ticket: input.ticket,
       linkScope: "none",

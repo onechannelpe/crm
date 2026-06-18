@@ -116,7 +116,8 @@ function toLeadDetailProfile(
   return {
     leadId: profile.leadId,
     proveedorActual: profile.proveedorActual,
-    tasaActual: profile.tasaActual,
+    tasaDebitoActual: profile.tasaDebitoActual,
+    tasaCreditoActual: profile.tasaCreditoActual,
     gpv: profile.gpv,
     ticket: profile.ticket,
     giroNegocio: organization?.giroNegocio ?? null,

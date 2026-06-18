@@ -165,7 +165,8 @@ export async function persistWorkflowCommercialData(
       {
         lead_id: idConverted,
         proveedor_actual: "BBVA",
-        tasa_actual: 2.8,
+        tasa_debito_actual: 2.8,
+        tasa_credito_actual: 3.1,
         gpv: 85_000.0,
         ticket: 245.5,
         abono_bank: "INTERBANK",
@@ -182,7 +183,8 @@ export async function persistWorkflowCommercialData(
     .onConflict((oc) =>
       oc.column("lead_id").doUpdateSet((eb) => ({
         proveedor_actual: eb.ref("excluded.proveedor_actual"),
-        tasa_actual: eb.ref("excluded.tasa_actual"),
+        tasa_debito_actual: eb.ref("excluded.tasa_debito_actual"),
+        tasa_credito_actual: eb.ref("excluded.tasa_credito_actual"),
         gpv: eb.ref("excluded.gpv"),
         ticket: eb.ref("excluded.ticket"),
         abono_bank: eb.ref("excluded.abono_bank"),

@@ -60,7 +60,8 @@ describe("register lead", () => {
       runtime,
       ruc: "20912345673",
       proveedorActual: "Izipay",
-      tasaActual: 2.9,
+      tasaDebitoActual: 2.9,
+      tasaCreditoActual: 3.4,
       gpv: 80000,
       ticket: 150,
       giroNegocio: "Gastronomía",
@@ -69,7 +70,8 @@ describe("register lead", () => {
 
     expect(result.profile).toEqual({
       proveedorActual: "Izipay",
-      tasaActual: 2.9,
+      tasaDebitoActual: 2.9,
+      tasaCreditoActual: 3.4,
       gpv: 80000,
       ticket: 150,
       abonoBank: expect.any(String),

@@ -90,7 +90,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("proveedor_actual", "varchar(255)")
-    .addColumn("tasa_actual", "real")
+    .addColumn("tasa_debito_actual", "real")
+    .addColumn("tasa_credito_actual", "real")
     .addColumn("gpv", "real")
     .addColumn("ticket", "real")
     .addColumn("link_scope", "text", (col) => col.notNull().defaultTo("none"))

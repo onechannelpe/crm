@@ -13,7 +13,8 @@ import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 type CommercialSnapshot = {
   proveedorActual: string | null;
-  tasaActual: number | null;
+  tasaDebitoActual: number | null;
+  tasaCreditoActual: number | null;
   gpv: number | null;
   ticket: number | null;
   abonoBank: string | null;
@@ -23,7 +24,8 @@ type CommercialSnapshot = {
 
 const COMMERCIAL_FIELD_KEYS = [
   "proveedorActual",
-  "tasaActual",
+  "tasaDebitoActual",
+  "tasaCreditoActual",
   "gpv",
   "ticket",
   "abonoBank",
@@ -53,7 +55,8 @@ export async function editCommercialScopeCommand(
 
     const prev: CommercialSnapshot = {
       proveedorActual: profile?.proveedorActual ?? null,
-      tasaActual: profile?.tasaActual ?? null,
+      tasaDebitoActual: profile?.tasaDebitoActual ?? null,
+      tasaCreditoActual: profile?.tasaCreditoActual ?? null,
       gpv: profile?.gpv ?? null,
       ticket: profile?.ticket ?? null,
       abonoBank: profile?.abonoBank ?? null,
@@ -62,7 +65,8 @@ export async function editCommercialScopeCommand(
     };
     const next: CommercialSnapshot = {
       proveedorActual: input.proveedorActual,
-      tasaActual: input.tasaActual,
+      tasaDebitoActual: input.tasaDebitoActual,
+      tasaCreditoActual: input.tasaCreditoActual,
       gpv: input.gpv,
       ticket: input.ticket,
       abonoBank: input.abonoBank,
@@ -85,7 +89,8 @@ export async function editCommercialScopeCommand(
     await repos.leadProfiles.upsert({
       leadId: state.id,
       proveedorActual: input.proveedorActual,
-      tasaActual: input.tasaActual,
+      tasaDebitoActual: input.tasaDebitoActual,
+      tasaCreditoActual: input.tasaCreditoActual,
       gpv: input.gpv,
       ticket: input.ticket,
       linkScope: profile?.linkScope ?? "none",

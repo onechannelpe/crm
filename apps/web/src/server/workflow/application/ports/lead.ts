@@ -127,11 +127,10 @@ export type RecordExportRow = {
   createdAt: number;
   executiveId: number;
   executiveName: string;
-  // Commercial profile (single competitor rate; the model has no debit/credit split).
   proveedorActual: string | null;
-  tasaActual: number | null;
+  tasaDebitoActual: number | null;
+  tasaCreditoActual: number | null;
   gpv: number | null;
-  // Latest rate proposal back office offered. Null until a rate is proposed.
   tarifaDebitoCulqi: number | null;
   tarifaCreditoCulqi: number | null;
 };

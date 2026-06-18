@@ -43,7 +43,8 @@ export function useCreateLeadPageState() {
     const draft = pageState().draft;
     return {
       proveedorActual: draft.proveedorActual,
-      tasaActual: draft.tasaActual,
+      tasaDebitoActual: draft.tasaDebitoActual,
+      tasaCreditoActual: draft.tasaCreditoActual,
       gpv: draft.gpv,
       ticket: draft.ticket,
       giroNegocio: draft.giroNegocio,
