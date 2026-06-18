@@ -42,7 +42,7 @@ export async function expireLeadReservation(
   });
 }
 
-// The sweep: retire every lead whose hold has lapsed since the last tick.
+// Retires every lead whose hold has lapsed since the last tick.
 export async function expireLapsedReservations(
   deps: { executor: DatabaseExecutor },
   now: number,
@@ -53,6 +53,7 @@ export async function expireLapsedReservations(
 
   let expiredCount = 0;
   for (const leadId of lapsed) {
+    // Each expiry is isolated: one stale row must not roll back the whole sweep.
     // eslint-disable-next-line no-await-in-loop
     const result = await expireLeadReservation(deps.executor, leadId, now);
     if (result.ok) expiredCount += 1;

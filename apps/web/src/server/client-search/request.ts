@@ -6,8 +6,9 @@ import type { EnrichmentRepositoryPort } from "./ports";
 
 /**
  * Single canonical enqueue interface for enrichment requests.
- * Idempotent: always succeeds, returns job ID.
- * Called by both UI actions and workflow commands.
+ * The job row is the source of truth. Redis publish is a best-effort wakeup
+ * after persistence, so callers can rely on the returned job id once this
+ * resolves.
  */
 export interface EnrichmentCommand {
   enqueueRequest(

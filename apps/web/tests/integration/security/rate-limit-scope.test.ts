@@ -54,8 +54,8 @@ describe("rate limit scope isolation", () => {
   });
 
   it("isolates counters by action name", async () => {
-    const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
-    for (let index = 0; index < limit; index += 1) {
+    const { userLimit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
+    for (let index = 0; index < userLimit; index += 1) {
       await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 

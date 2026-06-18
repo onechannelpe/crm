@@ -14,12 +14,6 @@ const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
 };
 
 const MAX_SIZE_OVERRIDES: Partial<Record<ArtifactType, number>> = {};
-/*
-const ABSOLUTE_MAX_UPLOAD_BYTES = Math.max(
-  MAX_SIZE_BYTES_DEFAULT,
-  ...Object.values(MAX_SIZE_OVERRIDES),
-);
-*/
 
 const MIME_BY_EXTENSION: Record<string, string> = {
   csv: "text/csv; charset=utf-8",

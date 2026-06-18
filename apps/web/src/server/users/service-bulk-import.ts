@@ -45,6 +45,8 @@ export async function applyImport(
 
   for (const row of rows) {
     try {
+      // Invites are provisioned sequentially so each row observes current
+      // duplicate and pending-invite state before delivery is recorded.
       // eslint-disable-next-line no-await-in-loop
       const result = await provisioning.createInvite({
         actorUserId: actor.userId,
@@ -75,6 +77,8 @@ export async function applyImport(
         continue;
       }
 
+      // Delivery follows the created invite immediately so a later row failure
+      // cannot leave a successful row without its delivery side effect.
       // eslint-disable-next-line no-await-in-loop
       await onInviteCreated({
         row,

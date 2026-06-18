@@ -26,8 +26,8 @@ describe("rate limit audit", () => {
 
   it("logs a rate_limit_exceeded audit entry on violation", async () => {
     const userId = 1;
-    const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
-    for (let index = 0; index < limit; index += 1) {
+    const { userLimit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
+    for (let index = 0; index < userLimit; index += 1) {
       await checkActionRateLimit(
         "leads.request",
         userId,

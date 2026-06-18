@@ -51,9 +51,8 @@ export async function editRateProposalCommand(
       currency: input.currency,
     };
 
-    // The whole proposal arrives, but only the moved fields become the
-    // correction. No movement means no correction: skip the write, the event,
-    // and the version bump entirely.
+    // The whole proposal arrives, but only moved fields are persisted as a
+    // correction. An unchanged proposal leaves persistence untouched.
     const changes = diffFields(latest, nextNumbers, RATE_FIELD_KEYS);
     if (changes.length === 0) {
       return Ok({ proposalId: latest.id });

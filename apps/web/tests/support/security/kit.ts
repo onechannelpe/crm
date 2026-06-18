@@ -12,8 +12,8 @@ export function createSecurityTestKit(ctx: TestDbContext) {
       userId: number,
       ipAddress: string,
     ) {
-      const { limit } = ACTION_RATE_LIMIT_POLICY[actionName];
-      for (let index = 0; index < limit; index += 1) {
+      const { userLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
+      for (let index = 0; index < userLimit; index += 1) {
         await checkActionRateLimit(actionName, userId, ctx.repos, ipAddress);
       }
     },
@@ -21,8 +21,8 @@ export function createSecurityTestKit(ctx: TestDbContext) {
       actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
       ipAddress: string,
     ) {
-      const { ipLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
-      for (let index = 0; index < ipLimit; index += 1) {
+      const { sourceIpLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
+      for (let index = 0; index < sourceIpLimit; index += 1) {
         await checkActionRateLimit(
           actionName,
           (index % 5) + 1,

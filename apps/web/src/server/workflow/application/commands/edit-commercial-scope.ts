@@ -36,7 +36,7 @@ const COMMERCIAL_FIELD_KEYS = [
 // Inline correction of the commercial scope captured at registration. There is
 // no stage transition: it rewrites the profile fields for the owning executive
 // and records the field-level correction on the lead history (and the audit
-// spine) like every other mutation. No movement means no correction.
+// spine) like every other mutation.
 export async function editCommercialScopeCommand(
   input: EditCommercialScopeCommandInput,
   ports: { executor: DatabaseExecutor; now: number },

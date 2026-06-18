@@ -16,10 +16,16 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { TestDbContext } from "../runtime/db";
 
-// Seeded users from the template DB (tests/support/runtime/db.ts).
-export const SUPERUSER_ID = 5; // superuser, branch 2 (can manage any executive)
-export const EXECUTIVE_ID = 1; // executive, branch 1
-export const EXECUTIVE_OTHER_BRANCH_ID = 3; // executive, branch 2
+const SEEDED_APPROVAL_USERS = {
+  superuserBranchTwo: { id: 5, branchId: 2 },
+  executiveBranchOne: { id: 1, branchId: 1 },
+  executiveBranchTwo: { id: 3, branchId: 2 },
+} as const;
+
+export const SUPERUSER_ID = SEEDED_APPROVAL_USERS.superuserBranchTwo.id;
+export const EXECUTIVE_ID = SEEDED_APPROVAL_USERS.executiveBranchOne.id;
+export const EXECUTIVE_OTHER_BRANCH_ID =
+  SEEDED_APPROVAL_USERS.executiveBranchTwo.id;
 
 type ApprovalTx = CapacityRequestTx & CapacityManageTx & CapacityGrantTx;
 
@@ -40,7 +46,8 @@ export function makeApprovalContext(
       id: "test-session",
       userId: overrides.userId ?? SUPERUSER_ID,
       role: overrides.role ?? "superuser",
-      branchId: overrides.branchId ?? 2,
+      branchId:
+        overrides.branchId ?? SEEDED_APPROVAL_USERS.superuserBranchTwo.branchId,
       onboardingCompleted: true,
       sessionClass: "app",
       primaryAuthMethod: "password",

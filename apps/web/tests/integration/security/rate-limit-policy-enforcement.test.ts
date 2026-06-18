@@ -27,8 +27,8 @@ describe("rate limit policy enforcement", () => {
   });
 
   it("allows requests up to the per action limit", async () => {
-    const limit = ACTION_RATE_LIMIT_POLICY["leads.request"].limit;
-    for (let index = 0; index < limit; index += 1) {
+    const userLimit = ACTION_RATE_LIMIT_POLICY["leads.request"].userLimit;
+    for (let index = 0; index < userLimit; index += 1) {
       await expect(
         checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
       ).resolves.toBeUndefined();
