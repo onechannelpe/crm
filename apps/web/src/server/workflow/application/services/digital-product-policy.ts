@@ -165,7 +165,9 @@ export function toProfileDigitalFields(policy: DigitalPolicy): {
     onlineUrl:
       policy.online.scope === "shared" ? policy.online.config.url : null,
     onlineCollectionMode:
-      policy.online.scope === "shared" ? policy.online.config.collectionMode : null,
+      policy.online.scope === "shared"
+        ? policy.online.config.collectionMode
+        : null,
   };
 }
 

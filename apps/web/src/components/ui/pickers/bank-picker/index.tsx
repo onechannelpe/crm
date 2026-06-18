@@ -2,7 +2,10 @@ import { createMemo, createSignal, For } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { SETTLEMENT_BANKS, type SettlementBank } from "~/contracts/workflow/vocabulary";
+import {
+  SETTLEMENT_BANKS,
+  type SettlementBank,
+} from "~/contracts/workflow/vocabulary";
 
 import styles from "./styles.module.css";
 

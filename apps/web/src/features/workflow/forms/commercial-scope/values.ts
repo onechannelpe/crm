@@ -1,5 +1,8 @@
 import type { CommercialScope } from "~/contracts/workflow/inputs";
-import { SETTLEMENT_BANKS, type SettlementBank } from "~/contracts/workflow/vocabulary";
+import {
+  SETTLEMENT_BANKS,
+  type SettlementBank,
+} from "~/contracts/workflow/vocabulary";
 
 // Form fields stay strings until submit so text, number, and select inputs share
 // one editable shape.

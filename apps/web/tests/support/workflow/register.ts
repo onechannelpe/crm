@@ -1,4 +1,7 @@
-import { SETTLEMENT_BANKS, type SettlementBank } from "~/contracts/workflow/vocabulary";
+import {
+  SETTLEMENT_BANKS,
+  type SettlementBank,
+} from "~/contracts/workflow/vocabulary";
 
 import type { TestRuntime } from "../runtime/app";
 import { runTestWorkflowCommand, type TestCommandOverrides } from "./command";

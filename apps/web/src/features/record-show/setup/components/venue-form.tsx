@@ -174,7 +174,9 @@ export function VenueForm(props: {
                           value={value}
                           label={MODALIDAD_COBRO_LABELS[value]}
                           checked={props.form.onlineCollectionMode() === value}
-                          onChange={() => props.form.setOnlineCollectionMode(value)}
+                          onChange={() =>
+                            props.form.setOnlineCollectionMode(value)
+                          }
                         />
                       )}
                     </For>
