@@ -11,13 +11,9 @@ import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
-interface OnboardingRedirectResponse {
-  redirectTo: string;
-}
-
 export async function completeOnboarding(
   phone: Phone,
-): Promise<OnboardingRedirectResponse> {
+): Promise<{ redirectTo: string }> {
   const onboarding = getServerRuntime().auth.onboarding;
 
   const result = await runAction({
@@ -42,7 +38,7 @@ export async function completePasskeyOnboarding(
   phone: Phone,
   challengeId: number,
   response: RegistrationResponseJSON,
-): Promise<OnboardingRedirectResponse> {
+): Promise<{ redirectTo: string }> {
   const onboarding = getServerRuntime().auth.onboarding;
 
   const result = await runAction({
@@ -62,12 +58,14 @@ export async function completePasskeyOnboarding(
         return enrolled;
       }
 
+      const session = {
+        ...ctx.actor,
+        strongAuthMethod: "passkey" as const,
+        strongAuthAt: ctx.now(),
+      };
+
       return completeOnboardingService(onboarding, {
-        session: {
-          ...ctx.actor,
-          strongAuthMethod: "passkey",
-          strongAuthAt: ctx.now(),
-        },
+        session,
         phone,
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
