@@ -1,5 +1,5 @@
 import { useAction } from "@solidjs/router";
-import { createEffect, createMemo, createResource, on, Show } from "solid-js";
+import { createMemo, createResource, Show } from "solid-js";
 
 import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
@@ -22,17 +22,8 @@ export function CreateLeadPage() {
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
 
-  const {
-    draftRuc,
-    draftRazonSocial,
-    draftAddress,
-    draftScope,
-    activeTab,
-    setRazonSocial,
-    setAddress,
-    setScopeField,
-    setActiveTab,
-  } = useCreateLeadPageState();
+  const { draftRuc, draftScope, activeTab, setScopeField, setActiveTab } =
+    useCreateLeadPageState();
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
     return /^\d{11}$/.test(value) ? value : null;
@@ -49,25 +40,17 @@ export function CreateLeadPage() {
     () => bootstrapPreview.latest ?? null,
   );
 
-  // Prefill identity from the SUNAT lookup, but only into empty fields so a
-  // manual edit is never clobbered when the preview re-resolves.
-  createEffect(
-    on(latestBootstrapPreview, (preview) => {
-      if (!preview) return;
-      if (preview.razonSocial && !draftRazonSocial().trim()) {
-        setRazonSocial(preview.razonSocial);
-      }
-      if (preview.address && !draftAddress().trim()) {
-        setAddress(preview.address);
-      }
-    }),
+  const previewRazonSocial = createMemo(
+    () => latestBootstrapPreview()?.razonSocial ?? null,
+  );
+  const previewAddress = createMemo(
+    () => latestBootstrapPreview()?.address ?? null,
   );
 
   const { error, submitting, submit } = createCreateLeadController({
     draftRuc,
     validRuc,
-    razonSocial: draftRazonSocial,
-    address: draftAddress,
+    previewName: previewRazonSocial,
     scope: draftScope,
     currentUser,
     createLead,
@@ -75,7 +58,7 @@ export function CreateLeadPage() {
       navigateTo(
         createLeadRecordDetailSidePanelPage({
           leadId,
-          title: draftRazonSocial() || `RUC ${ruc}`,
+          title: previewRazonSocial() || `RUC ${ruc}`,
           subtitle: `RUC ${ruc}`,
         }),
         { resetStack: true },
@@ -104,11 +87,9 @@ export function CreateLeadPage() {
   const recordContext = createMemo<RecordContext>(() => ({
     kind: "draft",
     ruc: draftRuc(),
-    razonSocial: draftRazonSocial(),
-    address: draftAddress(),
+    razonSocial: previewRazonSocial(),
+    address: previewAddress(),
     engineStatus: engineStatus(),
-    setRazonSocial,
-    setAddress,
     commercialScope: { values: draftScope(), setField: setScopeField },
   }));
   useScopedHotkey("Mod+Enter", () => void submit(), { allowInInputs: true });

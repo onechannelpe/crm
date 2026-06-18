@@ -40,8 +40,6 @@ export async function requestLeadCreation(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         ruc: r.str("ruc"),
-        razonSocial: r.str("razonSocial"),
-        address: r.str("address"),
         proveedorActual: r.str("proveedorActual"),
         tasaDebitoActual: r.num("tasaDebitoActual"),
         tasaCreditoActual: r.num("tasaCreditoActual"),

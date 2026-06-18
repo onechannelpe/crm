@@ -32,8 +32,6 @@ export async function registerLead(
     actorUserId: number;
     actorRole: Role;
     ruc: string;
-    razonSocial: string;
-    address: string;
     proveedorActual: string;
     tasaDebitoActual: number;
     tasaCreditoActual: number;
@@ -119,15 +117,16 @@ export async function registerLead(
 
   const result = await ports.executor.transaction().execute(async (db) => {
     const txRepos = createWorkflowRepos(db);
-    // A new organization is seeded with the identity the agent confirmed at
-    // registration (SUNAT-prefilled or hand-entered), so the lead is never born
-    // with a placeholder name. An existing organization keeps its canonical data.
+    // A new organization is seeded with the RUC as a placeholder name; the SUNAT
+    // enrichment enqueued below is the single owner of identity and fills in the
+    // legal name and address once it resolves. An existing organization keeps its
+    // canonical data.
     const organization =
       (await txRepos.party.findOrganizationByRuc(ruc.value)) ??
       (await txRepos.party.createOrganization({
         ruc: ruc.value,
-        name: input.razonSocial,
-        address: input.address.trim() || null,
+        name: ruc.value,
+        address: null,
         district: null,
         department: null,
       }));

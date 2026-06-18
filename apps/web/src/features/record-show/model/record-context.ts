@@ -19,11 +19,11 @@ export type LeadRecordContext = {
 export type DraftRecordContext = {
   kind: "draft";
   ruc: string;
-  razonSocial: string;
-  address: string;
+  // Identity is resolved from the SUNAT preview and shown read-only; it is never
+  // submitted (the server is the single owner). Null until the preview resolves.
+  razonSocial: string | null;
+  address: string | null;
   engineStatus: string;
-  setRazonSocial: (value: string) => void;
-  setAddress: (value: string) => void;
   commercialScope: CommercialScopeBinding;
 };
 

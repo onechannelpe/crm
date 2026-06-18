@@ -16,8 +16,6 @@ export function DraftHomeTab(props: { context: RecordContext }) {
           <CreateFieldsSection
             razonSocial={draft().razonSocial}
             address={draft().address}
-            onRazonSocialInput={draft().setRazonSocial}
-            onAddressInput={draft().setAddress}
             commercialScope={draft().commercialScope}
           />
           <SunatLookupSection status={draft().engineStatus} />

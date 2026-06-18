@@ -27,8 +27,7 @@ type CreateLeadResult = {
 type CreateLeadControllerInput = {
   draftRuc: Accessor<string>;
   validRuc: Accessor<string | null>;
-  razonSocial: Accessor<string>;
-  address: Accessor<string>;
+  previewName: Accessor<string | null>;
   scope: Accessor<CommercialScopeFormValues>;
   currentUser: Accessor<CurrentUserView>;
   createLead: (input: CreateLeadInput) => Promise<CreateLeadResult>;
@@ -70,8 +69,6 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
 
     setError(null);
 
-    const razonSocial = input.razonSocial().trim();
-    const address = input.address().trim();
     const user = input.currentUser();
 
     const txId = optimisticTransactions.begin({
@@ -80,8 +77,8 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
           ["mine", "review", "all"],
           createOptimisticLeadRow({
             ruc,
-            razonSocial,
-            address,
+            razonSocial: input.previewName(),
+            address: null,
             executiveId: user.id,
             executiveName: shortName(user),
             createdBy: user.id,
@@ -93,8 +90,6 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     try {
       const result = await createCommand.run({
         ruc,
-        razonSocial,
-        address,
         ...toCommercialScopePayload(scope),
       });
       await revalidateWorkflowLeadList();

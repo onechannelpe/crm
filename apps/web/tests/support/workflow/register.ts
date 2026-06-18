@@ -32,8 +32,6 @@ export type RegisterLeadResult = {
 export async function registerLead(input: {
   runtime: TestRuntime;
   ruc: string;
-  razonSocial?: string;
-  address?: string;
   actor?: { userId: number; role: "executive" | "admin"; branchId: number };
   proveedorActual?: string;
   tasaDebitoActual?: number;
@@ -52,8 +50,6 @@ export async function registerLead(input: {
       commandApi.registerLead({
         actor,
         ruc: input.ruc,
-        razonSocial: input.razonSocial ?? input.ruc,
-        address: input.address ?? "",
         proveedorActual: input.proveedorActual ?? "Niubiz",
         tasaDebitoActual: input.tasaDebitoActual ?? 3.5,
         tasaCreditoActual: input.tasaCreditoActual ?? 4.0,

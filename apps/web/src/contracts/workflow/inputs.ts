@@ -41,11 +41,7 @@ export type CommercialScope = {
   posTotal: number;
 };
 
-export type CreateLeadInput = {
-  ruc: string;
-  razonSocial: string;
-  address: string;
-} & CommercialScope;
+export type CreateLeadInput = { ruc: string } & CommercialScope;
 
 export type EditCommercialScopeInput = { leadId: string } & CommercialScope;
 

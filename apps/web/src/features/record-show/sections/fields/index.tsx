@@ -7,11 +7,9 @@ import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
-import { TextInput } from "~/components/ui/input/text-input";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { CommercialScopeBinding } from "~/features/record-show/model/record-context";
 import {
-  FieldInputValue,
   FieldRow,
   FieldTable,
   FieldTextValue,
@@ -60,30 +58,6 @@ function FieldsSectionFrame(props: { children: JSX.Element }) {
   );
 }
 
-function EditableFieldRow(props: {
-  label: string;
-  icon: FieldIcon;
-  value: string;
-  placeholder: string;
-  onInput: (value: string) => void;
-}) {
-  return (
-    <FieldRow label={props.label} icon={props.icon}>
-      <FieldValue>
-        <FieldInputValue>
-          <TextInput
-            sizeVariant="sm"
-            value={props.value}
-            onChange={props.onInput}
-            placeholder={props.placeholder}
-            aria-label={props.label}
-          />
-        </FieldInputValue>
-      </FieldValue>
-    </FieldRow>
-  );
-}
-
 function ReadonlyFieldRow(props: {
   label: string;
   icon: FieldIcon;
@@ -101,28 +75,23 @@ function ReadonlyFieldRow(props: {
 }
 
 export function CreateFieldsSection(props: {
-  razonSocial: string;
-  address: string;
-  onRazonSocialInput: (value: string) => void;
-  onAddressInput: (value: string) => void;
+  razonSocial: string | null;
+  address: string | null;
   commercialScope: CommercialScopeBinding;
 }) {
+  const pendingSunat = "Se completará con SUNAT";
   return (
     <FieldsSectionFrame>
       <FieldTable>
-        <EditableFieldRow
+        <ReadonlyFieldRow
           label="Razón social"
           icon={Building2}
-          value={props.razonSocial}
-          placeholder="Razón social (SUNAT)"
-          onInput={props.onRazonSocialInput}
+          value={props.razonSocial ?? pendingSunat}
         />
-        <EditableFieldRow
+        <ReadonlyFieldRow
           label="Dirección"
           icon={MapIcon}
-          value={props.address}
-          placeholder="Dirección (SUNAT)"
-          onInput={props.onAddressInput}
+          value={props.address ?? pendingSunat}
         />
         <CommercialScopeFields
           values={props.commercialScope.values}

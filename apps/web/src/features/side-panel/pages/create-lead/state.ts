@@ -25,8 +25,6 @@ export function useCreateLeadPageState() {
   }
 
   const setRuc = (ruc: string) => patchDraft({ ruc });
-  const setRazonSocial = (razonSocial: string) => patchDraft({ razonSocial });
-  const setAddress = (address: string) => patchDraft({ address });
   const setActiveTab = (activeTab: RecordTabId) => patchDraft({ activeTab });
 
   function setScopeField<K extends keyof CommercialScopeFormValues>(
@@ -37,8 +35,6 @@ export function useCreateLeadPageState() {
   }
 
   const draftRuc = createMemo(() => pageState().draft.ruc);
-  const draftRazonSocial = createMemo(() => pageState().draft.razonSocial);
-  const draftAddress = createMemo(() => pageState().draft.address);
   const draftScope = createMemo<CommercialScopeFormValues>(() => {
     const draft = pageState().draft;
     return {
@@ -59,14 +55,10 @@ export function useCreateLeadPageState() {
 
   return {
     draftRuc,
-    draftRazonSocial,
-    draftAddress,
     draftScope,
     activeTab,
     label,
     setRuc,
-    setRazonSocial,
-    setAddress,
     setScopeField,
     setActiveTab,
   };

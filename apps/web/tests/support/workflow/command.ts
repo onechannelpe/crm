@@ -64,8 +64,6 @@ function buildCommandApi(
           actorUserId: input.actor.userId,
           actorRole: input.actor.role,
           ruc: input.ruc,
-          razonSocial: input.razonSocial,
-          address: input.address,
           proveedorActual: input.proveedorActual,
           tasaDebitoActual: input.tasaDebitoActual,
           tasaCreditoActual: input.tasaCreditoActual,
