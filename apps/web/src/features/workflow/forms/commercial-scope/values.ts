@@ -4,6 +4,10 @@ import {
   type SettlementBank,
 } from "~/contracts/workflow/vocabulary";
 
+type ProjectionResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string };
+
 // Form fields stay strings until submit so text, number, and select inputs share
 // one editable shape.
 export type CommercialScopePayload = CommercialScope;
@@ -52,23 +56,31 @@ export function validateCommercialScope(
   return null;
 }
 
-// Callers must validate first; this assumes a non-empty bank and numeric fields.
 export function toCommercialScopePayload(
   values: CommercialScopeFormValues,
-): CommercialScopePayload {
+): ProjectionResult<CommercialScopePayload> {
+  const error = validateCommercialScope(values);
+  if (error) {
+    return { ok: false, error };
+  }
+
   const bank = values.settlementBank;
   if (!bank) {
-    throw new Error("commercial scope must be validated before projection");
+    return { ok: false, error: "Banco de abono es requerido" };
   }
+
   return {
-    currentProvider: values.currentProvider.trim(),
-    currentDebitRate: Number(values.currentDebitRate),
-    currentCreditRate: Number(values.currentCreditRate),
-    gpv: Number(values.gpv),
-    ticket: Number(values.ticket),
-    giroNegocio: values.giroNegocio.trim(),
-    settlementBank: bank,
-    posCount: Number(values.posCount),
+    ok: true,
+    value: {
+      currentProvider: values.currentProvider.trim(),
+      currentDebitRate: Number(values.currentDebitRate),
+      currentCreditRate: Number(values.currentCreditRate),
+      gpv: Number(values.gpv),
+      ticket: Number(values.ticket),
+      giroNegocio: values.giroNegocio.trim(),
+      settlementBank: bank,
+      posCount: Number(values.posCount),
+    },
   };
 }
 

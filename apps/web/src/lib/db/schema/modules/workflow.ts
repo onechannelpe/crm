@@ -89,9 +89,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
     )
-    // Commercial scope is captured in full at registration (lead born complete),
-    // so these columns are NOT NULL. Digital-policy columns below stay nullable
-    // until SETUP.
+    // Profiles are created at registration. Commercial fields are required
+    // immediately; digital-policy fields remain nullable until SETUP.
     .addColumn("current_provider", "varchar(255)", (col) => col.notNull())
     .addColumn("current_debit_rate", "real", (col) => col.notNull())
     .addColumn("current_credit_rate", "real", (col) => col.notNull())

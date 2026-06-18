@@ -10,7 +10,6 @@ import {
 import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
 import {
   toCommercialScopePayload,
-  validateCommercialScope,
   type CommercialScopeFormValues,
 } from "~/features/workflow/forms/commercial-scope/values";
 import { shortName } from "~/lib/users/display-name";
@@ -57,12 +56,9 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
       return;
     }
 
-    // Validate scope before submit. SUNAT identity fields can be missing or
-    // manually corrected, so they stay optional.
-    const scope = input.scope();
-    const scopeError = validateCommercialScope(scope);
-    if (scopeError) {
-      setError(scopeError);
+    const scopePayload = toCommercialScopePayload(input.scope());
+    if (!scopePayload.ok) {
+      setError(scopePayload.error);
       input.setActiveTab("home");
       return;
     }
@@ -90,7 +86,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     try {
       const result = await createCommand.run({
         ruc,
-        ...toCommercialScopePayload(scope),
+        ...scopePayload.value,
       });
       await revalidateWorkflowLeadList();
       optimisticTransactions.commit(txId);

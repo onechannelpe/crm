@@ -20,7 +20,6 @@ export type CommercialProfileFields = {
   posCount: number;
 };
 
-// Defaults to "none" scope at registration; populated at SETUP.
 export type DigitalPolicyFields = {
   linkScope: ProductScope;
   linkUrl: string | null;
@@ -46,15 +45,12 @@ type ProfileWrite<TFields> = {
 
 export type LeadProfileRepository = {
   findByLeadId(leadId: string): Promise<LeadProfile | undefined>;
-  // Registration seeds the commercial row plus "none" digital defaults.
   createCommercialProfile(
     values: ProfileWrite<CommercialProfileFields>,
   ): Promise<void>;
-  // Inline scope correction: rewrites only the commercial columns.
   updateCommercialScope(
     values: ProfileWrite<CommercialProfileFields>,
   ): Promise<void>;
-  // SETUP digital policy: rewrites only the digital columns.
   updateDigitalPolicy(values: ProfileWrite<DigitalPolicyFields>): Promise<void>;
 };
 

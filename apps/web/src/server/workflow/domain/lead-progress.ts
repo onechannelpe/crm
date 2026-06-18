@@ -4,8 +4,6 @@ import {
   type LeadStage,
 } from "~/contracts/workflow/vocabulary";
 
-// Only the digital-policy fields can leave a SETUP lead blocked; commercial scope
-// is always present (lead born complete at registration).
 export type SetupProfileFields = {
   linkScope?: "none" | "shared" | "per_venue";
   linkUrl?: string | null;

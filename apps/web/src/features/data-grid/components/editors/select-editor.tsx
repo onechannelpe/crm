@@ -23,7 +23,8 @@ export function GridSelectEditor<V extends string>(props: {
     <div
       ref={(el) => (listRef = el)}
       class={styles.cellEditorOptions}
-      // Custom styled option list; native select/datalist can't carry the grid styling.
+      // The grid editor uses listbox semantics without native select behavior so
+      // Escape can cancel and outside dismissal can leave the value unchanged.
       // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
       role="listbox"
       tabindex={-1}
@@ -39,6 +40,8 @@ export function GridSelectEditor<V extends string>(props: {
         {(option) => (
           <button
             type="button"
+            // The button supplies click and focus behavior while the parent
+            // listbox exposes the option state to assistive technology.
             // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
             role="option"
             aria-selected={option.value === props.selected}

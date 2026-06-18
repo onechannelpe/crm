@@ -155,8 +155,6 @@ export async function registerLead(
     });
     if (!effects.ok) return effects;
 
-    // The lead is born complete: back office needs the commercial scope in the
-    // export to qualify the lead, so it is captured at registration.
     await txRepos.leadProfiles.createCommercialProfile({
       leadId: effects.value.leadId,
       fields: {

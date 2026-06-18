@@ -51,8 +51,6 @@ export async function saveDigitalPolicyCommand(
     });
     if (!aggregateCheck.ok) return aggregateCheck;
 
-    // The profile row already exists from registration (lead born complete), so
-    // this is a partial update of just the digital columns.
     await repos.leadProfiles.updateDigitalPolicy({
       leadId: state.id,
       fields: toProfileDigitalFields(policy.value),

@@ -592,7 +592,6 @@ describe("lead reservation expiry", () => {
       proposedBy: scenario.actor.by("backOne").userId,
     });
 
-    // Within the window the sweep leaves the hold untouched.
     expect(
       await expireLapsedReservations(
         { executor: runtime.ctx.db },
@@ -600,7 +599,6 @@ describe("lead reservation expiry", () => {
       ),
     ).toBe(0);
 
-    // Travel past the window; now the sweep retires the lead and frees the RUC.
     runtime.now.set(runtime.now.get() + SEVEN_DAYS_MS + 1);
     expect(
       await expireLapsedReservations(

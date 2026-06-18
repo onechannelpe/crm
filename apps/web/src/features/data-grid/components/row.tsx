@@ -143,7 +143,6 @@ function DataGridRowCell<T extends { id: string }>(props: {
     props.rowOpen.open(props.row);
   }
 
-  // The same gesture, click or Enter, routes by column kind.
   function activateCell() {
     if (editable()) {
       interaction.openCellEditor(props.row.id, props.columnIndex);
@@ -176,6 +175,8 @@ function DataGridRowCell<T extends { id: string }>(props: {
           data-grid-focusable-cell={`${props.row.id}:${props.columnIndex}`}
           data-open-mode={props.rowOpen.mode}
           data-editable={editable() ? "true" : undefined}
+          // The focusable cell is a grid-managed composite target. Native buttons
+          // would nest inside rendered cell controls and break row-level keyboard routing.
           // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
           role="button"
           aria-disabled={isInteractive() ? undefined : "true"}
