@@ -51,8 +51,10 @@ export function buildVenueSubmitInput(
     policy.linkScope === "per_venue" ? form.linkUrl().trim() || null : null;
   const onlineUrl =
     policy.onlineScope === "per_venue" ? form.onlineUrl().trim() || null : null;
-  const onlineModalidad =
-    policy.onlineScope === "per_venue" ? form.onlineModalidad() || null : null;
+  const onlineCollectionMode =
+    policy.onlineScope === "per_venue"
+      ? form.onlineCollectionMode() || null
+      : null;
 
   if (policy.linkScope === "per_venue" && !linkUrl) {
     return { ok: false, error: "URL Culqi Link es requerida" };
@@ -60,7 +62,11 @@ export function buildVenueSubmitInput(
   if (policy.onlineScope === "per_venue" && !onlineUrl) {
     return { ok: false, error: "URL Culqi Online es requerida" };
   }
-  if (policy.onlineScope === "per_venue" && onlineUrl && !onlineModalidad) {
+  if (
+    policy.onlineScope === "per_venue" &&
+    onlineUrl &&
+    !onlineCollectionMode
+  ) {
     return { ok: false, error: "Modalidad de cobro es requerida" };
   }
 
@@ -69,7 +75,7 @@ export function buildVenueSubmitInput(
       ? {
           ...(linkUrl ? { linkUrl } : {}),
           ...(onlineUrl ? { onlineUrl } : {}),
-          ...(onlineModalidad ? { onlineModalidad } : {}),
+          ...(onlineCollectionMode ? { onlineCollectionMode } : {}),
         }
       : undefined;
 

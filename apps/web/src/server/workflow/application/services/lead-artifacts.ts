@@ -31,7 +31,7 @@ const LEAD_EXPORT_COLUMNS: {
   value: (row: RecordExportRow) => unknown;
 }[] = [
   { header: "RUC", value: (row) => row.ruc },
-  { header: "Razón social", value: (row) => row.razonSocial ?? "" },
+  { header: "Razón social", value: (row) => row.legalName ?? "" },
   { header: "ID ejecutivo", value: (row) => row.executiveId },
   { header: "Ejecutivo", value: (row) => row.executiveName },
   {
@@ -41,12 +41,12 @@ const LEAD_EXPORT_COLUMNS: {
   { header: "Etapa", value: (row) => row.stage },
   { header: "Dirección", value: (row) => row.address ?? "" },
   { header: "Estado", value: (row) => row.status ?? "" },
-  { header: "Prioridad", value: (row) => row.prioridad ?? "" },
-  { header: "Competencia", value: (row) => row.proveedorActual ?? "" },
-  { header: "Tasa comp. TD", value: (row) => row.tasaDebitoActual ?? "" },
-  { header: "Tasa comp. TC", value: (row) => row.tasaCreditoActual ?? "" },
-  { header: "Tasa Culqi TD", value: (row) => row.tarifaDebitoCulqi ?? "" },
-  { header: "Tasa Culqi TC", value: (row) => row.tarifaCreditoCulqi ?? "" },
+  { header: "Prioridad", value: (row) => row.priority ?? "" },
+  { header: "Competencia", value: (row) => row.currentProvider ?? "" },
+  { header: "Tasa comp. TD", value: (row) => row.currentDebitRate ?? "" },
+  { header: "Tasa comp. TC", value: (row) => row.currentCreditRate ?? "" },
+  { header: "Tasa Culqi TD", value: (row) => row.proposedDebitRate ?? "" },
+  { header: "Tasa Culqi TC", value: (row) => row.proposedCreditRate ?? "" },
   { header: "Proyectado", value: (row) => row.gpv ?? "" },
   { header: "Observación", value: () => "" },
 ];

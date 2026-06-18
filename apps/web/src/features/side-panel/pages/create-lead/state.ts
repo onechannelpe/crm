@@ -38,14 +38,14 @@ export function useCreateLeadPageState() {
   const draftScope = createMemo<CommercialScopeFormValues>(() => {
     const draft = pageState().draft;
     return {
-      proveedorActual: draft.proveedorActual,
-      tasaDebitoActual: draft.tasaDebitoActual,
-      tasaCreditoActual: draft.tasaCreditoActual,
+      currentProvider: draft.currentProvider,
+      currentDebitRate: draft.currentDebitRate,
+      currentCreditRate: draft.currentCreditRate,
       gpv: draft.gpv,
       ticket: draft.ticket,
       giroNegocio: draft.giroNegocio,
-      abonoBank: draft.abonoBank,
-      posTotal: draft.posTotal,
+      settlementBank: draft.settlementBank,
+      posCount: draft.posCount,
     };
   });
   const activeTab = createMemo<RecordTabId>(() =>

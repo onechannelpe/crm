@@ -115,7 +115,7 @@ export async function persistWorkflowHistoryEvents(
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
-        prioridad: "P2",
+        priority: "P2",
         reason: "Disponible según la consulta de cartera de Culqi",
         fromStage: "QUALIFYING",
         toStage: "PRICING",
@@ -164,7 +164,7 @@ export async function persistWorkflowHistoryEvents(
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
-        prioridad: "P1",
+        priority: "P1",
         reason: "Cliente disponible con alto volumen, excelente candidato",
         fromStage: "QUALIFYING",
         toStage: "PRICING",
@@ -213,7 +213,7 @@ export async function persistWorkflowHistoryEvents(
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
-        prioridad: "P2",
+        priority: "P2",
         reason: "Cliente disponible, listo para proponer tarifa competitiva",
         fromStage: "QUALIFYING",
         toStage: "PRICING",
@@ -241,7 +241,7 @@ export async function persistWorkflowHistoryEvents(
       payload_json: JSON.stringify({
         proposalId: qidQuoted,
         round: 1,
-        moneda: "PEN",
+        currency: "PEN",
       }),
       occurred_at: now - 10 * day,
     },
@@ -275,7 +275,7 @@ export async function persistWorkflowHistoryEvents(
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
-        prioridad: "P1",
+        priority: "P1",
         reason: "Empresa con alta facturación, perfil ideal para conversión",
         fromStage: "QUALIFYING",
         toStage: "PRICING",
@@ -303,7 +303,7 @@ export async function persistWorkflowHistoryEvents(
       payload_json: JSON.stringify({
         proposalId: qidForSale,
         round: 1,
-        moneda: "PEN",
+        currency: "PEN",
       }),
       occurred_at: now - 18 * day,
     },
@@ -358,7 +358,7 @@ export async function persistWorkflowHistoryEvents(
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
-        prioridad: "P1",
+        priority: "P1",
         reason: "Empresa constructora consolidada con gran volumen potencial",
         fromStage: "QUALIFYING",
         toStage: "PRICING",
@@ -386,7 +386,7 @@ export async function persistWorkflowHistoryEvents(
       payload_json: JSON.stringify({
         proposalId: qidConverted,
         round: 1,
-        moneda: "PEN",
+        currency: "PEN",
       }),
       occurred_at: now - 27 * day,
     },
@@ -474,7 +474,7 @@ export async function persistWorkflowHistoryEvents(
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "CARTERIZADO",
-        prioridad: "SIN RESULTADO",
+        priority: "SIN RESULTADO",
         reason: "Empresa ya carterizada por otro dealer según Culqi",
         fromStage: "QUALIFYING",
         toStage: "DISQUALIFIED",

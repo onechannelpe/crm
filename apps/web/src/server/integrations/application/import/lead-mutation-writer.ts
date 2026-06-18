@@ -19,7 +19,7 @@ function nextStageFor(
 
   return resolveReviewTransition({
     status: nextStatus,
-    prioridad: nextPrioridad,
+    priority: nextPrioridad,
   });
 }
 
@@ -86,7 +86,7 @@ export async function applyLeadMutation(input: {
       "workflow_leads.updated_by",
       "workflow_leads.updated_at",
       "workflow_leads.status",
-      "workflow_leads.prioridad",
+      "workflow_leads.priority",
       "workflow_leads.stage",
     ])
     .where("organizations.ruc", "=", input.row.ruc)
@@ -127,9 +127,7 @@ export async function applyLeadMutation(input: {
   const nextStatus =
     input.row.type === "import_status" ? input.row.status : lead.status;
   const nextPrioridad =
-    input.row.type === "import_prioridad"
-      ? input.row.prioridad
-      : lead.prioridad;
+    input.row.type === "import_prioridad" ? input.row.priority : lead.priority;
   const nextStage = nextStageFor(lead, nextStatus, nextPrioridad);
   const changedAt = Date.now();
   const stageChanged = nextStage !== lead.stage;
@@ -138,7 +136,7 @@ export async function applyLeadMutation(input: {
     .updateTable("workflow_leads")
     .set({
       status: nextStatus,
-      prioridad: nextPrioridad,
+      priority: nextPrioridad,
       stage: nextStage,
       updated_by: input.actorId,
       updated_at: changedAt,
@@ -183,7 +181,7 @@ export async function applyLeadMutation(input: {
       ruc: lead.ruc,
       executiveId: lead.executive_id,
       previousStatus: lead.status,
-      previousPrioridad: lead.prioridad,
+      previousPrioridad: lead.priority,
       previousStage: lead.stage,
       nextStatus,
       nextPrioridad,

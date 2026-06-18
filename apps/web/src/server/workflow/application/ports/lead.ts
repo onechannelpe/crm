@@ -19,7 +19,7 @@ export type LeadPatch = Partial<
     | "createdBy"
     | "organizationId"
     | "ruc"
-    | "razonSocial"
+    | "legalName"
     | "address"
     | "district"
     | "department"
@@ -83,7 +83,7 @@ export type LeadListFilters = {
   executiveId?: number;
   stage?: LeadStage;
   status?: LeadStatus;
-  prioridad?: LeadPriority;
+  priority?: LeadPriority;
   updatedSinceMs?: number;
   updatedUntilMs?: number;
   anyFieldSearch?: string;
@@ -103,7 +103,7 @@ export type RecordExportFilters = {
 export type LeadListRow = {
   id: string;
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   executiveId: number;
   executiveName: string;
@@ -111,7 +111,7 @@ export type LeadListRow = {
   createdByName: string;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   createdAt: number;
   updatedAt: number;
 };
@@ -119,20 +119,20 @@ export type LeadListRow = {
 export type RecordExportRow = {
   id: string;
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   createdAt: number;
   executiveId: number;
   executiveName: string;
-  proveedorActual: string | null;
-  tasaDebitoActual: number | null;
-  tasaCreditoActual: number | null;
+  currentProvider: string | null;
+  currentDebitRate: number | null;
+  currentCreditRate: number | null;
   gpv: number | null;
-  tarifaDebitoCulqi: number | null;
-  tarifaCreditoCulqi: number | null;
+  proposedDebitRate: number | null;
+  proposedCreditRate: number | null;
 };
 
 export type LeadQueries = {

@@ -14,11 +14,11 @@ import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 const RATE_FIELD_KEYS = [
   "paybackPricing",
-  "tarifaDebito",
-  "tarifaCredito",
-  "tarifaForaneo",
+  "proposedDebitRate",
+  "proposedCreditRate",
+  "proposedForeignRate",
   "fee",
-  "moneda",
+  "currency",
 ] as const satisfies ReadonlyArray<keyof RateProposalNumbers>;
 
 export async function editRateProposalCommand(
@@ -43,12 +43,12 @@ export async function editRateProposalCommand(
     }
 
     const nextNumbers: RateProposalNumbers = {
-      tarifaDebito: input.tarifaDebito,
-      tarifaCredito: input.tarifaCredito,
-      tarifaForaneo: input.tarifaForaneo,
+      proposedDebitRate: input.proposedDebitRate,
+      proposedCreditRate: input.proposedCreditRate,
+      proposedForeignRate: input.proposedForeignRate,
       fee: input.fee,
       paybackPricing: input.paybackPricing,
-      moneda: input.moneda,
+      currency: input.currency,
     };
 
     // The whole proposal arrives, but only the moved fields become the

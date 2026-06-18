@@ -41,7 +41,7 @@ export function CreateLeadPage() {
   );
 
   const previewRazonSocial = createMemo(
-    () => latestBootstrapPreview()?.razonSocial ?? null,
+    () => latestBootstrapPreview()?.legalName ?? null,
   );
   const previewAddress = createMemo(
     () => latestBootstrapPreview()?.address ?? null,
@@ -87,7 +87,7 @@ export function CreateLeadPage() {
   const recordContext = createMemo<RecordContext>(() => ({
     kind: "draft",
     ruc: draftRuc(),
-    razonSocial: previewRazonSocial(),
+    legalName: previewRazonSocial(),
     address: previewAddress(),
     engineStatus: engineStatus(),
     commercialScope: { values: draftScope(), setField: setScopeField },

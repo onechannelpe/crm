@@ -38,7 +38,7 @@ export async function saveDigitalPolicyCommand(
       linkUrl: input.linkUrl,
       onlineScope: input.onlineScope,
       onlineUrl: input.onlineUrl,
-      onlineModalidad: input.onlineModalidad,
+      onlineCollectionMode: input.onlineCollectionMode,
     });
     if (!policy.ok) return policy;
 

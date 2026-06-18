@@ -3,7 +3,10 @@ import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
-import type { LeadCallOutcome, Moneda } from "~/contracts/workflow/vocabulary";
+import type {
+  LeadCallOutcome,
+  Currency,
+} from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -122,7 +125,7 @@ export function proposeRate(
     actor: Actor;
     proposalId: string;
     round: number;
-    moneda: Moneda;
+    currency: Currency;
     reservationExpiresAt: number;
     now: number;
   },
@@ -139,7 +142,7 @@ export function proposeRate(
       payload: {
         proposalId: input.proposalId,
         round: input.round,
-        moneda: input.moneda,
+        currency: input.currency,
       },
       occurredAt: input.now,
     }),

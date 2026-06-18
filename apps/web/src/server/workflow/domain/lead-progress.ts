@@ -1,5 +1,8 @@
 import { type LeadBlockingField } from "~/contracts/workflow/views";
-import { type LeadNextStep, type LeadStage } from "~/contracts/workflow/vocabulary";
+import {
+  type LeadNextStep,
+  type LeadStage,
+} from "~/contracts/workflow/vocabulary";
 
 // Only the digital-policy fields can leave a SETUP lead blocked; commercial scope
 // is always present (lead born complete at registration).
@@ -8,7 +11,7 @@ export type SetupProfileFields = {
   linkUrl?: string | null;
   onlineScope?: "none" | "shared" | "per_venue";
   onlineUrl?: string | null;
-  onlineModalidad?: string | null;
+  onlineCollectionMode?: string | null;
 };
 
 export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
@@ -50,7 +53,10 @@ export function resolveLeadBlockingFields(input: {
       const p = input.profile;
       if (!p) return ["digitalPolicy"];
       if (p.linkScope === "shared" && !p.linkUrl) return ["digitalPolicy"];
-      if (p.onlineScope === "shared" && (!p.onlineUrl || !p.onlineModalidad)) {
+      if (
+        p.onlineScope === "shared" &&
+        (!p.onlineUrl || !p.onlineCollectionMode)
+      ) {
         return ["digitalPolicy"];
       }
       const withAccounts = input.venuesWithAccountsCount ?? 0;

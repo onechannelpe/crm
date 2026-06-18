@@ -40,7 +40,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     ),
   },
   {
-    key: "razonSocial",
+    key: "legalName",
     label: "Razón social",
     icon: Building2,
     minWidth: 240,
@@ -48,7 +48,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     renderCell: (lead) => (
       <RecordLinkChip
         href={`/records/${lead.id}`}
-        name={lead.razonSocial ?? lead.ruc}
+        name={lead.legalName ?? lead.ruc}
         shape="square"
       />
     ),
@@ -83,13 +83,13 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
       ) : null,
   },
   {
-    key: "prioridad",
+    key: "priority",
     label: "Prioridad",
     icon: Package,
     width: 152,
     renderCell: (lead) =>
-      lead.prioridad ? (
-        <Badge variant="secondary">{capitalize(lead.prioridad)}</Badge>
+      lead.priority ? (
+        <Badge variant="secondary">{capitalize(lead.priority)}</Badge>
       ) : null,
   },
   {

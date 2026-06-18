@@ -1,8 +1,8 @@
 "use server";
 
 import {
-  ABONO_BANKS,
-  MODALIDAD_COBRO_KINDS,
+  SETTLEMENT_BANKS,
+  COLLECTION_MODES,
   PRODUCT_SCOPES,
 } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
@@ -21,14 +21,14 @@ function parseLeadRef(input: unknown) {
 function parseCommercialScope(input: unknown) {
   return parseObject(input, validationFail, (r) => ({
     leadId: r.str("leadId"),
-    proveedorActual: r.str("proveedorActual"),
-    tasaDebitoActual: r.num("tasaDebitoActual"),
-    tasaCreditoActual: r.num("tasaCreditoActual"),
+    currentProvider: r.str("currentProvider"),
+    currentDebitRate: r.num("currentDebitRate"),
+    currentCreditRate: r.num("currentCreditRate"),
     gpv: r.num("gpv"),
     ticket: r.num("ticket"),
     giroNegocio: r.str("giroNegocio"),
-    abonoBank: r.enum("abonoBank", ABONO_BANKS),
-    posTotal: r.num("posTotal"),
+    settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
+    posCount: r.num("posCount"),
   }));
 }
 
@@ -40,14 +40,14 @@ export async function requestLeadCreation(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         ruc: r.str("ruc"),
-        proveedorActual: r.str("proveedorActual"),
-        tasaDebitoActual: r.num("tasaDebitoActual"),
-        tasaCreditoActual: r.num("tasaCreditoActual"),
+        currentProvider: r.str("currentProvider"),
+        currentDebitRate: r.num("currentDebitRate"),
+        currentCreditRate: r.num("currentCreditRate"),
         gpv: r.num("gpv"),
         ticket: r.num("ticket"),
         giroNegocio: r.str("giroNegocio"),
-        abonoBank: r.enum("abonoBank", ABONO_BANKS),
-        posTotal: r.num("posTotal"),
+        settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
+        posCount: r.num("posCount"),
       })),
 
     execute: ({ actor }, payload) =>
@@ -85,8 +85,8 @@ export async function requestSaveDigitalPolicy(input: unknown) {
         linkUrl: r.optStr("linkUrl") ?? null,
         onlineScope: r.enum("onlineScope", PRODUCT_SCOPES),
         onlineUrl: r.optStr("onlineUrl") ?? null,
-        onlineModalidad:
-          r.optEnum("onlineModalidad", MODALIDAD_COBRO_KINDS) ?? null,
+        onlineCollectionMode:
+          r.optEnum("onlineCollectionMode", COLLECTION_MODES) ?? null,
       })),
 
     audit: ({ leadId }) => ({ leadId }),

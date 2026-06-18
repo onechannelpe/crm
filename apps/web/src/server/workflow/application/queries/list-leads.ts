@@ -55,7 +55,7 @@ export async function listLeads(
     }),
     stage: input.filters.stage,
     status: input.filters.status,
-    prioridad: input.filters.prioridad,
+    priority: input.filters.priority,
     anyFieldSearch: normalizeLeadAnyFieldSearch(input.filters.anyFieldSearch),
     updatedSinceMs: input.filters.updatedSinceMs,
     updatedUntilMs: input.filters.updatedUntilMs,

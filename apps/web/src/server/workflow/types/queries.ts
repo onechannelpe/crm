@@ -18,7 +18,7 @@ export type ListLeadsInput = {
   filters: {
     stage?: LeadStage;
     status?: LeadStatus;
-    prioridad?: LeadPriority;
+    priority?: LeadPriority;
     executiveId?: number;
     anyFieldSearch?: string;
     updatedSinceMs?: number;

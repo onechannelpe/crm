@@ -1,4 +1,4 @@
-import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow/vocabulary";
+import { SETTLEMENT_BANKS, type SettlementBank } from "~/contracts/workflow/vocabulary";
 
 import type { TestRuntime } from "../runtime/app";
 import { runTestWorkflowCommand, type TestCommandOverrides } from "./command";
@@ -13,13 +13,13 @@ export type RegisteredLeadSnapshot = {
 };
 
 export type RegisteredLeadProfile = {
-  proveedorActual: string | null;
-  tasaDebitoActual: number | null;
-  tasaCreditoActual: number | null;
+  currentProvider: string | null;
+  currentDebitRate: number | null;
+  currentCreditRate: number | null;
   gpv: number | null;
   ticket: number | null;
-  abonoBank: string | null;
-  posTotal: number | null;
+  settlementBank: string | null;
+  posCount: number | null;
 };
 
 export type RegisterLeadResult = {
@@ -33,14 +33,14 @@ export async function registerLead(input: {
   runtime: TestRuntime;
   ruc: string;
   actor?: { userId: number; role: "executive" | "admin"; branchId: number };
-  proveedorActual?: string;
-  tasaDebitoActual?: number;
-  tasaCreditoActual?: number;
+  currentProvider?: string;
+  currentDebitRate?: number;
+  currentCreditRate?: number;
   gpv?: number;
   ticket?: number;
   giroNegocio?: string;
-  abonoBank?: AbonoBank;
-  posTotal?: number;
+  settlementBank?: SettlementBank;
+  posCount?: number;
   commandOverrides?: TestCommandOverrides;
 }): Promise<RegisterLeadResult> {
   const actor = input.actor ?? { userId: 1, role: "executive", branchId: 1 };
@@ -50,14 +50,14 @@ export async function registerLead(input: {
       commandApi.registerLead({
         actor,
         ruc: input.ruc,
-        proveedorActual: input.proveedorActual ?? "Niubiz",
-        tasaDebitoActual: input.tasaDebitoActual ?? 3.5,
-        tasaCreditoActual: input.tasaCreditoActual ?? 4.0,
+        currentProvider: input.currentProvider ?? "Niubiz",
+        currentDebitRate: input.currentDebitRate ?? 3.5,
+        currentCreditRate: input.currentCreditRate ?? 4.0,
         gpv: input.gpv ?? 50000,
         ticket: input.ticket ?? 120,
         giroNegocio: input.giroNegocio ?? "Retail",
-        abonoBank: input.abonoBank ?? ABONO_BANKS[0],
-        posTotal: input.posTotal ?? 2,
+        settlementBank: input.settlementBank ?? SETTLEMENT_BANKS[0],
+        posCount: input.posCount ?? 2,
       }),
     input.commandOverrides,
   );
@@ -83,13 +83,13 @@ export async function registerLead(input: {
   const profileRow = await input.runtime.ctx.db
     .selectFrom("workflow_lead_profiles")
     .select([
-      "proveedor_actual",
-      "tasa_debito_actual",
-      "tasa_credito_actual",
+      "current_provider",
+      "current_debit_rate",
+      "current_credit_rate",
       "gpv",
       "ticket",
-      "abono_bank",
-      "pos_total",
+      "settlement_bank",
+      "pos_count",
     ])
     .where("lead_id", "=", result.value.leadId)
     .executeTakeFirst();
@@ -114,13 +114,13 @@ export async function registerLead(input: {
     },
     profile: profileRow
       ? {
-          proveedorActual: profileRow.proveedor_actual,
-          tasaDebitoActual: profileRow.tasa_debito_actual,
-          tasaCreditoActual: profileRow.tasa_credito_actual,
+          currentProvider: profileRow.current_provider,
+          currentDebitRate: profileRow.current_debit_rate,
+          currentCreditRate: profileRow.current_credit_rate,
           gpv: profileRow.gpv,
           ticket: profileRow.ticket,
-          abonoBank: profileRow.abono_bank,
-          posTotal: profileRow.pos_total,
+          settlementBank: profileRow.settlement_bank,
+          posCount: profileRow.pos_count,
         }
       : null,
     historyEventTypes: history.map((event) => event.type),

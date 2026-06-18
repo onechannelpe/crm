@@ -77,7 +77,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
           ["mine", "review", "all"],
           createOptimisticLeadRow({
             ruc,
-            razonSocial: input.previewName(),
+            legalName: input.previewName(),
             address: null,
             executiveId: user.id,
             executiveName: shortName(user),

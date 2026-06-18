@@ -34,7 +34,7 @@ function buildImportEvents(input: {
           actorUserId: actorId,
           payload: {
             fromPrioridad: mutation.previousPrioridad,
-            toPrioridad: row.prioridad,
+            toPrioridad: row.priority,
             reason: "Imported from CSV",
           },
           occurredAt: mutation.changedAt,
@@ -45,7 +45,7 @@ function buildImportEvents(input: {
   }
 
   if (mutation.nextStatus === null || mutation.nextPrioridad === null) {
-    throw new Error("Stage transition requires status and prioridad");
+    throw new Error("Stage transition requires status and priority");
   }
 
   const reviewed = createHistoryEvent({
@@ -54,7 +54,7 @@ function buildImportEvents(input: {
     actorUserId: actorId,
     payload: {
       status: mutation.nextStatus,
-      prioridad: mutation.nextPrioridad,
+      priority: mutation.nextPrioridad,
       reason: "Imported from CSV",
       fromStage: mutation.previousStage,
       toStage: mutation.nextStage,

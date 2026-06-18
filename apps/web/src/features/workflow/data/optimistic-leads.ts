@@ -12,7 +12,7 @@ let nextOptimisticLeadId = -1;
 
 export function createOptimisticLeadRow(input: {
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   executiveId: number;
   executiveName: string;
@@ -25,7 +25,7 @@ export function createOptimisticLeadRow(input: {
   return {
     id: `optimistic-${nextOptimisticLeadId--}`,
     ruc: input.ruc,
-    razonSocial: input.razonSocial,
+    legalName: input.legalName,
     address: input.address,
     executiveId: input.executiveId,
     executiveName: input.executiveName,
@@ -33,7 +33,7 @@ export function createOptimisticLeadRow(input: {
     createdByName: input.createdByName,
     stage: "QUALIFYING",
     status: null,
-    prioridad: null,
+    priority: null,
     nextStep: "NO_ACTION",
     createdAt: now,
     updatedAt: now,

@@ -3,21 +3,21 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import type {
-  AbonoBank,
-  ModalidadCobro,
+  SettlementBank,
+  CollectionMode,
   ProductScope,
   SaleVenueAccount,
-  Moneda,
+  Currency,
 } from "~/server/workflow/types";
 
 export type CommercialProfileFields = {
-  proveedorActual: string;
-  tasaDebitoActual: number;
-  tasaCreditoActual: number;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
   gpv: number;
   ticket: number;
-  abonoBank: AbonoBank;
-  posTotal: number;
+  settlementBank: SettlementBank;
+  posCount: number;
 };
 
 // Defaults to "none" scope at registration; populated at SETUP.
@@ -26,7 +26,7 @@ export type DigitalPolicyFields = {
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 };
 
 export type LeadProfile = {
@@ -64,12 +64,12 @@ export type RateProposal = {
   id: string;
   leadId: string;
   round: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
   fee: number;
   paybackPricing: number;
-  moneda: Moneda;
+  currency: Currency;
   proposedBy: number;
   proposedAt: number;
   outcome: RateProposalOutcome;
@@ -77,12 +77,12 @@ export type RateProposal = {
 };
 
 export type RateProposalNumbers = {
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
   fee: number;
   paybackPricing: number;
-  moneda: Moneda;
+  currency: Currency;
 };
 
 export type RateProposalRepository = {
@@ -119,7 +119,7 @@ export type LeadVenue = {
   posQuantity: number;
   linkUrl: string | null;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
   direccion: string;
   referencia: string;
   distrito: string;

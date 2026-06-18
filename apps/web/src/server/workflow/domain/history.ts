@@ -4,7 +4,7 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-  Moneda,
+  Currency,
 } from "~/contracts/workflow/vocabulary";
 
 export type LeadHistoryEventType =
@@ -73,7 +73,7 @@ export type LeadHistoryPayloadByEvent = {
   };
   lead_reviewed: {
     status: LeadStatus;
-    prioridad: LeadPriority;
+    priority: LeadPriority;
     reason: string;
     fromStage: LeadStage;
     toStage: LeadStage;
@@ -102,7 +102,7 @@ export type LeadHistoryPayloadByEvent = {
   rate_proposed: {
     proposalId: string;
     round: number;
-    moneda: Moneda;
+    currency: Currency;
   };
   rate_revision_requested: {
     revisionId: string;

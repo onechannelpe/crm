@@ -71,18 +71,18 @@ export function WorkflowProgressSection(props: { data: LeadDetailView }) {
                 </RecordInlineCell>
                 <RecordInlineCell label="Tasa débito actual" icon={Target}>
                   <FieldTextValue>
-                    {formatRate(profile().tasaDebitoActual)}
+                    {formatRate(profile().currentDebitRate)}
                   </FieldTextValue>
                 </RecordInlineCell>
                 <RecordInlineCell label="Tasa crédito actual" icon={Target}>
                   <FieldTextValue>
-                    {formatRate(profile().tasaCreditoActual)}
+                    {formatRate(profile().currentCreditRate)}
                   </FieldTextValue>
                 </RecordInlineCell>
-                <Show when={profile().proveedorActual}>
-                  {(proveedor) => (
+                <Show when={profile().currentProvider}>
+                  {(provider) => (
                     <RecordInlineCell label="Proveedor actual" icon={Building2}>
-                      <FieldTextValue>{proveedor()}</FieldTextValue>
+                      <FieldTextValue>{provider()}</FieldTextValue>
                     </RecordInlineCell>
                   )}
                 </Show>

@@ -4,11 +4,11 @@ import { createLeadRecordDetailSidePanelPage } from "~/features/side-panel/types
 
 export function useOpenLeadRecord() {
   const rowOpen = useSidePanelRowOpen<
-    Pick<LeadListRowView, "id" | "ruc" | "razonSocial" | "address">
+    Pick<LeadListRowView, "id" | "ruc" | "legalName" | "address">
   >((lead) =>
     createLeadRecordDetailSidePanelPage({
       leadId: lead.id,
-      title: lead.razonSocial ?? "",
+      title: lead.legalName ?? "",
       subtitle: [lead.ruc, lead.address].filter(Boolean).join(" · "),
     }),
   );

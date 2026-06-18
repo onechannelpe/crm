@@ -20,7 +20,7 @@ type LeadRow = {
   updated_by: number | null;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   created_at: number;
   updated_at: number;
 };
@@ -43,7 +43,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
     id: row.id,
     organizationId: row.organization_id,
     ruc: row.ruc,
-    razonSocial: row.razon_social,
+    legalName: row.razon_social,
     address: row.address,
     district: row.district,
     department: row.department,
@@ -52,7 +52,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
     updatedBy: row.updated_by ?? null,
     stage: row.stage,
     status: row.status,
-    prioridad: row.prioridad,
+    priority: row.priority,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
@@ -69,7 +69,7 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
     updated_by: values.updatedBy ?? undefined,
     stage: values.stage,
     status: values.status,
-    prioridad: values.prioridad,
+    priority: values.priority,
     created_at: values.createdAt,
     updated_at: values.updatedAt,
     reservation_expires_at: values.reservationExpiresAt,
@@ -82,7 +82,7 @@ function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
     updated_by: values.updatedBy,
     stage: values.stage,
     status: values.status,
-    prioridad: values.prioridad,
+    priority: values.priority,
     updated_at: values.updatedAt,
   };
 }
@@ -99,7 +99,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       "lead.updated_by",
       "lead.stage",
       "lead.status",
-      "lead.prioridad",
+      "lead.priority",
       "lead.created_at",
       "lead.updated_at",
       "lead.deleted_at",

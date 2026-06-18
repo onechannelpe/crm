@@ -28,7 +28,7 @@ describe("field change serialization", () => {
   it("round-trips structured field changes", () => {
     const changes: FieldChange[] = [
       { field: "status", from: "DISPONIBLE", to: "CARTERIZADO" },
-      { field: "tarifaDebito", from: 1.2, to: null },
+      { field: "proposedDebitRate", from: 1.2, to: null },
     ];
     expect(parseFieldChanges(serializeFieldChanges(changes))).toEqual(changes);
   });

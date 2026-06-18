@@ -7,9 +7,9 @@ import type {
 } from "~/contracts/workflow/inputs";
 import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import {
-  ABONO_BANKS,
+  SETTLEMENT_BANKS,
   ACCOUNT_TYPE_KINDS,
-  MODALIDAD_COBRO_KINDS,
+  COLLECTION_MODES,
 } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
@@ -30,8 +30,8 @@ function venueFields(r: Reader<DomainError>): CreateVenueInput {
     digitalConfig: r.optObj("digitalConfig", (c) => ({
       linkUrl: c.optStr("linkUrl"),
       onlineUrl: c.optStr("onlineUrl"),
-      onlineModalidad:
-        c.optEnum("onlineModalidad", MODALIDAD_COBRO_KINDS) ?? null,
+      onlineCollectionMode:
+        c.optEnum("onlineCollectionMode", COLLECTION_MODES) ?? null,
     })),
     direccion: r.str("direccion"),
     referencia: r.str("referencia"),
@@ -47,7 +47,7 @@ function accountFields<TCurrency extends "PEN" | "USD">(
 ): SaleVenueAccount & { currency: TCurrency } {
   return {
     currency,
-    banco: r.enum("banco", ABONO_BANKS),
+    banco: r.enum("banco", SETTLEMENT_BANKS),
     tipoCuenta: r.enum("tipoCuenta", ACCOUNT_TYPE_KINDS),
     nroCuenta: r.str("nroCuenta"),
     cci: r.optStr("cci") ?? undefined,

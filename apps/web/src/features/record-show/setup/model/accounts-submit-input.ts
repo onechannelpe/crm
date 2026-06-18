@@ -1,5 +1,5 @@
 import {
-  type AbonoBank,
+  type SettlementBank,
   type AccountTypeKind,
 } from "~/contracts/workflow/vocabulary";
 
@@ -8,7 +8,7 @@ import type { AccountsFormState } from "./accounts-form-state";
 type AccountsSubmitInput = {
   solesAccount: {
     currency: "PEN";
-    banco: AbonoBank;
+    banco: SettlementBank;
     tipoCuenta: AccountTypeKind;
     nroCuenta: string;
     cci?: string;
@@ -16,7 +16,7 @@ type AccountsSubmitInput = {
   };
   dollarAccount?: {
     currency: "USD";
-    banco: AbonoBank;
+    banco: SettlementBank;
     tipoCuenta: AccountTypeKind;
     nroCuenta: string;
     cci?: string;
@@ -60,7 +60,7 @@ export function buildAccountsSubmitInput(
   let dollarAccount:
     | {
         currency: "USD";
-        banco: AbonoBank;
+        banco: SettlementBank;
         tipoCuenta: AccountTypeKind;
         nroCuenta: string;
         cci?: string;

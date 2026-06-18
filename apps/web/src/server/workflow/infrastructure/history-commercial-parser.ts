@@ -55,8 +55,8 @@ export function toRateProposedEntry(
   const round = requireNumber(payload, "round", row);
   if (!round.ok) return round;
 
-  const moneda = requireMoneda(payload, row);
-  if (!moneda.ok) return moneda;
+  const currency = requireMoneda(payload, row);
+  if (!currency.ok) return currency;
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -64,7 +64,7 @@ export function toRateProposedEntry(
     payload: {
       proposalId: proposalId.value,
       round: round.value,
-      moneda: moneda.value,
+      currency: currency.value,
     },
   });
 }

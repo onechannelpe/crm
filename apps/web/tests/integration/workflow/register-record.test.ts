@@ -59,23 +59,23 @@ describe("register lead", () => {
     const result = await registerLead({
       runtime,
       ruc: "20912345673",
-      proveedorActual: "Izipay",
-      tasaDebitoActual: 2.9,
-      tasaCreditoActual: 3.4,
+      currentProvider: "Izipay",
+      currentDebitRate: 2.9,
+      currentCreditRate: 3.4,
       gpv: 80000,
       ticket: 150,
       giroNegocio: "Gastronomía",
-      posTotal: 4,
+      posCount: 4,
     });
 
     expect(result.profile).toEqual({
-      proveedorActual: "Izipay",
-      tasaDebitoActual: 2.9,
-      tasaCreditoActual: 3.4,
+      currentProvider: "Izipay",
+      currentDebitRate: 2.9,
+      currentCreditRate: 3.4,
       gpv: 80000,
       ticket: 150,
-      abonoBank: expect.any(String),
-      posTotal: 4,
+      settlementBank: expect.any(String),
+      posCount: 4,
     });
     expect(result.snapshot.organizationGiroNegocio).toBe("Gastronomía");
   });

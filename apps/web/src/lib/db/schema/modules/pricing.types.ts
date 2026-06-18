@@ -1,6 +1,6 @@
 import type { Generated } from "kysely";
 
-import type { Moneda } from "~/contracts/workflow/vocabulary";
+import type { Currency } from "~/contracts/workflow/vocabulary";
 
 // Each proposal round is stored separately; reads derive the current rate from
 // the latest round for the lead.
@@ -8,12 +8,12 @@ export interface WorkflowRateProposalsTable {
   id: string;
   lead_id: string;
   round: number;
-  tarifa_debito: number;
-  tarifa_credito: number;
-  tarifa_foraneo: number;
+  proposed_debit_rate: number;
+  proposed_credit_rate: number;
+  proposed_foreign_rate: number;
   fee: number;
   payback_pricing: number;
-  moneda: Moneda;
+  currency: Currency;
   proposed_by: number;
   proposed_at: number;
   outcome: "pending" | "accepted" | "revision_requested";

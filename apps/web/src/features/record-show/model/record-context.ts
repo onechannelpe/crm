@@ -21,7 +21,7 @@ export type DraftRecordContext = {
   ruc: string;
   // Identity is resolved from the SUNAT preview and shown read-only; it is never
   // submitted (the server is the single owner). Null until the preview resolves.
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   engineStatus: string;
   commercialScope: CommercialScopeBinding;

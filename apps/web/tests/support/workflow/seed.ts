@@ -23,7 +23,7 @@ type LeadSeed = {
   executiveId: number;
   stage: "QUALIFYING" | "DISQUALIFIED" | "PRICING" | "SETUP" | "LIVE";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
+  priority: "P1" | "P2" | "SIN RESULTADO" | null;
   createdBy?: number;
   updatedBy?: number | null;
   createdAt?: number;
@@ -84,7 +84,7 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       executive_id: input.executiveId,
       stage: input.stage,
       status: input.status,
-      prioridad: input.prioridad,
+      priority: input.priority,
       created_by: input.createdBy ?? 1,
       updated_by: input.updatedBy ?? null,
       created_at: createdAt,

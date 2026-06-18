@@ -36,13 +36,13 @@ describe("integration record export columns", () => {
       .insertInto("workflow_lead_profiles")
       .values({
         lead_id: withData.id,
-        proveedor_actual: "Niubiz",
-        tasa_debito_actual: 3.5,
-        tasa_credito_actual: 4.2,
+        current_provider: "Niubiz",
+        current_debit_rate: 3.5,
+        current_credit_rate: 4.2,
         gpv: 120_000,
         ticket: 80,
-        abono_bank: "BCP",
-        pos_total: 3,
+        settlement_bank: "BCP",
+        pos_count: 3,
         link_scope: "none",
         online_scope: "none",
         updated_at: 1_000,
@@ -58,11 +58,11 @@ describe("integration record export columns", () => {
           id: "quote-old",
           lead_id: withData.id,
           payback_pricing: 10,
-          tarifa_debito: 1.0,
-          tarifa_credito: 2.0,
-          tarifa_foraneo: 3.0,
+          proposed_debit_rate: 1.0,
+          proposed_credit_rate: 2.0,
+          proposed_foreign_rate: 3.0,
           fee: 0.5,
-          moneda: "PEN",
+          currency: "PEN",
           round: 1,
           proposed_at: 1_000,
           proposed_by: executiveId,
@@ -73,11 +73,11 @@ describe("integration record export columns", () => {
           id: "quote-latest",
           lead_id: withData.id,
           payback_pricing: 11,
-          tarifa_debito: 1.5,
-          tarifa_credito: 2.5,
-          tarifa_foraneo: 3.5,
+          proposed_debit_rate: 1.5,
+          proposed_credit_rate: 2.5,
+          proposed_foreign_rate: 3.5,
           fee: 0.6,
-          moneda: "PEN",
+          currency: "PEN",
           round: 2,
           proposed_at: 1_500,
           proposed_by: executiveId,
@@ -95,22 +95,22 @@ describe("integration record export columns", () => {
 
     const enriched = rows.find((row) => row.id === withData.id);
     expect(enriched).toMatchObject({
-      proveedorActual: "Niubiz",
-      tasaDebitoActual: 3.5,
-      tasaCreditoActual: 4.2,
+      currentProvider: "Niubiz",
+      currentDebitRate: 3.5,
+      currentCreditRate: 4.2,
       gpv: 120_000,
-      tarifaDebitoCulqi: 1.5,
-      tarifaCreditoCulqi: 2.5,
+      proposedDebitRate: 1.5,
+      proposedCreditRate: 2.5,
     });
 
     const bare = rows.find((row) => row.id === withoutData.id);
     expect(bare).toMatchObject({
-      proveedorActual: null,
-      tasaDebitoActual: null,
-      tasaCreditoActual: null,
+      currentProvider: null,
+      currentDebitRate: null,
+      currentCreditRate: null,
       gpv: null,
-      tarifaDebitoCulqi: null,
-      tarifaCreditoCulqi: null,
+      proposedDebitRate: null,
+      proposedCreditRate: null,
     });
   });
 });

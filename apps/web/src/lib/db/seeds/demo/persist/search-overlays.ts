@@ -32,7 +32,7 @@ export async function persistSearchOverlays(
         expires_at: now - day + overlayTtl,
         payload_json: JSON.stringify({
           ruc: "20103615080",
-          razonSocial: "SERVICIOS GENERALES ANDINA SAC",
+          legalName: "SERVICIOS GENERALES ANDINA SAC",
           estado: "ACTIVO",
           condicion: "HABIDO",
         }),
@@ -58,7 +58,7 @@ export async function persistSearchOverlays(
         expires_at: now - 4 * day + overlayTtl,
         payload_json: JSON.stringify({
           ruc: "20103176060",
-          razonSocial: "COMERCIAL ANDINA EIRL",
+          legalName: "COMERCIAL ANDINA EIRL",
           estado: "ACTIVO",
           condicion: "HABIDO",
         }),
@@ -81,7 +81,7 @@ export async function persistSearchOverlays(
         expires_at: now - 7 * day + overlayTtl,
         payload_json: JSON.stringify({
           ruc: "20538856674",
-          razonSocial: "DISTRIBUIDORA NORTE PERU SAC",
+          legalName: "DISTRIBUIDORA NORTE PERU SAC",
           estado: "ACTIVO",
           condicion: "HABIDO",
         }),
@@ -104,7 +104,7 @@ export async function persistSearchOverlays(
         expires_at: now - 14 * day + overlayTtl,
         payload_json: JSON.stringify({
           ruc: "20542245671",
-          razonSocial: "INVERSIONES PACIFICO SRL",
+          legalName: "INVERSIONES PACIFICO SRL",
           estado: "ACTIVO",
           condicion: "HABIDO",
         }),
@@ -127,7 +127,7 @@ export async function persistSearchOverlays(
         expires_at: now - 21 * day + overlayTtl,
         payload_json: JSON.stringify({
           ruc: "20394809218",
-          razonSocial: "LOGISTICA CENTRAL SA",
+          legalName: "LOGISTICA CENTRAL SA",
           estado: "ACTIVO",
           condicion: "HABIDO",
         }),
@@ -150,7 +150,7 @@ export async function persistSearchOverlays(
         expires_at: now - 30 * day + overlayTtl,
         payload_json: JSON.stringify({
           ruc: "20219523468",
-          razonSocial: "CONSTRUCTORA ANDES SA",
+          legalName: "CONSTRUCTORA ANDES SA",
           estado: "ACTIVO",
           condicion: "HABIDO",
         }),
@@ -173,7 +173,7 @@ export async function persistSearchOverlays(
         expires_at: now - 3 * day + overlayTtl,
         payload_json: JSON.stringify({
           ruc: "20353745400",
-          razonSocial: "TRANSPORTES LIMA NORTE EIRL",
+          legalName: "TRANSPORTES LIMA NORTE EIRL",
           estado: "ACTIVO",
           condicion: "HABIDO",
         }),

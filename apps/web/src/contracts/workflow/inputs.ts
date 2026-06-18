@@ -1,19 +1,19 @@
 import type { SaleVenueAccount, VenueDigitalConfig } from "./primitives";
 import type {
-  AbonoBank,
+  SettlementBank,
   LeadCallOutcome,
   LeadPriority,
   LeadStage,
   LeadStatus,
-  ModalidadCobro,
-  Moneda,
+  CollectionMode,
+  Currency,
   ProductScope,
 } from "./vocabulary";
 
 export type ListLeadsFiltersInput = {
   stage?: LeadStage;
   status?: LeadStatus;
-  prioridad?: LeadPriority;
+  priority?: LeadPriority;
   executiveId?: number;
   anyFieldSearch?: string;
   updatedSinceMs?: number;
@@ -31,14 +31,14 @@ export type ListAssignableExecutivesInput = {
 };
 
 export type CommercialScope = {
-  proveedorActual: string;
-  tasaDebitoActual: number;
-  tasaCreditoActual: number;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
   gpv: number;
   ticket: number;
   giroNegocio: string;
-  abonoBank: AbonoBank;
-  posTotal: number;
+  settlementBank: SettlementBank;
+  posCount: number;
 };
 
 export type CreateLeadInput = { ruc: string } & CommercialScope;
@@ -63,12 +63,12 @@ export type LogLeadCallInput = {
 
 export type ProposeRateInput = {
   leadId: string;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
   fee: number;
   paybackPricing: number;
-  moneda: Moneda;
+  currency: Currency;
 };
 
 export type AcceptRateInput = {
@@ -79,12 +79,12 @@ export type AcceptRateInput = {
 export type EditRateProposalInput = {
   leadId: string;
   proposalId: string;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
   fee: number;
   paybackPricing: number;
-  moneda: Moneda;
+  currency: Currency;
 };
 
 export type SaveDigitalPolicyInput = {
@@ -93,7 +93,7 @@ export type SaveDigitalPolicyInput = {
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 };
 
 export type RecordRepLegalInput = {

@@ -30,9 +30,9 @@ function toOrganizationPatchFromSunatOverlay(overlay: SunatLeadOverlay): {
     department?: string;
   } = {};
 
-  const razonSocial = normalizeOverlayValue(overlay.legalName);
-  if (razonSocial !== null) {
-    patch.name = razonSocial;
+  const legalName = normalizeOverlayValue(overlay.legalName);
+  if (legalName !== null) {
+    patch.name = legalName;
   }
 
   const address = normalizeOverlayValue(overlay.address);

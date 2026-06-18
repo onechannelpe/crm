@@ -18,7 +18,7 @@ import type {
   LeadDetailRateProposalView,
   LeadDetailRateRevisionView,
 } from "~/contracts/workflow/views";
-import { MONEDAS } from "~/contracts/workflow/vocabulary";
+import { CURRENCIES } from "~/contracts/workflow/vocabulary";
 import {
   formatAmount,
   formatRate,
@@ -104,12 +104,12 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       await edit({
         leadId: props.leadId,
         proposalId: props.proposal.id,
-        tarifaDebito: props.proposal.tarifaDebito,
-        tarifaCredito: props.proposal.tarifaCredito,
-        tarifaForaneo: props.proposal.tarifaForaneo,
+        proposedDebitRate: props.proposal.proposedDebitRate,
+        proposedCreditRate: props.proposal.proposedCreditRate,
+        proposedForeignRate: props.proposal.proposedForeignRate,
         fee: props.proposal.fee,
         paybackPricing: props.proposal.paybackPricing,
-        moneda: props.proposal.moneda,
+        currency: props.proposal.currency,
         ...patch,
       });
       await revalidateWorkflowLead(props.leadId);
@@ -140,16 +140,16 @@ export function RateProposalSection(props: RateProposalSectionProps) {
         }
       : undefined;
 
-  const monedaFieldEdit = () =>
+  const currencyFieldEdit = () =>
     props.canEdit
       ? {
           ariaLabel: "Editar Moneda",
           renderEditor: (onClose: () => void) => (
             <InlineOptionsEditor
-              options={MONEDAS}
-              selected={props.proposal.moneda}
+              options={CURRENCIES}
+              selected={props.proposal.currency}
               ariaLabel="Moneda"
-              onSubmit={(value) => submitField({ moneda: value })}
+              onSubmit={(value) => submitField({ currency: value })}
               onClose={onClose}
             />
           ),
@@ -271,12 +271,12 @@ export function RateProposalSection(props: RateProposalSectionProps) {
             icon={Target}
             edit={numberFieldEdit(
               "T. debito",
-              props.proposal.tarifaDebito,
-              (value) => ({ tarifaDebito: value }),
+              props.proposal.proposedDebitRate,
+              (value) => ({ proposedDebitRate: value }),
             )}
           >
             <FieldTextValue>
-              {formatRate(props.proposal.tarifaDebito)}
+              {formatRate(props.proposal.proposedDebitRate)}
             </FieldTextValue>
           </RecordInlineCell>
           <RecordInlineCell
@@ -284,12 +284,12 @@ export function RateProposalSection(props: RateProposalSectionProps) {
             icon={Target}
             edit={numberFieldEdit(
               "T. credito",
-              props.proposal.tarifaCredito,
-              (value) => ({ tarifaCredito: value }),
+              props.proposal.proposedCreditRate,
+              (value) => ({ proposedCreditRate: value }),
             )}
           >
             <FieldTextValue>
-              {formatRate(props.proposal.tarifaCredito)}
+              {formatRate(props.proposal.proposedCreditRate)}
             </FieldTextValue>
           </RecordInlineCell>
           <RecordInlineCell
@@ -297,12 +297,12 @@ export function RateProposalSection(props: RateProposalSectionProps) {
             icon={Target}
             edit={numberFieldEdit(
               "T. foraneo",
-              props.proposal.tarifaForaneo,
-              (value) => ({ tarifaForaneo: value }),
+              props.proposal.proposedForeignRate,
+              (value) => ({ proposedForeignRate: value }),
             )}
           >
             <FieldTextValue>
-              {formatRate(props.proposal.tarifaForaneo)}
+              {formatRate(props.proposal.proposedForeignRate)}
             </FieldTextValue>
           </RecordInlineCell>
           <RecordInlineCell
@@ -317,9 +317,9 @@ export function RateProposalSection(props: RateProposalSectionProps) {
           <RecordInlineCell
             label="Moneda"
             icon={Package}
-            edit={monedaFieldEdit()}
+            edit={currencyFieldEdit()}
           >
-            <FieldTextValue>{props.proposal.moneda}</FieldTextValue>
+            <FieldTextValue>{props.proposal.currency}</FieldTextValue>
           </RecordInlineCell>
           <Show when={props.reservationExpiresAt}>
             {(expiresAt) => (

@@ -8,12 +8,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("round", "integer", (col) => col.notNull())
-    .addColumn("tarifa_debito", "real", (col) => col.notNull())
-    .addColumn("tarifa_credito", "real", (col) => col.notNull())
-    .addColumn("tarifa_foraneo", "real", (col) => col.notNull())
+    .addColumn("proposed_debit_rate", "real", (col) => col.notNull())
+    .addColumn("proposed_credit_rate", "real", (col) => col.notNull())
+    .addColumn("proposed_foreign_rate", "real", (col) => col.notNull())
     .addColumn("fee", "real", (col) => col.notNull())
     .addColumn("payback_pricing", "real", (col) => col.notNull())
-    .addColumn("moneda", "varchar(3)", (col) => col.notNull())
+    .addColumn("currency", "varchar(3)", (col) => col.notNull())
     .addColumn("proposed_by", "integer", (col) =>
       col.notNull().references("users.id"),
     )

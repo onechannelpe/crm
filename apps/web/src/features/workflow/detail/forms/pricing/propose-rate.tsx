@@ -6,7 +6,7 @@ import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import type { LeadDetailRateProposalView } from "~/contracts/workflow/views";
-import { MONEDAS, type Moneda } from "~/contracts/workflow/vocabulary";
+import { CURRENCIES, type Currency } from "~/contracts/workflow/vocabulary";
 import {
   FieldInputValue,
   FieldRow,
@@ -33,8 +33,8 @@ type ProposeRateSectionProps = {
   latestProposal?: LeadDetailRateProposalView;
 };
 
-function isMoneda(value: string): value is Moneda {
-  return (MONEDAS as readonly string[]).includes(value);
+function isMoneda(value: string): value is Currency {
+  return (CURRENCIES as readonly string[]).includes(value);
 }
 
 export function ProposeRateSection(props: ProposeRateSectionProps) {
@@ -43,20 +43,20 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
   const [paybackPricing, setPaybackPricing] = createSignal(
     props.latestProposal?.paybackPricing?.toString() ?? "",
   );
-  const [tarifaDebito, setTarifaDebito] = createSignal(
-    props.latestProposal?.tarifaDebito?.toString() ?? "",
+  const [proposedDebitRate, setTarifaDebito] = createSignal(
+    props.latestProposal?.proposedDebitRate?.toString() ?? "",
   );
-  const [tarifaCredito, setTarifaCredito] = createSignal(
-    props.latestProposal?.tarifaCredito?.toString() ?? "",
+  const [proposedCreditRate, setTarifaCredito] = createSignal(
+    props.latestProposal?.proposedCreditRate?.toString() ?? "",
   );
-  const [tarifaForaneo, setTarifaForaneo] = createSignal(
-    props.latestProposal?.tarifaForaneo?.toString() ?? "",
+  const [proposedForeignRate, setTarifaForaneo] = createSignal(
+    props.latestProposal?.proposedForeignRate?.toString() ?? "",
   );
   const [fee, setFee] = createSignal(
     props.latestProposal?.fee?.toString() ?? "",
   );
-  const [moneda, setMoneda] = createSignal<Moneda>(
-    props.latestProposal?.moneda ?? "PEN",
+  const [currency, setMoneda] = createSignal<Currency>(
+    props.latestProposal?.currency ?? "PEN",
   );
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -69,11 +69,11 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
       await propose({
         leadId: props.leadId,
         paybackPricing: Number(paybackPricing()),
-        tarifaDebito: Number(tarifaDebito()),
-        tarifaCredito: Number(tarifaCredito()),
-        tarifaForaneo: Number(tarifaForaneo()),
+        proposedDebitRate: Number(proposedDebitRate()),
+        proposedCreditRate: Number(proposedCreditRate()),
+        proposedForeignRate: Number(proposedForeignRate()),
         fee: Number(fee()),
-        moneda: moneda(),
+        currency: currency(),
       });
       await revalidateWorkflowLead(props.leadId);
     } catch (err) {
@@ -111,7 +111,7 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={tarifaDebito()}
+                  value={proposedDebitRate()}
                   onChange={setTarifaDebito}
                   required
                 />
@@ -124,7 +124,7 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={tarifaCredito()}
+                  value={proposedCreditRate()}
                   onChange={setTarifaCredito}
                   required
                 />
@@ -137,7 +137,7 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={tarifaForaneo()}
+                  value={proposedForeignRate()}
                   onChange={setTarifaForaneo}
                   required
                 />
@@ -160,7 +160,7 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
               <FieldInputValue>
                 <select
                   class={styles.select}
-                  value={moneda()}
+                  value={currency()}
                   onChange={(e) => {
                     const val = e.currentTarget.value;
                     if (isMoneda(val)) {
@@ -168,7 +168,7 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
                     }
                   }}
                 >
-                  <For each={MONEDAS}>
+                  <For each={CURRENCIES}>
                     {(m) => <option value={m}>{m}</option>}
                   </For>
                 </select>

@@ -15,7 +15,7 @@ export async function getLeadBootstrapPreview(
   );
   if (existingOrganization) {
     return Ok({
-      razonSocial: existingOrganization.name,
+      legalName: existingOrganization.name,
       address: existingOrganization.address,
       engineStatus: "available",
     });
@@ -25,14 +25,14 @@ export async function getLeadBootstrapPreview(
 
   if (!preview) {
     return Ok({
-      razonSocial: null,
+      legalName: null,
       address: null,
       engineStatus: "missing",
     });
   }
 
   return Ok({
-    razonSocial: preview.razonSocial,
+    legalName: preview.legalName,
     address: preview.address,
     engineStatus: "available",
   });

@@ -129,7 +129,7 @@ describe("update venue", () => {
         pos_quantity: 1,
         link_url: null,
         online_url: null,
-        online_modalidad: null,
+        online_collection_mode: null,
         direccion: "Av. Principal 100",
         referencia: "Primer piso",
         distrito: "Lima",

@@ -96,7 +96,7 @@ export function readRuc(
   payload: unknown,
 ): {
   ruc: string;
-  razonSocial: string;
+  legalName: string;
   address: string | null;
   district: string | null;
   department: string | null;
@@ -106,12 +106,12 @@ export function readRuc(
   const lista = firstListaEntry(payload);
   if (!lista) return null;
 
-  const razonSocial = sanitizeField(lista.apenomdenunciado);
-  if (!razonSocial) return null;
+  const legalName = sanitizeField(lista.apenomdenunciado);
+  if (!legalName) return null;
 
   return {
     ruc,
-    razonSocial,
+    legalName,
     address: sanitizeField(lista.direstablecimiento),
     district: sanitizeField(lista.desdistrito),
     department: sanitizeField(lista.desdepartamento),

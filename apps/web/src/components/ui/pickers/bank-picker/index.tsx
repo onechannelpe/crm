@@ -2,12 +2,12 @@ import { createMemo, createSignal, For } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow/vocabulary";
+import { SETTLEMENT_BANKS, type SettlementBank } from "~/contracts/workflow/vocabulary";
 
 import styles from "./styles.module.css";
 
 export interface BankPickerProps {
-  onSelect: (bank: AbonoBank) => void;
+  onSelect: (bank: SettlementBank) => void;
   onClose: () => void;
 }
 
@@ -17,8 +17,8 @@ export function BankPicker(props: BankPickerProps) {
 
   const filteredBanks = createMemo(() => {
     const term = search().toLowerCase().trim();
-    if (!term) return ABONO_BANKS;
-    return ABONO_BANKS.filter((bank) => bank.toLowerCase().includes(term));
+    if (!term) return SETTLEMENT_BANKS;
+    return SETTLEMENT_BANKS.filter((bank) => bank.toLowerCase().includes(term));
   });
 
   useDismissibleLayer({
@@ -27,7 +27,7 @@ export function BankPicker(props: BankPickerProps) {
     getContainer: () => containerRef,
   });
 
-  function handleSelect(bank: AbonoBank) {
+  function handleSelect(bank: SettlementBank) {
     props.onSelect(bank);
     props.onClose();
   }

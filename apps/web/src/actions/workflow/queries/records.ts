@@ -35,7 +35,7 @@ export async function queryLeadList(
       parseObject(filters, validationFail, (r) => ({
         stage: r.optEnum("stage", LEAD_STAGES),
         status: r.optEnum("status", LEAD_STATUSES),
-        prioridad: r.optEnum("prioridad", LEAD_PRIORITIES),
+        priority: r.optEnum("priority", LEAD_PRIORITIES),
         executiveId: r.optNum("executiveId") ?? undefined,
         anyFieldSearch: r.optStr("anyFieldSearch") ?? undefined,
         updatedSinceMs: r.optNum("updatedSinceMs") ?? undefined,

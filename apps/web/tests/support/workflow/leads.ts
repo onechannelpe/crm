@@ -23,7 +23,7 @@ export type ScenarioLeadSeed = {
   executive: ScenarioActorKey | number;
   stage: "QUALIFYING" | "DISQUALIFIED" | "PRICING" | "SETUP" | "LIVE";
   status?: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  prioridad?: "P1" | "P2" | "SIN RESULTADO" | null;
+  priority?: "P1" | "P2" | "SIN RESULTADO" | null;
   createdBy?: number;
   updatedBy?: number | null;
   createdAt?: number;
@@ -95,7 +95,7 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
           executiveId: resolveExecutiveUserId(executive),
           stage: input.stage,
           status: input.status ?? null,
-          prioridad: input.prioridad ?? null,
+          priority: input.priority ?? null,
           createdBy: input.createdBy,
           updatedBy: input.updatedBy,
           createdAt: input.createdAt,

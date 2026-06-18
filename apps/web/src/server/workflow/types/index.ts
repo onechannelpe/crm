@@ -5,13 +5,13 @@ export type {
 } from "~/contracts/workflow/primitives";
 export {
   isBcpBank,
-  type AbonoBank,
+  type SettlementBank,
   type LeadCallOutcome,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
-  type ModalidadCobro,
-  type Moneda,
+  type CollectionMode,
+  type Currency,
   type ProductScope,
 } from "~/contracts/workflow/vocabulary";
 export type {

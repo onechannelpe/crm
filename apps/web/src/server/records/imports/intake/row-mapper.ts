@@ -105,7 +105,7 @@ export function mapRecordImportRow(input: {
       row: input.rowNumber,
       ruc,
       type: "import_prioridad",
-      prioridad: prioridad.value,
+      priority: prioridad.value,
     },
   };
 }

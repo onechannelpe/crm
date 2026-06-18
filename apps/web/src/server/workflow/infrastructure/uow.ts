@@ -65,7 +65,7 @@ export function createLeadUow(executor: DatabaseExecutor): LeadUnitOfWork {
         .set({
           stage: next.stage,
           status: next.status,
-          prioridad: next.prioridad,
+          priority: next.priority,
           executive_id: next.executiveId,
           updated_by: next.updatedBy,
           updated_at: next.updatedAt,

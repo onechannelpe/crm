@@ -22,7 +22,7 @@ export function createEngineGateway(
 
       return match && match.kind === "company"
         ? {
-            razonSocial: match.company.legal_name ?? null,
+            legalName: match.company.legal_name ?? null,
             address: match.company.fiscal_address ?? null,
           }
         : null;

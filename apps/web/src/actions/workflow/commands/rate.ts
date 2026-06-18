@@ -1,6 +1,6 @@
 "use server";
 
-import { MONEDAS } from "~/contracts/workflow/vocabulary";
+import { CURRENCIES } from "~/contracts/workflow/vocabulary";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { fail } from "~/server/shared/domain-error";
@@ -17,12 +17,12 @@ export async function requestRateProposal(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         leadId: r.str("leadId"),
-        tarifaDebito: r.num("tarifaDebito"),
-        tarifaCredito: r.num("tarifaCredito"),
-        tarifaForaneo: r.num("tarifaForaneo"),
+        proposedDebitRate: r.num("proposedDebitRate"),
+        proposedCreditRate: r.num("proposedCreditRate"),
+        proposedForeignRate: r.num("proposedForeignRate"),
         fee: r.num("fee"),
         paybackPricing: r.num("paybackPricing"),
-        moneda: r.enum("moneda", MONEDAS),
+        currency: r.enum("currency", CURRENCIES),
       })),
 
     audit: ({ leadId }) => ({ leadId }),
@@ -44,12 +44,12 @@ export async function requestRateProposalEdit(input: unknown) {
       parseObject(input, validationFail, (r) => ({
         leadId: r.str("leadId"),
         proposalId: r.str("proposalId"),
-        tarifaDebito: r.num("tarifaDebito"),
-        tarifaCredito: r.num("tarifaCredito"),
-        tarifaForaneo: r.num("tarifaForaneo"),
+        proposedDebitRate: r.num("proposedDebitRate"),
+        proposedCreditRate: r.num("proposedCreditRate"),
+        proposedForeignRate: r.num("proposedForeignRate"),
         fee: r.num("fee"),
         paybackPricing: r.num("paybackPricing"),
-        moneda: r.enum("moneda", MONEDAS),
+        currency: r.enum("currency", CURRENCIES),
       })),
 
     audit: ({ leadId }) => ({ leadId }),

@@ -10,8 +10,8 @@ import { Button } from "~/components/ui/input/button";
 import { Radio, RadioGroup } from "~/components/ui/input/radio";
 import { TextInput } from "~/components/ui/input/text-input";
 import {
-  MODALIDAD_COBRO_KINDS,
-  type ModalidadCobro,
+  COLLECTION_MODES,
+  type CollectionMode,
   type ProductScope,
 } from "~/contracts/workflow/vocabulary";
 import {
@@ -31,7 +31,7 @@ import type { VenueFormState } from "../model/venue-form-state";
 
 import styles from "./venue-form.module.css";
 
-const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
+const MODALIDAD_COBRO_LABELS: Record<CollectionMode, string> = {
   SUSCRIPCIONES: "Suscripciones",
   ONE_CLIC: "One Click",
   CARGO_UNICO: "Cargo único",
@@ -167,14 +167,14 @@ export function VenueForm(props: {
               <FieldRow label="Modalidad de cobro" icon={Package}>
                 <FieldInputValue>
                   <RadioGroup>
-                    <For each={MODALIDAD_COBRO_KINDS}>
+                    <For each={COLLECTION_MODES}>
                       {(value) => (
                         <Radio
-                          name="onlineModalidad"
+                          name="onlineCollectionMode"
                           value={value}
                           label={MODALIDAD_COBRO_LABELS[value]}
-                          checked={props.form.onlineModalidad() === value}
-                          onChange={() => props.form.setOnlineModalidad(value)}
+                          checked={props.form.onlineCollectionMode() === value}
+                          onChange={() => props.form.setOnlineCollectionMode(value)}
                         />
                       )}
                     </For>

@@ -57,7 +57,7 @@ export async function updateVenueCommand(
       posQuantity: input.posQuantity,
       linkUrl: digital.linkUrl,
       onlineUrl: digital.onlineUrl,
-      onlineModalidad: digital.onlineModalidad,
+      onlineCollectionMode: digital.onlineCollectionMode,
       direccion: input.direccion,
       referencia: input.referencia,
       distrito: input.distrito,

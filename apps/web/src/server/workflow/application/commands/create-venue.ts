@@ -62,7 +62,7 @@ export async function createVenueCommand(
         pos_quantity: input.posQuantity,
         link_url: digital.linkUrl,
         online_url: digital.onlineUrl,
-        online_modalidad: digital.onlineModalidad,
+        online_collection_mode: digital.onlineCollectionMode,
         direccion: input.direccion,
         referencia: input.referencia,
         distrito: input.distrito,

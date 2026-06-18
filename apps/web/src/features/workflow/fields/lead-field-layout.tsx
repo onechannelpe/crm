@@ -81,16 +81,16 @@ export const LEAD_DETAIL_FIELD_GROUPS: FieldGroup[] = [
         ),
       },
       {
-        key: "prioridad",
+        key: "priority",
         label: "Prioridad",
         renderCell: (data) => (
           <RecordInlineCell
             label="Prioridad"
             icon={Checkbox}
-            empty={data.lead.prioridad === null}
+            empty={data.lead.priority === null}
           >
             <FieldTextValue>
-              {data.lead.prioridad && capitalize(data.lead.prioridad)}
+              {data.lead.priority && capitalize(data.lead.priority)}
             </FieldTextValue>
           </RecordInlineCell>
         ),

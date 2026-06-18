@@ -2,12 +2,12 @@ import { createMemo, createSignal } from "solid-js";
 
 import {
   isBcpBank,
-  type AbonoBank,
+  type SettlementBank,
   type AccountTypeKind,
 } from "~/contracts/workflow/vocabulary";
 
 export function useAccountsFormState() {
-  const [bancoSoles, setBancoSoles] = createSignal<AbonoBank | "">("");
+  const [bancoSoles, setBancoSoles] = createSignal<SettlementBank | "">("");
   const [showBancoSolesPicker, setShowBancoSolesPicker] = createSignal(false);
   const [tipoCuentaSoles, setTipoCuentaSoles] = createSignal<
     AccountTypeKind | ""
@@ -16,7 +16,7 @@ export function useAccountsFormState() {
   const [cciSoles, setCciSoles] = createSignal("");
 
   const [usarDolares, setUsarDolares] = createSignal(false);
-  const [bancoDolares, setBancoDolares] = createSignal<AbonoBank | "">("");
+  const [bancoDolares, setBancoDolares] = createSignal<SettlementBank | "">("");
   const [showBancoDolaresPicker, setShowBancoDolaresPicker] =
     createSignal(false);
   const [tipoCuentaDolares, setTipoCuentaDolares] = createSignal<

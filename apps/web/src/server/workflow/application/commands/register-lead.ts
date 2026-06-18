@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 
-import type { AbonoBank } from "~/contracts/workflow/vocabulary";
+import type { SettlementBank } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
@@ -32,14 +32,14 @@ export async function registerLead(
     actorUserId: number;
     actorRole: Role;
     ruc: string;
-    proveedorActual: string;
-    tasaDebitoActual: number;
-    tasaCreditoActual: number;
+    currentProvider: string;
+    currentDebitRate: number;
+    currentCreditRate: number;
     gpv: number;
     ticket: number;
     giroNegocio: string;
-    abonoBank: AbonoBank;
-    posTotal: number;
+    settlementBank: SettlementBank;
+    posCount: number;
   },
   ports: {
     leads: LeadRepository;
@@ -134,7 +134,7 @@ export async function registerLead(
     const draft = createLeadDraft({
       organizationId: organization.id,
       ruc: ruc.value,
-      razonSocial: organization.name,
+      legalName: organization.name,
       address: organization.address,
       executiveId: input.actorUserId,
       createdBy: input.actorUserId,
@@ -157,20 +157,17 @@ export async function registerLead(
 
     // The lead is born complete: back office needs the commercial scope in the
     // export to qualify the lead, so it is captured at registration.
-    await txRepos.leadProfiles.upsert({
+    await txRepos.leadProfiles.createCommercialProfile({
       leadId: effects.value.leadId,
-      proveedorActual: input.proveedorActual,
-      tasaDebitoActual: input.tasaDebitoActual,
-      tasaCreditoActual: input.tasaCreditoActual,
-      gpv: input.gpv,
-      ticket: input.ticket,
-      linkScope: "none",
-      linkUrl: null,
-      onlineScope: "none",
-      onlineUrl: null,
-      onlineModalidad: null,
-      abonoBank: input.abonoBank,
-      posTotal: input.posTotal,
+      fields: {
+        currentProvider: input.currentProvider,
+        currentDebitRate: input.currentDebitRate,
+        currentCreditRate: input.currentCreditRate,
+        gpv: input.gpv,
+        ticket: input.ticket,
+        settlementBank: input.settlementBank,
+        posCount: input.posCount,
+      },
       updatedAt: now,
       updatedBy: input.actorUserId,
     });

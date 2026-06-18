@@ -1,13 +1,13 @@
 import { createSignal } from "solid-js";
 
-import type { ModalidadCobro } from "~/contracts/workflow/vocabulary";
+import type { CollectionMode } from "~/contracts/workflow/vocabulary";
 
 export type VenueFormValues = {
   nombreComercial: string;
   posQuantity: string;
   linkUrl: string;
   onlineUrl: string;
-  onlineModalidad: ModalidadCobro | "";
+  onlineCollectionMode: CollectionMode | "";
   direccion: string;
   referencia: string;
   distrito: string;
@@ -20,7 +20,7 @@ const EMPTY_VENUE_FORM_VALUES: VenueFormValues = {
   posQuantity: "1",
   linkUrl: "",
   onlineUrl: "",
-  onlineModalidad: "",
+  onlineCollectionMode: "",
   direccion: "",
   referencia: "",
   distrito: "",
@@ -36,9 +36,9 @@ export function useVenueFormState(initialValues?: VenueFormValues) {
   const [posQuantity, setPosQuantity] = createSignal(initial.posQuantity);
   const [linkUrl, setLinkUrl] = createSignal(initial.linkUrl);
   const [onlineUrl, setOnlineUrl] = createSignal(initial.onlineUrl);
-  const [onlineModalidad, setOnlineModalidad] = createSignal<
-    ModalidadCobro | ""
-  >(initial.onlineModalidad);
+  const [onlineCollectionMode, setOnlineCollectionMode] = createSignal<
+    CollectionMode | ""
+  >(initial.onlineCollectionMode);
   const [direccion, setDireccion] = createSignal(initial.direccion);
   const [referencia, setReferencia] = createSignal(initial.referencia);
   const [distrito, setDistrito] = createSignal(initial.distrito);
@@ -50,7 +50,7 @@ export function useVenueFormState(initialValues?: VenueFormValues) {
     setPosQuantity(values.posQuantity);
     setLinkUrl(values.linkUrl);
     setOnlineUrl(values.onlineUrl);
-    setOnlineModalidad(values.onlineModalidad);
+    setOnlineCollectionMode(values.onlineCollectionMode);
     setDireccion(values.direccion);
     setReferencia(values.referencia);
     setDistrito(values.distrito);
@@ -67,8 +67,8 @@ export function useVenueFormState(initialValues?: VenueFormValues) {
     setLinkUrl,
     onlineUrl,
     setOnlineUrl,
-    onlineModalidad,
-    setOnlineModalidad,
+    onlineCollectionMode,
+    setOnlineCollectionMode,
     direccion,
     setDireccion,
     referencia,

@@ -35,8 +35,8 @@ export function toReviewedEntry(
   const status = requireLeadStatus(payload, "status", row);
   if (!status.ok) return status;
 
-  const prioridad = requireLeadPriority(payload, "prioridad", row);
-  if (!prioridad.ok) return prioridad;
+  const priority = requireLeadPriority(payload, "priority", row);
+  if (!priority.ok) return priority;
 
   const reason = requireString(payload, "reason", row);
   if (!reason.ok) return reason;
@@ -52,7 +52,7 @@ export function toReviewedEntry(
     eventType: "lead_reviewed",
     payload: {
       status: status.value,
-      prioridad: prioridad.value,
+      priority: priority.value,
       reason: reason.value,
       fromStage: fromStage.value,
       toStage: toStage.value,

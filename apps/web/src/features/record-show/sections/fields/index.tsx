@@ -75,7 +75,7 @@ function ReadonlyFieldRow(props: {
 }
 
 export function CreateFieldsSection(props: {
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   commercialScope: CommercialScopeBinding;
 }) {
@@ -86,7 +86,7 @@ export function CreateFieldsSection(props: {
         <ReadonlyFieldRow
           label="Razón social"
           icon={Building2}
-          value={props.razonSocial ?? pendingSunat}
+          value={props.legalName ?? pendingSunat}
         />
         <ReadonlyFieldRow
           label="Dirección"

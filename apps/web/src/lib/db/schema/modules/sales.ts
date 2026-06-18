@@ -11,7 +11,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("pos_quantity", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("link_url", "text")
     .addColumn("online_url", "text")
-    .addColumn("online_modalidad", "varchar(20)", (col) =>
+    .addColumn("online_collection_mode", "varchar(20)", (col) =>
       col.references("workflow_modalidad_cobro_kinds.value"),
     )
     .addColumn("direccion", "text", (col) => col.notNull())

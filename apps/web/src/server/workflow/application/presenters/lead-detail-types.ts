@@ -1,7 +1,7 @@
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import type {
-  AbonoBank,
-  ModalidadCobro,
+  SettlementBank,
+  CollectionMode,
   ProductScope,
 } from "~/server/workflow/types";
 
@@ -22,19 +22,19 @@ export type LeadDetailSourceStatusView = {
 
 export type LeadDetailProfileView = {
   leadId: string;
-  proveedorActual: string | null;
-  tasaDebitoActual: number | null;
-  tasaCreditoActual: number | null;
+  currentProvider: string | null;
+  currentDebitRate: number | null;
+  currentCreditRate: number | null;
   gpv: number | null;
   ticket: number | null;
   giroNegocio: string | null;
-  abonoBank: AbonoBank | null;
-  posTotal: number | null;
+  settlementBank: SettlementBank | null;
+  posCount: number | null;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
   updatedAt: number;
   updatedBy: number;
 };

@@ -70,7 +70,7 @@ export async function processEnrichmentJob(
     documentType: "ruc",
     documentValue: job.document_value,
     fullName: null,
-    legalName: result.data.razonSocial?.trim() || null,
+    legalName: result.data.legalName?.trim() || null,
     address: result.data.address,
     district: result.data.district,
     department: result.data.department,

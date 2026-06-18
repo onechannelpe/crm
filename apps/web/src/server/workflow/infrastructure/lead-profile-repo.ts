@@ -14,13 +14,13 @@ type NewLeadProfileRow = Insertable<Database["workflow_lead_profiles"]>;
 
 function toCommercialColumns(fields: CommercialProfileFields) {
   return {
-    proveedor_actual: fields.proveedorActual,
-    tasa_debito_actual: fields.tasaDebitoActual,
-    tasa_credito_actual: fields.tasaCreditoActual,
+    current_provider: fields.currentProvider,
+    current_debit_rate: fields.currentDebitRate,
+    current_credit_rate: fields.currentCreditRate,
     gpv: fields.gpv,
     ticket: fields.ticket,
-    abono_bank: fields.abonoBank,
-    pos_total: fields.posTotal,
+    settlement_bank: fields.settlementBank,
+    pos_count: fields.posCount,
   };
 }
 
@@ -30,25 +30,25 @@ function toDigitalColumns(fields: DigitalPolicyFields) {
     link_url: fields.linkUrl,
     online_scope: fields.onlineScope,
     online_url: fields.onlineUrl,
-    online_modalidad: fields.onlineModalidad,
+    online_collection_mode: fields.onlineCollectionMode,
   };
 }
 
 function toLeadProfile(row: LeadProfileRow): LeadProfile {
   return {
     leadId: row.lead_id,
-    proveedorActual: row.proveedor_actual,
-    tasaDebitoActual: row.tasa_debito_actual,
-    tasaCreditoActual: row.tasa_credito_actual,
+    currentProvider: row.current_provider,
+    currentDebitRate: row.current_debit_rate,
+    currentCreditRate: row.current_credit_rate,
     gpv: row.gpv,
     ticket: row.ticket,
     linkScope: row.link_scope,
     linkUrl: row.link_url,
     onlineScope: row.online_scope,
     onlineUrl: row.online_url,
-    onlineModalidad: row.online_modalidad,
-    abonoBank: row.abono_bank,
-    posTotal: row.pos_total,
+    onlineCollectionMode: row.online_collection_mode,
+    settlementBank: row.settlement_bank,
+    posCount: row.pos_count,
     updatedAt: row.updated_at,
     updatedBy: row.updated_by,
   };
@@ -83,7 +83,7 @@ export function createLeadProfileRepo(
           link_url: null,
           online_scope: "none",
           online_url: null,
-          online_modalidad: null,
+          online_collection_mode: null,
           updated_at: updatedAt,
           updated_by: updatedBy,
         } satisfies NewLeadProfileRow)

@@ -12,24 +12,24 @@ import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 type CommercialSnapshot = {
-  proveedorActual: string | null;
-  tasaDebitoActual: number | null;
-  tasaCreditoActual: number | null;
+  currentProvider: string | null;
+  currentDebitRate: number | null;
+  currentCreditRate: number | null;
   gpv: number | null;
   ticket: number | null;
-  abonoBank: string | null;
-  posTotal: number | null;
+  settlementBank: string | null;
+  posCount: number | null;
   giroNegocio: string | null;
 };
 
 const COMMERCIAL_FIELD_KEYS = [
-  "proveedorActual",
-  "tasaDebitoActual",
-  "tasaCreditoActual",
+  "currentProvider",
+  "currentDebitRate",
+  "currentCreditRate",
   "gpv",
   "ticket",
-  "abonoBank",
-  "posTotal",
+  "settlementBank",
+  "posCount",
   "giroNegocio",
 ] as const satisfies ReadonlyArray<keyof CommercialSnapshot>;
 
@@ -54,23 +54,23 @@ export async function editCommercialScopeCommand(
     const org = await repos.party.findOrganizationById(state.organizationId);
 
     const prev: CommercialSnapshot = {
-      proveedorActual: profile?.proveedorActual ?? null,
-      tasaDebitoActual: profile?.tasaDebitoActual ?? null,
-      tasaCreditoActual: profile?.tasaCreditoActual ?? null,
+      currentProvider: profile?.currentProvider ?? null,
+      currentDebitRate: profile?.currentDebitRate ?? null,
+      currentCreditRate: profile?.currentCreditRate ?? null,
       gpv: profile?.gpv ?? null,
       ticket: profile?.ticket ?? null,
-      abonoBank: profile?.abonoBank ?? null,
-      posTotal: profile?.posTotal ?? null,
+      settlementBank: profile?.settlementBank ?? null,
+      posCount: profile?.posCount ?? null,
       giroNegocio: org?.giroNegocio ?? null,
     };
     const next: CommercialSnapshot = {
-      proveedorActual: input.proveedorActual,
-      tasaDebitoActual: input.tasaDebitoActual,
-      tasaCreditoActual: input.tasaCreditoActual,
+      currentProvider: input.currentProvider,
+      currentDebitRate: input.currentDebitRate,
+      currentCreditRate: input.currentCreditRate,
       gpv: input.gpv,
       ticket: input.ticket,
-      abonoBank: input.abonoBank,
-      posTotal: input.posTotal,
+      settlementBank: input.settlementBank,
+      posCount: input.posCount,
       giroNegocio: input.giroNegocio,
     };
 
@@ -86,20 +86,17 @@ export async function editCommercialScopeCommand(
     });
     if (!transition.ok) return transition;
 
-    await repos.leadProfiles.upsert({
+    await repos.leadProfiles.updateCommercialScope({
       leadId: state.id,
-      proveedorActual: input.proveedorActual,
-      tasaDebitoActual: input.tasaDebitoActual,
-      tasaCreditoActual: input.tasaCreditoActual,
-      gpv: input.gpv,
-      ticket: input.ticket,
-      linkScope: profile?.linkScope ?? "none",
-      linkUrl: profile?.linkUrl ?? null,
-      onlineScope: profile?.onlineScope ?? "none",
-      onlineUrl: profile?.onlineUrl ?? null,
-      onlineModalidad: profile?.onlineModalidad ?? null,
-      abonoBank: input.abonoBank,
-      posTotal: input.posTotal,
+      fields: {
+        currentProvider: input.currentProvider,
+        currentDebitRate: input.currentDebitRate,
+        currentCreditRate: input.currentCreditRate,
+        gpv: input.gpv,
+        ticket: input.ticket,
+        settlementBank: input.settlementBank,
+        posCount: input.posCount,
+      },
       updatedAt: now,
       updatedBy: input.actor.userId,
     });

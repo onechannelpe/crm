@@ -2,12 +2,12 @@ import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type {
   VenueDigitalConfig,
-  ModalidadCobro,
+  CollectionMode,
   ProductScope,
 } from "~/server/workflow/types";
 
 type LinkConfig = { url: string };
-type OnlineConfig = { url: string; modalidad: ModalidadCobro };
+type OnlineConfig = { url: string; collectionMode: CollectionMode };
 
 export type LinkPolicy =
   | { scope: "none" }
@@ -34,7 +34,7 @@ type VenueSnapshot = {
   nombreComercial: string;
   linkUrl: string | null;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 };
 
 export function parseDigitalPolicy(raw: {
@@ -42,7 +42,7 @@ export function parseDigitalPolicy(raw: {
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 }): Result<DigitalPolicy, DomainError> {
   const linkUrl = raw.linkUrl?.trim() || null;
   const onlineUrl = raw.onlineUrl?.trim() || null;
@@ -67,20 +67,20 @@ export function parseDigitalPolicy(raw: {
 
   let online: OnlinePolicy;
   if (raw.onlineScope === "none") {
-    if (onlineUrl !== null || raw.onlineModalidad !== null) {
+    if (onlineUrl !== null || raw.onlineCollectionMode !== null) {
       return Err(fail("invalid_online_policy"));
     }
     online = { scope: "none" };
   } else if (raw.onlineScope === "shared") {
-    if (!onlineUrl || raw.onlineModalidad === null) {
+    if (!onlineUrl || raw.onlineCollectionMode === null) {
       return Err(fail("missing_online_shared_config"));
     }
     online = {
       scope: "shared",
-      config: { url: onlineUrl, modalidad: raw.onlineModalidad },
+      config: { url: onlineUrl, collectionMode: raw.onlineCollectionMode },
     };
   } else {
-    if (onlineUrl !== null || raw.onlineModalidad !== null) {
+    if (onlineUrl !== null || raw.onlineCollectionMode !== null) {
       return Err(fail("invalid_online_policy"));
     }
     online = { scope: "per_venue" };
@@ -95,7 +95,7 @@ export function parseVenueDigitalFields(
 ): Result<VenueDigitalFields, DomainError> {
   const linkUrl = raw?.linkUrl?.trim() || null;
   const onlineUrl = raw?.onlineUrl?.trim() || null;
-  const onlineModalidad = raw?.onlineModalidad ?? null;
+  const onlineCollectionMode = raw?.onlineCollectionMode ?? null;
 
   if (scopes.linkScope !== "per_venue" && linkUrl !== null) {
     return Err(fail("invalid_link_venue_config"));
@@ -106,13 +106,13 @@ export function parseVenueDigitalFields(
 
   if (
     scopes.onlineScope !== "per_venue" &&
-    (onlineUrl !== null || onlineModalidad !== null)
+    (onlineUrl !== null || onlineCollectionMode !== null)
   ) {
     return Err(fail("invalid_online_venue_config"));
   }
   if (
     scopes.onlineScope === "per_venue" &&
-    (onlineUrl === null || onlineModalidad === null)
+    (onlineUrl === null || onlineCollectionMode === null)
   ) {
     return Err(fail("missing_online_venue_config"));
   }
@@ -120,8 +120,8 @@ export function parseVenueDigitalFields(
   return Ok({
     link: linkUrl !== null ? { url: linkUrl } : null,
     online:
-      onlineUrl !== null && onlineModalidad !== null
-        ? { url: onlineUrl, modalidad: onlineModalidad }
+      onlineUrl !== null && onlineCollectionMode !== null
+        ? { url: onlineUrl, collectionMode: onlineCollectionMode }
         : null,
   });
 }
@@ -138,7 +138,7 @@ export function validateDigitalAggregate(input: {
     const check = parseVenueDigitalFields(scopes, {
       linkUrl: venue.linkUrl,
       onlineUrl: venue.onlineUrl,
-      onlineModalidad: venue.onlineModalidad,
+      onlineCollectionMode: venue.onlineCollectionMode,
     });
     if (!check.ok) {
       return Err(
@@ -156,7 +156,7 @@ export function toProfileDigitalFields(policy: DigitalPolicy): {
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 } {
   return {
     linkScope: policy.link.scope,
@@ -164,19 +164,19 @@ export function toProfileDigitalFields(policy: DigitalPolicy): {
     onlineScope: policy.online.scope,
     onlineUrl:
       policy.online.scope === "shared" ? policy.online.config.url : null,
-    onlineModalidad:
-      policy.online.scope === "shared" ? policy.online.config.modalidad : null,
+    onlineCollectionMode:
+      policy.online.scope === "shared" ? policy.online.config.collectionMode : null,
   };
 }
 
 export function toVenueDigitalInsert(fields: VenueDigitalFields): {
   linkUrl: string | null;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 } {
   return {
     linkUrl: fields.link?.url ?? null,
     onlineUrl: fields.online?.url ?? null,
-    onlineModalidad: fields.online?.modalidad ?? null,
+    onlineCollectionMode: fields.online?.collectionMode ?? null,
   };
 }

@@ -12,7 +12,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("stage", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(30)")
-    .addColumn("prioridad", "varchar(20)")
+    .addColumn("priority", "varchar(20)")
     .addColumn("created_by", "integer", (col) =>
       col.notNull().references("users.id"),
     )
@@ -57,9 +57,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("status")
     .execute();
   await db.schema
-    .createIndex("idx_workflow_leads_prioridad")
+    .createIndex("idx_workflow_leads_priority")
     .on("workflow_leads")
-    .column("prioridad")
+    .column("priority")
     .execute();
   await db.schema
     .createIndex("idx_workflow_leads_stage")
@@ -92,22 +92,22 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     // Commercial scope is captured in full at registration (lead born complete),
     // so these columns are NOT NULL. Digital-policy columns below stay nullable
     // until SETUP.
-    .addColumn("proveedor_actual", "varchar(255)", (col) => col.notNull())
-    .addColumn("tasa_debito_actual", "real", (col) => col.notNull())
-    .addColumn("tasa_credito_actual", "real", (col) => col.notNull())
+    .addColumn("current_provider", "varchar(255)", (col) => col.notNull())
+    .addColumn("current_debit_rate", "real", (col) => col.notNull())
+    .addColumn("current_credit_rate", "real", (col) => col.notNull())
     .addColumn("gpv", "real", (col) => col.notNull())
     .addColumn("ticket", "real", (col) => col.notNull())
     .addColumn("link_scope", "text", (col) => col.notNull().defaultTo("none"))
     .addColumn("link_url", "text")
     .addColumn("online_scope", "text", (col) => col.notNull().defaultTo("none"))
     .addColumn("online_url", "text")
-    .addColumn("online_modalidad", "varchar(20)", (col) =>
+    .addColumn("online_collection_mode", "varchar(20)", (col) =>
       col.references("workflow_modalidad_cobro_kinds.value"),
     )
-    .addColumn("abono_bank", "varchar(50)", (col) =>
+    .addColumn("settlement_bank", "varchar(50)", (col) =>
       col.notNull().references("workflow_abono_banks.value"),
     )
-    .addColumn("pos_total", "integer", (col) => col.notNull())
+    .addColumn("pos_count", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
       col.notNull().references("users.id"),

@@ -1,13 +1,13 @@
 import type { FieldChange } from "../events";
 import type { SaleVenueAccount } from "./primitives";
 import type {
-  AbonoBank,
+  SettlementBank,
   LeadNextStep,
   LeadPriority,
   LeadStage,
   LeadStatus,
-  ModalidadCobro,
-  Moneda,
+  CollectionMode,
+  Currency,
   ProductScope,
 } from "./vocabulary";
 
@@ -29,7 +29,7 @@ export type AssignableExecutiveView = {
 };
 
 export type LeadBootstrapPreviewView = {
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   engineStatus: "available" | "missing" | "failed";
 };
@@ -37,7 +37,7 @@ export type LeadBootstrapPreviewView = {
 export type LeadListRowView = {
   id: string;
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   executiveId: number;
   executiveName: string;
@@ -45,7 +45,7 @@ export type LeadListRowView = {
   createdByName: string;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   nextStep: LeadNextStep;
   createdAt: number;
   updatedAt: number;
@@ -71,7 +71,7 @@ export type LeadDetailLeadView = {
   id: string;
   ruc: string;
   isFavorite: boolean;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
@@ -83,7 +83,7 @@ export type LeadDetailLeadView = {
   updatedByName: string | null;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   nextStep: LeadNextStep;
   createdAt: number;
   updatedAt: number;
@@ -94,12 +94,12 @@ export type LeadDetailRateProposalView = {
   id: string;
   leadId: string;
   round: number;
-  moneda: Moneda;
+  currency: Currency;
   fee: number;
   paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
   outcome: "pending" | "accepted" | "revision_requested";
   proposedBy: number;
   proposedAt: number;
@@ -113,7 +113,7 @@ export type LeadDetailVenueView = {
   posQuantity: number;
   linkUrl: string | null;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
   direccion: string;
   referencia: string;
   distrito: string;
@@ -150,19 +150,19 @@ export type LeadDetailView = {
 
 type LeadDetailProfileView = {
   leadId: string;
-  proveedorActual: string | null;
-  tasaDebitoActual: number | null;
-  tasaCreditoActual: number | null;
+  currentProvider: string | null;
+  currentDebitRate: number | null;
+  currentCreditRate: number | null;
   gpv: number | null;
   ticket: number | null;
   giroNegocio: string | null;
-  abonoBank: AbonoBank | null;
-  posTotal: number | null;
+  settlementBank: SettlementBank | null;
+  posCount: number | null;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
   updatedAt: number;
   updatedBy: number;
 };

@@ -8,7 +8,7 @@ function applyEvent(state: LeadState, event: LeadEvent): LeadState {
         ...state,
         stage: event.payload.toStage,
         status: event.payload.status,
-        prioridad: event.payload.prioridad,
+        priority: event.payload.priority,
       };
     case "workflow_stage_changed":
       return { ...state, stage: event.payload.to };
@@ -17,7 +17,7 @@ function applyEvent(state: LeadState, event: LeadEvent): LeadState {
     case "lead_status_updated":
       return { ...state, status: event.payload.toStatus };
     case "lead_priority_updated":
-      return { ...state, prioridad: event.payload.toPrioridad };
+      return { ...state, priority: event.payload.toPrioridad };
     case "lead_reservation_expired":
       return { ...state, stage: "EXPIRED" };
     default:

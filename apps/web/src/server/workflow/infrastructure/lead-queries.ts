@@ -19,7 +19,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .select([
           "lead.id",
           "org.ruc",
-          "org.name as razon_social",
+          "org.name as legal_name",
           "org.address",
           "lead.executive_id",
           "executive.names as executive_names",
@@ -29,7 +29,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "creator.first_surname as creator_first_surname",
           "lead.stage",
           "lead.status",
-          "lead.prioridad",
+          "lead.priority",
           "lead.created_at",
           "lead.updated_at",
         ]);
@@ -55,7 +55,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       return rows.map((row) => ({
         id: row.id,
         ruc: row.ruc,
-        razonSocial: row.razon_social,
+        legalName: row.legal_name,
         address: row.address,
         executiveId: row.executive_id,
         executiveName: toFullName(
@@ -66,7 +66,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         createdByName: toFullName(row.creator_names, row.creator_first_surname),
         stage: row.stage,
         status: row.status,
-        prioridad: row.prioridad,
+        priority: row.priority,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
       }));
@@ -123,21 +123,21 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .select([
           "lead.id",
           "org.ruc",
-          "org.name as razon_social",
+          "org.name as legal_name",
           "org.address",
           "lead.executive_id",
           "executive.names as executive_names",
           "executive.first_surname as executive_first_surname",
           "lead.stage",
           "lead.status",
-          "lead.prioridad",
+          "lead.priority",
           "lead.created_at",
-          "profile.proveedor_actual",
-          "profile.tasa_debito_actual",
-          "profile.tasa_credito_actual",
+          "profile.current_provider",
+          "profile.current_debit_rate",
+          "profile.current_credit_rate",
           "profile.gpv",
-          "rate.tarifa_debito as tarifa_debito_culqi",
-          "rate.tarifa_credito as tarifa_credito_culqi",
+          "rate.proposed_debit_rate",
+          "rate.proposed_credit_rate",
         ]);
 
       if (filters.executiveId !== undefined) {
@@ -149,7 +149,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       return rows.map((row) => ({
         id: row.id,
         ruc: row.ruc,
-        razonSocial: row.razon_social,
+        legalName: row.legal_name,
         address: row.address,
         executiveId: row.executive_id,
         executiveName: toFullName(
@@ -158,14 +158,14 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         ),
         stage: row.stage,
         status: row.status,
-        prioridad: row.prioridad,
+        priority: row.priority,
         createdAt: row.created_at,
-        proveedorActual: row.proveedor_actual,
-        tasaDebitoActual: row.tasa_debito_actual,
-        tasaCreditoActual: row.tasa_credito_actual,
+        currentProvider: row.current_provider,
+        currentDebitRate: row.current_debit_rate,
+        currentCreditRate: row.current_credit_rate,
         gpv: row.gpv,
-        tarifaDebitoCulqi: row.tarifa_debito_culqi,
-        tarifaCreditoCulqi: row.tarifa_credito_culqi,
+        proposedDebitRate: row.proposed_debit_rate,
+        proposedCreditRate: row.proposed_credit_rate,
       }));
     },
   };

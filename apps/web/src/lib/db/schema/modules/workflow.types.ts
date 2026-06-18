@@ -1,9 +1,9 @@
 import type { Generated } from "kysely";
 
 import type {
-  AbonoBank,
+  SettlementBank,
   LeadStage,
-  ModalidadCobro,
+  CollectionMode,
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
 
@@ -13,7 +13,7 @@ export interface WorkflowLeadsTable {
   executive_id: number;
   stage: LeadStage;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
+  priority: "P1" | "P2" | "SIN RESULTADO" | null;
   created_by: number;
   updated_by: number | null;
   created_at: number;
@@ -31,24 +31,24 @@ export interface WorkflowIdempotencyKeysTable {
 
 export interface WorkflowLeadProfilesTable {
   lead_id: string;
-  proveedor_actual: string;
-  tasa_debito_actual: number;
-  tasa_credito_actual: number;
+  current_provider: string;
+  current_debit_rate: number;
+  current_credit_rate: number;
   gpv: number;
   ticket: number;
   link_scope: ProductScope;
   link_url: string | null;
   online_scope: ProductScope;
   online_url: string | null;
-  online_modalidad: ModalidadCobro | null;
-  abono_bank: AbonoBank;
-  pos_total: number;
+  online_collection_mode: CollectionMode | null;
+  settlement_bank: SettlementBank;
+  pos_count: number;
   updated_at: number;
   updated_by: number;
 }
 
 export interface WorkflowModalidadCobroKindsTable {
-  value: ModalidadCobro;
+  value: CollectionMode;
 }
 
 export interface WorkflowLeadAssignmentsTable {

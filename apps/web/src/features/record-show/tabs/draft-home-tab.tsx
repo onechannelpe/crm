@@ -14,7 +14,7 @@ export function DraftHomeTab(props: { context: RecordContext }) {
       {(draft) => (
         <div class={styles.homeContent}>
           <CreateFieldsSection
-            razonSocial={draft().razonSocial}
+            legalName={draft().legalName}
             address={draft().address}
             commercialScope={draft().commercialScope}
           />

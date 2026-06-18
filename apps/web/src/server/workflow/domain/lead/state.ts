@@ -13,7 +13,7 @@ export type LeadState = {
   id: string;
   organizationId: OrganizationId;
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
@@ -22,7 +22,7 @@ export type LeadState = {
   updatedBy: number | null;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -37,7 +37,7 @@ export type LeadDraft = Omit<LeadState, "id" | "version" | "deletedAt">;
 export function createLeadDraft(input: {
   organizationId: OrganizationId;
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   executiveId: number;
   createdBy: number;
@@ -49,7 +49,7 @@ export function createLeadDraft(input: {
   return Ok({
     organizationId: input.organizationId,
     ruc: ruc.value,
-    razonSocial: input.razonSocial,
+    legalName: input.legalName,
     address: input.address,
     district: null,
     department: null,
@@ -58,7 +58,7 @@ export function createLeadDraft(input: {
     updatedBy: null,
     stage: "QUALIFYING",
     status: null,
-    prioridad: null,
+    priority: null,
     createdAt: input.now,
     updatedAt: input.now,
     reservationExpiresAt: null,

@@ -2,12 +2,12 @@ import {
   LEAD_PRIORITIES,
   LEAD_STAGES,
   LEAD_STATUSES,
-  MONEDAS,
+  CURRENCIES,
   type LeadCallOutcome,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
-  type Moneda,
+  type Currency,
 } from "~/contracts/workflow/vocabulary";
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
@@ -227,8 +227,8 @@ export function requireCallOutcome(
 export function requireMoneda(
   payload: Record<string, unknown> | null,
   row: HistoryEventRow,
-): Result<Moneda, DomainError> {
-  const value = requireString(payload, "moneda", row);
+): Result<Currency, DomainError> {
+  const value = requireString(payload, "currency", row);
   if (!value.ok) return value;
-  return parseVocabularyValue(value.value, MONEDAS, "invalid_moneda");
+  return parseVocabularyValue(value.value, CURRENCIES, "invalid_moneda");
 }

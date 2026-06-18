@@ -67,8 +67,8 @@ export function applyLeadListFilters(
   if (filters.status !== undefined) {
     next = next.where("lead.status", "=", filters.status);
   }
-  if (filters.prioridad !== undefined) {
-    next = next.where("lead.prioridad", "=", filters.prioridad);
+  if (filters.priority !== undefined) {
+    next = next.where("lead.priority", "=", filters.priority);
   }
   if (filters.updatedSinceMs !== undefined) {
     next = next.where("lead.updated_at", ">=", filters.updatedSinceMs);

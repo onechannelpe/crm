@@ -13,8 +13,8 @@ import type {
   LeadDetailView,
 } from "~/contracts/workflow/views";
 import {
-  MODALIDAD_COBRO_KINDS,
-  type ModalidadCobro,
+  COLLECTION_MODES,
+  type CollectionMode,
   type ProductScope,
 } from "~/contracts/workflow/vocabulary";
 import { Card, CardContent } from "~/features/side-panel/components/card";
@@ -52,7 +52,7 @@ import { buildVenueSubmitInput } from "./model/venue-submit-input";
 
 import styles from "./setup-workspace.module.css";
 
-const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
+const MODALIDAD_COBRO_LABELS: Record<CollectionMode, string> = {
   SUSCRIPCIONES: "Suscripciones",
   ONE_CLIC: "One Click",
   CARGO_UNICO: "Cargo único",
@@ -75,7 +75,9 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
           linkUrl={props.data.profile?.linkUrl ?? null}
           onlineScope={props.data.profile?.onlineScope ?? "none"}
           onlineUrl={props.data.profile?.onlineUrl ?? null}
-          onlineModalidad={props.data.profile?.onlineModalidad ?? null}
+          onlineCollectionMode={
+            props.data.profile?.onlineCollectionMode ?? null
+          }
         />
       </Show>
 
@@ -140,7 +142,7 @@ function DigitalPolicyPanel(props: {
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 }) {
   const saveDigitalPolicy = useAction(saveDigitalPolicyMutation);
   const [linkEnabled, setLinkEnabled] = createSignal(
@@ -157,9 +159,9 @@ function DigitalPolicyPanel(props: {
     props.onlineScope === "per_venue" ? "per_venue" : "shared",
   );
   const [onlineUrl, setOnlineUrl] = createSignal(props.onlineUrl ?? "");
-  const [onlineModalidad, setOnlineModalidad] = createSignal<
-    ModalidadCobro | ""
-  >(props.onlineModalidad ?? "");
+  const [onlineCollectionMode, setOnlineCollectionMode] = createSignal<
+    CollectionMode | ""
+  >(props.onlineCollectionMode ?? "");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
@@ -178,7 +180,7 @@ function DigitalPolicyPanel(props: {
       return "URL de CulqiOnline es requerida cuando la modalidad es compartida";
     }
 
-    if (selectedOnlineScope === "shared" && !onlineModalidad()) {
+    if (selectedOnlineScope === "shared" && !onlineCollectionMode()) {
       return "Modalidad de cobro es obligatoria cuando CulqiOnline es compartido";
     }
 
@@ -201,7 +203,7 @@ function DigitalPolicyPanel(props: {
     try {
       const selectedLinkScope = resolvedLinkScope();
       const selectedOnlineScope = resolvedOnlineScope();
-      const modalidad = onlineModalidad();
+      const collectionMode = onlineCollectionMode();
 
       await saveDigitalPolicy({
         leadId: props.leadId,
@@ -209,8 +211,10 @@ function DigitalPolicyPanel(props: {
         linkUrl: selectedLinkScope === "shared" ? linkUrl().trim() : null,
         onlineScope: selectedOnlineScope,
         onlineUrl: selectedOnlineScope === "shared" ? onlineUrl().trim() : null,
-        onlineModalidad:
-          selectedOnlineScope === "shared" && modalidad ? modalidad : null,
+        onlineCollectionMode:
+          selectedOnlineScope === "shared" && collectionMode
+            ? collectionMode
+            : null,
       });
 
       await revalidateWorkflowLead(props.leadId);
@@ -282,7 +286,7 @@ function DigitalPolicyPanel(props: {
                   value={onlineEnabled()}
                   onChange={(checked) => {
                     setOnlineEnabled(checked);
-                    if (!checked) setOnlineModalidad("");
+                    if (!checked) setOnlineCollectionMode("");
                   }}
                 />
               </FieldInputValue>
@@ -304,7 +308,7 @@ function DigitalPolicyPanel(props: {
                       checked={onlineScope() === "per_venue"}
                       onChange={() => {
                         setOnlineScope("per_venue");
-                        setOnlineModalidad("");
+                        setOnlineCollectionMode("");
                       }}
                     />
                   </RadioGroup>
@@ -327,14 +331,14 @@ function DigitalPolicyPanel(props: {
                 <FieldRow label="Modalidad de cobro" icon={Package}>
                   <FieldInputValue>
                     <RadioGroup>
-                      <For each={MODALIDAD_COBRO_KINDS}>
+                      <For each={COLLECTION_MODES}>
                         {(value) => (
                           <Radio
-                            name="onlineModalidad"
+                            name="onlineCollectionMode"
                             value={value}
                             label={MODALIDAD_COBRO_LABELS[value]}
-                            checked={onlineModalidad() === value}
-                            onChange={() => setOnlineModalidad(value)}
+                            checked={onlineCollectionMode() === value}
+                            onChange={() => setOnlineCollectionMode(value)}
                           />
                         )}
                       </For>
@@ -515,7 +519,7 @@ function toVenueFormValues(venue: LeadDetailVenueView): VenueFormValues {
     posQuantity: String(venue.posQuantity),
     linkUrl: venue.linkUrl ?? "",
     onlineUrl: venue.onlineUrl ?? "",
-    onlineModalidad: venue.onlineModalidad ?? "",
+    onlineCollectionMode: venue.onlineCollectionMode ?? "",
     direccion: venue.direccion,
     referencia: venue.referencia,
     distrito: venue.distrito,

@@ -24,20 +24,20 @@ describe("outbox delivery", () => {
       organization: { key: "delivery-one" },
       stage: "QUALIFYING",
       status: "DISPONIBLE",
-      prioridad: "P1",
+      priority: "P1",
     });
     const leadTwo = await scenario.lead.assignedTo("execTwo", {
       key: "delivery-two",
       organization: { key: "delivery-two" },
       stage: "QUALIFYING",
       status: "SIN RESULTADO",
-      prioridad: "P1",
+      priority: "P1",
     });
 
     await scenario.importer.run({
       actor: "superuser",
       rows: [
-        { type: "priority", lead: leadOne, prioridad: "SIN RESULTADO" },
+        { type: "priority", lead: leadOne, priority: "SIN RESULTADO" },
         { type: "status", lead: leadTwo, status: "DISPONIBLE" },
       ],
     });

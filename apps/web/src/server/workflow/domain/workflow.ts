@@ -5,7 +5,7 @@ import {
 
 export function resolveReviewTransition(input: {
   status: LeadStatus;
-  prioridad: LeadPriority;
+  priority: LeadPriority;
 }): "DISQUALIFIED" | "PRICING" {
   if (input.status === "CARTERIZADO" || input.status === "STOCK") {
     return "DISQUALIFIED";

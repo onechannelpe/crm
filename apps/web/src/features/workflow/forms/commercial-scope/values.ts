@@ -1,30 +1,30 @@
 import type { CommercialScope } from "~/contracts/workflow/inputs";
-import { ABONO_BANKS, type AbonoBank } from "~/contracts/workflow/vocabulary";
+import { SETTLEMENT_BANKS, type SettlementBank } from "~/contracts/workflow/vocabulary";
 
 // Form fields stay strings until submit so text, number, and select inputs share
 // one editable shape.
 export type CommercialScopePayload = CommercialScope;
 
 export type CommercialScopeFormValues = {
-  proveedorActual: string;
-  tasaDebitoActual: string;
-  tasaCreditoActual: string;
+  currentProvider: string;
+  currentDebitRate: string;
+  currentCreditRate: string;
   gpv: string;
   ticket: string;
   giroNegocio: string;
-  abonoBank: AbonoBank | "";
-  posTotal: string;
+  settlementBank: SettlementBank | "";
+  posCount: string;
 };
 
 export const EMPTY_COMMERCIAL_SCOPE_VALUES: CommercialScopeFormValues = {
-  proveedorActual: "",
-  tasaDebitoActual: "",
-  tasaCreditoActual: "",
+  currentProvider: "",
+  currentDebitRate: "",
+  currentCreditRate: "",
   gpv: "",
   ticket: "",
   giroNegocio: "",
-  abonoBank: "",
-  posTotal: "",
+  settlementBank: "",
+  posCount: "",
 };
 
 function isNonNegativeNumber(value: string): boolean {
@@ -35,16 +35,16 @@ function isNonNegativeNumber(value: string): boolean {
 export function validateCommercialScope(
   values: CommercialScopeFormValues,
 ): string | null {
-  if (!values.proveedorActual.trim()) return "Proveedor actual es requerido";
-  if (!isNonNegativeNumber(values.tasaDebitoActual))
+  if (!values.currentProvider.trim()) return "Proveedor actual es requerido";
+  if (!isNonNegativeNumber(values.currentDebitRate))
     return "Tasa débito actual es requerida";
-  if (!isNonNegativeNumber(values.tasaCreditoActual))
+  if (!isNonNegativeNumber(values.currentCreditRate))
     return "Tasa crédito actual es requerida";
   if (!isNonNegativeNumber(values.gpv)) return "GPV es requerido";
   if (!isNonNegativeNumber(values.ticket)) return "Ticket es requerido";
   if (!values.giroNegocio.trim()) return "Giro de negocio es requerido";
-  if (!values.abonoBank) return "Banco de abono es requerido";
-  if (!values.posTotal.trim() || Number(values.posTotal) <= 0)
+  if (!values.settlementBank) return "Banco de abono es requerido";
+  if (!values.posCount.trim() || Number(values.posCount) <= 0)
     return "Cantidad de POS es requerida";
   return null;
 }
@@ -53,22 +53,22 @@ export function validateCommercialScope(
 export function toCommercialScopePayload(
   values: CommercialScopeFormValues,
 ): CommercialScopePayload {
-  const bank = values.abonoBank;
+  const bank = values.settlementBank;
   if (!bank) {
     throw new Error("commercial scope must be validated before projection");
   }
   return {
-    proveedorActual: values.proveedorActual.trim(),
-    tasaDebitoActual: Number(values.tasaDebitoActual),
-    tasaCreditoActual: Number(values.tasaCreditoActual),
+    currentProvider: values.currentProvider.trim(),
+    currentDebitRate: Number(values.currentDebitRate),
+    currentCreditRate: Number(values.currentCreditRate),
     gpv: Number(values.gpv),
     ticket: Number(values.ticket),
     giroNegocio: values.giroNegocio.trim(),
-    abonoBank: bank,
-    posTotal: Number(values.posTotal),
+    settlementBank: bank,
+    posCount: Number(values.posCount),
   };
 }
 
-export function coerceAbonoBank(value: string): AbonoBank | "" {
-  return ABONO_BANKS.find((bank) => bank === value) ?? "";
+export function coerceSettlementBank(value: string): SettlementBank | "" {
+  return SETTLEMENT_BANKS.find((bank) => bank === value) ?? "";
 }

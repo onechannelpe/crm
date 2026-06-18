@@ -5,13 +5,13 @@ import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { TextInput } from "~/components/ui/input/text-input";
-import { ABONO_BANKS } from "~/contracts/workflow/vocabulary";
+import { SETTLEMENT_BANKS } from "~/contracts/workflow/vocabulary";
 import {
   FieldInputValue,
   FieldRow,
 } from "~/features/side-panel/components/field-table";
 
-import { coerceAbonoBank, type CommercialScopeFormValues } from "./values";
+import { coerceSettlementBank, type CommercialScopeFormValues } from "./values";
 
 // Shared by the create draft and inline scope corrections. Renders rows only;
 // the parent owns the surrounding FieldTable or form.
@@ -28,8 +28,8 @@ export function CommercialScopeFields(props: {
         <FieldInputValue>
           <TextInput
             sizeVariant="sm"
-            value={props.values.proveedorActual}
-            onChange={(value) => props.onChange("proveedorActual", value)}
+            value={props.values.currentProvider}
+            onChange={(value) => props.onChange("currentProvider", value)}
             required
           />
         </FieldInputValue>
@@ -41,8 +41,8 @@ export function CommercialScopeFields(props: {
             type="number"
             step="0.01"
             min="0"
-            value={props.values.tasaDebitoActual}
-            onChange={(value) => props.onChange("tasaDebitoActual", value)}
+            value={props.values.currentDebitRate}
+            onChange={(value) => props.onChange("currentDebitRate", value)}
             required
           />
         </FieldInputValue>
@@ -54,8 +54,8 @@ export function CommercialScopeFields(props: {
             type="number"
             step="0.01"
             min="0"
-            value={props.values.tasaCreditoActual}
-            onChange={(value) => props.onChange("tasaCreditoActual", value)}
+            value={props.values.currentCreditRate}
+            onChange={(value) => props.onChange("currentCreditRate", value)}
             required
           />
         </FieldInputValue>
@@ -99,17 +99,17 @@ export function CommercialScopeFields(props: {
       <FieldRow label="Banco de abono" icon={Moneybag}>
         <FieldInputValue>
           <select
-            value={props.values.abonoBank}
+            value={props.values.settlementBank}
             onChange={(e) =>
               props.onChange(
-                "abonoBank",
-                coerceAbonoBank(e.currentTarget.value),
+                "settlementBank",
+                coerceSettlementBank(e.currentTarget.value),
               )
             }
             required
           >
             <option value="">Seleccionar banco...</option>
-            <For each={ABONO_BANKS}>
+            <For each={SETTLEMENT_BANKS}>
               {(bank) => <option value={bank}>{bank}</option>}
             </For>
           </select>
@@ -122,8 +122,8 @@ export function CommercialScopeFields(props: {
             type="number"
             min="1"
             step="1"
-            value={props.values.posTotal}
-            onChange={(value) => props.onChange("posTotal", value)}
+            value={props.values.posCount}
+            onChange={(value) => props.onChange("posCount", value)}
             required
           />
         </FieldInputValue>

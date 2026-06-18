@@ -20,7 +20,7 @@ export type ImportRowInput =
       row: number;
       ruc: string;
       type: "import_prioridad";
-      prioridad: LeadPriority;
+      priority: LeadPriority;
     };
 
 export type LoadedLead = {
@@ -32,7 +32,7 @@ export type LoadedLead = {
   updated_by: number | null;
   updated_at: number;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   stage: LeadStage;
 };
 
