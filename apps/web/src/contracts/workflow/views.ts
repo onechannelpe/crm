@@ -21,17 +21,7 @@ export type LeadAvailableAction =
   | "update-venue"
   | "reassign-lead";
 
-export type LeadBlockingField =
-  | "proveedorActual"
-  | "tasaDebitoActual"
-  | "tasaCreditoActual"
-  | "gpv"
-  | "ticket"
-  | "giroNegocio"
-  | "abonoBank"
-  | "posTotal"
-  | "digitalPolicy"
-  | "venueAccounts";
+export type LeadBlockingField = "digitalPolicy" | "venueAccounts";
 
 export type AssignableExecutiveView = {
   id: number;

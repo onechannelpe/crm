@@ -89,11 +89,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
     )
-    .addColumn("proveedor_actual", "varchar(255)")
-    .addColumn("tasa_debito_actual", "real")
-    .addColumn("tasa_credito_actual", "real")
-    .addColumn("gpv", "real")
-    .addColumn("ticket", "real")
+    // Commercial scope is captured in full at registration (lead born complete),
+    // so these columns are NOT NULL. Digital-policy columns below stay nullable
+    // until SETUP.
+    .addColumn("proveedor_actual", "varchar(255)", (col) => col.notNull())
+    .addColumn("tasa_debito_actual", "real", (col) => col.notNull())
+    .addColumn("tasa_credito_actual", "real", (col) => col.notNull())
+    .addColumn("gpv", "real", (col) => col.notNull())
+    .addColumn("ticket", "real", (col) => col.notNull())
     .addColumn("link_scope", "text", (col) => col.notNull().defaultTo("none"))
     .addColumn("link_url", "text")
     .addColumn("online_scope", "text", (col) => col.notNull().defaultTo("none"))
@@ -102,9 +105,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.references("workflow_modalidad_cobro_kinds.value"),
     )
     .addColumn("abono_bank", "varchar(50)", (col) =>
-      col.references("workflow_abono_banks.value"),
+      col.notNull().references("workflow_abono_banks.value"),
     )
-    .addColumn("pos_total", "integer")
+    .addColumn("pos_total", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
       col.notNull().references("users.id"),

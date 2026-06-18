@@ -51,21 +51,12 @@ export async function saveDigitalPolicyCommand(
     });
     if (!aggregateCheck.ok) return aggregateCheck;
 
-    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
-    const digitalFields = toProfileDigitalFields(policy.value);
-    const now = ports.now;
-
-    await repos.leadProfiles.upsert({
+    // The profile row already exists from registration (lead born complete), so
+    // this is a partial update of just the digital columns.
+    await repos.leadProfiles.updateDigitalPolicy({
       leadId: state.id,
-      proveedorActual: profile?.proveedorActual ?? null,
-      tasaDebitoActual: profile?.tasaDebitoActual ?? null,
-      tasaCreditoActual: profile?.tasaCreditoActual ?? null,
-      gpv: profile?.gpv ?? null,
-      ticket: profile?.ticket ?? null,
-      abonoBank: profile?.abonoBank ?? null,
-      posTotal: profile?.posTotal ?? null,
-      ...digitalFields,
-      updatedAt: now,
+      fields: toProfileDigitalFields(policy.value),
+      updatedAt: ports.now,
       updatedBy: input.actor.userId,
     });
 

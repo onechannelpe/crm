@@ -1,30 +1,9 @@
-import {
-  type AbonoBank,
-  type LeadNextStep,
-  type LeadStage,
-} from "~/contracts/workflow/vocabulary";
+import { type LeadBlockingField } from "~/contracts/workflow/views";
+import { type LeadNextStep, type LeadStage } from "~/contracts/workflow/vocabulary";
 
-export type LeadBlockingField =
-  | "proveedorActual"
-  | "tasaDebitoActual"
-  | "tasaCreditoActual"
-  | "gpv"
-  | "ticket"
-  | "giroNegocio"
-  | "abonoBank"
-  | "posTotal"
-  | "digitalPolicy"
-  | "venueAccounts";
-
-export type ScopingProfileFields = {
-  proveedorActual?: string | null;
-  tasaDebitoActual?: number | null;
-  tasaCreditoActual?: number | null;
-  gpv?: number | null;
-  ticket?: number | null;
-  giroNegocio?: string | null;
-  abonoBank?: AbonoBank | null;
-  posTotal?: number | null;
+// Only the digital-policy fields can leave a SETUP lead blocked; commercial scope
+// is always present (lead born complete at registration).
+export type SetupProfileFields = {
   linkScope?: "none" | "shared" | "per_venue";
   linkUrl?: string | null;
   onlineScope?: "none" | "shared" | "per_venue";
@@ -57,7 +36,7 @@ export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
 
 export function resolveLeadBlockingFields(input: {
   stage: LeadStage;
-  profile?: ScopingProfileFields | null;
+  profile?: SetupProfileFields | null;
   venuesWithAccountsCount?: number;
 }): LeadBlockingField[] {
   switch (input.stage) {

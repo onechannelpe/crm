@@ -41,6 +41,8 @@ describe("integration record export columns", () => {
         tasa_credito_actual: 4.2,
         gpv: 120_000,
         ticket: 80,
+        abono_bank: "BCP",
+        pos_total: 3,
         link_scope: "none",
         online_scope: "none",
         updated_at: 1_000,
