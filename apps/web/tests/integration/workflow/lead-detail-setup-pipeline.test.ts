@@ -22,14 +22,13 @@ describe("lead detail setup pipeline", () => {
   it("composes profile from lead commercial scope, organization, and optional digital policy", async () => {
     const scenario = createWorkflowScenario(runtime);
     const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.lead.atStage("SETUP", {
       key: "detail-profile",
       organization: {
         key: "detail-profile",
         legalName: "Acme SAC",
         giroNegocio: "Retail",
       },
-      stage: "SETUP",
       commercial: {
         currentProvider: "Izipay",
         currentDebitRate: 2.9,
@@ -100,10 +99,9 @@ describe("lead detail setup pipeline", () => {
   it("persists per-venue digital configuration and clears setup blockers when venue accounts are complete", async () => {
     const scenario = createWorkflowScenario(runtime);
     const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.lead.atStage("SETUP", {
       key: "detail-venue-digital",
       organization: { key: "detail-venue-digital" },
-      stage: "SETUP",
     });
 
     expectOk(

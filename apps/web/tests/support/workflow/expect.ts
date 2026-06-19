@@ -1,70 +1,96 @@
+import { expectOk } from "@tests/support/_core/assertions";
 import type { TestRuntime } from "@tests/support/runtime/app";
+
+import type { LeadStatus } from "~/contracts/workflow/vocabulary";
+
+import type { ScenarioActor } from "./leads";
+
+// Lead invariants are asserted through getLeadDetail, the same read model production
+// consumers use, rather than by reading raw workflow_leads columns. Every field these
+// helpers check (updatedBy, updatedAt, executiveId, status) is exposed on LeadDetailLeadView.
+// The caller passes the actor that can see the lead (after a reassign, only the new
+// executive or a review role can).
+
+async function loadLead(
+  runtime: TestRuntime,
+  actor: ScenarioActor,
+  leadId: string,
+) {
+  const detail = await runtime.workflow.queries.getLeadDetail({
+    actor,
+    leadId,
+  });
+  return expectOk(detail).lead;
+}
 
 export async function expectLeadMetadata(
   runtime: TestRuntime,
-  input: { leadId: string; updatedBy: number; minUpdatedAt?: number },
+  input: {
+    actor: ScenarioActor;
+    leadId: string;
+    updatedBy: number;
+    minUpdatedAt?: number;
+  },
 ): Promise<void> {
-  const row = await runtime.ctx.db
-    .selectFrom("workflow_leads")
-    .select(["updated_by", "updated_at"])
-    .where("id", "=", input.leadId)
-    .executeTakeFirstOrThrow();
+  const lead = await loadLead(runtime, input.actor, input.leadId);
 
-  if (row.updated_by !== input.updatedBy) {
+  if (lead.updatedBy !== input.updatedBy) {
     throw new Error(
-      `expected updated_by=${input.updatedBy} got ${String(row.updated_by)}`,
+      `expected updatedBy=${input.updatedBy} got ${String(lead.updatedBy)}`,
     );
   }
   if (
     input.minUpdatedAt !== undefined &&
-    row.updated_at <= input.minUpdatedAt
+    lead.updatedAt <= input.minUpdatedAt
   ) {
     throw new Error(
-      `expected updated_at > ${input.minUpdatedAt} got ${String(row.updated_at)}`,
+      `expected updatedAt > ${input.minUpdatedAt} got ${String(lead.updatedAt)}`,
     );
   }
 }
 
 export async function expectLeadAssignment(
   runtime: TestRuntime,
-  input: { leadId: string; executiveId: number; updatedBy: number },
+  input: {
+    actor: ScenarioActor;
+    leadId: string;
+    executiveId: number;
+    updatedBy: number;
+  },
 ): Promise<void> {
-  const row = await runtime.ctx.db
-    .selectFrom("workflow_leads")
-    .select(["executive_id", "updated_by"])
-    .where("id", "=", input.leadId)
-    .executeTakeFirstOrThrow();
+  const lead = await loadLead(runtime, input.actor, input.leadId);
 
-  if (row.executive_id !== input.executiveId) {
+  if (lead.executiveId !== input.executiveId) {
     throw new Error(
-      `expected executive_id=${input.executiveId} got ${String(row.executive_id)}`,
+      `expected executiveId=${input.executiveId} got ${String(lead.executiveId)}`,
     );
   }
-  if (row.updated_by !== input.updatedBy) {
+  if (lead.updatedBy !== input.updatedBy) {
     throw new Error(
-      `expected updated_by=${input.updatedBy} got ${String(row.updated_by)}`,
+      `expected updatedBy=${input.updatedBy} got ${String(lead.updatedBy)}`,
     );
   }
 }
 
 export async function expectLeadStatus(
   runtime: TestRuntime,
-  input: { leadId: string; updatedBy: number; status: string },
+  input: {
+    actor: ScenarioActor;
+    leadId: string;
+    updatedBy: number;
+    status: LeadStatus;
+  },
 ): Promise<void> {
-  const row = await runtime.ctx.db
-    .selectFrom("workflow_leads")
-    .select(["updated_by", "status"])
-    .where("id", "=", input.leadId)
-    .executeTakeFirstOrThrow();
+  const lead = await loadLead(runtime, input.actor, input.leadId);
 
-  if (row.updated_by !== input.updatedBy) {
+  if (lead.updatedBy !== input.updatedBy) {
     throw new Error(
-      `expected updated_by=${input.updatedBy} got ${String(row.updated_by)}`,
+      `expected updatedBy=${input.updatedBy} got ${String(lead.updatedBy)}`,
     );
   }
-  if (row.status !== input.status) {
+  if (lead.status !== input.status) {
     throw new Error(
-      `expected status=${input.status} got ${String(row.status)}`,
+      `expected status=${input.status} got ${String(lead.status)}`,
     );
   }
 }

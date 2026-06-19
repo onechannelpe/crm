@@ -81,8 +81,12 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
     },
   };
 
-  const lead = {
-    async assignedTo(
+  // Direct DB seed of a lead at an arbitrary stage, bypassing the state machine.
+  // Exposed only through `scenario.seedDirect.leadAt` (the labeled escape hatch), never
+  // as the default front door. Use for bulk setup and genuinely unreachable states; reach
+  // real stages through `scenario.lead.atStage` instead.
+  const seedDirectLead = {
+    async at(
       executive: ScenarioActorKey | number,
       input: Omit<ScenarioLeadSeed, "executive"> = {
         organization: {},
@@ -171,7 +175,7 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
 
   return {
     actor,
-    lead,
+    seedDirectLead,
     user,
     ids,
   };

@@ -19,14 +19,14 @@ describe("import outbox planning", () => {
 
   it("plans unified notification outbox entries for matching import mutations", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.lead.assignedTo("execOne", {
+    const leadOne = await scenario.seedDirect.leadAt("execOne", {
       key: "planning-one",
       organization: { key: "planning-one" },
       stage: "QUALIFYING",
       status: "DISPONIBLE",
       priority: "P1",
     });
-    const leadTwo = await scenario.lead.assignedTo("execTwo", {
+    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
       key: "planning-two",
       organization: { key: "planning-two" },
       stage: "QUALIFYING",

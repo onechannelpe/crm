@@ -1,11 +1,9 @@
 import { randomUUIDv7 } from "bun";
 
-import {
-  SETTLEMENT_BANKS,
-  type SettlementBank,
-} from "~/contracts/workflow/vocabulary";
+import type { SettlementBank } from "~/contracts/workflow/vocabulary";
 
 import type { TestRuntime } from "../runtime/app";
+import { MERCHANT } from "./fixtures";
 
 type OrganizationSeed = {
   key: string;
@@ -142,7 +140,7 @@ function resolveLeadOrganizationId(input: LeadSeed): string {
   throw new Error("missing_seed_lead_organization");
 }
 
-function buildDefaultRuc(key: string): string {
+export function buildDefaultRuc(key: string): string {
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
     hash = (hash * 131 + key.charCodeAt(index)) % 1_000_000_000;
@@ -153,13 +151,16 @@ function buildDefaultRuc(key: string): string {
 
 function resolveLeadCommercialSeed(input: LeadCommercialSeed | undefined) {
   return {
-    currentProvider: input?.currentProvider ?? "Niubiz",
-    currentDebitRate: input?.currentDebitRate ?? 3.5,
-    currentCreditRate: input?.currentCreditRate ?? 4,
-    gpv: input?.gpv ?? 50_000,
-    ticket: input?.ticket ?? 120,
-    settlementBank: input?.settlementBank ?? SETTLEMENT_BANKS[0],
-    posCount: input?.posCount ?? 2,
+    currentProvider:
+      input?.currentProvider ?? MERCHANT.standard.currentProvider,
+    currentDebitRate:
+      input?.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
+    currentCreditRate:
+      input?.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
+    gpv: input?.gpv ?? MERCHANT.standard.gpv,
+    ticket: input?.ticket ?? MERCHANT.standard.ticket,
+    settlementBank: input?.settlementBank ?? MERCHANT.standard.settlementBank,
+    posCount: input?.posCount ?? MERCHANT.standard.posCount,
   };
 }
 
@@ -181,6 +182,50 @@ export async function seedUser(runtime: TestRuntime, input: UserSeed) {
       role: input.role,
       is_active: 1,
       created_at: createdAt,
+    })
+    .execute();
+}
+
+type RateProposalSeed = {
+  id: string;
+  leadId: string;
+  round: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
+  fee: number;
+  paybackPricing: number;
+  proposedBy: number;
+  currency?: "PEN" | "USD";
+  outcome?: "pending" | "accepted" | "revision_requested";
+  proposedAt?: number;
+  decidedAt?: number | null;
+};
+
+// Direct insert of a rate proposal, bypassing proposeRate. Justified for query/projection
+// tests that need proposals pinned to specific rounds and rates (e.g. asserting the export
+// surfaces the latest version), where driving the real command adds noise without signal.
+export async function seedRateProposal(
+  runtime: TestRuntime,
+  input: RateProposalSeed,
+): Promise<void> {
+  const proposedAt = input.proposedAt ?? runtime.now.get();
+  await runtime.ctx.db
+    .insertInto("workflow_rate_proposals")
+    .values({
+      id: input.id,
+      lead_id: input.leadId,
+      round: input.round,
+      proposed_debit_rate: input.proposedDebitRate,
+      proposed_credit_rate: input.proposedCreditRate,
+      proposed_foreign_rate: input.proposedForeignRate,
+      fee: input.fee,
+      payback_pricing: input.paybackPricing,
+      currency: input.currency ?? "PEN",
+      proposed_by: input.proposedBy,
+      proposed_at: proposedAt,
+      outcome: input.outcome ?? "pending",
+      decided_at: input.decidedAt ?? null,
     })
     .execute();
 }

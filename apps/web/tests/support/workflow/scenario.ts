@@ -1,7 +1,9 @@
 import type { TestRuntime } from "../runtime/app";
+import { createLeadBuilder } from "./build-lead";
 import { createWorkflowImporter } from "./importer";
 import { createWorkflowLeadApis } from "./leads";
 import { createWorkflowOutbox } from "./outbox";
+import { seedRateProposal } from "./seed";
 
 export function createWorkflowScenario(runtime: TestRuntime) {
   const leadApis = createWorkflowLeadApis(runtime);
@@ -18,6 +20,22 @@ export function createWorkflowScenario(runtime: TestRuntime) {
   });
   const outbox = createWorkflowOutbox(runtime);
 
+  // Front door: reach a stage through the real command transitions.
+  const lead = createLeadBuilder({
+    runtime,
+    resolveActor: (key) => leadApis.actor.by(key),
+    importer: imported.importer,
+  });
+
+  // Labeled escape hatch: direct DB seeding for bulk setup, query/projection fixtures,
+  // and genuinely unreachable states. Every bypass goes through here so it stays visible.
+  const seedDirect = {
+    leadAt: (...args: Parameters<typeof leadApis.seedDirectLead.at>) =>
+      leadApis.seedDirectLead.at(...args),
+    rateProposal: (input: Parameters<typeof seedRateProposal>[1]) =>
+      seedRateProposal(runtime, input),
+  };
+
   const notifications = {
     async list() {
       return runtime.ctx.db
@@ -30,7 +48,8 @@ export function createWorkflowScenario(runtime: TestRuntime) {
 
   return {
     actor: leadApis.actor,
-    lead: leadApis.lead,
+    lead,
+    seedDirect,
     job: imported.job,
     importer: imported.importer,
     outbox,

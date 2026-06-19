@@ -19,14 +19,14 @@ describe("outbox delivery", () => {
 
   it("drains pending outbox events and persists notifications", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.lead.assignedTo("execOne", {
+    const leadOne = await scenario.seedDirect.leadAt("execOne", {
       key: "delivery-one",
       organization: { key: "delivery-one" },
       stage: "QUALIFYING",
       status: "DISPONIBLE",
       priority: "P1",
     });
-    const leadTwo = await scenario.lead.assignedTo("execTwo", {
+    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
       key: "delivery-two",
       organization: { key: "delivery-two" },
       stage: "QUALIFYING",

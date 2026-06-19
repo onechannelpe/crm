@@ -19,14 +19,14 @@ describe("integration import workflow concurrency", () => {
 
   it("applies import while export reads run concurrently without failures", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.lead.assignedTo("execOne", {
+    const leadOne = await scenario.seedDirect.leadAt("execOne", {
       key: "import-concurrency-one",
       organization: { key: "import-concurrency-one" },
       stage: "QUALIFYING",
       status: "DISPONIBLE",
       priority: "P1",
     });
-    const leadTwo = await scenario.lead.assignedTo("execTwo", {
+    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
       key: "import-concurrency-two",
       organization: { key: "import-concurrency-two" },
       stage: "QUALIFYING",

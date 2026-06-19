@@ -1,10 +1,8 @@
-import {
-  SETTLEMENT_BANKS,
-  type SettlementBank,
-} from "~/contracts/workflow/vocabulary";
+import type { SettlementBank } from "~/contracts/workflow/vocabulary";
 
 import type { TestRuntime } from "../runtime/app";
 import { runTestWorkflowCommand, type TestCommandOverrides } from "./command";
+import { MERCHANT } from "./fixtures";
 
 export type RegisteredLeadSnapshot = {
   id: string;
@@ -53,14 +51,18 @@ export async function registerLead(input: {
       commandApi.registerLead({
         actor,
         ruc: input.ruc,
-        currentProvider: input.currentProvider ?? "Niubiz",
-        currentDebitRate: input.currentDebitRate ?? 3.5,
-        currentCreditRate: input.currentCreditRate ?? 4.0,
-        gpv: input.gpv ?? 50000,
-        ticket: input.ticket ?? 120,
+        currentProvider:
+          input.currentProvider ?? MERCHANT.standard.currentProvider,
+        currentDebitRate:
+          input.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
+        currentCreditRate:
+          input.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
+        gpv: input.gpv ?? MERCHANT.standard.gpv,
+        ticket: input.ticket ?? MERCHANT.standard.ticket,
         giroNegocio: input.giroNegocio ?? "Retail",
-        settlementBank: input.settlementBank ?? SETTLEMENT_BANKS[0],
-        posCount: input.posCount ?? 2,
+        settlementBank:
+          input.settlementBank ?? MERCHANT.standard.settlementBank,
+        posCount: input.posCount ?? MERCHANT.standard.posCount,
       }),
     input.commandOverrides,
   );

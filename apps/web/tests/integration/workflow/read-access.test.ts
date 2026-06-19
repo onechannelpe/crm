@@ -20,7 +20,7 @@ describe("workflow read access", () => {
 
   it("lets review users read record detail even when they are not the assigned executive", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.seedDirect.leadAt("execOne", {
       key: "read-access-back-office",
       organization: { key: "read-access-back-office" },
       stage: "QUALIFYING",
@@ -40,7 +40,7 @@ describe("workflow read access", () => {
     "lets %s read record detail even when they are not the assigned executive",
     async (role) => {
       const scenario = createWorkflowScenario(runtime);
-      const lead = await scenario.lead.assignedTo("execOne", {
+      const lead = await scenario.seedDirect.leadAt("execOne", {
         key: `read-access-${role}`,
         organization: { key: `read-access-${role}` },
         stage: "PRICING",
@@ -58,7 +58,7 @@ describe("workflow read access", () => {
 
   it("blocks executives from reading another executive's record detail", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.seedDirect.leadAt("execOne", {
       key: "read-access-exec-blocked",
       organization: { key: "read-access-exec-blocked" },
       stage: "QUALIFYING",
