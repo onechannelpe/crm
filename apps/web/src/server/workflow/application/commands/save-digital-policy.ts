@@ -8,7 +8,7 @@ import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 import {
   parseDigitalPolicy,
-  toProfileDigitalFields,
+  toDigitalPolicyFields,
   validateDigitalAggregate,
 } from "../services/digital-product-policy";
 
@@ -51,9 +51,9 @@ export async function saveDigitalPolicyCommand(
     });
     if (!aggregateCheck.ok) return aggregateCheck;
 
-    await repos.leadProfiles.updateDigitalPolicy({
+    await repos.digitalPolicies.upsert({
       leadId: state.id,
-      fields: toProfileDigitalFields(policy.value),
+      fields: toDigitalPolicyFields(policy.value),
       updatedAt: ports.now,
       updatedBy: input.actor.userId,
     });

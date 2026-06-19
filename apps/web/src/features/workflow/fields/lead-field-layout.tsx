@@ -157,7 +157,7 @@ export const LEAD_DETAIL_FIELD_GROUPS: FieldGroup[] = [
     label: "Datos de registro",
     fields: [
       {
-        key: "direccion",
+        key: "address",
         label: "Dirección",
         renderCell: (data) => (
           <RecordInlineCell

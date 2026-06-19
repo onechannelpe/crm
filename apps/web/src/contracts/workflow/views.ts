@@ -109,16 +109,16 @@ export type LeadDetailRateProposalView = {
 export type LeadDetailVenueView = {
   id: string;
   leadId: string;
-  nombreComercial: string;
+  tradeName: string;
   posQuantity: number;
   linkUrl: string | null;
   onlineUrl: string | null;
   onlineCollectionMode: CollectionMode | null;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
   solesAccount?: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
@@ -137,7 +137,7 @@ export type LeadDetailRateRevisionView = {
 
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
-  profile: LeadDetailProfileView | undefined;
+  profile: LeadDetailProfileView;
   repLegal: LeadDetailRepLegalView | undefined;
   rateProposals: LeadDetailRateProposalView[];
   venues: LeadDetailVenueView[];
@@ -150,21 +150,19 @@ export type LeadDetailView = {
 
 type LeadDetailProfileView = {
   leadId: string;
-  currentProvider: string | null;
-  currentDebitRate: number | null;
-  currentCreditRate: number | null;
-  gpv: number | null;
-  ticket: number | null;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  ticket: number;
   giroNegocio: string | null;
-  settlementBank: SettlementBank | null;
-  posCount: number | null;
+  settlementBank: SettlementBank;
+  posCount: number;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
   onlineCollectionMode: CollectionMode | null;
-  updatedAt: number;
-  updatedBy: number;
 };
 
 type LeadDetailRepLegalView = {

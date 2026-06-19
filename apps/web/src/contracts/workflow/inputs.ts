@@ -108,14 +108,14 @@ export type RecordRepLegalInput = {
 
 export type CreateVenueInput = {
   leadId: string;
-  nombreComercial: string;
+  tradeName: string;
   posQuantity: number;
   digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
 };
 
 export type UpdateVenueInput = CreateVenueInput & {

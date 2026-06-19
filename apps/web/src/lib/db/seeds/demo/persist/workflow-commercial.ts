@@ -89,16 +89,16 @@ export async function persistWorkflowCommercialData(
       {
         id: vidConverted,
         lead_id: idConverted,
-        nombre_comercial: "Andes Miraflores",
+        trade_name: "Andes Miraflores",
         pos_quantity: 3,
         link_url: null,
         online_url: null,
         online_collection_mode: null,
-        direccion: "AV. BENAVIDES NRO. 1855",
-        referencia: "Frente al parque central",
-        distrito: "MIRAFLORES",
-        provincia: "LIMA",
-        departamento: "LIMA",
+        address: "AV. BENAVIDES NRO. 1855",
+        address_reference: "Frente al parque central",
+        district: "MIRAFLORES",
+        province: "LIMA",
+        department: "LIMA",
         created_at: now - 22 * day,
         created_by: EXEC_DANIELA,
       },
@@ -106,16 +106,16 @@ export async function persistWorkflowCommercialData(
     .onConflict((oc) =>
       oc.column("id").doUpdateSet((eb) => ({
         lead_id: eb.ref("excluded.lead_id"),
-        nombre_comercial: eb.ref("excluded.nombre_comercial"),
+        trade_name: eb.ref("excluded.trade_name"),
         pos_quantity: eb.ref("excluded.pos_quantity"),
         link_url: eb.ref("excluded.link_url"),
         online_url: eb.ref("excluded.online_url"),
         online_collection_mode: eb.ref("excluded.online_collection_mode"),
-        direccion: eb.ref("excluded.direccion"),
-        referencia: eb.ref("excluded.referencia"),
-        distrito: eb.ref("excluded.distrito"),
-        provincia: eb.ref("excluded.provincia"),
-        departamento: eb.ref("excluded.departamento"),
+        address: eb.ref("excluded.address"),
+        address_reference: eb.ref("excluded.address_reference"),
+        district: eb.ref("excluded.district"),
+        province: eb.ref("excluded.province"),
+        department: eb.ref("excluded.department"),
         created_at: eb.ref("excluded.created_at"),
         created_by: eb.ref("excluded.created_by"),
       })),
@@ -160,17 +160,10 @@ export async function persistWorkflowCommercialData(
     .execute();
 
   await db
-    .insertInto("workflow_lead_profiles")
+    .insertInto("workflow_lead_digital_policy")
     .values([
       {
         lead_id: idConverted,
-        current_provider: "BBVA",
-        current_debit_rate: 2.8,
-        current_credit_rate: 3.1,
-        gpv: 85_000.0,
-        ticket: 245.5,
-        settlement_bank: "INTERBANK",
-        pos_count: 4,
         link_scope: "none",
         link_url: null,
         online_scope: "none",
@@ -182,13 +175,6 @@ export async function persistWorkflowCommercialData(
     ])
     .onConflict((oc) =>
       oc.column("lead_id").doUpdateSet((eb) => ({
-        current_provider: eb.ref("excluded.current_provider"),
-        current_debit_rate: eb.ref("excluded.current_debit_rate"),
-        current_credit_rate: eb.ref("excluded.current_credit_rate"),
-        gpv: eb.ref("excluded.gpv"),
-        ticket: eb.ref("excluded.ticket"),
-        settlement_bank: eb.ref("excluded.settlement_bank"),
-        pos_count: eb.ref("excluded.pos_count"),
         link_scope: eb.ref("excluded.link_scope"),
         link_url: eb.ref("excluded.link_url"),
         online_scope: eb.ref("excluded.online_scope"),

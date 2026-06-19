@@ -25,6 +25,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     // won SETUP/LIVE, and terminal stages).
     .addColumn("reservation_expires_at", "integer")
     .addColumn("version", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("current_provider", "varchar(255)", (col) => col.notNull())
+    .addColumn("current_debit_rate", "real", (col) => col.notNull())
+    .addColumn("current_credit_rate", "real", (col) => col.notNull())
+    .addColumn("gpv", "real", (col) => col.notNull())
+    .addColumn("ticket", "real", (col) => col.notNull())
+    .addColumn("settlement_bank", "varchar(50)", (col) =>
+      col.notNull().references("workflow_settlement_banks.value"),
+    )
+    .addColumn("pos_count", "integer", (col) => col.notNull())
     .execute();
 
   // Only one *active* lead may hold a given RUC at a time. Released leads
@@ -80,33 +89,22 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("workflow_modalidad_cobro_kinds")
+    .createTable("workflow_collection_mode_kinds")
     .addColumn("value", "varchar(20)", (col) => col.primaryKey())
     .execute();
 
   await db.schema
-    .createTable("workflow_lead_profiles")
+    .createTable("workflow_lead_digital_policy")
     .addColumn("lead_id", "text", (col) =>
       col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
     )
-    // Profiles are created at registration. Commercial fields are required
-    // immediately; digital-policy fields remain nullable until SETUP.
-    .addColumn("current_provider", "varchar(255)", (col) => col.notNull())
-    .addColumn("current_debit_rate", "real", (col) => col.notNull())
-    .addColumn("current_credit_rate", "real", (col) => col.notNull())
-    .addColumn("gpv", "real", (col) => col.notNull())
-    .addColumn("ticket", "real", (col) => col.notNull())
     .addColumn("link_scope", "text", (col) => col.notNull().defaultTo("none"))
     .addColumn("link_url", "text")
     .addColumn("online_scope", "text", (col) => col.notNull().defaultTo("none"))
     .addColumn("online_url", "text")
     .addColumn("online_collection_mode", "varchar(20)", (col) =>
-      col.references("workflow_modalidad_cobro_kinds.value"),
+      col.references("workflow_collection_mode_kinds.value"),
     )
-    .addColumn("settlement_bank", "varchar(50)", (col) =>
-      col.notNull().references("workflow_abono_banks.value"),
-    )
-    .addColumn("pos_count", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("updated_by", "integer", (col) =>
       col.notNull().references("users.id"),

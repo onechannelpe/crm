@@ -12,13 +12,13 @@ import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 
 type CommercialSnapshot = {
-  currentProvider: string | null;
-  currentDebitRate: number | null;
-  currentCreditRate: number | null;
-  gpv: number | null;
-  ticket: number | null;
-  settlementBank: string | null;
-  posCount: number | null;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  ticket: number;
+  settlementBank: string;
+  posCount: number;
   giroNegocio: string | null;
 };
 
@@ -34,9 +34,9 @@ const COMMERCIAL_FIELD_KEYS = [
 ] as const satisfies ReadonlyArray<keyof CommercialSnapshot>;
 
 // Inline correction of the commercial scope captured at registration. There is
-// no stage transition: it rewrites the profile fields for the owning executive
-// and records the field-level correction on the lead history (and the audit
-// spine) like every other mutation.
+// no stage transition: it rewrites the born-complete commercial columns on the
+// lead row and the giro_negocio on the organization, and records the field-level
+// correction on the lead history (and the audit spine) like every other mutation.
 export async function editCommercialScopeCommand(
   input: EditCommercialScopeCommandInput,
   ports: { executor: DatabaseExecutor; now: number },
@@ -50,17 +50,12 @@ export async function editCommercialScopeCommand(
     if (!state) return Err(fail("lead_not_found"));
 
     const now = ports.now;
-    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
+    const commercial = await repos.leads.findCommercialScope(input.leadId);
+    if (!commercial) return Err(fail("lead_not_found"));
     const org = await repos.party.findOrganizationById(state.organizationId);
 
     const prev: CommercialSnapshot = {
-      currentProvider: profile?.currentProvider ?? null,
-      currentDebitRate: profile?.currentDebitRate ?? null,
-      currentCreditRate: profile?.currentCreditRate ?? null,
-      gpv: profile?.gpv ?? null,
-      ticket: profile?.ticket ?? null,
-      settlementBank: profile?.settlementBank ?? null,
-      posCount: profile?.posCount ?? null,
+      ...commercial,
       giroNegocio: org?.giroNegocio ?? null,
     };
     const next: CommercialSnapshot = {
@@ -86,9 +81,9 @@ export async function editCommercialScopeCommand(
     });
     if (!transition.ok) return transition;
 
-    await repos.leadProfiles.updateCommercialScope({
-      leadId: state.id,
-      fields: {
+    await repos.leads.updateCommercialSnapshot(
+      state.id,
+      {
         currentProvider: input.currentProvider,
         currentDebitRate: input.currentDebitRate,
         currentCreditRate: input.currentCreditRate,
@@ -97,9 +92,9 @@ export async function editCommercialScopeCommand(
         settlementBank: input.settlementBank,
         posCount: input.posCount,
       },
-      updatedAt: now,
-      updatedBy: input.actor.userId,
-    });
+      now,
+      input.actor.userId,
+    );
 
     await repos.party.updateOrganizationCommercial({
       organizationId: state.organizationId,

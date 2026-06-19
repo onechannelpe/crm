@@ -177,7 +177,7 @@ export function presentTimelineItem(
         occurredAt: event.occurredAt,
         kind: "system",
         title: "Sede agregada",
-        description: `${event.payload.nombreComercial} registrada por ${actorDisplayName}.`,
+        description: `${event.payload.tradeName} registrada por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "venue_updated":
@@ -186,7 +186,7 @@ export function presentTimelineItem(
         occurredAt: event.occurredAt,
         kind: "system",
         title: "Sede actualizada",
-        description: `${event.payload.nombreComercial} actualizada por ${actorDisplayName}.`,
+        description: `${event.payload.tradeName} actualizada por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "venue_accounts_added":

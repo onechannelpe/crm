@@ -10,7 +10,11 @@ import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
 import type { LeadPatch } from "~/server/workflow/application/ports/lead";
-import type { LeadDraft, LeadState } from "~/server/workflow/domain/lead/state";
+import type {
+  LeadCommercialScope,
+  LeadDraft,
+  LeadState,
+} from "~/server/workflow/domain/lead/state";
 
 type LeadRow = {
   id: string;
@@ -27,7 +31,7 @@ type LeadRow = {
 
 type LeadWithOrganizationRow = LeadRow & {
   ruc: string;
-  razon_social: string;
+  legal_name: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
@@ -43,7 +47,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
     id: row.id,
     organizationId: row.organization_id,
     ruc: row.ruc,
-    legalName: row.razon_social,
+    legalName: row.legal_name,
     address: row.address,
     district: row.district,
     department: row.department,
@@ -61,6 +65,18 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
   };
 }
 
+function toCommercialColumns(scope: LeadCommercialScope) {
+  return {
+    current_provider: scope.currentProvider,
+    current_debit_rate: scope.currentDebitRate,
+    current_credit_rate: scope.currentCreditRate,
+    gpv: scope.gpv,
+    ticket: scope.ticket,
+    settlement_bank: scope.settlementBank,
+    pos_count: scope.posCount,
+  };
+}
+
 function toNewLeadRow(values: LeadDraft): NewLeadRow {
   return {
     organization_id: values.organizationId,
@@ -73,6 +89,7 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
     created_at: values.createdAt,
     updated_at: values.updatedAt,
     reservation_expires_at: values.reservationExpiresAt,
+    ...toCommercialColumns(values),
   };
 }
 
@@ -106,7 +123,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       "lead.reservation_expires_at",
       "lead.version",
       "org.ruc",
-      "org.name as razon_social",
+      "org.legal_name",
       "org.address",
       "org.district",
       "org.department",
@@ -129,6 +146,36 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("lead.deleted_at", "is", null)
         .executeTakeFirst();
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
+    },
+
+    async findCommercialScope(
+      leadId: string,
+    ): Promise<LeadCommercialScope | undefined> {
+      const row = await db
+        .selectFrom("workflow_leads")
+        .select([
+          "current_provider",
+          "current_debit_rate",
+          "current_credit_rate",
+          "gpv",
+          "ticket",
+          "settlement_bank",
+          "pos_count",
+        ])
+        .where("id", "=", leadId)
+        .where("deleted_at", "is", null)
+        .executeTakeFirst();
+
+      if (!row) return undefined;
+      return {
+        currentProvider: row.current_provider,
+        currentDebitRate: row.current_debit_rate,
+        currentCreditRate: row.current_credit_rate,
+        gpv: row.gpv,
+        ticket: row.ticket,
+        settlementBank: row.settlement_bank,
+        posCount: row.pos_count,
+      };
     },
 
     // Returns the lead that currently holds this RUC.
@@ -183,6 +230,23 @@ export function createLeadRepo(db: DatabaseExecutor) {
           "=",
           db.selectFrom("organizations").select("id").where("ruc", "=", ruc),
         )
+        .execute();
+    },
+
+    updateCommercialSnapshot(
+      leadId: string,
+      scope: LeadCommercialScope,
+      updatedAt: number,
+      updatedBy: number,
+    ) {
+      return db
+        .updateTable("workflow_leads")
+        .set({
+          ...toCommercialColumns(scope),
+          updated_at: updatedAt,
+          updated_by: updatedBy,
+        })
+        .where("id", "=", leadId)
         .execute();
     },
   };

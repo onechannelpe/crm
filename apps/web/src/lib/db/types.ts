@@ -34,6 +34,7 @@ export interface Database {
   branches: core.BranchesTable;
   teams: core.TeamsTable;
   organizations: core.OrganizationsTable;
+  organization_branch_locks: core.OrganizationBranchLocksTable;
   branch_supervisors: core.BranchSupervisorsTable;
   back_office_assignments: core.BackOfficeAssignmentsTable;
   people: core.PeopleTable;
@@ -88,8 +89,8 @@ export interface Database {
   auth_events: observability.AuthEventsTable;
   workflow_leads: workflow.WorkflowLeadsTable;
   workflow_idempotency_keys: workflow.WorkflowIdempotencyKeysTable;
-  workflow_modalidad_cobro_kinds: workflow.WorkflowModalidadCobroKindsTable;
-  workflow_lead_profiles: workflow.WorkflowLeadProfilesTable;
+  workflow_collection_mode_kinds: workflow.WorkflowCollectionModeKindsTable;
+  workflow_lead_digital_policy: workflow.WorkflowLeadDigitalPolicyTable;
   workflow_rate_proposals: pricing.WorkflowRateProposalsTable;
   workflow_rate_proposal_policies: pricing.WorkflowRateProposalPoliciesTable;
   workflow_rate_revisions: pricing.WorkflowRateRevisionsTable;
@@ -109,5 +110,5 @@ export interface Database {
   workflow_lead_venue_accounts: sales.WorkflowLeadVenueAccountsTable;
   workflow_currency_kinds: sales.WorkflowCurrencyKindsTable;
   workflow_account_type_kinds: sales.WorkflowAccountTypeKindsTable;
-  workflow_abono_banks: sales.WorkflowAbonoBanksTable;
+  workflow_settlement_banks: sales.WorkflowSettlementBanksTable;
 }

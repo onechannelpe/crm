@@ -71,21 +71,19 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
       <Show when={canEditDigitalPolicy()}>
         <DigitalPolicyPanel
           leadId={props.data.lead.id}
-          linkScope={props.data.profile?.linkScope ?? "none"}
-          linkUrl={props.data.profile?.linkUrl ?? null}
-          onlineScope={props.data.profile?.onlineScope ?? "none"}
-          onlineUrl={props.data.profile?.onlineUrl ?? null}
-          onlineCollectionMode={
-            props.data.profile?.onlineCollectionMode ?? null
-          }
+          linkScope={props.data.profile.linkScope}
+          linkUrl={props.data.profile.linkUrl}
+          onlineScope={props.data.profile.onlineScope}
+          onlineUrl={props.data.profile.onlineUrl}
+          onlineCollectionMode={props.data.profile.onlineCollectionMode}
         />
       </Show>
 
       <Show when={canAddVenue()}>
         <VenueCreatePanel
           leadId={props.data.lead.id}
-          linkScope={props.data.profile?.linkScope ?? "none"}
-          onlineScope={props.data.profile?.onlineScope ?? "none"}
+          linkScope={props.data.profile.linkScope}
+          onlineScope={props.data.profile.onlineScope}
         />
       </Show>
 
@@ -124,8 +122,8 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
               <VenueEditPanel
                 leadId={props.data.lead.id}
                 venue={venue}
-                linkScope={props.data.profile?.linkScope ?? "none"}
-                onlineScope={props.data.profile?.onlineScope ?? "none"}
+                linkScope={props.data.profile.linkScope}
+                onlineScope={props.data.profile.onlineScope}
                 onClose={() => setEditingVenueId(null)}
               />
             </Show>
@@ -490,7 +488,7 @@ function VenueEditPanel(props: {
 
   return (
     <VenueForm
-      title={`Editar sede: ${props.venue.nombreComercial}`}
+      title={`Editar sede: ${props.venue.tradeName}`}
       submitLabel="Guardar cambios"
       form={form}
       linkScope={props.linkScope}
@@ -515,16 +513,16 @@ function VenueEditPanel(props: {
 
 function toVenueFormValues(venue: LeadDetailVenueView): VenueFormValues {
   return {
-    nombreComercial: venue.nombreComercial,
+    tradeName: venue.tradeName,
     posQuantity: String(venue.posQuantity),
     linkUrl: venue.linkUrl ?? "",
     onlineUrl: venue.onlineUrl ?? "",
     onlineCollectionMode: venue.onlineCollectionMode ?? "",
-    direccion: venue.direccion,
-    referencia: venue.referencia,
-    distrito: venue.distrito,
-    provincia: venue.provincia,
-    departamento: venue.departamento,
+    address: venue.address,
+    addressReference: venue.addressReference,
+    district: venue.district,
+    province: venue.province,
+    department: venue.department,
   };
 }
 
@@ -568,7 +566,7 @@ function AccountsFormPanel(props: {
 
   return (
     <AccountsForm
-      venueName={props.venue.nombreComercial}
+      venueName={props.venue.tradeName}
       form={form}
       submitting={submitting()}
       error={error()}

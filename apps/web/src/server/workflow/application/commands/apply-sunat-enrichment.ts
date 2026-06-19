@@ -18,13 +18,13 @@ function normalizeOverlayValue(value: string | null): string | null {
 }
 
 function toOrganizationPatchFromSunatOverlay(overlay: SunatLeadOverlay): {
-  name?: string;
+  legalName?: string;
   address?: string;
   district?: string;
   department?: string;
 } {
   const patch: {
-    name?: string;
+    legalName?: string;
     address?: string;
     district?: string;
     department?: string;
@@ -32,7 +32,7 @@ function toOrganizationPatchFromSunatOverlay(overlay: SunatLeadOverlay): {
 
   const legalName = normalizeOverlayValue(overlay.legalName);
   if (legalName !== null) {
-    patch.name = legalName;
+    patch.legalName = legalName;
   }
 
   const address = normalizeOverlayValue(overlay.address);

@@ -11,7 +11,7 @@ import type {
 function toOrganizationProfile(row: {
   id: OrganizationId;
   ruc: string;
-  name: string;
+  legal_name: string | null;
   giro_negocio: string | null;
   address: string | null;
   district: string | null;
@@ -23,7 +23,7 @@ function toOrganizationProfile(row: {
   return {
     id: row.id,
     ruc: row.ruc,
-    name: row.name,
+    legalName: row.legal_name,
     giroNegocio: row.giro_negocio,
     address: row.address,
     district: row.district,
@@ -59,7 +59,8 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
         .values({
           id,
           ruc: values.ruc,
-          name: values.name,
+          legal_name: values.legalName,
+          giro_negocio: values.giroNegocio,
           address: values.address,
           district: values.district,
           department: values.department,
@@ -86,7 +87,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
       await db
         .updateTable("organizations")
         .set({
-          name: values.name,
+          legal_name: values.legalName,
           address: values.address,
           district: values.district,
           department: values.department,

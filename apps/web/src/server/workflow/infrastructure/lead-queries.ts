@@ -19,7 +19,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .select([
           "lead.id",
           "org.ruc",
-          "org.name as legal_name",
+          "org.legal_name",
           "org.address",
           "lead.executive_id",
           "executive.names as executive_names",
@@ -95,11 +95,6 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .innerJoin("users as executive", "executive.id", "lead.executive_id");
       let q = applyLeadVisibility(base, filters)
         .innerJoin("organizations as org", "org.id", "lead.organization_id")
-        .leftJoin(
-          "workflow_lead_profiles as profile",
-          "profile.lead_id",
-          "lead.id",
-        )
         // Join only the latest rate proposal per lead: a derived table of
         // MAX(round) keeps one row even when earlier rounds exist. The proposal
         // is what back office offered, so its rates are the lead's Culqi rates.
@@ -123,7 +118,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .select([
           "lead.id",
           "org.ruc",
-          "org.name as legal_name",
+          "org.legal_name",
           "org.address",
           "lead.executive_id",
           "executive.names as executive_names",
@@ -132,10 +127,10 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "lead.status",
           "lead.priority",
           "lead.created_at",
-          "profile.current_provider",
-          "profile.current_debit_rate",
-          "profile.current_credit_rate",
-          "profile.gpv",
+          "lead.current_provider",
+          "lead.current_debit_rate",
+          "lead.current_credit_rate",
+          "lead.gpv",
           "rate.proposed_debit_rate",
           "rate.proposed_credit_rate",
         ]);

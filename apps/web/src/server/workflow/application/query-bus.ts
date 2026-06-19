@@ -23,7 +23,7 @@ export function createWorkflowQueryBus(
         {
           leads: repos.leads,
           leadFavorites: repos.leadFavorites,
-          leadProfiles: repos.leadProfiles,
+          digitalPolicies: repos.digitalPolicies,
           leadHistory: repos.leadHistory,
           rateProposals: repos.rateProposals,
           leadVenues: repos.leadVenues,

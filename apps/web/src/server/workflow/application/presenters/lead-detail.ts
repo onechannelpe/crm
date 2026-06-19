@@ -12,9 +12,9 @@ import {
   resolveLeadBlockingFields,
   resolveLeadNextStep,
 } from "../../domain/lead-progress";
-import type { LeadState } from "../../domain/lead/state";
+import type { LeadCommercialScope, LeadState } from "../../domain/lead/state";
 import type {
-  LeadProfile,
+  DigitalPolicy,
   RateRevision,
   RateRevisionFile,
   LegalRepresentative,
@@ -48,7 +48,8 @@ export type LeadDetailSource = {
   executiveName: string;
   createdByName: string;
   updatedByName: string | null;
-  profile: LeadProfile | undefined;
+  commercialScope: LeadCommercialScope;
+  digitalPolicy: DigitalPolicy | undefined;
   rateProposals: RateProposal[];
   venues: LeadVenue[];
   rateRevisions: RateRevisionWithFiles[];
@@ -89,7 +90,7 @@ function toLeadDetailLead(
     id: lead.id,
     ruc: organization.ruc,
     isFavorite,
-    legalName: organization.name,
+    legalName: organization.legalName,
     address: organization.address,
     district: organization.district,
     department: organization.department,
@@ -110,26 +111,26 @@ function toLeadDetailLead(
 }
 
 function toLeadDetailProfile(
-  profile: LeadProfile,
-  organization: OrganizationProfile | undefined,
+  leadId: string,
+  commercial: LeadCommercialScope,
+  digitalPolicy: DigitalPolicy | undefined,
+  organization: OrganizationProfile,
 ): LeadDetailProfileView {
   return {
-    leadId: profile.leadId,
-    currentProvider: profile.currentProvider,
-    currentDebitRate: profile.currentDebitRate,
-    currentCreditRate: profile.currentCreditRate,
-    gpv: profile.gpv,
-    ticket: profile.ticket,
-    giroNegocio: organization?.giroNegocio ?? null,
-    settlementBank: profile.settlementBank,
-    posCount: profile.posCount,
-    linkScope: profile.linkScope,
-    linkUrl: profile.linkUrl,
-    onlineScope: profile.onlineScope,
-    onlineUrl: profile.onlineUrl,
-    onlineCollectionMode: profile.onlineCollectionMode,
-    updatedAt: profile.updatedAt,
-    updatedBy: profile.updatedBy,
+    leadId,
+    currentProvider: commercial.currentProvider,
+    currentDebitRate: commercial.currentDebitRate,
+    currentCreditRate: commercial.currentCreditRate,
+    gpv: commercial.gpv,
+    ticket: commercial.ticket,
+    giroNegocio: organization.giroNegocio,
+    settlementBank: commercial.settlementBank,
+    posCount: commercial.posCount,
+    linkScope: digitalPolicy?.linkScope ?? "none",
+    linkUrl: digitalPolicy?.linkUrl ?? null,
+    onlineScope: digitalPolicy?.onlineScope ?? "none",
+    onlineUrl: digitalPolicy?.onlineUrl ?? null,
+    onlineCollectionMode: digitalPolicy?.onlineCollectionMode ?? null,
   };
 }
 
@@ -170,16 +171,16 @@ function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
   const result: LeadDetailVenueView = {
     id: venue.id,
     leadId: venue.leadId,
-    nombreComercial: venue.nombreComercial,
+    tradeName: venue.tradeName,
     posQuantity: venue.posQuantity,
     linkUrl: venue.linkUrl,
     onlineUrl: venue.onlineUrl,
     onlineCollectionMode: venue.onlineCollectionMode,
-    direccion: venue.direccion,
-    referencia: venue.referencia,
-    distrito: venue.distrito,
-    provincia: venue.provincia,
-    departamento: venue.departamento,
+    address: venue.address,
+    addressReference: venue.addressReference,
+    district: venue.district,
+    province: venue.province,
+    department: venue.department,
     createdAt: venue.createdAt,
     createdBy: venue.createdBy,
   };
@@ -220,9 +221,12 @@ function toRateRevisionView(
 }
 
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
-  const profile = source.profile
-    ? toLeadDetailProfile(source.profile, source.organization)
-    : undefined;
+  const profile = toLeadDetailProfile(
+    source.lead.id,
+    source.commercialScope,
+    source.digitalPolicy,
+    source.organization,
+  );
 
   return {
     lead: toLeadDetailLead(
@@ -244,7 +248,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     availableActions: source.availableActions,
     blockingFields: resolveLeadBlockingFields({
       stage: source.lead.stage,
-      profile,
+      digitalPolicy: source.digitalPolicy,
       venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
         .length,
     }),

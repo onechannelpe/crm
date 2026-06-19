@@ -17,8 +17,14 @@ import {
 import { createLeadUow } from "../../infrastructure/uow";
 import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 import { normalizeLeadRuc } from "../../parsers";
-import type { WorkflowUserRepository } from "../ports/entities";
-import type { LeadEnrichmentQueue } from "../ports/gateways";
+import type {
+  LeadCommercialScope,
+  WorkflowUserRepository,
+} from "../ports/entities";
+import type {
+  LeadEnrichmentQueue,
+  WorkflowEngineGateway,
+} from "../ports/gateways";
 import type { LeadRepository } from "../ports/lead";
 import { expireLeadReservation } from "./expire-reservation";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
@@ -45,6 +51,7 @@ export async function registerLead(
     leads: LeadRepository;
     leadStates: LeadStateRepository;
     users: WorkflowUserRepository;
+    engineGateway: WorkflowEngineGateway;
     enrichmentQueue: LeadEnrichmentQueue;
     executor: DatabaseExecutor;
     now: number;
@@ -115,18 +122,28 @@ export async function registerLead(
     });
   }
 
+  const commercialScope: LeadCommercialScope = {
+    currentProvider: input.currentProvider,
+    currentDebitRate: input.currentDebitRate,
+    currentCreditRate: input.currentCreditRate,
+    gpv: input.gpv,
+    ticket: input.ticket,
+    settlementBank: input.settlementBank,
+    posCount: input.posCount,
+  };
+
+  const overlay = await ports.engineGateway.enrichByRuc(ruc.value);
+
   const result = await ports.executor.transaction().execute(async (db) => {
     const txRepos = createWorkflowRepos(db);
-    // A new organization is seeded with the RUC as a placeholder name; the SUNAT
-    // enrichment enqueued below is the single owner of identity and fills in the
-    // legal name and address once it resolves. An existing organization keeps its
-    // canonical data.
+
     const organization =
       (await txRepos.party.findOrganizationByRuc(ruc.value)) ??
       (await txRepos.party.createOrganization({
         ruc: ruc.value,
-        name: ruc.value,
-        address: null,
+        legalName: overlay?.legalName ?? null,
+        giroNegocio: input.giroNegocio,
+        address: overlay?.address ?? null,
         district: null,
         department: null,
       }));
@@ -134,10 +151,11 @@ export async function registerLead(
     const draft = createLeadDraft({
       organizationId: organization.id,
       ruc: ruc.value,
-      legalName: organization.name,
+      legalName: organization.legalName,
       address: organization.address,
       executiveId: input.actorUserId,
       createdBy: input.actorUserId,
+      commercialScope,
       now,
     });
     if (!draft.ok) return draft;
@@ -154,26 +172,6 @@ export async function registerLead(
       now,
     });
     if (!effects.ok) return effects;
-
-    await txRepos.leadProfiles.createCommercialProfile({
-      leadId: effects.value.leadId,
-      fields: {
-        currentProvider: input.currentProvider,
-        currentDebitRate: input.currentDebitRate,
-        currentCreditRate: input.currentCreditRate,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        settlementBank: input.settlementBank,
-        posCount: input.posCount,
-      },
-      updatedAt: now,
-      updatedBy: input.actorUserId,
-    });
-
-    await txRepos.party.updateOrganizationCommercial({
-      organizationId: organization.id,
-      giroNegocio: input.giroNegocio,
-    });
 
     return effects;
   });

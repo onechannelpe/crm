@@ -96,7 +96,7 @@ function applyLeadAnyFieldSearch(
   return query.where((eb) =>
     eb.or([
       sql<boolean>`org.ruc like ${pattern} escape ${escapeChar}`,
-      sql<boolean>`lower(org.name) like ${pattern} escape ${escapeChar}`,
+      sql<boolean>`lower(org.legal_name) like ${pattern} escape ${escapeChar}`,
       sql<boolean>`lower(org.address) like ${pattern} escape ${escapeChar}`,
       sql<boolean>`lower(executive.names) like ${pattern} escape ${escapeChar}`,
       sql<boolean>`lower(executive.first_surname) like ${pattern} escape ${escapeChar}`,

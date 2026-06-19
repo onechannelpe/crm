@@ -21,6 +21,13 @@ export interface WorkflowLeadsTable {
   deleted_at: number | null;
   reservation_expires_at: number | null;
   version: Generated<number>;
+  current_provider: string;
+  current_debit_rate: number;
+  current_credit_rate: number;
+  gpv: number;
+  ticket: number;
+  settlement_bank: SettlementBank;
+  pos_count: number;
 }
 
 export interface WorkflowIdempotencyKeysTable {
@@ -29,25 +36,18 @@ export interface WorkflowIdempotencyKeysTable {
   created_at: number;
 }
 
-export interface WorkflowLeadProfilesTable {
+export interface WorkflowLeadDigitalPolicyTable {
   lead_id: string;
-  current_provider: string;
-  current_debit_rate: number;
-  current_credit_rate: number;
-  gpv: number;
-  ticket: number;
   link_scope: ProductScope;
   link_url: string | null;
   online_scope: ProductScope;
   online_url: string | null;
   online_collection_mode: CollectionMode | null;
-  settlement_bank: SettlementBank;
-  pos_count: number;
   updated_at: number;
   updated_by: number;
 }
 
-export interface WorkflowModalidadCobroKindsTable {
+export interface WorkflowCollectionModeKindsTable {
   value: CollectionMode;
 }
 

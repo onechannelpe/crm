@@ -22,21 +22,19 @@ export type LeadDetailSourceStatusView = {
 
 export type LeadDetailProfileView = {
   leadId: string;
-  currentProvider: string | null;
-  currentDebitRate: number | null;
-  currentCreditRate: number | null;
-  gpv: number | null;
-  ticket: number | null;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  ticket: number;
   giroNegocio: string | null;
-  settlementBank: SettlementBank | null;
-  posCount: number | null;
+  settlementBank: SettlementBank;
+  posCount: number;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
   onlineCollectionMode: CollectionMode | null;
-  updatedAt: number;
-  updatedBy: number;
 };
 
 export type LeadDetailRepLegalView = {

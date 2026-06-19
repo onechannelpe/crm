@@ -43,10 +43,12 @@ import { saveDigitalPolicyCommand } from "./commands/save-digital-policy";
 import { updateRateProposalPolicy } from "./commands/update-rate-proposal-policy";
 import { updateSourcingPolicy } from "./commands/update-sourcing-policy";
 import { updateVenueCommand } from "./commands/update-venue";
+import type { WorkflowEngineGateway } from "./ports/gateways";
 
 export function createWorkflowCommandBus(
   executor: DatabaseExecutor,
   repos: WorkflowRepos,
+  engineGateway: WorkflowEngineGateway,
   now: () => number,
 ) {
   const leadStates = createLeadStateRepo(executor);
@@ -83,6 +85,7 @@ export function createWorkflowCommandBus(
           leads: repos.leads,
           leadStates,
           users: repos.users,
+          engineGateway,
           enrichmentQueue,
           executor,
           now: now(),

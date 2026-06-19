@@ -3,9 +3,9 @@ import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadHistoryEntry } from "../../domain/history";
-import type { LeadState } from "../../domain/lead/state";
+import type { LeadCommercialScope, LeadState } from "../../domain/lead/state";
 import type {
-  LeadProfileRepository,
+  DigitalPolicyRepository,
   RateRevision,
   RateRevisionRepository,
   PartyRepository,
@@ -58,7 +58,7 @@ export type RateRevisionFilesQuery = {
 export type LeadDetailQueryDeps = {
   leads: LeadRepository;
   leadFavorites: LeadFavoriteRepository;
-  leadProfiles: LeadProfileRepository;
+  digitalPolicies: DigitalPolicyRepository;
   leadHistory: LeadHistoryRepository;
   rateProposals: RateProposalRepository;
   leadVenues: LeadVenueRepository;
@@ -71,8 +71,9 @@ export type LeadDetailQueryDeps = {
 
 export type LeadDetailLoadedSections = {
   lead: LeadState;
+  commercialScope: LeadCommercialScope;
   isFavorite: boolean;
-  profile: Awaited<ReturnType<LeadProfileRepository["findByLeadId"]>>;
+  digitalPolicy: Awaited<ReturnType<DigitalPolicyRepository["findByLeadId"]>>;
   rateProposals: RateProposal[];
   venues: LeadVenue[];
   rateRevisionRows: RateRevision[];
@@ -100,9 +101,14 @@ export async function loadLeadDetailSections(
     return Err(fail("lead_not_found"));
   }
 
+  const commercialScope = await deps.leads.findCommercialScope(input.leadId);
+  if (!commercialScope) {
+    return Err(fail("lead_commercial_scope_missing"));
+  }
+
   const [
     isFavorite,
-    profile,
+    digitalPolicy,
     rateProposals,
     venuesResult,
     rateRevisionRows,
@@ -116,7 +122,7 @@ export async function loadLeadDetailSections(
       leadId: input.leadId,
       userId: input.actorUserId,
     }),
-    deps.leadProfiles.findByLeadId(input.leadId),
+    deps.digitalPolicies.findByLeadId(input.leadId),
     deps.rateProposals.listByLeadId(input.leadId),
     deps.leadVenues.listByLeadId(input.leadId),
     deps.rateRevisions.listByLeadId(input.leadId),
@@ -166,8 +172,9 @@ export async function loadLeadDetailSections(
 
   return Ok({
     lead,
+    commercialScope,
     isFavorite,
-    profile,
+    digitalPolicy,
     rateProposals,
     venues,
     rateRevisionRows,

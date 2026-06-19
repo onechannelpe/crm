@@ -25,7 +25,7 @@ import { workflowActor } from "./actor";
 function venueFields(r: Reader<DomainError>): CreateVenueInput {
   return {
     leadId: r.str("leadId"),
-    nombreComercial: r.str("nombreComercial"),
+    tradeName: r.str("tradeName"),
     posQuantity: r.num("posQuantity"),
     digitalConfig: r.optObj("digitalConfig", (c) => ({
       linkUrl: c.optStr("linkUrl"),
@@ -33,11 +33,11 @@ function venueFields(r: Reader<DomainError>): CreateVenueInput {
       onlineCollectionMode:
         c.optEnum("onlineCollectionMode", COLLECTION_MODES) ?? null,
     })),
-    direccion: r.str("direccion"),
-    referencia: r.str("referencia"),
-    distrito: r.str("distrito"),
-    provincia: r.str("provincia"),
-    departamento: r.str("departamento"),
+    address: r.str("address"),
+    addressReference: r.str("addressReference"),
+    district: r.str("district"),
+    province: r.str("province"),
+    department: r.str("department"),
   };
 }
 

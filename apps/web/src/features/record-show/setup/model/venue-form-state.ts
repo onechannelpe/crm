@@ -3,64 +3,64 @@ import { createSignal } from "solid-js";
 import type { CollectionMode } from "~/contracts/workflow/vocabulary";
 
 export type VenueFormValues = {
-  nombreComercial: string;
+  tradeName: string;
   posQuantity: string;
   linkUrl: string;
   onlineUrl: string;
   onlineCollectionMode: CollectionMode | "";
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
 };
 
 const EMPTY_VENUE_FORM_VALUES: VenueFormValues = {
-  nombreComercial: "",
+  tradeName: "",
   posQuantity: "1",
   linkUrl: "",
   onlineUrl: "",
   onlineCollectionMode: "",
-  direccion: "",
-  referencia: "",
-  distrito: "",
-  provincia: "",
-  departamento: "",
+  address: "",
+  addressReference: "",
+  district: "",
+  province: "",
+  department: "",
 };
 
 export function useVenueFormState(initialValues?: VenueFormValues) {
   const initial = initialValues ?? EMPTY_VENUE_FORM_VALUES;
-  const [nombreComercial, setNombreComercial] = createSignal(
-    initial.nombreComercial,
-  );
+  const [tradeName, setTradeName] = createSignal(initial.tradeName);
   const [posQuantity, setPosQuantity] = createSignal(initial.posQuantity);
   const [linkUrl, setLinkUrl] = createSignal(initial.linkUrl);
   const [onlineUrl, setOnlineUrl] = createSignal(initial.onlineUrl);
   const [onlineCollectionMode, setOnlineCollectionMode] = createSignal<
     CollectionMode | ""
   >(initial.onlineCollectionMode);
-  const [direccion, setDireccion] = createSignal(initial.direccion);
-  const [referencia, setReferencia] = createSignal(initial.referencia);
-  const [distrito, setDistrito] = createSignal(initial.distrito);
-  const [provincia, setProvincia] = createSignal(initial.provincia);
-  const [departamento, setDepartamento] = createSignal(initial.departamento);
+  const [address, setAddress] = createSignal(initial.address);
+  const [addressReference, setAddressReference] = createSignal(
+    initial.addressReference,
+  );
+  const [district, setDistrict] = createSignal(initial.district);
+  const [province, setProvince] = createSignal(initial.province);
+  const [department, setDepartment] = createSignal(initial.department);
 
   function reset(values: VenueFormValues = EMPTY_VENUE_FORM_VALUES) {
-    setNombreComercial(values.nombreComercial);
+    setTradeName(values.tradeName);
     setPosQuantity(values.posQuantity);
     setLinkUrl(values.linkUrl);
     setOnlineUrl(values.onlineUrl);
     setOnlineCollectionMode(values.onlineCollectionMode);
-    setDireccion(values.direccion);
-    setReferencia(values.referencia);
-    setDistrito(values.distrito);
-    setProvincia(values.provincia);
-    setDepartamento(values.departamento);
+    setAddress(values.address);
+    setAddressReference(values.addressReference);
+    setDistrict(values.district);
+    setProvince(values.province);
+    setDepartment(values.department);
   }
 
   return {
-    nombreComercial,
-    setNombreComercial,
+    tradeName,
+    setTradeName,
     posQuantity,
     setPosQuantity,
     linkUrl,
@@ -69,16 +69,16 @@ export function useVenueFormState(initialValues?: VenueFormValues) {
     setOnlineUrl,
     onlineCollectionMode,
     setOnlineCollectionMode,
-    direccion,
-    setDireccion,
-    referencia,
-    setReferencia,
-    distrito,
-    setDistrito,
-    provincia,
-    setProvincia,
-    departamento,
-    setDepartamento,
+    address,
+    setAddress,
+    addressReference,
+    setAddressReference,
+    district,
+    setDistrict,
+    province,
+    setProvince,
+    department,
+    setDepartment,
     reset,
   };
 }

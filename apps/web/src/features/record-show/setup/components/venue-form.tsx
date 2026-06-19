@@ -87,8 +87,8 @@ export function VenueForm(props: {
             <TextFieldRow
               label="Nombre comercial"
               icon={Building2}
-              value={props.form.nombreComercial()}
-              onChange={props.form.setNombreComercial}
+              value={props.form.tradeName()}
+              onChange={props.form.setTradeName}
               required
             />
 
@@ -106,40 +106,40 @@ export function VenueForm(props: {
             <TextFieldRow
               label="Dirección"
               icon={MapIcon}
-              value={props.form.direccion()}
-              onChange={props.form.setDireccion}
+              value={props.form.address()}
+              onChange={props.form.setAddress}
               required
             />
 
             <TextFieldRow
               label="Referencia"
               icon={MapIcon}
-              value={props.form.referencia()}
-              onChange={props.form.setReferencia}
+              value={props.form.addressReference()}
+              onChange={props.form.setAddressReference}
               required
             />
 
             <TextFieldRow
               label="Distrito"
               icon={MapIcon}
-              value={props.form.distrito()}
-              onChange={props.form.setDistrito}
+              value={props.form.district()}
+              onChange={props.form.setDistrict}
               required
             />
 
             <TextFieldRow
               label="Provincia"
               icon={MapIcon}
-              value={props.form.provincia()}
-              onChange={props.form.setProvincia}
+              value={props.form.province()}
+              onChange={props.form.setProvince}
               required
             />
 
             <TextFieldRow
               label="Departamento"
               icon={MapIcon}
-              value={props.form.departamento()}
-              onChange={props.form.setDepartamento}
+              value={props.form.department()}
+              onChange={props.form.setDepartment}
               required
             />
 

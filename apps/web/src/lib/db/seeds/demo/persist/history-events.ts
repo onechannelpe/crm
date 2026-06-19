@@ -419,7 +419,7 @@ export async function persistWorkflowHistoryEvents(
       subject_user_id: null,
       payload_json: JSON.stringify({
         venueId: vidConverted,
-        nombreComercial: "Andes Miraflores",
+        tradeName: "Andes Miraflores",
       }),
       occurred_at: now - 22 * day,
     },

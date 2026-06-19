@@ -61,6 +61,10 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró la organización del lead.",
   },
+  lead_commercial_scope_missing: {
+    kind: "not_found",
+    message: "No se encontró el alcance comercial del lead.",
+  },
   file_storage_missing: {
     kind: "not_found",
     message: "No se encontró el archivo en el almacenamiento.",

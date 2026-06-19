@@ -2,12 +2,23 @@ import {
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
+  type SettlementBank,
 } from "~/contracts/workflow/vocabulary";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { normalizeLeadRuc } from "../../parsers";
+
+export type LeadCommercialScope = {
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  ticket: number;
+  settlementBank: SettlementBank;
+  posCount: number;
+};
 
 export type LeadState = {
   id: string;
@@ -32,7 +43,10 @@ export type LeadState = {
 
 // deletedAt is a lifecycle column set only by the delete command; a freshly
 // created lead is never deleted, so it is not part of the creation draft.
-export type LeadDraft = Omit<LeadState, "id" | "version" | "deletedAt">;
+// The draft also carries the born-complete commercial scope, which the INSERT
+// writes onto the lead row alongside the lifecycle columns.
+export type LeadDraft = Omit<LeadState, "id" | "version" | "deletedAt"> &
+  LeadCommercialScope;
 
 export function createLeadDraft(input: {
   organizationId: OrganizationId;
@@ -41,6 +55,7 @@ export function createLeadDraft(input: {
   address: string | null;
   executiveId: number;
   createdBy: number;
+  commercialScope: LeadCommercialScope;
   now: number;
 }): Result<LeadDraft, DomainError> {
   const ruc = normalizeLeadRuc(input.ruc);
@@ -62,5 +77,6 @@ export function createLeadDraft(input: {
     createdAt: input.now,
     updatedAt: input.now,
     reservationExpiresAt: null,
+    ...input.commercialScope,
   });
 }

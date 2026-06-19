@@ -321,13 +321,7 @@ export function createVenue(
   input: {
     actor: Actor;
     venueId: string;
-    nombreComercial: string;
-    posQuantity: number;
-    direccion: string;
-    referencia: string;
-    distrito: string;
-    provincia: string;
-    departamento: string;
+    tradeName: string;
     now: number;
   },
 ): TransitionResult {
@@ -342,7 +336,7 @@ export function createVenue(
       actorUserId: input.actor.userId,
       payload: {
         venueId: input.venueId,
-        nombreComercial: input.nombreComercial,
+        tradeName: input.tradeName,
       },
       occurredAt: input.now,
     }),
@@ -356,7 +350,7 @@ export function updateVenue(
   input: {
     actor: Actor;
     venueId: string;
-    nombreComercial: string;
+    tradeName: string;
     now: number;
   },
 ): TransitionResult {
@@ -371,7 +365,7 @@ export function updateVenue(
       actorUserId: input.actor.userId,
       payload: {
         venueId: input.venueId,
-        nombreComercial: input.nombreComercial,
+        tradeName: input.tradeName,
       },
       occurredAt: input.now,
     }),

@@ -8,7 +8,11 @@ import type {
 } from "~/server/workflow/types";
 
 import type { LeadHistoryEntry } from "../../domain/history";
-import type { LeadDraft, LeadState } from "../../domain/lead/state";
+import type {
+  LeadCommercialScope,
+  LeadDraft,
+  LeadState,
+} from "../../domain/lead/state";
 
 export type LeadPatch = Partial<
   Omit<
@@ -70,10 +74,17 @@ export type LeadReadRepository = {
 export type LeadRepository = {
   insert(values: LeadDraft): Promise<string>;
   findById(id: string): Promise<LeadState | undefined>;
+  findCommercialScope(leadId: string): Promise<LeadCommercialScope | undefined>;
   findByRuc(ruc: string): Promise<LeadState | undefined>;
   findByRucMany(rucs: string[]): Promise<LeadState[]>;
   updateById(id: string, values: LeadPatch): Promise<unknown>;
   updateByRuc(ruc: string, values: LeadPatch): Promise<unknown>;
+  updateCommercialSnapshot(
+    leadId: string,
+    scope: LeadCommercialScope,
+    updatedAt: number,
+    updatedBy: number,
+  ): Promise<unknown>;
 };
 
 export type LeadListFilters = {
@@ -127,10 +138,10 @@ export type RecordExportRow = {
   createdAt: number;
   executiveId: number;
   executiveName: string;
-  currentProvider: string | null;
-  currentDebitRate: number | null;
-  currentCreditRate: number | null;
-  gpv: number | null;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
   proposedDebitRate: number | null;
   proposedCreditRate: number | null;
 };

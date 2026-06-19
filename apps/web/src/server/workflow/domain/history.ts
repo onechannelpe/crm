@@ -122,11 +122,11 @@ export type LeadHistoryPayloadByEvent = {
   };
   venue_added: {
     venueId: string;
-    nombreComercial: string;
+    tradeName: string;
   };
   venue_updated: {
     venueId: string;
-    nombreComercial: string;
+    tradeName: string;
   };
   venue_accounts_added: {
     venueId: string;

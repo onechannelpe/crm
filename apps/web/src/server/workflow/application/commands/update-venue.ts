@@ -32,11 +32,13 @@ export async function updateVenueCommand(
       return Err(fail("venue_not_found"));
     }
 
-    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
+    const digitalPolicy = await repos.digitalPolicies.findByLeadId(
+      input.leadId,
+    );
     const venueFields = parseVenueDigitalFields(
       {
-        linkScope: profile?.linkScope ?? "none",
-        onlineScope: profile?.onlineScope ?? "none",
+        linkScope: digitalPolicy?.linkScope ?? "none",
+        onlineScope: digitalPolicy?.onlineScope ?? "none",
       },
       input.digitalConfig,
     );
@@ -46,23 +48,23 @@ export async function updateVenueCommand(
     const transition = updateVenue(state, {
       actor: input.actor,
       venueId: input.venueId,
-      nombreComercial: input.nombreComercial,
+      tradeName: input.tradeName,
       now,
     });
     if (!transition.ok) return transition;
 
     const digital = toVenueDigitalInsert(venueFields.value);
     await repos.leadVenues.update(input.venueId, {
-      nombreComercial: input.nombreComercial,
+      tradeName: input.tradeName,
       posQuantity: input.posQuantity,
       linkUrl: digital.linkUrl,
       onlineUrl: digital.onlineUrl,
       onlineCollectionMode: digital.onlineCollectionMode,
-      direccion: input.direccion,
-      referencia: input.referencia,
-      distrito: input.distrito,
-      provincia: input.provincia,
-      departamento: input.departamento,
+      address: input.address,
+      addressReference: input.addressReference,
+      district: input.district,
+      province: input.province,
+      department: input.department,
     });
 
     const committed = await uow.commit({

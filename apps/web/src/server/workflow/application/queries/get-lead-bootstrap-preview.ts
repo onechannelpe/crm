@@ -15,7 +15,7 @@ export async function getLeadBootstrapPreview(
   );
   if (existingOrganization) {
     return Ok({
-      legalName: existingOrganization.name,
+      legalName: existingOrganization.legalName,
       address: existingOrganization.address,
       engineStatus: "available",
     });

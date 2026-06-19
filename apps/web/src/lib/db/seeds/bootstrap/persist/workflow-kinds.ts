@@ -13,7 +13,7 @@ export async function persistWorkflowKinds(
   db: Kysely<Database>,
 ): Promise<void> {
   await db
-    .insertInto("workflow_modalidad_cobro_kinds")
+    .insertInto("workflow_collection_mode_kinds")
     .values(COLLECTION_MODES.map((value) => ({ value })))
     .onConflict((oc) => oc.doNothing())
     .execute();
@@ -31,7 +31,7 @@ export async function persistWorkflowKinds(
     .execute();
 
   await db
-    .insertInto("workflow_abono_banks")
+    .insertInto("workflow_settlement_banks")
     .values(SETTLEMENT_BANKS.map((value) => ({ value })))
     .onConflict((oc) => oc.doNothing())
     .execute();

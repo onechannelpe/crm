@@ -29,16 +29,16 @@ function toLeadVenue(
   const venue: LeadVenue = {
     id: row.id,
     leadId: row.lead_id,
-    nombreComercial: row.nombre_comercial,
+    tradeName: row.trade_name,
     posQuantity: row.pos_quantity,
     linkUrl: row.link_url,
     onlineUrl: row.online_url,
     onlineCollectionMode: row.online_collection_mode,
-    direccion: row.direccion,
-    referencia: row.referencia,
-    distrito: row.distrito,
-    provincia: row.provincia,
-    departamento: row.departamento,
+    address: row.address,
+    addressReference: row.address_reference,
+    district: row.district,
+    province: row.province,
+    department: row.department,
     createdAt: row.created_at,
     createdBy: row.created_by,
   };
@@ -104,16 +104,16 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
         .values({
           id,
           lead_id: values.leadId,
-          nombre_comercial: values.nombreComercial,
+          trade_name: values.tradeName,
           pos_quantity: values.posQuantity,
           link_url: values.linkUrl,
           online_url: values.onlineUrl,
           online_collection_mode: values.onlineCollectionMode,
-          direccion: values.direccion,
-          referencia: values.referencia,
-          distrito: values.distrito,
-          provincia: values.provincia,
-          departamento: values.departamento,
+          address: values.address,
+          address_reference: values.addressReference,
+          district: values.district,
+          province: values.province,
+          department: values.department,
           created_at: values.createdAt,
           created_by: values.createdBy,
         } satisfies NewLeadVenueRow)
@@ -163,16 +163,16 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
       await db
         .updateTable("workflow_lead_venues")
         .set({
-          nombre_comercial: values.nombreComercial,
+          trade_name: values.tradeName,
           pos_quantity: values.posQuantity,
           link_url: values.linkUrl,
           online_url: values.onlineUrl,
           online_collection_mode: values.onlineCollectionMode,
-          direccion: values.direccion,
-          referencia: values.referencia,
-          distrito: values.distrito,
-          provincia: values.provincia,
-          departamento: values.departamento,
+          address: values.address,
+          address_reference: values.addressReference,
+          district: values.district,
+          province: values.province,
+          department: values.department,
         })
         .where("id", "=", venueId)
         .executeTakeFirstOrThrow();

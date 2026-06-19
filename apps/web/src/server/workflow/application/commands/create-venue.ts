@@ -26,11 +26,13 @@ export async function createVenueCommand(
     const state = await leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const profile = await repos.leadProfiles.findByLeadId(input.leadId);
+    const digitalPolicy = await repos.digitalPolicies.findByLeadId(
+      input.leadId,
+    );
     const venueFields = parseVenueDigitalFields(
       {
-        linkScope: profile?.linkScope ?? "none",
-        onlineScope: profile?.onlineScope ?? "none",
+        linkScope: digitalPolicy?.linkScope ?? "none",
+        onlineScope: digitalPolicy?.onlineScope ?? "none",
       },
       input.digitalConfig,
     );
@@ -41,13 +43,7 @@ export async function createVenueCommand(
     const transition = createVenue(state, {
       actor: input.actor,
       venueId,
-      nombreComercial: input.nombreComercial,
-      posQuantity: input.posQuantity,
-      direccion: input.direccion,
-      referencia: input.referencia,
-      distrito: input.distrito,
-      provincia: input.provincia,
-      departamento: input.departamento,
+      tradeName: input.tradeName,
       now,
     });
     if (!transition.ok) return transition;
@@ -58,16 +54,16 @@ export async function createVenueCommand(
       .values({
         id: venueId,
         lead_id: input.leadId,
-        nombre_comercial: input.nombreComercial,
+        trade_name: input.tradeName,
         pos_quantity: input.posQuantity,
         link_url: digital.linkUrl,
         online_url: digital.onlineUrl,
         online_collection_mode: digital.onlineCollectionMode,
-        direccion: input.direccion,
-        referencia: input.referencia,
-        distrito: input.distrito,
-        provincia: input.provincia,
-        departamento: input.departamento,
+        address: input.address,
+        address_reference: input.addressReference,
+        district: input.district,
+        province: input.province,
+        department: input.department,
         created_at: now,
         created_by: input.actor.userId,
       })

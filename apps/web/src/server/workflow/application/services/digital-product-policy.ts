@@ -31,7 +31,6 @@ export type VenueDigitalFields = {
 
 type VenueSnapshot = {
   id: string;
-  nombreComercial: string;
   linkUrl: string | null;
   onlineUrl: string | null;
   onlineCollectionMode: CollectionMode | null;
@@ -151,7 +150,7 @@ export function validateDigitalAggregate(input: {
   return Ok(undefined);
 }
 
-export function toProfileDigitalFields(policy: DigitalPolicy): {
+export function toDigitalPolicyFields(policy: DigitalPolicy): {
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;

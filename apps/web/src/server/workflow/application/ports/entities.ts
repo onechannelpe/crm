@@ -3,22 +3,13 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import type {
-  SettlementBank,
   CollectionMode,
   ProductScope,
   SaleVenueAccount,
   Currency,
 } from "~/server/workflow/types";
 
-export type CommercialProfileFields = {
-  currentProvider: string;
-  currentDebitRate: number;
-  currentCreditRate: number;
-  gpv: number;
-  ticket: number;
-  settlementBank: SettlementBank;
-  posCount: number;
-};
+export type { LeadCommercialScope } from "~/server/workflow/domain/lead/state";
 
 export type DigitalPolicyFields = {
   linkScope: ProductScope;
@@ -28,30 +19,21 @@ export type DigitalPolicyFields = {
   onlineCollectionMode: CollectionMode | null;
 };
 
-export type LeadProfile = {
+export type DigitalPolicy = {
   leadId: string;
-} & CommercialProfileFields &
-  DigitalPolicyFields & {
+} & DigitalPolicyFields & {
     updatedAt: number;
     updatedBy: number;
   };
 
-type ProfileWrite<TFields> = {
-  leadId: string;
-  fields: TFields;
-  updatedAt: number;
-  updatedBy: number;
-};
-
-export type LeadProfileRepository = {
-  findByLeadId(leadId: string): Promise<LeadProfile | undefined>;
-  createCommercialProfile(
-    values: ProfileWrite<CommercialProfileFields>,
-  ): Promise<void>;
-  updateCommercialScope(
-    values: ProfileWrite<CommercialProfileFields>,
-  ): Promise<void>;
-  updateDigitalPolicy(values: ProfileWrite<DigitalPolicyFields>): Promise<void>;
+export type DigitalPolicyRepository = {
+  findByLeadId(leadId: string): Promise<DigitalPolicy | undefined>;
+  upsert(values: {
+    leadId: string;
+    fields: DigitalPolicyFields;
+    updatedAt: number;
+    updatedBy: number;
+  }): Promise<void>;
 };
 
 export type RateProposalOutcome = "pending" | "accepted" | "revision_requested";
@@ -111,16 +93,16 @@ export type RateProposalPolicyRepository = {
 export type LeadVenue = {
   id: string;
   leadId: string;
-  nombreComercial: string;
+  tradeName: string;
   posQuantity: number;
   linkUrl: string | null;
   onlineUrl: string | null;
   onlineCollectionMode: CollectionMode | null;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
   solesAccount?: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
@@ -194,7 +176,7 @@ export type RateRevisionRepository = {
 export type OrganizationProfile = {
   id: OrganizationId;
   ruc: string;
-  name: string;
+  legalName: string | null;
   giroNegocio: string | null;
   address: string | null;
   district: string | null;
@@ -221,7 +203,8 @@ export type PartyRepository = {
   ): Promise<OrganizationProfile | undefined>;
   createOrganization(values: {
     ruc: string;
-    name: string;
+    legalName: string | null;
+    giroNegocio: string | null;
     address: string | null;
     district: string | null;
     department: string | null;
@@ -232,7 +215,7 @@ export type PartyRepository = {
   }): Promise<void>;
   updateOrganizationFromEnrichment(values: {
     organizationId: OrganizationId;
-    name?: string;
+    legalName?: string;
     address?: string;
     district?: string;
     department?: string;

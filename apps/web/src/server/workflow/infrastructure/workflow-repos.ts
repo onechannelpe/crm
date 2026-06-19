@@ -3,9 +3,9 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
 import { createAssignmentRepo } from "./assignment-repo";
+import { createDigitalPolicyRepo } from "./digital-policy-repo";
 import { createHistoryRepo } from "./history-repo";
 import { createLeadFavoriteRepo } from "./lead-favorite-repo";
-import { createLeadProfileRepo } from "./lead-profile-repo";
 import { createLeadQueries } from "./lead-queries";
 import { createLeadRepo } from "./lead-repo";
 import { createLeadStateRepo } from "./lead-state-repo";
@@ -25,7 +25,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leadQueries: createLeadQueries(executor),
     leadFavorites: createLeadFavoriteRepo(executor),
     leadAssignments: createAssignmentRepo(executor),
-    leadProfiles: createLeadProfileRepo(executor),
+    digitalPolicies: createDigitalPolicyRepo(executor),
     leadHistory: createHistoryRepo(executor),
     events: createEventsRepo(executor),
     rateProposals: createRateProposalRepo(executor),

@@ -4,14 +4,14 @@ import { type ProductScope } from "~/contracts/workflow/vocabulary";
 import type { VenueFormState } from "./venue-form-state";
 
 type VenueSubmitInput = {
-  nombreComercial: string;
+  tradeName: string;
   posQuantity: number;
   digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
 };
 
 export type BuildVenueSubmitResult =
@@ -24,19 +24,19 @@ export function buildVenueSubmitInput(
 ): BuildVenueSubmitResult {
   const posQty = Number(form.posQuantity());
 
-  if (!form.nombreComercial().trim() || !form.direccion().trim()) {
+  if (!form.tradeName().trim() || !form.address().trim()) {
     return {
       ok: false,
       error: "Nombre comercial y direccion son obligatorios",
     };
   }
-  if (!form.referencia().trim()) {
+  if (!form.addressReference().trim()) {
     return { ok: false, error: "Referencia es obligatoria" };
   }
   if (
-    !form.distrito().trim() ||
-    !form.provincia().trim() ||
-    !form.departamento().trim()
+    !form.district().trim() ||
+    !form.province().trim() ||
+    !form.department().trim()
   ) {
     return {
       ok: false,
@@ -82,14 +82,14 @@ export function buildVenueSubmitInput(
   return {
     ok: true,
     value: {
-      nombreComercial: form.nombreComercial().trim(),
+      tradeName: form.tradeName().trim(),
       posQuantity: posQty,
       digitalConfig,
-      direccion: form.direccion().trim(),
-      referencia: form.referencia().trim(),
-      distrito: form.distrito().trim(),
-      provincia: form.provincia().trim(),
-      departamento: form.departamento().trim(),
+      address: form.address().trim(),
+      addressReference: form.addressReference().trim(),
+      district: form.district().trim(),
+      province: form.province().trim(),
+      department: form.department().trim(),
     },
   };
 }

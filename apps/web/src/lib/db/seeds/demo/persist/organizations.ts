@@ -18,7 +18,7 @@ export async function persistOrganizations(
   const organizationsToInsert: Array<{
     id: OrganizationId;
     ruc: string;
-    name: string;
+    legal_name: string;
     address: string;
     district: string;
     department: string;
@@ -26,10 +26,11 @@ export async function persistOrganizations(
   }> = [];
 
   for (const key of organizationKeys) {
-    const organization = ORGANIZATIONS[key];
+    const { name, ...organization } = ORGANIZATIONS[key];
     organizationsToInsert.push({
       id: randomUUIDv7(),
       ...organization,
+      legal_name: name,
       created_at: now,
     });
   }

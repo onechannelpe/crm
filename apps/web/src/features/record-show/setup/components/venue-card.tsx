@@ -41,28 +41,28 @@ export function VenueCard(props: {
   const venue = () => props.venue;
   return (
     <Card fullWidth>
-      <CardHeader>{venue().nombreComercial}</CardHeader>
+      <CardHeader>{venue().tradeName}</CardHeader>
       <CardContent>
         <FieldTable>
           <VenueDetailRow label="Cantidad POS" icon={Package}>
             {venue().posQuantity}
           </VenueDetailRow>
           <VenueDetailRow label="Direccion" icon={MapIcon}>
-            {venue().direccion}
+            {venue().address}
           </VenueDetailRow>
-          <Show when={venue().referencia}>
+          <Show when={venue().addressReference}>
             <VenueDetailRow label="Referencia" icon={MapIcon}>
-              {venue().referencia}
+              {venue().addressReference}
             </VenueDetailRow>
           </Show>
           <VenueDetailRow label="Distrito" icon={MapIcon}>
-            {venue().distrito}
+            {venue().district}
           </VenueDetailRow>
           <VenueDetailRow label="Provincia" icon={MapIcon}>
-            {venue().provincia}
+            {venue().province}
           </VenueDetailRow>
           <VenueDetailRow label="Departamento" icon={MapIcon}>
-            {venue().departamento}
+            {venue().department}
           </VenueDetailRow>
           <Show when={venue().linkUrl}>
             <VenueDetailRow label="URL Culqi Link" icon={LinkIcon}>

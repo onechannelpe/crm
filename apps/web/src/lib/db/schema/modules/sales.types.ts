@@ -9,16 +9,16 @@ import type {
 export interface WorkflowLeadVenuesTable {
   id: Generated<string>;
   lead_id: string;
-  nombre_comercial: string;
+  trade_name: string;
   pos_quantity: number;
   link_url: string | null;
   online_url: string | null;
   online_collection_mode: CollectionMode | null;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  address: string;
+  address_reference: string;
+  district: string;
+  province: string;
+  department: string;
   created_at: number;
   created_by: number;
 }
@@ -42,6 +42,6 @@ export interface WorkflowAccountTypeKindsTable {
   value: AccountTypeKind;
 }
 
-export interface WorkflowAbonoBanksTable {
+export interface WorkflowSettlementBanksTable {
   value: SettlementBank;
 }

@@ -4,7 +4,7 @@ import {
   type LeadStage,
 } from "~/contracts/workflow/vocabulary";
 
-export type SetupProfileFields = {
+export type DigitalPolicySnapshot = {
   linkScope?: "none" | "shared" | "per_venue";
   linkUrl?: string | null;
   onlineScope?: "none" | "shared" | "per_venue";
@@ -37,7 +37,7 @@ export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
 
 export function resolveLeadBlockingFields(input: {
   stage: LeadStage;
-  profile?: SetupProfileFields | null;
+  digitalPolicy?: DigitalPolicySnapshot | null;
   venuesWithAccountsCount?: number;
 }): LeadBlockingField[] {
   switch (input.stage) {
@@ -48,7 +48,7 @@ export function resolveLeadBlockingFields(input: {
     case "EXPIRED":
       return [];
     case "SETUP": {
-      const p = input.profile;
+      const p = input.digitalPolicy;
       if (!p) return ["digitalPolicy"];
       if (p.linkScope === "shared" && !p.linkUrl) return ["digitalPolicy"];
       if (
