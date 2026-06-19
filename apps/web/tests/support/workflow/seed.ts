@@ -1,19 +1,35 @@
 import { randomUUIDv7 } from "bun";
 
+import {
+  SETTLEMENT_BANKS,
+  type SettlementBank,
+} from "~/contracts/workflow/vocabulary";
+
 import type { TestRuntime } from "../runtime/app";
 
 type OrganizationSeed = {
   key: string;
   id?: string;
   ruc?: string;
-  name?: string;
+  legalName?: string | null;
+  giroNegocio?: string | null;
   createdAt?: number;
 };
 
 export type SeededOrganizationRef = {
   id: string;
   ruc: string;
-  name: string;
+  legalName: string | null;
+};
+
+export type LeadCommercialSeed = {
+  currentProvider?: string;
+  currentDebitRate?: number;
+  currentCreditRate?: number;
+  gpv?: number;
+  ticket?: number;
+  settlementBank?: SettlementBank;
+  posCount?: number;
 };
 
 type LeadSeed = {
@@ -28,6 +44,7 @@ type LeadSeed = {
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
+  commercial?: LeadCommercialSeed;
 };
 
 type LeadScenarioSeed = {
@@ -58,24 +75,27 @@ export async function seedOrganization(
     throw new Error("missing_seed_organization_key");
   }
   const ruc = input.ruc ?? buildDefaultRuc(key);
-  const name = input.name ?? `Org ${key}`;
+  const legalName =
+    input.legalName === undefined ? `Org ${key}` : input.legalName;
   await runtime.ctx.db
     .insertInto("organizations")
     .values({
       id,
       ruc,
-      name,
+      legal_name: legalName,
+      giro_negocio: input.giroNegocio ?? null,
       created_at: createdAt,
     })
     .execute();
 
-  return { id, ruc, name };
+  return { id, ruc, legalName };
 }
 
 export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
   const createdAt = input.createdAt ?? runtime.now.get();
   const updatedAt = input.updatedAt ?? createdAt;
   const organizationId = resolveLeadOrganizationId(input);
+  const commercial = resolveLeadCommercialSeed(input.commercial);
   await runtime.ctx.db
     .insertInto("workflow_leads")
     .values({
@@ -89,6 +109,13 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       updated_by: input.updatedBy ?? null,
       created_at: createdAt,
       updated_at: updatedAt,
+      current_provider: commercial.currentProvider,
+      current_debit_rate: commercial.currentDebitRate,
+      current_credit_rate: commercial.currentCreditRate,
+      gpv: commercial.gpv,
+      ticket: commercial.ticket,
+      settlement_bank: commercial.settlementBank,
+      pos_count: commercial.posCount,
     })
     .execute();
 }
@@ -122,6 +149,18 @@ function buildDefaultRuc(key: string): string {
   }
   const digits = String(hash).padStart(9, "0");
   return `20${digits}`;
+}
+
+function resolveLeadCommercialSeed(input: LeadCommercialSeed | undefined) {
+  return {
+    currentProvider: input?.currentProvider ?? "Niubiz",
+    currentDebitRate: input?.currentDebitRate ?? 3.5,
+    currentCreditRate: input?.currentCreditRate ?? 4,
+    gpv: input?.gpv ?? 50_000,
+    ticket: input?.ticket ?? 120,
+    settlementBank: input?.settlementBank ?? SETTLEMENT_BANKS[0],
+    posCount: input?.posCount ?? 2,
+  };
 }
 
 export async function seedUser(runtime: TestRuntime, input: UserSeed) {

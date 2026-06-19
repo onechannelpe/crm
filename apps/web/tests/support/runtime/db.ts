@@ -130,20 +130,28 @@ async function seedTemplate(db: Kysely<Database>) {
       {
         id: TEST_ORG_ID_LIMA,
         ruc: "20100000001",
-        name: "Org Lima",
+        legal_name: "Org Lima",
+        giro_negocio: null,
+        address: null,
+        district: null,
+        province: null,
+        department: null,
+        phone: null,
+        email: null,
         created_at: now,
-        locked_branch_id: null,
-        locked_at: null,
-        locked_by_user_id: null,
       },
       {
         id: TEST_ORG_ID_NORTE,
         ruc: "20100000002",
-        name: "Org Norte",
+        legal_name: "Org Norte",
+        giro_negocio: null,
+        address: null,
+        district: null,
+        province: null,
+        department: null,
+        phone: null,
+        email: null,
         created_at: now,
-        locked_branch_id: null,
-        locked_at: null,
-        locked_by_user_id: null,
       },
     ])
     .execute();
@@ -209,7 +217,7 @@ async function seedTemplate(db: Kysely<Database>) {
     .execute();
 
   await db
-    .insertInto("workflow_modalidad_cobro_kinds")
+    .insertInto("workflow_collection_mode_kinds")
     .values(COLLECTION_MODES.map((value) => ({ value })))
     .execute();
 
@@ -224,7 +232,7 @@ async function seedTemplate(db: Kysely<Database>) {
     .execute();
 
   await db
-    .insertInto("workflow_abono_banks")
+    .insertInto("workflow_settlement_banks")
     .values(SETTLEMENT_BANKS.map((value) => ({ value })))
     .execute();
 }

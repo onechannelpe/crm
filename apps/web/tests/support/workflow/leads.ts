@@ -3,7 +3,12 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { createDeterministicIdFactory } from "../_core/ids";
 import { ISOLATED_DB_IDENTITIES } from "../identities/catalog";
 import type { TestRuntime } from "../runtime/app";
-import { seedLeadScenario, seedUser, type SeededOrganizationRef } from "./seed";
+import {
+  seedLeadScenario,
+  seedUser,
+  type LeadCommercialSeed,
+  type SeededOrganizationRef,
+} from "./seed";
 
 export type ScenarioActorKey = keyof typeof ISOLATED_DB_IDENTITIES;
 
@@ -18,7 +23,8 @@ export type ScenarioLeadSeed = {
   organization: {
     key?: string;
     ruc?: string;
-    name?: string;
+    legalName?: string | null;
+    giroNegocio?: string | null;
   };
   executive: ScenarioActorKey | number;
   stage: "QUALIFYING" | "DISQUALIFIED" | "PRICING" | "SETUP" | "LIVE";
@@ -28,6 +34,7 @@ export type ScenarioLeadSeed = {
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
+  commercial?: LeadCommercialSeed;
 };
 
 export type ScenarioLeadRef = {
@@ -88,7 +95,8 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
         organization: {
           key: organizationKey,
           ruc: input.organization.ruc,
-          name: input.organization.name,
+          legalName: input.organization.legalName,
+          giroNegocio: input.organization.giroNegocio,
         },
         lead: {
           id: `lead-${key}`,
@@ -100,6 +108,7 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
           updatedBy: input.updatedBy,
           createdAt: input.createdAt,
           updatedAt: input.updatedAt,
+          commercial: input.commercial,
         },
       });
       return {

@@ -16,7 +16,10 @@ import { requestSunatRefresh } from "~/server/workflow/application/commands/requ
 import { saveDigitalPolicyCommand } from "~/server/workflow/application/commands/save-digital-policy";
 import { updateSourcingPolicy } from "~/server/workflow/application/commands/update-sourcing-policy";
 import { updateVenueCommand } from "~/server/workflow/application/commands/update-venue";
-import type { LeadEnrichmentQueue } from "~/server/workflow/application/ports/gateways";
+import type {
+  LeadEnrichmentQueue,
+  WorkflowEngineGateway,
+} from "~/server/workflow/application/ports/gateways";
 import { createLeadStateRepo } from "~/server/workflow/infrastructure/lead-state-repo";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {
@@ -43,7 +46,12 @@ const NO_OP_ENRICHMENT_QUEUE: LeadEnrichmentQueue = {
   enqueueRucVerification: async () => {},
 };
 
+const NO_OP_ENGINE_GATEWAY: WorkflowEngineGateway = {
+  enrichByRuc: async () => null,
+};
+
 export type TestCommandOverrides = {
+  engineGateway?: WorkflowEngineGateway;
   leadEnrichmentQueue?: LeadEnrichmentQueue;
 };
 
@@ -54,6 +62,7 @@ function buildCommandApi(
 ) {
   const repos = createWorkflowRepos(executor);
   const leadStates = createLeadStateRepo(executor);
+  const engineGateway = overrides?.engineGateway ?? NO_OP_ENGINE_GATEWAY;
   const enrichmentQueue =
     overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE;
 
@@ -77,6 +86,7 @@ function buildCommandApi(
           leads: repos.leads,
           leadStates,
           users: repos.users,
+          engineGateway,
           enrichmentQueue,
           executor,
           now: now(),

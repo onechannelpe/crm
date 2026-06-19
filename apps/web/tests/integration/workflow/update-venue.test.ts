@@ -30,7 +30,7 @@ describe("update venue", () => {
     await seedVenue({
       leadId: lead.id,
       venueId: "venue-update-1",
-      nombreComercial: "Local antiguo",
+      tradeName: "Local antiguo",
     });
 
     const result = await runTestWorkflowCommand(runtime, (commandApi) =>
@@ -38,13 +38,13 @@ describe("update venue", () => {
         actor: scenario.actor.by("execOne"),
         leadId: lead.id,
         venueId: "venue-update-1",
-        nombreComercial: "Local corregido",
+        tradeName: "Local corregido",
         posQuantity: 3,
-        direccion: "Av. Nueva 123",
-        referencia: "Frente al parque",
-        distrito: "Miraflores",
-        provincia: "Lima",
-        departamento: "Lima",
+        address: "Av. Nueva 123",
+        addressReference: "Frente al parque",
+        district: "Miraflores",
+        province: "Lima",
+        department: "Lima",
       }),
     );
 
@@ -54,9 +54,9 @@ describe("update venue", () => {
       .selectAll()
       .where("id", "=", "venue-update-1")
       .executeTakeFirstOrThrow();
-    expect(venue.nombre_comercial).toBe("Local corregido");
+    expect(venue.trade_name).toBe("Local corregido");
     expect(venue.pos_quantity).toBe(3);
-    expect(venue.direccion).toBe("Av. Nueva 123");
+    expect(venue.address).toBe("Av. Nueva 123");
 
     const event = await runtime.ctx.db
       .selectFrom("events")
@@ -80,7 +80,7 @@ describe("update venue", () => {
     await seedVenue({
       leadId: lead.id,
       venueId: "venue-update-live-1",
-      nombreComercial: "Local final",
+      tradeName: "Local final",
     });
 
     const detail = await runtime.workflow.queries.getLeadDetail({
@@ -95,46 +95,46 @@ describe("update venue", () => {
         actor: scenario.actor.by("execOne"),
         leadId: lead.id,
         venueId: "venue-update-live-1",
-        nombreComercial: "Local cambiado",
+        tradeName: "Local cambiado",
         posQuantity: 4,
-        direccion: "Av. Cambio 456",
-        referencia: "Esquina",
-        distrito: "San Isidro",
-        provincia: "Lima",
-        departamento: "Lima",
+        address: "Av. Cambio 456",
+        addressReference: "Esquina",
+        district: "San Isidro",
+        province: "Lima",
+        department: "Lima",
       }),
     );
 
     expectErr(result);
     const venue = await runtime.ctx.db
       .selectFrom("workflow_lead_venues")
-      .select(["nombre_comercial", "pos_quantity"])
+      .select(["trade_name", "pos_quantity"])
       .where("id", "=", "venue-update-live-1")
       .executeTakeFirstOrThrow();
-    expect(venue.nombre_comercial).toBe("Local final");
+    expect(venue.trade_name).toBe("Local final");
     expect(venue.pos_quantity).toBe(1);
   });
 
   async function seedVenue(input: {
     leadId: string;
     venueId: string;
-    nombreComercial: string;
+    tradeName: string;
   }) {
     await runtime.ctx.db
       .insertInto("workflow_lead_venues")
       .values({
         id: input.venueId,
         lead_id: input.leadId,
-        nombre_comercial: input.nombreComercial,
+        trade_name: input.tradeName,
         pos_quantity: 1,
         link_url: null,
         online_url: null,
         online_collection_mode: null,
-        direccion: "Av. Principal 100",
-        referencia: "Primer piso",
-        distrito: "Lima",
-        provincia: "Lima",
-        departamento: "Lima",
+        address: "Av. Principal 100",
+        address_reference: "Primer piso",
+        district: "Lima",
+        province: "Lima",
+        department: "Lima",
         created_at: 10,
         created_by: 1,
       })

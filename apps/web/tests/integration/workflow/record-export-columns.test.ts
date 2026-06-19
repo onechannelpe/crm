@@ -17,7 +17,7 @@ describe("integration record export columns", () => {
     await runtime.dispose();
   });
 
-  it("exports commercial profile and the latest quotation rates", async () => {
+  it("exports lead commercial snapshot and the latest quotation rates", async () => {
     const scenario = createWorkflowScenario(runtime);
     const executiveId = scenario.actor.by("execOne").userId;
 
@@ -25,30 +25,20 @@ describe("integration record export columns", () => {
       key: "export-with-data",
       organization: { key: "export-with-data" },
       stage: "PRICING",
+      commercial: {
+        currentProvider: "Niubiz",
+        currentDebitRate: 3.5,
+        currentCreditRate: 4.2,
+        gpv: 120_000,
+        ticket: 80,
+        posCount: 3,
+      },
     });
     const withoutData = await scenario.lead.assignedTo("execOne", {
       key: "export-without-data",
       organization: { key: "export-without-data" },
       stage: "QUALIFYING",
     });
-
-    await runtime.ctx.db
-      .insertInto("workflow_lead_profiles")
-      .values({
-        lead_id: withData.id,
-        current_provider: "Niubiz",
-        current_debit_rate: 3.5,
-        current_credit_rate: 4.2,
-        gpv: 120_000,
-        ticket: 80,
-        settlement_bank: "BCP",
-        pos_count: 3,
-        link_scope: "none",
-        online_scope: "none",
-        updated_at: 1_000,
-        updated_by: executiveId,
-      })
-      .execute();
 
     // Two versions: the export must surface the highest-version (latest) rates.
     await runtime.ctx.db
@@ -105,10 +95,10 @@ describe("integration record export columns", () => {
 
     const bare = rows.find((row) => row.id === withoutData.id);
     expect(bare).toMatchObject({
-      currentProvider: null,
-      currentDebitRate: null,
-      currentCreditRate: null,
-      gpv: null,
+      currentProvider: "Niubiz",
+      currentDebitRate: 3.5,
+      currentCreditRate: 4,
+      gpv: 50_000,
       proposedDebitRate: null,
       proposedCreditRate: null,
     });

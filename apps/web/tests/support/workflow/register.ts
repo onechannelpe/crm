@@ -10,25 +10,25 @@ export type RegisteredLeadSnapshot = {
   id: string;
   organizationId: string;
   organizationRuc: string;
-  organizationName: string;
+  organizationLegalName: string | null;
   organizationAddress: string | null;
   organizationGiroNegocio: string | null;
 };
 
-export type RegisteredLeadProfile = {
-  currentProvider: string | null;
-  currentDebitRate: number | null;
-  currentCreditRate: number | null;
-  gpv: number | null;
-  ticket: number | null;
-  settlementBank: string | null;
-  posCount: number | null;
+export type RegisteredLeadCommercialSnapshot = {
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  ticket: number;
+  settlementBank: string;
+  posCount: number;
 };
 
 export type RegisterLeadResult = {
   leadId: string;
   snapshot: RegisteredLeadSnapshot;
-  profile: RegisteredLeadProfile | null;
+  commercial: RegisteredLeadCommercialSnapshot;
   historyEventTypes: string[];
 };
 
@@ -75,27 +75,20 @@ export async function registerLead(input: {
     .select([
       "lead.id",
       "lead.organization_id",
+      "lead.current_provider",
+      "lead.current_debit_rate",
+      "lead.current_credit_rate",
+      "lead.gpv",
+      "lead.ticket",
+      "lead.settlement_bank",
+      "lead.pos_count",
       "org.ruc",
-      "org.name",
+      "org.legal_name",
       "org.address",
       "org.giro_negocio",
     ])
     .where("lead.id", "=", result.value.leadId)
     .executeTakeFirstOrThrow();
-
-  const profileRow = await input.runtime.ctx.db
-    .selectFrom("workflow_lead_profiles")
-    .select([
-      "current_provider",
-      "current_debit_rate",
-      "current_credit_rate",
-      "gpv",
-      "ticket",
-      "settlement_bank",
-      "pos_count",
-    ])
-    .where("lead_id", "=", result.value.leadId)
-    .executeTakeFirst();
 
   const history = await input.runtime.ctx.db
     .selectFrom("events")
@@ -111,21 +104,19 @@ export async function registerLead(input: {
       id: row.id,
       organizationId: row.organization_id,
       organizationRuc: row.ruc,
-      organizationName: row.name,
+      organizationLegalName: row.legal_name,
       organizationAddress: row.address,
       organizationGiroNegocio: row.giro_negocio,
     },
-    profile: profileRow
-      ? {
-          currentProvider: profileRow.current_provider,
-          currentDebitRate: profileRow.current_debit_rate,
-          currentCreditRate: profileRow.current_credit_rate,
-          gpv: profileRow.gpv,
-          ticket: profileRow.ticket,
-          settlementBank: profileRow.settlement_bank,
-          posCount: profileRow.pos_count,
-        }
-      : null,
+    commercial: {
+      currentProvider: row.current_provider,
+      currentDebitRate: row.current_debit_rate,
+      currentCreditRate: row.current_credit_rate,
+      gpv: row.gpv,
+      ticket: row.ticket,
+      settlementBank: row.settlement_bank,
+      posCount: row.pos_count,
+    },
     historyEventTypes: history.map((event) => event.type),
   };
 }
@@ -133,6 +124,7 @@ export async function registerLead(input: {
 export async function registerLeadAndLoadSnapshot(input: {
   runtime: TestRuntime;
   ruc: string;
+  commandOverrides?: TestCommandOverrides;
 }): Promise<RegisteredLeadSnapshot> {
   const registered = await registerLead(input);
   return registered.snapshot;
