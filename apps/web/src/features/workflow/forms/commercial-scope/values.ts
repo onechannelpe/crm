@@ -39,7 +39,7 @@ function isNonNegativeNumber(value: string): boolean {
   return value.trim() !== "" && Number.isFinite(parsed) && parsed >= 0;
 }
 
-export function validateCommercialScope(
+function validateCommercialScope(
   values: CommercialScopeFormValues,
 ): string | null {
   if (!values.currentProvider.trim()) return "Proveedor actual es requerido";

@@ -3,10 +3,7 @@ import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
-import type {
-  LeadCallOutcome,
-  Currency,
-} from "~/contracts/workflow/vocabulary";
+import type { Currency } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -65,51 +62,6 @@ export function reassignLead(
         fromExecutiveId: state.executiveId,
         toExecutiveId: input.toExecutiveId,
       },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
-}
-
-export function addNote(
-  state: LeadState,
-  input: { actor: Actor; body: string; now: number },
-): TransitionResult {
-  const authz = authorizeLeadAction("interact", input.actor, state);
-  if (!authz.ok) return authz;
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "note_added",
-      actorUserId: input.actor.userId,
-      payload: { body: input.body },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
-}
-
-export function logCall(
-  state: LeadState,
-  input: {
-    actor: Actor;
-    outcome: LeadCallOutcome;
-    notes: string | null;
-    now: number;
-  },
-): TransitionResult {
-  const authz = authorizeLeadAction("interact", input.actor, state);
-  if (!authz.ok) return authz;
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "call_logged",
-      actorUserId: input.actor.userId,
-      payload: { outcome: input.outcome, notes: input.notes },
       occurredAt: input.now,
     }),
   ];

@@ -9,7 +9,7 @@ function readNumberEnv(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-export function getMaxActiveWebGlContexts(): number {
+function getMaxActiveWebGlContexts(): number {
   return readNumberEnv(
     import.meta.env.VITE_MAX_WEBGL_CONTEXTS,
     DEFAULT_MAX_ACTIVE_WEBGL_CONTEXTS,
@@ -25,10 +25,6 @@ function notify() {
   for (const listener of listeners) {
     listener();
   }
-}
-
-export function getActiveWebGlContextCount(): number {
-  return activeCount;
 }
 
 export function tryReserveWebGlContextSlot(): (() => void) | null {

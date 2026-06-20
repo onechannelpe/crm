@@ -111,34 +111,3 @@ export function traceDiagnostic(
     }),
   );
 }
-
-export async function traceDiagnosticAsync<T>(
-  scope: string,
-  channel: DiagnosticChannel,
-  event: string,
-  run: () => Promise<T>,
-  meta: DiagnosticMeta = {},
-): Promise<T> {
-  if (!isDiagnosticEnabled(channel, scope)) {
-    return run();
-  }
-
-  const startedAt = Date.now();
-  traceDiagnostic(scope, channel, `${event}_start`, meta);
-
-  try {
-    const result = await run();
-    traceDiagnostic(scope, channel, `${event}_complete`, {
-      ...meta,
-      durationMs: Date.now() - startedAt,
-    });
-    return result;
-  } catch (error) {
-    traceDiagnostic(scope, channel, `${event}_error`, {
-      ...meta,
-      durationMs: Date.now() - startedAt,
-      error,
-    });
-    throw error;
-  }
-}

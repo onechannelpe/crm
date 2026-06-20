@@ -189,7 +189,7 @@ function section<T>(parse: (source: EnvSource) => T): () => T {
   };
 }
 
-export const sessionConfig = section(parseSessionEnv);
+// const sessionConfig = section(parseSessionEnv);
 export const totpConfig = section(parseTotpEnv);
 export const extensionConfig = section(parseExtensionEnv);
 export const securityConfig = section(parseSecurityEnv);

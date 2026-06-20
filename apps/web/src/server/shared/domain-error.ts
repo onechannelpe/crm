@@ -156,10 +156,6 @@ export function toWire(error: DomainError): WireError {
   return wire;
 }
 
-export function actionErrorFrom(error: DomainError): ActionError {
-  return new ActionError(toWire(error));
-}
-
 export function throwDomain(error: DomainError): never {
-  throw actionErrorFrom(error);
+  throw new ActionError(toWire(error));
 }
