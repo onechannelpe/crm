@@ -3,7 +3,6 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -67,17 +66,15 @@ describe("lead detail setup pipeline", () => {
     });
     expect(initialDetail.blockingFields).toEqual(["digitalPolicy"]);
 
-    const policyResult = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.saveDigitalPolicy({
-        actor,
-        leadId: lead.id,
-        linkScope: "per_venue",
-        linkUrl: null,
-        onlineScope: "per_venue",
-        onlineUrl: null,
-        onlineCollectionMode: null,
-      }),
-    );
+    const policyResult = await runtime.workflow.commands.saveDigitalPolicy({
+      actor,
+      leadId: lead.id,
+      linkScope: "per_venue",
+      linkUrl: null,
+      onlineScope: "per_venue",
+      onlineUrl: null,
+      onlineCollectionMode: null,
+    });
     expectOk(policyResult);
 
     const afterPolicy = expectOk(
@@ -105,38 +102,34 @@ describe("lead detail setup pipeline", () => {
     });
 
     expectOk(
-      await runTestWorkflowCommand(runtime, (commandApi) =>
-        commandApi.saveDigitalPolicy({
-          actor,
-          leadId: lead.id,
-          linkScope: "per_venue",
-          linkUrl: null,
-          onlineScope: "per_venue",
-          onlineUrl: null,
-          onlineCollectionMode: null,
-        }),
-      ),
+      await runtime.workflow.commands.saveDigitalPolicy({
+        actor,
+        leadId: lead.id,
+        linkScope: "per_venue",
+        linkUrl: null,
+        onlineScope: "per_venue",
+        onlineUrl: null,
+        onlineCollectionMode: null,
+      }),
     );
 
     expectOk(
-      await runTestWorkflowCommand(runtime, (commandApi) =>
-        commandApi.createVenue({
-          actor,
-          leadId: lead.id,
-          tradeName: "Local Miraflores",
-          posQuantity: 2,
-          digitalConfig: {
-            linkUrl: "https://pay.example/local-miraflores",
-            onlineUrl: "https://shop.example/local-miraflores",
-            onlineCollectionMode: "ONE_CLIC",
-          },
-          address: "Av. Nueva 123",
-          addressReference: "Frente al parque",
-          district: "Miraflores",
-          province: "Lima",
-          department: "Lima",
-        }),
-      ),
+      await runtime.workflow.commands.createVenue({
+        actor,
+        leadId: lead.id,
+        tradeName: "Local Miraflores",
+        posQuantity: 2,
+        digitalConfig: {
+          linkUrl: "https://pay.example/local-miraflores",
+          onlineUrl: "https://shop.example/local-miraflores",
+          onlineCollectionMode: "ONE_CLIC",
+        },
+        address: "Av. Nueva 123",
+        addressReference: "Frente al parque",
+        district: "Miraflores",
+        province: "Lima",
+        department: "Lima",
+      }),
     );
 
     const withVenue = expectOk(
@@ -155,21 +148,19 @@ describe("lead detail setup pipeline", () => {
     expect(withVenue.blockingFields).toEqual(["venueAccounts"]);
 
     expectOk(
-      await runTestWorkflowCommand(runtime, (commandApi) =>
-        commandApi.addVenueAccounts({
-          actor,
-          leadId: lead.id,
-          venueId: withVenue.venues[0].id,
-          solesAccount: {
-            currency: "PEN",
-            banco: "BCP",
-            tipoCuenta: "AHORROS",
-            nroCuenta: "19100000000001",
-            cci: "00219100000000000001",
-            isSettlement: true,
-          },
-        }),
-      ),
+      await runtime.workflow.commands.addVenueAccounts({
+        actor,
+        leadId: lead.id,
+        venueId: withVenue.venues[0].id,
+        solesAccount: {
+          currency: "PEN",
+          banco: "BCP",
+          tipoCuenta: "AHORROS",
+          nroCuenta: "19100000000001",
+          cci: "00219100000000000001",
+          isSettlement: true,
+        },
+      }),
     );
 
     const completed = expectOk(

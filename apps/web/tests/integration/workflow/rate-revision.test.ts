@@ -3,7 +3,6 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 import { proposePendingRate } from "@tests/support/workflow/pricing";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -129,14 +128,12 @@ describe("request rate revision command", () => {
       requestedByUserId: actor.userId,
     });
 
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.requestRateRevision({
-        actor,
-        leadId: lead.id,
-        justification: "Need better rate",
-        artifactIds: ["artifact-no-proposal"],
-      }),
-    );
+    const result = await runtime.workflow.commands.requestRateRevision({
+      actor,
+      leadId: lead.id,
+      justification: "Need better rate",
+      artifactIds: ["artifact-no-proposal"],
+    });
 
     expect(expectErr(result).code).toBe("rate_proposal_not_found");
     expect((await loadDetail(scenario, lead.id)).rateRevisions).toHaveLength(0);
@@ -159,14 +156,12 @@ describe("request rate revision command", () => {
       requestedByUserId: actor.userId,
     });
 
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.requestRateRevision({
-        actor,
-        leadId: lead.id,
-        justification: "Need better rate",
-        artifactIds: ["artifact-ready-1"],
-      }),
-    );
+    const result = await runtime.workflow.commands.requestRateRevision({
+      actor,
+      leadId: lead.id,
+      justification: "Need better rate",
+      artifactIds: ["artifact-ready-1"],
+    });
 
     expectOk(result);
 
@@ -201,14 +196,12 @@ describe("request rate revision command", () => {
       requestedByUserId: actor.userId,
     });
 
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.requestRateRevision({
-        actor,
-        leadId: lead.id,
-        justification: "Need better rate",
-        artifactIds: ["artifact-dup", "artifact-dup"],
-      }),
-    );
+    const result = await runtime.workflow.commands.requestRateRevision({
+      actor,
+      leadId: lead.id,
+      justification: "Need better rate",
+      artifactIds: ["artifact-dup", "artifact-dup"],
+    });
 
     expect(expectErr(result).code).toBe("duplicate_rate_revision_file");
 
@@ -258,14 +251,12 @@ describe("request rate revision command", () => {
         ...artifactOverride,
       });
 
-      const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-        commandApi.requestRateRevision({
-          actor,
-          leadId: lead.id,
-          justification: "Need better rate",
-          artifactIds: [artifactId],
-        }),
-      );
+      const result = await runtime.workflow.commands.requestRateRevision({
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: [artifactId],
+      });
 
       expect(expectErr(result).code).toBe(
         "rate_revision_file_not_submit_ready",
@@ -309,14 +300,12 @@ describe("request rate revision command", () => {
       linkedRevisionId: "revision-existing",
     });
 
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.requestRateRevision({
-        actor,
-        leadId: lead.id,
-        justification: "Need better rate",
-        artifactIds: ["artifact-linked"],
-      }),
-    );
+    const result = await runtime.workflow.commands.requestRateRevision({
+      actor,
+      leadId: lead.id,
+      justification: "Need better rate",
+      artifactIds: ["artifact-linked"],
+    });
 
     expect(expectErr(result).code).toBe("rate_revision_file_not_submit_ready");
     expect((await loadDetail(scenario, lead.id)).rateRevisions).toHaveLength(1);

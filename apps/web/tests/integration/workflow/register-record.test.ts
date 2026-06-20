@@ -45,17 +45,13 @@ describe("register lead", () => {
   });
 
   it("seeds organization identity from enrichment when available", async () => {
+    runtime.engine.company("20912345672", {
+      legalName: "Acme SAC",
+      address: "Av. Lima 123",
+    });
     const snapshot = await registerLeadAndLoadSnapshot({
       runtime,
       ruc: "20912345672",
-      commandOverrides: {
-        engineGateway: {
-          enrichByRuc: async () => ({
-            legalName: "Acme SAC",
-            address: "Av. Lima 123",
-          }),
-        },
-      },
     });
 
     expect(snapshot.organizationRuc).toBe("20912345672");

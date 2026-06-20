@@ -1,7 +1,6 @@
 import type { SettlementBank } from "~/contracts/workflow/vocabulary";
 
 import type { TestRuntime } from "../runtime/app";
-import { runTestWorkflowCommand, type TestCommandOverrides } from "./command";
 import { MERCHANT } from "./fixtures";
 
 export type RegisteredLeadSnapshot = {
@@ -42,30 +41,22 @@ export async function registerLead(input: {
   giroNegocio?: string;
   settlementBank?: SettlementBank;
   posCount?: number;
-  commandOverrides?: TestCommandOverrides;
 }): Promise<RegisterLeadResult> {
   const actor = input.actor ?? { userId: 1, role: "executive", branchId: 1 };
-  const result = await runTestWorkflowCommand(
-    input.runtime,
-    (commandApi) =>
-      commandApi.registerLead({
-        actor,
-        ruc: input.ruc,
-        currentProvider:
-          input.currentProvider ?? MERCHANT.standard.currentProvider,
-        currentDebitRate:
-          input.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
-        currentCreditRate:
-          input.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
-        gpv: input.gpv ?? MERCHANT.standard.gpv,
-        ticket: input.ticket ?? MERCHANT.standard.ticket,
-        giroNegocio: input.giroNegocio ?? "Retail",
-        settlementBank:
-          input.settlementBank ?? MERCHANT.standard.settlementBank,
-        posCount: input.posCount ?? MERCHANT.standard.posCount,
-      }),
-    input.commandOverrides,
-  );
+  const result = await input.runtime.workflow.commands.registerLead({
+    actor,
+    ruc: input.ruc,
+    currentProvider: input.currentProvider ?? MERCHANT.standard.currentProvider,
+    currentDebitRate:
+      input.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
+    currentCreditRate:
+      input.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
+    gpv: input.gpv ?? MERCHANT.standard.gpv,
+    ticket: input.ticket ?? MERCHANT.standard.ticket,
+    giroNegocio: input.giroNegocio ?? "Retail",
+    settlementBank: input.settlementBank ?? MERCHANT.standard.settlementBank,
+    posCount: input.posCount ?? MERCHANT.standard.posCount,
+  });
 
   if (!result.ok) {
     throw new Error("register_lead_failed");
@@ -126,7 +117,6 @@ export async function registerLead(input: {
 export async function registerLeadAndLoadSnapshot(input: {
   runtime: TestRuntime;
   ruc: string;
-  commandOverrides?: TestCommandOverrides;
 }): Promise<RegisteredLeadSnapshot> {
   const registered = await registerLead(input);
   return registered.snapshot;

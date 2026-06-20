@@ -1,5 +1,4 @@
 import type { TestRuntime } from "../runtime/app";
-import { runTestWorkflowCommand } from "./command";
 import type { ScenarioActor } from "./leads";
 
 // Drives a back-office rate proposal through the real command, leaving the lead with a
@@ -10,18 +9,16 @@ export async function proposePendingRate(
   runtime: TestRuntime,
   input: { leadId: string; backOffice: ScenarioActor },
 ): Promise<{ proposalId: string }> {
-  const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-    commandApi.proposeRate({
-      actor: input.backOffice,
-      leadId: input.leadId,
-      proposedDebitRate: 1.5,
-      proposedCreditRate: 2.5,
-      proposedForeignRate: 3.5,
-      fee: 0.6,
-      paybackPricing: 11,
-      currency: "PEN",
-    }),
-  );
+  const result = await runtime.workflow.commands.proposeRate({
+    actor: input.backOffice,
+    leadId: input.leadId,
+    proposedDebitRate: 1.5,
+    proposedCreditRate: 2.5,
+    proposedForeignRate: 3.5,
+    fee: 0.6,
+    paybackPricing: 11,
+    currency: "PEN",
+  });
   if (!result.ok) {
     throw new Error(`proposePendingRate failed (${result.error.code})`);
   }

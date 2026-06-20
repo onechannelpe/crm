@@ -3,7 +3,6 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 import {
   expectLeadAssignment,
   expectLeadMetadata,
@@ -33,13 +32,11 @@ describe("workflow lead mutation metadata", () => {
     });
 
     runtime.now.set(1_000);
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.addLeadNote({
-        actor: scenario.actor.by("execOne"),
-        leadId: lead.id,
-        body: "Test note",
-      }),
-    );
+    const result = await runtime.workflow.commands.addLeadNote({
+      actor: scenario.actor.by("execOne"),
+      leadId: lead.id,
+      body: "Test note",
+    });
 
     expectOk(result);
     await expectLeadMetadata(runtime, {
@@ -59,17 +56,15 @@ describe("workflow lead mutation metadata", () => {
       organization: { key: "metadata-reassign" },
     });
 
-    const reassignResult = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.reassignLead({
-        actor: scenario.actor.fromUser({
-          id: admin.id,
-          role: "admin",
-          branchId: 1,
-        }),
-        leadId: lead.id,
-        toExecutiveId: executive.id,
+    const reassignResult = await runtime.workflow.commands.reassignLead({
+      actor: scenario.actor.fromUser({
+        id: admin.id,
+        role: "admin",
+        branchId: 1,
       }),
-    );
+      leadId: lead.id,
+      toExecutiveId: executive.id,
+    });
 
     expectOk(reassignResult);
     const newExecutive = scenario.actor.fromUser({

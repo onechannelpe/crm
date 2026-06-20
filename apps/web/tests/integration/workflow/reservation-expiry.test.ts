@@ -3,13 +3,12 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { runTestWorkflowCommand } from "@tests/support/workflow/command";
 import { proposePendingRate } from "@tests/support/workflow/pricing";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { expireLapsedReservations } from "~/server/workflow/application/commands/expire-reservation";
 import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/lead/domain/pricing";
+import { expireLapsedReservations } from "~/server/workflow/lead/write/expire-reservation";
 
 // The hold window is owned by the pricing policy, not hardcoded here, so these stay
 // correct if the default validity changes.
@@ -80,9 +79,11 @@ describe("lead reservation expiry", () => {
 
     runtime.now.set(runtime.now.get() + RESERVATION_WINDOW_MS + 1);
 
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.acceptRate({ actor, leadId: lead.id, proposalId }),
-    );
+    const result = await runtime.workflow.commands.acceptRate({
+      actor,
+      leadId: lead.id,
+      proposalId,
+    });
 
     expect(expectErr(result).code).toBe("rate_proposal_expired");
   });

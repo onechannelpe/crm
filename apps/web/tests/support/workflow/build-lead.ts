@@ -3,7 +3,6 @@ import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import { createDeterministicIdFactory } from "../_core/ids";
 import type { TestRuntime } from "../runtime/app";
-import { runTestWorkflowCommand } from "./command";
 import type { createWorkflowImporter } from "./importer";
 import type { ScenarioActor, ScenarioActorKey, ScenarioLeadRef } from "./leads";
 import { registerLead } from "./register";
@@ -124,6 +123,14 @@ export function createLeadBuilder(deps: {
     const ruc = options.organization?.ruc ?? buildDefaultRuc(orgKey);
     const legalName = options.organization?.legalName;
 
+    // Organization identity is SUNAT-owned, set only via enrichment. When a test
+    // needs a known legal name we prime the fake engine for this RUC so the
+    // command enriches through the real port instead of writing the column behind
+    // the command's back.
+    if (legalName !== undefined && legalName !== null) {
+      runtime.engine.company(ruc, { legalName, address: null });
+    }
+
     const registered = await registerLead({
       runtime,
       ruc,
@@ -140,17 +147,6 @@ export function createLeadBuilder(deps: {
       ticket: options.commercial?.ticket,
       settlementBank: options.commercial?.settlementBank,
       posCount: options.commercial?.posCount,
-      // Organization identity is SUNAT-owned, set only via enrichment. When a test
-      // needs a known legal name we feed it through the same enrichment port the
-      // command uses, instead of writing the column behind the command's back.
-      commandOverrides:
-        legalName === undefined || legalName === null
-          ? undefined
-          : {
-              engineGateway: {
-                enrichByRuc: async () => ({ legalName, address: null }),
-              },
-            },
     });
 
     const leadRef: ScenarioLeadRef = {
@@ -176,18 +172,16 @@ export function createLeadBuilder(deps: {
     await assertStage(built.id, executive, "PRICING", "import review");
     if (stage === "PRICING") return built;
 
-    const proposed = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.proposeRate({
-        actor: backOffice,
-        leadId: built.id,
-        proposedDebitRate: 2.5,
-        proposedCreditRate: 3,
-        proposedForeignRate: 3.5,
-        fee: 0.5,
-        paybackPricing: 12,
-        currency: "PEN",
-      }),
-    );
+    const proposed = await runtime.workflow.commands.proposeRate({
+      actor: backOffice,
+      leadId: built.id,
+      proposedDebitRate: 2.5,
+      proposedCreditRate: 3,
+      proposedForeignRate: 3.5,
+      fee: 0.5,
+      paybackPricing: 12,
+      currency: "PEN",
+    });
     if (!proposed.ok) {
       throw new Error(
         `atStage(SETUP): proposeRate failed (${proposed.error.code})`,
@@ -196,9 +190,11 @@ export function createLeadBuilder(deps: {
     const proposalId = proposed.value.proposalId;
     built.proposalId = proposalId;
 
-    const accepted = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.acceptRate({ actor: executive, leadId: built.id, proposalId }),
-    );
+    const accepted = await runtime.workflow.commands.acceptRate({
+      actor: executive,
+      leadId: built.id,
+      proposalId,
+    });
     if (!accepted.ok) {
       throw new Error(
         `atStage(SETUP): acceptRate failed (${accepted.error.code})`,
@@ -207,36 +203,32 @@ export function createLeadBuilder(deps: {
     await assertStage(built.id, executive, "SETUP", "acceptRate");
     if (stage === "SETUP") return built;
 
-    const policy = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.saveDigitalPolicy({
-        actor: executive,
-        leadId: built.id,
-        linkScope: "none",
-        linkUrl: null,
-        onlineScope: "none",
-        onlineUrl: null,
-        onlineCollectionMode: null,
-      }),
-    );
+    const policy = await runtime.workflow.commands.saveDigitalPolicy({
+      actor: executive,
+      leadId: built.id,
+      linkScope: "none",
+      linkUrl: null,
+      onlineScope: "none",
+      onlineUrl: null,
+      onlineCollectionMode: null,
+    });
     if (!policy.ok) {
       throw new Error(
         `atStage(LIVE): saveDigitalPolicy failed (${policy.error.code})`,
       );
     }
 
-    const venue = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.createVenue({
-        actor: executive,
-        leadId: built.id,
-        tradeName: `Local ${key}`,
-        posQuantity: 1,
-        address: "Av. Principal 100",
-        addressReference: "Primer piso",
-        district: "Lima",
-        province: "Lima",
-        department: "Lima",
-      }),
-    );
+    const venue = await runtime.workflow.commands.createVenue({
+      actor: executive,
+      leadId: built.id,
+      tradeName: `Local ${key}`,
+      posQuantity: 1,
+      address: "Av. Principal 100",
+      addressReference: "Primer piso",
+      district: "Lima",
+      province: "Lima",
+      department: "Lima",
+    });
     if (!venue.ok) {
       throw new Error(
         `atStage(LIVE): createVenue failed (${venue.error.code})`,
@@ -248,21 +240,19 @@ export function createLeadBuilder(deps: {
     const venueId = await readFirstVenueId(built.id, executive);
     built.venueIds.push(venueId);
 
-    const accounts = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.addVenueAccounts({
-        actor: executive,
-        leadId: built.id,
-        venueId,
-        solesAccount: {
-          currency: "PEN",
-          banco: "BCP",
-          tipoCuenta: "AHORROS",
-          nroCuenta: "19100000000001",
-          cci: "00219100000000000001",
-          isSettlement: true,
-        },
-      }),
-    );
+    const accounts = await runtime.workflow.commands.addVenueAccounts({
+      actor: executive,
+      leadId: built.id,
+      venueId,
+      solesAccount: {
+        currency: "PEN",
+        banco: "BCP",
+        tipoCuenta: "AHORROS",
+        nroCuenta: "19100000000001",
+        cci: "00219100000000000001",
+        isSettlement: true,
+      },
+    });
     if (!accounts.ok) {
       throw new Error(
         `atStage(LIVE): addVenueAccounts failed (${accounts.error.code})`,

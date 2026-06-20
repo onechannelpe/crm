@@ -6,6 +6,7 @@ import { createFilesRuntime } from "~/server/platform/container/files-runtime";
 import type { ServerInfra } from "~/server/platform/container/infra";
 import { createWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import type { EngineClient } from "~/server/shared/engine/client";
+import type { SearchResult } from "~/server/shared/engine/types";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
 import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
@@ -13,6 +14,57 @@ import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
 interface TestLogger {
   info(message: string, meta?: unknown): void;
   error(message: string, meta?: unknown): void;
+}
+
+type CompanyOverlay = { legalName: string | null; address?: string | null };
+
+function createFakeEngine() {
+  const companies = new Map<string, CompanyOverlay>();
+
+  const client: EngineClient = {
+    async search(intent, query) {
+      if (intent !== "companies") return { ok: true, value: [] };
+      const overlay = companies.get(query);
+      const value = overlay ? [companyResult(query, overlay)] : [];
+      return { ok: true, value };
+    },
+    async requestCandidates() {
+      return { ok: true, value: [] };
+    },
+  };
+
+  return {
+    client,
+    company(ruc: string, overlay: CompanyOverlay) {
+      companies.set(ruc, overlay);
+    },
+  };
+}
+
+function companyResult(ruc: string, overlay: CompanyOverlay): SearchResult {
+  return {
+    kind: "company",
+    company: {
+      id: 0,
+      ruc,
+      legal_name: overlay.legalName,
+      trade_name: null,
+      company_type: null,
+      status: null,
+      condition: null,
+      fiscal_address: overlay.address ?? null,
+      registration_date: null,
+      activity_start_date: null,
+      line_of_business: null,
+      economic_activity: null,
+      ubigeo_code: null,
+      department: null,
+      province: null,
+      district: null,
+    },
+    rep: null,
+    phones: { primary: null, secondary: null, siblings: null },
+  };
 }
 
 export interface TestRuntime {
@@ -26,6 +78,7 @@ export interface TestRuntime {
   };
   workflow: ReturnType<typeof createWorkflowRuntime>;
   integrations: ReturnType<typeof createIntegrationRuntime>;
+  engine: { company(ruc: string, overlay: CompanyOverlay): void };
   dispose(): Promise<void>;
 }
 
@@ -64,19 +117,9 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
 
   const files = createFilesRuntime(infra);
 
-  const emptyEngineResult = { ok: true as const, value: [] };
+  const engine = createFakeEngine();
 
-  const engineClient: EngineClient = {
-    async search() {
-      return emptyEngineResult;
-    },
-
-    async requestCandidates() {
-      return emptyEngineResult;
-    },
-  };
-
-  const workflow = createWorkflowRuntime(infra, engineClient, files);
+  const workflow = createWorkflowRuntime(infra, engine.client, files);
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
@@ -85,6 +128,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     auth,
     workflow,
     integrations,
+    engine: { company: engine.company },
 
     async dispose() {
       await cleanupTestDb(ctx);

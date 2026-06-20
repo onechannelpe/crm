@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { applySunatEnrichment } from "~/server/workflow/application/commands/apply-sunat-enrichment";
+import { applySunatEnrichment } from "~/server/workflow/effects/sunat-enrichment";
 import type { PartyRepository } from "~/server/workflow/infrastructure/ports/entities";
 
 function createPartyRepositoryDouble() {
