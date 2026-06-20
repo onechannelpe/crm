@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveReviewTransition } from "~/server/workflow/domain/workflow";
+import { resolveReviewTransition } from "~/server/workflow/lead/domain/review";
 
 describe("workflow domain", () => {
   it("disqualifies the record when a rejected status arrives during qualifying", () => {

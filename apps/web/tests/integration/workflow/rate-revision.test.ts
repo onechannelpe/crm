@@ -3,9 +3,16 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
+import {
+  workflowCommandPorts,
+  workflowRepos,
+} from "@tests/support/workflow/deps";
 import { proposePendingRate } from "@tests/support/workflow/pricing";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+import { requestRateRevisionCommand } from "~/server/workflow/lead/write/request-rate-revision";
 
 type Scenario = ReturnType<typeof createWorkflowScenario>;
 
@@ -107,9 +114,11 @@ describe("request rate revision command", () => {
   });
 
   async function loadDetail(scenario: Scenario, leadId: string) {
+    const actor = scenario.actor.by("execOne");
     return expectOk(
-      await runtime.workflow.queries.getLeadDetail({
-        actor: scenario.actor.by("execOne"),
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId,
       }),
     );
@@ -128,12 +137,15 @@ describe("request rate revision command", () => {
       requestedByUserId: actor.userId,
     });
 
-    const result = await runtime.workflow.commands.requestRateRevision({
-      actor,
-      leadId: lead.id,
-      justification: "Need better rate",
-      artifactIds: ["artifact-no-proposal"],
-    });
+    const result = await requestRateRevisionCommand(
+      {
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-no-proposal"],
+      },
+      workflowCommandPorts(runtime),
+    );
 
     expect(expectErr(result).code).toBe("rate_proposal_not_found");
     expect((await loadDetail(scenario, lead.id)).rateRevisions).toHaveLength(0);
@@ -156,12 +168,15 @@ describe("request rate revision command", () => {
       requestedByUserId: actor.userId,
     });
 
-    const result = await runtime.workflow.commands.requestRateRevision({
-      actor,
-      leadId: lead.id,
-      justification: "Need better rate",
-      artifactIds: ["artifact-ready-1"],
-    });
+    const result = await requestRateRevisionCommand(
+      {
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-ready-1"],
+      },
+      workflowCommandPorts(runtime),
+    );
 
     expectOk(result);
 
@@ -196,12 +211,15 @@ describe("request rate revision command", () => {
       requestedByUserId: actor.userId,
     });
 
-    const result = await runtime.workflow.commands.requestRateRevision({
-      actor,
-      leadId: lead.id,
-      justification: "Need better rate",
-      artifactIds: ["artifact-dup", "artifact-dup"],
-    });
+    const result = await requestRateRevisionCommand(
+      {
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-dup", "artifact-dup"],
+      },
+      workflowCommandPorts(runtime),
+    );
 
     expect(expectErr(result).code).toBe("duplicate_rate_revision_file");
 
@@ -251,12 +269,15 @@ describe("request rate revision command", () => {
         ...artifactOverride,
       });
 
-      const result = await runtime.workflow.commands.requestRateRevision({
-        actor,
-        leadId: lead.id,
-        justification: "Need better rate",
-        artifactIds: [artifactId],
-      });
+      const result = await requestRateRevisionCommand(
+        {
+          actor,
+          leadId: lead.id,
+          justification: "Need better rate",
+          artifactIds: [artifactId],
+        },
+        workflowCommandPorts(runtime),
+      );
 
       expect(expectErr(result).code).toBe(
         "rate_revision_file_not_submit_ready",
@@ -300,12 +321,15 @@ describe("request rate revision command", () => {
       linkedRevisionId: "revision-existing",
     });
 
-    const result = await runtime.workflow.commands.requestRateRevision({
-      actor,
-      leadId: lead.id,
-      justification: "Need better rate",
-      artifactIds: ["artifact-linked"],
-    });
+    const result = await requestRateRevisionCommand(
+      {
+        actor,
+        leadId: lead.id,
+        justification: "Need better rate",
+        artifactIds: ["artifact-linked"],
+      },
+      workflowCommandPorts(runtime),
+    );
 
     expect(expectErr(result).code).toBe("rate_revision_file_not_submit_ready");
     expect((await loadDetail(scenario, lead.id)).rateRevisions).toHaveLength(1);

@@ -2,7 +2,9 @@ import { expectOk } from "@tests/support/_core/assertions";
 import type { TestRuntime } from "@tests/support/runtime/app";
 
 import type { LeadStatus } from "~/contracts/workflow/vocabulary";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
+import { workflowRepos } from "./deps";
 import type { ScenarioActor } from "./leads";
 
 // Lead invariants are asserted through getLeadDetail, the same read model production
@@ -16,8 +18,9 @@ async function loadLead(
   actor: ScenarioActor,
   leadId: string,
 ) {
-  const detail = await runtime.workflow.queries.getLeadDetail({
-    actor,
+  const detail = await getLeadDetail(workflowRepos(runtime), {
+    actorUserId: actor.userId,
+    actorRole: actor.role,
     leadId,
   });
   return expectOk(detail).lead;

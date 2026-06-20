@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
-import { buildVenueAccounts } from "~/server/workflow/domain/venue/accounts";
+import { buildVenueAccounts } from "~/server/workflow/lead/venue/domain";
 
 function soles(overrides: Partial<Omit<SaleVenueAccount, "currency">> = {}) {
   return {

@@ -1,12 +1,7 @@
-import { uploadsConfig } from "~/lib/env";
-import { noopQueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
-import { createFilesRuntime } from "~/server/platform/container/files-runtime";
-import type { ServerInfra } from "~/server/platform/container/infra";
-import { createWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { SearchResult } from "~/server/shared/engine/types";
 import { createEventsRepo } from "~/server/shared/repos-events";
@@ -78,9 +73,11 @@ export interface TestRuntime {
   auth: {
     sessionService: ReturnType<typeof createSessionService>;
   };
-  workflow: ReturnType<typeof createWorkflowRuntime>;
   integrations: ReturnType<typeof createIntegrationRuntime>;
-  engine: { company(ruc: string, overlay: CompanyOverlay): void };
+  engine: {
+    client: EngineClient;
+    company(ruc: string, overlay: CompanyOverlay): void;
+  };
   dispose(): Promise<void>;
 }
 
@@ -111,31 +108,18 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     }),
   };
 
-  const infra: ServerInfra = {
-    db: ctx.db,
-    now: now.get,
-    logger,
-  };
-
-  const files = createFilesRuntime(infra, uploadsConfig());
-
   const engine = createFakeEngine();
-
-  const workflow = createWorkflowRuntime(
-    infra,
-    engine.client,
-    files,
-    noopQueueDoorbell,
-  );
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
     ctx,
     now,
     auth,
-    workflow,
     integrations,
-    engine: { company: (ruc, overlay) => engine.company(ruc, overlay) },
+    engine: {
+      client: engine.client,
+      company: (ruc, overlay) => engine.company(ruc, overlay),
+    },
 
     async dispose() {
       await cleanupTestDb(ctx);

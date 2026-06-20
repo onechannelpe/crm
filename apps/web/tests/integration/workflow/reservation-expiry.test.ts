@@ -3,11 +3,17 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
+import {
+  workflowCommandPorts,
+  workflowRepos,
+} from "@tests/support/workflow/deps";
 import { proposePendingRate } from "@tests/support/workflow/pricing";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/lead/domain/pricing";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+import { acceptRateCommand } from "~/server/workflow/lead/write/accept-rate";
 import { expireLapsedReservations } from "~/server/workflow/lead/write/expire-reservation";
 
 // The hold window is owned by the pricing policy, not hardcoded here, so these stay
@@ -55,9 +61,11 @@ describe("lead reservation expiry", () => {
       ),
     ).toBe(1);
 
+    const actor = scenario.actor.by("execOne");
     const detail = expectOk(
-      await runtime.workflow.queries.getLeadDetail({
-        actor: scenario.actor.by("execOne"),
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
       }),
     );
@@ -79,11 +87,14 @@ describe("lead reservation expiry", () => {
 
     runtime.now.set(runtime.now.get() + RESERVATION_WINDOW_MS + 1);
 
-    const result = await runtime.workflow.commands.acceptRate({
-      actor,
-      leadId: lead.id,
-      proposalId,
-    });
+    const result = await acceptRateCommand(
+      {
+        actor,
+        leadId: lead.id,
+        proposalId,
+      },
+      workflowCommandPorts(runtime),
+    );
 
     expect(expectErr(result).code).toBe("rate_proposal_expired");
   });

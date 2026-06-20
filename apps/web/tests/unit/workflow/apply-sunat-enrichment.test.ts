@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { applySunatEnrichment } from "~/server/workflow/effects/sunat-enrichment";
-import type { PartyRepository } from "~/server/workflow/infrastructure/ports/entities";
+import { applySunatEnrichment } from "~/server/identity/enrichment/writeback";
+import type { PartyRepository } from "~/server/identity/organization/repo";
 
 function createPartyRepositoryDouble() {
   const findOrganizationByRuc = vi.fn<PartyRepository["findOrganizationByRuc"]>(

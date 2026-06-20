@@ -1,6 +1,8 @@
 import type { SettlementBank } from "~/contracts/workflow/vocabulary";
+import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/write/register-lead";
 
 import type { TestRuntime } from "../runtime/app";
+import { registerLeadPorts } from "./deps";
 import { MERCHANT } from "./fixtures";
 
 export type RegisteredLeadSnapshot = {
@@ -43,20 +45,24 @@ export async function registerLead(input: {
   posCount?: number;
 }): Promise<RegisterLeadResult> {
   const actor = input.actor ?? { userId: 1, role: "executive", branchId: 1 };
-  const result = await input.runtime.workflow.commands.registerLead({
-    actor,
-    ruc: input.ruc,
-    currentProvider: input.currentProvider ?? MERCHANT.standard.currentProvider,
-    currentDebitRate:
-      input.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
-    currentCreditRate:
-      input.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
-    gpv: input.gpv ?? MERCHANT.standard.gpv,
-    ticket: input.ticket ?? MERCHANT.standard.ticket,
-    giroNegocio: input.giroNegocio ?? "Retail",
-    settlementBank: input.settlementBank ?? MERCHANT.standard.settlementBank,
-    posCount: input.posCount ?? MERCHANT.standard.posCount,
-  });
+  const result = await workflowRegisterLead(
+    {
+      actor,
+      ruc: input.ruc,
+      currentProvider:
+        input.currentProvider ?? MERCHANT.standard.currentProvider,
+      currentDebitRate:
+        input.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
+      currentCreditRate:
+        input.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
+      gpv: input.gpv ?? MERCHANT.standard.gpv,
+      ticket: input.ticket ?? MERCHANT.standard.ticket,
+      giroNegocio: input.giroNegocio ?? "Retail",
+      settlementBank: input.settlementBank ?? MERCHANT.standard.settlementBank,
+      posCount: input.posCount ?? MERCHANT.standard.posCount,
+    },
+    registerLeadPorts(input.runtime),
+  );
 
   if (!result.ok) {
     throw new Error("register_lead_failed");

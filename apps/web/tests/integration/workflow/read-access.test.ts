@@ -3,8 +3,11 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
+import { workflowRepos } from "@tests/support/workflow/deps";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 describe("workflow read access", () => {
   let runtime: TestRuntime;
@@ -26,8 +29,10 @@ describe("workflow read access", () => {
       stage: "QUALIFYING",
     });
 
-    const result = await runtime.workflow.queries.getLeadDetail({
-      actor: scenario.actor.by("backOne"),
+    const actor = scenario.actor.by("backOne");
+    const result = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: actor.userId,
+      actorRole: actor.role,
       leadId: lead.id,
     });
 
@@ -46,8 +51,10 @@ describe("workflow read access", () => {
         stage: "PRICING",
       });
 
-      const result = await runtime.workflow.queries.getLeadDetail({
-        actor: scenario.actor.withRole("backOne", role),
+      const actor = scenario.actor.withRole("backOne", role);
+      const result = await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
       });
 
@@ -64,8 +71,10 @@ describe("workflow read access", () => {
       stage: "QUALIFYING",
     });
 
-    const result = await runtime.workflow.queries.getLeadDetail({
-      actor: scenario.actor.by("execTwo"),
+    const actor = scenario.actor.by("execTwo");
+    const result = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: actor.userId,
+      actorRole: actor.role,
       leadId: lead.id,
     });
 

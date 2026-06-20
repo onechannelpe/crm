@@ -1,8 +1,15 @@
 import type { LeadStage } from "~/contracts/workflow/vocabulary";
+import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
+import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
+import { acceptRateCommand } from "~/server/workflow/lead/write/accept-rate";
+import { proposeRateCommand } from "~/server/workflow/lead/write/propose-rate";
 
 import { createDeterministicIdFactory } from "../_core/ids";
 import type { TestRuntime } from "../runtime/app";
+import { workflowCommandPorts, workflowRepos } from "./deps";
 import type { createWorkflowImporter } from "./importer";
 import type { ScenarioActor, ScenarioActorKey, ScenarioLeadRef } from "./leads";
 import { registerLead } from "./register";
@@ -62,8 +69,9 @@ export function createLeadBuilder(deps: {
     leadId: string,
     actor: ScenarioActor,
   ): Promise<LeadStage> {
-    const detail = await runtime.workflow.queries.getLeadDetail({
-      actor,
+    const detail = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: actor.userId,
+      actorRole: actor.role,
       leadId,
     });
     if (!detail.ok) {
@@ -78,8 +86,9 @@ export function createLeadBuilder(deps: {
     leadId: string,
     actor: ScenarioActor,
   ): Promise<string> {
-    const detail = await runtime.workflow.queries.getLeadDetail({
-      actor,
+    const detail = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: actor.userId,
+      actorRole: actor.role,
       leadId,
     });
     if (!detail.ok) {
@@ -172,16 +181,19 @@ export function createLeadBuilder(deps: {
     await assertStage(built.id, executive, "PRICING", "import review");
     if (stage === "PRICING") return built;
 
-    const proposed = await runtime.workflow.commands.proposeRate({
-      actor: backOffice,
-      leadId: built.id,
-      proposedDebitRate: 2.5,
-      proposedCreditRate: 3,
-      proposedForeignRate: 3.5,
-      fee: 0.5,
-      paybackPricing: 12,
-      currency: "PEN",
-    });
+    const proposed = await proposeRateCommand(
+      {
+        actor: backOffice,
+        leadId: built.id,
+        proposedDebitRate: 2.5,
+        proposedCreditRate: 3,
+        proposedForeignRate: 3.5,
+        fee: 0.5,
+        paybackPricing: 12,
+        currency: "PEN",
+      },
+      workflowCommandPorts(runtime),
+    );
     if (!proposed.ok) {
       throw new Error(
         `atStage(SETUP): proposeRate failed (${proposed.error.code})`,
@@ -190,11 +202,14 @@ export function createLeadBuilder(deps: {
     const proposalId = proposed.value.proposalId;
     built.proposalId = proposalId;
 
-    const accepted = await runtime.workflow.commands.acceptRate({
-      actor: executive,
-      leadId: built.id,
-      proposalId,
-    });
+    const accepted = await acceptRateCommand(
+      {
+        actor: executive,
+        leadId: built.id,
+        proposalId,
+      },
+      workflowCommandPorts(runtime),
+    );
     if (!accepted.ok) {
       throw new Error(
         `atStage(SETUP): acceptRate failed (${accepted.error.code})`,
@@ -203,32 +218,38 @@ export function createLeadBuilder(deps: {
     await assertStage(built.id, executive, "SETUP", "acceptRate");
     if (stage === "SETUP") return built;
 
-    const policy = await runtime.workflow.commands.saveDigitalPolicy({
-      actor: executive,
-      leadId: built.id,
-      linkScope: "none",
-      linkUrl: null,
-      onlineScope: "none",
-      onlineUrl: null,
-      onlineCollectionMode: null,
-    });
+    const policy = await saveDigitalPolicyCommand(
+      {
+        actor: executive,
+        leadId: built.id,
+        linkScope: "none",
+        linkUrl: null,
+        onlineScope: "none",
+        onlineUrl: null,
+        onlineCollectionMode: null,
+      },
+      workflowCommandPorts(runtime),
+    );
     if (!policy.ok) {
       throw new Error(
         `atStage(LIVE): saveDigitalPolicy failed (${policy.error.code})`,
       );
     }
 
-    const venue = await runtime.workflow.commands.createVenue({
-      actor: executive,
-      leadId: built.id,
-      tradeName: `Local ${key}`,
-      posQuantity: 1,
-      address: "Av. Principal 100",
-      addressReference: "Primer piso",
-      district: "Lima",
-      province: "Lima",
-      department: "Lima",
-    });
+    const venue = await createVenueCommand(
+      {
+        actor: executive,
+        leadId: built.id,
+        tradeName: `Local ${key}`,
+        posQuantity: 1,
+        address: "Av. Principal 100",
+        addressReference: "Primer piso",
+        district: "Lima",
+        province: "Lima",
+        department: "Lima",
+      },
+      workflowCommandPorts(runtime),
+    );
     if (!venue.ok) {
       throw new Error(
         `atStage(LIVE): createVenue failed (${venue.error.code})`,
@@ -240,19 +261,22 @@ export function createLeadBuilder(deps: {
     const venueId = await readFirstVenueId(built.id, executive);
     built.venueIds.push(venueId);
 
-    const accounts = await runtime.workflow.commands.addVenueAccounts({
-      actor: executive,
-      leadId: built.id,
-      venueId,
-      solesAccount: {
-        currency: "PEN",
-        banco: "BCP",
-        tipoCuenta: "AHORROS",
-        nroCuenta: "19100000000001",
-        cci: "00219100000000000001",
-        isSettlement: true,
+    const accounts = await addVenueAccountsCommand(
+      {
+        actor: executive,
+        leadId: built.id,
+        venueId,
+        solesAccount: {
+          currency: "PEN",
+          banco: "BCP",
+          tipoCuenta: "AHORROS",
+          nroCuenta: "19100000000001",
+          cci: "00219100000000000001",
+          isSettlement: true,
+        },
       },
-    });
+      workflowCommandPorts(runtime),
+    );
     if (!accounts.ok) {
       throw new Error(
         `atStage(LIVE): addVenueAccounts failed (${accounts.error.code})`,

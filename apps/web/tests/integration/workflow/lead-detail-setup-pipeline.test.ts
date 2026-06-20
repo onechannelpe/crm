@@ -3,8 +3,17 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
+import {
+  workflowCommandPorts,
+  workflowRepos,
+} from "@tests/support/workflow/deps";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
+import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 
 describe("lead detail setup pipeline", () => {
   let runtime: TestRuntime;
@@ -40,8 +49,9 @@ describe("lead detail setup pipeline", () => {
     });
 
     const initialDetail = expectOk(
-      await runtime.workflow.queries.getLeadDetail({
-        actor,
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
       }),
     );
@@ -66,20 +76,24 @@ describe("lead detail setup pipeline", () => {
     });
     expect(initialDetail.blockingFields).toEqual(["digitalPolicy"]);
 
-    const policyResult = await runtime.workflow.commands.saveDigitalPolicy({
-      actor,
-      leadId: lead.id,
-      linkScope: "per_venue",
-      linkUrl: null,
-      onlineScope: "per_venue",
-      onlineUrl: null,
-      onlineCollectionMode: null,
-    });
+    const policyResult = await saveDigitalPolicyCommand(
+      {
+        actor,
+        leadId: lead.id,
+        linkScope: "per_venue",
+        linkUrl: null,
+        onlineScope: "per_venue",
+        onlineUrl: null,
+        onlineCollectionMode: null,
+      },
+      workflowCommandPorts(runtime),
+    );
     expectOk(policyResult);
 
     const afterPolicy = expectOk(
-      await runtime.workflow.queries.getLeadDetail({
-        actor,
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
       }),
     );
@@ -102,39 +116,46 @@ describe("lead detail setup pipeline", () => {
     });
 
     expectOk(
-      await runtime.workflow.commands.saveDigitalPolicy({
-        actor,
-        leadId: lead.id,
-        linkScope: "per_venue",
-        linkUrl: null,
-        onlineScope: "per_venue",
-        onlineUrl: null,
-        onlineCollectionMode: null,
-      }),
+      await saveDigitalPolicyCommand(
+        {
+          actor,
+          leadId: lead.id,
+          linkScope: "per_venue",
+          linkUrl: null,
+          onlineScope: "per_venue",
+          onlineUrl: null,
+          onlineCollectionMode: null,
+        },
+        workflowCommandPorts(runtime),
+      ),
     );
 
     expectOk(
-      await runtime.workflow.commands.createVenue({
-        actor,
-        leadId: lead.id,
-        tradeName: "Local Miraflores",
-        posQuantity: 2,
-        digitalConfig: {
-          linkUrl: "https://pay.example/local-miraflores",
-          onlineUrl: "https://shop.example/local-miraflores",
-          onlineCollectionMode: "ONE_CLIC",
+      await createVenueCommand(
+        {
+          actor,
+          leadId: lead.id,
+          tradeName: "Local Miraflores",
+          posQuantity: 2,
+          digitalConfig: {
+            linkUrl: "https://pay.example/local-miraflores",
+            onlineUrl: "https://shop.example/local-miraflores",
+            onlineCollectionMode: "ONE_CLIC",
+          },
+          address: "Av. Nueva 123",
+          addressReference: "Frente al parque",
+          district: "Miraflores",
+          province: "Lima",
+          department: "Lima",
         },
-        address: "Av. Nueva 123",
-        addressReference: "Frente al parque",
-        district: "Miraflores",
-        province: "Lima",
-        department: "Lima",
-      }),
+        workflowCommandPorts(runtime),
+      ),
     );
 
     const withVenue = expectOk(
-      await runtime.workflow.queries.getLeadDetail({
-        actor,
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
       }),
     );
@@ -148,24 +169,28 @@ describe("lead detail setup pipeline", () => {
     expect(withVenue.blockingFields).toEqual(["venueAccounts"]);
 
     expectOk(
-      await runtime.workflow.commands.addVenueAccounts({
-        actor,
-        leadId: lead.id,
-        venueId: withVenue.venues[0].id,
-        solesAccount: {
-          currency: "PEN",
-          banco: "BCP",
-          tipoCuenta: "AHORROS",
-          nroCuenta: "19100000000001",
-          cci: "00219100000000000001",
-          isSettlement: true,
+      await addVenueAccountsCommand(
+        {
+          actor,
+          leadId: lead.id,
+          venueId: withVenue.venues[0].id,
+          solesAccount: {
+            currency: "PEN",
+            banco: "BCP",
+            tipoCuenta: "AHORROS",
+            nroCuenta: "19100000000001",
+            cci: "00219100000000000001",
+            isSettlement: true,
+          },
         },
-      }),
+        workflowCommandPorts(runtime),
+      ),
     );
 
     const completed = expectOk(
-      await runtime.workflow.queries.getLeadDetail({
-        actor,
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
       }),
     );
