@@ -2,16 +2,10 @@ import { createApiEvent } from "@tests/support/unit/api-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requirePermission:
-    vi.fn<() => Promise<{ userId: number; id: string; branchId: number }>>(),
   claimInstallationSession: vi.fn<() => Promise<unknown>>(),
   refreshInstallationSession: vi.fn<() => Promise<unknown>>(),
   ingestRuntimeEvent: vi.fn<() => Promise<unknown>>(),
   createHandoffToken: vi.fn<() => Promise<unknown>>(),
-}));
-
-vi.mock("~/lib/auth/access/session", () => ({
-  requirePermission: mocks.requirePermission,
 }));
 
 vi.mock("~/server/runtime", () => ({
@@ -47,11 +41,6 @@ function invalidJsonRequest(url: string): Request {
 describe("extension api routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requirePermission.mockResolvedValue({
-      userId: 1,
-      id: "session-1",
-      branchId: 1,
-    });
   });
 
   it("returns 400 for malformed JSON in the handoff token route", async () => {

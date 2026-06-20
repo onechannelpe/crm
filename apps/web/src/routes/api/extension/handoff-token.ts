@@ -9,10 +9,6 @@ import { isErr } from "~/server/shared/result";
 import { readJsonBody } from "./json-body";
 
 export async function POST(event: APIEvent): Promise<Response> {
-  const auth = await authorizeRoutePermission("lead:work");
-  if (isErr(auth)) return auth.error;
-  const session = auth.value;
-
   const parsed = await readJsonBody(event.request);
   if (!parsed.ok) {
     return parsed.response;
@@ -24,6 +20,10 @@ export async function POST(event: APIEvent): Promise<Response> {
       { status: 400 },
     );
   }
+
+  const auth = await authorizeRoutePermission("lead:work");
+  if (isErr(auth)) return auth.error;
+  const session = auth.value;
 
   const origin = event.request.headers.get("origin") ?? "";
   const result =
