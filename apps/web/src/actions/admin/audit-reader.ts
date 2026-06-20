@@ -1,29 +1,23 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import {
   type AuditReaderFilterInput,
   type AuditReaderSnapshot,
 } from "~/server/audit-reader/contracts";
 import { createAuditReaderService } from "~/server/audit-reader/service";
 import { getServerRuntime } from "~/server/runtime";
-import { throwDomain } from "~/server/shared/domain-error";
-import { isErr } from "~/server/shared/result";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function getAuditReaderSnapshot(
   params?: AuditReaderFilterInput,
 ): Promise<AuditReaderSnapshot> {
-  await requirePermission("audit:read");
+  return runAction({
+    name: "admin.audit_reader.snapshot.read",
+    access: { kind: "permission", permission: "audit:read" },
 
-  const service = createAuditReaderService({
-    events: getServerRuntime().admin.events,
+    execute: () =>
+      createAuditReaderService({
+        events: getServerRuntime().admin.events,
+      }).getSnapshot(params),
   });
-
-  const result = await service.getSnapshot(params);
-
-  if (isErr(result)) {
-    throwDomain(result.error);
-  }
-
-  return result.value;
 }
