@@ -79,10 +79,12 @@ export async function updateVenueCommand(
       department: input.department,
     });
 
-    const committed = await ctx.commitTransition(transition.value);
+    // Editing a venue records a fact; it does not change the lead's lifecycle, so
+    // it appends without taking the version lock.
+    const appended = await ctx.appendFacts(transition.value.events);
 
-    if (!committed.ok) {
-      return committed;
+    if (!appended.ok) {
+      return appended;
     }
 
     return Ok({ leadId: state.id });
