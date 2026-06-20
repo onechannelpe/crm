@@ -1,12 +1,20 @@
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { LeadSourcingPolicyRepository } from "~/server/workflow/infrastructure/ports/entities";
-import type { UpdateSourcingPolicyCommandInput } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
+
+import type { LeadSourcingPolicyRepository } from "../sourcing-policy-repo";
 
 export async function updateSourcingPolicy(
-  input: UpdateSourcingPolicyCommandInput,
-  ports: { sourcingPolicies: LeadSourcingPolicyRepository; now: number },
+  input: {
+    actor: WorkflowActor;
+    branchId: number;
+    engineAssignmentEnabled: boolean;
+  },
+  ports: {
+    sourcingPolicies: LeadSourcingPolicyRepository;
+    now: number;
+  },
 ): Promise<
   Result<{ branchId: number; engineAssignmentEnabled: boolean }, DomainError>
 > {

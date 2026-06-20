@@ -9,6 +9,15 @@ import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
+import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
+import { addToFavoritesCommand } from "~/server/workflow/lead/write/add-to-favorites";
+import { deleteLeadCommand } from "~/server/workflow/lead/write/delete-lead";
+import { editCommercialScopeCommand } from "~/server/workflow/lead/write/edit-commercial-scope";
+import { reassignLeadCommand } from "~/server/workflow/lead/write/reassign-lead";
+import { recordRepLegalCommand } from "~/server/workflow/lead/write/record-rep-legal";
+import { registerLead } from "~/server/workflow/lead/write/register-lead";
+import { removeFromFavoritesCommand } from "~/server/workflow/lead/write/remove-from-favorites";
+import { requestSunatRefresh } from "~/server/workflow/lead/write/request-sunat-refresh";
 
 import { workflowActor } from "./actor";
 
@@ -51,10 +60,17 @@ export async function requestLeadCreation(input: unknown) {
       })),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.registerLead({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      registerLead(
+        { actor: workflowActor(actor), ...payload },
+        {
+          leads: getServerRuntime().workflow.repos.leads,
+          users: getServerRuntime().workflow.repos.users,
+          engineGateway: getServerRuntime().workflow.engineGateway,
+          enrichmentQueue: getServerRuntime().workflow.enrichmentQueue,
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -66,10 +82,13 @@ export async function requestEditCommercialScope(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.editCommercialScope({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      editCommercialScopeCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -92,10 +111,13 @@ export async function requestSaveDigitalPolicy(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.saveDigitalPolicy({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      saveDigitalPolicyCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -118,10 +140,13 @@ export async function requestRecordRepLegal(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.recordRepLegal({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      recordRepLegalCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -139,11 +164,17 @@ export async function requestLeadReassignment(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.reassignLead({
-        actor: workflowActor(actor),
-        leadId: payload.leadId,
-        toExecutiveId: payload.newExecutiveId,
-      }),
+      reassignLeadCommand(
+        {
+          actor: workflowActor(actor),
+          leadId: payload.leadId,
+          toExecutiveId: payload.newExecutiveId,
+        },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -155,10 +186,16 @@ export async function requestAddLeadToFavorites(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: async ({ actor }, { leadId }) => {
-      const result = await getServerRuntime().workflow.commands.addToFavorites({
-        actor: workflowActor(actor),
-        leadId,
-      });
+      const result = await addToFavoritesCommand(
+        {
+          actor: workflowActor(actor),
+          leadId,
+        },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      );
 
       if (isErr(result)) {
         return result;
@@ -177,11 +214,16 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: async ({ actor }, { leadId }) => {
-      const result =
-        await getServerRuntime().workflow.commands.removeFromFavorites({
+      const result = await removeFromFavoritesCommand(
+        {
           actor: workflowActor(actor),
           leadId,
-        });
+        },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      );
 
       if (isErr(result)) {
         return result;
@@ -200,10 +242,16 @@ export async function requestLeadDeletion(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, { leadId }) =>
-      getServerRuntime().workflow.commands.deleteLead({
-        actor: workflowActor(actor),
-        leadId,
-      }),
+      deleteLeadCommand(
+        {
+          actor: workflowActor(actor),
+          leadId,
+        },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -215,9 +263,15 @@ export async function requestLeadSunatRefresh(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, { leadId }) =>
-      getServerRuntime().workflow.commands.requestSunatRefresh({
-        actor: workflowActor(actor),
-        leadId,
-      }),
+      requestSunatRefresh(
+        {
+          actor: workflowActor(actor),
+          leadId,
+        },
+        {
+          leads: getServerRuntime().workflow.repos.leads,
+          enrichmentQueue: getServerRuntime().workflow.enrichmentQueue,
+        },
+      ),
   });
 }

@@ -19,6 +19,9 @@ import {
   validationFail,
   type Reader,
 } from "~/server/shared/parsing";
+import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
+import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
+import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
 
 import { workflowActor } from "./actor";
 
@@ -65,10 +68,13 @@ export async function requestVenueCreation(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.createVenue({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      createVenueCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -90,10 +96,13 @@ export async function requestVenueUpdate(input: unknown) {
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.updateVenue({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      updateVenueCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -119,9 +128,12 @@ export async function requestVenueAccountsAddition(input: unknown) {
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.addVenueAccounts({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      addVenueAccountsCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }

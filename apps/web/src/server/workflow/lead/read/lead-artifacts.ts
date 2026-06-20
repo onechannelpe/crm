@@ -21,9 +21,9 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import type {
   LeadQueries,
-  LeadReadRepository,
   RecordExportRow,
-} from "~/server/workflow/lead/read/queries-port";
+} from "~/server/workflow/lead/read/lead-queries";
+import type { LeadReadRepository } from "~/server/workflow/lead/write/lead-repo";
 
 const LEAD_EXPORT_COLUMNS: {
   header: string;

@@ -2,11 +2,59 @@ import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
-import type {
-  LegalRepresentative,
-  OrganizationProfile,
-  PartyRepository,
-} from "~/server/workflow/ports";
+
+export type OrganizationProfile = {
+  id: OrganizationId;
+  ruc: string;
+  legalName: string | null;
+  giroNegocio: string | null;
+  address: string | null;
+  district: string | null;
+  province: string | null;
+  department: string | null;
+  phone: string | null;
+  email: string | null;
+};
+
+export type LegalRepresentative = {
+  organizationId: OrganizationId;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  dni: string;
+  telefono: string | null;
+  email: string | null;
+};
+
+export type PartyRepository = {
+  findOrganizationByRuc(ruc: string): Promise<OrganizationProfile | undefined>;
+  findOrganizationById(
+    id: OrganizationId,
+  ): Promise<OrganizationProfile | undefined>;
+  createOrganization(values: {
+    ruc: string;
+    legalName: string | null;
+    giroNegocio: string | null;
+    address: string | null;
+    district: string | null;
+    department: string | null;
+  }): Promise<OrganizationProfile>;
+  updateOrganizationCommercial(values: {
+    organizationId: OrganizationId;
+    giroNegocio: string;
+  }): Promise<void>;
+  updateOrganizationFromEnrichment(values: {
+    organizationId: OrganizationId;
+    legalName?: string;
+    address?: string;
+    district?: string;
+    department?: string;
+  }): Promise<void>;
+  upsertPrimaryLegalRepresentative(values: LegalRepresentative): Promise<void>;
+  findPrimaryLegalRepresentative(
+    organizationId: OrganizationId,
+  ): Promise<LegalRepresentative | undefined>;
+};
 
 function toOrganizationProfile(row: {
   id: OrganizationId;

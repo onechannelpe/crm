@@ -1,5 +1,17 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadFavoriteRepository } from "~/server/workflow/lead/read/queries-port";
+
+export type LeadFavoriteRepository = {
+  isFavoriteForUser(input: {
+    leadId: string;
+    userId: number;
+  }): Promise<boolean>;
+  addForUser(input: {
+    leadId: string;
+    userId: number;
+    createdAt: number;
+  }): Promise<void>;
+  removeForUser(input: { leadId: string; userId: number }): Promise<void>;
+};
 
 export function createLeadFavoriteRepo(
   db: DatabaseExecutor,

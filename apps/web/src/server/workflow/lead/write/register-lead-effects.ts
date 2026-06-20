@@ -1,10 +1,8 @@
 import type { DomainError } from "~/server/shared/domain-error";
 import type { EventsRepo } from "~/server/shared/repos-events";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadAssignmentRepository,
-  LeadRepository,
-} from "~/server/workflow/lead/read/queries-port";
+import type { LeadAssignmentRepository } from "~/server/workflow/lead/write/assignment-repo";
+import type { LeadRepository } from "~/server/workflow/lead/write/lead-repo";
 
 import { createHistoryEvent } from "../../lead/domain/history";
 import type { LeadDraft } from "../../lead/domain/state";

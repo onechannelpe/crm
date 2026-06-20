@@ -3,6 +3,8 @@
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
+import { getSourcingPolicy } from "~/server/workflow/policy/read/get-sourcing-policy";
+import { updateSourcingPolicy } from "~/server/workflow/policy/write/update-sourcing-policy";
 
 import { workflowActor } from "../commands/actor";
 
@@ -16,13 +18,19 @@ export async function querySourcingPolicy(rawBranchId: number) {
         branchId: r.posInt("branchId"),
       })),
 
-    audit: (query) => ({ branchId: query.branchId }),
+    audit: ({ branchId }) => ({ branchId }),
 
-    execute: ({ actor }, query) =>
-      getServerRuntime().workflow.queries.getSourcingPolicy({
-        actorRole: actor.role,
-        branchId: query.branchId,
-      }),
+    execute: ({ actor }, query) => {
+      const { sourcingPolicies } = getServerRuntime().workflow.repos;
+
+      return getSourcingPolicy(
+        { sourcingPolicies },
+        {
+          actorRole: actor.role,
+          branchId: query.branchId,
+        },
+      );
+    },
   });
 }
 
@@ -40,13 +48,22 @@ export async function saveSourcingPolicy(input: {
         engineAssignmentEnabled: r.bool("engineAssignmentEnabled"),
       })),
 
-    audit: (command) => ({ branchId: command.branchId }),
+    audit: ({ branchId }) => ({ branchId }),
 
-    execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.updateSourcingPolicy({
-        actor: workflowActor(actor),
-        branchId: payload.branchId,
-        engineAssignmentEnabled: payload.engineAssignmentEnabled,
-      }),
+    execute: ({ actor }, command) => {
+      const workflow = getServerRuntime().workflow;
+
+      return updateSourcingPolicy(
+        {
+          actor: workflowActor(actor),
+          branchId: command.branchId,
+          engineAssignmentEnabled: command.engineAssignmentEnabled,
+        },
+        {
+          sourcingPolicies: workflow.repos.sourcingPolicies,
+          now: workflow.now(),
+        },
+      );
+    },
   });
 }

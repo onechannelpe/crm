@@ -4,7 +4,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { enqueueLeadEventNotifications } from "~/server/workflow/effects/notify";
 import type { LeadEvent } from "~/server/workflow/lead/domain/events";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
 
@@ -43,13 +42,12 @@ async function replaceActiveAssignment(
 }
 
 // Applies one lead transition: the version-checked snapshot update, the optional
-// active-assignment swap, the event-log append, and the notification enqueue.
+// active-assignment swap, and the event-log append.
 // Returns `concurrency_conflict` when another writer moved the lead first; the
 // runner turns that into a rollback so no child write survives the conflict.
 export async function commitTransition(
   tx: DatabaseExecutor,
   transition: LeadTransition,
-  now: number,
   assignment?: LeadAssignment,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
   const { next, events } = transition;
@@ -80,12 +78,6 @@ export async function commitTransition(
 
   const eventIds = await createEventsRepo(tx).append(
     events.map(toLeadEventAppend),
-  );
-
-  await enqueueLeadEventNotifications(
-    tx,
-    { lead: next, events, eventIds },
-    now,
   );
 
   return Ok({ eventIds });

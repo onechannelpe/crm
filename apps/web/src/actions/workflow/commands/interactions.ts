@@ -4,6 +4,10 @@ import { LEAD_CALL_OUTCOMES } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
+import {
+  addLeadNote as addLeadNoteUseCase,
+  logLeadCall,
+} from "~/server/workflow/lead/interaction/write";
 
 import { workflowActor } from "./actor";
 
@@ -22,10 +26,13 @@ export async function recordLeadCall(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.logLeadCall({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      logLeadCall(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -43,9 +50,12 @@ export async function addLeadNote(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.addLeadNote({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      addLeadNoteUseCase(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }

@@ -1,7 +1,77 @@
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
+import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { applyLeadListFilters, applyLeadVisibility } from "./lead-list-filters";
-import type { LeadQueries } from "./queries-port";
+
+export type LeadListFilters = {
+  actorUserId: number;
+  actorRole: Role;
+  actorBranchId: number;
+  executiveId?: number;
+  stage?: LeadStage;
+  status?: LeadStatus;
+  priority?: LeadPriority;
+  updatedSinceMs?: number;
+  updatedUntilMs?: number;
+  anyFieldSearch?: string;
+  sortBy: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
+  sortDirection: "asc" | "desc";
+  limit: number;
+  offset: number;
+};
+
+export type RecordExportFilters = {
+  actorUserId: number;
+  actorRole: Role;
+  actorBranchId: number;
+  executiveId?: number;
+};
+
+export type LeadListRow = {
+  id: string;
+  ruc: string;
+  legalName: string | null;
+  address: string | null;
+  executiveId: number;
+  executiveName: string;
+  createdBy: number;
+  createdByName: string;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  priority: LeadPriority | null;
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type RecordExportRow = {
+  id: string;
+  ruc: string;
+  legalName: string | null;
+  address: string | null;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  priority: LeadPriority | null;
+  createdAt: number;
+  executiveId: number;
+  executiveName: string;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  proposedDebitRate: number | null;
+  proposedCreditRate: number | null;
+};
+
+export type LeadQueries = {
+  list(filters: LeadListFilters): Promise<LeadListRow[]>;
+  count(filters: LeadListFilters): Promise<number>;
+  export(filters: RecordExportFilters): Promise<RecordExportRow[]>;
+};
 
 function toFullName(names: string, firstSurname: string): string {
   return `${names} ${firstSurname}`;

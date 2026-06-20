@@ -1,13 +1,48 @@
 import type { Insertable, Selectable } from "kysely";
 
+import type { Currency } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type {
-  RateProposal,
-  RateProposalNumbers,
-  RateProposalOutcome,
-  RateProposalRepository,
-} from "~/server/workflow/ports";
+
+export type RateProposalOutcome = "pending" | "accepted" | "revision_requested";
+
+export type RateProposal = {
+  id: string;
+  leadId: string;
+  round: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
+  fee: number;
+  paybackPricing: number;
+  currency: Currency;
+  proposedBy: number;
+  proposedAt: number;
+  outcome: RateProposalOutcome;
+  decidedAt: number | null;
+};
+
+export type RateProposalNumbers = {
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
+  fee: number;
+  paybackPricing: number;
+  currency: Currency;
+};
+
+export type RateProposalRepository = {
+  insert(values: RateProposal): Promise<void>;
+  listByLeadId(leadId: string): Promise<RateProposal[]>;
+  findLatest(leadId: string): Promise<RateProposal | undefined>;
+  nextRound(leadId: string): Promise<number>;
+  updateNumbers(id: string, values: RateProposalNumbers): Promise<void>;
+  markOutcome(
+    id: string,
+    outcome: RateProposalOutcome,
+    decidedAt: number,
+  ): Promise<void>;
+};
 
 type RateProposalRow = Selectable<Database["workflow_rate_proposals"]>;
 type NewRateProposalRow = Insertable<Database["workflow_rate_proposals"]>;

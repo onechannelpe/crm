@@ -1,7 +1,7 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { authorizeLeadAction } from "../../lead/domain/policy";
 import { runLeadTransaction } from "./transition";

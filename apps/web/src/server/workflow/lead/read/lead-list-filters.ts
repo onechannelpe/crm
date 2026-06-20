@@ -1,7 +1,7 @@
 import { sql, type SelectQueryBuilder } from "kysely";
 
+import type { LeadListFilters, RecordExportFilters } from "./lead-queries";
 import type { LeadQueryDatabase } from "./lead-query-types";
-import type { LeadListFilters, RecordExportFilters } from "./queries-port";
 
 type VisibilityQuery = SelectQueryBuilder<
   LeadQueryDatabase,

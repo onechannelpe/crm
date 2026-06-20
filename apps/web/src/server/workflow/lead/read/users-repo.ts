@@ -1,11 +1,34 @@
 import { shortName } from "~/lib/users/display-name";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
-import type {
-  AssignableExecutivesScope,
-  LeadUserWithName,
-  WorkflowUserRepository,
-} from "~/server/workflow/ports";
+
+export type LeadUser = {
+  id: number;
+  isActive: boolean;
+};
+
+export type LeadUserWithName = {
+  id: number;
+  fullName: string;
+};
+
+export type AssignableExecutivesScope = {
+  actorRole: "superuser" | "admin" | "sales_manager" | "supervisor";
+  actorBranchId: number;
+};
+
+export type WorkflowUserRepository = {
+  findById(id: number): Promise<LeadUser | undefined>;
+  findByIds(ids: number[]): Promise<LeadUserWithName[]>;
+  isExecutiveAssignable(
+    scope: AssignableExecutivesScope,
+    executiveId: number,
+  ): Promise<boolean>;
+  listAssignableExecutives(
+    input: AssignableExecutivesScope,
+    options?: { search?: string; limit?: number },
+  ): Promise<LeadUserWithName[]>;
+};
 
 export function createWorkflowUsersRepo(
   executor: DatabaseExecutor,

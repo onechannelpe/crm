@@ -7,8 +7,8 @@ import {
   requireCapability,
   resolveAssignableExecutivesScope,
 } from "~/server/workflow/lead/domain/policy";
-import type { LeadRepository } from "~/server/workflow/lead/read/queries-port";
-import type { WorkflowUserRepository } from "~/server/workflow/ports";
+import type { WorkflowUserRepository } from "~/server/workflow/lead/read/users-repo";
+import type { LeadRepository } from "~/server/workflow/lead/write/lead-repo";
 
 type AssignableExecutivesQueryDeps = {
   leads: LeadRepository;

@@ -6,6 +6,11 @@ import type {
   LeadDetailVenueView,
   LeadDetailView,
 } from "~/contracts/workflow/views";
+import type {
+  LegalRepresentative,
+  OrganizationProfile,
+} from "~/server/identity/organization/repo";
+import type { DigitalPolicy } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
   LeadCommercialScope,
@@ -15,16 +20,13 @@ import {
   resolveLeadBlockingFields,
   resolveLeadNextStep,
 } from "~/server/workflow/lead/read/lead-progress";
+import type { LeadVenue } from "~/server/workflow/lead/venue/repo";
+import type { RateProposal } from "~/server/workflow/lead/write/rate-proposal-repo";
 import type {
-  DigitalPolicy,
   RateRevision,
   RateRevisionFile,
-  LegalRepresentative,
-  OrganizationProfile,
-  RateProposal,
-  LeadVenue,
-  LeadSourceStatus,
-} from "~/server/workflow/ports";
+} from "~/server/workflow/lead/write/rate-revision-repo";
+import type { LeadSourceStatus } from "~/server/workflow/lead/write/source-status-repo";
 
 import type {
   LeadDetailRateRevisionFileView,

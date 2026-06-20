@@ -14,7 +14,42 @@ import type {
   LeadDraft,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
-import type { LeadPatch } from "~/server/workflow/lead/read/queries-port";
+
+export type LeadPatch = Partial<
+  Omit<
+    LeadState,
+    | "id"
+    | "version"
+    | "createdAt"
+    | "createdBy"
+    | "organizationId"
+    | "ruc"
+    | "legalName"
+    | "address"
+    | "district"
+    | "department"
+  >
+>;
+
+export type LeadReadRepository = {
+  findById(id: string): Promise<LeadState | undefined>;
+};
+
+export type LeadRepository = {
+  insert(values: LeadDraft): Promise<string>;
+  findById(id: string): Promise<LeadState | undefined>;
+  findCommercialScope(leadId: string): Promise<LeadCommercialScope | undefined>;
+  findByRuc(ruc: string): Promise<LeadState | undefined>;
+  findByRucMany(rucs: string[]): Promise<LeadState[]>;
+  updateById(id: string, values: LeadPatch): Promise<unknown>;
+  updateByRuc(ruc: string, values: LeadPatch): Promise<unknown>;
+  updateCommercialSnapshot(
+    leadId: string,
+    scope: LeadCommercialScope,
+    updatedAt: number,
+    updatedBy: number,
+  ): Promise<unknown>;
+};
 
 type LeadRow = {
   id: string;

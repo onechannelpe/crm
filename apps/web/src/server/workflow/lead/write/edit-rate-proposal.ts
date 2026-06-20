@@ -4,9 +4,9 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
-import type { RateProposalNumbers } from "~/server/workflow/ports";
 
 import { editRateProposal } from "../../lead/domain/decide";
+import type { RateProposalNumbers } from "./rate-proposal-repo";
 import { runLeadTransaction } from "./transition";
 
 const RATE_FIELD_KEYS = [

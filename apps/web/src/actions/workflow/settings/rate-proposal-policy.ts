@@ -3,6 +3,8 @@
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
+import { getRateProposalPolicy } from "~/server/workflow/policy/read/get-rate-proposal-policy";
+import { updateRateProposalPolicy } from "~/server/workflow/policy/write/update-rate-proposal-policy";
 
 import { workflowActor } from "../commands/actor";
 
@@ -13,11 +15,19 @@ export async function queryRateProposalPolicy() {
 
     audit: () => ({}),
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.queries.getRateProposalPolicy({
-        actorRole: actor.role,
-        branchId: actor.branchId,
-      }),
+    execute: ({ actor }) => {
+      const workflow = getServerRuntime().workflow;
+
+      return getRateProposalPolicy(
+        {
+          rateProposalPolicies: workflow.repos.rateProposalPolicies,
+        },
+        {
+          actorRole: actor.role,
+          branchId: actor.branchId,
+        },
+      );
+    },
   });
 }
 
@@ -31,12 +41,21 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
         validityDays: r.posInt("validityDays"),
       })),
 
-    audit: (command) => ({ validityDays: command.validityDays }),
+    audit: ({ validityDays }) => ({ validityDays }),
 
-    execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.updateRateProposalPolicy({
-        actor: workflowActor(actor),
-        validityDays: payload.validityDays,
-      }),
+    execute: ({ actor }, payload) => {
+      const workflow = getServerRuntime().workflow;
+
+      return updateRateProposalPolicy(
+        {
+          actor: workflowActor(actor),
+          validityDays: payload.validityDays,
+        },
+        {
+          rateProposalPolicies: workflow.repos.rateProposalPolicies,
+          now: workflow.now(),
+        },
+      );
+    },
   });
 }

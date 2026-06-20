@@ -5,8 +5,8 @@ import {
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
-import type { LeadReadRepository } from "~/server/workflow/lead/read/queries-port";
 import type { LeadEnrichmentQueue } from "~/server/workflow/lead/write/engine-port";
+import type { LeadReadRepository } from "~/server/workflow/lead/write/lead-repo";
 
 import { resolveCapabilities } from "../../lead/domain/policy";
 

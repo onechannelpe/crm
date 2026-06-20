@@ -5,7 +5,8 @@ import {
   DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS,
   resolveRateProposalPolicy,
 } from "~/server/workflow/lead/domain/pricing";
-import type { RateProposalPolicyRepository } from "~/server/workflow/ports";
+
+import type { RateProposalPolicyRepository } from "../rate-proposal-policy-repo";
 
 export type RateProposalPolicyView = {
   branchId: number;

@@ -1,7 +1,7 @@
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { LeadRepository } from "~/server/workflow/lead/read/queries-port";
-import type { WorkflowUserRepository } from "~/server/workflow/ports";
+import type { WorkflowUserRepository } from "~/server/workflow/lead/read/users-repo";
+import type { LeadRepository } from "~/server/workflow/lead/write/lead-repo";
 
 import {
   decideRegistrationConflict,

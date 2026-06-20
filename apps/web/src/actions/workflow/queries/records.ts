@@ -18,6 +18,10 @@ import {
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
+import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+import { listAssignableExecutives } from "~/server/workflow/lead/read/queries/list-assignable-executives";
+import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
 
 import { workflowActor } from "../commands/actor";
 
@@ -51,11 +55,20 @@ export async function queryLeadList(
       status: status ?? null,
     }),
 
-    execute: ({ actor }, parsed) =>
-      getServerRuntime().workflow.queries.listLeads({
-        actor: workflowActor(actor),
-        filters: parsed,
-      }),
+    execute: ({ actor }, parsedFilters) => {
+      const workflow = getServerRuntime().workflow;
+      const { userId, role, branchId } = workflowActor(actor);
+
+      return listLeads(
+        { leads: workflow.repos.leadQueries },
+        {
+          actorUserId: userId,
+          actorRole: role,
+          actorBranchId: branchId,
+          filters: parsedFilters,
+        },
+      );
+    },
   });
 }
 
@@ -71,13 +84,18 @@ export async function queryLeadDetail(
         leadId: r.str("leadId"),
       })),
 
-    audit: (query) => ({ leadId: query.leadId }),
+    audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, parsed) =>
-      getServerRuntime().workflow.queries.getLeadDetail({
-        actor: workflowActor(actor),
-        leadId: parsed.leadId,
-      }),
+    execute: ({ actor }, query) => {
+      const workflow = getServerRuntime().workflow;
+      const { userId, role } = workflowActor(actor);
+
+      return getLeadDetail(workflow.repos, {
+        actorUserId: userId,
+        actorRole: role,
+        leadId: query.leadId,
+      });
+    },
   });
 }
 
@@ -93,12 +111,17 @@ export async function queryLeadBootstrapPreview(
         ruc: r.str("ruc"),
       })),
 
-    audit: (query) => ({ ruc: query.ruc }),
+    audit: ({ ruc }) => ({ ruc }),
 
-    execute: (_ctx, query) =>
-      getServerRuntime().workflow.queries.getLeadBootstrapPreview({
-        ruc: query.ruc,
-      }),
+    execute: (_ctx, query) => {
+      const workflow = getServerRuntime().workflow;
+
+      return getLeadBootstrapPreview(
+        { party: workflow.repos.party },
+        workflow.engineGateway,
+        { ruc: query.ruc },
+      );
+    },
   });
 }
 
@@ -116,12 +139,18 @@ export async function queryAssignableExecutives(
         limit: r.optNum("limit") ?? undefined,
       })),
 
-    audit: (query) => ({ leadId: query.leadId }),
+    audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, parsed) =>
-      getServerRuntime().workflow.queries.listAssignableExecutives({
-        actor: workflowActor(actor),
-        ...parsed,
-      }),
+    execute: ({ actor }, query) => {
+      const workflow = getServerRuntime().workflow;
+      const { userId, role, branchId } = workflowActor(actor);
+
+      return listAssignableExecutives(workflow.repos, {
+        actorUserId: userId,
+        actorRole: role,
+        actorBranchId: branchId,
+        ...query,
+      });
+    },
   });
 }

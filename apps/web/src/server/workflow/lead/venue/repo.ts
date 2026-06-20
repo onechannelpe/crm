@@ -1,16 +1,60 @@
 import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
+import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
+import type { CollectionMode } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type {
+
+export type LeadVenue = {
+  id: string;
+  leadId: string;
+  tradeName: string;
+  posQuantity: number;
+  linkUrl: string | null;
+  onlineUrl: string | null;
+  onlineCollectionMode: CollectionMode | null;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
+  solesAccount?: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
+  createdAt: number;
+  createdBy: number;
+};
+
+export type LeadVenueInsert = Omit<
   LeadVenue,
-  LeadVenueAccounts,
-  LeadVenueInsert,
-  LeadVenueUpdate,
-} from "~/server/workflow/ports";
+  "id" | "solesAccount" | "dollarAccount"
+>;
+
+export type LeadVenueUpdate = Omit<
+  LeadVenue,
+  "id" | "leadId" | "solesAccount" | "dollarAccount" | "createdAt" | "createdBy"
+>;
+
+export type LeadVenueAccounts = {
+  solesAccount: SaleVenueAccount & { currency: "PEN" };
+  dollarAccount?: SaleVenueAccount & { currency: "USD" };
+};
+
+export type LeadVenueRepository = {
+  insert(values: LeadVenueInsert): Promise<string>;
+  update(venueId: string, values: LeadVenueUpdate): Promise<void>;
+  addAccounts(
+    venueId: string,
+    accounts: LeadVenueAccounts,
+    now: number,
+  ): Promise<void>;
+  findById(id: string): Promise<Result<LeadVenue | undefined, DomainError>>;
+  listByLeadId(leadId: string): Promise<Result<LeadVenue[], DomainError>>;
+  countByLeadId(leadId: string): Promise<number>;
+  countWithAccounts(leadId: string): Promise<number>;
+};
 
 type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
 type NewLeadVenueRow = Insertable<Database["workflow_lead_venues"]>;

@@ -1,10 +1,10 @@
 import { randomUUIDv7 } from "bun";
 
+import type { RequestRateRevisionInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { SubmitReadyRevisionFile } from "~/server/workflow/infrastructure/ports/entities";
-import type { RequestRateRevisionCommandInput } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { requestRateRevision } from "../../lead/domain/decide";
 import { resolveRateProposalPolicy } from "../../lead/domain/pricing";
@@ -12,21 +12,35 @@ import {
   computeReservationExpiry,
   isReservationActive,
 } from "../../lead/domain/reservation";
+import type { SubmitReadyRevisionFile } from "./rate-revision-repo";
 import { runLeadTransaction } from "./transition";
 
 export async function requestRateRevisionCommand(
-  input: RequestRateRevisionCommandInput,
-  ports: { executor: DatabaseExecutor; now: number },
+  input: RequestRateRevisionInput & {
+    actor: WorkflowActor;
+  },
+  ports: {
+    executor: DatabaseExecutor;
+    now: number;
+  },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leadStates.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const proposal = await ctx.repos.rateProposals.findLatest(state.id);
-    if (!proposal) return Err(fail("rate_proposal_not_found"));
+
+    if (!proposal) {
+      return Err(fail("rate_proposal_not_found"));
+    }
+
     if (proposal.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
     }
+
     if (!isReservationActive(state, ctx.now)) {
       return Err(fail("rate_proposal_expired"));
     }
@@ -36,6 +50,7 @@ export async function requestRateRevisionCommand(
         input.actor.branchId,
       ),
     });
+
     const reservationExpiresAt = computeReservationExpiry({
       now: ctx.now,
       validityDays: policy.validityDays,
@@ -43,19 +58,21 @@ export async function requestRateRevisionCommand(
 
     const existingCount = await ctx.repos.rateRevisions.countByLeadId(state.id);
 
-    const resolved = await Promise.all(
+    const revisionFiles = await Promise.all(
       input.artifactIds.map(async (artifactId) => {
         const file = await ctx.repos.rateRevisions.findSubmitReadyRevisionFile({
           artifactId,
           leadId: state.id,
           uploadedByUserId: input.actor.userId,
         });
+
         return { artifactId, file };
       }),
     );
 
     const validatedArtifacts: SubmitReadyRevisionFile[] = [];
-    for (const { artifactId, file } of resolved) {
+
+    for (const { artifactId, file } of revisionFiles) {
       if (!file) {
         return Err(
           fail("rate_revision_file_not_submit_ready", {
@@ -63,6 +80,7 @@ export async function requestRateRevisionCommand(
           }),
         );
       }
+
       validatedArtifacts.push(file);
     }
 
@@ -78,7 +96,10 @@ export async function requestRateRevisionCommand(
       reservationExpiresAt,
       now: ctx.now,
     });
-    if (!transition.ok) return transition;
+
+    if (!transition.ok) {
+      return transition;
+    }
 
     await ctx.repos.rateProposals.markOutcome(
       proposal.id,
@@ -97,12 +118,12 @@ export async function requestRateRevisionCommand(
     });
 
     await Promise.all(
-      validatedArtifacts.map((art) =>
+      validatedArtifacts.map((artifact) =>
         ctx.repos.rateRevisions.insertFile({
           leadId: state.id,
           revisionId,
-          artifactId: art.artifactId,
-          fileAssetId: art.fileAssetId,
+          artifactId: artifact.artifactId,
+          fileAssetId: artifact.fileAssetId,
           uploadedByUserId: input.actor.userId,
           createdAt: ctx.now,
         }),
@@ -110,7 +131,10 @@ export async function requestRateRevisionCommand(
     );
 
     const committed = await ctx.commit(transition.value);
-    if (!committed.ok) return committed;
+
+    if (!committed.ok) {
+      return committed;
+    }
 
     return Ok({ leadId: state.id });
   });

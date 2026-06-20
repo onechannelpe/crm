@@ -1,9 +1,39 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type {
-  RateRevision,
-  RateRevisionFile,
-  RateRevisionRepository,
-} from "~/server/workflow/ports";
+
+export type RateRevision = {
+  id: string;
+  leadId: string;
+  proposalId: string;
+  round: number;
+  justification: string;
+  requestedBy: number;
+  requestedAt: number;
+};
+
+export type RateRevisionFile = {
+  revisionId: string;
+  artifactId: string;
+  fileAssetId: number;
+  uploadedByUserId: number;
+  createdAt: number;
+};
+
+export type SubmitReadyRevisionFile = {
+  artifactId: string;
+  fileAssetId: number;
+};
+
+export type RateRevisionRepository = {
+  insert(values: RateRevision): Promise<void>;
+  insertFile(values: RateRevisionFile & { leadId: string }): Promise<void>;
+  findSubmitReadyRevisionFile(input: {
+    artifactId: string;
+    leadId: string;
+    uploadedByUserId: number;
+  }): Promise<SubmitReadyRevisionFile | null>;
+  countByLeadId(leadId: string): Promise<number>;
+  listByLeadId(leadId: string): Promise<RateRevision[]>;
+};
 
 export function createRateRevisionRepo(
   db: DatabaseExecutor,

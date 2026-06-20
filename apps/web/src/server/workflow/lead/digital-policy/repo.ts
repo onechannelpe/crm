@@ -1,12 +1,36 @@
 import type { Selectable } from "kysely";
 
+import type {
+  ProductScope,
+  CollectionMode,
+} from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type {
-  DigitalPolicy,
-  DigitalPolicyFields,
-  DigitalPolicyRepository,
-} from "~/server/workflow/ports";
+
+export type DigitalPolicyFields = {
+  linkScope: ProductScope;
+  linkUrl: string | null;
+  onlineScope: ProductScope;
+  onlineUrl: string | null;
+  onlineCollectionMode: CollectionMode | null;
+};
+
+export type DigitalPolicy = {
+  leadId: string;
+} & DigitalPolicyFields & {
+    updatedAt: number;
+    updatedBy: number;
+  };
+
+export type DigitalPolicyRepository = {
+  findByLeadId(leadId: string): Promise<DigitalPolicy | undefined>;
+  upsert(values: {
+    leadId: string;
+    fields: DigitalPolicyFields;
+    updatedAt: number;
+    updatedBy: number;
+  }): Promise<void>;
+};
 
 type DigitalPolicyRow = Selectable<Database["workflow_lead_digital_policy"]>;
 

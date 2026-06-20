@@ -5,6 +5,10 @@ import { CURRENCIES } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
+import { acceptRateCommand } from "~/server/workflow/lead/write/accept-rate";
+import { editRateProposalCommand } from "~/server/workflow/lead/write/edit-rate-proposal";
+import { proposeRateCommand } from "~/server/workflow/lead/write/propose-rate";
+import { requestRateRevisionCommand } from "~/server/workflow/lead/write/request-rate-revision";
 
 import { workflowActor } from "./actor";
 
@@ -27,10 +31,13 @@ export async function requestRateProposal(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.proposeRate({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      proposeRateCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -54,10 +61,13 @@ export async function requestRateProposalEdit(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.editRateProposal({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      editRateProposalCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -75,10 +85,13 @@ export async function requestRateAcceptance(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.acceptRate({
-        actor: workflowActor(actor),
-        ...payload,
-      }),
+      acceptRateCommand(
+        { actor: workflowActor(actor), ...payload },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }
 
@@ -101,11 +114,17 @@ export async function requestRateRevision(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>
-      getServerRuntime().workflow.commands.requestRateRevision({
-        actor: workflowActor(actor),
-        leadId: payload.leadId,
-        justification: payload.justification,
-        artifactIds: payload.artifactIds,
-      }),
+      requestRateRevisionCommand(
+        {
+          actor: workflowActor(actor),
+          leadId: payload.leadId,
+          justification: payload.justification,
+          artifactIds: payload.artifactIds,
+        },
+        {
+          executor: getServerRuntime().workflow.db,
+          now: getServerRuntime().workflow.now(),
+        },
+      ),
   });
 }

@@ -9,7 +9,7 @@ import { resolveLeadNextStep } from "~/server/workflow/lead/read/lead-progress";
 import type {
   LeadListFilters,
   LeadQueries,
-} from "~/server/workflow/lead/read/queries-port";
+} from "~/server/workflow/lead/read/lead-queries";
 
 import type { ListLeadsInput } from "../inputs";
 import { parsePageParams } from "./pagination";
