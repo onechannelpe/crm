@@ -1,3 +1,4 @@
+import { uploadsConfig } from "~/lib/env";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
@@ -115,7 +116,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     logger,
   };
 
-  const files = createFilesRuntime(infra);
+  const files = createFilesRuntime(infra, uploadsConfig());
 
   const engine = createFakeEngine();
 
