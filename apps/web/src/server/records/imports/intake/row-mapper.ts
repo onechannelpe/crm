@@ -4,7 +4,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import { parseOptionalVocabularyValue } from "~/server/workflow/parsers";
+import { parseOptionalVocabularyValue } from "~/server/workflow/lead/domain/parse";
 
 export interface RecordImportInvalidRow {
   row: number;

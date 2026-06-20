@@ -4,9 +4,9 @@ import {
   type DomainError,
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { LeadEnrichmentQueue } from "~/server/workflow/infrastructure/ports/gateways";
-import type { LeadReadRepository } from "~/server/workflow/infrastructure/ports/lead";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
+import type { LeadReadRepository } from "~/server/workflow/lead/read/queries-port";
+import type { LeadEnrichmentQueue } from "~/server/workflow/lead/write/engine-port";
 
 import { resolveCapabilities } from "../../lead/domain/policy";
 

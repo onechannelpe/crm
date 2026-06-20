@@ -3,21 +3,21 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type {
-  LeadCommercialScope,
-  WorkflowUserRepository,
-} from "~/server/workflow/infrastructure/ports/entities";
+import type { LeadRepository } from "~/server/workflow/lead/read/queries-port";
 import type {
   LeadEnrichmentQueue,
   WorkflowEngineGateway,
-} from "~/server/workflow/infrastructure/ports/gateways";
-import type { LeadRepository } from "~/server/workflow/infrastructure/ports/lead";
+} from "~/server/workflow/lead/write/engine-port";
+import type {
+  LeadCommercialScope,
+  WorkflowUserRepository,
+} from "~/server/workflow/ports";
 
 import { reassignLead } from "../../lead/domain/decide";
 import { requireCapability } from "../../lead/domain/policy";
 import { isReservationLapsed } from "../../lead/domain/reservation";
 import { createLeadDraft } from "../../lead/domain/state";
-import { normalizeLeadRuc } from "../../parsers";
+import { normalizeLeadRuc } from "../domain/parse";
 import { expireLeadReservation } from "./expire-reservation";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {

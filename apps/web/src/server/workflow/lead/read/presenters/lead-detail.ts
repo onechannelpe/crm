@@ -1,7 +1,20 @@
+import type {
+  LeadAvailableAction,
+  LeadDetailLeadView,
+  LeadDetailRateProposalView,
+  LeadDetailRateRevisionView,
+  LeadDetailVenueView,
+  LeadDetailView,
+} from "~/contracts/workflow/views";
+import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
+import type {
+  LeadCommercialScope,
+  LeadState,
+} from "~/server/workflow/lead/domain/state";
 import {
   resolveLeadBlockingFields,
   resolveLeadNextStep,
-} from "~/server/workflow/domain/lead-progress";
+} from "~/server/workflow/lead/read/lead-progress";
 import type {
   DigitalPolicy,
   RateRevision,
@@ -11,20 +24,7 @@ import type {
   RateProposal,
   LeadVenue,
   LeadSourceStatus,
-} from "~/server/workflow/infrastructure/ports/entities";
-import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
-import type {
-  LeadCommercialScope,
-  LeadState,
-} from "~/server/workflow/lead/domain/state";
-import type {
-  LeadAvailableAction,
-  LeadDetailLeadView,
-  LeadDetailRateProposalView,
-  LeadDetailRateRevisionView,
-  LeadDetailVenueView,
-  LeadDetailView,
-} from "~/server/workflow/types";
+} from "~/server/workflow/ports";
 
 import type {
   LeadDetailRateRevisionFileView,

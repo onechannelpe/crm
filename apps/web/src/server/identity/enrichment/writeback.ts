@@ -1,4 +1,4 @@
-import type { PartyRepository } from "~/server/workflow/infrastructure/ports/entities";
+import type { PartyRepository } from "~/server/workflow/ports";
 
 export type SunatLeadOverlay = {
   documentType: "dni" | "ruc";

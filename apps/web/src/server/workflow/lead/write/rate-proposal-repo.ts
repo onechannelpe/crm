@@ -7,7 +7,7 @@ import type {
   RateProposalNumbers,
   RateProposalOutcome,
   RateProposalRepository,
-} from "~/server/workflow/infrastructure/ports/entities";
+} from "~/server/workflow/ports";
 
 type RateProposalRow = Selectable<Database["workflow_rate_proposals"]>;
 type NewRateProposalRow = Insertable<Database["workflow_rate_proposals"]>;

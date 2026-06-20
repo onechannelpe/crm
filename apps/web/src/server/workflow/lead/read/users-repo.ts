@@ -1,12 +1,11 @@
 import { shortName } from "~/lib/users/display-name";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
-
-import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
   AssignableExecutivesScope,
   LeadUserWithName,
   WorkflowUserRepository,
-} from "./ports/entities";
+} from "~/server/workflow/ports";
 
 export function createWorkflowUsersRepo(
   executor: DatabaseExecutor,

@@ -1,13 +1,13 @@
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { WorkflowUserRepository } from "~/server/workflow/infrastructure/ports/entities";
-import type { LeadRepository } from "~/server/workflow/infrastructure/ports/lead";
+import type { LeadRepository } from "~/server/workflow/lead/read/queries-port";
+import type { WorkflowUserRepository } from "~/server/workflow/ports";
 
 import {
   decideRegistrationConflict,
   ensureCanReassignLead,
-} from "../../domain/assignment";
-import type { LeadState } from "../../lead/domain/state";
+} from "../domain/assignment";
+import type { LeadState } from "../domain/state";
 
 export type LeadRegistrationResolution =
   | { kind: "create" }

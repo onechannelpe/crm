@@ -8,7 +8,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { normalizeLeadRuc } from "../../parsers";
+import { normalizeLeadRuc } from "./parse";
 
 export type LeadCommercialScope = {
   currentProvider: string;

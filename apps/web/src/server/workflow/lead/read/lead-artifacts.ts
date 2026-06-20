@@ -1,3 +1,7 @@
+import type {
+  LeadRateRevisionFileView,
+  LeadSaleProofFileView,
+} from "~/contracts/workflow/results";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import type { ArtifactRepos } from "~/server/files/service/contracts";
 import { createDownloadArtifact } from "~/server/files/service/create-download-artifact";
@@ -14,16 +18,12 @@ import {
   type DomainError,
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import type {
   LeadQueries,
   LeadReadRepository,
   RecordExportRow,
-} from "~/server/workflow/infrastructure/ports/lead";
-import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
-import type {
-  LeadRateRevisionFileView,
-  LeadSaleProofFileView,
-} from "~/server/workflow/types";
+} from "~/server/workflow/lead/read/queries-port";
 
 const LEAD_EXPORT_COLUMNS: {
   header: string;

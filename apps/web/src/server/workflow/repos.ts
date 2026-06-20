@@ -1,22 +1,22 @@
 import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
+import { createPartyRepo } from "~/server/identity/organization/repo";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
-import { createAssignmentRepo } from "./assignment-repo";
-import { createDigitalPolicyRepo } from "./digital-policy-repo";
-import { createHistoryRepo } from "./history-repo";
-import { createLeadFavoriteRepo } from "./lead-favorite-repo";
-import { createLeadQueries } from "./lead-queries";
-import { createLeadRepo } from "./lead-repo";
-import { createLeadStateRepo } from "./lead-state-repo";
-import { createLeadVenueRepo } from "./lead-venue-repo";
-import { createPartyRepo } from "./party-repo";
-import { createRateProposalPolicyRepo } from "./rate-proposal-policy-repo";
-import { createRateProposalRepo } from "./rate-proposal-repo";
-import { createRateRevisionRepo } from "./rate-revision-repo";
-import { createSourceStatusRepo } from "./source-status-repo";
-import { createSourcingPolicyRepo } from "./sourcing-policy-repo";
-import { createWorkflowUsersRepo } from "./users-repo";
+import { createDigitalPolicyRepo } from "./lead/digital-policy/repo";
+import { createHistoryRepo } from "./lead/read/history/history-repo";
+import { createLeadFavoriteRepo } from "./lead/read/lead-favorite-repo";
+import { createLeadQueries } from "./lead/read/lead-queries";
+import { createWorkflowUsersRepo } from "./lead/read/users-repo";
+import { createLeadVenueRepo } from "./lead/venue/repo";
+import { createAssignmentRepo } from "./lead/write/assignment-repo";
+import { createLeadRepo } from "./lead/write/lead-repo";
+import { createLeadStateRepo } from "./lead/write/lead-state-repo";
+import { createRateProposalRepo } from "./lead/write/rate-proposal-repo";
+import { createRateRevisionRepo } from "./lead/write/rate-revision-repo";
+import { createSourceStatusRepo } from "./lead/write/source-status-repo";
+import { createRateProposalPolicyRepo } from "./policy/rate-proposal-policy-repo";
+import { createSourcingPolicyRepo } from "./policy/sourcing-policy-repo";
 
 export function createWorkflowRepos(executor: DatabaseExecutor) {
   return {

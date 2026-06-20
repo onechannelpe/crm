@@ -1,7 +1,7 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { LeadSourcingPolicyRepository } from "~/server/workflow/infrastructure/ports/entities";
+import type { LeadSourcingPolicyRepository } from "~/server/workflow/ports";
 
 export async function getSourcingPolicy(
   deps: {

@@ -1,5 +1,5 @@
+import type { LeadTimelineItem } from "~/contracts/workflow/views";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
-import type { LeadTimelineItem } from "~/server/workflow/types";
 
 import { presentTimelineItem } from "./timeline-item";
 

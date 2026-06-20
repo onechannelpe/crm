@@ -1,10 +1,10 @@
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { VenueDigitalConfig } from "~/contracts/workflow/primitives";
 import type {
-  VenueDigitalConfig,
   CollectionMode,
   ProductScope,
-} from "~/server/workflow/types";
+} from "~/contracts/workflow/vocabulary";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 type LinkConfig = { url: string };
 type OnlineConfig = { url: string; collectionMode: CollectionMode };

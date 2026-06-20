@@ -12,8 +12,8 @@ import {
 import { isPlainRecord } from "~/lib/type-guards";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import { invalidHistoryPayload } from "~/server/workflow/domain/integrity-errors";
-import { parseVocabularyValue } from "~/server/workflow/parsers";
+import { invalidHistoryPayload } from "~/server/workflow/lead/domain/integrity-errors";
+import { parseVocabularyValue } from "~/server/workflow/lead/domain/parse";
 
 import type { HistoryEventRow } from "./history-event-row";
 

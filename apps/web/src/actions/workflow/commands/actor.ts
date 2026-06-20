@@ -1,5 +1,5 @@
 import type { AuthSession } from "~/lib/auth/access/session-types";
-import type { WorkflowActor } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 /**
  * Projects the authenticated session down to the fields a workflow command

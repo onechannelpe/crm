@@ -2,7 +2,7 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadSourcingPolicy } from "~/server/workflow/infrastructure/ports/entities";
+import type { LeadSourcingPolicy } from "~/server/workflow/ports";
 
 type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
 type NewSourcingPolicyRow = Insertable<Database["lead_sourcing_policies"]>;

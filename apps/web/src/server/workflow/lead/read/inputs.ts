@@ -4,7 +4,7 @@ import type {
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
 
-import type { WorkflowActor } from "./actor";
+import type { WorkflowActor } from "../../actor";
 
 export type ListAssignableExecutivesInput = {
   actor: WorkflowActor;

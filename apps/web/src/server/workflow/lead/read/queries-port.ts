@@ -1,18 +1,18 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
 import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "~/server/workflow/types";
+} from "~/contracts/workflow/vocabulary";
+import type { Role } from "~/lib/auth/access/rbac";
+import type { DomainError } from "~/server/shared/domain-error";
+import type { Result } from "~/server/shared/result";
 
-import type { LeadHistoryEntry } from "../../lead/domain/history";
+import type { LeadHistoryEntry } from "../domain/history";
 import type {
   LeadCommercialScope,
   LeadDraft,
   LeadState,
-} from "../../lead/domain/state";
+} from "../domain/state";
 
 export type LeadPatch = Partial<
   Omit<

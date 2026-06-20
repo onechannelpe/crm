@@ -1,3 +1,4 @@
+import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
@@ -7,7 +8,6 @@ import {
   resolveAvailableActions,
 } from "~/server/workflow/lead/domain/policy";
 import { isReservationActive } from "~/server/workflow/lead/domain/reservation";
-import type { LeadDetailView } from "~/server/workflow/types";
 
 import { presentLeadDetail } from "../presenters/lead-detail";
 import {

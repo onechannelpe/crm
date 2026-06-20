@@ -1,10 +1,10 @@
-import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
-import type { SunatSourceStatus } from "~/server/workflow/infrastructure/ports/entities";
 import type {
   SettlementBank,
   CollectionMode,
   ProductScope,
-} from "~/server/workflow/types";
+} from "~/contracts/workflow/vocabulary";
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
+import type { SunatSourceStatus } from "~/server/workflow/ports";
 
 export type LeadDetailSourceStatusView = {
   sunat: {

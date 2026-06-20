@@ -1,16 +1,17 @@
+import type { LeadListView } from "~/contracts/workflow/views";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import { resolveLeadNextStep } from "~/server/workflow/domain/lead-progress";
-import type {
-  LeadListFilters,
-  LeadQueries,
-} from "~/server/workflow/infrastructure/ports/lead";
 import {
   requireCapability,
   resolveLeadListExecutiveScope,
 } from "~/server/workflow/lead/domain/policy";
-import type { LeadListView, ListLeadsInput } from "~/server/workflow/types";
+import { resolveLeadNextStep } from "~/server/workflow/lead/read/lead-progress";
+import type {
+  LeadListFilters,
+  LeadQueries,
+} from "~/server/workflow/lead/read/queries-port";
 
+import type { ListLeadsInput } from "../inputs";
 import { parsePageParams } from "./pagination";
 
 type LeadSortField = "createdAt" | "updatedAt" | "registeredBy" | "ruc";

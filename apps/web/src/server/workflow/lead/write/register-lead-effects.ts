@@ -4,7 +4,7 @@ import { Ok, type Result } from "~/server/shared/result";
 import type {
   LeadAssignmentRepository,
   LeadRepository,
-} from "~/server/workflow/infrastructure/ports/lead";
+} from "~/server/workflow/lead/read/queries-port";
 
 import { createHistoryEvent } from "../../lead/domain/history";
 import type { LeadDraft } from "../../lead/domain/state";

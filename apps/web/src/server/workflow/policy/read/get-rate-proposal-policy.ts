@@ -1,11 +1,11 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { RateProposalPolicyRepository } from "~/server/workflow/infrastructure/ports/entities";
 import {
   DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS,
   resolveRateProposalPolicy,
 } from "~/server/workflow/lead/domain/pricing";
+import type { RateProposalPolicyRepository } from "~/server/workflow/ports";
 
 export type RateProposalPolicyView = {
   branchId: number;

@@ -9,12 +9,12 @@ import type {
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
-import type { LeadPatch } from "~/server/workflow/infrastructure/ports/lead";
 import type {
   LeadCommercialScope,
   LeadDraft,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
+import type { LeadPatch } from "~/server/workflow/lead/read/queries-port";
 
 type LeadRow = {
   id: string;

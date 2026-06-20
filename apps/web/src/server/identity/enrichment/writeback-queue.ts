@@ -1,11 +1,11 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { applySunatEnrichment } from "~/server/workflow/effects/sunat-enrichment";
-import { createPartyRepo } from "~/server/workflow/infrastructure/party-repo";
+import { applySunatEnrichment } from "~/server/identity/enrichment/writeback";
 import {
   createSunatEnrichmentWritebackOutboxRepo,
   type SunatEnrichmentWritebackOutboxRepo,
-} from "~/server/workflow/infrastructure/sunat-enrichment-writeback-outbox-repo";
+} from "~/server/identity/enrichment/writeback-outbox-repo";
+import { createPartyRepo } from "~/server/identity/organization/repo";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type SunatEnrichmentWritebackJob = {
   id: number;

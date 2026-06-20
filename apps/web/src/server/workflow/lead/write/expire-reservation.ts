@@ -2,9 +2,9 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { createLeadRepo } from "../../infrastructure/lead-repo";
 import { expireReservation } from "../../lead/domain/decide";
 import { isReservationLapsed } from "../../lead/domain/reservation";
+import { createLeadRepo } from "./lead-repo";
 import { runLeadTransaction } from "./transition";
 
 // Releases a single lead whose RUC hold has lapsed. Idempotent: a lead that is

@@ -1,9 +1,7 @@
 import { summarizeFieldChanges } from "~/contracts/events";
+import type { LeadTimelineItem } from "~/contracts/workflow/views";
+import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
-import type {
-  LeadCallOutcome,
-  LeadTimelineItem,
-} from "~/server/workflow/types";
 
 import { formatTimelineActorName } from "./timeline-actor-name";
 

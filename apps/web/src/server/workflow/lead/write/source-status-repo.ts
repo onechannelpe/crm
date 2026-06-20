@@ -5,7 +5,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   SourceStatusRepository,
   SunatSourceStatus,
-} from "~/server/workflow/infrastructure/ports/entities";
+} from "~/server/workflow/ports";
 
 function toPipelineSunatStatus(input: {
   lifecycle: "idle" | "queued" | "running" | "succeeded" | "failed";

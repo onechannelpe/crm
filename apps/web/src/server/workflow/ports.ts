@@ -1,13 +1,13 @@
+import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
+import type {
+  CollectionMode,
+  Currency,
+  ProductScope,
+} from "~/contracts/workflow/vocabulary";
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
-import type {
-  CollectionMode,
-  ProductScope,
-  SaleVenueAccount,
-  Currency,
-} from "~/server/workflow/types";
 
 export type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 

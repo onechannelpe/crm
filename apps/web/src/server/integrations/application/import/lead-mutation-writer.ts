@@ -4,7 +4,7 @@ import {
   type LeadStatus,
 } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { resolveReviewTransition } from "~/server/workflow/domain/workflow";
+import { resolveReviewTransition } from "~/server/workflow/lead/domain/review";
 
 import type { ImportRowInput, LeadMutationResult, LoadedLead } from "./types";
 

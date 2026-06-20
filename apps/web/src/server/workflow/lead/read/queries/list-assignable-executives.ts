@@ -1,14 +1,14 @@
+import type { AssignableExecutiveView } from "~/contracts/workflow/views";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { WorkflowUserRepository } from "~/server/workflow/infrastructure/ports/entities";
-import type { LeadRepository } from "~/server/workflow/infrastructure/ports/lead";
 import {
   authorizeLeadAction,
   requireCapability,
   resolveAssignableExecutivesScope,
 } from "~/server/workflow/lead/domain/policy";
-import type { AssignableExecutiveView } from "~/server/workflow/types";
+import type { LeadRepository } from "~/server/workflow/lead/read/queries-port";
+import type { WorkflowUserRepository } from "~/server/workflow/ports";
 
 type AssignableExecutivesQueryDeps = {
   leads: LeadRepository;

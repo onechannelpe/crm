@@ -1,6 +1,16 @@
 import { createLogger } from "~/lib/observability/logger";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
+import type {
+  LeadCommercialScope,
+  LeadState,
+} from "~/server/workflow/lead/domain/state";
+import type {
+  LeadHistoryRepository,
+  LeadFavoriteRepository,
+  LeadRepository,
+} from "~/server/workflow/lead/read/queries-port";
 import type {
   DigitalPolicyRepository,
   RateRevision,
@@ -13,17 +23,7 @@ import type {
   SourceStatusRepository,
   LeadUserWithName,
   WorkflowUserRepository,
-} from "~/server/workflow/infrastructure/ports/entities";
-import type {
-  LeadHistoryRepository,
-  LeadFavoriteRepository,
-  LeadRepository,
-} from "~/server/workflow/infrastructure/ports/lead";
-import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
-import type {
-  LeadCommercialScope,
-  LeadState,
-} from "~/server/workflow/lead/domain/state";
+} from "~/server/workflow/ports";
 
 const logger = createLogger("workflow-get-lead-detail");
 

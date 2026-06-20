@@ -1,10 +1,9 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
 import type {
   RateRevision,
   RateRevisionFile,
   RateRevisionRepository,
-} from "./ports/entities";
+} from "~/server/workflow/ports";
 
 export function createRateRevisionRepo(
   db: DatabaseExecutor,

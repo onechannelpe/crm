@@ -4,7 +4,7 @@ import { Err, isErr, type Result } from "~/server/shared/result";
 import {
   createWorkflowRepos,
   type WorkflowRepos,
-} from "~/server/workflow/infrastructure/workflow-repos";
+} from "~/server/workflow/repos";
 
 import {
   commitTransition,
