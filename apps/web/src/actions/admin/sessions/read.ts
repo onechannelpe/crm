@@ -4,8 +4,8 @@ import type { SessionInfo } from "~/actions/auth/contracts";
 import { countActiveSessions as countActiveSessionsService } from "~/server/auth/application/queries/count-active-sessions";
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 

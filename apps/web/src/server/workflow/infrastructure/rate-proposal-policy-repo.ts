@@ -5,7 +5,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   RateProposalPolicyDefault,
   RateProposalPolicyRepository,
-} from "~/server/workflow/application/ports/entities";
+} from "~/server/workflow/infrastructure/ports/entities";
 
 type RateProposalPolicyRow = Selectable<
   Database["workflow_rate_proposal_policies"]

@@ -5,12 +5,12 @@ import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
-import { requestRateRevision } from "~/server/workflow/domain/lead/commands";
+import { requestRateRevision } from "~/server/workflow/lead/domain/decide";
 import {
   authorizeLeadAction,
   resolveAvailableActions,
-} from "~/server/workflow/domain/lead/policy";
-import type { LeadState } from "~/server/workflow/domain/lead/state";
+} from "~/server/workflow/lead/domain/policy";
+import type { LeadState } from "~/server/workflow/lead/domain/state";
 
 function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
   return {

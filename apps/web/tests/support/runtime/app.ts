@@ -2,9 +2,9 @@ import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
-import { createFilesRuntime } from "~/server/runtime/files-runtime";
-import type { ServerInfra } from "~/server/runtime/infra";
-import { createWorkflowRuntime } from "~/server/runtime/workflow-runtime";
+import { createFilesRuntime } from "~/server/platform/container/files-runtime";
+import type { ServerInfra } from "~/server/platform/container/infra";
+import { createWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { createEventsRepo } from "~/server/shared/repos-events";
 

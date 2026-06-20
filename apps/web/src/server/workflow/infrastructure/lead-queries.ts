@@ -1,6 +1,6 @@
 import type { DatabaseExecutor } from "../../shared/db-executor";
-import type { LeadQueries } from "../application/ports/lead";
 import { applyLeadListFilters, applyLeadVisibility } from "./lead-list-filters";
+import type { LeadQueries } from "./ports/lead";
 
 function toFullName(names: string, firstSurname: string): string {
   return `${names} ${firstSurname}`;

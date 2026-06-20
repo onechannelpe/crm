@@ -1,7 +1,7 @@
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 
 export type AfterCommitEffect = () => Promise<void>;
 

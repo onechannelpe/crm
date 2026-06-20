@@ -1,4 +1,4 @@
-import type { LeadCommercialScope } from "~/server/workflow/domain/lead/state";
+import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 /**
  * Named commercial personas, the single owner of the "default commercial snapshot".

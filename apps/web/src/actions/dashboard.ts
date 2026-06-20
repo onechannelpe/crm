@@ -1,7 +1,7 @@
 "use server";
 
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { Ok } from "~/server/shared/result";
 
 export async function getDashboardStats() {

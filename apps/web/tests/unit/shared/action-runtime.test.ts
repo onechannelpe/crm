@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { authenticate, authorizePermission } from "~/lib/auth/access/session";
 import type { AuthSession } from "~/lib/auth/access/session-types";
-import { createActionRunner } from "~/server/shared/action-runtime";
-import type { AppContext } from "~/server/shared/action-runtime/context";
+import { createActionRunner } from "~/server/platform/action";
+import type { AppContext } from "~/server/platform/action/context";
 import {
   external,
   forbidden,
@@ -20,7 +20,7 @@ vi.mock("~/lib/auth/access/session", () => ({
   authorizeRole: vi.fn<() => unknown>(),
 }));
 
-vi.mock("~/server/shared/action-runtime/context", () => ({
+vi.mock("~/server/platform/action/context", () => ({
   createAppContext: vi.fn<
     (actor: AuthSession, now: () => number) => AppContext
   >((actor, now) => ({

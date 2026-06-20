@@ -11,8 +11,8 @@ import {
   ACCOUNT_TYPE_KINDS,
   COLLECTION_MODES,
 } from "~/contracts/workflow/vocabulary";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import type { DomainError } from "~/server/shared/domain-error";
 import {
   parseObject,

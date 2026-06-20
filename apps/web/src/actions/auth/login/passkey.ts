@@ -9,8 +9,8 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/flows/finish-passkey-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
-import { runPublicAction } from "~/server/shared/action-runtime";
+import { runPublicAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { fail, throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 

@@ -1,6 +1,6 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { applySunatEnrichment } from "~/server/workflow/application/commands/apply-sunat-enrichment";
+import { applySunatEnrichment } from "~/server/workflow/effects/sunat-enrichment";
 import { createPartyRepo } from "~/server/workflow/infrastructure/party-repo";
 import {
   createSunatEnrichmentWritebackOutboxRepo,

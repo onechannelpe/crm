@@ -4,7 +4,7 @@ import { installSession } from "~/actions/auth/install-session";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import { isErr } from "~/server/shared/result";
 import { getInviteInfo as getInviteInfoService } from "~/server/team/application/invites";
 

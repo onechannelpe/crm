@@ -9,8 +9,8 @@ import {
   finishPasskeyEnrollment as finishPasskeyEnrollmentCommand,
 } from "~/server/auth/flows/passkey-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
   const { repos } = getServerRuntime().auth.onboarding;

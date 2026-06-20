@@ -3,8 +3,8 @@
 import type { ActionSuccess } from "~/contracts/common";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function revokeUserSession(

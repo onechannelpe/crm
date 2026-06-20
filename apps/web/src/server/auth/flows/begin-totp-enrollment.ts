@@ -5,7 +5,7 @@ import {
   buildTotpProvisioningUri,
   generateTotpSecret,
 } from "~/lib/auth/totp/totp";
-import type { AppContext } from "~/server/shared/action-runtime/context";
+import type { AppContext } from "~/server/platform/action/context";
 import {
   fail,
   forbidden,

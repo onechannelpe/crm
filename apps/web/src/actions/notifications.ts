@@ -4,8 +4,8 @@ import { randomUUIDv7 } from "bun";
 
 import { isRole } from "~/lib/auth/access/rbac";
 import type { NotificationAudience } from "~/server/notifications/types";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";

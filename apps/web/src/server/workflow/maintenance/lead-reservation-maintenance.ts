@@ -1,7 +1,6 @@
 import { createLogger } from "~/lib/observability/logger";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
-import { expireLapsedReservations } from "../application/commands/expire-reservation";
+import { expireLapsedReservations } from "~/server/workflow/lead/write/expire-reservation";
 
 const logger = createLogger("lead-reservation-maintenance");
 const SWEEP_INTERVAL_MS = 60_000;

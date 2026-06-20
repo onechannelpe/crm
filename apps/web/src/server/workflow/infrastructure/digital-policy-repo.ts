@@ -6,7 +6,7 @@ import type {
   DigitalPolicy,
   DigitalPolicyFields,
   DigitalPolicyRepository,
-} from "~/server/workflow/application/ports/entities";
+} from "~/server/workflow/infrastructure/ports/entities";
 
 type DigitalPolicyRow = Selectable<Database["workflow_lead_digital_policy"]>;
 

@@ -2,7 +2,7 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { buildFileDownloadHeaders } from "~/server/files/headers";
 import { executeDownload } from "~/server/files/service/execute-download";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 

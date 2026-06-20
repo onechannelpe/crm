@@ -1,13 +1,13 @@
 import { vi } from "vitest";
 
 import { Ok } from "~/server/shared/result";
-import type { RateRevisionRepository } from "~/server/workflow/application/ports/entities";
 import type {
   CommitResult,
   LeadUnitOfWork,
 } from "~/server/workflow/application/ports/uow";
-import type { LeadState } from "~/server/workflow/domain/lead/state";
 import type { LeadStateRepository } from "~/server/workflow/infrastructure/lead-state-repo";
+import type { RateRevisionRepository } from "~/server/workflow/infrastructure/ports/entities";
+import type { LeadState } from "~/server/workflow/lead/domain/state";
 
 export function makeWorkflowLead(
   overrides: Partial<LeadState> = {},

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import type { AppContext } from "~/server/shared/action-runtime/context";
+import type { AppContext } from "~/server/platform/action/context";
 
 import type { PolicyActor } from "../policy";
 import type { ArtifactType } from "../types";

@@ -1,8 +1,8 @@
 "use server";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 
 import { parseAssignContactsCommand } from "./input";
 

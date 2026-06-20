@@ -1,6 +1,6 @@
 import type { EngineClient } from "~/server/shared/engine/client";
 
-import type { WorkflowEngineGateway } from "../application/ports/gateways";
+import type { WorkflowEngineGateway } from "./ports/gateways";
 
 export function createEngineGateway(
   engine: EngineClient,

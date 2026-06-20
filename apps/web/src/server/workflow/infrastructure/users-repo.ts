@@ -6,7 +6,7 @@ import type {
   AssignableExecutivesScope,
   LeadUserWithName,
   WorkflowUserRepository,
-} from "../application/ports/entities";
+} from "./ports/entities";
 
 export function createWorkflowUsersRepo(
   executor: DatabaseExecutor,

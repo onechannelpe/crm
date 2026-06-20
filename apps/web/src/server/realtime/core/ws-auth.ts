@@ -1,5 +1,5 @@
 import { isRole, type Role } from "~/lib/auth/access/rbac";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 
 import type { WsPeer } from "./ws-types";
 

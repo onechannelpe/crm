@@ -8,14 +8,14 @@ import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJobId } from "~/lib/redis/publisher";
 import { maxUploadBytesForArtifactType } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { parseImportFile } from "~/server/records/imports/intake";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,
 } from "~/server/records/imports/progress-events";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
 import {
   fail,
   invalid,

@@ -1,4 +1,4 @@
-import type { AppContext } from "~/server/shared/action-runtime/context";
+import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, isErr, type Result } from "~/server/shared/result";
 

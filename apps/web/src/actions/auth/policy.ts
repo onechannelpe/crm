@@ -2,8 +2,8 @@
 
 import { getOnboardingRequirements as getOnboardingRequirementsQuery } from "~/server/auth/application/queries/get-onboarding-requirements";
 import type { OnboardingRequirements } from "~/server/auth/policy/types";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 
 export async function getOnboardingRequirements(): Promise<OnboardingRequirements> {
   return runAction({

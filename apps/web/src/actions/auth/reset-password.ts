@@ -3,8 +3,8 @@
 import { getRequestContext } from "~/lib/http/request-context";
 import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/flows/request-password-reset";
 import { resetPassword as resetPasswordService } from "~/server/auth/flows/reset-password";
-import { getServerRuntime } from "~/server/runtime";
-import { runPublicAction } from "~/server/shared/action-runtime";
+import { runPublicAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 

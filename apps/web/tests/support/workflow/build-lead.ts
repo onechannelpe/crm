@@ -1,5 +1,5 @@
 import type { LeadStage } from "~/contracts/workflow/vocabulary";
-import type { LeadCommercialScope } from "~/server/workflow/domain/lead/state";
+import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import { createDeterministicIdFactory } from "../_core/ids";
 import type { TestRuntime } from "../runtime/app";

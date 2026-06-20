@@ -11,7 +11,7 @@ import {
   getRequestSessionMaxAgeSeconds,
   setRequestSessionCookie,
 } from "~/lib/security/request-session";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 
 import { resolvePublicOrigin } from "./public-origin";
 

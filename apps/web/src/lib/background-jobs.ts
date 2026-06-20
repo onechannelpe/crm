@@ -5,7 +5,7 @@ import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { readStoredFile } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
 

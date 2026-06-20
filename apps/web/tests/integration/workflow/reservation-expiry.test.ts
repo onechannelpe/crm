@@ -9,7 +9,7 @@ import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { expireLapsedReservations } from "~/server/workflow/application/commands/expire-reservation";
-import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/domain/pricing-policy";
+import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/lead/domain/pricing";
 
 // The hold window is owned by the pricing policy, not hardcoded here, so these stay
 // correct if the default validity changes.

@@ -1,5 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 const logger = createLogger("stale-scanner");

@@ -4,8 +4,8 @@ import type {
   AuthFunnelSnapshot,
   AuthFunnelSnapshotInput,
 } from "~/contracts/observability/auth-funnel";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok, type Result } from "~/server/shared/result";

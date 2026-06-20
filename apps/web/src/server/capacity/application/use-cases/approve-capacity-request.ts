@@ -1,7 +1,7 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
-import type { AppContext } from "~/server/shared/action-runtime/context";
+import type { AppContext } from "~/server/platform/action/context";
 import {
   fail,
   forbidden,

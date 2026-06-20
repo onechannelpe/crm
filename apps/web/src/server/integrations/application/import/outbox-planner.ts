@@ -1,6 +1,6 @@
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { deriveLeadStageNotifications } from "~/server/workflow/application/notification-policy";
+import { deriveLeadStageNotifications } from "~/server/workflow/effects/notify";
 
 import type { LeadMutationOutcome, PlannedOutboxEvents } from "./types";
 

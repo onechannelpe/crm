@@ -1,6 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { AuthSession } from "~/lib/auth/access/session-types";
-import type { AppContext } from "~/server/shared/action-runtime/context";
+import type { AppContext } from "~/server/platform/action/context";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
 export function makeAuthSession(

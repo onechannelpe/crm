@@ -1,10 +1,10 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createEventsRepo } from "~/server/shared/repos-events";
-import { toLeadEventAppend } from "~/server/workflow/application/lead-events";
 import {
   createHistoryEvent,
   type LeadHistoryEventDraft,
-} from "~/server/workflow/domain/history";
+} from "~/server/workflow/lead/domain/history";
+import { toLeadEventAppend } from "~/server/workflow/lead/write/lead-events";
 
 import type { LeadMutationOutcome } from "./types";
 

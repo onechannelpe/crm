@@ -5,7 +5,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrganizationId } from "~/server/shared/ids";
-import type { LeadState } from "~/server/workflow/domain/lead/state";
+import type { LeadState } from "~/server/workflow/lead/domain/state";
 
 type LeadWithOrgRow = {
   id: string;

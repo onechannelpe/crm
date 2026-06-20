@@ -8,7 +8,7 @@ import { getClientIp } from "~/lib/auth/password/client-ip";
 import { appendSessionCookie } from "~/lib/auth/session/cookies";
 import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import { isErr } from "~/server/shared/result";
 
 function badRequest(): Response {

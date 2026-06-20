@@ -1,5 +1,5 @@
 import { authorizeRoutePermission } from "~/lib/auth/access/route-access";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 

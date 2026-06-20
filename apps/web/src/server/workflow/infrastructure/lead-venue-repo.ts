@@ -10,7 +10,7 @@ import type {
   LeadVenueAccounts,
   LeadVenueInsert,
   LeadVenueUpdate,
-} from "~/server/workflow/application/ports/entities";
+} from "~/server/workflow/infrastructure/ports/entities";
 
 type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
 type NewLeadVenueRow = Insertable<Database["workflow_lead_venues"]>;

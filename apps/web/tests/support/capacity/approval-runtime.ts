@@ -10,7 +10,7 @@ import type {
 import type { CapacityApprovalDeps } from "~/server/capacity/application/use-cases/shared";
 import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
-import type { AppContext } from "~/server/shared/action-runtime/context";
+import type { AppContext } from "~/server/platform/action/context";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 

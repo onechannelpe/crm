@@ -19,8 +19,7 @@ import { updateVenueCommand } from "~/server/workflow/application/commands/updat
 import type {
   LeadEnrichmentQueue,
   WorkflowEngineGateway,
-} from "~/server/workflow/application/ports/gateways";
-import { createLeadStateRepo } from "~/server/workflow/infrastructure/lead-state-repo";
+} from "~/server/workflow/infrastructure/ports/gateways";
 import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import type {
   AcceptRateCommandInput,
@@ -61,7 +60,6 @@ function buildCommandApi(
   overrides?: TestCommandOverrides,
 ) {
   const repos = createWorkflowRepos(executor);
-  const leadStates = createLeadStateRepo(executor);
   const engineGateway = overrides?.engineGateway ?? NO_OP_ENGINE_GATEWAY;
   const enrichmentQueue =
     overrides?.leadEnrichmentQueue ?? NO_OP_ENRICHMENT_QUEUE;

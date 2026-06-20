@@ -1,11 +1,11 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import { unknownLeadEventType } from "~/server/workflow/domain/integrity-errors";
 import {
   isLeadHistoryEventType,
   type LeadHistoryEntry,
-} from "~/server/workflow/domain/history";
-import { unknownLeadEventType } from "~/server/workflow/domain/integrity-errors";
+} from "~/server/workflow/lead/domain/history";
 
 import { toHistoryEntry } from "./history-entry-parser";
 

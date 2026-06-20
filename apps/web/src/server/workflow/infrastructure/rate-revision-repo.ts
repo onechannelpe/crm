@@ -4,7 +4,7 @@ import type {
   RateRevision,
   RateRevisionFile,
   RateRevisionRepository,
-} from "../application/ports/entities";
+} from "./ports/entities";
 
 export function createRateRevisionRepo(
   db: DatabaseExecutor,

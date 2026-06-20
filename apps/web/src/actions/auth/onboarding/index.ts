@@ -7,8 +7,8 @@ import type { Phone } from "~/lib/phone/pe-mobile";
 import { completeOnboarding as completeOnboardingService } from "~/server/auth/flows/complete-onboarding";
 import { enrollPasskey } from "~/server/auth/flows/passkey-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { isErr } from "~/server/shared/result";
 
 export async function completeOnboarding(

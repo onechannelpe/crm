@@ -2,7 +2,7 @@ import { parseFieldChanges, type FieldChange } from "~/contracts/events";
 import type {
   LeadHistoryEntry,
   LeadHistoryPerson,
-} from "~/server/workflow/domain/history";
+} from "~/server/workflow/lead/domain/history";
 
 export type HistoryEventRow = {
   id: string;

@@ -4,7 +4,7 @@ import {
   type AuthFunnelScreen,
 } from "~/lib/observability/auth-funnel";
 import type { ActionRequestContext } from "~/lib/observability/context";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 
 export function isAuthAnalyticsScreen(
   value: unknown,

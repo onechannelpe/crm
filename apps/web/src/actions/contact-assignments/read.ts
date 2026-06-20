@@ -4,8 +4,8 @@ import type { LeadCapacitySnapshot } from "~/actions/capacity/contracts";
 import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { Ok } from "~/server/shared/result";
 
 export async function getActiveContactAssignments(): Promise<

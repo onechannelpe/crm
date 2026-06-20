@@ -2,9 +2,9 @@
 
 import type { SearchDirectResult } from "~/contracts/search/results";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { runAction } from "~/server/shared/action-runtime";
 
 import { parseSearchCommand } from "./input";
 

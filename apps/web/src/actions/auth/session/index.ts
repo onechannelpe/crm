@@ -5,8 +5,8 @@ import { getCurrentUser } from "~/server/auth/application/queries/get-current-us
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { logoutUser } from "~/server/auth/flows/logout-user";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 
 export async function getLoginFlow(flowId: number) {
   const repos = getServerRuntime().auth.login.repos;

@@ -1,6 +1,6 @@
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 
 /**
  * Installs a freshly issued token as the current session cookie and revokes the

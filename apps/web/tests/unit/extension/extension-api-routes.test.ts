@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   createHandoffToken: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("~/server/runtime", () => ({
+vi.mock("~/server/platform/container", () => ({
   getServerRuntime: () => ({
     extension: {
       extensionService: {

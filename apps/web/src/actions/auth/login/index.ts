@@ -10,8 +10,8 @@ import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
 import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
-import { runPublicAction } from "~/server/shared/action-runtime";
+import { runPublicAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { fail, internal, throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 

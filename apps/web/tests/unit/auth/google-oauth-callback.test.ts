@@ -15,7 +15,7 @@ vi.mock("~/server/auth/infrastructure/request-passkey-provider", () => ({
   createRequestPasskeyProvider: () => ({}),
 }));
 
-vi.mock("~/server/runtime", () => ({
+vi.mock("~/server/platform/container", () => ({
   getServerRuntime: () => ({
     auth: {
       login: {
