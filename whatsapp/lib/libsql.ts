@@ -4,7 +4,36 @@
 // Doc del protocolo: cada request es { type: "execute", stmt: { sql, args } }.
 // Las celdas de respuesta vienen tipadas: { type: "integer"|"text"|..., value }.
 
-function toArg(value) {
+export type SqlValue = string | number | bigint | null | undefined;
+export type Row = Record<string, string | number | null>;
+
+interface HranaArg {
+  type: "null" | "integer" | "float" | "text";
+  value?: string | number;
+}
+
+interface HranaCell {
+  type: string;
+  value?: string | number;
+}
+
+interface HranaResult {
+  cols: Array<{ name: string }>;
+  rows: HranaCell[][];
+}
+
+interface HranaResponse {
+  results?: Array<
+    | { type: "ok"; response: { result: HranaResult } }
+    | { type: "error"; error?: { message?: string } }
+  >;
+}
+
+export interface Libsql {
+  query<T extends Row = Row>(sql: string, args?: SqlValue[]): Promise<T[]>;
+}
+
+function toArg(value: SqlValue): HranaArg {
   if (value === null || value === undefined) return { type: "null" };
   if (typeof value === "number") {
     return Number.isInteger(value)
@@ -15,7 +44,7 @@ function toArg(value) {
   return { type: "text", value: String(value) };
 }
 
-function fromCell(cell) {
+function fromCell(cell: HranaCell): string | number | null {
   switch (cell.type) {
     case "null":
       return null;
@@ -24,20 +53,23 @@ function fromCell(cell) {
     case "float":
       return typeof cell.value === "number" ? cell.value : Number(cell.value);
     default:
-      return cell.value; // text / blob (base64) se devuelven tal cual
+      return cell.value as string; // text / blob (base64) se devuelven tal cual
   }
 }
 
-export function createLibsql({ url, authToken }) {
-  const base = url.replace(/\/+$/, "");
-  const headers = { "content-type": "application/json" };
-  if (authToken) headers.authorization = `Bearer ${authToken}`;
+export function createLibsql(opts: {
+  url: string;
+  authToken?: string;
+}): Libsql {
+  const base = opts.url.replace(/\/+$/, "");
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (opts.authToken) headers.authorization = `Bearer ${opts.authToken}`;
 
   // sqld 0.24 soporta v3; v2 como respaldo por compatibilidad.
   const endpoints = [`${base}/v3/pipeline`, `${base}/v2/pipeline`];
 
-  async function pipeline(requests) {
-    let lastErr;
+  async function pipeline(requests: unknown[]): Promise<HranaResponse> {
+    let lastErr: unknown;
     for (const endpoint of endpoints) {
       try {
         const res = await fetch(endpoint, {
@@ -52,7 +84,7 @@ export function createLibsql({ url, authToken }) {
         if (!res.ok) {
           throw new Error(`libsql HTTP ${res.status}: ${await res.text()}`);
         }
-        return await res.json();
+        return (await res.json()) as HranaResponse;
       } catch (err) {
         lastErr = err;
         // si fue error de red, no tiene sentido probar el otro path
@@ -62,7 +94,10 @@ export function createLibsql({ url, authToken }) {
     throw lastErr ?? new Error("libsql: sin respuesta");
   }
 
-  async function query(sql, args = []) {
+  async function query<T extends Row = Row>(
+    sql: string,
+    args: SqlValue[] = [],
+  ): Promise<T[]> {
     const json = await pipeline([
       { type: "execute", stmt: { sql, args: args.map(toArg) } },
       { type: "close" },
@@ -75,11 +110,11 @@ export function createLibsql({ url, authToken }) {
     const result = first.response.result;
     const cols = result.cols.map((c) => c.name);
     return result.rows.map((row) => {
-      const obj = {};
+      const obj: Row = {};
       row.forEach((cell, i) => {
         obj[cols[i]] = fromCell(cell);
       });
-      return obj;
+      return obj as T;
     });
   }
 

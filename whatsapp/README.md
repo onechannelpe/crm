@@ -31,13 +31,15 @@ Así, lo que aparece en la web también llega al celular del vendedor.
 
 ## Requisitos
 
-- **Node.js ≥ 20.6** (usa `fetch` nativo y `process.loadEnvFile`). Probado en Node 24.
+- **bun** o **Node.js ≥ 22.6** (ambos ejecutan TypeScript de forma nativa: bun
+  directo, Node con *type stripping*). Probado en Node 24 y bun.
 - El **servidor libsql del CRM** corriendo (por defecto `http://127.0.0.1:8080`,
   lo levanta `bun run dev:libsql` en el CRM).
 - El **gateway OpenWA** corriendo (por defecto `http://localhost:2785`) con una
   sesión de WhatsApp **conectada** (QR escaneado).
 
-No requiere `npm install`: no tiene dependencias externas.
+Escrito en **TypeScript**, sin dependencias en runtime (no requiere `npm install`
+para ejecutarse; `typescript`/`@types/node` solo se usan para el `typecheck`).
 
 ---
 
@@ -74,10 +76,10 @@ Hay dos formas de cargarlo:
 
   ```bash
   # Ver ejecutivos y su WhatsApp actual
-  node register-number.js --list
+  node register-number.ts --list      # o: bun register-number.ts --list
 
   # Registrar/verificar un número (userId  teléfono)
-  node register-number.js 3 987654321
+  node register-number.ts 3 987654321
   ```
 
 ---
@@ -86,7 +88,13 @@ Hay dos formas de cargarlo:
 
 ```bash
 cd crm/whatsapp
-node index.js
+node index.ts          # o: bun index.ts
+```
+
+Y, en otra terminal, el bot de onboarding (opcional):
+
+```bash
+node onboarding-bot.ts # o: bun onboarding-bot.ts
 ```
 
 Verás logs como:
@@ -103,8 +111,8 @@ Verás logs como:
 1. Asegúrate de que la sesión de OpenWA esté **conectada** (escanea el QR con el
    número emisor, p. ej. `912345678`). Si está en `qr_ready`, los envíos fallan.
 2. Registra tu número como WhatsApp de un ejecutivo:
-   `node register-number.js <userIdEjecutivo> 987654321`
-3. Arranca el servicio: `node index.js`
+   `node register-number.ts <userIdEjecutivo> 987654321`
+3. Arranca el servicio: `node index.ts`
 4. Genera una notificación en el CRM para ese ejecutivo (ej. mueve un lead a una
    etapa que lo notifique, o un admin envía un broadcast a ese usuario).
 5. Debe llegarte el WhatsApp a `987654321`.
@@ -166,11 +174,14 @@ volumen alto y producción, es la opción recomendada.
 
 ## Archivos
 
-| Archivo               | Qué hace                                                        |
-| --------------------- | -------------------------------------------------------------- |
-| `index.js`            | Loop principal: sondea, compone el mensaje y envía.            |
-| `lib/libsql.js`       | Cliente mínimo del servidor libsql del CRM (solo lectura aquí).|
-| `lib/openwa.js`       | Cliente del gateway OpenWA (resolver sesión + enviar texto).   |
-| `register-number.js`  | Helper para cargar/verificar el WhatsApp de un usuario.        |
-| `.env`                | Configuración (no se versiona).                                |
-| `.state.json`         | Watermark del último id procesado (no se versiona).            |
+| Archivo                | Qué hace                                                        |
+| ---------------------- | -------------------------------------------------------------- |
+| `index.ts`             | Loop principal: sondea, compone el mensaje y envía.           |
+| `onboarding-bot.ts`    | Bot de opt-in: recibe a quien escribe primero y lo activa.    |
+| `lib/libsql.ts`        | Cliente mínimo del servidor libsql del CRM (solo lectura aquí).|
+| `lib/openwa.ts`        | Cliente del gateway OpenWA (resolver sesión + enviar texto).   |
+| `register-number.ts`   | Helper para cargar/verificar el WhatsApp de un usuario.        |
+| `tsconfig.json`        | Configuración de TypeScript.                                   |
+| `.env`                 | Configuración (no se versiona).                                |
+| `.state.json`          | Watermark del último id procesado (no se versiona).            |
+| `.onboarding.json`     | Estado del bot de onboarding (no se versiona).                 |

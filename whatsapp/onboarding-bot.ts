@@ -8,7 +8,7 @@
 //
 //  Flujo:
 //    1) La persona escribe cualquier cosa  → Bot: saludo + "¿cuál es tu nombre?"
-//    2) La persona responde su nombre       → Bot: "¡Genial {nombre}! ... recuerda decir gracias"
+//    2) La persona responde su nombre       → Bot: "¡Genial {nombre}! ... gracias"
 //    3) La persona dice "gracias"           → Bot: confirmación final
 //
 //  No modifica el CRM ni OpenWA: solo lee mensajes y responde vía el API de OpenWA.
@@ -18,7 +18,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { createOpenWa } from "./lib/openwa.js";
+import { createOpenWa, type OpenWaMessage } from "./lib/openwa.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 try {
@@ -34,23 +34,37 @@ const cfg = {
   pollIntervalMs: Number(process.env.ONBOARDING_POLL_MS ?? 3500),
   typingSec: Number(process.env.TYPING_SEC ?? 1),
   brand: process.env.BRAND_NAME ?? "CRM ProSolutions",
+  countryCode: process.env.COUNTRY_CODE ?? "51",
 };
 
 // ── Textos del bot (puedes editarlos a tu gusto) ───────────────────────────
 const MSG = {
-  welcome: () =>
+  welcome: (): string =>
     `¡Hola! 👋 Bienvenido/a a *${cfg.brand}*.\n\n` +
     `Antes de empezar, ¿me puedes decir tu *nombre*?`,
-  askNameAgain: () =>
+  askNameAgain: (): string =>
     `No te entendí bien 🙈. ¿Me escribes tu *nombre*, por favor?`,
-  confirmed: (name) =>
+  confirmed: (name: string): string =>
     `¡Genial${name ? `, ${name}` : ""}! 🎉\n\n` +
     `Este número ya puede recibir notificaciones de *${cfg.brand}*.\n\n` +
     `Para terminar de activarlo, recuerda responder *gracias* 🙏`,
-  thanks: () =>
+  thanks: (): string =>
     `¡Con gusto! 🙌 Quedaste activado/a.\n\n` +
     `A partir de ahora te llegarán aquí tus notificaciones de *${cfg.brand}*.`,
 };
+
+type Stage = "asked_name" | "await_thanks" | "done";
+
+interface Contact {
+  stage: Stage;
+  name: string | null;
+  updatedAt: number;
+}
+
+interface OnboardingState {
+  processedIds: string[];
+  contacts: Record<string, Contact>;
+}
 
 const STATE_FILE = join(__dirname, ".onboarding.json");
 const PROCESSED_CAP = 500;
@@ -59,40 +73,40 @@ const openwa = createOpenWa({
   baseUrl: cfg.openwaBaseUrl,
   apiKey: cfg.openwaApiKey,
   sessionName: cfg.sessionName,
-  countryCode: process.env.COUNTRY_CODE ?? "51",
+  countryCode: cfg.countryCode,
 });
 
-function log(level, msg, extra) {
+function log(level: string, msg: string, extra?: unknown): void {
   const ts = new Date().toISOString();
   const tail = extra ? ` ${JSON.stringify(extra)}` : "";
   console.log(`[${ts}] ${level} ${msg}${tail}`);
 }
 
 // ── Estado ─────────────────────────────────────────────────────────────────
-// processedIds: ids de mensajes ya atendidos (evita responder dos veces).
-// contacts: { "<chatId>": { stage, name, updatedAt } }
-//   stage: "asked_name" | "await_thanks" | "done"
-function loadState() {
-  const base = { processedIds: [], contacts: {} };
+function loadState(): OnboardingState {
+  const base: OnboardingState = { processedIds: [], contacts: {} };
   if (!existsSync(STATE_FILE)) return base;
   try {
-    return { ...base, ...JSON.parse(readFileSync(STATE_FILE, "utf8")) };
+    return {
+      ...base,
+      ...(JSON.parse(readFileSync(STATE_FILE, "utf8")) as OnboardingState),
+    };
   } catch {
     return base;
   }
 }
-function saveState(state) {
-  if (state.processedIds.length > PROCESSED_CAP) {
-    state.processedIds = state.processedIds.slice(-PROCESSED_CAP);
+function saveState(s: OnboardingState): void {
+  if (s.processedIds.length > PROCESSED_CAP) {
+    s.processedIds = s.processedIds.slice(-PROCESSED_CAP);
   }
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 }
 
-const state = loadState();
+const state: OnboardingState = loadState();
 
 // ── Sesión ─────────────────────────────────────────────────────────────────
-let sessionId = null;
-async function ensureSession() {
+let sessionId: string | null = null;
+async function ensureSession(): Promise<string> {
   if (sessionId) return sessionId;
   const session = await openwa.resolveSession();
   if (!session) {
@@ -108,7 +122,7 @@ async function ensureSession() {
 }
 
 // ── Responder (con "escribiendo…" para parecer humano) ─────────────────────
-async function reply(sid, chatId, text) {
+async function reply(sid: string, chatId: string, text: string): Promise<boolean> {
   if (cfg.typingSec > 0) {
     await openwa.sendTyping(sid, chatId, "typing");
     await new Promise((r) => setTimeout(r, cfg.typingSec * 1000 + 800));
@@ -121,27 +135,26 @@ async function reply(sid, chatId, text) {
 }
 
 // ¿Es un chat individual de persona? (descarta grupos y difusiones)
-function isIndividualChat(chatId) {
+function isIndividualChat(chatId: string | undefined): boolean {
   if (!chatId) return false;
   if (chatId.includes("@g.us")) return false; // grupo
   if (chatId.includes("status@broadcast")) return false;
   return true;
 }
 
-function looksLikeThanks(body) {
+function looksLikeThanks(body: string): boolean {
   return /gracias|thank|grcias|graciass/i.test(body ?? "");
 }
 
-// Limpia el nombre recibido (toma las primeras palabras, sin emojis raros).
-function cleanName(body) {
+// Limpia el nombre recibido (toma las primeras palabras).
+function cleanName(body: string): string {
   const t = (body ?? "").trim().replace(/\s+/g, " ");
   if (!t) return "";
-  // Tomamos hasta 3 palabras como nombre.
   return t.split(" ").slice(0, 3).join(" ").slice(0, 40);
 }
 
 // ── Procesa un mensaje entrante según el estado del contacto ────────────────
-async function handleIncoming(sid, m) {
+async function handleIncoming(sid: string, m: OpenWaMessage): Promise<void> {
   const chatId = m.chatId;
   const body = (m.body ?? "").trim();
   const contact = state.contacts[chatId];
@@ -189,11 +202,10 @@ async function handleIncoming(sid, m) {
 }
 
 // ── Loop ───────────────────────────────────────────────────────────────────
-async function tick() {
+async function tick(): Promise<void> {
   const sid = await ensureSession();
   const messages = await openwa.getMessages(sid, 30);
 
-  // Más antiguos primero, solo entrantes de chats individuales no procesados.
   const pending = messages
     .filter(
       (m) =>
@@ -209,7 +221,7 @@ async function tick() {
     } catch (err) {
       log("ERROR", "Error atendiendo mensaje", {
         chatId: m.chatId,
-        error: String(err?.message ?? err),
+        error: String((err as Error)?.message ?? err),
       });
     }
     state.processedIds.push(m.id);
@@ -217,7 +229,7 @@ async function tick() {
   }
 }
 
-async function main() {
+async function main(): Promise<void> {
   log("INFO", "Iniciando bot de onboarding", {
     session: cfg.sessionName,
     brand: cfg.brand,
@@ -241,23 +253,22 @@ async function main() {
       });
     } catch (err) {
       log("WARN", "No se pudo prelistar el historial", {
-        error: String(err?.message ?? err),
+        error: String((err as Error)?.message ?? err),
       });
     }
   }
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (;;) {
     try {
       await tick();
     } catch (err) {
-      log("ERROR", "Error en el ciclo", { error: String(err?.message ?? err) });
+      log("ERROR", "Error en el ciclo", { error: String((err as Error)?.message ?? err) });
     }
     await new Promise((r) => setTimeout(r, cfg.pollIntervalMs));
   }
 }
 
-main().catch((err) => {
-  log("ERROR", "Fallo fatal", { error: String(err?.stack ?? err) });
+main().catch((err: unknown) => {
+  log("ERROR", "Fallo fatal", { error: String((err as Error)?.stack ?? err) });
   process.exit(1);
 });

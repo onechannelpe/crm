@@ -2,16 +2,16 @@
 // `user_channel_addresses` (canal whatsapp, verificado). El notifier lee de ahí.
 //
 // Uso:
-//   node register-number.js --list                 Lista ejecutivos y su WhatsApp
-//   node register-number.js <userId> <telefono>    Registra/actualiza y verifica
+//   bun register-number.ts --list                 Lista ejecutivos y su WhatsApp
+//   bun register-number.ts <userId> <telefono>    Registra/actualiza y verifica
 //
 // Ejemplo:
-//   node register-number.js 3 987654321
+//   bun register-number.ts 3 987654321
 
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { createLibsql } from "./lib/libsql.js";
+import { createLibsql } from "./lib/libsql.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 try {
@@ -28,7 +28,7 @@ const targetRole = process.env.TARGET_ROLE ?? "executive";
 const countryCode = (process.env.COUNTRY_CODE ?? "51").replace(/\D/g, "");
 
 // Normaliza a forma local (sin código de país), como usa el CRM en sus seeds.
-function normalizeLocal(raw) {
+function normalizeLocal(raw: string): string {
   let digits = String(raw).replace(/\D/g, "");
   if (digits.startsWith(countryCode) && digits.length > 9) {
     digits = digits.slice(countryCode.length);
@@ -36,8 +36,16 @@ function normalizeLocal(raw) {
   return digits;
 }
 
-async function list() {
-  const rows = await db.query(
+interface UserRow extends Record<string, string | number | null> {
+  id: number;
+  username: string;
+  role: string;
+  address: string | null;
+  is_verified: number | null;
+}
+
+async function list(): Promise<void> {
+  const rows = await db.query<UserRow>(
     `SELECT u.id          AS id,
             u.username     AS username,
             u.role         AS role,
@@ -60,16 +68,17 @@ async function list() {
   console.log("");
 }
 
-async function register(userId, phone) {
+async function register(userId: number, phone: string): Promise<void> {
   const address = normalizeLocal(phone);
   if (!address || address.length < 6) {
     console.error(`Teléfono inválido: "${phone}"`);
     process.exit(1);
   }
 
-  const users = await db.query("SELECT id, username, role FROM users WHERE id = ?", [
-    userId,
-  ]);
+  const users = await db.query<{ id: number; username: string; role: string }>(
+    "SELECT id, username, role FROM users WHERE id = ?",
+    [userId],
+  );
   if (users.length === 0) {
     console.error(`No existe el usuario #${userId}.`);
     process.exit(1);
@@ -108,11 +117,11 @@ if (args[0] === "--list" || args[0] === "-l") {
   console.log(
     [
       "Uso:",
-      "  node register-number.js --list                 Lista usuarios y su WhatsApp",
-      "  node register-number.js <userId> <telefono>    Registra/verifica un número",
+      "  bun register-number.ts --list                 Lista usuarios y su WhatsApp",
+      "  bun register-number.ts <userId> <telefono>    Registra/verifica un número",
       "",
       "Ejemplo:",
-      "  node register-number.js 3 987654321",
+      "  bun register-number.ts 3 987654321",
     ].join("\n"),
   );
   process.exit(1);

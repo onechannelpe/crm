@@ -11,46 +11,79 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { createLibsql } from "./lib/libsql.js";
-import { createOpenWa } from "./lib/openwa.js";
+import { createLibsql } from "./lib/libsql.ts";
+import { createOpenWa } from "./lib/openwa.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Carga el .env (Node >= 20.6). Si no existe, seguimos con el entorno actual.
+// Carga el .env (Node >= 20.6 / bun). Si no existe, seguimos con el entorno.
 try {
   process.loadEnvFile(join(__dirname, ".env"));
 } catch {
   /* sin .env: se usan variables de entorno del proceso */
 }
 
-const cfg = {
+interface Config {
+  webDbUrl: string;
+  webDbAuthToken?: string;
+  openwaBaseUrl: string;
+  openwaApiKey: string;
+  sessionName: string;
+  pollIntervalMs: number;
+  targetRole: string;
+  countryCode: string;
+  startFrom: string;
+  crmBaseUrl: string;
+  dryRun: boolean;
+  minDelaySec: number;
+  maxDelaySec: number;
+  maxPerHour: number;
+  maxPerDay: number;
+  typingSec: number;
+  verifyNumber: boolean;
+  quietHours: string;
+}
+
+const cfg: Config = {
   webDbUrl: process.env.WEB_DB_URL ?? "http://127.0.0.1:8080",
   webDbAuthToken: process.env.WEB_DB_AUTH_TOKEN || undefined,
   openwaBaseUrl: process.env.OPENWA_BASE_URL ?? "http://localhost:2785",
   openwaApiKey: process.env.OPENWA_API_KEY ?? "",
-  sessionName: process.env.OPENWA_SESSION_NAME ?? "pruebita",
+  sessionName: process.env.OPENWA_SESSION_NAME ?? "crm-notify",
   pollIntervalMs: Number(process.env.POLL_INTERVAL_MS ?? 4000),
   targetRole: process.env.TARGET_ROLE ?? "executive",
   countryCode: process.env.COUNTRY_CODE ?? "51",
   startFrom: (process.env.START_FROM ?? "now").toLowerCase(),
   crmBaseUrl: (process.env.CRM_BASE_URL ?? "").replace(/\/+$/, ""),
   dryRun: String(process.env.DRY_RUN ?? "false").toLowerCase() === "true",
-
-  // ── Anti-baneo: ritmo humano de envío ──
-  // Espera ALEATORIA entre un mensaje y el siguiente (segundos).
   minDelaySec: Number(process.env.MIN_DELAY_SEC ?? 45),
   maxDelaySec: Number(process.env.MAX_DELAY_SEC ?? 150),
-  // Topes de seguridad (cuántos mensajes como máximo por ventana).
   maxPerHour: Number(process.env.MAX_PER_HOUR ?? 15),
   maxPerDay: Number(process.env.MAX_PER_DAY ?? 120),
-  // Simular "escribiendo…" antes de enviar (segundos; 0 = desactivado).
   typingSec: Number(process.env.TYPING_SEC ?? 3),
-  // Verificar que el número esté en WhatsApp antes de enviar (anti-spam).
   verifyNumber:
     String(process.env.VERIFY_NUMBER ?? "true").toLowerCase() === "true",
-  // Horario silencioso (no enviar). Formato "HH:MM-HH:MM"; vacío = 24/7.
   quietHours: (process.env.QUIET_HOURS ?? "").trim(),
 };
+
+interface State {
+  lastId: number | null;
+  sentTimes: number[];
+  nextSendAt: number;
+}
+
+interface NotificationRow extends Record<string, string | number | null> {
+  id: number;
+  user_id: number;
+  title: string;
+  body_text: string;
+  action_url: string | null;
+  event_type: string;
+  priority: string;
+  address: string;
+}
+
+type Outcome = "sent" | "retry" | "dropped";
 
 const STATE_FILE = join(__dirname, ".state.json");
 const MAX_ATTEMPTS = 3; // reintentos por notificación antes de descartarla
@@ -65,46 +98,41 @@ const openwa = createOpenWa({
   countryCode: cfg.countryCode,
 });
 
-function log(level, msg, extra) {
+function log(level: string, msg: string, extra?: unknown): void {
   const ts = new Date().toISOString();
   const tail = extra ? ` ${JSON.stringify(extra)}` : "";
   console.log(`[${ts}] ${level} ${msg}${tail}`);
 }
 
 // ── Estado (watermark + ritmo de envío) ────────────────────────────────────
-// lastId    : última notificación procesada.
-// sentTimes : epochs (ms) de envíos recientes, para los topes hora/día.
-// nextSendAt: epoch (ms) a partir del cual se permite el próximo envío.
-function loadState() {
-  const base = { lastId: null, sentTimes: [], nextSendAt: 0 };
+function loadState(): State {
+  const base: State = { lastId: null, sentTimes: [], nextSendAt: 0 };
   if (!existsSync(STATE_FILE)) return base;
   try {
-    return { ...base, ...JSON.parse(readFileSync(STATE_FILE, "utf8")) };
+    return { ...base, ...(JSON.parse(readFileSync(STATE_FILE, "utf8")) as State) };
   } catch {
     return base;
   }
 }
-function saveState(state) {
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+function saveState(s: State): void {
+  writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 }
 
 // ── Helpers de ritmo (anti-baneo) ──────────────────────────────────────────
-function randomBetween(minMs, maxMs) {
+function randomBetween(minMs: number, maxMs: number): number {
   if (maxMs <= minMs) return minMs;
   return minMs + Math.floor(Math.random() * (maxMs - minMs + 1));
 }
 
-function pruneSentTimes(now) {
+function pruneSentTimes(now: number): void {
   state.sentTimes = (state.sentTimes ?? []).filter((t) => now - t < DAY_MS);
 }
 
-// Devuelve un motivo de bloqueo ("hourly_cap" | "daily_cap" | "cooldown" |
-// "quiet_hours") o null si se puede enviar ahora.
-function throttleReason(now) {
+// Devuelve un motivo de bloqueo o null si se puede enviar ahora.
+function throttleReason(now: number): string | null {
   if (isQuietNow(now)) return "quiet_hours";
   if (now < (state.nextSendAt ?? 0)) return "cooldown";
   pruneSentTimes(now);
-  // Topes en 0 (o negativos) = desactivados.
   if (cfg.maxPerHour > 0) {
     const inHour = state.sentTimes.filter((t) => now - t < HOUR_MS).length;
     if (inHour >= cfg.maxPerHour) return "hourly_cap";
@@ -115,9 +143,8 @@ function throttleReason(now) {
   return null;
 }
 
-// ¿Estamos dentro del horario silencioso? Soporta rangos que cruzan medianoche
-// (p.ej. 22:00-07:00). Usa la hora local del proceso.
-function isQuietNow(now) {
+// ¿Estamos dentro del horario silencioso? Soporta rangos que cruzan medianoche.
+function isQuietNow(now: number): boolean {
   if (!cfg.quietHours) return false;
   const m = cfg.quietHours.match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/);
   if (!m) return false;
@@ -129,9 +156,10 @@ function isQuietNow(now) {
 }
 
 // ── Consultas ──────────────────────────────────────────────────────────────
-// Siguiente notificación pendiente (una sola, para enviar a ritmo humano).
-async function fetchNextNotification(lastId) {
-  const rows = await db.query(
+async function fetchNextNotification(
+  lastId: number | null,
+): Promise<NotificationRow | null> {
+  const rows = await db.query<NotificationRow>(
     `SELECT n.id          AS id,
             n.user_id      AS user_id,
             n.title        AS title,
@@ -156,9 +184,8 @@ async function fetchNextNotification(lastId) {
   return rows[0] ?? null;
 }
 
-// Cuántas notificaciones quedan en cola (para los logs).
-async function countPending(lastId) {
-  const rows = await db.query(
+async function countPending(lastId: number | null): Promise<number> {
+  const rows = await db.query<{ c: number }>(
     `SELECT COUNT(*) AS c
        FROM app_notifications n
        JOIN users u ON u.id = n.user_id
@@ -170,15 +197,15 @@ async function countPending(lastId) {
   return rows[0]?.c ?? 0;
 }
 
-async function currentMaxId() {
-  const rows = await db.query(
+async function currentMaxId(): Promise<number> {
+  const rows = await db.query<{ max_id: number }>(
     "SELECT COALESCE(MAX(id), 0) AS max_id FROM app_notifications",
   );
   return rows[0]?.max_id ?? 0;
 }
 
 // ── Composición del mensaje de WhatsApp ────────────────────────────────────
-function buildMessage(n) {
+function buildMessage(n: NotificationRow): string {
   let text = `*${n.title}*\n${n.body_text}`;
   if (cfg.crmBaseUrl && n.action_url) {
     const path = n.action_url.startsWith("/") ? n.action_url : `/${n.action_url}`;
@@ -188,8 +215,8 @@ function buildMessage(n) {
 }
 
 // ── Resolución de la sesión de OpenWA ──────────────────────────────────────
-let sessionId = null;
-async function ensureSession() {
+let sessionId: string | null = null;
+async function ensureSession(): Promise<string> {
   if (sessionId) return sessionId;
   const session = await openwa.resolveSession();
   if (!session) {
@@ -198,7 +225,6 @@ async function ensureSession() {
     );
   }
   sessionId = session.id;
-  // Estados operativos de OpenWA en los que se puede enviar.
   const READY_STATES = new Set(["ready", "connected"]);
   if (!READY_STATES.has(session.status)) {
     log(
@@ -213,10 +239,9 @@ async function ensureSession() {
 }
 
 // ── Envío de una notificación ──────────────────────────────────────────────
-const attempts = new Map(); // id -> nº de intentos fallidos
+const attempts = new Map<number, number>();
 
-// Devuelve "sent" | "retry" | "dropped"
-async function deliver(n) {
+async function deliver(n: NotificationRow): Promise<Outcome> {
   const chatId = openwa.toChatId(n.address);
   if (!chatId) {
     log("ERROR", "Dirección inválida, se descarta", { id: n.id, address: n.address });
@@ -229,7 +254,7 @@ async function deliver(n) {
     return "sent";
   }
 
-  let result;
+  let result: { ok: boolean; status: number; body: unknown };
   try {
     const sid = await ensureSession();
 
@@ -258,7 +283,7 @@ async function deliver(n) {
     }
     result = await openwa.sendText(sid, chatId, text);
   } catch (err) {
-    result = { ok: false, status: 0, body: String(err?.message ?? err) };
+    result = { ok: false, status: 0, body: String((err as Error)?.message ?? err) };
   }
 
   if (result.ok) {
@@ -298,11 +323,9 @@ async function deliver(n) {
 }
 
 // ── Loop principal ─────────────────────────────────────────────────────────
-let state = loadState();
+const state: State = loadState();
 
-// Fija el watermark inicial. Puede tocar la BD (modo "now"), así que se llama
-// dentro del loop y, si la BD está caída, se reintenta en el próximo ciclo.
-async function bootstrapWatermark() {
+async function bootstrapWatermark(): Promise<void> {
   if (state.lastId !== null && state.lastId !== undefined) return;
   if (cfg.startFrom === "beginning") {
     state.lastId = 0;
@@ -316,10 +339,8 @@ async function bootstrapWatermark() {
   saveState(state);
 }
 
-// Procesa COMO MÁXIMO un mensaje por ciclo: así el ritmo de envío lo marca el
-// espaciado aleatorio (nextSendAt) y los topes, no la velocidad del sondeo.
 let lastThrottleLog = 0;
-async function tick() {
+async function tick(): Promise<void> {
   await bootstrapWatermark();
 
   const next = await fetchNextNotification(state.lastId);
@@ -327,11 +348,9 @@ async function tick() {
 
   const now = Date.now();
 
-  // En DRY_RUN ignoramos el ritmo para poder demostrar rápido.
   if (!cfg.dryRun) {
     const reason = throttleReason(now);
     if (reason) {
-      // Log de "en espera" como mucho cada 30s para no saturar la consola.
       if (now - lastThrottleLog > 30_000) {
         const pending = await countPending(state.lastId);
         const waitMs = Math.max(0, (state.nextSendAt ?? 0) - now);
@@ -348,16 +367,11 @@ async function tick() {
 
   const outcome = await deliver(next);
 
-  if (outcome === "retry") {
-    // No avanza el watermark: se reintenta el mismo mensaje en el próximo ciclo.
-    return;
-  }
+  if (outcome === "retry") return;
 
-  // "sent" o "dropped": avanza el watermark.
   state.lastId = next.id;
 
   if (outcome === "sent" && !cfg.dryRun) {
-    // Registra el envío y programa el siguiente hueco aleatorio.
     state.sentTimes = state.sentTimes ?? [];
     state.sentTimes.push(Date.now());
     pruneSentTimes(Date.now());
@@ -373,7 +387,7 @@ async function tick() {
   saveState(state);
 }
 
-async function main() {
+async function main(): Promise<void> {
   log("INFO", "Iniciando CRM → WhatsApp notifier", {
     webDbUrl: cfg.webDbUrl,
     openwaBaseUrl: cfg.openwaBaseUrl,
@@ -395,30 +409,27 @@ async function main() {
     process.exit(1);
   }
 
-  // Intento temprano de resolver la sesión (solo para avisar del estado del QR).
-  // No es fatal: si OpenWA está caído, se reintenta dentro del loop.
   try {
     await ensureSession();
   } catch (err) {
     log("WARN", "No se pudo resolver la sesión OpenWA todavía", {
-      error: String(err?.message ?? err),
+      error: String((err as Error)?.message ?? err),
     });
   }
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (;;) {
     try {
       await tick();
     } catch (err) {
       log("ERROR", "Error en el ciclo de sondeo", {
-        error: String(err?.message ?? err),
+        error: String((err as Error)?.message ?? err),
       });
     }
     await new Promise((r) => setTimeout(r, cfg.pollIntervalMs));
   }
 }
 
-main().catch((err) => {
-  log("ERROR", "Fallo fatal", { error: String(err?.stack ?? err) });
+main().catch((err: unknown) => {
+  log("ERROR", "Fallo fatal", { error: String((err as Error)?.stack ?? err) });
   process.exit(1);
 });
