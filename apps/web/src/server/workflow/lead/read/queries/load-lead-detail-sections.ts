@@ -5,11 +5,21 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { DigitalPolicyRepository } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
+  RateProposal,
+  RateRevision,
+} from "~/server/workflow/lead/domain/rows";
+import type {
   LeadCommercialScope,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
 import type { LeadHistoryRepository } from "~/server/workflow/lead/read/history/history-repo";
 import type { LeadFavoriteRepository } from "~/server/workflow/lead/read/lead-favorite-repo";
+import type {
+  LeadDetailReader,
+  RateProposalReader,
+  RateRevisionReader,
+  SourceStatusReader,
+} from "~/server/workflow/lead/read/ports";
 import type {
   LeadUserWithName,
   WorkflowUserRepository,
@@ -18,16 +28,6 @@ import type {
   LeadVenue,
   LeadVenueRepository,
 } from "~/server/workflow/lead/venue/repo";
-import type { LeadRepository } from "~/server/workflow/lead/write/lead-repo";
-import type {
-  RateProposal,
-  RateProposalRepository,
-} from "~/server/workflow/lead/write/rate-proposal-repo";
-import type {
-  RateRevision,
-  RateRevisionRepository,
-} from "~/server/workflow/lead/write/rate-revision-repo";
-import type { SourceStatusRepository } from "~/server/workflow/lead/write/source-status-repo";
 
 const logger = createLogger("workflow-get-lead-detail");
 
@@ -62,15 +62,15 @@ export type RateRevisionFilesQuery = {
 };
 
 export type LeadDetailQueryDeps = {
-  leads: LeadRepository;
+  leads: LeadDetailReader;
   leadFavorites: LeadFavoriteRepository;
   digitalPolicies: DigitalPolicyRepository;
   leadHistory: LeadHistoryRepository;
-  rateProposals: RateProposalRepository;
+  rateProposals: RateProposalReader;
   leadVenues: LeadVenueRepository;
-  rateRevisions: RateRevisionRepository;
+  rateRevisions: RateRevisionReader;
   rateRevisionFiles: RateRevisionFilesQuery;
-  sourceStatuses: SourceStatusRepository;
+  sourceStatuses: SourceStatusReader;
   users: WorkflowUserRepository;
   party: PartyRepository;
 };
@@ -84,7 +84,7 @@ export type LeadDetailLoadedSections = {
   venues: LeadVenue[];
   rateRevisionRows: RateRevision[];
   history: LeadHistoryEntry[];
-  sourceStatus: Awaited<ReturnType<SourceStatusRepository["findByRuc"]>>;
+  sourceStatus: Awaited<ReturnType<SourceStatusReader["findByRuc"]>>;
   userRows: LeadUserWithName[];
   organization: NonNullable<
     Awaited<ReturnType<PartyRepository["findOrganizationById"]>>

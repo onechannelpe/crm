@@ -23,7 +23,7 @@ import type {
   LeadQueries,
   RecordExportRow,
 } from "~/server/workflow/lead/read/lead-queries";
-import type { LeadReadRepository } from "~/server/workflow/lead/write/lead-repo";
+import type { LeadReader } from "~/server/workflow/lead/read/ports";
 
 const LEAD_EXPORT_COLUMNS: {
   header: string;
@@ -51,7 +51,7 @@ const LEAD_EXPORT_COLUMNS: {
 ];
 
 type LeadArtifactDeps = {
-  leadReader: LeadReadRepository;
+  leadReader: LeadReader;
   leadQueries: LeadQueries;
   filesRepo: ArtifactRepos;
   filesStorage: FileStorage;
@@ -61,10 +61,7 @@ async function requireReadableLead(
   deps: LeadArtifactDeps,
   input: { leadId: string; ctx: AppContext },
 ): Promise<
-  Result<
-    NonNullable<Awaited<ReturnType<LeadReadRepository["findById"]>>>,
-    DomainError
-  >
+  Result<NonNullable<Awaited<ReturnType<LeadReader["findById"]>>>, DomainError>
 > {
   const lead = await deps.leadReader.findById(input.leadId);
   if (!lead) {

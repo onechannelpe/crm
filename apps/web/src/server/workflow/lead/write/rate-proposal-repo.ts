@@ -1,35 +1,12 @@
 import type { Insertable, Selectable } from "kysely";
 
-import type { Currency } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
-export type RateProposalOutcome = "pending" | "accepted" | "revision_requested";
-
-export type RateProposal = {
-  id: string;
-  leadId: string;
-  round: number;
-  proposedDebitRate: number;
-  proposedCreditRate: number;
-  proposedForeignRate: number;
-  fee: number;
-  paybackPricing: number;
-  currency: Currency;
-  proposedBy: number;
-  proposedAt: number;
-  outcome: RateProposalOutcome;
-  decidedAt: number | null;
-};
-
-export type RateProposalNumbers = {
-  proposedDebitRate: number;
-  proposedCreditRate: number;
-  proposedForeignRate: number;
-  fee: number;
-  paybackPricing: number;
-  currency: Currency;
-};
+import type {
+  RateProposal,
+  RateProposalNumbers,
+  RateProposalOutcome,
+} from "~/server/workflow/lead/domain/rows";
 
 export type RateProposalRepository = {
   insert(values: RateProposal): Promise<void>;

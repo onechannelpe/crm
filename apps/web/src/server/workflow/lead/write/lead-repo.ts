@@ -27,6 +27,7 @@ export type LeadRepository = {
   findByIdIncludingDeleted(id: string): Promise<LeadState | undefined>;
   findCommercialScope(leadId: string): Promise<LeadCommercialScope | undefined>;
   findByRuc(ruc: string): Promise<LeadState | undefined>;
+  findByRucMany(rucs: string[]): Promise<LeadState[]>;
   updateCommercialSnapshot(
     leadId: string,
     scope: LeadCommercialScope,
@@ -201,6 +202,15 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("lead.stage", "!=", "EXPIRED")
         .executeTakeFirst();
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
+    },
+
+    // Bulk RUC lookup for the CSV import path: which RUCs already have leads.
+    async findByRucMany(rucs: string[]): Promise<LeadState[]> {
+      if (rucs.length === 0) return [];
+      const rows = await selectLeadWithOrganization
+        .where("org.ruc", "in", rucs)
+        .execute();
+      return rows.map((row) => toLead(row as LeadWithOrganizationRow));
     },
 
     // Leads whose RUC hold has lapsed but that the sweep has not yet retired.

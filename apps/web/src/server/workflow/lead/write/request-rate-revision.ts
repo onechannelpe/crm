@@ -12,7 +12,7 @@ import {
   computeReservationExpiry,
   isReservationActive,
 } from "../../lead/domain/reservation";
-import type { SubmitReadyRevisionFile } from "./rate-revision-repo";
+import type { SubmitReadyRevisionFile } from "../domain/rows";
 import { runLeadTransaction } from "./transition";
 
 export async function requestRateRevisionCommand(

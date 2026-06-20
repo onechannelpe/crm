@@ -13,6 +13,12 @@ import type {
 import type { DigitalPolicy } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
+  LeadSourceStatus,
+  RateProposal,
+  RateRevision,
+  RateRevisionFile,
+} from "~/server/workflow/lead/domain/rows";
+import type {
   LeadCommercialScope,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
@@ -21,12 +27,6 @@ import {
   resolveLeadNextStep,
 } from "~/server/workflow/lead/read/lead-progress";
 import type { LeadVenue } from "~/server/workflow/lead/venue/repo";
-import type { RateProposal } from "~/server/workflow/lead/write/rate-proposal-repo";
-import type {
-  RateRevision,
-  RateRevisionFile,
-} from "~/server/workflow/lead/write/rate-revision-repo";
-import type { LeadSourceStatus } from "~/server/workflow/lead/write/source-status-repo";
 
 import type {
   LeadDetailRateRevisionFileView,

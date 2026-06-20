@@ -4,7 +4,7 @@ import type {
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
-import type { SunatSourceStatus } from "~/server/workflow/lead/write/source-status-repo";
+import type { SunatSourceStatus } from "~/server/workflow/lead/domain/rows";
 
 export type LeadDetailSourceStatusView = {
   sunat: {

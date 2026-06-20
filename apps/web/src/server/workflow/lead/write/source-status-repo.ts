@@ -2,27 +2,10 @@ import type { SunatEconomicActivity } from "~/server/client-search/enrichment/su
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
-export type SunatSourceStatus =
-  | "idle"
-  | "queued"
-  | "running"
-  | "completed"
-  | "failed"
-  | "stale";
-
-export type LeadSourceStatus = {
-  sunat: {
-    status: SunatSourceStatus;
-    fetchedAt: number | null;
-    district: string | null;
-    department: string | null;
-    contributorStatus: string | null;
-    contributorCondition: string | null;
-    economicActivities: SunatEconomicActivity[];
-    payloadAvailable: boolean;
-  };
-};
+import type {
+  LeadSourceStatus,
+  SunatSourceStatus,
+} from "~/server/workflow/lead/domain/rows";
 
 export type SourceStatusRepository = {
   findByRuc(ruc: string): Promise<LeadSourceStatus>;

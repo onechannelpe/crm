@@ -1,27 +1,9 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
-export type RateRevision = {
-  id: string;
-  leadId: string;
-  proposalId: string;
-  round: number;
-  justification: string;
-  requestedBy: number;
-  requestedAt: number;
-};
-
-export type RateRevisionFile = {
-  revisionId: string;
-  artifactId: string;
-  fileAssetId: number;
-  uploadedByUserId: number;
-  createdAt: number;
-};
-
-export type SubmitReadyRevisionFile = {
-  artifactId: string;
-  fileAssetId: number;
-};
+import type {
+  RateRevision,
+  RateRevisionFile,
+  SubmitReadyRevisionFile,
+} from "~/server/workflow/lead/domain/rows";
 
 export type RateRevisionRepository = {
   insert(values: RateRevision): Promise<void>;

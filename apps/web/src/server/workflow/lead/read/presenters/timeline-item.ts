@@ -216,6 +216,15 @@ export function presentTimelineItem(
           event.payload?.body || `Registrada por ${actorDisplayName}.`,
         actorDisplayName,
       };
+    case "lead_deleted":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Cliente eliminado",
+        description: `Eliminado por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
     default: {
       const exhaustive: never = event;
       return exhaustive;
