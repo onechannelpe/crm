@@ -41,6 +41,26 @@ function finish(
   });
 }
 
+export function deleteLead(
+  state: LeadState,
+  input: { actor: Actor; now: number },
+): TransitionResult {
+  const authz = authorizeLeadAction("delete", input.actor, state);
+  if (!authz.ok) return authz;
+
+  const events: LeadEvent[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_deleted",
+      actorUserId: input.actor.userId,
+      payload: {},
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
 export function reassignLead(
   state: LeadState,
   input: { actor: Actor; toExecutiveId: number; now: number },

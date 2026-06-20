@@ -16,6 +16,7 @@ import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import { toCallEntry, toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,
+  toLeadDeletedEntry,
   toPriorityUpdatedEntry,
   toReassignmentEntry,
   toRegisteredEntry,
@@ -78,6 +79,8 @@ export function toHistoryEntry(
       return toCallEntry(row, payload.value);
     case "note_added":
       return toNoteEntry(row, payload.value);
+    case "lead_deleted":
+      return toLeadDeletedEntry(row);
     default: {
       const exhaustive: never = row.event_type;
       return exhaustive;

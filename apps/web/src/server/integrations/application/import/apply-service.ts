@@ -1,12 +1,9 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
+import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 import { appendImportLeadEvents } from "./import-events-writer";
 import { applyLeadMutation } from "./lead-mutation-writer";
-import {
-  createEmptyOutboxPlan,
-  persistOutboxPlan,
-  planOutboxForMutation,
-} from "./outbox-planner";
 import { stageImportRows } from "./staging-repo";
 import type { ImportRowInput, RowResult } from "./types";
 
@@ -47,7 +44,7 @@ export async function applyImportRows(
   const sortedRows = input.validRows.toSorted((a, b) => a.row - b.row);
   let applied = 0;
   let failed = input.invalidRows.length;
-  const outboxPlan = createEmptyOutboxPlan();
+  const committedEvents: CommittedLeadEvent[] = [];
   const progressEveryRows = Math.max(1, input.progressEveryRows ?? 50);
   let lastEmittedProcessed = -1;
 
@@ -95,26 +92,18 @@ export async function applyImportRows(
         continue;
       }
 
-      await appendImportLeadEvents({
+      const rowEvents = await appendImportLeadEvents({
         executor: trx,
         actorId: input.actorId,
         mutation: mutationResult.mutation,
       });
-      await planOutboxForMutation({
-        executor: trx,
-        mutation: mutationResult.mutation,
-        outboxPlan,
-      });
+      committedEvents.push(...rowEvents);
       applied++;
       emitProgress(false);
     }
     /* eslint-enable no-await-in-loop */
 
-    await persistOutboxPlan({
-      executor: trx,
-      outboxPlan,
-      now: Date.now(),
-    });
+    await enqueueLeadEffects(trx, committedEvents, Date.now());
   });
   emitProgress(true);
 

@@ -21,7 +21,7 @@ export async function proposeRateCommand(
   },
 ): Promise<Result<{ proposalId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
-    const state = await ctx.repos.leadStates.findById(input.leadId);
+    const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
       return Err(fail("lead_not_found"));
@@ -70,7 +70,7 @@ export async function proposeRateCommand(
       decidedAt: null,
     });
 
-    const committed = await ctx.commit(transition.value);
+    const committed = await ctx.commitTransition(transition.value);
 
     if (!committed.ok) {
       return committed;

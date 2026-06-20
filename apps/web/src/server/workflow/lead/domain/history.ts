@@ -26,7 +26,8 @@ export type LeadHistoryEventType =
   | "venue_updated"
   | "venue_accounts_added"
   | "call_logged"
-  | "note_added";
+  | "note_added"
+  | "lead_deleted";
 
 const LEAD_HISTORY_EVENT_TYPES = {
   lead_registered: true,
@@ -48,6 +49,7 @@ const LEAD_HISTORY_EVENT_TYPES = {
   venue_accounts_added: true,
   call_logged: true,
   note_added: true,
+  lead_deleted: true,
 } satisfies Record<LeadHistoryEventType, true>;
 
 export function isLeadHistoryEventType(
@@ -138,6 +140,7 @@ export type LeadHistoryPayloadByEvent = {
   note_added: {
     body: string;
   };
+  lead_deleted: Record<string, never>;
 };
 
 export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =

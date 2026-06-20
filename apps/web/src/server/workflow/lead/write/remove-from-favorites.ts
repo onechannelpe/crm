@@ -11,7 +11,7 @@ export async function removeFromFavoritesCommand(
   ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
-    const state = await ctx.repos.leadStates.findById(input.leadId);
+    const state = await ctx.repos.leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
     const authz = authorizeLeadAction("view", input.actor, state);

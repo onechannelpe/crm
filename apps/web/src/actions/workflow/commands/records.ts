@@ -63,12 +63,8 @@ export async function requestLeadCreation(input: unknown) {
       registerLead(
         { actor: workflowActor(actor), ...payload },
         {
-          leads: getServerRuntime().workflow.repos.leads,
-          users: getServerRuntime().workflow.repos.users,
-          engineGateway: getServerRuntime().workflow.engineGateway,
-          enrichmentQueue: getServerRuntime().workflow.enrichmentQueue,
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
+          ...getServerRuntime().workflow.ports(),
+          identity: getServerRuntime().workflow.engineGateway,
         },
       ),
   });
@@ -84,10 +80,7 @@ export async function requestEditCommercialScope(input: unknown) {
     execute: ({ actor }, payload) =>
       editCommercialScopeCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -113,10 +106,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
     execute: ({ actor }, payload) =>
       saveDigitalPolicyCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -142,10 +132,7 @@ export async function requestRecordRepLegal(input: unknown) {
     execute: ({ actor }, payload) =>
       recordRepLegalCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -170,10 +157,7 @@ export async function requestLeadReassignment(input: unknown) {
           leadId: payload.leadId,
           toExecutiveId: payload.newExecutiveId,
         },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -191,10 +175,7 @@ export async function requestAddLeadToFavorites(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       );
 
       if (isErr(result)) {
@@ -219,10 +200,7 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       );
 
       if (isErr(result)) {
@@ -247,10 +225,7 @@ export async function requestLeadDeletion(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }

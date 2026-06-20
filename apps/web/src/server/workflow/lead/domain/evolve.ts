@@ -20,6 +20,8 @@ function applyEvent(state: LeadState, event: LeadEvent): LeadState {
       return { ...state, priority: event.payload.toPrioridad };
     case "lead_reservation_expired":
       return { ...state, stage: "EXPIRED" };
+    case "lead_deleted":
+      return { ...state, deletedAt: event.occurredAt };
     default:
       return state;
   }

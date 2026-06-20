@@ -60,6 +60,16 @@ export function toReviewedEntry(
   });
 }
 
+export function toLeadDeletedEntry(
+  row: HistoryEventRow,
+): Result<LeadHistoryEntry, DomainError> {
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "lead_deleted",
+    payload: {},
+  });
+}
+
 export function toReservationExpiredEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,

@@ -43,6 +43,8 @@ export function createWorkflowRuntime(
   return {
     db: infra.db,
     now: infra.now,
+    // runLeadTransaction opens its own transaction from this.
+    ports: () => ({ executor: infra.db, now: infra.now() }),
     repos,
     engineGateway,
     enrichmentQueue,

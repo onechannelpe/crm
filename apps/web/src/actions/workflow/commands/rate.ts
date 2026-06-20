@@ -33,10 +33,7 @@ export async function requestRateProposal(input: unknown) {
     execute: ({ actor }, payload) =>
       proposeRateCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -63,10 +60,7 @@ export async function requestRateProposalEdit(input: unknown) {
     execute: ({ actor }, payload) =>
       editRateProposalCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -87,10 +81,7 @@ export async function requestRateAcceptance(input: unknown) {
     execute: ({ actor }, payload) =>
       acceptRateCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -121,10 +112,7 @@ export async function requestRateRevision(input: unknown) {
           justification: payload.justification,
           artifactIds: payload.artifactIds,
         },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }

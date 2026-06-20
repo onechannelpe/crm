@@ -28,10 +28,7 @@ export async function recordLeadCall(input: unknown) {
     execute: ({ actor }, payload) =>
       logLeadCall(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -52,10 +49,7 @@ export async function addLeadNote(input: unknown) {
     execute: ({ actor }, payload) =>
       addLeadNoteUseCase(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }

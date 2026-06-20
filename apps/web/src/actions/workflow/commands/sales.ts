@@ -70,10 +70,7 @@ export async function requestVenueCreation(input: unknown) {
     execute: ({ actor }, payload) =>
       createVenueCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -98,10 +95,7 @@ export async function requestVenueUpdate(input: unknown) {
     execute: ({ actor }, payload) =>
       updateVenueCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }
@@ -130,10 +124,7 @@ export async function requestVenueAccountsAddition(input: unknown) {
     execute: ({ actor }, payload) =>
       addVenueAccountsCommand(
         { actor: workflowActor(actor), ...payload },
-        {
-          executor: getServerRuntime().workflow.db,
-          now: getServerRuntime().workflow.now(),
-        },
+        getServerRuntime().workflow.ports(),
       ),
   });
 }

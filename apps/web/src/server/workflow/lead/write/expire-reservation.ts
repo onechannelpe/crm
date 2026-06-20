@@ -16,7 +16,7 @@ export async function expireLeadReservation(
   now: number,
 ): Promise<Result<void, DomainError>> {
   return runLeadTransaction({ executor, now }, async (ctx) => {
-    const state = await ctx.repos.leadStates.findById(leadId);
+    const state = await ctx.repos.leads.findById(leadId);
     if (!state) return Ok(undefined);
     if (state.stage !== "PRICING" || !isReservationLapsed(state, ctx.now)) {
       return Ok(undefined);
@@ -25,7 +25,7 @@ export async function expireLeadReservation(
     const transition = expireReservation(state, { now: ctx.now });
     if (!transition.ok) return transition;
 
-    const committed = await ctx.commit(transition.value);
+    const committed = await ctx.commitTransition(transition.value);
     if (!committed.ok) return committed;
 
     return Ok(undefined);

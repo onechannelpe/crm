@@ -11,7 +11,6 @@ import { createWorkflowUsersRepo } from "./lead/read/users-repo";
 import { createLeadVenueRepo } from "./lead/venue/repo";
 import { createAssignmentRepo } from "./lead/write/assignment-repo";
 import { createLeadRepo } from "./lead/write/lead-repo";
-import { createLeadStateRepo } from "./lead/write/lead-state-repo";
 import { createRateProposalRepo } from "./lead/write/rate-proposal-repo";
 import { createRateRevisionRepo } from "./lead/write/rate-revision-repo";
 import { createSourceStatusRepo } from "./lead/write/source-status-repo";
@@ -21,7 +20,6 @@ import { createSourcingPolicyRepo } from "./policy/sourcing-policy-repo";
 export function createWorkflowRepos(executor: DatabaseExecutor) {
   return {
     leads: createLeadRepo(executor),
-    leadStates: createLeadStateRepo(executor),
     leadQueries: createLeadQueries(executor),
     leadFavorites: createLeadFavoriteRepo(executor),
     leadAssignments: createAssignmentRepo(executor),

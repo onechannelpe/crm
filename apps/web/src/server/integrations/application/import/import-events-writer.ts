@@ -5,6 +5,7 @@ import {
   type LeadHistoryEventDraft,
 } from "~/server/workflow/lead/domain/history";
 import { toLeadEventAppend } from "~/server/workflow/lead/write/lead-events";
+import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 import type { LeadMutationOutcome } from "./types";
 
@@ -80,11 +81,15 @@ export async function appendImportLeadEvents(input: {
   executor: DatabaseExecutor;
   actorId: number;
   mutation: LeadMutationOutcome;
-}): Promise<void> {
+}): Promise<CommittedLeadEvent[]> {
   const events = buildImportEvents({
     actorId: input.actorId,
     mutation: input.mutation,
   });
 
-  await createEventsRepo(input.executor).append(events.map(toLeadEventAppend));
+  const ids = await createEventsRepo(input.executor).append(
+    events.map(toLeadEventAppend),
+  );
+
+  return events.map((event, index) => ({ event, id: ids[index] }));
 }

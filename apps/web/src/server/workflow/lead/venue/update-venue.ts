@@ -21,7 +21,7 @@ export async function updateVenueCommand(
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
-    const state = await ctx.repos.leadStates.findById(input.leadId);
+    const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
       return Err(fail("lead_not_found"));
@@ -79,7 +79,7 @@ export async function updateVenueCommand(
       department: input.department,
     });
 
-    const committed = await ctx.commit(transition.value);
+    const committed = await ctx.commitTransition(transition.value);
 
     if (!committed.ok) {
       return committed;

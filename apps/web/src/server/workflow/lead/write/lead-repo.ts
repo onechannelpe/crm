@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import type { Insertable, Updateable } from "kysely";
+import type { Insertable } from "kysely";
 
 import type {
   LeadPriority,
@@ -15,22 +15,6 @@ import type {
   LeadState,
 } from "~/server/workflow/lead/domain/state";
 
-export type LeadPatch = Partial<
-  Omit<
-    LeadState,
-    | "id"
-    | "version"
-    | "createdAt"
-    | "createdBy"
-    | "organizationId"
-    | "ruc"
-    | "legalName"
-    | "address"
-    | "district"
-    | "department"
-  >
->;
-
 export type LeadReadRepository = {
   findById(id: string): Promise<LeadState | undefined>;
 };
@@ -38,11 +22,11 @@ export type LeadReadRepository = {
 export type LeadRepository = {
   insert(values: LeadDraft): Promise<string>;
   findById(id: string): Promise<LeadState | undefined>;
+  // Includes soft-deleted leads. Only the delete command needs this, to make
+  // re-deletion an idempotent no-op instead of a not-found error.
+  findByIdIncludingDeleted(id: string): Promise<LeadState | undefined>;
   findCommercialScope(leadId: string): Promise<LeadCommercialScope | undefined>;
   findByRuc(ruc: string): Promise<LeadState | undefined>;
-  findByRucMany(rucs: string[]): Promise<LeadState[]>;
-  updateById(id: string, values: LeadPatch): Promise<unknown>;
-  updateByRuc(ruc: string, values: LeadPatch): Promise<unknown>;
   updateCommercialSnapshot(
     leadId: string,
     scope: LeadCommercialScope,
@@ -75,7 +59,6 @@ type LeadWithOrganizationRow = LeadRow & {
   version: number;
 };
 type NewLeadRow = Insertable<Database["workflow_leads"]>;
-type LeadRowPatch = Updateable<Database["workflow_leads"]>;
 
 function toLead(row: LeadWithOrganizationRow): LeadState {
   return {
@@ -128,17 +111,6 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
   };
 }
 
-function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
-  return {
-    executive_id: values.executiveId,
-    updated_by: values.updatedBy,
-    stage: values.stage,
-    status: values.status,
-    priority: values.priority,
-    updated_at: values.updatedAt,
-  };
-}
-
 export function createLeadRepo(db: DatabaseExecutor) {
   const selectLeadWithOrganization = db
     .selectFrom("workflow_leads as lead")
@@ -179,6 +151,13 @@ export function createLeadRepo(db: DatabaseExecutor) {
       const row = await selectLeadWithOrganization
         .where("lead.id", "=", id)
         .where("lead.deleted_at", "is", null)
+        .executeTakeFirst();
+      return row ? toLead(row as LeadWithOrganizationRow) : undefined;
+    },
+
+    async findByIdIncludingDeleted(id: string) {
+      const row = await selectLeadWithOrganization
+        .where("lead.id", "=", id)
         .executeTakeFirst();
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
     },
@@ -235,37 +214,6 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("stage", "=", "PRICING")
         .execute();
       return rows.map((row) => row.id);
-    },
-
-    async findByRucMany(rucs: string[]) {
-      if (rucs.length === 0) {
-        return [];
-      }
-
-      const rows = await selectLeadWithOrganization
-        .where("org.ruc", "in", rucs)
-        .execute();
-      return rows.map((row) => toLead(row as LeadWithOrganizationRow));
-    },
-
-    updateById(id: string, values: LeadPatch) {
-      return db
-        .updateTable("workflow_leads")
-        .set(toLeadPatchRow(values))
-        .where("id", "=", id)
-        .execute();
-    },
-
-    updateByRuc(ruc: string, values: LeadPatch) {
-      return db
-        .updateTable("workflow_leads")
-        .set(toLeadPatchRow(values))
-        .where(
-          "organization_id",
-          "=",
-          db.selectFrom("organizations").select("id").where("ruc", "=", ruc),
-        )
-        .execute();
     },
 
     updateCommercialSnapshot(

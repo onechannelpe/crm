@@ -37,7 +37,7 @@ export async function reassignLeadCommand(
       return Err(fail("invalid_executive"));
     }
 
-    const state = await ctx.repos.leadStates.findById(input.leadId);
+    const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
       return Err(fail("lead_not_found"));
@@ -53,7 +53,7 @@ export async function reassignLeadCommand(
       return transition;
     }
 
-    const committed = await ctx.commit(transition.value, {
+    const committed = await ctx.commitTransition(transition.value, {
       toExecutiveId: input.toExecutiveId,
       assignedBy: input.actor.userId,
       at: ctx.now,

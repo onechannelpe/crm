@@ -3,7 +3,6 @@ import {
   type LeadStage,
   type LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { NotificationIntent } from "~/server/notifications/types";
 
 export type RowResult =
   | { row: number; ok: false; reason: string }
@@ -61,7 +60,3 @@ export type LeadMutationResult =
       rowResult: RowResult;
       mutation: LeadMutationOutcome;
     };
-
-export type PlannedOutboxEvents = {
-  notificationIntents: NotificationIntent[];
-};
