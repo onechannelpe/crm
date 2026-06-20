@@ -1,12 +1,11 @@
 import { getRequestContext } from "~/lib/http/request-context";
 import {
-  actionErrorFrom,
   fail,
   forbidden,
   unauthenticated,
   type DomainError,
 } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { hasPermission, type Permission, type Role } from "./rbac";
 import type { AuthSession } from "./session-types";
@@ -78,37 +77,4 @@ export function authorizePermission(
     return Err(forbidden());
   }
   return Ok(session);
-}
-
-// Throwing facades for raw callers (routes, standalone actions). They throw a
-// typed ActionError carrying the wire failure, so even outside runAction a
-// denial reaches the client as forbidden/unauthenticated rather than a raw
-// Error or a generic internal fault.
-
-export async function requireAuth(): Promise<AuthSession> {
-  const result = await authenticate();
-  if (isErr(result)) throw actionErrorFrom(result.error);
-  return result.value;
-}
-
-export async function requireSession(): Promise<AuthSession> {
-  const result = await authenticateSession();
-  if (isErr(result)) throw actionErrorFrom(result.error);
-  return result.value;
-}
-
-export async function requireRole(role: Role): Promise<AuthSession> {
-  const session = await requireAuth();
-  const result = authorizeRole(session, role);
-  if (isErr(result)) throw actionErrorFrom(result.error);
-  return result.value;
-}
-
-export async function requirePermission(
-  permission: Permission,
-): Promise<AuthSession> {
-  const session = await requireAuth();
-  const result = authorizePermission(session, permission);
-  if (isErr(result)) throw actionErrorFrom(result.error);
-  return result.value;
 }

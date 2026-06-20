@@ -30,6 +30,7 @@ export interface Reader<E> {
   strList(field: string): string[];
   optNum(field: string): number | null;
   optStr(field: string): string | null;
+  optBool(field: string): boolean | null;
   optEnum<T extends string>(
     field: string,
     options: readonly T[],
@@ -120,6 +121,13 @@ class RecordReader<E> implements Reader<E> {
     if (value === undefined || value === null || value === "") return null;
     if (typeof value !== "string") this.reject(field, "invalid");
     return value.trim() || null;
+  }
+
+  optBool(field: string): boolean | null {
+    const value = this.record[field];
+    if (value === undefined || value === null) return null;
+    if (typeof value !== "boolean") this.reject(field, "invalid");
+    return value;
   }
 
   optEnum<T extends string>(

@@ -1,15 +1,15 @@
 import { isSearchIntent } from "~/contracts/search/vocabulary";
 import type { RunDirectSearchCommand } from "~/server/search-workflow/run-search";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+export type SearchQueryInput = Omit<RunDirectSearchCommand, "actorUserId">;
+
 export function parseSearchCommand(
-  actorUserId: UserId,
   intent: unknown,
   query: unknown,
   limit: unknown,
-): Result<RunDirectSearchCommand, DomainError> {
+): Result<SearchQueryInput, DomainError> {
   if (typeof intent !== "string" || !isSearchIntent(intent)) {
     return Err(invalid({ code: "search.intent.invalid" }));
   }
@@ -24,7 +24,6 @@ export function parseSearchCommand(
   }
 
   return Ok({
-    actorUserId,
     intent,
     query: query.trim(),
     limit: safeLimit,

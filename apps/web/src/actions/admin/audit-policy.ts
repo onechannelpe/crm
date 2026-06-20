@@ -1,24 +1,46 @@
 "use server";
 
-import {
-  getSession,
-  requirePermission,
-  requireRole,
-} from "~/lib/auth/access/session";
-import { hasRole } from "~/lib/auth/access/session";
+import { getSession, hasRole } from "~/lib/auth/access/session";
 import type { AuditPolicySnapshot } from "~/server/audit-reader/contracts";
 import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
 } from "~/server/audit-reader/policy-service";
 import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
+import type { DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { Ok, type Result } from "~/server/shared/result";
 
-export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
-  await requirePermission("audit:read");
-  const auditPolicyService = createAuditPolicyService({
+type UpsertAuditPolicyFields = {
+  action: string;
+  riskLevel: string;
+  isActive: boolean;
+};
+
+function auditPolicyService() {
+  return createAuditPolicyService({
     auditActionPolicies: getServerRuntime().admin.auditActionPolicies,
   });
-  return auditPolicyService.getSnapshot();
+}
+
+function parseUpsertAuditPolicy(
+  raw: unknown,
+): Result<UpsertAuditPolicyFields, DomainError> {
+  return parseObject(raw, validationFail, (r) => ({
+    action: r.str("action"),
+    riskLevel: r.str("riskLevel"),
+    isActive: r.bool("isActive"),
+  }));
+}
+
+export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
+  return runAction({
+    name: "admin.audit_policy.snapshot.read",
+    access: { kind: "permission", permission: "audit:read" },
+
+    execute: async () => Ok(await auditPolicyService().getSnapshot()),
+  });
 }
 
 export async function canManageAuditPolicies(): Promise<boolean> {
@@ -27,20 +49,21 @@ export async function canManageAuditPolicies(): Promise<boolean> {
   return hasRole(session.role, "admin");
 }
 
-export async function upsertAuditPolicy(input: {
-  action: string;
-  riskLevel: string;
-  isActive: boolean;
-}): Promise<void> {
-  const session = await requireRole("admin");
-  const auditPolicyService = createAuditPolicyService({
-    auditActionPolicies: getServerRuntime().admin.auditActionPolicies,
+export async function upsertAuditPolicy(input: unknown): Promise<void> {
+  return runAction({
+    name: "admin.audit_policy.upsert",
+    access: { kind: "role", role: "admin" },
+    parse: () => parseUpsertAuditPolicy(input),
+    audit: (fields) => ({ action: fields.action, isActive: fields.isActive }),
+
+    execute: async (ctx, fields) => {
+      const payload: UpsertAuditPolicyInput = {
+        action: fields.action,
+        riskLevel: fields.riskLevel,
+        isActive: fields.isActive,
+        actorUserId: ctx.actor.userId,
+      };
+      return Ok(await auditPolicyService().upsertPolicy(payload));
+    },
   });
-  const payload: UpsertAuditPolicyInput = {
-    action: input.action,
-    riskLevel: input.riskLevel,
-    isActive: input.isActive,
-    actorUserId: session.userId,
-  };
-  await auditPolicyService.upsertPolicy(payload);
 }

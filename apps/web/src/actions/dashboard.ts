@@ -1,21 +1,25 @@
 "use server";
 
-import { requireAuth } from "~/lib/auth/access/session";
-import { requirePermission } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
+import { Ok } from "~/server/shared/result";
 
-export interface DashboardStats {
-  activeLeads: number;
-}
+export async function getDashboardStats() {
+  return runAction({
+    name: "dashboard.stats.read",
+    access: { kind: "permission", permission: "lead:work" },
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const session = await requireAuth();
-  await requirePermission("lead:work");
+    execute: async ({ actor }) => {
+      const { contactAssignments } =
+        getServerRuntime().contactAssignments.repos;
 
-  const { contactAssignments } = getServerRuntime().contactAssignments.repos;
-  const activeLeads = await contactAssignments.findActiveByUser(session.userId);
+      const activeLeads = await contactAssignments.findActiveByUser(
+        actor.userId,
+      );
 
-  return {
-    activeLeads: activeLeads.length,
-  };
+      return Ok({
+        activeLeads: activeLeads.length,
+      });
+    },
+  });
 }

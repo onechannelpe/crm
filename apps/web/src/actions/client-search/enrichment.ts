@@ -1,28 +1,67 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
+import type { DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { Ok, type Result } from "~/server/shared/result";
 
-export async function requestSearchEnrichment(
-  documentType: string,
-  documentValue: string,
-) {
-  const session = await requirePermission("search:use");
-  const { enrichmentCommand } = getServerRuntime().clientSearch;
+type EnrichmentTarget = {
+  documentType: string;
+  documentValue: string;
+};
 
-  return enrichmentCommand.enqueueRequest(
-    documentType,
-    documentValue,
-    session.userId,
+function parseEnrichmentTarget(
+  rawDocumentType: unknown,
+  rawDocumentValue: unknown,
+): Result<EnrichmentTarget, DomainError> {
+  return parseObject(
+    { documentType: rawDocumentType, documentValue: rawDocumentValue },
+    validationFail,
+    (r) => ({
+      documentType: r.str("documentType"),
+      documentValue: r.str("documentValue"),
+    }),
   );
 }
 
-export async function getSearchEnrichmentStatus(
-  documentType: string,
-  documentValue: string,
+export async function requestSearchEnrichment(
+  rawDocumentType: unknown,
+  rawDocumentValue: unknown,
 ) {
-  await requirePermission("search:use");
+  return runAction({
+    name: "client_search.enrichment.request",
+    access: { kind: "permission", permission: "search:use" },
+    parse: () => parseEnrichmentTarget(rawDocumentType, rawDocumentValue),
 
-  const { enrichmentQuery } = getServerRuntime().clientSearch;
-  return enrichmentQuery.getStatus(documentType, documentValue);
+    execute: async (ctx, target) => {
+      const { enrichmentCommand } = getServerRuntime().clientSearch;
+      const jobId = await enrichmentCommand.enqueueRequest(
+        target.documentType,
+        target.documentValue,
+        ctx.actor.userId,
+      );
+      return Ok(jobId);
+    },
+  });
+}
+
+export async function getSearchEnrichmentStatus(
+  rawDocumentType: unknown,
+  rawDocumentValue: unknown,
+) {
+  return runAction({
+    name: "client_search.enrichment.status.read",
+    access: { kind: "permission", permission: "search:use" },
+    parse: () => parseEnrichmentTarget(rawDocumentType, rawDocumentValue),
+
+    execute: async (_ctx, target) => {
+      const { enrichmentQuery } = getServerRuntime().clientSearch;
+      const status = await enrichmentQuery.getStatus(
+        target.documentType,
+        target.documentValue,
+      );
+      return Ok(status);
+    },
+  });
 }

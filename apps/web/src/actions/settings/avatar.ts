@@ -1,13 +1,14 @@
 "use server";
 
-import { requireSession } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 import {
   external,
   fail,
   invalid,
-  throwDomain,
+  type DomainError,
 } from "~/server/shared/domain-error";
+import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
 
 type ValidationAvatarErrorCode = Extract<
@@ -53,6 +54,16 @@ function isValidationAvatarError(
   return exhaustiveCheck;
 }
 
+// Maps the storage service's own error code union onto the domain error
+// channel: caller-fixable codes become validation, infrastructure outages
+// become external (reported, generic message to the client).
+function toAvatarDomainError(code: AvatarDomainErrorCode): DomainError {
+  if (isValidationAvatarError(code)) {
+    return invalid({ code });
+  }
+  return external(avatarExternalMessage(code), { code });
+}
+
 function avatarUrl(version: number): string {
   return `/api/me/avatar?v=${version}`;
 }
@@ -72,52 +83,50 @@ export interface RemoveAvatarResult {
 export async function uploadUserAvatar(
   formData: FormData,
 ): Promise<UpdateAvatarResult> {
-  const session = await requireSession();
-  const { profilePictureService } = getServerRuntime().profilePicture;
-  const file = formData.get("file");
+  return runAction({
+    name: "settings.avatar.upload",
+    access: { kind: "session" },
+    parse: (): Result<File, DomainError> => {
+      const file = formData.get("file");
+      if (!(file instanceof File)) {
+        return Err(fail("profile_picture_required"));
+      }
+      return Ok(file);
+    },
 
-  if (!(file instanceof File)) {
-    throwDomain(fail("profile_picture_required"));
-  }
+    execute: async (ctx, file) => {
+      const { profilePictureService } = getServerRuntime().profilePicture;
+      const result = await profilePictureService.upload(ctx.actor.userId, file);
+      if (isErr(result)) {
+        return Err(toAvatarDomainError(result.error.code));
+      }
 
-  const result = await profilePictureService.upload(session.userId, file);
-  if (!result.ok) {
-    if (isValidationAvatarError(result.error.code)) {
-      throwDomain(invalid({ code: result.error.code }));
-    }
-    throwDomain(
-      external(avatarExternalMessage(result.error.code), {
-        code: result.error.code,
-      }),
-    );
-  }
-
-  return {
-    avatarVersion: result.value.avatarVersion,
-    avatarUrl: avatarUrl(result.value.avatarVersion),
-    message: "Foto de perfil actualizada",
-  };
+      return Ok({
+        avatarVersion: result.value.avatarVersion,
+        avatarUrl: avatarUrl(result.value.avatarVersion),
+        message: "Foto de perfil actualizada",
+      });
+    },
+  });
 }
 
 export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
-  const session = await requireSession();
-  const { profilePictureService } = getServerRuntime().profilePicture;
-  const result = await profilePictureService.remove(session.userId);
+  return runAction({
+    name: "settings.avatar.remove",
+    access: { kind: "session" },
 
-  if (!result.ok) {
-    if (isValidationAvatarError(result.error.code)) {
-      throwDomain(invalid({ code: result.error.code }));
-    }
-    throwDomain(
-      external(avatarExternalMessage(result.error.code), {
-        code: result.error.code,
-      }),
-    );
-  }
+    execute: async (ctx) => {
+      const { profilePictureService } = getServerRuntime().profilePicture;
+      const result = await profilePictureService.remove(ctx.actor.userId);
+      if (isErr(result)) {
+        return Err(toAvatarDomainError(result.error.code));
+      }
 
-  return {
-    avatarVersion: result.value.avatarVersion,
-    avatarUrl: null,
-    message: "Foto de perfil eliminada",
-  };
+      return Ok({
+        avatarVersion: result.value.avatarVersion,
+        avatarUrl: null,
+        message: "Foto de perfil eliminada",
+      });
+    },
+  });
 }
