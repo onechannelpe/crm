@@ -1,0 +1,16 @@
+# Configuración y secretos
+.env
+
+# Estado en runtime
+.state.json
+.onboarding.json
+
+# Artefactos temporales / de pruebas
+*.pid
+*.log
+.newsid
+qr.png
+qr_resp.json
+
+# Dependencias
+node_modules/
