@@ -3,7 +3,11 @@ import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
-import type { Currency } from "~/contracts/workflow/vocabulary";
+import type {
+  Currency,
+  LeadPriority,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -13,6 +17,7 @@ import { applyEvents } from "./evolve";
 import { createHistoryEvent } from "./history";
 import { authorizeLeadAction } from "./policy";
 import { isReservationActive } from "./reservation";
+import { resolveReviewTransition } from "./review";
 import type { LeadState } from "./state";
 
 type Actor = { userId: number; role: Role };
@@ -192,6 +197,87 @@ export function editCommercialScope(
       occurredAt: input.now,
     }),
   ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
+export function reviewLead(
+  state: LeadState,
+  input: {
+    actor: Actor;
+    rowType: "status" | "priority";
+    status: LeadStatus | null;
+    priority: LeadPriority | null;
+    reason: string;
+    now: number;
+  },
+): TransitionResult {
+  const authz = authorizeLeadAction("review", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
+
+  const events: LeadEvent[] = [];
+
+  if (input.rowType === "status") {
+    if (input.status === null) return Err(fail("invalid_stage"));
+    events.push(
+      createHistoryEvent({
+        leadId: state.id,
+        eventType: "lead_status_updated",
+        actorUserId: input.actor.userId,
+        payload: {
+          fromStatus: state.status,
+          toStatus: input.status,
+          reason: input.reason,
+        },
+        occurredAt: input.now,
+      }),
+    );
+  } else {
+    if (input.priority === null) return Err(fail("invalid_stage"));
+    events.push(
+      createHistoryEvent({
+        leadId: state.id,
+        eventType: "lead_priority_updated",
+        actorUserId: input.actor.userId,
+        payload: {
+          fromPrioridad: state.priority,
+          toPrioridad: input.priority,
+          reason: input.reason,
+        },
+        occurredAt: input.now,
+      }),
+    );
+  }
+
+  if (input.status !== null && input.priority !== null) {
+    const toStage = resolveReviewTransition({
+      status: input.status,
+      priority: input.priority,
+    });
+    events.push(
+      createHistoryEvent({
+        leadId: state.id,
+        eventType: "lead_reviewed",
+        actorUserId: input.actor.userId,
+        payload: {
+          status: input.status,
+          priority: input.priority,
+          reason: input.reason,
+          fromStage: state.stage,
+          toStage,
+        },
+        occurredAt: input.now,
+      }),
+      createHistoryEvent({
+        leadId: state.id,
+        eventType: "workflow_stage_changed",
+        actorUserId: input.actor.userId,
+        payload: { from: state.stage, to: toStage },
+        occurredAt: input.now,
+      }),
+    );
+  }
 
   return finish(state, events, input.actor, input.now);
 }

@@ -1,3 +1,4 @@
+import type { EnrichmentJobRequest } from "~/server/client-search/ports";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
@@ -10,11 +11,12 @@ export async function reactToRegistration(
   committed: CommittedLeadEvent[],
 ): Promise<void> {
   const repo = createSearchEnrichmentRepo(tx);
+  const jobsByRuc = new Map<string, EnrichmentJobRequest>();
 
   for (const { event } of committed) {
     if (event.eventType !== "lead_registered") continue;
 
-    await repo.upsertJob({
+    jobsByRuc.set(event.payload.ruc, {
       document_type: "ruc",
       document_value: event.payload.ruc,
       requested_by_user_id: event.actorUserId ?? 0,
@@ -22,4 +24,6 @@ export async function reactToRegistration(
       max_attempts: 5,
     });
   }
+
+  await repo.upsertJobs([...jobsByRuc.values()]);
 }

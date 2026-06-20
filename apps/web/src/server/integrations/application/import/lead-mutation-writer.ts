@@ -1,27 +1,12 @@
-import {
-  type LeadPriority,
-  type LeadStage,
-  type LeadStatus,
-} from "~/contracts/workflow/vocabulary";
+import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { resolveReviewTransition } from "~/server/workflow/lead/domain/review";
+import { reviewLead } from "~/server/workflow/lead/domain/decide";
+import { commitTransition } from "~/server/workflow/lead/write/commit";
+import { createWorkflowRepos } from "~/server/workflow/repos";
 
-import type { ImportRowInput, LeadMutationResult, LoadedLead } from "./types";
+import type { ImportRowInput, LeadMutationResult } from "./types";
 
-function nextStageFor(
-  current: LoadedLead,
-  nextStatus: LeadStatus | null,
-  nextPrioridad: LeadPriority | null,
-): LeadStage {
-  if (nextStatus === null || nextPrioridad === null) {
-    return current.stage;
-  }
-
-  return resolveReviewTransition({
-    status: nextStatus,
-    priority: nextPrioridad,
-  });
-}
+const IMPORT_REASON = "Imported from CSV";
 
 async function markImportRowFailed(input: {
   executor: DatabaseExecutor;
@@ -67,39 +52,21 @@ async function markImportRowApplied(input: {
 export async function applyLeadMutation(input: {
   executor: DatabaseExecutor;
   jobId: string;
-  actorId: number;
+  actor: { userId: number; role: Role };
   row: ImportRowInput;
+  now: number;
 }): Promise<LeadMutationResult> {
-  const lead = (await input.executor
-    .selectFrom("workflow_leads")
-    .innerJoin(
-      "organizations",
-      "organizations.id",
-      "workflow_leads.organization_id",
-    )
-    .select([
-      "workflow_leads.id",
-      "workflow_leads.organization_id",
-      "organizations.ruc",
-      "workflow_leads.executive_id",
-      "workflow_leads.created_by",
-      "workflow_leads.updated_by",
-      "workflow_leads.updated_at",
-      "workflow_leads.status",
-      "workflow_leads.priority",
-      "workflow_leads.stage",
-    ])
-    .where("organizations.ruc", "=", input.row.ruc)
-    .executeTakeFirst()) as LoadedLead | undefined;
+  const repos = createWorkflowRepos(input.executor);
+  const lead = await repos.leads.findByRuc(input.row.ruc);
+
   if (!lead) {
-    const changedAt = Date.now();
     await markImportRowFailed({
       executor: input.executor,
       jobId: input.jobId,
       rowNumber: input.row.row,
       reason: "RUC not found",
       leadId: null,
-      changedAt,
+      changedAt: input.now,
     });
     return {
       ok: false,
@@ -108,7 +75,6 @@ export async function applyLeadMutation(input: {
   }
 
   if (lead.stage !== "QUALIFYING") {
-    const changedAt = Date.now();
     const reason = "Lead is not in pending external review stage";
     await markImportRowFailed({
       executor: input.executor,
@@ -116,7 +82,7 @@ export async function applyLeadMutation(input: {
       rowNumber: input.row.row,
       reason,
       leadId: lead.id,
-      changedAt,
+      changedAt: input.now,
     });
     return {
       ok: false,
@@ -128,38 +94,56 @@ export async function applyLeadMutation(input: {
     input.row.type === "import_status" ? input.row.status : lead.status;
   const nextPrioridad =
     input.row.type === "import_prioridad" ? input.row.priority : lead.priority;
-  const nextStage = nextStageFor(lead, nextStatus, nextPrioridad);
-  const changedAt = Date.now();
-  const stageChanged = nextStage !== lead.stage;
 
-  const updateResult = await input.executor
-    .updateTable("workflow_leads")
-    .set({
-      status: nextStatus,
-      priority: nextPrioridad,
-      stage: nextStage,
-      updated_by: input.actorId,
-      updated_at: changedAt,
-    })
-    .where("id", "=", lead.id)
-    .where("updated_at", "=", lead.updated_at)
-    .executeTakeFirst();
+  const transition = reviewLead(lead, {
+    actor: input.actor,
+    rowType: input.row.type === "import_status" ? "status" : "priority",
+    status: nextStatus,
+    priority: nextPrioridad,
+    reason: IMPORT_REASON,
+    now: input.now,
+  });
 
-  if (Number(updateResult.numUpdatedRows ?? 0) < 1) {
+  if (!transition.ok) {
+    const reason =
+      transition.error.code === "invalid_stage"
+        ? "Lead is not in pending external review stage"
+        : (transition.error.code ?? "Could not apply row");
     await markImportRowFailed({
       executor: input.executor,
       jobId: input.jobId,
       rowNumber: input.row.row,
-      reason: "Lead changed concurrently",
+      reason,
       leadId: lead.id,
-      changedAt,
+      changedAt: input.now,
+    });
+    return {
+      ok: false,
+      rowResult: { row: input.row.row, ok: false, reason },
+    };
+  }
+
+  const committed = await commitTransition(input.executor, transition.value);
+
+  if (!committed.ok) {
+    const reason =
+      committed.error.code === "concurrency_conflict"
+        ? "Lead changed concurrently"
+        : (committed.error.code ?? "Could not apply row");
+    await markImportRowFailed({
+      executor: input.executor,
+      jobId: input.jobId,
+      rowNumber: input.row.row,
+      reason,
+      leadId: lead.id,
+      changedAt: input.now,
     });
     return {
       ok: false,
       rowResult: {
         row: input.row.row,
         ok: false,
-        reason: "Lead changed concurrently",
+        reason,
       },
     };
   }
@@ -169,25 +153,15 @@ export async function applyLeadMutation(input: {
     jobId: input.jobId,
     rowNumber: input.row.row,
     leadId: lead.id,
-    changedAt,
+    changedAt: input.now,
   });
 
   return {
     ok: true,
     rowResult: { row: input.row.row, ok: true },
-    mutation: {
-      row: input.row,
-      leadId: lead.id,
-      ruc: lead.ruc,
-      executiveId: lead.executive_id,
-      previousStatus: lead.status,
-      previousPrioridad: lead.priority,
-      previousStage: lead.stage,
-      nextStatus,
-      nextPrioridad,
-      nextStage,
-      changedAt,
-      stageChanged,
-    },
+    committed: transition.value.events.map((event, index) => ({
+      event,
+      id: committed.value.eventIds[index],
+    })),
   };
 }

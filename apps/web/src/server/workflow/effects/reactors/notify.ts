@@ -1,7 +1,19 @@
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { LeadEventFor } from "~/server/workflow/lead/domain/events";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
+
+type CommittedStageChange = {
+  event: LeadEventFor<"workflow_stage_changed">;
+  id: string;
+};
+
+function isCommittedStageChange(
+  committed: CommittedLeadEvent,
+): committed is CommittedStageChange {
+  return committed.event.eventType === "workflow_stage_changed";
+}
 
 export function deriveLeadStageNotifications(input: {
   eventId: string;
@@ -59,29 +71,29 @@ export async function reactToStageChanges(
   committed: CommittedLeadEvent[],
   now: number,
 ): Promise<void> {
+  const stageChanges = committed.filter(isCommittedStageChange);
+  if (stageChanges.length === 0) return;
+
+  const leadIds = [...new Set(stageChanges.map(({ event }) => event.leadId))];
+  const leadRows = await tx
+    .selectFrom("workflow_leads as lead")
+    .innerJoin("organizations as org", "org.id", "lead.organization_id")
+    .leftJoin("users as executive", "executive.id", "lead.executive_id")
+    .select([
+      "lead.id as leadId",
+      "org.ruc as ruc",
+      "lead.executive_id as executiveId",
+      "executive.branch_id as branchId",
+    ])
+    .where("lead.id", "in", leadIds)
+    .execute();
+  const leadsById = new Map(leadRows.map((lead) => [lead.leadId, lead]));
   const intents: NotificationIntent[] = [];
 
-  for (const { event, id } of committed) {
-    if (event.eventType !== "workflow_stage_changed") continue;
-
-    const lead = await tx
-      .selectFrom("workflow_leads as lead")
-      .innerJoin("organizations as org", "org.id", "lead.organization_id")
-      .select(["org.ruc as ruc", "lead.executive_id as executiveId"])
-      .where("lead.id", "=", event.leadId)
-      .executeTakeFirst();
+  for (const { event, id } of stageChanges) {
+    const lead = leadsById.get(event.leadId);
 
     if (!lead || lead.executiveId <= 0) continue;
-
-    let branchId: number | null = null;
-    if (event.payload.to === "PRICING") {
-      const user = await tx
-        .selectFrom("users")
-        .select("branch_id")
-        .where("id", "=", lead.executiveId)
-        .executeTakeFirst();
-      branchId = user?.branch_id ?? null;
-    }
 
     intents.push(
       ...deriveLeadStageNotifications({
@@ -90,7 +102,7 @@ export async function reactToStageChanges(
         toStage: event.payload.to,
         ruc: lead.ruc,
         executiveId: lead.executiveId,
-        branchId,
+        branchId: event.payload.to === "PRICING" ? lead.branchId : null,
       }),
     );
   }

@@ -20,6 +20,7 @@ export type LeadCapability =
   | "propose-rate"
   | "accept-rate"
   | "request-rate-revision"
+  | "review"
   | "register"
   | "list-assignable-executives";
 
@@ -86,6 +87,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
   ) {
     caps.add("propose-rate");
   }
+  if (hasPermission(role, "lead:review")) caps.add("review");
   if (hasPermission(role, "lead:register")) caps.add("register");
 
   return caps;

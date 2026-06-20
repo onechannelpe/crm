@@ -1,14 +1,27 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
-import { appendImportLeadEvents } from "./import-events-writer";
 import { applyLeadMutation } from "./lead-mutation-writer";
 import { stageImportRows } from "./staging-repo";
 import type { ImportRowInput, RowResult } from "./types";
 
 function resultSort(a: RowResult, b: RowResult): number {
   return a.row - b.row;
+}
+
+async function loadImportActor(
+  executor: DatabaseExecutor,
+  actorId: number,
+): Promise<{ userId: number; role: Role }> {
+  const user = await executor
+    .selectFrom("users")
+    .select(["id", "role"])
+    .where("id", "=", actorId)
+    .executeTakeFirstOrThrow();
+
+  return { userId: user.id, role: user.role };
 }
 
 export async function applyImportRows(
@@ -73,6 +86,8 @@ export async function applyImportRows(
   emitProgress(true);
 
   await executor.transaction().execute(async (trx) => {
+    const actor = await loadImportActor(trx, input.actorId);
+
     await stageImportRows(trx, input.jobId, sortedRows, input.invalidRows, now);
 
     // Rows apply in file order inside one transaction so later rows see earlier
@@ -82,8 +97,9 @@ export async function applyImportRows(
       const mutationResult = await applyLeadMutation({
         executor: trx,
         jobId: input.jobId,
-        actorId: input.actorId,
+        actor,
         row,
+        now: Date.now(),
       });
       results.push(mutationResult.rowResult);
       if (!mutationResult.ok) {
@@ -92,12 +108,7 @@ export async function applyImportRows(
         continue;
       }
 
-      const rowEvents = await appendImportLeadEvents({
-        executor: trx,
-        actorId: input.actorId,
-        mutation: mutationResult.mutation,
-      });
-      committedEvents.push(...rowEvents);
+      committedEvents.push(...mutationResult.committed);
       applied++;
       emitProgress(false);
     }
