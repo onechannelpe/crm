@@ -386,10 +386,6 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "La nota de decisión es obligatoria para rechazar.",
   },
-  artifact_id_required: {
-    kind: "validation",
-    message: "Falta el identificador del documento.",
-  },
   invalid_ruc: {
     kind: "validation",
     message: "El RUC debe tener 11 dígitos. Intenta nuevamente.",

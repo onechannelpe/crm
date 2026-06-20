@@ -180,14 +180,29 @@ export function loadServerEnv(source: EnvSource) {
   } as const;
 }
 
-export type ServerEnv = ReturnType<typeof loadServerEnv>;
+function section<T>(parse: (source: EnvSource) => T): () => T {
+  let cached: T | undefined;
+  return () => {
+    if (process.env.NODE_ENV === "test") return parse(process.env);
+    cached ??= parse(process.env);
+    return cached;
+  };
+}
 
-let cached: ServerEnv | undefined;
+export const sessionConfig = section(parseSessionEnv);
+export const totpConfig = section(parseTotpEnv);
+export const extensionConfig = section(parseExtensionEnv);
+export const securityConfig = section(parseSecurityEnv);
+export const uploadsConfig = section(parseUploadsEnv);
+export const engineConfig = section(parseEngineEnv);
+export const googleOAuthConfig = section(parseGoogleOAuthEnv);
+export const notificationsConfig = section(parseNotificationsEnv);
+export const sentryConfig = section(parseSentryEnv);
 
-export function serverEnv(): ServerEnv {
-  if (process.env.NODE_ENV === "test") {
-    return loadServerEnv(process.env);
-  }
-  cached ??= loadServerEnv(process.env);
-  return cached;
+export type NotificationsConfig = ReturnType<typeof parseNotificationsEnv>;
+export type EngineConfig = ReturnType<typeof parseEngineEnv>;
+export type UploadsConfig = ReturnType<typeof parseUploadsEnv>;
+
+export function validateServerConfig(): void {
+  loadServerEnv(process.env);
 }

@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import { diffFields } from "~/contracts/events";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
@@ -7,9 +5,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { EditCommercialScopeCommandInput } from "~/server/workflow/types";
 
 import { editCommercialScope } from "../../domain/lead/commands";
-import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
-import { createLeadUow } from "../../infrastructure/uow";
-import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+import { runLeadTransaction } from "../lead-transaction";
 
 type CommercialSnapshot = {
   currentProvider: string;
@@ -41,18 +37,15 @@ export async function editCommercialScopeCommand(
   input: EditCommercialScopeCommandInput,
   ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return ports.executor.transaction().execute(async (tx) => {
-    const repos = createWorkflowRepos(tx);
-    const leads = createLeadStateRepo(tx);
-    const uow = createLeadUow(tx);
-
-    const state = await leads.findById(input.leadId);
+  return runLeadTransaction(ports, async (ctx) => {
+    const state = await ctx.repos.leadStates.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const now = ports.now;
-    const commercial = await repos.leads.findCommercialScope(input.leadId);
+    const commercial = await ctx.repos.leads.findCommercialScope(input.leadId);
     if (!commercial) return Err(fail("lead_not_found"));
-    const org = await repos.party.findOrganizationById(state.organizationId);
+    const org = await ctx.repos.party.findOrganizationById(
+      state.organizationId,
+    );
 
     const prev: CommercialSnapshot = {
       ...commercial,
@@ -77,11 +70,11 @@ export async function editCommercialScopeCommand(
     const transition = editCommercialScope(state, {
       actor: input.actor,
       changes,
-      now,
+      now: ctx.now,
     });
     if (!transition.ok) return transition;
 
-    await repos.leads.updateCommercialSnapshot(
+    await ctx.repos.leads.updateCommercialSnapshot(
       state.id,
       {
         currentProvider: input.currentProvider,
@@ -92,20 +85,16 @@ export async function editCommercialScopeCommand(
         settlementBank: input.settlementBank,
         posCount: input.posCount,
       },
-      now,
+      ctx.now,
       input.actor.userId,
     );
 
-    await repos.party.updateOrganizationCommercial({
+    await ctx.repos.party.updateOrganizationCommercial({
       organizationId: state.organizationId,
       giroNegocio: input.giroNegocio,
     });
 
-    const committed = await uow.commit({
-      next: transition.value.next,
-      events: transition.value.events,
-      idempotencyKey: randomUUIDv7(),
-    });
+    const committed = await ctx.commit(transition.value);
     if (!committed.ok) return committed;
 
     return Ok({ leadId: state.id });

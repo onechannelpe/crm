@@ -4,8 +4,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { SaveDigitalPolicyCommandInput } from "~/server/workflow/types";
 
 import { authorizeLeadAction } from "../../domain/lead/policy";
-import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
-import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+import { runLeadTransaction } from "../lead-transaction";
 import {
   parseDigitalPolicy,
   toDigitalPolicyFields,
@@ -16,11 +15,8 @@ export async function saveDigitalPolicyCommand(
   input: SaveDigitalPolicyCommandInput,
   ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return ports.executor.transaction().execute(async (tx) => {
-    const repos = createWorkflowRepos(tx);
-    const leads = createLeadStateRepo(tx);
-
-    const state = await leads.findById(input.leadId);
+  return runLeadTransaction(ports, async (ctx) => {
+    const state = await ctx.repos.leadStates.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
     const authz = authorizeLeadAction(
@@ -42,7 +38,7 @@ export async function saveDigitalPolicyCommand(
     });
     if (!policy.ok) return policy;
 
-    const venues = await repos.leadVenues.listByLeadId(state.id);
+    const venues = await ctx.repos.leadVenues.listByLeadId(state.id);
     if (!venues.ok) return venues;
 
     const aggregateCheck = validateDigitalAggregate({
@@ -51,10 +47,10 @@ export async function saveDigitalPolicyCommand(
     });
     if (!aggregateCheck.ok) return aggregateCheck;
 
-    await repos.digitalPolicies.upsert({
+    await ctx.repos.digitalPolicies.upsert({
       leadId: state.id,
       fields: toDigitalPolicyFields(policy.value),
-      updatedAt: ports.now,
+      updatedAt: ctx.now,
       updatedBy: input.actor.userId,
     });
 

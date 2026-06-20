@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
@@ -7,8 +5,7 @@ import { Ok, type Result } from "~/server/shared/result";
 import { expireReservation } from "../../domain/lead/commands";
 import { isReservationLapsed } from "../../domain/lead/reservation";
 import { createLeadRepo } from "../../infrastructure/lead-repo";
-import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
-import { createLeadUow } from "../../infrastructure/uow";
+import { runLeadTransaction } from "../lead-transaction";
 
 // Releases a single lead whose RUC hold has lapsed. Idempotent: a lead that is
 // no longer in PRICING or whose hold is not actually lapsed is left untouched,
@@ -18,24 +15,17 @@ export async function expireLeadReservation(
   leadId: string,
   now: number,
 ): Promise<Result<void, DomainError>> {
-  return executor.transaction().execute(async (tx) => {
-    const leads = createLeadStateRepo(tx);
-    const uow = createLeadUow(tx);
-
-    const state = await leads.findById(leadId);
+  return runLeadTransaction({ executor, now }, async (ctx) => {
+    const state = await ctx.repos.leadStates.findById(leadId);
     if (!state) return Ok(undefined);
-    if (state.stage !== "PRICING" || !isReservationLapsed(state, now)) {
+    if (state.stage !== "PRICING" || !isReservationLapsed(state, ctx.now)) {
       return Ok(undefined);
     }
 
-    const transition = expireReservation(state, { now });
+    const transition = expireReservation(state, { now: ctx.now });
     if (!transition.ok) return transition;
 
-    const committed = await uow.commit({
-      next: transition.value.next,
-      events: transition.value.events,
-      idempotencyKey: randomUUIDv7(),
-    });
+    const committed = await ctx.commit(transition.value);
     if (!committed.ok) return committed;
 
     return Ok(undefined);

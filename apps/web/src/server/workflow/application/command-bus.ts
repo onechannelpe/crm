@@ -21,7 +21,6 @@ import type {
 } from "~/server/workflow/types";
 import type { WorkflowActor } from "~/server/workflow/types";
 
-import { createLeadStateRepo } from "../infrastructure/lead-state-repo";
 import type { WorkflowRepos } from "../infrastructure/workflow-repos";
 import { acceptRateCommand } from "./commands/accept-rate";
 import { addLeadNoteCommand } from "./commands/add-note";
@@ -51,8 +50,6 @@ export function createWorkflowCommandBus(
   engineGateway: WorkflowEngineGateway,
   now: () => number,
 ) {
-  const leadStates = createLeadStateRepo(executor);
-
   const enrichmentCommand = createEnrichmentCommand(
     createSearchEnrichmentRepo(executor),
   );
@@ -83,7 +80,6 @@ export function createWorkflowCommandBus(
         },
         {
           leads: repos.leads,
-          leadStates,
           users: repos.users,
           engineGateway,
           enrichmentQueue,
@@ -141,7 +137,7 @@ export function createWorkflowCommandBus(
       addToFavoritesCommand(input, { executor, now: now() }),
 
     removeFromFavorites: (input: { actor: WorkflowActor; leadId: string }) =>
-      removeFromFavoritesCommand(input, { executor }),
+      removeFromFavoritesCommand(input, { executor, now: now() }),
 
     deleteLead: (input: { actor: WorkflowActor; leadId: string }) =>
       deleteLeadCommand(input, { executor, now: now() }),

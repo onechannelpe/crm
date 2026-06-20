@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import type { SettlementBank } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -10,13 +8,8 @@ import { reassignLead } from "../../domain/lead/commands";
 import { requireCapability } from "../../domain/lead/policy";
 import { isReservationLapsed } from "../../domain/lead/reservation";
 import { createLeadDraft } from "../../domain/lead/state";
-import {
-  createLeadStateRepo,
-  type LeadStateRepository,
-} from "../../infrastructure/lead-state-repo";
-import { createLeadUow } from "../../infrastructure/uow";
-import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
 import { normalizeLeadRuc } from "../../parsers";
+import { runLeadTransaction } from "../lead-transaction";
 import type {
   LeadCommercialScope,
   WorkflowUserRepository,
@@ -49,7 +42,6 @@ export async function registerLead(
   },
   ports: {
     leads: LeadRepository;
-    leadStates: LeadStateRepository;
     users: WorkflowUserRepository;
     engineGateway: WorkflowEngineGateway;
     enrichmentQueue: LeadEnrichmentQueue;
@@ -93,33 +85,29 @@ export async function registerLead(
 
   if (resolution.value.kind === "reassign") {
     const leadId = resolution.value.lead.id;
-    return ports.executor.transaction().execute(async (tx) => {
-      const txLeads = createLeadStateRepo(tx);
-      const txUow = createLeadUow(tx);
-      const state = await txLeads.findById(leadId);
-      if (!state) return Err(fail("lead_not_found"));
+    return runLeadTransaction(
+      { executor: ports.executor, now },
+      async (ctx) => {
+        const state = await ctx.repos.leadStates.findById(leadId);
+        if (!state) return Err(fail("lead_not_found"));
 
-      const transition = reassignLead(state, {
-        actor: { userId: input.actorUserId, role: input.actorRole },
-        toExecutiveId: input.actorUserId,
-        now,
-      });
-      if (!transition.ok) return transition;
+        const transition = reassignLead(state, {
+          actor: { userId: input.actorUserId, role: input.actorRole },
+          toExecutiveId: input.actorUserId,
+          now: ctx.now,
+        });
+        if (!transition.ok) return transition;
 
-      const committed = await txUow.commit({
-        next: transition.value.next,
-        events: transition.value.events,
-        idempotencyKey: randomUUIDv7(),
-        assignment: {
+        const committed = await ctx.commit(transition.value, {
           toExecutiveId: input.actorUserId,
           assignedBy: input.actorUserId,
-          at: now,
-        },
-      });
-      if (!committed.ok) return committed;
+          at: ctx.now,
+        });
+        if (!committed.ok) return committed;
 
-      return Ok({ leadId: state.id });
-    });
+        return Ok({ leadId: state.id });
+      },
+    );
   }
 
   const commercialScope: LeadCommercialScope = {
@@ -134,47 +122,45 @@ export async function registerLead(
 
   const overlay = await ports.engineGateway.enrichByRuc(ruc.value);
 
-  const result = await ports.executor.transaction().execute(async (db) => {
-    const txRepos = createWorkflowRepos(db);
+  const result = await runLeadTransaction(
+    { executor: ports.executor, now },
+    async (ctx) => {
+      const organization =
+        (await ctx.repos.party.findOrganizationByRuc(ruc.value)) ??
+        (await ctx.repos.party.createOrganization({
+          ruc: ruc.value,
+          legalName: overlay?.legalName ?? null,
+          giroNegocio: input.giroNegocio,
+          address: overlay?.address ?? null,
+          district: null,
+          department: null,
+        }));
 
-    const organization =
-      (await txRepos.party.findOrganizationByRuc(ruc.value)) ??
-      (await txRepos.party.createOrganization({
+      const draft = createLeadDraft({
+        organizationId: organization.id,
         ruc: ruc.value,
-        legalName: overlay?.legalName ?? null,
-        giroNegocio: input.giroNegocio,
-        address: overlay?.address ?? null,
-        district: null,
-        department: null,
-      }));
+        legalName: organization.legalName,
+        address: organization.address,
+        executiveId: input.actorUserId,
+        createdBy: input.actorUserId,
+        commercialScope,
+        now: ctx.now,
+      });
+      if (!draft.ok) return draft;
 
-    const draft = createLeadDraft({
-      organizationId: organization.id,
-      ruc: ruc.value,
-      legalName: organization.legalName,
-      address: organization.address,
-      executiveId: input.actorUserId,
-      createdBy: input.actorUserId,
-      commercialScope,
-      now,
-    });
-    if (!draft.ok) return draft;
-
-    const effects = await writeLeadRegistrationEffects({
-      deps: {
-        leads: txRepos.leads,
-        leadAssignments: txRepos.leadAssignments,
-        events: txRepos.events,
-      },
-      actorUserId: input.actorUserId,
-      executiveId: input.actorUserId,
-      draft: draft.value,
-      now,
-    });
-    if (!effects.ok) return effects;
-
-    return effects;
-  });
+      return writeLeadRegistrationEffects({
+        deps: {
+          leads: ctx.repos.leads,
+          leadAssignments: ctx.repos.leadAssignments,
+          events: ctx.repos.events,
+        },
+        actorUserId: input.actorUserId,
+        executiveId: input.actorUserId,
+        draft: draft.value,
+        now: ctx.now,
+      });
+    },
+  );
   if (!result.ok) return result;
 
   await ports.enrichmentQueue.enqueueRucVerification(

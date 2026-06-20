@@ -1,38 +1,28 @@
-import { randomUUIDv7 } from "bun";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { LogLeadCallCommandInput } from "~/server/workflow/types";
 
 import { logCall } from "../../domain/lead/commands";
-import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
-import { createLeadUow } from "../../infrastructure/uow";
+import { runLeadTransaction } from "../lead-transaction";
 
 export async function logLeadCallCommand(
   input: LogLeadCallCommandInput,
   ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ interactionId: string }, DomainError>> {
-  return ports.executor.transaction().execute(async (tx) => {
-    const leads = createLeadStateRepo(tx);
-    const uow = createLeadUow(tx);
-    const state = await leads.findById(input.leadId);
+  return runLeadTransaction(ports, async (ctx) => {
+    const state = await ctx.repos.leadStates.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const now = ports.now;
     const transition = logCall(state, {
       actor: input.actor,
       outcome: input.outcome,
       notes: input.notes?.trim() ?? null,
-      now,
+      now: ctx.now,
     });
     if (!transition.ok) return transition;
 
-    const committed = await uow.commit({
-      next: transition.value.next,
-      events: transition.value.events,
-      idempotencyKey: randomUUIDv7(),
-    });
+    const committed = await ctx.commit(transition.value);
     if (!committed.ok) return committed;
 
     return Ok({ interactionId: committed.value.eventIds[0] });

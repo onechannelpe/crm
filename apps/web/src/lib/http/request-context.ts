@@ -3,7 +3,7 @@ import { getRequestEvent } from "solid-js/web";
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { getSessionCookie } from "~/lib/auth/session/cookies";
-import { serverEnv } from "~/lib/env";
+import { securityConfig } from "~/lib/env";
 import type { ActionRequestContext } from "~/lib/observability/context";
 import {
   deleteRequestSessionCookie,
@@ -44,7 +44,7 @@ export async function buildRequestContext(
 
   return {
     publicOrigin: resolvePublicOrigin(request, {
-      trustedProxy: serverEnv().security.trustedProxy === "true",
+      trustedProxy: securityConfig().trustedProxy === "true",
     }),
     clientIp: getClientIp(request.headers),
     userAgent: request.headers.get("user-agent") ?? null,

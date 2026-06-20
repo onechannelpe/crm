@@ -16,6 +16,18 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 export type FieldFail<E> = (field: string, reason: "required" | "invalid") => E;
 
 /**
+ * Cheap structural constraints for a string list, enforced at the parse
+ * boundary before any persistence work. `min` short-circuits to "required"
+ * (the field needs at least that many entries); `max` and `unique` are
+ * "invalid". Empty entries are always rejected as "invalid".
+ */
+export type StrListConstraints = {
+  min?: number;
+  max?: number;
+  unique?: boolean;
+};
+
+/**
  * Reads typed fields out of an already-narrowed record. Each method returns
  * the value directly and throws the first failure as a sentinel; parseObject
  * catches it and returns an Err. The throw never escapes the toolkit, so every
@@ -27,7 +39,7 @@ export interface Reader<E> {
   posInt(field: string): number;
   bool(field: string): boolean;
   enum<T extends string>(field: string, options: readonly T[]): T;
-  strList(field: string): string[];
+  strList(field: string, opts?: StrListConstraints): string[];
   optNum(field: string): number | null;
   optStr(field: string): string | null;
   optBool(field: string): boolean | null;
@@ -96,13 +108,24 @@ class RecordReader<E> implements Reader<E> {
     return match;
   }
 
-  strList(field: string): string[] {
+  strList(field: string, opts?: StrListConstraints): string[] {
     const value = this.present(field);
     if (!Array.isArray(value)) this.reject(field, "invalid");
     const items: string[] = [];
     for (const item of value) {
       if (typeof item !== "string") this.reject(field, "invalid");
-      items.push(item.trim());
+      const trimmed = item.trim();
+      if (!trimmed) this.reject(field, "invalid");
+      items.push(trimmed);
+    }
+    if (opts?.min !== undefined && items.length < opts.min) {
+      this.reject(field, "required");
+    }
+    if (opts?.max !== undefined && items.length > opts.max) {
+      this.reject(field, "invalid");
+    }
+    if (opts?.unique && new Set(items).size !== items.length) {
+      this.reject(field, "invalid");
     }
     return items;
   }

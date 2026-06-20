@@ -11,47 +11,41 @@ import {
   isReservationActive,
 } from "../../domain/lead/reservation";
 import { resolveRateProposalPolicy } from "../../domain/pricing-policy";
-import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
-import { createLeadUow } from "../../infrastructure/uow";
-import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+import { runLeadTransaction } from "../lead-transaction";
 import type { SubmitReadyRevisionFile } from "../ports/entities";
 
 export async function requestRateRevisionCommand(
   input: RequestRateRevisionCommandInput,
   ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return ports.executor.transaction().execute(async (tx) => {
-    const leads = createLeadStateRepo(tx);
-    const uow = createLeadUow(tx);
-    const repos = createWorkflowRepos(tx);
-    const state = await leads.findById(input.leadId);
+  return runLeadTransaction(ports, async (ctx) => {
+    const state = await ctx.repos.leadStates.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const proposal = await repos.rateProposals.findLatest(state.id);
+    const proposal = await ctx.repos.rateProposals.findLatest(state.id);
     if (!proposal) return Err(fail("rate_proposal_not_found"));
     if (proposal.outcome !== "pending") {
       return Err(fail("rate_proposal_not_pending"));
     }
-    const now = ports.now;
-    if (!isReservationActive(state, now)) {
+    if (!isReservationActive(state, ctx.now)) {
       return Err(fail("rate_proposal_expired"));
     }
 
     const policy = resolveRateProposalPolicy({
-      branchPolicy: await repos.rateProposalPolicies.findByBranchId(
+      branchPolicy: await ctx.repos.rateProposalPolicies.findByBranchId(
         input.actor.branchId,
       ),
     });
     const reservationExpiresAt = computeReservationExpiry({
-      now,
+      now: ctx.now,
       validityDays: policy.validityDays,
     });
 
-    const existingCount = await repos.rateRevisions.countByLeadId(state.id);
+    const existingCount = await ctx.repos.rateRevisions.countByLeadId(state.id);
 
     const resolved = await Promise.all(
       input.artifactIds.map(async (artifactId) => {
-        const file = await repos.rateRevisions.findSubmitReadyRevisionFile({
+        const file = await ctx.repos.rateRevisions.findSubmitReadyRevisionFile({
           artifactId,
           leadId: state.id,
           uploadedByUserId: input.actor.userId,
@@ -82,44 +76,40 @@ export async function requestRateRevisionCommand(
       justification: input.justification,
       artifactIds: input.artifactIds,
       reservationExpiresAt,
-      now,
+      now: ctx.now,
     });
     if (!transition.ok) return transition;
 
-    await repos.rateProposals.markOutcome(
+    await ctx.repos.rateProposals.markOutcome(
       proposal.id,
       "revision_requested",
-      now,
+      ctx.now,
     );
 
-    await repos.rateRevisions.insert({
+    await ctx.repos.rateRevisions.insert({
       id: revisionId,
       leadId: state.id,
       proposalId: proposal.id,
       round,
       justification: input.justification,
       requestedBy: input.actor.userId,
-      requestedAt: now,
+      requestedAt: ctx.now,
     });
 
     await Promise.all(
       validatedArtifacts.map((art) =>
-        repos.rateRevisions.insertFile({
+        ctx.repos.rateRevisions.insertFile({
           leadId: state.id,
           revisionId,
           artifactId: art.artifactId,
           fileAssetId: art.fileAssetId,
           uploadedByUserId: input.actor.userId,
-          createdAt: now,
+          createdAt: ctx.now,
         }),
       ),
     );
 
-    const committed = await uow.commit({
-      next: transition.value.next,
-      events: transition.value.events,
-      idempotencyKey: randomUUIDv7(),
-    });
+    const committed = await ctx.commit(transition.value);
     if (!committed.ok) return committed;
 
     return Ok({ leadId: state.id });

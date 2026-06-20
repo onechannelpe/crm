@@ -1,4 +1,4 @@
-import { serverEnv } from "~/lib/env";
+import { securityConfig } from "~/lib/env";
 
 export function getClientIp(
   headers: Headers,
@@ -22,7 +22,7 @@ export function getClientIp(
 }
 
 function isTrustedProxyEnabled(): boolean {
-  return serverEnv().security.trustedProxy === "true";
+  return securityConfig().trustedProxy === "true";
 }
 
 function cleanIp(value: string | null | undefined): string | null {

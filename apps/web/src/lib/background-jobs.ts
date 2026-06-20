@@ -1,4 +1,4 @@
-import { serverEnv } from "~/lib/env";
+import { uploadsConfig } from "~/lib/env";
 import { startQueueDoorbellSubscriber } from "~/lib/job-queue/doorbell-subscriber";
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
@@ -20,7 +20,7 @@ export function startBackgroundJobs() {
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
     readFile: (filePath) =>
-      readStoredFile(serverEnv().uploads.storageRoot, filePath),
+      readStoredFile(uploadsConfig().storageRoot, filePath),
   });
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);

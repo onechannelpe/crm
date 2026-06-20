@@ -6,9 +6,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { CreateVenueCommandInput } from "~/server/workflow/types";
 
 import { createVenue } from "../../domain/lead/commands";
-import { createLeadStateRepo } from "../../infrastructure/lead-state-repo";
-import { createLeadUow } from "../../infrastructure/uow";
-import { createWorkflowRepos } from "../../infrastructure/workflow-repos";
+import { runLeadTransaction } from "../lead-transaction";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
@@ -18,15 +16,11 @@ export async function createVenueCommand(
   input: CreateVenueCommandInput,
   ports: { executor: DatabaseExecutor; now: number },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return ports.executor.transaction().execute(async (tx) => {
-    const repos = createWorkflowRepos(tx);
-    const leads = createLeadStateRepo(tx);
-    const uow = createLeadUow(tx);
-
-    const state = await leads.findById(input.leadId);
+  return runLeadTransaction(ports, async (ctx) => {
+    const state = await ctx.repos.leadStates.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
-    const digitalPolicy = await repos.digitalPolicies.findByLeadId(
+    const digitalPolicy = await ctx.repos.digitalPolicies.findByLeadId(
       input.leadId,
     );
     const venueFields = parseVenueDigitalFields(
@@ -38,18 +32,17 @@ export async function createVenueCommand(
     );
     if (!venueFields.ok) return venueFields;
 
-    const now = ports.now;
     const venueId = randomUUIDv7();
     const transition = createVenue(state, {
       actor: input.actor,
       venueId,
       tradeName: input.tradeName,
-      now,
+      now: ctx.now,
     });
     if (!transition.ok) return transition;
 
     const digital = toVenueDigitalInsert(venueFields.value);
-    await tx
+    await ctx.tx
       .insertInto("workflow_lead_venues")
       .values({
         id: venueId,
@@ -64,16 +57,12 @@ export async function createVenueCommand(
         district: input.district,
         province: input.province,
         department: input.department,
-        created_at: now,
+        created_at: ctx.now,
         created_by: input.actor.userId,
       })
       .executeTakeFirstOrThrow();
 
-    const committed = await uow.commit({
-      next: transition.value.next,
-      events: transition.value.events,
-      idempotencyKey: randomUUIDv7(),
-    });
+    const committed = await ctx.commit(transition.value);
     if (!committed.ok) return committed;
 
     return Ok({ leadId: state.id });
