@@ -100,7 +100,7 @@ export async function sendBroadcastNotification(
         now,
       );
 
-      await notifications.dispatchPendingJobs();
+      notifications.dispatchPendingJobs();
 
       return Ok(undefined);
     },

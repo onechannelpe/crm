@@ -65,7 +65,7 @@ export function createRecordsImportQueue(
         job &&
         (job.type === "import_status" || job.type === "import_prioridad")
       ) {
-        await publishRecordImportProgress(
+        publishRecordImportProgress(
           buildRecordImportProgressEvent({
             job,
             status: "COMPLETED",
@@ -84,7 +84,7 @@ export function createRecordsImportQueue(
         job &&
         (job.type === "import_status" || job.type === "import_prioridad")
       ) {
-        await publishRecordImportProgress(
+        publishRecordImportProgress(
           buildRecordImportProgressEvent({
             job,
             status: "PENDING",
@@ -99,7 +99,7 @@ export function createRecordsImportQueue(
         job &&
         (job.type === "import_status" || job.type === "import_prioridad")
       ) {
-        await publishRecordImportProgress(
+        publishRecordImportProgress(
           buildRecordImportProgressEvent({
             job,
             status: "FAILED",

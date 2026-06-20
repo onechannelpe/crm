@@ -25,7 +25,7 @@ export function createAuthRuntime(
   notifications: {
     messaging: MessagingGateway;
     enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
-    dispatchPendingJobs(): Promise<void>;
+    dispatchPendingJobs(): void;
   },
 ) {
   const sessionService = createSessionService({

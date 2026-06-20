@@ -3,7 +3,7 @@ import { createMessageChannels } from "@crm/message-channels";
 
 import type { NotificationsConfig } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishMessage } from "~/lib/redis/publisher";
+import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import { createNotificationProcessor } from "~/server/notifications/processor";
@@ -15,6 +15,7 @@ import type { ServerInfra } from "./infra";
 export function createNotificationsRuntime(
   infra: ServerInfra,
   config: NotificationsConfig,
+  doorbell: QueueDoorbell,
 ) {
   const channels = createMessageChannels({
     resendApiKey: config.resendApiKey || undefined,
@@ -34,8 +35,8 @@ export function createNotificationsRuntime(
       name: "notifications-intents",
       runOnce: () => runProcessor(workerId, 50),
     }),
-    async dispatchPendingJobs(): Promise<void> {
-      await publishMessage(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
+    dispatchPendingJobs(): void {
+      doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
     },
     async enqueue(
       intents: NotificationIntent[],

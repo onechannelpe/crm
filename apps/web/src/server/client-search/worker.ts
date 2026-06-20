@@ -1,6 +1,6 @@
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
-import { publishJobId } from "~/lib/redis/publisher";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
 import type { ProcessResult } from "~/server/client-search/model";
 import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
@@ -12,6 +12,7 @@ import {
 type EnrichmentWorkerDeps = {
   enrichmentRepo: EnrichmentRepositoryPort;
   scraper: SunatScraperClient;
+  doorbell: QueueDoorbell;
 };
 
 export function createEnrichmentQueue(
@@ -21,7 +22,7 @@ export function createEnrichmentQueue(
   const leaseMs = 30_000;
   const batchSize = 20;
   const maxConcurrency = 3;
-  const { enrichmentRepo, scraper } = deps;
+  const { doorbell, enrichmentRepo, scraper } = deps;
 
   return createJobQueue({
     name: "enrichment",
@@ -40,7 +41,7 @@ export function createEnrichmentQueue(
           overlayToRow(result.overlay),
           Date.now(),
         );
-        await publishJobId(JOB_CHANNELS.ENRICHMENT_WRITEBACK, job.id);
+        doorbell.wake(JOB_CHANNELS.ENRICHMENT_WRITEBACK, job.id);
         return { kind: "complete" };
       }
 

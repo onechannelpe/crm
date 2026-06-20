@@ -9,7 +9,7 @@ import type {
 
 interface AlertNotifications {
   enqueue(intents: NotificationIntent[], now: number): Promise<void>;
-  dispatchPendingJobs(): Promise<void>;
+  dispatchPendingJobs(): void;
 }
 
 const logger = createLogger("login-alerts");
@@ -47,7 +47,7 @@ export function createPrivilegedLoginAlertSender(
         ],
         params.occurredAt,
       );
-      await notifications.dispatchPendingJobs();
+      notifications.dispatchPendingJobs();
     } catch (error) {
       logger.error("privileged_login_alert_failed", { error });
     }

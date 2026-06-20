@@ -1,3 +1,4 @@
+import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -47,10 +48,12 @@ export function createWorkflowCommandBus(
   executor: DatabaseExecutor,
   repos: WorkflowRepos,
   engineGateway: WorkflowEngineGateway,
+  doorbell: QueueDoorbell,
   now: () => number,
 ) {
   const enrichmentCommand = createEnrichmentCommand(
     createSearchEnrichmentRepo(executor),
+    doorbell,
   );
   const enrichmentQueue = {
     async enqueueRucVerification(

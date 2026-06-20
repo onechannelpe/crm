@@ -56,7 +56,7 @@ export function createRecordImportRunner(deps: {
         rowsApplied: 0,
         rowsFailed: 0,
       });
-      await publishRecordImportProgress(
+      publishRecordImportProgress(
         buildRecordImportProgressEvent({
           job,
           status: "PROCESSING",
@@ -76,7 +76,7 @@ export function createRecordImportRunner(deps: {
           validRows,
           invalidRows,
           onProgress: (progress) => {
-            void publishRecordImportProgress(
+            publishRecordImportProgress(
               buildRecordImportProgressEvent({
                 job,
                 status: "PROCESSING",

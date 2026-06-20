@@ -1,3 +1,4 @@
+import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { createWorkflowCommandBus } from "~/server/workflow/commands";
 import { createEngineGateway } from "~/server/workflow/infrastructure/engine-gateway";
@@ -14,6 +15,7 @@ export function createWorkflowRuntime(
   infra: ServerInfra,
   engine: EngineClient,
   files: Pick<FilesRuntime, "repo" | "storage">,
+  doorbell: QueueDoorbell,
 ) {
   const engineGateway = createEngineGateway(engine);
   const repos = createWorkflowRepos(infra.db);
@@ -23,6 +25,7 @@ export function createWorkflowRuntime(
       infra.db,
       repos,
       engineGateway,
+      doorbell,
       infra.now,
     ),
     queries: createWorkflowQueryBus(repos, engineGateway),

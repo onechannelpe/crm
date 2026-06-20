@@ -1,5 +1,5 @@
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishJobId } from "~/lib/redis/publisher";
+import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 
 import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
@@ -21,6 +21,7 @@ export interface EnrichmentCommand {
 
 export function createEnrichmentCommand(
   repo: EnrichmentRepositoryPort,
+  doorbell: QueueDoorbell,
 ): EnrichmentCommand {
   return {
     async enqueueRequest(
@@ -42,7 +43,7 @@ export function createEnrichmentCommand(
         max_attempts: 5,
       });
 
-      await publishJobId(JOB_CHANNELS.ENRICHMENT, jobId);
+      doorbell.wake(JOB_CHANNELS.ENRICHMENT, jobId);
 
       return jobId;
     },

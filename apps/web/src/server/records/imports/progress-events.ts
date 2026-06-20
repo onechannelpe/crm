@@ -46,8 +46,8 @@ export function buildRecordImportProgressEvent(input: {
   };
 }
 
-export async function publishRecordImportProgress(
+export function publishRecordImportProgress(
   event: RecordImportProgressEvent,
-): Promise<void> {
-  await publishMessage(JOB_CHANNELS.RECORDS_IMPORT_PROGRESS, event);
+): void {
+  publishMessage(JOB_CHANNELS.RECORDS_IMPORT_PROGRESS, event);
 }

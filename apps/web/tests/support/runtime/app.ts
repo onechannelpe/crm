@@ -1,4 +1,5 @@
 import { uploadsConfig } from "~/lib/env";
+import { noopQueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
@@ -120,7 +121,12 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
 
   const engine = createFakeEngine();
 
-  const workflow = createWorkflowRuntime(infra, engine.client, files);
+  const workflow = createWorkflowRuntime(
+    infra,
+    engine.client,
+    files,
+    noopQueueDoorbell,
+  );
   const integrations = createIntegrationRuntime(ctx.db);
 
   return {
@@ -129,7 +135,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     auth,
     workflow,
     integrations,
-    engine: { company: engine.company },
+    engine: { company: (ruc, overlay) => engine.company(ruc, overlay) },
 
     async dispose() {
       await cleanupTestDb(ctx);
