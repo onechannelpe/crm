@@ -1,29 +1,48 @@
+import type { AddVenueAccountsInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { AddVenueAccountsCommandInput } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
-import { buildVenueAccounts } from "../../domain/venue/accounts";
 import { addVenueAccounts } from "../../lead/domain/decide";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
+import { buildVenueAccounts } from "./domain";
 
 export async function addVenueAccountsCommand(
-  input: AddVenueAccountsCommandInput,
-  ports: { executor: DatabaseExecutor; now: number },
+  input: AddVenueAccountsInput & {
+    actor: WorkflowActor;
+  },
+  ports: {
+    executor: DatabaseExecutor;
+    now: number;
+  },
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  const accounts = buildVenueAccounts(input);
-  if (!accounts.ok) return accounts;
+  const parsedAccounts = buildVenueAccounts(input);
+
+  if (!parsedAccounts.ok) {
+    return parsedAccounts;
+  }
 
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leadStates.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
 
-    const venueResult = await ctx.repos.leadVenues.findById(input.venueId);
-    if (!venueResult.ok) return venueResult;
-    if (!venueResult.value || venueResult.value.leadId !== input.leadId) {
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
+
+    const venueLookup = await ctx.repos.leadVenues.findById(input.venueId);
+
+    if (!venueLookup.ok) {
+      return venueLookup;
+    }
+
+    const venue = venueLookup.value;
+
+    if (!venue || venue.leadId !== input.leadId) {
       return Err(fail("venue_not_found"));
     }
-    if (venueResult.value.solesAccount) {
+
+    if (venue.solesAccount) {
       return Err(fail("accounts_already_added"));
     }
 
@@ -31,6 +50,7 @@ export async function addVenueAccountsCommand(
       ctx.repos.leadVenues.countByLeadId(input.leadId),
       ctx.repos.leadVenues.countWithAccounts(input.leadId),
     ]);
+
     const shouldTransitionToLive =
       totalVenues > 0 && venuesWithAccounts + 1 === totalVenues;
 
@@ -40,16 +60,22 @@ export async function addVenueAccountsCommand(
       shouldTransitionToLive,
       now: ctx.now,
     });
-    if (!transition.ok) return transition;
+
+    if (!transition.ok) {
+      return transition;
+    }
 
     await ctx.repos.leadVenues.addAccounts(
       input.venueId,
-      accounts.value,
+      parsedAccounts.value,
       ctx.now,
     );
 
     const committed = await ctx.commit(transition.value);
-    if (!committed.ok) return committed;
+
+    if (!committed.ok) {
+      return committed;
+    }
 
     return Ok({ leadId: state.id });
   });

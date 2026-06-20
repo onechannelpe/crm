@@ -1,9 +1,10 @@
 import { randomUUIDv7 } from "bun";
 
+import type { ProposeRateInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { ProposeRateCommandInput } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { proposeRate } from "../../lead/domain/decide";
 import { resolveRateProposalPolicy } from "../../lead/domain/pricing";
@@ -11,23 +12,33 @@ import { computeReservationExpiry } from "../../lead/domain/reservation";
 import { runLeadTransaction } from "./transition";
 
 export async function proposeRateCommand(
-  input: ProposeRateCommandInput,
-  ports: { executor: DatabaseExecutor; now: number },
+  input: ProposeRateInput & {
+    actor: WorkflowActor;
+  },
+  ports: {
+    executor: DatabaseExecutor;
+    now: number;
+  },
 ): Promise<Result<{ proposalId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leadStates.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const round = await ctx.repos.rateProposals.nextRound(state.id);
     const proposalId = randomUUIDv7();
-    const policy = resolveRateProposalPolicy({
+
+    const proposalPolicy = resolveRateProposalPolicy({
       branchPolicy: await ctx.repos.rateProposalPolicies.findByBranchId(
         input.actor.branchId,
       ),
     });
+
     const reservationExpiresAt = computeReservationExpiry({
       now: ctx.now,
-      validityDays: policy.validityDays,
+      validityDays: proposalPolicy.validityDays,
     });
 
     const transition = proposeRate(state, {
@@ -38,7 +49,10 @@ export async function proposeRateCommand(
       reservationExpiresAt,
       now: ctx.now,
     });
-    if (!transition.ok) return transition;
+
+    if (!transition.ok) {
+      return transition;
+    }
 
     await ctx.repos.rateProposals.insert({
       id: proposalId,
@@ -57,7 +71,10 @@ export async function proposeRateCommand(
     });
 
     const committed = await ctx.commit(transition.value);
-    if (!committed.ok) return committed;
+
+    if (!committed.ok) {
+      return committed;
+    }
 
     return Ok({ proposalId });
   });

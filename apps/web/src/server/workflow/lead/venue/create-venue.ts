@@ -1,47 +1,65 @@
 import { randomUUIDv7 } from "bun";
 
+import type { CreateVenueInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
-} from "~/server/workflow/lead/domain/digital-policy";
-import type { CreateVenueCommandInput } from "~/server/workflow/types";
+} from "~/server/workflow/lead/digital-policy/domain";
 
 import { createVenue } from "../../lead/domain/decide";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
 
 export async function createVenueCommand(
-  input: CreateVenueCommandInput,
-  ports: { executor: DatabaseExecutor; now: number },
+  input: CreateVenueInput & {
+    actor: WorkflowActor;
+  },
+  ports: {
+    executor: DatabaseExecutor;
+    now: number;
+  },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leadStates.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
 
-    const digitalPolicy = await ctx.repos.digitalPolicies.findByLeadId(
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
+
+    const savedDigitalPolicy = await ctx.repos.digitalPolicies.findByLeadId(
       input.leadId,
     );
-    const venueFields = parseVenueDigitalFields(
+
+    const parsedVenueFields = parseVenueDigitalFields(
       {
-        linkScope: digitalPolicy?.linkScope ?? "none",
-        onlineScope: digitalPolicy?.onlineScope ?? "none",
+        linkScope: savedDigitalPolicy?.linkScope ?? "none",
+        onlineScope: savedDigitalPolicy?.onlineScope ?? "none",
       },
       input.digitalConfig,
     );
-    if (!venueFields.ok) return venueFields;
+
+    if (!parsedVenueFields.ok) {
+      return parsedVenueFields;
+    }
 
     const venueId = randomUUIDv7();
+
     const transition = createVenue(state, {
       actor: input.actor,
       venueId,
       tradeName: input.tradeName,
       now: ctx.now,
     });
-    if (!transition.ok) return transition;
 
-    const digital = toVenueDigitalInsert(venueFields.value);
+    if (!transition.ok) {
+      return transition;
+    }
+
+    const digital = toVenueDigitalInsert(parsedVenueFields.value);
+
     await ctx.tx
       .insertInto("workflow_lead_venues")
       .values({
@@ -63,7 +81,10 @@ export async function createVenueCommand(
       .executeTakeFirstOrThrow();
 
     const committed = await ctx.commit(transition.value);
-    if (!committed.ok) return committed;
+
+    if (!committed.ok) {
+      return committed;
+    }
 
     return Ok({ leadId: state.id });
   });

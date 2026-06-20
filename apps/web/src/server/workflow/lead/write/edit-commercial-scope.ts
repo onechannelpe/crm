@@ -1,8 +1,9 @@
 import { diffFields } from "~/contracts/events";
+import type { EditCommercialScopeInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { EditCommercialScopeCommandInput } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { editCommercialScope } from "../../lead/domain/decide";
 import { runLeadTransaction } from "./transition";
@@ -34,15 +35,27 @@ const COMMERCIAL_FIELD_KEYS = [
 // lead row and the giro_negocio on the organization, and records the field-level
 // correction on the lead history (and the audit spine) like every other mutation.
 export async function editCommercialScopeCommand(
-  input: EditCommercialScopeCommandInput,
-  ports: { executor: DatabaseExecutor; now: number },
+  input: EditCommercialScopeInput & {
+    actor: WorkflowActor;
+  },
+  ports: {
+    executor: DatabaseExecutor;
+    now: number;
+  },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leadStates.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const commercial = await ctx.repos.leads.findCommercialScope(input.leadId);
-    if (!commercial) return Err(fail("lead_not_found"));
+
+    if (!commercial) {
+      return Err(fail("lead_not_found"));
+    }
+
     const org = await ctx.repos.party.findOrganizationById(
       state.organizationId,
     );
@@ -51,6 +64,7 @@ export async function editCommercialScopeCommand(
       ...commercial,
       giroNegocio: org?.giroNegocio ?? null,
     };
+
     const next: CommercialSnapshot = {
       currentProvider: input.currentProvider,
       currentDebitRate: input.currentDebitRate,
@@ -63,6 +77,7 @@ export async function editCommercialScopeCommand(
     };
 
     const changes = diffFields(prev, next, COMMERCIAL_FIELD_KEYS);
+
     if (changes.length === 0) {
       return Ok({ leadId: state.id });
     }
@@ -72,7 +87,10 @@ export async function editCommercialScopeCommand(
       changes,
       now: ctx.now,
     });
-    if (!transition.ok) return transition;
+
+    if (!transition.ok) {
+      return transition;
+    }
 
     await ctx.repos.leads.updateCommercialSnapshot(
       state.id,
@@ -95,7 +113,10 @@ export async function editCommercialScopeCommand(
     });
 
     const committed = await ctx.commit(transition.value);
-    if (!committed.ok) return committed;
+
+    if (!committed.ok) {
+      return committed;
+    }
 
     return Ok({ leadId: state.id });
   });
