@@ -1,7 +1,7 @@
 "use server";
 
+import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
 import { getSession, hasRole } from "~/lib/auth/access/session";
-import type { AuditPolicySnapshot } from "~/server/audit-reader/contracts";
 import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,

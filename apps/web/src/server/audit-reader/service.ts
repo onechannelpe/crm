@@ -1,3 +1,7 @@
+import type {
+  AuditReaderFilterInput,
+  AuditReaderSnapshot,
+} from "~/contracts/audit-reader/snapshot";
 import { parseFieldChanges } from "~/contracts/events";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import type { createEventsRepo } from "~/server/shared/repos-events";
@@ -8,9 +12,7 @@ import {
   AUDIT_READER_DEFAULT_WINDOW_MINUTES,
   AUDIT_READER_MAX_LIMIT,
   AUDIT_READER_MAX_WINDOW_MINUTES,
-  type AuditReaderFilterInput,
-  type AuditReaderSnapshot,
-} from "./contracts";
+} from "./limits";
 
 interface AuditReaderDeps {
   events: ReturnType<typeof createEventsRepo>;

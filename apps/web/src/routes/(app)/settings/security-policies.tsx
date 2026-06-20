@@ -11,6 +11,7 @@ import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -19,7 +20,6 @@ import {
   auditPolicySnapshotQuery,
   canManageAuditPoliciesQuery,
 } from "~/lib/queries/audit";
-import type { AuditActionPolicyItem } from "~/server/audit-reader/contracts";
 
 import styles from "./settings-page.module.css";
 

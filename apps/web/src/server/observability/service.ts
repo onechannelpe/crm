@@ -1,4 +1,13 @@
 import { serializeEventPayload } from "~/contracts/events";
+import type {
+  AuthFunnelSnapshot,
+  AuthFunnelSnapshotInput,
+} from "~/contracts/observability/auth-funnel";
+import type {
+  ObservabilitySnapshot,
+  ObservabilitySnapshotInput,
+  ObservationStatus,
+} from "~/contracts/observability/snapshot";
 import type { Role } from "~/lib/auth/access/rbac";
 import {
   isAuthFunnelEventName,
@@ -14,19 +23,13 @@ import type { WireKind } from "~/lib/wire-error";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import {
-  OBSERVABILITY_DEFAULT_LIMIT,
-  OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
-  OBSERVABILITY_MAX_LIMIT,
-  OBSERVABILITY_MAX_WINDOW_MINUTES,
-  type AuthFunnelSnapshot,
-  type AuthFunnelSnapshotInput,
-  type ObservationStatus,
-  type ObservabilitySnapshot,
-  type ObservabilitySnapshotInput,
-} from "./contracts";
 import type { createActionObservationsRepo } from "./repos-action-observations";
 import type { createAuthFunnelEventsRepo } from "./repos-auth-funnel-events";
+
+const OBSERVABILITY_DEFAULT_WINDOW_MINUTES = 60;
+const OBSERVABILITY_MAX_WINDOW_MINUTES = 24 * 60;
+const OBSERVABILITY_DEFAULT_LIMIT = 50;
+const OBSERVABILITY_MAX_LIMIT = 200;
 
 interface ObservabilityRepos {
   actionObservations: ReturnType<typeof createActionObservationsRepo>;

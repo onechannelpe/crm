@@ -5,8 +5,17 @@ import {
   serializeFieldChanges,
   type FieldChange,
 } from "~/contracts/events";
-import type { AuditReaderQueryFilter } from "~/server/audit-reader/contracts";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+
+export interface AuditReaderQueryFilter {
+  fromInclusive: number;
+  toInclusive: number;
+  limit: number;
+  action?: string;
+  entityType?: string;
+  actorUserId?: number;
+  onlyHighRisk?: boolean;
+}
 
 export type EventToAppend = {
   entityType: string;

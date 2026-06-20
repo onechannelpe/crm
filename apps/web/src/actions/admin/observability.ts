@@ -3,19 +3,12 @@
 import type {
   ObservabilitySnapshot,
   ObservabilitySnapshotInput,
-} from "~/server/observability/contracts";
+} from "~/contracts/observability/snapshot";
 import { getServerRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok, type Result } from "~/server/shared/result";
-
-export type {
-  ObservabilityActionEvent,
-  ObservabilityActionSummary,
-  ObservabilitySnapshot,
-  ObservabilitySnapshotInput,
-} from "~/server/observability/contracts";
 
 function parseObservabilityInput(
   raw: unknown,

@@ -14,6 +14,7 @@ import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { AuditReaderSnapshot } from "~/contracts/audit-reader/snapshot";
 import { summarizeFieldChanges } from "~/contracts/events";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -21,7 +22,6 @@ import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { auditReaderSnapshotQuery } from "~/lib/queries/audit";
 import { formatDateTime } from "~/lib/utils";
-import type { AuditReaderSnapshot } from "~/server/audit-reader/contracts";
 
 type AuditLogEvent = AuditReaderSnapshot["events"][number];
 type AuditLogGridRow = AuditLogEvent & { id: string };
