@@ -52,7 +52,7 @@ export function runLeadTransaction<O>(
         repos: createWorkflowRepos(tx),
         now: ports.now,
         commit: (transition, assignment) =>
-          commitTransition(tx, transition, ports.now, assignment),
+          commitTransition(tx, transition, assignment),
       });
       if (isErr(result)) throw new LeadTransactionRollback(result.error);
       return result;

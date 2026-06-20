@@ -1,18 +1,27 @@
+import type { RecordRepLegalInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { RecordRepLegalCommandInput } from "~/server/workflow/types";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { recordRepLegal } from "../../lead/domain/decide";
 import { runLeadTransaction } from "./transition";
 
 export async function recordRepLegalCommand(
-  input: RecordRepLegalCommandInput,
-  ports: { executor: DatabaseExecutor; now: number },
+  input: RecordRepLegalInput & {
+    actor: WorkflowActor;
+  },
+  ports: {
+    executor: DatabaseExecutor;
+    now: number;
+  },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leadStates.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const transition = recordRepLegal(state, {
       actor: input.actor,
@@ -24,7 +33,10 @@ export async function recordRepLegalCommand(
       email: input.email,
       now: ctx.now,
     });
-    if (!transition.ok) return transition;
+
+    if (!transition.ok) {
+      return transition;
+    }
 
     await ctx.repos.party.upsertPrimaryLegalRepresentative({
       organizationId: state.organizationId,
@@ -37,7 +49,10 @@ export async function recordRepLegalCommand(
     });
 
     const committed = await ctx.commit(transition.value);
-    if (!committed.ok) return committed;
+
+    if (!committed.ok) {
+      return committed;
+    }
 
     return Ok({ leadId: state.id });
   });

@@ -2,7 +2,18 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadSourcingPolicy } from "~/server/workflow/ports";
+
+type LeadSourcingPolicy = {
+  branchId: number;
+  engineAssignmentEnabled: boolean;
+  updatedAt: number;
+  updatedByUserId: number;
+};
+
+export type LeadSourcingPolicyRepository = {
+  findByBranchId(branchId: number): Promise<LeadSourcingPolicy | undefined>;
+  upsert(values: LeadSourcingPolicy): Promise<unknown>;
+};
 
 type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
 type NewSourcingPolicyRow = Insertable<Database["lead_sourcing_policies"]>;
@@ -31,17 +42,19 @@ export function createSourcingPolicyRepo(db: DatabaseExecutor) {
     },
 
     upsert(values: LeadSourcingPolicy) {
+      const engineAssignmentEnabled = values.engineAssignmentEnabled ? 1 : 0;
+
       return db
         .insertInto("lead_sourcing_policies")
         .values({
           branch_id: values.branchId,
-          engine_assignment_enabled: values.engineAssignmentEnabled ? 1 : 0,
+          engine_assignment_enabled: engineAssignmentEnabled,
           updated_at: values.updatedAt,
           updated_by_user_id: values.updatedByUserId,
         } satisfies NewSourcingPolicyRow)
         .onConflict((oc) =>
           oc.column("branch_id").doUpdateSet({
-            engine_assignment_enabled: values.engineAssignmentEnabled ? 1 : 0,
+            engine_assignment_enabled: engineAssignmentEnabled,
             updated_at: values.updatedAt,
             updated_by_user_id: values.updatedByUserId,
           }),

@@ -1,12 +1,12 @@
 import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
+import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createEnrichmentCommand } from "~/server/client-search/request";
+import { createSunatEnrichmentWritebackQueue } from "~/server/identity/enrichment/writeback-queue";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { createWorkflowCommandBus } from "~/server/workflow/commands";
-import { createEngineGateway } from "~/server/workflow/infrastructure/engine-gateway";
-import { createLeadRepo } from "~/server/workflow/infrastructure/lead-repo";
-import { createWorkflowRepos } from "~/server/workflow/infrastructure/workflow-repos";
 import { createLeadArtifactsService } from "~/server/workflow/lead/read/lead-artifacts";
-import { createWorkflowQueryBus } from "~/server/workflow/queries";
-import { createSunatEnrichmentWritebackQueue } from "~/server/workflow/queue/sunat-enrichment-writeback-queue";
+import { createEngineGateway } from "~/server/workflow/lead/write/engine-gateway";
+import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
+import { createWorkflowRepos } from "~/server/workflow/repos";
 
 import type { FilesRuntime } from "./files-runtime";
 import type { ServerInfra } from "./infra";
@@ -19,18 +19,35 @@ export function createWorkflowRuntime(
 ) {
   const engineGateway = createEngineGateway(engine);
   const repos = createWorkflowRepos(infra.db);
+  const leadRepo = createLeadRepo(infra.db);
+
+  const enrichmentCommand = createEnrichmentCommand(
+    createSearchEnrichmentRepo(infra.db),
+    doorbell,
+  );
+
+  const enrichmentQueue = {
+    enqueueRucVerification: async (
+      ruc: string,
+      requestedByUserId: number,
+    ): Promise<void> => {
+      await enrichmentCommand.enqueueRequest(
+        "ruc",
+        ruc,
+        requestedByUserId,
+        infra.now(),
+      );
+    },
+  };
 
   return {
-    commands: createWorkflowCommandBus(
-      infra.db,
-      repos,
-      engineGateway,
-      doorbell,
-      infra.now,
-    ),
-    queries: createWorkflowQueryBus(repos, engineGateway),
+    db: infra.db,
+    now: infra.now,
+    repos,
+    engineGateway,
+    enrichmentQueue,
     leadArtifacts: createLeadArtifactsService({
-      leadReader: createLeadRepo(infra.db),
+      leadReader: leadRepo,
       leadQueries: repos.leadQueries,
       filesRepo: files.repo,
       filesStorage: files.storage,

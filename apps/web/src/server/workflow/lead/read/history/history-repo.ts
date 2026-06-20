@@ -9,7 +9,13 @@ import { unknownLeadEventType } from "~/server/workflow/lead/domain/integrity-er
 
 import { toHistoryEntry } from "./history-entry-parser";
 
-export function createHistoryRepo(db: DatabaseExecutor) {
+export type LeadHistoryRepository = {
+  listByLeadId(
+    leadId: string,
+  ): Promise<Result<LeadHistoryEntry[], DomainError>>;
+};
+
+export function createHistoryRepo(db: DatabaseExecutor): LeadHistoryRepository {
   return {
     async listByLeadId(
       leadId: string,
@@ -40,14 +46,26 @@ export function createHistoryRepo(db: DatabaseExecutor) {
         .execute();
 
       const entries: LeadHistoryEntry[] = [];
+
       for (const row of rows) {
-        if (!isLeadHistoryEventType(row.event_type)) {
-          return unknownLeadEventType({ id: row.id, type: row.event_type });
+        const eventType = row.event_type;
+
+        if (!isLeadHistoryEventType(eventType)) {
+          return unknownLeadEventType({
+            id: row.id,
+            type: eventType,
+          });
         }
-        const entry = toHistoryEntry({ ...row, event_type: row.event_type });
+
+        const entry = toHistoryEntry({
+          ...row,
+          event_type: eventType,
+        });
+
         if (!entry.ok) {
           return Err(entry.error);
         }
+
         entries.push(entry.value);
       }
 
