@@ -66,7 +66,7 @@ export default function LoginPasskeyPage() {
                 <p class={pageStyles.supportText}>
                   Usuario: {flow().identifier}
                 </p>
-                <Show when={passkeyLogin.error()}>
+                <Show when={passkeyLogin.errorMessage()}>
                   {(message) => (
                     <p class={pageStyles.formError} role="alert">
                       {message()}

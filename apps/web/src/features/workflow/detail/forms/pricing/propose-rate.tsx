@@ -59,11 +59,13 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
     props.latestProposal?.currency ?? "PEN",
   );
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [proposeRateErrorMessage, setProposeRateErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    setError(null);
+    setProposeRateErrorMessage(null);
     setSubmitting(true);
     try {
       await propose({
@@ -76,8 +78,8 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
         currency: currency(),
       });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setProposeRateErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -175,7 +177,9 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
               </FieldInputValue>
             </FieldRow>
           </FieldTable>
-          {error() && <p class={styles.error}>{error()}</p>}
+          {proposeRateErrorMessage() && (
+            <p class={styles.error}>{proposeRateErrorMessage()}</p>
+          )}
           <RecordDetailSectionActions>
             <Button
               type="submit"

@@ -54,7 +54,7 @@ export function LoginHome() {
         <Show when={loginMethods.lastUsedMethod() === "passkey"}>
           <LastUsedPill />
         </Show>
-        <Show when={passkeyLogin.error()}>
+        <Show when={passkeyLogin.errorMessage()}>
           {(message) => (
             <p class={pageStyles.formError} role="alert">
               {message()}

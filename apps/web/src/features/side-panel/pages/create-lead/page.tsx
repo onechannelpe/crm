@@ -47,7 +47,7 @@ export function CreateLeadPage() {
     () => latestBootstrapPreview()?.address ?? null,
   );
 
-  const { error, submitting, submit } = createCreateLeadController({
+  const { errorMessage, submitting, submit } = createCreateLeadController({
     draftRuc,
     validRuc,
     previewName: previewRazonSocial,
@@ -104,7 +104,7 @@ export function CreateLeadPage() {
             onTabSelect={setActiveTab}
           />
 
-          <Show when={error()}>
+          <Show when={errorMessage()}>
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
         </div>

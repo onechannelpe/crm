@@ -35,8 +35,8 @@ export function OptionsDropdown(props: { onClose: () => void }) {
       await navigator.clipboard.writeText(window.location.href);
       enqueueSuccessSnackBar("Enlace copiado al portapapeles");
       props.onClose();
-    } catch (err) {
-      console.error("Failed to copy link", err);
+    } catch (caught) {
+      console.error("Failed to copy link", caught);
       enqueueErrorSnackBar("Error al copiar el enlace");
     }
   }

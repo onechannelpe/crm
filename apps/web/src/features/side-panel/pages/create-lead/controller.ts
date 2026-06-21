@@ -35,9 +35,11 @@ type CreateLeadControllerInput = {
 };
 
 export function createCreateLeadController(input: CreateLeadControllerInput) {
-  const [error, setError] = createSignal<string | null>(null);
+  const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
 
-  createEffect(on(input.draftRuc, () => setError(null), { defer: true }));
+  createEffect(
+    on(input.draftRuc, () => setErrorMessage(null), { defer: true }),
+  );
 
   const optimisticTransactions = createOptimisticTransactionStore();
   const createCommand = createCommandController({
@@ -51,19 +53,19 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
 
     const ruc = input.validRuc();
     if (!ruc) {
-      setError("El RUC debe tener 11 dígitos.");
+      setErrorMessage("El RUC debe tener 11 dígitos.");
       input.setActiveTab("home");
       return;
     }
 
     const scopePayload = toCommercialScopePayload(input.scope());
     if (!scopePayload.ok) {
-      setError(scopePayload.error);
+      setErrorMessage(scopePayload.error);
       input.setActiveTab("home");
       return;
     }
 
-    setError(null);
+    setErrorMessage(null);
 
     const user = input.currentUser();
 
@@ -95,18 +97,17 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
       optimisticTransactions.rollback(txId);
       const wire = parseWireError(submitError);
       if (codeIs(wire, "invalid_ruc") || codeIs(wire, "ruc_required")) {
-        setError(wire.message);
+        setErrorMessage(wire.message);
         input.setActiveTab("home");
         return;
       }
 
-      setError(wire.message);
+      setErrorMessage(wire.message);
     }
   }
 
   return {
-    error,
-    setError,
+    errorMessage,
     submitting: createCommand.pending,
     submit,
   };

@@ -30,9 +30,9 @@ export function ExecutivePicker(props: ExecutivePickerProps) {
         revalidateWorkflowLeadList(),
       ]);
       props.onSelect();
-    } catch (err) {
-      throw new Error(actionErrorMessage(err), {
-        cause: err,
+    } catch (caught) {
+      throw new Error(actionErrorMessage(caught), {
+        cause: caught,
       });
     }
   }

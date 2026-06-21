@@ -35,7 +35,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
   const [executiveCategory, setExecutiveCategory] = createSignal("");
   const [teamId, setTeamId] = createSignal("");
   const [expiresAt, setExpiresAt] = createSignal("");
-  const [expiresAtError, setExpiresAtError] = createSignal<
+  const [expiresAtErrorMessage, setExpiresAtErrorMessage] = createSignal<
     string | undefined
   >();
 
@@ -64,7 +64,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
     setExecutiveCategory("");
     setTeamId("");
     setExpiresAt("");
-    setExpiresAtError(undefined);
+    setExpiresAtErrorMessage(undefined);
   }
 
   async function handleSubmit(event: Event): Promise<void> {
@@ -73,7 +73,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
     const parsedExpiresAt = parseInviteExpiryDate(expiresAt());
 
     if (parsedExpiresAt.isErr) {
-      setExpiresAtError(parsedExpiresAt.error);
+      setExpiresAtErrorMessage(parsedExpiresAt.error);
       return;
     }
 
@@ -91,14 +91,14 @@ export function InviteForm(props: { setup: InviteManagement }) {
 
       resetForm();
       enqueueSuccessSnackBar(message);
-    } catch (err: unknown) {
-      const wire = parseWireError(err);
+    } catch (caught: unknown) {
+      const wire = parseWireError(caught);
 
       if (
         codeIs(wire, "invalid_expires_at") ||
         codeIs(wire, "expires_at_too_soon")
       ) {
-        setExpiresAtError(INVITE_EXPIRY_ERROR_TEXT);
+        setExpiresAtErrorMessage(INVITE_EXPIRY_ERROR_TEXT);
         return;
       }
 
@@ -188,10 +188,10 @@ export function InviteForm(props: { setup: InviteManagement }) {
           value={expiresAt()}
           min={getMinInviteExpiryDate()}
           description={INVITE_EXPIRY_HELPER_TEXT}
-          error={expiresAtError()}
+          error={expiresAtErrorMessage()}
           onInput={(nextValue) => {
             setExpiresAt(nextValue);
-            setExpiresAtError(getInviteExpiryFieldError(nextValue));
+            setExpiresAtErrorMessage(getInviteExpiryFieldError(nextValue));
           }}
         />
 
@@ -203,7 +203,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
               submission.pending ||
               !role() ||
               (role() === "executive" && !executiveCategory()) ||
-              expiresAtError() !== undefined
+              expiresAtErrorMessage() !== undefined
             }
           >
             Enviar invitación

@@ -17,7 +17,9 @@ export default function QuotationPoliciesPage() {
 
   const [validityDays, setValidityDays] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [policySaveErrorMessage, setPolicySaveErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   createEffect(() => {
     const snapshot = policy();
@@ -27,15 +29,15 @@ export default function QuotationPoliciesPage() {
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
-    setError(null);
+    setPolicySaveErrorMessage(null);
     setSubmitting(true);
 
     try {
       await updatePolicy({
         validityDays: Number(validityDays()),
       });
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setPolicySaveErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -74,7 +76,7 @@ export default function QuotationPoliciesPage() {
                 )}
               </Show>
             </p>
-            <Show when={error()}>
+            <Show when={policySaveErrorMessage()}>
               {(message) => <p class="text-sm text-destructive">{message()}</p>}
             </Show>
             <Button type="submit" loading={submitting()}>

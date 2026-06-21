@@ -70,8 +70,8 @@ export function RecordPage() {
       if (result) {
         enqueueSuccessSnackBar(result.message);
       }
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   }
 

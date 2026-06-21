@@ -27,16 +27,18 @@ export function SetNewPasswordForm(props: { token: string }) {
   // so route it to a "request a new link" panel rather than an inline error.
   // The message rides on the wire (catalog copy), so render it verbatim.
   const tokenExpiredMessage = () => {
-    const error = submitError();
-    return error !== undefined && codeIs(error, "invalid_token")
-      ? error.message
+    const submitFailure = submitError();
+    return submitFailure !== undefined && codeIs(submitFailure, "invalid_token")
+      ? submitFailure.message
       : undefined;
   };
 
   const fieldError = () => {
-    const error = submitError();
-    if (error === undefined || codeIs(error, "invalid_token")) return undefined;
-    return error.message;
+    const submitFailure = submitError();
+    if (submitFailure === undefined || codeIs(submitFailure, "invalid_token")) {
+      return undefined;
+    }
+    return submitFailure.message;
   };
 
   return (

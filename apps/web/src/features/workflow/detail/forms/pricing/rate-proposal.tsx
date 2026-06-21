@@ -75,7 +75,12 @@ export function RateProposalSection(props: RateProposalSectionProps) {
   const [uploading, setUploading] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
   const [isDragging, setIsDragging] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [acceptErrorMessage, setAcceptErrorMessage] = createSignal<
+    string | null
+  >(null);
+  const [revisionErrorMessage, setRevisionErrorMessage] = createSignal<
+    string | null
+  >(null);
   const justificationId = createUniqueId();
   const fileInputId = createUniqueId();
 
@@ -87,13 +92,13 @@ export function RateProposalSection(props: RateProposalSectionProps) {
     props.reservationExpiresAt <= Date.now();
 
   async function handleAccept() {
-    setError(null);
+    setAcceptErrorMessage(null);
     setAccepting(true);
     try {
       await accept({ leadId: props.leadId, proposalId: props.proposal.id });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setAcceptErrorMessage(actionErrorMessage(caught));
     } finally {
       setAccepting(false);
     }
@@ -113,8 +118,8 @@ export function RateProposalSection(props: RateProposalSectionProps) {
         ...patch,
       });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      throw new Error(actionErrorMessage(err), { cause: err });
+    } catch (caught) {
+      throw new Error(actionErrorMessage(caught), { cause: caught });
     }
   }
 
@@ -158,10 +163,10 @@ export function RateProposalSection(props: RateProposalSectionProps) {
 
   async function handleUploadFiles(files: File[]) {
     if (files.length === 0 || uploading()) return;
-    setError(null);
+    setRevisionErrorMessage(null);
 
     if (stagedFiles().length + files.length > MAX_RATE_REVISION_FILES) {
-      setError(
+      setRevisionErrorMessage(
         `Solo se pueden adjuntar hasta ${MAX_RATE_REVISION_FILES} archivos por solicitud`,
       );
       return;
@@ -193,7 +198,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       });
 
       if (failures.length > 0) {
-        setError(
+        setRevisionErrorMessage(
           failures.length === 1
             ? failures[0]
             : "Algunos archivos no se pudieron subir",
@@ -203,8 +208,8 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       if (successes.length > 0) {
         setStagedFiles((prev) => [...prev, ...successes]);
       }
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setRevisionErrorMessage(actionErrorMessage(caught));
     } finally {
       setUploading(false);
     }
@@ -218,14 +223,14 @@ export function RateProposalSection(props: RateProposalSectionProps) {
     e.preventDefault();
     if (submitting()) return;
     if (!justification().trim()) {
-      setError("El fundamento es requerido");
+      setRevisionErrorMessage("El fundamento es requerido");
       return;
     }
     if (stagedFiles().length === 0) {
-      setError("Se requiere al menos un documento de soporte");
+      setRevisionErrorMessage("Se requiere al menos un documento de soporte");
       return;
     }
-    setError(null);
+    setRevisionErrorMessage(null);
     setSubmitting(true);
     try {
       await requestRevision({
@@ -234,8 +239,8 @@ export function RateProposalSection(props: RateProposalSectionProps) {
         artifactIds: stagedFiles().map((f) => f.artifactId),
       });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setRevisionErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -352,7 +357,10 @@ export function RateProposalSection(props: RateProposalSectionProps) {
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => setShowRevisionForm(true)}
+                onClick={() => {
+                  setAcceptErrorMessage(null);
+                  setShowRevisionForm(true);
+                }}
               >
                 Solicitar revision de tarifa
               </Button>
@@ -446,7 +454,9 @@ export function RateProposalSection(props: RateProposalSectionProps) {
                 </Show>
               </div>
 
-              {error() && <p class={styles.error}>{error()}</p>}
+              {revisionErrorMessage() && (
+                <p class={styles.error}>{revisionErrorMessage()}</p>
+              )}
 
               <div class={styles.formActions}>
                 <Button
@@ -457,7 +467,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
                     setShowRevisionForm(false);
                     setStagedFiles([]);
                     setJustification("");
-                    setError(null);
+                    setRevisionErrorMessage(null);
                   }}
                 >
                   Cancelar
@@ -476,7 +486,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
           </div>
         </Show>
 
-        <Show when={error() && !showRevisionForm()}>
+        <Show when={acceptErrorMessage()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
       </RecordDetailSectionBody>

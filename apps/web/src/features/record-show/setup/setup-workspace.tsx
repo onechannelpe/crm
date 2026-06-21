@@ -161,7 +161,8 @@ function DigitalPolicyPanel(props: {
     CollectionMode | ""
   >(props.onlineCollectionMode ?? "");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [digitalPolicyErrorMessage, setDigitalPolicyErrorMessage] =
+    createSignal<string | null>(null);
 
   const resolvedLinkScope = () => (linkEnabled() ? linkScope() : "none");
   const resolvedOnlineScope = () => (onlineEnabled() ? onlineScope() : "none");
@@ -191,12 +192,12 @@ function DigitalPolicyPanel(props: {
     const validationError = validate();
 
     if (validationError) {
-      setError(validationError);
+      setDigitalPolicyErrorMessage(validationError);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setDigitalPolicyErrorMessage(null);
 
     try {
       const selectedLinkScope = resolvedLinkScope();
@@ -216,8 +217,8 @@ function DigitalPolicyPanel(props: {
       });
 
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setDigitalPolicyErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -347,7 +348,7 @@ function DigitalPolicyPanel(props: {
             </Show>
           </FieldTable>
 
-          <Show when={error()}>
+          <Show when={digitalPolicyErrorMessage()}>
             {(msg) => <p class={styles.error}>{msg()}</p>}
           </Show>
 
@@ -376,7 +377,9 @@ function VenueCreatePanel(props: {
   const form = useVenueFormState();
   const [showForm, setShowForm] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [venueCreateErrorMessage, setVenueCreateErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -387,20 +390,20 @@ function VenueCreatePanel(props: {
     });
 
     if (!parsed.ok) {
-      setError(parsed.error);
+      setVenueCreateErrorMessage(parsed.error);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setVenueCreateErrorMessage(null);
 
     try {
       await createVenue({ leadId: props.leadId, ...parsed.value });
       await revalidateWorkflowLead(props.leadId);
       form.reset();
       setShowForm(false);
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setVenueCreateErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -436,7 +439,7 @@ function VenueCreatePanel(props: {
         linkScope={props.linkScope}
         onlineScope={props.onlineScope}
         submitting={submitting()}
-        error={error()}
+        errorMessage={venueCreateErrorMessage()}
         onSubmit={(event) => void handleSubmit(event)}
       />
     </Show>
@@ -453,7 +456,9 @@ function VenueEditPanel(props: {
   const updateVenue = useAction(updateVenueMutation);
   const form = useVenueFormState(toVenueFormValues(props.venue));
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [venueEditErrorMessage, setVenueEditErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -464,12 +469,12 @@ function VenueEditPanel(props: {
     });
 
     if (!parsed.ok) {
-      setError(parsed.error);
+      setVenueEditErrorMessage(parsed.error);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setVenueEditErrorMessage(null);
 
     try {
       await updateVenue({
@@ -479,8 +484,8 @@ function VenueEditPanel(props: {
       });
       await revalidateWorkflowLead(props.leadId);
       props.onClose();
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setVenueEditErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -494,7 +499,7 @@ function VenueEditPanel(props: {
       linkScope={props.linkScope}
       onlineScope={props.onlineScope}
       submitting={submitting()}
-      error={error()}
+      errorMessage={venueEditErrorMessage()}
       secondaryAction={
         <Button
           type="button"
@@ -533,7 +538,9 @@ function AccountsFormPanel(props: {
   const addAccounts = useAction(addVenueAccountsMutation);
   const form = useAccountsFormState();
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [accountsErrorMessage, setAccountsErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -541,12 +548,12 @@ function AccountsFormPanel(props: {
     const parsed = buildAccountsSubmitInput(form);
 
     if (!parsed.ok) {
-      setError(parsed.error);
+      setAccountsErrorMessage(parsed.error);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setAccountsErrorMessage(null);
 
     try {
       await addAccounts({
@@ -557,8 +564,8 @@ function AccountsFormPanel(props: {
 
       await revalidateWorkflowLead(props.leadId);
       form.reset();
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setAccountsErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -569,7 +576,7 @@ function AccountsFormPanel(props: {
       venueName={props.venue.tradeName}
       form={form}
       submitting={submitting()}
-      error={error()}
+      errorMessage={accountsErrorMessage()}
       onSubmit={(event) => void handleSubmit(event)}
     />
   );

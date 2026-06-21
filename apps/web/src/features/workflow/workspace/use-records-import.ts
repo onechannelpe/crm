@@ -259,8 +259,8 @@ export function useRecordsImport() {
 
       schedulePolling(session, 0);
       connectWebsocket(session);
-    } catch (error: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(error));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   }
 

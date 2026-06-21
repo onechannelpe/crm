@@ -41,8 +41,8 @@ export function LoginRetriesCard() {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
       if (!next) enqueueInfoSnackBar("Usuario no encontrado");
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   });
 

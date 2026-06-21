@@ -129,8 +129,8 @@ export default function SecurityPage() {
         const { message } = await removeAllPasskeys();
         await refreshCurrentUser();
         enqueueSuccessSnackBar(message);
-      } catch (err: unknown) {
-        enqueueErrorSnackBar(actionErrorMessage(err));
+      } catch (caught: unknown) {
+        enqueueErrorSnackBar(actionErrorMessage(caught));
       }
       removePasskeysDialog.close();
     },
@@ -142,8 +142,8 @@ export default function SecurityPage() {
       totpEnrollment.reset();
       await refreshCurrentUser();
       enqueueSuccessSnackBar(message);
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
     disableTotpDialog.close();
   });
@@ -169,8 +169,8 @@ export default function SecurityPage() {
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-      } catch (err: unknown) {
-        enqueueErrorSnackBar(actionErrorMessage(err));
+      } catch (caught: unknown) {
+        enqueueErrorSnackBar(actionErrorMessage(caught));
       }
     },
   );

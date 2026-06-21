@@ -6,8 +6,8 @@ import { cn } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
-function editorErrorMessage(cause: unknown): string {
-  return cause instanceof Error ? cause.message : "No se pudo guardar";
+function editorErrorMessage(caught: unknown): string {
+  return caught instanceof Error ? caught.message : "No se pudo guardar";
 }
 
 export interface InlineFieldEditorProps {
@@ -56,8 +56,8 @@ export function InlineFieldEditor(props: InlineFieldEditorProps) {
     try {
       await props.onSubmit(value());
       props.onClose();
-    } catch (cause) {
-      setSaveErrorMessage(editorErrorMessage(cause));
+    } catch (caught) {
+      setSaveErrorMessage(editorErrorMessage(caught));
       setSubmitting(false);
     }
   }
@@ -157,8 +157,8 @@ export function InlineOptionsEditor<T extends string>(
     try {
       await props.onSubmit(option);
       props.onClose();
-    } catch (cause) {
-      setSaveErrorMessage(editorErrorMessage(cause));
+    } catch (caught) {
+      setSaveErrorMessage(editorErrorMessage(caught));
       setSubmitting(false);
     }
   }

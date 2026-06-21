@@ -65,7 +65,7 @@ export function AccountsForm(props: {
   venueName: string;
   form: AccountsFormState;
   submitting: boolean;
-  error: string | null;
+  errorMessage: string | null;
   onSubmit: (event: SubmitEvent) => void;
 }) {
   const { form } = props;
@@ -203,7 +203,7 @@ export function AccountsForm(props: {
             </FormFieldRow>
           </FieldTable>
 
-          <Show when={props.error}>
+          <Show when={props.errorMessage}>
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
 

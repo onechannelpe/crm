@@ -50,11 +50,13 @@ export function RepLegalSection(props: {
   const [email, setEmail] = createSignal(repLegal()?.email ?? "");
 
   const [saving, setSaving] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [saveErrorMessage, setSaveErrorMessage] = createSignal<string | null>(
+    null,
+  );
 
   async function handleSave(e: SubmitEvent) {
     e.preventDefault();
-    setError(null);
+    setSaveErrorMessage(null);
     setSaving(true);
     try {
       await record({
@@ -67,8 +69,8 @@ export function RepLegalSection(props: {
         email: email().trim(),
       });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(actionErrorMessage(err));
+    } catch (caught) {
+      setSaveErrorMessage(actionErrorMessage(caught));
     } finally {
       setSaving(false);
     }
@@ -188,7 +190,7 @@ export function RepLegalSection(props: {
               </FieldRow>
             </FieldTable>
 
-            <Show when={error()}>
+            <Show when={saveErrorMessage()}>
               {(msg) => <p class={formStyles.error}>{msg()}</p>}
             </Show>
 

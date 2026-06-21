@@ -24,7 +24,7 @@ export function AppHeader() {
     modKey,
     isSidePanelOpen,
     extensionState,
-    extensionError,
+    extensionErrorMessage,
     isExtensionAvailable,
     toggleSidePanel,
   } = useAppHeaderSidePanel();
@@ -56,7 +56,7 @@ export function AppHeader() {
       <Show when={isExtensionAvailable()}>
         <ExtensionStatusIndicator
           extensionState={extensionState}
-          extensionError={extensionError}
+          extensionErrorMessage={extensionErrorMessage}
           onOpen={focusExtensionWindow}
         />
       </Show>

@@ -55,8 +55,8 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
     try {
       const { message } = await resendInvite(inviteId);
       enqueueSuccessSnackBar(message);
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   }
 
@@ -70,8 +70,8 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
     try {
       const { message } = await revokeInvite(inviteId);
       enqueueSuccessSnackBar(message);
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
 
     setPendingRevokeId(null);

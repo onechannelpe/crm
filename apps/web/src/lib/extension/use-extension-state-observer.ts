@@ -5,7 +5,7 @@ import type { ExecutiveStateSnapshot } from "./runtime";
 
 interface UseExtensionStateObserverOptions {
   extensionState: Accessor<ExecutiveStateSnapshot | null>;
-  extensionError: Accessor<string | null>;
+  extensionErrorMessage: Accessor<string | null>;
   onStateChange?: (state: ExecutiveStateSnapshot | null) => void;
   onErrorChange?: (error: string | null) => void;
   onReauthRequired?: () => void;
@@ -22,7 +22,7 @@ export function useExtensionStateObserver(
 
   createEffect(() => {
     const currentState = options.extensionState?.();
-    const currentError = options.extensionError?.();
+    const currentError = options.extensionErrorMessage?.();
 
     // Notify on state change
     if (currentState !== prevState) {

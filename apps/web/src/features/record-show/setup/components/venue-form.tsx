@@ -71,7 +71,7 @@ export function VenueForm(props: {
   linkScope: ProductScope;
   onlineScope: ProductScope;
   submitting: boolean;
-  error: string | null;
+  errorMessage: string | null;
   secondaryAction?: JSX.Element;
   onSubmit: (event: SubmitEvent) => void;
 }) {
@@ -186,7 +186,7 @@ export function VenueForm(props: {
             </Show>
           </FieldTable>
 
-          <Show when={props.error}>
+          <Show when={props.errorMessage}>
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
 

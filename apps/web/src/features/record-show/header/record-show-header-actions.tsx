@@ -49,7 +49,9 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const user = currentUser();
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = createSignal(false);
-  const [deleteError, setDeleteError] = createSignal<string | null>(null);
+  const [deleteErrorMessage, setDeleteErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   const canDelete = createMemo(
     () => detail()?.lead != null && hasPermission(user.role, "lead:delete"),
@@ -66,7 +68,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
         danger: true,
         disabled: deleteBusy(),
         onSelect: () => {
-          setDeleteError(null);
+          setDeleteErrorMessage(null);
           setConfirmDeleteOpen(true);
         },
       });
@@ -76,14 +78,14 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   });
 
   async function handleConfirmDelete() {
-    setDeleteError(null);
+    setDeleteErrorMessage(null);
 
     try {
       await deleteLead(props.leadId);
       setConfirmDeleteOpen(false);
       navigate("/records");
-    } catch (err) {
-      setDeleteError(actionErrorMessage(err));
+    } catch (caught) {
+      setDeleteErrorMessage(actionErrorMessage(caught));
     }
   }
 
@@ -219,7 +221,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
         onConfirm={() => void handleConfirmDelete()}
         onClose={() => setConfirmDeleteOpen(false)}
       >
-        <Show when={deleteError()}>
+        <Show when={deleteErrorMessage()}>
           {(message) => <p class={styles.deleteError}>{message()}</p>}
         </Show>
       </ConfirmDialog>

@@ -32,8 +32,8 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       const enrollmentState = await beginTotpEnrollment();
 
       setEnrollment(enrollmentState);
-    } catch (error) {
-      options.enqueueErrorSnackBar(actionErrorMessage(error));
+    } catch (caught) {
+      options.enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setLoading(false);
     }
@@ -53,8 +53,8 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       await options.refreshStatus();
 
       options.enqueueSuccessSnackBar(message);
-    } catch (error) {
-      options.enqueueErrorSnackBar(actionErrorMessage(error));
+    } catch (caught) {
+      options.enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setLoading(false);
     }

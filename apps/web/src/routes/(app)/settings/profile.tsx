@@ -30,7 +30,9 @@ export default function ProfilePage() {
   const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
     null,
   );
-  const [avatarError, setAvatarError] = createSignal<string | null>(null);
+  const [avatarErrorMessage, setAvatarErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   const uploadAvatar = useAction(uploadUserAvatarMutation);
   const removeAvatar = useAction(removeUserAvatarMutation);
@@ -77,15 +79,15 @@ export default function ProfilePage() {
       }));
 
       enqueueSuccessSnackBar(message);
-    } catch (error: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(error));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setSavingProfile(false);
     }
   };
 
   const uploadProfilePicture = async (file: File) => {
-    setAvatarError(null);
+    setAvatarErrorMessage(null);
     clearAvatarPreview();
 
     const optimisticPreview = URL.createObjectURL(file);
@@ -105,17 +107,17 @@ export default function ProfilePage() {
       }));
       enqueueSuccessSnackBar(updated.message);
       clearAvatarPreview();
-    } catch (error: unknown) {
+    } catch (caught: unknown) {
       clearAvatarPreview();
 
-      const message = actionErrorMessage(error);
-      setAvatarError(message);
+      const message = actionErrorMessage(caught);
+      setAvatarErrorMessage(message);
       enqueueErrorSnackBar(message);
     }
   };
 
   const removeProfilePicture = async () => {
-    setAvatarError(null);
+    setAvatarErrorMessage(null);
     clearAvatarPreview();
 
     try {
@@ -128,9 +130,9 @@ export default function ProfilePage() {
         avatarVersion: updated.avatarVersion,
       }));
       enqueueSuccessSnackBar(updated.message);
-    } catch (error: unknown) {
-      const message = actionErrorMessage(error);
-      setAvatarError(message);
+    } catch (caught: unknown) {
+      const message = actionErrorMessage(caught);
+      setAvatarErrorMessage(message);
       enqueueErrorSnackBar(message);
     }
   };
@@ -142,7 +144,7 @@ export default function ProfilePage() {
           pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
           initials={getUserInitials(shortName(user()))}
           uploading={avatarMutationPending()}
-          errorMessage={avatarError()}
+          errorMessage={avatarErrorMessage()}
           onUpload={uploadProfilePicture}
           onRemove={removeProfilePicture}
         />

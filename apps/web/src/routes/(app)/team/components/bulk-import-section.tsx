@@ -56,8 +56,8 @@ export function BulkImportSection() {
       const csv = await readFileText(file);
       const data = await previewBulkCsv(csv, role());
       setPreview(data);
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setIsPreviewing(false);
     }
@@ -73,8 +73,8 @@ export function BulkImportSection() {
       setResult(data);
       setCsvFile(null);
       setPreview(null);
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setIsImporting(false);
     }

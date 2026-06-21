@@ -35,8 +35,8 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
       );
       await options.refreshStatus();
       options.enqueueSuccessSnackBar(message);
-    } catch (error: unknown) {
-      options.enqueueErrorSnackBar(actionErrorMessage(error));
+    } catch (caught: unknown) {
+      options.enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setLoading(false);
     }

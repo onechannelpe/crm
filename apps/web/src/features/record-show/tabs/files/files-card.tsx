@@ -41,7 +41,9 @@ function hasDraggedFiles(event: DragEvent): boolean {
 }
 
 export function FilesCard(props: FilesCardProps) {
-  const [error, setError] = createSignal<string | null>(null);
+  const [fileActionErrorMessage, setFileActionErrorMessage] = createSignal<
+    string | null
+  >(null);
   const [isDraggingFile, setIsDraggingFile] = createSignal(false);
   const [previewState, setPreviewState] = createSignal<{
     file: LeadSaleProofFileView;
@@ -61,34 +63,38 @@ export function FilesCard(props: FilesCardProps) {
       return;
     }
 
-    setError(null);
+    setFileActionErrorMessage(null);
     try {
       await Promise.all(files.map((file) => uploadAttachmentFile(file)));
       await refetch();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo subir el archivo",
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo subir el archivo",
       );
     }
   }
 
   async function handleDownload(artifactId: string) {
-    setError(null);
+    setFileActionErrorMessage(null);
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
         artifactId,
       });
       window.location.href = `/api/files/download/${token.token}`;
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo descargar el archivo",
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo descargar el archivo",
       );
     }
   }
 
   async function handlePreview(file: LeadSaleProofFileView) {
-    setError(null);
+    setFileActionErrorMessage(null);
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
@@ -98,9 +104,11 @@ export function FilesCard(props: FilesCardProps) {
         file,
         previewUrl: `/api/files/download/${token.token}?inline=1`,
       });
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo abrir la vista previa",
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo abrir la vista previa",
       );
     }
   }
@@ -112,7 +120,7 @@ export function FilesCard(props: FilesCardProps) {
     );
 
   async function handleRevisionDownload(leadId: string, artifactId: string) {
-    setError(null);
+    setFileActionErrorMessage(null);
     const result = await requestRateRevisionFileDownloadToken({
       leadId,
       artifactId,
@@ -121,7 +129,7 @@ export function FilesCard(props: FilesCardProps) {
     if (result.ok) {
       window.location.href = `/api/files/download/${result.value.token}`;
     } else {
-      setError(actionErrorMessage(result.error));
+      setFileActionErrorMessage(actionErrorMessage(result.error));
     }
   }
 
@@ -155,7 +163,7 @@ export function FilesCard(props: FilesCardProps) {
               )}
             </For>
           </ActivityListCard>
-          <Show when={error()}>
+          <Show when={fileActionErrorMessage()}>
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
         </ActivitySection>
@@ -228,7 +236,7 @@ export function FilesCard(props: FilesCardProps) {
             onPreview={handlePreview}
           />
         </div>
-        <Show when={error()}>
+        <Show when={fileActionErrorMessage()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
       </ActivitySection>

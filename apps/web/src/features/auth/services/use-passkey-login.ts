@@ -41,7 +41,7 @@ export function usePasskeyLogin() {
   const trackAuthClientEvent = useAction(trackAuthClientEventMutation);
 
   const [phase, setPhase] = createSignal<PasskeyLoginPhase>("idle");
-  const [error, setError] = createSignal<string>();
+  const [errorMessage, setErrorMessage] = createSignal<string>();
   const [activeFlow, setActiveFlow] = createSignal<PasskeyLoginFlowState>();
   const [supportStatus, setSupportStatus] =
     createSignal<PasskeySupportStatus>("unknown");
@@ -56,18 +56,18 @@ export function usePasskeyLogin() {
     );
   });
 
-  function resetError() {
-    setError(undefined);
+  function clearErrorMessage() {
+    setErrorMessage(undefined);
   }
 
   function clear() {
     setPhase("idle");
-    setError(undefined);
+    setErrorMessage(undefined);
     setActiveFlow(undefined);
   }
 
   async function markUnsupported() {
-    setError("Este navegador no admite claves de acceso.");
+    setErrorMessage("Este navegador no admite claves de acceso.");
 
     await trackAuthClientEvent({
       kind: "passkey_result",
@@ -78,7 +78,7 @@ export function usePasskeyLogin() {
 
   async function continueFlow(flow: PasskeyLoginFlowState): Promise<boolean> {
     setActiveFlow(flow);
-    setError(undefined);
+    setErrorMessage(undefined);
 
     if (!supported()) {
       await markUnsupported();
@@ -96,10 +96,10 @@ export function usePasskeyLogin() {
 
       navigate(redirectTo);
       return true;
-    } catch (err: unknown) {
+    } catch (caught: unknown) {
       if (
-        err instanceof DOMException &&
-        (err.name === "NotAllowedError" || err.name === "AbortError")
+        caught instanceof DOMException &&
+        (caught.name === "NotAllowedError" || caught.name === "AbortError")
       ) {
         await trackAuthClientEvent({
           kind: "passkey_result",
@@ -107,17 +107,17 @@ export function usePasskeyLogin() {
           code: "cancelled",
         });
 
-        setError(
+        setErrorMessage(
           "La verificación con clave de acceso se canceló. Intenta de nuevo.",
         );
 
         return false;
       }
 
-      const wire = parseWireError(err);
+      const wire = parseWireError(caught);
 
       if (wire.kind !== "internal") {
-        setError(wire.message);
+        setErrorMessage(wire.message);
 
         if (codeIs(wire, "flow_expired")) {
           setActiveFlow(undefined);
@@ -132,7 +132,7 @@ export function usePasskeyLogin() {
         code: "server_error",
       });
 
-      setError("No se pudo iniciar sesión con la clave de acceso.");
+      setErrorMessage("No se pudo iniciar sesión con la clave de acceso.");
       return false;
     } finally {
       setPhase("idle");
@@ -146,7 +146,7 @@ export function usePasskeyLogin() {
       return false;
     }
 
-    resetError();
+    clearErrorMessage();
     setPhase("starting");
 
     try {
@@ -158,8 +158,8 @@ export function usePasskeyLogin() {
       );
 
       return continueFlow(flow);
-    } catch (err: unknown) {
-      setError(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      setErrorMessage(actionErrorMessage(caught));
       return false;
     } finally {
       if (phase() === "starting") {
@@ -173,7 +173,7 @@ export function usePasskeyLogin() {
       return false;
     }
 
-    resetError();
+    clearErrorMessage();
     setPhase("starting");
 
     try {
@@ -182,8 +182,8 @@ export function usePasskeyLogin() {
       );
 
       return continueFlow(flow);
-    } catch (err: unknown) {
-      setError(actionErrorMessage(err));
+    } catch (caught: unknown) {
+      setErrorMessage(actionErrorMessage(caught));
       return false;
     } finally {
       if (phase() === "starting") {
@@ -204,7 +204,7 @@ export function usePasskeyLogin() {
 
   return {
     phase,
-    error,
+    errorMessage,
     supportStatus,
     supportKnown,
     supported,
@@ -214,7 +214,7 @@ export function usePasskeyLogin() {
     startDiscoverable,
     retry,
     continueFlow,
-    resetError,
+    clearErrorMessage,
     clear,
   };
 }

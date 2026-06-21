@@ -33,24 +33,24 @@ function getChromeRuntimeConnectApi(): ChromeRuntimeConnectApi | null {
 
 export interface ExtensionPortConnection {
   state: Accessor<ExecutiveStateSnapshot | null>;
-  error: Accessor<string | null>;
+  errorMessage: Accessor<string | null>;
   isAvailable: Accessor<boolean>;
 }
 
 export function createExtensionPortConnection(): ExtensionPortConnection {
   const [state, setState] = createSignal<ExecutiveStateSnapshot | null>(null);
-  const [error, setError] = createSignal<string | null>(null);
+  const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
   const [isAvailable, setIsAvailable] = createSignal(false);
   let hasReceivedState = false;
 
   const extensionId = getExtensionId();
   if (!extensionId) {
-    return { state, error, isAvailable };
+    return { state, errorMessage, isAvailable };
   }
 
   const runtime = getChromeRuntimeConnectApi();
   if (!runtime) {
-    return { state, error, isAvailable };
+    return { state, errorMessage, isAvailable };
   }
 
   setIsAvailable(true);
@@ -59,7 +59,7 @@ export function createExtensionPortConnection(): ExtensionPortConnection {
     port = runtime.connect(extensionId, { name: "web" });
   } catch {
     setIsAvailable(false);
-    return { state, error, isAvailable };
+    return { state, errorMessage, isAvailable };
   }
 
   port.onMessage.addListener((message: unknown) => {
@@ -67,24 +67,24 @@ export function createExtensionPortConnection(): ExtensionPortConnection {
     if (message.ok) {
       hasReceivedState = true;
       setState(message.executiveState);
-      setError(null);
+      setErrorMessage(null);
     } else {
       setState(message.executiveState ?? null);
-      setError(message.error);
+      setErrorMessage(message.error);
     }
   });
 
   port.onDisconnect.addListener(() => {
     setState(null);
     if (!hasReceivedState) {
-      setError(null);
+      setErrorMessage(null);
       return;
     }
 
-    setError(runtime.lastError?.message ?? "Extension disconnected.");
+    setErrorMessage(runtime.lastError?.message ?? "Extension disconnected.");
   });
 
   onCleanup(() => port.disconnect());
 
-  return { state, error, isAvailable };
+  return { state, errorMessage, isAvailable };
 }

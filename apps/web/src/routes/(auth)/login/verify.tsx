@@ -35,8 +35,8 @@ export default function LoginVerifyPage() {
     totpSubmission.error ? parseWireError(totpSubmission.error) : undefined;
 
   const flowExpiredAtSubmit = () => {
-    const error = submitError();
-    return error !== undefined && codeIs(error, "flow_expired");
+    const submitFailure = submitError();
+    return submitFailure !== undefined && codeIs(submitFailure, "flow_expired");
   };
 
   const totpFlow = createMemo(() => {
@@ -47,9 +47,11 @@ export default function LoginVerifyPage() {
   });
 
   const totpError = () => {
-    const error = submitError();
-    if (error === undefined || codeIs(error, "flow_expired")) return undefined;
-    return error.message;
+    const submitFailure = submitError();
+    if (submitFailure === undefined || codeIs(submitFailure, "flow_expired")) {
+      return undefined;
+    }
+    return submitFailure.message;
   };
 
   return (

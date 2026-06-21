@@ -18,7 +18,7 @@ import pageStyles from "~/features/auth/ui/login-page.module.css";
 export function RequestResetForm() {
   const submission = useSubmission(requestPasswordResetMutation);
   const requestSent = () => submission.result?.ok === true;
-  const error = () =>
+  const errorMessage = () =>
     submission.error ? actionErrorMessage(submission.error) : undefined;
 
   return (
@@ -41,7 +41,7 @@ export function RequestResetForm() {
                 autocomplete="email"
                 required
               />
-              <LoginFeedback message={error()} />
+              <LoginFeedback message={errorMessage()} />
               <Button
                 type="submit"
                 class={styles.full}

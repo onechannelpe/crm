@@ -102,7 +102,7 @@ export function LoginCredentialsForm() {
         </Button>
 
         <LoginPasskeyPanel
-          error={passkeyLogin.error()}
+          error={passkeyLogin.errorMessage()}
           busy={passkeyLogin.busy()}
           supported={passkeyLogin.supported()}
           hasActiveFlow={passkeyLogin.activeFlow() !== undefined}

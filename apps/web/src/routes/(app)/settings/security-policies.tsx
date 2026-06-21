@@ -77,7 +77,9 @@ export default function SecurityPoliciesPage() {
   const [policyRiskLevel, setPolicyRiskLevel] =
     createSignal<PolicyRiskLevel>("medium");
   const [policyIsActive, setPolicyIsActive] = createSignal(true);
-  const [policyError, setPolicyError] = createSignal<string | null>(null);
+  const [policyErrorMessage, setPolicyErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   const policySnapshot = createAsync(() => auditPolicySnapshotQuery());
   const canManagePolicies = createAsync(() => canManageAuditPoliciesQuery(), {
@@ -99,7 +101,7 @@ export default function SecurityPoliciesPage() {
   );
 
   async function savePolicy(): Promise<void> {
-    setPolicyError(null);
+    setPolicyErrorMessage(null);
     try {
       await saveAuditPolicy({
         action: policyAction(),
@@ -107,7 +109,7 @@ export default function SecurityPoliciesPage() {
         isActive: policyIsActive(),
       });
     } catch {
-      setPolicyError(
+      setPolicyErrorMessage(
         "No se pudo guardar la política. Revisa los valores y los permisos.",
       );
     }
@@ -150,7 +152,7 @@ export default function SecurityPoliciesPage() {
       <p class={styles.helperText}>
         Solo admin y superuser pueden editar políticas.
       </p>
-      <p class={styles.errorText}>{policyError() ?? ""}</p>
+      <p class={styles.errorText}>{policyErrorMessage() ?? ""}</p>
       <DataGrid
         ariaLabel="Políticas de seguridad"
         columns={[...SECURITY_POLICY_COLUMNS]}
