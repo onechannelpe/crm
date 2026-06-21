@@ -94,7 +94,7 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
   const createdAt = input.createdAt ?? runtime.now.get();
   const updatedAt = input.updatedAt ?? createdAt;
   const organizationId = resolveLeadOrganizationId(input);
-  const commercial = resolveLeadCommercialSeed(input.commercial);
+  const commercial = withMerchantDefaults(input.commercial);
   await runtime.ctx.db
     .insertInto("workflow_leads")
     .values({
@@ -150,7 +150,9 @@ export function buildDefaultRuc(key: string): string {
   return `20${digits}`;
 }
 
-function resolveLeadCommercialSeed(input: LeadCommercialOptions | undefined) {
+export function withMerchantDefaults(
+  input: LeadCommercialOptions | undefined,
+): LeadCommercialScope {
   return {
     currentProvider:
       input?.currentProvider ?? MERCHANT.standard.currentProvider,

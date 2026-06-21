@@ -3,7 +3,7 @@ import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/com
 
 import type { TestRuntime } from "../runtime/app";
 import { registerLeadPorts } from "./deps";
-import { MERCHANT } from "./fixtures";
+import { withMerchantDefaults } from "./seed";
 
 export type RegisteredLeadSnapshot = {
   id: string;
@@ -49,17 +49,8 @@ export async function registerLead(input: {
     {
       actor,
       ruc: input.ruc,
-      currentProvider:
-        input.currentProvider ?? MERCHANT.standard.currentProvider,
-      currentDebitRate:
-        input.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
-      currentCreditRate:
-        input.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
-      gpv: input.gpv ?? MERCHANT.standard.gpv,
-      ticket: input.ticket ?? MERCHANT.standard.ticket,
+      ...withMerchantDefaults(input),
       giroNegocio: input.giroNegocio ?? "Retail",
-      settlementBank: input.settlementBank ?? MERCHANT.standard.settlementBank,
-      posCount: input.posCount ?? MERCHANT.standard.posCount,
     },
     registerLeadPorts(input.runtime),
   );
