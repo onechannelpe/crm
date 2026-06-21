@@ -1,13 +1,15 @@
 import type { Generated } from "kysely";
 
-export interface AuditLogsTable {
-  id: Generated<number>;
-  user_id: number;
-  action: string;
+export interface EventsTable {
+  id: string;
   entity_type: string;
-  entity_id: number;
-  changes: string | null;
-  created_at: number;
+  entity_id: string;
+  type: string;
+  actor_user_id: number | null;
+  subject_user_id: number | null;
+  payload_json: string | null;
+  changes_json: string | null;
+  occurred_at: number;
 }
 
 export interface AuditActionPoliciesTable {

@@ -70,7 +70,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("organizations")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("ruc", "varchar(20)", (col) => col.notNull().unique())
-    .addColumn("name", "varchar(255)", (col) => col.notNull())
+    .addColumn("legal_name", "varchar(255)")
     .addColumn("giro_negocio", "text")
     .addColumn("address", "text")
     .addColumn("district", "varchar(100)")
@@ -78,13 +78,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("department", "varchar(100)")
     .addColumn("phone", "varchar(20)")
     .addColumn("email", "varchar(255)")
-    .addColumn("locked_branch_id", "integer", (col) =>
-      col.references("branches.id"),
-    )
-    .addColumn("locked_at", "integer")
-    .addColumn("locked_by_user_id", "integer", (col) =>
-      col.references("users.id"),
-    )
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 
@@ -92,5 +85,25 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_organizations_ruc")
     .on("organizations")
     .column("ruc")
+    .execute();
+
+  await db.schema
+    .createTable("organization_branch_locks")
+    .addColumn("organization_id", "text", (col) =>
+      col.primaryKey().references("organizations.id").onDelete("cascade"),
+    )
+    .addColumn("branch_id", "integer", (col) =>
+      col.notNull().references("branches.id"),
+    )
+    .addColumn("locked_at", "integer", (col) => col.notNull())
+    .addColumn("locked_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .execute();
+
+  await db.schema
+    .createIndex("idx_organization_branch_locks_branch")
+    .on("organization_branch_locks")
+    .column("branch_id")
     .execute();
 }

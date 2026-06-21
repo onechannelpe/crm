@@ -6,7 +6,7 @@ export interface WorkflowArtifactsTable {
     | "records_export"
     | "integration_import"
     | "sale_proof"
-    | "negotiation_file";
+    | "rate_revision_file";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
   status:

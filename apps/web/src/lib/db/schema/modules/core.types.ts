@@ -39,7 +39,7 @@ export interface PeopleTable {
 export interface OrganizationsTable {
   id: string;
   ruc: string;
-  name: string;
+  legal_name: string | null;
   giro_negocio: string | null;
   address: string | null;
   district: string | null;
@@ -47,8 +47,12 @@ export interface OrganizationsTable {
   department: string | null;
   phone: string | null;
   email: string | null;
-  locked_branch_id: number | null;
-  locked_at: number | null;
-  locked_by_user_id: number | null;
   created_at: number;
+}
+
+export interface OrganizationBranchLocksTable {
+  organization_id: string;
+  branch_id: number;
+  locked_at: number;
+  locked_by_user_id: number;
 }

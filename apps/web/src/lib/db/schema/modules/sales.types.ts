@@ -1,24 +1,24 @@
 import type { Generated } from "kysely";
 
 import type {
-  AbonoBank,
+  SettlementBank,
   AccountTypeKind,
-  ModalidadCobro,
+  CollectionMode,
 } from "~/contracts/workflow/vocabulary";
 
 export interface WorkflowLeadVenuesTable {
   id: Generated<string>;
   lead_id: string;
-  nombre_comercial: string;
+  trade_name: string;
   pos_quantity: number;
   link_url: string | null;
   online_url: string | null;
-  online_modalidad: ModalidadCobro | null;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  online_collection_mode: CollectionMode | null;
+  address: string;
+  address_reference: string;
+  district: string;
+  province: string;
+  department: string;
   created_at: number;
   created_by: number;
 }
@@ -27,7 +27,7 @@ export interface WorkflowLeadVenueAccountsTable {
   id: Generated<string>;
   venue_id: string;
   currency: "PEN" | "USD";
-  bank: AbonoBank;
+  bank: SettlementBank;
   account_type: AccountTypeKind;
   account_number: string;
   cci: string | null;
@@ -42,6 +42,6 @@ export interface WorkflowAccountTypeKindsTable {
   value: AccountTypeKind;
 }
 
-export interface WorkflowAbonoBanksTable {
-  value: AbonoBank;
+export interface WorkflowSettlementBanksTable {
+  value: SettlementBank;
 }

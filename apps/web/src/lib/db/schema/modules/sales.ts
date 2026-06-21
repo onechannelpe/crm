@@ -7,18 +7,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
-    .addColumn("nombre_comercial", "varchar(255)", (col) => col.notNull())
+    .addColumn("trade_name", "varchar(255)", (col) => col.notNull())
     .addColumn("pos_quantity", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("link_url", "text")
     .addColumn("online_url", "text")
-    .addColumn("online_modalidad", "varchar(20)", (col) =>
-      col.references("workflow_modalidad_cobro_kinds.value"),
+    .addColumn("online_collection_mode", "varchar(20)", (col) =>
+      col.references("workflow_collection_mode_kinds.value"),
     )
-    .addColumn("direccion", "text", (col) => col.notNull())
-    .addColumn("referencia", "text", (col) => col.notNull())
-    .addColumn("distrito", "varchar(100)", (col) => col.notNull())
-    .addColumn("provincia", "varchar(100)", (col) => col.notNull())
-    .addColumn("departamento", "varchar(100)", (col) => col.notNull())
+    .addColumn("address", "text", (col) => col.notNull())
+    .addColumn("address_reference", "text", (col) => col.notNull())
+    .addColumn("district", "varchar(100)", (col) => col.notNull())
+    .addColumn("province", "varchar(100)", (col) => col.notNull())
+    .addColumn("department", "varchar(100)", (col) => col.notNull())
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("created_by", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -42,7 +42,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("workflow_abono_banks")
+    .createTable("workflow_settlement_banks")
     .addColumn("value", "varchar(50)", (col) => col.primaryKey())
     .execute();
 
@@ -56,7 +56,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("workflow_currency_kinds.value"),
     )
     .addColumn("bank", "varchar(50)", (col) =>
-      col.notNull().references("workflow_abono_banks.value"),
+      col.notNull().references("workflow_settlement_banks.value"),
     )
     .addColumn("account_type", "varchar(20)", (col) =>
       col.notNull().references("workflow_account_type_kinds.value"),
