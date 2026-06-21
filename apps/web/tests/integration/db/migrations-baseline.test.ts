@@ -39,7 +39,7 @@ describe("schema baseline", () => {
       `.execute(db);
       const tableNames = new Set(tables.rows.map((row) => row.name));
       expect(tableNames.has("users")).toBe(true);
-      expect(tableNames.has("audit_logs")).toBe(true);
+      expect(tableNames.has("events")).toBe(true);
       expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
       expect(tableNames.has("action_observations")).toBe(true);
@@ -53,9 +53,10 @@ describe("schema baseline", () => {
       `.execute(db);
       const indexNames = new Set(indexes.rows.map((row) => row.name));
       expect(indexNames.has("idx_app_notifications_source_event")).toBe(true);
-      expect(indexNames.has("idx_audit_created_at")).toBe(true);
-      expect(indexNames.has("idx_audit_action_created")).toBe(true);
-      expect(indexNames.has("idx_audit_user_created")).toBe(true);
+      expect(indexNames.has("idx_events_occurred")).toBe(true);
+      expect(indexNames.has("idx_events_type_occurred")).toBe(true);
+      expect(indexNames.has("idx_events_actor_occurred")).toBe(true);
+      expect(indexNames.has("idx_events_entity_occurred")).toBe(true);
       expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
       expect(indexNames.has("idx_report_export_jobs_branch_time")).toBe(true);
     } finally {
@@ -73,7 +74,6 @@ describe("schema baseline", () => {
         .values({ name: "Lima", created_at: Date.now() })
         .execute();
 
-      // Should not throw and should be no-op because hash matches
       await migrateToLatest(db);
 
       const branches = await db

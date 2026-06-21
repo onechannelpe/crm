@@ -6,10 +6,10 @@ import * as files from "./modules/files";
 import * as identity from "./modules/identity";
 import * as integrations from "./modules/integrations";
 import * as leads from "./modules/leads";
-import * as negotiation from "./modules/negotiation";
 import * as notifications from "./modules/notifications";
 import * as observability from "./modules/observability";
 import * as platform from "./modules/platform";
+import * as pricing from "./modules/pricing";
 import * as sales from "./modules/sales";
 import * as search from "./modules/search";
 import * as workflow from "./modules/workflow";
@@ -28,6 +28,6 @@ export const SCHEMA_MODULES = [
   workflow,
   integrations,
   files,
-  negotiation,
+  pricing,
   sales,
 ] as const;
