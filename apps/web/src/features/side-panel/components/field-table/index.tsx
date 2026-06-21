@@ -95,7 +95,7 @@ export function FieldTextValue(props: ParentProps) {
   return <span class={styles.fieldTextValue}>{props.children}</span>;
 }
 
-export function FieldEmptyValue(props: ParentProps) {
+function FieldEmptyValue(props: ParentProps) {
   return <span class={styles.fieldEmptyValue}>{props.children}</span>;
 }
 
@@ -152,6 +152,7 @@ export function RecordInlineCell(
                 <LightIconButton
                   Icon={Pencil}
                   aria-label={edit().ariaLabel}
+                  title={edit().ariaLabel}
                   onClick={(event) => {
                     event.stopPropagation();
                     setEditing(true);

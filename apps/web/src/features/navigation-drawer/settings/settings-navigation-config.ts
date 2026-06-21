@@ -51,6 +51,17 @@ export function createSettingsNavigationSections(
           isHidden: !canAccessPath(options.role, "/settings/capacity-policies"),
         },
         {
+          id: "quotation-policies",
+          label: "Politicas de cotizacion",
+          href: "/settings/quotation-policies",
+          icon: Settings,
+          section: "operations",
+          isHidden: !canAccessPath(
+            options.role,
+            "/settings/quotation-policies",
+          ),
+        },
+        {
           id: "capacity-audit",
           label: "Auditoria de capacidad",
           href: "/settings/capacity-audit",

@@ -13,8 +13,8 @@ import type {
   LeadDetailView,
 } from "~/contracts/workflow/views";
 import {
-  MODALIDAD_COBRO_KINDS,
-  type ModalidadCobro,
+  COLLECTION_MODES,
+  type CollectionMode,
   type ProductScope,
 } from "~/contracts/workflow/vocabulary";
 import { Card, CardContent } from "~/features/side-panel/components/card";
@@ -34,11 +34,10 @@ import {
   addVenueAccountsMutation,
   createVenueMutation,
   saveDigitalPolicyMutation,
-  startSetupExecutionMutation,
   updateVenueMutation,
 } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { AccountsForm } from "./components/accounts-form";
 import { VenueCard } from "./components/venue-card";
@@ -53,16 +52,16 @@ import { buildVenueSubmitInput } from "./model/venue-submit-input";
 
 import styles from "./setup-workspace.module.css";
 
-const MODALIDAD_COBRO_LABELS: Record<ModalidadCobro, string> = {
+const MODALIDAD_COBRO_LABELS: Record<CollectionMode, string> = {
   SUSCRIPCIONES: "Suscripciones",
   ONE_CLIC: "One Click",
   CARGO_UNICO: "Cargo único",
 };
 
 export function SetupWorkspace(props: { data: LeadDetailView }) {
-  const canAddVenue = () => props.data.lead.stage === "SETUP_EXECUTION";
-  const canAddAccounts = () => props.data.lead.stage === "SETUP_EXECUTION";
-  const canEditDigitalPolicy = () => props.data.lead.stage === "SETUP_PLAN";
+  const canAddVenue = () => props.data.lead.stage === "SETUP";
+  const canAddAccounts = () => props.data.lead.stage === "SETUP";
+  const canEditDigitalPolicy = () => props.data.lead.stage === "SETUP";
   const canEditVenue = () =>
     props.data.availableActions.includes("update-venue");
   const [editingVenueId, setEditingVenueId] = createSignal<string | null>(null);
@@ -72,19 +71,19 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
       <Show when={canEditDigitalPolicy()}>
         <DigitalPolicyPanel
           leadId={props.data.lead.id}
-          linkScope={props.data.profile?.linkScope ?? "none"}
-          linkUrl={props.data.profile?.linkUrl ?? null}
-          onlineScope={props.data.profile?.onlineScope ?? "none"}
-          onlineUrl={props.data.profile?.onlineUrl ?? null}
-          onlineModalidad={props.data.profile?.onlineModalidad ?? null}
+          linkScope={props.data.profile.linkScope}
+          linkUrl={props.data.profile.linkUrl}
+          onlineScope={props.data.profile.onlineScope}
+          onlineUrl={props.data.profile.onlineUrl}
+          onlineCollectionMode={props.data.profile.onlineCollectionMode}
         />
       </Show>
 
       <Show when={canAddVenue()}>
         <VenueCreatePanel
           leadId={props.data.lead.id}
-          linkScope={props.data.profile?.linkScope ?? "none"}
-          onlineScope={props.data.profile?.onlineScope ?? "none"}
+          linkScope={props.data.profile.linkScope}
+          onlineScope={props.data.profile.onlineScope}
         />
       </Show>
 
@@ -123,70 +122,15 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
               <VenueEditPanel
                 leadId={props.data.lead.id}
                 venue={venue}
-                linkScope={props.data.profile?.linkScope ?? "none"}
-                onlineScope={props.data.profile?.onlineScope ?? "none"}
+                linkScope={props.data.profile.linkScope}
+                onlineScope={props.data.profile.onlineScope}
                 onClose={() => setEditingVenueId(null)}
               />
             </Show>
           )}
         </For>
       </Show>
-
-      <Show
-        when={props.data.availableActions.includes("start-setup-execution")}
-      >
-        <StartSetupExecutionAction leadId={props.data.lead.id} />
-      </Show>
     </div>
-  );
-}
-
-// Primary transition that closes out the SETUP_PLAN stage. Lives at the foot of
-// the planning surface so it reads as "planning done, begin execution" rather
-// than a detached action in a generic bucket.
-function StartSetupExecutionAction(props: { leadId: string }) {
-  const startSetupExecution = useAction(startSetupExecutionMutation);
-  const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
-
-  async function handleStart() {
-    if (submitting()) return;
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      await startSetupExecution({ leadId: props.leadId });
-      await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(toAppError(err, "Error al iniciar afiliación").publicMessage);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Afiliación" />
-      </RecordDetailSectionHeader>
-      <RecordDetailSectionBody>
-        <RecordDetailSectionActions align="start">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            loading={submitting()}
-            onClick={() => void handleStart()}
-          >
-            Iniciar afiliación
-          </Button>
-        </RecordDetailSectionActions>
-        <Show when={error()}>
-          {(msg) => <p class={styles.error}>{msg()}</p>}
-        </Show>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
   );
 }
 
@@ -196,7 +140,7 @@ function DigitalPolicyPanel(props: {
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
+  onlineCollectionMode: CollectionMode | null;
 }) {
   const saveDigitalPolicy = useAction(saveDigitalPolicyMutation);
   const [linkEnabled, setLinkEnabled] = createSignal(
@@ -213,11 +157,12 @@ function DigitalPolicyPanel(props: {
     props.onlineScope === "per_venue" ? "per_venue" : "shared",
   );
   const [onlineUrl, setOnlineUrl] = createSignal(props.onlineUrl ?? "");
-  const [onlineModalidad, setOnlineModalidad] = createSignal<
-    ModalidadCobro | ""
-  >(props.onlineModalidad ?? "");
+  const [onlineCollectionMode, setOnlineCollectionMode] = createSignal<
+    CollectionMode | ""
+  >(props.onlineCollectionMode ?? "");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [digitalPolicyErrorMessage, setDigitalPolicyErrorMessage] =
+    createSignal<string | null>(null);
 
   const resolvedLinkScope = () => (linkEnabled() ? linkScope() : "none");
   const resolvedOnlineScope = () => (onlineEnabled() ? onlineScope() : "none");
@@ -234,7 +179,7 @@ function DigitalPolicyPanel(props: {
       return "URL de CulqiOnline es requerida cuando la modalidad es compartida";
     }
 
-    if (selectedOnlineScope === "shared" && !onlineModalidad()) {
+    if (selectedOnlineScope === "shared" && !onlineCollectionMode()) {
       return "Modalidad de cobro es obligatoria cuando CulqiOnline es compartido";
     }
 
@@ -247,17 +192,17 @@ function DigitalPolicyPanel(props: {
     const validationError = validate();
 
     if (validationError) {
-      setError(validationError);
+      setDigitalPolicyErrorMessage(validationError);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setDigitalPolicyErrorMessage(null);
 
     try {
       const selectedLinkScope = resolvedLinkScope();
       const selectedOnlineScope = resolvedOnlineScope();
-      const modalidad = onlineModalidad();
+      const collectionMode = onlineCollectionMode();
 
       await saveDigitalPolicy({
         leadId: props.leadId,
@@ -265,15 +210,15 @@ function DigitalPolicyPanel(props: {
         linkUrl: selectedLinkScope === "shared" ? linkUrl().trim() : null,
         onlineScope: selectedOnlineScope,
         onlineUrl: selectedOnlineScope === "shared" ? onlineUrl().trim() : null,
-        onlineModalidad:
-          selectedOnlineScope === "shared" && modalidad ? modalidad : null,
+        onlineCollectionMode:
+          selectedOnlineScope === "shared" && collectionMode
+            ? collectionMode
+            : null,
       });
 
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(
-        toAppError(err, "No se pudo guardar política digital").publicMessage,
-      );
+    } catch (caught) {
+      setDigitalPolicyErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -340,7 +285,7 @@ function DigitalPolicyPanel(props: {
                   value={onlineEnabled()}
                   onChange={(checked) => {
                     setOnlineEnabled(checked);
-                    if (!checked) setOnlineModalidad("");
+                    if (!checked) setOnlineCollectionMode("");
                   }}
                 />
               </FieldInputValue>
@@ -362,7 +307,7 @@ function DigitalPolicyPanel(props: {
                       checked={onlineScope() === "per_venue"}
                       onChange={() => {
                         setOnlineScope("per_venue");
-                        setOnlineModalidad("");
+                        setOnlineCollectionMode("");
                       }}
                     />
                   </RadioGroup>
@@ -385,14 +330,14 @@ function DigitalPolicyPanel(props: {
                 <FieldRow label="Modalidad de cobro" icon={Package}>
                   <FieldInputValue>
                     <RadioGroup>
-                      <For each={MODALIDAD_COBRO_KINDS}>
+                      <For each={COLLECTION_MODES}>
                         {(value) => (
                           <Radio
-                            name="onlineModalidad"
+                            name="onlineCollectionMode"
                             value={value}
                             label={MODALIDAD_COBRO_LABELS[value]}
-                            checked={onlineModalidad() === value}
-                            onChange={() => setOnlineModalidad(value)}
+                            checked={onlineCollectionMode() === value}
+                            onChange={() => setOnlineCollectionMode(value)}
                           />
                         )}
                       </For>
@@ -403,7 +348,7 @@ function DigitalPolicyPanel(props: {
             </Show>
           </FieldTable>
 
-          <Show when={error()}>
+          <Show when={digitalPolicyErrorMessage()}>
             {(msg) => <p class={styles.error}>{msg()}</p>}
           </Show>
 
@@ -432,7 +377,9 @@ function VenueCreatePanel(props: {
   const form = useVenueFormState();
   const [showForm, setShowForm] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [venueCreateErrorMessage, setVenueCreateErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -443,20 +390,20 @@ function VenueCreatePanel(props: {
     });
 
     if (!parsed.ok) {
-      setError(parsed.error);
+      setVenueCreateErrorMessage(parsed.error);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setVenueCreateErrorMessage(null);
 
     try {
       await createVenue({ leadId: props.leadId, ...parsed.value });
       await revalidateWorkflowLead(props.leadId);
       form.reset();
       setShowForm(false);
-    } catch (err) {
-      setError(toAppError(err, "No se pudo registrar la sede").publicMessage);
+    } catch (caught) {
+      setVenueCreateErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -492,7 +439,7 @@ function VenueCreatePanel(props: {
         linkScope={props.linkScope}
         onlineScope={props.onlineScope}
         submitting={submitting()}
-        error={error()}
+        errorMessage={venueCreateErrorMessage()}
         onSubmit={(event) => void handleSubmit(event)}
       />
     </Show>
@@ -509,7 +456,9 @@ function VenueEditPanel(props: {
   const updateVenue = useAction(updateVenueMutation);
   const form = useVenueFormState(toVenueFormValues(props.venue));
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [venueEditErrorMessage, setVenueEditErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -520,12 +469,12 @@ function VenueEditPanel(props: {
     });
 
     if (!parsed.ok) {
-      setError(parsed.error);
+      setVenueEditErrorMessage(parsed.error);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setVenueEditErrorMessage(null);
 
     try {
       await updateVenue({
@@ -535,8 +484,8 @@ function VenueEditPanel(props: {
       });
       await revalidateWorkflowLead(props.leadId);
       props.onClose();
-    } catch (err) {
-      setError(toAppError(err, "No se pudo actualizar la sede").publicMessage);
+    } catch (caught) {
+      setVenueEditErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -544,13 +493,13 @@ function VenueEditPanel(props: {
 
   return (
     <VenueForm
-      title={`Editar sede: ${props.venue.nombreComercial}`}
+      title={`Editar sede: ${props.venue.tradeName}`}
       submitLabel="Guardar cambios"
       form={form}
       linkScope={props.linkScope}
       onlineScope={props.onlineScope}
       submitting={submitting()}
-      error={error()}
+      errorMessage={venueEditErrorMessage()}
       secondaryAction={
         <Button
           type="button"
@@ -569,16 +518,16 @@ function VenueEditPanel(props: {
 
 function toVenueFormValues(venue: LeadDetailVenueView): VenueFormValues {
   return {
-    nombreComercial: venue.nombreComercial,
+    tradeName: venue.tradeName,
     posQuantity: String(venue.posQuantity),
     linkUrl: venue.linkUrl ?? "",
     onlineUrl: venue.onlineUrl ?? "",
-    onlineModalidad: venue.onlineModalidad ?? "",
-    direccion: venue.direccion,
-    referencia: venue.referencia,
-    distrito: venue.distrito,
-    provincia: venue.provincia,
-    departamento: venue.departamento,
+    onlineCollectionMode: venue.onlineCollectionMode ?? "",
+    address: venue.address,
+    addressReference: venue.addressReference,
+    district: venue.district,
+    province: venue.province,
+    department: venue.department,
   };
 }
 
@@ -589,7 +538,9 @@ function AccountsFormPanel(props: {
   const addAccounts = useAction(addVenueAccountsMutation);
   const form = useAccountsFormState();
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [accountsErrorMessage, setAccountsErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -597,12 +548,12 @@ function AccountsFormPanel(props: {
     const parsed = buildAccountsSubmitInput(form);
 
     if (!parsed.ok) {
-      setError(parsed.error);
+      setAccountsErrorMessage(parsed.error);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setAccountsErrorMessage(null);
 
     try {
       await addAccounts({
@@ -613,10 +564,8 @@ function AccountsFormPanel(props: {
 
       await revalidateWorkflowLead(props.leadId);
       form.reset();
-    } catch (err) {
-      setError(
-        toAppError(err, "No se pudieron registrar las cuentas").publicMessage,
-      );
+    } catch (caught) {
+      setAccountsErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -624,10 +573,10 @@ function AccountsFormPanel(props: {
 
   return (
     <AccountsForm
-      venueName={props.venue.nombreComercial}
+      venueName={props.venue.tradeName}
       form={form}
       submitting={submitting()}
-      error={error()}
+      errorMessage={accountsErrorMessage()}
       onSubmit={(event) => void handleSubmit(event)}
     />
   );

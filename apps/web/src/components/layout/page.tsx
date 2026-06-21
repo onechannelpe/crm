@@ -51,10 +51,6 @@ export function AppPageSection(props: BaseProps) {
   );
 }
 
-export function AppInsetPanel(props: BaseProps) {
-  return <div class={cn(styles.insetPanel, props.class)}>{props.children}</div>;
-}
-
 export function AppPageSectionTitle(props: SectionTitleProps) {
   return (
     <div class={cn(styles.sectionTitle, props.class)}>

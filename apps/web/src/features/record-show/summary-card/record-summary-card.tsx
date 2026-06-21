@@ -22,8 +22,8 @@ export function RecordSummaryCard(props: RecordSummaryCardProps) {
         <Building2 size={20} />
       </div>
       <div class={styles.info}>
-        <p class={styles.name}>{props.lead.razonSocial ?? props.lead.ruc}</p>
-        <Show when={props.lead.razonSocial}>
+        <p class={styles.name}>{props.lead.legalName ?? props.lead.ruc}</p>
+        <Show when={props.lead.legalName}>
           <p class={styles.ruc}>{props.lead.ruc}</p>
         </Show>
         <p class={styles.stage}>{props.lead.stage}</p>

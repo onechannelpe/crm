@@ -2,12 +2,12 @@ import { createSignal, For, Show } from "solid-js";
 
 import {
   requestLeadSaleProofDownloadToken,
-  requestNegotiationFileDownloadToken,
+  requestRateRevisionFileDownloadToken,
 } from "~/actions/workflow/files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
-import { type LeadDetailNegotiationRequestView } from "~/contracts/workflow/views";
+import { type LeadDetailRateRevisionView } from "~/contracts/workflow/views";
 import {
   ActivitySection,
   ActivityListCard,
@@ -17,6 +17,7 @@ import {
   ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal } from "./preview-modal";
@@ -28,19 +29,17 @@ import styles from "./files.module.css";
 type FilesCardProps = {
   leadId: string;
   canUpload: boolean;
-  negotiationRequests?: LeadDetailNegotiationRequestView[];
+  rateRevisions?: LeadDetailRateRevisionView[];
 };
 
 function hasDraggedFiles(event: DragEvent): boolean {
-  const types = event.dataTransfer?.types;
-  if (!types) {
-    return false;
-  }
-  return Array.from(types).includes("Files");
+  return Array.from(event.dataTransfer?.types ?? []).includes("Files");
 }
 
 export function FilesCard(props: FilesCardProps) {
-  const [error, setError] = createSignal<string | null>(null);
+  const [fileActionErrorMessage, setFileActionErrorMessage] = createSignal<
+    string | null
+  >(null);
   const [isDraggingFile, setIsDraggingFile] = createSignal(false);
   const [previewState, setPreviewState] = createSignal<{
     file: LeadSaleProofFileView;
@@ -55,64 +54,77 @@ export function FilesCard(props: FilesCardProps) {
     leadId: () => props.leadId,
   });
 
+  const rateRevisions = () => props.rateRevisions ?? [];
+  const revisionFileCount = () =>
+    rateRevisions().reduce(
+      (count, revision) => count + revision.files.length,
+      0,
+    );
+
   async function uploadFiles(files: File[]) {
     if (!props.canUpload || files.length === 0) {
       return;
     }
 
-    setError(null);
+    setFileActionErrorMessage(null);
+
     try {
       await Promise.all(files.map((file) => uploadAttachmentFile(file)));
       await refetch();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo subir el archivo",
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo subir el archivo",
       );
     }
   }
 
   async function handleDownload(artifactId: string) {
-    setError(null);
+    setFileActionErrorMessage(null);
+
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
         artifactId,
       });
+
       window.location.href = `/api/files/download/${token.token}`;
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo descargar el archivo",
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo descargar el archivo",
       );
     }
   }
 
   async function handlePreview(file: LeadSaleProofFileView) {
-    setError(null);
+    setFileActionErrorMessage(null);
+
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
         artifactId: file.artifactId,
       });
+
       setPreviewState({
         file,
         previewUrl: `/api/files/download/${token.token}?inline=1`,
       });
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo abrir la vista previa",
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo abrir la vista previa",
       );
     }
   }
 
-  const negotiationRequests = () => props.negotiationRequests ?? [];
-  const allNegotiationFiles = () =>
-    negotiationRequests().flatMap((req) =>
-      req.files.map((f) => ({ ...f, round: req.round, requestId: req.id })),
-    );
+  async function handleRevisionDownload(leadId: string, artifactId: string) {
+    setFileActionErrorMessage(null);
 
-  async function handleNegotiationDownload(leadId: string, artifactId: string) {
-    setError(null);
-    const result = await requestNegotiationFileDownloadToken({
+    const result = await requestRateRevisionFileDownloadToken({
       leadId,
       artifactId,
     });
@@ -120,25 +132,25 @@ export function FilesCard(props: FilesCardProps) {
     if (result.ok) {
       window.location.href = `/api/files/download/${result.value.token}`;
     } else {
-      setError(result.error.publicMessage);
+      setFileActionErrorMessage(actionErrorMessage(result.error));
     }
   }
 
   return (
     <ActivityTabContainer>
-      <Show when={allNegotiationFiles().length > 0}>
+      <Show when={revisionFileCount() > 0}>
         <ActivitySection
-          title="Revisiones de tasa"
-          count={allNegotiationFiles().length}
+          title="Revisiones de tarifa"
+          count={revisionFileCount()}
         >
           <ActivityListCard>
-            <For each={negotiationRequests()}>
-              {(req) => (
-                <For each={req.files}>
+            <For each={rateRevisions()}>
+              {(revision) => (
+                <For each={revision.files}>
                   {(file) => (
                     <ActivityListRow
                       onClick={() =>
-                        void handleNegotiationDownload(
+                        void handleRevisionDownload(
                           props.leadId,
                           file.artifactId,
                         )
@@ -146,7 +158,9 @@ export function FilesCard(props: FilesCardProps) {
                     >
                       <ActivityRowBody>
                         <ActivityRowTitle>{file.filename}</ActivityRowTitle>
-                        <ActivityRowMeta>Ronda {req.round}</ActivityRowMeta>
+                        <ActivityRowMeta>
+                          Ronda {revision.round}
+                        </ActivityRowMeta>
                       </ActivityRowBody>
                     </ActivityListRow>
                   )}
@@ -154,15 +168,12 @@ export function FilesCard(props: FilesCardProps) {
               )}
             </For>
           </ActivityListCard>
-          <Show when={error()}>
-            {(message) => <p class={styles.error}>{message()}</p>}
-          </Show>
         </ActivitySection>
       </Show>
 
       <ActivitySection
         title="Comprobantes"
-        count={attachments()?.length}
+        count={attachments()?.length ?? 0}
         action={
           <>
             <input
@@ -206,16 +217,23 @@ export function FilesCard(props: FilesCardProps) {
               event.preventDefault();
             }
           }}
-          onDragLeave={(_event) => {
-            dragEnterCount--;
-            if (dragEnterCount === 0) {
-              setIsDraggingFile(false);
+          onDragLeave={(event) => {
+            if (props.canUpload && hasDraggedFiles(event)) {
+              dragEnterCount = Math.max(0, dragEnterCount - 1);
+
+              if (dragEnterCount === 0) {
+                setIsDraggingFile(false);
+              }
             }
           }}
           onDrop={(event) => {
             event.preventDefault();
+
             dragEnterCount = 0;
             setIsDraggingFile(false);
+
+            const files = Array.from(event.dataTransfer?.files ?? []);
+            void uploadFiles(files);
           }}
         >
           <AttachmentList
@@ -227,10 +245,12 @@ export function FilesCard(props: FilesCardProps) {
             onPreview={handlePreview}
           />
         </div>
-        <Show when={error()}>
+
+        <Show when={fileActionErrorMessage()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
       </ActivitySection>
+
       <PreviewModal
         state={previewState()}
         onClose={() => setPreviewState(null)}

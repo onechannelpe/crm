@@ -22,7 +22,9 @@ export function UserPicker(props: UserPickerProps) {
   const [search, setSearch] = createSignal("");
   const [debouncedSearch, setDebouncedSearch] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [selectionErrorMessage, setSelectionErrorMessage] = createSignal<
+    string | null
+  >(null);
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
   let containerRef: HTMLDivElement | undefined;
 
@@ -47,14 +49,16 @@ export function UserPicker(props: UserPickerProps) {
       props.onClose();
       return;
     }
-    setError(null);
+    setSelectionErrorMessage(null);
     setSubmitting(true);
     try {
       await props.onSelect(userId);
       props.onClose();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error al seleccionar usuario",
+    } catch (caught) {
+      setSelectionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "Error al seleccionar usuario",
       );
     } finally {
       setSubmitting(false);
@@ -75,8 +79,8 @@ export function UserPicker(props: UserPickerProps) {
           disabled={submitting()}
         />
       </div>
-      <Show when={error()}>
-        <p class={styles.error}>{error()}</p>
+      <Show when={selectionErrorMessage()}>
+        <p class={styles.error}>{selectionErrorMessage()}</p>
       </Show>
       <ul class={styles.list}>
         <Show

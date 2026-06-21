@@ -24,7 +24,7 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
   );
 
   const displayName = createMemo(
-    () => data()?.lead.razonSocial ?? data()?.lead.ruc ?? "—",
+    () => data()?.lead.legalName ?? data()?.lead.ruc ?? "—",
   );
 
   const currentIndex = createMemo(() => {
