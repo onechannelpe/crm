@@ -1,36 +1,34 @@
-import type { Insertable } from "kysely";
 import { getRequestEvent } from "solid-js/web";
 
-import { rateLimitError } from "~/lib/app-errors";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { Database } from "~/lib/db/types";
-type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { rateLimited, throwDomain } from "~/server/shared/domain-error";
+import type { EventsRepo } from "~/server/shared/repos-events";
 
 interface ActionRateLimitPolicy {
-  /** Max requests per authenticated user per window. */
-  limit: number;
-  /** Max requests from a single source IP per window (guards against credential-stuffing / shared-IP flooding). */
-  ipLimit: number;
+  userLimit: number;
+  sourceIpLimit: number;
   windowMs: number;
 }
 
 export const ACTION_RATE_LIMIT_POLICY = {
-  "leads.request": { limit: 10, ipLimit: 50, windowMs: 60_000 },
-  "search.use": { limit: 120, ipLimit: 300, windowMs: 60_000 },
-  "capacity.request": { limit: 20, ipLimit: 60, windowMs: 60_000 },
-  "capacity.approve": { limit: 60, ipLimit: 180, windowMs: 60_000 },
-  "team.invite.create": { limit: 10, ipLimit: 30, windowMs: 60 * 60_000 },
+  "leads.request": { userLimit: 10, sourceIpLimit: 50, windowMs: 60_000 },
+  "search.use": { userLimit: 120, sourceIpLimit: 300, windowMs: 60_000 },
+  "capacity.request": { userLimit: 20, sourceIpLimit: 60, windowMs: 60_000 },
+  "capacity.approve": { userLimit: 60, sourceIpLimit: 180, windowMs: 60_000 },
+  "team.invite.create": {
+    userLimit: 10,
+    sourceIpLimit: 30,
+    windowMs: 60 * 60_000,
+  },
 } satisfies Record<string, ActionRateLimitPolicy>;
 
 export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
 
 export type RateLimitDeps = {
   actionRateLimits: ActionRateLimitsRepo;
-  auditLogs: {
-    create(values: NewAuditLogRow): unknown;
-  };
+  events: Pick<EventsRepo, "append">;
 };
 
 function resolveRequestIp(): string {
@@ -81,24 +79,19 @@ async function blockWithAudit(params: {
     String(retryAfterSeconds),
   );
 
-  await deps.auditLogs.create({
-    user_id: userId,
-    action: "rate_limit_exceeded",
-    entity_type: "user",
-    entity_id: userId,
-    changes: JSON.stringify({
-      actionName,
-      scope,
-      limit,
-      windowMs,
-      retryAfterMs,
-    }),
-    created_at: now,
+  await deps.events.append({
+    type: "rate_limit_exceeded",
+    entityType: "user",
+    entityId: userId,
+    actorUserId: userId,
+    payload: { actionName, scope, limit, windowMs, retryAfterMs },
+    occurredAt: now,
   });
 
-  throw rateLimitError(
-    `Too many requests for ${actionName}. Try again in ${retryAfterSeconds}s.`,
-    retryAfterSeconds,
+  throwDomain(
+    rateLimited(retryAfterSeconds, {
+      code: "action_rate_limited",
+    }),
   );
 }
 
@@ -120,12 +113,12 @@ export async function checkActionRateLimit(
     policy.windowMs,
   );
 
-  if (userSnapshot.request_count > policy.limit) {
+  if (userSnapshot.request_count > policy.userLimit) {
     await blockWithAudit({
       actionName,
       userId,
       scope: "user",
-      limit: policy.limit,
+      limit: policy.userLimit,
       windowMs: policy.windowMs,
       windowStartedAt: userSnapshot.window_started_at,
       now,
@@ -140,12 +133,12 @@ export async function checkActionRateLimit(
     policy.windowMs,
   );
 
-  if (ipSnapshot.request_count > policy.ipLimit) {
+  if (ipSnapshot.request_count > policy.sourceIpLimit) {
     await blockWithAudit({
       actionName,
       userId,
       scope: "ip",
-      limit: policy.ipLimit,
+      limit: policy.sourceIpLimit,
       windowMs: policy.windowMs,
       windowStartedAt: ipSnapshot.window_started_at,
       now,
