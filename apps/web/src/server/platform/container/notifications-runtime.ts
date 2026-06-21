@@ -1,9 +1,9 @@
 import { createEmailComposer } from "@crm/email-composer";
 import { createMessageChannels } from "@crm/message-channels";
 
-import { getEnvFor } from "~/lib/env";
+import type { NotificationsConfig } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishJob } from "~/lib/redis/publisher";
+import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import { createNotificationProcessor } from "~/server/notifications/processor";
@@ -12,14 +12,17 @@ import type { NotificationIntent } from "~/server/notifications/types";
 
 import type { ServerInfra } from "./infra";
 
-export function createNotificationsRuntime(infra: ServerInfra) {
-  const env = getEnvFor("notifications");
+export function createNotificationsRuntime(
+  infra: ServerInfra,
+  config: NotificationsConfig,
+  doorbell: QueueDoorbell,
+) {
   const channels = createMessageChannels({
-    resendApiKey: env.resendApiKey || undefined,
-    fromEmail: env.emailFrom || undefined,
-    whatsappAccessToken: env.whatsappAccessToken || undefined,
-    whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-    whatsappApiVersion: env.whatsappApiVersion || undefined,
+    resendApiKey: config.resendApiKey || undefined,
+    fromEmail: config.emailFrom || undefined,
+    whatsappAccessToken: config.whatsappAccessToken || undefined,
+    whatsappPhoneNumberId: config.whatsappPhoneNumberId || undefined,
+    whatsappApiVersion: config.whatsappApiVersion || undefined,
   });
   const composer = createEmailComposer();
   const messaging = createMessagingGateway({ channels, composer });
@@ -32,8 +35,8 @@ export function createNotificationsRuntime(infra: ServerInfra) {
       name: "notifications-intents",
       runOnce: () => runProcessor(workerId, 50),
     }),
-    async dispatchPendingJobs(): Promise<void> {
-      await publishJob(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
+    dispatchPendingJobs(): void {
+      doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
     },
     async enqueue(
       intents: NotificationIntent[],

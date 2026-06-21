@@ -1,12 +1,13 @@
-import { config } from "~/lib/config";
+import { uploadsConfig } from "~/lib/env";
 import { startQueueDoorbellSubscriber } from "~/lib/job-queue/doorbell-subscriber";
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { readStoredFile } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
+import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
 
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
@@ -19,7 +20,7 @@ export function startBackgroundJobs() {
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
     readFile: (filePath) =>
-      readStoredFile(config.uploads.storageRoot, filePath),
+      readStoredFile(uploadsConfig().storageRoot, filePath),
   });
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
@@ -39,23 +40,24 @@ export function startBackgroundJobs() {
     }
   };
 
-  // Start account lifecycle maintenance tasks
   startAccountLifecycleMaintenance({
     executor: getServerRuntime().infra.db,
     messaging: getServerRuntime().notifications.messaging,
     invalidateUserSessions: (userId) =>
-      getServerRuntime().auth.sessionService.invalidateUserSessions(userId),
+      getServerRuntime().auth.sessionService.revokeAllForUser(userId),
   });
 
-  // Start recovery scanner
+  startLeadReservationMaintenance({
+    executor: getServerRuntime().infra.db,
+  });
+
   startStaleScanner(30_000);
 
-  // Fallback polling (every 30s)
+  // Periodic draining recovers wakeups missed while Redis is unavailable.
   setInterval(() => {
     runAllQueues();
   }, 30_000);
 
-  // Redis triggered processing
   void startQueueDoorbellSubscriber({
     RECORDS_IMPORT: () => {
       void recordsImportQueue.runOnce();
@@ -71,6 +73,5 @@ export function startBackgroundJobs() {
     },
   });
 
-  // Initial immediate run
   runAllQueues();
 }

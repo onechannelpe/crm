@@ -1,15 +1,15 @@
 export type CleanupErrorHandler = (error: unknown) => void;
 
-export const reportCleanupErrorInDevelopment: CleanupErrorHandler = (error) => {
-  if (process.env.NODE_ENV !== "production") {
+function reportCleanupErrorInDevelopment(error: unknown): void {
+  if (import.meta.env.DEV) {
     console.error("Cleanup task failed:", error);
   }
-};
+}
 
-export const runCleanupTasks = (
+export function runCleanupTasks(
   cleanupTasks: ReadonlyArray<() => void>,
   onError: CleanupErrorHandler = reportCleanupErrorInDevelopment,
-) => {
+): void {
   cleanupTasks.forEach((cleanupTask) => {
     try {
       cleanupTask();
@@ -17,4 +17,4 @@ export const runCleanupTasks = (
       onError(error);
     }
   });
-};
+}

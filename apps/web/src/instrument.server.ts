@@ -1,8 +1,10 @@
 import { init } from "@sentry/bun";
 
-import { getEnvFor } from "~/lib/env";
+import { sentryConfig, validateServerConfig } from "~/lib/env";
 
-const { sentryDsn, sentryTraceSampleRate } = getEnvFor("sentry");
+validateServerConfig();
+
+const { sentryDsn, sentryTraceSampleRate } = sentryConfig();
 
 init({
   dsn: sentryDsn,

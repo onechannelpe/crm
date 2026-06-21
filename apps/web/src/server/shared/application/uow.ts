@@ -10,7 +10,7 @@ export type AppUow<TTx> = {
 
 class UowRollbackError extends Error {
   constructor(readonly error: DomainError) {
-    super(error.message);
+    super("transaction_result_error");
   }
 }
 
