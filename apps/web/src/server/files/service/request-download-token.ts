@@ -1,5 +1,5 @@
-import type { AppContext } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { AppContext } from "~/server/platform/action/context";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { checkArtifactPolicy } from "../policy";
@@ -22,22 +22,14 @@ export async function requestDownloadToken(
 
   const artifact = await repo.artifacts.findById(artifactId);
   if (!artifact) {
-    return Err(
-      domainError("not_found", "artifact_not_found", "Artifact not found"),
-    );
+    return Err(fail("artifact_not_found"));
   }
 
   const policyResult = checkArtifactPolicy(actor, artifact, "artifact.read");
   if (isErr(policyResult)) return policyResult;
 
   if (!DOWNLOAD_READY_STATUSES.has(artifact.status)) {
-    return Err(
-      domainError(
-        "conflict",
-        "artifact_not_downloadable",
-        "Artifact file is not ready",
-      ),
-    );
+    return Err(fail("artifact_not_downloadable"));
   }
 
   const bindingRole =
@@ -47,13 +39,7 @@ export async function requestDownloadToken(
     bindingRole,
   );
   if (!fileAsset) {
-    return Err(
-      domainError(
-        "not_found",
-        "artifact_file_not_found",
-        "File not found for this artifact",
-      ),
-    );
+    return Err(fail("artifact_file_not_found"));
   }
 
   const rawToken = generateDownloadToken();

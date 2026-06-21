@@ -10,14 +10,10 @@ const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
   records_export: ["csv"],
   integration_import: ["csv", "xlsx"],
   sale_proof: ["pdf", "png", "jpg", "jpeg"],
-  negotiation_file: ["xlsx", "xls", "png", "jpg", "jpeg"],
+  rate_revision_file: ["xlsx", "xls", "png", "jpg", "jpeg"],
 };
 
 const MAX_SIZE_OVERRIDES: Partial<Record<ArtifactType, number>> = {};
-export const ABSOLUTE_MAX_UPLOAD_BYTES = Math.max(
-  MAX_SIZE_BYTES_DEFAULT,
-  ...Object.values(MAX_SIZE_OVERRIDES),
-);
 
 const MIME_BY_EXTENSION: Record<string, string> = {
   csv: "text/csv; charset=utf-8",

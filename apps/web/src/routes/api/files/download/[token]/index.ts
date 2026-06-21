@@ -2,7 +2,8 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { buildFileDownloadHeaders } from "~/server/files/headers";
 import { executeDownload } from "~/server/files/service/execute-download";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
+import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 export async function GET(
@@ -23,7 +24,7 @@ export async function GET(
       const kind = result.error.kind;
       const status =
         kind === "not_found" ? 404 : kind === "conflict" ? 410 : 500;
-      return new Response(result.error.message, { status });
+      return new Response(toWire(result.error).message, { status });
     }
 
     const { fileAsset, body } = result.value;

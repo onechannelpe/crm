@@ -2,25 +2,25 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
-import type { NegotiationFileRecord } from "./types";
+import type { RateRevisionFileRecord } from "./types";
 
 type DB = Kysely<Database>;
 
-export function createNegotiationFilesRepo(db: DB) {
+export function createRateRevisionFilesRepo(db: DB) {
   return {
     async insert(input: {
       leadId: string;
-      negotiationRequestId: string;
+      revisionId: string;
       artifactId: string;
       fileAssetId: number;
       uploadedByUserId: number;
       now: number;
     }) {
       const result = await db
-        .insertInto("workflow_negotiation_files")
+        .insertInto("workflow_rate_revision_files")
         .values({
           lead_id: input.leadId,
-          negotiation_request_id: input.negotiationRequestId,
+          revision_id: input.revisionId,
           artifact_id: input.artifactId,
           file_asset_id: input.fileAssetId,
           uploaded_by_user_id: input.uploadedByUserId,
@@ -31,46 +31,42 @@ export function createNegotiationFilesRepo(db: DB) {
       return Number(result.insertId);
     },
 
-    async listByNegotiationRequestId(
-      requestId: string,
-    ): Promise<NegotiationFileRecord[]> {
+    async listByRevisionId(
+      revisionId: string,
+    ): Promise<RateRevisionFileRecord[]> {
       const rows = await db
-        .selectFrom("workflow_negotiation_files")
+        .selectFrom("workflow_rate_revision_files")
         .innerJoin(
           "workflow_artifacts",
           "workflow_artifacts.id",
-          "workflow_negotiation_files.artifact_id",
+          "workflow_rate_revision_files.artifact_id",
         )
         .innerJoin(
           "file_assets",
           "file_assets.id",
-          "workflow_negotiation_files.file_asset_id",
+          "workflow_rate_revision_files.file_asset_id",
         )
         .select([
-          "workflow_negotiation_files.id as id",
-          "workflow_negotiation_files.lead_id as leadId",
-          "workflow_negotiation_files.negotiation_request_id as negotiationRequestId",
-          "workflow_negotiation_files.artifact_id as artifactId",
-          "workflow_negotiation_files.file_asset_id as fileAssetId",
-          "workflow_negotiation_files.uploaded_by_user_id as uploadedByUserId",
-          "workflow_negotiation_files.created_at as createdAt",
+          "workflow_rate_revision_files.id as id",
+          "workflow_rate_revision_files.lead_id as leadId",
+          "workflow_rate_revision_files.revision_id as revisionId",
+          "workflow_rate_revision_files.artifact_id as artifactId",
+          "workflow_rate_revision_files.file_asset_id as fileAssetId",
+          "workflow_rate_revision_files.uploaded_by_user_id as uploadedByUserId",
+          "workflow_rate_revision_files.created_at as createdAt",
           "workflow_artifacts.status as artifactStatus",
           "file_assets.safe_display_filename as safeDisplayFilename",
           "file_assets.detected_mime as detectedMime",
           "file_assets.size_bytes as sizeBytes",
         ])
-        .where(
-          "workflow_negotiation_files.negotiation_request_id",
-          "=",
-          requestId,
-        )
-        .orderBy("workflow_negotiation_files.created_at", "asc")
+        .where("workflow_rate_revision_files.revision_id", "=", revisionId)
+        .orderBy("workflow_rate_revision_files.created_at", "asc")
         .execute();
 
       return rows.map((row) => ({
         id: row.id,
         leadId: row.leadId,
-        negotiationRequestId: row.negotiationRequestId,
+        revisionId: row.revisionId,
         artifactId: row.artifactId,
         fileAssetId: row.fileAssetId,
         uploadedByUserId: row.uploadedByUserId,
@@ -84,33 +80,33 @@ export function createNegotiationFilesRepo(db: DB) {
 
     async findByArtifactId(
       artifactId: string,
-    ): Promise<NegotiationFileRecord | null> {
+    ): Promise<RateRevisionFileRecord | null> {
       const row = await db
-        .selectFrom("workflow_negotiation_files")
+        .selectFrom("workflow_rate_revision_files")
         .innerJoin(
           "workflow_artifacts",
           "workflow_artifacts.id",
-          "workflow_negotiation_files.artifact_id",
+          "workflow_rate_revision_files.artifact_id",
         )
         .innerJoin(
           "file_assets",
           "file_assets.id",
-          "workflow_negotiation_files.file_asset_id",
+          "workflow_rate_revision_files.file_asset_id",
         )
         .select([
-          "workflow_negotiation_files.id as id",
-          "workflow_negotiation_files.lead_id as leadId",
-          "workflow_negotiation_files.negotiation_request_id as negotiationRequestId",
-          "workflow_negotiation_files.artifact_id as artifactId",
-          "workflow_negotiation_files.file_asset_id as fileAssetId",
-          "workflow_negotiation_files.uploaded_by_user_id as uploadedByUserId",
-          "workflow_negotiation_files.created_at as createdAt",
+          "workflow_rate_revision_files.id as id",
+          "workflow_rate_revision_files.lead_id as leadId",
+          "workflow_rate_revision_files.revision_id as revisionId",
+          "workflow_rate_revision_files.artifact_id as artifactId",
+          "workflow_rate_revision_files.file_asset_id as fileAssetId",
+          "workflow_rate_revision_files.uploaded_by_user_id as uploadedByUserId",
+          "workflow_rate_revision_files.created_at as createdAt",
           "workflow_artifacts.status as artifactStatus",
           "file_assets.safe_display_filename as safeDisplayFilename",
           "file_assets.detected_mime as detectedMime",
           "file_assets.size_bytes as sizeBytes",
         ])
-        .where("workflow_negotiation_files.artifact_id", "=", artifactId)
+        .where("workflow_rate_revision_files.artifact_id", "=", artifactId)
         .executeTakeFirst();
 
       if (!row) return null;
@@ -118,7 +114,7 @@ export function createNegotiationFilesRepo(db: DB) {
       return {
         id: row.id,
         leadId: row.leadId,
-        negotiationRequestId: row.negotiationRequestId,
+        revisionId: row.revisionId,
         artifactId: row.artifactId,
         fileAssetId: row.fileAssetId,
         uploadedByUserId: row.uploadedByUserId,
