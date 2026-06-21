@@ -29,6 +29,7 @@ export function InlineFieldEditor(props: InlineFieldEditorProps) {
   const [value, setValue] = createSignal(props.initialValue);
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+
   let containerRef: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
 
@@ -45,23 +46,37 @@ export function InlineFieldEditor(props: InlineFieldEditorProps) {
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
-    if (submitting()) return;
+
+    if (submitting()) {
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
+
     try {
       await props.onSubmit(value());
       props.onClose();
-    } catch (err) {
-      setError(editorErrorMessage(err));
+    } catch (error) {
+      setError(editorErrorMessage(error));
       setSubmitting(false);
     }
   }
 
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key !== "Escape" || submitting()) {
+      return;
+    }
+
+    event.preventDefault();
+    props.onClose();
+  }
+
   return (
-    <div ref={(el) => (containerRef = el)} class={styles.popover}>
-      <form class={styles.form} onSubmit={(e) => void handleSubmit(e)}>
+    <div ref={(element) => (containerRef = element)} class={styles.popover}>
+      <form class={styles.form} onSubmit={(event) => void handleSubmit(event)}>
         <input
-          ref={(el) => (inputRef = el)}
+          ref={(element) => (inputRef = element)}
           class={styles.input}
           type={props.type ?? "text"}
           step={props.step}
@@ -69,18 +84,15 @@ export function InlineFieldEditor(props: InlineFieldEditorProps) {
           placeholder={props.placeholder}
           aria-label={props.ariaLabel}
           value={value()}
-          onInput={(e) => setValue(e.currentTarget.value)}
+          onInput={(event) => setValue(event.currentTarget.value)}
           disabled={submitting()}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.preventDefault();
-              props.onClose();
-            }
-          }}
+          onKeyDown={handleKeyDown}
         />
+
         <Show when={error()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
+
         <div class={styles.actions}>
           <Button
             type="button"
@@ -91,6 +103,7 @@ export function InlineFieldEditor(props: InlineFieldEditorProps) {
           >
             Cancelar
           </Button>
+
           <Button
             type="submit"
             variant="primary"
@@ -118,6 +131,7 @@ export function InlineOptionsEditor<T extends string>(
 ) {
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+
   let containerRef: HTMLDivElement | undefined;
 
   useDismissibleLayer({
@@ -127,26 +141,33 @@ export function InlineOptionsEditor<T extends string>(
   });
 
   async function handleSelect(option: T) {
+    if (submitting()) {
+      return;
+    }
+
     if (option === props.selected) {
       props.onClose();
       return;
     }
+
     setError(null);
     setSubmitting(true);
+
     try {
       await props.onSubmit(option);
       props.onClose();
-    } catch (err) {
-      setError(editorErrorMessage(err));
+    } catch (error) {
+      setError(editorErrorMessage(error));
       setSubmitting(false);
     }
   }
 
   return (
-    <div ref={(el) => (containerRef = el)} class={styles.popover}>
+    <div ref={(element) => (containerRef = element)} class={styles.popover}>
       <Show when={error()}>
         {(message) => <p class={styles.error}>{message()}</p>}
       </Show>
+
       <ul class={styles.list} aria-label={props.ariaLabel}>
         <For each={props.options}>
           {(option) => (
@@ -161,6 +182,7 @@ export function InlineOptionsEditor<T extends string>(
                 onClick={() => void handleSelect(option)}
               >
                 <span>{option}</span>
+
                 <Show when={option === props.selected}>
                   <span class={styles.selectedBadge}>Actual</span>
                 </Show>
