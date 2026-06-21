@@ -1,74 +1,120 @@
 "use server";
 
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-import { isErr } from "~/server/shared/result";
+import { ROLES } from "~/lib/auth/access/rbac";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { isErr, Ok } from "~/server/shared/result";
 import {
   createTeamInvite as createTeamInviteService,
   resendTeamInvite as resendTeamInviteService,
   revokeTeamInvite as revokeTeamInviteService,
 } from "~/server/team/application/invites";
+import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
 
-import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
-
-export async function createTeamInvite(input: {
-  names: string;
-  firstSurname: string;
-  secondSurname: string;
-  email: string;
-  role: string;
-  executiveCategory?: string | null;
-  teamId?: number | null;
-  expiresAt?: number | null;
-}): Promise<{ inviteId: number }> {
-  const safeInput = parseCreateTeamInviteInput(input);
-
+export async function createTeamInvite(
+  input: unknown,
+): Promise<{ inviteId: number; message: string }> {
   return runAction({
-    actionName: "team.invite.create",
+    name: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
-    input: {
-      role: safeInput.role,
-      hasTeamId: safeInput.teamId !== null,
+
+    parse: () => {
+      const command = parseObject(input, validationFail, (r) => ({
+        names: r.str("names"),
+        firstSurname: r.str("firstSurname"),
+        secondSurname: r.str("secondSurname"),
+        email: r.str("email"),
+        role: r.enum("role", ROLES),
+        executiveCategory: r.optStr("executiveCategory"),
+        teamId: r.optNum("teamId"),
+        expiresAt: r.optNum("expiresAt"),
+      }));
+
+      if (isErr(command)) {
+        return command;
+      }
+
+      return validateTeamInviteInput(command.value);
     },
-    execute: (ctx) =>
-      createTeamInviteService(ctx, getServerRuntime().team.invites, safeInput),
+
+    audit: ({ role, teamId }) => ({
+      role,
+      hasTeamId: teamId !== null,
+    }),
+
+    execute: async (ctx, command) => {
+      const result = await createTeamInviteService(
+        ctx,
+        getServerRuntime().team.invites,
+        command,
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ ...result.value, message: "Invitación enviada" });
+    },
   });
 }
 
-export async function resendTeamInvite(inviteId: number): Promise<void> {
-  const parsedInput = parseInviteIdInput(inviteId);
-  if (isErr(parsedInput)) {
-    throw parsedInput.error;
-  }
-
-  await runAction({
-    actionName: "team.invite.resend",
+export async function resendTeamInvite(
+  rawInviteId: unknown,
+): Promise<{ message: string }> {
+  return runAction({
+    name: "team.invite.resend",
     access: { kind: "permission", permission: "hr:manage" },
-    input: { inviteId: parsedInput.value.inviteId },
-    execute: (ctx) =>
-      resendTeamInviteService(
+
+    parse: () =>
+      parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
+        inviteId: r.posInt("inviteId"),
+      })),
+
+    audit: (command) => ({ inviteId: command.inviteId }),
+
+    execute: async (ctx, command) => {
+      const result = await resendTeamInviteService(
         ctx,
         getServerRuntime().team.invites,
-        parsedInput.value,
-      ),
+        command,
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Invitación reenviada" });
+    },
   });
 }
 
-export async function revokeTeamInvite(inviteId: number): Promise<void> {
-  const parsedInput = parseInviteIdInput(inviteId);
-  if (isErr(parsedInput)) {
-    throw parsedInput.error;
-  }
-
-  await runAction({
-    actionName: "team.invite.revoke",
+export async function revokeTeamInvite(
+  rawInviteId: unknown,
+): Promise<{ message: string }> {
+  return runAction({
+    name: "team.invite.revoke",
     access: { kind: "permission", permission: "hr:manage" },
-    input: { inviteId: parsedInput.value.inviteId },
-    execute: (ctx) =>
-      revokeTeamInviteService(
+
+    parse: () =>
+      parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
+        inviteId: r.posInt("inviteId"),
+      })),
+
+    audit: (command) => ({ inviteId: command.inviteId }),
+
+    execute: async (ctx, command) => {
+      const result = await revokeTeamInviteService(
         ctx,
         getServerRuntime().team.invites,
-        parsedInput.value,
-      ),
+        command,
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Invitación revocada" });
+    },
   });
 }

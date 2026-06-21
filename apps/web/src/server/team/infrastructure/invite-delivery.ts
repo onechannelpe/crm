@@ -5,7 +5,7 @@ import { getRequestEvent } from "solid-js/web";
 import type { Role } from "~/lib/auth/access/rbac";
 import { config } from "~/lib/config";
 import { APP_LOCALE } from "~/lib/locale";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 
 export function buildInviteUrl(token: string): string {
   const path = `/login/invite/${encodeURIComponent(token)}`;

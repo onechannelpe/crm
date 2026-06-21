@@ -1,12 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
-import {
-  applyBulkImport,
-  previewBulkCsv,
-  type BulkApplyResult,
-  type BulkPreviewResult,
-} from "~/actions/team/bulk-import";
+import { applyBulkImport, previewBulkCsv } from "~/actions/team/bulk-import";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
@@ -21,10 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { getErrorMessage } from "~/lib/errors";
+import type {
+  BulkApplyResult,
+  BulkPreviewResult,
+} from "~/contracts/team/bulk-import";
 import { readFileText } from "~/lib/file/read-file-text";
 import { APP_LOCALE } from "~/lib/locale";
 import { bulkImportSetupQuery } from "~/lib/queries/team";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "../team-page.module.css";
 
@@ -57,10 +56,8 @@ export function BulkImportSection() {
       const csv = await readFileText(file);
       const data = await previewBulkCsv(csv, role());
       setPreview(data);
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(
-        getErrorMessage(err, "Error al procesar el archivo"),
-      );
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setIsPreviewing(false);
     }
@@ -76,8 +73,8 @@ export function BulkImportSection() {
       setResult(data);
       setCsvFile(null);
       setPreview(null);
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(getErrorMessage(err, "Error al importar usuarios"));
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setIsImporting(false);
     }
