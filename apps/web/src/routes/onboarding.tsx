@@ -8,14 +8,17 @@ import {
   Suspense,
 } from "solid-js";
 
-import { chooseSecurity } from "~/actions/auth/onboarding/choose-security";
-import { completeOnboardingStep } from "~/actions/auth/onboarding/complete-step";
-import { finishPasskeyOnboardingStep } from "~/actions/auth/onboarding/finish-passkey-step";
-import { startPasskeyOnboardingStep } from "~/actions/auth/onboarding/start-passkey-step";
-import { startTotpOnboardingStep } from "~/actions/auth/onboarding/start-totp-step";
+import {
+  completeOnboardingFromCurrentSession,
+  completeOnboardingWithPasskey,
+} from "~/actions/auth/onboarding/complete";
 import { submitOnboardingProfile } from "~/actions/auth/onboarding/submit-profile";
-import { verifyTotpOnboardingStep } from "~/actions/auth/onboarding/verify-totp-step";
 import { getOnboardingRequirements } from "~/actions/auth/policy";
+import { beginPasskeyEnrollment } from "~/actions/auth/security/passkey";
+import {
+  beginTotpEnrollment,
+  finishTotpEnrollment,
+} from "~/actions/auth/security/totp";
 import { Loader } from "~/components/feedback/loading/loader";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { SessionProvider } from "~/components/providers/session-provider";
@@ -133,7 +136,7 @@ function OnboardingContent() {
     }
     setTotpStartAttempted(true);
     setTotpLoading(true);
-    void startTotpOnboardingStep()
+    void beginTotpEnrollment()
       .then((enrollment) => setTotpEnrollment(enrollment))
       .catch((error: unknown) =>
         enqueueErrorSnackBar(actionErrorMessage(error)),
@@ -162,16 +165,8 @@ function OnboardingContent() {
     }
   }
 
-  async function handleChooseSecurity(method: "passkey-step" | "totp-step") {
-    setSubmitting(true);
-    try {
-      const result = await chooseSecurity({ method });
-      navigate(result.redirectTo);
-    } catch (error: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(error));
-    } finally {
-      setSubmitting(false);
-    }
+  function handleChooseSecurity(method: "passkey-step" | "totp-step") {
+    navigate(`/onboarding?step=${method}`);
   }
 
   async function handlePasskeySetup() {
@@ -184,10 +179,10 @@ function OnboardingContent() {
 
     setPasskeyPhase("device");
     try {
-      const { challengeId, options } = await startPasskeyOnboardingStep();
+      const { challengeId, options } = await beginPasskeyEnrollment();
       const response = await createRegistrationResponse(options);
       setPasskeyPhase("server");
-      const result = await finishPasskeyOnboardingStep({
+      const result = await completeOnboardingWithPasskey({
         challengeId,
         response,
       });
@@ -203,7 +198,7 @@ function OnboardingContent() {
     if (totpCode().length < 6) return;
     setTotpLoading(true);
     try {
-      const result = await verifyTotpOnboardingStep({ code: totpCode() });
+      const result = await finishTotpEnrollment(totpCode());
       setRecoveryCodes(result.recoveryCodes);
       enqueueSuccessSnackBar(result.message);
       await refreshCurrentUser();
@@ -218,7 +213,7 @@ function OnboardingContent() {
   async function handleComplete() {
     setSubmitting(true);
     try {
-      const result = await completeOnboardingStep();
+      const result = await completeOnboardingFromCurrentSession();
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
@@ -319,10 +314,8 @@ function OnboardingContent() {
                 hasPasskey={state.current.hasPasskey}
                 totpEnabled={state.current.totpEnabled}
                 securityRequired={state.next.state.securityRequired}
-                onSelectPasskey={() =>
-                  void handleChooseSecurity("passkey-step")
-                }
-                onSelectTotp={() => void handleChooseSecurity("totp-step")}
+                onSelectPasskey={() => handleChooseSecurity("passkey-step")}
+                onSelectTotp={() => handleChooseSecurity("totp-step")}
               />
             </EnterTransition>
           </Show>
