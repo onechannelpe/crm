@@ -31,7 +31,6 @@ export function RecordPage() {
     useLeadRecordPageState();
 
   const canDeleteCompany = createMemo(() => currentUser().role === "superuser");
-
   const detailData = createAsync(() => leadDetailQuery(leadId()));
 
   createEffect(() => {
@@ -97,25 +96,29 @@ export function RecordPage() {
       </PanelList>
 
       <Show when={detailData()}>
-        {(detail) => (
-          <Footer
-            onOpen={() => navigate(`/records/${detail().lead.id}`)}
-            options={{
-              showDeleteCompany: canDeleteCompany(),
-              addToFavoritesDisabled: detail().lead.isFavorite,
-              onAddToFavorites: () => void handleAddToFavorites(),
-              onExportCompany: () => {
-                exportLead(detail().lead);
-                enqueueSuccessSnackBar("Empresa exportada");
-              },
-              onDeleteCompany: () => {
-                enqueueInfoSnackBar(
-                  "Eliminar empresa estará disponible pronto",
-                );
-              },
-            }}
-          />
-        )}
+        {(detail) => {
+          const lead = detail().lead;
+
+          return (
+            <Footer
+              onOpen={() => navigate(`/records/${lead.id}`)}
+              options={{
+                showDeleteCompany: canDeleteCompany(),
+                addToFavoritesDisabled: lead.isFavorite,
+                onAddToFavorites: () => void handleAddToFavorites(),
+                onExportCompany: () => {
+                  exportLead(lead);
+                  enqueueSuccessSnackBar("Empresa exportada");
+                },
+                onDeleteCompany: () => {
+                  enqueueInfoSnackBar(
+                    "Eliminar empresa estará disponible pronto",
+                  );
+                },
+              }}
+            />
+          );
+        }}
       </Show>
     </div>
   );
