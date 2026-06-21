@@ -24,25 +24,25 @@ export function CreateLeadPage() {
 
   const { draftRuc, draftScope, activeTab, setScopeField, setActiveTab } =
     useCreateLeadPageState();
+
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
+
     return /^\d{11}$/.test(value) ? value : null;
   });
 
-  const [bootstrapPreview] = createResource(validRuc, async (ruc) => {
-    if (!ruc) {
-      return null;
-    }
-    return queryLeadBootstrapPreview(ruc);
-  });
+  const [bootstrapPreview] = createResource(validRuc, (ruc) =>
+    queryLeadBootstrapPreview(ruc),
+  );
 
   const latestBootstrapPreview = createMemo(
     () => bootstrapPreview.latest ?? null,
   );
 
-  const previewRazonSocial = createMemo(
+  const previewLegalName = createMemo(
     () => latestBootstrapPreview()?.legalName ?? null,
   );
+
   const previewAddress = createMemo(
     () => latestBootstrapPreview()?.address ?? null,
   );
@@ -50,7 +50,7 @@ export function CreateLeadPage() {
   const { errorMessage, submitting, submit } = createCreateLeadController({
     draftRuc,
     validRuc,
-    previewName: previewRazonSocial,
+    previewName: previewLegalName,
     scope: draftScope,
     currentUser,
     createLead,
@@ -58,7 +58,7 @@ export function CreateLeadPage() {
       navigateTo(
         createLeadRecordDetailSidePanelPage({
           leadId,
-          title: previewRazonSocial() || `RUC ${ruc}`,
+          title: previewLegalName() || `RUC ${ruc}`,
           subtitle: `RUC ${ruc}`,
         }),
         { resetStack: true },
@@ -68,10 +68,10 @@ export function CreateLeadPage() {
   });
 
   const engineStatus = createMemo(() => {
-    const value = validRuc();
+    const ruc = validRuc();
     const preview = latestBootstrapPreview();
 
-    if (!value) {
+    if (!ruc) {
       return "";
     }
 
@@ -87,11 +87,15 @@ export function CreateLeadPage() {
   const recordContext = createMemo<RecordContext>(() => ({
     kind: "draft",
     ruc: draftRuc(),
-    legalName: previewRazonSocial(),
+    legalName: previewLegalName(),
     address: previewAddress(),
     engineStatus: engineStatus(),
-    commercialScope: { values: draftScope(), setField: setScopeField },
+    commercialScope: {
+      values: draftScope(),
+      setField: setScopeField,
+    },
   }));
+
   useScopedHotkey("Mod+Enter", () => void submit(), { allowInInputs: true });
 
   return (
