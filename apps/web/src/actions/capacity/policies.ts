@@ -14,7 +14,7 @@ export async function updateSearchPolicyOverride(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         userId: r.posInt("userId"),
-        monthlyLimit: r.num("monthlySearchLimit"),
+        monthlyLimit: r.posInt("monthlySearchLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
 
@@ -62,7 +62,7 @@ export async function updateSearchPolicyDefault(input: unknown) {
           kind: r.enum("scopeType", SCOPE_TYPES),
           scopeId: r.posInt("scopeId"),
         },
-        monthlyLimit: r.num("monthlySearchLimit"),
+        monthlyLimit: r.posInt("monthlySearchLimit"),
       })),
 
     audit: ({ scope }) => ({

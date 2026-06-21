@@ -19,7 +19,7 @@ export function validateRequestAmount(
 export function validateSearchLimit(
   monthlyLimit: number,
 ): Result<number, DomainError> {
-  if (!Number.isFinite(monthlyLimit) || monthlyLimit <= 0) {
+  if (!Number.isInteger(monthlyLimit) || monthlyLimit < 1) {
     return Err(fail("invalid_search_limit"));
   }
   if (monthlyLimit > config.searchAccess.maxMonthlyLimit) {
