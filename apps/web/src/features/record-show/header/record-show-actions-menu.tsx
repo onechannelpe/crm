@@ -29,43 +29,65 @@ type RecordShowActionsMenuProps = {
 };
 
 export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
-  const [isOpen, setIsOpen] = createSignal(false);
+  const [open, setOpen] = createSignal(false);
   const [menuPosition, setMenuPosition] = createSignal({ top: 0, left: 0 });
+
   let rootRef: HTMLDivElement | undefined;
   let menuRef: HTMLDivElement | undefined;
 
   function updateMenuPosition() {
     if (!rootRef) return;
+
     const rect = rootRef.getBoundingClientRect();
-    setMenuPosition({ top: rect.bottom + 4, left: rect.right });
+
+    setMenuPosition({
+      top: rect.bottom + 4,
+      left: rect.right,
+    });
+  }
+
+  function toggleMenu() {
+    const nextOpen = !open();
+
+    setOpen(nextOpen);
+
+    if (nextOpen) {
+      updateMenuPosition();
+    }
   }
 
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (!isOpen()) return;
+      if (!open()) return;
+
       const target = event.target;
+
       if (!(target instanceof Node)) return;
       if (rootRef?.contains(target) || menuRef?.contains(target)) return;
-      setIsOpen(false);
+
+      setOpen(false);
     };
 
     window.document.addEventListener("pointerdown", handlePointerDown);
+
     onCleanup(() =>
       window.document.removeEventListener("pointerdown", handlePointerDown),
     );
   });
 
   createEffect(() => {
-    if (!isOpen()) return;
+    if (!open()) return;
+
     updateMenuPosition();
 
-    const onViewportChange = () => updateMenuPosition();
-    window.addEventListener("resize", onViewportChange);
-    window.addEventListener("scroll", onViewportChange, true);
+    const handleViewportChange = () => updateMenuPosition();
+
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
 
     onCleanup(() => {
-      window.removeEventListener("resize", onViewportChange);
-      window.removeEventListener("scroll", onViewportChange, true);
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
     });
   });
 
@@ -76,17 +98,14 @@ export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
           <TopBarActionButton
             ariaLabel="Más opciones"
             iconOnly
-            pressed={isOpen()}
-            onClick={() => {
-              const next = !isOpen();
-              setIsOpen(next);
-              if (next) updateMenuPosition();
-            }}
+            pressed={open()}
+            onClick={toggleMenu}
           >
             <DotsVertical size={16} />
           </TopBarActionButton>
         </TopBarTooltip>
-        <Show when={isOpen()}>
+
+        <Show when={open()}>
           <Portal>
             <div
               class={styles.menu}
@@ -107,8 +126,11 @@ export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
                     }}
                     role="menuitem"
                     disabled={item.disabled}
+                    aria-disabled={item.disabled}
                     onClick={() => {
-                      setIsOpen(false);
+                      if (item.disabled) return;
+
+                      setOpen(false);
                       item.onSelect();
                     }}
                   >
