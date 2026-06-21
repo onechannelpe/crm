@@ -1,4 +1,9 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  external,
+  fail,
+  invalid,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";
@@ -31,13 +36,7 @@ export async function refreshInstallationSession(
 
   try {
     if (!isUuid(input.installationId)) {
-      return Err(
-        domainError(
-          "validation",
-          "installation_invalid",
-          "Extension installation ID must be a UUID",
-        ),
-      );
+      return Err(invalid({ code: "installation_invalid" }));
     }
 
     const currentTime = now();
@@ -49,13 +48,7 @@ export async function refreshInstallationSession(
         currentTime,
       );
     if (!session) {
-      return Err(
-        domainError(
-          "forbidden",
-          "session_invalid",
-          "Extension session refresh is invalid or expired",
-        ),
-      );
+      return Err(fail("extension_session_invalid"));
     }
 
     const authSessionActive = await hasActiveAuthSession(
@@ -73,13 +66,7 @@ export async function refreshInstallationSession(
         sync_health: "reauth_required",
         sync_updated_at: currentTime,
       });
-      return Err(
-        domainError(
-          "forbidden",
-          "session_invalid",
-          "Extension session refresh is invalid or expired",
-        ),
-      );
+      return Err(fail("extension_session_invalid"));
     }
 
     const credentials = await issueSessionCredentials(session, currentTime);
@@ -99,30 +86,21 @@ export async function refreshInstallationSession(
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
       return Err(
-        domainError(
-          "external",
-          "misconfigured",
-          "Extension signing keys are not configured",
-        ),
+        external("Extension signing keys are not configured", {
+          code: "misconfigured",
+        }),
       );
     }
     if (isInvalidExtensionToken(error)) {
-      return Err(
-        domainError(
-          "forbidden",
-          "session_invalid",
-          "Extension session token is invalid or expired",
-        ),
-      );
+      return Err(fail("extension_session_invalid"));
     }
 
     return Err(
-      domainError(
-        "external",
-        "unexpected",
+      external(
         error instanceof Error
           ? error.message
           : "Unexpected extension session refresh failure",
+        { code: "unexpected" },
       ),
     );
   }

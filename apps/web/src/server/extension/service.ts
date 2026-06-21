@@ -13,7 +13,6 @@ import { refreshInstallationSession } from "./service/session";
 import type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
 
 export type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
-export { hasActiveAuthSession } from "./service/shared";
 
 export function createExtensionService(
   repos: ExtensionRepos,

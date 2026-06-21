@@ -9,7 +9,7 @@ import styles from "./extension-status-indicator.module.css";
 
 interface ExtensionStatusIndicatorProps {
   extensionState: Accessor<ExecutiveStateSnapshot | null>;
-  extensionError: Accessor<string | null>;
+  extensionErrorMessage: Accessor<string | null>;
   onOpen: () => void;
 }
 
@@ -21,12 +21,12 @@ type ExtensionStatusView = {
 
 export function ExtensionStatusIndicator(props: ExtensionStatusIndicatorProps) {
   const status = (): ExtensionStatusView => {
-    const error = props.extensionError();
-    if (error) {
+    const errorMessage = props.extensionErrorMessage();
+    if (errorMessage) {
       return {
         color: "error",
         label: "Revisar extensión",
-        tooltip: error,
+        tooltip: errorMessage,
       };
     }
 

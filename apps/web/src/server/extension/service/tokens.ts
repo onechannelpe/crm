@@ -4,8 +4,8 @@ import {
 } from "../contracts";
 import { hashExtensionSecretToken, signExtensionToken } from "../crypto";
 
-export const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
-export const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;
+const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
+const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;
 
 export interface InstallationSessionRecord {
   jti: string;
@@ -28,7 +28,7 @@ export interface SessionCredentials {
   expiresAt: number;
 }
 
-export function accessTokenExpiresAt(issuedAt: number): number {
+function accessTokenExpiresAt(issuedAt: number): number {
   return issuedAt + EXTENSION_ACCESS_TOKEN_TTL_MS;
 }
 
@@ -36,11 +36,11 @@ export function installationSessionExpiresAt(issuedAt: number): number {
   return issuedAt + EXTENSION_INSTALLATION_SESSION_TTL_MS;
 }
 
-export function generateRefreshToken(): string {
+function generateRefreshToken(): string {
   return crypto.randomUUID();
 }
 
-export async function signInstallationSessionToken(
+async function signInstallationSessionToken(
   session: InstallationSessionRecord,
   issuedAt: number,
 ): Promise<string> {
