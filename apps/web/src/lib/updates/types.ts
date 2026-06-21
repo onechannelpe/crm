@@ -1,15 +1,15 @@
 import type { Component } from "solid-js";
 
-export const updateKinds = ["release", "technical"] as const;
+const updateKinds = ["release", "technical"] as const;
 export type UpdateKind = (typeof updateKinds)[number];
 
-export const updateCadences = ["nightly", "weekly", "none"] as const;
+const updateCadences = ["nightly", "weekly", "none"] as const;
 export type UpdateCadence = (typeof updateCadences)[number];
 
-export const updateVisibilities = ["internal"] as const;
+const updateVisibilities = ["internal"] as const;
 export type UpdateVisibility = (typeof updateVisibilities)[number];
 
-export const updateFilters = [
+const updateFilters = [
   "all",
   "technical",
   "release-nightly",

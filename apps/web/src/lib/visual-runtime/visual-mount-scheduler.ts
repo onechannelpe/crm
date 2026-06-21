@@ -19,7 +19,7 @@ export type ScheduleVisualMountOptions = {
   timeoutMs?: number;
 };
 
-export type VisualMountScheduler = {
+type VisualMountScheduler = {
   schedule: (
     callback: () => void,
     options?: ScheduleVisualMountOptions,
@@ -94,7 +94,7 @@ function removeJob(queue: VisualMountJob[], job: VisualMountJob) {
   queue.splice(index, 1);
 }
 
-export function createVisualMountScheduler(
+function createVisualMountScheduler(
   host: VisualMountSchedulerHost = getDefaultHost(),
 ): VisualMountScheduler {
   const {
@@ -209,5 +209,5 @@ export function createVisualMountScheduler(
   };
 }
 
-export const visualMountScheduler = createVisualMountScheduler();
+const visualMountScheduler = createVisualMountScheduler();
 export const scheduleVisualMount = visualMountScheduler.schedule;

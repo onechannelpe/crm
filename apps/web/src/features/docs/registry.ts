@@ -57,11 +57,11 @@ export const docs = Object.entries(docModules)
 
 export type DocSlug = (typeof docs)[number]["slug"];
 
-export const docsBySlug = Object.fromEntries(
+const docsBySlug = Object.fromEntries(
   docs.map((entry) => [entry.slug, entry]),
 ) as Record<DocSlug, DocEntry>;
 
-export function isDocSlug(slug: string): slug is DocSlug {
+function isDocSlug(slug: string): slug is DocSlug {
   return Object.hasOwn(docsBySlug, slug);
 }
 

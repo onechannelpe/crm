@@ -4,16 +4,6 @@ export type WebGlPolicyDecision =
 
 export type WebGlPolicyDenialReason = "kill-switch" | "no-webgl-support";
 
-export class WebGlUnavailableError extends Error {
-  readonly reason: WebGlPolicyDenialReason;
-
-  constructor(reason: WebGlPolicyDenialReason) {
-    super(`WebGL is unavailable (${reason})`);
-    this.name = "WebGlUnavailableError";
-    this.reason = reason;
-  }
-}
-
 function readBooleanEnv(value: string | undefined): boolean {
   if (value === undefined) {
     return false;
@@ -23,7 +13,7 @@ function readBooleanEnv(value: string | undefined): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes";
 }
 
-export function isHeavyVisualsKillSwitchEnabled(): boolean {
+function isHeavyVisualsKillSwitchEnabled(): boolean {
   return readBooleanEnv(import.meta.env.VITE_DISABLE_HEAVY_VISUALS);
 }
 
@@ -37,7 +27,7 @@ function isWebGlContext(
   );
 }
 
-export function detectWebGlSupport(): boolean {
+function detectWebGlSupport(): boolean {
   if (cachedSupportProbe !== null) {
     return cachedSupportProbe;
   }
@@ -76,7 +66,7 @@ export function detectWebGlSupport(): boolean {
   }
 }
 
-export function detectPrefersReducedMotion(): boolean {
+function detectPrefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !("matchMedia" in window)) {
     return false;
   }

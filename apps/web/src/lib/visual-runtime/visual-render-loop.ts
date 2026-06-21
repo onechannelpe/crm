@@ -47,12 +47,13 @@ export type CreateVisualRenderLoopOptions = {
   visibilityObserver?: typeof observeElementVisibility;
 };
 
-export const reportVisualRenderLoopErrorInDevelopment: VisualRenderLoopErrorHandler =
-  (error) => {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("Visual render loop failed:", error);
-    }
-  };
+const reportVisualRenderLoopErrorInDevelopment: VisualRenderLoopErrorHandler = (
+  error,
+) => {
+  if (import.meta.env.DEV) {
+    console.error("Visual render loop failed:", error);
+  }
+};
 
 const MAX_FRAME_DELTA_SECONDS = 0.1;
 

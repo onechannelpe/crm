@@ -1,15 +1,10 @@
-export const observeElementsSize = (
-  elements: ReadonlyArray<Element>,
+export function observeElementSize(
+  element: Element,
   onResize: () => void,
-): (() => void) => {
-  if (elements.length === 0) {
-    return () => {};
-  }
-
+): () => void {
   if (typeof ResizeObserver === "function") {
     const resizeObserver = new ResizeObserver(() => onResize());
-
-    elements.forEach((element) => resizeObserver.observe(element));
+    resizeObserver.observe(element);
 
     return () => resizeObserver.disconnect();
   }
@@ -21,9 +16,4 @@ export const observeElementsSize = (
   window.addEventListener("resize", onResize);
 
   return () => window.removeEventListener("resize", onResize);
-};
-
-export const observeElementSize = (
-  element: Element,
-  onResize: () => void,
-): (() => void) => observeElementsSize([element], onResize);
+}
