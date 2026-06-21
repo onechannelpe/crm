@@ -31,11 +31,13 @@ export async function POST(event: APIEvent): Promise<Response> {
           ? 400
           : result.error.code === "handoff_invalid"
             ? 401
-            : result.error.code === "extension_session_invalid"
-              ? 401
-              : result.error.code === "misconfigured"
-                ? 503
-                : 500;
+            : result.error.code === "handoff_claimed_by_other_installation"
+              ? 409
+              : result.error.code === "extension_session_invalid"
+                ? 401
+                : result.error.code === "misconfigured"
+                  ? 503
+                  : 500;
       return Response.json({ error: toWire(result.error).message }, { status });
     }
 
