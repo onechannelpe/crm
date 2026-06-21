@@ -27,20 +27,6 @@ function parseLeadRef(input: unknown) {
   }));
 }
 
-function parseCommercialScope(input: unknown) {
-  return parseObject(input, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-    currentProvider: r.str("currentProvider"),
-    currentDebitRate: r.num("currentDebitRate"),
-    currentCreditRate: r.num("currentCreditRate"),
-    gpv: r.num("gpv"),
-    ticket: r.num("ticket"),
-    giroNegocio: r.str("giroNegocio"),
-    settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
-    posCount: r.num("posCount"),
-  }));
-}
-
 export async function requestLeadCreation(input: unknown) {
   return runAction({
     name: "workflow.register_lead",
@@ -74,7 +60,20 @@ export async function requestEditCommercialScope(input: unknown) {
   return runAction({
     name: "workflow.edit_commercial_scope",
     access: { kind: "auth" },
-    parse: () => parseCommercialScope(input),
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        currentProvider: r.str("currentProvider"),
+        currentDebitRate: r.num("currentDebitRate"),
+        currentCreditRate: r.num("currentCreditRate"),
+        gpv: r.num("gpv"),
+        ticket: r.num("ticket"),
+        giroNegocio: r.str("giroNegocio"),
+        settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
+        posCount: r.num("posCount"),
+      })),
+
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, payload) =>

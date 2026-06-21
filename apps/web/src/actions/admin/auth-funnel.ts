@@ -6,22 +6,8 @@ import type {
 } from "~/contracts/observability/auth-funnel";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import type { DomainError } from "~/server/shared/domain-error";
 import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok, type Result } from "~/server/shared/result";
-
-function parseAuthFunnelInput(
-  raw: unknown,
-): Result<AuthFunnelSnapshotInput, DomainError> {
-  if (raw === undefined || raw === null) return Ok({});
-  return parseObject(raw, validationFail, (r) => ({
-    windowMinutes: r.optNum("windowMinutes") ?? undefined,
-    limit: r.optNum("limit") ?? undefined,
-    eventName: r.optStr("eventName") ?? undefined,
-    method: r.optStr("method") ?? undefined,
-    outcome: r.optStr("outcome") ?? undefined,
-  }));
-}
+import { Ok } from "~/server/shared/result";
 
 export async function getAuthFunnelSnapshot(
   rawParams?: unknown,
@@ -29,9 +15,22 @@ export async function getAuthFunnelSnapshot(
   return runAction({
     name: "admin.auth_funnel.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },
-    parse: () => parseAuthFunnelInput(rawParams),
 
-    execute: (_ctx, input) =>
+    parse: () => {
+      if (rawParams === undefined || rawParams === null) {
+        return Ok({});
+      }
+
+      return parseObject(rawParams, validationFail, (r) => ({
+        windowMinutes: r.optNum("windowMinutes") ?? undefined,
+        limit: r.optNum("limit") ?? undefined,
+        eventName: r.optStr("eventName") ?? undefined,
+        method: r.optStr("method") ?? undefined,
+        outcome: r.optStr("outcome") ?? undefined,
+      }));
+    },
+
+    execute: (_ctx, input: AuthFunnelSnapshotInput) =>
       getServerRuntime().observability.observabilityService.getAuthFunnelSnapshot(
         input,
       ),
