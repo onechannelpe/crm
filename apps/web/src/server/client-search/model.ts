@@ -1,6 +1,14 @@
+import { invalid, type DomainError } from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+
 import type { SunatEconomicActivity } from "./enrichment/sunat/contracts";
 
 export type DocumentType = "dni" | "ruc";
+
+export type EnrichmentTarget = {
+  documentType: DocumentType;
+  documentValue: string;
+};
 
 type Lifecycle = "idle" | "queued" | "running" | "succeeded" | "failed";
 
@@ -48,30 +56,40 @@ function isDigits(value: string): boolean {
   return /^\d+$/.test(value);
 }
 
-export function normalizeEnrichmentInput(input: {
-  documentType: string;
-  documentValue: string;
-}): {
-  documentType: DocumentType;
-  documentValue: string;
-} {
-  const documentType = input.documentType;
-  const documentValue = input.documentValue.trim();
+export function parseDocument(
+  documentType: string,
+  documentValue: string,
+): Result<EnrichmentTarget, DomainError> {
+  const value = documentValue.trim();
 
   if (documentType !== "dni" && documentType !== "ruc") {
-    throw new Error("Invalid document type");
+    return Err(invalid({ code: "enrichment.document_type.invalid" }));
   }
 
   if (documentType === "dni") {
-    if (documentValue.length !== 8 || !isDigits(documentValue)) {
-      throw new Error("Invalid DNI");
+    if (value.length !== 8 || !isDigits(value)) {
+      return Err(invalid({ code: "enrichment.dni.invalid" }));
     }
-    return { documentType, documentValue };
+    return Ok({ documentType, documentValue: value });
   }
 
-  if (documentValue.length !== 11 || !isDigits(documentValue)) {
-    throw new Error("Invalid RUC");
+  if (value.length !== 11 || !isDigits(value)) {
+    return Err(invalid({ code: "enrichment.ruc.invalid" }));
   }
 
-  return { documentType, documentValue };
+  return Ok({ documentType, documentValue: value });
+}
+
+// Throwing facade for trusted internal callers that pass a hardcoded type and
+// an already-validated value. A failure here is a real invariant violation,
+// not user input, so it surfaces as a fault rather than a validation error.
+export function normalizeEnrichmentInput(input: {
+  documentType: string;
+  documentValue: string;
+}): EnrichmentTarget {
+  const parsed = parseDocument(input.documentType, input.documentValue);
+  if (isErr(parsed)) {
+    throw new Error(`invalid enrichment document: ${parsed.error.code}`);
+  }
+  return parsed.value;
 }

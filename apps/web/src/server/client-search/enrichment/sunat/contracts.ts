@@ -18,7 +18,7 @@ export interface SunatEconomicActivity {
 
 export interface SunatRucData {
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;

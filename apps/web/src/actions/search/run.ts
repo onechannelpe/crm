@@ -1,33 +1,38 @@
 "use server";
 
 import type { SearchDirectResult } from "~/contracts/search/results";
-import { requirePermission } from "~/lib/auth/access/session";
+import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { getServerRuntime } from "~/server/runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { isErr } from "~/server/shared/result";
-
-import { mapSearchError } from "./errors";
-import { parseSearchCommand } from "./input";
+import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function searchDirect(
-  intent: unknown,
-  query: unknown,
-  limit?: unknown,
+  input: unknown,
 ): Promise<SearchDirectResult> {
-  const { repos, rateLimitDeps } = getServerRuntime().search;
-  const session = await requirePermission("search:use");
-  await checkActionRateLimit("search.use", session.userId, rateLimitDeps);
+  return runAction({
+    name: "search.use",
+    access: { kind: "permission", permission: "search:use" },
 
-  const cmdResult = parseSearchCommand(session.userId, intent, query, limit);
-  if (isErr(cmdResult)) mapSearchError(cmdResult.error);
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        intent: r.enum("intent", SEARCH_INTENTS),
+        query: r.str("query"),
+        limit: r.optIntRange("limit", { min: 1, max: 100 }) ?? 20,
+      })),
 
-  const result = await runDirectSearch(
-    cmdResult.value,
-    repos,
-    getServerRuntime().engine,
-  );
-  if (isErr(result)) mapSearchError(result.error);
+    audit: (command) => ({ intent: command.intent }),
 
-  return result.value;
+    execute: async (ctx, command) => {
+      const { repos, rateLimitDeps } = getServerRuntime().search;
+      await checkActionRateLimit("search.use", ctx.actor.userId, rateLimitDeps);
+
+      return runDirectSearch(
+        { ...command, actorUserId: ctx.actor.userId },
+        repos,
+        getServerRuntime().engine,
+      );
+    },
+  });
 }

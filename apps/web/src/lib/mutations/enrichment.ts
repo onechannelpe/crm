@@ -5,7 +5,10 @@ import { enrichmentStatusQuery } from "~/lib/queries/enrichment";
 
 export const requestEnrichmentMutation = action(
   async (documentType: string, documentValue: string) => {
-    const jobId = await requestSearchEnrichment(documentType, documentValue);
+    const jobId = await requestSearchEnrichment({
+      documentType,
+      documentValue,
+    });
     return json(
       { jobId },
       {

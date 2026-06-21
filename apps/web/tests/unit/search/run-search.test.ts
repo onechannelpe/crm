@@ -7,11 +7,12 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/server/shared/domain-error";
 import type { SearchResult } from "~/server/shared/engine/types";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 const USER_ID = 1;
+const EXHAUSTED_SEARCH_COMMIT_AMOUNT = 999_999;
 
 function makeRepos() {
   const searchCapacityGrants = makeSearchCapacityGrantsRepo();
@@ -58,10 +59,13 @@ const successEngine = {
 const failEngine = {
   search: async (): Promise<Result<SearchResult[], DomainError>> =>
     Err(
-      domainError("external", "engine_request_failed", "service unavailable", {
-        status: 503,
-        request_id: "req-search-1",
-        engine_error: "service unavailable",
+      external("service unavailable", {
+        code: "engine_request_failed",
+        details: {
+          status: 503,
+          request_id: "req-search-1",
+          engine_error: "service unavailable",
+        },
       }),
     ),
 };
@@ -116,13 +120,10 @@ describe("runDirectSearch", () => {
   it("returns error immediately when capacity is exhausted without calling gateway", async () => {
     const repos = makeRepos();
 
-    // Exhaust capacity by pre-filling commits up to the system default limit
-    // The system default is read from config; we simulate exhaustion by
-    // inserting a large committed reservation directly.
     repos.searchUsageCommits.rows.push({
       id: "pre-existing",
       reservation_id: "pre-res",
-      amount: 999999,
+      amount: EXHAUSTED_SEARCH_COMMIT_AMOUNT,
       created_at: 1_700_000_000_000,
     });
     repos.searchUsageReservations.rows.push({

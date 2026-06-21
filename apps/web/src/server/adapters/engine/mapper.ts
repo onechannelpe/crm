@@ -1,15 +1,10 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import { domainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/server/shared/domain-error";
 
 interface EngineErrorPayload {
   error?: string;
   request_id?: string;
 }
 
-/**
- * Extract error details from response: parse JSON if present, extract correlation ID.
- * Returns {error, request_id} or null if no error payload found.
- */
 async function extractEngineErrorPayload(
   response: Response,
 ): Promise<EngineErrorPayload | null> {
@@ -26,34 +21,31 @@ async function extractEngineErrorPayload(
 
     return json as EngineErrorPayload;
   } catch {
-    // If body parsing fails, just return null; we'll use status code
+    // Malformed engine error bodies fall back to the HTTP status below.
     return null;
   }
 }
 
-/**
- * Map HTTP error response into DomainError.
- * Correlation ID (request_id) flows from response header, then body.
- * Details carry http status, request_id, and engine error message for debugging.
- */
 export async function mapEngineErrorResponse(
   response: Response,
   requestId: string,
 ): Promise<DomainError> {
   const payload = await extractEngineErrorPayload(response);
 
+  // Preserve the strongest available correlation id for downstream diagnostics.
   const headerRequestId = response.headers.get("x-request-id");
   const bodyRequestId = payload?.request_id;
   const correlationId = headerRequestId ?? bodyRequestId ?? requestId;
 
-  return domainError(
-    "external",
-    "engine_request_failed",
+  return external(
     payload?.error ?? `Engine returned status ${response.status}`,
     {
-      request_id: correlationId,
-      http_status: response.status,
-      engine_error: payload?.error,
+      code: "engine_request_failed",
+      details: {
+        request_id: correlationId,
+        http_status: response.status,
+        engine_error: payload?.error,
+      },
     },
   );
 }
@@ -65,8 +57,8 @@ export function mapEngineNetworkError(
   const message =
     error instanceof Error ? error.message : "Engine communication failed";
 
-  return domainError("external", "engine_communication_failed", message, {
-    request_id: requestId,
-    http_status: 0,
+  return external(message, {
+    code: "engine_communication_failed",
+    details: { request_id: requestId, http_status: 0 },
   });
 }

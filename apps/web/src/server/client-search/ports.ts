@@ -23,14 +23,17 @@ export type OverlayRow = {
 
 export type JobRow = Selectable<SearchEnrichmentJobsTable>;
 
+export type EnrichmentJobRequest = {
+  document_type: DocumentType;
+  document_value: string;
+  requested_by_user_id: number;
+  now: number;
+  max_attempts: number;
+};
+
 export interface EnrichmentRepositoryPort {
-  upsertJob(values: {
-    document_type: DocumentType;
-    document_value: string;
-    requested_by_user_id: number;
-    now: number;
-    max_attempts: number;
-  }): Promise<number>;
+  upsertJob(values: EnrichmentJobRequest): Promise<number>;
+  upsertJobs(values: EnrichmentJobRequest[]): Promise<void>;
   leaseJobs(
     limit: number,
     leaseMs: number,

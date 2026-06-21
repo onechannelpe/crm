@@ -1,14 +1,9 @@
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishJob } from "~/lib/redis/publisher";
+import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 
 import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
 
-/**
- * Single canonical enqueue interface for enrichment requests.
- * Idempotent: always succeeds, returns job ID.
- * Called by both UI actions and workflow commands.
- */
 export interface EnrichmentCommand {
   enqueueRequest(
     documentType: string,
@@ -20,6 +15,7 @@ export interface EnrichmentCommand {
 
 export function createEnrichmentCommand(
   repo: EnrichmentRepositoryPort,
+  doorbell: QueueDoorbell,
 ): EnrichmentCommand {
   return {
     async enqueueRequest(
@@ -41,7 +37,8 @@ export function createEnrichmentCommand(
         max_attempts: 5,
       });
 
-      await publishJob(JOB_CHANNELS.ENRICHMENT, jobId);
+      // Persistence is authoritative; Redis only wakes the worker.
+      doorbell.wake(JOB_CHANNELS.ENRICHMENT, jobId);
 
       return jobId;
     },
