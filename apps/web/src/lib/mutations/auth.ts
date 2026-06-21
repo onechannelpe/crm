@@ -4,19 +4,12 @@ import { redirect } from "@solidjs/router";
 import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
-  RequestPasswordResetResult,
-  ResetPasswordResult,
 } from "~/actions/auth/contracts";
 import {
   acceptInvitePasswordStep,
   type AcceptInviteResult,
 } from "~/actions/auth/invite";
-import {
-  passkeyStart,
-  passwordLogin,
-  totpLogin,
-  type TotpLoginSubmissionResult,
-} from "~/actions/auth/login";
+import { passkeyStart, passwordLogin, totpLogin } from "~/actions/auth/login";
 import {
   requestPasswordReset,
   resetPassword,
@@ -35,20 +28,18 @@ export const passkeyStartMutation = action(
 );
 
 export const totpLoginMutation = action(
-  async (formData: FormData): Promise<TotpLoginSubmissionResult> =>
-    totpLogin(formData),
+  async (formData: FormData): Promise<void> => totpLogin(formData),
   "totpLogin",
 );
 
 export const requestPasswordResetMutation = action(
-  async (formData: FormData): Promise<RequestPasswordResetResult> =>
+  async (formData: FormData): Promise<{ ok: true }> =>
     requestPasswordReset(formData),
   "requestPasswordReset",
 );
 
 export const resetPasswordMutation = action(
-  async (formData: FormData): Promise<ResetPasswordResult> =>
-    resetPassword(formData),
+  async (formData: FormData): Promise<{ ok: true }> => resetPassword(formData),
   "resetPassword",
 );
 

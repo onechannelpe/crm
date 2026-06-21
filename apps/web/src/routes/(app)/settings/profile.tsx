@@ -9,19 +9,15 @@ import { ProfileImageInput } from "~/components/settings/ProfileImageInput";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { getErrorMessage } from "~/lib/errors";
 import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
 } from "~/lib/mutations/profile";
 import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
 import { shortName } from "~/lib/users/display-name";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-page.module.css";
-
-function toMessage(error: unknown, fallback: string): string {
-  return getErrorMessage(error, fallback);
-}
 
 export default function ProfilePage() {
   const { currentUser, updateCurrentUser } = useAuthenticatedSession();
@@ -34,7 +30,9 @@ export default function ProfilePage() {
   const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
     null,
   );
-  const [avatarError, setAvatarError] = createSignal<string | null>(null);
+  const [avatarErrorMessage, setAvatarErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   const uploadAvatar = useAction(uploadUserAvatarMutation);
   const removeAvatar = useAction(removeUserAvatarMutation);
@@ -48,43 +46,49 @@ export default function ProfilePage() {
   const avatarMutationPending = () => isUploadingAvatar() || isRemovingAvatar();
   const phoneFormId = "settings-profile-phone-form";
 
-  onCleanup(() => {
+  function clearAvatarPreview() {
     const preview = avatarPreviewUrl();
+
     if (preview) {
       URL.revokeObjectURL(preview);
+      setAvatarPreviewUrl(null);
     }
-  });
+  }
 
-  const saveProfile = async (e: Event) => {
-    e.preventDefault();
+  onCleanup(clearAvatarPreview);
+
+  const savePhone = async (event: SubmitEvent) => {
+    event.preventDefault();
+
     const localPhone = normalizePhoneInput(profilePhone());
     setProfilePhone(localPhone);
+
     if (!isValidPhone(localPhone)) {
       enqueueErrorSnackBar("Ingresa 9 dígitos y que empiece con 9");
       return;
     }
+
     setSavingProfile(true);
+
     try {
-      await updateUserProfile(localPhone);
+      const { message } = await updateUserProfile(localPhone);
+
       updateCurrentUser((existing) => ({
         ...existing,
         phone: localPhone,
       }));
-      enqueueSuccessSnackBar("Perfil actualizado");
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(toMessage(err, "No se pudo actualizar el perfil"));
+
+      enqueueSuccessSnackBar(message);
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setSavingProfile(false);
     }
   };
 
   const uploadProfilePicture = async (file: File) => {
-    setAvatarError(null);
-
-    const previousPreview = avatarPreviewUrl();
-    if (previousPreview) {
-      URL.revokeObjectURL(previousPreview);
-    }
+    setAvatarErrorMessage(null);
+    clearAvatarPreview();
 
     const optimisticPreview = URL.createObjectURL(file);
     setAvatarPreviewUrl(optimisticPreview);
@@ -92,6 +96,7 @@ export default function ProfilePage() {
     try {
       const formData = new FormData();
       formData.set("file", file);
+
       const updated = await uploadAvatar(formData);
 
       setAvatarUrl(updated.avatarUrl);
@@ -100,41 +105,34 @@ export default function ProfilePage() {
         avatarUrl: updated.avatarUrl,
         avatarVersion: updated.avatarVersion,
       }));
-      enqueueSuccessSnackBar("Foto de perfil actualizada");
+      enqueueSuccessSnackBar(updated.message);
+      clearAvatarPreview();
+    } catch (caught: unknown) {
+      clearAvatarPreview();
 
-      URL.revokeObjectURL(optimisticPreview);
-      setAvatarPreviewUrl(null);
-    } catch (error: unknown) {
-      URL.revokeObjectURL(optimisticPreview);
-      setAvatarPreviewUrl(null);
-
-      const message = toMessage(error, "No se pudo subir la foto de perfil");
-      setAvatarError(message);
+      const message = actionErrorMessage(caught);
+      setAvatarErrorMessage(message);
       enqueueErrorSnackBar(message);
     }
   };
 
   const removeProfilePicture = async () => {
-    setAvatarError(null);
-
-    const previousPreview = avatarPreviewUrl();
-    if (previousPreview) {
-      URL.revokeObjectURL(previousPreview);
-      setAvatarPreviewUrl(null);
-    }
+    setAvatarErrorMessage(null);
+    clearAvatarPreview();
 
     try {
       const updated = await removeAvatar();
+
       setAvatarUrl(updated.avatarUrl);
       updateCurrentUser((existing) => ({
         ...existing,
         avatarUrl: null,
         avatarVersion: updated.avatarVersion,
       }));
-      enqueueSuccessSnackBar("Foto de perfil eliminada");
-    } catch (error: unknown) {
-      const message = toMessage(error, "No se pudo eliminar la foto de perfil");
-      setAvatarError(message);
+      enqueueSuccessSnackBar(updated.message);
+    } catch (caught: unknown) {
+      const message = actionErrorMessage(caught);
+      setAvatarErrorMessage(message);
       enqueueErrorSnackBar(message);
     }
   };
@@ -146,7 +144,7 @@ export default function ProfilePage() {
           pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
           initials={getUserInitials(shortName(user()))}
           uploading={avatarMutationPending()}
-          errorMessage={avatarError()}
+          errorMessage={avatarErrorMessage()}
           onUpload={uploadProfilePicture}
           onRemove={removeProfilePicture}
         />
@@ -169,16 +167,16 @@ export default function ProfilePage() {
       >
         <form
           id={phoneFormId}
-          onSubmit={(e) => {
-            void saveProfile(e);
+          onSubmit={(event) => {
+            void savePhone(event);
           }}
         >
           <div class={styles.formGrid}>
             <Input
               label="Teléfono"
               value={profilePhone()}
-              onInput={(e) =>
-                setProfilePhone(normalizePhoneInput(e.currentTarget.value))
+              onInput={(event) =>
+                setProfilePhone(normalizePhoneInput(event.currentTarget.value))
               }
               placeholder="987654321"
             />

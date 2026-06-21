@@ -1,11 +1,10 @@
-import {
-  getStrongAuthStatus,
-  requiresStrongAuthRole,
-} from "~/lib/auth/security/strong-auth-status";
+import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { Phone } from "~/lib/phone/pe-mobile";
+import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -21,12 +20,6 @@ type OnboardingRepos = {
   notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
-export type CompleteOnboardingError =
-  | { kind: "not_found"; code: "user_not_found"; message: string }
-  | { kind: "conflict"; code: "strong_auth_required"; message: string }
-  | { kind: "conflict"; code: "address_already_claimed"; message: string }
-  | { kind: "unexpected"; code: "unexpected"; message: string };
-
 export interface CompleteOnboardingInput {
   userId: UserId;
   phone: Phone;
@@ -40,16 +33,12 @@ export async function completeAccountOnboardingWithRepos(
   repos: OnboardingRepos,
   input: CompleteOnboardingInput,
   deps: Pick<AccountOnboardingDeps, "now"> = {},
-): Promise<Result<void, CompleteOnboardingError>> {
+): Promise<Result<void, DomainError>> {
   const now = deps.now ?? Date.now;
 
   const user = await repos.users.findById(input.userId);
   if (!user) {
-    return Err({
-      kind: "not_found",
-      code: "user_not_found",
-      message: "User not found",
-    });
+    return Err(fail("user_not_found"));
   }
 
   if (user.onboarding_completed_at !== null) {
@@ -61,11 +50,7 @@ export async function completeAccountOnboardingWithRepos(
     requiresStrongAuthRole(user.role) &&
     !strongAuthStatus.hasVerifiedStrongAuth
   ) {
-    return Err({
-      kind: "conflict",
-      code: "strong_auth_required",
-      message: "Strong authentication setup required",
-    });
+    return Err(fail("strong_auth_required"));
   }
 
   const completedAt = now();
@@ -79,11 +64,7 @@ export async function completeAccountOnboardingWithRepos(
     repos,
   );
   if (isErr(bootstrapResult)) {
-    return Err({
-      kind: "conflict",
-      code: "address_already_claimed",
-      message: "Este número de WhatsApp ya está en uso",
-    });
+    return Err(fail("phone_in_use"));
   }
 
   await repos.users.completeOnboarding(user.id, { completedAt });
