@@ -55,9 +55,6 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     () => detail()?.lead != null && hasPermission(user.role, "lead:delete"),
   );
 
-  // The overflow menu shows only when it has at least one option. Permission
-  // maps to an option here, in one place; the menu hides its trigger when the
-  // list is empty.
   const menuItems = createMemo<RecordShowMenuItem[]>(() => {
     const items: RecordShowMenuItem[] = [];
 

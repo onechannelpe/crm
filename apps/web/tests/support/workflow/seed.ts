@@ -202,9 +202,6 @@ type RateProposalSeed = {
   decidedAt?: number | null;
 };
 
-// Direct insert of a rate proposal, bypassing proposeRate. Justified for query/projection
-// tests that need proposals pinned to specific rounds and rates (e.g. asserting the export
-// surfaces the latest version), where driving the real command adds noise without signal.
 export async function seedRateProposal(
   runtime: TestRuntime,
   input: RateProposalSeed,

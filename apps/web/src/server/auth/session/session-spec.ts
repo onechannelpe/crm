@@ -14,10 +14,6 @@ import type { EventsRepo } from "~/server/shared/repos-events";
 
 type UserRow = Selectable<UsersTable>;
 
-/**
- * The minimal user shape needed to mint a session. Flows fetch the user as part
- * of proving identity and hand this subset to `establish`.
- */
 export type SessionUser = Pick<
   UserRow,
   "id" | "branch_id" | "role" | "onboarding_completed_at"
@@ -28,11 +24,6 @@ export interface SessionRequestMetadata {
   userAgent: string | null;
 }
 
-/**
- * A fully-resolved description of the session to mint. Produced by a flow after
- * a factor is proven (and, for login, after the policy decides). `establish` is
- * the only consumer; nothing else builds a session row.
- */
 export interface SessionSpec {
   user: SessionUser;
   sessionClass: SessionClass;
@@ -43,7 +34,6 @@ export interface SessionSpec {
   auditAction?: "login" | "login_passkey";
 }
 
-/** The result of issuing a session: the identity it represents and its token. */
 export interface IssuedSession {
   userId: UserId;
   role: Role;
@@ -87,11 +77,6 @@ export interface SessionUsersPort {
   deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
 }
 
-/**
- * Only the event append `establish` needs. The input stays tied to the repo so
- * call sites match the real shape, but the result is ignored, so the port does
- * not demand the repo's id array (a fake `Promise<void>` suffices).
- */
 export interface SessionEventPort {
   append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
 }

@@ -15,21 +15,6 @@ import type { ScenarioActor, ScenarioActorKey, ScenarioLeadRef } from "./leads";
 import { registerLead } from "./register";
 import { buildDefaultRuc } from "./seed";
 
-/**
- * Command-driven lead builder: the front door for reaching a non-trivial stage.
- *
- * `atStage(stage)` walks the REAL production transitions in order, so a state it
- * produces is one production can actually produce. This is the whole point: a test
- * cannot accidentally construct an impossible lead (e.g. LIVE with no venue accounts).
- * The only QUALIFYING->PRICING path in production is the CSV import round-trip, so the
- * builder drives the importer rather than mutating the row directly.
- *
- * After each hop we re-read the stage and throw a located error if it did not advance.
- * Front-door setup couples to upstream commands (and the import subsystem); the guard
- * turns "a broken acceptRate" into a diagnostic at the builder rather than silent noise
- * in an unrelated assertion downstream.
- */
-
 export type AtStageOptions = {
   key?: string;
   executive?: ScenarioActorKey;
@@ -132,10 +117,6 @@ export function createLeadBuilder(deps: {
     const ruc = options.organization?.ruc ?? buildDefaultRuc(orgKey);
     const legalName = options.organization?.legalName;
 
-    // Organization identity is SUNAT-owned, set only via enrichment. When a test
-    // needs a known legal name we prime the fake engine for this RUC so the
-    // command enriches through the real port instead of writing the column behind
-    // the command's back.
     if (legalName !== undefined && legalName !== null) {
       runtime.engine.company(ruc, { legalName, address: null });
     }

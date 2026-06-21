@@ -12,6 +12,7 @@ import type { SearchResult } from "~/server/shared/engine/types";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 const USER_ID = 1;
+const EXHAUSTED_SEARCH_COMMIT_AMOUNT = 999_999;
 
 function makeRepos() {
   const searchCapacityGrants = makeSearchCapacityGrantsRepo();
@@ -119,13 +120,10 @@ describe("runDirectSearch", () => {
   it("returns error immediately when capacity is exhausted without calling gateway", async () => {
     const repos = makeRepos();
 
-    // Exhaust capacity by pre-filling commits up to the system default limit
-    // The system default is read from config; we simulate exhaustion by
-    // inserting a large committed reservation directly.
     repos.searchUsageCommits.rows.push({
       id: "pre-existing",
       reservation_id: "pre-res",
-      amount: 999999,
+      amount: EXHAUSTED_SEARCH_COMMIT_AMOUNT,
       created_at: 1_700_000_000_000,
     });
     repos.searchUsageReservations.rows.push({

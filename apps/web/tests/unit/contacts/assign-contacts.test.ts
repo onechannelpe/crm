@@ -17,6 +17,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 const USER_ID = 1;
 const BRANCH_ID = 1;
+const EXHAUSTED_ACTIVE_ASSIGNMENTS = 9_999;
 
 function makeCandidate(n: number): RecordCandidate {
   return {
@@ -77,9 +78,7 @@ const emptyEngine = {
 
 describe("assignContacts", () => {
   it("returns 0 requested and 0 assigned when buffer is already full", async () => {
-    // System default bufferTarget is read from config; we simulate full buffer
-    // by setting activeAssignments to a large number.
-    const repos = makeRepos(9999);
+    const repos = makeRepos(EXHAUSTED_ACTIVE_ASSIGNMENTS);
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
       {
@@ -142,7 +141,6 @@ describe("assignContacts", () => {
       .filter((r) => r.status === "cancelled")
       .reduce((s, r) => s + r.amount, 0);
 
-    // committed + cancelled must equal the original reservation amount
     expect(committed + cancelled).toBe(reservations[0].amount);
   });
 
@@ -166,7 +164,6 @@ describe("assignContacts", () => {
     if (!result.ok) throw new Error("Expected success");
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations[0].status).toBe("committed");
-    // No cancelled reservations
     expect(reservations.filter((r) => r.status === "cancelled")).toHaveLength(
       0,
     );

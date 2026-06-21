@@ -111,7 +111,6 @@ describe("action runtime", () => {
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) return;
     expect(result.error.kind).toBe("unauthenticated");
-    // No actor was established, so no telemetry row.
     expect(p.record).not.toHaveBeenCalled();
   });
 
@@ -160,7 +159,6 @@ describe("action runtime", () => {
       code: "provider_down",
       message: "Ocurrió un error inesperado.",
     });
-    // details/cause never reach the wire.
     expect(result.error).not.toHaveProperty("details");
     expect(p.report).toHaveBeenCalledWith(fault);
     expect(p.record).toHaveBeenCalledWith(

@@ -20,7 +20,6 @@ export interface WireError {
   retryAfterSeconds?: number;
 }
 
-// Client fallback for failures that never reached the server wire projection.
 const FALLBACK_MESSAGE = "Ocurrió un error inesperado.";
 
 // Enumerable wire fields make ActionError survive RPC serialization.
@@ -69,12 +68,6 @@ function isWireShaped(error: unknown): error is WireError {
   );
 }
 
-/**
- * Resolves any caught value into a `WireError`. Recognizes an `ActionError`,
- * the serialized wire shape that crosses the RPC boundary, and falls back to a
- * generic internal failure for anything else (so a raw thrown value never leaks
- * its message to the UI).
- */
 export function parseWireError(error: unknown): WireError {
   if (error instanceof ActionError) return error.wire;
   if (isWireShaped(error)) {

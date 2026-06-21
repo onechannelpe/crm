@@ -1,17 +1,5 @@
 import type { DomainErrorKind } from "~/server/shared/domain-error";
 
-/**
- * The single source of truth for user-facing error copy. Each granular code
- * maps to its coarse `kind` and its render-ready Spanish message. The server
- * projects this onto the wire; the client renders `message` verbatim and never
- * owns copy.
- *
- * Only displayed codes belong here. Server faults (`internal`) and third-party
- * faults (`external`) always render the generic message, so they carry no
- * catalog entry; their granular code rides along on `logMessage`/telemetry
- * only. The long tail of auto-derived field-validation codes also stays out:
- * the parser falls back to a generic validation line for anything absent here.
- */
 export const ERROR_CATALOG = {
   // not_found
   lead_not_found: { kind: "not_found", message: "No se encontró el lead." },

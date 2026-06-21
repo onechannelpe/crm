@@ -2,24 +2,12 @@ import { isPlainRecord } from "~/lib/type-guards";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-/**
- * Builds the error value for a failed field read. `field` is the dotted
- * camelCase path from the object root (for example "solesAccount.nroCuenta");
- * the root object itself is reported with an empty string. `reason` is
- * "required" when the value is absent or blank, and "invalid" when it is
- * present but the wrong type or outside an allowed set.
- *
- * Consumers map one path plus reason into their own failure channel, so the
- * same readers serve action commands (DomainError), history replay, and CSV
- * import without each rebuilding the traversal.
- */
+/** Dotted field paths use an empty string for failures at the object root. */
 export type FieldFail<E> = (field: string, reason: "required" | "invalid") => E;
 
 /**
- * Cheap structural constraints for a string list, enforced at the parse
- * boundary before any persistence work. `min` short-circuits to "required"
- * (the field needs at least that many entries); `max` and `unique` are
- * "invalid". Empty entries are always rejected as "invalid".
+ * A list below `min` is required. Empty entries and `max` or `unique`
+ * violations are invalid.
  */
 export type StrListConstraints = {
   min?: number;
@@ -27,12 +15,7 @@ export type StrListConstraints = {
   unique?: boolean;
 };
 
-/**
- * Reads typed fields out of an already-narrowed record. Each method returns
- * the value directly and throws the first failure as a sentinel; parseObject
- * catches it and returns an Err. The throw never escapes the toolkit, so every
- * caller observes a Result and the boundary contract stays in Result<T, E>.
- */
+/** Reader failures are contained by `parseObject` and returned as `Err`. */
 export interface Reader<E> {
   str(field: string): string;
   num(field: string): number;
@@ -51,9 +34,7 @@ export interface Reader<E> {
   optObj<T>(field: string, build: (reader: Reader<E>) => T): T | undefined;
 }
 
-// Sentinel for the short-circuit throw. Holds the already-built failure value
-// so parseObject can surface it without re-deriving anything. Carries unknown
-// because instanceof erases the generic; parseObject restores the type.
+// The sentinel carries unknown because instanceof erases the generic.
 class FieldError {
   constructor(readonly error: unknown) {}
 }
@@ -81,8 +62,6 @@ class RecordReader<E> implements Reader<E> {
     return value;
   }
 
-  // Positive integer: the common shape for ids and counts. A present value that
-  // is not an integer >= 1 is "invalid"; absent is "required".
   posInt(field: string): number {
     const value = this.present(field);
     if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
@@ -183,9 +162,7 @@ class RecordReader<E> implements Reader<E> {
     return this.path ? `${this.path}.${field}` : field;
   }
 
-  // Absent (undefined/null) is "required"; a present value of the wrong type is
-  // the caller's "invalid" to report. Splitting the two keeps the failure code
-  // honest, so telemetry can tell a missing field from a malformed one.
+  // Failure classification distinguishes missing input from malformed input.
   private present(field: string): unknown {
     const value = this.record[field];
     if (value === undefined || value === null) this.reject(field, "required");
@@ -197,12 +174,7 @@ class RecordReader<E> implements Reader<E> {
   }
 }
 
-/**
- * Narrows an untrusted value to a typed object. `build` reads each field
- * through the reader; the first bad field short-circuits to an Err carrying
- * the failure that `fail` produced for that field path. A non-object root is
- * reported as an "invalid" failure on the empty path.
- */
+/** A non-object root is invalid at the empty field path. */
 export function parseObject<T, E>(
   raw: unknown,
   fail: FieldFail<E>,
@@ -232,15 +204,8 @@ function fieldCode(field: string): string {
 }
 
 /**
- * FieldFail binding that turns a path plus reason into a validation
- * DomainError. The code is the snake_case field path, so "tasaActual" yields
- * "tasa_actual_required" and "solesAccount.nroCuenta" yields
- * "soles_account_nro_cuenta_required". Telemetry and tests can assert on a
- * stable, derivable code without hand-maintained strings. The root failure
- * reports "invalid_input".
- *
- * Specific user copy must use `fail(catalogCode)` at the domain boundary.
- * Derived field codes stay technical and render the generic validation copy.
+ * Derived field codes are snake_case and use generic validation copy. Specific
+ * user-facing copy requires a catalogued domain failure.
  */
 export const validationFail: FieldFail<DomainError> = (field, reason) => {
   if (!field) {

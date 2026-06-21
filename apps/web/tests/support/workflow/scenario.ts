@@ -20,15 +20,12 @@ export function createWorkflowScenario(runtime: TestRuntime) {
   });
   const outbox = createWorkflowOutbox(runtime);
 
-  // Front door: reach a stage through the real command transitions.
   const lead = createLeadBuilder({
     runtime,
     resolveActor: (key) => leadApis.actor.by(key),
     importer: imported.importer,
   });
 
-  // Labeled escape hatch: direct DB seeding for bulk setup, query/projection fixtures,
-  // and genuinely unreachable states. Every bypass goes through here so it stays visible.
   const seedDirect = {
     leadAt: (...args: Parameters<typeof leadApis.seedDirectLead.at>) =>
       leadApis.seedDirectLead.at(...args),

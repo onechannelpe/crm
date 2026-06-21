@@ -93,9 +93,6 @@ describe("update venue", () => {
   it("blocks venue updates after setup", async () => {
     const scenario = createWorkflowScenario(runtime);
     const actor = scenario.actor.by("execOne");
-    // atStage("LIVE") reaches LIVE the only way production can: a venue with
-    // completed accounts. No way to construct the impossible "LIVE with an
-    // accountless venue" state the old direct seed produced.
     const lead = await scenario.lead.atStage("LIVE", {
       key: "venue-update-live",
       organization: { key: "venue-update-live" },

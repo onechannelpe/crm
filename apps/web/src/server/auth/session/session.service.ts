@@ -32,22 +32,15 @@ const noopLogger = {
 };
 
 /**
- * The single owner of the session lifecycle. `establish` is the only place that
- * mints a session row + token; `resolve` is the only place that turns a cookie
- * token into an `AuthSession`; `revoke`/`revokeAllForUser` are the only places
- * that destroy sessions. Every auth flow funnels through these. No flow builds,
- * reads, or deletes a session row directly.
+ * Session lifecycle gateway. Auth flows provide a proven `SessionSpec`; this
+ * service owns session persistence, token resolution, refresh, and revocation.
+ * Flows must not access session rows directly.
  */
 export function createSessionService(deps: SessionServiceDeps) {
   const now = deps.now ?? Date.now;
   const logger = deps.logger ?? noopLogger;
 
   return {
-    /**
-     * Mint a new session for an already-proven identity. Writes the session row,
-     * records the optional login audit, and returns the issued token. Step-up and
-     * enrollment re-issue by calling this again with new strong-factor facts.
-     */
     async establish(spec: SessionSpec): Promise<IssuedSession> {
       const identity = mapUserToSessionIdentity(spec.user);
       const token = generateSessionToken();
@@ -92,11 +85,6 @@ export function createSessionService(deps: SessionServiceDeps) {
       };
     },
 
-    /**
-     * Turn a cookie token into the live identity, or null. Validates the token
-     * format, the persisted row, and the user, refreshing activity/expiry as a
-     * side effect. Backed by an in-process cache keyed by session id.
-     */
     async resolve(token: string): Promise<AuthSession | null> {
       if (!isValidTokenFormat(token)) {
         return null;
