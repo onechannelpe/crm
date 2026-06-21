@@ -4,12 +4,6 @@ import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
 
-/**
- * Single canonical enqueue interface for enrichment requests.
- * The job row is the source of truth. Redis publish is a best-effort wakeup
- * after persistence, so callers can rely on the returned job id once this
- * resolves.
- */
 export interface EnrichmentCommand {
   enqueueRequest(
     documentType: string,
@@ -43,6 +37,7 @@ export function createEnrichmentCommand(
         max_attempts: 5,
       });
 
+      // Persistence is authoritative; Redis only wakes the worker.
       doorbell.wake(JOB_CHANNELS.ENRICHMENT, jobId);
 
       return jobId;

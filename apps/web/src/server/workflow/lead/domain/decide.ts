@@ -26,9 +26,6 @@ type TransitionResult = Result<
   DomainError
 >;
 
-// reservationExpiresAt is an explicit override: `undefined` leaves the existing
-// hold untouched, a number re-stamps it (a fresh quotation round), and `null`
-// clears it (the lead left the priced phase).
 function finish(
   state: LeadState,
   events: LeadEvent[],
@@ -94,8 +91,6 @@ export function reassignLead(
   return finish(state, events, input.actor, input.now);
 }
 
-// Back office proposes the Culqi rate. The lead stays in PRICING; the proposal
-// row carries the numbers. The executive then accepts or requests a revision.
 export function proposeRate(
   state: LeadState,
   input: {
@@ -125,7 +120,6 @@ export function proposeRate(
     }),
   ];
 
-  // Each quotation round resets the RUC hold.
   return finish(
     state,
     events,
@@ -135,11 +129,6 @@ export function proposeRate(
   );
 }
 
-// Back office corrects a pending proposal's numbers in place. The command layer
-// owns the proposal entity (it resolves the latest pending proposal and diffs
-// old vs new); the domain owns every lead-state rule: who may correct, the
-// stage, and that the RUC hold is still live. The field-level changes ride on
-// the event so the activity feed and the audit log both show exactly what moved.
 export function editRateProposal(
   state: LeadState,
   input: {
@@ -174,8 +163,6 @@ export function editRateProposal(
   return finish(state, events, input.actor, input.now);
 }
 
-// Inline correction of the commercial scope captured at registration. No stage
-// transition; the owning executive rewrites the profile fields.
 export function editCommercialScope(
   state: LeadState,
   input: { actor: Actor; changes: FieldChange[]; now: number },
@@ -282,7 +269,6 @@ export function reviewLead(
   return finish(state, events, input.actor, input.now);
 }
 
-// The executive confirms the client agreed to the proposed rate.
 export function acceptRate(
   state: LeadState,
   input: { actor: Actor; proposalId: string; now: number },
@@ -311,9 +297,6 @@ export function acceptRate(
   return finish(state, events, input.actor, input.now, null);
 }
 
-// The sweep (or the registration guard) expires a lapsed hold: the lead becomes
-// terminal EXPIRED and releases its RUC. Runs as the system, so there is no
-// actor and no authorization check.
 export function expireReservation(
   state: LeadState,
   input: { now: number },
@@ -374,9 +357,6 @@ export function recordRepLegal(
   return finish(state, events, input.actor, input.now);
 }
 
-// A lead goes LIVE the moment its last unfunded venue is funded. The decider
-// owns that rule from the venue counts; the command only supplies the data, not
-// the conclusion.
 export function addVenueAccounts(
   state: LeadState,
   input: {
@@ -419,8 +399,6 @@ export function addVenueAccounts(
   return finish(state, events, input.actor, input.now);
 }
 
-// The executive rejects the current proposal and asks for a new rate. The lead
-// stays in PRICING (no stage bounce); back office will propose another round.
 export function requestRateRevision(
   state: LeadState,
   input: {
@@ -468,7 +446,6 @@ export function requestRateRevision(
     }),
   ];
 
-  // Requesting a revision is a fresh round, so it resets the RUC hold.
   return finish(
     state,
     events,

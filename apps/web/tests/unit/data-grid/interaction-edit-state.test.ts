@@ -43,8 +43,6 @@ describe("createDataGridInteraction edit state", () => {
 
     interaction.openCellEditor("b", 1);
 
-    // Opening an editor also moves keyboard focus to that cell, so navigation
-    // resumes from there after the editor closes.
     expect(interaction.getCellTabIndex("b", 1)).toBe(0);
     expect(interaction.getCellTabIndex("a", 0)).toBe(-1);
 

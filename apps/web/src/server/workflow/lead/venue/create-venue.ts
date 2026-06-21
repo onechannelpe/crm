@@ -80,9 +80,6 @@ export async function createVenueCommand(
       })
       .executeTakeFirstOrThrow();
 
-    // Adding a venue records a fact; it does not change the lead's lifecycle, so
-    // it appends without taking the version lock (concurrent venue adds on one
-    // lead must not collide on optimistic concurrency).
     const appended = await ctx.appendFacts(venueEvents.value);
 
     if (!appended.ok) {

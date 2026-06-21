@@ -157,14 +157,9 @@ export function resolveAvailableActions(
   if (caps.has("interact")) {
     actions.push("log-call", "add-note");
   }
-  // Back office proposes when the lead is in pricing and there is no proposal
-  // currently awaiting the executive's response.
   if (caps.has("propose-rate") && inPricing && !meta.hasActivePendingProposal) {
     actions.push("propose-rate");
   }
-  // While a proposal is awaiting the executive, back office can still correct it
-  // in place (same permission as proposing). This is the escape hatch for a
-  // typo, so it does not need the executive to bounce the round back.
   if (caps.has("propose-rate") && inPricing && meta.hasActivePendingProposal) {
     actions.push("edit-rate-proposal");
   }

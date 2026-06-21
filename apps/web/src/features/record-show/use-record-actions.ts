@@ -33,9 +33,6 @@ function exportLeadAsJson(lead: LeadDetailLeadView) {
   URL.revokeObjectURL(url);
 }
 
-// Lead actions shared by the full-page header and the side-panel footer.
-// Owns the favorites mutation/revalidate wiring and JSON export; callers
-// layer their own UX (snackbars) on top.
 export function useLeadActions() {
   const addFavorite = useAction(addLeadToFavoritesMutation);
   const removeFavorite = useAction(removeLeadFromFavoritesMutation);
@@ -44,8 +41,6 @@ export function useLeadActions() {
   const [favoriteBusy, setFavoriteBusy] = createSignal(false);
   const [deleteBusy, setDeleteBusy] = createSignal(false);
 
-  // Soft-deletes the lead and refreshes the list so it drops out of active
-  // views. Callers own the post-delete navigation away from the record.
   async function deleteLead(leadId: string): Promise<void> {
     if (deleteBusy()) {
       return;

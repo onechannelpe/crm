@@ -35,7 +35,7 @@ export async function resolveLeadRegistration(input: {
   ruc: string;
   executiveId: number;
 }): Promise<Result<LeadRegistrationResolution, DomainError>> {
-  const existingLead = await input.deps.leads.findByRuc(input.ruc);
+  const existingLead = await input.deps.leads.findActiveByRuc(input.ruc);
   if (!existingLead) {
     return Ok({ kind: "create" });
   }

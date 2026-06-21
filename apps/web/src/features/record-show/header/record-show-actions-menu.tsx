@@ -28,9 +28,6 @@ type RecordShowActionsMenuProps = {
   items: RecordShowMenuItem[];
 };
 
-// Overflow (•••) menu for the record header. The trigger renders only when at
-// least one option is available, so callers gate visibility by including or
-// omitting items rather than by wrapping this component in their own Show.
 export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
   const [isOpen, setIsOpen] = createSignal(false);
   const [menuPosition, setMenuPosition] = createSignal({ top: 0, left: 0 });

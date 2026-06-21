@@ -1,12 +1,4 @@
-// The events spine's shared vocabulary. Every domain occurrence (lead lifecycle,
-// auth/security actions, invites, capacity decisions) is one row in `events`.
-// Two read models project from it: the per-entity activity feed and the
-// cross-entity audit explorer. This module owns the field-diff atom and its
-// serialization so producers and both readers can never disagree.
-
-// A field-level change records the raw before/after of one field. Values stay
-// typed (booleans stay booleans) so the durable log is locale- and
-// presentation-independent; display labels resolve at read time below.
+// Stored values remain presentation-independent; labels resolve when read.
 export type FieldChangeValue = string | number | boolean | null;
 
 export type FieldChange = {
@@ -15,9 +7,7 @@ export type FieldChange = {
   to: FieldChangeValue;
 };
 
-// Display labels for diffable fields. Stored changes keep stable field keys
-// only; labels live here so renaming a label never rewrites history and every
-// surface reads the same wording.
+// Read-time labels can change without rewriting stored field keys.
 const FIELD_LABELS: Record<string, string> = {
   paybackPricing: "Payback",
   proposedDebitRate: "T. débito",
@@ -50,9 +40,6 @@ function toChangeValue(value: unknown): FieldChangeValue {
   return null;
 }
 
-// Diff two snapshots over a set of keys, keeping only the fields that moved. An
-// empty result means "nothing changed", which callers use to skip the whole
-// occurrence (no event, no audit row, no version bump).
 export function diffFields<T>(
   prev: Partial<T> | undefined,
   next: T,
@@ -108,9 +95,7 @@ export function parseFieldChanges(raw: string | null): FieldChange[] {
   }
 }
 
-// Per-type event data (a session id, an invite email, rate-limit details). Kept
-// as opaque JSON because it is heterogeneous by event type; the field diff is
-// the structured part. Also used for telemetry input summaries.
+// Event-specific payloads remain opaque because their data is heterogeneous.
 export function serializeEventPayload(payload?: unknown): string | null {
   if (payload === null || payload === undefined) return null;
   return JSON.stringify(payload);

@@ -9,11 +9,6 @@ import type { LeadState } from "~/server/workflow/lead/domain/state";
 
 type Actor = { userId: number; role: Role };
 
-// Interactions are timeline facts, not state transitions. They authorize against
-// the lead and emit one event, but they never evolve the aggregate or take its
-// version: two executives logging activity on the same lead must not collide on
-// optimistic concurrency. The write path appends these events without the
-// version-checked lead update.
 export function recordNote(
   state: LeadState,
   input: { actor: Actor; body: string; now: number },

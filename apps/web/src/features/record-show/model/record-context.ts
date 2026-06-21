@@ -19,8 +19,7 @@ export type LeadRecordContext = {
 export type DraftRecordContext = {
   kind: "draft";
   ruc: string;
-  // Identity is resolved from the SUNAT preview and shown read-only; it is never
-  // submitted (the server is the single owner). Null until the preview resolves.
+  // Enrichment owns organization identity; draft forms display but never submit it.
   legalName: string | null;
   address: string | null;
   engineStatus: string;

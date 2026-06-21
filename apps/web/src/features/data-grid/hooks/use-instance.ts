@@ -310,7 +310,6 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
     closeCellEditor() {
       const cell = editingCell();
       setEditingCell(undefined);
-      // Return focus to the cell so keyboard navigation continues from here.
       if (cell) {
         focusRegisteredCell(cell.rowId, cell.columnIndex);
       }
@@ -363,8 +362,6 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
         return;
       }
 
-      // Horizontal navigation changes columns. Vertical navigation below keeps
-      // the column fixed.
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         const lastColumnIndex = options.columnCount() - 1;
         if (lastColumnIndex < 0) {

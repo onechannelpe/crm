@@ -47,14 +47,13 @@ export function startBackgroundJobs() {
       getServerRuntime().auth.sessionService.revokeAllForUser(userId),
   });
 
-  // Release leads whose quotation hold on a RUC has lapsed.
   startLeadReservationMaintenance({
     executor: getServerRuntime().infra.db,
   });
 
   startStaleScanner(30_000);
 
-  // Fallback: if no Redis doorbell fires, queues are still drained on each tick.
+  // Periodic draining recovers wakeups missed while Redis is unavailable.
   setInterval(() => {
     runAllQueues();
   }, 30_000);

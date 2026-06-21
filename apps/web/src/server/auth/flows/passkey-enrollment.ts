@@ -33,12 +33,7 @@ export function beginPasskeyEnrollment(
   });
 }
 
-/**
- * Register a passkey credential for a user without touching their session. The
- * onboarding flow uses this directly: the final app session is established by
- * `completeOnboarding`, so enrolling a credential here must not mint a session
- * of its own (doing both would double-issue).
- */
+// Onboarding issues its session after all steps complete; enrollment must not double-issue.
 export async function enrollPasskey(
   repos: AuthOnboardingRepos,
   input: {
@@ -62,12 +57,6 @@ export async function enrollPasskey(
   return Ok(undefined);
 }
 
-/**
- * Enroll a passkey for an already-authenticated user and re-establish their
- * session as a passkey step-up. Used by the security settings flow, where the
- * user already holds an app session that should now reflect the new strong
- * factor.
- */
 export async function finishPasskeyEnrollment(
   repos: AuthOnboardingRepos,
   input: {

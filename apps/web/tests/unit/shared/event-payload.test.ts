@@ -1,11 +1,33 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  diffFields,
   parseFieldChanges,
   serializeEventPayload,
   serializeFieldChanges,
   type FieldChange,
 } from "~/contracts/events";
+
+describe("field changes", () => {
+  it("returns only changed keys with typed values", () => {
+    expect(
+      diffFields(
+        { enabled: false, count: 2, label: "same" },
+        { enabled: true, count: 3, label: "same" },
+        ["enabled", "count", "label"],
+      ),
+    ).toEqual([
+      { field: "enabled", from: false, to: true },
+      { field: "count", from: 2, to: 3 },
+    ]);
+  });
+
+  it("returns no changes for equal snapshots", () => {
+    expect(
+      diffFields({ status: "OPEN" }, { status: "OPEN" }, ["status"]),
+    ).toEqual([]);
+  });
+});
 
 describe("event payload serialization", () => {
   it("serializes undefined or null payload as null", () => {

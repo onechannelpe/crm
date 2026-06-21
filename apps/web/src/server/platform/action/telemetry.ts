@@ -11,7 +11,6 @@ import type { AppContext } from "./context";
  */
 export type AuditFields = Record<string, string | number | boolean | null>;
 
-// The observability service owns the persisted shape; the runtime just fills it.
 export type TelemetryRow = RecordActionObservationInput;
 
 export type TelemetryContext = {

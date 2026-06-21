@@ -13,8 +13,6 @@ import {
 
 import { coerceSettlementBank, type CommercialScopeFormValues } from "./values";
 
-// Shared by the create draft and inline scope corrections. Renders rows only;
-// the parent owns the surrounding FieldTable or form.
 export function CommercialScopeFields(props: {
   values: CommercialScopeFormValues;
   onChange: <K extends keyof CommercialScopeFormValues>(

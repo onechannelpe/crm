@@ -11,10 +11,6 @@ import {
 } from "~/actions/team/invites";
 import { ActionError } from "~/lib/wire-error";
 
-// Actions validate the untrusted payload before resolving the actor, so a
-// malformed request is rejected without any session or database work. The
-// rejection is an ActionError carrying a stable granular `code` the client
-// localizes on; assert on the code rather than the wording.
 async function rejectionCode(run: Promise<unknown>): Promise<unknown> {
   try {
     await run;

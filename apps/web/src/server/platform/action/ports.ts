@@ -4,12 +4,7 @@ import { getServerRuntime } from "~/server/platform/container";
 
 import type { TelemetryRow } from "./telemetry";
 
-/**
- * The runtime's side-effecting dependencies, injected so the pipeline stays
- * pure and unit tests pass fakes instead of mocking modules. `report` owns the
- * Sentry capture policy; `record` owns the telemetry write; `now` is the single
- * clock for `startedAt` and durations.
- */
+// Injection isolates side effects and gives tests a deterministic clock.
 export type RuntimePorts = {
   now: () => number;
   report: (error: unknown) => void;

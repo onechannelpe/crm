@@ -57,7 +57,7 @@ export async function applyLeadMutation(input: {
   now: number;
 }): Promise<LeadMutationResult> {
   const repos = createWorkflowRepos(input.executor);
-  const lead = await repos.leads.findByRuc(input.row.ruc);
+  const lead = await repos.leads.findActiveByRuc(input.row.ruc);
 
   if (!lead) {
     await markImportRowFailed({

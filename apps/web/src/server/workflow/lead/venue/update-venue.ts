@@ -79,8 +79,6 @@ export async function updateVenueCommand(
       department: input.department,
     });
 
-    // Editing a venue records a fact; it does not change the lead's lifecycle, so
-    // it appends without taking the version lock.
     const appended = await ctx.appendFacts(venueEvents.value);
 
     if (!appended.ok) {

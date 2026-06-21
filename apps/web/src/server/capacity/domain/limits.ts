@@ -2,14 +2,6 @@ import { config } from "~/lib/config";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-/**
- * The capacity bounds invariants. The action boundary proves each value is a
- * finite number; these own the policy ceilings and positivity rules, so every
- * use-case that writes an amount or limit enforces them identically. Ceilings
- * live with `config` rather than the database, so they are validated here and
- * nowhere else.
- */
-
 const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function validateRequestAmount(

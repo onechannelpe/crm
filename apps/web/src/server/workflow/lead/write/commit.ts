@@ -41,10 +41,6 @@ async function replaceActiveAssignment(
     .execute();
 }
 
-// Applies one lead lifecycle transition: the version-checked snapshot update, the
-// optional active-assignment swap, and the event-log append.
-// Returns `concurrency_conflict` when another writer moved the lead first; the
-// runner turns that into a rollback so no child write survives the conflict.
 export async function commitTransition(
   tx: DatabaseExecutor,
   transition: LeadTransition,
@@ -84,10 +80,7 @@ export async function commitTransition(
   return Ok({ eventIds });
 }
 
-// Appends timeline facts (notes, calls, registration) without taking the lead
-// version lock: multiple actors recording activity on one lead must not collide
-// on optimistic concurrency. The lead row is only touched to advance
-// `updated_at`/`updated_by`; a deleted lead rejects the append.
+// Timeline facts avoid the version lock so concurrent activity can coexist.
 export async function appendFacts(
   tx: DatabaseExecutor,
   events: LeadEvent[],

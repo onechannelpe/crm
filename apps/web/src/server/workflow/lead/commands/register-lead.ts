@@ -58,7 +58,7 @@ export async function registerLead(
   // Lazy release: if the RUC is still held by a lapsed lead the sweep has not
   // retired yet, expire it now so this registration sees the RUC as available
   // instead of waiting for the next sweep tick.
-  const heldLead = await repos.leads.findByRuc(ruc.value);
+  const heldLead = await repos.leads.findActiveByRuc(ruc.value);
 
   if (heldLead && isReservationLapsed(heldLead, now)) {
     const released = await expireLeadReservation(
@@ -171,9 +171,6 @@ export async function registerLead(
       assignedAt: ctx.now,
     });
 
-    // Registration is an append-only birth: the lead row is freshly inserted, so
-    // there is no prior version to lock. The `lead_registered` event drives the
-    // SUNAT enrichment reactor downstream.
     const appended = await ctx.appendFacts([
       createHistoryEvent({
         leadId,

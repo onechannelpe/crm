@@ -37,7 +37,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .columns(["actor_user_id", "occurred_at"])
     .execute();
 
-  // Drives entity-scoped activity and audit lookups.
   await db.schema
     .createIndex("idx_events_entity_occurred")
     .on("events")

@@ -20,8 +20,6 @@ export type ActionStepUpRequirement = {
   stepUp?: "recent_strong_auth";
 };
 
-// Identity. A failure here happens before an actor is known, so the runtime
-// surfaces it without a telemetry row. "session" skips the onboarding gate.
 export function authenticateAccess(
   access: ActionAccess,
 ): Promise<Result<AuthSession, DomainError>> {
@@ -47,9 +45,6 @@ function authorizeFor(
   }
 }
 
-// Authorization + step-up. The actor is known here, so the runtime records a
-// telemetry row for any failure (a denied attempt by an identified actor is an
-// auditable event).
 export function authorizeAccess(
   actor: AuthSession,
   access: ActionAccess,

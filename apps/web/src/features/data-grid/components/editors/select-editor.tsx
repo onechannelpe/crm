@@ -7,8 +7,6 @@ export type GridSelectOption<V extends string> = {
   label: string;
 };
 
-// Selection is explicit: choosing an option commits, Escape cancels, and outside
-// dismissal commits nothing.
 export function GridSelectEditor<V extends string>(props: {
   options: readonly GridSelectOption<V>[];
   selected?: V | null;

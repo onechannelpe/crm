@@ -18,11 +18,9 @@ import type {
 export type LeadRepository = {
   insert(values: LeadDraft): Promise<string>;
   findById(id: string): Promise<LeadState | undefined>;
-  // Includes soft-deleted leads. Only the delete command needs this, to make
-  // re-deletion an idempotent no-op instead of a not-found error.
   findByIdIncludingDeleted(id: string): Promise<LeadState | undefined>;
   findCommercialScope(leadId: string): Promise<LeadCommercialScope | undefined>;
-  findByRuc(ruc: string): Promise<LeadState | undefined>;
+  findActiveByRuc(ruc: string): Promise<LeadState | undefined>;
   findByRucMany(rucs: string[]): Promise<LeadState[]>;
   updateCommercialSnapshot(
     leadId: string,
@@ -189,9 +187,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       };
     },
 
-    // Returns the lead that currently holds this RUC.
-    // EXPIRED and deleted leads are excluded.
-    async findByRuc(ruc: string) {
+    async findActiveByRuc(ruc: string) {
       const row = await selectLeadWithOrganization
         .where("org.ruc", "=", ruc)
         .where("lead.deleted_at", "is", null)
@@ -200,7 +196,6 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
     },
 
-    // Bulk RUC lookup for the CSV import path: which RUCs already have leads.
     async findByRucMany(rucs: string[]): Promise<LeadState[]> {
       if (rucs.length === 0) return [];
       const rows = await selectLeadWithOrganization
@@ -209,7 +204,6 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return rows.map((row) => toLead(row as LeadWithOrganizationRow));
     },
 
-    // Leads whose RUC hold has lapsed but that the sweep has not yet retired.
     async findLapsedReservations(now: number): Promise<string[]> {
       const rows = await db
         .selectFrom("workflow_leads")

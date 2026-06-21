@@ -21,12 +21,10 @@ export type LeadTransaction = {
   tx: DatabaseExecutor;
   repos: WorkflowRepos;
   now: number;
-  // Version-locked lifecycle commit. Use for state transitions.
   commitTransition(
     transition: LeadTransition,
     assignment?: LeadAssignment,
   ): Promise<Result<{ eventIds: string[] }, DomainError>>;
-  // Append-only timeline facts. No version lock. Use for notes/calls/registration.
   appendFacts(
     events: LeadEvent[],
   ): Promise<Result<{ eventIds: string[] }, DomainError>>;
@@ -43,20 +41,6 @@ function zip(events: LeadEvent[], ids: string[]): CommittedLeadEvent[] {
   return events.map((event, index) => ({ event, id: ids[index] }));
 }
 
-/**
- * Single owner of the lead mutation envelope. Opens one transaction, builds the
- * tx-scoped repositories, stamps one `now`, and runs the command body. The body
- * loads the aggregate, runs the pure transition, writes child rows, and records
- * events through `commitTransition` (version-locked) or `appendFacts`.
- *
- * Every event recorded through this runner is accumulated and, once the body
- * succeeds, fed to `enqueueLeadEffects` inside the same transaction. Effects
- * (notifications, enrichment) are therefore impossible to forget and atomic with
- * the write that produced them.
- *
- * Any `Err` the body returns rolls the transaction back, so a command that has
- * already written a child row leaves nothing behind when a later step fails.
- */
 export function runLeadTransaction<O>(
   ports: { executor: DatabaseExecutor; now: number },
   body: (ctx: LeadTransaction) => Promise<Result<O, DomainError>>,
@@ -87,6 +71,7 @@ export function runLeadTransaction<O>(
 
       if (isErr(result)) throw new LeadTransactionRollback(result.error);
 
+      // Effects share the transaction with source events to prevent orphaned delivery.
       await enqueueLeadEffects(tx, committed, ports.now);
       return result;
     })

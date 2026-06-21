@@ -10,13 +10,6 @@ import type { LeadState } from "~/server/workflow/lead/domain/state";
 
 type Actor = { userId: number; role: Role };
 
-// Adding or editing a venue records a timeline fact during SETUP. Like an
-// interaction, it authorizes against the lead and emits one event but never
-// evolves the aggregate or takes its version: concurrent venue edits on one lead
-// must not collide on optimistic concurrency. The write path appends these
-// events without the version-checked lead update. The lead only goes LIVE once
-// the last venue's accounts are funded, which is a real transition handled by
-// `addVenueAccounts` in the lifecycle decider.
 export function createVenue(
   state: LeadState,
   input: { actor: Actor; venueId: string; tradeName: string; now: number },
@@ -60,20 +53,6 @@ export type VenueAccounts = {
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
 };
 
-/**
- * Validates and normalizes the bank accounts attached to a venue. This is the
- * single owner of the two account invariants, so every path that registers
- * accounts enforces them identically:
- *
- *   - Exactly one account is the settlement (abono) account. The unique index
- *     on workflow_lead_venue_accounts only blocks a second settlement row, so
- *     the "at least one" half of the rule is enforced here and nowhere else.
- *   - CCI is required for non-BCP banks and dropped for BCP accounts, where the
- *     bank code alone identifies the destination.
- *
- * The action boundary has already proven each field is present and well typed;
- * this function owns the cross-field business rules a shape parser cannot.
- */
 export function buildVenueAccounts(input: {
   solesAccount: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };

@@ -25,10 +25,7 @@ async function runReservationSweepTick(deps: LeadReservationMaintenanceDeps) {
   }
 }
 
-// Authoritatively retires leads whose RUC hold has lapsed, moving them to the
-// terminal EXPIRED stage so the RUC is released and the owner's view stops
-// showing the lead as in-progress. Registration also releases lazily, so the
-// cadence here only bounds how long a lapsed lead lingers in the owner's list.
+// Registration also releases lazily, so cadence only bounds stale visibility.
 export function startLeadReservationMaintenance(
   deps: LeadReservationMaintenanceDeps,
 ) {

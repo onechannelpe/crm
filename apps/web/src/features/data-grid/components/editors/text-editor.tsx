@@ -1,9 +1,9 @@
 import { onCleanup, onMount } from "solid-js";
 
+import { createTextEditorState } from "./text-editor-state";
+
 import styles from "../../styles/data-grid.module.css";
 
-// Enter, Tab, and outside dismissal commit the current value. Escape cancels.
-// The editor reads from the input ref so it stays uncontrolled after mount.
 export function GridTextEditor(props: {
   initialValue: string;
   placeholder?: string;
@@ -13,20 +13,7 @@ export function GridTextEditor(props: {
   close: () => void;
 }) {
   let inputRef: HTMLInputElement | undefined;
-  let cancelled = false;
-  let committed = false;
-
-  function commit() {
-    if (committed || cancelled) {
-      return;
-    }
-    committed = true;
-
-    const next = (inputRef?.value ?? "").trim();
-    if (next !== props.initialValue.trim()) {
-      props.onCommit(next);
-    }
-  }
+  const state = createTextEditorState(props.initialValue, props.onCommit);
 
   onMount(() => {
     inputRef?.focus();
@@ -35,7 +22,7 @@ export function GridTextEditor(props: {
 
   // Cleanup covers outside dismissal. Enter and Tab already committed, and
   // Escape marks the edit as cancelled before unmount.
-  onCleanup(() => commit());
+  onCleanup(() => state.commit(inputRef?.value ?? ""));
 
   return (
     <input
@@ -49,7 +36,7 @@ export function GridTextEditor(props: {
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === "Tab") {
           event.preventDefault();
-          commit();
+          state.commit(inputRef?.value ?? "");
           props.close();
           return;
         }
@@ -57,7 +44,7 @@ export function GridTextEditor(props: {
         if (event.key === "Escape") {
           event.preventDefault();
           event.stopPropagation();
-          cancelled = true;
+          state.cancel();
           props.close();
         }
       }}

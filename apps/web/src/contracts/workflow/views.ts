@@ -63,7 +63,6 @@ export type LeadTimelineItem = {
   title: string;
   description: string;
   actorDisplayName: string;
-  // Field-level diff for correction events, so the feed can show what moved.
   changes?: FieldChange[];
 };
 
