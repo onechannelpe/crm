@@ -5,10 +5,10 @@ import { CURRENCIES } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
-import { acceptRateCommand } from "~/server/workflow/lead/write/accept-rate";
-import { editRateProposalCommand } from "~/server/workflow/lead/write/edit-rate-proposal";
-import { proposeRateCommand } from "~/server/workflow/lead/write/propose-rate";
-import { requestRateRevisionCommand } from "~/server/workflow/lead/write/request-rate-revision";
+import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
+import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-rate-proposal";
+import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
+import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
 
 import { workflowActor } from "./actor";
 

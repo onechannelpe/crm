@@ -1,5 +1,5 @@
 import type { SettlementBank } from "~/contracts/workflow/vocabulary";
-import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/write/register-lead";
+import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/commands/register-lead";
 
 import type { TestRuntime } from "../runtime/app";
 import { registerLeadPorts } from "./deps";

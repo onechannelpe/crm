@@ -6,7 +6,7 @@ import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { acceptRate } from "../../lead/domain/decide";
 import { isReservationActive } from "../../lead/domain/reservation";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
 
 export async function acceptRateCommand(
   input: AcceptRateInput & {

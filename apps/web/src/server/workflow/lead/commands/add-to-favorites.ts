@@ -4,7 +4,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { authorizeLeadAction } from "../../lead/domain/policy";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
 
 export async function addToFavoritesCommand(
   input: { actor: WorkflowActor; leadId: string },

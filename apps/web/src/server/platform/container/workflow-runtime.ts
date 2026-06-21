@@ -2,9 +2,10 @@ import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createSunatEnrichmentWritebackQueue } from "~/server/identity/enrichment/writeback-queue";
+import { createOrganizationEnrichment } from "~/server/identity/organization/enrichment";
+import type { OrganizationEnrichmentQueue } from "~/server/identity/organization/enrichment";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { createLeadArtifactsService } from "~/server/workflow/lead/read/lead-artifacts";
-import { createEngineGateway } from "~/server/workflow/lead/write/engine-gateway";
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
@@ -17,7 +18,7 @@ export function createWorkflowRuntime(
   files: Pick<FilesRuntime, "repo" | "storage">,
   doorbell: QueueDoorbell,
 ) {
-  const engineGateway = createEngineGateway(engine);
+  const organizationEnrichment = createOrganizationEnrichment(engine);
   const repos = createWorkflowRepos(infra.db);
   const leadRepo = createLeadRepo(infra.db);
 
@@ -26,7 +27,7 @@ export function createWorkflowRuntime(
     doorbell,
   );
 
-  const enrichmentQueue = {
+  const enrichmentQueue: OrganizationEnrichmentQueue = {
     enqueueRucVerification: async (
       ruc: string,
       requestedByUserId: number,
@@ -46,7 +47,7 @@ export function createWorkflowRuntime(
     // runLeadTransaction opens its own transaction from this.
     ports: () => ({ executor: infra.db, now: infra.now() }),
     repos,
-    engineGateway,
+    organizationEnrichment,
     enrichmentQueue,
     leadArtifacts: createLeadArtifactsService({
       leadReader: leadRepo,

@@ -4,15 +4,14 @@ import {
   type DomainError,
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { OrganizationEnrichmentQueue } from "~/server/identity/organization/enrichment";
 import type { WorkflowActor } from "~/server/workflow/actor";
-import type { LeadEnrichmentQueue } from "~/server/workflow/lead/write/engine-port";
-import type { LeadReadRepository } from "~/server/workflow/lead/write/lead-repo";
-
-import { resolveCapabilities } from "../../lead/domain/policy";
+import { resolveCapabilities } from "~/server/workflow/lead/domain/policy";
+import type { LeadReader } from "~/server/workflow/lead/read/ports";
 
 export async function requestSunatRefresh(
   input: { actor: WorkflowActor; leadId: string },
-  ports: { leads: LeadReadRepository; enrichmentQueue: LeadEnrichmentQueue },
+  ports: { leads: LeadReader; enrichmentQueue: OrganizationEnrichmentQueue },
 ): Promise<Result<void, DomainError>> {
   if (!resolveCapabilities(input.actor.role).has("view")) {
     return Err(forbidden());

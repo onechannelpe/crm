@@ -17,7 +17,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { addLeadNote } from "~/server/workflow/lead/interaction/write";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-import { reassignLeadCommand } from "~/server/workflow/lead/write/reassign-lead";
+import { reassignLeadCommand } from "~/server/workflow/lead/commands/reassign-lead";
 
 describe("workflow lead mutation metadata", () => {
   let runtime: TestRuntime;

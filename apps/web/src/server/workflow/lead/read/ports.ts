@@ -31,10 +31,3 @@ export type RateRevisionReader = {
 export type SourceStatusReader = {
   findByRuc(ruc: string): Promise<LeadSourceStatus>;
 };
-
-export type EnrichmentReader = {
-  enrichByRuc(ruc: string): Promise<{
-    legalName: string | null;
-    address: string | null;
-  } | null>;
-};

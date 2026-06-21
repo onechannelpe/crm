@@ -4,8 +4,8 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { expireReservation } from "../../lead/domain/decide";
 import { isReservationLapsed } from "../../lead/domain/reservation";
-import { createLeadRepo } from "./lead-repo";
-import { runLeadTransaction } from "./transition";
+import { createLeadRepo } from "../write/lead-repo";
+import { runLeadTransaction } from "../write/transition";
 
 // Releases a single lead whose RUC hold has lapsed. Idempotent: a lead that is
 // no longer in PRICING or whose hold is not actually lapsed is left untouched,

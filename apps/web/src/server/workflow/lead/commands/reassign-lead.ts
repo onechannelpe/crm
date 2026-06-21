@@ -6,7 +6,7 @@ import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { reassignLead } from "../../lead/domain/decide";
 import { resolveAssignableExecutivesScope } from "../../lead/domain/policy";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
 
 export async function reassignLeadCommand(
   input: Omit<ReassignLeadInput, "newExecutiveId"> & {

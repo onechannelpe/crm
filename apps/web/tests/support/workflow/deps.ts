@@ -1,4 +1,4 @@
-import { createEngineGateway } from "~/server/workflow/lead/write/engine-gateway";
+import { createOrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
 import type { TestRuntime } from "../runtime/app";
@@ -17,6 +17,6 @@ export function workflowCommandPorts(runtime: TestRuntime) {
 export function registerLeadPorts(runtime: TestRuntime) {
   return {
     ...workflowCommandPorts(runtime),
-    identity: createEngineGateway(runtime.engine.client),
+    identity: createOrganizationEnrichment(runtime.engine.client),
   };
 }

@@ -2,10 +2,10 @@ import type { CreateLeadInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { createHistoryEvent } from "~/server/workflow/lead/domain/history";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
-import type { WorkflowEngineGateway } from "~/server/workflow/lead/write/engine-port";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
 import { reassignLead } from "../../lead/domain/decide";
@@ -18,7 +18,7 @@ import {
   ensureActiveExecutive,
   resolveLeadRegistration,
 } from "./register-lead-resolution";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
 
 export async function registerLead(
   input: CreateLeadInput & {
@@ -27,7 +27,7 @@ export async function registerLead(
   ports: {
     executor: DatabaseExecutor;
     now: number;
-    identity: WorkflowEngineGateway;
+    identity: OrganizationEnrichment;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const actor = input.actor;

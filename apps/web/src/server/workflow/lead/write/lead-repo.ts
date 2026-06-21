@@ -15,10 +15,6 @@ import type {
   LeadState,
 } from "~/server/workflow/lead/domain/state";
 
-export type LeadReadRepository = {
-  findById(id: string): Promise<LeadState | undefined>;
-};
-
 export type LeadRepository = {
   insert(values: LeadDraft): Promise<string>;
   findById(id: string): Promise<LeadState | undefined>;

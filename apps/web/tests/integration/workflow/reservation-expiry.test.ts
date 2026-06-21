@@ -13,8 +13,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/lead/domain/pricing";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-import { acceptRateCommand } from "~/server/workflow/lead/write/accept-rate";
-import { expireLapsedReservations } from "~/server/workflow/lead/write/expire-reservation";
+import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
+import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
 
 // The hold window is owned by the pricing policy, not hardcoded here, so these stay
 // correct if the default validity changes.

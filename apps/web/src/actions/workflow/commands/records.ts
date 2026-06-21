@@ -10,14 +10,14 @@ import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
-import { addToFavoritesCommand } from "~/server/workflow/lead/write/add-to-favorites";
-import { deleteLeadCommand } from "~/server/workflow/lead/write/delete-lead";
-import { editCommercialScopeCommand } from "~/server/workflow/lead/write/edit-commercial-scope";
-import { reassignLeadCommand } from "~/server/workflow/lead/write/reassign-lead";
-import { recordRepLegalCommand } from "~/server/workflow/lead/write/record-rep-legal";
-import { registerLead } from "~/server/workflow/lead/write/register-lead";
-import { removeFromFavoritesCommand } from "~/server/workflow/lead/write/remove-from-favorites";
-import { requestSunatRefresh } from "~/server/workflow/lead/write/request-sunat-refresh";
+import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
+import { deleteLeadCommand } from "~/server/workflow/lead/commands/delete-lead";
+import { editCommercialScopeCommand } from "~/server/workflow/lead/commands/edit-commercial-scope";
+import { reassignLeadCommand } from "~/server/workflow/lead/commands/reassign-lead";
+import { recordRepLegalCommand } from "~/server/workflow/lead/commands/record-rep-legal";
+import { registerLead } from "~/server/workflow/lead/commands/register-lead";
+import { removeFromFavoritesCommand } from "~/server/workflow/lead/commands/remove-from-favorites";
+import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sunat-refresh";
 
 import { workflowActor } from "./actor";
 
@@ -64,7 +64,7 @@ export async function requestLeadCreation(input: unknown) {
         { actor: workflowActor(actor), ...payload },
         {
           ...getServerRuntime().workflow.ports(),
-          identity: getServerRuntime().workflow.engineGateway,
+          identity: getServerRuntime().workflow.organizationEnrichment,
         },
       ),
   });

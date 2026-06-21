@@ -118,7 +118,7 @@ export async function queryLeadBootstrapPreview(
 
       return getLeadBootstrapPreview(
         { party: workflow.repos.party },
-        workflow.engineGateway,
+        workflow.organizationEnrichment,
         { ruc: query.ruc },
       );
     },

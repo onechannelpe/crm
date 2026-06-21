@@ -13,7 +13,7 @@ import {
   isReservationActive,
 } from "../../lead/domain/reservation";
 import type { SubmitReadyRevisionFile } from "../domain/rows";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
 
 export async function requestRateRevisionCommand(
   input: RequestRateRevisionInput & {

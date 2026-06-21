@@ -9,7 +9,7 @@ import type { WorkflowActor } from "~/server/workflow/actor";
 import { proposeRate } from "../../lead/domain/decide";
 import { resolveRateProposalPolicy } from "../../lead/domain/pricing";
 import { computeReservationExpiry } from "../../lead/domain/reservation";
-import { runLeadTransaction } from "./transition";
+import { runLeadTransaction } from "../write/transition";
 
 export async function proposeRateCommand(
   input: ProposeRateInput & {

@@ -1,4 +1,4 @@
-import { proposeRateCommand } from "~/server/workflow/lead/write/propose-rate";
+import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 
 import type { TestRuntime } from "../runtime/app";
 import { workflowCommandPorts } from "./deps";
