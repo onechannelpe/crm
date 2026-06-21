@@ -1,7 +1,6 @@
 import { revalidate } from "@solidjs/router";
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 
-import type { AuthFunnelSnapshot } from "~/actions/admin/auth-funnel";
 import { WindowSelect } from "~/components/features/audit/window-select";
 import Activity from "~/components/icons/activity";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -12,6 +11,7 @@ import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { AuthFunnelSnapshot } from "~/contracts/observability/auth-funnel";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";

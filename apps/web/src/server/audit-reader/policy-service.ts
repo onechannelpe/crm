@@ -2,7 +2,7 @@ import type {
   AuditActionPolicyItem,
   AuditPolicyRiskLevel,
   AuditPolicySnapshot,
-} from "./contracts";
+} from "~/contracts/audit-reader/policy";
 
 interface AuditPolicyServiceDeps {
   auditActionPolicies: {

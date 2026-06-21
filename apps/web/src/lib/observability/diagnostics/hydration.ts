@@ -1,11 +1,8 @@
 import {
   isDiagnosticEnabled,
-  isHydrationMismatchError,
   traceDiagnostic,
   type DiagnosticMeta,
 } from "./core";
-
-export { isHydrationMismatchError };
 
 export function isHydrationDiagnosticsEnabled(scope: string): boolean {
   return import.meta.env.DEV && isDiagnosticEnabled("hydration", scope);
@@ -18,4 +15,10 @@ export function traceHydrationEvent(
 ) {
   if (!import.meta.env.DEV) return;
   traceDiagnostic(scope, "hydration", event, meta);
+}
+
+export function isHydrationMismatchError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+
+  return error.message.toLowerCase().includes("hydration mismatch");
 }

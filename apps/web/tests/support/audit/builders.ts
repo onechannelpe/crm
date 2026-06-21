@@ -1,25 +1,25 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
-import type { AppErrorCode } from "~/lib/app-errors";
+import type { WireKind } from "~/lib/wire-error";
 
-export async function seedAuditLog(
+export async function seedEvent(
   ctx: TestDbContext,
   input: {
-    userId: number;
-    action: string;
+    actorUserId: number;
+    type: string;
     entityType: string;
     entityId: number;
-    changes: string;
-    createdAt: number;
+    payload?: unknown;
+    occurredAt: number;
   },
 ): Promise<void> {
-  await ctx.repos.auditLogs.create({
-    user_id: input.userId,
-    action: input.action,
-    entity_type: input.entityType,
-    entity_id: input.entityId,
-    changes: input.changes,
-    created_at: input.createdAt,
+  await ctx.repos.events.append({
+    type: input.type,
+    entityType: input.entityType,
+    entityId: input.entityId,
+    actorUserId: input.actorUserId,
+    payload: input.payload,
+    occurredAt: input.occurredAt,
   });
 }
 
@@ -33,7 +33,7 @@ export type ActionObservationSeed = {
   status: "ok" | "error";
   durationMs: number;
   createdAt: number;
-  errorCode?: AppErrorCode | null;
+  errorCode?: WireKind | null;
   errorMessage?: string | null;
   input?: Record<string, unknown>;
 };

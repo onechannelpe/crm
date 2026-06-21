@@ -2,7 +2,7 @@ import { For } from "solid-js";
 
 import { Select } from "~/components/ui/input/select";
 
-export const WINDOW_OPTIONS_DEFAULT = [
+const WINDOW_OPTIONS_DEFAULT = [
   { value: 15, label: "15 min" },
   { value: 60, label: "1 hora" },
   { value: 240, label: "4 horas" },

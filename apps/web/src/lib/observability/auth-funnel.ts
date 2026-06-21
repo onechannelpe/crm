@@ -1,8 +1,8 @@
-export const AUTH_FUNNEL_SOURCES = ["client", "server"] as const;
+const AUTH_FUNNEL_SOURCES = ["client", "server"] as const;
 
 export type AuthFunnelSource = (typeof AUTH_FUNNEL_SOURCES)[number];
 
-export const AUTH_FUNNEL_EVENT_NAMES = [
+const AUTH_FUNNEL_EVENT_NAMES = [
   "screen_viewed",
   "password_result",
   "passkey_start_result",
@@ -12,7 +12,7 @@ export const AUTH_FUNNEL_EVENT_NAMES = [
 
 export type AuthFunnelEventName = (typeof AUTH_FUNNEL_EVENT_NAMES)[number];
 
-export const AUTH_FUNNEL_SCREENS = [
+const AUTH_FUNNEL_SCREENS = [
   "login",
   "login_user",
   "login_verify",
@@ -22,7 +22,7 @@ export const AUTH_FUNNEL_SCREENS = [
 
 export type AuthFunnelScreen = (typeof AUTH_FUNNEL_SCREENS)[number];
 
-export const AUTH_FUNNEL_METHODS = [
+const AUTH_FUNNEL_METHODS = [
   "password",
   "password_totp",
   "passkey",
@@ -31,7 +31,7 @@ export const AUTH_FUNNEL_METHODS = [
 
 export type AuthFunnelMethod = (typeof AUTH_FUNNEL_METHODS)[number];
 
-export const AUTH_FUNNEL_OUTCOMES = [
+const AUTH_FUNNEL_OUTCOMES = [
   "viewed",
   "failed",
   "succeeded",
@@ -50,7 +50,7 @@ export type AuthFunnelClientEventPayload =
   | {
       kind: "passkey_result";
       outcome: "failed";
-      code: "cancelled" | "unsupported" | "browser_error";
+      code: "cancelled" | "unsupported" | "server_error";
     };
 
 export type AuthFunnelServerEventPayload =
@@ -90,7 +90,7 @@ export type AuthFunnelServerEventPayload =
         | "internal"
         | "cancelled"
         | "unsupported"
-        | "browser_error";
+        | "server_error";
     }
   | {
       kind: "passkey_result";

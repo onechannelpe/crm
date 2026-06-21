@@ -1,57 +1,62 @@
 "use server";
 
 import type { ActionSuccess } from "~/contracts/common";
-import { validationError } from "~/lib/app-errors";
-import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/application/commands/revoke-all-user-sessions";
-import { revokeUserSession as revokeUserSessionService } from "~/server/auth/application/commands/revoke-user-session";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-import { isErr } from "~/server/shared/result";
-
-import {
-  parseRevokeAllUserSessionsInput,
-  parseRevokeUserSessionInput,
-} from "./input";
+import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
+import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function revokeUserSession(
-  sessionId: string,
-  targetUserId: number,
+  rawSessionId: unknown,
+  rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
-  const parsedInput = parseRevokeUserSessionInput({ sessionId, targetUserId });
-  if (isErr(parsedInput)) {
-    throw validationError(parsedInput.error.message);
-  }
   return runAction({
-    actionName: "admin.sessions.revoke",
+    name: "admin.sessions.revoke",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
-    input: parsedInput.value,
-    execute: (ctx) =>
+
+    parse: () =>
+      parseObject(
+        { sessionId: rawSessionId, targetUserId: rawTargetUserId },
+        validationFail,
+        (r) => ({
+          sessionId: r.str("sessionId"),
+          targetUserId: r.posInt("targetUserId"),
+        }),
+      ),
+
+    audit: (command) => ({ targetUserId: command.targetUserId }),
+
+    execute: (ctx, input) =>
       revokeUserSessionService(
         ctx,
         getServerRuntime().auth.adminSessionRevocation,
-        parsedInput.value,
+        input,
       ),
   });
 }
 
 export async function revokeAllUserSessions(
-  targetUserId: number,
+  rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
-  const parsedInput = parseRevokeAllUserSessionsInput(targetUserId);
-  if (isErr(parsedInput)) {
-    throw validationError(parsedInput.error.message);
-  }
   return runAction({
-    actionName: "admin.sessions.revoke_all",
+    name: "admin.sessions.revoke_all",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
-    input: parsedInput.value,
-    execute: (ctx) =>
+
+    parse: () =>
+      parseObject({ targetUserId: rawTargetUserId }, validationFail, (r) => ({
+        targetUserId: r.posInt("targetUserId"),
+      })),
+
+    audit: (command) => ({ targetUserId: command.targetUserId }),
+
+    execute: (ctx, input) =>
       revokeAllUserSessionsService(
         ctx,
         getServerRuntime().auth.adminSessionRevocation,
-        parsedInput.value,
+        input,
       ),
   });
 }
