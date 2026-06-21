@@ -7,13 +7,13 @@ import {
 } from "~/features/records-imports/contracts";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { parseRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
+import { getServerRuntime } from "~/server/platform/container";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { buildRecordImportProgressEvent } from "~/server/records/imports/progress-events";
 import {
   ensureRecordImportsRealtimeBridge,
   getRecordImportsTopicHub,
 } from "~/server/records/imports/realtime";
-import { getServerRuntime } from "~/server/runtime";
 
 import { readPeerSession, resolvePeerSession } from "./core/ws-auth";
 import type { WsPeer } from "./core/ws-types";

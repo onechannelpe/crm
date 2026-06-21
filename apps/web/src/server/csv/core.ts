@@ -112,27 +112,6 @@ export function readFirstNonEmptyCsvRow(
   return firstRow;
 }
 
-export function countNonEmptyCsvRows(
-  content: string,
-  delimiter: CsvDelimiter,
-  options: { afterRowNumber?: number } = {},
-): number {
-  const afterRowNumber = options.afterRowNumber ?? 0;
-  let count = 0;
-
-  scanCsvRows(content, delimiter, (row) => {
-    if (row.rowNumber <= afterRowNumber) {
-      return;
-    }
-    if (isRowEmpty(row.cells)) {
-      return;
-    }
-    count++;
-  });
-
-  return count;
-}
-
 export function parseCsvRows(
   content: string,
   delimiter: CsvDelimiter,

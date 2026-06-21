@@ -36,7 +36,7 @@ export function parseRecordImportTopic(topic: string): string | null {
   return rawJobId;
 }
 
-export function isRecordImportProgressEvent(
+function isRecordImportProgressEvent(
   value: unknown,
 ): value is RecordImportProgressEvent {
   if (!isObjectRecord(value)) {

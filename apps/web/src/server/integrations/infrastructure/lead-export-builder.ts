@@ -1,21 +1,10 @@
-const EXPORT_HEADERS = [
-  "ruc",
-  "razon_social",
-  "executive_id",
-  "executive_name",
-  "created_at",
-  "stage",
-  "address",
-  "status",
-  "prioridad",
-] as const;
-
-export function buildRecordExportCsv(rows: Record<string, unknown>[]): string {
-  const headers = [...EXPORT_HEADERS];
-  const lines = rows.map((row) =>
-    headers.map((key) => cell(row[key])).join(","),
-  );
-  return [headers.join(","), ...lines].join("\n");
+export function buildRecordExportCsv(
+  headers: readonly string[],
+  rows: readonly (readonly unknown[])[],
+): string {
+  const headerLine = headers.map(cell).join(",");
+  const lines = rows.map((row) => row.map(cell).join(","));
+  return [headerLine, ...lines].join("\n");
 }
 
 function cell(value: unknown): string {
