@@ -11,7 +11,7 @@ export function useAppHeaderSidePanel() {
   const { isOpen, openPanel, closePanel } = useSidePanel();
   const {
     state: extensionState,
-    error: extensionError,
+    errorMessage: extensionErrorMessage,
     isAvailable: isExtensionAvailable,
   } = createExtensionPortConnection();
 
@@ -36,7 +36,7 @@ export function useAppHeaderSidePanel() {
     modKey,
     isSidePanelOpen: isOpen,
     extensionState,
-    extensionError,
+    extensionErrorMessage,
     isExtensionAvailable,
     toggleSidePanel,
   };

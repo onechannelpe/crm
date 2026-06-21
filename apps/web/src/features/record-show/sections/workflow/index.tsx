@@ -22,7 +22,7 @@ import { blockingFieldLabel } from "~/features/workflow/detail/actions/workflow-
 import { formatAmount, formatRate } from "./format";
 
 export function WorkflowProgressSection(props: { data: LeadDetailView }) {
-  const negotiationCount = () => props.data.negotiationRequests.length;
+  const revisionCount = () => props.data.rateRevisions.length;
 
   return (
     <RecordDetailSection>
@@ -44,17 +44,17 @@ export function WorkflowProgressSection(props: { data: LeadDetailView }) {
             </FieldTextValue>
           </RecordInlineCell>
 
-          <RecordInlineCell label="Cotizaciones" icon={Package}>
+          <RecordInlineCell label="Propuestas de tarifa" icon={Package}>
             <FieldTextValue>
-              {props.data.quotations.length === 0
-                ? "Sin cotizaciones"
-                : `${props.data.quotations.length} registradas`}
+              {props.data.rateProposals.length === 0
+                ? "Sin propuestas"
+                : `${props.data.rateProposals.length} registradas`}
             </FieldTextValue>
           </RecordInlineCell>
 
-          <Show when={negotiationCount() > 0}>
-            <RecordInlineCell label="Revisiones de tasa" icon={Target}>
-              <FieldTextValue>Ronda {negotiationCount()} de 3</FieldTextValue>
+          <Show when={revisionCount() > 0}>
+            <RecordInlineCell label="Revisiones de tarifa" icon={Target}>
+              <FieldTextValue>Ronda {revisionCount()} de 3</FieldTextValue>
             </RecordInlineCell>
           </Show>
 
@@ -69,15 +69,20 @@ export function WorkflowProgressSection(props: { data: LeadDetailView }) {
                     {formatAmount(profile().ticket)}
                   </FieldTextValue>
                 </RecordInlineCell>
-                <RecordInlineCell label="Tasa actual" icon={Target}>
+                <RecordInlineCell label="Tasa débito actual" icon={Target}>
                   <FieldTextValue>
-                    {formatRate(profile().tasaActual)}
+                    {formatRate(profile().currentDebitRate)}
                   </FieldTextValue>
                 </RecordInlineCell>
-                <Show when={profile().proveedorActual}>
-                  {(proveedor) => (
+                <RecordInlineCell label="Tasa crédito actual" icon={Target}>
+                  <FieldTextValue>
+                    {formatRate(profile().currentCreditRate)}
+                  </FieldTextValue>
+                </RecordInlineCell>
+                <Show when={profile().currentProvider}>
+                  {(provider) => (
                     <RecordInlineCell label="Proveedor actual" icon={Building2}>
-                      <FieldTextValue>{proveedor()}</FieldTextValue>
+                      <FieldTextValue>{provider()}</FieldTextValue>
                     </RecordInlineCell>
                   )}
                 </Show>
@@ -85,7 +90,7 @@ export function WorkflowProgressSection(props: { data: LeadDetailView }) {
             )}
           </Show>
 
-          <Show when={props.data.lead.stage === "SETUP_EXECUTION"}>
+          <Show when={props.data.lead.stage === "SETUP"}>
             <RecordInlineCell label="Siguiente paso" icon={Package}>
               <FieldTextValue>Completar cuentas en Sedes</FieldTextValue>
             </RecordInlineCell>

@@ -4,14 +4,14 @@ import { type ProductScope } from "~/contracts/workflow/vocabulary";
 import type { VenueFormState } from "./venue-form-state";
 
 type VenueSubmitInput = {
-  nombreComercial: string;
+  tradeName: string;
   posQuantity: number;
   digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
 };
 
 export type BuildVenueSubmitResult =
@@ -24,19 +24,19 @@ export function buildVenueSubmitInput(
 ): BuildVenueSubmitResult {
   const posQty = Number(form.posQuantity());
 
-  if (!form.nombreComercial().trim() || !form.direccion().trim()) {
+  if (!form.tradeName().trim() || !form.address().trim()) {
     return {
       ok: false,
       error: "Nombre comercial y direccion son obligatorios",
     };
   }
-  if (!form.referencia().trim()) {
+  if (!form.addressReference().trim()) {
     return { ok: false, error: "Referencia es obligatoria" };
   }
   if (
-    !form.distrito().trim() ||
-    !form.provincia().trim() ||
-    !form.departamento().trim()
+    !form.district().trim() ||
+    !form.province().trim() ||
+    !form.department().trim()
   ) {
     return {
       ok: false,
@@ -51,8 +51,10 @@ export function buildVenueSubmitInput(
     policy.linkScope === "per_venue" ? form.linkUrl().trim() || null : null;
   const onlineUrl =
     policy.onlineScope === "per_venue" ? form.onlineUrl().trim() || null : null;
-  const onlineModalidad =
-    policy.onlineScope === "per_venue" ? form.onlineModalidad() || null : null;
+  const onlineCollectionMode =
+    policy.onlineScope === "per_venue"
+      ? form.onlineCollectionMode() || null
+      : null;
 
   if (policy.linkScope === "per_venue" && !linkUrl) {
     return { ok: false, error: "URL Culqi Link es requerida" };
@@ -60,7 +62,11 @@ export function buildVenueSubmitInput(
   if (policy.onlineScope === "per_venue" && !onlineUrl) {
     return { ok: false, error: "URL Culqi Online es requerida" };
   }
-  if (policy.onlineScope === "per_venue" && onlineUrl && !onlineModalidad) {
+  if (
+    policy.onlineScope === "per_venue" &&
+    onlineUrl &&
+    !onlineCollectionMode
+  ) {
     return { ok: false, error: "Modalidad de cobro es requerida" };
   }
 
@@ -69,21 +75,21 @@ export function buildVenueSubmitInput(
       ? {
           ...(linkUrl ? { linkUrl } : {}),
           ...(onlineUrl ? { onlineUrl } : {}),
-          ...(onlineModalidad ? { onlineModalidad } : {}),
+          ...(onlineCollectionMode ? { onlineCollectionMode } : {}),
         }
       : undefined;
 
   return {
     ok: true,
     value: {
-      nombreComercial: form.nombreComercial().trim(),
+      tradeName: form.tradeName().trim(),
       posQuantity: posQty,
       digitalConfig,
-      direccion: form.direccion().trim(),
-      referencia: form.referencia().trim(),
-      distrito: form.distrito().trim(),
-      provincia: form.provincia().trim(),
-      departamento: form.departamento().trim(),
+      address: form.address().trim(),
+      addressReference: form.addressReference().trim(),
+      district: form.district().trim(),
+      province: form.province().trim(),
+      department: form.department().trim(),
     },
   };
 }

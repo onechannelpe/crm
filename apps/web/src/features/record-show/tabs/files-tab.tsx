@@ -28,7 +28,7 @@ export function FilesTab(props: { context: RecordContext }) {
         <FilesCard
           leadId={data.lead.id}
           canUpload={data.lead.stage === "LIVE"}
-          negotiationRequests={data.negotiationRequests}
+          rateRevisions={data.rateRevisions}
         />
       )}
     </Show>

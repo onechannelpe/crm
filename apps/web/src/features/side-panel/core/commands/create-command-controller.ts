@@ -30,9 +30,9 @@ export function createCommandController<TInput, TOutput>(
         setLastResult(() => result);
         setStatus("success");
         return result;
-      } catch (error) {
+      } catch (caught) {
         const normalizedError =
-          error instanceof Error ? error : new Error("Unknown command error");
+          caught instanceof Error ? caught : new Error("Unknown command error");
         setLastError(normalizedError);
         setStatus("error");
         throw normalizedError;

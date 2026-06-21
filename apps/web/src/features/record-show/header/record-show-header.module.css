@@ -77,6 +77,12 @@
   font-weight: var(--font-weight-medium);
 }
 
+.deleteError {
+  color: var(--destructive);
+  font-size: var(--font-size-body);
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .desktopAction {
     display: none;

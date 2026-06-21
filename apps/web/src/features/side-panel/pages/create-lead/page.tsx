@@ -22,34 +22,43 @@ export function CreateLeadPage() {
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
 
-  const { draftRuc, activeTab, setActiveTab } = useCreateLeadPageState();
+  const { draftRuc, draftScope, activeTab, setScopeField, setActiveTab } =
+    useCreateLeadPageState();
+
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
+
     return /^\d{11}$/.test(value) ? value : null;
   });
 
-  const [bootstrapPreview] = createResource(validRuc, async (ruc) => {
-    if (!ruc) {
-      return null;
-    }
-    return queryLeadBootstrapPreview(ruc);
-  });
+  const [bootstrapPreview] = createResource(validRuc, (ruc) =>
+    queryLeadBootstrapPreview(ruc),
+  );
 
   const latestBootstrapPreview = createMemo(
     () => bootstrapPreview.latest ?? null,
   );
 
-  const { error, submitting, submit } = createCreateLeadController({
+  const previewLegalName = createMemo(
+    () => latestBootstrapPreview()?.legalName ?? null,
+  );
+
+  const previewAddress = createMemo(
+    () => latestBootstrapPreview()?.address ?? null,
+  );
+
+  const { errorMessage, submitting, submit } = createCreateLeadController({
     draftRuc,
     validRuc,
+    previewName: previewLegalName,
+    scope: draftScope,
     currentUser,
-    latestBootstrapPreview,
     createLead,
     onLeadCreated: ({ leadId, ruc }) => {
       navigateTo(
         createLeadRecordDetailSidePanelPage({
           leadId,
-          title: latestBootstrapPreview()?.razonSocial ?? "",
+          title: previewLegalName() || `RUC ${ruc}`,
           subtitle: `RUC ${ruc}`,
         }),
         { resetStack: true },
@@ -59,10 +68,10 @@ export function CreateLeadPage() {
   });
 
   const engineStatus = createMemo(() => {
-    const value = validRuc();
+    const ruc = validRuc();
     const preview = latestBootstrapPreview();
 
-    if (!value) {
+    if (!ruc) {
       return "";
     }
 
@@ -78,10 +87,15 @@ export function CreateLeadPage() {
   const recordContext = createMemo<RecordContext>(() => ({
     kind: "draft",
     ruc: draftRuc(),
-    razonSocial: latestBootstrapPreview()?.razonSocial ?? null,
-    address: latestBootstrapPreview()?.address ?? null,
+    legalName: previewLegalName(),
+    address: previewAddress(),
     engineStatus: engineStatus(),
+    commercialScope: {
+      values: draftScope(),
+      setField: setScopeField,
+    },
   }));
+
   useScopedHotkey("Mod+Enter", () => void submit(), { allowInInputs: true });
 
   return (
@@ -94,7 +108,7 @@ export function CreateLeadPage() {
             onTabSelect={setActiveTab}
           />
 
-          <Show when={error()}>
+          <Show when={errorMessage()}>
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
         </div>

@@ -14,11 +14,7 @@ export function WorkflowTab(props: { context: RecordContext }) {
         <>
           <WorkflowStageSections leadId={data.lead.id} data={data} />
           <Show
-            when={
-              data.lead.stage === "SETUP_PLAN" ||
-              data.lead.stage === "SETUP_EXECUTION" ||
-              data.lead.stage === "LIVE"
-            }
+            when={data.lead.stage === "SETUP" || data.lead.stage === "LIVE"}
           >
             <SetupWorkspace data={data} />
           </Show>

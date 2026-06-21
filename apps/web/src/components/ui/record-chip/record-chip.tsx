@@ -32,10 +32,10 @@ export function RecordChip(props: RecordChipProps) {
   const showAvatar = () => props.showAvatar ?? true;
   const avatarShapeClass = () =>
     shape() === "round" ? styles.avatarRound : styles.avatarSquare;
-  const [imgError, setImgError] = createSignal(false);
+  const [hasImageError, setHasImageError] = createSignal(false);
 
   const showImage = () =>
-    showAvatar() && Boolean(props.avatarUrl) && !imgError();
+    showAvatar() && Boolean(props.avatarUrl) && !hasImageError();
 
   return (
     <span class={styles.chip}>
@@ -59,7 +59,7 @@ export function RecordChip(props: RecordChipProps) {
             src={props.avatarUrl ?? undefined}
             alt=""
             class={`${styles.avatar} ${avatarShapeClass()} ${styles.avatarImage}`}
-            onError={() => setImgError(true)}
+            onError={() => setHasImageError(true)}
             aria-hidden="true"
           />
         </Show>

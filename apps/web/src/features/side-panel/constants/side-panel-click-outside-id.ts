@@ -1,7 +1,7 @@
 export const SIDE_PANEL_CLICK_OUTSIDE_ID = "side-panel";
 export const PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID =
   "page-header-side-panel-button";
-export const NAVIGATION_DRAWER_CLICK_OUTSIDE_ID = "navigation-drawer";
+const NAVIGATION_DRAWER_CLICK_OUTSIDE_ID = "navigation-drawer";
 
 export const SIDE_PANEL_EXCLUDED_CLICK_OUTSIDE_IDS: string[] = [
   SIDE_PANEL_CLICK_OUTSIDE_ID,

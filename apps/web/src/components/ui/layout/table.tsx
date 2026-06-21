@@ -18,10 +18,6 @@ export const TableBody = (
   props: JSX.HTMLAttributes<HTMLTableSectionElement>,
 ) => <tbody {...props} />;
 
-export const TableFooter = (
-  props: JSX.HTMLAttributes<HTMLTableSectionElement>,
-) => <tfoot {...props} />;
-
 export const TableRow = (props: JSX.HTMLAttributes<HTMLTableRowElement>) => (
   <tr class={cn(styles.row, props.class)} {...props} />
 );
@@ -33,7 +29,3 @@ export const TableHead = (
 export const TableCell = (
   props: JSX.TdHTMLAttributes<HTMLTableCellElement>,
 ) => <td class={cn(styles.cell, props.class)} {...props} />;
-
-export const TableCaption = (
-  props: JSX.HTMLAttributes<HTMLTableCaptionElement>,
-) => <caption class={cn(styles.caption, props.class)} {...props} />;

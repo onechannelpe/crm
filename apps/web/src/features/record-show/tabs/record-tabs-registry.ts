@@ -28,9 +28,7 @@ const onlyLead = (kind: RecordKind) => kind === "lead";
 const onlyDraft = (kind: RecordKind) => kind === "draft";
 const always = () => true;
 
-// Single source of truth for record tabs. Order is fixed here; `appearsIn` decides
-// membership per context, so lead defaults to "workflow" and a draft to "home".
-export const RECORD_TABS: readonly RecordTabDefinition[] = [
+const RECORD_TABS: readonly RecordTabDefinition[] = [
   {
     id: "home",
     icon: HomeTabler,
