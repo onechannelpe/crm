@@ -1,7 +1,6 @@
 import { revalidate } from "@solidjs/router";
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 
-import type { ObservabilitySnapshot } from "~/actions/admin/observability";
 import { WindowSelect } from "~/components/features/audit/window-select";
 import Activity from "~/components/icons/activity";
 import CircleAlert from "~/components/icons/circle-alert";
@@ -11,6 +10,7 @@ import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
