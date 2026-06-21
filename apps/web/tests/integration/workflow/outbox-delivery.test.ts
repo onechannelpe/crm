@@ -19,25 +19,25 @@ describe("outbox delivery", () => {
 
   it("drains pending outbox events and persists notifications", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.lead.assignedTo("execOne", {
+    const leadOne = await scenario.seedDirect.leadAt("execOne", {
       key: "delivery-one",
       organization: { key: "delivery-one" },
       stage: "QUALIFYING",
       status: "DISPONIBLE",
-      prioridad: "P1",
+      priority: "P1",
     });
-    const leadTwo = await scenario.lead.assignedTo("execTwo", {
+    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
       key: "delivery-two",
       organization: { key: "delivery-two" },
       stage: "QUALIFYING",
       status: "SIN RESULTADO",
-      prioridad: "P1",
+      priority: "P1",
     });
 
     await scenario.importer.run({
       actor: "superuser",
       rows: [
-        { type: "priority", lead: leadOne, prioridad: "SIN RESULTADO" },
+        { type: "priority", lead: leadOne, priority: "SIN RESULTADO" },
         { type: "status", lead: leadTwo, status: "DISPONIBLE" },
       ],
     });
@@ -47,14 +47,14 @@ describe("outbox delivery", () => {
     const notifications = await scenario.notifications.list();
     expect(notifications).toEqual([
       {
-        user_id: 1,
-        event_type: "lead.needs_executive_input",
-        source_event_id: expect.stringContaining(`${leadOne.id}:stage_changed`),
+        user_id: 2,
+        event_type: "lead.ready_for_quotation",
+        source_event_id: expect.stringContaining(":ready_pricing"),
       },
       {
         user_id: 4,
         event_type: "lead.ready_for_quotation",
-        source_event_id: expect.stringContaining(`${leadTwo.id}:stage_changed`),
+        source_event_id: expect.stringContaining(":ready_pricing"),
       },
     ]);
 

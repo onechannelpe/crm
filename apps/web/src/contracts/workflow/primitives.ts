@@ -1,13 +1,13 @@
 import type {
-  AbonoBank,
+  SettlementBank,
   AccountTypeKind,
-  ModalidadCobro,
-  Moneda,
+  CollectionMode,
+  Currency,
 } from "./vocabulary";
 
 export type SaleVenueAccount = {
-  currency: Moneda;
-  banco: AbonoBank;
+  currency: Currency;
+  banco: SettlementBank;
   tipoCuenta: AccountTypeKind;
   nroCuenta: string;
   cci?: string;
@@ -17,5 +17,5 @@ export type SaleVenueAccount = {
 export type VenueDigitalConfig = {
   linkUrl?: string | null;
   onlineUrl?: string | null;
-  onlineModalidad?: ModalidadCobro | null;
+  onlineCollectionMode?: CollectionMode | null;
 };

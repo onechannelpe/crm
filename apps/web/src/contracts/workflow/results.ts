@@ -13,7 +13,7 @@ export type LeadSaleProofFileView = {
   status: "ready" | "processing" | "failed";
 };
 
-export type LeadNegotiationFileView = {
+export type LeadRateRevisionFileView = {
   artifactId: string;
   filename: string;
   detectedMime: string;

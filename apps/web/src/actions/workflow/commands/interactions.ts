@@ -1,59 +1,55 @@
 "use server";
 
-import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-import { parseRequiredLeadText } from "~/server/workflow/parsers";
+import { LEAD_CALL_OUTCOMES } from "~/contracts/workflow/vocabulary";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import {
+  addLeadNote as addLeadNoteUseCase,
+  logLeadCall,
+} from "~/server/workflow/lead/interaction/write";
 
-export async function recordLeadCall(input: {
-  leadId: string;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
-}) {
+import { workflowActor } from "./actor";
+
+export async function recordLeadCall(input: unknown) {
   return runAction({
-    actionName: "workflow.log_call",
+    name: "workflow.log_call",
     access: { kind: "auth" },
-    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.logLeadCall({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        outcome: input.outcome,
-        notes: input.notes ?? null,
-      }),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        outcome: r.enum("outcome", LEAD_CALL_OUTCOMES),
+        notes: r.optStr("notes"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      logLeadCall(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
   });
 }
 
-export async function addLeadNote(input: { leadId: string; body: string }) {
-  const parsedBody = parseRequiredLeadText(
-    input.body,
-    "note_body_required",
-    "Note body is required",
-  );
-
-  if (!parsedBody.ok) {
-    return parsedBody;
-  }
-
+export async function addLeadNote(input: unknown) {
   return runAction({
-    actionName: "workflow.add_note",
+    name: "workflow.add_note",
     access: { kind: "auth" },
-    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.addLeadNote({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        body: parsedBody.value,
-      }),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        body: r.str("body"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      addLeadNoteUseCase(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
   });
 }

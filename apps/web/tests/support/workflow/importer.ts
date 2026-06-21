@@ -38,7 +38,7 @@ export function createWorkflowImporter(input: {
         | {
             type: "priority";
             lead: ScenarioLeadRef;
-            prioridad: "P1" | "P2" | "SIN RESULTADO";
+            priority: "P1" | "P2" | "SIN RESULTADO";
           }
       >;
       jobKey?: string;
@@ -59,7 +59,7 @@ export function createWorkflowImporter(input: {
           row: rowNo,
           ruc: row.lead.organization.ruc,
           type: "import_prioridad",
-          prioridad: row.prioridad,
+          priority: row.priority,
         };
       });
 

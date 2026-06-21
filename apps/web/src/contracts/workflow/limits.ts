@@ -1,0 +1,2 @@
+export const MAX_RATE_REVISION_FILES = 3;
+export const MAX_RATE_REVISION_ROUNDS = 3;
