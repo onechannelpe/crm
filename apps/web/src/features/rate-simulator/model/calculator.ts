@@ -197,7 +197,7 @@ export function calculateRates(input: RatesInput): ParseResult<RatesResult> {
   };
 }
 
-export function formatPercent(value: bigint): string {
+function formatPercent(value: bigint): string {
   const asPercentScaled = divideRoundHalfUp(value * 10_000n, SCALE);
   const whole = asPercentScaled / 100n;
   const decimals = (asPercentScaled % 100n).toString().padStart(2, "0");

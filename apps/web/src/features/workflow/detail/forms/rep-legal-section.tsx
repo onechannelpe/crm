@@ -22,7 +22,7 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { recordRepLegalMutation } from "../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
@@ -35,8 +35,7 @@ export function RepLegalSection(props: {
 }) {
   const record = useAction(recordRepLegalMutation);
 
-  const canEdit = () =>
-    props.data.lead.stage === "SETUP_EXECUTION" && !repLegal();
+  const canEdit = () => props.data.lead.stage === "SETUP" && !repLegal();
   const repLegal = () => props.data.repLegal;
 
   const [nombres, setNombres] = createSignal(repLegal()?.nombres ?? "");
@@ -51,11 +50,13 @@ export function RepLegalSection(props: {
   const [email, setEmail] = createSignal(repLegal()?.email ?? "");
 
   const [saving, setSaving] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [saveErrorMessage, setSaveErrorMessage] = createSignal<string | null>(
+    null,
+  );
 
   async function handleSave(e: SubmitEvent) {
     e.preventDefault();
-    setError(null);
+    setSaveErrorMessage(null);
     setSaving(true);
     try {
       await record({
@@ -68,10 +69,8 @@ export function RepLegalSection(props: {
         email: email().trim(),
       });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(
-        toAppError(err, "Error al guardar representante legal").publicMessage,
-      );
+    } catch (caught) {
+      setSaveErrorMessage(actionErrorMessage(caught));
     } finally {
       setSaving(false);
     }
@@ -191,7 +190,7 @@ export function RepLegalSection(props: {
               </FieldRow>
             </FieldTable>
 
-            <Show when={error()}>
+            <Show when={saveErrorMessage()}>
               {(msg) => <p class={formStyles.error}>{msg()}</p>}
             </Show>
 

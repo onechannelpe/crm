@@ -1,11 +1,14 @@
 import { useAction } from "@solidjs/router";
 
 import { UserPicker } from "~/components/ui/pickers/user-picker";
-import { toAppError } from "~/lib/app-errors";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { reassignLeadMutation } from "../../data/command-mutations";
 import { assignableExecutivesQuery } from "../../data/queries";
-import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
+import {
+  revalidateWorkflowLead,
+  revalidateWorkflowLeadList,
+} from "../../data/revalidate-workflow";
 
 export interface ExecutivePickerProps {
   leadId: string;
@@ -20,11 +23,16 @@ export function ExecutivePicker(props: ExecutivePickerProps) {
   async function handleSelect(executiveId: number) {
     try {
       await reassign({ leadId: props.leadId, newExecutiveId: executiveId });
-      await revalidateWorkflowLead(props.leadId);
+      // Reassigning changes ownership, which affects "mine" list filters, so the
+      // list view must refresh too, not only the open record.
+      await Promise.all([
+        revalidateWorkflowLead(props.leadId),
+        revalidateWorkflowLeadList(),
+      ]);
       props.onSelect();
-    } catch (err) {
-      throw new Error(toAppError(err, "Error al reasignar").publicMessage, {
-        cause: err,
+    } catch (caught) {
+      throw new Error(actionErrorMessage(caught), {
+        cause: caught,
       });
     }
   }

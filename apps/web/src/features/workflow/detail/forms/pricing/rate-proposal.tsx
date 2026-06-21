@@ -1,17 +1,24 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, createUniqueId, For, Show } from "solid-js";
 
-import { uploadLeadNegotiationFile } from "~/actions/workflow/files";
+import { uploadLeadRateRevisionFile } from "~/actions/workflow/files";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Paperclip from "~/components/icons/paperclip";
 import Target from "~/components/icons/target";
 import Trash from "~/components/icons/trash";
 import { Button } from "~/components/ui/input/button";
+import {
+  InlineFieldEditor,
+  InlineOptionsEditor,
+} from "~/components/ui/input/inline-field-editor";
+import type { EditRateProposalInput } from "~/contracts/workflow/inputs";
+import { MAX_RATE_REVISION_FILES } from "~/contracts/workflow/limits";
 import type {
-  LeadDetailNegotiationRequestView,
-  LeadDetailQuotationView,
+  LeadDetailRateProposalView,
+  LeadDetailRateRevisionView,
 } from "~/contracts/workflow/views";
+import { CURRENCIES } from "~/contracts/workflow/vocabulary";
 import {
   formatAmount,
   formatRate,
@@ -28,15 +35,17 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
-import { toAppError } from "~/lib/app-errors";
+import { formatDate } from "~/lib/utils";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
-  approveForSaleMutation,
-  requestRateNegotiationMutation,
-} from "../../data/command-mutations";
-import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
+  acceptRateMutation,
+  editRateProposalMutation,
+  requestRateRevisionMutation,
+} from "../../../data/command-mutations";
+import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";
 
-import styles from "./quoted.module.css";
+import styles from "../quoted.module.css";
 
 type StagedFile = {
   artifactId: string;
@@ -44,54 +53,121 @@ type StagedFile = {
   sizeBytes: number;
 };
 
-const MAX_NEGOTIATION_FILES = 3;
-
-type QuotedSectionProps = {
+type RateProposalSectionProps = {
   leadId: string;
-  quotation: LeadDetailQuotationView;
-  negotiationRequests: LeadDetailNegotiationRequestView[];
-  canRequestNegotiation: boolean;
-  canApprove: boolean;
+  proposal: LeadDetailRateProposalView;
+  reservationExpiresAt: number | null;
+  rateRevisions: LeadDetailRateRevisionView[];
+  canRequestRevision: boolean;
+  canAccept: boolean;
+  canEdit: boolean;
 };
 
-export function QuotedSection(props: QuotedSectionProps) {
-  const approve = useAction(approveForSaleMutation);
-  const requestNegotiation = useAction(requestRateNegotiationMutation);
+export function RateProposalSection(props: RateProposalSectionProps) {
+  const accept = useAction(acceptRateMutation);
+  const requestRevision = useAction(requestRateRevisionMutation);
+  const edit = useAction(editRateProposalMutation);
 
-  const [approving, setApproving] = createSignal(false);
-  const [showNegotiationForm, setShowNegotiationForm] = createSignal(false);
+  const [accepting, setAccepting] = createSignal(false);
+  const [showRevisionForm, setShowRevisionForm] = createSignal(false);
   const [justification, setJustification] = createSignal("");
   const [stagedFiles, setStagedFiles] = createSignal<StagedFile[]>([]);
   const [uploading, setUploading] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
   const [isDragging, setIsDragging] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [acceptErrorMessage, setAcceptErrorMessage] = createSignal<
+    string | null
+  >(null);
+  const [revisionErrorMessage, setRevisionErrorMessage] = createSignal<
+    string | null
+  >(null);
   const justificationId = createUniqueId();
   const fileInputId = createUniqueId();
 
-  const currentRound = () => props.negotiationRequests.length;
+  const currentRound = () => props.rateRevisions.length;
   const isRenegotiation = () => currentRound() > 0;
+  const isExpired = () =>
+    props.proposal.outcome === "pending" &&
+    props.reservationExpiresAt !== null &&
+    props.reservationExpiresAt <= Date.now();
 
-  async function handleApprove() {
-    setError(null);
-    setApproving(true);
+  async function handleAccept() {
+    setAcceptErrorMessage(null);
+    setAccepting(true);
     try {
-      await approve({ leadId: props.leadId });
+      await accept({ leadId: props.leadId, proposalId: props.proposal.id });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(toAppError(err, "Error al aprobar").publicMessage);
+    } catch (caught) {
+      setAcceptErrorMessage(actionErrorMessage(caught));
     } finally {
-      setApproving(false);
+      setAccepting(false);
     }
   }
 
+  async function submitField(patch: Partial<EditRateProposalInput>) {
+    try {
+      await edit({
+        leadId: props.leadId,
+        proposalId: props.proposal.id,
+        proposedDebitRate: props.proposal.proposedDebitRate,
+        proposedCreditRate: props.proposal.proposedCreditRate,
+        proposedForeignRate: props.proposal.proposedForeignRate,
+        fee: props.proposal.fee,
+        paybackPricing: props.proposal.paybackPricing,
+        currency: props.proposal.currency,
+        ...patch,
+      });
+      await revalidateWorkflowLead(props.leadId);
+    } catch (caught) {
+      throw new Error(actionErrorMessage(caught), { cause: caught });
+    }
+  }
+
+  const numberFieldEdit = (
+    label: string,
+    current: number,
+    toPatch: (value: number) => Partial<EditRateProposalInput>,
+  ) =>
+    props.canEdit
+      ? {
+          ariaLabel: `Editar ${label}`,
+          renderEditor: (onClose: () => void) => (
+            <InlineFieldEditor
+              initialValue={String(current)}
+              ariaLabel={label}
+              type="number"
+              step="0.01"
+              min="0"
+              onSubmit={(value) => submitField(toPatch(Number(value)))}
+              onClose={onClose}
+            />
+          ),
+        }
+      : undefined;
+
+  const currencyFieldEdit = () =>
+    props.canEdit
+      ? {
+          ariaLabel: "Editar Moneda",
+          renderEditor: (onClose: () => void) => (
+            <InlineOptionsEditor
+              options={CURRENCIES}
+              selected={props.proposal.currency}
+              ariaLabel="Moneda"
+              onSubmit={(value) => submitField({ currency: value })}
+              onClose={onClose}
+            />
+          ),
+        }
+      : undefined;
+
   async function handleUploadFiles(files: File[]) {
     if (files.length === 0 || uploading()) return;
-    setError(null);
+    setRevisionErrorMessage(null);
 
-    if (stagedFiles().length + files.length > MAX_NEGOTIATION_FILES) {
-      setError(
-        `Solo se pueden adjuntar hasta ${MAX_NEGOTIATION_FILES} archivos por solicitud`,
+    if (stagedFiles().length + files.length > MAX_RATE_REVISION_FILES) {
+      setRevisionErrorMessage(
+        `Solo se pueden adjuntar hasta ${MAX_RATE_REVISION_FILES} archivos por solicitud`,
       );
       return;
     }
@@ -102,7 +178,7 @@ export function QuotedSection(props: QuotedSectionProps) {
         files.map((file) => {
           const formData = new FormData();
           formData.set("file", file);
-          return uploadLeadNegotiationFile(props.leadId, formData);
+          return uploadLeadRateRevisionFile(props.leadId, formData);
         }),
       );
 
@@ -117,12 +193,12 @@ export function QuotedSection(props: QuotedSectionProps) {
             sizeBytes: result.value.sizeBytes,
           });
         } else {
-          failures.push(result.error.publicMessage);
+          failures.push(actionErrorMessage(result.error));
         }
       });
 
       if (failures.length > 0) {
-        setError(
+        setRevisionErrorMessage(
           failures.length === 1
             ? failures[0]
             : "Algunos archivos no se pudieron subir",
@@ -132,8 +208,8 @@ export function QuotedSection(props: QuotedSectionProps) {
       if (successes.length > 0) {
         setStagedFiles((prev) => [...prev, ...successes]);
       }
-    } catch (err) {
-      setError(toAppError(err, "Error al subir archivo").publicMessage);
+    } catch (caught) {
+      setRevisionErrorMessage(actionErrorMessage(caught));
     } finally {
       setUploading(false);
     }
@@ -143,28 +219,28 @@ export function QuotedSection(props: QuotedSectionProps) {
     setStagedFiles((prev) => prev.filter((f) => f.artifactId !== artifactId));
   }
 
-  async function handleSubmitNegotiation(e: SubmitEvent) {
+  async function handleSubmitRevision(e: SubmitEvent) {
     e.preventDefault();
     if (submitting()) return;
     if (!justification().trim()) {
-      setError("El fundamento es requerido");
+      setRevisionErrorMessage("El fundamento es requerido");
       return;
     }
     if (stagedFiles().length === 0) {
-      setError("Se requiere al menos un documento de soporte");
+      setRevisionErrorMessage("Se requiere al menos un documento de soporte");
       return;
     }
-    setError(null);
+    setRevisionErrorMessage(null);
     setSubmitting(true);
     try {
-      await requestNegotiation({
+      await requestRevision({
         leadId: props.leadId,
         justification: justification().trim(),
         artifactIds: stagedFiles().map((f) => f.artifactId),
       });
       await revalidateWorkflowLead(props.leadId);
-    } catch (err) {
-      setError(toAppError(err, "Error al enviar solicitud").publicMessage);
+    } catch (caught) {
+      setRevisionErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -175,73 +251,129 @@ export function QuotedSection(props: QuotedSectionProps) {
   return (
     <RecordDetailSection>
       <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Propuesta recibida" />
+        <RecordDetailSectionTitle text="Tarifa propuesta" />
         <Show when={isRenegotiation()}>
           <span class={styles.roundBadge}>Ronda {currentRound() + 1}</span>
         </Show>
       </RecordDetailSectionHeader>
       <RecordDetailSectionBody>
         <FieldTable>
-          <RecordInlineCell label="Payback" icon={Moneybag}>
+          <RecordInlineCell
+            label="Payback"
+            icon={Moneybag}
+            edit={numberFieldEdit(
+              "Payback",
+              props.proposal.paybackPricing,
+              (value) => ({ paybackPricing: value }),
+            )}
+          >
             <FieldTextValue>
-              {formatAmount(props.quotation.paybackPricing)}
+              {formatAmount(props.proposal.paybackPricing)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="T. debito" icon={Target}>
+          <RecordInlineCell
+            label="T. debito"
+            icon={Target}
+            edit={numberFieldEdit(
+              "T. debito",
+              props.proposal.proposedDebitRate,
+              (value) => ({ proposedDebitRate: value }),
+            )}
+          >
             <FieldTextValue>
-              {formatRate(props.quotation.tarifaDebito)}
+              {formatRate(props.proposal.proposedDebitRate)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="T. credito" icon={Target}>
+          <RecordInlineCell
+            label="T. credito"
+            icon={Target}
+            edit={numberFieldEdit(
+              "T. credito",
+              props.proposal.proposedCreditRate,
+              (value) => ({ proposedCreditRate: value }),
+            )}
+          >
             <FieldTextValue>
-              {formatRate(props.quotation.tarifaCredito)}
+              {formatRate(props.proposal.proposedCreditRate)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="T. foraneo" icon={Target}>
+          <RecordInlineCell
+            label="T. foraneo"
+            icon={Target}
+            edit={numberFieldEdit(
+              "T. foraneo",
+              props.proposal.proposedForeignRate,
+              (value) => ({ proposedForeignRate: value }),
+            )}
+          >
             <FieldTextValue>
-              {formatRate(props.quotation.tarifaForaneo)}
+              {formatRate(props.proposal.proposedForeignRate)}
             </FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="Fee" icon={Moneybag}>
-            <FieldTextValue>{formatAmount(props.quotation.fee)}</FieldTextValue>
+          <RecordInlineCell
+            label="Fee"
+            icon={Moneybag}
+            edit={numberFieldEdit("Fee", props.proposal.fee, (value) => ({
+              fee: value,
+            }))}
+          >
+            <FieldTextValue>{formatAmount(props.proposal.fee)}</FieldTextValue>
           </RecordInlineCell>
-          <RecordInlineCell label="Moneda" icon={Package}>
-            <FieldTextValue>{props.quotation.moneda}</FieldTextValue>
+          <RecordInlineCell
+            label="Moneda"
+            icon={Package}
+            edit={currencyFieldEdit()}
+          >
+            <FieldTextValue>{props.proposal.currency}</FieldTextValue>
           </RecordInlineCell>
+          <Show when={props.reservationExpiresAt}>
+            {(expiresAt) => (
+              <RecordInlineCell label="Vigencia" icon={Package}>
+                <FieldTextValue>
+                  {isExpired()
+                    ? `Vencio el ${formatDate(expiresAt())}`
+                    : `Hasta el ${formatDate(expiresAt())}`}
+                </FieldTextValue>
+              </RecordInlineCell>
+            )}
+          </Show>
         </FieldTable>
 
-        <Show when={!showNegotiationForm()}>
+        <Show when={!showRevisionForm()}>
           <RecordDetailSectionActions stack>
-            <Show when={props.canApprove}>
+            <Show when={props.canAccept}>
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
-                loading={approving()}
-                onClick={() => void handleApprove()}
+                loading={accepting()}
+                onClick={() => void handleAccept()}
               >
-                Aprobar para venta
+                Aceptar tarifa
               </Button>
             </Show>
-            <Show when={props.canRequestNegotiation}>
+            <Show when={props.canRequestRevision}>
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => setShowNegotiationForm(true)}
+                onClick={() => {
+                  setAcceptErrorMessage(null);
+                  setShowRevisionForm(true);
+                }}
               >
-                Solicitar revision de tasa
+                Solicitar revision de tarifa
               </Button>
             </Show>
           </RecordDetailSectionActions>
         </Show>
 
-        <Show when={showNegotiationForm()}>
+        <Show when={showRevisionForm()}>
           <div class={styles.negotiationForm}>
             <p class={styles.negotiationFormTitle}>
-              Solicitud de revision de tasa
+              Solicitud de revision de tarifa
             </p>
-            <form onSubmit={(e) => void handleSubmitNegotiation(e)}>
+            <form onSubmit={(e) => void handleSubmitRevision(e)}>
               <label class={styles.justificationLabel}>
                 Fundamento
                 <textarea
@@ -322,7 +454,9 @@ export function QuotedSection(props: QuotedSectionProps) {
                 </Show>
               </div>
 
-              {error() && <p class={styles.error}>{error()}</p>}
+              {revisionErrorMessage() && (
+                <p class={styles.error}>{revisionErrorMessage()}</p>
+              )}
 
               <div class={styles.formActions}>
                 <Button
@@ -330,10 +464,10 @@ export function QuotedSection(props: QuotedSectionProps) {
                   variant="secondary"
                   size="sm"
                   onClick={() => {
-                    setShowNegotiationForm(false);
+                    setShowRevisionForm(false);
                     setStagedFiles([]);
                     setJustification("");
-                    setError(null);
+                    setRevisionErrorMessage(null);
                   }}
                 >
                   Cancelar
@@ -352,7 +486,7 @@ export function QuotedSection(props: QuotedSectionProps) {
           </div>
         </Show>
 
-        <Show when={error() && !showNegotiationForm()}>
+        <Show when={acceptErrorMessage()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
       </RecordDetailSectionBody>

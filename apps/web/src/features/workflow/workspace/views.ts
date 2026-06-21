@@ -9,7 +9,7 @@ export type WorkspaceView = {
   readonly permission?: Permission;
 };
 
-export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
+const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   {
     id: "mine",
     label: "Mis clientes",
@@ -24,9 +24,9 @@ export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
     permission: "lead:review",
   },
   {
-    id: "quotation",
-    label: "Cotización",
-    filters: (): ListLeadsFiltersInput => ({ stage: "QUOTING" }),
+    id: "pricing",
+    label: "Tarifa",
+    filters: (): ListLeadsFiltersInput => ({ stage: "PRICING" }),
     permission: "quotation:create",
   },
   {

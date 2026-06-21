@@ -1,4 +1,3 @@
-import type { Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import type { LeadListRowView } from "~/contracts/workflow/views";
@@ -13,7 +12,7 @@ let nextOptimisticLeadId = -1;
 
 export function createOptimisticLeadRow(input: {
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   executiveId: number;
   executiveName: string;
@@ -26,7 +25,7 @@ export function createOptimisticLeadRow(input: {
   return {
     id: `optimistic-${nextOptimisticLeadId--}`,
     ruc: input.ruc,
-    razonSocial: input.razonSocial,
+    legalName: input.legalName,
     address: input.address,
     executiveId: input.executiveId,
     executiveName: input.executiveName,
@@ -34,30 +33,17 @@ export function createOptimisticLeadRow(input: {
     createdByName: input.createdByName,
     stage: "QUALIFYING",
     status: null,
-    prioridad: null,
-    nextStep: "REVIEW_LEAD",
+    priority: null,
+    nextStep: "NO_ACTION",
     createdAt: now,
     updatedAt: now,
     optimisticClientKey: `new:${input.ruc}:${now}`,
   };
 }
 
-/**
- * Read optimistic rows for a given key reactively.
- * Safe to call inside source() or other reactive contexts.
- */
+/** Reactive read for source() and other tracking contexts. */
 export function getOptimisticLeadRows(key: string): OptimisticLeadRow[] {
   return state[key] ?? [];
-}
-
-/**
- * Returns a stable accessor for a given key.
- * Use this when you need a fixed Accessor<T> reference outside a reactive context.
- */
-export function useOptimisticLeadRows(
-  key: string,
-): Accessor<OptimisticLeadRow[]> {
-  return () => state[key] ?? [];
 }
 
 export function addOptimisticLead(
