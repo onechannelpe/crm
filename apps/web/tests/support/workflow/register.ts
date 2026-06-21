@@ -1,38 +1,58 @@
+import type { SettlementBank } from "~/contracts/workflow/vocabulary";
+import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/commands/register-lead";
+
 import type { TestRuntime } from "../runtime/app";
-import { runTestWorkflowCommand, type TestCommandOverrides } from "./command";
+import { registerLeadPorts } from "./deps";
+import { withMerchantDefaults } from "./seed";
 
 export type RegisteredLeadSnapshot = {
   id: string;
   organizationId: string;
   organizationRuc: string;
-  organizationName: string;
+  organizationLegalName: string | null;
   organizationAddress: string | null;
+  organizationGiroNegocio: string | null;
+};
+
+export type RegisteredLeadCommercialSnapshot = {
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  ticket: number;
+  settlementBank: string;
+  posCount: number;
 };
 
 export type RegisterLeadResult = {
   leadId: string;
   snapshot: RegisteredLeadSnapshot;
+  commercial: RegisteredLeadCommercialSnapshot;
   historyEventTypes: string[];
 };
 
 export async function registerLead(input: {
   runtime: TestRuntime;
   ruc: string;
-  actor?: { userId: number; role: "admin" | "executive"; branchId: number };
-  executiveId?: number;
-  commandOverrides?: TestCommandOverrides;
+  actor?: { userId: number; role: "executive" | "admin"; branchId: number };
+  currentProvider?: string;
+  currentDebitRate?: number;
+  currentCreditRate?: number;
+  gpv?: number;
+  ticket?: number;
+  giroNegocio?: string | null;
+  settlementBank?: SettlementBank;
+  posCount?: number;
 }): Promise<RegisterLeadResult> {
-  const actor = input.actor ?? { userId: 1, role: "admin", branchId: 1 };
-  const executiveId = input.executiveId ?? 1;
-  const result = await runTestWorkflowCommand(
-    input.runtime,
-    (commandApi) =>
-      commandApi.registerLead({
-        actor,
-        ruc: input.ruc,
-        executiveId,
-      }),
-    input.commandOverrides,
+  const actor = input.actor ?? { userId: 1, role: "executive", branchId: 1 };
+  const result = await workflowRegisterLead(
+    {
+      actor,
+      ruc: input.ruc,
+      ...withMerchantDefaults(input),
+      giroNegocio: input.giroNegocio ?? "Retail",
+    },
+    registerLeadPorts(input.runtime),
   );
 
   if (!result.ok) {
@@ -45,17 +65,26 @@ export async function registerLead(input: {
     .select([
       "lead.id",
       "lead.organization_id",
+      "lead.current_provider",
+      "lead.current_debit_rate",
+      "lead.current_credit_rate",
+      "lead.gpv",
+      "lead.ticket",
+      "lead.settlement_bank",
+      "lead.pos_count",
       "org.ruc",
-      "org.name",
+      "org.legal_name",
       "org.address",
+      "org.giro_negocio",
     ])
     .where("lead.id", "=", result.value.leadId)
     .executeTakeFirstOrThrow();
 
   const history = await input.runtime.ctx.db
-    .selectFrom("workflow_history_events")
-    .select(["event_type"])
-    .where("lead_id", "=", result.value.leadId)
+    .selectFrom("events")
+    .select(["type"])
+    .where("entity_type", "=", "lead")
+    .where("entity_id", "=", result.value.leadId)
     .orderBy("occurred_at", "asc")
     .execute();
 
@@ -65,10 +94,20 @@ export async function registerLead(input: {
       id: row.id,
       organizationId: row.organization_id,
       organizationRuc: row.ruc,
-      organizationName: row.name,
+      organizationLegalName: row.legal_name,
       organizationAddress: row.address,
+      organizationGiroNegocio: row.giro_negocio,
     },
-    historyEventTypes: history.map((event) => event.event_type),
+    commercial: {
+      currentProvider: row.current_provider,
+      currentDebitRate: row.current_debit_rate,
+      currentCreditRate: row.current_credit_rate,
+      gpv: row.gpv,
+      ticket: row.ticket,
+      settlementBank: row.settlement_bank,
+      posCount: row.pos_count,
+    },
+    historyEventTypes: history.map((event) => event.type),
   };
 }
 

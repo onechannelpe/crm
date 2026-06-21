@@ -1,0 +1,38 @@
+import type { LeadBootstrapPreviewView } from "~/contracts/workflow/views";
+import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
+import type { PartyRepository } from "~/server/identity/organization/repo";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
+
+export async function getLeadBootstrapPreview(
+  deps: { party: PartyRepository },
+  enrichment: OrganizationEnrichment,
+  input: { ruc: string },
+): Promise<Result<LeadBootstrapPreviewView, DomainError>> {
+  const existingOrganization = await deps.party.findOrganizationByRuc(
+    input.ruc,
+  );
+  if (existingOrganization) {
+    return Ok({
+      legalName: existingOrganization.legalName,
+      address: existingOrganization.address,
+      engineStatus: "available",
+    });
+  }
+
+  const preview = await enrichment.enrichByRuc(input.ruc);
+
+  if (!preview) {
+    return Ok({
+      legalName: null,
+      address: null,
+      engineStatus: "missing",
+    });
+  }
+
+  return Ok({
+    legalName: preview.legalName,
+    address: preview.address,
+    engineStatus: "available",
+  });
+}

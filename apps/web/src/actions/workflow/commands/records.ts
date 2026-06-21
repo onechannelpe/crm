@@ -1,395 +1,251 @@
 "use server";
 
-import type {
-  AbonoBank,
-  ModalidadCobro,
-  ProductScope,
+import {
+  SETTLEMENT_BANKS,
+  COLLECTION_MODES,
+  PRODUCT_SCOPES,
 } from "~/contracts/workflow/vocabulary";
-import { validationError } from "~/lib/app-errors";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-import {
-  parseRequiredLeadPriority,
-  parseRequiredLeadStatus,
-  parseRequiredLeadText,
-} from "~/server/workflow/parsers";
-import {
-  type ReassignLeadCommandInput,
-  type RegisterLeadCommandInput,
-} from "~/server/workflow/types";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { isErr, Ok } from "~/server/shared/result";
+import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
+import { deleteLeadCommand } from "~/server/workflow/lead/commands/delete-lead";
+import { editCommercialScopeCommand } from "~/server/workflow/lead/commands/edit-commercial-scope";
+import { reassignLeadCommand } from "~/server/workflow/lead/commands/reassign-lead";
+import { recordRepLegalCommand } from "~/server/workflow/lead/commands/record-rep-legal";
+import { registerLead } from "~/server/workflow/lead/commands/register-lead";
+import { removeFromFavoritesCommand } from "~/server/workflow/lead/commands/remove-from-favorites";
+import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sunat-refresh";
+import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 
-export type CreateLeadInput = {
-  ruc: string;
-  executiveId?: number;
-};
+import { workflowActor } from "./actor";
 
-export type LeadReviewInput = {
-  leadId: string;
-  status: string;
-  prioridad: string;
-  reason: string;
-};
-
-export type SaveCommercialScopeInput = {
-  leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: AbonoBank;
-  posTotal: number;
-};
-
-export type RequestQuotationInput = {
-  leadId: string;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  giroNegocio: string;
-  abonoBank: AbonoBank;
-  posTotal: number;
-};
-
-export type SaveDigitalPolicyInput = {
-  leadId: string;
-  linkScope: ProductScope;
-  linkUrl: string | null;
-  onlineScope: ProductScope;
-  onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-};
-
-export type RecordRepLegalInput = {
-  leadId: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  dni: string;
-  telefono: string;
-  email: string;
-};
-
-export type ReassignLeadInput = {
-  leadId: string;
-  newExecutiveId: number;
-};
-
-function assertParsed<T>(
-  parsed: { ok: true; value: T } | { ok: false; error: { message: string } },
-): T {
-  if (!parsed.ok) {
-    throw validationError(parsed.error.message);
-  }
-  return parsed.value;
+function parseLeadRef(input: unknown) {
+  return parseObject(input, validationFail, (r) => ({
+    leadId: r.str("leadId"),
+  }));
 }
 
-function parseCommercialScope(input: {
-  proveedorActual: string;
-  giroNegocio: string;
-}) {
-  const proveedorActual = parseRequiredLeadText(
-    input.proveedorActual,
-    "proveedor_actual_required",
-    "Proveedor actual is required",
-  );
+export async function requestLeadCreation(input: unknown) {
+  return runAction({
+    name: "workflow.register_lead",
+    access: { kind: "auth" },
 
-  if (!proveedorActual.ok) {
-    return proveedorActual;
-  }
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        ruc: r.str("ruc"),
+        currentProvider: r.str("currentProvider"),
+        currentDebitRate: r.num("currentDebitRate"),
+        currentCreditRate: r.num("currentCreditRate"),
+        gpv: r.num("gpv"),
+        ticket: r.num("ticket"),
+        giroNegocio: r.str("giroNegocio"),
+        settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
+        posCount: r.num("posCount"),
+      })),
 
-  const giroNegocio = parseRequiredLeadText(
-    input.giroNegocio,
-    "giro_negocio_required",
-    "Giro de negocio is required",
-  );
+    execute: ({ actor }, payload) =>
+      registerLead(
+        { actor: workflowActor(actor), ...payload },
+        {
+          ...getServerRuntime().workflow.ports(),
+          identity: getServerRuntime().workflow.organizationEnrichment,
+        },
+      ),
+  });
+}
 
-  if (!giroNegocio.ok) {
-    return giroNegocio;
-  }
+export async function requestEditCommercialScope(input: unknown) {
+  return runAction({
+    name: "workflow.edit_commercial_scope",
+    access: { kind: "auth" },
 
-  return {
-    ok: true,
-    value: {
-      proveedorActual: proveedorActual.value,
-      giroNegocio: giroNegocio.value,
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        currentProvider: r.str("currentProvider"),
+        currentDebitRate: r.num("currentDebitRate"),
+        currentCreditRate: r.num("currentCreditRate"),
+        gpv: r.num("gpv"),
+        ticket: r.num("ticket"),
+        giroNegocio: r.str("giroNegocio"),
+        settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
+        posCount: r.num("posCount"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      editCommercialScopeCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function requestSaveDigitalPolicy(input: unknown) {
+  return runAction({
+    name: "workflow.save_digital_policy",
+    access: { kind: "auth" },
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        linkScope: r.enum("linkScope", PRODUCT_SCOPES),
+        linkUrl: r.optStr("linkUrl") ?? null,
+        onlineScope: r.enum("onlineScope", PRODUCT_SCOPES),
+        onlineUrl: r.optStr("onlineUrl") ?? null,
+        onlineCollectionMode:
+          r.optEnum("onlineCollectionMode", COLLECTION_MODES) ?? null,
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      saveDigitalPolicyCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function requestRecordRepLegal(input: unknown) {
+  return runAction({
+    name: "workflow.record_rep_legal",
+    access: { kind: "auth" },
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        nombres: r.str("nombres"),
+        apellidoPaterno: r.str("apellidoPaterno"),
+        apellidoMaterno: r.str("apellidoMaterno"),
+        dni: r.str("dni"),
+        telefono: r.str("telefono"),
+        email: r.str("email"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      recordRepLegalCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function requestLeadReassignment(input: unknown) {
+  return runAction({
+    name: "workflow.reassign_lead",
+    access: { kind: "auth" },
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        newExecutiveId: r.posInt("newExecutiveId"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      reassignLeadCommand(
+        {
+          actor: workflowActor(actor),
+          leadId: payload.leadId,
+          toExecutiveId: payload.newExecutiveId,
+        },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function requestAddLeadToFavorites(input: unknown) {
+  return runAction({
+    name: "workflow.add_lead_to_favorites",
+    access: { kind: "auth" },
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: async ({ actor }, { leadId }) => {
+      const result = await addToFavoritesCommand(
+        {
+          actor: workflowActor(actor),
+          leadId,
+        },
+        getServerRuntime().workflow.ports(),
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Empresa agregada a favoritos" });
     },
-  } as const;
-}
-
-export async function requestLeadCreation(input: CreateLeadInput) {
-  return runAction({
-    actionName: "workflow.register_lead",
-    access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.registerLead({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        ruc: input.ruc,
-        executiveId: input.executiveId ?? actor.userId,
-      } satisfies RegisterLeadCommandInput),
   });
 }
 
-export async function requestLeadReview(input: LeadReviewInput) {
-  const status = assertParsed(parseRequiredLeadStatus(input.status));
-  const prioridad = assertParsed(parseRequiredLeadPriority(input.prioridad));
-  const reason = assertParsed(
-    parseRequiredLeadText(
-      input.reason,
-      "review_reason_required",
-      "Reason is required",
-    ),
-  );
-
+export async function requestRemoveLeadFromFavorites(input: unknown) {
   return runAction({
-    actionName: "workflow.review_lead",
+    name: "workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.reviewLead({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
+    execute: async ({ actor }, { leadId }) => {
+      const result = await removeFromFavoritesCommand(
+        {
+          actor: workflowActor(actor),
+          leadId,
         },
-        leadId: input.leadId,
-        status,
-        prioridad,
-        reason,
-      }),
+        getServerRuntime().workflow.ports(),
+      );
+
+      if (isErr(result)) {
+        return result;
+      }
+
+      return Ok({ message: "Empresa quitada de favoritos" });
+    },
   });
 }
 
-export async function requestSaveCommercialScope(
-  input: SaveCommercialScopeInput,
-) {
-  const commercialScope = assertParsed(parseCommercialScope(input));
-
+export async function requestLeadDeletion(input: unknown) {
   return runAction({
-    actionName: "workflow.save_commercial_scope",
+    name: "workflow.delete_lead",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.saveCommercialScope({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
+    execute: ({ actor }, { leadId }) =>
+      deleteLeadCommand(
+        {
+          actor: workflowActor(actor),
+          leadId,
         },
-        leadId: input.leadId,
-        proveedorActual: commercialScope.proveedorActual,
-        tasaActual: input.tasaActual,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        giroNegocio: commercialScope.giroNegocio,
-        abonoBank: input.abonoBank,
-        posTotal: input.posTotal,
-      }),
+        getServerRuntime().workflow.ports(),
+      ),
   });
 }
 
-export async function requestQuotation(input: RequestQuotationInput) {
-  const commercialScope = assertParsed(parseCommercialScope(input));
-
+export async function requestLeadSunatRefresh(input: unknown) {
   return runAction({
-    actionName: "workflow.request_quotation",
+    name: "workflow.request_sunat_refresh",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.requestQuotation({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
+    execute: ({ actor }, { leadId }) =>
+      requestSunatRefresh(
+        {
+          actor: workflowActor(actor),
+          leadId,
         },
-        leadId: input.leadId,
-        proveedorActual: commercialScope.proveedorActual,
-        tasaActual: input.tasaActual,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        giroNegocio: commercialScope.giroNegocio,
-        abonoBank: input.abonoBank,
-        posTotal: input.posTotal,
-      }),
-  });
-}
-
-export async function requestSaveDigitalPolicy(input: SaveDigitalPolicyInput) {
-  return runAction({
-    actionName: "workflow.save_digital_policy",
-    access: { kind: "auth" },
-    input: { leadId: input.leadId },
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.saveDigitalPolicy({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
+        {
+          leads: getServerRuntime().workflow.repos.leads,
+          enrichmentQueue: getServerRuntime().workflow.enrichmentQueue,
         },
-        ...input,
-      }),
-  });
-}
-
-export async function requestRecordRepLegal(input: RecordRepLegalInput) {
-  const nombres = assertParsed(
-    parseRequiredLeadText(
-      input.nombres,
-      "nombres_required",
-      "Nombres is required",
-    ),
-  );
-  const apellidoPaterno = assertParsed(
-    parseRequiredLeadText(
-      input.apellidoPaterno,
-      "apellido_paterno_required",
-      "Apellido paterno is required",
-    ),
-  );
-  const apellidoMaterno = assertParsed(
-    parseRequiredLeadText(
-      input.apellidoMaterno,
-      "apellido_materno_required",
-      "Apellido materno is required",
-    ),
-  );
-  const dni = assertParsed(
-    parseRequiredLeadText(input.dni, "dni_required", "DNI is required"),
-  );
-  const telefono = assertParsed(
-    parseRequiredLeadText(
-      input.telefono,
-      "telefono_required",
-      "Telefono is required",
-    ),
-  );
-  const email = assertParsed(
-    parseRequiredLeadText(input.email, "email_required", "Email is required"),
-  );
-
-  return runAction({
-    actionName: "workflow.record_rep_legal",
-    access: { kind: "auth" },
-    input: { leadId: input.leadId },
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.recordRepLegal({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        nombres,
-        apellidoPaterno,
-        apellidoMaterno,
-        dni,
-        telefono,
-        email,
-      }),
-  });
-}
-
-export async function requestStartSetupExecution(input: { leadId: string }) {
-  return runAction({
-    actionName: "workflow.start_setup_execution",
-    access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.startSetupExecution({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-      }),
-  });
-}
-
-export async function requestLeadReassignment(input: ReassignLeadInput) {
-  return runAction({
-    actionName: "workflow.reassign_lead",
-    access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.reassignLead({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        toExecutiveId: input.newExecutiveId,
-      } satisfies ReassignLeadCommandInput),
-  });
-}
-
-export async function requestAddLeadToFavorites(input: { leadId: string }) {
-  return runAction({
-    actionName: "workflow.add_lead_to_favorites",
-    access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.addToFavorites({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-      }),
-  });
-}
-
-export async function requestRemoveLeadFromFavorites(input: {
-  leadId: string;
-}) {
-  return runAction({
-    actionName: "workflow.remove_lead_from_favorites",
-    access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.removeFromFavorites({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-      }),
-  });
-}
-
-export async function requestLeadSunatRefresh(input: { leadId: string }) {
-  return runAction({
-    actionName: "workflow.request_sunat_refresh",
-    access: { kind: "auth" },
-    input,
-
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.requestSunatRefresh({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-      }),
+      ),
   });
 }

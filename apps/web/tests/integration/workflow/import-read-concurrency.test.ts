@@ -19,19 +19,19 @@ describe("integration import workflow concurrency", () => {
 
   it("applies import while export reads run concurrently without failures", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.lead.assignedTo("execOne", {
+    const leadOne = await scenario.seedDirect.leadAt("execOne", {
       key: "import-concurrency-one",
       organization: { key: "import-concurrency-one" },
       stage: "QUALIFYING",
       status: "DISPONIBLE",
-      prioridad: "P1",
+      priority: "P1",
     });
-    const leadTwo = await scenario.lead.assignedTo("execTwo", {
+    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
       key: "import-concurrency-two",
       organization: { key: "import-concurrency-two" },
       stage: "QUALIFYING",
       status: "SIN RESULTADO",
-      prioridad: "P1",
+      priority: "P1",
     });
     const recordExportQuery = runtime.integrations.recordExportQuery;
     const concurrentExportReads = (async () => {
@@ -47,7 +47,7 @@ describe("integration import workflow concurrency", () => {
     const applyPromise = scenario.importer.run({
       actor: "superuser",
       rows: [
-        { type: "priority", lead: leadOne, prioridad: "SIN RESULTADO" },
+        { type: "priority", lead: leadOne, priority: "SIN RESULTADO" },
         { type: "status", lead: leadTwo, status: "DISPONIBLE" },
       ],
     });

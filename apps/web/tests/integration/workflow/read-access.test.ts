@@ -3,8 +3,11 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
+import { workflowRepos } from "@tests/support/workflow/deps";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 describe("workflow read access", () => {
   let runtime: TestRuntime;
@@ -20,14 +23,16 @@ describe("workflow read access", () => {
 
   it("lets review users read record detail even when they are not the assigned executive", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.seedDirect.leadAt("execOne", {
       key: "read-access-back-office",
       organization: { key: "read-access-back-office" },
       stage: "QUALIFYING",
     });
 
-    const result = await runtime.workflow.queries.getLeadDetail({
-      actor: scenario.actor.by("backOne"),
+    const actor = scenario.actor.by("backOne");
+    const result = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: actor.userId,
+      actorRole: actor.role,
       leadId: lead.id,
     });
 
@@ -40,14 +45,16 @@ describe("workflow read access", () => {
     "lets %s read record detail even when they are not the assigned executive",
     async (role) => {
       const scenario = createWorkflowScenario(runtime);
-      const lead = await scenario.lead.assignedTo("execOne", {
+      const lead = await scenario.seedDirect.leadAt("execOne", {
         key: `read-access-${role}`,
         organization: { key: `read-access-${role}` },
-        stage: "QUOTED",
+        stage: "PRICING",
       });
 
-      const result = await runtime.workflow.queries.getLeadDetail({
-        actor: scenario.actor.withRole("backOne", role),
+      const actor = scenario.actor.withRole("backOne", role);
+      const result = await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
       });
 
@@ -58,14 +65,16 @@ describe("workflow read access", () => {
 
   it("blocks executives from reading another executive's record detail", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.seedDirect.leadAt("execOne", {
       key: "read-access-exec-blocked",
       organization: { key: "read-access-exec-blocked" },
       stage: "QUALIFYING",
     });
 
-    const result = await runtime.workflow.queries.getLeadDetail({
-      actor: scenario.actor.by("execTwo"),
+    const actor = scenario.actor.by("execTwo");
+    const result = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: actor.userId,
+      actorRole: actor.role,
       leadId: lead.id,
     });
 

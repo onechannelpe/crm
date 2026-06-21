@@ -1,9 +1,20 @@
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 
 import { createDeterministicIdFactory } from "../_core/ids";
 import { ISOLATED_DB_IDENTITIES } from "../identities/catalog";
 import type { TestRuntime } from "../runtime/app";
-import { seedLeadScenario, seedUser, type SeededOrganizationRef } from "./seed";
+import {
+  seedLeadScenario,
+  seedUser,
+  type LeadCommercialOptions,
+  type OrganizationSeedOptions,
+  type SeededOrganizationRef,
+} from "./seed";
 
 export type ScenarioActorKey = keyof typeof ISOLATED_DB_IDENTITIES;
 
@@ -15,27 +26,16 @@ export type ScenarioActor = {
 
 export type ScenarioLeadSeed = {
   key?: string;
-  organization: {
-    key?: string;
-    ruc?: string;
-    name?: string;
-  };
+  organization: OrganizationSeedOptions;
   executive: ScenarioActorKey | number;
-  stage:
-    | "QUALIFYING"
-    | "DISQUALIFIED"
-    | "SCOPING"
-    | "QUOTING"
-    | "QUOTED"
-    | "SETUP_PLAN"
-    | "SETUP_EXECUTION"
-    | "LIVE";
-  status?: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  prioridad?: "P1" | "P2" | "SIN RESULTADO" | null;
+  stage: LeadStage;
+  status?: LeadStatus | null;
+  priority?: LeadPriority | null;
   createdBy?: number;
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
+  commercial?: LeadCommercialOptions;
 };
 
 export type ScenarioLeadRef = {
@@ -82,8 +82,8 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
     },
   };
 
-  const lead = {
-    async assignedTo(
+  const seedDirectLead = {
+    async at(
       executive: ScenarioActorKey | number,
       input: Omit<ScenarioLeadSeed, "executive"> = {
         organization: {},
@@ -96,18 +96,20 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
         organization: {
           key: organizationKey,
           ruc: input.organization.ruc,
-          name: input.organization.name,
+          legalName: input.organization.legalName,
+          giroNegocio: input.organization.giroNegocio,
         },
         lead: {
           id: `lead-${key}`,
           executiveId: resolveExecutiveUserId(executive),
           stage: input.stage,
           status: input.status ?? null,
-          prioridad: input.prioridad ?? null,
+          priority: input.priority ?? null,
           createdBy: input.createdBy,
           updatedBy: input.updatedBy,
           createdAt: input.createdAt,
           updatedAt: input.updatedAt,
+          commercial: input.commercial,
         },
       });
       return {
@@ -170,7 +172,7 @@ export function createWorkflowLeadApis(runtime: TestRuntime) {
 
   return {
     actor,
-    lead,
+    seedDirectLead,
     user,
     ids,
   };

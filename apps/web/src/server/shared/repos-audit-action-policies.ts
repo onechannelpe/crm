@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
+import type { AuditPolicyRiskLevel } from "~/contracts/audit-reader/policy";
 import type { Database } from "~/lib/db/types";
-import type { AuditPolicyRiskLevel } from "~/server/audit-reader/contracts";
 
 export interface UpsertAuditActionPolicyInput {
   action: string;

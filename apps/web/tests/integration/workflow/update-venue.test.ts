@@ -3,9 +3,16 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { runTestWorkflowCommand } from "@tests/support/workflow/command";
+import {
+  workflowCommandPorts,
+  workflowRepos,
+} from "@tests/support/workflow/deps";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
+import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
 
 describe("update venue", () => {
   let runtime: TestRuntime;
@@ -18,125 +25,117 @@ describe("update venue", () => {
     await runtime.dispose();
   });
 
-  it("updates venue fields during setup execution", async () => {
+  it("updates venue fields during setup", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.atStage("SETUP", {
       key: "venue-update",
       organization: { key: "venue-update" },
-      stage: "SETUP_EXECUTION",
-      createdAt: 10,
-      updatedAt: 10,
-    });
-    await seedVenue({
-      leadId: lead.id,
-      venueId: "venue-update-1",
-      nombreComercial: "Local antiguo",
     });
 
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.updateVenue({
-        actor: scenario.actor.by("execOne"),
-        leadId: lead.id,
-        venueId: "venue-update-1",
-        nombreComercial: "Local corregido",
-        posQuantity: 3,
-        direccion: "Av. Nueva 123",
-        referencia: "Frente al parque",
-        distrito: "Miraflores",
-        provincia: "Lima",
-        departamento: "Lima",
-      }),
+    expectOk(
+      await createVenueCommand(
+        {
+          actor,
+          leadId: lead.id,
+          tradeName: "Local antiguo",
+          posQuantity: 1,
+          address: "Av. Principal 100",
+          addressReference: "Primer piso",
+          district: "Lima",
+          province: "Lima",
+          department: "Lima",
+        },
+        workflowCommandPorts(runtime),
+      ),
     );
 
-    expectOk(result);
-    const venue = await runtime.ctx.db
-      .selectFrom("workflow_lead_venues")
-      .selectAll()
-      .where("id", "=", "venue-update-1")
-      .executeTakeFirstOrThrow();
-    expect(venue.nombre_comercial).toBe("Local corregido");
-    expect(venue.pos_quantity).toBe(3);
-    expect(venue.direccion).toBe("Av. Nueva 123");
+    const seeded = expectOk(
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
+        leadId: lead.id,
+      }),
+    );
+    const venueId = seeded.venues[0].id;
 
-    const event = await runtime.ctx.db
-      .selectFrom("workflow_history_events")
-      .select(["event_type", "payload_json"])
-      .where("lead_id", "=", lead.id)
-      .where("event_type", "=", "venue_updated")
-      .executeTakeFirstOrThrow();
-    expect(event.payload_json).toContain("Local corregido");
+    const result = await updateVenueCommand(
+      {
+        actor,
+        leadId: lead.id,
+        venueId,
+        tradeName: "Local corregido",
+        posQuantity: 3,
+        address: "Av. Nueva 123",
+        addressReference: "Frente al parque",
+        district: "Miraflores",
+        province: "Lima",
+        department: "Lima",
+      },
+      workflowCommandPorts(runtime),
+    );
+    expectOk(result);
+
+    const updated = expectOk(
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
+        leadId: lead.id,
+      }),
+    );
+    expect(updated.venues[0]).toMatchObject({
+      tradeName: "Local corregido",
+      posQuantity: 3,
+      address: "Av. Nueva 123",
+    });
   });
 
-  it("blocks venue updates after setup execution", async () => {
+  it("blocks venue updates after setup", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const actor = scenario.actor.by("execOne");
+    const lead = await scenario.lead.atStage("LIVE", {
       key: "venue-update-live",
       organization: { key: "venue-update-live" },
-      stage: "LIVE",
-      createdAt: 10,
-      updatedAt: 10,
     });
-    await seedVenue({
-      leadId: lead.id,
-      venueId: "venue-update-live-1",
-      nombreComercial: "Local final",
-    });
+    const venueId = lead.venueIds[0];
 
-    const detail = await runtime.workflow.queries.getLeadDetail({
-      actor: scenario.actor.by("execOne"),
-      leadId: lead.id,
-    });
-    const detailValue = expectOk(detail);
-    expect(detailValue.availableActions).not.toContain("update-venue");
-
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.updateVenue({
-        actor: scenario.actor.by("execOne"),
+    const detail = expectOk(
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
         leadId: lead.id,
-        venueId: "venue-update-live-1",
-        nombreComercial: "Local cambiado",
-        posQuantity: 4,
-        direccion: "Av. Cambio 456",
-        referencia: "Esquina",
-        distrito: "San Isidro",
-        provincia: "Lima",
-        departamento: "Lima",
       }),
     );
+    expect(detail.lead.stage).toBe("LIVE");
+    expect(detail.availableActions).not.toContain("update-venue");
+    const originalTradeName = detail.venues[0].tradeName;
 
-    expectErr(result);
-    const venue = await runtime.ctx.db
-      .selectFrom("workflow_lead_venues")
-      .select(["nombre_comercial", "pos_quantity"])
-      .where("id", "=", "venue-update-live-1")
-      .executeTakeFirstOrThrow();
-    expect(venue.nombre_comercial).toBe("Local final");
-    expect(venue.pos_quantity).toBe(1);
+    const result = await updateVenueCommand(
+      {
+        actor,
+        leadId: lead.id,
+        venueId,
+        tradeName: "Local cambiado",
+        posQuantity: 4,
+        address: "Av. Cambio 456",
+        addressReference: "Esquina",
+        district: "San Isidro",
+        province: "Lima",
+        department: "Lima",
+      },
+      workflowCommandPorts(runtime),
+    );
+
+    const error = expectErr(result);
+    expect(error.code).toBe("invalid_stage");
+
+    const after = expectOk(
+      await getLeadDetail(workflowRepos(runtime), {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
+        leadId: lead.id,
+      }),
+    );
+    expect(after.venues[0].tradeName).toBe(originalTradeName);
   });
-
-  async function seedVenue(input: {
-    leadId: string;
-    venueId: string;
-    nombreComercial: string;
-  }) {
-    await runtime.ctx.db
-      .insertInto("workflow_lead_venues")
-      .values({
-        id: input.venueId,
-        lead_id: input.leadId,
-        nombre_comercial: input.nombreComercial,
-        pos_quantity: 1,
-        link_url: null,
-        online_url: null,
-        online_modalidad: null,
-        direccion: "Av. Principal 100",
-        referencia: "Primer piso",
-        distrito: "Lima",
-        provincia: "Lima",
-        departamento: "Lima",
-        created_at: 10,
-        created_by: 1,
-      })
-      .executeTakeFirstOrThrow();
-  }
 });

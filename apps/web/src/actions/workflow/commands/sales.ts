@@ -1,232 +1,130 @@
 "use server";
 
 import type {
-  SaleVenueAccount,
-  VenueDigitalConfig,
-} from "~/contracts/workflow/primitives";
-import { validationError } from "~/lib/app-errors";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-import { parseRequiredLeadText } from "~/server/workflow/parsers";
+  AddVenueAccountsInput,
+  CreateVenueInput,
+  UpdateVenueInput,
+} from "~/contracts/workflow/inputs";
+import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
+import {
+  SETTLEMENT_BANKS,
+  ACCOUNT_TYPE_KINDS,
+  COLLECTION_MODES,
+} from "~/contracts/workflow/vocabulary";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import type { DomainError } from "~/server/shared/domain-error";
+import {
+  parseObject,
+  validationFail,
+  type Reader,
+} from "~/server/shared/parsing";
+import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
+import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
+import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
 
-export type CreateVenueInput = {
-  leadId: string;
-  nombreComercial: string;
-  posQuantity: number;
-  digitalConfig?: VenueDigitalConfig;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
-};
+import { workflowActor } from "./actor";
 
-export type UpdateVenueInput = CreateVenueInput & {
-  venueId: string;
-};
-
-export type AddVenueAccountsInput = {
-  leadId: string;
-  venueId: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
-  dollarAccount?: SaleVenueAccount & { currency: "USD" };
-};
-
-function assertParsed<T>(
-  parsed: { ok: true; value: T } | { ok: false; error: { message: string } },
-): T {
-  if (!parsed.ok) {
-    throw validationError(parsed.error.message);
-  }
-  return parsed.value;
+function venueFields(r: Reader<DomainError>): CreateVenueInput {
+  return {
+    leadId: r.str("leadId"),
+    tradeName: r.str("tradeName"),
+    posQuantity: r.num("posQuantity"),
+    digitalConfig: r.optObj("digitalConfig", (c) => ({
+      linkUrl: c.optStr("linkUrl"),
+      onlineUrl: c.optStr("onlineUrl"),
+      onlineCollectionMode:
+        c.optEnum("onlineCollectionMode", COLLECTION_MODES) ?? null,
+    })),
+    address: r.str("address"),
+    addressReference: r.str("addressReference"),
+    district: r.str("district"),
+    province: r.str("province"),
+    department: r.str("department"),
+  };
 }
 
-export async function requestVenueCreation(input: CreateVenueInput) {
-  const nombreComercial = assertParsed(
-    parseRequiredLeadText(
-      input.nombreComercial,
-      "nombre_comercial_required",
-      "Nombre comercial is required",
-    ),
-  );
-  const direccion = assertParsed(
-    parseRequiredLeadText(
-      input.direccion,
-      "direccion_required",
-      "Direccion is required",
-    ),
-  );
-  const referencia = assertParsed(
-    parseRequiredLeadText(
-      input.referencia,
-      "referencia_required",
-      "Referencia is required",
-    ),
-  );
-  const distrito = assertParsed(
-    parseRequiredLeadText(
-      input.distrito,
-      "distrito_required",
-      "Distrito is required",
-    ),
-  );
-  const provincia = assertParsed(
-    parseRequiredLeadText(
-      input.provincia,
-      "provincia_required",
-      "Provincia is required",
-    ),
-  );
-  const departamento = assertParsed(
-    parseRequiredLeadText(
-      input.departamento,
-      "departamento_required",
-      "Departamento is required",
-    ),
-  );
+function accountFields<TCurrency extends "PEN" | "USD">(
+  r: Reader<DomainError>,
+  currency: TCurrency,
+): SaleVenueAccount & { currency: TCurrency } {
+  return {
+    currency,
+    banco: r.enum("banco", SETTLEMENT_BANKS),
+    tipoCuenta: r.enum("tipoCuenta", ACCOUNT_TYPE_KINDS),
+    nroCuenta: r.str("nroCuenta"),
+    cci: r.optStr("cci") ?? undefined,
+    isSettlement: r.bool("isSettlement"),
+  };
+}
 
+export async function requestVenueCreation(input: unknown) {
   return runAction({
-    actionName: "workflow.create_venue",
+    name: "workflow.create_venue",
     access: { kind: "auth" },
-    input: { leadId: input.leadId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.createVenue({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        nombreComercial,
-        posQuantity: input.posQuantity,
-        digitalConfig: input.digitalConfig,
-        direccion,
-        referencia,
-        distrito,
-        provincia,
-        departamento,
-      }),
+    parse: () => parseObject(input, validationFail, venueFields),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      createVenueCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
   });
 }
 
-export async function requestVenueUpdate(input: UpdateVenueInput) {
-  const nombreComercial = assertParsed(
-    parseRequiredLeadText(
-      input.nombreComercial,
-      "nombre_comercial_required",
-      "Nombre comercial is required",
-    ),
-  );
-  const direccion = assertParsed(
-    parseRequiredLeadText(
-      input.direccion,
-      "direccion_required",
-      "Direccion is required",
-    ),
-  );
-  const referencia = assertParsed(
-    parseRequiredLeadText(
-      input.referencia,
-      "referencia_required",
-      "Referencia is required",
-    ),
-  );
-  const distrito = assertParsed(
-    parseRequiredLeadText(
-      input.distrito,
-      "distrito_required",
-      "Distrito is required",
-    ),
-  );
-  const provincia = assertParsed(
-    parseRequiredLeadText(
-      input.provincia,
-      "provincia_required",
-      "Provincia is required",
-    ),
-  );
-  const departamento = assertParsed(
-    parseRequiredLeadText(
-      input.departamento,
-      "departamento_required",
-      "Departamento is required",
-    ),
-  );
-
+export async function requestVenueUpdate(input: unknown) {
   return runAction({
-    actionName: "workflow.update_venue",
+    name: "workflow.update_venue",
     access: { kind: "auth" },
-    input: { leadId: input.leadId, venueId: input.venueId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.updateVenue({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        venueId: input.venueId,
-        nombreComercial,
-        posQuantity: input.posQuantity,
-        digitalConfig: input.digitalConfig,
-        direccion,
-        referencia,
-        distrito,
-        provincia,
-        departamento,
-      }),
+    parse: () =>
+      parseObject(
+        input,
+        validationFail,
+        (r): UpdateVenueInput => ({
+          ...venueFields(r),
+          venueId: r.str("venueId"),
+        }),
+      ),
+
+    audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+
+    execute: ({ actor }, payload) =>
+      updateVenueCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
   });
 }
 
-export async function requestVenueAccountsAddition(
-  input: AddVenueAccountsInput,
-) {
-  const solesNroCuenta = assertParsed(
-    parseRequiredLeadText(
-      input.solesAccount.nroCuenta,
-      "soles_account_number_required",
-      "Soles account number is required",
-    ),
-  );
-
-  const dollarNroCuenta = input.dollarAccount
-    ? assertParsed(
-        parseRequiredLeadText(
-          input.dollarAccount.nroCuenta,
-          "dollar_account_number_required",
-          "Dollar account number is required",
-        ),
-      )
-    : null;
-
+export async function requestVenueAccountsAddition(input: unknown) {
   return runAction({
-    actionName: "workflow.add_venue_accounts",
+    name: "workflow.add_venue_accounts",
     access: { kind: "auth" },
-    input: { leadId: input.leadId, venueId: input.venueId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.commands.addVenueAccounts({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId: input.leadId,
-        venueId: input.venueId,
-        solesAccount: {
-          ...input.solesAccount,
-          nroCuenta: solesNroCuenta,
-        },
-        ...(input.dollarAccount && dollarNroCuenta
-          ? {
-              dollarAccount: {
-                ...input.dollarAccount,
-                nroCuenta: dollarNroCuenta,
-              },
-            }
-          : {}),
-      }),
+    parse: () =>
+      parseObject(
+        input,
+        validationFail,
+        (r): AddVenueAccountsInput => ({
+          leadId: r.str("leadId"),
+          venueId: r.str("venueId"),
+          solesAccount: r.obj("solesAccount", (a) => accountFields(a, "PEN")),
+          dollarAccount: r.optObj("dollarAccount", (a) =>
+            accountFields(a, "USD"),
+          ),
+        }),
+      ),
+
+    audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+
+    execute: ({ actor }, payload) =>
+      addVenueAccountsCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
   });
 }

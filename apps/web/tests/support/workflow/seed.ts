@@ -1,19 +1,34 @@
 import { randomUUIDv7 } from "bun";
 
-import type { TestRuntime } from "../runtime/app";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
+import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
-type OrganizationSeed = {
+import type { TestRuntime } from "../runtime/app";
+import { MERCHANT } from "./fixtures";
+
+export type OrganizationSeedOptions = {
+  key?: string;
+  ruc?: string;
+  legalName?: string | null;
+  giroNegocio?: string | null;
+};
+
+export type LeadCommercialOptions = Partial<LeadCommercialScope>;
+
+type OrganizationSeed = OrganizationSeedOptions & {
   key: string;
   id?: string;
-  ruc?: string;
-  name?: string;
   createdAt?: number;
 };
 
 export type SeededOrganizationRef = {
   id: string;
   ruc: string;
-  name: string;
+  legalName: string | null;
 };
 
 type LeadSeed = {
@@ -21,21 +36,14 @@ type LeadSeed = {
   organizationId?: string;
   organization?: SeededOrganizationRef;
   executiveId: number;
-  stage:
-    | "QUALIFYING"
-    | "DISQUALIFIED"
-    | "SCOPING"
-    | "QUOTING"
-    | "QUOTED"
-    | "SETUP_PLAN"
-    | "SETUP_EXECUTION"
-    | "LIVE";
-  status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  priority: LeadPriority | null;
   createdBy?: number;
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
+  commercial?: LeadCommercialOptions;
 };
 
 type LeadScenarioSeed = {
@@ -66,24 +74,27 @@ export async function seedOrganization(
     throw new Error("missing_seed_organization_key");
   }
   const ruc = input.ruc ?? buildDefaultRuc(key);
-  const name = input.name ?? `Org ${key}`;
+  const legalName =
+    input.legalName === undefined ? `Org ${key}` : input.legalName;
   await runtime.ctx.db
     .insertInto("organizations")
     .values({
       id,
       ruc,
-      name,
+      legal_name: legalName,
+      giro_negocio: input.giroNegocio ?? null,
       created_at: createdAt,
     })
     .execute();
 
-  return { id, ruc, name };
+  return { id, ruc, legalName };
 }
 
 export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
   const createdAt = input.createdAt ?? runtime.now.get();
   const updatedAt = input.updatedAt ?? createdAt;
   const organizationId = resolveLeadOrganizationId(input);
+  const commercial = withMerchantDefaults(input.commercial);
   await runtime.ctx.db
     .insertInto("workflow_leads")
     .values({
@@ -92,11 +103,18 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       executive_id: input.executiveId,
       stage: input.stage,
       status: input.status,
-      prioridad: input.prioridad,
+      priority: input.priority,
       created_by: input.createdBy ?? 1,
       updated_by: input.updatedBy ?? null,
       created_at: createdAt,
       updated_at: updatedAt,
+      current_provider: commercial.currentProvider,
+      current_debit_rate: commercial.currentDebitRate,
+      current_credit_rate: commercial.currentCreditRate,
+      gpv: commercial.gpv,
+      ticket: commercial.ticket,
+      settlement_bank: commercial.settlementBank,
+      pos_count: commercial.posCount,
     })
     .execute();
 }
@@ -123,13 +141,30 @@ function resolveLeadOrganizationId(input: LeadSeed): string {
   throw new Error("missing_seed_lead_organization");
 }
 
-function buildDefaultRuc(key: string): string {
+export function buildDefaultRuc(key: string): string {
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
     hash = (hash * 131 + key.charCodeAt(index)) % 1_000_000_000;
   }
   const digits = String(hash).padStart(9, "0");
   return `20${digits}`;
+}
+
+export function withMerchantDefaults(
+  input: LeadCommercialOptions | undefined,
+): LeadCommercialScope {
+  return {
+    currentProvider:
+      input?.currentProvider ?? MERCHANT.standard.currentProvider,
+    currentDebitRate:
+      input?.currentDebitRate ?? MERCHANT.standard.currentDebitRate,
+    currentCreditRate:
+      input?.currentCreditRate ?? MERCHANT.standard.currentCreditRate,
+    gpv: input?.gpv ?? MERCHANT.standard.gpv,
+    ticket: input?.ticket ?? MERCHANT.standard.ticket,
+    settlementBank: input?.settlementBank ?? MERCHANT.standard.settlementBank,
+    posCount: input?.posCount ?? MERCHANT.standard.posCount,
+  };
 }
 
 export async function seedUser(runtime: TestRuntime, input: UserSeed) {
@@ -150,6 +185,47 @@ export async function seedUser(runtime: TestRuntime, input: UserSeed) {
       role: input.role,
       is_active: 1,
       created_at: createdAt,
+    })
+    .execute();
+}
+
+type RateProposalSeed = {
+  id: string;
+  leadId: string;
+  round: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
+  fee: number;
+  paybackPricing: number;
+  proposedBy: number;
+  currency?: "PEN" | "USD";
+  outcome?: "pending" | "accepted" | "revision_requested";
+  proposedAt?: number;
+  decidedAt?: number | null;
+};
+
+export async function seedRateProposal(
+  runtime: TestRuntime,
+  input: RateProposalSeed,
+): Promise<void> {
+  const proposedAt = input.proposedAt ?? runtime.now.get();
+  await runtime.ctx.db
+    .insertInto("workflow_rate_proposals")
+    .values({
+      id: input.id,
+      lead_id: input.leadId,
+      round: input.round,
+      proposed_debit_rate: input.proposedDebitRate,
+      proposed_credit_rate: input.proposedCreditRate,
+      proposed_foreign_rate: input.proposedForeignRate,
+      fee: input.fee,
+      payback_pricing: input.paybackPricing,
+      currency: input.currency ?? "PEN",
+      proposed_by: input.proposedBy,
+      proposed_at: proposedAt,
+      outcome: input.outcome ?? "pending",
+      decided_at: input.decidedAt ?? null,
     })
     .execute();
 }

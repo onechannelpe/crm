@@ -3,7 +3,10 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { runTestWorkflowCommand } from "@tests/support/workflow/command";
+import {
+  workflowCommandPorts,
+  workflowRepos,
+} from "@tests/support/workflow/deps";
 import {
   expectLeadAssignment,
   expectLeadMetadata,
@@ -12,12 +15,15 @@ import {
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { reassignLeadCommand } from "~/server/workflow/lead/commands/reassign-lead";
+import { addLeadNote } from "~/server/workflow/lead/interaction/write";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+
 describe("workflow lead mutation metadata", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
     runtime = await createTestRuntime("workflow-lead-mutation-metadata");
-    runtime.now.set(1_000);
   });
 
   afterEach(async () => {
@@ -26,24 +32,26 @@ describe("workflow lead mutation metadata", () => {
 
   it("updates lead.updatedBy when a note is added", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    // Register in the past so a later mutation must advance updatedAt to pass.
+    runtime.now.set(10);
+    const lead = await scenario.lead.atStage("QUALIFYING", {
       key: "metadata-note",
       organization: { key: "metadata-note" },
-      stage: "QUALIFYING",
-      createdAt: 10,
-      updatedAt: 10,
     });
 
-    const result = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.addLeadNote({
+    runtime.now.set(1_000);
+    const result = await addLeadNote(
+      {
         actor: scenario.actor.by("execOne"),
         leadId: lead.id,
         body: "Test note",
-      }),
+      },
+      workflowCommandPorts(runtime),
     );
 
     expectOk(result);
     await expectLeadMetadata(runtime, {
+      actor: scenario.actor.by("execOne"),
       leadId: lead.id,
       updatedBy: 1,
       minUpdatedAt: 10,
@@ -54,16 +62,13 @@ describe("workflow lead mutation metadata", () => {
     const scenario = createWorkflowScenario(runtime);
     const admin = await scenario.user.admin();
     const executive = await scenario.user.executive();
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.lead.atStage("QUALIFYING", {
       key: "metadata-reassign",
       organization: { key: "metadata-reassign" },
-      stage: "QUALIFYING",
-      createdAt: 10,
-      updatedAt: 10,
     });
 
-    const reassignResult = await runTestWorkflowCommand(runtime, (commandApi) =>
-      commandApi.reassignLead({
+    const reassignResult = await reassignLeadCommand(
+      {
         actor: scenario.actor.fromUser({
           id: admin.id,
           role: "admin",
@@ -71,28 +76,34 @@ describe("workflow lead mutation metadata", () => {
         }),
         leadId: lead.id,
         toExecutiveId: executive.id,
-      }),
+      },
+      workflowCommandPorts(runtime),
     );
 
     expectOk(reassignResult);
+    const newExecutive = scenario.actor.fromUser({
+      id: executive.id,
+      role: "executive",
+      branchId: 1,
+    });
     await expectLeadAssignment(runtime, {
+      actor: newExecutive,
       leadId: lead.id,
       executiveId: executive.id,
       updatedBy: admin.id,
     });
 
-    const previousAccess = await runtime.workflow.queries.getLeadDetail({
-      actor: scenario.actor.by("execOne"),
+    const previousActor = scenario.actor.by("execOne");
+    const previousAccess = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: previousActor.userId,
+      actorRole: previousActor.role,
       leadId: lead.id,
     });
     expectErr(previousAccess);
 
-    const newAccess = await runtime.workflow.queries.getLeadDetail({
-      actor: scenario.actor.fromUser({
-        id: executive.id,
-        role: "executive",
-        branchId: 1,
-      }),
+    const newAccess = await getLeadDetail(workflowRepos(runtime), {
+      actorUserId: newExecutive.userId,
+      actorRole: newExecutive.role,
       leadId: lead.id,
     });
     expectOk(newAccess);
@@ -100,10 +111,9 @@ describe("workflow lead mutation metadata", () => {
 
   it("updates lead.updatedBy for import mutations", async () => {
     const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.assignedTo("execOne", {
+    const lead = await scenario.lead.atStage("QUALIFYING", {
       key: "metadata-import",
       organization: { key: "metadata-import" },
-      stage: "QUALIFYING",
     });
     const result = await scenario.importer.run({
       actor: "backOne",
@@ -113,6 +123,7 @@ describe("workflow lead mutation metadata", () => {
     expect(result.applied).toBe(1);
     expect(result.failed).toBe(0);
     await expectLeadStatus(runtime, {
+      actor: scenario.actor.by("execOne"),
       leadId: lead.id,
       updatedBy: 2,
       status: "DISPONIBLE",

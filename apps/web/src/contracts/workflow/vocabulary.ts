@@ -1,15 +1,13 @@
 export const LEAD_STAGES = [
   "QUALIFYING",
   "DISQUALIFIED",
-  "SCOPING",
-  "QUOTING",
-  "QUOTED",
-  "SETUP_PLAN",
-  "SETUP_EXECUTION",
+  "PRICING",
+  "SETUP",
   "LIVE",
+  "EXPIRED",
 ] as const;
 
-const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
+export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
 export const LEAD_STATUSES = [
   "DISPONIBLE",
   "SIN RESULTADO",
@@ -17,16 +15,14 @@ export const LEAD_STATUSES = [
   "STOCK",
 ] as const;
 export const LEAD_PRIORITIES = ["P1", "P2", "SIN RESULTADO"] as const;
-export const LEAD_NEXT_STEPS = [
-  "REVIEW_LEAD",
+const LEAD_NEXT_STEPS = [
   "NO_ACTION",
-  "SAVE_COMMERCIAL_SCOPE",
-  "CREATE_QUOTATION",
-  "APPROVE_FOR_SALE",
+  "PROPOSE_RATE",
+  "ACCEPT_RATE",
   "DEFINE_DIGITAL_POLICY",
   "REGISTER_VENUE_ACCOUNTS",
 ] as const;
-const LEAD_CALL_OUTCOMES = [
+export const LEAD_CALL_OUTCOMES = [
   "answered",
   "no_answer",
   "wrong_number",
@@ -34,8 +30,8 @@ const LEAD_CALL_OUTCOMES = [
   "qualified",
   "disqualified",
 ] as const;
-export const MONEDAS = ["PEN", "USD"] as const;
-export const ABONO_BANKS = [
+export const CURRENCIES = ["PEN", "USD"] as const;
+export const SETTLEMENT_BANKS = [
   "BCP",
   "BBVA",
   "SCOTIABANK",
@@ -44,7 +40,7 @@ export const ABONO_BANKS = [
   "BANBIF",
   "MI BANCO",
 ] as const;
-export const MODALIDAD_COBRO_KINDS = [
+export const COLLECTION_MODES = [
   "SUSCRIPCIONES",
   "ONE_CLIC",
   "CARGO_UNICO",
@@ -57,9 +53,9 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
 export type LeadNextStep = (typeof LEAD_NEXT_STEPS)[number];
 export type LeadCallOutcome = (typeof LEAD_CALL_OUTCOMES)[number];
-export type Moneda = (typeof MONEDAS)[number];
-export type AbonoBank = (typeof ABONO_BANKS)[number];
-export type ModalidadCobro = (typeof MODALIDAD_COBRO_KINDS)[number];
+export type Currency = (typeof CURRENCIES)[number];
+export type SettlementBank = (typeof SETTLEMENT_BANKS)[number];
+export type CollectionMode = (typeof COLLECTION_MODES)[number];
 export type AccountTypeKind = (typeof ACCOUNT_TYPE_KINDS)[number];
 
 export function isBcpBank(value: string | null | undefined): boolean {

@@ -1,37 +1,27 @@
+import type { FieldChange } from "../events";
 import type { SaleVenueAccount } from "./primitives";
 import type {
-  AbonoBank,
+  SettlementBank,
   LeadNextStep,
   LeadPriority,
   LeadStage,
   LeadStatus,
-  ModalidadCobro,
-  Moneda,
+  CollectionMode,
+  Currency,
   ProductScope,
 } from "./vocabulary";
 
 export type LeadAvailableAction =
   | "log-call"
   | "add-note"
-  | "request-quotation"
-  | "review-lead"
-  | "create-quotation"
-  | "approve-for-sale"
-  | "start-setup-execution"
+  | "propose-rate"
+  | "edit-rate-proposal"
+  | "accept-rate"
+  | "request-rate-revision"
   | "update-venue"
-  | "request-rate-negotiation"
   | "reassign-lead";
 
-export type LeadBlockingField =
-  | "proveedorActual"
-  | "tasaActual"
-  | "gpv"
-  | "ticket"
-  | "giroNegocio"
-  | "abonoBank"
-  | "posTotal"
-  | "digitalPolicy"
-  | "venueAccounts";
+export type LeadBlockingField = "digitalPolicy" | "venueAccounts";
 
 export type AssignableExecutiveView = {
   id: number;
@@ -39,7 +29,7 @@ export type AssignableExecutiveView = {
 };
 
 export type LeadBootstrapPreviewView = {
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   engineStatus: "available" | "missing" | "failed";
 };
@@ -47,7 +37,7 @@ export type LeadBootstrapPreviewView = {
 export type LeadListRowView = {
   id: string;
   ruc: string;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   executiveId: number;
   executiveName: string;
@@ -55,7 +45,7 @@ export type LeadListRowView = {
   createdByName: string;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   nextStep: LeadNextStep;
   createdAt: number;
   updatedAt: number;
@@ -73,13 +63,14 @@ export type LeadTimelineItem = {
   title: string;
   description: string;
   actorDisplayName: string;
+  changes?: FieldChange[];
 };
 
 export type LeadDetailLeadView = {
   id: string;
   ruc: string;
   isFavorite: boolean;
-  razonSocial: string | null;
+  legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
@@ -91,84 +82,86 @@ export type LeadDetailLeadView = {
   updatedByName: string | null;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  priority: LeadPriority | null;
   nextStep: LeadNextStep;
   createdAt: number;
   updatedAt: number;
+  reservationExpiresAt: number | null;
 };
 
-export type LeadDetailQuotationView = {
+export type LeadDetailRateProposalView = {
   id: string;
   leadId: string;
-  version: number;
-  moneda: Moneda;
+  round: number;
+  currency: Currency;
   fee: number;
   paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  createdAt: number;
-  createdBy: number;
+  proposedDebitRate: number;
+  proposedCreditRate: number;
+  proposedForeignRate: number;
+  outcome: "pending" | "accepted" | "revision_requested";
+  proposedBy: number;
+  proposedAt: number;
+  decidedAt: number | null;
 };
 
 export type LeadDetailVenueView = {
   id: string;
   leadId: string;
-  nombreComercial: string;
+  tradeName: string;
   posQuantity: number;
   linkUrl: string | null;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-  direccion: string;
-  referencia: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
+  onlineCollectionMode: CollectionMode | null;
+  address: string;
+  addressReference: string;
+  district: string;
+  province: string;
+  department: string;
   solesAccount?: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
   createdBy: number;
 };
 
-export type LeadDetailNegotiationRequestView = {
+export type LeadDetailRateRevisionView = {
   id: string;
+  proposalId: string;
   round: number;
   justification: string;
   requestedBy: number;
   requestedAt: number;
-  files: LeadDetailNegotiationFileView[];
+  files: LeadDetailRateRevisionFileView[];
 };
 
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
-  profile: LeadDetailProfileView | undefined;
+  profile: LeadDetailProfileView;
   repLegal: LeadDetailRepLegalView | undefined;
-  quotations: LeadDetailQuotationView[];
+  rateProposals: LeadDetailRateProposalView[];
   venues: LeadDetailVenueView[];
-  negotiationRequests: LeadDetailNegotiationRequestView[];
+  rateRevisions: LeadDetailRateRevisionView[];
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];
   sourceStatus: LeadDetailSourceStatusView;
 };
 
-// Internal detail helpers kept local to this contract file.
 type LeadDetailProfileView = {
   leadId: string;
-  proveedorActual: string | null;
-  tasaActual: number | null;
-  gpv: number | null;
-  ticket: number | null;
+  currentProvider: string;
+  currentDebitRate: number;
+  currentCreditRate: number;
+  gpv: number;
+  ticket: number;
   giroNegocio: string | null;
-  abonoBank: AbonoBank | null;
-  posTotal: number | null;
+  settlementBank: SettlementBank;
+  posCount: number;
   linkScope: ProductScope;
   linkUrl: string | null;
   onlineScope: ProductScope;
   onlineUrl: string | null;
-  onlineModalidad: ModalidadCobro | null;
-  updatedAt: number;
-  updatedBy: number;
+  onlineCollectionMode: CollectionMode | null;
 };
 
 type LeadDetailRepLegalView = {
@@ -199,7 +192,7 @@ type LeadDetailSourceStatusView = {
   };
 };
 
-type LeadDetailNegotiationFileView = {
+type LeadDetailRateRevisionFileView = {
   artifactId: string;
   filename: string;
   detectedMime: string;

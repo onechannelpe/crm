@@ -10,57 +10,118 @@ import {
   type LeadDetailView,
   type LeadListView,
 } from "~/contracts/workflow/views";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import {
+  LEAD_PRIORITIES,
+  LEAD_STAGES,
+  LEAD_STATUSES,
+} from "~/contracts/workflow/vocabulary";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
+import { listAssignableExecutives } from "~/server/workflow/lead/read/queries/list-assignable-executives";
+import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
+
+import { workflowActor } from "../commands/actor";
+
+const SORT_FIELDS = ["createdAt", "updatedAt", "registeredBy", "ruc"] as const;
+const SORT_DIRECTIONS = ["asc", "desc"] as const;
 
 export async function queryLeadList(
   filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
   return runAction({
-    actionName: "workflow.list_leads",
+    name: "workflow.list_leads",
     access: { kind: "auth" },
-    input: filters,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.queries.listLeads({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
+    parse: () =>
+      parseObject(filters, validationFail, (r) => ({
+        stage: r.optEnum("stage", LEAD_STAGES),
+        status: r.optEnum("status", LEAD_STATUSES),
+        priority: r.optEnum("priority", LEAD_PRIORITIES),
+        executiveId: r.optNum("executiveId") ?? undefined,
+        anyFieldSearch: r.optStr("anyFieldSearch") ?? undefined,
+        updatedSinceMs: r.optNum("updatedSinceMs") ?? undefined,
+        updatedUntilMs: r.optNum("updatedUntilMs") ?? undefined,
+        sortBy: r.optEnum("sortBy", SORT_FIELDS),
+        sortDirection: r.optEnum("sortDirection", SORT_DIRECTIONS),
+        limit: r.optNum("limit") ?? undefined,
+        offset: r.optNum("offset") ?? undefined,
+      })),
+
+    audit: ({ stage, status }) => ({
+      stage: stage ?? null,
+      status: status ?? null,
+    }),
+
+    execute: ({ actor }, parsedFilters) => {
+      const workflow = getServerRuntime().workflow;
+      const { userId, role, branchId } = workflowActor(actor);
+
+      return listLeads(
+        { leads: workflow.repos.leadQueries },
+        {
+          actorUserId: userId,
+          actorRole: role,
+          actorBranchId: branchId,
+          filters: parsedFilters,
         },
-        filters,
-      }),
+      );
+    },
   });
 }
 
-export async function queryLeadDetail(leadId: string): Promise<LeadDetailView> {
+export async function queryLeadDetail(
+  rawLeadId: string,
+): Promise<LeadDetailView> {
   return runAction({
-    actionName: "workflow.get_lead_detail",
+    name: "workflow.get_lead_detail",
     access: { kind: "auth" },
-    input: { leadId },
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.queries.getLeadDetail({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        leadId,
-      }),
+    parse: () =>
+      parseObject({ leadId: rawLeadId }, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, query) => {
+      const workflow = getServerRuntime().workflow;
+      const { userId, role } = workflowActor(actor);
+
+      return getLeadDetail(workflow.repos, {
+        actorUserId: userId,
+        actorRole: role,
+        leadId: query.leadId,
+      });
+    },
   });
 }
 
 export async function queryLeadBootstrapPreview(
-  ruc: string,
+  rawRuc: string,
 ): Promise<LeadBootstrapPreviewView> {
   return runAction({
-    actionName: "workflow.get_lead_bootstrap_preview",
+    name: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
-    input: { ruc },
 
-    execute: () =>
-      getServerRuntime().workflow.queries.getLeadBootstrapPreview({ ruc }),
+    parse: () =>
+      parseObject({ ruc: rawRuc }, validationFail, (r) => ({
+        ruc: r.str("ruc"),
+      })),
+
+    audit: ({ ruc }) => ({ ruc }),
+
+    execute: (_ctx, query) => {
+      const workflow = getServerRuntime().workflow;
+
+      return getLeadBootstrapPreview(
+        { party: workflow.repos.party },
+        workflow.organizationEnrichment,
+        { ruc: query.ruc },
+      );
+    },
   });
 }
 
@@ -68,18 +129,28 @@ export async function queryAssignableExecutives(
   input: ListAssignableExecutivesInput,
 ): Promise<AssignableExecutiveView[]> {
   return runAction({
-    actionName: "workflow.list_assignable_executives",
+    name: "workflow.list_assignable_executives",
     access: { kind: "auth" },
-    input,
 
-    execute: ({ actor }) =>
-      getServerRuntime().workflow.queries.listAssignableExecutives({
-        actor: {
-          userId: actor.userId,
-          role: actor.role,
-          branchId: actor.branchId,
-        },
-        ...input,
-      }),
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        search: r.optStr("search") ?? undefined,
+        limit: r.optNum("limit") ?? undefined,
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, query) => {
+      const workflow = getServerRuntime().workflow;
+      const { userId, role, branchId } = workflowActor(actor);
+
+      return listAssignableExecutives(workflow.repos, {
+        actorUserId: userId,
+        actorRole: role,
+        actorBranchId: branchId,
+        ...query,
+      });
+    },
   });
 }
