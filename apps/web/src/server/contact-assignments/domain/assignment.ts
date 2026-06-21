@@ -1,6 +1,5 @@
+import type { ContactAssignmentStatus } from "~/contracts/contact-assignments/vocabulary";
 import { config } from "~/lib/config";
-
-export type ContactAssignmentStatus = "active" | "completed" | "expired";
 
 export type ContactAssignmentDraft = {
   user_id: number;

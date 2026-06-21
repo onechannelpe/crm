@@ -2,10 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { computeNeededAssignments } from "~/server/contact-assignments/domain/assignment-demand";
 
-/**
- * Tests for contact assignment demand logic.
- * Invariant: Needed assignments should never be negative.
- */
 describe("computeNeededAssignments", () => {
   it.each([
     { active: 10, target: 10, expected: 0, desc: "exact match" },

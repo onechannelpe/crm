@@ -26,7 +26,7 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
       const id = randomUUIDv7();
       await db
         .insertInto("organizations")
-        .values({ id, ruc, name, created_at: Date.now() })
+        .values({ id, ruc, legal_name: name, created_at: Date.now() })
         .onConflict((oc) => oc.column("ruc").doNothing())
         .executeTakeFirstOrThrow();
 
@@ -39,13 +39,20 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
 
     lockToBranch(orgId: OrganizationId, branchId: number, userId: number) {
       return db
-        .updateTable("organizations")
-        .set({
-          locked_branch_id: branchId,
+        .insertInto("organization_branch_locks")
+        .values({
+          organization_id: orgId,
+          branch_id: branchId,
           locked_at: Date.now(),
           locked_by_user_id: userId,
         })
-        .where("id", "=", orgId)
+        .onConflict((oc) =>
+          oc.column("organization_id").doUpdateSet({
+            branch_id: branchId,
+            locked_at: Date.now(),
+            locked_by_user_id: userId,
+          }),
+        )
         .execute();
     },
 
@@ -53,7 +60,16 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
       return db
         .selectFrom("organizations")
         .selectAll()
-        .where("locked_branch_id", "is", null)
+        .where((eb) =>
+          eb.not(
+            eb.exists(
+              eb
+                .selectFrom("organization_branch_locks as lock")
+                .select("lock.organization_id")
+                .whereRef("lock.organization_id", "=", "organizations.id"),
+            ),
+          ),
+        )
         .limit(limit)
         .execute();
     },
@@ -64,8 +80,21 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
         .selectAll()
         .where((eb) =>
           eb.or([
-            eb("locked_branch_id", "is", null),
-            eb("locked_branch_id", "=", branchId),
+            eb.not(
+              eb.exists(
+                eb
+                  .selectFrom("organization_branch_locks as lock")
+                  .select("lock.organization_id")
+                  .whereRef("lock.organization_id", "=", "organizations.id"),
+              ),
+            ),
+            eb.exists(
+              eb
+                .selectFrom("organization_branch_locks as lock")
+                .select("lock.organization_id")
+                .whereRef("lock.organization_id", "=", "organizations.id")
+                .where("lock.branch_id", "=", branchId),
+            ),
           ]),
         )
         .limit(limit)

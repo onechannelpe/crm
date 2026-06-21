@@ -1,11 +1,11 @@
 "use server";
 
 import type { LeadCapacitySnapshot } from "~/actions/capacity/contracts";
-import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/contracts";
+import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { Ok } from "~/server/shared/result";
 
 export async function getActiveContactAssignments(): Promise<
@@ -13,9 +13,8 @@ export async function getActiveContactAssignments(): Promise<
 > {
   const readRepos = getServerRuntime().contactAssignments.repos;
   return runAction({
-    actionName: "contact_assignments.list_active",
+    name: "contact_assignments.list_active",
     access: { kind: "permission", permission: "lead:work" },
-    input: {},
     execute: async (ctx) =>
       Ok(await getActiveContactAssignmentsUseCase(ctx.actor.userId, readRepos)),
   });
@@ -24,9 +23,8 @@ export async function getActiveContactAssignments(): Promise<
 export async function getMyContactAssignmentCapacity(): Promise<LeadCapacitySnapshot> {
   const readRepos = getServerRuntime().contactAssignments.repos;
   return runAction({
-    actionName: "contact_assignments.get_capacity",
+    name: "contact_assignments.get_capacity",
     access: { kind: "permission", permission: "capacity:read:self" },
-    input: {},
     execute: (ctx) => getContactAssignmentCapacity(ctx.actor.userId, readRepos),
   });
 }

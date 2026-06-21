@@ -14,14 +14,22 @@ export function createContactsTestKit(ctx: TestDbContext) {
       userId: number;
       now?: number;
     }): Promise<void> {
+      const lockedAt = input.now ?? Date.now();
       await ctx.db
-        .updateTable("organizations")
-        .set({
-          locked_branch_id: input.branchId,
-          locked_at: input.now ?? Date.now(),
+        .insertInto("organization_branch_locks")
+        .values({
+          organization_id: input.organizationId,
+          branch_id: input.branchId,
+          locked_at: lockedAt,
           locked_by_user_id: input.userId,
         })
-        .where("id", "=", input.organizationId)
+        .onConflict((oc) =>
+          oc.column("organization_id").doUpdateSet({
+            branch_id: input.branchId,
+            locked_at: lockedAt,
+            locked_by_user_id: input.userId,
+          }),
+        )
         .execute();
     },
 
@@ -56,11 +64,15 @@ export function createContactsTestKit(ctx: TestDbContext) {
       lockedByUserId: number | null;
       lockedAt: number | null;
     }> {
-      const org = await ctx.repos.organizations.findById(organizationId);
+      const lock = await ctx.db
+        .selectFrom("organization_branch_locks")
+        .select(["branch_id", "locked_by_user_id", "locked_at"])
+        .where("organization_id", "=", organizationId)
+        .executeTakeFirst();
       return {
-        lockedBranchId: org?.locked_branch_id ?? null,
-        lockedByUserId: org?.locked_by_user_id ?? null,
-        lockedAt: org?.locked_at ?? null,
+        lockedBranchId: lock?.branch_id ?? null,
+        lockedByUserId: lock?.locked_by_user_id ?? null,
+        lockedAt: lock?.locked_at ?? null,
       };
     },
   };
