@@ -33,11 +33,7 @@ type FilesCardProps = {
 };
 
 function hasDraggedFiles(event: DragEvent): boolean {
-  const types = event.dataTransfer?.types;
-  if (!types) {
-    return false;
-  }
-  return Array.from(types).includes("Files");
+  return Array.from(event.dataTransfer?.types ?? []).includes("Files");
 }
 
 export function FilesCard(props: FilesCardProps) {
@@ -58,12 +54,20 @@ export function FilesCard(props: FilesCardProps) {
     leadId: () => props.leadId,
   });
 
+  const rateRevisions = () => props.rateRevisions ?? [];
+  const revisionFileCount = () =>
+    rateRevisions().reduce(
+      (count, revision) => count + revision.files.length,
+      0,
+    );
+
   async function uploadFiles(files: File[]) {
     if (!props.canUpload || files.length === 0) {
       return;
     }
 
     setFileActionErrorMessage(null);
+
     try {
       await Promise.all(files.map((file) => uploadAttachmentFile(file)));
       await refetch();
@@ -78,11 +82,13 @@ export function FilesCard(props: FilesCardProps) {
 
   async function handleDownload(artifactId: string) {
     setFileActionErrorMessage(null);
+
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
         artifactId,
       });
+
       window.location.href = `/api/files/download/${token.token}`;
     } catch (caught) {
       setFileActionErrorMessage(
@@ -95,11 +101,13 @@ export function FilesCard(props: FilesCardProps) {
 
   async function handlePreview(file: LeadSaleProofFileView) {
     setFileActionErrorMessage(null);
+
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
         artifactId: file.artifactId,
       });
+
       setPreviewState({
         file,
         previewUrl: `/api/files/download/${token.token}?inline=1`,
@@ -113,14 +121,9 @@ export function FilesCard(props: FilesCardProps) {
     }
   }
 
-  const rateRevisions = () => props.rateRevisions ?? [];
-  const allRevisionFiles = () =>
-    rateRevisions().flatMap((req) =>
-      req.files.map((f) => ({ ...f, round: req.round, requestId: req.id })),
-    );
-
   async function handleRevisionDownload(leadId: string, artifactId: string) {
     setFileActionErrorMessage(null);
+
     const result = await requestRateRevisionFileDownloadToken({
       leadId,
       artifactId,
@@ -135,15 +138,15 @@ export function FilesCard(props: FilesCardProps) {
 
   return (
     <ActivityTabContainer>
-      <Show when={allRevisionFiles().length > 0}>
+      <Show when={revisionFileCount() > 0}>
         <ActivitySection
           title="Revisiones de tarifa"
-          count={allRevisionFiles().length}
+          count={revisionFileCount()}
         >
           <ActivityListCard>
             <For each={rateRevisions()}>
-              {(req) => (
-                <For each={req.files}>
+              {(revision) => (
+                <For each={revision.files}>
                   {(file) => (
                     <ActivityListRow
                       onClick={() =>
@@ -155,7 +158,9 @@ export function FilesCard(props: FilesCardProps) {
                     >
                       <ActivityRowBody>
                         <ActivityRowTitle>{file.filename}</ActivityRowTitle>
-                        <ActivityRowMeta>Ronda {req.round}</ActivityRowMeta>
+                        <ActivityRowMeta>
+                          Ronda {revision.round}
+                        </ActivityRowMeta>
                       </ActivityRowBody>
                     </ActivityListRow>
                   )}
@@ -163,15 +168,12 @@ export function FilesCard(props: FilesCardProps) {
               )}
             </For>
           </ActivityListCard>
-          <Show when={fileActionErrorMessage()}>
-            {(message) => <p class={styles.error}>{message()}</p>}
-          </Show>
         </ActivitySection>
       </Show>
 
       <ActivitySection
         title="Comprobantes"
-        count={attachments()?.length}
+        count={attachments()?.length ?? 0}
         action={
           <>
             <input
@@ -215,16 +217,23 @@ export function FilesCard(props: FilesCardProps) {
               event.preventDefault();
             }
           }}
-          onDragLeave={(_event) => {
-            dragEnterCount--;
-            if (dragEnterCount === 0) {
-              setIsDraggingFile(false);
+          onDragLeave={(event) => {
+            if (props.canUpload && hasDraggedFiles(event)) {
+              dragEnterCount = Math.max(0, dragEnterCount - 1);
+
+              if (dragEnterCount === 0) {
+                setIsDraggingFile(false);
+              }
             }
           }}
           onDrop={(event) => {
             event.preventDefault();
+
             dragEnterCount = 0;
             setIsDraggingFile(false);
+
+            const files = Array.from(event.dataTransfer?.files ?? []);
+            void uploadFiles(files);
           }}
         >
           <AttachmentList
@@ -236,10 +245,12 @@ export function FilesCard(props: FilesCardProps) {
             onPreview={handlePreview}
           />
         </div>
+
         <Show when={fileActionErrorMessage()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
       </ActivitySection>
+
       <PreviewModal
         state={previewState()}
         onClose={() => setPreviewState(null)}
