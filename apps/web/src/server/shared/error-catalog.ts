@@ -240,6 +240,10 @@ export const ERROR_CATALOG = {
     kind: "forbidden",
     message: "El enlace de la extensión es inválido o expiró.",
   },
+  handoff_claimed_by_other_installation: {
+    kind: "forbidden",
+    message: "El enlace de la extensión ya fue usado por otra instalación.",
+  },
   handoff_origin_not_allowed: {
     kind: "forbidden",
     message: "El origen de la solicitud no está permitido para la extensión.",
