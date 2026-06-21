@@ -9,41 +9,54 @@ import {
   resendTeamInvite,
   revokeTeamInvite,
 } from "~/actions/team/invites";
+import { ActionError } from "~/lib/wire-error";
+
+async function rejectionCode(run: Promise<unknown>): Promise<unknown> {
+  try {
+    await run;
+  } catch (error) {
+    if (error instanceof ActionError) return error.wire.code;
+    return undefined;
+  }
+  throw new Error("expected the action to reject");
+}
 
 describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {
-    await expect(listUserSessions(0)).rejects.toThrow(
-      "userId must be a positive integer",
-    );
+    expect(await rejectionCode(listUserSessions(0))).toBe("invalid_user_id");
   });
 
   it("rejects malformed textual payloads before auth", async () => {
-    await expect(revokeUserSession("   ", 1)).rejects.toThrow(
-      "sessionId is required",
+    expect(await rejectionCode(revokeUserSession("   ", 1))).toBe(
+      "session_id_required",
     );
-    await expect(getUserLoginRetryReport("   ")).rejects.toThrow(
-      "username is required",
+    expect(await rejectionCode(getUserLoginRetryReport("   "))).toBe(
+      "username_required",
     );
-    await expect(
-      createTeamInvite({
-        names: "Test",
-        firstSurname: "User",
-        secondSurname: "Test",
-        email: "bad-email",
-        role: "executive",
-        teamId: null,
-      }),
-    ).rejects.toThrow("email must be valid");
-    await expect(
-      createTeamInvite({
-        names: "Test",
-        firstSurname: "User",
-        secondSurname: "Test",
-        email: "test@example.com",
-        role: "bad-role",
-        teamId: null,
-      }),
-    ).rejects.toThrow("role is invalid");
+    expect(
+      await rejectionCode(
+        createTeamInvite({
+          names: "Test",
+          firstSurname: "User",
+          secondSurname: "Test",
+          email: "bad-email",
+          role: "executive",
+          teamId: null,
+        }),
+      ),
+    ).toBe("invalid_email");
+    expect(
+      await rejectionCode(
+        createTeamInvite({
+          names: "Test",
+          firstSurname: "User",
+          secondSurname: "Test",
+          email: "test@example.com",
+          role: "bad-role",
+          teamId: null,
+        }),
+      ),
+    ).toBe("invalid_role");
     await expect(
       acceptInvitePasswordStep({
         token: "invalid",
@@ -57,11 +70,7 @@ describe("action guards fail fast", () => {
   });
 
   it("rejects invalid range/count values before auth", async () => {
-    await expect(resendTeamInvite(0)).rejects.toThrow(
-      "inviteId must be a positive integer",
-    );
-    await expect(revokeTeamInvite(0)).rejects.toThrow(
-      "inviteId must be a positive integer",
-    );
+    expect(await rejectionCode(resendTeamInvite(0))).toBe("invalid_invite_id");
+    expect(await rejectionCode(revokeTeamInvite(0))).toBe("invalid_invite_id");
   });
 });

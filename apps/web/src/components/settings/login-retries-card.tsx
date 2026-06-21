@@ -16,8 +16,8 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { useAsyncAction } from "~/hooks/use-async-action";
-import { getErrorMessage } from "~/lib/errors";
 import { APP_LOCALE } from "~/lib/locale";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./login-retries-card.module.css";
 
@@ -41,10 +41,8 @@ export function LoginRetriesCard() {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
       if (!next) enqueueInfoSnackBar("Usuario no encontrado");
-    } catch (err: unknown) {
-      enqueueErrorSnackBar(
-        getErrorMessage(err, "No se pudo cargar el reporte"),
-      );
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   });
 
