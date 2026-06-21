@@ -1,28 +1,48 @@
 "use server";
 
-import type { ActionSuccess } from "~/contracts/common";
-import { assertNonEmptyString } from "~/contracts/guards";
-import { conflictError, validationError } from "~/lib/app-errors";
-import { requireSession } from "~/lib/auth/access/session";
 import { parsePhone } from "~/lib/phone/pe-mobile";
-import { getServerRuntime } from "~/server/runtime";
-import { isErr } from "~/server/shared/result";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { fail } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { Err, isErr, Ok } from "~/server/shared/result";
 
-export async function updateUserProfile(phone: string): Promise<ActionSuccess> {
-  const safePhone = assertNonEmptyString(phone, "phone");
-  const localPhone = parsePhone(safePhone);
-  if (!localPhone) {
-    throw validationError("El número debe tener 9 dígitos y empezar con 9");
-  }
-  const session = await requireSession();
+export async function updateUserProfile(
+  rawPhone: unknown,
+): Promise<{ message: string }> {
+  return runAction({
+    name: "settings.profile.update_phone",
+    access: { kind: "session" },
 
-  const result = await getServerRuntime().users.updatePhone(
-    session.userId,
-    localPhone,
-  );
-  if (isErr(result)) {
-    throw conflictError("Este número de WhatsApp ya está en uso");
-  }
+    parse: () => {
+      const shape = parseObject({ phone: rawPhone }, validationFail, (r) => ({
+        phone: r.str("phone"),
+      }));
 
-  return { success: true };
+      if (isErr(shape)) {
+        return shape;
+      }
+
+      const localPhone = parsePhone(shape.value.phone);
+
+      if (!localPhone) {
+        return Err(fail("invalid_phone"));
+      }
+
+      return Ok({ phone: localPhone });
+    },
+
+    execute: async (ctx, command) => {
+      const result = await getServerRuntime().users.updatePhone(
+        ctx.actor.userId,
+        command.phone,
+      );
+
+      if (isErr(result)) {
+        return Err(fail("phone_in_use"));
+      }
+
+      return Ok({ message: "Perfil actualizado" });
+    },
+  });
 }
