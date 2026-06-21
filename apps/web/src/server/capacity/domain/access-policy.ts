@@ -1,5 +1,9 @@
 import type { AuthSession } from "~/lib/auth/access/session-types";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import {
+  fail,
+  forbidden,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
@@ -63,29 +67,17 @@ export async function canManageScope(
 ): Promise<Result<void, DomainError>> {
   if (scope.kind === "branch") {
     if (actor.role !== "superuser" && actor.role !== "admin") {
-      return Err(
-        domainError(
-          "forbidden",
-          "forbidden",
-          "Insufficient role to manage branch default",
-        ),
-      );
+      return Err(forbidden());
     }
     if (actor.branchId !== scope.scopeId) {
-      return Err(
-        domainError(
-          "forbidden",
-          "forbidden",
-          "Cannot manage defaults for another branch",
-        ),
-      );
+      return Err(forbidden());
     }
     return Ok(undefined);
   }
 
   const team = await repos.teams.findById(scope.scopeId);
   if (!team || team.branchId !== actor.branchId) {
-    return Err(domainError("not_found", "team_not_found", "Team not found"));
+    return Err(fail("team_not_found"));
   }
   if (actor.role === "superuser" || actor.role === "admin") {
     return Ok(undefined);
@@ -101,11 +93,5 @@ export async function canManageScope(
     }
   }
 
-  return Err(
-    domainError(
-      "forbidden",
-      "forbidden",
-      "Cannot manage defaults for this team",
-    ),
-  );
+  return Err(forbidden());
 }

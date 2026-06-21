@@ -1,117 +1,104 @@
 "use server";
 
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
 
-import {
-  parseLeadPolicyOverrideInput,
-  parseLeadPolicyValues,
-  parseScopeDefaultInput,
-  parseSearchPolicyLimit,
-  parseSearchPolicyOverrideInput,
-} from "./input";
+const SCOPE_TYPES = ["branch", "team"] as const;
 
-export async function updateSearchPolicyOverride(input: {
-  userId: number;
-  monthlySearchLimit: number;
-  expiresAt: number | null;
-}) {
-  const overrideInput = parseSearchPolicyOverrideInput(input);
-  if (!overrideInput.ok) throw overrideInput.error;
+export async function updateSearchPolicyOverride(input: unknown) {
   return runAction({
-    actionName: "capacity.search_policy_override.update",
+    name: "capacity.search_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    input: overrideInput.value,
-    execute: (ctx) =>
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        userId: r.posInt("userId"),
+        monthlyLimit: r.num("monthlySearchLimit"),
+        expiresAt: r.optNum("expiresAt"),
+      })),
+
+    audit: ({ userId }) => ({ userId }),
+
+    execute: (ctx, override) =>
       getServerRuntime().capacity.useCases.updateSearchPolicyOverride(
         ctx,
-        overrideInput.value,
+        override,
       ),
   });
 }
 
-export async function updateLeadPolicyOverride(input: {
-  userId: number;
-  activeBufferTarget: number;
-  dailyRefillLimit: number;
-  expiresAt: number | null;
-}) {
-  const overrideInput = parseLeadPolicyOverrideInput(input);
-  if (!overrideInput.ok) throw overrideInput.error;
+export async function updateLeadPolicyOverride(input: unknown) {
   return runAction({
-    actionName: "capacity.lead_policy_override.update",
+    name: "capacity.lead_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    input: overrideInput.value,
-    execute: (ctx) =>
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        userId: r.posInt("userId"),
+        bufferTarget: r.num("activeBufferTarget"),
+        dailyLimit: r.num("dailyRefillLimit"),
+        expiresAt: r.optNum("expiresAt"),
+      })),
+
+    audit: ({ userId }) => ({ userId }),
+
+    execute: (ctx, override) =>
       getServerRuntime().capacity.useCases.updateLeadPolicyOverride(
         ctx,
-        overrideInput.value,
+        override,
       ),
   });
 }
 
-export async function updateSearchPolicyDefault(input: {
-  scopeType: "branch" | "team";
-  scopeId: number;
-  monthlySearchLimit: number;
-}) {
-  const scopeInput = parseScopeDefaultInput(input);
-  if (!scopeInput.ok) throw scopeInput.error;
-  const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
-  if (!limitResult.ok) throw limitResult.error;
+export async function updateSearchPolicyDefault(input: unknown) {
   return runAction({
-    actionName: "capacity.search_policy_default.update",
+    name: "capacity.search_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    input: {
-      scope: {
-        kind: scopeInput.value.scopeType,
-        scopeId: scopeInput.value.scopeId,
-      },
-      monthlyLimit: limitResult.value,
-    },
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.updateSearchPolicyDefault(ctx, {
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
         scope: {
-          kind: scopeInput.value.scopeType,
-          scopeId: scopeInput.value.scopeId,
+          kind: r.enum("scopeType", SCOPE_TYPES),
+          scopeId: r.posInt("scopeId"),
         },
-        monthlyLimit: limitResult.value,
-      }),
+        monthlyLimit: r.num("monthlySearchLimit"),
+      })),
+
+    audit: ({ scope }) => ({
+      scopeKind: scope.kind,
+      scopeId: scope.scopeId,
+    }),
+
+    execute: (ctx, params) =>
+      getServerRuntime().capacity.useCases.updateSearchPolicyDefault(
+        ctx,
+        params,
+      ),
   });
 }
 
-export async function updateLeadPolicyDefault(input: {
-  scopeType: "branch" | "team";
-  scopeId: number;
-  activeBufferTarget: number;
-  dailyRefillLimit: number;
-}) {
-  const scopeInput = parseScopeDefaultInput(input);
-  if (!scopeInput.ok) throw scopeInput.error;
-  const policyResult = parseLeadPolicyValues({
-    activeBufferTarget: input.activeBufferTarget,
-    dailyRefillLimit: input.dailyRefillLimit,
-  });
-  if (!policyResult.ok) throw policyResult.error;
+export async function updateLeadPolicyDefault(input: unknown) {
   return runAction({
-    actionName: "capacity.lead_policy_default.update",
+    name: "capacity.lead_policy_default.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
-    input: {
-      scope: {
-        kind: scopeInput.value.scopeType,
-        scopeId: scopeInput.value.scopeId,
-      },
-      bufferTarget: policyResult.value.activeBufferTarget,
-      dailyLimit: policyResult.value.dailyRefillLimit,
-    },
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.updateLeadPolicyDefault(ctx, {
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
         scope: {
-          kind: scopeInput.value.scopeType,
-          scopeId: scopeInput.value.scopeId,
+          kind: r.enum("scopeType", SCOPE_TYPES),
+          scopeId: r.posInt("scopeId"),
         },
-        bufferTarget: policyResult.value.activeBufferTarget,
-        dailyLimit: policyResult.value.dailyRefillLimit,
-      }),
+        bufferTarget: r.num("activeBufferTarget"),
+        dailyLimit: r.num("dailyRefillLimit"),
+      })),
+
+    audit: ({ scope }) => ({
+      scopeKind: scope.kind,
+      scopeId: scope.scopeId,
+    }),
+
+    execute: (ctx, params) =>
+      getServerRuntime().capacity.useCases.updateLeadPolicyDefault(ctx, params),
   });
 }

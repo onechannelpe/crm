@@ -1,44 +1,59 @@
 "use server";
 
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import type { DomainError } from "~/server/shared/domain-error";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import type { Result } from "~/server/shared/result";
 
-import { parseCapacityAmount, parseCapacityReason } from "./input";
+function parseCapacityRequest(
+  rawAmount: unknown,
+  rawReason: unknown,
+): Result<{ amount: number; reason: string }, DomainError> {
+  return parseObject(
+    { amount: rawAmount, reason: rawReason },
+    validationFail,
+    (r) => ({
+      amount: r.num("amount"),
+      reason: r.str("reason"),
+    }),
+  );
+}
 
-export async function requestMoreSearches(amount: number, reason: string) {
-  const amountResult = parseCapacityAmount(amount);
-  if (!amountResult.ok) throw amountResult.error;
-  const reasonResult = parseCapacityReason(reason);
-  if (!reasonResult.ok) throw reasonResult.error;
-
+export async function requestMoreSearches(
+  rawAmount: unknown,
+  rawReason: unknown,
+) {
   return runAction({
-    actionName: "capacity.request_search",
+    name: "capacity.request_search",
     access: { kind: "permission", permission: "capacity:request:self" },
-    input: { amount: amountResult.value, reason: reasonResult.value },
-    execute: (ctx) =>
+    parse: () => parseCapacityRequest(rawAmount, rawReason),
+    audit: (request) => ({ amount: request.amount }),
+
+    execute: (ctx, request) =>
       getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "search_extra",
-        amount: amountResult.value,
-        reason: reasonResult.value,
+        amount: request.amount,
+        reason: request.reason,
       }),
   });
 }
 
-export async function requestMoreLeadRefill(amount: number, reason: string) {
-  const amountResult = parseCapacityAmount(amount);
-  if (!amountResult.ok) throw amountResult.error;
-  const reasonResult = parseCapacityReason(reason);
-  if (!reasonResult.ok) throw reasonResult.error;
-
+export async function requestMoreLeadRefill(
+  rawAmount: unknown,
+  rawReason: unknown,
+) {
   return runAction({
-    actionName: "capacity.request_lead_refill",
+    name: "capacity.request_lead_refill",
     access: { kind: "permission", permission: "capacity:request:self" },
-    input: { amount: amountResult.value, reason: reasonResult.value },
-    execute: (ctx) =>
+    parse: () => parseCapacityRequest(rawAmount, rawReason),
+    audit: (request) => ({ amount: request.amount }),
+
+    execute: (ctx, request) =>
       getServerRuntime().capacity.useCases.requestCapacity(ctx, {
         kind: "lead_refill",
-        amount: amountResult.value,
-        reason: reasonResult.value,
+        amount: request.amount,
+        reason: request.reason,
       }),
   });
 }

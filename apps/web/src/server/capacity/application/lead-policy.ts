@@ -1,4 +1,4 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -89,7 +89,7 @@ export async function getEffectiveLeadPolicy(
 ): Promise<Result<LeadPolicy, DomainError>> {
   const user = await repos.users.findById(userId);
   if (!user) {
-    return Err(domainError("not_found", "user_not_found", "User not found"));
+    return Err(fail("user_not_found"));
   }
 
   const now = Date.now();
