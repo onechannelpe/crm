@@ -1,60 +1,53 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { requirePermission } from "~/lib/auth/access/session";
+import { authorizeRoutePermission } from "~/lib/auth/access/route-access";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
+import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "./json-body";
 
 export async function POST(event: APIEvent): Promise<Response> {
-  try {
-    const session = await requirePermission("lead:work");
-    const parsed = await readJsonBody(event.request);
-    if (!parsed.ok) {
-      return parsed.response;
-    }
-    const body = parsed.body;
-    if (!isCreateExtensionHandoffTokenRequest(body)) {
-      return Response.json(
-        { error: "Invalid handoff token request" },
-        { status: 400 },
-      );
-    }
-
-    const origin = event.request.headers.get("origin") ?? "";
-    const result =
-      await getServerRuntime().extension.extensionService.createHandoffToken({
-        userId: session.userId,
-        authSessionId: session.id,
-        branchId: session.branchId,
-        assignmentId: body.assignmentId,
-        origin,
-      });
-
-    if (isErr(result)) {
-      const status =
-        result.error.code === "assignment_not_found"
-          ? 404
-          : result.error.code === "assignment_inactive"
-            ? 409
-            : result.error.code === "invalid_origin"
-              ? 403
-              : result.error.code === "misconfigured"
-                ? 503
-                : 500;
-      return Response.json({ error: result.error.message }, { status });
-    }
-
-    return Response.json(result.value, { status: 200 });
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return new Response("Unauthorized", { status: 401 });
-    }
-    if (error instanceof Error && error.message === "Forbidden") {
-      return new Response("Forbidden", { status: 403 });
-    }
-
-    return new Response("Unexpected error", { status: 500 });
+  const parsed = await readJsonBody(event.request);
+  if (!parsed.ok) {
+    return parsed.response;
   }
+  const body = parsed.body;
+  if (!isCreateExtensionHandoffTokenRequest(body)) {
+    return Response.json(
+      { error: "Invalid handoff token request" },
+      { status: 400 },
+    );
+  }
+
+  const auth = await authorizeRoutePermission("lead:work");
+  if (isErr(auth)) return auth.error;
+  const session = auth.value;
+
+  const origin = event.request.headers.get("origin") ?? "";
+  const result =
+    await getServerRuntime().extension.extensionService.createHandoffToken({
+      userId: session.userId,
+      authSessionId: session.id,
+      branchId: session.branchId,
+      assignmentId: body.assignmentId,
+      origin,
+    });
+
+  if (isErr(result)) {
+    const status =
+      result.error.code === "assignment_not_found"
+        ? 404
+        : result.error.code === "assignment_inactive"
+          ? 409
+          : result.error.code === "invalid_origin"
+            ? 403
+            : result.error.code === "misconfigured"
+              ? 503
+              : 500;
+    return Response.json({ error: toWire(result.error).message }, { status });
+  }
+
+  return Response.json(result.value, { status: 200 });
 }

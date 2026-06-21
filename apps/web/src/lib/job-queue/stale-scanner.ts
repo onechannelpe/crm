@@ -1,5 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 const logger = createLogger("stale-scanner");
@@ -32,7 +32,7 @@ const JOB_TABLES = [
   },
 ] as const;
 
-export async function resetStalledJobs(
+async function resetStalledJobs(
   executor: DatabaseExecutor = getServerRuntime().infra.db,
 ) {
   const now = Date.now();
@@ -66,9 +66,6 @@ export async function resetStalledJobs(
   );
 }
 
-/**
- * Starts the global stale job scanner.
- */
 export function startStaleScanner(intervalMs = 30_000) {
   logger.info("stale_scanner_started", { intervalMs });
   setInterval(() => {

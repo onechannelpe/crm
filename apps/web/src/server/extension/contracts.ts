@@ -5,7 +5,7 @@ export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
 export const EXTENSION_SESSION_TOKEN_AUDIENCE =
   "crm-extension-session" as const;
 
-export const EXTENSION_EXECUTIVE_PRESENCE_STATUSES = [
+const EXTENSION_EXECUTIVE_PRESENCE_STATUSES = [
   "idle",
   "ready",
   "dialing",
@@ -17,15 +17,11 @@ export const EXTENSION_EXECUTIVE_PRESENCE_STATUSES = [
 export type ExtensionExecutivePresenceStatus =
   (typeof EXTENSION_EXECUTIVE_PRESENCE_STATUSES)[number];
 
-export const EXTENSION_SYNC_HEALTHS = [
-  "ok",
-  "stale",
-  "reauth_required",
-] as const;
+const EXTENSION_SYNC_HEALTHS = ["ok", "stale", "reauth_required"] as const;
 
 export type ExtensionSyncHealth = (typeof EXTENSION_SYNC_HEALTHS)[number];
 
-export const EXTENSION_RUNTIME_EVENT_TYPES = [
+const EXTENSION_RUNTIME_EVENT_TYPES = [
   "executive.presence",
   "executive.heartbeat",
   "call.lifecycle",
@@ -192,21 +188,12 @@ export interface TeamExecutiveStatusView {
   syncUpdatedAt: number | null;
 }
 
-export function isExtensionExecutivePresenceStatus(
+function isExtensionExecutivePresenceStatus(
   value: unknown,
 ): value is ExtensionExecutivePresenceStatus {
   return (
     typeof value === "string" &&
     EXTENSION_EXECUTIVE_PRESENCE_STATUSES.some((status) => status === value)
-  );
-}
-
-export function isExtensionSyncHealth(
-  value: unknown,
-): value is ExtensionSyncHealth {
-  return (
-    typeof value === "string" &&
-    EXTENSION_SYNC_HEALTHS.some((syncHealth) => syncHealth === value)
   );
 }
 

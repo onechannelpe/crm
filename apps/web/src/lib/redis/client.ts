@@ -15,7 +15,12 @@ export function getRedisPublisherClient(): RedisClient {
   if (!publisherClient) {
     const url = redisUrl();
     logger.info("initializing_publisher", { url });
-    publisherClient = new RedisClient(url);
+    publisherClient = new RedisClient(url, {
+      autoReconnect: false,
+      connectionTimeout: 500,
+      enableOfflineQueue: false,
+      maxRetries: 0,
+    });
   }
 
   return publisherClient;
