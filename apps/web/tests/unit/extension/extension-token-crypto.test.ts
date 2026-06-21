@@ -6,37 +6,39 @@ import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
   EXTENSION_HANDOFF_TOKEN_ISSUER,
 } from "~/server/extension/contracts";
-import {
-  signExtensionToken,
-  verifyExtensionToken,
-} from "~/server/extension/crypto";
 import { isExtensionHandoffClaims } from "~/server/extension/service/validators";
 
-function stubExtensionTokenKeys() {
-  const { privateKey, publicKey } = generateKeyPairSync("ed25519");
-
-  vi.stubEnv(
-    "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
-    Buffer.from(privateKey.export({ format: "der", type: "pkcs8" })).toString(
-      "base64",
-    ),
-  );
-  vi.stubEnv(
-    "EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64",
-    Buffer.from(publicKey.export({ format: "der", type: "spki" })).toString(
-      "base64",
-    ),
-  );
+interface ExtensionTokenKeyMaterial {
+  privateKeyPkcs8Base64: string;
+  publicKeySpkiBase64: string;
 }
 
-function stubMismatchedPublicKey() {
-  const { publicKey } = generateKeyPairSync("ed25519");
+function generateExtensionTokenKeys(): ExtensionTokenKeyMaterial {
+  const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 
+  return {
+    privateKeyPkcs8Base64: Buffer.from(
+      privateKey.export({ format: "der", type: "pkcs8" }),
+    ).toString("base64"),
+    publicKeySpkiBase64: Buffer.from(
+      publicKey.export({ format: "der", type: "spki" }),
+    ).toString("base64"),
+  };
+}
+
+async function importExtensionCrypto() {
+  vi.resetModules();
+  return import("~/server/extension/crypto");
+}
+
+function stubExtensionTokenKeys(keys: ExtensionTokenKeyMaterial): void {
+  vi.stubEnv(
+    "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
+    keys.privateKeyPkcs8Base64,
+  );
   vi.stubEnv(
     "EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64",
-    Buffer.from(publicKey.export({ format: "der", type: "spki" })).toString(
-      "base64",
-    ),
+    keys.publicKeySpkiBase64,
   );
 }
 
@@ -46,7 +48,10 @@ describe("extension token crypto", () => {
   });
 
   it("signs with the private key and verifies with the configured public key", async () => {
-    stubExtensionTokenKeys();
+    const keys = generateExtensionTokenKeys();
+    stubExtensionTokenKeys(keys);
+    const { signExtensionToken, verifyExtensionToken } =
+      await importExtensionCrypto();
 
     const claims = {
       iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
@@ -74,7 +79,14 @@ describe("extension token crypto", () => {
   });
 
   it("rejects a token when the public key does not match the signing key", async () => {
-    stubExtensionTokenKeys();
+    const signingKeys = generateExtensionTokenKeys();
+    const verificationKeys = generateExtensionTokenKeys();
+    stubExtensionTokenKeys({
+      privateKeyPkcs8Base64: signingKeys.privateKeyPkcs8Base64,
+      publicKeySpkiBase64: verificationKeys.publicKeySpkiBase64,
+    });
+    const { signExtensionToken, verifyExtensionToken } =
+      await importExtensionCrypto();
 
     const token = await signExtensionToken({
       iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
@@ -93,8 +105,6 @@ describe("extension token crypto", () => {
       iat: 1_700_000_000,
       exp: 1_700_000_120,
     });
-
-    stubMismatchedPublicKey();
 
     await expect(
       verifyExtensionToken(token, isExtensionHandoffClaims),
