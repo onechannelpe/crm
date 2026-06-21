@@ -33,7 +33,9 @@ export default function SearchPage() {
   const [model, setModel] = createSignal(createSearchViewModel({ rows: [] }));
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
   const [searching, setSearching] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [searchErrorMessage, setSearchErrorMessage] = createSignal<
+    string | null
+  >(null);
   const { openPanel, closePanel } = useSidePanel();
   const resultCount = createMemo(() => model().total);
 
@@ -56,21 +58,25 @@ export default function SearchPage() {
   async function handleSearch(event?: Event) {
     event?.preventDefault();
     setSearching(true);
-    setError(null);
+    setSearchErrorMessage(null);
     try {
-      const response = await searchDirect(intent(), query(), 20);
+      const response = await searchDirect({
+        intent: intent(),
+        query: query(),
+        limit: 20,
+      });
       setSearchParams({ intent: intent(), query: query(), limit: "20" });
       const nextModel = createSearchViewModel(response);
       setModel(nextModel);
       setSelectedKey(null);
       closePanel();
       await revalidate(mySearchAllowanceQuery.key);
-    } catch (searchError) {
+    } catch (caught) {
       setModel(createSearchViewModel({ rows: [] }));
       setSelectedKey(null);
       closePanel();
-      setError(
-        searchError instanceof Error ? searchError.message : "Search failed",
+      setSearchErrorMessage(
+        caught instanceof Error ? caught.message : "Search failed",
       );
     } finally {
       setSearching(false);
@@ -81,7 +87,7 @@ export default function SearchPage() {
     on(
       () => searchParams.query,
       (urlQuery) => {
-        if (!urlQuery || model().total > 0 || error()) return;
+        if (!urlQuery || model().total > 0 || searchErrorMessage()) return;
         void handleSearch();
       },
     ),
@@ -141,7 +147,7 @@ export default function SearchPage() {
           }}
         />
 
-        <Show when={error()}>
+        <Show when={searchErrorMessage()}>
           {(message) => <p class="text-sm text-destructive">{message()}</p>}
         </Show>
       </div>

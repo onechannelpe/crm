@@ -43,6 +43,44 @@ export function createSearchEnrichmentRepo(
       return result.id;
     },
 
+    async upsertJobs(values) {
+      if (values.length === 0) return;
+
+      await db
+        .insertInto("search_enrichment_jobs")
+        .values(
+          values.map((job) => ({
+            document_type: job.document_type,
+            document_value: job.document_value,
+            status: "queued" as const,
+            requested_by_user_id: job.requested_by_user_id,
+            requested_at: job.now,
+            completed_at: null,
+            lease_owner: null,
+            lease_until: null,
+            attempt_count: 0,
+            max_attempts: job.max_attempts,
+            last_error: null,
+            next_attempt_at: job.now,
+          })),
+        )
+        .onConflict((oc) =>
+          oc.columns(["document_type", "document_value"]).doUpdateSet((eb) => ({
+            status: "queued",
+            requested_by_user_id: eb.ref("excluded.requested_by_user_id"),
+            requested_at: eb.ref("excluded.requested_at"),
+            completed_at: null,
+            lease_owner: null,
+            lease_until: null,
+            attempt_count: 0,
+            max_attempts: eb.ref("excluded.max_attempts"),
+            last_error: null,
+            next_attempt_at: eb.ref("excluded.next_attempt_at"),
+          })),
+        )
+        .execute();
+    },
+
     async leaseJobs(limit, leaseMs, leaseOwner) {
       const now = Date.now();
       const leaseUntil = now + leaseMs;
