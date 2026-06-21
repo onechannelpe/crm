@@ -6,8 +6,8 @@ import { cn } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
-function editorErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "No se pudo guardar";
+function editorErrorMessage(cause: unknown): string {
+  return cause instanceof Error ? cause.message : "No se pudo guardar";
 }
 
 export interface InlineFieldEditorProps {
@@ -28,7 +28,9 @@ export interface InlineFieldEditorProps {
 export function InlineFieldEditor(props: InlineFieldEditorProps) {
   const [value, setValue] = createSignal(props.initialValue);
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [saveErrorMessage, setSaveErrorMessage] = createSignal<string | null>(
+    null,
+  );
 
   let containerRef: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
@@ -51,14 +53,14 @@ export function InlineFieldEditor(props: InlineFieldEditorProps) {
       return;
     }
 
-    setError(null);
+    setSaveErrorMessage(null);
     setSubmitting(true);
 
     try {
       await props.onSubmit(value());
       props.onClose();
-    } catch (error) {
-      setError(editorErrorMessage(error));
+    } catch (cause) {
+      setSaveErrorMessage(editorErrorMessage(cause));
       setSubmitting(false);
     }
   }
@@ -89,7 +91,7 @@ export function InlineFieldEditor(props: InlineFieldEditorProps) {
           onKeyDown={handleKeyDown}
         />
 
-        <Show when={error()}>
+        <Show when={saveErrorMessage()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
 
@@ -130,7 +132,9 @@ export function InlineOptionsEditor<T extends string>(
   props: InlineOptionsEditorProps<T>,
 ) {
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [saveErrorMessage, setSaveErrorMessage] = createSignal<string | null>(
+    null,
+  );
 
   let containerRef: HTMLDivElement | undefined;
 
@@ -150,21 +154,21 @@ export function InlineOptionsEditor<T extends string>(
       return;
     }
 
-    setError(null);
+    setSaveErrorMessage(null);
     setSubmitting(true);
 
     try {
       await props.onSubmit(option);
       props.onClose();
-    } catch (error) {
-      setError(editorErrorMessage(error));
+    } catch (cause) {
+      setSaveErrorMessage(editorErrorMessage(cause));
       setSubmitting(false);
     }
   }
 
   return (
     <div ref={(element) => (containerRef = element)} class={styles.popover}>
-      <Show when={error()}>
+      <Show when={saveErrorMessage()}>
         {(message) => <p class={styles.error}>{message()}</p>}
       </Show>
 
