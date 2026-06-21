@@ -1,5 +1,3 @@
-import { isPlainRecord } from "~/lib/type-guards";
-
 export type HalftoneTabId = "design" | "animations" | "export";
 export type HalftoneSourceMode = "shape" | "image";
 export type HalftoneMaterialSurface = "solid" | "glass";
@@ -178,41 +176,7 @@ export type HalftoneStudioAction =
   | { type: "clearStatus" }
   | { type: "hideHint" };
 
-function upsertGeometrySpec(
-  geometrySpecs: HalftoneGeometrySpec[],
-  spec: HalftoneGeometrySpec,
-) {
-  const existingIndex = geometrySpecs.findIndex(
-    (geometrySpec) => geometrySpec.key === spec.key,
-  );
-
-  if (existingIndex === -1) {
-    return [...geometrySpecs, spec];
-  }
-
-  return geometrySpecs.map((geometrySpec, index) =>
-    index === existingIndex ? spec : geometrySpec,
-  );
-}
-
-export const DEFAULT_GEOMETRY_SPECS: HalftoneGeometrySpec[] = [
-  { key: "torusKnot", label: "Torus Knot", kind: "builtin" },
-  { key: "sphere", label: "Sphere", kind: "builtin" },
-  { key: "torus", label: "Torus", kind: "builtin" },
-  { key: "icosahedron", label: "Icosahedron", kind: "builtin" },
-  { key: "box", label: "Box", kind: "builtin" },
-  { key: "cone", label: "Cone", kind: "builtin" },
-  { key: "cylinder", label: "Cylinder", kind: "builtin" },
-  { key: "octahedron", label: "Octahedron", kind: "builtin" },
-  { key: "dodecahedron", label: "Dodecahedron", kind: "builtin" },
-  { key: "tetrahedron", label: "Tetrahedron", kind: "builtin" },
-  { key: "sunCoin", label: "Sun Coin", kind: "builtin" },
-  { key: "lotusCoin", label: "Lotus Coin", kind: "builtin" },
-  { key: "arrowTarget", label: "Arrow Target", kind: "builtin" },
-  { key: "dollarCoin", label: "Dollar Coin", kind: "builtin" },
-];
-
-export const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftonePatternSettings = {
+const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftonePatternSettings = {
   enabled: true,
   scale: 24.72,
   power: -0.07,
@@ -223,7 +187,7 @@ export const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftonePatternSettings = {
   hoverDashColor: "#4A38F5",
 };
 
-export const DEFAULT_IMAGE_HALFTONE_SETTINGS: HalftonePatternSettings = {
+const DEFAULT_IMAGE_HALFTONE_SETTINGS: HalftonePatternSettings = {
   enabled: true,
   scale: 24.72,
   power: -0.07,
@@ -234,7 +198,7 @@ export const DEFAULT_IMAGE_HALFTONE_SETTINGS: HalftonePatternSettings = {
   hoverDashColor: "#4A38F5",
 };
 
-export const DEFAULT_SOLID_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
+const DEFAULT_SOLID_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
   surface: "solid",
   color: "#d4d0c8",
   roughness: 0.42,
@@ -244,7 +208,7 @@ export const DEFAULT_SOLID_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
   environmentPower: 5,
 };
 
-export const DEFAULT_GLASS_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
+const DEFAULT_GLASS_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
   surface: "glass",
   color: "#7d7d7d",
   roughness: 0,
@@ -254,7 +218,7 @@ export const DEFAULT_GLASS_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
   environmentPower: 5,
 };
 
-export const DEFAULT_SOLID_LIGHTING_SETTINGS: HalftoneLightingSettings = {
+const DEFAULT_SOLID_LIGHTING_SETTINGS: HalftoneLightingSettings = {
   intensity: 1.5,
   fillIntensity: 0.15,
   ambientIntensity: 0.08,
@@ -262,7 +226,7 @@ export const DEFAULT_SOLID_LIGHTING_SETTINGS: HalftoneLightingSettings = {
   height: 2,
 };
 
-export const DEFAULT_GLASS_LIGHTING_SETTINGS: HalftoneLightingSettings = {
+const DEFAULT_GLASS_LIGHTING_SETTINGS: HalftoneLightingSettings = {
   intensity: 3,
   fillIntensity: 0,
   ambientIntensity: 0.3,
@@ -270,12 +234,12 @@ export const DEFAULT_GLASS_LIGHTING_SETTINGS: HalftoneLightingSettings = {
   height: 2,
 };
 
-export const DEFAULT_SOLID_BACKGROUND_SETTINGS: HalftoneBackgroundSettings = {
+const DEFAULT_SOLID_BACKGROUND_SETTINGS: HalftoneBackgroundSettings = {
   transparent: true,
   color: "#000000",
 };
 
-export const DEFAULT_GLASS_BACKGROUND_SETTINGS: HalftoneBackgroundSettings = {
+const DEFAULT_GLASS_BACKGROUND_SETTINGS: HalftoneBackgroundSettings = {
   transparent: true,
   color: "#000000",
 };
@@ -296,7 +260,7 @@ function getDefaultBackgroundSettings(
     : DEFAULT_SOLID_BACKGROUND_SETTINGS;
 }
 
-export const DEFAULT_SOLID_ANIMATION_SETTINGS: HalftoneAnimationSettings = {
+const DEFAULT_SOLID_ANIMATION_SETTINGS: HalftoneAnimationSettings = {
   autoRotateEnabled: true,
   breatheEnabled: false,
   cameraParallaxEnabled: false,
@@ -349,7 +313,7 @@ export const DEFAULT_SOLID_ANIMATION_SETTINGS: HalftoneAnimationSettings = {
   waveAmount: 2,
 };
 
-export const DEFAULT_GLASS_ANIMATION_SETTINGS: HalftoneAnimationSettings = {
+const DEFAULT_GLASS_ANIMATION_SETTINGS: HalftoneAnimationSettings = {
   autoRotateEnabled: true,
   breatheEnabled: false,
   cameraParallaxEnabled: false,
@@ -410,49 +374,7 @@ function getDefaultAnimationSettings(
     : DEFAULT_SOLID_ANIMATION_SETTINGS;
 }
 
-export const LEGACY_HALFTONE_SETTING_KEYS = [
-  "numRows",
-  "contrast",
-  "shading",
-  "baseInk",
-  "maxBar",
-  "rowMerge",
-  "cellRatio",
-  "cutoff",
-  "highlightOpen",
-  "shadowGrouping",
-  "shadowCrush",
-] as const;
-
-export function isRoundedBandHalftoneSettings(value: unknown): value is Omit<
-  HalftonePatternSettings,
-  "hoverDashColor" | "toneTarget"
-> & {
-  hoverDashColor?: string;
-  toneTarget?: HalftoneToneTarget;
-} {
-  if (!isPlainRecord(value)) {
-    return false;
-  }
-
-  const candidate = value;
-
-  return (
-    typeof candidate.enabled === "boolean" &&
-    typeof candidate.scale === "number" &&
-    typeof candidate.power === "number" &&
-    typeof candidate.width === "number" &&
-    typeof candidate.imageContrast === "number" &&
-    typeof candidate.dashColor === "string" &&
-    (candidate.toneTarget === "light" ||
-      candidate.toneTarget === "dark" ||
-      typeof candidate.toneTarget === "undefined") &&
-    (typeof candidate.hoverDashColor === "string" ||
-      typeof candidate.hoverDashColor === "undefined")
-  );
-}
-
-export function getDefaultHalftoneSettings(sourceMode: HalftoneSourceMode) {
+function getDefaultHalftoneSettings(sourceMode: HalftoneSourceMode) {
   return sourceMode === "image"
     ? DEFAULT_IMAGE_HALFTONE_SETTINGS
     : DEFAULT_SHAPE_HALFTONE_SETTINGS;
@@ -510,7 +432,7 @@ function normalizeMaterialSettings(
   };
 }
 
-export const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
+const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
   sourceMode: "shape" as HalftoneSourceMode,
   shapeKey: "torusKnot",
   lighting: { ...DEFAULT_SOLID_LIGHTING_SETTINGS },
@@ -584,143 +506,4 @@ export function normalizeHalftoneStudioSettings(
       ...settings?.animation,
     },
   };
-}
-
-export function createInitialHalftoneStudioState(): HalftoneStudioState {
-  return {
-    activeTab: "design",
-    geometrySpecs: [...DEFAULT_GEOMETRY_SPECS],
-    importedFiles: {},
-    settings: normalizeHalftoneStudioSettings(DEFAULT_HALFTONE_SETTINGS),
-    showHint: true,
-    statusMessage: "",
-    statusIsError: false,
-  };
-}
-
-export function halftoneStudioReducer(
-  state: HalftoneStudioState,
-  action: HalftoneStudioAction,
-): HalftoneStudioState {
-  switch (action.type) {
-    case "setTab":
-      return {
-        ...state,
-        activeTab: action.value,
-      };
-    case "setSourceMode":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          sourceMode: action.value,
-        },
-      };
-    case "setShapeKey":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          shapeKey: action.value,
-        },
-      };
-    case "replaceSettings":
-      return {
-        ...state,
-        settings: normalizeHalftoneStudioSettings(action.value),
-      };
-    case "patchLighting":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          lighting: {
-            ...state.settings.lighting,
-            ...action.value,
-          },
-        },
-      };
-    case "patchMaterial":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          material: {
-            ...state.settings.material,
-            ...action.value,
-          },
-        },
-      };
-    case "patchHalftone":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          halftone: {
-            ...state.settings.halftone,
-            ...action.value,
-          },
-        },
-      };
-    case "patchBackground":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          background: {
-            ...state.settings.background,
-            ...action.value,
-          },
-        },
-      };
-    case "patchAnimation":
-      return {
-        ...state,
-        settings: {
-          ...state.settings,
-          animation: {
-            ...state.settings.animation,
-            ...action.value,
-          },
-        },
-      };
-    case "registerImportedFile":
-      return {
-        ...state,
-        geometrySpecs: action.spec.userProvided
-          ? upsertGeometrySpec(state.geometrySpecs, action.spec)
-          : state.geometrySpecs,
-        importedFiles: {
-          ...state.importedFiles,
-          [action.spec.key]: action.file,
-        },
-        settings: action.activate
-          ? {
-              ...state.settings,
-              shapeKey: action.spec.key,
-            }
-          : state.settings,
-      };
-    case "setStatus":
-      return {
-        ...state,
-        statusMessage: action.message,
-        statusIsError: action.isError ?? false,
-      };
-    case "clearStatus":
-      return {
-        ...state,
-        statusMessage: "",
-        statusIsError: false,
-      };
-    case "hideHint":
-      return state.showHint
-        ? {
-            ...state,
-            showHint: false,
-          }
-        : state;
-    default:
-      return state;
-  }
 }

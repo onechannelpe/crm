@@ -56,27 +56,6 @@ export const createHalftoneInteractionState = (
   velocityY: 0,
 });
 
-export const applySpringStep = ({
-  current,
-  damping,
-  strength,
-  target,
-  velocity,
-}: {
-  current: number;
-  damping: number;
-  strength: number;
-  target: number;
-  velocity: number;
-}) => {
-  const nextVelocity = (velocity + (target - current) * strength) * damping;
-
-  return {
-    value: current + nextVelocity,
-    velocity: nextVelocity,
-  };
-};
-
 export const resetHalftoneInteractionState = (
   interactionState: HalftoneInteractionState,
   animation: HalftoneStudioSettings["animation"],

@@ -25,8 +25,8 @@ export function createSiteWebGlRenderer(
       originalDispose();
     } catch {
       // Disposing a renderer whose context was already torn down can
-      // throw "delete: object does not belong to this context" — that's
-      // a no-op for us and must not bubble up to the consumer.
+      // throw "delete: object does not belong to this context". The renderer is
+      // already torn down, so the disposal failure must not reach the consumer.
     }
   };
 
@@ -36,7 +36,7 @@ export function createSiteWebGlRenderer(
     try {
       onContextLost?.(event);
     } catch (callbackError) {
-      if (process.env.NODE_ENV !== "production") {
+      if (import.meta.env.DEV) {
         console.error("onContextLost callback threw:", callbackError);
       }
     }
@@ -57,22 +57,3 @@ export function createSiteWebGlRenderer(
 }
 
 export type SiteWebGlRendererCreationFailureHandler = (error: unknown) => void;
-
-export const reportSiteWebGlRendererCreationFailure: SiteWebGlRendererCreationFailureHandler =
-  (error) => {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("WebGL renderer creation failed:", error);
-    }
-  };
-
-export function tryCreateSiteWebGlRenderer(
-  parameters?: SiteWebGlRendererParameters,
-  onError: SiteWebGlRendererCreationFailureHandler = reportSiteWebGlRendererCreationFailure,
-): WebGLRenderer | null {
-  try {
-    return createSiteWebGlRenderer(parameters);
-  } catch (error) {
-    onError(error);
-    return null;
-  }
-}

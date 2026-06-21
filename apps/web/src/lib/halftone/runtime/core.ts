@@ -28,7 +28,7 @@ const IMAGE_POINTER_VELOCITY_DAMPING = 0.82;
 const IMAGE_HOVER_FADE_IN = 18;
 const IMAGE_HOVER_FADE_OUT = 7;
 
-export const DEFAULT_IMAGE_INTERACTION_SETTINGS: HalftonePointerSettings = {
+const DEFAULT_IMAGE_INTERACTION_SETTINGS: HalftonePointerSettings = {
   hoverFadeIn: IMAGE_HOVER_FADE_IN,
   hoverFadeOut: IMAGE_HOVER_FADE_OUT,
   pointerFollow: IMAGE_POINTER_FOLLOW,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseEnvFor, validateSecret } from "~/lib/env";
+import { loadServerEnv, validateSecret } from "~/lib/env";
 
 describe("env validation", () => {
   const baseEnv = {
@@ -48,12 +48,12 @@ describe("env validation", () => {
   });
 
   it("defaults engine connect mode to local", () => {
-    expect(parseEnvFor("engine", baseEnv).engineConnectMode).toBe("local");
+    expect(loadServerEnv(baseEnv).engine.engineConnectMode).toBe("local");
   });
 
   it("rejects invalid engine connect mode values", () => {
     expect(() =>
-      parseEnvFor("engine", {
+      loadServerEnv({
         ...baseEnv,
         ENGINE_CONNECT_MODE: "invalid",
       }),
