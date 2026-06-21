@@ -2,7 +2,6 @@ import type { LeadStage } from "~/contracts/workflow/vocabulary";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
-import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
 import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
@@ -13,19 +12,18 @@ import { workflowCommandPorts, workflowRepos } from "./deps";
 import type { createWorkflowImporter } from "./importer";
 import type { ScenarioActor, ScenarioActorKey, ScenarioLeadRef } from "./leads";
 import { registerLead } from "./register";
-import { buildDefaultRuc } from "./seed";
+import {
+  buildDefaultRuc,
+  type LeadCommercialOptions,
+  type OrganizationSeedOptions,
+} from "./seed";
 
 export type AtStageOptions = {
   key?: string;
   executive?: ScenarioActorKey;
   backOffice?: ScenarioActorKey;
-  organization?: {
-    key?: string;
-    ruc?: string;
-    legalName?: string | null;
-    giroNegocio?: string;
-  };
-  commercial?: Partial<LeadCommercialScope>;
+  organization?: OrganizationSeedOptions;
+  commercial?: LeadCommercialOptions;
 };
 
 export type BuiltLead = ScenarioLeadRef & {

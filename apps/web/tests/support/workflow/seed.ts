@@ -1,16 +1,27 @@
 import { randomUUIDv7 } from "bun";
 
-import type { SettlementBank } from "~/contracts/workflow/vocabulary";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
+import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import type { TestRuntime } from "../runtime/app";
 import { MERCHANT } from "./fixtures";
 
-type OrganizationSeed = {
-  key: string;
-  id?: string;
+export type OrganizationSeedOptions = {
+  key?: string;
   ruc?: string;
   legalName?: string | null;
   giroNegocio?: string | null;
+};
+
+export type LeadCommercialOptions = Partial<LeadCommercialScope>;
+
+type OrganizationSeed = OrganizationSeedOptions & {
+  key: string;
+  id?: string;
   createdAt?: number;
 };
 
@@ -20,29 +31,19 @@ export type SeededOrganizationRef = {
   legalName: string | null;
 };
 
-export type LeadCommercialSeed = {
-  currentProvider?: string;
-  currentDebitRate?: number;
-  currentCreditRate?: number;
-  gpv?: number;
-  ticket?: number;
-  settlementBank?: SettlementBank;
-  posCount?: number;
-};
-
 type LeadSeed = {
   id: string;
   organizationId?: string;
   organization?: SeededOrganizationRef;
   executiveId: number;
-  stage: "QUALIFYING" | "DISQUALIFIED" | "PRICING" | "SETUP" | "LIVE";
-  status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  priority: "P1" | "P2" | "SIN RESULTADO" | null;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  priority: LeadPriority | null;
   createdBy?: number;
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
-  commercial?: LeadCommercialSeed;
+  commercial?: LeadCommercialOptions;
 };
 
 type LeadScenarioSeed = {
@@ -149,7 +150,7 @@ export function buildDefaultRuc(key: string): string {
   return `20${digits}`;
 }
 
-function resolveLeadCommercialSeed(input: LeadCommercialSeed | undefined) {
+function resolveLeadCommercialSeed(input: LeadCommercialOptions | undefined) {
   return {
     currentProvider:
       input?.currentProvider ?? MERCHANT.standard.currentProvider,

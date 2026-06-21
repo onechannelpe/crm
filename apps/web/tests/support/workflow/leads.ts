@@ -1,3 +1,8 @@
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 
 import { createDeterministicIdFactory } from "../_core/ids";
@@ -6,7 +11,8 @@ import type { TestRuntime } from "../runtime/app";
 import {
   seedLeadScenario,
   seedUser,
-  type LeadCommercialSeed,
+  type LeadCommercialOptions,
+  type OrganizationSeedOptions,
   type SeededOrganizationRef,
 } from "./seed";
 
@@ -20,21 +26,16 @@ export type ScenarioActor = {
 
 export type ScenarioLeadSeed = {
   key?: string;
-  organization: {
-    key?: string;
-    ruc?: string;
-    legalName?: string | null;
-    giroNegocio?: string | null;
-  };
+  organization: OrganizationSeedOptions;
   executive: ScenarioActorKey | number;
-  stage: "QUALIFYING" | "DISQUALIFIED" | "PRICING" | "SETUP" | "LIVE";
-  status?: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  priority?: "P1" | "P2" | "SIN RESULTADO" | null;
+  stage: LeadStage;
+  status?: LeadStatus | null;
+  priority?: LeadPriority | null;
   createdBy?: number;
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
-  commercial?: LeadCommercialSeed;
+  commercial?: LeadCommercialOptions;
 };
 
 export type ScenarioLeadRef = {

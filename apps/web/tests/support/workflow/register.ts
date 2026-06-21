@@ -40,7 +40,7 @@ export async function registerLead(input: {
   currentCreditRate?: number;
   gpv?: number;
   ticket?: number;
-  giroNegocio?: string;
+  giroNegocio?: string | null;
   settlementBank?: SettlementBank;
   posCount?: number;
 }): Promise<RegisterLeadResult> {
