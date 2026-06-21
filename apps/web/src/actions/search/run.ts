@@ -1,43 +1,26 @@
 "use server";
 
 import type { SearchDirectResult } from "~/contracts/search/results";
-import { isSearchIntent } from "~/contracts/search/vocabulary";
+import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { invalid } from "~/server/shared/domain-error";
-import { Err, Ok } from "~/server/shared/result";
+import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function searchDirect(
-  intent: unknown,
-  query: unknown,
-  limit?: unknown,
+  input: unknown,
 ): Promise<SearchDirectResult> {
   return runAction({
     name: "search.use",
     access: { kind: "permission", permission: "search:use" },
 
-    parse: () => {
-      if (typeof intent !== "string" || !isSearchIntent(intent)) {
-        return Err(invalid({ code: "search.intent.invalid" }));
-      }
-
-      if (typeof query !== "string" || query.trim().length === 0) {
-        return Err(invalid({ code: "search.value.empty" }));
-      }
-
-      const safeLimit = limit == null ? 20 : Number(limit);
-      if (!Number.isInteger(safeLimit) || safeLimit < 1 || safeLimit > 100) {
-        return Err(invalid({ code: "search.limit.out_of_range" }));
-      }
-
-      return Ok({
-        intent,
-        query: query.trim(),
-        limit: safeLimit,
-      });
-    },
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        intent: r.enum("intent", SEARCH_INTENTS),
+        query: r.str("query"),
+        limit: r.optIntRange("limit", { min: 1, max: 100 }) ?? 20,
+      })),
 
     audit: (command) => ({ intent: command.intent }),
 

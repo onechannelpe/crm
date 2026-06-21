@@ -144,7 +144,7 @@ export async function requestLeadReassignment(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         leadId: r.str("leadId"),
-        newExecutiveId: r.num("newExecutiveId"),
+        newExecutiveId: r.posInt("newExecutiveId"),
       })),
 
     audit: ({ leadId }) => ({ leadId }),

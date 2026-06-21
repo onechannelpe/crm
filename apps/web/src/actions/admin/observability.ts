@@ -1,9 +1,6 @@
 "use server";
 
-import type {
-  ObservabilitySnapshot,
-  ObservabilitySnapshotInput,
-} from "~/contracts/observability/snapshot";
+import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
@@ -29,7 +26,7 @@ export async function getObservabilitySnapshot(
       }));
     },
 
-    execute: (_ctx, input: ObservabilitySnapshotInput) =>
+    execute: (_ctx, input) =>
       getServerRuntime().observability.observabilityService.getActionSnapshot(
         input,
       ),

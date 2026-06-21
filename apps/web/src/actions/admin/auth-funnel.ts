@@ -1,9 +1,6 @@
 "use server";
 
-import type {
-  AuthFunnelSnapshot,
-  AuthFunnelSnapshotInput,
-} from "~/contracts/observability/auth-funnel";
+import type { AuthFunnelSnapshot } from "~/contracts/observability/auth-funnel";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
@@ -30,7 +27,7 @@ export async function getAuthFunnelSnapshot(
       }));
     },
 
-    execute: (_ctx, input: AuthFunnelSnapshotInput) =>
+    execute: (_ctx, input) =>
       getServerRuntime().observability.observabilityService.getAuthFunnelSnapshot(
         input,
       ),

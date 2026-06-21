@@ -60,7 +60,11 @@ export default function SearchPage() {
     setSearching(true);
     setSearchErrorMessage(null);
     try {
-      const response = await searchDirect(intent(), query(), 20);
+      const response = await searchDirect({
+        intent: intent(),
+        query: query(),
+        limit: 20,
+      });
       setSearchParams({ intent: intent(), query: query(), limit: "20" });
       const nextModel = createSearchViewModel(response);
       setModel(nextModel);

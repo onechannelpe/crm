@@ -4,6 +4,6 @@ import { getSearchEnrichmentStatus } from "~/actions/client-search/enrichment";
 
 export const enrichmentStatusQuery = query(
   (documentType: string, documentValue: string) =>
-    getSearchEnrichmentStatus(documentType, documentValue),
+    getSearchEnrichmentStatus({ documentType, documentValue }),
   "enrichmentStatus",
 );

@@ -18,6 +18,7 @@ export interface Reader<E> {
   enum<T extends string>(field: string, options: readonly T[]): T;
   strList(field: string, opts?: StrListConstraints): string[];
   optNum(field: string): number | null;
+  optIntRange(field: string, opts: { min: number; max: number }): number | null;
   optStr(field: string): string | null;
   optBool(field: string): boolean | null;
   optEnum<T extends string>(
@@ -107,6 +108,23 @@ class RecordReader<E> implements Reader<E> {
     const value = this.record[field];
     if (value === undefined || value === null) return null;
     if (typeof value !== "number" || !Number.isFinite(value)) {
+      this.reject(field, "invalid");
+    }
+    return value;
+  }
+
+  optIntRange(
+    field: string,
+    opts: { min: number; max: number },
+  ): number | null {
+    const value = this.record[field];
+    if (value === undefined || value === null) return null;
+    if (
+      typeof value !== "number" ||
+      !Number.isInteger(value) ||
+      value < opts.min ||
+      value > opts.max
+    ) {
       this.reject(field, "invalid");
     }
     return value;
