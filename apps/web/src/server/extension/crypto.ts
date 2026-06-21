@@ -1,5 +1,3 @@
-import { createPrivateKey, createPublicKey } from "node:crypto";
-
 import { extensionConfig } from "~/lib/env";
 
 import type {
@@ -75,23 +73,13 @@ async function importPrivateKey(): Promise<CryptoKey> {
 
 async function importPublicKey(): Promise<CryptoKey> {
   const env = extensionConfig();
-  if (!env.extensionHandoffPrivateKeyPkcs8Base64) {
-    throw new Error("Missing extension handoff private key");
+  if (!env.extensionHandoffPublicKeySpkiBase64) {
+    throw new Error("Missing extension handoff public key");
   }
-
-  const privateKey = createPrivateKey({
-    key: Buffer.from(env.extensionHandoffPrivateKeyPkcs8Base64, "base64"),
-    format: "der",
-    type: "pkcs8",
-  });
-  const publicKeyDer = createPublicKey(privateKey).export({
-    format: "der",
-    type: "spki",
-  });
 
   return crypto.subtle.importKey(
     "spki",
-    toArrayBuffer(new Uint8Array(publicKeyDer)),
+    toArrayBuffer(fromBase64(env.extensionHandoffPublicKeySpkiBase64)),
     { name: "Ed25519" },
     false,
     ["verify"],

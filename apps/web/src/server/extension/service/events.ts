@@ -169,7 +169,7 @@ export async function ingestRuntimeEvent(
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
       return Err(
-        external("Extension signing keys are not configured", {
+        external("Extension token keys are not configured", {
           code: "misconfigured",
         }),
       );

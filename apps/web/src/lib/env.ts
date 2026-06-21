@@ -92,6 +92,11 @@ function parseExtensionEnv(source: EnvSource) {
       "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
       "",
     ),
+    extensionHandoffPublicKeySpkiBase64: optional(
+      source,
+      "EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64",
+      "",
+    ),
     extensionExpectedOrigin: optional(
       source,
       "EXTENSION_EXPECTED_ORIGIN",
