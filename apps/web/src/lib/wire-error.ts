@@ -10,15 +10,19 @@ const WIRE_KINDS = [
 
 export type WireKind = (typeof WIRE_KINDS)[number];
 
-export interface WireError {
-  kind: WireKind;
-  /** Granular domain code for client branching. Null when none. */
+type WireErrorBase = {
   code: string | null;
-  /** Render-ready Spanish shown to the user. Generic for internal failures. */
   message: string;
-  /** Seconds until the client may retry. Only set for kind === "rate_limit". */
-  retryAfterSeconds?: number;
-}
+};
+
+export type WireError = WireErrorBase &
+  (
+    | { kind: "rate_limit"; retryAfterSeconds?: number }
+    | {
+        kind: Exclude<WireKind, "rate_limit">;
+        retryAfterSeconds?: never;
+      }
+  );
 
 const FALLBACK_MESSAGE = "Ocurrió un error inesperado.";
 
@@ -39,13 +43,21 @@ export class ActionError extends Error {
   }
 
   get wire(): WireError {
+    if (this.kind === "rate_limit") {
+      return {
+        kind: this.kind,
+        code: this.code,
+        message: this.message,
+        ...(this.retryAfterSeconds !== undefined
+          ? { retryAfterSeconds: this.retryAfterSeconds }
+          : {}),
+      };
+    }
+
     return {
       kind: this.kind,
       code: this.code,
       message: this.message,
-      ...(this.retryAfterSeconds !== undefined
-        ? { retryAfterSeconds: this.retryAfterSeconds }
-        : {}),
     };
   }
 }
@@ -61,19 +73,27 @@ function isWireShaped(error: unknown): error is WireError {
   const kind = Reflect.get(error, "kind");
   const code = Reflect.get(error, "code");
   const message = Reflect.get(error, "message");
+  const retryAfterSeconds = Reflect.get(error, "retryAfterSeconds");
   return (
     isWireKind(kind) &&
     (code === null || typeof code === "string") &&
-    typeof message === "string"
+    typeof message === "string" &&
+    (kind === "rate_limit"
+      ? retryAfterSeconds === undefined || typeof retryAfterSeconds === "number"
+      : retryAfterSeconds === undefined)
   );
 }
 
 export function parseWireError(error: unknown): WireError {
   if (error instanceof ActionError) return error.wire;
   if (isWireShaped(error)) {
+    if (error.kind !== "rate_limit") {
+      return { kind: error.kind, code: error.code, message: error.message };
+    }
+
     const retryAfterSeconds = Reflect.get(error, "retryAfterSeconds");
     return {
-      kind: error.kind,
+      kind: "rate_limit",
       code: error.code,
       message: error.message,
       ...(typeof retryAfterSeconds === "number" ? { retryAfterSeconds } : {}),
