@@ -8,6 +8,7 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { hydrateRuc } from "~/server/shared/document";
 import type { OrganizationId } from "~/server/shared/ids";
 import type {
   LeadCommercialScope,
@@ -59,7 +60,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
   return {
     id: row.id,
     organizationId: row.organization_id,
-    ruc: row.ruc,
+    ruc: hydrateRuc(row.ruc),
     legalName: row.legal_name,
     address: row.address,
     district: row.district,

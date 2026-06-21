@@ -1,13 +1,12 @@
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
+import type { Document } from "~/server/shared/document";
 
-import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
 
 export interface EnrichmentCommand {
   enqueueRequest(
-    documentType: string,
-    documentValue: string,
+    document: Document,
     requestedByUserId: number,
     now?: number,
   ): Promise<number>;
@@ -18,20 +17,10 @@ export function createEnrichmentCommand(
   doorbell: QueueDoorbell,
 ): EnrichmentCommand {
   return {
-    async enqueueRequest(
-      documentType,
-      documentValue,
-      requestedByUserId,
-      now = Date.now(),
-    ) {
-      const normalized = normalizeEnrichmentInput({
-        documentType,
-        documentValue,
-      });
-
+    async enqueueRequest(document, requestedByUserId, now = Date.now()) {
       const jobId = await repo.upsertJob({
-        document_type: normalized.documentType,
-        document_value: normalized.documentValue,
+        document_type: document.kind,
+        document_value: document.value,
         requested_by_user_id: requestedByUserId,
         now,
         max_attempts: 5,

@@ -1,19 +1,5 @@
-import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
+import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-
-export function normalizeLeadRuc(ruc: unknown): Result<string, DomainError> {
-  if (typeof ruc !== "string") {
-    return Err(fail("invalid_ruc"));
-  }
-
-  const normalizedRuc = ruc.trim();
-
-  if (!/^\d{11}$/.test(normalizedRuc)) {
-    return Err(fail("invalid_ruc"));
-  }
-
-  return Ok(normalizedRuc);
-}
 
 function isVocabularyValue<TValue extends string>(
   value: string,

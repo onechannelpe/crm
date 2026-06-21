@@ -1,3 +1,4 @@
+import type { Ruc } from "~/server/shared/document";
 import type {
   LeadSourceStatus,
   RateProposal,
@@ -29,5 +30,5 @@ export type RateRevisionReader = {
 };
 
 export type SourceStatusReader = {
-  findByRuc(ruc: string): Promise<LeadSourceStatus>;
+  findByRuc(ruc: Ruc): Promise<LeadSourceStatus>;
 };

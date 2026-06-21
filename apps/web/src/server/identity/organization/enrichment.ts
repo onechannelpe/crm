@@ -1,3 +1,4 @@
+import type { Ruc } from "~/server/shared/document";
 import type { EngineClient } from "~/server/shared/engine/client";
 
 // The organization-enrichment capability: resolve an organization's
@@ -14,7 +15,7 @@ export type OrganizationEnrichment = {
 // The scheduling side of enrichment: enqueue a RUC verification for the
 // enrichment worker to process later.
 export type OrganizationEnrichmentQueue = {
-  enqueueRucVerification(ruc: string, requestedByUserId: number): Promise<void>;
+  enqueueRucVerification(ruc: Ruc, requestedByUserId: number): Promise<void>;
 };
 
 export function createOrganizationEnrichment(

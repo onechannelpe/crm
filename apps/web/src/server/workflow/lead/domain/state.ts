@@ -4,11 +4,11 @@ import {
   type LeadStatus,
   type SettlementBank,
 } from "~/contracts/workflow/vocabulary";
+import type { Ruc } from "~/server/shared/document";
+import { parseRuc } from "~/server/shared/document";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { OrganizationId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
-
-import { normalizeLeadRuc } from "./parse";
 
 export type LeadCommercialScope = {
   currentProvider: string;
@@ -23,7 +23,7 @@ export type LeadCommercialScope = {
 export type LeadState = {
   id: string;
   organizationId: OrganizationId;
-  ruc: string;
+  ruc: Ruc;
   legalName: string | null;
   address: string | null;
   district: string | null;
@@ -58,7 +58,7 @@ export function createLeadDraft(input: {
   commercialScope: LeadCommercialScope;
   now: number;
 }): Result<LeadDraft, DomainError> {
-  const ruc = normalizeLeadRuc(input.ruc);
+  const ruc = parseRuc(input.ruc);
   if (!ruc.ok) return ruc;
 
   return Ok({
