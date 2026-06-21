@@ -95,7 +95,11 @@ export function isExtensionInstallationSessionClaims(
 }
 
 export function isCryptoMisconfiguration(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("private key");
+  return (
+    error instanceof Error &&
+    error.message.includes("extension handoff") &&
+    error.message.includes("key")
+  );
 }
 
 export function isInvalidExtensionToken(error: unknown): boolean {

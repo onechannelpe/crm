@@ -24,13 +24,28 @@ Extension session and event APIs live under [`src/routes/api/extension/`](src/ro
 
 Configuration is loaded from env files selected by the script or passed by the caller.
 
-| Setting group       | Variables                                                                                                                                    |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core auth           | `SESSION_SECRET`, `TOTP_ENCRYPTION_KEY`, `ENGINE_HMAC_KEY_ID`, `ENGINE_HMAC_SECRET`                                                          |
-| Engine client       | `ENGINE_CONNECT_MODE`, `ENGINE_URL`                                                                                                          |
-| Storage and proxy   | `WEB_DB_PATH`, `WEB_UPLOADS_ROOT`, `TRUSTED_PROXY`                                                                                           |
-| Extension and OAuth | `EXTENSION_EXPECTED_ORIGIN`, `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` |
-| Notifications       | `RESEND_API_KEY`, `EMAIL_FROM`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_GRAPH_API_VERSION`                            |
+| Group               | Variable                                     |
+| ------------------- | -------------------------------------------- |
+| Core auth           | `SESSION_SECRET`                             |
+| Core auth           | `TOTP_ENCRYPTION_KEY`                        |
+| Core auth           | `ENGINE_HMAC_KEY_ID`                         |
+| Core auth           | `ENGINE_HMAC_SECRET`                         |
+| Engine client       | `ENGINE_CONNECT_MODE`                        |
+| Engine client       | `ENGINE_URL`                                 |
+| Storage and proxy   | `WEB_DB_PATH`                                |
+| Storage and proxy   | `WEB_UPLOADS_ROOT`                           |
+| Storage and proxy   | `TRUSTED_PROXY`                              |
+| Extension and OAuth | `EXTENSION_EXPECTED_ORIGIN`                  |
+| Extension and OAuth | `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64` |
+| Extension and OAuth | `EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64`   |
+| Extension and OAuth | `GOOGLE_CLIENT_ID`                           |
+| Extension and OAuth | `GOOGLE_CLIENT_SECRET`                       |
+| Extension and OAuth | `GOOGLE_REDIRECT_URI`                        |
+| Notifications       | `RESEND_API_KEY`                             |
+| Notifications       | `EMAIL_FROM`                                 |
+| Notifications       | `WHATSAPP_ACCESS_TOKEN`                      |
+| Notifications       | `WHATSAPP_PHONE_NUMBER_ID`                   |
+| Notifications       | `WHATSAPP_GRAPH_API_VERSION`                 |
 
 The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. The WebAuthn relying party is derived per request from the public origin (`requestContext.publicOrigin`). Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
 
