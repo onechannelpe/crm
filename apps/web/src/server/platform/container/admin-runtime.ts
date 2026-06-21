@@ -1,11 +1,11 @@
 import { createAuditActionPoliciesRepo } from "~/server/shared/repos-audit-action-policies";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import type { ServerInfra } from "./infra";
 
 export function createAdminRuntime(infra: ServerInfra) {
   return {
-    auditLogs: createAuditLogsRepo(infra.db),
+    events: createEventsRepo(infra.db),
     auditActionPolicies: createAuditActionPoliciesRepo(infra.db),
   };
 }

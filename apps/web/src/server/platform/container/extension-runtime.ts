@@ -11,16 +11,16 @@ import {
   type OrganizationsRepo,
 } from "~/server/contacts/repos-organizations";
 import {
+  createExtensionRuntimeRepo,
+  type ExtensionRuntimeRepo,
+} from "~/server/extension/repos";
+import { createExtensionService } from "~/server/extension/service";
+import {
   createSessionRepository,
   type SessionRepository,
 } from "~/server/sessions/repos-sessions";
 import { createExecutorUow } from "~/server/shared/application/uow";
 
-import {
-  createExtensionRuntimeRepo,
-  type ExtensionRuntimeRepo,
-} from "../extension/repos";
-import { createExtensionService } from "../extension/service";
 import type { ServerInfra } from "./infra";
 
 export type ExtensionRuntimeRepos = {

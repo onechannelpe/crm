@@ -1,4 +1,3 @@
-import { createSessionService } from "~/server/auth/application/session-service";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
@@ -13,9 +12,11 @@ import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo
 import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { createSessionService } from "~/server/auth/session/session.service";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
 import type { NotificationIntent } from "~/server/notifications/types";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import type { ServerInfra } from "./infra";
 
@@ -24,12 +25,13 @@ export function createAuthRuntime(
   notifications: {
     messaging: MessagingGateway;
     enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
-    dispatchPendingJobs(): Promise<void>;
+    dispatchPendingJobs(): void;
   },
 ) {
   const sessionService = createSessionService({
     sessions: createAuthSessionRepo(infra.db),
     users: createAuthUsersRepo(infra.db),
+    events: createEventsRepo(infra.db),
     now: infra.now,
     logger: infra.logger,
   });
@@ -54,7 +56,7 @@ export function createAuthRuntime(
       repos: {
         users: onboarding.repos.users,
         sessions: onboarding.repos.sessions,
-        auditLogs: onboarding.repos.auditLogs,
+        events: onboarding.repos.events,
       },
     },
     totp: createTotpEnrollmentContext(infra.db),
@@ -64,18 +66,17 @@ export function createAuthRuntime(
     }),
     sessionRead: createAuthSessionReadContext({
       executor: infra.db,
-      invalidateSession: (id) => sessionService.invalidateSession(id),
+      revokeSession: (id) => sessionService.revoke(id),
     }),
     sessionLogout: createAuthSessionLogoutContext({
       executor: infra.db,
-      invalidateSession: (id) => sessionService.invalidateSession(id),
+      revokeSession: (id) => sessionService.revoke(id),
     }),
     adminSessionsRead: createAdminSessionsReadContext(infra.db),
     adminSessionRevocation: createAdminSessionRevocationContext({
       executor: infra.db,
-      invalidateSession: (id) => sessionService.invalidateSession(id),
-      invalidateUserSessions: (userId) =>
-        sessionService.invalidateUserSessions(userId),
+      revokeSession: (id) => sessionService.revoke(id),
+      revokeUserSessions: (userId) => sessionService.revokeAllForUser(userId),
     }),
   };
 }

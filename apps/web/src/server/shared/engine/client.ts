@@ -1,5 +1,5 @@
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import { getEnvFor } from "~/lib/env";
+import type { EngineConfig } from "~/lib/env";
 import { createEngineAdapter } from "~/server/adapters/engine/client";
 import type { DomainError } from "~/server/shared/domain-error";
 import { buildEngineClientConfig } from "~/server/shared/engine/config";
@@ -29,7 +29,7 @@ export interface EngineClient {
   ): Promise<Result<RecordCandidate[], DomainError>>;
 }
 
-export function createDefaultEngineClient(): EngineClient {
-  const engineConfig = buildEngineClientConfig(getEnvFor("engine"));
+export function createDefaultEngineClient(config: EngineConfig): EngineClient {
+  const engineConfig = buildEngineClientConfig(config);
   return createEngineAdapter(engineConfig);
 }

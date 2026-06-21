@@ -3,7 +3,7 @@ import {
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 
@@ -16,6 +16,6 @@ export function createSecurityRuntime(infra: ServerInfra) {
     passkeys: createPasskeysRepo(infra.db),
     userTotpFactors: createUserTotpFactorsRepo(infra.db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(infra.db),
-    auditLogs: createAuditLogsRepo(infra.db),
+    events: createEventsRepo(infra.db),
   };
 }
