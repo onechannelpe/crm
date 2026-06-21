@@ -30,7 +30,7 @@ export async function updateSearchPolicyDefault(
       {
         scopeType: input.scope.kind,
         scopeId: input.scope.scopeId,
-        monthlyLimit: input.monthlyLimit,
+        monthlyLimit: monthlyLimit.value,
       },
       tx,
     );

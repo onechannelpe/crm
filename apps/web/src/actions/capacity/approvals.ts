@@ -41,7 +41,7 @@ function parseCapacityGrant(
     validationFail,
     (r) => ({
       targetUserId: r.posInt("userId"),
-      amount: r.num("amount"),
+      amount: r.posInt("amount"),
       reason: r.str("reason"),
     }),
   );

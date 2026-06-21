@@ -14,7 +14,7 @@ function parseCapacityRequest(
     { amount: rawAmount, reason: rawReason },
     validationFail,
     (r) => ({
-      amount: r.num("amount"),
+      amount: r.posInt("amount"),
       reason: r.str("reason"),
     }),
   );
