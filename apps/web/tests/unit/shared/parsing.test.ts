@@ -44,6 +44,27 @@ describe("parseObject", () => {
     expectErrCode(result, "invalid_tasa_actual");
   });
 
+  it.each([0, -1, 1.5, Number.NaN])(
+    "reports %s as an invalid positive integer",
+    (amount) => {
+      const result = parseObject({ amount }, validationFail, (r) => ({
+        amount: r.posInt("amount"),
+      }));
+
+      expectErrCode(result, "invalid_amount");
+    },
+  );
+
+  it("accepts a positive integer", () => {
+    const result = parseObject({ amount: 1 }, validationFail, (r) => ({
+      amount: r.posInt("amount"),
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.value.amount).toBe(1);
+  });
+
   it("reports a present wrong-typed field as invalid", () => {
     const result = parseObject({ reason: 42 }, validationFail, (r) => ({
       reason: r.str("reason"),
