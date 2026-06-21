@@ -15,7 +15,9 @@ export function GridSelectEditor<V extends string>(props: {
 }) {
   let listRef: HTMLDivElement | undefined;
 
-  onMount(() => listRef?.focus());
+  onMount(() => {
+    listRef?.focus();
+  });
 
   return (
     <div
