@@ -58,7 +58,9 @@ function valueFor(
 export default function RateSimulatorPage() {
   const [form, setForm] = createSignal(DEFAULT_INPUT);
   const [summary, setSummary] = createSignal<SummaryTable | null>(null);
-  const [error, setError] = createSignal<string | null>(null);
+  const [calculationErrorMessage, setCalculationErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   const updateField = (
     section: keyof RatesInput,
@@ -80,11 +82,11 @@ export default function RateSimulatorPage() {
     const result = calculateRates(form());
     if (!result.ok) {
       setSummary(null);
-      setError(result.error);
+      setCalculationErrorMessage(result.error);
       return;
     }
 
-    setError(null);
+    setCalculationErrorMessage(null);
     setSummary(asSummaryTable(result.value));
   };
 
@@ -162,7 +164,7 @@ export default function RateSimulatorPage() {
 
           <div class={styles.actions}>
             <Button type="submit">Calcular</Button>
-            <Show when={error()}>
+            <Show when={calculationErrorMessage()}>
               {(message) => <p class={styles.errorText}>{message()}</p>}
             </Show>
           </div>

@@ -21,7 +21,7 @@ function normalizeLeadListFilters(
   return {
     stage: filters.stage,
     status: filters.status,
-    prioridad: filters.prioridad,
+    priority: filters.priority,
     executiveId: filters.executiveId,
     anyFieldSearch: filters.anyFieldSearch,
     updatedSinceMs: filters.updatedSinceMs,
@@ -38,10 +38,6 @@ export const leadListQuery = query(
     queryLeadList(normalizeLeadListFilters(filters)),
   "workflow.leadList",
 );
-
-export function leadListKeyFor(filters: ListLeadsFiltersInput): string {
-  return leadListQuery.keyFor(normalizeLeadListFilters(filters));
-}
 
 export const leadDetailQuery = query(
   (leadId: string): Promise<LeadDetailView> => queryLeadDetail(leadId),

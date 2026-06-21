@@ -6,20 +6,16 @@ import {
 const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   QUALIFYING: "En calificación",
   DISQUALIFIED: "Descalificado",
-  SCOPING: "Relevamiento comercial",
-  QUOTING: "Listo para cotización",
-  QUOTED: "Cotizado",
-  SETUP_PLAN: "Plan de afiliación",
-  SETUP_EXECUTION: "Afiliación en curso",
+  PRICING: "Definición de tarifa",
+  SETUP: "Afiliación",
   LIVE: "Activo",
+  EXPIRED: "Vencido",
 };
 
 const LEAD_NEXT_STEP_LABELS: Record<LeadNextStep, string> = {
-  REVIEW_LEAD: "Revisar cliente",
   NO_ACTION: "Sin acciones pendientes",
-  SAVE_COMMERCIAL_SCOPE: "Guardar alcance comercial",
-  CREATE_QUOTATION: "Crear cotización",
-  APPROVE_FOR_SALE: "Aprobar para venta",
+  PROPOSE_RATE: "Proponer tarifa",
+  ACCEPT_RATE: "Confirmar tarifa con el cliente",
   DEFINE_DIGITAL_POLICY: "Definir política digital",
   REGISTER_VENUE_ACCOUNTS: "Registrar cuentas de sedes",
 };

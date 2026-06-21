@@ -13,7 +13,7 @@ export type LeadSortKey =
   | "ruc_asc"
   | "ruc_desc";
 
-export const LEAD_WORKSPACE_SORTS = [
+const LEAD_WORKSPACE_SORTS = [
   { value: "createdAt_desc", label: "Más recientes" },
   { value: "createdAt_asc", label: "Más antiguos" },
   { value: "updatedAt_desc", label: "Más recientes" },
