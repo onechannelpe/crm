@@ -20,7 +20,7 @@ function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
     input.outcome === "failed" &&
     (input.code === "cancelled" ||
       input.code === "unsupported" ||
-      input.code === "browser_error")
+      input.code === "server_error")
   ) {
     return input;
   }

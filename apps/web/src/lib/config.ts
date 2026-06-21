@@ -20,9 +20,6 @@ export const config = {
   contactCooldown: {
     defaultHours: 24,
   },
-  uploads: {
-    storageRoot: process.env.WEB_UPLOADS_ROOT ?? ".local-storage/documents",
-  },
   session: {
     maxAgeSeconds: 60 * 60 * 24 * 30,
   },

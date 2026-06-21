@@ -1,4 +1,3 @@
-import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import { createLogger } from "~/lib/observability/logger";
 
 import { verifyCsrf } from "../../security/csrf";
@@ -9,7 +8,7 @@ const logger = createLogger("auth-request-guard");
 
 export interface AuthRequestEvent {
   request: Request;
-  locals?: App.RequestEventLocals;
+  locals: App.RequestEventLocals;
 }
 
 export type AuthRequestDecision =
@@ -36,7 +35,7 @@ export function isPublicPath(pathname: string): boolean {
 
 export function enforceCsrfRequestPolicy(
   request: Request,
-  targetOrigin = getTargetOrigin(request),
+  targetOrigin: string,
 ): string | null {
   if (SAFE_METHODS.has(request.method)) {
     return null;
@@ -44,19 +43,9 @@ export function enforceCsrfRequestPolicy(
 
   const fetchSite = request.headers.get("sec-fetch-site");
   if (fetchSite) {
-    if (fetchSite === "same-origin") {
-      return null;
-    }
-
-    if (fetchSite === "cross-site" || fetchSite === "same-site") {
-      return "CSRF validation failed (Fetch Metadata)";
-    }
-
-    if (fetchSite === "none") {
-      return "CSRF validation failed (Fetch Metadata)";
-    }
-
-    return "CSRF validation failed (Fetch Metadata)";
+    return fetchSite === "same-origin"
+      ? null
+      : "CSRF validation failed (Fetch Metadata)";
   }
 
   const sourceOrigin = getSourceOrigin(request);
@@ -89,10 +78,6 @@ function getSourceOrigin(request: Request): string | null {
   }
 }
 
-export function getTargetOrigin(request: Request): string {
-  return getRequestPublicOrigin(request);
-}
-
 function normalizeOrigin(value: string): string | null {
   try {
     return new URL(value).origin;
@@ -105,9 +90,8 @@ export async function enforceAuthRequest(
   event: AuthRequestEvent,
 ): Promise<AuthRequestDecision> {
   const url = new URL(event.request.url);
-  const requestContext = event.locals?.requestContext;
-  const targetOrigin =
-    requestContext?.publicOrigin ?? getTargetOrigin(event.request);
+  const requestContext = event.locals.requestContext;
+  const targetOrigin = requestContext.publicOrigin;
 
   if (!SAFE_METHODS.has(event.request.method)) {
     const csrfPolicyError = enforceCsrfRequestPolicy(
@@ -122,9 +106,7 @@ export async function enforceAuthRequest(
       };
     }
 
-    const csrfToken = requestContext
-      ? await requestContext.getRequestCsrfToken()
-      : null;
+    const csrfToken = await requestContext.getRequestCsrfToken();
     const isCsrfValid = csrfToken
       ? await verifyCsrf(event.request, csrfToken)
       : false;
@@ -138,7 +120,7 @@ export async function enforceAuthRequest(
 
   if (isPublicPath(url.pathname)) return { kind: "allow" };
 
-  const session = requestContext ? await requestContext.getAuthSession() : null;
+  const session = await requestContext.getAuthSession();
   if (!session) {
     return { kind: "redirect_login" };
   }
@@ -178,7 +160,7 @@ function logCsrfReject(
     fetchSite: request.headers.get("sec-fetch-site"),
     origin: request.headers.get("origin"),
     targetOrigin,
-    requestId: event.locals?.requestContext?.observability.requestId ?? null,
-    traceId: event.locals?.requestContext?.observability.traceId ?? null,
+    requestId: event.locals.requestContext.observability.requestId,
+    traceId: event.locals.requestContext.observability.traceId,
   });
 }

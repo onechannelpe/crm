@@ -1,45 +1,41 @@
-import { assertPositiveInt } from "~/contracts/guards";
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
-import { createPasskeyProvider } from "~/lib/auth/providers/passkey-provider";
-import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
-import { createPasskeyLoginStateService } from "~/server/auth/passkey/service/login-state";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
+import { createPasskeyLoginStateService } from "~/server/auth/factors/passkey/service/login-state";
+import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 
 import type { LoginFlowState } from "../contracts";
 
-async function readActiveLoginFlow(
+export async function getLoginFlowState(
   flowId: number,
   deps: AuthLoginDeps,
+  webauthnProvider: WebauthnProvider,
 ): Promise<LoginFlowState | null> {
-  const safeFlowId = assertPositiveInt(flowId, "flowId");
-  const flow = await deps.loginFlows.findById(safeFlowId);
+  const flow = await deps.loginFlows.findById(flowId);
 
-  if (!flow) return null;
+  if (!flow) {
+    return null;
+  }
+
   if (flow.expires_at < Date.now()) {
     await deleteLoginFlow(flow, deps);
     return null;
   }
 
-  if (flow.state === "totp") {
-    return {
-      id: flow.id,
-      identifier: flow.identifier,
-      state: "totp",
-    };
+  switch (flow.state) {
+    case "totp":
+      return {
+        id: flow.id,
+        identifier: flow.identifier,
+        state: "totp",
+      };
+
+    case "passkey":
+      return createPasskeyLoginStateService(deps, {
+        webauthnProvider,
+      }).hydrateLoginFlow(flow);
+
+    default:
+      await deleteLoginFlow(flow, deps);
+      return null;
   }
-
-  if (flow.state === "passkey") {
-    return createPasskeyLoginStateService(deps, {
-      webauthnService: createPasskeyProvider(deps),
-    }).hydrateLoginFlow(flow);
-  }
-
-  await deleteLoginFlow(flow, deps);
-  return null;
-}
-
-export async function getLoginFlowState(
-  flowId: number,
-  deps: AuthLoginDeps,
-): Promise<LoginFlowState | null> {
-  return readActiveLoginFlow(flowId, deps);
 }

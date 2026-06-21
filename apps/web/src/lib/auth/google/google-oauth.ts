@@ -1,13 +1,13 @@
 import { decodeIdToken, Google } from "arctic";
 
-import { getEnvFor } from "~/lib/env";
+import { googleOAuthConfig } from "~/lib/env";
 import { isPlainRecord } from "~/lib/type-guards";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 let googleOAuth: Google | undefined;
 
 export function getGoogleOAuth(): Google {
-  const env = getEnvFor("googleOAuth");
+  const env = googleOAuthConfig();
   googleOAuth ??= new Google(
     env.googleClientId,
     env.googleClientSecret,
@@ -23,7 +23,7 @@ export interface GoogleIdTokenClaims {
   picture?: string;
 }
 
-export function parseGoogleClaims(claims: unknown): GoogleIdTokenClaims {
+function parseGoogleClaims(claims: unknown): GoogleIdTokenClaims {
   if (!isPlainRecord(claims)) {
     throw new Error("Invalid Google ID token claims");
   }

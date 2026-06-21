@@ -1,35 +1,45 @@
 import { getRequestContext } from "~/lib/http/request-context";
+import {
+  fail,
+  forbidden,
+  unauthenticated,
+  type DomainError,
+} from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { hasPermission, type Permission, type Role } from "./rbac";
 import type { AuthSession } from "./session-types";
 
 export async function getSession(): Promise<AuthSession | null> {
-  const session = await getRequestContext().getAuthSession();
-  if (!session) return null;
-
-  return session;
+  return getRequestContext().getAuthSession();
 }
 
-export async function requireAuth(): Promise<AuthSession> {
+// Result-returning core. The action runtime consumes these so that an auth
+// denial is an outcome in the same Result channel as parsing and execution, not
+// a thrown exception that loses its kind. The throwing facades below wrap these
+// for the raw (non-runAction) callers in routes and standalone actions.
+
+export async function authenticate(): Promise<
+  Result<AuthSession, DomainError>
+> {
   const session = await getSession();
-
   if (!session) {
-    throw new Error("Unauthorized");
+    return Err(unauthenticated());
   }
-
   if (session.sessionClass !== "app" || !session.onboardingCompleted) {
-    throw new Error("Onboarding required");
+    return Err(fail("onboarding_required"));
   }
-
-  return session;
+  return Ok(session);
 }
 
-export async function requireSession(): Promise<AuthSession> {
+export async function authenticateSession(): Promise<
+  Result<AuthSession, DomainError>
+> {
   const session = await getSession();
   if (!session) {
-    throw new Error("Unauthorized");
+    return Err(unauthenticated());
   }
-  return session;
+  return Ok(session);
 }
 
 const ROLE_HIERARCHY: Record<Role, number> = {
@@ -49,18 +59,22 @@ export function hasRole(userRole: Role, requiredRole: Role): boolean {
   return userLevel >= requiredLevel;
 }
 
-export async function requireRole(role: Role) {
-  const session = await requireAuth();
+export function authorizeRole(
+  session: AuthSession,
+  role: Role,
+): Result<AuthSession, DomainError> {
   if (!hasRole(session.role, role)) {
-    throw new Error("Forbidden");
+    return Err(forbidden());
   }
-  return session;
+  return Ok(session);
 }
 
-export async function requirePermission(permission: Permission) {
-  const session = await requireAuth();
+export function authorizePermission(
+  session: AuthSession,
+  permission: Permission,
+): Result<AuthSession, DomainError> {
   if (!hasPermission(session.role, permission)) {
-    throw new Error("Forbidden");
+    return Err(forbidden());
   }
-  return session;
+  return Ok(session);
 }

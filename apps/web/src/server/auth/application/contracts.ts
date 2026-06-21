@@ -34,38 +34,6 @@ export interface CurrentUserView {
   branch: { id: number; name: string } | null;
 }
 
-export type PasswordLoginSubmissionResult =
-  | {
-      ok: false;
-      code: "invalid_credentials" | "strong_auth_required";
-    }
-  | {
-      ok: true;
-      nextStep: "passkey";
-      flow: PasskeyLoginFlowState;
-    };
-
-export type PasskeyStartSubmissionResult =
-  | {
-      ok: false;
-      code: "invalid_credentials";
-    }
-  | {
-      ok: true;
-      flow: PasskeyLoginFlowState;
-    };
-
-export type RequestPasswordResetResult =
-  | { ok: true }
-  | { ok: false; code: "rate_limited" | "email_required" };
-
-export type ResetPasswordResult =
-  | { ok: true }
-  | {
-      ok: false;
-      code: "invalid_token" | "password_mismatch" | "password_too_short";
-    };
-
 export interface SessionInfo {
   id: string;
   userId: number;
@@ -100,14 +68,9 @@ export type SubmitPrimaryLoginResult =
   | { kind: "passkey_required"; flow: PasskeyLoginFlowState }
   | { kind: "complete"; result: LoginFlowLoginResult };
 
-export type SubmitPrimaryLoginError =
-  | {
-      kind: "invalid_credentials" | "strong_auth_required";
-    }
-  | {
-      kind: "unexpected";
-      message: string;
-    };
+export type SubmitPrimaryLoginError = {
+  kind: "invalid_credentials" | "strong_auth_required";
+};
 
 export type SubmitTotpLoginError =
   | { kind: "flow_expired" }

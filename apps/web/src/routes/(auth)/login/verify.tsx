@@ -1,18 +1,18 @@
 import { createAsync, useSearchParams, useSubmission } from "@solidjs/router";
-import { createMemo, createSignal, onMount, Show, Suspense } from "solid-js";
+import { createMemo, createSignal, Show, Suspense } from "solid-js";
 
 import { Loader } from "~/components/feedback/loading/loader";
-import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
-import { totpLoginUiMessage } from "~/features/auth/model/login-ui";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { totpLoginMutation } from "~/lib/mutations/auth";
 import { loginFlowQuery } from "~/lib/queries/auth";
+import { parseWireError } from "~/lib/wire-error";
+import { codeIs } from "~/lib/wire-error-codes";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";
@@ -22,7 +22,6 @@ import pageStyles from "~/features/auth/ui/login-page.module.css";
 export default function LoginVerifyPage() {
   useAuthPageView("login_verify");
   const [searchParams] = useSearchParams();
-  const { enqueueErrorSnackBar } = useSnackBar();
   const totpSubmission = useSubmission(totpLoginMutation);
   const [totpCode, setTotpCode] = createSignal("");
   const flowId = () => parseLoginFlowId(searchParams.flow);
@@ -32,21 +31,27 @@ export default function LoginVerifyPage() {
       ? loginFlowQuery(currentFlowId)
       : Promise.resolve(null);
   });
+  const submitError = () =>
+    totpSubmission.error ? parseWireError(totpSubmission.error) : undefined;
+
+  const flowExpiredAtSubmit = () => {
+    const submitFailure = submitError();
+    return submitFailure !== undefined && codeIs(submitFailure, "flow_expired");
+  };
+
   const totpFlow = createMemo(() => {
     const flow = loginFlow();
     if (flow === undefined && flowId()) return undefined;
+    if (flowExpiredAtSubmit()) return null;
     return flow?.state === "totp" ? flow : null;
   });
 
-  onMount(() => {
-    if (!flowId()) {
-      enqueueErrorSnackBar("La sesión de inicio expiró. Intenta de nuevo.");
-    }
-  });
-
   const totpError = () => {
-    const result = totpSubmission.result;
-    return result && !result.ok ? totpLoginUiMessage(result.code) : undefined;
+    const submitFailure = submitError();
+    if (submitFailure === undefined || codeIs(submitFailure, "flow_expired")) {
+      return undefined;
+    }
+    return submitFailure.message;
   };
 
   return (

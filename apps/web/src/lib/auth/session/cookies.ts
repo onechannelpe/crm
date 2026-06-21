@@ -1,13 +1,17 @@
 import { getCookie, setCookie, deleteCookie } from "@solidjs/start/http";
 
 const COOKIE_NAME = "session";
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === "production";
+}
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
 function serializeSessionCookieValue(
   token: string,
   options?: { maxAge?: number },
 ): string {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = isProduction() ? "; Secure" : "";
   const maxAge =
     options?.maxAge === undefined
       ? `; Max-Age=${COOKIE_MAX_AGE}`
@@ -20,11 +24,9 @@ export function getSessionCookie(): string | undefined {
 }
 
 export function setSessionCookie(token: string): void {
-  const isProduction = process.env.NODE_ENV === "production";
-
   setCookie(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: isProduction,
+    secure: isProduction(),
     sameSite: "lax",
     maxAge: COOKIE_MAX_AGE,
     path: "/",
@@ -32,11 +34,9 @@ export function setSessionCookie(token: string): void {
 }
 
 export function deleteSessionCookie(): void {
-  const isProduction = process.env.NODE_ENV === "production";
-
   deleteCookie(COOKIE_NAME, {
     httpOnly: true,
-    secure: isProduction,
+    secure: isProduction(),
     sameSite: "lax",
     path: "/",
   });

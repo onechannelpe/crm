@@ -7,11 +7,15 @@ const mocks = vi.hoisted(() => ({
   completeGoogleOAuthCallback: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("~/lib/auth/google/google-callback-login", () => ({
+vi.mock("~/server/auth/flows/google-callback-login", () => ({
   completeGoogleOAuthCallback: mocks.completeGoogleOAuthCallback,
 }));
 
-vi.mock("~/server/runtime", () => ({
+vi.mock("~/server/auth/infrastructure/request-passkey-provider", () => ({
+  createRequestPasskeyProvider: () => ({}),
+}));
+
+vi.mock("~/server/platform/container", () => ({
   getServerRuntime: () => ({
     auth: {
       login: {

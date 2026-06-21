@@ -1,8 +1,9 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { completeGoogleOAuthCallback } from "~/lib/auth/google/google-callback-login";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
 import { Err, Ok, isErr } from "~/server/shared/result";
 
 const mocks = vi.hoisted(() => ({
@@ -45,6 +46,7 @@ describe("google oauth callback login", () => {
       },
       scenario.ctx.repos,
       sendPrivilegedLoginAlert,
+      createTestPasskeyProvider(scenario.ctx.repos),
     );
 
     expect(isErr(result)).toBe(true);
@@ -68,6 +70,7 @@ describe("google oauth callback login", () => {
       request,
       scenario.ctx.repos,
       sendPrivilegedLoginAlert,
+      createTestPasskeyProvider(scenario.ctx.repos),
     );
 
     expect(isErr(result)).toBe(true);
@@ -95,6 +98,7 @@ describe("google oauth callback login", () => {
       request,
       scenario.ctx.repos,
       sendPrivilegedLoginAlert,
+      createTestPasskeyProvider(scenario.ctx.repos),
     );
 
     expect(isErr(result)).toBe(true);
@@ -123,6 +127,7 @@ describe("google oauth callback login", () => {
       request,
       scenario.ctx.repos,
       sendPrivilegedLoginAlert,
+      createTestPasskeyProvider(scenario.ctx.repos),
     );
 
     expect(isErr(result)).toBe(false);
@@ -157,6 +162,7 @@ describe("google oauth callback login", () => {
       request,
       scenario.ctx.repos,
       sendPrivilegedLoginAlert,
+      createTestPasskeyProvider(scenario.ctx.repos),
     );
 
     expect(isErr(result)).toBe(false);
@@ -181,6 +187,7 @@ describe("google oauth callback login", () => {
       request,
       scenario.ctx.repos,
       sendPrivilegedLoginAlert,
+      createTestPasskeyProvider(scenario.ctx.repos),
     );
 
     expect(isErr(result)).toBe(true);

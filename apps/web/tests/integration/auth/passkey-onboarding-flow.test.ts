@@ -8,7 +8,7 @@ import {
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createPasskeyEnrollmentAuthService } from "~/server/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
 import { isErr } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 
@@ -44,9 +44,9 @@ describe("passkey onboarding flow", () => {
         const passkeyResult = await createPasskeyEnrollmentAuthService(
           transactionRepos,
           {
-            createWebauthnProvider: (repos) =>
-              createWebauthnProviderWithRegistration(async (enrolledUserId) => {
-                await repos.passkeys.create({
+            webauthnProvider: createWebauthnProviderWithRegistration(
+              async (enrolledUserId) => {
+                await transactionRepos.passkeys.create({
                   id: "passkey-1",
                   user_id: enrolledUserId,
                   public_key: Buffer.from("test-public-key").toString("base64"),
@@ -54,7 +54,8 @@ describe("passkey onboarding flow", () => {
                   transports: JSON.stringify(["internal"]),
                 });
                 return { verified: true };
-              }),
+              },
+            ),
           },
         ).finishEnrollment({
           userId,
@@ -64,7 +65,7 @@ describe("passkey onboarding flow", () => {
         });
         if (isErr(passkeyResult)) {
           throw new Error(
-            `Passkey enrollment failed: ${passkeyResult.error.message}`,
+            `Passkey enrollment failed: ${passkeyResult.error.code ?? passkeyResult.error.kind}`,
           );
         }
 

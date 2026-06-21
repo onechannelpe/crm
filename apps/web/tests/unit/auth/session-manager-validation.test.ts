@@ -47,12 +47,12 @@ describe("session manager validation", () => {
     store.set(sessionId, buildSessionRow(sessionId, nowTs));
 
     const { service, spies } = createSessionServiceHarness(nowTs, store);
-    const first = await service.validateSessionToken(token);
-    expect(first.session).not.toBeNull();
+    const first = await service.resolve(token);
+    expect(first).not.toBeNull();
 
     spies.usersFindById.mockClear();
-    const second = await service.validateSessionToken(token);
-    expect(second.session).not.toBeNull();
+    const second = await service.resolve(token);
+    expect(second).not.toBeNull();
     expect(spies.usersFindById).not.toHaveBeenCalled();
   });
 
@@ -64,13 +64,13 @@ describe("session manager validation", () => {
     store.set(sessionId, buildSessionRow(sessionId, nowTs));
 
     const { service } = createSessionServiceHarness(nowTs, store);
-    const first = await service.validateSessionToken(token);
-    expect(first.session).not.toBeNull();
+    const first = await service.resolve(token);
+    expect(first).not.toBeNull();
 
-    await service.invalidateUserSessions(execOne.userId);
+    await service.revokeAllForUser(execOne.userId);
 
-    const second = await service.validateSessionToken(token);
-    expect(second.session).toBeNull();
+    const second = await service.resolve(token);
+    expect(second).toBeNull();
     expect(store.has(sessionId)).toBe(false);
   });
 
@@ -83,9 +83,9 @@ describe("session manager validation", () => {
     store.set(sessionId, { ...row, session_class: "pre_auth" });
 
     const { service, spies } = createSessionServiceHarness(nowTs, store);
-    const result = await service.validateSessionToken(token);
+    const result = await service.resolve(token);
 
-    expect(result.session?.onboardingCompleted).toBe(false);
+    expect(result?.onboardingCompleted).toBe(false);
     expect(spies.usersFindById).toHaveBeenCalledOnce();
   });
 });

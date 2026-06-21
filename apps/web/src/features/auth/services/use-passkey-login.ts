@@ -3,16 +3,14 @@ import { createMemo, createSignal, onMount } from "solid-js";
 
 import { finishPasskeyLogin } from "~/actions/auth/login/passkey";
 import {
-  passkeyFinishUiMessage,
-  passkeyStartUiMessage,
-} from "~/features/auth/model/login-ui";
-import {
   createAuthenticationResponse,
   isPasskeyAuthenticationSupported,
 } from "~/lib/auth/passkey/authentication-client";
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 import { passkeyStartMutation } from "~/lib/mutations/auth";
 import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
+import { actionErrorMessage, parseWireError } from "~/lib/wire-error";
+import { codeIs } from "~/lib/wire-error-codes";
 
 export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
 export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
@@ -29,9 +27,11 @@ function buildPasskeyStartFormData(
 ): FormData {
   const formData = new FormData();
   formData.set("mode", input.mode);
+
   if (input.mode === "identified") {
     formData.set("identifier", input.identifier);
   }
+
   return formData;
 }
 
@@ -41,7 +41,7 @@ export function usePasskeyLogin() {
   const trackAuthClientEvent = useAction(trackAuthClientEventMutation);
 
   const [phase, setPhase] = createSignal<PasskeyLoginPhase>("idle");
-  const [error, setError] = createSignal<string>();
+  const [errorMessage, setErrorMessage] = createSignal<string>();
   const [activeFlow, setActiveFlow] = createSignal<PasskeyLoginFlowState>();
   const [supportStatus, setSupportStatus] =
     createSignal<PasskeySupportStatus>("unknown");
@@ -56,18 +56,19 @@ export function usePasskeyLogin() {
     );
   });
 
-  function resetError() {
-    setError(undefined);
+  function clearErrorMessage() {
+    setErrorMessage(undefined);
   }
 
   function clear() {
     setPhase("idle");
-    setError(undefined);
+    setErrorMessage(undefined);
     setActiveFlow(undefined);
   }
 
   async function markUnsupported() {
-    setError("Este navegador no admite claves de acceso.");
+    setErrorMessage("Este navegador no admite claves de acceso.");
+
     await trackAuthClientEvent({
       kind: "passkey_result",
       outcome: "failed",
@@ -75,9 +76,9 @@ export function usePasskeyLogin() {
     });
   }
 
-  async function runFlow(flow: PasskeyLoginFlowState): Promise<boolean> {
+  async function continueFlow(flow: PasskeyLoginFlowState): Promise<boolean> {
     setActiveFlow(flow);
-    setError(undefined);
+    setErrorMessage(undefined);
 
     if (!supported()) {
       await markUnsupported();
@@ -85,45 +86,53 @@ export function usePasskeyLogin() {
     }
 
     setPhase("device");
+
     try {
       const response = await createAuthenticationResponse(flow.requestOptions);
+
       setPhase("verifying");
 
-      const result = await finishPasskeyLogin(flow.id, response);
-      if (!result.ok) {
-        setError(passkeyFinishUiMessage(result.code));
-        if (result.code === "flow_expired") {
-          setActiveFlow(undefined);
-        }
+      const { redirectTo } = await finishPasskeyLogin(flow.id, response);
+
+      navigate(redirectTo);
+      return true;
+    } catch (caught: unknown) {
+      if (
+        caught instanceof DOMException &&
+        (caught.name === "NotAllowedError" || caught.name === "AbortError")
+      ) {
+        await trackAuthClientEvent({
+          kind: "passkey_result",
+          outcome: "failed",
+          code: "cancelled",
+        });
+
+        setErrorMessage(
+          "La verificación con clave de acceso se canceló. Intenta de nuevo.",
+        );
+
         return false;
       }
 
-      navigate(result.redirectTo);
-      return true;
-    } catch (caughtError: unknown) {
-      if (caughtError instanceof DOMException) {
-        if (
-          caughtError.name === "NotAllowedError" ||
-          caughtError.name === "AbortError"
-        ) {
-          await trackAuthClientEvent({
-            kind: "passkey_result",
-            outcome: "failed",
-            code: "cancelled",
-          });
-          setError(
-            "La verificación con clave de acceso se canceló. Intenta de nuevo.",
-          );
-          return false;
+      const wire = parseWireError(caught);
+
+      if (wire.kind !== "internal") {
+        setErrorMessage(wire.message);
+
+        if (codeIs(wire, "flow_expired")) {
+          setActiveFlow(undefined);
         }
+
+        return false;
       }
 
       await trackAuthClientEvent({
         kind: "passkey_result",
         outcome: "failed",
-        code: "browser_error",
+        code: "server_error",
       });
-      setError("No se pudo iniciar sesión con la clave de acceso.");
+
+      setErrorMessage("No se pudo iniciar sesión con la clave de acceso.");
       return false;
     } finally {
       setPhase("idle");
@@ -132,26 +141,26 @@ export function usePasskeyLogin() {
 
   async function start(identifier: string): Promise<boolean> {
     const safeIdentifier = identifier.trim();
+
     if (!safeIdentifier || busy()) {
       return false;
     }
 
-    resetError();
+    clearErrorMessage();
     setPhase("starting");
 
     try {
-      const result = await beginPasskeyLogin(
+      const { flow } = await beginPasskeyLogin(
         buildPasskeyStartFormData({
           mode: "identified",
           identifier: safeIdentifier,
         }),
       );
-      if (!result.ok) {
-        setError(passkeyStartUiMessage(result.code));
-        return false;
-      }
 
-      return await runFlow(result.flow);
+      return continueFlow(flow);
+    } catch (caught: unknown) {
+      setErrorMessage(actionErrorMessage(caught));
+      return false;
     } finally {
       if (phase() === "starting") {
         setPhase("idle");
@@ -164,19 +173,18 @@ export function usePasskeyLogin() {
       return false;
     }
 
-    resetError();
+    clearErrorMessage();
     setPhase("starting");
 
     try {
-      const result = await beginPasskeyLogin(
+      const { flow } = await beginPasskeyLogin(
         buildPasskeyStartFormData({ mode: "discoverable" }),
       );
-      if (!result.ok) {
-        setError(passkeyStartUiMessage(result.code));
-        return false;
-      }
 
-      return await runFlow(result.flow);
+      return continueFlow(flow);
+    } catch (caught: unknown) {
+      setErrorMessage(actionErrorMessage(caught));
+      return false;
     } finally {
       if (phase() === "starting") {
         setPhase("idle");
@@ -186,16 +194,17 @@ export function usePasskeyLogin() {
 
   async function retry(): Promise<boolean> {
     const flow = activeFlow();
+
     if (!flow || busy()) {
       return false;
     }
 
-    return await runFlow(flow);
+    return continueFlow(flow);
   }
 
   return {
     phase,
-    error,
+    errorMessage,
     supportStatus,
     supportKnown,
     supported,
@@ -204,8 +213,8 @@ export function usePasskeyLogin() {
     start,
     startDiscoverable,
     retry,
-    runFlow,
-    resetError,
+    continueFlow,
+    clearErrorMessage,
     clear,
   };
 }

@@ -2,221 +2,224 @@
 
 import { redirect } from "@solidjs/router";
 
-import type {
-  PasskeyStartSubmissionResult,
-  PasswordLoginSubmissionResult,
-} from "~/actions/auth/contracts";
-import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
+import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { startPasskeyLogin } from "~/server/auth/application/commands/start-passkey-login";
-import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
-import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
+import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
+import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
+import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
+import { runPublicAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { fail, internal, throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 import {
   completeLoginAndRedirect,
-  normalizePasskeyStartError,
-  normalizePasswordLoginError,
   readLoginFlowId,
   readLoginText,
   readPasskeyStartMode,
-  resolvePasskeyStartAnalyticsCode,
-  resolvePasswordAnalyticsCode,
 } from "./support";
-
-export type TotpLoginSubmissionResult = {
-  ok: false;
-  code: "invalid_totp";
-};
 
 export async function passwordLogin(
   formData: FormData,
-): Promise<PasswordLoginSubmissionResult> {
-  const identifier = readLoginText(formData, "identifier");
-  const password = readLoginText(formData, "password", { trim: false });
-  const request = getRequestClientMetadata();
-  const loginContext = getServerRuntime().auth.login;
-  const result = await submitPasswordLogin(
-    {
-      identifier,
-      password,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-    },
-    loginContext.repos,
-    loginContext.privilegedLoginAlertSender,
-  );
-  if (isErr(result)) {
-    await recordAuthAnalyticsEvent(
-      {
-        source: "server",
-        kind: "password_result",
-        outcome: "failed",
-        code: resolvePasswordAnalyticsCode(result.error),
-      },
-      getActionRequestContext(),
-    );
-    return normalizePasswordLoginError(result.error);
-  }
+): Promise<{ nextStep: "passkey"; flow: PasskeyLoginFlowState }> {
+  return runPublicAction(async () => {
+    const identifier = readLoginText(formData, "identifier");
+    const password = readLoginText(formData, "password", { trim: false });
+    const request = getRequestClientMetadata();
+    const analyticsContext = getActionRequestContext();
+    const loginContext = getServerRuntime().auth.login;
 
-  if (result.value.kind === "totp_required") {
-    await recordAuthAnalyticsEvent(
+    const result = await submitPasswordLogin(
       {
-        source: "server",
-        kind: "password_result",
-        outcome: "totp_required",
+        identifier,
+        password,
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent,
       },
-      getActionRequestContext(),
+      loginContext.repos,
+      loginContext.privilegedLoginAlertSender,
+      createRequestPasskeyProvider(loginContext.repos),
     );
-    throw redirect(`/login/verify?flow=${result.value.flow.id}`);
-  }
-  if (result.value.kind === "passkey_required") {
-    await recordAuthAnalyticsEvent(
-      {
-        source: "server",
-        kind: "password_result",
-        outcome: "passkey_required",
-      },
-      getActionRequestContext(),
-    );
-    return {
-      ok: true,
-      nextStep: "passkey",
-      flow: result.value.flow,
-    };
-  }
 
-  await recordAuthAnalyticsEvent(
-    {
-      source: "server",
-      kind: "password_result",
-      outcome: "succeeded",
-    },
-    getActionRequestContext(),
-  );
-  return await completeLoginAndRedirect(result.value.result);
+    if (isErr(result)) {
+      await recordAuthAnalyticsEvent(
+        {
+          source: "server",
+          kind: "password_result",
+          outcome: "failed",
+          code: result.error.kind,
+        },
+        analyticsContext,
+      );
+
+      throwDomain(fail(result.error.kind));
+    }
+
+    if (result.value.kind === "totp_required") {
+      await recordAuthAnalyticsEvent(
+        {
+          source: "server",
+          kind: "password_result",
+          outcome: "totp_required",
+        },
+        analyticsContext,
+      );
+
+      throw redirect(`/login/verify?flow=${result.value.flow.id}`);
+    }
+
+    if (result.value.kind === "passkey_required") {
+      await recordAuthAnalyticsEvent(
+        {
+          source: "server",
+          kind: "password_result",
+          outcome: "passkey_required",
+        },
+        analyticsContext,
+      );
+
+      return {
+        nextStep: "passkey",
+        flow: result.value.flow,
+      };
+    }
+
+    await recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "password_result",
+        outcome: "succeeded",
+      },
+      analyticsContext,
+    );
+
+    return completeLoginAndRedirect(result.value.result);
+  });
 }
 
 export async function passkeyStart(
   formData: FormData,
-): Promise<PasskeyStartSubmissionResult> {
-  const mode = readPasskeyStartMode(formData);
-  if (!mode) {
-    throw internalError("Invalid passkey login mode");
-  }
+): Promise<{ flow: PasskeyLoginFlowState }> {
+  return runPublicAction(async () => {
+    const mode = readPasskeyStartMode(formData);
 
-  const request = getRequestClientMetadata();
-  const loginContext = getServerRuntime().auth.login;
-  const result =
-    mode === "identified"
-      ? await startPasskeyLogin(
-          {
+    if (!mode) {
+      throwDomain(internal("Invalid passkey login mode"));
+    }
+
+    const request = getRequestClientMetadata();
+    const analyticsContext = getActionRequestContext();
+    const loginContext = getServerRuntime().auth.login;
+
+    const command =
+      mode === "identified"
+        ? {
             identifier: readLoginText(formData, "identifier"),
             ipAddress: request.ipAddress,
             mode,
-          },
-          loginContext.repos,
-          {
-            createWebauthnProvider: createRequestPasskeyProviderFactory(),
-          },
-        )
-      : await startPasskeyLogin(
-          {
+          }
+        : {
             ipAddress: request.ipAddress,
             mode,
-          },
-          loginContext.repos,
-          {
-            createWebauthnProvider: createRequestPasskeyProviderFactory(),
-          },
-        );
-  if (isErr(result)) {
+          };
+
+    const result = await startPasskeyLogin(
+      command,
+      loginContext.repos,
+      createRequestPasskeyProvider(loginContext.repos),
+    );
+
+    if (isErr(result)) {
+      await recordAuthAnalyticsEvent(
+        {
+          source: "server",
+          kind: "passkey_start_result",
+          outcome: "failed",
+          code: "invalid_credentials",
+        },
+        analyticsContext,
+      );
+
+      throwDomain(fail("invalid_credentials"));
+    }
+
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "passkey_start_result",
-        outcome: "failed",
-        code: resolvePasskeyStartAnalyticsCode(result.error),
+        outcome: "started",
       },
-      getActionRequestContext(),
+      analyticsContext,
     );
-    return normalizePasskeyStartError(result.error);
-  }
 
-  await recordAuthAnalyticsEvent(
-    {
-      source: "server",
-      kind: "passkey_start_result",
-      outcome: "started",
-    },
-    getActionRequestContext(),
-  );
-  return {
-    ok: true,
-    flow: result.value,
-  };
+    return { flow: result.value };
+  });
 }
 
-export async function totpLogin(
-  formData: FormData,
-): Promise<TotpLoginSubmissionResult> {
-  const flowId = readLoginFlowId(formData, "flowId");
-  const totpCode = readLoginText(formData, "totpCode");
-  if (!flowId) {
-    throw redirect("/login/user?error=flow_expired");
-  }
-  const request = getRequestClientMetadata();
-  const loginContext = getServerRuntime().auth.login;
-  const result = await submitTotpForLoginFlow(
-    {
-      flowId,
-      totpCode,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-    },
-    loginContext.repos,
-    loginContext.privilegedLoginAlertSender,
-  );
-  if (isErr(result)) {
-    if (result.error.kind === "flow_expired") {
+export async function totpLogin(formData: FormData): Promise<void> {
+  return runPublicAction(async () => {
+    const flowId = readLoginFlowId(formData, "flowId");
+    const totpCode = readLoginText(formData, "totpCode");
+
+    if (!flowId) {
+      throwDomain(fail("flow_expired"));
+    }
+
+    const request = getRequestClientMetadata();
+    const analyticsContext = getActionRequestContext();
+    const loginContext = getServerRuntime().auth.login;
+
+    const result = await submitTotpForLoginFlow(
+      {
+        flowId,
+        totpCode,
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent,
+      },
+      loginContext.repos,
+      loginContext.privilegedLoginAlertSender,
+    );
+
+    if (isErr(result)) {
+      if (result.error.kind === "flow_expired") {
+        await recordAuthAnalyticsEvent(
+          {
+            source: "server",
+            kind: "totp_result",
+            outcome: "failed",
+            code: "flow_expired",
+          },
+          analyticsContext,
+        );
+
+        throwDomain(fail("flow_expired"));
+      }
+
       await recordAuthAnalyticsEvent(
         {
           source: "server",
           kind: "totp_result",
           outcome: "failed",
-          code: "flow_expired",
+          code: "invalid_totp",
         },
-        getActionRequestContext(),
+        analyticsContext,
       );
-      throw redirect("/login/user?error=flow_expired");
+
+      throwDomain(fail("totp_code_invalid"));
     }
 
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "totp_result",
-        outcome: "failed",
-        code: "invalid_totp",
+        outcome: "succeeded",
       },
-      getActionRequestContext(),
+      analyticsContext,
     );
-    return {
-      ok: false,
-      code: "invalid_totp",
-    };
-  }
 
-  await recordAuthAnalyticsEvent(
-    {
-      source: "server",
-      kind: "totp_result",
-      outcome: "succeeded",
-    },
-    getActionRequestContext(),
-  );
-  return await completeLoginAndRedirect(result.value.result);
+    return completeLoginAndRedirect(result.value.result);
+  });
 }

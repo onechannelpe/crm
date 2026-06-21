@@ -3,7 +3,7 @@ import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -14,7 +14,7 @@ import type { AuthSessionLogoutPort } from "../application/ports";
 
 interface AuthSessionRuntimeDeps {
   executor: DatabaseExecutor;
-  invalidateSession(sessionId: string): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
 }
 
 export function createAuthSessionReadContext(deps: AuthSessionRuntimeDeps) {
@@ -36,12 +36,12 @@ export function createAuthSessionLogoutContext(
   deps: AuthSessionRuntimeDeps,
 ): AuthSessionLogoutPort {
   const executor = deps.executor;
-  const auditLogs = createAuditLogsRepo(executor);
+  const events = createEventsRepo(executor);
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
-    invalidateSession(sessionId) {
-      return deps.invalidateSession(sessionId);
+    revokeSession(sessionId) {
+      return deps.revokeSession(sessionId);
     },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(
@@ -59,15 +59,8 @@ export function createAuthSessionLogoutContext(
     clearSessionCookie() {
       deleteSessionCookie();
     },
-    async createAuditLog(input) {
-      await auditLogs.create({
-        user_id: input.userId,
-        action: input.action,
-        entity_type: input.entityType,
-        entity_id: input.entityId,
-        changes: input.changes,
-        created_at: input.createdAt,
-      });
+    async appendEvent(input) {
+      await events.append(input);
     },
   };
 }

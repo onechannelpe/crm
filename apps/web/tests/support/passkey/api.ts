@@ -1,8 +1,19 @@
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/server";
 
-import { PasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
+import {
+  createPasskeyProvider,
+  PasskeyRequestError,
+  resolveWebauthnRelyingParty,
+  type PasskeyProviderDeps,
+} from "~/server/auth/factors/passkey-provider";
 
 import type { TestDbContext } from "../runtime/db";
+
+const TEST_RELYING_PARTY = resolveWebauthnRelyingParty("http://localhost:5173");
+
+export function createTestPasskeyProvider(repos: PasskeyProviderDeps) {
+  return createPasskeyProvider(repos, TEST_RELYING_PARTY);
+}
 
 type WebauthnOverrides = {
   getRegistrationOptions?: (

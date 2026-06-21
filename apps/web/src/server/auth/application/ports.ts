@@ -1,6 +1,6 @@
 export interface AdminSessionRevocationPort {
-  invalidateSession(sessionId: string): Promise<void>;
-  invalidateUserSessions(userId: number): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
+  revokeUserSessions(userId: number): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
     now: number,
@@ -11,18 +11,18 @@ export interface AdminSessionRevocationPort {
     syncHealth: "ok" | "stale" | "reauth_required";
     syncUpdatedAt: number;
   }): Promise<void>;
-  createAuditLog(input: {
-    userId: number;
-    action: string;
+  appendEvent(input: {
+    type: string;
     entityType: string;
-    entityId: number;
-    changes: string | null;
-    createdAt: number;
+    entityId: string | number;
+    actorUserId: number;
+    payload?: unknown;
+    occurredAt: number;
   }): Promise<void>;
 }
 
 export interface AuthSessionLogoutPort {
-  invalidateSession(sessionId: string): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
     now: number,
@@ -33,12 +33,12 @@ export interface AuthSessionLogoutPort {
     syncUpdatedAt: number;
   }): Promise<void>;
   clearSessionCookie(): void;
-  createAuditLog(input: {
-    userId: number;
-    action: string;
+  appendEvent(input: {
+    type: string;
     entityType: string;
-    entityId: number;
-    changes: string | null;
-    createdAt: number;
+    entityId: string | number;
+    actorUserId: number;
+    payload?: unknown;
+    occurredAt: number;
   }): Promise<void>;
 }

@@ -1,38 +1,62 @@
 "use server";
 
-import { assertNonEmptyString } from "~/contracts/guards";
-import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
-import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/application/commands/begin-totp-enrollment";
-import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/application/commands/finish-totp-enrollment";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { installSession } from "~/actions/auth/install-session";
+import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/flows/begin-totp-enrollment";
+import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/flows/finish-totp-enrollment";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
+import { isErr, Ok } from "~/server/shared/result";
 
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
-  const totpContext = getServerRuntime().auth.totp;
   return runAction({
-    actionName: "auth.totp.begin",
+    name: "auth.totp.begin",
     access: { kind: "session" },
-    execute: (ctx) => beginTotpEnrollmentService(ctx, totpContext),
+
+    execute: (ctx) =>
+      beginTotpEnrollmentService(ctx, getServerRuntime().auth.totp),
   });
 }
 
-export async function finishTotpEnrollment(code: string): Promise<string[]> {
-  const safeCode = assertNonEmptyString(code, "code");
-  const totpContext = getServerRuntime().auth.totp;
+export async function finishTotpEnrollment(
+  rawCode: string,
+): Promise<{ recoveryCodes: string[]; message: string }> {
   const result = await runAction({
-    actionName: "auth.totp.finish",
+    name: "auth.totp.finish",
     access: { kind: "session" },
-    input: { hasCode: true },
-    execute: (ctx) =>
-      finishTotpEnrollmentService(ctx, totpContext, {
-        code: safeCode,
-      }),
+
+    // The TOTP code is a secret in flight; parse validates presence but no
+    // audit projection records it.
+    parse: () =>
+      parseObject({ code: rawCode }, validationFail, (r) => ({
+        code: r.str("code"),
+      })),
+
+    execute: async (ctx, command) => {
+      const enrollment = await finishTotpEnrollmentService(
+        ctx,
+        getServerRuntime().auth.totp,
+        { code: command.code },
+      );
+
+      if (isErr(enrollment)) {
+        return enrollment;
+      }
+
+      return Ok({
+        ...enrollment.value,
+        message: "Aplicación de autenticación configurada",
+      });
+    },
   });
-  await replaceCurrentSession(result.sessionToken, (id) =>
-    getServerRuntime().auth.sessionService.invalidateSession(id),
-  );
-  return result.recoveryCodes;
+
+  await installSession(result.sessionToken);
+
+  return {
+    recoveryCodes: result.recoveryCodes,
+    message: result.message,
+  };
 }

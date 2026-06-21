@@ -66,7 +66,7 @@ export default function LoginPasskeyPage() {
                 <p class={pageStyles.supportText}>
                   Usuario: {flow().identifier}
                 </p>
-                <Show when={passkeyLogin.error()}>
+                <Show when={passkeyLogin.errorMessage()}>
                   {(message) => (
                     <p class={pageStyles.formError} role="alert">
                       {message()}
@@ -104,7 +104,7 @@ export default function LoginPasskeyPage() {
                     class={styles.full}
                     loading={passkeyLogin.busy()}
                     onClick={() => {
-                      void passkeyLogin.runFlow(flow());
+                      void passkeyLogin.continueFlow(flow());
                     }}
                   >
                     Reintentar con clave de acceso

@@ -6,6 +6,7 @@ import {
   setIdentityPassword,
   type SeededIdentityName,
 } from "@tests/support/identities/api";
+import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -16,8 +17,8 @@ import { vi } from "vitest";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { generateCurrentTotpCode } from "~/lib/auth/totp/totp";
-import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
-import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
+import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
+import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
 
 const NOOP_PRIVILEGED_ALERT: SendPrivilegedLoginAlert = async () => {};
 
@@ -94,6 +95,7 @@ export function createAuthScenario(
       reposOverride?: TestDbContext["repos"],
     ) {
       const identity = getSeededIdentity(name);
+      const repos = reposOverride ?? ctx.repos;
       return submitPasswordLogin(
         {
           identifier: identity.username,
@@ -101,8 +103,9 @@ export function createAuthScenario(
           ipAddress: meta.ipAddress,
           userAgent: meta.userAgent,
         },
-        reposOverride ?? ctx.repos,
+        repos,
         NOOP_PRIVILEGED_ALERT,
+        createTestPasskeyProvider(repos),
       );
     },
     async loginByIdentifier(
@@ -111,6 +114,7 @@ export function createAuthScenario(
       meta: RequestMeta,
       reposOverride?: TestDbContext["repos"],
     ) {
+      const repos = reposOverride ?? ctx.repos;
       return submitPasswordLogin(
         {
           identifier,
@@ -118,8 +122,9 @@ export function createAuthScenario(
           ipAddress: meta.ipAddress,
           userAgent: meta.userAgent,
         },
-        reposOverride ?? ctx.repos,
+        repos,
         NOOP_PRIVILEGED_ALERT,
+        createTestPasskeyProvider(repos),
       );
     },
     async loginTotp(flowId: TotpFlowId, totpCode: string, meta: RequestMeta) {
