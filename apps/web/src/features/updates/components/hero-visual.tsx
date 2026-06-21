@@ -1,6 +1,7 @@
 import { HalftoneImageCanvas } from "~/lib/halftone/image-canvas";
 import { WebGlMount } from "~/lib/visual-runtime";
 
+import { UpdatesHeroVisualPlaceholder } from "./hero-visual-fallback";
 import {
   MILESTONE_IMAGE_FIT,
   MILESTONE_IMAGE_URL,
@@ -34,13 +35,10 @@ const RELEASE_NOTES_SETTINGS = buildMilestoneSettings({
 const HERO_VISUAL_RENDER_HEIGHT = 460;
 const HERO_VISUAL_MAX_PIXEL_RATIO = 1.5;
 
-export function UpdatesHeroVisual() {
+export default function UpdatesHeroVisual() {
   return (
     <div aria-hidden="true" class={styles.heroVisual}>
-      <WebGlMount
-        fallback={<div class={styles.heroVisualPlaceholder} />}
-        priority
-      >
+      <WebGlMount fallback={<UpdatesHeroVisualPlaceholder />} priority>
         <HalftoneImageCanvas
           imageFit={MILESTONE_IMAGE_FIT}
           imageUrl={MILESTONE_IMAGE_URL}

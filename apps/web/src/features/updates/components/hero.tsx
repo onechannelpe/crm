@@ -1,6 +1,12 @@
-import { UpdatesHeroVisual } from "./hero-visual";
+import { clientOnly } from "@solidjs/start";
+
+import { UpdatesHeroVisualFallback } from "./hero-visual-fallback";
 
 import styles from "./styles/layout.module.css";
+
+const ClientUpdatesHeroVisual = clientOnly(() => import("./hero-visual"), {
+  lazy: true,
+});
 
 export function UpdatesHero(props: {
   titleMuted: string;
@@ -16,7 +22,7 @@ export function UpdatesHero(props: {
         <span class={styles.heroTitleBold}>{props.titleBold}</span>
       </h1>
       <p class={styles.heroBody}>{props.body}</p>
-      <UpdatesHeroVisual />
+      <ClientUpdatesHeroVisual fallback={<UpdatesHeroVisualFallback />} />
     </section>
   );
 }
