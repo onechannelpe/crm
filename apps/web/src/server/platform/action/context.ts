@@ -12,7 +12,10 @@ export interface AppContext {
   now: () => number;
 }
 
-export function createAppContext(actor: AuthSession): AppContext {
+export function createAppContext(
+  actor: AuthSession,
+  now: () => number,
+): AppContext {
   const request = getRequestContext();
   const action = getActionRequestContext();
   return {
@@ -22,6 +25,6 @@ export function createAppContext(actor: AuthSession): AppContext {
     ipAddress: request.clientIp,
     userAgent: request.userAgent,
     publicOrigin: request.publicOrigin,
-    now: Date.now,
+    now,
   };
 }
