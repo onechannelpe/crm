@@ -41,7 +41,9 @@ export function RequestResetForm() {
                 autocomplete="email"
                 required
               />
+
               <LoginFeedback message={errorMessage()} />
+
               <Button
                 type="submit"
                 class={styles.full}
@@ -49,10 +51,12 @@ export function RequestResetForm() {
               >
                 Enviar enlace
               </Button>
+
               <a href="/login" class={linkStyles.passkeyLink}>
                 Volver al inicio de sesión
               </a>
             </form>
+
             <div class={shellStyles.footerNote}>
               <LegalFooter />
             </div>
@@ -71,6 +75,7 @@ function ResetLinkSentNotice() {
           Si existe una cuenta con ese correo, recibirás un enlace en los
           próximos minutos.
         </p>
+
         <a href="/login" class={linkStyles.passkeyLink}>
           Volver al inicio de sesión
         </a>
