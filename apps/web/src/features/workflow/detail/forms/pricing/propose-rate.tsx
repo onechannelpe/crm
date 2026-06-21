@@ -13,8 +13,8 @@ import {
   FieldTable,
 } from "~/features/side-panel/components/field-table";
 import {
-  RecordDetailSectionActions,
   RecordDetailSection,
+  RecordDetailSectionActions,
   RecordDetailSectionBody,
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
@@ -37,36 +37,58 @@ function isMoneda(value: string): value is Currency {
   return (CURRENCIES as readonly string[]).includes(value);
 }
 
+function RateInputRow(props: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <FieldRow label={props.label} icon={Moneybag}>
+      <FieldInputValue>
+        <TextInput
+          sizeVariant="sm"
+          type="number"
+          step="0.01"
+          min="0"
+          value={props.value}
+          onChange={props.onChange}
+          required
+        />
+      </FieldInputValue>
+    </FieldRow>
+  );
+}
+
 export function ProposeRateSection(props: ProposeRateSectionProps) {
   const propose = useAction(proposeRateMutation);
 
   const [paybackPricing, setPaybackPricing] = createSignal(
     props.latestProposal?.paybackPricing?.toString() ?? "",
   );
-  const [proposedDebitRate, setTarifaDebito] = createSignal(
+  const [proposedDebitRate, setProposedDebitRate] = createSignal(
     props.latestProposal?.proposedDebitRate?.toString() ?? "",
   );
-  const [proposedCreditRate, setTarifaCredito] = createSignal(
+  const [proposedCreditRate, setProposedCreditRate] = createSignal(
     props.latestProposal?.proposedCreditRate?.toString() ?? "",
   );
-  const [proposedForeignRate, setTarifaForaneo] = createSignal(
+  const [proposedForeignRate, setProposedForeignRate] = createSignal(
     props.latestProposal?.proposedForeignRate?.toString() ?? "",
   );
   const [fee, setFee] = createSignal(
     props.latestProposal?.fee?.toString() ?? "",
   );
-  const [currency, setMoneda] = createSignal<Currency>(
+  const [currency, setCurrency] = createSignal<Currency>(
     props.latestProposal?.currency ?? "PEN",
   );
   const [submitting, setSubmitting] = createSignal(false);
-  const [proposeRateErrorMessage, setProposeRateErrorMessage] = createSignal<
-    string | null
-  >(null);
+  const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
 
-  async function handleSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    setProposeRateErrorMessage(null);
+  async function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
+
+    setErrorMessage(null);
     setSubmitting(true);
+
     try {
       await propose({
         leadId: props.leadId,
@@ -77,9 +99,10 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
         fee: Number(fee()),
         currency: currency(),
       });
+
       await revalidateWorkflowLead(props.leadId);
     } catch (caught) {
-      setProposeRateErrorMessage(actionErrorMessage(caught));
+      setErrorMessage(actionErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -90,96 +113,61 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
       <RecordDetailSectionHeader>
         <RecordDetailSectionTitle text="Proponer tarifa" />
       </RecordDetailSectionHeader>
+
       <RecordDetailSectionBody>
-        <form onSubmit={(e) => void handleSubmit(e)}>
+        <form onSubmit={(event) => void handleSubmit(event)}>
           <FieldTable>
-            <FieldRow label="Payback" icon={Moneybag}>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={paybackPricing()}
-                  onChange={setPaybackPricing}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow label="T. debito" icon={Moneybag}>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={proposedDebitRate()}
-                  onChange={setTarifaDebito}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow label="T. credito" icon={Moneybag}>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={proposedCreditRate()}
-                  onChange={setTarifaCredito}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow label="T. foraneo" icon={Moneybag}>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={proposedForeignRate()}
-                  onChange={setTarifaForaneo}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
-            <FieldRow label="Fee" icon={Moneybag}>
-              <FieldInputValue>
-                <TextInput
-                  sizeVariant="sm"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={fee()}
-                  onChange={setFee}
-                  required
-                />
-              </FieldInputValue>
-            </FieldRow>
+            <RateInputRow
+              label="Payback"
+              value={paybackPricing()}
+              onChange={setPaybackPricing}
+            />
+
+            <RateInputRow
+              label="T. débito"
+              value={proposedDebitRate()}
+              onChange={setProposedDebitRate}
+            />
+
+            <RateInputRow
+              label="T. crédito"
+              value={proposedCreditRate()}
+              onChange={setProposedCreditRate}
+            />
+
+            <RateInputRow
+              label="T. foráneo"
+              value={proposedForeignRate()}
+              onChange={setProposedForeignRate}
+            />
+
+            <RateInputRow label="Fee" value={fee()} onChange={setFee} />
+
             <FieldRow label="Moneda" icon={Package}>
               <FieldInputValue>
                 <select
                   class={styles.select}
                   value={currency()}
-                  onChange={(e) => {
-                    const val = e.currentTarget.value;
-                    if (isMoneda(val)) {
-                      setMoneda(val);
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+
+                    if (isMoneda(value)) {
+                      setCurrency(value);
                     }
                   }}
                 >
                   <For each={CURRENCIES}>
-                    {(m) => <option value={m}>{m}</option>}
+                    {(currencyOption) => (
+                      <option value={currencyOption}>{currencyOption}</option>
+                    )}
                   </For>
                 </select>
               </FieldInputValue>
             </FieldRow>
           </FieldTable>
-          {proposeRateErrorMessage() && (
-            <p class={styles.error}>{proposeRateErrorMessage()}</p>
-          )}
+
+          {errorMessage() && <p class={styles.error}>{errorMessage()}</p>}
+
           <RecordDetailSectionActions>
             <Button
               type="submit"
