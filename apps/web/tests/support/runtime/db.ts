@@ -4,10 +4,10 @@ import { join } from "node:path";
 import { sql, type Kysely } from "kysely";
 
 import {
-  ABONO_BANKS,
+  SETTLEMENT_BANKS,
   ACCOUNT_TYPE_KINDS,
-  MODALIDAD_COBRO_KINDS,
-  MONEDAS,
+  COLLECTION_MODES,
+  CURRENCIES,
 } from "~/contracts/workflow/vocabulary";
 import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
@@ -130,20 +130,28 @@ async function seedTemplate(db: Kysely<Database>) {
       {
         id: TEST_ORG_ID_LIMA,
         ruc: "20100000001",
-        name: "Org Lima",
+        legal_name: "Org Lima",
+        giro_negocio: null,
+        address: null,
+        district: null,
+        province: null,
+        department: null,
+        phone: null,
+        email: null,
         created_at: now,
-        locked_branch_id: null,
-        locked_at: null,
-        locked_by_user_id: null,
       },
       {
         id: TEST_ORG_ID_NORTE,
         ruc: "20100000002",
-        name: "Org Norte",
+        legal_name: "Org Norte",
+        giro_negocio: null,
+        address: null,
+        district: null,
+        province: null,
+        department: null,
+        phone: null,
+        email: null,
         created_at: now,
-        locked_branch_id: null,
-        locked_at: null,
-        locked_by_user_id: null,
       },
     ])
     .execute();
@@ -209,13 +217,13 @@ async function seedTemplate(db: Kysely<Database>) {
     .execute();
 
   await db
-    .insertInto("workflow_modalidad_cobro_kinds")
-    .values(MODALIDAD_COBRO_KINDS.map((value) => ({ value })))
+    .insertInto("workflow_collection_mode_kinds")
+    .values(COLLECTION_MODES.map((value) => ({ value })))
     .execute();
 
   await db
     .insertInto("workflow_currency_kinds")
-    .values(MONEDAS.map((value) => ({ value })))
+    .values(CURRENCIES.map((value) => ({ value })))
     .execute();
 
   await db
@@ -224,8 +232,8 @@ async function seedTemplate(db: Kysely<Database>) {
     .execute();
 
   await db
-    .insertInto("workflow_abono_banks")
-    .values(ABONO_BANKS.map((value) => ({ value })))
+    .insertInto("workflow_settlement_banks")
+    .values(SETTLEMENT_BANKS.map((value) => ({ value })))
     .execute();
 }
 
