@@ -43,8 +43,8 @@ export function buildVenueSubmitInput(
       error: "Distrito, provincia y departamento son obligatorios",
     };
   }
-  if (!Number.isFinite(posQty) || posQty <= 0) {
-    return { ok: false, error: "Cantidad POS debe ser mayor a 0" };
+  if (!Number.isInteger(posQty) || posQty < 1) {
+    return { ok: false, error: "Cantidad POS debe ser un entero mayor a 0" };
   }
 
   const linkUrl =

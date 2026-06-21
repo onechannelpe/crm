@@ -29,7 +29,7 @@ function venueFields(r: Reader<DomainError>): CreateVenueInput {
   return {
     leadId: r.str("leadId"),
     tradeName: r.str("tradeName"),
-    posQuantity: r.num("posQuantity"),
+    posQuantity: r.posInt("posQuantity"),
     digitalConfig: r.optObj("digitalConfig", (c) => ({
       linkUrl: c.optStr("linkUrl"),
       onlineUrl: c.optStr("onlineUrl"),

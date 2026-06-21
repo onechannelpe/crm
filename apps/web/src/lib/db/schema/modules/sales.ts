@@ -8,7 +8,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("trade_name", "varchar(255)", (col) => col.notNull())
-    .addColumn("pos_quantity", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("pos_quantity", "integer", (col) => col.notNull())
     .addColumn("link_url", "text")
     .addColumn("online_url", "text")
     .addColumn("online_collection_mode", "varchar(20)", (col) =>

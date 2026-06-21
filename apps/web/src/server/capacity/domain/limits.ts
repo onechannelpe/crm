@@ -32,13 +32,13 @@ export function validateLeadPolicyValues(values: {
   bufferTarget: number;
   dailyLimit: number;
 }): Result<{ bufferTarget: number; dailyLimit: number }, DomainError> {
-  if (!Number.isFinite(values.bufferTarget) || values.bufferTarget <= 0) {
+  if (!Number.isInteger(values.bufferTarget) || values.bufferTarget < 1) {
     return Err(fail("invalid_buffer_target"));
   }
   if (values.bufferTarget > config.leadAssignment.maxBufferTarget) {
     return Err(fail("buffer_target_exceeds_max"));
   }
-  if (!Number.isFinite(values.dailyLimit) || values.dailyLimit <= 0) {
+  if (!Number.isInteger(values.dailyLimit) || values.dailyLimit < 1) {
     return Err(fail("invalid_daily_refill"));
   }
   if (values.dailyLimit > config.capacityRequests.maxRequestAmount) {

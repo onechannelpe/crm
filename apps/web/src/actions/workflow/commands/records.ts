@@ -42,7 +42,7 @@ export async function requestLeadCreation(input: unknown) {
         ticket: r.num("ticket"),
         giroNegocio: r.str("giroNegocio"),
         settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
-        posCount: r.num("posCount"),
+        posCount: r.posInt("posCount"),
       })),
 
     execute: ({ actor }, payload) =>
@@ -71,7 +71,7 @@ export async function requestEditCommercialScope(input: unknown) {
         ticket: r.num("ticket"),
         giroNegocio: r.str("giroNegocio"),
         settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
-        posCount: r.num("posCount"),
+        posCount: r.posInt("posCount"),
       })),
 
     audit: ({ leadId }) => ({ leadId }),
