@@ -11,8 +11,8 @@ import { proposePendingRate } from "@tests/support/workflow/pricing";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 type Scenario = ReturnType<typeof createWorkflowScenario>;
 

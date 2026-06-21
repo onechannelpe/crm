@@ -1,10 +1,10 @@
+import type { OrganizationEnrichmentQueue } from "~/server/identity/organization/enrichment";
 import {
   fail,
   forbidden,
   type DomainError,
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { OrganizationEnrichmentQueue } from "~/server/identity/organization/enrichment";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { resolveCapabilities } from "~/server/workflow/lead/domain/policy";
 import type { LeadReader } from "~/server/workflow/lead/read/ports";

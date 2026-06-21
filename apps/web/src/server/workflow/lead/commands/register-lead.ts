@@ -1,8 +1,8 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
+import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { createHistoryEvent } from "~/server/workflow/lead/domain/history";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
@@ -13,12 +13,12 @@ import { requireCapability } from "../../lead/domain/policy";
 import { isReservationLapsed } from "../../lead/domain/reservation";
 import { createLeadDraft } from "../../lead/domain/state";
 import { normalizeLeadRuc } from "../domain/parse";
+import { runLeadTransaction } from "../write/transition";
 import { expireLeadReservation } from "./expire-reservation";
 import {
   ensureActiveExecutive,
   resolveLeadRegistration,
 } from "./register-lead-resolution";
-import { runLeadTransaction } from "../write/transition";
 
 export async function registerLead(
   input: CreateLeadInput & {

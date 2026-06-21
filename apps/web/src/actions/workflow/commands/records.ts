@@ -9,7 +9,6 @@ import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
-import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
 import { deleteLeadCommand } from "~/server/workflow/lead/commands/delete-lead";
 import { editCommercialScopeCommand } from "~/server/workflow/lead/commands/edit-commercial-scope";
@@ -18,6 +17,7 @@ import { recordRepLegalCommand } from "~/server/workflow/lead/commands/record-re
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 import { removeFromFavoritesCommand } from "~/server/workflow/lead/commands/remove-from-favorites";
 import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sunat-refresh";
+import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 
 import { workflowActor } from "./actor";
 

@@ -11,10 +11,10 @@ import { proposePendingRate } from "@tests/support/workflow/pricing";
 import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/lead/domain/pricing";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
+import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/lead/domain/pricing";
+import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 // The hold window is owned by the pricing policy, not hardcoded here, so these stay
 // correct if the default validity changes.
