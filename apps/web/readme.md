@@ -4,9 +4,9 @@ Serves the CRM UI, the CRM API routes, and the background maintenance worker.
 
 The request path starts in [`src/entry-server.tsx`](src/entry-server.tsx) and mounts the router in [`src/app.tsx`](src/app.tsx). Every request passes through [`src/middleware.ts`](src/middleware.ts). Middleware sets the CSP nonce, request tracing fields, and CSRF cookie, then delegates access control to [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts). That auth layer handles public paths separately, validates the session cookie, redirects for login or onboarding, and stores the session on `event.locals`.
 
-Authenticated pages live under [`src/routes/(app).tsx`](src/routes/%28app%29.tsx). Public pages live under [`src/routes/(public).tsx`](src/routes/%28public%29.tsx). Server functions live under [`src/actions/`](src/actions/). Read wrappers live under [`src/lib/queries/`](src/lib/queries/). Write wrappers live under [`src/lib/mutations/`](src/lib/mutations/). Domain services and repositories live under [`src/server/`](src/server/). Shared wiring lives in [`src/server/shared/context.ts`](src/server/shared/context.ts) and [`src/server/shared/registry.ts`](src/server/shared/registry.ts).
+Authenticated pages live under [`src/routes/(app).tsx`](src/routes/%28app%29.tsx). Public pages live under [`src/routes/(public).tsx`](src/routes/%28public%29.tsx). Server functions live under [`src/actions/`](src/actions/). Read wrappers live under [`src/lib/queries/`](src/lib/queries/). Write wrappers live under [`src/lib/mutations/`](src/lib/mutations/). Domain services and repositories live under [`src/server/`](src/server/). Action runtime wiring lives in [`src/server/shared/action-runtime/`](src/server/shared/action-runtime/). Runtime dependency assembly lives in [`src/server/runtime/`](src/server/runtime/).
 
-Most feature work follows the same path. A route calls a server function in [`src/actions/`](src/actions/). The action calls a service under [`src/server/`](src/server/), and the service uses repositories from [`src/server/shared/registry.ts`](src/server/shared/registry.ts). Database access starts in [`src/lib/db/client.ts`](src/lib/db/client.ts) and [`src/lib/db/db.ts`](src/lib/db/db.ts). Schema modules live under [`src/lib/db/schema/`](src/lib/db/schema/).
+Most feature work follows the same path. A route calls a server function in [`src/actions/`](src/actions/). The action calls a service under [`src/server/`](src/server/), and the service receives dependencies from the relevant runtime module under [`src/server/runtime/`](src/server/runtime/). Database access starts in [`src/lib/db/client.ts`](src/lib/db/client.ts) and [`src/lib/db/db.ts`](src/lib/db/db.ts). Schema modules live under [`src/lib/db/schema/`](src/lib/db/schema/).
 
 Search and candidate discovery are the main cross-service dependencies. Engine
 configuration is built in
@@ -28,12 +28,11 @@ Configuration is loaded from env files selected by the script or passed by the c
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Core auth           | `SESSION_SECRET`, `TOTP_ENCRYPTION_KEY`, `ENGINE_HMAC_KEY_ID`, `ENGINE_HMAC_SECRET`                                                          |
 | Engine client       | `ENGINE_CONNECT_MODE`, `ENGINE_URL`                                                                                                          |
-| WebAuthn            | `WEBAUTHN_RP_ID`, `WEBAUTHN_ORIGIN`                                                                                                          |
 | Storage and proxy   | `WEB_DB_PATH`, `WEB_UPLOADS_ROOT`, `TRUSTED_PROXY`                                                                                           |
 | Extension and OAuth | `EXTENSION_EXPECTED_ORIGIN`, `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` |
 | Notifications       | `RESEND_API_KEY`, `EMAIL_FROM`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_GRAPH_API_VERSION`                            |
 
-The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. WebAuthn defaults are `WEBAUTHN_RP_ID=localhost` and `WEBAUTHN_ORIGIN=http://localhost:5173`. Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
+The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. The WebAuthn relying party is derived per request from the public origin (`requestContext.publicOrigin`). Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
 
 ## Running
 
@@ -114,10 +113,10 @@ and
 
 Start with [`src/middleware.ts`](src/middleware.ts) and
 [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts) for
-request and session flow. Then read [`src/actions/auth/login.ts`](src/actions/auth/login.ts),
-[`src/server/shared/context.ts`](src/server/shared/context.ts), and
-[`src/server/shared/registry.ts`](src/server/shared/registry.ts). For engine-backed
-search or candidate assignment, continue with
+request and session flow. Then read
+[`src/actions/auth/login/index.ts`](src/actions/auth/login/index.ts) and
+[`src/server/shared/action-runtime/`](src/server/shared/action-runtime/) for
+action execution. For engine-backed search or candidate assignment, continue with
 [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts),
 [`src/server/adapters/engine/client.ts`](src/server/adapters/engine/client.ts),
 [`src/server/search-workflow/run-search.ts`](src/server/search-workflow/run-search.ts),
