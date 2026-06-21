@@ -6,11 +6,11 @@ import {
 import { createSecurityTestKit } from "@tests/support/security/kit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppError } from "~/lib/app-errors";
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "~/lib/security/action-rate-limit";
+import { ActionError } from "~/lib/wire-error";
 
 describe("rate limit retry after", () => {
   let ctx: TestDbContext;
@@ -30,15 +30,17 @@ describe("rate limit retry after", () => {
     const kit = createSecurityTestKit(ctx);
     await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
 
-    let blocked: AppError | undefined;
+    let blocked: ActionError | undefined;
     try {
       await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     } catch (error) {
-      if (error instanceof AppError) blocked = error;
+      if (error instanceof ActionError) blocked = error;
     }
 
-    expect(blocked?.code).toBe("rate_limit");
-    const retryAfter = blocked?.retryAfterSeconds ?? 0;
+    const wire = blocked?.wire;
+    expect(wire?.kind).toBe("rate_limit");
+    const retryAfter =
+      wire?.kind === "rate_limit" ? (wire.retryAfterSeconds ?? 0) : 0;
     expect(retryAfter).toBeGreaterThan(0);
     expect(retryAfter).toBeLessThanOrEqual(
       ACTION_RATE_LIMIT_POLICY["leads.request"].windowMs / 1000,
@@ -59,7 +61,9 @@ describe("rate limit retry after", () => {
           "198.51.100.1",
         );
       } catch (error) {
-        if (error instanceof AppError) return error.retryAfterSeconds ?? 0;
+        if (error instanceof ActionError && error.wire.kind === "rate_limit") {
+          return error.wire.retryAfterSeconds ?? 0;
+        }
       }
       return 0;
     };

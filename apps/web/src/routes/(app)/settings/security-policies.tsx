@@ -11,6 +11,7 @@ import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -19,7 +20,6 @@ import {
   auditPolicySnapshotQuery,
   canManageAuditPoliciesQuery,
 } from "~/lib/queries/audit";
-import type { AuditActionPolicyItem } from "~/server/audit-reader/contracts";
 
 import styles from "./settings-page.module.css";
 
@@ -77,7 +77,9 @@ export default function SecurityPoliciesPage() {
   const [policyRiskLevel, setPolicyRiskLevel] =
     createSignal<PolicyRiskLevel>("medium");
   const [policyIsActive, setPolicyIsActive] = createSignal(true);
-  const [policyError, setPolicyError] = createSignal<string | null>(null);
+  const [policyErrorMessage, setPolicyErrorMessage] = createSignal<
+    string | null
+  >(null);
 
   const policySnapshot = createAsync(() => auditPolicySnapshotQuery());
   const canManagePolicies = createAsync(() => canManageAuditPoliciesQuery(), {
@@ -99,7 +101,7 @@ export default function SecurityPoliciesPage() {
   );
 
   async function savePolicy(): Promise<void> {
-    setPolicyError(null);
+    setPolicyErrorMessage(null);
     try {
       await saveAuditPolicy({
         action: policyAction(),
@@ -107,7 +109,7 @@ export default function SecurityPoliciesPage() {
         isActive: policyIsActive(),
       });
     } catch {
-      setPolicyError(
+      setPolicyErrorMessage(
         "No se pudo guardar la política. Revisa los valores y los permisos.",
       );
     }
@@ -150,7 +152,7 @@ export default function SecurityPoliciesPage() {
       <p class={styles.helperText}>
         Solo admin y superuser pueden editar políticas.
       </p>
-      <p class={styles.errorText}>{policyError() ?? ""}</p>
+      <p class={styles.errorText}>{policyErrorMessage() ?? ""}</p>
       <DataGrid
         ariaLabel="Políticas de seguridad"
         columns={[...SECURITY_POLICY_COLUMNS]}
