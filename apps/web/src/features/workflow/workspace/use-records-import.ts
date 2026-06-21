@@ -11,8 +11,8 @@ import {
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/features/records-imports/contracts";
-import { getErrorMessage } from "~/lib/errors";
 import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4000;
@@ -99,7 +99,7 @@ export function useRecordsImport() {
     try {
       s.socket?.close();
     } catch {
-      // no-op
+      // Closing an already-torn-down browser socket must not block local cleanup.
     }
   }
 
@@ -187,7 +187,7 @@ export function useRecordsImport() {
     try {
       s.socket?.close();
     } catch {
-      // no-op
+      // Reconnect replaces the socket even if the old browser handle is gone.
     }
     s.socket = null;
 
@@ -259,10 +259,8 @@ export function useRecordsImport() {
 
       schedulePolling(session, 0);
       connectWebsocket(session);
-    } catch (error: unknown) {
-      enqueueErrorSnackBar(
-        getErrorMessage(error, "No se pudo importar el archivo"),
-      );
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   }
 

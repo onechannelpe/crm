@@ -28,7 +28,7 @@ export async function stageImportRows(
           ruc: row.ruc,
           status_value: row.type === "import_status" ? row.status : null,
           prioridad_value:
-            row.type === "import_prioridad" ? row.prioridad : null,
+            row.type === "import_prioridad" ? row.priority : null,
           state: "staged",
           lead_id: null,
           failure_reason: null,

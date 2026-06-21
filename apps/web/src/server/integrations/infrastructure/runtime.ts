@@ -1,7 +1,7 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
-import { createLeadQueries } from "~/server/workflow/infrastructure/lead-queries";
-import { createLeadRepo } from "~/server/workflow/infrastructure/lead-repo";
+import { createLeadQueries } from "~/server/workflow/lead/read/lead-queries";
+import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 
 import type { IntegrationRuntime } from "../types";
 import { createIntegrationJobRepo } from "./integration-job-repo";
