@@ -8,14 +8,14 @@
 // Ejemplo:
 //   bun register-number.ts 3 987654321
 
-import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { createLibsql } from "./lib/libsql.ts";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const moduleDir = dirname(fileURLToPath(import.meta.url));
 try {
-  process.loadEnvFile(join(__dirname, ".env"));
+  process.loadEnvFile(join(moduleDir, ".env"));
 } catch {
   /* sin .env */
 }
@@ -63,7 +63,9 @@ async function list(): Promise<void> {
     const wa = r.address
       ? `${r.address}${r.is_verified ? " (verificado)" : " (SIN verificar)"}`
       : "— sin WhatsApp —";
-    console.log(`  #${String(r.id).padEnd(4)} ${String(r.username).padEnd(24)} ${wa}`);
+    console.log(
+      `  #${String(r.id).padEnd(4)} ${String(r.username).padEnd(24)} ${wa}`,
+    );
   }
   console.log("");
 }

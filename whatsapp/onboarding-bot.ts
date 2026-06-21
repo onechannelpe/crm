@@ -15,14 +15,14 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { createOpenWa, type OpenWaMessage } from "./lib/openwa.ts";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const moduleDir = dirname(fileURLToPath(import.meta.url));
 try {
-  process.loadEnvFile(join(__dirname, ".env"));
+  process.loadEnvFile(join(moduleDir, ".env"));
 } catch {
   /* sin .env */
 }
@@ -66,7 +66,7 @@ interface OnboardingState {
   contacts: Record<string, Contact>;
 }
 
-const STATE_FILE = join(__dirname, ".onboarding.json");
+const STATE_FILE = join(moduleDir, ".onboarding.json");
 const PROCESSED_CAP = 500;
 
 const openwa = createOpenWa({
@@ -114,7 +114,10 @@ async function ensureSession(): Promise<string> {
   }
   sessionId = session.id;
   if (!["ready", "connected"].includes(session.status)) {
-    log("WARN", `Sesión "${cfg.sessionName}" en estado "${session.status}" (no operativa).`);
+    log(
+      "WARN",
+      `Sesión "${cfg.sessionName}" en estado "${session.status}" (no operativa).`,
+    );
   } else {
     log("INFO", "Sesión OpenWA lista", { sessionId, status: session.status });
   }
@@ -122,14 +125,22 @@ async function ensureSession(): Promise<string> {
 }
 
 // ── Responder (con "escribiendo…" para parecer humano) ─────────────────────
-async function reply(sid: string, chatId: string, text: string): Promise<boolean> {
+async function reply(
+  sid: string,
+  chatId: string,
+  text: string,
+): Promise<boolean> {
   if (cfg.typingSec > 0) {
     await openwa.sendTyping(sid, chatId, "typing");
     await new Promise((r) => setTimeout(r, cfg.typingSec * 1000 + 800));
   }
   const res = await openwa.sendText(sid, chatId, text);
   if (!res.ok) {
-    log("ERROR", "No se pudo responder", { chatId, status: res.status, body: res.body });
+    log("ERROR", "No se pudo responder", {
+      chatId,
+      status: res.status,
+      body: res.body,
+    });
   }
   return res.ok;
 }
@@ -163,7 +174,11 @@ async function handleIncoming(sid: string, m: OpenWaMessage): Promise<void> {
   if (!contact) {
     const ok = await reply(sid, chatId, MSG.welcome());
     if (ok) {
-      state.contacts[chatId] = { stage: "asked_name", name: null, updatedAt: Date.now() };
+      state.contacts[chatId] = {
+        stage: "asked_name",
+        name: null,
+        updatedAt: Date.now(),
+      };
       log("INFO", "Onboarding iniciado", { chatId });
     }
     return;
@@ -180,7 +195,10 @@ async function handleIncoming(sid: string, m: OpenWaMessage): Promise<void> {
       contact.name = name;
       contact.stage = "await_thanks";
       contact.updatedAt = Date.now();
-      log("INFO", "Nombre recibido, activación pendiente de 'gracias'", { chatId, name });
+      log("INFO", "Nombre recibido, activación pendiente de 'gracias'", {
+        chatId,
+        name,
+      });
     }
     return;
   }
@@ -215,6 +233,8 @@ async function tick(): Promise<void> {
     )
     .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
 
+  // Se procesan en orden (secuencial) para respetar el flujo de cada contacto.
+  /* eslint-disable no-await-in-loop */
   for (const m of pending) {
     try {
       await handleIncoming(sid, m);
@@ -227,6 +247,7 @@ async function tick(): Promise<void> {
     state.processedIds.push(m.id);
     saveState(state);
   }
+  /* eslint-enable no-await-in-loop */
 }
 
 async function main(): Promise<void> {
@@ -248,9 +269,13 @@ async function main(): Promise<void> {
       const existing = await openwa.getMessages(sid, 30);
       state.processedIds = existing.map((m) => m.id);
       saveState(state);
-      log("INFO", "Historial marcado como visto; solo se atenderán mensajes nuevos.", {
-        vistos: state.processedIds.length,
-      });
+      log(
+        "INFO",
+        "Historial marcado como visto; solo se atenderán mensajes nuevos.",
+        {
+          vistos: state.processedIds.length,
+        },
+      );
     } catch (err) {
       log("WARN", "No se pudo prelistar el historial", {
         error: String((err as Error)?.message ?? err),
@@ -258,14 +283,19 @@ async function main(): Promise<void> {
     }
   }
 
+  // Loop de sondeo secuencial: cada iteración espera el tick y la pausa.
+  /* eslint-disable no-await-in-loop */
   for (;;) {
     try {
       await tick();
     } catch (err) {
-      log("ERROR", "Error en el ciclo", { error: String((err as Error)?.message ?? err) });
+      log("ERROR", "Error en el ciclo", {
+        error: String((err as Error)?.message ?? err),
+      });
     }
     await new Promise((r) => setTimeout(r, cfg.pollIntervalMs));
   }
+  /* eslint-enable no-await-in-loop */
 }
 
 main().catch((err: unknown) => {

@@ -32,7 +32,7 @@ Así, lo que aparece en la web también llega al celular del vendedor.
 ## Requisitos
 
 - **bun** o **Node.js ≥ 22.6** (ambos ejecutan TypeScript de forma nativa: bun
-  directo, Node con *type stripping*). Probado en Node 24 y bun.
+  directo, Node con _type stripping_). Probado en Node 24 y bun.
 - El **servidor libsql del CRM** corriendo (por defecto `http://127.0.0.1:8080`,
   lo levanta `bun run dev:libsql` en el CRM).
 - El **gateway OpenWA** corriendo (por defecto `http://localhost:2785`) con una
@@ -132,6 +132,7 @@ Resumen de la documentación oficial de OpenWA (`docs/16-risk-management.md` y
 `docs/12-troubleshooting-faq.md`):
 
 **HACER ✅**
+
 - Usar un **número dedicado** (no personal).
 - **Calentar números nuevos**: uso normal 1–2 semanas antes de automatizar.
 - Que los empleados **guarden el número y escriban primero** (no enviar a quien
@@ -142,9 +143,10 @@ Resumen de la documentación oficial de OpenWA (`docs/16-risk-management.md` y
 - Verificar que el número exista en WhatsApp antes de enviar (`VERIFY_NUMBER=true`).
 
 **NO HACER ❌**
+
 - Enviar en **ráfaga** o a números desconocidos.
 - Plantillas **idénticas** a muchos destinatarios.
-- >200 mensajes/día en números nuevos.
+- > 200 mensajes/día en números nuevos.
 - Comunicación **unidireccional** ignorando respuestas.
 - IPs de datacenter sin proxy residencial.
 
@@ -174,14 +176,14 @@ volumen alto y producción, es la opción recomendada.
 
 ## Archivos
 
-| Archivo                | Qué hace                                                        |
-| ---------------------- | -------------------------------------------------------------- |
-| `index.ts`             | Loop principal: sondea, compone el mensaje y envía.           |
-| `onboarding-bot.ts`    | Bot de opt-in: recibe a quien escribe primero y lo activa.    |
-| `lib/libsql.ts`        | Cliente mínimo del servidor libsql del CRM (solo lectura aquí).|
-| `lib/openwa.ts`        | Cliente del gateway OpenWA (resolver sesión + enviar texto).   |
-| `register-number.ts`   | Helper para cargar/verificar el WhatsApp de un usuario.        |
-| `tsconfig.json`        | Configuración de TypeScript.                                   |
-| `.env`                 | Configuración (no se versiona).                                |
-| `.state.json`          | Watermark del último id procesado (no se versiona).            |
-| `.onboarding.json`     | Estado del bot de onboarding (no se versiona).                 |
+| Archivo              | Qué hace                                                        |
+| -------------------- | --------------------------------------------------------------- |
+| `index.ts`           | Loop principal: sondea, compone el mensaje y envía.             |
+| `onboarding-bot.ts`  | Bot de opt-in: recibe a quien escribe primero y lo activa.      |
+| `lib/libsql.ts`      | Cliente mínimo del servidor libsql del CRM (solo lectura aquí). |
+| `lib/openwa.ts`      | Cliente del gateway OpenWA (resolver sesión + enviar texto).    |
+| `register-number.ts` | Helper para cargar/verificar el WhatsApp de un usuario.         |
+| `tsconfig.json`      | Configuración de TypeScript.                                    |
+| `.env`               | Configuración (no se versiona).                                 |
+| `.state.json`        | Watermark del último id procesado (no se versiona).             |
+| `.onboarding.json`   | Estado del bot de onboarding (no se versiona).                  |

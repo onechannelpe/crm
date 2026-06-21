@@ -33,7 +33,11 @@ export interface OpenWa {
   getMessages(sessionId: string, limit?: number): Promise<OpenWaMessage[]>;
   numberExists(sessionId: string, rawAddress: string): Promise<boolean | null>;
   sendTyping(sessionId: string, chatId: string, state?: string): Promise<void>;
-  sendText(sessionId: string, chatId: string, text: string): Promise<SendResult>;
+  sendText(
+    sessionId: string,
+    chatId: string,
+    text: string,
+  ): Promise<SendResult>;
 }
 
 export function createOpenWa(opts: {
@@ -62,13 +66,18 @@ export function createOpenWa(opts: {
   async function listSessions(): Promise<OpenWaSession[]> {
     const res = await fetch(`${base}/api/sessions`, { headers });
     if (!res.ok) {
-      throw new Error(`OpenWA /sessions HTTP ${res.status}: ${await res.text()}`);
+      throw new Error(
+        `OpenWA /sessions HTTP ${res.status}: ${await res.text()}`,
+      );
     }
     return (await res.json()) as OpenWaSession[];
   }
 
   // Devuelve { id, status } de la sesión configurada, o null si no existe.
-  async function resolveSession(): Promise<{ id: string; status: string } | null> {
+  async function resolveSession(): Promise<{
+    id: string;
+    status: string;
+  } | null> {
     const sessions = await listSessions();
     const match = sessions.find((s) => s.name === opts.sessionName);
     return match ? { id: match.id, status: match.status } : null;

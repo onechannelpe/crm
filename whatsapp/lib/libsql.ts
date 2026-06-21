@@ -40,7 +40,8 @@ function toArg(value: SqlValue): HranaArg {
       ? { type: "integer", value: String(value) }
       : { type: "float", value };
   }
-  if (typeof value === "bigint") return { type: "integer", value: String(value) };
+  if (typeof value === "bigint")
+    return { type: "integer", value: String(value) };
   return { type: "text", value: String(value) };
 }
 
@@ -62,7 +63,9 @@ export function createLibsql(opts: {
   authToken?: string;
 }): Libsql {
   const base = opts.url.replace(/\/+$/, "");
-  const headers: Record<string, string> = { "content-type": "application/json" };
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
   if (opts.authToken) headers.authorization = `Bearer ${opts.authToken}`;
 
   // sqld 0.24 soporta v3; v2 como respaldo por compatibilidad.
@@ -70,6 +73,9 @@ export function createLibsql(opts: {
 
   async function pipeline(requests: unknown[]): Promise<HranaResponse> {
     let lastErr: unknown;
+    // El fallback de endpoints (v3 → v2) debe ser secuencial: probar uno y, si
+    // no responde, el otro. Por eso el await dentro del loop es intencional.
+    /* eslint-disable no-await-in-loop */
     for (const endpoint of endpoints) {
       try {
         const res = await fetch(endpoint, {
@@ -91,6 +97,7 @@ export function createLibsql(opts: {
         if (err instanceof TypeError) break;
       }
     }
+    /* eslint-enable no-await-in-loop */
     throw lastErr ?? new Error("libsql: sin respuesta");
   }
 
@@ -105,7 +112,9 @@ export function createLibsql(opts: {
     const first = json.results?.[0];
     if (!first) throw new Error("libsql: respuesta vacía");
     if (first.type === "error") {
-      throw new Error(`libsql SQL error: ${first.error?.message ?? "desconocido"}`);
+      throw new Error(
+        `libsql SQL error: ${first.error?.message ?? "desconocido"}`,
+      );
     }
     const result = first.response.result;
     const cols = result.cols.map((c) => c.name);

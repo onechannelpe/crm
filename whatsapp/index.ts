@@ -8,17 +8,17 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { createLibsql } from "./lib/libsql.ts";
 import { createOpenWa } from "./lib/openwa.ts";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const moduleDir = dirname(fileURLToPath(import.meta.url));
 
 // Carga el .env (Node >= 20.6 / bun). Si no existe, seguimos con el entorno.
 try {
-  process.loadEnvFile(join(__dirname, ".env"));
+  process.loadEnvFile(join(moduleDir, ".env"));
 } catch {
   /* sin .env: se usan variables de entorno del proceso */
 }
@@ -85,7 +85,7 @@ interface NotificationRow extends Record<string, string | number | null> {
 
 type Outcome = "sent" | "retry" | "dropped";
 
-const STATE_FILE = join(__dirname, ".state.json");
+const STATE_FILE = join(moduleDir, ".state.json");
 const MAX_ATTEMPTS = 3; // reintentos por notificación antes de descartarla
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -109,7 +109,10 @@ function loadState(): State {
   const base: State = { lastId: null, sentTimes: [], nextSendAt: 0 };
   if (!existsSync(STATE_FILE)) return base;
   try {
-    return { ...base, ...(JSON.parse(readFileSync(STATE_FILE, "utf8")) as State) };
+    return {
+      ...base,
+      ...(JSON.parse(readFileSync(STATE_FILE, "utf8")) as State),
+    };
   } catch {
     return base;
   }
@@ -208,7 +211,9 @@ async function currentMaxId(): Promise<number> {
 function buildMessage(n: NotificationRow): string {
   let text = `*${n.title}*\n${n.body_text}`;
   if (cfg.crmBaseUrl && n.action_url) {
-    const path = n.action_url.startsWith("/") ? n.action_url : `/${n.action_url}`;
+    const path = n.action_url.startsWith("/")
+      ? n.action_url
+      : `/${n.action_url}`;
     text += `\n\n${cfg.crmBaseUrl}${path}`;
   }
   return text;
@@ -244,13 +249,21 @@ const attempts = new Map<number, number>();
 async function deliver(n: NotificationRow): Promise<Outcome> {
   const chatId = openwa.toChatId(n.address);
   if (!chatId) {
-    log("ERROR", "Dirección inválida, se descarta", { id: n.id, address: n.address });
+    log("ERROR", "Dirección inválida, se descarta", {
+      id: n.id,
+      address: n.address,
+    });
     return "dropped";
   }
   const text = buildMessage(n);
 
   if (cfg.dryRun) {
-    log("DRY", "Enviaría WhatsApp", { id: n.id, userId: n.user_id, chatId, text });
+    log("DRY", "Enviaría WhatsApp", {
+      id: n.id,
+      userId: n.user_id,
+      chatId,
+      text,
+    });
     return "sent";
   }
 
@@ -283,7 +296,11 @@ async function deliver(n: NotificationRow): Promise<Outcome> {
     }
     result = await openwa.sendText(sid, chatId, text);
   } catch (err) {
-    result = { ok: false, status: 0, body: String((err as Error)?.message ?? err) };
+    result = {
+      ok: false,
+      status: 0,
+      body: String((err as Error)?.message ?? err),
+    };
   }
 
   if (result.ok) {
@@ -329,7 +346,10 @@ async function bootstrapWatermark(): Promise<void> {
   if (state.lastId !== null && state.lastId !== undefined) return;
   if (cfg.startFrom === "beginning") {
     state.lastId = 0;
-    log("INFO", "Arranque desde el inicio: se reenviará el historial pendiente.");
+    log(
+      "INFO",
+      "Arranque desde el inicio: se reenviará el historial pendiente.",
+    );
   } else {
     state.lastId = await currentMaxId();
     log("INFO", "Arranque en 'now': se ignora el historial.", {
@@ -357,7 +377,8 @@ async function tick(): Promise<void> {
         log("INFO", "En cola, esperando turno", {
           motivo: reason,
           enCola: pending,
-          proximoEnSeg: reason === "cooldown" ? Math.ceil(waitMs / 1000) : undefined,
+          proximoEnSeg:
+            reason === "cooldown" ? Math.ceil(waitMs / 1000) : undefined,
         });
         lastThrottleLog = now;
       }
@@ -417,6 +438,9 @@ async function main(): Promise<void> {
     });
   }
 
+  // Loop de sondeo: cada iteración depende de la anterior (espera el tick y la
+  // pausa), por lo que el await secuencial es intencional.
+  /* eslint-disable no-await-in-loop */
   for (;;) {
     try {
       await tick();
@@ -427,6 +451,7 @@ async function main(): Promise<void> {
     }
     await new Promise((r) => setTimeout(r, cfg.pollIntervalMs));
   }
+  /* eslint-enable no-await-in-loop */
 }
 
 main().catch((err: unknown) => {

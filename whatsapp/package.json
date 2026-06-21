@@ -2,19 +2,19 @@
   "name": "crm-whatsapp-notifier",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "description": "Reenvía las notificaciones del panel del CRM (tabla app_notifications) al WhatsApp de los ejecutivos vía el gateway OpenWA. Servicio independiente en TypeScript, no modifica el CRM.",
+  "type": "module",
   "scripts": {
     "start": "node index.ts",
     "onboarding": "node onboarding-bot.ts",
     "register": "node register-number.ts",
     "typecheck": "tsc --noEmit"
   },
-  "engines": {
-    "node": ">=22.6.0"
-  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22.6.0"
   }
 }
