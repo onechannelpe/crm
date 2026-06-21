@@ -51,7 +51,7 @@ describe("team invite create benchmark", () => {
 
       if (!result.ok) {
         throw new Error(
-          `expected invite create success, got ${result.error.message}`,
+          `expected invite create success, got ${result.error.code ?? result.error.kind}`,
         );
       }
     },

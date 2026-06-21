@@ -1,8 +1,7 @@
 import { canAssignRole } from "~/lib/auth/access/rbac";
-import type { DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { inviteError } from "../domain/errors";
 import { issueInvite } from "./issue-invite";
 import type {
   InviteDeps,
@@ -22,46 +21,24 @@ export async function resendInvite(
 
     const invite = await transactionRepos.userInvites.findById(input.inviteId);
     if (!invite) {
-      return Err(inviteError("invite_not_found", "Invite not found"));
+      return Err(fail("invite_not_found"));
     }
     if (invite.branch_id !== input.branchId) {
-      return Err(
-        inviteError(
-          "cross_branch_forbidden",
-          "Cannot manage invites from another branch",
-        ),
-      );
+      return Err(fail("cross_branch_forbidden"));
     }
     if (invite.status !== "pending") {
-      return Err(
-        inviteError("invite_not_pending", "Only pending invites can be resent"),
-      );
+      return Err(fail("invite_not_pending"));
     }
 
     const user = await transactionRepos.users.findById(invite.user_id);
     if (!user || user.branch_id !== input.branchId) {
-      return Err(
-        inviteError(
-          "invite_target_missing",
-          "Invite target user was not found",
-        ),
-      );
+      return Err(fail("invite_target_missing"));
     }
     if (user.is_active === 1) {
-      return Err(
-        inviteError(
-          "invite_target_active",
-          "Invite target user is already active",
-        ),
-      );
+      return Err(fail("invite_target_active"));
     }
     if (!canAssignRole(input.actorRole, user.role)) {
-      return Err(
-        inviteError(
-          "role_not_assignable",
-          "You cannot manage invites for this role",
-        ),
-      );
+      return Err(fail("role_not_assignable"));
     }
 
     const issued = await issueInvite(transactionRepos, runtime, {

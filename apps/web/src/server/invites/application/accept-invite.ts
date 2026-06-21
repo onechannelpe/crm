@@ -1,9 +1,7 @@
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
-import { createAuditService } from "~/server/shared/audit";
-import type { DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { inviteError } from "../domain/errors";
 import { mapAcceptedInviteResult } from "./runtime";
 import type {
   AcceptInviteInput,
@@ -27,20 +25,10 @@ export async function acceptInvite(
     );
 
     if (!invite) {
-      return Err(
-        inviteError(
-          "invite_invalid_or_expired",
-          "Invite is invalid or expired",
-        ),
-      );
+      return Err(fail("invite_invalid_or_expired"));
     }
     if (invite.user_is_active === 1) {
-      return Err(
-        inviteError(
-          "invite_target_active",
-          "Invite target user is already active",
-        ),
-      );
+      return Err(fail("invite_target_active"));
     }
 
     const passwordHash = await runtime.hashPassword(input.password);
@@ -58,15 +46,14 @@ export async function acceptInvite(
       invite.invite_id,
       currentTime,
     );
-    await createAuditService(transactionRepos).log(
-      invite.user_id,
-      "user_invite_accepted",
-      "user",
-      invite.user_id,
-      {
-        inviteId: invite.invite_id,
-      },
-    );
+    await transactionRepos.events.append({
+      type: "user_invite_accepted",
+      entityType: "user",
+      entityId: invite.user_id,
+      actorUserId: invite.user_id,
+      payload: { inviteId: invite.invite_id },
+      occurredAt: currentTime,
+    });
 
     return Ok(mapAcceptedInviteResult(invite));
   });

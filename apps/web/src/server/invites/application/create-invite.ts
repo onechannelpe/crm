@@ -1,9 +1,8 @@
 import { canAssignRole } from "~/lib/auth/access/rbac";
 import { generateUsername } from "~/lib/users/generate-username";
-import type { DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { inviteError } from "../domain/errors";
 import {
   buildPendingIdentity,
   normalizeInviteEmail,
@@ -22,18 +21,11 @@ export async function createInvite(
   input: CreateInviteInput,
 ): Promise<Result<InviteIssueResult, DomainError>> {
   if (!canAssignRole(input.actorRole, input.role)) {
-    return Err(
-      inviteError("role_not_assignable", "You cannot assign the selected role"),
-    );
+    return Err(fail("role_not_assignable"));
   }
 
   if (input.role === "executive" && !input.executiveCategory) {
-    return Err(
-      inviteError(
-        "role_not_assignable",
-        "Executive category is required for executives",
-      ),
-    );
+    return Err(fail("invalid_executive_category"));
   }
 
   const normalizedEmail = normalizeInviteEmail(input.email);
@@ -42,30 +34,18 @@ export async function createInvite(
     if (input.teamId !== null) {
       const team = await transactionRepos.teams.findById(input.teamId);
       if (!team || team.branch_id !== input.branchId) {
-        return Err(
-          inviteError("invalid_team", "Invalid team for the selected branch"),
-        );
+        return Err(fail("invalid_team"));
       }
     }
 
     let user = await transactionRepos.users.findByEmail(normalizedEmail);
 
     if (user?.is_active === 1) {
-      return Err(
-        inviteError(
-          "active_user_exists",
-          "A user with this email already exists",
-        ),
-      );
+      return Err(fail("active_user_exists"));
     }
 
     if (user && user.branch_id !== input.branchId) {
-      return Err(
-        inviteError(
-          "pending_user_other_branch",
-          "A pending user with this email belongs to another branch",
-        ),
-      );
+      return Err(fail("pending_user_other_branch"));
     }
 
     if (!user) {
@@ -100,32 +80,17 @@ export async function createInvite(
           throw raceError;
         }
         if (racedUser.is_active === 1) {
-          return Err(
-            inviteError(
-              "active_user_exists",
-              "A user with this email already exists",
-            ),
-          );
+          return Err(fail("active_user_exists"));
         }
         if (racedUser.branch_id !== input.branchId) {
-          return Err(
-            inviteError(
-              "pending_user_other_branch",
-              "A pending user with this email belongs to another branch",
-            ),
-          );
+          return Err(fail("pending_user_other_branch"));
         }
         user = racedUser;
       }
     }
 
     if (!user) {
-      return Err(
-        inviteError(
-          "invite_target_missing",
-          "Could not provision invite target user",
-        ),
-      );
+      return Err(fail("invite_target_missing"));
     }
 
     await transactionRepos.users.updateInviteProvisioning(user.id, {

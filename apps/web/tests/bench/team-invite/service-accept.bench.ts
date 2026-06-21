@@ -47,7 +47,7 @@ describe("team invite accept benchmark", () => {
 
       if (!result.ok) {
         throw new Error(
-          `expected invite accept success, got ${result.error.message}`,
+          `expected invite accept success, got ${result.error.code ?? result.error.kind}`,
         );
       }
     },

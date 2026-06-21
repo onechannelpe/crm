@@ -3,18 +3,8 @@ import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import type { AppUow } from "~/server/shared/application/uow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
+import type { EventsRepo } from "~/server/shared/repos-events";
 import type { Result } from "~/server/shared/result";
-
-export interface InviteAuditPort {
-  create(values: {
-    user_id: number;
-    action: string;
-    entity_type: string;
-    entity_id: number;
-    changes: string | null;
-    created_at: number;
-  }): Promise<unknown>;
-}
 
 export interface InviteUsersPort {
   findById(id: number): Promise<
@@ -142,7 +132,7 @@ export interface InviteDeps {
   users: InviteUsersPort;
   teams: InviteTeamsPort;
   userInvites: InviteUserInvitesPort;
-  auditLogs: InviteAuditPort;
+  events: Pick<EventsRepo, "append">;
 }
 
 export interface InviteServiceDeps {

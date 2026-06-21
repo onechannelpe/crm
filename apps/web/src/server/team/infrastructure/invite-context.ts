@@ -6,7 +6,7 @@ import type {
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
 import { createUsersRepo } from "~/server/users/repos-users";
@@ -16,7 +16,7 @@ function createTeamInviteRepos(executor: DatabaseExecutor) {
     teams: createTeamsRepo(executor),
     userInvites: createUserInvitesRepo(executor),
     users: createUsersRepo(executor),
-    auditLogs: createAuditLogsRepo(executor),
+    events: createEventsRepo(executor),
   };
 }
 
@@ -42,7 +42,7 @@ export function createTeamInviteContext(
     async enforceInviteCreateRateLimit(userId: number) {
       await checkActionRateLimit("team.invite.create", userId, {
         actionRateLimits: createActionRateLimitsRepo(executor),
-        auditLogs: repos.auditLogs,
+        events: repos.events,
       });
     },
   };
