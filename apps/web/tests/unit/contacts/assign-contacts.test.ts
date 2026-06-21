@@ -11,12 +11,13 @@ import type {
   AssignContactsTransactionRepos,
   AssignContactsUow,
 } from "~/server/contact-assignments/application/contact-assignment-writer";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 const USER_ID = 1;
 const BRANCH_ID = 1;
+const EXHAUSTED_ACTIVE_ASSIGNMENTS = 9_999;
 
 function makeCandidate(n: number): RecordCandidate {
   return {
@@ -77,9 +78,7 @@ const emptyEngine = {
 
 describe("assignContacts", () => {
   it("returns 0 requested and 0 assigned when buffer is already full", async () => {
-    // System default bufferTarget is read from config; we simulate full buffer
-    // by setting activeAssignments to a large number.
-    const repos = makeRepos(9999);
+    const repos = makeRepos(EXHAUSTED_ACTIVE_ASSIGNMENTS);
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
       {
@@ -100,14 +99,12 @@ describe("assignContacts", () => {
   it("commits assigned amount and cancels unused when partial assignment occurs", async () => {
     const repos = makeRepos(0);
 
-    // Gateway returns 2 candidates but contacts will all have cooldowns after first
     let contactCallCount = 0;
     repos.contacts.findOrCreate = async (): Promise<{
       id: number;
       cooldown_until: number | null;
     }> => {
       contactCallCount++;
-      // First contact is contactable, rest are on cooldown
       const cooldown_until = contactCallCount === 1 ? null : 1_700_000_099_999;
       return { id: contactCallCount, cooldown_until };
     };
@@ -144,7 +141,6 @@ describe("assignContacts", () => {
       .filter((r) => r.status === "cancelled")
       .reduce((s, r) => s + r.amount, 0);
 
-    // committed + cancelled must equal the original reservation amount
     expect(committed + cancelled).toBe(reservations[0].amount);
   });
 
@@ -168,7 +164,6 @@ describe("assignContacts", () => {
     if (!result.ok) throw new Error("Expected success");
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations[0].status).toBe("committed");
-    // No cancelled reservations
     expect(reservations.filter((r) => r.status === "cancelled")).toHaveLength(
       0,
     );
@@ -183,16 +178,14 @@ describe("assignContacts", () => {
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> =>
         Err(
-          domainError(
-            "external",
-            "engine_request_failed",
-            "service unavailable",
-            {
+          external("service unavailable", {
+            code: "engine_request_failed",
+            details: {
               status: 503,
               request_id: "req-leads-1",
               engine_error: "service unavailable",
             },
-          ),
+          }),
         ),
     };
 

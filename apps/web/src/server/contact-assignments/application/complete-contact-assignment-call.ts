@@ -1,9 +1,9 @@
+import type { ContactAssignmentCallOutcome } from "~/contracts/contact-assignments/vocabulary";
 import type { AppUow } from "~/server/shared/application/uow";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  ContactAssignmentCallOutcome,
   CompleteContactAssignmentCallCommand,
   CompleteContactAssignmentCallResult,
 } from "./contracts";
@@ -37,13 +37,7 @@ async function completeAssignmentInteraction(
     input.actorUserId,
   );
   if (!assignment || assignment.contact_id !== input.contactId) {
-    return Err(
-      domainError(
-        "forbidden",
-        "assignment_inactive",
-        "Contact assignment is not active or does not match the contact",
-      ),
-    );
+    return Err(fail("assignment_inactive"));
   }
 
   await repos.contactAssignments.markCompleted(

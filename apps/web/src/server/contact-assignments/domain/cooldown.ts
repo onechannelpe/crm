@@ -2,7 +2,7 @@ export type ContactCooldownSnapshot = {
   cooldown_until: number | null;
 };
 
-export function isInCooldown(
+function isInCooldown(
   contact: ContactCooldownSnapshot,
   now: number = Date.now(),
 ): boolean {
@@ -15,11 +15,4 @@ export function canContactNow(
   now: number = Date.now(),
 ): boolean {
   return !isInCooldown(contact, now);
-}
-
-export function computeCooldownUntil(
-  hours: number,
-  now: number = Date.now(),
-): number {
-  return now + hours * 60 * 60 * 1000;
 }

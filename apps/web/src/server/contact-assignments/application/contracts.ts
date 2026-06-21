@@ -1,12 +1,6 @@
 import type { ActionSuccess } from "~/contracts/common";
-import type { ContactAssignmentStatus } from "~/server/contact-assignments/domain/assignment";
-import type { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
-
-export type ContactAssignmentCallOutcome =
-  | "no_answer"
-  | "callback_scheduled"
-  | "sale_made"
-  | "invalid_data";
+import type { CompleteContactAssignmentCallInput } from "~/contracts/contact-assignments/inputs";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 export interface AssignContactsCommand {
   actorUserId: UserId;
@@ -20,22 +14,7 @@ export interface AssignContactsResult {
 
 export type CompleteContactAssignmentCallResult = ActionSuccess;
 
-export type CompleteContactAssignmentCallCommand = {
-  actorUserId: UserId;
-  assignmentId: number;
-  contactId: number;
-  outcome: ContactAssignmentCallOutcome;
-  notes: string | null;
-};
-
-export type ActiveContactAssignmentView = {
-  assignmentId: number;
-  assignedAt: number;
-  expiresAt: number;
-  status: ContactAssignmentStatus;
-  contactId: number;
-  name: string;
-  dni: string;
-  phonePrimary: string | null;
-  organizationId: OrganizationId;
-};
+export type CompleteContactAssignmentCallCommand =
+  CompleteContactAssignmentCallInput & {
+    actorUserId: UserId;
+  };
