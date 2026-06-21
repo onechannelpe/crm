@@ -42,9 +42,10 @@ export function createWorkflowRuntime(
   };
 
   return {
-    db: infra.db,
     now: infra.now,
-    // runLeadTransaction opens its own transaction from this.
+    // Lead commands take their executor only through here; runLeadTransaction
+    // opens its own transaction from it. No raw db handle is exposed, so a
+    // command cannot hand-roll its own transaction ports.
     ports: () => ({ executor: infra.db, now: infra.now() }),
     repos,
     organizationEnrichment,

@@ -46,18 +46,16 @@ export async function addVenueAccountsCommand(
       return Err(fail("accounts_already_added"));
     }
 
-    const [totalVenues, venuesWithAccounts] = await Promise.all([
+    const [totalVenues, fundedVenues] = await Promise.all([
       ctx.repos.leadVenues.countByLeadId(input.leadId),
       ctx.repos.leadVenues.countWithAccounts(input.leadId),
     ]);
 
-    const shouldTransitionToLive =
-      totalVenues > 0 && venuesWithAccounts + 1 === totalVenues;
-
     const transition = addVenueAccounts(state, {
       actor: input.actor,
       venueId: input.venueId,
-      shouldTransitionToLive,
+      totalVenues,
+      fundedVenues,
       now: ctx.now,
     });
 

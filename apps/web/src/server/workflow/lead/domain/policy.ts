@@ -22,6 +22,7 @@ export type LeadCapability =
   | "request-rate-revision"
   | "review"
   | "register"
+  | "request-sunat-refresh"
   | "list-assignable-executives";
 
 export type AssignableExecutivesScope =
@@ -39,6 +40,7 @@ const OWNER_REQUIRED = new Set<LeadCapability>([
   "add-venue-accounts",
   "accept-rate",
   "request-rate-revision",
+  "request-sunat-refresh",
 ]);
 
 export function resolveCapabilities(role: Role): Set<LeadCapability> {
@@ -72,6 +74,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("add-venue-accounts");
     caps.add("accept-rate");
     caps.add("request-rate-revision");
+    caps.add("request-sunat-refresh");
   }
   if (hasPermission(role, "lead:sale:create")) {
     caps.add("edit-commercial-scope");
@@ -80,6 +83,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("update-venue");
     caps.add("add-venue-accounts");
     caps.add("accept-rate");
+    caps.add("request-sunat-refresh");
   }
   if (
     hasPermission(role, "quotation:create") ||

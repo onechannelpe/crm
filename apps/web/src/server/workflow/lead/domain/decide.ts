@@ -374,70 +374,16 @@ export function recordRepLegal(
   return finish(state, events, input.actor, input.now);
 }
 
-export function createVenue(
-  state: LeadState,
-  input: {
-    actor: Actor;
-    venueId: string;
-    tradeName: string;
-    now: number;
-  },
-): TransitionResult {
-  const authz = authorizeLeadAction("create-venue", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "venue_added",
-      actorUserId: input.actor.userId,
-      payload: {
-        venueId: input.venueId,
-        tradeName: input.tradeName,
-      },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
-}
-
-export function updateVenue(
-  state: LeadState,
-  input: {
-    actor: Actor;
-    venueId: string;
-    tradeName: string;
-    now: number;
-  },
-): TransitionResult {
-  const authz = authorizeLeadAction("update-venue", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
-
-  const events: LeadEvent[] = [
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "venue_updated",
-      actorUserId: input.actor.userId,
-      payload: {
-        venueId: input.venueId,
-        tradeName: input.tradeName,
-      },
-      occurredAt: input.now,
-    }),
-  ];
-
-  return finish(state, events, input.actor, input.now);
-}
-
+// A lead goes LIVE the moment its last unfunded venue is funded. The decider
+// owns that rule from the venue counts; the command only supplies the data, not
+// the conclusion.
 export function addVenueAccounts(
   state: LeadState,
   input: {
     actor: Actor;
     venueId: string;
-    shouldTransitionToLive: boolean;
+    totalVenues: number;
+    fundedVenues: number;
     now: number;
   },
 ): TransitionResult {
@@ -455,7 +401,10 @@ export function addVenueAccounts(
     }),
   ];
 
-  if (input.shouldTransitionToLive) {
+  const completesLastVenue =
+    input.totalVenues > 0 && input.fundedVenues + 1 === input.totalVenues;
+
+  if (completesLastVenue) {
     events.push(
       createHistoryEvent({
         leadId: state.id,

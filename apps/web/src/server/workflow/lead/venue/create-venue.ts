@@ -10,8 +10,8 @@ import {
   toVenueDigitalInsert,
 } from "~/server/workflow/lead/digital-policy/domain";
 
-import { createVenue } from "../../lead/domain/decide";
 import { runLeadTransaction } from "../write/transition";
+import { createVenue } from "./domain";
 
 export async function createVenueCommand(
   input: CreateVenueInput & {
@@ -47,15 +47,15 @@ export async function createVenueCommand(
 
     const venueId = randomUUIDv7();
 
-    const transition = createVenue(state, {
+    const venueEvents = createVenue(state, {
       actor: input.actor,
       venueId,
       tradeName: input.tradeName,
       now: ctx.now,
     });
 
-    if (!transition.ok) {
-      return transition;
+    if (!venueEvents.ok) {
+      return venueEvents;
     }
 
     const digital = toVenueDigitalInsert(parsedVenueFields.value);
@@ -83,7 +83,7 @@ export async function createVenueCommand(
     // Adding a venue records a fact; it does not change the lead's lifecycle, so
     // it appends without taking the version lock (concurrent venue adds on one
     // lead must not collide on optimistic concurrency).
-    const appended = await ctx.appendFacts(transition.value.events);
+    const appended = await ctx.appendFacts(venueEvents.value);
 
     if (!appended.ok) {
       return appended;

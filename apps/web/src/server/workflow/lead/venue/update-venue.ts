@@ -8,8 +8,8 @@ import {
   toVenueDigitalInsert,
 } from "~/server/workflow/lead/digital-policy/domain";
 
-import { updateVenue } from "../../lead/domain/decide";
 import { runLeadTransaction } from "../write/transition";
+import { updateVenue } from "./domain";
 
 export async function updateVenueCommand(
   input: UpdateVenueInput & {
@@ -53,15 +53,15 @@ export async function updateVenueCommand(
       return parsedVenueFields;
     }
 
-    const transition = updateVenue(state, {
+    const venueEvents = updateVenue(state, {
       actor: input.actor,
       venueId: input.venueId,
       tradeName: input.tradeName,
       now: ctx.now,
     });
 
-    if (!transition.ok) {
-      return transition;
+    if (!venueEvents.ok) {
+      return venueEvents;
     }
 
     const digital = toVenueDigitalInsert(parsedVenueFields.value);
@@ -81,7 +81,7 @@ export async function updateVenueCommand(
 
     // Editing a venue records a fact; it does not change the lead's lifecycle, so
     // it appends without taking the version lock.
-    const appended = await ctx.appendFacts(transition.value.events);
+    const appended = await ctx.appendFacts(venueEvents.value);
 
     if (!appended.ok) {
       return appended;
