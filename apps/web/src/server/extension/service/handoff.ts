@@ -161,10 +161,6 @@ export async function claimInstallationSession(
   },
 ): Promise<Result<ClaimExtensionSessionResponse, DomainError>> {
   const { now, uow } = context;
-  const invalidHandoff = (): Result<never, DomainError> =>
-    Err(fail("handoff_invalid"));
-  const claimedByOtherInstallation = (): Result<never, DomainError> =>
-    Err(fail("handoff_invalid"));
 
   if (!isUuid(input.installationId)) {
     return Err(invalid({ code: "installation_invalid" }));
@@ -178,13 +174,13 @@ export async function claimInstallationSession(
     );
 
     if (isTokenExpired(handoffClaims.exp, claimedAt)) {
-      return invalidHandoff();
+      return Err(fail("handoff_invalid"));
     }
 
     const userId = parseSubjectUserId(handoffClaims.sub);
 
     if (!userId) {
-      return invalidHandoff();
+      return Err(fail("handoff_invalid"));
     }
 
     const claimResult = await uow.run(async (txRepos) => {
@@ -201,7 +197,7 @@ export async function claimInstallationSession(
         handoff.auth_session_id !== handoffClaims.authSessionId ||
         handoff.assignment_id !== handoffClaims.assignmentId
       ) {
-        return invalidHandoff();
+        return Err(fail("handoff_invalid"));
       }
 
       const authSessionActive = await hasActiveAuthSession(
@@ -211,7 +207,7 @@ export async function claimInstallationSession(
       );
 
       if (!authSessionActive) {
-        return invalidHandoff();
+        return Err(fail("handoff_invalid"));
       }
 
       let session: InstallationSessionRecord;
@@ -222,7 +218,7 @@ export async function claimInstallationSession(
           handoff.installation_id !== input.installationId ||
           !handoff.installation_session_jti
         ) {
-          return claimedByOtherInstallation();
+          return Err(fail("handoff_claimed_by_other_installation"));
         }
 
         const existingSession =
@@ -232,7 +228,7 @@ export async function claimInstallationSession(
           );
 
         if (!existingSession) {
-          return invalidHandoff();
+          return Err(fail("handoff_invalid"));
         }
 
         session = existingSession;
@@ -262,7 +258,7 @@ export async function claimInstallationSession(
             racedHandoff.installation_id !== input.installationId ||
             !racedHandoff.installation_session_jti
           ) {
-            return claimedByOtherInstallation();
+            return Err(fail("handoff_claimed_by_other_installation"));
           }
 
           const racedSession =
@@ -272,7 +268,7 @@ export async function claimInstallationSession(
             );
 
           if (!racedSession) {
-            return invalidHandoff();
+            return Err(fail("handoff_invalid"));
           }
 
           session = racedSession;
@@ -354,7 +350,7 @@ export async function claimInstallationSession(
     }
 
     if (isInvalidExtensionToken(error)) {
-      return invalidHandoff();
+      return Err(fail("handoff_invalid"));
     }
 
     return Err(
