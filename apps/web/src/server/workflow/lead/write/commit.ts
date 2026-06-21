@@ -4,12 +4,15 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { LeadEvent } from "~/server/workflow/lead/domain/events";
+import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
 
 import { toLeadEventAppend } from "./lead-events";
 
-export type LeadTransition = { next: LeadState; events: LeadEvent[] };
+export type LeadTransition = {
+  next: LeadState;
+  events: LeadHistoryEventDraft[];
+};
 
 export type LeadAssignment = {
   toExecutiveId: number;
@@ -83,7 +86,7 @@ export async function commitTransition(
 // Timeline facts avoid the version lock so concurrent activity can coexist.
 export async function appendFacts(
   tx: DatabaseExecutor,
-  events: LeadEvent[],
+  events: LeadHistoryEventDraft[],
   now: number,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
   const leadId = events[0]?.leadId;

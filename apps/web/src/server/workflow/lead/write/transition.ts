@@ -2,7 +2,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, type Result } from "~/server/shared/result";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
-import type { LeadEvent } from "~/server/workflow/lead/domain/events";
+import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import {
   createWorkflowRepos,
   type WorkflowRepos,
@@ -15,7 +15,7 @@ import {
   type LeadTransition,
 } from "./commit";
 
-export type CommittedLeadEvent = { event: LeadEvent; id: string };
+export type CommittedLeadEvent = { event: LeadHistoryEventDraft; id: string };
 
 export type LeadTransaction = {
   tx: DatabaseExecutor;
@@ -26,7 +26,7 @@ export type LeadTransaction = {
     assignment?: LeadAssignment,
   ): Promise<Result<{ eventIds: string[] }, DomainError>>;
   appendFacts(
-    events: LeadEvent[],
+    events: LeadHistoryEventDraft[],
   ): Promise<Result<{ eventIds: string[] }, DomainError>>;
 };
 
@@ -37,7 +37,10 @@ class LeadTransactionRollback {
   constructor(readonly error: DomainError) {}
 }
 
-function zip(events: LeadEvent[], ids: string[]): CommittedLeadEvent[] {
+function zip(
+  events: LeadHistoryEventDraft[],
+  ids: string[],
+): CommittedLeadEvent[] {
   return events.map((event, index) => ({ event, id: ids[index] }));
 }
 

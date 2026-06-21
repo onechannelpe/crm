@@ -1,7 +1,7 @@
-import type { LeadEvent } from "./events";
+import type { LeadHistoryEventDraft } from "./history";
 import type { LeadState } from "./state";
 
-function applyEvent(state: LeadState, event: LeadEvent): LeadState {
+function applyEvent(state: LeadState, event: LeadHistoryEventDraft): LeadState {
   switch (event.eventType) {
     case "lead_reviewed":
       return {
@@ -29,7 +29,7 @@ function applyEvent(state: LeadState, event: LeadEvent): LeadState {
 
 export function applyEvents(
   state: LeadState,
-  events: LeadEvent[],
+  events: LeadHistoryEventDraft[],
   meta: { actorUserId: number | null; now: number },
 ): LeadState {
   const next = events.reduce(applyEvent, state);

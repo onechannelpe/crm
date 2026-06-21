@@ -12,9 +12,8 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { LeadEvent } from "./events";
 import { applyEvents } from "./evolve";
-import { createHistoryEvent } from "./history";
+import { createHistoryEvent, type LeadHistoryEventDraft } from "./history";
 import { authorizeLeadAction } from "./policy";
 import { isReservationActive } from "./reservation";
 import { resolveReviewTransition } from "./review";
@@ -22,13 +21,13 @@ import type { LeadState } from "./state";
 
 type Actor = { userId: number; role: Role };
 type TransitionResult = Result<
-  { next: LeadState; events: LeadEvent[] },
+  { next: LeadState; events: LeadHistoryEventDraft[] },
   DomainError
 >;
 
 function finish(
   state: LeadState,
-  events: LeadEvent[],
+  events: LeadHistoryEventDraft[],
   actor: Actor,
   now: number,
   reservationExpiresAt?: number | null,
@@ -50,7 +49,7 @@ export function deleteLead(
   const authz = authorizeLeadAction("delete", input.actor, state);
   if (!authz.ok) return authz;
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "lead_deleted",
@@ -74,7 +73,7 @@ export function reassignLead(
     return Err(fail("same_executive"));
   }
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "lead_reassigned",
@@ -106,7 +105,7 @@ export function proposeRate(
   if (!authz.ok) return authz;
   if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "rate_proposed",
@@ -146,7 +145,7 @@ export function editRateProposal(
     return Err(fail("rate_proposal_expired"));
   }
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "rate_proposal_corrected",
@@ -174,7 +173,7 @@ export function editCommercialScope(
   );
   if (!authz.ok) return authz;
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "commercial_scope_corrected",
@@ -203,7 +202,7 @@ export function reviewLead(
   if (!authz.ok) return authz;
   if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
 
-  const events: LeadEvent[] = [];
+  const events: LeadHistoryEventDraft[] = [];
 
   if (input.rowType === "status") {
     if (input.status === null) return Err(fail("invalid_stage"));
@@ -277,7 +276,7 @@ export function acceptRate(
   if (!authz.ok) return authz;
   if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "rate_accepted",
@@ -303,7 +302,7 @@ export function expireReservation(
 ): TransitionResult {
   if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "lead_reservation_expired",
@@ -337,7 +336,7 @@ export function recordRepLegal(
   if (!authz.ok) return authz;
   if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "rep_legal_recorded",
@@ -371,7 +370,7 @@ export function addVenueAccounts(
   if (!authz.ok) return authz;
   if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "venue_accounts_added",
@@ -432,7 +431,7 @@ export function requestRateRevision(
     return Err(fail("duplicate_rate_revision_file"));
   }
 
-  const events: LeadEvent[] = [
+  const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
       leadId: state.id,
       eventType: "rate_revision_requested",

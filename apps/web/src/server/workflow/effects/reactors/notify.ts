@@ -1,11 +1,11 @@
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { LeadEventFor } from "~/server/workflow/lead/domain/events";
+import type { LeadHistoryEventDraftFor } from "~/server/workflow/lead/domain/history";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 type CommittedStageChange = {
-  event: LeadEventFor<"workflow_stage_changed">;
+  event: LeadHistoryEventDraftFor<"workflow_stage_changed">;
   id: string;
 };
 

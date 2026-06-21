@@ -2,8 +2,10 @@ import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { type DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
-import type { LeadEvent } from "~/server/workflow/lead/domain/events";
-import { createHistoryEvent } from "~/server/workflow/lead/domain/history";
+import {
+  createHistoryEvent,
+  type LeadHistoryEventDraft,
+} from "~/server/workflow/lead/domain/history";
 import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
 
@@ -12,7 +14,7 @@ type Actor = { userId: number; role: Role };
 export function recordNote(
   state: LeadState,
   input: { actor: Actor; body: string; now: number },
-): Result<LeadEvent[], DomainError> {
+): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("interact", input.actor, state);
   if (!authz.ok) return authz;
 
@@ -35,7 +37,7 @@ export function recordCall(
     notes: string | null;
     now: number;
   },
-): Result<LeadEvent[], DomainError> {
+): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("interact", input.actor, state);
   if (!authz.ok) return authz;
 
