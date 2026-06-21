@@ -106,6 +106,16 @@ function parseSecurityEnv(source: EnvSource) {
   } as const;
 }
 
+function parseUploadsEnv(source: EnvSource) {
+  return {
+    storageRoot: optional(
+      source,
+      "WEB_UPLOADS_ROOT",
+      ".local-storage/documents",
+    ),
+  } as const;
+}
+
 function parseEngineEnv(source: EnvSource) {
   return {
     engineConnectMode: optionalEnum(
@@ -118,17 +128,6 @@ function parseEngineEnv(source: EnvSource) {
     engineHmacKeyId: required(source, "ENGINE_HMAC_KEY_ID"),
     engineHmacSecret: required(source, "ENGINE_HMAC_SECRET", true),
     engineTimeoutMs: optional(source, "ENGINE_TIMEOUT_MS", "5000"),
-  } as const;
-}
-
-function parsePasskeyEnv(source: EnvSource) {
-  return {
-    webauthnRpId: optional(source, "WEBAUTHN_RP_ID", "localhost"),
-    webauthnOrigin: optional(
-      source,
-      "WEBAUTHN_ORIGIN",
-      "http://localhost:5173",
-    ),
   } as const;
 }
 
@@ -167,62 +166,43 @@ function parseSentryEnv(source: EnvSource) {
   } as const;
 }
 
-type EnvByCapability = {
-  session: ReturnType<typeof parseSessionEnv>;
-  totp: ReturnType<typeof parseTotpEnv>;
-  extension: ReturnType<typeof parseExtensionEnv>;
-  security: ReturnType<typeof parseSecurityEnv>;
-  engine: ReturnType<typeof parseEngineEnv>;
-  passkey: ReturnType<typeof parsePasskeyEnv>;
-  googleOAuth: ReturnType<typeof parseGoogleOAuthEnv>;
-  notifications: ReturnType<typeof parseNotificationsEnv>;
-  sentry: ReturnType<typeof parseSentryEnv>;
-};
-
-export type EnvCapability = keyof EnvByCapability;
-
-const envParsers: {
-  [K in EnvCapability]: (source: EnvSource) => EnvByCapability[K];
-} = {
-  session: parseSessionEnv,
-  totp: parseTotpEnv,
-  extension: parseExtensionEnv,
-  security: parseSecurityEnv,
-  engine: parseEngineEnv,
-  passkey: parsePasskeyEnv,
-  googleOAuth: parseGoogleOAuthEnv,
-  notifications: parseNotificationsEnv,
-  sentry: parseSentryEnv,
-};
-
-let envCache: {
-  [K in EnvCapability]?: EnvByCapability[K];
-} = {};
-
-function shouldCacheEnv(): boolean {
-  return process.env.NODE_ENV !== "test";
+export function loadServerEnv(source: EnvSource) {
+  return {
+    session: parseSessionEnv(source),
+    totp: parseTotpEnv(source),
+    extension: parseExtensionEnv(source),
+    security: parseSecurityEnv(source),
+    uploads: parseUploadsEnv(source),
+    engine: parseEngineEnv(source),
+    googleOAuth: parseGoogleOAuthEnv(source),
+    notifications: parseNotificationsEnv(source),
+    sentry: parseSentryEnv(source),
+  } as const;
 }
 
-export function parseEnvFor<C extends EnvCapability>(
-  capability: C,
-  source: EnvSource,
-): EnvByCapability[C] {
-  return envParsers[capability](source);
-}
-
-export function getEnvFor<C extends EnvCapability>(
-  capability: C,
-): EnvByCapability[C] {
-  if (!shouldCacheEnv()) {
-    return parseEnvFor(capability, process.env);
-  }
-
-  const cached = envCache[capability];
-  if (cached) {
+function section<T>(parse: (source: EnvSource) => T): () => T {
+  let cached: T | undefined;
+  return () => {
+    if (process.env.NODE_ENV === "test") return parse(process.env);
+    cached ??= parse(process.env);
     return cached;
-  }
+  };
+}
 
-  const parsed = parseEnvFor(capability, process.env);
-  envCache[capability] = parsed;
-  return parsed;
+// const sessionConfig = section(parseSessionEnv);
+export const totpConfig = section(parseTotpEnv);
+export const extensionConfig = section(parseExtensionEnv);
+export const securityConfig = section(parseSecurityEnv);
+export const uploadsConfig = section(parseUploadsEnv);
+export const engineConfig = section(parseEngineEnv);
+export const googleOAuthConfig = section(parseGoogleOAuthEnv);
+export const notificationsConfig = section(parseNotificationsEnv);
+export const sentryConfig = section(parseSentryEnv);
+
+export type NotificationsConfig = ReturnType<typeof parseNotificationsEnv>;
+export type EngineConfig = ReturnType<typeof parseEngineEnv>;
+export type UploadsConfig = ReturnType<typeof parseUploadsEnv>;
+
+export function validateServerConfig(): void {
+  loadServerEnv(process.env);
 }

@@ -50,9 +50,8 @@ describe("session manager persisted validation", () => {
       })
       .execute();
 
-    const result =
-      await runtime.auth.sessionService.validateSessionToken(token);
-    expect(result.session).toBeNull();
+    const result = await runtime.auth.sessionService.resolve(token);
+    expect(result).toBeNull();
     expect(await runtime.ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 });

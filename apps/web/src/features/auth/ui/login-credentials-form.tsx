@@ -3,10 +3,10 @@ import { createEffect, createSignal, onMount } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { passwordLoginUiMessage } from "~/features/auth/model/login-ui";
 import { useLoginFlow } from "~/features/auth/services/use-login-flow";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
 import { passwordLoginMutation } from "~/lib/mutations/auth";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { LoginFeedback } from "./login-feedback";
 import { LoginPasskeyPanel } from "./login-passkey-panel";
@@ -19,34 +19,32 @@ export function LoginCredentialsForm() {
   const loginMethods = useLoginFlow();
   const passwordSubmission = useSubmission(passwordLoginMutation);
   const passkeyLogin = usePasskeyLogin();
+
   const [username, setUsername] = createSignal("");
   const [handledPasskeyFlowId, setHandledPasskeyFlowId] = createSignal<
     number | null
   >(null);
+
   let usernameInputRef: HTMLInputElement | undefined;
 
   onMount(() => {
     usernameInputRef?.focus();
   });
 
-  const passwordError = () => {
-    const result = passwordSubmission.result;
-    return result && !result.ok
-      ? passwordLoginUiMessage(result.code)
+  const passwordError = () =>
+    passwordSubmission.error
+      ? actionErrorMessage(passwordSubmission.error)
       : undefined;
-  };
 
   createEffect(() => {
     const result = passwordSubmission.result;
-    if (!result?.ok || result.nextStep !== "passkey") {
-      return;
-    }
-    if (handledPasskeyFlowId() === result.flow.id) {
+
+    if (!result || handledPasskeyFlowId() === result.flow.id) {
       return;
     }
 
     setHandledPasskeyFlowId(result.flow.id);
-    void passkeyLogin.runFlow(result.flow);
+    void passkeyLogin.continueFlow(result.flow);
   });
 
   function handleUsernameInput(value: string) {
@@ -66,6 +64,7 @@ export function LoginCredentialsForm() {
         }}
       >
         <LoginFeedback message={passwordError()} />
+
         <Input
           id="auth-username"
           type="text"
@@ -84,6 +83,7 @@ export function LoginCredentialsForm() {
           }}
           required
         />
+
         <Input
           id="current-password"
           type="password"
@@ -92,6 +92,7 @@ export function LoginCredentialsForm() {
           autocomplete="current-password"
           required
         />
+
         <Button
           type="submit"
           class={styles.full}
@@ -99,8 +100,9 @@ export function LoginCredentialsForm() {
         >
           Iniciar sesión
         </Button>
+
         <LoginPasskeyPanel
-          error={passkeyLogin.error()}
+          error={passkeyLogin.errorMessage()}
           busy={passkeyLogin.busy()}
           supported={passkeyLogin.supported()}
           hasActiveFlow={passkeyLogin.activeFlow() !== undefined}
@@ -113,6 +115,7 @@ export function LoginCredentialsForm() {
           }}
         />
       </form>
+
       <div class={shellStyles.footerNote}>
         <a href="/reset-password" class={linkStyles.forgotLink}>
           ¿Olvidaste tu contraseña?

@@ -38,11 +38,13 @@ export type Permission =
   | "lead:sale:create"
   | "lead:sale:upload-proof"
   | "lead:view:all"
+  | "lead:delete"
   | "lead:review"
   | "lead:reassign"
   | "quotation:create"
   | "quotation:revise"
   | "quotation:view:all"
+  | "quotation:policy:manage"
   | "integration:manage"
   | "file:artifact:request"
   | "file:artifact:upload"
@@ -76,6 +78,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:upload-proof",
   ],
   supervisor: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "lead:view:all",
@@ -113,6 +116,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:upload-proof",
   ],
   sales_manager: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "lead:view:all",
@@ -133,17 +137,18 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "audit:read",
     "admin:read",
     "admin:manage",
+    "quotation:policy:manage",
     "file:artifact:read",
     "file:artifact:audit:read",
   ],
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
   admin: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "sales:review",
     "search:use",
-    "lead:register",
     "lead:commercial-input:complete",
     "lead:sale:create",
     "lead:sale:upload-proof",
@@ -153,6 +158,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "quotation:create",
     "quotation:revise",
     "quotation:view:all",
+    "quotation:policy:manage",
     "integration:manage",
     "capacity:read:self",
     "capacity:request:self",
@@ -176,13 +182,13 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "file:artifact:audit:read",
   ],
   superuser: [
+    "lead:delete",
     "lead:rate:simulate",
     "lead:work",
     "sales:create",
     "sales:submit",
     "sales:review",
     "sales:approve",
-    "lead:register",
     "lead:commercial-input:complete",
     "lead:sale:create",
     "lead:sale:upload-proof",
@@ -192,6 +198,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "quotation:create",
     "quotation:revise",
     "quotation:view:all",
+    "quotation:policy:manage",
     "integration:manage",
     "search:use",
     "capacity:read:self",

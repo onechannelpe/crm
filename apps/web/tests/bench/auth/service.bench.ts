@@ -1,8 +1,9 @@
+import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
+import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
 import { isErr } from "~/server/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
@@ -67,6 +68,7 @@ describe("auth login service benchmark", () => {
         },
         ctx.repos,
         sendPrivilegedLoginAlert,
+        createTestPasskeyProvider(ctx.repos),
       );
 
       if (

@@ -25,8 +25,11 @@ function stripForwardedValue(value: string | undefined): string | null {
   return normalized || null;
 }
 
-export function getRequestPublicOrigin(request: Request): string {
-  if (process.env.TRUSTED_PROXY === "true") {
+export function resolvePublicOrigin(
+  request: Request,
+  policy: { trustedProxy: boolean },
+): string {
+  if (policy.trustedProxy) {
     const forwardedOrigin = getForwardedOrigin(request.headers);
     if (forwardedOrigin) {
       return forwardedOrigin;

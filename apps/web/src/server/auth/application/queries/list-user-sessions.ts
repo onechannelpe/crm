@@ -1,7 +1,7 @@
 import type { Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { AppContext } from "~/server/shared/action-runtime";
+import type { AppContext } from "~/server/platform/action/context";
 
 import type { AdminSessionsReadContext } from "../../infrastructure/admin-sessions-read-context";
 

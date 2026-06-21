@@ -1,47 +1,57 @@
 "use server";
 
-import { getRequestEvent } from "solid-js/web";
-
-import type {
-  RequestPasswordResetResult,
-  ResetPasswordResult,
-} from "~/actions/auth/contracts";
-import { getRequestPublicOrigin } from "~/lib/http/public-origin";
-import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/application/commands/request-password-reset";
-import { resetPassword as resetPasswordService } from "~/server/auth/application/commands/reset-password";
-import { getServerRuntime } from "~/server/runtime";
-
-function getOrigin(): string {
-  const event = getRequestEvent();
-  if (!event?.request) return "";
-  return getRequestPublicOrigin(event.request);
-}
+import { getRequestContext } from "~/lib/http/request-context";
+import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/flows/request-password-reset";
+import { resetPassword as resetPasswordService } from "~/server/auth/flows/reset-password";
+import { runPublicAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { throwDomain } from "~/server/shared/domain-error";
+import { isErr } from "~/server/shared/result";
 
 export async function requestPasswordReset(
   formData: FormData,
-): Promise<RequestPasswordResetResult> {
+): Promise<{ ok: true }> {
   const rawEmail = formData.get("email");
-  return requestPasswordResetService({
-    deps: getServerRuntime().auth.passwordReset,
-    email: typeof rawEmail === "string" ? rawEmail : "",
-    origin: getOrigin(),
+  const email = typeof rawEmail === "string" ? rawEmail : "";
+
+  const origin = getRequestContext().publicOrigin;
+
+  return runPublicAction(async () => {
+    const result = await requestPasswordResetService({
+      deps: getServerRuntime().auth.passwordReset,
+      email,
+      origin,
+    });
+
+    if (isErr(result)) {
+      throwDomain(result.error);
+    }
+
+    return result.value;
   });
 }
 
-export async function resetPassword(
-  formData: FormData,
-): Promise<ResetPasswordResult> {
+export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
   const rawToken = formData.get("token");
   const rawPassword = formData.get("password");
   const rawConfirm = formData.get("confirmPassword");
+
   const token = typeof rawToken === "string" ? rawToken.trim() : "";
   const password = typeof rawPassword === "string" ? rawPassword : "";
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
-  return resetPasswordService({
-    deps: getServerRuntime().auth.passwordReset,
-    token,
-    password,
-    confirmPassword,
+  return runPublicAction(async () => {
+    const result = await resetPasswordService({
+      deps: getServerRuntime().auth.passwordReset,
+      token,
+      password,
+      confirmPassword,
+    });
+
+    if (isErr(result)) {
+      throwDomain(result.error);
+    }
+
+    return result.value;
   });
 }

@@ -3,6 +3,7 @@ import { getRequestEvent } from "solid-js/web";
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { getSessionCookie } from "~/lib/auth/session/cookies";
+import { securityConfig } from "~/lib/env";
 import type { ActionRequestContext } from "~/lib/observability/context";
 import {
   deleteRequestSessionCookie,
@@ -10,9 +11,9 @@ import {
   getRequestSessionMaxAgeSeconds,
   setRequestSessionCookie,
 } from "~/lib/security/request-session";
-import { getServerRuntime } from "~/server/runtime";
+import { getServerRuntime } from "~/server/platform/container";
 
-import { getRequestPublicOrigin } from "./public-origin";
+import { resolvePublicOrigin } from "./public-origin";
 
 const REQUEST_SESSION_ACTIVITY_UPDATE_MS = 5 * 60 * 1000;
 
@@ -42,7 +43,9 @@ export async function buildRequestContext(
     : null;
 
   return {
-    publicOrigin: getRequestPublicOrigin(request),
+    publicOrigin: resolvePublicOrigin(request, {
+      trustedProxy: securityConfig().trustedProxy === "true",
+    }),
     clientIp: getClientIp(request.headers),
     userAgent: request.headers.get("user-agent") ?? null,
     observability,
@@ -85,9 +88,7 @@ async function loadRequestSession(): Promise<AuthSession | null> {
     return null;
   }
 
-  const { session } =
-    await getServerRuntime().auth.sessionService.validateSessionToken(token);
-  return session;
+  return getServerRuntime().auth.sessionService.resolve(token);
 }
 
 async function loadRequestSessionState(

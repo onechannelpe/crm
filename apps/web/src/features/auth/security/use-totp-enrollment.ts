@@ -4,7 +4,7 @@ import {
   beginTotpEnrollment,
   finishTotpEnrollment,
 } from "~/actions/auth/security/totp";
-import { getErrorMessage } from "~/lib/errors";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 export interface TotpEnrollmentState {
   qrCodeDataUrl: string;
@@ -14,12 +14,7 @@ export interface TotpEnrollmentState {
 interface TotpEnrollmentOptions {
   enqueueSuccessSnackBar: (message: string) => void;
   enqueueErrorSnackBar: (message: string) => void;
-  enqueueInfoSnackBar: (message: string) => void;
   refreshStatus: () => void | PromiseLike<unknown>;
-  beginInfoMessage?: string;
-  beginFailureMessage?: string;
-  verifySuccessMessage?: string;
-  verifyFailureMessage?: string;
 }
 
 export function useTotpEnrollment(options: TotpEnrollmentOptions) {
@@ -32,20 +27,13 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
 
   async function beginEnrollment() {
     setLoading(true);
+
     try {
-      const nextEnrollment = await beginTotpEnrollment();
-      setEnrollment(nextEnrollment);
-      if (options.beginInfoMessage) {
-        options.enqueueInfoSnackBar(options.beginInfoMessage);
-      }
-    } catch (error: unknown) {
-      options.enqueueErrorSnackBar(
-        getErrorMessage(
-          error,
-          options.beginFailureMessage ??
-            "No se pudo iniciar la configuración del 2FA",
-        ),
-      );
+      const enrollmentState = await beginTotpEnrollment();
+
+      setEnrollment(enrollmentState);
+    } catch (caught) {
+      options.enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setLoading(false);
     }
@@ -53,23 +41,20 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
 
   async function verifyEnrollment() {
     setLoading(true);
+
     try {
-      const nextRecoveryCodes = await finishTotpEnrollment(code());
-      setRecoveryCodes(nextRecoveryCodes);
+      const { recoveryCodes: codes, message } =
+        await finishTotpEnrollment(code());
+
+      setRecoveryCodes(codes);
       setEnrollment(null);
       setCode("");
+
       await options.refreshStatus();
-      options.enqueueSuccessSnackBar(
-        options.verifySuccessMessage ??
-          "Aplicación de autenticación configurada",
-      );
-    } catch (error: unknown) {
-      options.enqueueErrorSnackBar(
-        getErrorMessage(
-          error,
-          options.verifyFailureMessage ?? "Código de verificación inválido",
-        ),
-      );
+
+      options.enqueueSuccessSnackBar(message);
+    } catch (caught) {
+      options.enqueueErrorSnackBar(actionErrorMessage(caught));
     } finally {
       setLoading(false);
     }

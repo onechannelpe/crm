@@ -1,5 +1,5 @@
 "use server";
 
-import { beginPasskeyRegistration } from "./passkey";
+import { beginPasskeyEnrollment } from "../security/passkey";
 
-export const startPasskeyOnboardingStep = beginPasskeyRegistration;
+export const startPasskeyOnboardingStep = beginPasskeyEnrollment;

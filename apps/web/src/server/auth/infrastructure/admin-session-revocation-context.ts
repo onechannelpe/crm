@@ -1,28 +1,28 @@
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 
 import type { AdminSessionRevocationPort } from "../application/ports";
 
 interface AdminSessionRevocationRuntimeDeps {
   executor: DatabaseExecutor;
-  invalidateSession(sessionId: string): Promise<void>;
-  invalidateUserSessions(userId: number): Promise<void>;
+  revokeSession(sessionId: string): Promise<void>;
+  revokeUserSessions(userId: number): Promise<void>;
 }
 
 export function createAdminSessionRevocationContext(
   deps: AdminSessionRevocationRuntimeDeps,
 ): AdminSessionRevocationPort {
   const executor = deps.executor;
-  const auditLogs = createAuditLogsRepo(executor);
+  const events = createEventsRepo(executor);
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
-    invalidateSession(sessionId) {
-      return deps.invalidateSession(sessionId);
+    revokeSession(sessionId) {
+      return deps.revokeSession(sessionId);
     },
-    invalidateUserSessions(userId) {
-      return deps.invalidateUserSessions(userId);
+    revokeUserSessions(userId) {
+      return deps.revokeUserSessions(userId);
     },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(
@@ -40,15 +40,8 @@ export function createAdminSessionRevocationContext(
         sync_updated_at: input.syncUpdatedAt,
       });
     },
-    async createAuditLog(input) {
-      await auditLogs.create({
-        user_id: input.userId,
-        action: input.action,
-        entity_type: input.entityType,
-        entity_id: input.entityId,
-        changes: input.changes,
-        created_at: input.createdAt,
-      });
+    async appendEvent(input) {
+      await events.append(input);
     },
   };
 }

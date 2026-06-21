@@ -5,7 +5,7 @@ function normalizeIdentifier(identifier: string): string {
   return identifier.trim().toLowerCase();
 }
 
-export function buildAccountThrottleKey(
+function buildAccountThrottleKey(
   endpoint: AuthThrottleEndpoint,
   identifier: string,
 ): string {

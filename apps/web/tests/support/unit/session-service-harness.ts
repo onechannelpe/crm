@@ -2,10 +2,11 @@ import { vi } from "vitest";
 
 import type { UserSessionRow } from "~/lib/auth/types";
 import type {
+  SessionEventPort,
   SessionRepositoryPort,
   SessionUsersPort,
-} from "~/server/auth/application/session-ports";
-import { createSessionService } from "~/server/auth/application/session-service";
+} from "~/server/auth/session/session-spec";
+import { createSessionService } from "~/server/auth/session/session.service";
 
 export type SessionStore = Map<string, UserSessionRow>;
 
@@ -57,9 +58,16 @@ export function createSessionServiceHarness(
     deactivateIfExpired: usersDeactivateIfExpired,
   };
 
+  const events: SessionEventPort = {
+    async append() {
+      return [];
+    },
+  };
+
   const service = createSessionService({
     sessions,
     users,
+    events,
     now: () => nowTs,
     logger: { error() {} },
   });

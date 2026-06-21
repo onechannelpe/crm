@@ -1,5 +1,5 @@
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import type { AuthLoginDeps } from "~/server/auth/application/login-deps";
+import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -11,7 +11,7 @@ import {
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
@@ -20,7 +20,7 @@ export function createAuthLoginContext(
   executor: DatabaseExecutor,
   notifications: {
     enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
-    dispatchPendingJobs(): Promise<void>;
+    dispatchPendingJobs(): void;
   },
 ) {
   return {
@@ -29,7 +29,7 @@ export function createAuthLoginContext(
       loginFlows: createLoginFlowsRepo(executor),
       users: createUsersRepo(executor),
       sessions: createSessionRepository(executor),
-      auditLogs: createAuditLogsRepo(executor),
+      events: createEventsRepo(executor),
       authThrottle: createAuthThrottleRepo(executor),
       authEvents: createAuthEventsRepo(executor),
       userTotpFactors: createUserTotpFactorsRepo(executor),

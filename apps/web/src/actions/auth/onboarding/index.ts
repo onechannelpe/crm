@@ -2,91 +2,78 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { conflictError, internalError } from "~/lib/app-errors";
-import { requireSession } from "~/lib/auth/access/session";
-import { getRequestClientMetadata } from "~/lib/http/request-context";
+import { installSession } from "~/actions/auth/install-session";
 import type { Phone } from "~/lib/phone/pe-mobile";
-import { completeOnboarding as completeOnboardingService } from "~/server/auth/application/commands/complete-onboarding";
-import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/runtime";
+import { completeOnboarding as completeOnboardingService } from "~/server/auth/flows/complete-onboarding";
+import { enrollPasskey } from "~/server/auth/flows/passkey-enrollment";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
 import { isErr } from "~/server/shared/result";
-
-export interface OnboardingRedirectResponse {
-  redirectTo: string;
-}
-
-function mapOnboardingError(error: { code: string; message: string }): never {
-  switch (error.code) {
-    case "user_not_found":
-      throw internalError("No se pudo completar el registro");
-    case "strong_auth_required":
-      throw conflictError(error.message);
-    case "address_already_claimed":
-      throw conflictError(error.message);
-    default:
-      throw internalError(error.message);
-  }
-}
 
 export async function completeOnboarding(
   phone: Phone,
-): Promise<OnboardingRedirectResponse> {
-  const session = await requireSession();
-  const request = getRequestClientMetadata();
-  const onboardingContext = getServerRuntime().auth.onboarding;
-  const result = await completeOnboardingService(onboardingContext, {
-    session,
-    phone,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-    invalidateSession: (sessionId) =>
-      getServerRuntime().auth.sessionService.invalidateSession(sessionId),
+): Promise<{ redirectTo: string }> {
+  const onboarding = getServerRuntime().auth.onboarding;
+
+  const result = await runAction({
+    name: "auth.onboarding.complete",
+    access: { kind: "session" },
+
+    execute: (ctx) =>
+      completeOnboardingService(onboarding, {
+        session: ctx.actor,
+        phone,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      }),
   });
-  if (isErr(result)) {
-    mapOnboardingError(result.error);
-  }
-  return result.value;
+
+  await installSession(result.sessionToken);
+
+  return { redirectTo: result.redirectTo };
 }
 
 export async function completePasskeyOnboarding(
   phone: Phone,
   challengeId: number,
   response: RegistrationResponseJSON,
-): Promise<OnboardingRedirectResponse> {
-  const session = await requireSession();
-  const request = getRequestClientMetadata();
-  const onboardingContext = getServerRuntime().auth.onboarding;
-  const registrationResult = await finishPasskeyRegistrationService(
-    onboardingContext.repos,
-    {
-      session,
-      challengeId,
-      response,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-      createWebauthnProvider: createRequestPasskeyProviderFactory(),
-      invalidateSession: (sessionId) =>
-        getServerRuntime().auth.sessionService.invalidateSession(sessionId),
+): Promise<{ redirectTo: string }> {
+  const onboarding = getServerRuntime().auth.onboarding;
+
+  const result = await runAction({
+    name: "auth.onboarding.complete_passkey",
+    access: { kind: "session" },
+
+    execute: async (ctx) => {
+      const enrolled = await enrollPasskey(onboarding.repos, {
+        userId: ctx.actor.userId,
+        challengeId,
+        response,
+        ipAddress: ctx.ipAddress,
+        webauthnProvider: createRequestPasskeyProvider(onboarding.repos),
+      });
+
+      if (isErr(enrolled)) {
+        return enrolled;
+      }
+
+      const session = {
+        ...ctx.actor,
+        strongAuthMethod: "passkey" as const,
+        strongAuthAt: ctx.now(),
+      };
+
+      return completeOnboardingService(onboarding, {
+        session,
+        phone,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      });
     },
-  );
-  if (isErr(registrationResult)) {
-    throw internalError(registrationResult.error.message);
-  }
-  const result = await completeOnboardingService(onboardingContext, {
-    session: {
-      ...session,
-      strongAuthMethod: "passkey",
-      strongAuthAt: Date.now(),
-    },
-    phone,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-    invalidateSession: (sessionId) =>
-      getServerRuntime().auth.sessionService.invalidateSession(sessionId),
   });
-  if (isErr(result)) {
-    mapOnboardingError(result.error);
-  }
-  return result.value;
+
+  await installSession(result.sessionToken);
+
+  return { redirectTo: result.redirectTo };
 }

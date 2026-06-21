@@ -1,19 +1,13 @@
-import { forbiddenError, notFoundError } from "~/lib/app-errors";
+import { fail, forbidden, throwDomain } from "~/server/shared/domain-error";
 
 import type { Role } from "./rbac";
 import type { AuthSession } from "./session-types";
 
 /**
- * Asserts that a fetched record is non-null and owned by the session user.
- *
- * - Throws notFoundError if record is null/undefined.
- * - Throws forbiddenError if getOwnerId(record) !== session.userId,
- *   unless session.role is in bypassRoles.
- * - Returns the narrowed non-null record for use in continuation code.
- *
- * Use this in actions that fetch a record before operating on it.
- * For pure-mutation repos that accept userId in the WHERE clause, prefer
- * the db-level pattern instead (repo.findByIdForUser / repo.deleteForUser).
+ * Enforces action-layer ownership for records that were already fetched.
+ * Missing records resolve as not_found; non-owners resolve as forbidden unless
+ * their role bypasses ownership. Prefer repo-level WHERE ownership for pure
+ * mutations that can encode the user in SQL.
  */
 export function assertOwnedRecord<T>(
   record: T | null | undefined,
@@ -24,17 +18,13 @@ export function assertOwnedRecord<T>(
     bypassRoles?: ReadonlySet<Role>;
   },
 ): T {
-  const name = options?.resourceName ?? "Resource";
-
   if (record == null) {
-    throw notFoundError(`${name} not found`);
+    throwDomain(fail("resource_not_found"));
   }
 
   const bypass = options?.bypassRoles ?? ADMIN_BYPASS;
   if (!bypass.has(session.role) && getOwnerId(record) !== session.userId) {
-    throw forbiddenError(
-      `You do not have access to this ${name.toLowerCase()}`,
-    );
+    throwDomain(forbidden({ code: "ownership_forbidden" }));
   }
 
   return record;

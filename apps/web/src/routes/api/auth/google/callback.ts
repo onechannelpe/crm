@@ -1,13 +1,14 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { completeGoogleOAuthCallback } from "~/lib/auth/google/google-callback-login";
 import {
   appendClearedGoogleOAuthCookies,
   readGoogleOAuthCookies,
 } from "~/lib/auth/google/google-oauth-cookies";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { appendSessionCookie } from "~/lib/auth/session/cookies";
-import { getServerRuntime } from "~/server/runtime";
+import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
+import { getServerRuntime } from "~/server/platform/container";
 import { isErr } from "~/server/shared/result";
 
 function badRequest(): Response {
@@ -44,6 +45,7 @@ export async function GET(event: APIEvent): Promise<Response> {
     },
     runtime.repos,
     runtime.privilegedLoginAlertSender,
+    createRequestPasskeyProvider(runtime.repos),
   );
   if (isErr(result)) {
     if (result.error.kind === "bad_request") {

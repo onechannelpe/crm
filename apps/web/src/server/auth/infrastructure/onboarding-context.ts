@@ -7,7 +7,7 @@ import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createEventsRepo } from "~/server/shared/repos-events";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
@@ -18,7 +18,7 @@ export type AuthOnboardingRepos = {
   loginFlows: ReturnType<typeof createLoginFlowsRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  events: ReturnType<typeof createEventsRepo>;
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
   authEvents: ReturnType<typeof createAuthEventsRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
@@ -33,7 +33,7 @@ export function createAuthOnboardingContext(executor: DatabaseExecutor) {
     loginFlows: createLoginFlowsRepo(executor),
     passkeys: createPasskeysRepo(executor),
     webauthnChallenges: createWebauthnChallengesRepo(executor),
-    auditLogs: createAuditLogsRepo(executor),
+    events: createEventsRepo(executor),
     authThrottle: createAuthThrottleRepo(executor),
     authEvents: createAuthEventsRepo(executor),
     userTotpFactors: createUserTotpFactorsRepo(executor),
@@ -51,7 +51,7 @@ export function createAuthOnboardingContext(executor: DatabaseExecutor) {
         loginFlows: createLoginFlowsRepo(txDb),
         passkeys: createPasskeysRepo(txDb),
         webauthnChallenges: createWebauthnChallengesRepo(txDb),
-        auditLogs: createAuditLogsRepo(txDb),
+        events: createEventsRepo(txDb),
         authThrottle: createAuthThrottleRepo(txDb),
         authEvents: createAuthEventsRepo(txDb),
         userTotpFactors: createUserTotpFactorsRepo(txDb),
