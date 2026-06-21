@@ -68,10 +68,10 @@ export interface SaleProofFileRecord {
   sizeBytes: number;
 }
 
-export interface NegotiationFileRecord {
+export interface RateRevisionFileRecord {
   id: number;
   leadId: string;
-  negotiationRequestId: string;
+  revisionId: string;
   artifactId: string;
   fileAssetId: number;
   uploadedByUserId: number;

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { DownloadTokenDeps } from "~/server/files/service/contracts";
 import { requestDownloadToken } from "~/server/files/service/request-download-token";
 import type { FileAsset, WorkflowArtifact } from "~/server/files/types";
-import type { AppContext } from "~/server/shared/action-runtime";
+import type { AppContext } from "~/server/platform/action/context";
 import { isErr } from "~/server/shared/result";
 
 function makeContext(overrides?: Partial<AppContext>): AppContext {

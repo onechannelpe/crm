@@ -1,5 +1,5 @@
-import type { AppContext } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { AppContext } from "~/server/platform/action/context";
+import { external, fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { checkArtifactPolicy } from "../policy";
@@ -50,11 +50,9 @@ export async function createDownloadArtifact(
   );
   if (!staticValidation.ok) {
     return Err(
-      domainError(
-        "validation",
-        "download_payload_invalid",
-        staticValidation.reason,
-      ),
+      fail("download_payload_invalid", {
+        details: { reason: staticValidation.reason },
+      }),
     );
   }
 
@@ -65,17 +63,17 @@ export async function createDownloadArtifact(
   const streamError = inspector.pushChunk(input.bytes);
   if (streamError) {
     return Err(
-      domainError("validation", "download_payload_invalid", streamError.reason),
+      fail("download_payload_invalid", {
+        details: { reason: streamError.reason },
+      }),
     );
   }
   const streamValidation = inspector.finalize();
   if (!streamValidation.ok) {
     return Err(
-      domainError(
-        "validation",
-        "download_payload_invalid",
-        streamValidation.reason,
-      ),
+      fail("download_payload_invalid", {
+        details: { reason: streamValidation.reason },
+      }),
     );
   }
 
@@ -146,10 +144,9 @@ export async function createDownloadArtifact(
   );
   if (!artifact || !fileAsset) {
     return Err(
-      domainError(
-        "external",
-        "artifact_create_incomplete",
+      external(
         "Artifact generation completed but persisted artifact is incomplete",
+        { code: "artifact_create_incomplete" },
       ),
     );
   }

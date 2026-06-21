@@ -9,7 +9,7 @@ vi.mock("~/lib/auth/access/session", () => ({
   getSession: getSessionMock,
 }));
 
-vi.mock("~/server/runtime", () => ({
+vi.mock("~/server/platform/container", () => ({
   getServerRuntime: () => ({
     profilePicture: {
       profilePictureService: {
