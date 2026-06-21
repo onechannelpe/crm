@@ -15,9 +15,6 @@ type WireErrorBase = {
   message: string;
 };
 
-// retryAfterSeconds is meaningful only for a 429, so the union keeps it off
-// every other kind. A consumer that reads it has, by construction, already
-// narrowed to rate_limit.
 export type WireError = WireErrorBase &
   (
     | { kind: "rate_limit"; retryAfterSeconds?: number }
@@ -26,11 +23,7 @@ export type WireError = WireErrorBase &
 
 const FALLBACK_MESSAGE = "Ocurrió un error inesperado.";
 
-// Transport envelope: carries a WireError verbatim across the server-action
-// boundary. seroval (SolidStart's serializer) copies an error's own properties
-// via Object.getOwnPropertyNames, so `wire` survives as a nested object that the
-// client recovers through parseWireError. The envelope reshapes nothing; the
-// only place a WireError is constructed is toWire.
+// Seroval serializes Error own properties, so wire survives the server-action boundary.
 export class ActionError extends Error {
   readonly wire: WireError;
 
@@ -45,9 +38,6 @@ function isWireKind(value: unknown): value is WireKind {
   return WIRE_KINDS.some((kind) => kind === value);
 }
 
-// The single runtime owner of the wire shape, paired with the type. Enforces the
-// rate_limit/retryAfterSeconds invariant so a malformed payload can never pass as
-// a typed WireError.
 function isWireError(value: unknown): value is WireError {
   if (!value || typeof value !== "object") return false;
   const kind = Reflect.get(value, "kind");
@@ -68,10 +58,7 @@ function carriedWire(error: unknown): WireError | undefined {
   return isWireError(wire) ? wire : undefined;
 }
 
-// Resolves any caught value to a WireError. A same-realm ActionError exposes
-// `wire` directly; a serialized one (deserialized by seroval on the client)
-// carries it as an own property; anything else is an untrusted fault and
-// collapses to the generic internal message so a raw throw never leaks to the UI.
+// Unknown failures use a generic message so server details are not exposed to the UI.
 export function parseWireError(error: unknown): WireError {
   if (error instanceof ActionError) return error.wire;
   return (

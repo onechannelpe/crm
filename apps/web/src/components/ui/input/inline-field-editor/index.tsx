@@ -22,9 +22,6 @@ export interface InlineFieldEditorProps {
   onClose: () => void;
 }
 
-// A single-value inline editor anchored to a field. Enter saves, Escape and
-// click-away cancel, and the popover stays open with an inline message when the
-// save fails so the entered value is not lost.
 export function InlineFieldEditor(props: InlineFieldEditorProps) {
   const [value, setValue] = createSignal(props.initialValue);
   const [submitting, setSubmitting] = createSignal(false);

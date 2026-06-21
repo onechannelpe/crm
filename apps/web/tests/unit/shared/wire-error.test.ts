@@ -1,3 +1,4 @@
+import { deserialize, serialize } from "seroval";
 import { describe, expect, it } from "vitest";
 
 import { ActionError, parseWireError } from "~/lib/wire-error";
@@ -17,20 +18,17 @@ describe("parseWireError", () => {
     });
   });
 
-  // After crossing the action boundary the client no longer holds an ActionError
-  // instance, but seroval preserves the `wire` own property on the deserialized
-  // error. parseWireError recovers it from that carried shape.
   it("recovers the wire from a serialized rate-limit error with retry metadata", () => {
-    expect(
-      parseWireError({
-        wire: {
-          kind: "rate_limit",
-          code: "login_rate_limited",
-          message: "Inténtalo nuevamente.",
-          retryAfterSeconds: 30,
-        },
+    const serialized = serialize(
+      new ActionError({
+        kind: "rate_limit",
+        code: "login_rate_limited",
+        message: "Inténtalo nuevamente.",
+        retryAfterSeconds: 30,
       }),
-    ).toEqual({
+    );
+
+    expect(parseWireError(deserialize(serialized))).toEqual({
       kind: "rate_limit",
       code: "login_rate_limited",
       message: "Inténtalo nuevamente.",
