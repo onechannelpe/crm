@@ -31,11 +31,6 @@ const noopLogger = {
   error() {},
 };
 
-/**
- * Session lifecycle gateway. Auth flows provide a proven `SessionSpec`; this
- * service owns session persistence, token resolution, refresh, and revocation.
- * Flows must not access session rows directly.
- */
 export function createSessionService(deps: SessionServiceDeps) {
   const now = deps.now ?? Date.now;
   const logger = deps.logger ?? noopLogger;

@@ -91,4 +91,24 @@ describe("parseObject", () => {
 
     expectErrCode(result, "invalid_input");
   });
+
+  it("reports a list below its minimum as required", () => {
+    const result = parseObject({ tags: [] }, validationFail, (r) => ({
+      tags: r.strList("tags", { min: 1 }),
+    }));
+
+    expectErrCode(result, "tags_required");
+  });
+
+  it.each([
+    { tags: ["one", "two"], options: { max: 1 } },
+    { tags: ["one", "one"], options: { unique: true } },
+    { tags: ["one", "  "], options: {} },
+  ])("reports malformed string lists as invalid", ({ tags, options }) => {
+    const result = parseObject({ tags }, validationFail, (r) => ({
+      tags: r.strList("tags", options),
+    }));
+
+    expectErrCode(result, "invalid_tags");
+  });
 });

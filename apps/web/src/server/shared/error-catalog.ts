@@ -1,7 +1,6 @@
 import type { DomainErrorKind } from "~/server/shared/domain-error";
 
 export const ERROR_CATALOG = {
-  // not_found
   lead_not_found: { kind: "not_found", message: "No se encontró el lead." },
   executive_not_found: {
     kind: "not_found",
@@ -74,7 +73,6 @@ export const ERROR_CATALOG = {
     message: "No se encontró el recurso solicitado.",
   },
 
-  // conflict
   request_not_pending: {
     kind: "conflict",
     message: "La solicitud ya no está pendiente.",
@@ -176,7 +174,6 @@ export const ERROR_CATALOG = {
       "Tu rol requiere mantener al menos un método de verificación fuerte.",
   },
 
-  // invites
   invite_not_found: {
     kind: "not_found",
     message: "No se encontró la invitación.",
@@ -218,7 +215,6 @@ export const ERROR_CATALOG = {
     message: "Ya existe un usuario pendiente con este correo en otra sede.",
   },
 
-  // forbidden
   cannot_manage_executive: {
     kind: "forbidden",
     message: "No puedes gestionar este ejecutivo.",
@@ -261,7 +257,6 @@ export const ERROR_CATALOG = {
     message: "La contraseña actual es incorrecta.",
   },
 
-  // validation
   flow_expired: {
     kind: "validation",
     message: "La sesión de inicio expiró. Intenta de nuevo.",
@@ -439,7 +434,6 @@ export const ERROR_CATALOG = {
     message: "El límite diario supera el máximo permitido.",
   },
 
-  // password reset
   email_required: {
     kind: "validation",
     message: "Ingresa tu correo electrónico.",

@@ -78,6 +78,7 @@ export interface SessionUsersPort {
 }
 
 export interface SessionEventPort {
+  // The service ignores append results so adapters can return their native type.
   append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
 }
 

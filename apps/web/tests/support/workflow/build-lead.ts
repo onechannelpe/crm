@@ -152,6 +152,7 @@ export function createLeadBuilder(deps: {
     await assertStage(built.id, executive, "QUALIFYING", "registerLead");
     if (stage === "QUALIFYING") return built;
 
+    // Production qualification crosses the import boundary, so test setup does too.
     await importer.run({
       actor: options.backOffice ?? "backOne",
       rows: [

@@ -2,20 +2,14 @@ import { isPlainRecord } from "~/lib/type-guards";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-/** Dotted field paths use an empty string for failures at the object root. */
 export type FieldFail<E> = (field: string, reason: "required" | "invalid") => E;
 
-/**
- * A list below `min` is required. Empty entries and `max` or `unique`
- * violations are invalid.
- */
 export type StrListConstraints = {
   min?: number;
   max?: number;
   unique?: boolean;
 };
 
-/** Reader failures are contained by `parseObject` and returned as `Err`. */
 export interface Reader<E> {
   str(field: string): string;
   num(field: string): number;
@@ -162,7 +156,6 @@ class RecordReader<E> implements Reader<E> {
     return this.path ? `${this.path}.${field}` : field;
   }
 
-  // Failure classification distinguishes missing input from malformed input.
   private present(field: string): unknown {
     const value = this.record[field];
     if (value === undefined || value === null) this.reject(field, "required");
@@ -174,7 +167,6 @@ class RecordReader<E> implements Reader<E> {
   }
 }
 
-/** A non-object root is invalid at the empty field path. */
 export function parseObject<T, E>(
   raw: unknown,
   fail: FieldFail<E>,
@@ -203,10 +195,6 @@ function fieldCode(field: string): string {
   return field.split(".").map(camelToSnake).join("_");
 }
 
-/**
- * Derived field codes are snake_case and use generic validation copy. Specific
- * user-facing copy requires a catalogued domain failure.
- */
 export const validationFail: FieldFail<DomainError> = (field, reason) => {
   if (!field) {
     return invalid({ code: "invalid_input" });
