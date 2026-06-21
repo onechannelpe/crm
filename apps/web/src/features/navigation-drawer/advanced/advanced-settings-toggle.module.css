@@ -3,8 +3,10 @@
   display: flex;
   gap: 8px;
   height: 20px;
+  justify-content: space-between;
   padding: 4px;
   position: relative;
+  width: 100%;
 }
 
 .iconContainer {
@@ -12,14 +14,6 @@
   display: flex;
   left: -20px;
   position: absolute;
-}
-
-.toggleContainer {
-  align-items: center;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .text {
