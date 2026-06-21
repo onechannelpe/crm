@@ -23,15 +23,6 @@ export function createRouteRowOpen<T>(
   };
 }
 
-export function createInlineRowOpen<T>(
-  open: (row: T) => void,
-): DataGridRowOpen<T> {
-  return {
-    mode: "inline",
-    open,
-  };
-}
-
 export function createNoopRowOpen<T>(): DataGridRowOpen<T> {
   return {
     mode: "none",

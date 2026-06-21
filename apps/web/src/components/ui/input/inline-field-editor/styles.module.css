@@ -1,0 +1,95 @@
+.popover {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 220px;
+  padding: var(--spacing-2);
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--spacing-1));
+  z-index: 50;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.input {
+  background: var(--background-transparent-lighter);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  height: 28px;
+  outline: none;
+  padding-inline: var(--spacing-2);
+  width: 100%;
+}
+
+.input:focus {
+  border-color: var(--color-blue);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: flex-end;
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-xs);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  list-style: none;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.item {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-size-sm);
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-1) var(--spacing-2);
+  text-align: left;
+  width: 100%;
+}
+
+.item:hover:not(:disabled) {
+  background: var(--background-transparent-light);
+}
+
+.item:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.itemSelected {
+  color: var(--color-blue);
+}
+
+.selectedBadge {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-xs);
+}
