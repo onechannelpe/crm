@@ -1,4 +1,8 @@
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
+import {
+  generateRecoveryCodes,
+  hashRecoveryCodes,
+} from "~/lib/auth/totp/recovery-codes";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { AppContext } from "~/server/platform/action/context";
@@ -22,8 +26,6 @@ export async function finishTotpEnrollment(
     return Err(fail("totp_setup_invalid"));
   }
 
-  const { generateRecoveryCodes, hashRecoveryCodes } =
-    await import("~/lib/auth/totp/recovery-codes");
   const secret = await decryptTotpSecret(factor.secret_encrypted);
   if (!verifyTotpCode(secret, input.code)) {
     return Err(fail("totp_code_invalid"));
