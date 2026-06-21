@@ -8,6 +8,7 @@ import {
   isHydrationMismatchError,
   traceHydrationEvent,
 } from "./lib/observability/diagnostics/hydration";
+import { sentryDefaultDataCollection } from "./lib/observability/sentry";
 import { setupCsrfInterceptor } from "./lib/security/csrf-client";
 
 init({
@@ -22,7 +23,7 @@ init({
   replaysOnErrorSampleRate: Number(
     import.meta.env.VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE ?? "1.0",
   ),
-  sendDefaultPii: false,
+  dataCollection: sentryDefaultDataCollection(),
 });
 
 setupCsrfInterceptor();
