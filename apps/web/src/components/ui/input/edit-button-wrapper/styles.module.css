@@ -1,10 +1,23 @@
 .wrapper {
+  display: inline-flex;
   opacity: 0;
+  transform: translateX(-2px);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
   pointer-events: none;
-  transition: opacity 0.1s ease;
 }
 
-.wrapper.visible {
+.wrapper.visible,
+.wrapper:focus-within {
   opacity: 1;
+  transform: none;
   pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper {
+    transition: none;
+    transform: none;
+  }
 }

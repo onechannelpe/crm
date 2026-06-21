@@ -750,3 +750,67 @@
     min-width: 100%;
   }
 }
+
+/* Inline cell editor portal. This layer is positioning-only: it places the editor
+   over the editing cell and nothing else. Each editor paints its own surface, so a
+   self-surfaced editor (e.g. UserPicker) does not get a double border/shadow. */
+.cellEditor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+}
+
+.cellEditorInput,
+.cellEditorOptions {
+  background: var(--t-background-primary);
+  border: 1px solid var(--t-border-color-medium);
+  border-radius: var(--t-border-radius-sm);
+  box-shadow:
+    0 14px 30px rgb(15 23 42 / 0.12),
+    0 2px 4px rgb(15 23 42 / 0.08);
+  outline: none;
+}
+
+.cellEditorInput {
+  width: 100%;
+  min-width: 0;
+  padding: var(--t-spacing-2);
+  color: var(--t-font-color-primary);
+  font-size: var(--t-font-size-sm);
+}
+
+.cellEditorInput::placeholder {
+  color: var(--t-font-color-light);
+}
+
+.cellEditorOptions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--t-spacing-1);
+}
+
+.cellEditorOption {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--t-spacing-1) var(--t-spacing-2);
+  border: none;
+  border-radius: var(--t-border-radius-sm);
+  background: transparent;
+  color: var(--t-font-color-secondary);
+  font-size: var(--t-font-size-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cellEditorOption:hover {
+  background: var(--t-background-transparent-light);
+}
+
+.cellEditorOption[data-active="true"] {
+  background: var(--t-background-transparent-medium);
+  color: var(--t-font-color-primary);
+}
