@@ -143,17 +143,19 @@ function messageFor(error: DomainError): string {
 }
 
 export function toWire(error: DomainError): WireError {
-  const wire: WireError = {
-    kind: DOMAIN_TO_WIRE[error.kind],
-    code: error.code,
-    message: messageFor(error),
-  };
+  const code = error.code;
+  const message = messageFor(error);
 
   if (error.kind === "rate_limit") {
-    wire.retryAfterSeconds = error.retryAfterSeconds;
+    return {
+      kind: "rate_limit",
+      code,
+      message,
+      retryAfterSeconds: error.retryAfterSeconds,
+    };
   }
 
-  return wire;
+  return { kind: DOMAIN_TO_WIRE[error.kind], code, message };
 }
 
 export function throwDomain(error: DomainError): never {

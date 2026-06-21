@@ -15,50 +15,29 @@ type WireErrorBase = {
   message: string;
 };
 
+// retryAfterSeconds is meaningful only for a 429, so the union keeps it off
+// every other kind. A consumer that reads it has, by construction, already
+// narrowed to rate_limit.
 export type WireError = WireErrorBase &
   (
     | { kind: "rate_limit"; retryAfterSeconds?: number }
-    | {
-        kind: Exclude<WireKind, "rate_limit">;
-        retryAfterSeconds?: never;
-      }
+    | { kind: Exclude<WireKind, "rate_limit">; retryAfterSeconds?: never }
   );
 
 const FALLBACK_MESSAGE = "Ocurrió un error inesperado.";
 
-// Enumerable wire fields make ActionError survive RPC serialization.
+// Transport envelope: carries a WireError verbatim across the server-action
+// boundary. seroval (SolidStart's serializer) copies an error's own properties
+// via Object.getOwnPropertyNames, so `wire` survives as a nested object that the
+// client recovers through parseWireError. The envelope reshapes nothing; the
+// only place a WireError is constructed is toWire.
 export class ActionError extends Error {
-  readonly kind: WireKind;
-  readonly code: string | null;
-  readonly retryAfterSeconds?: number;
+  readonly wire: WireError;
 
   constructor(wire: WireError) {
     super(wire.message);
     this.name = "ActionError";
-    this.kind = wire.kind;
-    this.code = wire.code;
-    if (wire.retryAfterSeconds !== undefined) {
-      this.retryAfterSeconds = wire.retryAfterSeconds;
-    }
-  }
-
-  get wire(): WireError {
-    if (this.kind === "rate_limit") {
-      return {
-        kind: this.kind,
-        code: this.code,
-        message: this.message,
-        ...(this.retryAfterSeconds !== undefined
-          ? { retryAfterSeconds: this.retryAfterSeconds }
-          : {}),
-      };
-    }
-
-    return {
-      kind: this.kind,
-      code: this.code,
-      message: this.message,
-    };
+    this.wire = wire;
   }
 }
 
@@ -66,40 +45,42 @@ function isWireKind(value: unknown): value is WireKind {
   return WIRE_KINDS.some((kind) => kind === value);
 }
 
-// A thrown action error arrives at the client serialized to a plain object, so
-// match on shape rather than instanceof.
-function isWireShaped(error: unknown): error is WireError {
-  if (!error || typeof error !== "object") return false;
-  const kind = Reflect.get(error, "kind");
-  const code = Reflect.get(error, "code");
-  const message = Reflect.get(error, "message");
-  const retryAfterSeconds = Reflect.get(error, "retryAfterSeconds");
-  return (
-    isWireKind(kind) &&
-    (code === null || typeof code === "string") &&
-    typeof message === "string" &&
-    (kind === "rate_limit"
-      ? retryAfterSeconds === undefined || typeof retryAfterSeconds === "number"
-      : retryAfterSeconds === undefined)
-  );
+// The single runtime owner of the wire shape, paired with the type. Enforces the
+// rate_limit/retryAfterSeconds invariant so a malformed payload can never pass as
+// a typed WireError.
+function isWireError(value: unknown): value is WireError {
+  if (!value || typeof value !== "object") return false;
+  const kind = Reflect.get(value, "kind");
+  const code = Reflect.get(value, "code");
+  const message = Reflect.get(value, "message");
+  const retryAfterSeconds = Reflect.get(value, "retryAfterSeconds");
+  if (!isWireKind(kind)) return false;
+  if (code !== null && typeof code !== "string") return false;
+  if (typeof message !== "string") return false;
+  return kind === "rate_limit"
+    ? retryAfterSeconds === undefined || typeof retryAfterSeconds === "number"
+    : retryAfterSeconds === undefined;
 }
 
+function carriedWire(error: unknown): WireError | undefined {
+  if (!error || typeof error !== "object") return undefined;
+  const wire = Reflect.get(error, "wire");
+  return isWireError(wire) ? wire : undefined;
+}
+
+// Resolves any caught value to a WireError. A same-realm ActionError exposes
+// `wire` directly; a serialized one (deserialized by seroval on the client)
+// carries it as an own property; anything else is an untrusted fault and
+// collapses to the generic internal message so a raw throw never leaks to the UI.
 export function parseWireError(error: unknown): WireError {
   if (error instanceof ActionError) return error.wire;
-  if (isWireShaped(error)) {
-    if (error.kind !== "rate_limit") {
-      return { kind: error.kind, code: error.code, message: error.message };
+  return (
+    carriedWire(error) ?? {
+      kind: "internal",
+      code: null,
+      message: FALLBACK_MESSAGE,
     }
-
-    const retryAfterSeconds = Reflect.get(error, "retryAfterSeconds");
-    return {
-      kind: "rate_limit",
-      code: error.code,
-      message: error.message,
-      ...(typeof retryAfterSeconds === "number" ? { retryAfterSeconds } : {}),
-    };
-  }
-  return { kind: "internal", code: null, message: FALLBACK_MESSAGE };
+  );
 }
 
 export function actionErrorMessage(error: unknown): string {

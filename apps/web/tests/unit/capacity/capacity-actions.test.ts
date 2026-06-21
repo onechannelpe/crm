@@ -5,9 +5,11 @@ import type { WireError } from "~/lib/wire-error";
 
 async function expectInvalidLimit(limit: number) {
   await expect(getAuditEvents(limit)).rejects.toMatchObject({
-    kind: "validation",
-    code: "invalid_limit",
-  } satisfies Partial<WireError>);
+    wire: {
+      kind: "validation",
+      code: "invalid_limit",
+    } satisfies Partial<WireError>,
+  });
 }
 
 describe("capacity actions", () => {

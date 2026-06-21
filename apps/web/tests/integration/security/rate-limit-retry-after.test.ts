@@ -37,8 +37,10 @@ describe("rate limit retry after", () => {
       if (error instanceof ActionError) blocked = error;
     }
 
-    expect(blocked?.kind).toBe("rate_limit");
-    const retryAfter = blocked?.retryAfterSeconds ?? 0;
+    const wire = blocked?.wire;
+    expect(wire?.kind).toBe("rate_limit");
+    const retryAfter =
+      wire?.kind === "rate_limit" ? (wire.retryAfterSeconds ?? 0) : 0;
     expect(retryAfter).toBeGreaterThan(0);
     expect(retryAfter).toBeLessThanOrEqual(
       ACTION_RATE_LIMIT_POLICY["leads.request"].windowMs / 1000,
@@ -59,7 +61,9 @@ describe("rate limit retry after", () => {
           "198.51.100.1",
         );
       } catch (error) {
-        if (error instanceof ActionError) return error.retryAfterSeconds ?? 0;
+        if (error instanceof ActionError && error.wire.kind === "rate_limit") {
+          return error.wire.retryAfterSeconds ?? 0;
+        }
       }
       return 0;
     };

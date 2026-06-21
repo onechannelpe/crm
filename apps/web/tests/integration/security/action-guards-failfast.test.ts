@@ -15,7 +15,7 @@ async function rejectionCode(run: Promise<unknown>): Promise<unknown> {
   try {
     await run;
   } catch (error) {
-    if (error instanceof ActionError) return error.code;
+    if (error instanceof ActionError) return error.wire.code;
     return undefined;
   }
   throw new Error("expected the action to reject");

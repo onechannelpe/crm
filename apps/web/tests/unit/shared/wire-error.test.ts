@@ -17,13 +17,18 @@ describe("parseWireError", () => {
     });
   });
 
-  it("accepts a serialized rate-limit error with retry metadata", () => {
+  // After crossing the action boundary the client no longer holds an ActionError
+  // instance, but seroval preserves the `wire` own property on the deserialized
+  // error. parseWireError recovers it from that carried shape.
+  it("recovers the wire from a serialized rate-limit error with retry metadata", () => {
     expect(
       parseWireError({
-        kind: "rate_limit",
-        code: "login_rate_limited",
-        message: "Inténtalo nuevamente.",
-        retryAfterSeconds: 30,
+        wire: {
+          kind: "rate_limit",
+          code: "login_rate_limited",
+          message: "Inténtalo nuevamente.",
+          retryAfterSeconds: 30,
+        },
       }),
     ).toEqual({
       kind: "rate_limit",
@@ -44,10 +49,12 @@ describe("parseWireError", () => {
   it("rejects retry metadata on non-rate-limit errors", () => {
     expect(
       parseWireError({
-        kind: "validation",
-        code: "invalid_input",
-        message: "Entrada inválida.",
-        retryAfterSeconds: 30,
+        wire: {
+          kind: "validation",
+          code: "invalid_input",
+          message: "Entrada inválida.",
+          retryAfterSeconds: 30,
+        },
       }),
     ).toEqual({
       kind: "internal",
