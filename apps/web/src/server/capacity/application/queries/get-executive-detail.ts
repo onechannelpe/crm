@@ -1,8 +1,12 @@
 import { longName } from "~/lib/users/display-name";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
-import type { AppContext } from "~/server/shared/action-runtime";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { AppContext } from "~/server/platform/action/context";
+import {
+  fail,
+  forbidden,
+  type DomainError,
+} from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
@@ -41,12 +45,10 @@ export async function getExecutiveDetail(
 ): Promise<Result<ExecutiveCapacityDetailView, DomainError>> {
   const managed = await canManageExecutive(ctx.actor, input.userId, deps.repos);
   if (!managed.target) {
-    return Err(
-      domainError("not_found", "executive_not_found", "Executive not found"),
-    );
+    return Err(fail("executive_not_found"));
   }
   if (!managed.ok) {
-    return Err(domainError("forbidden", "forbidden", "Forbidden"));
+    return Err(forbidden());
   }
 
   const [searchStatus, leadStatus, requests] = await Promise.all([

@@ -86,7 +86,7 @@ describe("capacity approval failures", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");
-    expect(result.error.code).toBe("forbidden");
+    expect(result.error.kind).toBe("forbidden");
     expect((await ctx.repos.capacityRequests.findById(requestId))?.status).toBe(
       "pending",
     );

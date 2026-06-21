@@ -1,3 +1,4 @@
+import type { FieldChange } from "~/contracts/events";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 
 export type PolicySource = "system" | "branch" | "team" | "user";
@@ -38,22 +39,15 @@ export type CapacityRequestStatus =
   | "rejected"
   | "canceled";
 
-export type AuditChangeValue =
-  | string
-  | number
-  | boolean
-  | null
-  | AuditChangeValue[]
-  | { [k: string]: AuditChangeValue };
-
 export type CapacityAuditEvent = {
-  id: number;
+  id: string;
   createdAt: number;
-  userId: number;
-  action: string;
+  actorUserId: number | null;
+  type: string;
   entityType: string;
-  entityId: number | null;
-  changes: AuditChangeValue;
+  entityId: string;
+  changes: FieldChange[];
+  payload: string | null;
 };
 
 export type PendingCapacityRequestView = {

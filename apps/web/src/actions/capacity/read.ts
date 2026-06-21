@@ -7,16 +7,17 @@ import type {
   ManagedExecutiveView,
   PendingCapacityRequestView,
 } from "~/actions/capacity/contracts";
-import { assertPositiveInt } from "~/contracts/guards";
-import { getServerRuntime } from "~/server/runtime";
-import { runAction } from "~/server/shared/action-runtime";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
 > {
   return runAction({
-    actionName: "capacity.managed_executives.read",
+    name: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
+
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.listManagedExecutives(ctx),
   });
@@ -25,15 +26,20 @@ export async function getManagedExecutivesList(): Promise<
 export async function getExecutiveDetail(
   userId: number,
 ): Promise<ExecutiveCapacityDetailView> {
-  const safeUserId = assertPositiveInt(userId, "userId");
   return runAction({
-    actionName: "capacity.executive_detail.read",
+    name: "capacity.executive_detail.read",
     access: { kind: "permission", permission: "capacity:read:team" },
-    input: { userId: safeUserId },
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.getExecutiveDetail(ctx, {
-        userId: safeUserId,
+
+    parse: () =>
+      parseObject({ userId }, validationFail, (r) => {
+        const parsedUserId = r.posInt("userId");
+        return { userId: parsedUserId };
       }),
+
+    audit: (params) => ({ userId: params.userId }),
+
+    execute: (ctx, params) =>
+      getServerRuntime().capacity.useCases.getExecutiveDetail(ctx, params),
   });
 }
 
@@ -41,8 +47,9 @@ export async function getPendingRequests(): Promise<
   PendingCapacityRequestView[]
 > {
   return runAction({
-    actionName: "capacity.pending_requests.read",
+    name: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
+
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.listPendingRequests(ctx),
   });
@@ -50,8 +57,9 @@ export async function getPendingRequests(): Promise<
 
 export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
   return runAction({
-    actionName: "capacity.policy_defaults.read",
+    name: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
+
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.getPolicyDefaults(ctx),
   });
@@ -60,15 +68,16 @@ export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
 export async function getAuditEvents(
   limit?: number,
 ): Promise<CapacityAuditEvent[]> {
-  const safeLimit =
-    limit == null ? undefined : assertPositiveInt(limit, "limit");
   return runAction({
-    actionName: "capacity.audit.read",
+    name: "capacity.audit.read",
     access: { kind: "permission", permission: "capacity:audit:read" },
-    input: { limit: safeLimit },
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.getAuditEvents(ctx, {
-        limit: safeLimit,
-      }),
+
+    parse: () =>
+      parseObject({ limit }, validationFail, (r) => ({
+        limit: limit != null ? r.posInt("limit") : undefined,
+      })),
+
+    execute: (ctx, params) =>
+      getServerRuntime().capacity.useCases.getAuditEvents(ctx, params),
   });
 }

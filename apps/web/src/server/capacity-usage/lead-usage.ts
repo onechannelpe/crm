@@ -1,4 +1,4 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import {
   asLeadReservationId,
   type LeadReservationId,
@@ -55,9 +55,7 @@ async function reserveLeadUsage(
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<LeadReservationId, DomainError>> {
   if (command.remainingCapacity < command.amount) {
-    return Err(
-      domainError("conflict", "lead_exhausted", "Lead capacity exhausted"),
-    );
+    return Err(fail("lead_exhausted"));
   }
   const row = await repos.leadUsageReservations.insert({
     user_id: command.actorUserId,
@@ -75,13 +73,7 @@ async function commitLeadUsage(
     command.reservationId.value,
   );
   if (!reservation) {
-    return Err(
-      domainError(
-        "not_found",
-        "reservation_not_found",
-        "Reservation not found",
-      ),
-    );
+    return Err(fail("reservation_not_found"));
   }
   await repos.leadUsageCommits.insert({
     reservation_id: command.reservationId.value,
@@ -103,13 +95,7 @@ async function cancelLeadUsage(
     command.reservationId.value,
   );
   if (!reservation) {
-    return Err(
-      domainError(
-        "not_found",
-        "reservation_not_found",
-        "Reservation not found",
-      ),
-    );
+    return Err(fail("reservation_not_found"));
   }
   await repos.leadUsageReservations.updateStatus(
     command.reservationId.value,

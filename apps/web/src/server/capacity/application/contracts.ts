@@ -1,25 +1,19 @@
+import type { FieldChange } from "~/contracts/events";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 
 import type { CapacityRequestStatus } from "../domain/types";
 import type { LeadCapacitySnapshot } from "./queries/get-lead-capacity-snapshot";
 import type { SearchCapacitySnapshot } from "./queries/get-search-capacity-snapshot";
 
-export type AuditChangeValue =
-  | string
-  | number
-  | boolean
-  | null
-  | AuditChangeValue[]
-  | { [k: string]: AuditChangeValue };
-
 export type CapacityAuditEvent = {
-  id: number;
+  id: string;
   createdAt: number;
-  userId: number;
-  action: string;
+  actorUserId: number | null;
+  type: string;
   entityType: string;
-  entityId: number | null;
-  changes: AuditChangeValue;
+  entityId: string;
+  changes: FieldChange[];
+  payload: string | null;
 };
 
 export type PendingCapacityRequestView = {
