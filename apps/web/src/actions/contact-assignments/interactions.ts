@@ -16,8 +16,8 @@ export async function completeContactAssignmentCall(
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        assignmentId: r.num("assignmentId"),
-        contactId: r.num("contactId"),
+        assignmentId: r.posInt("assignmentId"),
+        contactId: r.posInt("contactId"),
         outcome: r.enum("outcome", CONTACT_ASSIGNMENT_CALL_OUTCOMES),
         notes: r.optStr("notes") ?? null,
       })),

@@ -39,6 +39,11 @@ function isNonNegativeNumber(value: string): boolean {
   return value.trim() !== "" && Number.isFinite(parsed) && parsed >= 0;
 }
 
+function isPositiveInteger(value: string): boolean {
+  const parsed = Number(value);
+  return value.trim() !== "" && Number.isInteger(parsed) && parsed >= 1;
+}
+
 function validateCommercialScope(
   values: CommercialScopeFormValues,
 ): string | null {
@@ -51,8 +56,8 @@ function validateCommercialScope(
   if (!isNonNegativeNumber(values.ticket)) return "Ticket es requerido";
   if (!values.giroNegocio.trim()) return "Giro de negocio es requerido";
   if (!values.settlementBank) return "Banco de abono es requerido";
-  if (!values.posCount.trim() || Number(values.posCount) <= 0)
-    return "Cantidad de POS es requerida";
+  if (!isPositiveInteger(values.posCount))
+    return "Cantidad de POS debe ser un entero mayor a 0";
   return null;
 }
 

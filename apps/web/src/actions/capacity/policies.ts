@@ -36,8 +36,8 @@ export async function updateLeadPolicyOverride(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         userId: r.posInt("userId"),
-        bufferTarget: r.num("activeBufferTarget"),
-        dailyLimit: r.num("dailyRefillLimit"),
+        bufferTarget: r.posInt("activeBufferTarget"),
+        dailyLimit: r.posInt("dailyRefillLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
 
@@ -89,8 +89,8 @@ export async function updateLeadPolicyDefault(input: unknown) {
           kind: r.enum("scopeType", SCOPE_TYPES),
           scopeId: r.posInt("scopeId"),
         },
-        bufferTarget: r.num("activeBufferTarget"),
-        dailyLimit: r.num("dailyRefillLimit"),
+        bufferTarget: r.posInt("activeBufferTarget"),
+        dailyLimit: r.posInt("dailyRefillLimit"),
       })),
 
     audit: ({ scope }) => ({
