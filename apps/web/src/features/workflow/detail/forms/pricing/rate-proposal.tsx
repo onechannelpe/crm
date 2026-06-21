@@ -8,6 +8,7 @@ import Paperclip from "~/components/icons/paperclip";
 import Target from "~/components/icons/target";
 import Trash from "~/components/icons/trash";
 import { Button } from "~/components/ui/input/button";
+import { FileDropzone } from "~/components/ui/input/file-dropzone";
 import {
   InlineFieldEditor,
   InlineOptionsEditor,
@@ -74,7 +75,6 @@ export function RateProposalSection(props: RateProposalSectionProps) {
   const [stagedFiles, setStagedFiles] = createSignal<StagedFile[]>([]);
   const [uploading, setUploading] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
-  const [isDragging, setIsDragging] = createSignal(false);
   const [acceptErrorMessage, setAcceptErrorMessage] = createSignal<
     string | null
   >(null);
@@ -82,7 +82,6 @@ export function RateProposalSection(props: RateProposalSectionProps) {
     string | null
   >(null);
   const justificationId = createUniqueId();
-  const fileInputId = createUniqueId();
 
   const currentRound = () => props.rateRevisions.length;
   const isRenegotiation = () => currentRound() > 0;
@@ -246,8 +245,6 @@ export function RateProposalSection(props: RateProposalSectionProps) {
     }
   }
 
-  let dragCount = 0;
-
   return (
     <RecordDetailSection>
       <RecordDetailSectionHeader>
@@ -390,44 +387,23 @@ export function RateProposalSection(props: RateProposalSectionProps) {
                 <span class={styles.fileSectionLabel}>
                   Documentos de soporte
                 </span>
-                <label
-                  for={fileInputId}
-                  class={`${styles.dropZone} ${isDragging() ? styles.dropZoneDragging : ""}`}
-                  onDragEnter={(e) => {
-                    e.preventDefault();
-                    dragCount++;
-                    setIsDragging(true);
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDragLeave={() => {
-                    dragCount--;
-                    if (dragCount === 0) setIsDragging(false);
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    dragCount = 0;
-                    setIsDragging(false);
-                    const files = Array.from(e.dataTransfer?.files ?? []);
-                    void handleUploadFiles(files);
-                  }}
+                <FileDropzone
+                  accept=".xlsx,.xls,.png,.jpg,.jpeg"
+                  multiple
+                  disabled={uploading()}
+                  onFiles={(files) => void handleUploadFiles(files)}
                 >
-                  <input
-                    type="file"
-                    class={styles.fileInput}
-                    id={fileInputId}
-                    accept=".xlsx,.xls,.png,.jpg,.jpeg"
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.currentTarget.files ?? []);
-                      void handleUploadFiles(files);
-                      e.currentTarget.value = "";
-                    }}
-                  />
-                  <Paperclip size={14} />
-                  {uploading()
-                    ? "Subiendo..."
-                    : "Adjuntar archivos o arrastrar aqui"}
-                </label>
+                  {(dragging) => (
+                    <div
+                      class={`${styles.dropZone} ${dragging ? styles.dropZoneDragging : ""}`}
+                    >
+                      <Paperclip size={14} />
+                      {uploading()
+                        ? "Subiendo..."
+                        : "Adjuntar archivos o arrastrar aqui"}
+                    </div>
+                  )}
+                </FileDropzone>
 
                 <Show when={stagedFiles().length > 0}>
                   <div class={styles.stagedFiles}>
