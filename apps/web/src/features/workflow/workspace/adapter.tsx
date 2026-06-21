@@ -40,6 +40,11 @@ import styles from "./styles.module.css";
 const LEAD_PAGE_SIZE = 100;
 const LEAD_SEARCH_DEBOUNCE_MS = 250;
 
+async function handleLeadsExport() {
+  const { token } = await requestWorkflowLeadsExportDownloadToken();
+  downloadWithToken(token);
+}
+
 export function LeadsWorkspace() {
   const { currentUser } = useAuthenticatedSession();
   const user = currentUser();
@@ -152,11 +157,6 @@ export function LeadsWorkspace() {
   const recordImport = useRecordsImport();
   const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
-  async function handleExport() {
-    const { token } = await requestWorkflowLeadsExportDownloadToken();
-    downloadWithToken(token);
-  }
-
   const adapter = {
     id: "leads-workspace",
     title: () => activeView().label,
@@ -203,7 +203,7 @@ export function LeadsWorkspace() {
           {
             key: "export",
             label: "Exportar",
-            onClick: handleExport,
+            onClick: handleLeadsExport,
           },
         ]
       : undefined,
