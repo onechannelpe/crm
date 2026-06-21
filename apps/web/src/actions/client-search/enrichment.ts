@@ -1,19 +1,17 @@
 "use server";
 
-import { parseDocument } from "~/server/client-search/model";
+import { isPlainRecord } from "~/lib/type-guards";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { isErr, Ok } from "~/server/shared/result";
+import { parseDocument } from "~/server/shared/document";
+import { invalid } from "~/server/shared/domain-error";
+import { Err, Ok } from "~/server/shared/result";
 
-function parseEnrichmentTarget(input: unknown) {
-  const shaped = parseObject(input, validationFail, (r) => ({
-    documentType: r.str("documentType"),
-    documentValue: r.str("documentValue"),
-  }));
-  if (isErr(shaped)) return shaped;
-
-  return parseDocument(shaped.value.documentType, shaped.value.documentValue);
+function parseDocumentInput(input: unknown) {
+  if (!isPlainRecord(input)) {
+    return Err(invalid({ code: "invalid_document_type" }));
+  }
+  return parseDocument(input.documentType, input.documentValue);
 }
 
 export async function requestSearchEnrichment(input: unknown) {
@@ -21,13 +19,12 @@ export async function requestSearchEnrichment(input: unknown) {
     name: "client_search.enrichment.request",
     access: { kind: "permission", permission: "search:use" },
 
-    parse: () => parseEnrichmentTarget(input),
+    parse: () => parseDocumentInput(input),
 
-    execute: async (ctx, target) => {
+    execute: async (ctx, document) => {
       const { enrichmentCommand } = getServerRuntime().clientSearch;
       const jobId = await enrichmentCommand.enqueueRequest(
-        target.documentType,
-        target.documentValue,
+        document,
         ctx.actor.userId,
       );
       return Ok(jobId);
@@ -40,14 +37,11 @@ export async function getSearchEnrichmentStatus(input: unknown) {
     name: "client_search.enrichment.status.read",
     access: { kind: "permission", permission: "search:use" },
 
-    parse: () => parseEnrichmentTarget(input),
+    parse: () => parseDocumentInput(input),
 
-    execute: async (_ctx, target) => {
+    execute: async (_ctx, document) => {
       const { enrichmentQuery } = getServerRuntime().clientSearch;
-      const status = await enrichmentQuery.getStatus(
-        target.documentType,
-        target.documentValue,
-      );
+      const status = await enrichmentQuery.getStatus(document);
       return Ok(status);
     },
   });

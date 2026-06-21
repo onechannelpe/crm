@@ -5,6 +5,7 @@ import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
+import { hydrateRuc } from "~/server/shared/document";
 import { requestRateRevision } from "~/server/workflow/lead/domain/decide";
 import {
   authorizeLeadAction,
@@ -16,7 +17,7 @@ function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
   return {
     id: "lead-1",
     organizationId: "org-1",
-    ruc: "20600000001",
+    ruc: hydrateRuc("20600000001"),
     legalName: null,
     address: null,
     district: null,

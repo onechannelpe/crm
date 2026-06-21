@@ -1,29 +1,21 @@
+import type { Document } from "~/server/shared/document";
+
 import type { SunatEconomicActivity } from "./enrichment/sunat/contracts";
 import type { EnrichmentStatus, Overlay } from "./model";
-import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort, JobRow, OverlayRow } from "./ports";
 
 export interface EnrichmentQuery {
-  getStatus(
-    documentType: string,
-    documentValue: string,
-    now?: number,
-  ): Promise<EnrichmentStatus>;
+  getStatus(document: Document, now?: number): Promise<EnrichmentStatus>;
 }
 
 export function createEnrichmentQuery(
   repo: EnrichmentRepositoryPort,
 ): EnrichmentQuery {
   return {
-    async getStatus(documentType, documentValue, now = Date.now()) {
-      const normalized = normalizeEnrichmentInput({
-        documentType,
-        documentValue,
-      });
-
+    async getStatus(document, now = Date.now()) {
       const [job, overlayRow] = await Promise.all([
-        repo.getJobStatus(normalized.documentType, normalized.documentValue),
-        repo.getOverlay(normalized.documentType, normalized.documentValue),
+        repo.getJobStatus(document.kind, document.value),
+        repo.getOverlay(document.kind, document.value),
       ]);
 
       const freshness = resolveFreshness(overlayRow, now);
@@ -31,8 +23,8 @@ export function createEnrichmentQuery(
       const overlay = overlayRow ? rowToOverlay(overlayRow) : null;
 
       return {
-        documentType: normalized.documentType,
-        documentValue: normalized.documentValue,
+        documentType: document.kind,
+        documentValue: document.value,
         lifecycle,
         freshness,
         overlay,

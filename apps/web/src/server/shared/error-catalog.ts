@@ -377,6 +377,14 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "El RUC debe tener 11 dígitos. Intenta nuevamente.",
   },
+  invalid_dni: {
+    kind: "validation",
+    message: "El DNI debe tener 8 dígitos. Intenta nuevamente.",
+  },
+  invalid_document_type: {
+    kind: "validation",
+    message: "El tipo de documento no es válido.",
+  },
   ruc_required: { kind: "validation", message: "Ingresa el RUC del cliente." },
   missing_cci_soles: {
     kind: "validation",

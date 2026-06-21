@@ -28,13 +28,9 @@ export function createWorkflowRuntime(
   );
 
   const enrichmentQueue: OrganizationEnrichmentQueue = {
-    enqueueRucVerification: async (
-      ruc: string,
-      requestedByUserId: number,
-    ): Promise<void> => {
+    enqueueRucVerification: async (ruc, requestedByUserId): Promise<void> => {
       await enrichmentCommand.enqueueRequest(
-        "ruc",
-        ruc,
+        { kind: "ruc", value: ruc },
         requestedByUserId,
         infra.now(),
       );

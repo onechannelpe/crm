@@ -1,6 +1,7 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
 import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { parseRuc } from "~/server/shared/document";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
@@ -12,7 +13,6 @@ import { reassignLead } from "../../lead/domain/decide";
 import { requireCapability } from "../../lead/domain/policy";
 import { isReservationLapsed } from "../../lead/domain/reservation";
 import { createLeadDraft } from "../../lead/domain/state";
-import { normalizeLeadRuc } from "../domain/parse";
 import { runLeadTransaction } from "../write/transition";
 import { expireLeadReservation } from "./expire-reservation";
 import {
@@ -40,7 +40,7 @@ export async function registerLead(
     return canRegister;
   }
 
-  const ruc = normalizeLeadRuc(input.ruc);
+  const ruc = parseRuc(input.ruc);
 
   if (!ruc.ok) {
     return ruc;

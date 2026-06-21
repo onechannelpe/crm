@@ -1,11 +1,10 @@
 import type { Selectable } from "kysely";
 
 import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
-
-import type { DocumentType } from "./model";
+import type { DocumentKind } from "~/server/shared/document";
 
 export type OverlayRow = {
-  document_type: DocumentType;
+  document_type: DocumentKind;
   document_value: string;
   full_name: string | null;
   legal_name: string | null;
@@ -24,7 +23,7 @@ export type OverlayRow = {
 export type JobRow = Selectable<SearchEnrichmentJobsTable>;
 
 export type EnrichmentJobRequest = {
-  document_type: DocumentType;
+  document_type: DocumentKind;
   document_value: string;
   requested_by_user_id: number;
   now: number;
@@ -59,11 +58,11 @@ export interface EnrichmentRepositoryPort {
   ): Promise<void>;
   extendLease(id: number, workerId: string, leaseMs: number): Promise<boolean>;
   getOverlay(
-    documentType: DocumentType,
+    documentType: DocumentKind,
     documentValue: string,
   ): Promise<OverlayRow | null | undefined>;
   getJobStatus(
-    documentType: DocumentType,
+    documentType: DocumentKind,
     documentValue: string,
   ): Promise<JobRow | null | undefined>;
 }

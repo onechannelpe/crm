@@ -2,13 +2,14 @@ import type { SunatEconomicActivity } from "~/server/client-search/enrichment/su
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { Ruc } from "~/server/shared/document";
 import type {
   LeadSourceStatus,
   SunatSourceStatus,
 } from "~/server/workflow/lead/domain/rows";
 
 export type SourceStatusRepository = {
-  findByRuc(ruc: string): Promise<LeadSourceStatus>;
+  findByRuc(ruc: Ruc): Promise<LeadSourceStatus>;
 };
 
 function toPipelineSunatStatus(input: {
@@ -78,7 +79,10 @@ export function createSourceStatusRepo(
 
   return {
     async findByRuc(ruc) {
-      const enrichmentStatus = await enrichmentQuery.getStatus("ruc", ruc);
+      const enrichmentStatus = await enrichmentQuery.getStatus({
+        kind: "ruc",
+        value: ruc,
+      });
       const overlay = toPipelineOverlay(enrichmentStatus.overlay);
 
       return {
