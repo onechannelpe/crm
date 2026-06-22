@@ -1,5 +1,6 @@
 import { action } from "@solidjs/router";
 
+import { addLeadNote } from "~/actions/workflow/commands/interactions";
 import {
   requestRateAcceptance,
   requestRateProposal,
@@ -22,6 +23,7 @@ import {
 } from "~/actions/workflow/commands/sales";
 import type {
   AcceptRateInput,
+  AddLeadNoteInput,
   AddVenueAccountsInput,
   CreateLeadInput,
   CreateVenueInput,
@@ -37,6 +39,11 @@ import type {
 export const createLeadMutation = action(
   (input: CreateLeadInput) => requestLeadCreation(input),
   "workflow.createLead",
+);
+
+export const addNoteMutation = action(
+  (input: AddLeadNoteInput) => addLeadNote(input),
+  "workflow.addNote",
 );
 
 export const proposeRateMutation = action(

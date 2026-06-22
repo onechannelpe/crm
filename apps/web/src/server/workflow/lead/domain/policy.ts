@@ -157,7 +157,8 @@ export function resolveAvailableActions(
   if (caps.has("add-note")) {
     actions.push("add-note");
   }
-  const canProposeRate = caps.has("propose-rate") && actor.role === "back_office";
+  const canProposeRate =
+    caps.has("propose-rate") && actor.role === "back_office";
   if (canProposeRate && inPricing && !meta.hasActivePendingProposal) {
     actions.push("propose-rate");
   }

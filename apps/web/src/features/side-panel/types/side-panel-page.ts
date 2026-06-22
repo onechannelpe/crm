@@ -214,7 +214,7 @@ export function createLeadRecordDetailSidePanelPage(
       leadId: input.leadId,
       title: input.title,
       subtitle: input.subtitle ?? `Cliente ${input.leadId}`,
-      activeTab: "workflow",
+      activeTab: "resumen",
     },
   };
 }

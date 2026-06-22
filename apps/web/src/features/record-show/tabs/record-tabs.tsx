@@ -30,7 +30,11 @@ export function RecordTabs(props: {
       <Show when={activeDefinition()} keyed>
         {(definition) => (
           <div class={styles.pane}>
-            <Dynamic component={definition.component} context={props.context} />
+            <Dynamic
+              component={definition.component}
+              context={props.context}
+              onNavigate={props.onTabSelect}
+            />
           </div>
         )}
       </Show>

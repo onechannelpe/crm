@@ -14,10 +14,6 @@ import {
   RecordInlineCell,
 } from "~/features/side-panel/components/field-table";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
-import {
-  leadNextStepLabel,
-  leadStageLabel,
-} from "~/features/workflow/presentation/lead-display";
 import { capitalize, formatDateTime } from "~/lib/utils";
 
 export type FieldConfig = {
@@ -60,98 +56,10 @@ function ManagedByRow(props: { data: LeadDetailView }) {
   );
 }
 
+// Registration identity first (what the lead is), then qualification status, then
+// administrative metadata last. Stage and next step are owned by the stepper, so
+// they are intentionally absent here.
 export const LEAD_DETAIL_FIELD_GROUPS: FieldGroup[] = [
-  {
-    key: "estado",
-    label: "Estado",
-    fields: [
-      {
-        key: "status",
-        label: "Estado",
-        renderCell: (data) => (
-          <RecordInlineCell
-            label="Estado"
-            icon={Package}
-            empty={data.lead.status === null}
-          >
-            <FieldTextValue>
-              {data.lead.status && capitalize(data.lead.status)}
-            </FieldTextValue>
-          </RecordInlineCell>
-        ),
-      },
-      {
-        key: "priority",
-        label: "Prioridad",
-        renderCell: (data) => (
-          <RecordInlineCell
-            label="Prioridad"
-            icon={Checkbox}
-            empty={data.lead.priority === null}
-          >
-            <FieldTextValue>
-              {data.lead.priority && capitalize(data.lead.priority)}
-            </FieldTextValue>
-          </RecordInlineCell>
-        ),
-      },
-      {
-        key: "stage",
-        label: "Etapa",
-        renderCell: (data) => (
-          <RecordInlineCell label="Etapa" icon={Package}>
-            <FieldTextValue>{leadStageLabel(data.lead.stage)}</FieldTextValue>
-          </RecordInlineCell>
-        ),
-      },
-      {
-        key: "nextStep",
-        label: "Siguiente paso",
-        renderCell: (data) => (
-          <RecordInlineCell label="Siguiente paso" icon={User}>
-            <FieldTextValue>
-              {leadNextStepLabel(data.lead.nextStep)}
-            </FieldTextValue>
-          </RecordInlineCell>
-        ),
-      },
-    ],
-  },
-  {
-    key: "administracion",
-    label: "Administración",
-    fields: [
-      {
-        key: "managedBy",
-        label: "Administrado por",
-        renderCell: (data) => <ManagedByRow data={data} />,
-      },
-      {
-        key: "updatedBy",
-        label: "Actualizado por",
-        renderCell: (data) => (
-          <RecordInlineCell
-            label="Actualizado por"
-            icon={User}
-            empty={!data.lead.updatedByName}
-          >
-            <RecordChip name={data.lead.updatedByName ?? ""} shape="round" />
-          </RecordInlineCell>
-        ),
-      },
-      {
-        key: "updatedAt",
-        label: "Actualizado",
-        renderCell: (data) => (
-          <RecordInlineCell label="Actualizado" icon={Clock}>
-            <FieldTextValue>
-              {formatDateTime(data.lead.updatedAt)}
-            </FieldTextValue>
-          </RecordInlineCell>
-        ),
-      },
-    ],
-  },
   {
     key: "sunat",
     label: "Datos de registro",
@@ -218,6 +126,77 @@ export const LEAD_DETAIL_FIELD_GROUPS: FieldGroup[] = [
                 }),
               )}
             />
+          </RecordInlineCell>
+        ),
+      },
+    ],
+  },
+  {
+    key: "estado",
+    label: "Estado",
+    fields: [
+      {
+        key: "status",
+        label: "Estado",
+        renderCell: (data) => (
+          <RecordInlineCell
+            label="Estado"
+            icon={Package}
+            empty={data.lead.status === null}
+          >
+            <FieldTextValue>
+              {data.lead.status && capitalize(data.lead.status)}
+            </FieldTextValue>
+          </RecordInlineCell>
+        ),
+      },
+      {
+        key: "priority",
+        label: "Prioridad",
+        renderCell: (data) => (
+          <RecordInlineCell
+            label="Prioridad"
+            icon={Checkbox}
+            empty={data.lead.priority === null}
+          >
+            <FieldTextValue>
+              {data.lead.priority && capitalize(data.lead.priority)}
+            </FieldTextValue>
+          </RecordInlineCell>
+        ),
+      },
+    ],
+  },
+  {
+    key: "administracion",
+    label: "Administración",
+    fields: [
+      {
+        key: "managedBy",
+        label: "Administrado por",
+        renderCell: (data) => <ManagedByRow data={data} />,
+      },
+      {
+        key: "updatedBy",
+        label: "Actualizado por",
+        renderCell: (data) => (
+          <RecordInlineCell
+            label="Actualizado por"
+            icon={User}
+            empty={!data.lead.updatedByName}
+          >
+            <RecordChip name={data.lead.updatedByName ?? ""} shape="round" />
+          </RecordInlineCell>
+        ),
+      },
+      {
+        key: "updatedAt",
+        label: "Actualizado",
+        renderCell: (data) => (
+          <RecordInlineCell label="Actualizado" icon={Clock}>
+            <FieldTextValue>
+              {formatDateTime(data.lead.updatedAt)}
+            </FieldTextValue>
           </RecordInlineCell>
         ),
       },
