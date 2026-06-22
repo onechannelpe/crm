@@ -292,7 +292,11 @@ function parseNotificationsEnv(source: EnvSource) {
       "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
       true,
     ),
-    whatsappAppSecret: required(source, "WHATSAPP_APP_SECRET"),
+    // Optional: only required for the POST signature check. The GET handshake
+    // works without it, so a missing secret should not crash boot. The
+    // signature verifier treats an empty string as "always fail", which is
+    // the safe default until the secret is set.
+    kapsoWebhookSecret: source["KAPSO_WEBHOOK_SECRET"] ?? "",
   } as const;
 }
 

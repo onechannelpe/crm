@@ -1,4 +1,3 @@
-import { sendWithKapsoWhatsAppText } from "@crm/message-channels";
 import type { APIEvent } from "@solidjs/start/server";
 
 import { notificationsConfig } from "~/lib/env";
@@ -8,10 +7,12 @@ import { isPlainRecord } from "~/lib/type-guards";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { openSession } from "~/server/notifications/whatsapp-session";
 import { getServerRuntime } from "~/server/platform/container";
+import { sendWithKapsoWhatsAppText } from "@crm/message-channels";
 
 const logger = createLogger("whatsapp-webhook");
 
 const VERIFY_COMMAND = "/verificar";
+const INBOUND_MESSAGE_EVENT = "whatsapp.message.received";
 const VERIFY_REPLY_BODY = [
   "Listo, este número queda verificado para recibir notificaciones de la plataforma.",
   "Te avisaremos por WhatsApp cuando un cliente acepte una tarifa o quede listo para afiliación.",
@@ -42,32 +43,37 @@ export function GET(event: APIEvent): Response {
 
 type InboundMessage = { from: string; body: string | null };
 
+// Parses a Kapso v2 webhook payload (`whatsapp.message.received`) and yields
+// one entry per inbound text message with a normalized local-form phone and
+// the message body (or null for non-text messages like images/audio).
 function extractInboundMessages(body: unknown): InboundMessage[] {
-  if (!isPlainRecord(body) || body["object"] !== "whatsapp_business_account") {
+  if (!isPlainRecord(body)) return [];
+
+  // The v2 payload is keyed at the top level: { message, conversation,
+  // phone_number_id, is_new_conversation }. Older code paths nested under
+  // entry[].changes[].value.messages[]; we only support the Kapso shape.
+  const message = isPlainRecord(body["message"]) ? body["message"] : null;
+  if (!message) return [];
+
+  // Only react to inbound text messages. Outbound, statuses, and non-text
+  // types are ignored here.
+  const messageKapso = isPlainRecord(message["kapso"])
+    ? message["kapso"]
+    : null;
+  if (!messageKapso || messageKapso["direction"] !== "inbound") return [];
+
+  const conversation = isPlainRecord(body["conversation"])
+    ? body["conversation"]
+    : null;
+  if (!conversation || typeof conversation["phone_number"] !== "string") {
     return [];
   }
 
-  const messages: InboundMessage[] = [];
-  const entries = Array.isArray(body["entry"]) ? body["entry"] : [];
+  const text = isPlainRecord(message["text"]) ? message["text"] : undefined;
+  const bodyText =
+    text && typeof text["body"] === "string" ? text["body"] : null;
 
-  for (const entry of entries) {
-    if (!isPlainRecord(entry)) continue;
-    const changes = Array.isArray(entry["changes"]) ? entry["changes"] : [];
-    for (const change of changes) {
-      if (!isPlainRecord(change) || change["field"] !== "messages") continue;
-      const value = isPlainRecord(change["value"]) ? change["value"] : {};
-      const inbound = Array.isArray(value["messages"]) ? value["messages"] : [];
-      for (const msg of inbound) {
-        if (!isPlainRecord(msg) || typeof msg["from"] !== "string") continue;
-        const text = isPlainRecord(msg["text"]) ? msg["text"] : undefined;
-        const bodyText =
-          text && typeof text["body"] === "string" ? text["body"] : null;
-        messages.push({ from: msg["from"], body: bodyText });
-      }
-    }
-  }
-
-  return messages;
+  return [{ from: conversation["phone_number"], body: bodyText }];
 }
 
 function isVerifyCommand(body: string | null): boolean {
@@ -99,8 +105,16 @@ async function sendVerificationReply(rawPhone: string): Promise<void> {
   }
 }
 
-// POST requests reach this handler only after HMAC signature verification.
+// POST requests reach this handler only after HMAC signature verification
+// against KAPSO_WEBHOOK_SECRET (see lib/webhooks/kapso-signature.ts).
 export async function POST(event: APIEvent): Promise<Response> {
+  // Only react to the inbound-message event. Other events (sent, delivered,
+  // read, conversation lifecycle) are not handled here.
+  const eventName = event.request.headers.get("x-webhook-event");
+  if (eventName !== INBOUND_MESSAGE_EVENT) {
+    return new Response("OK", { status: 200 });
+  }
+
   let body: unknown;
   try {
     body = JSON.parse(await event.request.text());
@@ -109,6 +123,9 @@ export async function POST(event: APIEvent): Promise<Response> {
   }
 
   const messages = extractInboundMessages(body);
+  logger.info("whatsapp_webhook_received", {
+    messageCount: messages.length,
+  });
   if (messages.length === 0) return new Response("OK", { status: 200 });
 
   try {

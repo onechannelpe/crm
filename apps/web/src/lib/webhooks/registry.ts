@@ -1,4 +1,4 @@
-import { verifyWhatsAppSignature } from "./whatsapp-signature";
+import { verifyKapsoSignature } from "./kapso-signature";
 
 export interface WebhookVerifierInput {
   request: Request;
@@ -18,7 +18,7 @@ export type WebhookPolicy = {
 const WEBHOOK_POLICIES: Record<string, WebhookPolicy> = {
   "/api/webhooks/whatsapp": {
     handshakeMethods: ["GET"],
-    verify: verifyWhatsAppSignature,
+    verify: verifyKapsoSignature,
   },
 };
 

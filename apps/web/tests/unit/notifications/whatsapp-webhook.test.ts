@@ -5,7 +5,8 @@ const mocks = vi.hoisted(() => ({
   findAddress:
     vi.fn<
       () => Promise<
-        { user_id: number; is_verified: number; address: string } | undefined
+        | { user_id: number; is_verified: number; address: string }
+        | undefined
       >
     >(),
   markVerified: vi.fn<() => Promise<boolean>>(),
@@ -16,16 +17,15 @@ const mocks = vi.hoisted(() => ({
   loggerWarn:
     vi.fn<(event: string, metadata: Record<string, unknown>) => void>(),
   openSession: vi.fn<() => Promise<unknown>>(),
-  sendReply:
-    vi.fn<
-      (input: {
-        apiKey: string;
-        phoneNumberId: string;
-        metaGraphVersion: string;
-        to: string;
-        body: string;
-      }) => Promise<{ providerMessageId: string | null }>
-    >(),
+  sendReply: vi.fn<
+    (input: {
+      apiKey: string;
+      phoneNumberId: string;
+      metaGraphVersion: string;
+      to: string;
+      body: string;
+    }) => Promise<{ providerMessageId: string | null }>
+  >(),
 }));
 
 vi.mock("~/lib/observability/logger", () => ({
@@ -47,7 +47,15 @@ vi.mock("~/lib/env", () => ({
 }));
 
 vi.mock("~/lib/phone/pe-mobile", () => ({
-  normalizePhoneInput: (value: string) => value,
+  normalizePhoneInput: (value: string) => {
+    // Match the production behavior: strip non-digits, drop a leading
+    // 51 country code if present so the result is the local 9-digit form.
+    const digits = value.replace(/\D+/g, "");
+    if (digits.length === 11 && digits.startsWith("51")) {
+      return digits.slice(2);
+    }
+    return digits;
+  },
 }));
 
 vi.mock("~/server/notifications/repos/user-channel-address", () => ({
@@ -77,37 +85,56 @@ vi.mock("@crm/message-channels", () => ({
 
 import { POST } from "~/routes/api/webhooks/whatsapp";
 
-function webhookRequest(payload: unknown): Request {
-  return new Request("http://localhost/api/webhooks/whatsapp", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+function kapsoV2Inbound(payload: {
+  phoneNumber: string;
+  textBody: string | null;
+  direction?: "inbound" | "outbound";
+}): Record<string, unknown> {
+  return {
+    message: {
+      id: "wamid.test",
+      timestamp: "1700000000",
+      type: payload.textBody === null ? "image" : "text",
+      ...(payload.textBody === null
+        ? {}
+        : { text: { body: payload.textBody } }),
+      kapso: {
+        direction: payload.direction ?? "inbound",
+        status: "received",
+        processing_status: "pending",
+        origin: "cloud_api",
+        has_media: payload.textBody === null,
+        content: payload.textBody ?? "(image)",
+      },
+    },
+    conversation: {
+      id: "conv_test",
+      phone_number: payload.phoneNumber,
+      status: "active",
+      last_active_at: "2026-01-01T00:00:00Z",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+      metadata: {},
+      phone_number_id: "test-phone-id",
+      kapso: {},
+    },
+    is_new_conversation: true,
+    phone_number_id: "test-phone-id",
+  };
 }
 
-function standardPayload(
-  from: string,
-  body: string | null,
-): Record<string, unknown> {
-  return {
-    object: "whatsapp_business_account",
-    entry: [
-      {
-        changes: [
-          {
-            field: "messages",
-            value: {
-              messages: [
-                {
-                  from,
-                  ...(body === null ? {} : { text: { body } }),
-                },
-              ],
-            },
-          },
-        ],
-      },
-    ],
-  };
+function webhookRequest(
+  payload: unknown,
+  event = "whatsapp.message.received",
+): Request {
+  return new Request("http://localhost/api/webhooks/whatsapp", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-webhook-event": event,
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
 describe("POST /api/webhooks/whatsapp", () => {
@@ -119,12 +146,14 @@ describe("POST /api/webhooks/whatsapp", () => {
     mocks.findAddress.mockResolvedValue({
       user_id: 7,
       is_verified: 1,
-      address: "51911000001",
+      address: "911000001",
     });
     mocks.openSession.mockResolvedValue(undefined);
 
     const response = await POST(
-      createApiEvent(webhookRequest(standardPayload("51911000001", null))),
+      createApiEvent(
+        webhookRequest(kapsoV2Inbound({ phoneNumber: "+51911000001", textBody: "hola" })),
+      ),
     );
 
     expect(response.status).toBe(200);
@@ -135,15 +164,17 @@ describe("POST /api/webhooks/whatsapp", () => {
     mocks.findAddress.mockResolvedValue({
       user_id: 7,
       is_verified: 0,
-      address: "51911000001",
+      address: "911000007",
     });
     mocks.markVerified.mockResolvedValue(true);
     mocks.openSession.mockResolvedValue(undefined);
-    mocks.sendReply.mockResolvedValue({ providerMessageId: "wamid.test" });
+    mocks.sendReply.mockResolvedValue({ providerMessageId: "wamid.reply" });
 
     const response = await POST(
       createApiEvent(
-        webhookRequest(standardPayload("51911000001", "/verificar")),
+        webhookRequest(
+          kapsoV2Inbound({ phoneNumber: "+51911000007", textBody: "/verificar" }),
+        ),
       ),
     );
 
@@ -157,15 +188,17 @@ describe("POST /api/webhooks/whatsapp", () => {
     mocks.findAddress.mockResolvedValue({
       user_id: 7,
       is_verified: 0,
-      address: "51911000001",
+      address: "911000007",
     });
     mocks.markVerified.mockResolvedValue(true);
     mocks.openSession.mockResolvedValue(undefined);
-    mocks.sendReply.mockResolvedValue({ providerMessageId: "wamid.test" });
+    mocks.sendReply.mockResolvedValue({ providerMessageId: "wamid.reply" });
 
     const response = await POST(
       createApiEvent(
-        webhookRequest(standardPayload("51911000001", "  /VERIFICAR  ")),
+        webhookRequest(
+          kapsoV2Inbound({ phoneNumber: "+51911000007", textBody: "  /VERIFICAR  " }),
+        ),
       ),
     );
 
@@ -178,7 +211,9 @@ describe("POST /api/webhooks/whatsapp", () => {
 
     const response = await POST(
       createApiEvent(
-        webhookRequest(standardPayload("51999999999", "/verificar")),
+        webhookRequest(
+          kapsoV2Inbound({ phoneNumber: "+51999999999", textBody: "/verificar" }),
+        ),
       ),
     );
 
@@ -192,11 +227,15 @@ describe("POST /api/webhooks/whatsapp", () => {
     mocks.findAddress.mockResolvedValue({
       user_id: 7,
       is_verified: 0,
-      address: "51911000001",
+      address: "911000007",
     });
 
     const response = await POST(
-      createApiEvent(webhookRequest(standardPayload("51911000001", "hola"))),
+      createApiEvent(
+        webhookRequest(
+          kapsoV2Inbound({ phoneNumber: "+51911000007", textBody: "hola" }),
+        ),
+      ),
     );
 
     expect(response.status).toBe(200);
@@ -204,16 +243,58 @@ describe("POST /api/webhooks/whatsapp", () => {
     expect(mocks.openSession).not.toHaveBeenCalled();
   });
 
+  it("ignores outbound message events", async () => {
+    mocks.findAddress.mockResolvedValue({
+      user_id: 7,
+      is_verified: 1,
+      address: "911000007",
+    });
+
+    const response = await POST(
+      createApiEvent(
+        webhookRequest(
+          kapsoV2Inbound({
+            phoneNumber: "+51911000007",
+            textBody: "outbound",
+            direction: "outbound",
+          }),
+          "whatsapp.message.sent",
+        ),
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.openSession).not.toHaveBeenCalled();
+  });
+
+  it("ignores non-message events entirely", async () => {
+    const response = await POST(
+      createApiEvent(
+        webhookRequest(
+          kapsoV2Inbound({ phoneNumber: "+51911000007", textBody: "hola" }),
+          "whatsapp.conversation.created",
+        ),
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.openSession).not.toHaveBeenCalled();
+  });
+
   it("returns a retryable failure when session persistence fails", async () => {
     mocks.findAddress.mockResolvedValue({
       user_id: 7,
       is_verified: 1,
-      address: "51911000001",
+      address: "911000007",
     });
     mocks.openSession.mockRejectedValue(new Error("database unavailable"));
 
     const response = await POST(
-      createApiEvent(webhookRequest(standardPayload("51911000001", null))),
+      createApiEvent(
+        webhookRequest(
+          kapsoV2Inbound({ phoneNumber: "+51911000007", textBody: "hola" }),
+        ),
+      ),
     );
 
     expect(response.status).toBe(503);
