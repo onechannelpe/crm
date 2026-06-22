@@ -6,6 +6,7 @@ import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, throwDomain } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
@@ -86,7 +87,7 @@ export async function changePassword(
       await events.append({
         type: "password_changed",
         entityType: "user",
-        entityId: userId,
+        entityId: auditEntityId("user", userId),
         actorUserId: userId,
         occurredAt: Date.now(),
       });
@@ -120,7 +121,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
       await events.append({
         type: "passkeys_removed",
         entityType: "user",
-        entityId: userId,
+        entityId: auditEntityId("user", userId),
         actorUserId: userId,
         occurredAt: Date.now(),
       });
@@ -156,7 +157,7 @@ export async function disableTotp(): Promise<{ message: string }> {
       await events.append({
         type: "totp_disabled",
         entityType: "user",
-        entityId: userId,
+        entityId: auditEntityId("user", userId),
         actorUserId: userId,
         occurredAt: Date.now(),
       });

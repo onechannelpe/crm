@@ -9,7 +9,7 @@ import type { UserId } from "~/server/shared/ids";
 type AppendedEvent = {
   type: string;
   entityType: string;
-  entityId: string | number;
+  entityId: string;
   actorUserId: number;
   payload?: unknown;
   occurredAt: number;
@@ -100,12 +100,12 @@ describe("admin session revocation", () => {
     expect(harness.events[0]).toMatchObject({
       type: "session_revoked_by_admin",
       entityType: "user_session",
-      entityId: 42,
+      entityId: "session-abc",
       actorUserId: 9001,
       occurredAt: 1_700_000_100_000,
     });
     expect(harness.events[0].payload).toEqual({
-      sessionId: "session-abc",
+      targetUserId: 42,
       revokedBy: 9001,
     });
   });
@@ -138,7 +138,7 @@ describe("admin session revocation", () => {
     expect(harness.events[0]).toMatchObject({
       type: "all_sessions_revoked",
       entityType: "user",
-      entityId: 77,
+      entityId: "77",
       actorUserId: 9001,
       occurredAt: 1_700_000_100_000,
     });

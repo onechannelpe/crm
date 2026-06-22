@@ -20,7 +20,7 @@ describe("audit logs reader repository", () => {
       actorUserId: 5,
       type: "product_updated",
       entityType: "product",
-      entityId: 101,
+      entityId: "018f63e2-4300-7000-8000-000000000101",
       payload: { field: "price" },
       occurredAt: baseTime,
     });
@@ -28,7 +28,7 @@ describe("audit logs reader repository", () => {
       actorUserId: 1,
       type: "leads_requested",
       entityType: "lead_assignment",
-      entityId: 1,
+      entityId: "018f63e2-4300-7000-8000-000000000001",
       payload: { requested: 4, assigned: 4 },
       occurredAt: baseTime + 1,
     });
@@ -36,7 +36,7 @@ describe("audit logs reader repository", () => {
       actorUserId: 5,
       type: "all_sessions_revoked",
       entityType: "user_session",
-      entityId: 5,
+      entityId: "018f63e2-4300-7000-8000-000000000005",
       payload: { reason: "security" },
       occurredAt: baseTime + 2,
     });

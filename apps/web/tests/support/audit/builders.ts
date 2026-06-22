@@ -8,7 +8,7 @@ export async function seedEvent(
     actorUserId: number;
     type: string;
     entityType: string;
-    entityId: number;
+    entityId: string;
     payload?: unknown;
     occurredAt: number;
   },

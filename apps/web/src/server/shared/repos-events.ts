@@ -19,7 +19,7 @@ export interface AuditReaderQueryFilter {
 
 export type EventToAppend = {
   entityType: string;
-  entityId: string | number;
+  entityId: string;
   type: string;
   actorUserId?: number | null;
   subjectUserId?: number | null;
@@ -37,7 +37,7 @@ export function createEventsRepo(db: DatabaseExecutor) {
       const rows = list.map((event) => ({
         id: randomUUIDv7(),
         entity_type: event.entityType,
-        entity_id: String(event.entityId),
+        entity_id: event.entityId,
         type: event.type,
         actor_user_id: event.actorUserId ?? null,
         subject_user_id: event.subjectUserId ?? null,

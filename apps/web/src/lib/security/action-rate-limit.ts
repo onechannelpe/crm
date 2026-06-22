@@ -3,6 +3,7 @@ import { getRequestEvent } from "solid-js/web";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { auditEntityId } from "~/server/shared/audit-entity";
 import { rateLimited, throwDomain } from "~/server/shared/domain-error";
 import type { EventsRepo } from "~/server/shared/repos-events";
 
@@ -82,7 +83,7 @@ async function blockWithAudit(params: {
   await deps.events.append({
     type: "rate_limit_exceeded",
     entityType: "user",
-    entityId: userId,
+    entityId: auditEntityId("user", userId),
     actorUserId: userId,
     payload: { actionName, scope, limit, windowMs, retryAfterMs },
     occurredAt: now,

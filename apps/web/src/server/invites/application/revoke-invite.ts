@@ -1,4 +1,5 @@
 import { canAssignRole } from "~/lib/auth/access/rbac";
+import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -37,7 +38,7 @@ export async function revokeInvite(
     await transactionRepos.events.append({
       type: "user_invite_revoked",
       entityType: "user",
-      entityId: invite.user_id,
+      entityId: auditEntityId("user", invite.user_id),
       actorUserId: input.actorUserId,
       payload: { inviteId: invite.id },
       occurredAt: revokedAt,

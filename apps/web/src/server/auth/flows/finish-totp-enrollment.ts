@@ -6,6 +6,7 @@ import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { AppContext } from "~/server/platform/action/context";
+import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -38,7 +39,7 @@ export async function finishTotpEnrollment(
   await deps.repos.events.append({
     type: "totp_enabled",
     entityType: "user",
-    entityId: user.id,
+    entityId: auditEntityId("user", user.id),
     actorUserId: user.id,
     occurredAt: ctx.now(),
   });

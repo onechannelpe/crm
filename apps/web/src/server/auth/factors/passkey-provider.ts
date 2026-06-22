@@ -10,6 +10,7 @@ import {
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 
+import { auditEntityId } from "~/server/shared/audit-entity";
 import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
@@ -149,7 +150,7 @@ export function createPasskeyProvider(
       await repos.events.append({
         type: "passkey_registration_started",
         entityType: "passkey",
-        entityId: userId,
+        entityId: auditEntityId("passkey", userId),
         actorUserId: userId,
         occurredAt: Date.now(),
       });

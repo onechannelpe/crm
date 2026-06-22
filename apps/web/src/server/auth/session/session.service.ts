@@ -14,6 +14,7 @@ import {
   hashSessionToken,
   isValidTokenFormat,
 } from "~/lib/auth/session/tokens";
+import { auditEntityId } from "~/server/shared/audit-entity";
 import type { UserId } from "~/server/shared/ids";
 
 import type {
@@ -62,7 +63,7 @@ export function createSessionService(deps: SessionServiceDeps) {
         await deps.events.append({
           type: spec.auditAction,
           entityType: "user",
-          entityId: spec.user.id,
+          entityId: auditEntityId("user", spec.user.id),
           actorUserId: spec.user.id,
           occurredAt: nowTs,
         });

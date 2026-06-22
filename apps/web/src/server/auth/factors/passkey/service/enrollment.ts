@@ -4,6 +4,7 @@ import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/types";
 import { config } from "~/lib/config";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { isPasskeyRequestError } from "~/server/auth/factors/passkey-provider";
+import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -151,7 +152,7 @@ export function createPasskeyEnrollmentService(
       await repos.events.append({
         type: "passkey_registered",
         entityType: "passkey",
-        entityId: input.userId,
+        entityId: auditEntityId("passkey", input.userId),
         actorUserId: input.userId,
         occurredAt: Date.now(),
       });

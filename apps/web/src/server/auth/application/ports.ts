@@ -14,7 +14,7 @@ export interface AdminSessionRevocationPort {
   appendEvent(input: {
     type: string;
     entityType: string;
-    entityId: string | number;
+    entityId: string;
     actorUserId: number;
     payload?: unknown;
     occurredAt: number;
@@ -36,7 +36,7 @@ export interface AuthSessionLogoutPort {
   appendEvent(input: {
     type: string;
     entityType: string;
-    entityId: string | number;
+    entityId: string;
     actorUserId: number;
     payload?: unknown;
     occurredAt: number;

@@ -1,5 +1,6 @@
 import type { AdminSessionRevocationPort } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
+import { auditEntityId } from "~/server/shared/audit-entity";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -19,7 +20,7 @@ export async function revokeAllUserSessions(
   await port.appendEvent({
     type: "all_sessions_revoked",
     entityType: "user",
-    entityId: input.targetUserId,
+    entityId: auditEntityId("user", input.targetUserId),
     actorUserId: ctx.actor.userId,
     payload: { revokedBy: ctx.actor.userId },
     occurredAt: now,

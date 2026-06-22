@@ -1,4 +1,5 @@
 import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
+import { auditEntityId } from "~/server/shared/audit-entity";
 
 import type {
   InviteDeps,
@@ -36,7 +37,7 @@ export async function issueInvite(
   await repos.events.append({
     type: "user_invite_issued",
     entityType: "user",
-    entityId: input.userId,
+    entityId: auditEntityId("user", input.userId),
     actorUserId: input.actorUserId,
     payload: { inviteId, email: input.email, role: input.role, expiresAt },
     occurredAt: issuedAt,
