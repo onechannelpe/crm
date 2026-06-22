@@ -69,22 +69,6 @@ export function optionalString(
   return invalidPayload(row, key);
 }
 
-export function nullableString(
-  payload: Record<string, unknown> | null,
-  key: string,
-  row: HistoryEventRow,
-): Result<string | null, DomainError> {
-  const value = payload?.[key];
-  if (value === null) {
-    return Ok(null);
-  }
-  if (typeof value === "string") {
-    return Ok(value);
-  }
-
-  return invalidPayload(row, key);
-}
-
 export function requireNumber(
   payload: Record<string, unknown> | null,
   key: string,

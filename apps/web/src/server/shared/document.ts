@@ -26,7 +26,7 @@ export function parseRuc(value: unknown): Result<Ruc, DomainError> {
   return Ok(trimmed as Ruc);
 }
 
-export function parseDni(value: unknown): Result<Dni, DomainError> {
+function parseDni(value: unknown): Result<Dni, DomainError> {
   if (typeof value !== "string") return Err(fail("invalid_dni"));
   const trimmed = value.trim();
   if (!DNI_PATTERN.test(trimmed)) return Err(fail("invalid_dni"));

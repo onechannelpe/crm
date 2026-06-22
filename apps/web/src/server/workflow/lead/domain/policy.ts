@@ -43,7 +43,7 @@ const OWNER_REQUIRED = new Set<LeadCapability>([
   "request-sunat-refresh",
 ]);
 
-export function resolveCapabilities(role: Role): Set<LeadCapability> {
+function resolveCapabilities(role: Role): Set<LeadCapability> {
   const caps = new Set<LeadCapability>();
 
   const canRead =

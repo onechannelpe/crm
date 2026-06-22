@@ -15,7 +15,7 @@ function isCommittedStageChange(
   return committed.event.eventType === "workflow_stage_changed";
 }
 
-export function deriveLeadStageNotifications(input: {
+function deriveLeadStageNotifications(input: {
   eventId: string;
   leadId: string;
   toStage: string;
