@@ -68,6 +68,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Mi capacidad", icon: "capacity" },
   },
   { match: "/inventory", header: { label: "Inventario", icon: "inventory" } },
+  {
+    match: "/fulfillment",
+    header: { label: "Entregas", icon: "inventory" },
+  },
   { match: "/team", header: { label: "Equipo", icon: "team" } },
   {
     match: "/team/requests",
@@ -163,6 +167,18 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     tileColor: "orange",
     section: "secondary",
     order: 4,
+    group: "Operaciones",
+  },
+  {
+    id: "fulfillment",
+    href: "/fulfillment",
+    activePrefixes: ["/fulfillment"],
+    label: "Entregas",
+    navLabel: "Entregas",
+    icon: "inventory",
+    tileColor: "orange",
+    section: "secondary",
+    order: 6,
     group: "Operaciones",
   },
   {

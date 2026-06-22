@@ -5,6 +5,7 @@ import Point from "~/components/icons/point";
 import { Button } from "~/components/ui/input/button";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
+import { FulfillmentPanel } from "~/features/workflow/detail/forms/fulfillment/fulfillment-panel";
 import { ProposeRateSection } from "~/features/workflow/detail/forms/pricing/propose-rate";
 import { RateProposalSection } from "~/features/workflow/detail/forms/pricing/rate-proposal";
 
@@ -67,6 +68,10 @@ export function NextActionCard(props: {
             canEdit={props.data.availableActions.includes("edit-rate-proposal")}
           />
         )}
+      </Match>
+
+      <Match when={action().kind === "fulfillment"}>
+        <FulfillmentPanel data={props.data} />
       </Match>
 
       <Match when={action().kind === "setup-checklist"}>

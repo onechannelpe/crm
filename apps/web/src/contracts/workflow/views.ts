@@ -9,6 +9,10 @@ import type {
   CollectionMode,
   Currency,
   ProductScope,
+  ProductKind,
+  FulfillmentStep,
+  FulfillmentAction,
+  FulfillmentDocKind,
 } from "./vocabulary";
 
 export type LeadAvailableAction =
@@ -18,7 +22,9 @@ export type LeadAvailableAction =
   | "accept-rate"
   | "request-rate-revision"
   | "update-venue"
-  | "reassign-lead";
+  | "reassign-lead"
+  // Fulfillment handoff the current actor may perform now, given the order's step.
+  | `fulfillment:${FulfillmentAction}`;
 
 export type LeadBlockingField = "digitalPolicy" | "venueAccounts";
 
@@ -133,6 +139,55 @@ export type LeadDetailRateRevisionView = {
   files: LeadDetailRateRevisionFileView[];
 };
 
+export type LeadDetailFulfillmentDocView = {
+  docKind: FulfillmentDocKind;
+  artifactId: string;
+  filename: string;
+  detectedMime: string;
+  sizeBytes: number;
+  uploadedByUserId: number;
+  uploadedAt: number;
+};
+
+export type LeadDetailFulfillmentUnitView = {
+  id: string;
+  label: string;
+  venueId: string | null;
+  serial: string | null;
+  paymentUrl: string | null;
+  paymentProofArtifactId: string | null;
+  serviceRef: string | null;
+  paymentValidated: boolean;
+};
+
+// Back-office (and supervisor) inbox: every lead across their branch sitting on
+// a step they must act on, oldest first. The single highest-leverage screen for
+// the bottleneck role.
+export type FulfillmentQueueRowView = {
+  leadId: string;
+  ruc: string;
+  legalName: string | null;
+  executiveName: string;
+  productKind: ProductKind | null;
+  currentStep: FulfillmentStep;
+  pendingOwner: "executive" | "back_office" | "supervisor" | null;
+  waitingSince: number;
+};
+
+export type FulfillmentQueueView = {
+  rows: FulfillmentQueueRowView[];
+};
+
+export type LeadDetailFulfillmentView = {
+  orderId: string;
+  productKind: ProductKind | null;
+  currentStep: FulfillmentStep;
+  // The actor expected to act on the current step, for the "whose turn" hint.
+  pendingOwner: "executive" | "back_office" | "supervisor" | null;
+  units: LeadDetailFulfillmentUnitView[];
+  documents: LeadDetailFulfillmentDocView[];
+};
+
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
   profile: LeadDetailProfileView;
@@ -140,6 +195,7 @@ export type LeadDetailView = {
   rateProposals: LeadDetailRateProposalView[];
   venues: LeadDetailVenueView[];
   rateRevisions: LeadDetailRateRevisionView[];
+  fulfillment: LeadDetailFulfillmentView | null;
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];

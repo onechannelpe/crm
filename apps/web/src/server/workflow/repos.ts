@@ -4,6 +4,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
 import { createDigitalPolicyRepo } from "./lead/digital-policy/repo";
+import { createFulfillmentRepo } from "./lead/fulfillment/repo";
 import { createHistoryRepo } from "./lead/read/history/history-repo";
 import { createLeadFavoriteRepo } from "./lead/read/lead-favorite-repo";
 import { createLeadQueries } from "./lead/read/lead-queries";
@@ -29,6 +30,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     rateProposals: createRateProposalRepo(executor),
     rateProposalPolicies: createRateProposalPolicyRepo(executor),
     leadVenues: createLeadVenueRepo(executor),
+    fulfillment: createFulfillmentRepo(executor),
     rateRevisions: createRateRevisionRepo(executor),
     rateRevisionFiles: createRateRevisionFilesRepo(executor),
     sourceStatuses: createSourceStatusRepo(executor),

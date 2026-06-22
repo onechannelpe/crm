@@ -3,6 +3,7 @@ import * as capacity from "./modules/capacity";
 import * as core from "./modules/core";
 import * as extensions from "./modules/extensions";
 import * as files from "./modules/files";
+import * as fulfillment from "./modules/fulfillment";
 import * as identity from "./modules/identity";
 import * as integrations from "./modules/integrations";
 import * as leads from "./modules/leads";
@@ -30,4 +31,5 @@ export const SCHEMA_MODULES = [
   files,
   pricing,
   sales,
+  fulfillment,
 ] as const;

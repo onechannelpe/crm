@@ -2,6 +2,7 @@ import { query } from "@solidjs/router";
 
 import {
   queryAssignableExecutives,
+  queryFulfillmentQueue,
   queryLeadDetail,
   queryLeadList,
 } from "~/actions/workflow/queries/records";
@@ -11,6 +12,7 @@ import {
 } from "~/contracts/workflow/inputs";
 import {
   type AssignableExecutiveView,
+  type FulfillmentQueueView,
   type LeadDetailView,
   type LeadListView,
 } from "~/contracts/workflow/views";
@@ -48,4 +50,9 @@ export const assignableExecutivesQuery = query(
   (input: ListAssignableExecutivesInput): Promise<AssignableExecutiveView[]> =>
     queryAssignableExecutives(input),
   "workflow.assignableExecutives",
+);
+
+export const fulfillmentQueueQuery = query(
+  (): Promise<FulfillmentQueueView> => queryFulfillmentQueue(),
+  "workflow.fulfillmentQueue",
 );

@@ -6,7 +6,12 @@ export interface WorkflowArtifactsTable {
     | "records_export"
     | "integration_import"
     | "sale_proof"
-    | "rate_revision_file";
+    | "rate_revision_file"
+    | "transactions_report"
+    | "addendum_unsigned"
+    | "addendum_signed_photo"
+    | "addendum_signed_pdf"
+    | "payment_proof";
   direction: "upload" | "download" | "bidirectional";
   execution_mode: "sync" | "async";
   status:

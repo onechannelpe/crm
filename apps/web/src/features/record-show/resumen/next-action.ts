@@ -12,7 +12,8 @@ export type NextAction =
       kind: "decide-rate";
       proposal: LeadDetailView["rateProposals"][number];
     }
-  | { kind: "setup-checklist" };
+  | { kind: "setup-checklist" }
+  | { kind: "fulfillment" };
 
 export type SetupChecklistItem = { label: string; done: boolean };
 
@@ -45,6 +46,8 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
     }
     case "SETUP":
       return { kind: "setup-checklist" };
+    case "FULFILLMENT":
+      return { kind: "fulfillment" };
     case "LIVE":
       return {
         kind: "message",
@@ -100,6 +103,8 @@ export function nextActionSummary(data: LeadDetailView): string {
       return "Confirmar o revisar tarifa";
     case "setup-checklist":
       return "Completar afiliación";
+    case "fulfillment":
+      return "Gestionar entrega";
     default: {
       const exhaustive: never = action;
       return exhaustive satisfies never;

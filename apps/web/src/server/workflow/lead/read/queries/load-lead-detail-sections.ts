@@ -12,6 +12,10 @@ import type {
   LeadCommercialScope,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
+import type {
+  FulfillmentOrderDetails,
+  FulfillmentRepository,
+} from "~/server/workflow/lead/fulfillment/repo";
 import type { LeadHistoryRepository } from "~/server/workflow/lead/read/history/history-repo";
 import type { LeadFavoriteRepository } from "~/server/workflow/lead/read/lead-favorite-repo";
 import type {
@@ -73,6 +77,7 @@ export type LeadDetailQueryDeps = {
   sourceStatuses: SourceStatusReader;
   users: WorkflowUserRepository;
   party: PartyRepository;
+  fulfillment: FulfillmentRepository;
 };
 
 export type LeadDetailLoadedSections = {
@@ -96,6 +101,7 @@ export type LeadDetailLoadedSections = {
     revision: RateRevision;
     files: Awaited<ReturnType<RateRevisionFilesQuery["listByRevisionId"]>>;
   }>;
+  fulfillment: FulfillmentOrderDetails | null;
 };
 
 export async function loadLeadDetailSections(
@@ -123,6 +129,7 @@ export async function loadLeadDetailSections(
     userRows,
     organization,
     legalRepresentative,
+    fulfillment,
   ] = await Promise.all([
     deps.leadFavorites.isFavoriteForUser({
       leadId: input.leadId,
@@ -141,6 +148,7 @@ export async function loadLeadDetailSections(
     ]),
     deps.party.findOrganizationById(lead.organizationId),
     deps.party.findPrimaryLegalRepresentative(lead.organizationId),
+    deps.fulfillment.findByLeadId(input.leadId),
   ]);
 
   if (!historyResult.ok && !isRecoverableSectionError(historyResult.error)) {
@@ -190,5 +198,6 @@ export async function loadLeadDetailSections(
     organization,
     legalRepresentative,
     rateRevisions,
+    fulfillment,
   });
 }

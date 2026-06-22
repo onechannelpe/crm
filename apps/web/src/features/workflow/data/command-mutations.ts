@@ -1,5 +1,14 @@
 import { action } from "@solidjs/router";
 
+import {
+  chooseFulfillmentProduct,
+  recordFulfillmentSerial,
+  registerFulfillmentPaymentLink,
+  registerFulfillmentSale,
+  uploadFulfillmentDocument,
+  uploadFulfillmentPaymentProof,
+  validateFulfillmentPayment,
+} from "~/actions/workflow/commands/fulfillment";
 import { addLeadNote } from "~/actions/workflow/commands/interactions";
 import {
   requestRateAcceptance,
@@ -25,12 +34,16 @@ import type {
   AcceptRateInput,
   AddLeadNoteInput,
   AddVenueAccountsInput,
+  ChooseFulfillmentProductInput,
   CreateLeadInput,
   CreateVenueInput,
   EditRateProposalInput,
   ProposeRateInput,
   ReassignLeadInput,
   RecordRepLegalInput,
+  RecordUnitSerialInput,
+  RegisterUnitPaymentLinkInput,
+  RegisterUnitSaleInput,
   RequestRateRevisionInput,
   SaveDigitalPolicyInput,
   UpdateVenueInput,
@@ -109,4 +122,42 @@ export const removeLeadFromFavoritesMutation = action(
 export const deleteLeadMutation = action(
   (input: { leadId: string }) => requestLeadDeletion(input),
   "workflow.deleteLead",
+);
+
+export const chooseFulfillmentProductMutation = action(
+  (input: ChooseFulfillmentProductInput) => chooseFulfillmentProduct(input),
+  "workflow.chooseFulfillmentProduct",
+);
+
+export const uploadFulfillmentDocumentMutation = action(
+  (input: { leadId: string; action: string; formData: FormData }) =>
+    uploadFulfillmentDocument(input.leadId, input.action, input.formData),
+  "workflow.uploadFulfillmentDocument",
+);
+
+export const recordFulfillmentSerialMutation = action(
+  (input: RecordUnitSerialInput) => recordFulfillmentSerial(input),
+  "workflow.recordFulfillmentSerial",
+);
+
+export const registerFulfillmentPaymentLinkMutation = action(
+  (input: RegisterUnitPaymentLinkInput) =>
+    registerFulfillmentPaymentLink(input),
+  "workflow.registerFulfillmentPaymentLink",
+);
+
+export const uploadFulfillmentPaymentProofMutation = action(
+  (input: { leadId: string; unitId: string; formData: FormData }) =>
+    uploadFulfillmentPaymentProof(input.leadId, input.unitId, input.formData),
+  "workflow.uploadFulfillmentPaymentProof",
+);
+
+export const validateFulfillmentPaymentMutation = action(
+  (input: { leadId: string }) => validateFulfillmentPayment(input),
+  "workflow.validateFulfillmentPayment",
+);
+
+export const registerFulfillmentSaleMutation = action(
+  (input: RegisterUnitSaleInput) => registerFulfillmentSale(input),
+  "workflow.registerFulfillmentSale",
 );

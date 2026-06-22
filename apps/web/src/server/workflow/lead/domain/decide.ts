@@ -383,17 +383,49 @@ export function addVenueAccounts(
   const completesLastVenue =
     input.totalVenues > 0 && input.fundedVenues + 1 === input.totalVenues;
 
+  // Affiliation data complete: hand off to fulfillment (hardware delivery + sale
+  // registration). LIVE now means the sale is registered, not the form is filled.
   if (completesLastVenue) {
     events.push(
       createHistoryEvent({
         leadId: state.id,
         eventType: "workflow_stage_changed",
         actorUserId: input.actor.userId,
-        payload: { from: state.stage, to: "LIVE" },
+        payload: { from: state.stage, to: "FULFILLMENT" },
         occurredAt: input.now,
       }),
     );
   }
+
+  return finish(state, events, input.actor, input.now);
+}
+
+// Closes fulfillment once every unit's sale is registered. Emitted by the
+// register-sale handoff alongside the per-unit service references.
+export function completeFulfillment(
+  state: LeadState,
+  input: { actor: Actor; orderId: string; now: number },
+): TransitionResult {
+  const authz = authorizeLeadAction("complete-fulfillment", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "FULFILLMENT") return Err(fail("invalid_stage"));
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "fulfillment_completed",
+      actorUserId: input.actor.userId,
+      payload: { orderId: input.orderId },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "LIVE" },
+      occurredAt: input.now,
+    }),
+  ];
 
   return finish(state, events, input.actor, input.now);
 }

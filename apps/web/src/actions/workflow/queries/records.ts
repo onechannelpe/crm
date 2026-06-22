@@ -6,6 +6,7 @@ import {
 } from "~/contracts/workflow/inputs";
 import {
   type AssignableExecutiveView,
+  type FulfillmentQueueView,
   type LeadBootstrapPreviewView,
   type LeadDetailView,
   type LeadListView,
@@ -21,6 +22,7 @@ import { parseObject, validationFail } from "~/server/shared/parsing";
 import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { listAssignableExecutives } from "~/server/workflow/lead/read/queries/list-assignable-executives";
+import { listFulfillmentQueue } from "~/server/workflow/lead/read/queries/list-fulfillment-queue";
 import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
 
 import { workflowActor } from "../commands/actor";
@@ -95,6 +97,21 @@ export async function queryLeadDetail(
         actorRole: role,
         leadId: query.leadId,
       });
+    },
+  });
+}
+
+export async function queryFulfillmentQueue(): Promise<FulfillmentQueueView> {
+  return runAction({
+    name: "workflow.list_fulfillment_queue",
+    access: { kind: "auth" },
+
+    execute: ({ actor }) => {
+      const { role, branchId } = workflowActor(actor);
+      return listFulfillmentQueue(
+        getServerRuntime().workflow.ports().executor,
+        { actorRole: role, actorBranchId: branchId },
+      );
     },
   });
 }

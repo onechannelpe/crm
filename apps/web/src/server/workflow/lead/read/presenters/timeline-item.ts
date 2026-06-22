@@ -1,4 +1,9 @@
 import { summarizeFieldChanges } from "~/contracts/events";
+import {
+  describeDocKind,
+  describeFulfillmentStep,
+  describeProductKind,
+} from "~/contracts/workflow/fulfillment-labels";
 import type { LeadTimelineItem } from "~/contracts/workflow/views";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 
@@ -174,6 +179,51 @@ export function presentTimelineItem(
         kind: "system",
         title: "Cuentas de sede registradas",
         description: `Registradas por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "fulfillment_started":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "stage-change",
+        title: "Entrega iniciada",
+        description: "El cliente pasó a entrega y registro de venta.",
+        actorDisplayName,
+      };
+    case "fulfillment_product_chosen":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Producto definido",
+        description: `${describeProductKind(event.payload.productKind)} (definido por ${actorDisplayName}).`,
+        actorDisplayName,
+      };
+    case "fulfillment_step_advanced":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Avance de entrega",
+        description: `${describeFulfillmentStep(event.payload.to)} (${actorDisplayName}).`,
+        actorDisplayName,
+      };
+    case "fulfillment_document_uploaded":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Documento de entrega cargado",
+        description: `${describeDocKind(event.payload.docKind)} cargado por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "fulfillment_completed":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "stage-change",
+        title: "Venta registrada",
+        description: "La venta quedó registrada. Cliente activo.",
         actorDisplayName,
       };
     case "note_added":

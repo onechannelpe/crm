@@ -5,7 +5,13 @@ import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
 
 import styles from "./resumen.module.css";
 
-const PIPELINE: LeadStage[] = ["QUALIFYING", "PRICING", "SETUP", "LIVE"];
+const PIPELINE: LeadStage[] = [
+  "QUALIFYING",
+  "PRICING",
+  "SETUP",
+  "FULFILLMENT",
+  "LIVE",
+];
 
 function isTerminal(stage: LeadStage): boolean {
   return stage === "DISQUALIFIED" || stage === "EXPIRED";

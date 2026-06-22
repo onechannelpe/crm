@@ -157,14 +157,22 @@ describe("lead action policy", () => {
       resolveAvailableActions(
         { userId: 2, role: "back_office" },
         makeLeadState(),
-        { hasActivePendingProposal: false, rateRevisionCount: 0 },
+        {
+          hasActivePendingProposal: false,
+          rateRevisionCount: 0,
+          fulfillmentStep: null,
+        },
       ),
     ).toContain("propose-rate");
 
     const executiveActions = resolveAvailableActions(
       { userId: 1, role: "executive" },
       makeLeadState(),
-      { hasActivePendingProposal: true, rateRevisionCount: 0 },
+      {
+        hasActivePendingProposal: true,
+        rateRevisionCount: 0,
+        fulfillmentStep: null,
+      },
     );
     expect(executiveActions).toContain("accept-rate");
     expect(executiveActions).toContain("request-rate-revision");
@@ -176,6 +184,7 @@ describe("lead action policy", () => {
         {
           hasActivePendingProposal: true,
           rateRevisionCount: MAX_RATE_REVISION_ROUNDS,
+          fulfillmentStep: null,
         },
       ),
     ).not.toContain("request-rate-revision");

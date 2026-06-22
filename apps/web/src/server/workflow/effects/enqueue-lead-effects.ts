@@ -2,6 +2,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 import { reactToRegistration } from "./reactors/enrichment";
+import { reactToFulfillmentChanges } from "./reactors/fulfillment-notify";
 import { reactToStageChanges } from "./reactors/notify";
 
 /**
@@ -18,5 +19,6 @@ export async function enqueueLeadEffects(
   if (committed.length === 0) return;
 
   await reactToStageChanges(tx, committed, now);
+  await reactToFulfillmentChanges(tx, committed, now);
   await reactToRegistration(tx, committed);
 }

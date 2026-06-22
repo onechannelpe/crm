@@ -1,0 +1,87 @@
+import type { Kysely } from "kysely";
+
+export async function createTables<T>(db: Kysely<T>): Promise<void> {
+  await db.schema
+    .createTable("lead_fulfillment_orders")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("lead_id", "text", (col) =>
+      col
+        .notNull()
+        .unique()
+        .references("workflow_leads.id")
+        .onDelete("cascade"),
+    )
+    .addColumn("product_kind", "varchar(30)")
+    .addColumn("current_step", "varchar(40)", (col) => col.notNull())
+    .addColumn("service_b_ref", "text")
+    .addColumn("created_by", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  // The work-queue and detail reads filter live orders by their pending step.
+  await db.schema
+    .createIndex("idx_lead_fulfillment_orders_step")
+    .on("lead_fulfillment_orders")
+    .column("current_step")
+    .execute();
+
+  await db.schema
+    .createTable("lead_fulfillment_units")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("order_id", "text", (col) =>
+      col
+        .notNull()
+        .references("lead_fulfillment_orders.id")
+        .onDelete("cascade"),
+    )
+    .addColumn("venue_id", "text", (col) =>
+      col.references("workflow_lead_venues.id"),
+    )
+    .addColumn("label", "varchar(120)", (col) => col.notNull())
+    .addColumn("serial_number", "text")
+    .addColumn("payment_url", "text")
+    .addColumn("payment_proof_artifact_id", "text")
+    .addColumn("payment_validated", "integer", (col) =>
+      col.notNull().defaultTo(0),
+    )
+    .addColumn("service_a_ref", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_lead_fulfillment_units_order")
+    .on("lead_fulfillment_units")
+    .column("order_id")
+    .execute();
+
+  await db.schema
+    .createTable("lead_fulfillment_documents")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("order_id", "text", (col) =>
+      col
+        .notNull()
+        .references("lead_fulfillment_orders.id")
+        .onDelete("cascade"),
+    )
+    .addColumn("doc_kind", "varchar(40)", (col) => col.notNull())
+    .addColumn("artifact_id", "text", (col) =>
+      col.notNull().references("workflow_artifacts.id"),
+    )
+    .addColumn("file_asset_id", "integer", (col) =>
+      col.notNull().references("file_assets.id"),
+    )
+    .addColumn("uploaded_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_lead_fulfillment_documents_order")
+    .on("lead_fulfillment_documents")
+    .column("order_id")
+    .execute();
+}

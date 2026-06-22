@@ -2,7 +2,22 @@ import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { ArtifactType, WorkflowArtifact } from "./types";
+import {
+  EXECUTIVE_OWNED_ARTIFACT_TYPES,
+  type ArtifactType,
+  type WorkflowArtifact,
+} from "./types";
+
+const EXECUTIVE_OWNED = new Set<ArtifactType>(EXECUTIVE_OWNED_ARTIFACT_TYPES);
+
+// Executives may request/upload/read these artifact kinds on their own leads
+// without the broad file:artifact:* grant the back office carries.
+function isExecutiveOwned(
+  actor: PolicyActor,
+  artifactType: ArtifactType,
+): boolean {
+  return actor.role === "executive" && EXECUTIVE_OWNED.has(artifactType);
+}
 
 export type PolicyAction =
   | "artifact.request"
@@ -25,6 +40,11 @@ const ARTIFACT_DIRECTIONS: Record<
   integration_import: "upload",
   sale_proof: "upload",
   rate_revision_file: "upload",
+  transactions_report: "upload",
+  addendum_unsigned: "upload",
+  addendum_signed_photo: "upload",
+  addendum_signed_pdf: "upload",
+  payment_proof: "upload",
 };
 
 function deny(code: string): Result<void, DomainError> {
@@ -39,10 +59,7 @@ function canRequest(
   actor: PolicyActor,
   artifactType: ArtifactType,
 ): Result<void, DomainError> {
-  if (
-    (artifactType === "sale_proof" || artifactType === "rate_revision_file") &&
-    actor.role === "executive"
-  ) {
+  if (isExecutiveOwned(actor, artifactType)) {
     return allow();
   }
 
@@ -61,11 +78,7 @@ function canUpload(
   actor: PolicyActor,
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
-  const isExecutiveOwnedUpload =
-    (artifact.artifactType === "sale_proof" ||
-      artifact.artifactType === "rate_revision_file") &&
-    actor.role === "executive";
-  if (!isExecutiveOwnedUpload) {
+  if (!isExecutiveOwned(actor, artifact.artifactType)) {
     if (!hasPermission(actor.role, "file:artifact:upload")) {
       return deny("artifact_upload_forbidden");
     }
@@ -95,12 +108,8 @@ function canRead(
   actor: PolicyActor,
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
-  const isExecutiveReadable =
-    (artifact.artifactType === "sale_proof" ||
-      artifact.artifactType === "rate_revision_file") &&
-    actor.role === "executive";
   if (
-    !isExecutiveReadable &&
+    !isExecutiveOwned(actor, artifact.artifactType) &&
     !hasPermission(actor.role, "file:artifact:read")
   ) {
     return deny("artifact_read_forbidden");

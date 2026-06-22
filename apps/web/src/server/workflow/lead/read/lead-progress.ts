@@ -24,6 +24,8 @@ export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
       return "PROPOSE_RATE";
     case "SETUP":
       return "DEFINE_DIGITAL_POLICY";
+    case "FULFILLMENT":
+      return "COMPLETE_FULFILLMENT";
     case "LIVE":
       return "NO_ACTION";
     case "EXPIRED":
@@ -44,6 +46,7 @@ export function resolveLeadBlockingFields(input: {
     case "QUALIFYING":
     case "DISQUALIFIED":
     case "PRICING":
+    case "FULFILLMENT":
     case "LIVE":
     case "EXPIRED":
       return [];

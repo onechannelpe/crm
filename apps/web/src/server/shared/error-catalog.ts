@@ -40,6 +40,34 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró la sede para este cliente.",
   },
+  fulfillment_not_started: {
+    kind: "not_found",
+    message: "La entrega de este cliente aún no ha iniciado.",
+  },
+  fulfillment_unit_not_found: {
+    kind: "not_found",
+    message: "No se encontró el equipo de entrega.",
+  },
+  invalid_fulfillment_step: {
+    kind: "validation",
+    message: "Esta acción no corresponde al paso actual de la entrega.",
+  },
+  invalid_fulfillment_action: {
+    kind: "validation",
+    message: "Acción de entrega inválida.",
+  },
+  fulfillment_product_required: {
+    kind: "validation",
+    message: "Primero define el producto del cliente.",
+  },
+  artifact_not_uploaded: {
+    kind: "validation",
+    message: "El documento aún no se ha cargado.",
+  },
+  lead_not_in_fulfillment: {
+    kind: "validation",
+    message: "El cliente no está en etapa de entrega.",
+  },
   sale_proof_not_found: {
     kind: "not_found",
     message: "No se encontró el comprobante de venta.",

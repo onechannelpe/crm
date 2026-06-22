@@ -2,6 +2,7 @@ import type {
   LeadRateRevisionFileView,
   LeadSaleProofFileView,
 } from "~/contracts/workflow/results";
+import type { FulfillmentDocKind } from "~/contracts/workflow/vocabulary";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import type { ArtifactRepos } from "~/server/files/service/contracts";
 import { createDownloadArtifact } from "~/server/files/service/create-download-artifact";
@@ -250,6 +251,68 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       if (!saleProof || saleProof.leadId !== input.leadId) {
         return Err(fail("sale_proof_not_found"));
       }
+
+      return requestDownloadToken(input.ctx, input.artifactId, {
+        repo: deps.filesRepo,
+      });
+    },
+
+    // Uploads one fulfillment document and returns its artifact id. The
+    // fulfillment command then binds it to the order and advances the step, so
+    // this only handles file ingestion + artifact-level authorization.
+    async uploadFulfillmentArtifact(input: {
+      ctx: AppContext;
+      leadId: string;
+      docKind: FulfillmentDocKind;
+      file: {
+        name: string;
+        sizeBytes: number;
+        stream: ReadableStream<Uint8Array>;
+      };
+    }): Promise<Result<{ artifactId: string }, DomainError>> {
+      const lead = await requireReadableLead(deps, input);
+      if (!lead.ok) return lead;
+      if (lead.value.stage !== "FULFILLMENT") {
+        return Err(fail("lead_not_in_fulfillment"));
+      }
+
+      const requested = await requestArtifact(
+        input.ctx,
+        {
+          artifactType: input.docKind,
+          executionMode: "async",
+          workflowContext: {
+            kind: "fulfillment_document",
+            leadId: input.leadId,
+          },
+        },
+        { repo: deps.filesRepo },
+      );
+      if (!requested.ok) return requested;
+
+      const artifactId = requested.value.id;
+      const uploaded = await uploadArtifactFile(
+        input.ctx,
+        artifactId,
+        {
+          name: input.file.name,
+          sizeBytes: input.file.sizeBytes,
+          stream: input.file.stream,
+        },
+        { repo: deps.filesRepo, storage: deps.filesStorage },
+      );
+      if (!uploaded.ok) return uploaded;
+
+      return Ok({ artifactId });
+    },
+
+    async requestFulfillmentDownloadToken(input: {
+      ctx: AppContext;
+      leadId: string;
+      artifactId: string;
+    }): Promise<Result<{ token: string }, DomainError>> {
+      const lead = await requireReadableLead(deps, input);
+      if (!lead.ok) return lead;
 
       return requestDownloadToken(input.ctx, input.artifactId, {
         repo: deps.filesRepo,

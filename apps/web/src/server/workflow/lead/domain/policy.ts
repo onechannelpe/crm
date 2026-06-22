@@ -1,10 +1,14 @@
 import { MAX_RATE_REVISION_ROUNDS } from "~/contracts/workflow/limits";
 import type { LeadAvailableAction } from "~/contracts/workflow/views";
-import { type LeadStage } from "~/contracts/workflow/vocabulary";
+import {
+  type FulfillmentStep,
+  type LeadStage,
+} from "~/contracts/workflow/vocabulary";
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import { pendingOwnerForStep, stepDefinition } from "../fulfillment/steps";
 import type { LeadState } from "./state";
 
 export type LeadCapability =
@@ -23,6 +27,7 @@ export type LeadCapability =
   | "review"
   | "register"
   | "request-sunat-refresh"
+  | "complete-fulfillment"
   | "list-assignable-executives";
 
 export type AssignableExecutivesScope =
@@ -93,8 +98,48 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
   }
   if (hasPermission(role, "lead:review")) caps.add("review");
   if (hasPermission(role, "lead:register")) caps.add("register");
+  if (hasPermission(role, "fulfillment:manage")) {
+    caps.add("complete-fulfillment");
+  }
 
   return caps;
+}
+
+// Authorizes a fulfillment handoff by the step's pending owner. Back office runs
+// the order; the supervisor (or back office) may upload the transactions report;
+// the executive performs client-facing steps only on their own lead.
+export function authorizeFulfillmentStep(
+  step: FulfillmentStep,
+  actor: { userId: number; role: Role },
+  state: { executiveId: number; stage: LeadStage },
+): Result<void, DomainError> {
+  if (state.stage !== "FULFILLMENT") return Err(forbidden());
+
+  const owner = pendingOwnerForStep(step);
+  if (owner === null) return Err(forbidden());
+
+  if (owner === "executive") {
+    if (state.executiveId !== actor.userId) return Err(forbidden());
+    if (!hasPermission(actor.role, "fulfillment:client-step")) {
+      return Err(forbidden());
+    }
+    return Ok(undefined);
+  }
+
+  if (owner === "supervisor") {
+    if (
+      !hasPermission(actor.role, "fulfillment:report:upload") &&
+      !hasPermission(actor.role, "fulfillment:manage")
+    ) {
+      return Err(forbidden());
+    }
+    return Ok(undefined);
+  }
+
+  if (!hasPermission(actor.role, "fulfillment:manage")) {
+    return Err(forbidden());
+  }
+  return Ok(undefined);
 }
 
 function canViewAllLeads(role: Role): boolean {
@@ -147,7 +192,11 @@ export function requireCapability(
 export function resolveAvailableActions(
   actor: { userId: number; role: Role },
   state: LeadState,
-  meta: { hasActivePendingProposal: boolean; rateRevisionCount: number },
+  meta: {
+    hasActivePendingProposal: boolean;
+    rateRevisionCount: number;
+    fulfillmentStep: FulfillmentStep | null;
+  },
 ): LeadAvailableAction[] {
   const caps = resolveCapabilities(actor.role);
   const ownsLead = state.executiveId === actor.userId;
@@ -184,6 +233,16 @@ export function resolveAvailableActions(
   }
   if (caps.has("update-venue") && ownsLead && state.stage === "SETUP") {
     actions.push("update-venue");
+  }
+  if (
+    state.stage === "FULFILLMENT" &&
+    meta.fulfillmentStep !== null &&
+    authorizeFulfillmentStep(meta.fulfillmentStep, actor, state).ok
+  ) {
+    const def = stepDefinition(meta.fulfillmentStep);
+    if (def.action !== null) {
+      actions.push(`fulfillment:${def.action}`);
+    }
   }
   if (caps.has("reassign")) {
     actions.push("reassign-lead");

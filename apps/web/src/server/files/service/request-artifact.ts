@@ -15,6 +15,11 @@ const DIRECTION_MAP: Record<
   integration_import: "upload",
   sale_proof: "upload",
   rate_revision_file: "upload",
+  transactions_report: "upload",
+  addendum_unsigned: "upload",
+  addendum_signed_photo: "upload",
+  addendum_signed_pdf: "upload",
+  payment_proof: "upload",
 };
 
 export async function requestArtifact(

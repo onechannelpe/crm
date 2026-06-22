@@ -50,7 +50,13 @@ export type Permission =
   | "file:artifact:request"
   | "file:artifact:upload"
   | "file:artifact:read"
-  | "file:artifact:audit:read";
+  | "file:artifact:audit:read"
+  // Back office drives the fulfillment order end to end.
+  | "fulfillment:manage"
+  // Supervisor (and back office) may upload the refurbished transactions report.
+  | "fulfillment:report:upload"
+  // Executive performs the client-facing fulfillment handoffs on their leads.
+  | "fulfillment:client-step";
 
 export const ROLES = [
   "executive",
@@ -78,6 +84,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:commercial-input:complete",
     "lead:sale:create",
     "lead:sale:upload-proof",
+    "fulfillment:client-step",
   ],
   supervisor: [
     "lead:note:add",
@@ -101,6 +108,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "audit:read",
     "file:artifact:read",
     "file:artifact:audit:read",
+    "fulfillment:report:upload",
   ],
   back_office: [
     "lead:note:add",
@@ -118,6 +126,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "file:artifact:upload",
     "file:artifact:read",
     "lead:sale:upload-proof",
+    "fulfillment:manage",
+    "fulfillment:report:upload",
   ],
   sales_manager: [
     "lead:note:add",

@@ -1,0 +1,94 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-spacing-4, 16px);
+}
+
+.statusLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--t-spacing-2, 8px);
+}
+
+.stepName {
+  font-weight: 600;
+}
+
+.waiting {
+  color: var(--t-font-color-tertiary, #6b7280);
+  font-size: 0.85rem;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: var(--t-spacing-2, 8px);
+  padding: 4px 0;
+  color: var(--t-font-color-tertiary, #6b7280);
+  font-size: 0.85rem;
+}
+
+.stepItem[data-state="done"] {
+  color: var(--t-font-color-secondary, #374151);
+}
+
+.stepItem[data-state="current"] {
+  color: var(--t-font-color-primary, #111827);
+  font-weight: 600;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-spacing-2, 8px);
+  padding: var(--t-spacing-3, 12px);
+  border: 1px solid var(--t-border-color-light, #e5e7eb);
+  border-radius: var(--t-border-radius-md, 8px);
+}
+
+.unitRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--t-spacing-2, 8px);
+}
+
+.unitLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.unitGrow {
+  flex: 2;
+}
+
+.docList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--t-spacing-2, 8px);
+  font-size: 0.85rem;
+}
+
+.errorText {
+  color: var(--t-color-red-50, #dc2626);
+  font-size: 0.85rem;
+}

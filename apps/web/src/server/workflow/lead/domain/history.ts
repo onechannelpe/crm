@@ -4,6 +4,10 @@ import type {
   LeadStage,
   LeadStatus,
   Currency,
+  ProductKind,
+  FulfillmentStep,
+  FulfillmentAction,
+  FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
 
 export type LeadHistoryEventType =
@@ -24,6 +28,11 @@ export type LeadHistoryEventType =
   | "venue_added"
   | "venue_updated"
   | "venue_accounts_added"
+  | "fulfillment_started"
+  | "fulfillment_product_chosen"
+  | "fulfillment_step_advanced"
+  | "fulfillment_document_uploaded"
+  | "fulfillment_completed"
   | "note_added"
   | "lead_deleted";
 
@@ -45,6 +54,11 @@ const LEAD_HISTORY_EVENT_TYPES = {
   venue_added: true,
   venue_updated: true,
   venue_accounts_added: true,
+  fulfillment_started: true,
+  fulfillment_product_chosen: true,
+  fulfillment_step_advanced: true,
+  fulfillment_document_uploaded: true,
+  fulfillment_completed: true,
   note_added: true,
   lead_deleted: true,
 } satisfies Record<LeadHistoryEventType, true>;
@@ -129,6 +143,28 @@ export type LeadHistoryPayloadByEvent = {
   };
   venue_accounts_added: {
     venueId: string;
+  };
+  fulfillment_started: {
+    orderId: string;
+    unitCount: number;
+  };
+  fulfillment_product_chosen: {
+    orderId: string;
+    productKind: ProductKind;
+  };
+  fulfillment_step_advanced: {
+    orderId: string;
+    from: FulfillmentStep;
+    to: FulfillmentStep;
+    action: FulfillmentAction;
+  };
+  fulfillment_document_uploaded: {
+    orderId: string;
+    docKind: FulfillmentDocKind;
+    artifactId: string;
+  };
+  fulfillment_completed: {
+    orderId: string;
   };
   note_added: {
     body: string;

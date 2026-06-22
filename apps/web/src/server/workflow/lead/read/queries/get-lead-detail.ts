@@ -56,6 +56,7 @@ export async function getLeadDetail(
       hasActivePendingProposal:
         latestProposal?.outcome === "pending" && isReservationActive(lead, now),
       rateRevisionCount: loaded.value.rateRevisionRows.length,
+      fulfillmentStep: loaded.value.fulfillment?.order.currentStep ?? null,
     },
   );
 
@@ -77,6 +78,7 @@ export async function getLeadDetail(
       sourceStatus: loaded.value.sourceStatus,
       organization: loaded.value.organization,
       legalRepresentative: loaded.value.legalRepresentative,
+      fulfillment: loaded.value.fulfillment,
     }),
   );
 }

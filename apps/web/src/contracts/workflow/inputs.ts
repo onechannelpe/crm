@@ -7,6 +7,7 @@ import type {
   CollectionMode,
   Currency,
   ProductScope,
+  ProductKind,
 } from "./vocabulary";
 
 export type ListLeadsFiltersInput = {
@@ -126,4 +127,48 @@ export type RequestRateRevisionInput = {
   leadId: string;
   justification: string;
   artifactIds: string[];
+};
+
+// Back office picks what the client will receive; this seeds the fulfillment
+// step sequence and creates one hardware unit per POS for the POS kinds.
+export type ChooseFulfillmentProductInput = {
+  leadId: string;
+  productKind: ProductKind;
+};
+
+// One artifact-backed handoff (transactions report, addendum, signed photos,
+// compiled PDF). The order's current step selects which document kind applies.
+export type AttachFulfillmentDocumentInput = {
+  leadId: string;
+  artifactId: string;
+};
+
+// Per-unit data entry. The step advances only once every unit on the order has
+// the value the current step requires (serial, payment link, sale reference).
+export type RecordUnitSerialInput = {
+  leadId: string;
+  unitId: string;
+  serial: string;
+};
+
+export type RegisterUnitPaymentLinkInput = {
+  leadId: string;
+  unitId: string;
+  paymentUrl: string;
+};
+
+export type UploadUnitPaymentProofInput = {
+  leadId: string;
+  unitId: string;
+  artifactId: string;
+};
+
+export type RegisterUnitSaleInput = {
+  leadId: string;
+  unitId: string;
+  serviceRef: string;
+};
+
+export type ValidateFulfillmentPaymentInput = {
+  leadId: string;
 };

@@ -13,6 +13,13 @@ import {
   toVenueUpdatedEntry,
 } from "./history-commercial-parser";
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
+import {
+  toFulfillmentCompletedEntry,
+  toFulfillmentDocumentUploadedEntry,
+  toFulfillmentProductChosenEntry,
+  toFulfillmentStartedEntry,
+  toFulfillmentStepAdvancedEntry,
+} from "./history-fulfillment-parser";
 import { toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,
@@ -75,6 +82,16 @@ export function toHistoryEntry(
         payload: { venueId: venueId.value },
       });
     }
+    case "fulfillment_started":
+      return toFulfillmentStartedEntry(row, payload.value);
+    case "fulfillment_product_chosen":
+      return toFulfillmentProductChosenEntry(row, payload.value);
+    case "fulfillment_step_advanced":
+      return toFulfillmentStepAdvancedEntry(row, payload.value);
+    case "fulfillment_document_uploaded":
+      return toFulfillmentDocumentUploadedEntry(row, payload.value);
+    case "fulfillment_completed":
+      return toFulfillmentCompletedEntry(row);
     case "note_added":
       return toNoteEntry(row, payload.value);
     case "lead_deleted":

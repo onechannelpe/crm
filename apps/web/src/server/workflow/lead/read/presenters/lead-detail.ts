@@ -1,5 +1,6 @@
 import type {
   LeadAvailableAction,
+  LeadDetailFulfillmentView,
   LeadDetailLeadView,
   LeadDetailRateProposalView,
   LeadDetailRateRevisionView,
@@ -22,6 +23,8 @@ import type {
   LeadCommercialScope,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
+import type { FulfillmentOrderDetails } from "~/server/workflow/lead/fulfillment/repo";
+import { pendingOwnerForStep } from "~/server/workflow/lead/fulfillment/steps";
 import {
   resolveLeadBlockingFields,
   resolveLeadNextStep,
@@ -64,7 +67,38 @@ export type LeadDetailSource = {
   sourceStatus: LeadSourceStatus;
   organization: OrganizationProfile;
   legalRepresentative: LegalRepresentative | undefined;
+  fulfillment: FulfillmentOrderDetails | null;
 };
+
+function toFulfillmentView(
+  details: FulfillmentOrderDetails,
+): LeadDetailFulfillmentView {
+  return {
+    orderId: details.order.id,
+    productKind: details.order.productKind,
+    currentStep: details.order.currentStep,
+    pendingOwner: pendingOwnerForStep(details.order.currentStep),
+    units: details.units.map((unit) => ({
+      id: unit.id,
+      label: unit.label,
+      venueId: unit.venueId,
+      serial: unit.serial,
+      paymentUrl: unit.paymentUrl,
+      paymentProofArtifactId: unit.paymentProofArtifactId,
+      serviceRef: unit.serviceRef,
+      paymentValidated: unit.paymentValidated,
+    })),
+    documents: details.documents.map((doc) => ({
+      docKind: doc.docKind,
+      artifactId: doc.artifactId,
+      filename: doc.safeDisplayFilename,
+      detectedMime: doc.detectedMime,
+      sizeBytes: doc.sizeBytes,
+      uploadedByUserId: doc.uploadedByUserId,
+      uploadedAt: doc.createdAt,
+    })),
+  };
+}
 
 function toLeadSourceStatus(
   sourceStatus: LeadSourceStatus,
@@ -249,6 +283,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     rateProposals: source.rateProposals.map(toRateProposalView),
     venues: source.venues.map(toLeadDetailVenue),
     rateRevisions: source.rateRevisions.map(toRateRevisionView),
+    fulfillment: source.fulfillment
+      ? toFulfillmentView(source.fulfillment)
+      : null,
     timeline: presentTimeline(source.history, source.canRevealFullTimeline),
     availableActions: source.availableActions,
     blockingFields: resolveLeadBlockingFields({

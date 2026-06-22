@@ -11,6 +11,11 @@ const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
   integration_import: ["csv", "xlsx"],
   sale_proof: ["pdf", "png", "jpg", "jpeg"],
   rate_revision_file: ["xlsx", "xls", "png", "jpg", "jpeg"],
+  transactions_report: ["pdf", "csv", "xlsx", "xls", "png", "jpg", "jpeg"],
+  addendum_unsigned: ["pdf"],
+  addendum_signed_photo: ["pdf", "png", "jpg", "jpeg"],
+  addendum_signed_pdf: ["pdf"],
+  payment_proof: ["pdf", "png", "jpg", "jpeg"],
 };
 
 const MAX_SIZE_OVERRIDES: Partial<Record<ArtifactType, number>> = {};

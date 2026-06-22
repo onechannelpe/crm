@@ -3,8 +3,22 @@ const ARTIFACT_TYPES = [
   "integration_import",
   "sale_proof",
   "rate_revision_file",
+  "transactions_report",
+  "addendum_unsigned",
+  "addendum_signed_photo",
+  "addendum_signed_pdf",
+  "payment_proof",
 ] as const;
 export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
+
+// Fulfillment documents that the executive owns (uploads/reads on their own
+// leads without the broad file:artifact:* grant), mirroring sale_proof.
+export const EXECUTIVE_OWNED_ARTIFACT_TYPES = [
+  "sale_proof",
+  "rate_revision_file",
+  "addendum_signed_photo",
+  "payment_proof",
+] as const;
 
 const EXECUTION_MODES = ["sync", "async"] as const;
 export type ArtifactExecutionMode = (typeof EXECUTION_MODES)[number];
