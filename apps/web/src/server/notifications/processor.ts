@@ -108,12 +108,16 @@ export function createNotificationProcessor(
     /* eslint-disable no-await-in-loop */
     for (const entry of entries) {
       try {
-        const planned = await planDeliveries(db, {
-          id: entry.id,
-          event_type: entry.event_type,
-          audience_json: entry.audience_json,
-          channels_json: entry.channels_json,
-        });
+        const planned = await planDeliveries(
+          db,
+          {
+            id: entry.id,
+            event_type: entry.event_type,
+            audience_json: entry.audience_json,
+            channels_json: entry.channels_json,
+          },
+          now,
+        );
 
         logger.info("intent_processing", {
           id: entry.id,
