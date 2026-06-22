@@ -1,9 +1,9 @@
 import { createClient } from "@libsql/client";
 import { Kysely } from "kysely";
-import { LibSQLDialect } from "kysely-turso/libsql";
 
 import { createLogger } from "~/lib/observability/logger";
 
+import { LibSQLDialect } from "./libsql-dialect";
 import type { Database as DatabaseSchema } from "./types";
 
 const logger = createLogger("db-client");
@@ -33,6 +33,6 @@ export function createDb(dbUrl: string): Kysely<DatabaseSchema> {
   });
 
   return new Kysely<DatabaseSchema>({
-    dialect: new LibSQLDialect({ client }),
+    dialect: new LibSQLDialect(client),
   });
 }
