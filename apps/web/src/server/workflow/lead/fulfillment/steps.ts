@@ -234,7 +234,7 @@ export function fulfillmentProgress(
   const sequence = STEP_SEQUENCE[productKind].filter(
     (step) => step !== "COMPLETED",
   );
-  const currentIndex = sequence.indexOf(currentStep);
+  const currentIndex = sequence.findIndex((step) => step === currentStep);
   return sequence.map((step, index) => ({
     step,
     status:

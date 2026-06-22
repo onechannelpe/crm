@@ -60,6 +60,10 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "Primero define el producto del cliente.",
   },
+  reject_reason_required: {
+    kind: "validation",
+    message: "Indica el motivo de la devolución.",
+  },
   artifact_not_uploaded: {
     kind: "validation",
     message: "El documento aún no se ha cargado.",
