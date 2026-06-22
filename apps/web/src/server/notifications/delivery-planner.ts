@@ -3,7 +3,10 @@ import type { Kysely } from "kysely";
 import type { Database } from "~/lib/db/types";
 
 import { resolveAudience } from "./audience";
-import type { NotificationAudience, NotificationChannel } from "./types";
+import {
+  parseNotificationAudience,
+  parseNotificationChannels,
+} from "./outbox-payload";
 import { filterUsersWithActiveSession } from "./whatsapp-session";
 
 export type NotificationOutboxEntry = {
@@ -43,23 +46,13 @@ async function loadVerifiedAddressMap(
   return new Map(rows.map((row) => [row.user_id, row.address]));
 }
 
-function parseAudience(entry: NotificationOutboxEntry): NotificationAudience {
-  // oxlint-disable-next-line no-unsafe-type-assertion
-  return JSON.parse(entry.audience_json) as NotificationAudience;
-}
-
-function parseChannels(entry: NotificationOutboxEntry): NotificationChannel[] {
-  // oxlint-disable-next-line no-unsafe-type-assertion
-  return JSON.parse(entry.channels_json) as NotificationChannel[];
-}
-
 export async function planDeliveries(
   db: Kysely<Database>,
   entry: NotificationOutboxEntry,
   now = Date.now(),
 ): Promise<PlannedDeliveries> {
-  const audience = parseAudience(entry);
-  const channels = parseChannels(entry);
+  const audience = parseNotificationAudience(entry.audience_json);
+  const channels = parseNotificationChannels(entry.channels_json);
   const recipients = await resolveAudience(db, audience);
 
   const inAppRecipients = channels.includes("in_app") ? recipients : [];

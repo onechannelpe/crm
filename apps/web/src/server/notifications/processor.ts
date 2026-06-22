@@ -105,7 +105,7 @@ export function createNotificationProcessor(
       .where("lease_owner", "=", workerId)
       .execute();
 
-    /* eslint-disable no-await-in-loop */
+    /* eslint-disable no-await-in-loop -- Sequential delivery bounds provider concurrency. */
     for (const entry of entries) {
       try {
         const planned = await planDeliveries(

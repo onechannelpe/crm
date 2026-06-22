@@ -61,7 +61,7 @@ function extractSenderPhones(body: unknown): string[] {
   return phones;
 }
 
-// Machine request policy verifies the signature before route dispatch.
+// POST requests reach this handler only after HMAC signature verification.
 export async function POST(event: APIEvent): Promise<Response> {
   let body: unknown;
   try {

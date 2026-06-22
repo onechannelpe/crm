@@ -1,5 +1,3 @@
-// Unclassified paths use authenticated browser policy.
-
 export type RequestClass = "machine" | "public" | "browser";
 
 const PUBLIC_ROUTE_PREFIXES = [
