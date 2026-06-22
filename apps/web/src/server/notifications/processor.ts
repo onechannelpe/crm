@@ -92,6 +92,7 @@ async function markOutboxFailed(
 export function createNotificationProcessor(
   db: Kysely<Database>,
   messaging: Pick<MessagingGateway, "sendCampaignEmail" | "sendWhatsAppText">,
+  options: { publicOrigin: string },
 ) {
   return async function runOnce(workerId: string, limit = 50): Promise<void> {
     const now = Date.now();
@@ -128,7 +129,7 @@ export function createNotificationProcessor(
         await deliverInApp(db, entry, planned.inAppRecipients, now);
 
         for (const delivery of planned.externalDeliveries) {
-          await deliverExternal(db, entry, delivery, messaging, now);
+          await deliverExternal(db, entry, delivery, messaging, options, now);
         }
 
         await markOutboxDone(db, entry.id, now);

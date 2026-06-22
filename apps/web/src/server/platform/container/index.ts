@@ -1,4 +1,9 @@
-import { engineConfig, notificationsConfig, uploadsConfig } from "~/lib/env";
+import {
+  appConfig,
+  engineConfig,
+  notificationsConfig,
+  uploadsConfig,
+} from "~/lib/env";
 import { createRedisQueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createDefaultEngineClient } from "~/server/shared/engine/client";
 
@@ -34,7 +39,12 @@ function createServerRuntime() {
   const queueDoorbell = memo(createRedisQueueDoorbell);
   const engine = memo(() => createDefaultEngineClient(engineConfig()));
   const notifications = memo(() =>
-    createNotificationsRuntime(infra, notificationsConfig(), queueDoorbell()),
+    createNotificationsRuntime(
+      infra,
+      notificationsConfig(),
+      appConfig(),
+      queueDoorbell(),
+    ),
   );
   const files = memo(() => createFilesRuntime(infra, uploadsConfig()));
   const admin = memo(() => createAdminRuntime(infra));

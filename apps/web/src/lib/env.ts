@@ -120,6 +120,35 @@ function parseSecurityEnv(source: EnvSource) {
   } as const;
 }
 
+function parseAppEnv(source: EnvSource) {
+  return {
+    publicOrigin: parsePublicOrigin(
+      optional(source, "APP_PUBLIC_ORIGIN", "http://localhost:3000"),
+    ),
+  } as const;
+}
+
+function parsePublicOrigin(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("APP_PUBLIC_ORIGIN must be a valid URL origin");
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("APP_PUBLIC_ORIGIN must use http or https");
+  }
+
+  if (url.pathname !== "/" || url.search || url.hash) {
+    throw new Error(
+      "APP_PUBLIC_ORIGIN must not include a path, query, or hash",
+    );
+  }
+
+  return url.origin;
+}
+
 function parseUploadsEnv(source: EnvSource) {
   return {
     storageRoot: optional(
@@ -290,6 +319,7 @@ export function loadServerEnv(source: EnvSource) {
     totp: parseTotpEnv(source),
     extension: parseExtensionEnv(source),
     security: parseSecurityEnv(source),
+    app: parseAppEnv(source),
     uploads: parseUploadsEnv(source),
     engine: parseEngineEnv(source),
     googleOAuth: parseGoogleOAuthEnv(source),
@@ -310,6 +340,7 @@ function section<T>(parse: (source: EnvSource) => T): () => T {
 export const totpConfig = section(parseTotpEnv);
 export const extensionConfig = section(parseExtensionEnv);
 export const securityConfig = section(parseSecurityEnv);
+export const appConfig = section(parseAppEnv);
 export const uploadsConfig = section(parseUploadsEnv);
 export const engineConfig = section(parseEngineEnv);
 export const googleOAuthConfig = section(parseGoogleOAuthEnv);
@@ -317,6 +348,7 @@ export const notificationsConfig = section(parseNotificationsEnv);
 export const sentryConfig = section(parseSentryEnv);
 
 export type NotificationsConfig = ReturnType<typeof parseNotificationsEnv>;
+export type AppConfig = ReturnType<typeof parseAppEnv>;
 export type EngineConfig = ReturnType<typeof parseEngineEnv>;
 export type UploadsConfig = ReturnType<typeof parseUploadsEnv>;
 

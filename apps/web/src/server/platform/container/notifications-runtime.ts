@@ -7,7 +7,7 @@ import {
   type DeliveryProvider,
 } from "@crm/message-channels";
 
-import type { NotificationsConfig } from "~/lib/env";
+import type { AppConfig, NotificationsConfig } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
@@ -21,6 +21,7 @@ import type { ServerInfra } from "./infra";
 export function createNotificationsRuntime(
   infra: ServerInfra,
   config: NotificationsConfig,
+  app: AppConfig,
   doorbell: QueueDoorbell,
 ) {
   const providers: DeliveryProvider[] = [];
@@ -47,7 +48,9 @@ export function createNotificationsRuntime(
   const composer = createEmailComposer();
   const messaging = createMessagingGateway({ channels, composer });
 
-  const runProcessor = createNotificationProcessor(infra.db, messaging);
+  const runProcessor = createNotificationProcessor(infra.db, messaging, {
+    publicOrigin: app.publicOrigin,
+  });
 
   return {
     messaging,

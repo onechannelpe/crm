@@ -8,6 +8,34 @@ import type { MessagingGateway } from "./messaging-gateway";
 
 const logger = createLogger("notifications-processor");
 
+type ExternalNotificationEntry = {
+  id: string;
+  title: string;
+  body_text: string;
+  action_url: string | null;
+};
+
+function absoluteActionUrl(
+  actionUrl: string | null,
+  publicOrigin: string,
+): string | null {
+  if (actionUrl === null) return null;
+
+  return new URL(actionUrl, publicOrigin).toString();
+}
+
+export function formatWhatsAppNotificationBody(
+  entry: Pick<ExternalNotificationEntry, "body_text" | "action_url">,
+  publicOrigin: string,
+): string {
+  const actionUrl = absoluteActionUrl(entry.action_url, publicOrigin);
+  if (actionUrl === null) {
+    return entry.body_text;
+  }
+
+  return `${entry.body_text} Revísalo en: ${actionUrl}`;
+}
+
 export async function deliverInApp(
   db: Kysely<Database>,
   entry: {
@@ -62,9 +90,10 @@ export async function deliverInApp(
 
 export async function deliverExternal(
   db: Kysely<Database>,
-  entry: { id: string; title: string; body_text: string },
+  entry: ExternalNotificationEntry,
   delivery: PlannedExternalDelivery,
   messaging: Pick<MessagingGateway, "sendCampaignEmail" | "sendWhatsAppText">,
+  options: { publicOrigin: string },
   now: number,
 ): Promise<void> {
   const receipt =
@@ -79,7 +108,7 @@ export async function deliverExternal(
         })
       : await messaging.sendWhatsAppText({
           to: delivery.recipientAddress,
-          body: entry.body_text,
+          body: formatWhatsAppNotificationBody(entry, options.publicOrigin),
         });
   const provider = receipt.ok
     ? receipt.value.provider

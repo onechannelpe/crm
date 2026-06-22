@@ -57,6 +57,30 @@ describe("env validation", () => {
     expect(loadServerEnv(baseEnv).engine.engineConnectMode).toBe("local");
   });
 
+  it("defaults app public origin to local development", () => {
+    expect(loadServerEnv(baseEnv).app.publicOrigin).toBe(
+      "http://localhost:3000",
+    );
+  });
+
+  it("normalizes app public origin", () => {
+    expect(
+      loadServerEnv({
+        ...baseEnv,
+        APP_PUBLIC_ORIGIN: "https://crm.example.com/",
+      }).app.publicOrigin,
+    ).toBe("https://crm.example.com");
+  });
+
+  it("rejects invalid app public origins", () => {
+    expect(() =>
+      loadServerEnv({
+        ...baseEnv,
+        APP_PUBLIC_ORIGIN: "https://crm.example.com/app",
+      }),
+    ).toThrow("APP_PUBLIC_ORIGIN must not include a path, query, or hash");
+  });
+
   it("routes email to Resend and WhatsApp to Kapso", () => {
     expect(loadServerEnv(baseEnv).notifications).toMatchObject({
       routes: {

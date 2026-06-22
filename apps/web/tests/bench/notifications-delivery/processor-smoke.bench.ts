@@ -53,7 +53,9 @@ describe("notifications delivery processor smoke benchmark", () => {
     intentIds = await seedProcessorSmokeFixtures(ctx);
 
     const module = await import("~/server/notifications/processor");
-    runOnce = module.createNotificationProcessor(ctx.db, messaging);
+    runOnce = module.createNotificationProcessor(ctx.db, messaging, {
+      publicOrigin: "http://localhost:3000",
+    });
   });
 
   afterAll(async () => {

@@ -14,28 +14,34 @@ export function createWorkflowOutbox(runtime: TestRuntime) {
     },
 
     async drainAll(workerId = "test-worker"): Promise<void> {
-      const runOnce = createNotificationProcessor(runtime.ctx.db, {
-        async sendCampaignEmail() {
-          return {
-            ok: true as const,
-            value: {
-              channel: "email",
-              provider: "resend",
-              providerMessageId: "campaign",
-            },
-          };
+      const runOnce = createNotificationProcessor(
+        runtime.ctx.db,
+        {
+          async sendCampaignEmail() {
+            return {
+              ok: true as const,
+              value: {
+                channel: "email",
+                provider: "resend",
+                providerMessageId: "campaign",
+              },
+            };
+          },
+          async sendWhatsAppText() {
+            return {
+              ok: true as const,
+              value: {
+                channel: "whatsapp",
+                provider: "whatsapp_cloud",
+                providerMessageId: "whatsapp",
+              },
+            };
+          },
         },
-        async sendWhatsAppText() {
-          return {
-            ok: true as const,
-            value: {
-              channel: "whatsapp",
-              provider: "whatsapp_cloud",
-              providerMessageId: "whatsapp",
-            },
-          };
+        {
+          publicOrigin: "http://localhost:3000",
         },
-      });
+      );
 
       for (let index = 0; index < 5; index += 1) {
         await runOnce(workerId, 50);
