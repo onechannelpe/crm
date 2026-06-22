@@ -25,6 +25,7 @@ describe("bootstrapUserNotifications", () => {
         findByChannelAndAddress: vi.fn(),
         upsert: upsertAddress,
         claimWhatsAppAddress,
+        markWhatsAppVerified: vi.fn(),
       },
       notificationPreferences: {
         upsert: upsertPreference,
@@ -78,6 +79,7 @@ describe("bootstrapUserNotifications", () => {
         findByChannelAndAddress: vi.fn(),
         upsert: upsertAddress,
         claimWhatsAppAddress,
+        markWhatsAppVerified: vi.fn(),
       },
       notificationPreferences: {
         upsert: upsertPreference,
@@ -111,6 +113,7 @@ describe("bootstrapUserNotifications", () => {
           findByChannelAndAddress: vi.fn(),
           upsert: upsertAddress,
           claimWhatsAppAddress,
+          markWhatsAppVerified: vi.fn(),
         },
         notificationPreferences: {
           upsert: upsertPreference,

@@ -16,7 +16,16 @@ const mocks = vi.hoisted(() => ({
   loggerWarn:
     vi.fn<(event: string, metadata: Record<string, unknown>) => void>(),
   openSession: vi.fn<() => Promise<unknown>>(),
-  sendReply: vi.fn<() => Promise<{ providerMessageId: string | null }>>(),
+  sendReply:
+    vi.fn<
+      (input: {
+        apiKey: string;
+        phoneNumberId: string;
+        metaGraphVersion: string;
+        to: string;
+        body: string;
+      }) => Promise<{ providerMessageId: string | null }>
+    >(),
 }));
 
 vi.mock("~/lib/observability/logger", () => ({
@@ -57,8 +66,13 @@ vi.mock("~/server/platform/container", () => ({
 }));
 
 vi.mock("@crm/message-channels", () => ({
-  sendWithKapsoWhatsAppText: (...args: unknown[]) =>
-    mocks.sendReply(...(args as [])),
+  sendWithKapsoWhatsAppText: (input: {
+    apiKey: string;
+    phoneNumberId: string;
+    metaGraphVersion: string;
+    to: string;
+    body: string;
+  }) => mocks.sendReply(input),
 }));
 
 import { POST } from "~/routes/api/webhooks/whatsapp";

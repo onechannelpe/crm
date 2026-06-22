@@ -116,6 +116,12 @@ export async function POST(event: APIEvent): Promise<Response> {
     const addressRepo = createUserChannelAddressRepo(db);
     const now = Date.now();
 
+    /* eslint-disable no-await-in-loop -- Sequential per-message processing:
+       - the verify write must complete before a subsequent message from the
+         same sender is read (a duplicate /verificar is a no-op via the
+         is_verified filter, but we want that to be observable in tests);
+       - the Kapso outbound call is rate-limited per phone number, so we do
+         not fan out parallel replies. */
     for (const message of messages) {
       const localAddress = normalizePhoneInput(message.from);
       if (!localAddress) continue;
@@ -158,6 +164,7 @@ export async function POST(event: APIEvent): Promise<Response> {
         await openSession(db, row.user_id, now);
       }
     }
+    /* eslint-enable no-await-in-loop */
   } catch (error) {
     logger.error("whatsapp_webhook_session_open_failed", {
       error: error instanceof Error ? error.message : "Unknown error",
