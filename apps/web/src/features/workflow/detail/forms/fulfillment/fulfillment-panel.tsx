@@ -21,6 +21,7 @@ import type {
 import {
   PRODUCT_KINDS,
   type FulfillmentAction,
+  type FulfillmentDocKind,
   type ProductKind,
   isFulfillmentAction,
   isProductKind,
@@ -38,6 +39,7 @@ import {
   recordFulfillmentSerialMutation,
   registerFulfillmentPaymentLinkMutation,
   registerFulfillmentSaleMutation,
+  rejectFulfillmentStepMutation,
   uploadFulfillmentDocumentMutation,
   uploadFulfillmentPaymentProofMutation,
   validateFulfillmentPaymentMutation,
@@ -46,10 +48,19 @@ import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";
 
 import styles from "./fulfillment.module.css";
 
+type Unit = LeadDetailFulfillmentUnitView;
+type Doc = LeadDetailFulfillmentView["documents"][number];
+
 const OWNER_LABELS: Record<string, string> = {
   executive: "el ejecutivo",
   back_office: "back office",
   supervisor: "el supervisor",
+};
+
+const OWNER_BADGE: Record<string, string> = {
+  executive: "Ejecutivo",
+  back_office: "Back office",
+  supervisor: "Supervisor",
 };
 
 const DOCUMENT_ACTIONS = new Set<FulfillmentAction>([
@@ -59,12 +70,38 @@ const DOCUMENT_ACTIONS = new Set<FulfillmentAction>([
   "compile_signed_pdf",
 ]);
 
+// The document a given upload step needs the actor to read before acting, plus
+// the instruction that frames the handoff.
+const DOC_STEP_CONTEXT: Partial<
+  Record<FulfillmentAction, { docKind: FulfillmentDocKind; instruction: string }>
+> = {
+  generate_addendum: {
+    docKind: "transactions_report",
+    instruction: "Genera la adenda a partir del reporte de transacciones.",
+  },
+  submit_signed_addendum: {
+    docKind: "addendum_unsigned",
+    instruction: "Envía esta adenda al cliente para firma, luego sube las fotos.",
+  },
+  compile_signed_pdf: {
+    docKind: "addendum_signed_photo",
+    instruction: "Compila estas fotos firmadas en un solo PDF.",
+  },
+};
+
+const PRODUCT_CONSEQUENCE: Record<ProductKind, string> = {
+  pos_new: "Equipo nuevo: el cliente paga el POS, se genera un link de pago.",
+  pos_refurbished:
+    "Equipo reacondicionado: requiere reporte de transacciones y adenda firmada.",
+  digital_only:
+    "Solo digital: sin equipo ni pago, pasa directo a registro de venta.",
+};
+
 function pendingAction(data: LeadDetailView): FulfillmentAction | null {
   const found = data.availableActions.find((action) =>
     action.startsWith("fulfillment:"),
   );
   if (!found) return null;
-
   const action = found.slice("fulfillment:".length);
   return isFulfillmentAction(action) ? action : null;
 }
@@ -74,16 +111,24 @@ async function downloadDocument(leadId: string, artifactId: string) {
   window.location.href = `/api/files/download/${token.token}`;
 }
 
+function docsOfKind(view: LeadDetailFulfillmentView, kind: FulfillmentDocKind) {
+  return view.documents.filter((doc) => doc.docKind === kind);
+}
+
 function productKindLabel(productKind: string | null): string {
-  if (!productKind || !isProductKind(productKind)) {
-    return "Producto sin definir";
-  }
+  if (!productKind || !isProductKind(productKind)) return "Producto sin definir";
   return describeProductKind(productKind);
+}
+
+function missingUnits(units: Unit[], field: keyof Unit): Unit[] {
+  return units.filter((unit) => unit[field] === null);
 }
 
 export function FulfillmentPanel(props: { data: LeadDetailView }) {
   const fulfillment = (): LeadDetailFulfillmentView | null =>
     props.data.fulfillment;
+  const canReject = (): boolean =>
+    props.data.availableActions.includes("fulfillment-reject");
 
   return (
     <Show
@@ -92,30 +137,13 @@ export function FulfillmentPanel(props: { data: LeadDetailView }) {
     >
       {(view) => (
         <div class={styles.panel}>
-          <div class={styles.statusLine}>
-            <span class={styles.stepName}>
-              {describeFulfillmentStep(view().currentStep)}
-            </span>
-            <span class={styles.waiting}>
-              {productKindLabel(view().productKind)}
-            </span>
-          </div>
+          <ProgressChecklist view={view()} />
 
-          <Switch
-            fallback={
-              <Show when={view().pendingOwner}>
-                {(owner) => (
-                  <p class={styles.waiting}>
-                    Esperando a {OWNER_LABELS[owner()] ?? owner()}.
-                  </p>
-                )}
-              </Show>
-            }
-          >
+          <Switch fallback={<WaitingBanner view={view()} />}>
             <Match when={pendingAction(props.data)}>
               {(action) => (
                 <FulfillmentControl
-                  leadId={props.data.lead.id}
+                  data={props.data}
                   action={action()}
                   view={view()}
                 />
@@ -123,8 +151,12 @@ export function FulfillmentPanel(props: { data: LeadDetailView }) {
             </Match>
           </Switch>
 
+          <Show when={canReject()}>
+            <RejectControl leadId={props.data.lead.id} />
+          </Show>
+
           <Show when={view().units.length > 0}>
-            <UnitsSummary units={view().units} />
+            <UnitsMatrix units={view().units} />
           </Show>
 
           <Show when={view().documents.length > 0}>
@@ -144,12 +176,12 @@ export function FulfillmentPanel(props: { data: LeadDetailView }) {
                           type="button"
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
+                          onClick={() =>
                             void downloadDocument(
                               props.data.lead.id,
                               doc.artifactId,
-                            );
-                          }}
+                            )
+                          }
                         >
                           Descargar
                         </Button>
@@ -166,33 +198,80 @@ export function FulfillmentPanel(props: { data: LeadDetailView }) {
   );
 }
 
+function ProgressChecklist(props: { view: LeadDetailFulfillmentView }) {
+  return (
+    <div>
+      <ol class={styles.progress}>
+        <For each={props.view.steps}>
+          {(item) => (
+            <li class={styles.progressItem} data-state={item.status}>
+              {describeFulfillmentStep(item.step)}
+            </li>
+          )}
+        </For>
+      </ol>
+      <div class={styles.statusLine}>
+        <span class={styles.stepName}>
+          {describeFulfillmentStep(props.view.currentStep)}
+        </span>
+        <Show when={props.view.pendingOwner}>
+          {(owner) => (
+            <span class={styles.badge}>
+              Turno: {OWNER_BADGE[owner()] ?? owner()}
+            </span>
+          )}
+        </Show>
+      </div>
+      <span class={styles.waiting}>{productKindLabel(props.view.productKind)}</span>
+    </div>
+  );
+}
+
+function WaitingBanner(props: { view: LeadDetailFulfillmentView }) {
+  return (
+    <Show when={props.view.pendingOwner}>
+      {(owner) => (
+        <p class={styles.waitingBanner}>
+          Esperando a {OWNER_LABELS[owner()] ?? owner()} —{" "}
+          {describeFulfillmentStep(props.view.currentStep)}.
+        </p>
+      )}
+    </Show>
+  );
+}
+
 function FulfillmentControl(props: {
-  leadId: string;
+  data: LeadDetailView;
   action: FulfillmentAction;
   view: LeadDetailFulfillmentView;
 }) {
+  const leadId = () => props.data.lead.id;
   return (
     <Switch>
       <Match when={props.action === "choose_product"}>
-        <ProductChooser leadId={props.leadId} />
+        <ProductChooser data={props.data} />
       </Match>
       <Match when={DOCUMENT_ACTIONS.has(props.action)}>
-        <DocumentUpload leadId={props.leadId} action={props.action} />
+        <DocumentUpload
+          leadId={leadId()}
+          action={props.action}
+          view={props.view}
+        />
       </Match>
       <Match when={props.action === "record_serials"}>
-        <SerialEntry leadId={props.leadId} units={props.view.units} />
+        <SerialEntry leadId={leadId()} units={props.view.units} />
       </Match>
       <Match when={props.action === "register_payment_link"}>
-        <PaymentLinkEntry leadId={props.leadId} units={props.view.units} />
+        <PaymentLinkEntry leadId={leadId()} units={props.view.units} />
       </Match>
       <Match when={props.action === "upload_payment_proof"}>
-        <PaymentProofUpload leadId={props.leadId} units={props.view.units} />
+        <PaymentProofUpload leadId={leadId()} units={props.view.units} />
       </Match>
       <Match when={props.action === "validate_payment"}>
-        <ValidatePayment leadId={props.leadId} />
+        <ValidatePayment leadId={leadId()} units={props.view.units} />
       </Match>
       <Match when={props.action === "register_sale"}>
-        <SaleEntry leadId={props.leadId} units={props.view.units} />
+        <SaleEntry leadId={leadId()} units={props.view.units} />
       </Match>
     </Switch>
   );
@@ -204,10 +283,57 @@ function useSubmitState() {
   return { submitting, setSubmitting, error, setError };
 }
 
-function ProductChooser(props: { leadId: string }) {
+function CopyButton(props: { value: string }) {
+  const [copied, setCopied] = createSignal(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(props.value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  }
+  return (
+    <Button type="button" variant="secondary" size="sm" onClick={() => void copy()}>
+      {copied() ? "Copiado" : "Copiar"}
+    </Button>
+  );
+}
+
+function ProductChooser(props: { data: LeadDetailView }) {
   const choose = useAction(chooseFulfillmentProductMutation);
-  const [productKind, setProductKind] = createSignal<ProductKind>("pos_new");
+  const [productKind, setProductKind] = createSignal<ProductKind | "">("");
   const state = useSubmitState();
+
+  const posCount = () =>
+    props.data.venues.reduce(
+      (sum, venue) => sum + Math.max(1, venue.posQuantity),
+      0,
+    );
+
+  const unitSummary = () => {
+    const kind = productKind();
+    if (kind === "") return null;
+    if (kind === "digital_only") return "Se creará 1 registro digital.";
+    const count = Math.max(1, posCount());
+    return `Se crearán ${count} unidad${count === 1 ? "" : "es"}, una por POS.`;
+  };
+
+  async function submitProduct() {
+    const kind = productKind();
+    if (kind === "") return;
+    state.setSubmitting(true);
+    state.setError(null);
+    try {
+      await choose({ leadId: props.data.lead.id, productKind: kind });
+      await revalidateWorkflowLead(props.data.lead.id);
+    } catch (caught) {
+      state.setError(actionErrorMessage(caught));
+    } finally {
+      state.setSubmitting(false);
+    }
+  }
 
   const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
     event,
@@ -216,58 +342,48 @@ function ProductChooser(props: { leadId: string }) {
     void submitProduct();
   };
 
-  async function submitProduct() {
-    state.setSubmitting(true);
-    state.setError(null);
-    try {
-      await choose({ leadId: props.leadId, productKind: productKind() });
-      await revalidateWorkflowLead(props.leadId);
-    } catch (caught) {
-      state.setError(actionErrorMessage(caught));
-    } finally {
-      state.setSubmitting(false);
-    }
-  }
-
-  const handleProductKindChange: JSX.EventHandler<HTMLSelectElement, Event> = (
-    event,
-  ) => {
+  const handleChange: JSX.EventHandler<HTMLSelectElement, Event> = (event) => {
     const next = event.currentTarget.value;
-    if (isProductKind(next)) setProductKind(next);
+    setProductKind(next === "" || !isProductKind(next) ? "" : next);
   };
 
   return (
     <form class={styles.control} onSubmit={handleSubmit}>
-      <Select
-        label="Producto"
-        value={productKind()}
-        onChange={handleProductKindChange}
-      >
+      <Select label="Producto" value={productKind()} onChange={handleChange}>
+        <option value="">Selecciona el producto…</option>
         <For each={PRODUCT_KINDS}>
           {(kind) => <option value={kind}>{describeProductKind(kind)}</option>}
         </For>
       </Select>
+      <Show when={productKind() !== ""}>
+        <p class={styles.contextNote}>
+          {PRODUCT_CONSEQUENCE[productKind() as ProductKind]}
+        </p>
+        <p class={styles.contextNote}>{unitSummary()}</p>
+      </Show>
       <Show when={state.error()}>
         <p class={styles.errorText}>{state.error()}</p>
       </Show>
-      <Button type="submit" size="sm" disabled={state.submitting()}>
+      <Button
+        type="submit"
+        size="sm"
+        disabled={state.submitting() || productKind() === ""}
+      >
         {describeFulfillmentAction("choose_product")}
       </Button>
     </form>
   );
 }
 
-function DocumentUpload(props: { leadId: string; action: FulfillmentAction }) {
+function DocumentUpload(props: {
+  leadId: string;
+  action: FulfillmentAction;
+  view: LeadDetailFulfillmentView;
+}) {
   const upload = useAction(uploadFulfillmentDocumentMutation);
   const [file, setFile] = createSignal<File | null>(null);
   const state = useSubmitState();
-
-  const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
-    event,
-  ) => {
-    event.preventDefault();
-    void uploadDocument();
-  };
+  const context = () => DOC_STEP_CONTEXT[props.action];
 
   async function uploadDocument() {
     const selected = file();
@@ -289,8 +405,39 @@ function DocumentUpload(props: { leadId: string; action: FulfillmentAction }) {
     }
   }
 
+  const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
+    event,
+  ) => {
+    event.preventDefault();
+    void uploadDocument();
+  };
+
   return (
     <form class={styles.control} onSubmit={handleSubmit}>
+      <Show when={context()}>
+        {(ctx) => (
+          <div class={styles.context}>
+            <p class={styles.contextNote}>{ctx().instruction}</p>
+            <For each={docsOfKind(props.view, ctx().docKind)}>
+              {(doc) => (
+                <div class={styles.contextRow}>
+                  <span class={styles.contextLabel}>{doc.filename}</span>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() =>
+                      void downloadDocument(props.leadId, doc.artifactId)
+                    }
+                  >
+                    Descargar
+                  </Button>
+                </div>
+              )}
+            </For>
+          </div>
+        )}
+      </Show>
       <FileInput
         onChange={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
       />
@@ -304,133 +451,187 @@ function DocumentUpload(props: { leadId: string; action: FulfillmentAction }) {
   );
 }
 
-function missingUnits(
-  units: LeadDetailFulfillmentUnitView[],
-  field: keyof LeadDetailFulfillmentUnitView,
-): LeadDetailFulfillmentUnitView[] {
-  return units.filter((unit) => unit[field] === null);
+// One batched text control over the units still missing a value. A single
+// submit walks each entered row, then revalidates once, so a multi-POS client
+// is not N separate submits with N refetches.
+function UnitTextRows(props: {
+  leadId: string;
+  units: Unit[];
+  placeholder: string;
+  verb: string;
+  context?: (unit: Unit) => JSX.Element;
+  submitOne: (unitId: string, value: string) => Promise<void>;
+}) {
+  const [values, setValues] = createSignal<Record<string, string>>({});
+  const state = useSubmitState();
+
+  function setValue(unitId: string, value: string) {
+    setValues((prev) => ({ ...prev, [unitId]: value }));
+  }
+
+  async function submitAll() {
+    const entries = props.units
+      .map((unit) => [unit.id, (values()[unit.id] ?? "").trim()] as const)
+      .filter(([, value]) => value.length > 0);
+    if (entries.length === 0) return;
+
+    state.setSubmitting(true);
+    state.setError(null);
+    try {
+      for (const [unitId, value] of entries) {
+        await props.submitOne(unitId, value);
+      }
+      await revalidateWorkflowLead(props.leadId);
+    } catch (caught) {
+      state.setError(actionErrorMessage(caught));
+    } finally {
+      state.setSubmitting(false);
+    }
+  }
+
+  const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
+    event,
+  ) => {
+    event.preventDefault();
+    void submitAll();
+  };
+
+  return (
+    <form class={styles.control} onSubmit={handleSubmit}>
+      <For each={props.units}>
+        {(unit) => (
+          <div class={styles.unitEntry}>
+            <span class={styles.unitLabel}>{unit.label}</span>
+            <Show when={props.context}>{(ctx) => ctx()(unit)}</Show>
+            <TextInput
+              sizeVariant="sm"
+              value={values()[unit.id] ?? ""}
+              placeholder={props.placeholder}
+              onChange={(value) => setValue(unit.id, value)}
+            />
+          </div>
+        )}
+      </For>
+      <Show when={state.error()}>
+        <p class={styles.errorText}>{state.error()}</p>
+      </Show>
+      <Button type="submit" size="sm" disabled={state.submitting()}>
+        {props.verb}
+      </Button>
+    </form>
+  );
 }
 
-function SerialEntry(props: {
-  leadId: string;
-  units: LeadDetailFulfillmentUnitView[];
-}) {
+function SerialEntry(props: { leadId: string; units: Unit[] }) {
   const record = useAction(recordFulfillmentSerialMutation);
-
   return (
-    <div class={styles.control}>
-      <For each={missingUnits(props.units, "serial")}>
-        {(unit) => (
-          <UnitTextControl
-            label={unit.label}
-            placeholder="Serial"
-            verb={describeFulfillmentAction("record_serials")}
-            onSubmit={async (value) => {
-              await record({
-                leadId: props.leadId,
-                unitId: unit.id,
-                serial: value,
-              });
-              await revalidateWorkflowLead(props.leadId);
-            }}
-          />
-        )}
-      </For>
-    </div>
+    <UnitTextRows
+      leadId={props.leadId}
+      units={missingUnits(props.units, "serial")}
+      placeholder="Serial"
+      verb={describeFulfillmentAction("record_serials")}
+      submitOne={(unitId, serial) =>
+        record({ leadId: props.leadId, unitId, serial }).then(() => undefined)
+      }
+    />
   );
 }
 
-function PaymentLinkEntry(props: {
-  leadId: string;
-  units: LeadDetailFulfillmentUnitView[];
-}) {
+function PaymentLinkEntry(props: { leadId: string; units: Unit[] }) {
   const register = useAction(registerFulfillmentPaymentLinkMutation);
-
   return (
-    <div class={styles.control}>
-      <For each={missingUnits(props.units, "paymentUrl")}>
-        {(unit) => (
-          <UnitTextControl
-            label={unit.label}
-            placeholder="https://pago..."
-            verb={describeFulfillmentAction("register_payment_link")}
-            onSubmit={async (value) => {
-              await register({
-                leadId: props.leadId,
-                unitId: unit.id,
-                paymentUrl: value,
-              });
-              await revalidateWorkflowLead(props.leadId);
-            }}
-          />
-        )}
-      </For>
-    </div>
+    <UnitTextRows
+      leadId={props.leadId}
+      units={missingUnits(props.units, "paymentUrl")}
+      placeholder="https://pago..."
+      verb={describeFulfillmentAction("register_payment_link")}
+      context={(unit) => (
+        <span class={styles.contextValue}>Serial: {unit.serial ?? "—"}</span>
+      )}
+      submitOne={(unitId, paymentUrl) =>
+        register({ leadId: props.leadId, unitId, paymentUrl }).then(
+          () => undefined,
+        )
+      }
+    />
   );
 }
 
-function SaleEntry(props: {
-  leadId: string;
-  units: LeadDetailFulfillmentUnitView[];
-}) {
+function SaleEntry(props: { leadId: string; units: Unit[] }) {
   const register = useAction(registerFulfillmentSaleMutation);
-
   return (
-    <div class={styles.control}>
-      <For each={missingUnits(props.units, "serviceRef")}>
-        {(unit) => (
-          <UnitTextControl
-            label={unit.label}
-            placeholder="Referencia de venta"
-            verb={describeFulfillmentAction("register_sale")}
-            onSubmit={async (value) => {
-              await register({
-                leadId: props.leadId,
-                unitId: unit.id,
-                serviceRef: value,
-              });
-              await revalidateWorkflowLead(props.leadId);
-            }}
-          />
-        )}
-      </For>
-    </div>
+    <UnitTextRows
+      leadId={props.leadId}
+      units={missingUnits(props.units, "serviceRef")}
+      placeholder="Referencia de venta"
+      verb={describeFulfillmentAction("register_sale")}
+      context={(unit) => (
+        <span class={styles.contextValue}>
+          Serial: {unit.serial ?? "—"}
+          {unit.paymentValidated ? " · Pago validado" : ""}
+        </span>
+      )}
+      submitOne={(unitId, serviceRef) =>
+        register({ leadId: props.leadId, unitId, serviceRef }).then(
+          () => undefined,
+        )
+      }
+    />
   );
 }
 
-function PaymentProofUpload(props: {
-  leadId: string;
-  units: LeadDetailFulfillmentUnitView[];
-}) {
+// The executive's job here is to send the payment link to the client, so the
+// link (registered by back office) is the primary thing on screen, with copy.
+function PaymentProofUpload(props: { leadId: string; units: Unit[] }) {
   const upload = useAction(uploadFulfillmentPaymentProofMutation);
+
+  async function submitFile(unitId: string, file: File) {
+    const formData = new FormData();
+    formData.set("file", file);
+    await upload({ leadId: props.leadId, unitId, formData });
+    await revalidateWorkflowLead(props.leadId);
+  }
 
   return (
     <div class={styles.control}>
       <For each={missingUnits(props.units, "paymentProofArtifactId")}>
         {(unit) => (
-          <UnitFileControl
-            label={unit.label}
-            verb={describeFulfillmentAction("upload_payment_proof")}
-            onSubmit={async (selected) => {
-              const formData = new FormData();
-              formData.set("file", selected);
-              await upload({ leadId: props.leadId, unitId: unit.id, formData });
-              await revalidateWorkflowLead(props.leadId);
-            }}
-          />
+          <div class={styles.unitEntry}>
+            <span class={styles.unitLabel}>{unit.label}</span>
+            <Show
+              when={unit.paymentUrl}
+              fallback={
+                <span class={styles.contextValue}>Sin link de pago aún.</span>
+              }
+            >
+              {(url) => (
+                <div class={styles.contextRow}>
+                  <a
+                    class={styles.contextLink}
+                    href={url()}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {url()}
+                  </a>
+                  <CopyButton value={url()} />
+                </div>
+              )}
+            </Show>
+            <UnitFileControl
+              verb={describeFulfillmentAction("upload_payment_proof")}
+              onSubmit={(file) => submitFile(unit.id, file)}
+            />
+          </div>
         )}
       </For>
     </div>
   );
 }
 
-function ValidatePayment(props: { leadId: string }) {
+function ValidatePayment(props: { leadId: string; units: Unit[] }) {
   const validate = useAction(validateFulfillmentPaymentMutation);
   const state = useSubmitState();
-
-  const handleClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = () => {
-    void validatePayment();
-  };
 
   async function validatePayment() {
     state.setSubmitting(true);
@@ -447,6 +648,36 @@ function ValidatePayment(props: { leadId: string }) {
 
   return (
     <div class={styles.control}>
+      <p class={styles.contextNote}>
+        Revisa cada comprobante antes de validar. Si alguno es incorrecto,
+        recházalo para que el ejecutivo lo reenvíe.
+      </p>
+      <For each={props.units}>
+        {(unit) => (
+          <div class={styles.contextRow}>
+            <span class={styles.contextLabel}>{unit.label}</span>
+            <Show
+              when={unit.paymentProofArtifactId}
+              fallback={
+                <span class={styles.contextValue}>Sin comprobante</span>
+              }
+            >
+              {(artifactId) => (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    void downloadDocument(props.leadId, artifactId())
+                  }
+                >
+                  Ver comprobante
+                </Button>
+              )}
+            </Show>
+          </div>
+        )}
+      </For>
       <Show when={state.error()}>
         <p class={styles.errorText}>{state.error()}</p>
       </Show>
@@ -454,7 +685,7 @@ function ValidatePayment(props: { leadId: string }) {
         type="button"
         size="sm"
         disabled={state.submitting()}
-        onClick={handleClick}
+        onClick={() => void validatePayment()}
       >
         {describeFulfillmentAction("validate_payment")}
       </Button>
@@ -462,28 +693,21 @@ function ValidatePayment(props: { leadId: string }) {
   );
 }
 
-function UnitTextControl(props: {
-  label: string;
-  placeholder: string;
-  verb: string;
-  onSubmit: (value: string) => Promise<void>;
-}) {
-  const [value, setValue] = createSignal("");
+function RejectControl(props: { leadId: string }) {
+  const reject = useAction(rejectFulfillmentStepMutation);
+  const [reason, setReason] = createSignal("");
   const state = useSubmitState();
 
-  const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
-    event,
-  ) => {
-    event.preventDefault();
-    void submitValue();
-  };
-
-  async function submitValue() {
-    if (!value().trim()) return;
+  async function submitReject() {
+    if (!reason().trim()) {
+      state.setError("Indica el motivo de la devolución.");
+      return;
+    }
     state.setSubmitting(true);
     state.setError(null);
     try {
-      await props.onSubmit(value().trim());
+      await reject({ leadId: props.leadId, reason: reason().trim() });
+      await revalidateWorkflowLead(props.leadId);
     } catch (caught) {
       state.setError(actionErrorMessage(caught));
     } finally {
@@ -491,42 +715,42 @@ function UnitTextControl(props: {
     }
   }
 
+  const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
+    event,
+  ) => {
+    event.preventDefault();
+    void submitReject();
+  };
+
   return (
-    <form class={styles.unitRow} onSubmit={handleSubmit}>
-      <div class={styles.unitGrow}>
-        <span class={styles.unitLabel}>{props.label}</span>
-        <TextInput
-          sizeVariant="sm"
-          value={value()}
-          placeholder={props.placeholder}
-          onChange={setValue}
-          required
-        />
-      </div>
-      <Button type="submit" size="sm" disabled={state.submitting()}>
-        {props.verb}
-      </Button>
+    <form class={styles.rejectBox} onSubmit={handleSubmit}>
+      <TextInput
+        sizeVariant="sm"
+        value={reason()}
+        placeholder="Motivo de la devolución"
+        onChange={setReason}
+      />
       <Show when={state.error()}>
         <p class={styles.errorText}>{state.error()}</p>
       </Show>
+      <Button
+        type="submit"
+        variant="secondary"
+        size="sm"
+        disabled={state.submitting()}
+      >
+        Rechazar y devolver
+      </Button>
     </form>
   );
 }
 
 function UnitFileControl(props: {
-  label: string;
   verb: string;
   onSubmit: (file: File) => Promise<void>;
 }) {
   const [file, setFile] = createSignal<File | null>(null);
   const state = useSubmitState();
-
-  const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
-    event,
-  ) => {
-    event.preventDefault();
-    void submitFile();
-  };
 
   async function submitFile() {
     const selected = file();
@@ -542,11 +766,17 @@ function UnitFileControl(props: {
     }
   }
 
+  const handleSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = (
+    event,
+  ) => {
+    event.preventDefault();
+    void submitFile();
+  };
+
   return (
     <form class={styles.unitRow} onSubmit={handleSubmit}>
       <div class={styles.unitGrow}>
         <FileInput
-          label={props.label}
           onChange={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
         />
       </div>
@@ -560,26 +790,36 @@ function UnitFileControl(props: {
   );
 }
 
-function UnitsSummary(props: { units: LeadDetailFulfillmentUnitView[] }) {
+function paymentStatus(unit: Unit): string {
+  if (unit.paymentValidated) return "Validado";
+  if (unit.paymentProofArtifactId) return "Comprobante recibido";
+  if (unit.paymentUrl) return "Link enviado";
+  return "—";
+}
+
+function UnitsMatrix(props: { units: Unit[] }) {
   return (
-    <ul class={styles.steps}>
-      <For each={props.units}>
-        {(unit) => (
-          <li
-            class={styles.stepItem}
-            data-state={unit.serviceRef ? "done" : "current"}
-          >
-            <span class={styles.unitLabel}>{unit.label}</span>
-            <span class={styles.waiting}>
-              {unit.serviceRef
-                ? "Venta registrada"
-                : unit.serial
-                  ? `Serial ${unit.serial}`
-                  : "Pendiente"}
-            </span>
-          </li>
-        )}
-      </For>
-    </ul>
+    <table class={styles.matrix}>
+      <thead>
+        <tr>
+          <th>Unidad</th>
+          <th>Serial</th>
+          <th>Pago</th>
+          <th>Venta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <For each={props.units}>
+          {(unit) => (
+            <tr data-state={unit.serviceRef ? "done" : "current"}>
+              <td>{unit.label}</td>
+              <td>{unit.serial ?? "—"}</td>
+              <td>{paymentStatus(unit)}</td>
+              <td>{unit.serviceRef ? "✓ Registrada" : "Pendiente"}</td>
+            </tr>
+          )}
+        </For>
+      </tbody>
+    </table>
   );
 }

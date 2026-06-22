@@ -1,3 +1,35 @@
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-spacing-5, 24px);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-spacing-2, 8px);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--t-spacing-2, 8px);
+}
+
+.groupTitle {
+  font-weight: 600;
+}
+
+.count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--t-background-secondary, #f3f4f6);
+  color: var(--t-font-color-secondary, #374151);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
 .queue {
   display: flex;
   flex-direction: column;
@@ -23,6 +55,12 @@
   background: var(--t-background-secondary, #f9fafb);
 }
 
+/* Aged items get a visible left marker so a 3-day blocker does not read like a
+   1-hour one. */
+.row[data-state="stale"] {
+  border-left: 3px solid var(--t-color-red-50, #dc2626);
+}
+
 .main {
   display: flex;
   flex-direction: column;
@@ -46,10 +84,6 @@
   font-size: 0.85rem;
 }
 
-.step {
-  font-weight: 600;
-}
-
 .tag {
   padding: 2px 8px;
   border-radius: 999px;
@@ -57,10 +91,14 @@
   color: var(--t-font-color-secondary, #374151);
 }
 
-.owner,
 .executive,
 .waiting {
   color: var(--t-font-color-tertiary, #6b7280);
+}
+
+.row[data-state="stale"] .waiting {
+  color: var(--t-color-red-50, #dc2626);
+  font-weight: 600;
 }
 
 .empty {

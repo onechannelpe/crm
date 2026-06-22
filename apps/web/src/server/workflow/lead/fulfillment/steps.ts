@@ -196,3 +196,52 @@ export function supervisorQueueSteps(): FulfillmentStep[] {
     (step) => STEP_DEFINITIONS[step].owner === "supervisor",
   );
 }
+
+// Steps a reviewer can bounce back when the submitted artifact is wrong. The
+// reject sends the order to `to` (re-notifying that step's owner) and clears
+// `clearField` on every unit so the prior actor re-supplies it. Only review
+// steps are rejectable; data-entry steps are corrected by re-entry in place.
+export type RejectRule = { to: FulfillmentStep; clearField: UnitField | null };
+
+const REJECT_RULES: Partial<Record<FulfillmentStep, RejectRule>> = {
+  AWAITING_PAYMENT_VALIDATION: {
+    to: "AWAITING_PAYMENT",
+    clearField: "payment_proof_artifact_id",
+  },
+  AWAITING_PDF_COMPILE: { to: "AWAITING_SIGNATURE", clearField: null },
+};
+
+export function rejectRuleForStep(step: FulfillmentStep): RejectRule | null {
+  return REJECT_RULES[step] ?? null;
+}
+
+export type FulfillmentStepStatus = "done" | "current" | "pending";
+
+export type FulfillmentStepProgress = {
+  step: FulfillmentStep;
+  status: FulfillmentStepStatus;
+};
+
+// The product's step sequence tagged done/current/pending for the panel
+// checklist. Before a product is chosen the order sits on CHOOSE_PRODUCT alone.
+export function fulfillmentProgress(
+  productKind: ProductKind | null,
+  currentStep: FulfillmentStep,
+): FulfillmentStepProgress[] {
+  if (productKind === null) {
+    return [{ step: "CHOOSE_PRODUCT", status: "current" }];
+  }
+  const sequence = STEP_SEQUENCE[productKind].filter(
+    (step) => step !== "COMPLETED",
+  );
+  const currentIndex = sequence.indexOf(currentStep);
+  return sequence.map((step, index) => ({
+    step,
+    status:
+      currentStep === "COMPLETED" || index < currentIndex
+        ? "done"
+        : index === currentIndex
+          ? "current"
+          : "pending",
+  }));
+}
