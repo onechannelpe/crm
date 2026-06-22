@@ -1,3 +1,4 @@
+import { sendWithKapsoWhatsAppText } from "@crm/message-channels";
 import type { APIEvent } from "@solidjs/start/server";
 
 import { notificationsConfig } from "~/lib/env";
@@ -7,7 +8,6 @@ import { isPlainRecord } from "~/lib/type-guards";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { openSession } from "~/server/notifications/whatsapp-session";
 import { getServerRuntime } from "~/server/platform/container";
-import { sendWithKapsoWhatsAppText } from "@crm/message-channels";
 
 const logger = createLogger("whatsapp-webhook");
 
@@ -56,14 +56,10 @@ function extractInboundMessages(body: unknown): InboundMessage[] {
     for (const change of changes) {
       if (!isPlainRecord(change) || change["field"] !== "messages") continue;
       const value = isPlainRecord(change["value"]) ? change["value"] : {};
-      const inbound = Array.isArray(value["messages"])
-        ? value["messages"]
-        : [];
+      const inbound = Array.isArray(value["messages"]) ? value["messages"] : [];
       for (const msg of inbound) {
         if (!isPlainRecord(msg) || typeof msg["from"] !== "string") continue;
-        const text = isPlainRecord(msg["text"])
-          ? msg["text"]
-          : undefined;
+        const text = isPlainRecord(msg["text"]) ? msg["text"] : undefined;
         const bodyText =
           text && typeof text["body"] === "string" ? text["body"] : null;
         messages.push({ from: msg["from"], body: bodyText });

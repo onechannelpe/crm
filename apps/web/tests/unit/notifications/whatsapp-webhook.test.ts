@@ -5,8 +5,7 @@ const mocks = vi.hoisted(() => ({
   findAddress:
     vi.fn<
       () => Promise<
-        | { user_id: number; is_verified: number; address: string }
-        | undefined
+        { user_id: number; is_verified: number; address: string } | undefined
       >
     >(),
   markVerified: vi.fn<() => Promise<boolean>>(),
@@ -183,9 +182,7 @@ describe("POST /api/webhooks/whatsapp", () => {
     });
 
     const response = await POST(
-      createApiEvent(
-        webhookRequest(standardPayload("51911000001", "hola")),
-      ),
+      createApiEvent(webhookRequest(standardPayload("51911000001", "hola"))),
     );
 
     expect(response.status).toBe(200);
