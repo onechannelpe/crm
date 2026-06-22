@@ -1,6 +1,5 @@
 import type { FieldChange } from "~/contracts/events";
 import type {
-  LeadCallOutcome,
   LeadPriority,
   LeadStage,
   LeadStatus,
@@ -25,7 +24,6 @@ export type LeadHistoryEventType =
   | "venue_added"
   | "venue_updated"
   | "venue_accounts_added"
-  | "call_logged"
   | "note_added"
   | "lead_deleted";
 
@@ -47,7 +45,6 @@ const LEAD_HISTORY_EVENT_TYPES = {
   venue_added: true,
   venue_updated: true,
   venue_accounts_added: true,
-  call_logged: true,
   note_added: true,
   lead_deleted: true,
 } satisfies Record<LeadHistoryEventType, true>;
@@ -132,10 +129,6 @@ export type LeadHistoryPayloadByEvent = {
   };
   venue_accounts_added: {
     venueId: string;
-  };
-  call_logged: {
-    outcome: LeadCallOutcome;
-    notes: string | null;
   };
   note_added: {
     body: string;

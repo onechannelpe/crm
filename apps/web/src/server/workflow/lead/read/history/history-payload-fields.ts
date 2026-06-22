@@ -3,7 +3,6 @@ import {
   LEAD_STAGES,
   LEAD_STATUSES,
   CURRENCIES,
-  type LeadCallOutcome,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
@@ -204,24 +203,6 @@ export function optionalLeadPriority(
     return parsed;
   }
   return Ok(parsed.value);
-}
-
-export function requireCallOutcome(
-  payload: Record<string, unknown> | null,
-  row: HistoryEventRow,
-): Result<LeadCallOutcome, DomainError> {
-  const value = payload?.outcome;
-  switch (value) {
-    case "answered":
-    case "no_answer":
-    case "wrong_number":
-    case "callback_requested":
-    case "qualified":
-    case "disqualified":
-      return Ok(value);
-    default:
-      return invalidPayload(row, "outcome");
-  }
 }
 
 export function requireMoneda(

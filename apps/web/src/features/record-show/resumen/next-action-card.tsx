@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch } from "solid-js";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 
 import CircleCheck from "~/components/icons/circle-check-big";
 import Point from "~/components/icons/point";
@@ -26,7 +26,7 @@ export function NextActionCard(props: {
   data: LeadDetailView;
   onNavigate: (id: RecordTabId) => void;
 }) {
-  const action = () => resolveNextAction(props.data);
+  const action = createMemo(() => resolveNextAction(props.data));
   const latestProposal = () => props.data.rateProposals.at(-1);
 
   return (
@@ -47,24 +47,22 @@ export function NextActionCard(props: {
         />
       </Match>
 
-      <Match when={action().kind === "decide-rate"}>
-        <Show when={latestProposal()}>
-          {(proposal) => (
-            <RateProposalSection
-              leadId={props.data.lead.id}
-              proposal={proposal()}
-              reservationExpiresAt={props.data.lead.reservationExpiresAt}
-              rateRevisions={props.data.rateRevisions}
-              canAccept={props.data.availableActions.includes("accept-rate")}
-              canRequestRevision={props.data.availableActions.includes(
-                "request-rate-revision",
-              )}
-              canEdit={props.data.availableActions.includes(
-                "edit-rate-proposal",
-              )}
-            />
-          )}
-        </Show>
+      {/* decide-rate only resolves when a proposal exists, so the proposal in
+          the `when` both narrows the type and co-locates that invariant. */}
+      <Match when={action().kind === "decide-rate" && latestProposal()}>
+        {(proposal) => (
+          <RateProposalSection
+            leadId={props.data.lead.id}
+            proposal={proposal()}
+            reservationExpiresAt={props.data.lead.reservationExpiresAt}
+            rateRevisions={props.data.rateRevisions}
+            canAccept={props.data.availableActions.includes("accept-rate")}
+            canRequestRevision={props.data.availableActions.includes(
+              "request-rate-revision",
+            )}
+            canEdit={props.data.availableActions.includes("edit-rate-proposal")}
+          />
+        )}
       </Match>
 
       <Match when={action().kind === "setup-checklist"}>

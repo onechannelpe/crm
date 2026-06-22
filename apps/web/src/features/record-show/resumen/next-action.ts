@@ -12,8 +12,7 @@ export type NextAction =
     }
   | { kind: "propose-rate" }
   | { kind: "decide-rate" }
-  | { kind: "setup-checklist" }
-  | { kind: "none" };
+  | { kind: "setup-checklist" };
 
 export type SetupChecklistItem = { label: string; done: boolean };
 
@@ -101,8 +100,6 @@ export function nextActionSummary(data: LeadDetailView): string {
       return "Confirmar o revisar tarifa";
     case "setup-checklist":
       return "Completar afiliación";
-    case "none":
-      return "Sin acciones pendientes";
     default: {
       const exhaustive: never = action;
       return exhaustive;

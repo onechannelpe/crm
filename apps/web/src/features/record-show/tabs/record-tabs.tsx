@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, createEffect } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import type { RecordContext } from "~/features/record-show/model/record-context";
@@ -19,6 +19,18 @@ export function RecordTabs(props: {
   const tabs = () => recordTabsFor(props.context);
   const activeDefinition = () =>
     tabs().find((tab) => tab.id === props.activeTab) ?? tabs()[0];
+
+  // The persisted active tab can become invisible after a stage change (a
+  // stage-gated tab like Afiliación drops out of the visible set). When that
+  // happens the body already falls back to the first tab; reconcile the stored
+  // id so the strip highlight and the persisted state follow the body instead
+  // of pointing at a tab that is no longer shown.
+  createEffect(() => {
+    const resolved = activeDefinition();
+    if (resolved && resolved.id !== props.activeTab) {
+      props.onTabSelect(resolved.id);
+    }
+  });
 
   return (
     <>

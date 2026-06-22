@@ -1,11 +1,11 @@
 import type { JSX } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
-import Checkbox from "~/components/icons/checkbox";
-import Plus from "~/components/icons/plus";
 import HomeTabler from "~/components/icons/home-tabler";
+import Info from "~/components/icons/info";
 import MessageSquare from "~/components/icons/message-square";
 import Paperclip from "~/components/icons/paperclip";
+import Plus from "~/components/icons/plus";
 import TimelineEvent from "~/components/icons/timeline-event";
 import type { LeadStage } from "~/contracts/workflow/vocabulary";
 import { ActividadTab } from "~/features/record-show/actividad/actividad-tab";
@@ -24,7 +24,6 @@ type RecordTabKind = RecordContext["kind"];
 export type RecordTabDefinition = {
   id: RecordTabId;
   label: string;
-  infoLabel?: string;
   icon?: TabIconComponent;
   // Coarse visibility by record kind. Drives active-tab resolution where only the
   // kind is known (the persisted tab id, before the lead detail is loaded).
@@ -55,7 +54,7 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
   },
   {
     id: "resumen",
-    icon: Checkbox,
+    icon: Info,
     label: "Resumen",
     kinds: LEAD,
     component: ResumenTab,
@@ -119,9 +118,9 @@ export function resolveActiveRecordTabId(
   return match ? match.id : available[0].id;
 }
 
-// Side-panel chrome shows the active tab's label (preferring an info label).
-// Looked up from the same registry so labels never drift from tabs.
+// Side-panel chrome shows the active tab's label. Looked up from the same
+// registry so the chrome label never drifts from the tab strip.
 export function recordTabDisplayLabel(tabId: RecordTabId): string {
   const tab = RECORD_TABS.find((entry) => entry.id === tabId);
-  return tab?.infoLabel ?? tab?.label ?? "";
+  return tab?.label ?? "";
 }
