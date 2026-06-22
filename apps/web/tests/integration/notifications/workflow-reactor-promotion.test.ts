@@ -278,4 +278,70 @@ describe("notification planner — workflow reactor promotion", () => {
       ),
     ).toEqual([]);
   });
+
+  it("routes the AWAITING_PAYMENT handoff to WhatsApp with the URL inline", async () => {
+    // This is the contract emitted by the reactor for the "Link de pago listo"
+    // step. The body is what delivery-executor will hand to Kapso.
+    await ctx.repos.userChannelAddresses.upsert({
+      user_id: 1,
+      channel: "whatsapp",
+      address: "51911000001",
+      is_verified: 1,
+      verified_at: NOW,
+      created_at: NOW,
+      updated_at: NOW,
+    });
+    await openSession(ctx.db, 1, NOW);
+
+    const intent: NotificationIntent = {
+      id: "evt-1:AWAITING_PAYMENT",
+      eventType: "lead.fulfillment_handoff",
+      audience: { kind: "user_ids", userIds: [1] },
+      channels: ["in_app", "whatsapp"],
+      priority: "high",
+      title: "Link de pago listo",
+      bodyText: [
+        "Link(s) de pago listos para el cliente RUC 20123456789:",
+        "• POS #1: https://pay.example.com/abc",
+        "Envíalo(s) al cliente y sube el comprobante.",
+      ].join("\n"),
+      actionUrl: "/records/lead-1",
+    };
+    await enqueueNotifications(ctx.db, [intent], NOW);
+
+    const entry = await ctx.db
+      .selectFrom("notification_outbox")
+      .selectAll()
+      .where("id", "=", intent.id)
+      .executeTakeFirstOrThrow();
+
+    const planned = await planDeliveries(
+      ctx.db,
+      {
+        id: entry.id,
+        event_type: entry.event_type,
+        audience_json: entry.audience_json,
+        channels_json: entry.channels_json,
+      },
+      NOW,
+    );
+
+    expect(planned.inAppRecipients).toEqual([1]);
+    const whatsapp = planned.externalDeliveries.filter(
+      (delivery) => delivery.channel === "whatsapp",
+    );
+    expect(whatsapp).toEqual([
+      { userId: 1, channel: "whatsapp", recipientAddress: "51911000001" },
+    ]);
+
+    // The outbox row must preserve the URL in the body so the executor hands
+    // it to Kapso verbatim.
+    const stored = await ctx.db
+      .selectFrom("notification_outbox")
+      .select("body_text")
+      .where("id", "=", intent.id)
+      .executeTakeFirstOrThrow();
+    expect(stored.body_text).toContain("https://pay.example.com/abc");
+    expect(stored.body_text).toContain("RUC 20123456789");
+  });
 });

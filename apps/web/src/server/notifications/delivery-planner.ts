@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { createLogger } from "~/lib/observability/logger";
 
 import { resolveAudience } from "./audience";
 import {
@@ -8,6 +9,8 @@ import {
   parseNotificationChannels,
 } from "./outbox-payload";
 import { filterUsersWithActiveSession } from "./whatsapp-session";
+
+const logger = createLogger("notifications-planner");
 
 export type NotificationOutboxEntry = {
   id: string;
@@ -77,9 +80,23 @@ export async function planDeliveries(
 
   for (const { channel, addresses } of addressMaps) {
     for (const userId of recipients) {
-      if (channel === "whatsapp" && !activeWhatsAppUsers.has(userId)) continue;
+      if (channel === "whatsapp" && !activeWhatsAppUsers.has(userId)) {
+        logger.info("whatsapp_skipped_no_session", {
+          userId,
+          reason: "no_active_session",
+        });
+        continue;
+      }
       const recipientAddress = addresses.get(userId);
-      if (!recipientAddress) continue;
+      if (!recipientAddress) {
+        if (channel === "whatsapp") {
+          logger.info("whatsapp_skipped_no_address", {
+            userId,
+            reason: "no_verified_address",
+          });
+        }
+        continue;
+      }
       externalDeliveries.push({ userId, channel, recipientAddress });
     }
   }

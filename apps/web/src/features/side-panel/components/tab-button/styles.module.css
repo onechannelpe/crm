@@ -18,15 +18,20 @@
   background-color: transparent;
   bottom: 0;
   content: "";
-  height: 1px;
+  height: 2px;
   left: 0;
   position: absolute;
   right: 0;
   z-index: 1;
+  transform: scaleX(0);
+  transition:
+    transform var(--motion-normal, 0.25s) ease,
+    background-color var(--motion-normal, 0.25s) ease;
 }
 
 .tabButtonActive::after {
   background-color: var(--foreground);
+  transform: scaleX(1);
 }
 
 .tabHover {

@@ -115,13 +115,27 @@ function audienceFor(
   return { kind: "branch_role", branchId, role: "back_office" };
 }
 
-function deriveFulfillmentNotification(input: {
+export function formatPaymentReadyBody(
+  ruc: string,
+  units: readonly { label: string; paymentUrl: string | null }[],
+): string {
+  if (units.length === 0) {
+    return `Envía el link de pago al cliente RUC ${ruc} y sube el comprobante.`;
+  }
+  const lines = units
+    .map((unit) => `• ${unit.label}: ${unit.paymentUrl ?? "(sin link)"}`)
+    .join("\n");
+  return `Link(s) de pago listos para el cliente RUC ${ruc}:\n${lines}\nEnvíalo(s) al cliente y sube el comprobante.`;
+}
+
+export function deriveFulfillmentNotification(input: {
   eventId: string;
   event: FulfillmentEvent;
   leadId: string;
   ruc: string;
   executiveId: number;
   branchId: number | null;
+  paymentUnits: readonly { label: string; paymentUrl: string | null }[];
 }): NotificationIntent[] {
   if (input.event.eventType === "fulfillment_completed") {
     return [
@@ -139,6 +153,32 @@ function deriveFulfillmentNotification(input: {
         actionUrl: `/records/${input.leadId}`,
       },
     ];
+  }
+
+  // The link of payment is ready: this is the step the executive has been
+  // waiting for. We promote it to WhatsApp and inline every unit's URL so
+  // the executive can copy-paste it to the client without opening the app.
+  if (input.event.eventType === "fulfillment_step_advanced") {
+    const step = input.event.payload.to;
+    if (step === "AWAITING_PAYMENT") {
+      const body = formatPaymentReadyBody(input.ruc, input.paymentUnits);
+      return [
+        {
+          id: `${input.eventId}:${step}`,
+          eventType: "lead.fulfillment_handoff",
+          audience: { kind: "user_ids", userIds: [input.executiveId] },
+          // High-value, time-sensitive: surface on both the in-app bell and
+          // WhatsApp so the executive can forward the link to the client
+          // immediately. Planner still gates WA on a verified address and
+          // an active Meta session.
+          channels: ["in_app", "whatsapp"],
+          priority: "high",
+          title: "Link de pago listo",
+          bodyText: body,
+          actionUrl: `/records/${input.leadId}`,
+        },
+      ];
+    }
   }
 
   if (input.event.eventType === "fulfillment_step_rejected") {
@@ -210,10 +250,48 @@ export async function reactToFulfillmentChanges(
     .execute();
   const leadsById = new Map(leadRows.map((lead) => [lead.leadId, lead]));
 
+  // For the AWAITING_PAYMENT step we inline each unit's payment URL in the
+  // notification body, so the executive can forward it to the client without
+  // opening the app. Load units only for the orders that need them.
+  const paymentOrderIds = [
+    ...new Set(
+      events
+        .filter(
+          (ev) =>
+            ev.event.eventType === "fulfillment_step_advanced" &&
+            ev.event.payload.to === "AWAITING_PAYMENT",
+        )
+        .map((ev) => ev.event.payload.orderId),
+    ),
+  ];
+  const paymentUnitsByOrderId = new Map<
+    string,
+    { label: string; paymentUrl: string | null }[]
+  >();
+  if (paymentOrderIds.length > 0) {
+    const unitRows = await tx
+      .selectFrom("lead_fulfillment_units")
+      .select(["order_id", "label", "payment_url"])
+      .where("order_id", "in", paymentOrderIds)
+      .orderBy("created_at", "asc")
+      .execute();
+    for (const row of unitRows) {
+      const list = paymentUnitsByOrderId.get(row.order_id) ?? [];
+      list.push({ label: row.label, paymentUrl: row.payment_url });
+      paymentUnitsByOrderId.set(row.order_id, list);
+    }
+  }
+
   const intents: NotificationIntent[] = [];
   for (const { event, id } of events) {
     const lead = leadsById.get(event.leadId);
     if (!lead || lead.executiveId <= 0) continue;
+
+    const paymentUnits =
+      event.eventType === "fulfillment_step_advanced" &&
+      event.payload.to === "AWAITING_PAYMENT"
+        ? (paymentUnitsByOrderId.get(event.payload.orderId) ?? [])
+        : [];
 
     intents.push(
       ...deriveFulfillmentNotification({
@@ -223,6 +301,7 @@ export async function reactToFulfillmentChanges(
         ruc: lead.ruc,
         executiveId: lead.executiveId,
         branchId: lead.branchId,
+        paymentUnits,
       }),
     );
   }

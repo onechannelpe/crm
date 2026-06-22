@@ -93,11 +93,12 @@
   background: var(--foreground);
   bottom: 0;
   content: "";
-  height: 1px;
+  height: 2px;
   left: 0;
   position: absolute;
   right: 0;
   z-index: 1;
+  transform: scaleX(1);
 }
 
 .moreMenu {
