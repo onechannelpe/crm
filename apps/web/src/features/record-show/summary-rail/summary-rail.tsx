@@ -10,8 +10,6 @@ import {
 
 import styles from "./summary-rail.module.css";
 
-// At-a-glance orientation for the full-page record. The stepper and the
-// actionable next-step card live in the Resumen tab; the rail only summarizes.
 export function SummaryRail(props: { data: LeadDetailView }) {
   const profile = () => props.data.profile;
   const metrics = () => [

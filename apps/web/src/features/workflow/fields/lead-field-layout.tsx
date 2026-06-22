@@ -56,9 +56,6 @@ function ManagedByRow(props: { data: LeadDetailView }) {
   );
 }
 
-// Registration identity first (what the lead is), then qualification status, then
-// administrative metadata last. Stage and next step are owned by the stepper, so
-// they are intentionally absent here.
 export const LEAD_DETAIL_FIELD_GROUPS: FieldGroup[] = [
   {
     key: "sunat",

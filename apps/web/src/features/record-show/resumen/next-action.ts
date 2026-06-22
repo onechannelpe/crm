@@ -1,8 +1,5 @@
 import type { LeadDetailView } from "~/contracts/workflow/views";
 
-// The single decision the record surfaces right now, derived from stage plus the
-// server-resolved available actions. The action card and the summary rail both
-// read this so they never drift.
 export type NextAction =
   | {
       kind: "message";
@@ -11,11 +8,15 @@ export type NextAction =
       message: string;
     }
   | { kind: "propose-rate" }
-  | { kind: "decide-rate" }
+  | {
+      kind: "decide-rate";
+      proposal: LeadDetailView["rateProposals"][number];
+    }
   | { kind: "setup-checklist" };
 
 export type SetupChecklistItem = { label: string; done: boolean };
 
+// Server-resolved actions preserve authorization while stage selects presentation.
 export function resolveNextAction(data: LeadDetailView): NextAction {
   const { stage } = data.lead;
   const actions = data.availableActions;
@@ -30,9 +31,8 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
           "En espera de calificación de disponibilidad por back office (Estado y Prioridad).",
       };
     case "PRICING": {
-      if (data.rateProposals.length > 0) {
-        return { kind: "decide-rate" };
-      }
+      const proposal = data.rateProposals.at(-1);
+      if (proposal) return { kind: "decide-rate", proposal };
       if (actions.includes("propose-rate")) {
         return { kind: "propose-rate" };
       }
@@ -68,7 +68,7 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
       };
     default: {
       const exhaustive: never = stage;
-      return exhaustive;
+      return exhaustive satisfies never;
     }
   }
 }
@@ -102,7 +102,7 @@ export function nextActionSummary(data: LeadDetailView): string {
       return "Completar afiliación";
     default: {
       const exhaustive: never = action;
-      return exhaustive;
+      return exhaustive satisfies never;
     }
   }
 }

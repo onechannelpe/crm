@@ -9,8 +9,6 @@ import { ActivityTabEmptyState } from "~/features/side-panel/components/activity
 
 import styles from "~/features/record-show/tabs/timeline/styles.module.css";
 
-// The process event feed. Authored notes live in their own tab, so they are
-// filtered out here to avoid duplicating them across both surfaces.
 export function ActividadTab(props: { context: RecordContext }) {
   const groups = createMemo(() => {
     const context = props.context;

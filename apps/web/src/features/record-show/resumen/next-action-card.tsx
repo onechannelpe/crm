@@ -22,6 +22,12 @@ function asMessage(
   return action.kind === "message" ? action : null;
 }
 
+function asRateDecision(
+  action: NextAction,
+): Extract<NextAction, { kind: "decide-rate" }> | null {
+  return action.kind === "decide-rate" ? action : null;
+}
+
 export function NextActionCard(props: {
   data: LeadDetailView;
   onNavigate: (id: RecordTabId) => void;
@@ -47,13 +53,11 @@ export function NextActionCard(props: {
         />
       </Match>
 
-      {/* decide-rate only resolves when a proposal exists, so the proposal in
-          the `when` both narrows the type and co-locates that invariant. */}
-      <Match when={action().kind === "decide-rate" && latestProposal()}>
-        {(proposal) => (
+      <Match when={asRateDecision(action())}>
+        {(decision) => (
           <RateProposalSection
             leadId={props.data.lead.id}
-            proposal={proposal()}
+            proposal={decision().proposal}
             reservationExpiresAt={props.data.lead.reservationExpiresAt}
             rateRevisions={props.data.rateRevisions}
             canAccept={props.data.availableActions.includes("accept-rate")}

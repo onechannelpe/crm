@@ -25,12 +25,8 @@ export type RecordTabDefinition = {
   id: RecordTabId;
   label: string;
   icon?: TabIconComponent;
-  // Coarse visibility by record kind. Drives active-tab resolution where only the
-  // kind is known (the persisted tab id, before the lead detail is loaded).
-  kinds: RecordTabKind[];
-  // Fine visibility within a lead, by stage. Applied by the render layer, which
-  // has the full context.
-  stageGate?: (stage: LeadStage) => boolean;
+  visibleForKinds: RecordTabKind[];
+  isVisibleAtStage?: (stage: LeadStage) => boolean;
   component: (props: {
     context: RecordContext;
     onNavigate: (id: RecordTabId) => void;
@@ -49,58 +45,58 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
     id: "registro",
     icon: Plus,
     label: "Registro",
-    kinds: DRAFT,
+    visibleForKinds: DRAFT,
     component: RegistroTab,
   },
   {
     id: "resumen",
     icon: Info,
     label: "Resumen",
-    kinds: LEAD,
+    visibleForKinds: LEAD,
     component: ResumenTab,
   },
   {
     id: "datos",
     icon: HomeTabler,
     label: "Datos",
-    kinds: LEAD,
+    visibleForKinds: LEAD,
     component: DatosTab,
   },
   {
     id: "afiliacion",
     icon: Building2,
     label: "Afiliación",
-    kinds: LEAD,
-    stageGate: inAfiliacion,
+    visibleForKinds: LEAD,
+    isVisibleAtStage: inAfiliacion,
     component: AfiliacionTab,
   },
   {
     id: "notas",
     icon: MessageSquare,
     label: "Notas",
-    kinds: LEAD,
+    visibleForKinds: LEAD,
     component: NotasTab,
   },
   {
     id: "actividad",
     icon: TimelineEvent,
     label: "Actividad",
-    kinds: BOTH,
+    visibleForKinds: BOTH,
     component: ActividadTab,
   },
   {
     id: "archivos",
     icon: Paperclip,
     label: "Archivos",
-    kinds: LEAD,
+    visibleForKinds: LEAD,
     component: FilesTab,
   },
 ];
 
 function tabAppears(tab: RecordTabDefinition, context: RecordContext): boolean {
-  if (!tab.kinds.includes(context.kind)) return false;
-  if (tab.stageGate && context.kind === "lead") {
-    return tab.stageGate(context.data.lead.stage);
+  if (!tab.visibleForKinds.includes(context.kind)) return false;
+  if (tab.isVisibleAtStage && context.kind === "lead") {
+    return tab.isVisibleAtStage(context.data.lead.stage);
   }
   return true;
 }
@@ -113,13 +109,13 @@ export function resolveActiveRecordTabId(
   tabId: string,
   kind: RecordTabKind,
 ): RecordTabId {
-  const available = RECORD_TABS.filter((tab) => tab.kinds.includes(kind));
+  const available = RECORD_TABS.filter((tab) =>
+    tab.visibleForKinds.includes(kind),
+  );
   const match = available.find((tab) => tab.id === tabId);
   return match ? match.id : available[0].id;
 }
 
-// Side-panel chrome shows the active tab's label. Looked up from the same
-// registry so the chrome label never drifts from the tab strip.
 export function recordTabDisplayLabel(tabId: RecordTabId): string {
   const tab = RECORD_TABS.find((entry) => entry.id === tabId);
   return tab?.label ?? "";
