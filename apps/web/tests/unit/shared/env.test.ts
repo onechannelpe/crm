@@ -13,6 +13,11 @@ describe("env validation", () => {
     GOOGLE_REDIRECT_URI: "http://localhost:3000/api/auth/google/callback",
     RESEND_API_KEY: "re_test_key",
     EMAIL_FROM: "support@example.com",
+    WHATSAPP_ACCESS_TOKEN: "test-whatsapp-access-token",
+    WHATSAPP_PHONE_NUMBER_ID: "test-whatsapp-phone-number-id",
+    WHATSAPP_WEBHOOK_VERIFY_TOKEN:
+      "stable-test-whatsapp-verify-token-satisfies-entropy-checks-12345",
+    WHATSAPP_APP_SECRET: "test-whatsapp-app-secret",
   } satisfies Record<string, string>;
 
   it("throws if secret is too short", () => {

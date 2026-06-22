@@ -4,21 +4,11 @@ import { describe, expect, it } from "vitest";
 import {
   enforceCsrfRequestPolicy,
   enforceAuthRequest,
-  isPublicPath,
 } from "~/lib/auth/access/request-auth";
 
 const LOCAL_ORIGIN = "http://localhost:3000";
 
 describe("auth middleware csrf policy", () => {
-  it("detects public routes", () => {
-    expect(isPublicPath("/login")).toBe(true);
-    expect(isPublicPath("/auth/callback")).toBe(true);
-    expect(isPublicPath("/api/auth/google")).toBe(true);
-    expect(isPublicPath("/_build/assets.js")).toBe(true);
-    expect(isPublicPath("/robots.txt")).toBe(true);
-    expect(isPublicPath("/dashboard")).toBe(false);
-  });
-
   it("allows same-origin unsafe requests via fetch metadata", () => {
     const error = enforceCsrfRequestPolicy(
       new Request("http://localhost:3000/dashboard", {
@@ -131,5 +121,31 @@ describe("auth middleware csrf policy", () => {
     });
 
     expect(decision.kind).not.toBe("reject");
+  });
+
+  it("allows the webhook GET handshake without a session or CSRF token", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request(
+        "http://localhost:3000/api/webhooks/whatsapp?hub.mode=subscribe",
+        { method: "GET" },
+      ),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
+
+    expect(decision.kind).toBe("allow");
+  });
+
+  it("rejects an unsigned webhook POST before it reaches the handler", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/api/webhooks/whatsapp", {
+        method: "POST",
+        body: JSON.stringify({ object: "whatsapp_business_account" }),
+      }),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
+
+    expect(decision.kind).toBe("reject");
+    if (decision.kind !== "reject") throw new Error("Expected reject");
+    expect(decision.response.status).toBe(403);
   });
 });

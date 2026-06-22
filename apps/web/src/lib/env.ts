@@ -148,9 +148,15 @@ function parseNotificationsEnv(source: EnvSource) {
   return {
     resendApiKey: required(source, "RESEND_API_KEY"),
     emailFrom: required(source, "EMAIL_FROM"),
-    whatsappAccessToken: optional(source, "WHATSAPP_ACCESS_TOKEN", ""),
-    whatsappPhoneNumberId: optional(source, "WHATSAPP_PHONE_NUMBER_ID", ""),
+    whatsappAccessToken: required(source, "WHATSAPP_ACCESS_TOKEN"),
+    whatsappPhoneNumberId: required(source, "WHATSAPP_PHONE_NUMBER_ID"),
     whatsappApiVersion: optional(source, "WHATSAPP_GRAPH_API_VERSION", "v23.0"),
+    whatsappWebhookVerifyToken: required(
+      source,
+      "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
+      true,
+    ),
+    whatsappAppSecret: required(source, "WHATSAPP_APP_SECRET"),
   } as const;
 }
 
@@ -194,7 +200,6 @@ function section<T>(parse: (source: EnvSource) => T): () => T {
   };
 }
 
-// const sessionConfig = section(parseSessionEnv);
 export const totpConfig = section(parseTotpEnv);
 export const extensionConfig = section(parseExtensionEnv);
 export const securityConfig = section(parseSecurityEnv);

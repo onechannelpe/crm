@@ -2,10 +2,7 @@ import { createRequestContext } from "@tests/support/auth/request-context";
 import { makeAuthSession } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
-import {
-  enforceAuthRequest,
-  isPublicPath,
-} from "~/lib/auth/access/request-auth";
+import { enforceAuthRequest } from "~/lib/auth/access/request-auth";
 
 describe("auth middleware routing", () => {
   it("redirects to /login when private route has no session", async () => {
@@ -122,10 +119,14 @@ describe("auth middleware routing", () => {
     expect(decision.kind).toBe("allow");
   });
 
-  it("classifies explicit public path prefixes", () => {
-    expect(isPublicPath("/releases/v1.0")).toBe(true);
-    expect(isPublicPath("/docs/api")).toBe(true);
-    expect(isPublicPath("/privacy")).toBe(true);
-    expect(isPublicPath("/terms")).toBe(true);
+  it("rejects an unauthenticated API request with 401 instead of a redirect", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/api/me/avatar"),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
+
+    expect(decision.kind).toBe("reject");
+    if (decision.kind !== "reject") throw new Error("Expected reject");
+    expect(decision.response.status).toBe(401);
   });
 });

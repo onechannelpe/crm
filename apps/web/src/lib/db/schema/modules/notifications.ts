@@ -125,4 +125,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("notification_outbox")
     .columns(["status", "available_at", "lease_until"])
     .execute();
+
+  await db.schema
+    .createTable("whatsapp_sessions")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().unique().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .execute();
 }

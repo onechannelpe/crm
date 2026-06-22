@@ -70,6 +70,7 @@ export interface Database {
   notification_deliveries: notifications.NotificationDeliveriesTable;
   app_notifications: notifications.AppNotificationsTable;
   notification_outbox: notifications.NotificationOutboxTable;
+  whatsapp_sessions: notifications.WhatsAppSessionsTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;

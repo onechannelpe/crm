@@ -22,6 +22,8 @@ Candidate assignment flows through
 and [`src/server/workflow/infrastructure/engine-gateway.ts`](src/server/workflow/infrastructure/engine-gateway.ts).
 Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
 
+## Configuration
+
 Configuration is loaded from env files selected by the script or passed by the caller.
 
 | Group               | Variable                                     |
@@ -45,6 +47,8 @@ Configuration is loaded from env files selected by the script or passed by the c
 | Notifications       | `EMAIL_FROM`                                 |
 | Notifications       | `WHATSAPP_ACCESS_TOKEN`                      |
 | Notifications       | `WHATSAPP_PHONE_NUMBER_ID`                   |
+| Notifications       | `WHATSAPP_APP_SECRET`                        |
+| Notifications       | `WHATSAPP_WEBHOOK_VERIFY_TOKEN`              |
 | Notifications       | `WHATSAPP_GRAPH_API_VERSION`                 |
 
 The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. The WebAuthn relying party is derived per request from the public origin (`requestContext.publicOrigin`). Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).

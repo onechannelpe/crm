@@ -527,6 +527,15 @@ export async function persistDemoIdentities(
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
+
+  await db
+    .insertInto("whatsapp_sessions")
+    .values([
+      { user_id: 1, expires_at: now + oneDay },
+      { user_id: 12, expires_at: now + oneDay },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
 }
 
 const oneMinute = 60 * 1000;
