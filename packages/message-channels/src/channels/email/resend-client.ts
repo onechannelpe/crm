@@ -1,3 +1,4 @@
+import type { DeliveryProvider } from "../../types";
 import type {
   ProviderSendFailure,
   ProviderSendResult,
@@ -93,4 +94,23 @@ export async function sendWithResend(
   }
 
   return { providerMessageId };
+}
+
+export function createResendProvider(config: {
+  apiKey: string;
+  fromEmail: string;
+}): DeliveryProvider<"email"> {
+  return {
+    id: "resend",
+    channel: "email",
+    send(input) {
+      return sendWithResend(config.apiKey, {
+        from: config.fromEmail,
+        to: input.to,
+        subject: input.subject,
+        html: input.html,
+        text: input.text,
+      });
+    },
+  };
 }

@@ -74,13 +74,18 @@ export async function deliverExternal(
           params: {
             title: entry.title,
             bodyText: entry.body_text,
-            platformName: "CRM",
+            platformName: "Culqi360",
           },
         })
       : await messaging.sendWhatsAppText({
           to: delivery.recipientAddress,
           body: entry.body_text,
         });
+  const provider = receipt.ok
+    ? receipt.value.provider
+    : receipt.error.kind === "provider_error"
+      ? receipt.error.provider
+      : null;
 
   await db
     .insertInto("notification_deliveries")
@@ -88,11 +93,7 @@ export async function deliverExternal(
       intent_id: entry.id,
       recipient_channel: delivery.channel,
       recipient_address: delivery.recipientAddress,
-      provider: receipt.ok
-        ? receipt.value.provider
-        : delivery.channel === "email"
-          ? "resend"
-          : "whatsapp_cloud",
+      provider,
       provider_message_id: receipt.ok
         ? (receipt.value.providerMessageId ?? null)
         : null,

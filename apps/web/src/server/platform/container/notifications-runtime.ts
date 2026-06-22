@@ -1,5 +1,11 @@
 import { createEmailComposer } from "@crm/email-composer";
-import { createMessageChannels } from "@crm/message-channels";
+import {
+  createKapsoProvider,
+  createMessageChannels,
+  createResendProvider,
+  createWhatsAppCloudProvider,
+  type DeliveryProvider,
+} from "@crm/message-channels";
 
 import type { NotificationsConfig } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
@@ -17,12 +23,26 @@ export function createNotificationsRuntime(
   config: NotificationsConfig,
   doorbell: QueueDoorbell,
 ) {
+  const providers: DeliveryProvider[] = [];
+  if (config.resend) {
+    providers.push(createResendProvider(config.resend));
+  }
+  if (config.kapso) {
+    providers.push(
+      createKapsoProvider({
+        apiKey: config.kapso.apiKey,
+        phoneNumberId: config.kapso.whatsappPhoneNumberId,
+        metaGraphVersion: config.kapso.metaGraphVersion,
+      }),
+    );
+  }
+  if (config.whatsappCloud) {
+    providers.push(createWhatsAppCloudProvider(config.whatsappCloud));
+  }
+
   const channels = createMessageChannels({
-    resendApiKey: config.resendApiKey || undefined,
-    fromEmail: config.emailFrom || undefined,
-    whatsappAccessToken: config.whatsappAccessToken || undefined,
-    whatsappPhoneNumberId: config.whatsappPhoneNumberId || undefined,
-    whatsappApiVersion: config.whatsappApiVersion || undefined,
+    routes: config.routes,
+    providers,
   });
   const composer = createEmailComposer();
   const messaging = createMessagingGateway({ channels, composer });

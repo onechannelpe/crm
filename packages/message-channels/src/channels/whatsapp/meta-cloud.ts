@@ -1,3 +1,4 @@
+import type { DeliveryProvider } from "../../types";
 import type {
   ProviderSendFailure,
   ProviderSendResult,
@@ -110,4 +111,24 @@ export async function sendWithWhatsAppCloudText(
     retryable: response.status === 429 || response.status >= 500,
   };
   throw failure;
+}
+
+export function createWhatsAppCloudProvider(config: {
+  accessToken: string;
+  phoneNumberId: string;
+  graphVersion: string;
+}): DeliveryProvider<"whatsapp"> {
+  return {
+    id: "whatsapp_cloud",
+    channel: "whatsapp",
+    send(input) {
+      return sendWithWhatsAppCloudText({
+        accessToken: config.accessToken,
+        phoneNumberId: config.phoneNumberId,
+        apiVersion: config.graphVersion,
+        to: input.to,
+        body: input.body,
+      });
+    },
+  };
 }

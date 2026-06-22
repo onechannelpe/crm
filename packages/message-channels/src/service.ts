@@ -1,13 +1,15 @@
-import { sendWithResend } from "./channels/email/resend-client";
 import { isProviderSendFailure } from "./channels/provider-types";
-import { sendWithWhatsAppCloudText } from "./channels/whatsapp/meta-cloud";
 import {
   Err,
   Ok,
-  type DeliveryReceipt,
+  deliveryProviderChannel,
   type DeliveryError,
+  type DeliveryProvider,
+  type DeliveryProviderId,
+  type DeliveryReceipt,
   type MessageChannels,
   type MessageChannelsConfig,
+  type NotificationChannel,
   type OutboundEmail,
   type OutboundWhatsAppText,
   type Result,
@@ -15,41 +17,12 @@ import {
 
 type SendEmailResult = Result<DeliveryReceipt, DeliveryError>;
 type SendWhatsAppResult = Result<DeliveryReceipt, DeliveryError>;
-
-function getEmailConfig(config: MessageChannelsConfig): {
-  resendApiKey: string;
-  fromEmail: string;
-} | null {
-  if (!config.resendApiKey || !config.fromEmail) {
-    return null;
-  }
-  return {
-    resendApiKey: config.resendApiKey,
-    fromEmail: config.fromEmail,
-  };
-}
-
-function getWhatsAppConfig(config: MessageChannelsConfig): {
-  accessToken: string;
-  phoneNumberId: string;
-  apiVersion: string;
-} | null {
-  if (
-    !config.whatsappAccessToken ||
-    !config.whatsappPhoneNumberId ||
-    !config.whatsappApiVersion
-  ) {
-    return null;
-  }
-  return {
-    accessToken: config.whatsappAccessToken,
-    phoneNumberId: config.whatsappPhoneNumberId,
-    apiVersion: config.whatsappApiVersion,
-  };
-}
+type ProviderRegistry = Partial<
+  Record<DeliveryProviderId, DeliveryProvider<NotificationChannel>>
+>;
 
 function errFromInput(
-  channel: "email" | "whatsapp",
+  channel: NotificationChannel,
   message: string,
 ): Result<never, DeliveryError> {
   return Err({
@@ -62,7 +35,7 @@ function errFromInput(
 }
 
 function errNotConfigured(
-  channel: "email" | "whatsapp",
+  channel: NotificationChannel,
 ): Result<never, DeliveryError> {
   return Err({
     kind: "not_configured",
@@ -77,9 +50,9 @@ function errNotConfigured(
 }
 
 function errFromProviderFailure(
-  channel: "email" | "whatsapp",
+  channel: NotificationChannel,
   failure: {
-    provider: "resend" | "whatsapp_cloud";
+    provider: DeliveryProviderId;
     code: string;
     statusCode: number | null;
     message: string;
@@ -97,12 +70,97 @@ function errFromProviderFailure(
   });
 }
 
+function createProviderRegistry(
+  providers: DeliveryProvider[],
+): ProviderRegistry {
+  const registry: ProviderRegistry = {};
+
+  for (const provider of providers) {
+    if (registry[provider.id]) {
+      throw new Error(`Duplicate notification provider: ${provider.id}`);
+    }
+    registry[provider.id] = provider;
+  }
+
+  return registry;
+}
+
+function validateRoutes(
+  config: MessageChannelsConfig,
+  registry: ProviderRegistry,
+): void {
+  for (const [channel, providerId] of Object.entries(config.routes) as Array<
+    [NotificationChannel, DeliveryProviderId]
+  >) {
+    const providerChannel = deliveryProviderChannel(providerId);
+    if (providerChannel !== channel) {
+      throw new Error(
+        `Notification route ${channel}:${providerId} cannot use a ${providerChannel} provider`,
+      );
+    }
+
+    const provider = registry[providerId];
+    if (!provider) {
+      throw new Error(
+        `Notification route ${channel}:${providerId} references an unregistered provider`,
+      );
+    }
+
+    if (provider.channel !== providerChannel) {
+      throw new Error(
+        `Notification provider ${providerId} registered for ${provider.channel}, expected ${providerChannel}`,
+      );
+    }
+  }
+}
+
+function getProvider<C extends NotificationChannel>(
+  channel: C,
+  config: MessageChannelsConfig,
+  registry: ProviderRegistry,
+): DeliveryProvider<C> | null {
+  const providerId = config.routes[channel];
+  if (!providerId) {
+    return null;
+  }
+
+  return (registry[providerId] as DeliveryProvider<C> | undefined) ?? null;
+}
+
+async function sendWithProvider<C extends NotificationChannel>(
+  channel: C,
+  provider: DeliveryProvider<C>,
+  input: C extends "email" ? OutboundEmail : OutboundWhatsAppText,
+): Promise<Result<DeliveryReceipt, DeliveryError>> {
+  try {
+    const receipt = await provider.send(input);
+    return Ok({
+      channel,
+      provider: provider.id,
+      providerMessageId: receipt.providerMessageId,
+    });
+  } catch (error) {
+    if (isProviderSendFailure(error)) {
+      return errFromProviderFailure(channel, error);
+    }
+
+    return errFromProviderFailure(channel, {
+      provider: provider.id,
+      code: "unknown_error",
+      statusCode: null,
+      message: error instanceof Error ? error.message : "Unknown error",
+      retryable: true,
+    });
+  }
+}
+
 async function sendEmail(
   config: MessageChannelsConfig,
+  registry: ProviderRegistry,
   input: OutboundEmail,
 ): Promise<SendEmailResult> {
-  const emailConfig = getEmailConfig(config);
-  if (!emailConfig) {
+  const provider = getProvider("email", config, registry);
+  if (!provider) {
     return errNotConfigured("email");
   }
 
@@ -114,39 +172,16 @@ async function sendEmail(
     return errFromInput("email", "Email subject is required");
   }
 
-  try {
-    const receipt = await sendWithResend(emailConfig.resendApiKey, {
-      from: emailConfig.fromEmail,
-      to: input.to,
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
-    });
-    return Ok({
-      channel: "email",
-      provider: "resend",
-      providerMessageId: receipt.providerMessageId,
-    });
-  } catch (error) {
-    if (isProviderSendFailure(error)) {
-      return errFromProviderFailure("email", error);
-    }
-    return errFromProviderFailure("email", {
-      provider: "resend",
-      code: "unknown_error",
-      statusCode: null,
-      message: error instanceof Error ? error.message : "Unknown error",
-      retryable: true,
-    });
-  }
+  return sendWithProvider("email", provider, input);
 }
 
 async function sendWhatsAppText(
   config: MessageChannelsConfig,
+  registry: ProviderRegistry,
   input: OutboundWhatsAppText,
 ): Promise<SendWhatsAppResult> {
-  const whatsAppConfig = getWhatsAppConfig(config);
-  if (!whatsAppConfig) {
+  const provider = getProvider("whatsapp", config, registry);
+  if (!provider) {
     return errNotConfigured("whatsapp");
   }
 
@@ -158,42 +193,21 @@ async function sendWhatsAppText(
     return errFromInput("whatsapp", "WhatsApp body is required");
   }
 
-  try {
-    const receipt = await sendWithWhatsAppCloudText({
-      accessToken: whatsAppConfig.accessToken,
-      phoneNumberId: whatsAppConfig.phoneNumberId,
-      apiVersion: whatsAppConfig.apiVersion,
-      to: input.to,
-      body: input.body,
-    });
-    return Ok({
-      channel: "whatsapp",
-      provider: "whatsapp_cloud",
-      providerMessageId: receipt.providerMessageId,
-    });
-  } catch (error) {
-    if (isProviderSendFailure(error)) {
-      return errFromProviderFailure("whatsapp", error);
-    }
-    return errFromProviderFailure("whatsapp", {
-      provider: "whatsapp_cloud",
-      code: "unknown_error",
-      statusCode: null,
-      message: error instanceof Error ? error.message : "Unknown error",
-      retryable: true,
-    });
-  }
+  return sendWithProvider("whatsapp", provider, input);
 }
 
 export function createMessageChannels(
   config: MessageChannelsConfig,
 ): MessageChannels {
+  const registry = createProviderRegistry(config.providers);
+  validateRoutes(config, registry);
+
   return {
     sendEmail(input) {
-      return sendEmail(config, input);
+      return sendEmail(config, registry, input);
     },
     sendWhatsAppText(input) {
-      return sendWhatsAppText(config, input);
+      return sendWhatsAppText(config, registry, input);
     },
   };
 }

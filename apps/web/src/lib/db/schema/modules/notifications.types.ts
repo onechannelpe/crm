@@ -32,7 +32,7 @@ export interface NotificationDeliveriesTable {
   intent_id: string;
   recipient_channel: "email" | "whatsapp";
   recipient_address: string;
-  provider: "resend" | "whatsapp_cloud";
+  provider: "resend" | "whatsapp_cloud" | "kapso" | null;
   provider_message_id: string | null;
   status: "sent" | "failed";
   error_code: string | null;

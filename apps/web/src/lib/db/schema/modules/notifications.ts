@@ -55,7 +55,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("intent_id", "text", (col) => col.notNull())
     .addColumn("recipient_channel", "varchar(20)", (col) => col.notNull())
     .addColumn("recipient_address", "varchar(255)", (col) => col.notNull())
-    .addColumn("provider", "varchar(32)", (col) => col.notNull())
+    .addColumn("provider", "varchar(32)")
     .addColumn("provider_message_id", "varchar(255)")
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("error_code", "varchar(64)")

@@ -1,5 +1,7 @@
+import { isDeliveryProviderId, type DeliveryProviderId } from "../types";
+
 export interface ProviderSendFailure {
-  provider: "resend" | "whatsapp_cloud";
+  provider: DeliveryProviderId;
   code: string;
   statusCode: number | null;
   message: string;
@@ -17,8 +19,15 @@ export function isProviderSendFailure(
     typeof value === "object" &&
     value !== null &&
     "provider" in value &&
+    typeof value.provider === "string" &&
+    isDeliveryProviderId(value.provider) &&
     "code" in value &&
+    typeof value.code === "string" &&
+    "statusCode" in value &&
+    (typeof value.statusCode === "number" || value.statusCode === null) &&
     "message" in value &&
-    "retryable" in value
+    typeof value.message === "string" &&
+    "retryable" in value &&
+    typeof value.retryable === "boolean"
   );
 }

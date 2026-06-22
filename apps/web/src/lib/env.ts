@@ -1,3 +1,12 @@
+import {
+  deliveryProviderChannel,
+  isDeliveryProviderId,
+  isNotificationChannel,
+  type DeliveryProviderId,
+  type NotificationChannel,
+  type NotificationRoutes,
+} from "@crm/message-channels";
+
 const SECRET_MIN_LENGTH = 32;
 const SECRET_MIN_UNIQUE_CHARS = 10;
 const SEQUENTIAL_CHARS =
@@ -144,13 +153,111 @@ function parseGoogleOAuthEnv(source: EnvSource) {
   } as const;
 }
 
+function parseNotificationRoutes(source: EnvSource): NotificationRoutes {
+  const raw = optional(
+    source,
+    "NOTIFICATION_ROUTES",
+    "email:resend,whatsapp:kapso",
+  );
+  const routes: NotificationRoutes = {};
+
+  for (const segment of raw.split(",")) {
+    const trimmed = segment.trim();
+    if (!trimmed) continue;
+
+    const [channel, provider, extra] = trimmed.split(":");
+    if (!channel || !provider || extra !== undefined) {
+      throw new Error(
+        "NOTIFICATION_ROUTES entries must use channel:provider format",
+      );
+    }
+
+    if (!isNotificationChannel(channel)) {
+      throw new Error(`Unknown notification channel in route: ${channel}`);
+    }
+
+    if (!isDeliveryProviderId(provider)) {
+      throw new Error(`Unknown notification provider in route: ${provider}`);
+    }
+
+    if (routes[channel]) {
+      throw new Error(`Duplicate notification route for channel: ${channel}`);
+    }
+
+    switch (channel) {
+      case "email":
+        if (provider !== "resend") {
+          throw routeProviderMismatch(channel, provider);
+        }
+        routes.email = provider;
+        break;
+      case "whatsapp":
+        if (provider === "resend") {
+          throw routeProviderMismatch(channel, provider);
+        }
+        routes.whatsapp = provider;
+        break;
+      default:
+        channel satisfies never;
+    }
+  }
+
+  return routes;
+}
+
+function routeProviderMismatch(
+  channel: NotificationChannel,
+  provider: DeliveryProviderId,
+): Error {
+  const providerChannel = deliveryProviderChannel(provider);
+  return new Error(
+    `Notification route ${channel}:${provider} cannot use a ${providerChannel} provider`,
+  );
+}
+
+function routeUses(
+  routes: NotificationRoutes,
+  provider: DeliveryProviderId,
+): boolean {
+  return Object.values(routes).includes(provider);
+}
+
 function parseNotificationsEnv(source: EnvSource) {
+  const routes = parseNotificationRoutes(source);
+
   return {
-    resendApiKey: required(source, "RESEND_API_KEY"),
-    emailFrom: required(source, "EMAIL_FROM"),
-    whatsappAccessToken: required(source, "WHATSAPP_ACCESS_TOKEN"),
-    whatsappPhoneNumberId: required(source, "WHATSAPP_PHONE_NUMBER_ID"),
-    whatsappApiVersion: optional(source, "WHATSAPP_GRAPH_API_VERSION", "v23.0"),
+    routes,
+    resend: routeUses(routes, "resend")
+      ? {
+          apiKey: required(source, "RESEND_API_KEY"),
+          fromEmail: required(source, "EMAIL_FROM"),
+        }
+      : null,
+    kapso: routeUses(routes, "kapso")
+      ? {
+          apiKey: required(source, "KAPSO_API_KEY"),
+          whatsappPhoneNumberId: required(
+            source,
+            "KAPSO_WHATSAPP_PHONE_NUMBER_ID",
+          ),
+          metaGraphVersion: optional(
+            source,
+            "KAPSO_META_GRAPH_VERSION",
+            "v24.0",
+          ),
+        }
+      : null,
+    whatsappCloud: routeUses(routes, "whatsapp_cloud")
+      ? {
+          accessToken: required(source, "WHATSAPP_CLOUD_ACCESS_TOKEN"),
+          phoneNumberId: required(source, "WHATSAPP_CLOUD_PHONE_NUMBER_ID"),
+          graphVersion: optional(
+            source,
+            "WHATSAPP_CLOUD_GRAPH_VERSION",
+            "v24.0",
+          ),
+        }
+      : null,
     whatsappWebhookVerifyToken: required(
       source,
       "WHATSAPP_WEBHOOK_VERIFY_TOKEN",

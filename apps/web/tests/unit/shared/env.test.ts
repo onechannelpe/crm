@@ -11,10 +11,11 @@ describe("env validation", () => {
     GOOGLE_CLIENT_ID: "google-client-id",
     GOOGLE_CLIENT_SECRET: "google-client-secret",
     GOOGLE_REDIRECT_URI: "http://localhost:3000/api/auth/google/callback",
+    NOTIFICATION_ROUTES: "email:resend,whatsapp:kapso",
     RESEND_API_KEY: "re_test_key",
     EMAIL_FROM: "support@example.com",
-    WHATSAPP_ACCESS_TOKEN: "test-whatsapp-access-token",
-    WHATSAPP_PHONE_NUMBER_ID: "test-whatsapp-phone-number-id",
+    KAPSO_API_KEY: "test-kapso-api-key",
+    KAPSO_WHATSAPP_PHONE_NUMBER_ID: "test-whatsapp-phone-number-id",
     WHATSAPP_WEBHOOK_VERIFY_TOKEN:
       "stable-test-whatsapp-verify-token-satisfies-entropy-checks-12345",
     WHATSAPP_APP_SECRET: "test-whatsapp-app-secret",
@@ -54,6 +55,55 @@ describe("env validation", () => {
 
   it("defaults engine connect mode to local", () => {
     expect(loadServerEnv(baseEnv).engine.engineConnectMode).toBe("local");
+  });
+
+  it("routes email to Resend and WhatsApp to Kapso", () => {
+    expect(loadServerEnv(baseEnv).notifications).toMatchObject({
+      routes: {
+        email: "resend",
+        whatsapp: "kapso",
+      },
+      kapso: {
+        metaGraphVersion: "v24.0",
+      },
+    });
+  });
+
+  it("requires only provider credentials used by notification routes", () => {
+    expect(() =>
+      loadServerEnv({
+        ...baseEnv,
+        NOTIFICATION_ROUTES: "whatsapp:whatsapp_cloud",
+      }),
+    ).toThrow("Missing required env: WHATSAPP_CLOUD_ACCESS_TOKEN");
+
+    const notifications = loadServerEnv({
+      ...baseEnv,
+      NOTIFICATION_ROUTES: "whatsapp:whatsapp_cloud",
+      WHATSAPP_CLOUD_ACCESS_TOKEN: "test-whatsapp-access-token",
+      WHATSAPP_CLOUD_PHONE_NUMBER_ID: "test-whatsapp-phone-number-id",
+    }).notifications;
+
+    expect(notifications.routes.whatsapp).toBe("whatsapp_cloud");
+    expect(notifications.resend).toBeNull();
+    expect(notifications.kapso).toBeNull();
+    expect(notifications.whatsappCloud?.graphVersion).toBe("v24.0");
+  });
+
+  it("rejects invalid notification routes", () => {
+    expect(() =>
+      loadServerEnv({
+        ...baseEnv,
+        NOTIFICATION_ROUTES: "sms:kapso",
+      }),
+    ).toThrow("Unknown notification channel in route: sms");
+
+    expect(() =>
+      loadServerEnv({
+        ...baseEnv,
+        NOTIFICATION_ROUTES: "email:kapso",
+      }),
+    ).toThrow("Notification route email:kapso cannot use a whatsapp provider");
   });
 
   it("rejects invalid engine connect mode values", () => {
