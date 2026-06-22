@@ -1,17 +1,23 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import { validateNotificationIntent } from "./outbox-payload";
 import type { NotificationIntent } from "./types";
 
 export async function enqueueNotifications(
   db: DatabaseExecutor,
-  intents: NotificationIntent[],
+  intents: readonly unknown[],
   now: number,
 ): Promise<void> {
   if (intents.length === 0) return;
+  // `intents` is typed as `unknown` so the validation step is visible at this
+  // boundary. Typed callers can pass a `NotificationIntent[]` directly.
+  const validated: NotificationIntent[] = intents.map((intent) =>
+    validateNotificationIntent(intent),
+  );
   await db
     .insertInto("notification_outbox")
     .values(
-      intents.map((intent) => ({
+      validated.map((intent) => ({
         id: intent.id,
         event_type: intent.eventType,
         audience_json: JSON.stringify(intent.audience),

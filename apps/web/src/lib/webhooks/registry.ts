@@ -11,13 +11,13 @@ export type WebhookVerifier = (input: WebhookVerifierInput) => boolean;
 export const WEBHOOK_BODY_LIMIT_BYTES = 256 * 1024;
 
 export type WebhookPolicy = {
-  unsignedMethods: readonly string[];
+  handshakeMethods: readonly string[];
   verify: WebhookVerifier;
 };
 
 const WEBHOOK_POLICIES: Record<string, WebhookPolicy> = {
   "/api/webhooks/whatsapp": {
-    unsignedMethods: ["GET"],
+    handshakeMethods: ["GET"],
     verify: verifyWhatsAppSignature,
   },
 };

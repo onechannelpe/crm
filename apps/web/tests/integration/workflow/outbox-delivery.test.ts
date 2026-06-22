@@ -17,6 +17,43 @@ describe("outbox delivery", () => {
     await runtime.dispose();
   });
 
+  it("marks rows with malformed channels as failed", async () => {
+    const scenario = createWorkflowScenario(runtime);
+
+    await runtime.ctx.db
+      .insertInto("notification_outbox")
+      .values({
+        id: "test-malformed-channels",
+        event_type: "test.malformed",
+        audience_json: JSON.stringify({ kind: "user_ids", userIds: [1] }),
+        channels_json: JSON.stringify(["in_app", "sms"]),
+        title: "should fail",
+        body_text: "unsupported channel",
+        action_url: null,
+        priority: "normal",
+        status: "pending",
+        attempt_count: 0,
+        available_at: 0,
+        lease_owner: null,
+        lease_until: null,
+        error: null,
+        created_at: 0,
+        processed_at: null,
+      })
+      .execute();
+
+    await scenario.outbox.drainAll();
+
+    const failed = await runtime.ctx.db
+      .selectFrom("notification_outbox")
+      .select(["status", "error"])
+      .where("id", "=", "test-malformed-channels")
+      .executeTakeFirstOrThrow();
+
+    expect(failed.status).toBe("failed");
+    expect(failed.error).toContain("Invalid notification channels payload");
+  });
+
   it("drains pending outbox events and persists notifications", async () => {
     const scenario = createWorkflowScenario(runtime);
     const leadOne = await scenario.seedDirect.leadAt("execOne", {

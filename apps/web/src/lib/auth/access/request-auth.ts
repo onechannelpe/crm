@@ -87,7 +87,9 @@ async function enforceWebhookRequest(
 ): Promise<AuthRequestDecision> {
   const policy = getWebhookPolicy(pathname);
   if (!policy) return reject(403, "Forbidden");
-  if (policy.unsignedMethods.includes(request.method)) return { kind: "allow" };
+  if (policy.handshakeMethods.includes(request.method)) {
+    return { kind: "allow" };
+  }
 
   const contentLength = request.headers.get("content-length");
   if (contentLength && Number(contentLength) > WEBHOOK_BODY_LIMIT_BYTES) {

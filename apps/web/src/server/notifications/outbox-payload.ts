@@ -1,13 +1,23 @@
 import { isRole } from "~/lib/auth/access/rbac";
 import { isPlainRecord } from "~/lib/type-guards";
 
-import type { NotificationAudience, NotificationChannel } from "./types";
+import type {
+  NotificationAudience,
+  NotificationChannel,
+  NotificationIntent,
+} from "./types";
 
 const NOTIFICATION_CHANNELS = [
   "in_app",
   "email",
   "whatsapp",
 ] as const satisfies ReadonlyArray<NotificationChannel>;
+
+const NOTIFICATION_PRIORITIES = [
+  "high",
+  "normal",
+  "low",
+] as const satisfies ReadonlyArray<NotificationIntent["priority"]>;
 
 function isPositiveInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
@@ -38,7 +48,42 @@ function isNotificationAudience(value: unknown): value is NotificationAudience {
 }
 
 function isNotificationChannel(value: unknown): value is NotificationChannel {
-  return NOTIFICATION_CHANNELS.some((channel) => channel === value);
+  return (NOTIFICATION_CHANNELS as ReadonlyArray<unknown>).includes(value);
+}
+
+function isNotificationChannels(
+  value: unknown,
+): value is NotificationChannel[] {
+  return Array.isArray(value) && value.every(isNotificationChannel);
+}
+
+function isNotificationPriority(
+  value: unknown,
+): value is NotificationIntent["priority"] {
+  return (NOTIFICATION_PRIORITIES as ReadonlyArray<unknown>).includes(value);
+}
+
+function isNotificationIntent(value: unknown): value is NotificationIntent {
+  if (!isPlainRecord(value)) return false;
+  return (
+    typeof value["id"] === "string" &&
+    typeof value["eventType"] === "string" &&
+    isNotificationAudience(value["audience"]) &&
+    isNotificationChannels(value["channels"]) &&
+    isNotificationPriority(value["priority"]) &&
+    typeof value["title"] === "string" &&
+    typeof value["bodyText"] === "string" &&
+    (value["actionUrl"] === null || typeof value["actionUrl"] === "string")
+  );
+}
+
+// Producer boundary: bad input is rejected before the row reaches the
+// durable outbox table, where retries would multiply the cost.
+export function validateNotificationIntent(input: unknown): NotificationIntent {
+  if (!isNotificationIntent(input)) {
+    throw new Error("Invalid notification intent");
+  }
+  return input;
 }
 
 export function parseNotificationAudience(value: string): NotificationAudience {
@@ -53,7 +98,7 @@ export function parseNotificationChannels(
   value: string,
 ): NotificationChannel[] {
   const parsed: unknown = JSON.parse(value);
-  if (!Array.isArray(parsed) || !parsed.every(isNotificationChannel)) {
+  if (!isNotificationChannels(parsed)) {
     throw new Error("Invalid notification channels payload");
   }
   return parsed;
