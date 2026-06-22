@@ -176,8 +176,9 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       const results = await Promise.all(
         files.map((file) => {
           const formData = new FormData();
+          formData.set("leadId", props.leadId);
           formData.set("file", file);
-          return uploadLeadRateRevisionFile(props.leadId, formData);
+          return uploadLeadRateRevisionFile(formData);
         }),
       );
 

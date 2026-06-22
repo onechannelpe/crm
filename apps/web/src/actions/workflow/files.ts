@@ -24,24 +24,22 @@ type LeadArtifactRef = {
   artifactId: string;
 };
 
-// The file payload is multipart form data, not a JSON record, so the File is
-// read here directly; the leadId still goes through the object toolkit like
-// every other id. The file stream reaches execute; only name and size are
-// projected into the audit record.
-function parseLeadUpload(
-  leadId: unknown,
-  formData: unknown,
-): Result<LeadUpload, DomainError> {
-  const parsedLeadId = parseObject({ leadId }, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-  }));
-
-  if (!parsedLeadId.ok) {
-    return parsedLeadId;
-  }
-
+// File uploads must arrive as a single top-level FormData argument so the
+// framework uses multipart transport instead of serializing File through JSON.
+function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
   if (!(formData instanceof FormData)) {
     return Err(invalid({ code: "invalid_input" }));
+  }
+
+  const parsedFields = parseObject(
+    { leadId: formData.get("leadId") },
+    validationFail,
+    (r) => ({
+      leadId: r.str("leadId"),
+    }),
+  );
+  if (!parsedFields.ok) {
+    return parsedFields;
   }
 
   const file = formData.get("file");
@@ -51,7 +49,7 @@ function parseLeadUpload(
   }
 
   return Ok({
-    leadId: parsedLeadId.value.leadId,
+    leadId: parsedFields.value.leadId,
     file: {
       name: file.name,
       sizeBytes: file.size,
@@ -103,14 +101,11 @@ export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
   });
 }
 
-export async function uploadLeadSaleProofFile(
-  rawLeadId: string,
-  formData: FormData,
-) {
+export async function uploadLeadSaleProofFile(formData: FormData) {
   return runAction({
     name: "workflow.upload_sale_proof_file",
     access: { kind: "auth" },
-    parse: () => parseLeadUpload(rawLeadId, formData),
+    parse: () => parseLeadUpload(formData),
 
     audit: ({ leadId, file }) => ({
       leadId,
@@ -147,13 +142,12 @@ export async function requestLeadSaleProofDownloadToken(input: {
 }
 
 export async function uploadLeadRateRevisionFile(
-  rawLeadId: string,
   formData: FormData,
 ): Promise<Result<LeadRateRevisionFileView, WireError>> {
   return runActionResult({
     name: "workflow.upload_rate_revision_file",
     access: { kind: "auth" },
-    parse: () => parseLeadUpload(rawLeadId, formData),
+    parse: () => parseLeadUpload(formData),
 
     audit: ({ leadId, file }) => ({
       leadId,

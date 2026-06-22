@@ -17,11 +17,12 @@ export function useUploadAttachmentFile(params: UseUploadAttachmentFileParams) {
     }
 
     const formData = new FormData();
+    formData.set("leadId", id);
     formData.set("file", file);
 
     setPendingUploads((current) => current + 1);
     try {
-      await uploadLeadSaleProofFile(id, formData);
+      await uploadLeadSaleProofFile(formData);
       await params.onUploaded?.();
     } finally {
       setPendingUploads((current) => Math.max(0, current - 1));

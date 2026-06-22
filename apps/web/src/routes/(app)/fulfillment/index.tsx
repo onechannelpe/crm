@@ -35,7 +35,7 @@ function groupByStep(rows: FulfillmentQueueRowView[]): Group[] {
   }
   return [...byStep.entries()]
     .map(([step, groupRows]) => ({ step, rows: groupRows }))
-    .sort((a, b) => a.rows[0].waitingSince - b.rows[0].waitingSince);
+    .toSorted((a, b) => a.rows[0].waitingSince - b.rows[0].waitingSince);
 }
 
 // Back-office (and supervisor) inbox: every lead across the branch sitting on a

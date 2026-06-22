@@ -43,20 +43,24 @@ type ProofUpload = {
   file: { name: string; sizeBytes: number; stream: ReadableStream<Uint8Array> };
 };
 
-function parseDocUpload(
-  leadId: unknown,
-  action: unknown,
-  formData: unknown,
-): Result<DocUpload, DomainError> {
-  const fields = parseObject({ leadId, action }, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-    action: r.enum("action", FULFILLMENT_ACTIONS),
-  }));
-  if (!fields.ok) return fields;
-
+function parseDocUpload(formData: unknown): Result<DocUpload, DomainError> {
   if (!(formData instanceof FormData)) {
     return Err(invalid({ code: "invalid_input" }));
   }
+
+  const fields = parseObject(
+    {
+      leadId: formData.get("leadId"),
+      action: formData.get("action"),
+    },
+    validationFail,
+    (r) => ({
+      leadId: r.str("leadId"),
+      action: r.enum("action", FULFILLMENT_ACTIONS),
+    }),
+  );
+  if (!fields.ok) return fields;
+
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return Err(fail("file_required"));
@@ -69,20 +73,24 @@ function parseDocUpload(
   });
 }
 
-function parseProofUpload(
-  leadId: unknown,
-  unitId: unknown,
-  formData: unknown,
-): Result<ProofUpload, DomainError> {
-  const fields = parseObject({ leadId, unitId }, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-    unitId: r.str("unitId"),
-  }));
-  if (!fields.ok) return fields;
-
+function parseProofUpload(formData: unknown): Result<ProofUpload, DomainError> {
   if (!(formData instanceof FormData)) {
     return Err(invalid({ code: "invalid_input" }));
   }
+
+  const fields = parseObject(
+    {
+      leadId: formData.get("leadId"),
+      unitId: formData.get("unitId"),
+    },
+    validationFail,
+    (r) => ({
+      leadId: r.str("leadId"),
+      unitId: r.str("unitId"),
+    }),
+  );
+  if (!fields.ok) return fields;
+
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return Err(fail("file_required"));
@@ -117,15 +125,11 @@ export async function chooseFulfillmentProduct(input: unknown) {
   });
 }
 
-export async function uploadFulfillmentDocument(
-  rawLeadId: string,
-  rawAction: string,
-  formData: FormData,
-) {
+export async function uploadFulfillmentDocument(formData: FormData) {
   return runAction({
     name: "workflow.upload_fulfillment_document",
     access: { kind: "auth" },
-    parse: () => parseDocUpload(rawLeadId, rawAction, formData),
+    parse: () => parseDocUpload(formData),
     audit: ({ leadId, action, file }) => ({
       leadId,
       action,
@@ -201,15 +205,11 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
   });
 }
 
-export async function uploadFulfillmentPaymentProof(
-  rawLeadId: string,
-  rawUnitId: string,
-  formData: FormData,
-) {
+export async function uploadFulfillmentPaymentProof(formData: FormData) {
   return runAction({
     name: "workflow.upload_fulfillment_payment_proof",
     access: { kind: "auth" },
-    parse: () => parseProofUpload(rawLeadId, rawUnitId, formData),
+    parse: () => parseProofUpload(formData),
     audit: ({ leadId, unitId, file }) => ({
       leadId,
       unitId,

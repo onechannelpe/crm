@@ -132,8 +132,7 @@ export const chooseFulfillmentProductMutation = action(
 );
 
 export const uploadFulfillmentDocumentMutation = action(
-  (input: { leadId: string; action: string; formData: FormData }) =>
-    uploadFulfillmentDocument(input.leadId, input.action, input.formData),
+  (formData: FormData) => uploadFulfillmentDocument(formData),
   "workflow.uploadFulfillmentDocument",
 );
 
@@ -149,8 +148,7 @@ export const registerFulfillmentPaymentLinkMutation = action(
 );
 
 export const uploadFulfillmentPaymentProofMutation = action(
-  (input: { leadId: string; unitId: string; formData: FormData }) =>
-    uploadFulfillmentPaymentProof(input.leadId, input.unitId, input.formData),
+  (formData: FormData) => uploadFulfillmentPaymentProof(formData),
   "workflow.uploadFulfillmentPaymentProof",
 );
 

@@ -49,7 +49,6 @@ import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";
 import styles from "./fulfillment.module.css";
 
 type Unit = LeadDetailFulfillmentUnitView;
-type Doc = LeadDetailFulfillmentView["documents"][number];
 
 const OWNER_LABELS: Record<string, string> = {
   executive: "el ejecutivo",
@@ -73,7 +72,10 @@ const DOCUMENT_ACTIONS = new Set<FulfillmentAction>([
 // The document a given upload step needs the actor to read before acting, plus
 // the instruction that frames the handoff.
 const DOC_STEP_CONTEXT: Partial<
-  Record<FulfillmentAction, { docKind: FulfillmentDocKind; instruction: string }>
+  Record<
+    FulfillmentAction,
+    { docKind: FulfillmentDocKind; instruction: string }
+  >
 > = {
   generate_addendum: {
     docKind: "transactions_report",
@@ -81,7 +83,8 @@ const DOC_STEP_CONTEXT: Partial<
   },
   submit_signed_addendum: {
     docKind: "addendum_unsigned",
-    instruction: "Envía esta adenda al cliente para firma, luego sube las fotos.",
+    instruction:
+      "Envía esta adenda al cliente para firma, luego sube las fotos.",
   },
   compile_signed_pdf: {
     docKind: "addendum_signed_photo",
@@ -116,7 +119,8 @@ function docsOfKind(view: LeadDetailFulfillmentView, kind: FulfillmentDocKind) {
 }
 
 function productKindLabel(productKind: string | null): string {
-  if (!productKind || !isProductKind(productKind)) return "Producto sin definir";
+  if (!productKind || !isProductKind(productKind))
+    return "Producto sin definir";
   return describeProductKind(productKind);
 }
 
@@ -222,7 +226,9 @@ function ProgressChecklist(props: { view: LeadDetailFulfillmentView }) {
           )}
         </Show>
       </div>
-      <span class={styles.waiting}>{productKindLabel(props.view.productKind)}</span>
+      <span class={styles.waiting}>
+        {productKindLabel(props.view.productKind)}
+      </span>
     </div>
   );
 }
@@ -295,7 +301,12 @@ function CopyButton(props: { value: string }) {
     }
   }
   return (
-    <Button type="button" variant="secondary" size="sm" onClick={() => void copy()}>
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      onClick={() => void copy()}
+    >
       {copied() ? "Copiado" : "Copiar"}
     </Button>
   );
@@ -318,6 +329,12 @@ function ProductChooser(props: { data: LeadDetailView }) {
     if (kind === "digital_only") return "Se creará 1 registro digital.";
     const count = Math.max(1, posCount());
     return `Se crearán ${count} unidad${count === 1 ? "" : "es"}, una por POS.`;
+  };
+
+  const productConsequence = () => {
+    const kind = productKind();
+    if (kind === "") return null;
+    return PRODUCT_CONSEQUENCE[kind];
   };
 
   async function submitProduct() {
@@ -355,11 +372,13 @@ function ProductChooser(props: { data: LeadDetailView }) {
           {(kind) => <option value={kind}>{describeProductKind(kind)}</option>}
         </For>
       </Select>
-      <Show when={productKind() !== ""}>
-        <p class={styles.contextNote}>
-          {PRODUCT_CONSEQUENCE[productKind() as ProductKind]}
-        </p>
-        <p class={styles.contextNote}>{unitSummary()}</p>
+      <Show when={productConsequence()}>
+        {(consequence) => (
+          <>
+            <p class={styles.contextNote}>{consequence()}</p>
+            <p class={styles.contextNote}>{unitSummary()}</p>
+          </>
+        )}
       </Show>
       <Show when={state.error()}>
         <p class={styles.errorText}>{state.error()}</p>
@@ -395,8 +414,10 @@ function DocumentUpload(props: {
     state.setError(null);
     try {
       const formData = new FormData();
+      formData.set("leadId", props.leadId);
+      formData.set("action", props.action);
       formData.set("file", selected);
-      await upload({ leadId: props.leadId, action: props.action, formData });
+      await upload(formData);
       await revalidateWorkflowLead(props.leadId);
     } catch (caught) {
       state.setError(actionErrorMessage(caught));
@@ -478,9 +499,9 @@ function UnitTextRows(props: {
     state.setSubmitting(true);
     state.setError(null);
     try {
-      for (const [unitId, value] of entries) {
-        await props.submitOne(unitId, value);
-      }
+      await Promise.all(
+        entries.map(([unitId, value]) => props.submitOne(unitId, value)),
+      );
       await revalidateWorkflowLead(props.leadId);
     } catch (caught) {
       state.setError(actionErrorMessage(caught));
@@ -587,8 +608,10 @@ function PaymentProofUpload(props: { leadId: string; units: Unit[] }) {
 
   async function submitFile(unitId: string, file: File) {
     const formData = new FormData();
+    formData.set("leadId", props.leadId);
+    formData.set("unitId", unitId);
     formData.set("file", file);
-    await upload({ leadId: props.leadId, unitId, formData });
+    await upload(formData);
     await revalidateWorkflowLead(props.leadId);
   }
 
