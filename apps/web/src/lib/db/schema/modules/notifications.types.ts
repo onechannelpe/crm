@@ -11,6 +11,13 @@ export interface UserChannelAddressesTable {
   updated_at: number;
 }
 
+export interface WhatsAppSessionsTable {
+  id: Generated<number>;
+  user_id: number;
+  expires_at: number;
+  created_at: number;
+}
+
 export interface NotificationPreferencesTable {
   id: Generated<number>;
   user_id: number;

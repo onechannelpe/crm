@@ -4,6 +4,7 @@ import type { Database } from "~/lib/db/types";
 
 import { resolveAudience } from "./audience";
 import type { NotificationAudience, NotificationChannel } from "./types";
+import { filterUsersWithActiveSession } from "./whatsapp-session";
 
 export type NotificationOutboxEntry = {
   id: string;
@@ -55,6 +56,7 @@ function parseChannels(entry: NotificationOutboxEntry): NotificationChannel[] {
 export async function planDeliveries(
   db: Kysely<Database>,
   entry: NotificationOutboxEntry,
+  now = Date.now(),
 ): Promise<PlannedDeliveries> {
   const audience = parseAudience(entry);
   const channels = parseChannels(entry);
@@ -66,16 +68,23 @@ export async function planDeliveries(
     (channel): channel is "email" | "whatsapp" => channel !== "in_app",
   );
 
+  const [addressMaps, activeWhatsAppUsers] = await Promise.all([
+    Promise.all(
+      externalChannels.map(async (channel) => ({
+        channel,
+        addresses: await loadVerifiedAddressMap(db, recipients, channel),
+      })),
+    ),
+    externalChannels.includes("whatsapp")
+      ? filterUsersWithActiveSession(db, recipients, now)
+      : Promise.resolve(new Set<number>()),
+  ]);
+
   const externalDeliveries: PlannedExternalDelivery[] = [];
-  const addressMaps = await Promise.all(
-    externalChannels.map(async (channel) => ({
-      channel,
-      addresses: await loadVerifiedAddressMap(db, recipients, channel),
-    })),
-  );
 
   for (const { channel, addresses } of addressMaps) {
     for (const userId of recipients) {
+      if (channel === "whatsapp" && !activeWhatsAppUsers.has(userId)) continue;
       const recipientAddress = addresses.get(userId);
       if (!recipientAddress) continue;
       externalDeliveries.push({ userId, channel, recipientAddress });

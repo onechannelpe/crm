@@ -151,6 +151,13 @@ function parseNotificationsEnv(source: EnvSource) {
     whatsappAccessToken: optional(source, "WHATSAPP_ACCESS_TOKEN", ""),
     whatsappPhoneNumberId: optional(source, "WHATSAPP_PHONE_NUMBER_ID", ""),
     whatsappApiVersion: optional(source, "WHATSAPP_GRAPH_API_VERSION", "v23.0"),
+    whatsappWebhookVerifyToken: optional(
+      source,
+      "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
+      "",
+    ),
+    // Used to validate X-Hub-Signature-256 on incoming webhook events.
+    whatsappAppSecret: optional(source, "WHATSAPP_APP_SECRET", ""),
   } as const;
 }
 
