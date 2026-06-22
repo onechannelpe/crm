@@ -5,6 +5,7 @@ import {
   recordFulfillmentSerial,
   registerFulfillmentPaymentLink,
   registerFulfillmentSale,
+  rejectFulfillmentStep,
   uploadFulfillmentDocument,
   uploadFulfillmentPaymentProof,
   validateFulfillmentPayment,
@@ -44,6 +45,7 @@ import type {
   RecordUnitSerialInput,
   RegisterUnitPaymentLinkInput,
   RegisterUnitSaleInput,
+  RejectFulfillmentStepInput,
   RequestRateRevisionInput,
   SaveDigitalPolicyInput,
   UpdateVenueInput,
@@ -160,4 +162,9 @@ export const validateFulfillmentPaymentMutation = action(
 export const registerFulfillmentSaleMutation = action(
   (input: RegisterUnitSaleInput) => registerFulfillmentSale(input),
   "workflow.registerFulfillmentSale",
+);
+
+export const rejectFulfillmentStepMutation = action(
+  (input: RejectFulfillmentStepInput) => rejectFulfillmentStep(input),
+  "workflow.rejectFulfillmentStep",
 );

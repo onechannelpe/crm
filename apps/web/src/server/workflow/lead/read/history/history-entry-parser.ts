@@ -19,6 +19,7 @@ import {
   toFulfillmentProductChosenEntry,
   toFulfillmentStartedEntry,
   toFulfillmentStepAdvancedEntry,
+  toFulfillmentStepRejectedEntry,
 } from "./history-fulfillment-parser";
 import { toNoteEntry } from "./history-interaction-parser";
 import {
@@ -88,6 +89,8 @@ export function toHistoryEntry(
       return toFulfillmentProductChosenEntry(row, payload.value);
     case "fulfillment_step_advanced":
       return toFulfillmentStepAdvancedEntry(row, payload.value);
+    case "fulfillment_step_rejected":
+      return toFulfillmentStepRejectedEntry(row, payload.value);
     case "fulfillment_document_uploaded":
       return toFulfillmentDocumentUploadedEntry(row, payload.value);
     case "fulfillment_completed":

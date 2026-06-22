@@ -31,6 +31,7 @@ export type LeadHistoryEventType =
   | "fulfillment_started"
   | "fulfillment_product_chosen"
   | "fulfillment_step_advanced"
+  | "fulfillment_step_rejected"
   | "fulfillment_document_uploaded"
   | "fulfillment_completed"
   | "note_added"
@@ -57,6 +58,7 @@ const LEAD_HISTORY_EVENT_TYPES = {
   fulfillment_started: true,
   fulfillment_product_chosen: true,
   fulfillment_step_advanced: true,
+  fulfillment_step_rejected: true,
   fulfillment_document_uploaded: true,
   fulfillment_completed: true,
   note_added: true,
@@ -157,6 +159,12 @@ export type LeadHistoryPayloadByEvent = {
     from: FulfillmentStep;
     to: FulfillmentStep;
     action: FulfillmentAction;
+  };
+  fulfillment_step_rejected: {
+    orderId: string;
+    from: FulfillmentStep;
+    to: FulfillmentStep;
+    reason: string;
   };
   fulfillment_document_uploaded: {
     orderId: string;

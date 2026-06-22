@@ -40,7 +40,7 @@ const STEP_DEFINITIONS: Record<FulfillmentStep, StepDefinition> = {
   CHOOSE_PRODUCT: {
     kind: "choose",
     action: "choose_product",
-    owner: "back_office",
+    owner: "executive",
   },
   AWAITING_TRANSACTIONS_REPORT: {
     kind: "document",

@@ -18,8 +18,8 @@ import { runLeadTransaction, type LeadTransaction } from "../write/transition";
 import type { FulfillmentOrderDetails, FulfillmentUnit } from "./repo";
 import {
   nextStep,
+  rejectRuleForStep,
   stepDefinition,
-  stepForAction,
   type UnitField,
 } from "./steps";
 
@@ -40,12 +40,15 @@ async function loadForAction(
   const details = await ctx.repos.fulfillment.findByLeadId(input.leadId);
   if (!details) return Err(fail("fulfillment_not_started"));
 
-  const expected = stepForAction(input.action);
-  if (expected === null || details.order.currentStep !== expected) {
+  // The order's persisted step is the source of truth. Resolving a step from the
+  // action instead is ambiguous: record_serials maps to two steps (refurbished
+  // AWAITING_SERIALS and new-POS AWAITING_SERIAL_ENTRY).
+  const currentStep = details.order.currentStep;
+  if (stepDefinition(currentStep).action !== input.action) {
     return Err(fail("invalid_fulfillment_step"));
   }
 
-  const authz = authorizeFulfillmentStep(expected, input.actor, state);
+  const authz = authorizeFulfillmentStep(currentStep, input.actor, state);
   if (!authz.ok) return authz;
 
   return Ok({ state, details });
@@ -451,6 +454,60 @@ export async function registerUnitSaleCommand(
     },
     "service_a_ref",
   );
+}
+
+// Reviewer bounces a review step back to its prior actor with a reason. Clears
+// the rejected field so the prior actor re-supplies it; the reactor notifies
+// that actor. Only steps in REJECT_RULES are rejectable.
+export async function rejectFulfillmentStepCommand(
+  input: { leadId: string; reason: string; actor: WorkflowActor },
+  ports: Ports,
+): Promise<LeadResult> {
+  return runLeadTransaction(ports, async (ctx) => {
+    const state = await ctx.repos.leads.findById(input.leadId);
+    if (!state) return Err(fail("lead_not_found"));
+
+    const details = await ctx.repos.fulfillment.findByLeadId(input.leadId);
+    if (!details) return Err(fail("fulfillment_not_started"));
+
+    if (input.reason.trim().length === 0) {
+      return Err(fail("reject_reason_required"));
+    }
+
+    const from = details.order.currentStep;
+    const rule = rejectRuleForStep(from);
+    if (rule === null) return Err(fail("invalid_fulfillment_step"));
+
+    // The reviewer who rejects is the owner of the current step.
+    const authz = authorizeFulfillmentStep(from, input.actor, state);
+    if (!authz.ok) return authz;
+
+    if (rule.clearField) {
+      await ctx.repos.fulfillment.clearUnitField(
+        details.order.id,
+        rule.clearField,
+      );
+    }
+    await ctx.repos.fulfillment.setStep(details.order.id, rule.to, ctx.now);
+
+    const facts = await ctx.appendFacts([
+      createHistoryEvent({
+        leadId: input.leadId,
+        eventType: "fulfillment_step_rejected",
+        actorUserId: input.actor.userId,
+        payload: {
+          orderId: details.order.id,
+          from,
+          to: rule.to,
+          reason: input.reason,
+        },
+        occurredAt: ctx.now,
+      }),
+    ]);
+    if (!facts.ok) return facts;
+
+    return Ok({ leadId: input.leadId });
+  });
 }
 
 export async function validateFulfillmentPaymentCommand(

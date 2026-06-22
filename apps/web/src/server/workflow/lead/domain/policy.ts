@@ -8,7 +8,11 @@ import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { pendingOwnerForStep, stepDefinition } from "../fulfillment/steps";
+import {
+  pendingOwnerForStep,
+  rejectRuleForStep,
+  stepDefinition,
+} from "../fulfillment/steps";
 import type { LeadState } from "./state";
 
 export type LeadCapability =
@@ -242,6 +246,9 @@ export function resolveAvailableActions(
     const def = stepDefinition(meta.fulfillmentStep);
     if (def.action !== null) {
       actions.push(`fulfillment:${def.action}`);
+    }
+    if (rejectRuleForStep(meta.fulfillmentStep)) {
+      actions.push("fulfillment-reject");
     }
   }
   if (caps.has("reassign")) {

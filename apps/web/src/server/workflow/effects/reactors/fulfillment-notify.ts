@@ -17,6 +17,7 @@ type FulfillmentEvent = Extract<
     eventType:
       | "fulfillment_started"
       | "fulfillment_step_advanced"
+      | "fulfillment_step_rejected"
       | "fulfillment_completed";
   }
 >;
@@ -27,6 +28,7 @@ function isFulfillmentEvent(
   return (
     committed.event.eventType === "fulfillment_started" ||
     committed.event.eventType === "fulfillment_step_advanced" ||
+    committed.event.eventType === "fulfillment_step_rejected" ||
     committed.event.eventType === "fulfillment_completed"
   );
 }
@@ -131,6 +133,26 @@ function deriveFulfillmentNotification(input: {
         priority: "high",
         title: "Venta registrada",
         bodyText: `La venta del cliente RUC ${input.ruc} quedó registrada. Cliente activo.`,
+        actionUrl: `/records/${input.leadId}`,
+      },
+    ];
+  }
+
+  if (input.event.eventType === "fulfillment_step_rejected") {
+    const target = input.event.payload.to;
+    const owner = pendingOwnerForStep(target);
+    if (owner === null) return [];
+    const audience = audienceFor(owner, input.executiveId, input.branchId);
+    if (audience === null) return [];
+    return [
+      {
+        id: `${input.eventId}:${target}:rejected`,
+        eventType: "lead.fulfillment_handoff",
+        audience,
+        channels: ["in_app"],
+        priority: "high",
+        title: "Entrega devuelta",
+        bodyText: `Cliente RUC ${input.ruc}: ${input.event.payload.reason}`,
         actionUrl: `/records/${input.leadId}`,
       },
     ];

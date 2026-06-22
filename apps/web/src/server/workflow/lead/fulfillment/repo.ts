@@ -233,6 +233,16 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
+    // Clears one field on every unit of the order, used when a review step is
+    // rejected so the prior actor re-supplies the value.
+    async clearUnitField(orderId: string, field: UnitField): Promise<void> {
+      await db
+        .updateTable("lead_fulfillment_units")
+        .set({ [field]: null })
+        .where("order_id", "=", orderId)
+        .execute();
+    },
+
     async markPaymentsValidated(orderId: string): Promise<void> {
       await db
         .updateTable("lead_fulfillment_units")

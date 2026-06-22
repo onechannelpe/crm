@@ -5,6 +5,7 @@ import type {
   RecordUnitSerialInput,
   RegisterUnitPaymentLinkInput,
   RegisterUnitSaleInput,
+  RejectFulfillmentStepInput,
 } from "~/contracts/workflow/inputs";
 import {
   FULFILLMENT_ACTIONS,
@@ -22,6 +23,7 @@ import {
   recordUnitSerialCommand,
   registerUnitPaymentLinkCommand,
   registerUnitSaleCommand,
+  rejectFulfillmentStepCommand,
   uploadUnitPaymentProofCommand,
   validateFulfillmentPaymentCommand,
 } from "~/server/workflow/lead/fulfillment/commands";
@@ -244,6 +246,28 @@ export async function validateFulfillmentPayment(input: unknown) {
     execute: ({ actor }, { leadId }) =>
       validateFulfillmentPaymentCommand(
         { leadId, actor: workflowActor(actor) },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function rejectFulfillmentStep(input: unknown) {
+  return runAction({
+    name: "workflow.reject_fulfillment_step",
+    access: { kind: "auth" },
+    parse: () =>
+      parseObject(
+        input,
+        validationFail,
+        (r): RejectFulfillmentStepInput => ({
+          leadId: r.str("leadId"),
+          reason: r.str("reason"),
+        }),
+      ),
+    audit: ({ leadId }) => ({ leadId }),
+    execute: ({ actor }, payload) =>
+      rejectFulfillmentStepCommand(
+        { actor: workflowActor(actor), ...payload },
         getServerRuntime().workflow.ports(),
       ),
   });

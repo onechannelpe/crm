@@ -172,3 +172,10 @@ export type RegisterUnitSaleInput = {
 export type ValidateFulfillmentPaymentInput = {
   leadId: string;
 };
+
+// Reviewer bounces the current review step back to its prior actor with a
+// reason. The order's current step selects where it returns to.
+export type RejectFulfillmentStepInput = {
+  leadId: string;
+  reason: string;
+};

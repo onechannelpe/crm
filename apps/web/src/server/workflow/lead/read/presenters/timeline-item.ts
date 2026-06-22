@@ -208,6 +208,15 @@ export function presentTimelineItem(
         description: `${describeFulfillmentStep(event.payload.to)} (${actorDisplayName}).`,
         actorDisplayName,
       };
+    case "fulfillment_step_rejected":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Entrega devuelta",
+        description: `${describeFulfillmentStep(event.payload.to)}: ${event.payload.reason} (${actorDisplayName}).`,
+        actorDisplayName,
+      };
     case "fulfillment_document_uploaded":
       return {
         id: `history:${event.id}`,

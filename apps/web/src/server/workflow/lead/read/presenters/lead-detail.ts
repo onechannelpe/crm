@@ -24,7 +24,10 @@ import type {
   LeadState,
 } from "~/server/workflow/lead/domain/state";
 import type { FulfillmentOrderDetails } from "~/server/workflow/lead/fulfillment/repo";
-import { pendingOwnerForStep } from "~/server/workflow/lead/fulfillment/steps";
+import {
+  fulfillmentProgress,
+  pendingOwnerForStep,
+} from "~/server/workflow/lead/fulfillment/steps";
 import {
   resolveLeadBlockingFields,
   resolveLeadNextStep,
@@ -78,6 +81,10 @@ function toFulfillmentView(
     productKind: details.order.productKind,
     currentStep: details.order.currentStep,
     pendingOwner: pendingOwnerForStep(details.order.currentStep),
+    steps: fulfillmentProgress(
+      details.order.productKind,
+      details.order.currentStep,
+    ),
     units: details.units.map((unit) => ({
       id: unit.id,
       label: unit.label,

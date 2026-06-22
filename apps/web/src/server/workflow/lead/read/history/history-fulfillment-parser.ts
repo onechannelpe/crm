@@ -98,6 +98,44 @@ export function toFulfillmentStepAdvancedEntry(
   });
 }
 
+export function toFulfillmentStepRejectedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const orderId = requireString(payload, "orderId", row);
+  if (!orderId.ok) return orderId;
+  const fromValue = requireString(payload, "from", row);
+  if (!fromValue.ok) return fromValue;
+  const toValue = requireString(payload, "to", row);
+  if (!toValue.ok) return toValue;
+  const reason = requireString(payload, "reason", row);
+  if (!reason.ok) return reason;
+
+  const from = parseVocabularyValue(
+    fromValue.value,
+    FULFILLMENT_STEPS,
+    "invalid_fulfillment_step",
+  );
+  if (!from.ok) return from;
+  const to = parseVocabularyValue(
+    toValue.value,
+    FULFILLMENT_STEPS,
+    "invalid_fulfillment_step",
+  );
+  if (!to.ok) return to;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "fulfillment_step_rejected",
+    payload: {
+      orderId: orderId.value,
+      from: from.value,
+      to: to.value,
+      reason: reason.value,
+    },
+  });
+}
+
 export function toFulfillmentDocumentUploadedEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
