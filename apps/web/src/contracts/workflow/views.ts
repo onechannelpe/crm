@@ -12,7 +12,6 @@ import type {
 } from "./vocabulary";
 
 export type LeadAvailableAction =
-  | "log-call"
   | "add-note"
   | "propose-rate"
   | "edit-rate-proposal"

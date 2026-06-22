@@ -1,4 +1,3 @@
-import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { type DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
@@ -15,7 +14,7 @@ export function recordNote(
   state: LeadState,
   input: { actor: Actor; body: string; now: number },
 ): Result<LeadHistoryEventDraft[], DomainError> {
-  const authz = authorizeLeadAction("interact", input.actor, state);
+  const authz = authorizeLeadAction("add-note", input.actor, state);
   if (!authz.ok) return authz;
 
   return Ok([
@@ -24,29 +23,6 @@ export function recordNote(
       eventType: "note_added",
       actorUserId: input.actor.userId,
       payload: { body: input.body },
-      occurredAt: input.now,
-    }),
-  ]);
-}
-
-export function recordCall(
-  state: LeadState,
-  input: {
-    actor: Actor;
-    outcome: LeadCallOutcome;
-    notes: string | null;
-    now: number;
-  },
-): Result<LeadHistoryEventDraft[], DomainError> {
-  const authz = authorizeLeadAction("interact", input.actor, state);
-  if (!authz.ok) return authz;
-
-  return Ok([
-    createHistoryEvent({
-      leadId: state.id,
-      eventType: "call_logged",
-      actorUserId: input.actor.userId,
-      payload: { outcome: input.outcome, notes: input.notes },
       occurredAt: input.now,
     }),
   ]);

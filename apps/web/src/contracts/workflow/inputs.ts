@@ -1,7 +1,6 @@
 import type { SaleVenueAccount, VenueDigitalConfig } from "./primitives";
 import type {
   SettlementBank,
-  LeadCallOutcome,
   LeadPriority,
   LeadStage,
   LeadStatus,
@@ -53,12 +52,6 @@ export type ReassignLeadInput = {
 export type AddLeadNoteInput = {
   leadId: string;
   body: string;
-};
-
-export type LogLeadCallInput = {
-  leadId: string;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
 };
 
 export type ProposeRateInput = {
