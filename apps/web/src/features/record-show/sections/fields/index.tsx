@@ -1,9 +1,7 @@
 import { createSignal, For } from "solid-js";
 import type { JSX } from "solid-js";
 
-import Building2 from "~/components/icons/building-2";
 import ChevronDown from "~/components/icons/chevron-down";
-import MapIcon from "~/components/icons/map";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
@@ -75,24 +73,11 @@ function ReadonlyFieldRow(props: {
 }
 
 export function CreateFieldsSection(props: {
-  legalName: string | null;
-  address: string | null;
   commercialScope: CommercialScopeBinding;
 }) {
-  const pendingSunat = "Se completará con SUNAT";
   return (
     <FieldsSectionFrame>
       <FieldTable>
-        <ReadonlyFieldRow
-          label="Razón social"
-          icon={Building2}
-          value={props.legalName ?? pendingSunat}
-        />
-        <ReadonlyFieldRow
-          label="Dirección"
-          icon={MapIcon}
-          value={props.address ?? pendingSunat}
-        />
         <CommercialScopeFields
           values={props.commercialScope.values}
           onChange={props.commercialScope.setField}

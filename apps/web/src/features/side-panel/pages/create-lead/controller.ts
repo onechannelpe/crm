@@ -54,14 +54,14 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     const ruc = input.validRuc();
     if (!ruc) {
       setErrorMessage("El RUC debe tener 11 dígitos.");
-      input.setActiveTab("home");
+      input.setActiveTab("registro");
       return;
     }
 
     const scopePayload = toCommercialScopePayload(input.scope());
     if (!scopePayload.ok) {
       setErrorMessage(scopePayload.error);
-      input.setActiveTab("home");
+      input.setActiveTab("registro");
       return;
     }
 
@@ -98,7 +98,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
       const wire = parseWireError(submitError);
       if (codeIs(wire, "invalid_ruc") || codeIs(wire, "ruc_required")) {
         setErrorMessage(wire.message);
-        input.setActiveTab("home");
+        input.setActiveTab("registro");
         return;
       }
 

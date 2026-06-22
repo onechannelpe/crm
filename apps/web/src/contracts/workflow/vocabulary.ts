@@ -22,14 +22,6 @@ const LEAD_NEXT_STEPS = [
   "DEFINE_DIGITAL_POLICY",
   "REGISTER_VENUE_ACCOUNTS",
 ] as const;
-export const LEAD_CALL_OUTCOMES = [
-  "answered",
-  "no_answer",
-  "wrong_number",
-  "callback_requested",
-  "qualified",
-  "disqualified",
-] as const;
 export const CURRENCIES = ["PEN", "USD"] as const;
 export const SETTLEMENT_BANKS = [
   "BCP",
@@ -52,7 +44,6 @@ export type LeadStage = (typeof LEAD_STAGES)[number];
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
 export type LeadNextStep = (typeof LEAD_NEXT_STEPS)[number];
-export type LeadCallOutcome = (typeof LEAD_CALL_OUTCOMES)[number];
 export type Currency = (typeof CURRENCIES)[number];
 export type SettlementBank = (typeof SETTLEMENT_BANKS)[number];
 export type CollectionMode = (typeof COLLECTION_MODES)[number];

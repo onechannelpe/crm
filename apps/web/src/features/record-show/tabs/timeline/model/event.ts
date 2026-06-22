@@ -25,19 +25,6 @@ export function normalizeLeadEvent(item: LeadTimelineItem): Event {
     };
   }
 
-  if (item.kind === "call") {
-    return {
-      id: item.id,
-      createdAt: item.occurredAt,
-      name: "linked-task.created",
-      author: item.actorDisplayName,
-      action: "creó una tarea relacionada",
-      subject: item.title,
-      description: item.description,
-      kind: item.kind,
-    };
-  }
-
   if (item.kind === "assignment") {
     return {
       id: item.id,
@@ -77,7 +64,5 @@ export function normalizeLeadEvent(item: LeadTimelineItem): Event {
 }
 
 export function isLinkedEvent(event: Event): boolean {
-  return (
-    event.name.startsWith("linked-note") || event.name.startsWith("linked-task")
-  );
+  return event.name.startsWith("linked-note");
 }

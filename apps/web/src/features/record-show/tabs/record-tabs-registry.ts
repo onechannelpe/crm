@@ -1,88 +1,122 @@
 import type { JSX } from "solid-js";
 
-import Checkbox from "~/components/icons/checkbox";
+import Building2 from "~/components/icons/building-2";
 import HomeTabler from "~/components/icons/home-tabler";
+import Info from "~/components/icons/info";
+import MessageSquare from "~/components/icons/message-square";
 import Paperclip from "~/components/icons/paperclip";
+import Plus from "~/components/icons/plus";
 import TimelineEvent from "~/components/icons/timeline-event";
+import type { LeadStage } from "~/contracts/workflow/vocabulary";
+import { ActividadTab } from "~/features/record-show/actividad/actividad-tab";
+import { AfiliacionTab } from "~/features/record-show/afiliacion/afiliacion-tab";
+import { DatosTab } from "~/features/record-show/datos/datos-tab";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
-import { ActivityTab } from "~/features/record-show/tabs/activity-tab";
-import { DataTab } from "~/features/record-show/tabs/data-tab";
-import { DraftHomeTab } from "~/features/record-show/tabs/draft-home-tab";
+import { NotasTab } from "~/features/record-show/notas/notas-tab";
+import { RegistroTab } from "~/features/record-show/registro/registro-tab";
+import { ResumenTab } from "~/features/record-show/resumen/resumen-tab";
 import { FilesTab } from "~/features/record-show/tabs/files-tab";
-import { WorkflowTab } from "~/features/record-show/tabs/workflow-tab";
 import type { TabIconComponent } from "~/features/side-panel/components/tab-strip";
 
-type RecordKind = RecordContext["kind"];
+type RecordTabKind = RecordContext["kind"];
 
 export type RecordTabDefinition = {
   id: RecordTabId;
   label: string;
-  infoLabel?: string;
   icon?: TabIconComponent;
-  appearsIn: (kind: RecordKind) => boolean;
-  component: (props: { context: RecordContext }) => JSX.Element;
+  visibleForKinds: RecordTabKind[];
+  isVisibleAtStage?: (stage: LeadStage) => boolean;
+  component: (props: {
+    context: RecordContext;
+    onNavigate: (id: RecordTabId) => void;
+  }) => JSX.Element;
 };
 
-const onlyLead = (kind: RecordKind) => kind === "lead";
-const onlyDraft = (kind: RecordKind) => kind === "draft";
-const always = () => true;
+const LEAD: RecordTabKind[] = ["lead"];
+const DRAFT: RecordTabKind[] = ["draft"];
+const BOTH: RecordTabKind[] = ["lead", "draft"];
+
+const inAfiliacion = (stage: LeadStage) =>
+  stage === "SETUP" || stage === "LIVE";
 
 const RECORD_TABS: readonly RecordTabDefinition[] = [
   {
-    id: "home",
-    icon: HomeTabler,
-    label: "Inicio",
-    infoLabel: "Borrador",
-    appearsIn: onlyDraft,
-    component: DraftHomeTab,
+    id: "registro",
+    icon: Plus,
+    label: "Registro",
+    visibleForKinds: DRAFT,
+    component: RegistroTab,
   },
   {
-    id: "workflow",
-    icon: Checkbox,
-    label: "Flujo",
-    appearsIn: onlyLead,
-    component: WorkflowTab,
+    id: "resumen",
+    icon: Info,
+    label: "Resumen",
+    visibleForKinds: LEAD,
+    component: ResumenTab,
   },
   {
-    id: "activity",
-    icon: TimelineEvent,
-    label: "Actividad",
-    appearsIn: always,
-    component: ActivityTab,
-  },
-  {
-    id: "files",
-    icon: Paperclip,
-    label: "Archivos",
-    appearsIn: always,
-    component: FilesTab,
-  },
-  {
-    id: "data",
+    id: "datos",
     icon: HomeTabler,
     label: "Datos",
-    appearsIn: onlyLead,
-    component: DataTab,
+    visibleForKinds: LEAD,
+    component: DatosTab,
+  },
+  {
+    id: "afiliacion",
+    icon: Building2,
+    label: "Afiliación",
+    visibleForKinds: LEAD,
+    isVisibleAtStage: inAfiliacion,
+    component: AfiliacionTab,
+  },
+  {
+    id: "notas",
+    icon: MessageSquare,
+    label: "Notas",
+    visibleForKinds: LEAD,
+    component: NotasTab,
+  },
+  {
+    id: "actividad",
+    icon: TimelineEvent,
+    label: "Actividad",
+    visibleForKinds: BOTH,
+    component: ActividadTab,
+  },
+  {
+    id: "archivos",
+    icon: Paperclip,
+    label: "Archivos",
+    visibleForKinds: LEAD,
+    component: FilesTab,
   },
 ];
 
+function tabAppears(tab: RecordTabDefinition, context: RecordContext): boolean {
+  if (!tab.visibleForKinds.includes(context.kind)) return false;
+  if (tab.isVisibleAtStage && context.kind === "lead") {
+    return tab.isVisibleAtStage(context.data.lead.stage);
+  }
+  return true;
+}
+
 export function recordTabsFor(context: RecordContext): RecordTabDefinition[] {
-  return RECORD_TABS.filter((tab) => tab.appearsIn(context.kind));
+  return RECORD_TABS.filter((tab) => tabAppears(tab, context));
 }
 
 export function resolveActiveRecordTabId(
   tabId: string,
-  kind: RecordKind,
+  kind: RecordTabKind,
 ): RecordTabId {
-  const available = RECORD_TABS.filter((tab) => tab.appearsIn(kind));
+  const available = RECORD_TABS.filter((tab) =>
+    tab.visibleForKinds.includes(kind),
+  );
   const match = available.find((tab) => tab.id === tabId);
   return match ? match.id : available[0].id;
 }
 
-// Side-panel chrome shows the active tab's label (preferring the draft "Borrador"
-// info label). Looked up from the same registry so labels never drift from tabs.
 export function recordTabDisplayLabel(tabId: RecordTabId): string {
   const tab = RECORD_TABS.find((entry) => entry.id === tabId);
-  return tab?.infoLabel ?? tab?.label ?? "";
+  return tab?.label ?? "";
 }

@@ -22,10 +22,9 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
+import { recordRepLegalMutation } from "~/features/workflow/data/command-mutations";
+import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { actionErrorMessage } from "~/lib/wire-error";
-
-import { recordRepLegalMutation } from "../../data/command-mutations";
-import { revalidateWorkflowLead } from "../../data/revalidate-workflow";
 
 import formStyles from "./section-form.module.css";
 

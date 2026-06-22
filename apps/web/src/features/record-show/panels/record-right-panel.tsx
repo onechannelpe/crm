@@ -11,7 +11,7 @@ type RecordRightPanelProps = {
 };
 
 export function RecordRightPanel(props: RecordRightPanelProps) {
-  const [activeTab, setActiveTab] = createSignal<RecordTabId>("workflow");
+  const [activeTab, setActiveTab] = createSignal<RecordTabId>("resumen");
 
   return (
     <div class={styles.panel}>

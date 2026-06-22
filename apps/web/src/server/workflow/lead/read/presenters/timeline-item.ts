@@ -1,28 +1,8 @@
 import { summarizeFieldChanges } from "~/contracts/events";
 import type { LeadTimelineItem } from "~/contracts/workflow/views";
-import type { LeadCallOutcome } from "~/contracts/workflow/vocabulary";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 
 import { formatTimelineActorName } from "./timeline-actor-name";
-
-function describeCallOutcome(outcome: LeadCallOutcome | null) {
-  switch (outcome) {
-    case "answered":
-      return "Llamada contestada";
-    case "no_answer":
-      return "Sin respuesta";
-    case "wrong_number":
-      return "Número incorrecto";
-    case "callback_requested":
-      return "Pidió devolución";
-    case "qualified":
-      return "Cliente calificado";
-    case "disqualified":
-      return "Cliente descartado";
-    default:
-      return "Llamada registrada";
-  }
-}
 
 export function presentTimelineItem(
   event: LeadHistoryEntry,
@@ -194,16 +174,6 @@ export function presentTimelineItem(
         kind: "system",
         title: "Cuentas de sede registradas",
         description: `Registradas por ${actorDisplayName}.`,
-        actorDisplayName,
-      };
-    case "call_logged":
-      return {
-        id: `history:${event.id}`,
-        occurredAt: event.occurredAt,
-        kind: "call",
-        title: describeCallOutcome(event.payload?.outcome ?? null),
-        description:
-          event.payload?.notes || `Registrada por ${actorDisplayName}.`,
         actorDisplayName,
       };
     case "note_added":

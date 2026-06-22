@@ -13,7 +13,7 @@ import {
   toVenueUpdatedEntry,
 } from "./history-commercial-parser";
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
-import { toCallEntry, toNoteEntry } from "./history-interaction-parser";
+import { toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,
   toLeadDeletedEntry,
@@ -75,8 +75,6 @@ export function toHistoryEntry(
         payload: { venueId: venueId.value },
       });
     }
-    case "call_logged":
-      return toCallEntry(row, payload.value);
     case "note_added":
       return toNoteEntry(row, payload.value);
     case "lead_deleted":

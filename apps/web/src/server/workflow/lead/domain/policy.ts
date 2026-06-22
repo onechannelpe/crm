@@ -10,7 +10,7 @@ import type { LeadState } from "./state";
 export type LeadCapability =
   | "view"
   | "delete"
-  | "interact"
+  | "add-note"
   | "reassign"
   | "edit-commercial-scope"
   | "record-rep-legal"
@@ -61,7 +61,7 @@ export function resolveCapabilities(role: Role): Set<LeadCapability> {
 
   if (canRead) caps.add("view");
   if (hasPermission(role, "lead:delete")) caps.add("delete");
-  if (hasPermission(role, "lead:workflow")) caps.add("interact");
+  if (hasPermission(role, "lead:note:add")) caps.add("add-note");
   if (hasPermission(role, "lead:reassign")) {
     caps.add("reassign");
     caps.add("list-assignable-executives");
@@ -154,13 +154,15 @@ export function resolveAvailableActions(
   const inPricing = state.stage === "PRICING";
   const actions: LeadAvailableAction[] = [];
 
-  if (caps.has("interact")) {
-    actions.push("log-call", "add-note");
+  if (caps.has("add-note")) {
+    actions.push("add-note");
   }
-  if (caps.has("propose-rate") && inPricing && !meta.hasActivePendingProposal) {
+  const canProposeRate =
+    caps.has("propose-rate") && actor.role === "back_office";
+  if (canProposeRate && inPricing && !meta.hasActivePendingProposal) {
     actions.push("propose-rate");
   }
-  if (caps.has("propose-rate") && inPricing && meta.hasActivePendingProposal) {
+  if (canProposeRate && inPricing && meta.hasActivePendingProposal) {
     actions.push("edit-rate-proposal");
   }
   if (

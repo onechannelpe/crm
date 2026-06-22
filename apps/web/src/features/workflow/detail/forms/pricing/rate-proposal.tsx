@@ -21,10 +21,6 @@ import type {
 } from "~/contracts/workflow/views";
 import { CURRENCIES } from "~/contracts/workflow/vocabulary";
 import {
-  formatAmount,
-  formatRate,
-} from "~/features/record-show/sections/workflow/format";
-import {
   FieldTable,
   FieldTextValue,
   RecordInlineCell,
@@ -36,6 +32,10 @@ import {
   RecordDetailSectionHeader,
   RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
+import {
+  formatAmount,
+  formatRate,
+} from "~/features/workflow/presentation/format";
 import { formatDate } from "~/lib/utils";
 import { actionErrorMessage } from "~/lib/wire-error";
 

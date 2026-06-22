@@ -34,6 +34,7 @@ export type Permission =
   | "admin:manage"
   | "audit:read"
   | "lead:register"
+  | "lead:note:add"
   | "lead:commercial-input:complete"
   | "lead:sale:create"
   | "lead:sale:upload-proof"
@@ -64,6 +65,7 @@ export const ROLES = [
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   executive: [
+    "lead:note:add",
     "lead:rate:simulate",
     "lead:work",
     "lead:workflow",
@@ -78,6 +80,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:upload-proof",
   ],
   supervisor: [
+    "lead:note:add",
     "lead:delete",
     "lead:rate:simulate",
     "lead:work",
@@ -100,6 +103,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "file:artifact:audit:read",
   ],
   back_office: [
+    "lead:note:add",
     "lead:rate:simulate",
     "sales:review",
     "sales:approve",
@@ -116,6 +120,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:upload-proof",
   ],
   sales_manager: [
+    "lead:note:add",
     "lead:delete",
     "lead:rate:simulate",
     "lead:work",
@@ -144,6 +149,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
   admin: [
+    "lead:note:add",
     "lead:delete",
     "lead:rate:simulate",
     "lead:work",
@@ -182,6 +188,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "file:artifact:audit:read",
   ],
   superuser: [
+    "lead:note:add",
     "lead:delete",
     "lead:rate:simulate",
     "lead:work",

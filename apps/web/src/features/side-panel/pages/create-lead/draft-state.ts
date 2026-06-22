@@ -10,7 +10,7 @@ export type LeadRecordDraftState = {
 } & CommercialScopeFormValues;
 
 export const DEFAULT_LEAD_RECORD_DRAFT_STATE: LeadRecordDraftState = {
-  activeTab: "home",
+  activeTab: "registro",
   ruc: "",
   ...EMPTY_COMMERCIAL_SCOPE_VALUES,
 };

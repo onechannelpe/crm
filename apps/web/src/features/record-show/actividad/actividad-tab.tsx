@@ -9,7 +9,7 @@ import { ActivityTabEmptyState } from "~/features/side-panel/components/activity
 
 import styles from "~/features/record-show/tabs/timeline/styles.module.css";
 
-export function ActivityTab(props: { context: RecordContext }) {
+export function ActividadTab(props: { context: RecordContext }) {
   const groups = createMemo(() => {
     const context = props.context;
     if (context.kind === "draft") {
@@ -21,6 +21,7 @@ export function ActivityTab(props: { context: RecordContext }) {
 
     return groupEventsByMonth(
       context.data.timeline
+        .filter((event) => event.kind !== "note")
         .toSorted((a, b) => b.occurredAt - a.occurredAt)
         .map(normalizeLeadEvent),
     );

@@ -12,7 +12,6 @@ import type {
 } from "./vocabulary";
 
 export type LeadAvailableAction =
-  | "log-call"
   | "add-note"
   | "propose-rate"
   | "edit-rate-proposal"
@@ -59,7 +58,7 @@ export type LeadListView = {
 export type LeadTimelineItem = {
   id: string;
   occurredAt: number;
-  kind: "call" | "note" | "assignment" | "stage-change" | "system";
+  kind: "note" | "assignment" | "stage-change" | "system";
   title: string;
   description: string;
   actorDisplayName: string;
