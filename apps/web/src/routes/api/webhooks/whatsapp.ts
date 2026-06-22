@@ -61,9 +61,7 @@ function extractSenderPhones(body: unknown): string[] {
   return phones;
 }
 
-// The request guard verifies the X-Hub-Signature-256 HMAC before this runs, so
-// the handler only translates authentic inbound messages into refreshed
-// WhatsApp sessions.
+// Machine request policy verifies the signature before route dispatch.
 export async function POST(event: APIEvent): Promise<Response> {
   let body: unknown;
   try {
@@ -73,33 +71,32 @@ export async function POST(event: APIEvent): Promise<Response> {
   }
 
   const senderPhones = extractSenderPhones(body);
-  if (senderPhones.length > 0) {
-    // Meta requires 200 quickly; anything else triggers retries. openSession is
-    // idempotent, so on a DB failure we log and still ack: Meta's at-least-once
-    // redelivery covers the dropped work without a retry storm.
-    try {
-      const db = getServerRuntime().infra.db;
-      const addressRepo = createUserChannelAddressRepo(db);
-      const now = Date.now();
+  if (senderPhones.length === 0) return new Response("OK", { status: 200 });
 
-      await Promise.all(
-        senderPhones.map(async (rawPhone) => {
-          const address = normalizePhoneInput(rawPhone);
-          if (!address) return;
-          const row = await addressRepo.findByChannelAndAddress(
-            "whatsapp",
-            address,
-          );
-          // Only open sessions for confirmed ownership; claims start unverified.
-          if (!row || row.is_verified !== 1) return;
-          await openSession(db, row.user_id, now);
-        }),
-      );
-    } catch (error) {
-      logger.error("whatsapp_webhook_session_open_failed", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
+  try {
+    const db = getServerRuntime().infra.db;
+    const addressRepo = createUserChannelAddressRepo(db);
+    const now = Date.now();
+
+    await Promise.all(
+      senderPhones.map(async (rawPhone) => {
+        const address = normalizePhoneInput(rawPhone);
+        if (!address) return;
+        const row = await addressRepo.findByChannelAndAddress(
+          "whatsapp",
+          address,
+        );
+        // Only confirmed ownership can open a messaging session.
+        if (!row || row.is_verified !== 1) return;
+        await openSession(db, row.user_id, now);
+      }),
+    );
+  } catch (error) {
+    logger.error("whatsapp_webhook_session_open_failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    // Failed session work remains unacknowledged so the provider can retry it.
+    return new Response("Service Unavailable", { status: 503 });
   }
 
   return new Response("OK", { status: 200 });

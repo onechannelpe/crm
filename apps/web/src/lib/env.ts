@@ -156,7 +156,6 @@ function parseNotificationsEnv(source: EnvSource) {
       "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
       true,
     ),
-    // Meta-issued; validates X-Hub-Signature-256 on incoming webhook events.
     whatsappAppSecret: required(source, "WHATSAPP_APP_SECRET"),
   } as const;
 }
@@ -201,7 +200,6 @@ function section<T>(parse: (source: EnvSource) => T): () => T {
   };
 }
 
-// const sessionConfig = section(parseSessionEnv);
 export const totpConfig = section(parseTotpEnv);
 export const extensionConfig = section(parseExtensionEnv);
 export const securityConfig = section(parseSecurityEnv);

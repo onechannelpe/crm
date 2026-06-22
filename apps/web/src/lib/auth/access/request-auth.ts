@@ -80,15 +80,12 @@ function normalizeOrigin(value: string): string | null {
   }
 }
 
-// Inbound webhooks authenticate by signature, not by browser session or CSRF
-// origin. Verifying here gives the invariant "no webhook handler runs
-// unauthenticated" a single owner; the handler then sees only authentic calls.
+// Machine requests use provider signatures instead of browser session and CSRF.
 async function enforceWebhookRequest(
   request: Request,
   pathname: string,
 ): Promise<AuthRequestDecision> {
-  // The provider's subscription handshake (e.g. Meta hub.challenge) is a GET
-  // with no signature; the handler validates it against the verify token.
+  // Safe methods support provider handshakes validated by the endpoint.
   if (SAFE_METHODS.has(request.method)) return { kind: "allow" };
 
   const verifier = getWebhookVerifier(pathname);
