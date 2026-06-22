@@ -10,10 +10,18 @@ export type WebhookVerifier = (input: WebhookVerifierInput) => boolean;
 // Bounds body buffering before signature verification.
 export const WEBHOOK_BODY_LIMIT_BYTES = 256 * 1024;
 
-const VERIFIERS: Record<string, WebhookVerifier> = {
-  "/api/webhooks/whatsapp": verifyWhatsAppSignature,
+export type WebhookPolicy = {
+  unsignedMethods: readonly string[];
+  verify: WebhookVerifier;
 };
 
-export function getWebhookVerifier(pathname: string): WebhookVerifier | null {
-  return VERIFIERS[pathname] ?? null;
+const WEBHOOK_POLICIES: Record<string, WebhookPolicy> = {
+  "/api/webhooks/whatsapp": {
+    unsignedMethods: ["GET"],
+    verify: verifyWhatsAppSignature,
+  },
+};
+
+export function getWebhookPolicy(pathname: string): WebhookPolicy | null {
+  return WEBHOOK_POLICIES[pathname] ?? null;
 }

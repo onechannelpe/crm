@@ -1,6 +1,6 @@
 import { createLogger } from "~/lib/observability/logger";
 import {
-  getWebhookVerifier,
+  getWebhookPolicy,
   WEBHOOK_BODY_LIMIT_BYTES,
 } from "~/lib/webhooks/registry";
 
@@ -85,12 +85,9 @@ async function enforceWebhookRequest(
   request: Request,
   pathname: string,
 ): Promise<AuthRequestDecision> {
-  // Safe methods support provider handshakes validated by the endpoint.
-  if (SAFE_METHODS.has(request.method)) return { kind: "allow" };
-
-  const verifier = getWebhookVerifier(pathname);
-  // Fail closed: a webhook route with no registered verifier is unreachable.
-  if (!verifier) return reject(403, "Forbidden");
+  const policy = getWebhookPolicy(pathname);
+  if (!policy) return reject(403, "Forbidden");
+  if (policy.unsignedMethods.includes(request.method)) return { kind: "allow" };
 
   const contentLength = request.headers.get("content-length");
   if (contentLength && Number(contentLength) > WEBHOOK_BODY_LIMIT_BYTES) {
@@ -103,7 +100,7 @@ async function enforceWebhookRequest(
     return reject(413, "Payload Too Large");
   }
 
-  if (!verifier({ request, rawBody })) {
+  if (!policy.verify({ request, rawBody })) {
     return reject(403, "Forbidden");
   }
 

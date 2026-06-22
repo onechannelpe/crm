@@ -135,6 +135,30 @@ describe("auth middleware csrf policy", () => {
     expect(decision.kind).toBe("allow");
   });
 
+  it("rejects unsigned methods not allowed by the webhook policy", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/api/webhooks/whatsapp", {
+        method: "HEAD",
+      }),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
+
+    expect(decision.kind).toBe("reject");
+    if (decision.kind !== "reject") throw new Error("Expected reject");
+    expect(decision.response.status).toBe(403);
+  });
+
+  it("rejects unregistered webhook paths for every method", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/api/webhooks/unknown"),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
+
+    expect(decision.kind).toBe("reject");
+    if (decision.kind !== "reject") throw new Error("Expected reject");
+    expect(decision.response.status).toBe(403);
+  });
+
   it("rejects an unsigned webhook POST before it reaches the handler", async () => {
     const decision = await enforceAuthRequest({
       request: new Request("http://localhost:3000/api/webhooks/whatsapp", {
