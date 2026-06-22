@@ -148,16 +148,16 @@ function parseNotificationsEnv(source: EnvSource) {
   return {
     resendApiKey: required(source, "RESEND_API_KEY"),
     emailFrom: required(source, "EMAIL_FROM"),
-    whatsappAccessToken: optional(source, "WHATSAPP_ACCESS_TOKEN", ""),
-    whatsappPhoneNumberId: optional(source, "WHATSAPP_PHONE_NUMBER_ID", ""),
+    whatsappAccessToken: required(source, "WHATSAPP_ACCESS_TOKEN"),
+    whatsappPhoneNumberId: required(source, "WHATSAPP_PHONE_NUMBER_ID"),
     whatsappApiVersion: optional(source, "WHATSAPP_GRAPH_API_VERSION", "v23.0"),
-    whatsappWebhookVerifyToken: optional(
+    whatsappWebhookVerifyToken: required(
       source,
       "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
-      "",
+      true,
     ),
-    // Used to validate X-Hub-Signature-256 on incoming webhook events.
-    whatsappAppSecret: optional(source, "WHATSAPP_APP_SECRET", ""),
+    // Meta-issued; validates X-Hub-Signature-256 on incoming webhook events.
+    whatsappAppSecret: required(source, "WHATSAPP_APP_SECRET"),
   } as const;
 }
 
