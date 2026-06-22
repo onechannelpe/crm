@@ -21,10 +21,11 @@ export function RecordTabs(props: {
     tabs().find((tab) => tab.id === props.activeTab) ?? tabs()[0];
 
   // The persisted active tab can become invisible after a stage change (a
-  // stage-gated tab like Afiliación drops out of the visible set). When that
-  // happens the body already falls back to the first tab; reconcile the stored
-  // id so the strip highlight and the persisted state follow the body instead
-  // of pointing at a tab that is no longer shown.
+  // stage-gated tab like Afiliación drops out of the visible set). The strip
+  // and body both render activeDefinition() so they stay consistent within a
+  // single render (no transient highlight flash, no SSR/hydration mismatch).
+  // This effect only persists the reconciled id back to the parent store so the
+  // stored value stops pointing at a tab that is no longer shown.
   createEffect(() => {
     const resolved = activeDefinition();
     if (resolved && resolved.id !== props.activeTab) {
@@ -36,7 +37,7 @@ export function RecordTabs(props: {
     <>
       <TabStrip
         tabs={tabs()}
-        activeTab={props.activeTab}
+        activeTab={activeDefinition()?.id ?? props.activeTab}
         onTabSelect={props.onTabSelect}
       />
       <Show when={activeDefinition()} keyed>
