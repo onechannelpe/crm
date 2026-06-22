@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-
 import type { APIEvent } from "@solidjs/start/server";
 
 import { notificationsConfig } from "~/lib/env";
@@ -12,8 +10,8 @@ import { getServerRuntime } from "~/server/platform/container";
 
 const logger = createLogger("whatsapp-webhook");
 
-// Meta sends hub.mode=subscribe + hub.verify_token + hub.challenge.
-// Echo back the challenge to confirm the endpoint.
+// Meta's subscription handshake: echo hub.challenge when the verify token
+// matches. There is no body to sign here, so the token is the shared secret.
 export function GET(event: APIEvent): Response {
   const url = new URL(event.request.url);
   const mode = url.searchParams.get("hub.mode");
@@ -26,25 +24,13 @@ export function GET(event: APIEvent): Response {
     challenge &&
     token === whatsappWebhookVerifyToken
   ) {
-    return new Response(challenge, { status: 200 });
+    return new Response(challenge, {
+      status: 200,
+      headers: { "content-type": "text/plain" },
+    });
   }
 
   return new Response("Forbidden", { status: 403 });
-}
-
-function verifySignature(
-  payload: string,
-  signature: string | null,
-  appSecret: string,
-): boolean {
-  if (!signature) return false;
-  const expected = createHmac("sha256", appSecret)
-    .update(payload)
-    .digest("hex");
-  const expectedBuf = Buffer.from(`sha256=${expected}`, "utf8");
-  const actualBuf = Buffer.from(signature, "utf8");
-  if (expectedBuf.length !== actualBuf.length) return false;
-  return timingSafeEqual(expectedBuf, actualBuf);
 }
 
 function extractSenderPhones(body: unknown): string[] {
@@ -75,18 +61,13 @@ function extractSenderPhones(body: unknown): string[] {
   return phones;
 }
 
+// The request guard verifies the X-Hub-Signature-256 HMAC before this runs, so
+// the handler only translates authentic inbound messages into refreshed
+// WhatsApp sessions.
 export async function POST(event: APIEvent): Promise<Response> {
-  const rawBody = await event.request.text();
-  const { whatsappAppSecret } = notificationsConfig();
-
-  const signature = event.request.headers.get("x-hub-signature-256");
-  if (!verifySignature(rawBody, signature, whatsappAppSecret)) {
-    return new Response("Forbidden", { status: 403 });
-  }
-
   let body: unknown;
   try {
-    body = JSON.parse(rawBody);
+    body = JSON.parse(await event.request.text());
   } catch {
     return new Response("Bad Request", { status: 400 });
   }

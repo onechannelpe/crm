@@ -1,6 +1,11 @@
 import { createLogger } from "~/lib/observability/logger";
+import {
+  getWebhookVerifier,
+  WEBHOOK_BODY_LIMIT_BYTES,
+} from "~/lib/webhooks/registry";
 
 import { verifyCsrf } from "../../security/csrf";
+import { classifyRequest, isApiPath } from "./request-class";
 import { canAccessPath, getDefaultAppPath } from "./route-policy";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -18,19 +23,8 @@ export type AuthRequestDecision =
   | { kind: "redirect_home"; to: string }
   | { kind: "reject"; response: Response };
 
-export function isPublicPath(pathname: string): boolean {
-  return (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/reset-password") ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/_") ||
-    pathname.startsWith("/updates") ||
-    pathname.startsWith("/docs") ||
-    pathname === "/privacy" ||
-    pathname === "/terms" ||
-    pathname.includes(".")
-  );
+function reject(status: number, message: string): AuthRequestDecision {
+  return { kind: "reject", response: new Response(message, { status }) };
 }
 
 export function enforceCsrfRequestPolicy(
@@ -86,10 +80,49 @@ function normalizeOrigin(value: string): string | null {
   }
 }
 
+// Inbound webhooks authenticate by signature, not by browser session or CSRF
+// origin. Verifying here gives the invariant "no webhook handler runs
+// unauthenticated" a single owner; the handler then sees only authentic calls.
+async function enforceWebhookRequest(
+  request: Request,
+  pathname: string,
+): Promise<AuthRequestDecision> {
+  // The provider's subscription handshake (e.g. Meta hub.challenge) is a GET
+  // with no signature; the handler validates it against the verify token.
+  if (SAFE_METHODS.has(request.method)) return { kind: "allow" };
+
+  const verifier = getWebhookVerifier(pathname);
+  // Fail closed: a webhook route with no registered verifier is unreachable.
+  if (!verifier) return reject(403, "Forbidden");
+
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > WEBHOOK_BODY_LIMIT_BYTES) {
+    return reject(413, "Payload Too Large");
+  }
+
+  // Read a clone so the route handler can still consume the original body.
+  const rawBody = await request.clone().text();
+  if (Buffer.byteLength(rawBody) > WEBHOOK_BODY_LIMIT_BYTES) {
+    return reject(413, "Payload Too Large");
+  }
+
+  if (!verifier({ request, rawBody })) {
+    return reject(403, "Forbidden");
+  }
+
+  return { kind: "allow" };
+}
+
 export async function enforceAuthRequest(
   event: AuthRequestEvent,
 ): Promise<AuthRequestDecision> {
   const url = new URL(event.request.url);
+  const requestClass = classifyRequest(url.pathname);
+
+  if (requestClass === "machine") {
+    return enforceWebhookRequest(event.request, url.pathname);
+  }
+
   const requestContext = event.locals.requestContext;
   const targetOrigin = requestContext.publicOrigin;
 
@@ -100,10 +133,7 @@ export async function enforceAuthRequest(
     );
     if (csrfPolicyError) {
       logCsrfReject(event, csrfPolicyError, targetOrigin);
-      return {
-        kind: "reject",
-        response: new Response(csrfPolicyError, { status: 403 }),
-      };
+      return reject(403, csrfPolicyError);
     }
 
     const csrfToken = await requestContext.getRequestCsrfToken();
@@ -111,18 +141,19 @@ export async function enforceAuthRequest(
       ? await verifyCsrf(event.request, csrfToken)
       : false;
     if (!isCsrfValid) {
-      return {
-        kind: "reject",
-        response: new Response("CSRF validation failed", { status: 403 }),
-      };
+      return reject(403, "CSRF validation failed");
     }
   }
 
-  if (isPublicPath(url.pathname)) return { kind: "allow" };
+  if (requestClass === "public") return { kind: "allow" };
 
   const session = await requestContext.getAuthSession();
   if (!session) {
-    return { kind: "redirect_login" };
+    // Browser navigations get a login redirect; API clients get a status code
+    // they can act on instead of an opaque 302 to an HTML page.
+    return isApiPath(url.pathname)
+      ? reject(401, "Unauthorized")
+      : { kind: "redirect_login" };
   }
 
   if (session.sessionClass === "pre_auth" && url.pathname !== "/onboarding") {

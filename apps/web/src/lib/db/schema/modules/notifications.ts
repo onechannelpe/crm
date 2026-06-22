@@ -133,6 +133,5 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().unique().references("users.id").onDelete("cascade"),
     )
     .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 }

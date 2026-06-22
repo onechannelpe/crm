@@ -14,7 +14,6 @@ export function openSession(
     .values({
       user_id: userId,
       expires_at: now + SESSION_DURATION_MS,
-      created_at: now,
     })
     .onConflict((oc) =>
       oc

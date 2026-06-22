@@ -531,8 +531,8 @@ export async function persistDemoIdentities(
   await db
     .insertInto("whatsapp_sessions")
     .values([
-      { user_id: 1, expires_at: now + oneDay, created_at: now },
-      { user_id: 12, expires_at: now + oneDay, created_at: now },
+      { user_id: 1, expires_at: now + oneDay },
+      { user_id: 12, expires_at: now + oneDay },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
