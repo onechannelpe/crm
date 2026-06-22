@@ -1,5 +1,6 @@
 import { For, Show } from "solid-js";
 
+import Check from "~/components/icons/check";
 import type { LeadStage } from "~/contracts/workflow/vocabulary";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
 
@@ -38,12 +39,24 @@ export function StageStepper(props: { stage: LeadStage }) {
     >
       <ol class={styles.stepper}>
         <For each={PIPELINE}>
-          {(stage) => (
-            <li class={styles.step} data-state={stepState(stage, props.stage)}>
-              <span class={styles.stepDot} />
-              <span class={styles.stepLabel}>{leadStageLabel(stage)}</span>
-            </li>
-          )}
+          {(stage) => {
+            const state = stepState(stage, props.stage);
+            return (
+              <li class={styles.step} data-state={state}>
+                <div class={styles.stepDotContainer}>
+                  <Show
+                    when={state === "done"}
+                    fallback={<span class={styles.stepDot} />}
+                  >
+                    <span class={styles.stepCheck}>
+                      <Check size={10} strokeWidth={3} />
+                    </span>
+                  </Show>
+                </div>
+                <span class={styles.stepLabel}>{leadStageLabel(stage)}</span>
+              </li>
+            );
+          }}
         </For>
       </ol>
     </Show>

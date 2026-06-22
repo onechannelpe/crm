@@ -129,7 +129,10 @@ function deriveFulfillmentNotification(input: {
         id: `${input.eventId}:fulfillment_completed`,
         eventType: "lead.fulfillment_completed",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        channels: ["in_app"],
+        // Terminal moment of the funnel for this lead: notify the executive
+        // both in-app and via WhatsApp. Planner still gates WA on a verified
+        // address and an active Meta session.
+        channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Venta registrada",
         bodyText: `La venta del cliente RUC ${input.ruc} quedó registrada. Cliente activo.`,

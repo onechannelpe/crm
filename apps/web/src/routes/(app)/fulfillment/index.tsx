@@ -1,6 +1,7 @@
 import { A, createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
+import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { AppPage, AppPageSection } from "~/components/layout/page";
 import {
   describeFulfillmentStep,
@@ -52,7 +53,14 @@ export default function FulfillmentQueuePage() {
       <AppPageSection>
         <Show
           when={queue().rows.length > 0}
-          fallback={<p class={styles.empty}>No hay entregas pendientes.</p>}
+          fallback={
+            <div class={styles.empty}>
+              <EmptyState
+                title="No hay entregas pendientes"
+                description="Todas las entregas han sido completadas o gestionadas."
+              />
+            </div>
+          }
         >
           <div class={styles.groups}>
             <For each={groups()}>

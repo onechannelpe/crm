@@ -15,7 +15,7 @@ function isCommittedStageChange(
   return committed.event.eventType === "workflow_stage_changed";
 }
 
-function deriveLeadStageNotifications(input: {
+export function deriveLeadStageNotifications(input: {
   eventId: string;
   leadId: string;
   toStage: string;
@@ -51,7 +51,10 @@ function deriveLeadStageNotifications(input: {
         id: `${input.eventId}:ready_setup`,
         eventType: "lead.ready_for_sale",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        channels: ["in_app"],
+        // High-value moment for the executive: in-app bell + WhatsApp so they
+        // unblock the client from anywhere. WhatsApp delivery still depends
+        // on a verified address and an active Meta session (see planner).
+        channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Cliente listo para afiliación",
         bodyText: `El cliente RUC ${input.ruc} aceptó la tarifa. Define la política digital para continuar.`,

@@ -7,11 +7,11 @@
 
 .stepper {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-1);
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: var(--spacing-2) 0;
 }
 
 .step {
@@ -24,14 +24,59 @@
   text-align: center;
 }
 
+.stepDotContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  z-index: 1;
+  background: var(--background);
+  transition: all 0.2s ease-in-out;
+}
+
+.stepDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.2s ease-in-out;
+}
+
+.stepCheck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--foreground);
+  color: var(--background);
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .step:not(:first-child)::before {
   content: "";
   position: absolute;
-  top: 5px;
+  top: 9px;
   right: 50%;
   left: -50%;
   height: 2px;
-  background: var(--border);
+  background: var(--border-light);
+  transition: background-color 0.25s ease;
+  z-index: 0;
 }
 
 .step[data-state="done"]::before,
@@ -39,32 +84,27 @@
   background: var(--foreground);
 }
 
-.stepDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--border);
-  z-index: 1;
-}
-
-.step[data-state="done"] .stepDot {
-  background: var(--foreground);
-}
-
 .step[data-state="current"] .stepDot {
   background: var(--foreground);
-  box-shadow: 0 0 0 3px var(--background-transparent-light);
+  transform: scale(1.25);
+  box-shadow: 0 0 0 4px var(--background-transparent-light);
 }
 
 .stepLabel {
   color: var(--foreground-tertiary);
   font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
   line-height: 1.3;
+  transition: color 0.2s ease;
 }
 
 .step[data-state="current"] .stepLabel {
   color: var(--foreground);
   font-weight: var(--font-weight-semibold);
+}
+
+.step[data-state="done"] .stepLabel {
+  color: var(--foreground-secondary);
 }
 
 .terminalBanner {
