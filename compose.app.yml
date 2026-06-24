@@ -20,6 +20,7 @@ x-app: &app
   networks:
     - default
     - shared-engine
+    - dokploy-network
 
 services:
   libsql:
@@ -81,8 +82,14 @@ services:
 
   web:
     <<: *app
-    ports:
-      - 127.0.0.1:${WEB_PUBLISHED_PORT:?Set WEB_PUBLISHED_PORT}:3000
+    expose:
+      - "3000"
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: dokploy-network
+      traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.entrypoints: web
+      traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.rule: Host(`${APP_DOMAIN:?Set APP_DOMAIN}`)
+      traefik.http.services.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.loadbalancer.server.port: "3000"
     depends_on:
       libsql:
         condition: service_started
@@ -118,3 +125,6 @@ networks:
   shared-engine:
     external: true
     name: crm-engine
+  dokploy-network:
+    external: true
+    name: dokploy-network
