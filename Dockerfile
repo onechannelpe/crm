@@ -13,7 +13,7 @@ COPY packages/images/package.json ./packages/images/package.json
 COPY packages/message-channels/package.json ./packages/message-channels/package.json
 COPY tools/codegen/package.json ./tools/codegen/package.json
 
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile --production --ignore-scripts
 
 FROM oven/bun:1.3.14 AS build
 
