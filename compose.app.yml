@@ -85,11 +85,11 @@ services:
     expose:
       - "3000"
     labels:
-      traefik.enable: "true"
-      traefik.docker.network: dokploy-network
-      traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.entrypoints: web
-      traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.rule: Host(`${APP_DOMAIN:?Set APP_DOMAIN}`)
-      traefik.http.services.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.loadbalancer.server.port: "3000"
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.entrypoints=web
+      - traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.rule=Host(`${APP_DOMAIN:?Set APP_DOMAIN}`)
+      - traefik.http.services.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.loadbalancer.server.port=3000
     depends_on:
       libsql:
         condition: service_started
