@@ -1,3 +1,4 @@
+import { sendWithKapsoWhatsAppText } from "@crm/message-channels";
 import type { APIEvent } from "@solidjs/start/server";
 
 import { notificationsConfig } from "~/lib/env";
@@ -7,7 +8,6 @@ import { isPlainRecord } from "~/lib/type-guards";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { openSession } from "~/server/notifications/whatsapp-session";
 import { getServerRuntime } from "~/server/platform/container";
-import { sendWithKapsoWhatsAppText } from "@crm/message-channels";
 
 const logger = createLogger("whatsapp-webhook");
 
