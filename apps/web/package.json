@@ -5,6 +5,7 @@
     "dev": "bun run migrate && bun run seed && bun run dev:server",
     "dev:server": "bun --env-file=../../.env --bun vite --config vite.config.ts",
     "build": "bun --env-file=../../.env.production --bun vite build --config vite.config.ts",
+    "build:container": "bun --bun vite build --config vite.config.ts",
     "start": "bun run .output/server/index.mjs",
     "worker:maintenance": "bun --env-file=../../.env src/workers/maintenance-runner.ts",
     "worker:maintenance:prod": "bun src/workers/maintenance-runner.ts",

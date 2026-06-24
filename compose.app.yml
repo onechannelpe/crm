@@ -1,0 +1,120 @@
+x-app: &app
+  image: crm-app-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}:latest
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  env_file:
+    - .env
+  environment:
+    NODE_ENV: production
+    NITRO_HOST: 0.0.0.0
+    NITRO_PORT: 3000
+    WEB_DB_URL: http://libsql:8080
+    REDIS_URL: redis://redis:6379
+    ENGINE_CONNECT_MODE: internal
+    ENGINE_URL: http://engine:3001
+    WEB_UPLOADS_ROOT: /var/lib/crm-web/documents
+  volumes:
+    - ${APP_DATA_PATH:?Set APP_DATA_PATH}/uploads:/var/lib/crm-web
+  networks:
+    - default
+    - shared-engine
+
+services:
+  libsql:
+    image: ghcr.io/tursodatabase/libsql-server@sha256:817fb6c6865d048a509f5c120905629fb9b5af20ad0c526cdc68a6d8793898ad
+    restart: unless-stopped
+    environment:
+      SQLD_NODE: primary
+      SQLD_HTTP_LISTEN_ADDR: 0.0.0.0:8080
+    volumes:
+      - ${APP_DATA_PATH:?Set APP_DATA_PATH}/libsql:/var/lib/sqld
+    expose:
+      - "8080"
+
+  redis:
+    image: redis:8.2.7-bookworm
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --bind
+      - 0.0.0.0
+      - --protected-mode
+      - "no"
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --loglevel
+      - warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  migrate:
+    image: crm-app-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      WEB_DB_URL: http://libsql:8080
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        bun -e 'for (let i = 0; i < 60; i++) {
+          try { const response = await fetch("http://libsql:8080/health");
+          if (response.ok) process.exit(0); } catch {}
+          await Bun.sleep(1000); } process.exit(1);' &&
+        bun run migrate:prod &&
+        bun src/lib/db/seed.ts
+    depends_on:
+      libsql:
+        condition: service_started
+
+  web:
+    <<: *app
+    ports:
+      - 127.0.0.1:${WEB_PUBLISHED_PORT:?Set WEB_PUBLISHED_PORT}:3000
+    depends_on:
+      libsql:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - >-
+          const response = await fetch("http://127.0.0.1:3000/");
+          if (response.status >= 500) process.exit(1);
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  worker:
+    <<: *app
+    command: ["bun", "run", "worker:maintenance:prod"]
+    depends_on:
+      libsql:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+networks:
+  shared-engine:
+    external: true
+    name: crm-engine
