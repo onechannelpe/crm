@@ -5,7 +5,7 @@ export interface EngineClientConfig {
   timeoutMs: number;
 }
 
-export type EngineConnectMode = "local" | "remote";
+export type EngineConnectMode = "local" | "internal" | "remote";
 
 export function buildEngineClientConfig({
   engineConnectMode,
@@ -42,6 +42,18 @@ export function buildEngineClientConfig({
 
     if (!isLoopback) {
       throw new Error("ENGINE_URL must target a loopback host in local mode");
+    }
+  }
+
+  if (engineConnectMode === "internal") {
+    if (url.protocol !== "http:") {
+      throw new Error("ENGINE_URL must use http in internal mode");
+    }
+
+    if (isLoopback) {
+      throw new Error(
+        "ENGINE_URL must not target a loopback host in internal mode",
+      );
     }
   }
 

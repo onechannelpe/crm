@@ -136,6 +136,6 @@ describe("env validation", () => {
         ...baseEnv,
         ENGINE_CONNECT_MODE: "invalid",
       }),
-    ).toThrow("ENGINE_CONNECT_MODE must be one of: local, remote");
+    ).toThrow("ENGINE_CONNECT_MODE must be one of: local, internal, remote");
   });
 });

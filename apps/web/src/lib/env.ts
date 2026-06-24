@@ -164,7 +164,7 @@ function parseEngineEnv(source: EnvSource) {
     engineConnectMode: optionalEnum(
       source,
       "ENGINE_CONNECT_MODE",
-      ["local", "remote"] as const,
+      ["local", "internal", "remote"] as const,
       "local",
     ),
     engineUrl: optional(source, "ENGINE_URL", "http://127.0.0.1:3001"),

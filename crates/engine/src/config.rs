@@ -14,6 +14,7 @@ const DEFAULT_MAX_LIMIT: usize = 100;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectMode {
     Local,
+    Internal,
     Remote,
 }
 
@@ -89,9 +90,10 @@ impl Env {
 fn parse_connect_mode(raw: &str) -> Result<ConnectMode, StartupError> {
     match raw {
         "local" => Ok(ConnectMode::Local),
+        "internal" => Ok(ConnectMode::Internal),
         "remote" => Ok(ConnectMode::Remote),
         _ => Err(StartupError::Config(
-            "ENGINE_CONNECT_MODE must be one of: local, remote".into(),
+            "ENGINE_CONNECT_MODE must be one of: local, internal, remote".into(),
         )),
     }
 }
@@ -229,6 +231,18 @@ mod tests {
     }
 
     #[test]
+    fn internal_mode_allows_non_loopback_host() {
+        let _guard = env_lock().lock().unwrap();
+        set_base_env();
+        set_env("ENGINE_CONNECT_MODE", "internal");
+        set_env("ENGINE_HOST", "0.0.0.0");
+
+        let cfg = EngineConfig::load().expect("config");
+        assert_eq!(cfg.connect_mode, ConnectMode::Internal);
+        assert_eq!(cfg.host, "0.0.0.0");
+    }
+
+    #[test]
     fn invalid_connect_mode_is_rejected() {
         let _guard = env_lock().lock().unwrap();
         set_base_env();
@@ -237,7 +251,7 @@ mod tests {
         let err = EngineConfig::load().expect_err("should fail");
         assert_eq!(
             err.to_string(),
-            "configuration error: ENGINE_CONNECT_MODE must be one of: local, remote"
+            "configuration error: ENGINE_CONNECT_MODE must be one of: local, internal, remote"
         );
     }
 
