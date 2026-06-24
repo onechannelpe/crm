@@ -5,8 +5,7 @@ const mocks = vi.hoisted(() => ({
   findAddress:
     vi.fn<
       () => Promise<
-        | { user_id: number; is_verified: number; address: string }
-        | undefined
+        { user_id: number; is_verified: number; address: string } | undefined
       >
     >(),
   markVerified: vi.fn<() => Promise<boolean>>(),
@@ -17,15 +16,16 @@ const mocks = vi.hoisted(() => ({
   loggerWarn:
     vi.fn<(event: string, metadata: Record<string, unknown>) => void>(),
   openSession: vi.fn<() => Promise<unknown>>(),
-  sendReply: vi.fn<
-    (input: {
-      apiKey: string;
-      phoneNumberId: string;
-      metaGraphVersion: string;
-      to: string;
-      body: string;
-    }) => Promise<{ providerMessageId: string | null }>
-  >(),
+  sendReply:
+    vi.fn<
+      (input: {
+        apiKey: string;
+        phoneNumberId: string;
+        metaGraphVersion: string;
+        to: string;
+        body: string;
+      }) => Promise<{ providerMessageId: string | null }>
+    >(),
 }));
 
 vi.mock("~/lib/observability/logger", () => ({
@@ -152,7 +152,9 @@ describe("POST /api/webhooks/whatsapp", () => {
 
     const response = await POST(
       createApiEvent(
-        webhookRequest(kapsoV2Inbound({ phoneNumber: "+51911000001", textBody: "hola" })),
+        webhookRequest(
+          kapsoV2Inbound({ phoneNumber: "+51911000001", textBody: "hola" }),
+        ),
       ),
     );
 
@@ -173,7 +175,10 @@ describe("POST /api/webhooks/whatsapp", () => {
     const response = await POST(
       createApiEvent(
         webhookRequest(
-          kapsoV2Inbound({ phoneNumber: "+51911000007", textBody: "/verificar" }),
+          kapsoV2Inbound({
+            phoneNumber: "+51911000007",
+            textBody: "/verificar",
+          }),
         ),
       ),
     );
@@ -197,7 +202,10 @@ describe("POST /api/webhooks/whatsapp", () => {
     const response = await POST(
       createApiEvent(
         webhookRequest(
-          kapsoV2Inbound({ phoneNumber: "+51911000007", textBody: "  /VERIFICAR  " }),
+          kapsoV2Inbound({
+            phoneNumber: "+51911000007",
+            textBody: "  /VERIFICAR  ",
+          }),
         ),
       ),
     );
@@ -212,7 +220,10 @@ describe("POST /api/webhooks/whatsapp", () => {
     const response = await POST(
       createApiEvent(
         webhookRequest(
-          kapsoV2Inbound({ phoneNumber: "+51999999999", textBody: "/verificar" }),
+          kapsoV2Inbound({
+            phoneNumber: "+51999999999",
+            textBody: "/verificar",
+          }),
         ),
       ),
     );
