@@ -33,6 +33,7 @@ ENV NODE_ENV=production \
 WORKDIR /app
 
 COPY --from=production-deps --chown=bun:bun /app/node_modules ./node_modules
+COPY --from=production-deps --chown=bun:bun /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=build --chown=bun:bun /app/apps/web/.output ./apps/web/.output
 COPY --from=build --chown=bun:bun /app/apps/web/package.json ./apps/web/package.json
 COPY --from=build --chown=bun:bun /app/apps/web/src ./apps/web/src
