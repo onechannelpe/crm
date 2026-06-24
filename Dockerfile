@@ -21,6 +21,7 @@ WORKDIR /app
 
 COPY . .
 RUN bun install --frozen-lockfile
+RUN bun run generate:templates
 RUN bun run --cwd apps/web build:container
 
 FROM oven/bun:1.3.14 AS runtime
@@ -36,6 +37,7 @@ COPY --from=build --chown=bun:bun /app/apps/web/.output ./apps/web/.output
 COPY --from=build --chown=bun:bun /app/apps/web/package.json ./apps/web/package.json
 COPY --from=build --chown=bun:bun /app/apps/web/src ./apps/web/src
 COPY --from=build --chown=bun:bun /app/apps/web/tsconfig.json ./apps/web/tsconfig.json
+COPY --from=build --chown=bun:bun /app/packages ./packages
 
 WORKDIR /app/apps/web
 USER bun
