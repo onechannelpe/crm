@@ -7,121 +7,125 @@ import type { ContactAssignmentDraft } from "~/server/contact-assignments/domain
 type NewLeadAssignmentRow = Insertable<Database["lead_assignments"]>;
 
 export function createContactAssignmentsRepo(db: Kysely<Database>) {
+  const create = (values: NewLeadAssignmentRow) =>
+    db.insertInto("lead_assignments").values(values).executeTakeFirstOrThrow();
+
+  const createMany = async (
+    assignments: ContactAssignmentDraft[],
+  ): Promise<void> => {
+    if (assignments.length === 0) return;
+    await db.insertInto("lead_assignments").values(assignments).execute();
+  };
+
+  const findActiveByUser = (userId: number) =>
+    db
+      .selectFrom("lead_assignments")
+      .selectAll()
+      .where("user_id", "=", userId)
+      .where("status", "=", "active")
+      .where("expires_at", ">", Date.now())
+      .execute();
+
+  const findActiveByUserWithContacts = (
+    userId: number,
+  ): Promise<ActiveContactAssignmentView[]> =>
+    db
+      .selectFrom("lead_assignments")
+      .innerJoin(
+        "organization_people",
+        "organization_people.id",
+        "lead_assignments.contact_id",
+      )
+      .innerJoin("people", "people.id", "organization_people.person_id")
+      .select([
+        "lead_assignments.id as assignmentId",
+        "lead_assignments.assigned_at as assignedAt",
+        "lead_assignments.expires_at as expiresAt",
+        "lead_assignments.status",
+        "organization_people.id as contactId",
+        "people.full_name as name",
+        "organization_people.dni",
+        "organization_people.telefono as phonePrimary",
+        "organization_people.organization_id as organizationId",
+      ])
+      .where("lead_assignments.user_id", "=", userId)
+      .where("lead_assignments.status", "=", "active")
+      .where("lead_assignments.expires_at", ">", Date.now())
+      .orderBy("lead_assignments.assigned_at", "desc")
+      .execute();
+
+  const countActiveByUser = async (userId: number) => {
+    const rows = await findActiveByUser(userId);
+    return rows.length;
+  };
+
+  const countActiveByUsers = async (userIds: number[]) => {
+    if (userIds.length === 0) {
+      return [] as Array<{ userId: number; activeCount: number }>;
+    }
+
+    const rows = await db
+      .selectFrom("lead_assignments")
+      .select((eb) => [
+        "user_id as userId",
+        eb.fn.count<number>("id").as("activeCount"),
+      ])
+      .where("user_id", "in", userIds)
+      .where("status", "=", "active")
+      .where("expires_at", ">", Date.now())
+      .groupBy("user_id")
+      .execute();
+
+    return rows.map((row) => ({
+      userId: row.userId,
+      activeCount: row.activeCount,
+    }));
+  };
+
+  const findActiveForContact = (userId: number, contactId: number) =>
+    db
+      .selectFrom("lead_assignments")
+      .selectAll()
+      .where("user_id", "=", userId)
+      .where("contact_id", "=", contactId)
+      .where("status", "=", "active")
+      .where("expires_at", ">", Date.now())
+      .executeTakeFirst();
+
+  const hasActiveForContact = async (userId: number, contactId: number) => {
+    const row = await findActiveForContact(userId, contactId);
+    return !!row;
+  };
+
+  const findActiveByIdForUser = (id: number, userId: number) =>
+    db
+      .selectFrom("lead_assignments")
+      .selectAll()
+      .where("id", "=", id)
+      .where("user_id", "=", userId)
+      .where("status", "=", "active")
+      .where("expires_at", ">", Date.now())
+      .executeTakeFirst();
+
+  const markCompleted = (id: number, userId: number) =>
+    db
+      .updateTable("lead_assignments")
+      .set({ status: "completed" })
+      .where("id", "=", id)
+      .where("user_id", "=", userId)
+      .execute();
+
   return {
-    create(values: NewLeadAssignmentRow) {
-      return db
-        .insertInto("lead_assignments")
-        .values(values)
-        .executeTakeFirstOrThrow();
-    },
-
-    async createMany(assignments: ContactAssignmentDraft[]): Promise<void> {
-      if (assignments.length === 0) return;
-      await db.insertInto("lead_assignments").values(assignments).execute();
-    },
-
-    findActiveByUser(userId: number) {
-      return db
-        .selectFrom("lead_assignments")
-        .selectAll()
-        .where("user_id", "=", userId)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
-        .execute();
-    },
-
-    findActiveByUserWithContacts(
-      userId: number,
-    ): Promise<ActiveContactAssignmentView[]> {
-      return db
-        .selectFrom("lead_assignments")
-        .innerJoin(
-          "organization_people",
-          "organization_people.id",
-          "lead_assignments.contact_id",
-        )
-        .innerJoin("people", "people.id", "organization_people.person_id")
-        .select([
-          "lead_assignments.id as assignmentId",
-          "lead_assignments.assigned_at as assignedAt",
-          "lead_assignments.expires_at as expiresAt",
-          "lead_assignments.status",
-          "organization_people.id as contactId",
-          "people.full_name as name",
-          "organization_people.dni",
-          "organization_people.telefono as phonePrimary",
-          "organization_people.organization_id as organizationId",
-        ])
-        .where("lead_assignments.user_id", "=", userId)
-        .where("lead_assignments.status", "=", "active")
-        .where("lead_assignments.expires_at", ">", Date.now())
-        .orderBy("lead_assignments.assigned_at", "desc")
-        .execute();
-    },
-
-    async countActiveByUser(userId: number) {
-      const rows = await this.findActiveByUser(userId);
-      return rows.length;
-    },
-
-    async countActiveByUsers(userIds: number[]) {
-      if (userIds.length === 0) {
-        return [] as Array<{ userId: number; activeCount: number }>;
-      }
-
-      const rows = await db
-        .selectFrom("lead_assignments")
-        .select((eb) => [
-          "user_id as userId",
-          eb.fn.count<number>("id").as("activeCount"),
-        ])
-        .where("user_id", "in", userIds)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
-        .groupBy("user_id")
-        .execute();
-
-      return rows.map((row) => ({
-        userId: row.userId,
-        activeCount: row.activeCount,
-      }));
-    },
-
-    findActiveForContact(userId: number, contactId: number) {
-      return db
-        .selectFrom("lead_assignments")
-        .selectAll()
-        .where("user_id", "=", userId)
-        .where("contact_id", "=", contactId)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
-        .executeTakeFirst();
-    },
-
-    async hasActiveForContact(userId: number, contactId: number) {
-      const row = await this.findActiveForContact(userId, contactId);
-      return !!row;
-    },
-
-    findActiveByIdForUser(id: number, userId: number) {
-      return db
-        .selectFrom("lead_assignments")
-        .selectAll()
-        .where("id", "=", id)
-        .where("user_id", "=", userId)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
-        .executeTakeFirst();
-    },
-
-    markCompleted(id: number, userId: number) {
-      return db
-        .updateTable("lead_assignments")
-        .set({ status: "completed" })
-        .where("id", "=", id)
-        .where("user_id", "=", userId)
-        .execute();
-    },
+    create,
+    createMany,
+    findActiveByUser,
+    findActiveByUserWithContacts,
+    countActiveByUser,
+    countActiveByUsers,
+    findActiveForContact,
+    hasActiveForContact,
+    findActiveByIdForUser,
+    markCompleted,
   };
 }
 

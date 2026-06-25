@@ -10,6 +10,7 @@ import {
 import type { AppConfig, NotificationsConfig } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
+import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { createNotificationDeliveryService } from "~/server/notifications/delivery-executor";
 import { createNotificationPlanner } from "~/server/notifications/delivery-planner";
@@ -76,10 +77,14 @@ export function createNotificationsRuntime(
 
   return {
     messaging,
-    createIntentQueue: (workerId: string) => ({
-      name: "notifications-intents",
-      runOnce: () => processor.runOnce(workerId, 50),
-    }),
+    createIntentQueue(workerId: string): QueueRunner {
+      return {
+        name: "notifications-intents",
+        async runOnce(): Promise<void> {
+          await processor.runOnce(workerId, 50);
+        },
+      };
+    },
     dispatchPendingJobs(): void {
       doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
     },
