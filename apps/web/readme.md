@@ -52,8 +52,8 @@ Configuration is loaded from env files selected by the script or passed by the c
 | Notifications       | `WHATSAPP_CLOUD_ACCESS_TOKEN`                |
 | Notifications       | `WHATSAPP_CLOUD_PHONE_NUMBER_ID`             |
 | Notifications       | `WHATSAPP_CLOUD_GRAPH_VERSION`               |
-| Notifications       | `WHATSAPP_APP_SECRET`                        |
 | Notifications       | `WHATSAPP_WEBHOOK_VERIFY_TOKEN`              |
+| Notifications       | `KAPSO_WEBHOOK_SECRET`                       |
 
 The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. The WebAuthn relying party is derived per request from the public origin (`requestContext.publicOrigin`). Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
 

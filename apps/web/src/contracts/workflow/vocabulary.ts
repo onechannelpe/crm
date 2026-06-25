@@ -8,18 +8,12 @@ export const LEAD_STAGES = [
   "EXPIRED",
 ] as const;
 
-// What the client agreed to receive. Drives the fulfillment step sequence:
-// the two POS kinds run different document/serial flows, digital_only skips
-// hardware entirely and goes straight to sale registration.
 export const PRODUCT_KINDS = [
   "pos_new",
   "pos_refurbished",
   "digital_only",
 ] as const;
 
-// Handoff points inside FULFILLMENT. Each non-terminal step names the moment a
-// specific actor must act, which is also where a notification fires. The step
-// sequence per product kind lives in server/workflow/lead/fulfillment/steps.ts.
 export const FULFILLMENT_STEPS = [
   "CHOOSE_PRODUCT",
   // refurbished branch

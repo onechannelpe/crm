@@ -129,22 +129,16 @@ export type RequestRateRevisionInput = {
   artifactIds: string[];
 };
 
-// Back office picks what the client will receive; this seeds the fulfillment
-// step sequence and creates one hardware unit per POS for the POS kinds.
 export type ChooseFulfillmentProductInput = {
   leadId: string;
   productKind: ProductKind;
 };
 
-// One artifact-backed handoff (transactions report, addendum, signed photos,
-// compiled PDF). The order's current step selects which document kind applies.
 export type AttachFulfillmentDocumentInput = {
   leadId: string;
   artifactId: string;
 };
 
-// Per-unit data entry. The step advances only once every unit on the order has
-// the value the current step requires (serial, payment link, sale reference).
 export type RecordUnitSerialInput = {
   leadId: string;
   unitId: string;
@@ -173,8 +167,6 @@ export type ValidateFulfillmentPaymentInput = {
   leadId: string;
 };
 
-// Reviewer bounces the current review step back to its prior actor with a
-// reason. The order's current step selects where it returns to.
 export type RejectFulfillmentStepInput = {
   leadId: string;
   reason: string;

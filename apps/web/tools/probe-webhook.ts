@@ -1,4 +1,4 @@
-// Throwaway: probe the live webhook with a real signature.
+// Signs a sample Kapso payload for manual endpoint probes.
 import { createHmac } from "node:crypto";
 
 const secret = "tendSGiiGmLA+WbPZwkNs6mupYPnr2kS6ZR0dn7M+0o";

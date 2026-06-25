@@ -143,9 +143,7 @@ export function deriveFulfillmentNotification(input: {
         id: `${input.eventId}:fulfillment_completed`,
         eventType: "lead.fulfillment_completed",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        // Terminal moment of the funnel for this lead: notify the executive
-        // both in-app and via WhatsApp. Planner still gates WA on a verified
-        // address and an active Meta session.
+        // Terminal funnel moment for this lead, promoted beyond the in-app bell.
         channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Venta registrada",
@@ -155,9 +153,6 @@ export function deriveFulfillmentNotification(input: {
     ];
   }
 
-  // The link of payment is ready: this is the step the executive has been
-  // waiting for. We promote it to WhatsApp and inline every unit's URL so
-  // the executive can copy-paste it to the client without opening the app.
   if (input.event.eventType === "fulfillment_step_advanced") {
     const step = input.event.payload.to;
     if (step === "AWAITING_PAYMENT") {
@@ -167,10 +162,6 @@ export function deriveFulfillmentNotification(input: {
           id: `${input.eventId}:${step}`,
           eventType: "lead.fulfillment_handoff",
           audience: { kind: "user_ids", userIds: [input.executiveId] },
-          // High-value, time-sensitive: surface on both the in-app bell and
-          // WhatsApp so the executive can forward the link to the client
-          // immediately. Planner still gates WA on a verified address and
-          // an active Meta session.
           channels: ["in_app", "whatsapp"],
           priority: "high",
           title: "Link de pago listo",

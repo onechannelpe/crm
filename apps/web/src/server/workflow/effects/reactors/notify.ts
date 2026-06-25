@@ -51,9 +51,7 @@ export function deriveLeadStageNotifications(input: {
         id: `${input.eventId}:ready_setup`,
         eventType: "lead.ready_for_sale",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        // High-value moment for the executive: in-app bell + WhatsApp so they
-        // unblock the client from anywhere. WhatsApp delivery still depends
-        // on a verified address and an active Meta session (see planner).
+        // High-value client work, promoted beyond the in-app bell.
         channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Cliente listo para afiliación",

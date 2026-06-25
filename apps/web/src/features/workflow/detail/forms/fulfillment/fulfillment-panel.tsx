@@ -238,7 +238,7 @@ function WaitingBanner(props: { view: LeadDetailFulfillmentView }) {
     <Show when={props.view.pendingOwner}>
       {(owner) => (
         <p class={styles.waitingBanner}>
-          Esperando a {OWNER_LABELS[owner()] ?? owner()} —{" "}
+          Esperando a {OWNER_LABELS[owner()] ?? owner()}:{" "}
           {describeFulfillmentStep(props.view.currentStep)}.
         </p>
       )}
@@ -567,7 +567,9 @@ function PaymentLinkEntry(props: { leadId: string; units: Unit[] }) {
       placeholder="https://pago..."
       verb={describeFulfillmentAction("register_payment_link")}
       context={(unit) => (
-        <span class={styles.contextValue}>Serial: {unit.serial ?? "—"}</span>
+        <span class={styles.contextValue}>
+          Serial: {unit.serial ?? "sin registrar"}
+        </span>
       )}
       submitOne={(unitId, paymentUrl) =>
         register({ leadId: props.leadId, unitId, paymentUrl }).then(
@@ -588,7 +590,7 @@ function SaleEntry(props: { leadId: string; units: Unit[] }) {
       verb={describeFulfillmentAction("register_sale")}
       context={(unit) => (
         <span class={styles.contextValue}>
-          Serial: {unit.serial ?? "—"}
+          Serial: {unit.serial ?? "sin registrar"}
           {unit.paymentValidated ? " · Pago validado" : ""}
         </span>
       )}
@@ -817,7 +819,7 @@ function paymentStatus(unit: Unit): string {
   if (unit.paymentValidated) return "Validado";
   if (unit.paymentProofArtifactId) return "Comprobante recibido";
   if (unit.paymentUrl) return "Link enviado";
-  return "—";
+  return "Pendiente";
 }
 
 function UnitsMatrix(props: { units: Unit[] }) {
@@ -836,7 +838,7 @@ function UnitsMatrix(props: { units: Unit[] }) {
           {(unit) => (
             <tr data-state={unit.serviceRef ? "done" : "current"}>
               <td>{unit.label}</td>
-              <td>{unit.serial ?? "—"}</td>
+              <td>{unit.serial ?? "Sin registrar"}</td>
               <td>{paymentStatus(unit)}</td>
               <td>{unit.serviceRef ? "✓ Registrada" : "Pendiente"}</td>
             </tr>

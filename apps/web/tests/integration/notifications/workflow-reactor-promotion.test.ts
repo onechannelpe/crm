@@ -30,7 +30,7 @@ function makeIntent(input: {
   };
 }
 
-describe("notification planner — workflow reactor promotion", () => {
+describe("notification planner: workflow reactor promotion", () => {
   let ctx: TestDbContext;
 
   beforeEach(async () => {
@@ -221,7 +221,7 @@ describe("notification planner — workflow reactor promotion", () => {
 
   it("does not produce WhatsApp deliveries for events whose intent channels are in_app only", async () => {
     // Confirms the unchanged event (ready_for_quotation) is not accidentally
-    // promoted. The intent here is hand-rolled with in_app only — exactly
+    // promoted. The intent here is hand-rolled with in_app only, exactly
     // what the reactor still emits for PRICING stage transitions.
     await ctx.repos.userChannelAddresses.upsert({
       user_id: 1,

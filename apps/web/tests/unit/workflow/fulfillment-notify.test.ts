@@ -66,7 +66,7 @@ describe("formatPaymentReadyBody", () => {
   });
 });
 
-describe("deriveFulfillmentNotification — AWAITING_PAYMENT step", () => {
+describe("deriveFulfillmentNotification: AWAITING_PAYMENT step", () => {
   it("emits an in-app + WhatsApp intent with the payment URL inlined", () => {
     const intents = deriveFulfillmentNotification({
       ...baseInput,

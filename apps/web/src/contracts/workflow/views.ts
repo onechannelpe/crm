@@ -23,9 +23,7 @@ export type LeadAvailableAction =
   | "request-rate-revision"
   | "update-venue"
   | "reassign-lead"
-  // Fulfillment handoff the current actor may perform now, given the order's step.
   | `fulfillment:${FulfillmentAction}`
-  // Reviewer may bounce the current review step back to its prior actor.
   | "fulfillment-reject";
 
 export type LeadBlockingField = "digitalPolicy" | "venueAccounts";
@@ -162,9 +160,6 @@ export type LeadDetailFulfillmentUnitView = {
   paymentValidated: boolean;
 };
 
-// Back-office (and supervisor) inbox: every lead across their branch sitting on
-// a step they must act on, oldest first. The single highest-leverage screen for
-// the bottleneck role.
 export type FulfillmentQueueRowView = {
   leadId: string;
   ruc: string;
@@ -189,9 +184,7 @@ export type LeadDetailFulfillmentView = {
   orderId: string;
   productKind: ProductKind | null;
   currentStep: FulfillmentStep;
-  // The actor expected to act on the current step, for the "whose turn" hint.
   pendingOwner: "executive" | "back_office" | "supervisor" | null;
-  // The product's step sequence tagged done/current/pending for the checklist.
   steps: LeadDetailFulfillmentStepView[];
   units: LeadDetailFulfillmentUnitView[];
   documents: LeadDetailFulfillmentDocView[];
