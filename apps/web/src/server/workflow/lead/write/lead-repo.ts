@@ -23,6 +23,10 @@ export type LeadRepository = {
   findCommercialScope(leadId: string): Promise<LeadCommercialScope | undefined>;
   findActiveByRuc(ruc: string): Promise<LeadState | undefined>;
   findByRucMany(rucs: string[]): Promise<LeadState[]>;
+  countPendingQuotationDecisions(
+    executiveId: number,
+    now: number,
+  ): Promise<number>;
   updateCommercialSnapshot(
     leadId: string,
     scope: LeadCommercialScope,
@@ -203,6 +207,33 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("org.ruc", "in", rucs)
         .execute();
       return rows.map((row) => toLead(row as LeadWithOrganizationRow));
+    },
+
+    // Quotations awaiting the executive's decision: in PRICING, reservation
+    // still active, with a pending proposal. accept-rate / request-rate-revision
+    // / close-lead each move the proposal off "pending" or the lead off PRICING,
+    // so resolving any one of them frees a slot. At most one proposal per lead
+    // is ever pending, so the join yields one row per such lead.
+    async countPendingQuotationDecisions(
+      executiveId: number,
+      now: number,
+    ): Promise<number> {
+      const row = await db
+        .selectFrom("workflow_leads as lead")
+        .innerJoin("workflow_rate_proposals as proposal", (join) =>
+          join
+            .onRef("proposal.lead_id", "=", "lead.id")
+            .on("proposal.outcome", "=", "pending"),
+        )
+        .select((eb) => eb.fn.countAll<number>().as("count"))
+        .where("lead.executive_id", "=", executiveId)
+        .where("lead.stage", "=", "PRICING")
+        .where("lead.deleted_at", "is", null)
+        .where("lead.reservation_expires_at", "is not", null)
+        .where("lead.reservation_expires_at", ">", now)
+        .executeTakeFirst();
+
+      return row?.count ?? 0;
     },
 
     async findLapsedReservations(now: number): Promise<string[]> {

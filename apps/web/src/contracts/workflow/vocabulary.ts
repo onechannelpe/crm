@@ -6,6 +6,21 @@ export const LEAD_STAGES = [
   "FULFILLMENT",
   "LIVE",
   "EXPIRED",
+  "CLOSED_LOST",
+] as const;
+
+// Reasons an executive closes a quotation as lost. Recorded on the lead_closed
+// history event so the business can report on why deals fall through at pricing.
+// Distinct from DISQUALIFIED, which is a back-office availability call at
+// qualifying, not an executive commercial loss.
+export const CLOSE_REASONS = [
+  "RATE",
+  "CULQI_REFERENCES",
+  "DECLINED_TAX_REPORT",
+  "QUOTE_DELAYS",
+  "BCP_REFUSAL",
+  "OTHER_CHANNEL_QUOTE",
+  "POS_COST_REFUSAL",
 ] as const;
 
 export const PRODUCT_KINDS = [
@@ -88,6 +103,7 @@ export const ACCOUNT_TYPE_KINDS = ["AHORROS", "CORRIENTE"] as const;
 
 export type ProductScope = (typeof PRODUCT_SCOPES)[number];
 export type LeadStage = (typeof LEAD_STAGES)[number];
+export type CloseReason = (typeof CLOSE_REASONS)[number];
 export type ProductKind = (typeof PRODUCT_KINDS)[number];
 export type FulfillmentStep = (typeof FULFILLMENT_STEPS)[number];
 export type FulfillmentDocKind = (typeof FULFILLMENT_DOC_KINDS)[number];
@@ -113,6 +129,10 @@ export function isProductKind(value: string): value is ProductKind {
 
 export function isFulfillmentAction(value: string): value is FulfillmentAction {
   return isStringMember(FULFILLMENT_ACTIONS, value);
+}
+
+export function isCloseReason(value: string): value is CloseReason {
+  return isStringMember(CLOSE_REASONS, value);
 }
 
 export function isBcpBank(value: string | null | undefined): boolean {

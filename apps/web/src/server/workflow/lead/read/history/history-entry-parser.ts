@@ -24,6 +24,7 @@ import {
 import { toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,
+  toLeadClosedEntry,
   toLeadDeletedEntry,
   toPriorityUpdatedEntry,
   toReassignmentEntry,
@@ -68,6 +69,8 @@ export function toHistoryEntry(
       return toRateProposalCorrectedEntry(row, payload.value);
     case "commercial_scope_corrected":
       return toCommercialScopeCorrectedEntry(row);
+    case "lead_closed":
+      return toLeadClosedEntry(row, payload.value);
     case "lead_reservation_expired":
       return toReservationExpiredEntry(row, payload.value);
     case "venue_added":

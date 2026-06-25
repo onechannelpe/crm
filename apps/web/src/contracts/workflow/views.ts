@@ -21,6 +21,7 @@ export type LeadAvailableAction =
   | "edit-rate-proposal"
   | "accept-rate"
   | "request-rate-revision"
+  | "close-lead"
   | "update-venue"
   | "reassign-lead"
   | `fulfillment:${FulfillmentAction}`
@@ -167,12 +168,19 @@ export type FulfillmentQueueRowView = {
   executiveName: string;
   productKind: ProductKind | null;
   currentStep: FulfillmentStep;
-  pendingOwner: "executive" | "back_office" | "supervisor" | null;
+  pendingOwner: "executive" | "back_office" | null;
   waitingSince: number;
 };
 
 export type FulfillmentQueueView = {
   rows: FulfillmentQueueRowView[];
+};
+
+// Quotations awaiting the executive's decision, against the registration cap.
+// Drives the blocked-registration affordance in the leads workspace.
+export type PendingQuotationCountView = {
+  count: number;
+  limit: number;
 };
 
 export type LeadDetailFulfillmentStepView = {
@@ -184,7 +192,7 @@ export type LeadDetailFulfillmentView = {
   orderId: string;
   productKind: ProductKind | null;
   currentStep: FulfillmentStep;
-  pendingOwner: "executive" | "back_office" | "supervisor" | null;
+  pendingOwner: "executive" | "back_office" | null;
   steps: LeadDetailFulfillmentStepView[];
   units: LeadDetailFulfillmentUnitView[];
   documents: LeadDetailFulfillmentDocView[];

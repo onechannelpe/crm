@@ -6,6 +6,7 @@ import type {
   LeadStatus,
   CollectionMode,
   Currency,
+  CloseReason,
   ProductScope,
   ProductKind,
 } from "./vocabulary";
@@ -68,6 +69,12 @@ export type ProposeRateInput = {
 export type AcceptRateInput = {
   leadId: string;
   proposalId: string;
+};
+
+export type CloseLeadInput = {
+  leadId: string;
+  reason: CloseReason;
+  note: string | null;
 };
 
 export type EditRateProposalInput = {

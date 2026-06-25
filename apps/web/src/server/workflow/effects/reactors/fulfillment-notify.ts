@@ -51,9 +51,9 @@ const STEP_MESSAGE: Record<
       `Elige el producto del cliente RUC ${ruc} para iniciar la entrega.`,
   },
   AWAITING_TRANSACTIONS_REPORT: {
-    title: "Reporte de transacciones requerido",
+    title: "Sube el reporte de transacciones",
     body: (ruc) =>
-      `El cliente RUC ${ruc} requiere un producto reacondicionado. Sube el reporte de transacciones.`,
+      `El cliente RUC ${ruc} requiere un producto reacondicionado. Sube el reporte de transacciones para que back office genere la adenda.`,
   },
   AWAITING_ADDENDUM: {
     title: "Genera la adenda",
@@ -109,9 +109,6 @@ function audienceFor(
     return { kind: "user_ids", userIds: [executiveId] };
   }
   if (branchId === null) return null;
-  if (owner === "supervisor") {
-    return { kind: "branch_role", branchId, role: "supervisor" };
-  }
   return { kind: "branch_role", branchId, role: "back_office" };
 }
 

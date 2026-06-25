@@ -1,25 +1,45 @@
 # Project guidelines
 
+Readability
+
+- Keep functions small, linear, and single-purpose.
+- Use early returns to keep happy paths visible and indentation shallow.
+- Avoid boolean mode arguments; split behavior into separate functions.
+- Use one consistent domain term per concept across modules and APIs.
+- Avoid generic names unless literal.
+- Remove dead code, commented-out code, and ceremony without active value.
+- Do not abstract coincidental similarity that has no shared reason to change.
+- Keep side effects explicit and close to boundaries.
+- Keep domain modules locally understandable without framework context.
+- Validate at boundaries and return explicit errors with actionable context.
+- Comments are allowed only for non-obvious intent or external API quirks.
+- Long comments are welcome when they record _why_, a measured result, a
+  rejected alternative, an external quirk, so a future maintainer keeps the
+  reasoning. Cut comments that only restate the code.
+
+Working approach
+
+- Be pragmatic about the architecture, not about the diff. "Pragmatic" means the
+  shape that is right for the long term, not "keep the debt to stay small."
+- Breaking changes are encouraged when they buy long-term clarity. The DB is
+  disposable (reset/reseed freely); there is no backfill or compat-shim burden.
+- Verify, don't guess. A throwaway probe script beats an assumption.
+- Give each cross-cutting invariant one owner instead of re-checking it
+  at every call site.
+
 ## ALWAYS
 
 - Prefer retrieval-led reasoning over pre-training for libraries/frameworks. Use MCP context7 for current docs before writing code.
 - Follow framework conventions. Do not invent workarounds.
-- Implement only the requested scope.
 - Push back when a request conflicts with conventions, correctness, safety, or maintainability. Explain the concern and choose the cleanest defensible path.
-- Fix structure, not symptoms. Default to the smallest valid local change. Escalate to a structural refactor when the root cause crosses boundaries or creates duplicated ownership.
 - Prefer explicit, straightforward code over clever abstractions.
-- If ambiguous, ask up to 2 clarifying questions OR choose the simplest valid interpretation.
-- Keep responses brief: 3-6 sentences for typical answers. For multi-step work: short overview + up to 5 bullets covering what changed, where, and next steps.
 - State what you verified vs what you're inferring. If uncertain about line numbers or API details, say so.
-- Do not use em dashes in comments, logs, docs, commit messages, or user-facing strings.
 
 ## WHEN implementing
 
 - Make one change at a time.
 - After edits, briefly state what changed, where, and what validation was performed.
-- Parallelize independent tool calls when possible.
 - Provide brief progress updates only when starting major work phases or plan changes.
-- For complex architectural decisions, propose multiple options, evaluate tradeoffs, and choose the best or a hybrid. For straightforward changes, proceed directly.
 - Apply fail-fast: validate inputs → auth checks → business logic.
   - Check "not OK" first to avoid nesting.
   - Early return or throw immediately for invalid states.
@@ -31,24 +51,9 @@
 - When a change is behaviorally testable or crosses boundaries, run the smallest direct test or probe before finalizing. If it is not directly testable, say why and use the best available static check.
 - Validate by scope:
   - Docs or instruction changes: reread links, file references, commands, and generated indexes. Do not run full repo checks unless behavior changed.
-  - Narrow code changes: run the smallest relevant check while working.
   - Broad refactors or redesigns: finish the design first, then run the relevant checks at the end.
   - Run `bun run check` only for cross-subsystem changes, generation or contract changes, or repo-wide tooling changes.
 - Use `bun run test` for Vitest-based tests. Do not use `bun test`.
-
-## WHEN debugging
-
-1. Reproduce: confirm current behavior.
-2. Isolate: narrow the failing component and list the possible causes.
-3. Read involved code paths.
-4. Add logs or checks where they can confirm or reject each possible cause.
-5. Fix only after understanding root cause.
-6. After finding the cause, read beyond the local file and decide whether the problem is local, at a boundary, or architectural.
-7. If the problem is architectural, fix the design instead of patching the symptom.
-
-Do not assume a bug from error messages alone.
-Do not choose the quickest patch before checking whether the surrounding design caused the issue.
-For browser-specific issues the agent cannot observe directly, do not guess. Add the needed logs, tell the user what to run, and wait for the resulting console or server logs before fixing.
 
 ## WHEN adding dependencies
 
@@ -85,24 +90,6 @@ Failure points:
 4. Do not keep temporary compatibility ownership unless explicitly requested.
 5. Avoid re-export type indirection. Import types directly from their canonical owner.
 
-## WHEN writing Rust
-
-1. Read the full handler or service path before changing code.
-2. Validate inputs and auth first. Keep the happy path straight.
-3. Propagate fallible operations with `?` instead of `.unwrap()`.
-4. Keep changes in existing modules unless a new logical boundary is required.
-5. Use `bun run check:engine` for engine or pipeline changes.
-
-Failure points:
-
-- Nested validation that hides the happy path.
-- Silent error drops with `let _ =` on fallible operations.
-- Unchecked indexing where `.get()` or iterators fit.
-
-## WHEN writing documentation
-
-Prefer sentence case for headings. Avoid emojis.
-
 ## WHEN writing SolidJS
 
 Anti-patterns to check before implementing:
@@ -118,3 +105,65 @@ Anti-patterns to check before implementing:
 - Naming: kebab-case.ts, camelCase vars, PascalCase types, UPPER_SNAKE_CASE constants.
 - Organization: 70-line guideline, not a hard rule. Single responsibility. If "and also" appears in the description, split it. Code as documentation. Comments only for non-obvious decisions or JSDoc.
 - Use descriptive test names such as `it("blocks further attempts after repeated failures")`.
+
+## Comment style guide
+
+Write comments for future maintainers with operational intent.
+
+Keep comments:
+
+- Direct, concrete, and behavior-focused.
+- Close to the logic they explain.
+- Focused on non-obvious decisions, invariants, edge cases, and boundary contracts.
+
+Avoid comments that:
+
+- Repeat obvious code structure (`Header`, `Info`, `Poster`).
+- Repeat cross-module rationale already documented here.
+- Use meta narrative about the writing process.
+
+Style constraints:
+
+- Prefer plain sentences with periods, commas, parentheses, and brackets.
+- Avoid em dashes.
+- Use doc comments for exported APIs when the contract is subtle.
+
+### Rules for better code review
+
+1. Do not abstract by default. Extract helpers only when they remove meaningful duplication or clarify intent. Avoid helpers that force the reader to jump around for a 3-line transformation.
+2. Keep transformations near their boundary. If a command expects a smaller shape, project it inline. Do not pass a larger object just because TypeScript allows structural compatibility.
+3. Normalize once, then use the normalized value. Do not compute `const normalizedRuc = input.ruc.trim()` and later call `input.ruc.trim()` again.
+4. Extract repeated validation only when it represents a real concept.
+5. Prefer explicit object construction at domain boundaries. When calling workflow/domain commands, explicit payloads are safer and easier to audit than blindly spreading large objects.
+
+6. Use spreads only when the input shape is intentionally the command shape.
+7. Remove dead or unused fields/imports. If x is present in an input type but unused, question whether it belongs there.
+8. Simplify callbacks when they are pure pass-throughs.
+   Prefer:
+
+```ts
+(input) => querySomething(input);
+```
+
+over unnecessary `async` blocks with `return`.
+
+12. Let formatting improve scanability. Add blank lines between parse, error handling, mutation, revalidation, and cleanup. This often beats adding abstractions.
+13. Do not fight the type system with invented local types.
+14. In UI code, extract repeated markup only when it reduces visual noise. For example, a `TextFieldRow` is useful if it removes many repeated rows. Do not extract every label, radio, or button into a component automatically.
+
+### Questions an agent should ask while reviewing
+
+1. Does this code pass a larger object than the callee needs?
+2. Is this helper making the code easier to read, or just shorter?
+3. Can validation happen before the async/runtime/action boundary?
+4. Is `execute` doing more than executing?
+5. Are names describing the current value accurately?
+6. Is this value normalized once and reused consistently?
+7. Is `...input` safe here, or could it leak extra fields across a boundary?
+8. Is duplicated code accidental duplication or a meaningful repeated concept?
+9. Would extracting this make future changes safer, or just add indirection?
+10. Are TypeScript types coming from the domain, or am I guessing them?\*\*
+11. Would a reader understand this flow top-to-bottom without jumping around?
+12. Is the current code already fine?
+
+That last question matters. BE comfortable saying: “No meaningful change needed.”

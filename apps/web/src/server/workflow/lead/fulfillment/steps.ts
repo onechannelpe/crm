@@ -7,9 +7,8 @@ import type {
 import { FULFILLMENT_STEPS } from "~/contracts/workflow/vocabulary";
 
 // The actor whose turn it is on a given step. Drives the "whose turn" hint and
-// the notification audience. Authorization may allow a wider set (e.g. back
-// office can also upload the transactions report), but the queue/hint use this.
-export type PendingOwner = "executive" | "back_office" | "supervisor";
+// the notification audience.
+export type PendingOwner = "executive" | "back_office";
 
 // Unit column a per-unit step fills. The step completes only when every unit on
 // the order carries a non-null value here.
@@ -45,8 +44,10 @@ const STEP_DEFINITIONS: Record<FulfillmentStep, StepDefinition> = {
   AWAITING_TRANSACTIONS_REPORT: {
     kind: "document",
     action: "upload_transactions_report",
-    // Usually the supervisor produces this; back office is also authorized.
-    owner: "supervisor",
+    // A dedicated person produces the report offline and hands it to the
+    // executive, who uploads it here. Back office reviews it at AWAITING_ADDENDUM
+    // and can reject it back if it is wrong.
+    owner: "executive",
     docKind: "transactions_report",
   },
   AWAITING_ADDENDUM: {
@@ -181,19 +182,11 @@ export function isTerminalStep(step: FulfillmentStep): boolean {
   return step === "COMPLETED";
 }
 
-// Steps the back-office work queue surfaces. Back office owns most handoffs and
-// is also authorized to cover the supervisor's transactions-report step, so both
-// appear in their queue.
+// Steps the back-office work queue surfaces. Back office owns every handoff that
+// is not the executive's turn.
 export function backOfficeQueueSteps(): FulfillmentStep[] {
-  return FULFILLMENT_STEPS.filter((step) => {
-    const owner = STEP_DEFINITIONS[step].owner;
-    return owner === "back_office" || owner === "supervisor";
-  });
-}
-
-export function supervisorQueueSteps(): FulfillmentStep[] {
   return FULFILLMENT_STEPS.filter(
-    (step) => STEP_DEFINITIONS[step].owner === "supervisor",
+    (step) => STEP_DEFINITIONS[step].owner === "back_office",
   );
 }
 
@@ -209,6 +202,9 @@ const REJECT_RULES: Partial<Record<FulfillmentStep, RejectRule>> = {
     clearField: "payment_proof_artifact_id",
   },
   AWAITING_PDF_COMPILE: { to: "AWAITING_SIGNATURE", clearField: null },
+  // Back office reviews the executive's transactions report while generating the
+  // addendum; a wrong report bounces back for re-upload.
+  AWAITING_ADDENDUM: { to: "AWAITING_TRANSACTIONS_REPORT", clearField: null },
 };
 
 export function rejectRuleForStep(step: FulfillmentStep): RejectRule | null {

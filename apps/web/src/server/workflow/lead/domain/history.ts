@@ -4,6 +4,7 @@ import type {
   LeadStage,
   LeadStatus,
   Currency,
+  CloseReason,
   ProductKind,
   FulfillmentStep,
   FulfillmentAction,
@@ -24,6 +25,7 @@ export type LeadHistoryEventType =
   | "rate_accepted"
   | "rate_proposal_corrected"
   | "commercial_scope_corrected"
+  | "lead_closed"
   | "lead_reservation_expired"
   | "venue_added"
   | "venue_updated"
@@ -51,6 +53,7 @@ const LEAD_HISTORY_EVENT_TYPES = {
   rate_accepted: true,
   rate_proposal_corrected: true,
   commercial_scope_corrected: true,
+  lead_closed: true,
   lead_reservation_expired: true,
   venue_added: true,
   venue_updated: true,
@@ -132,6 +135,11 @@ export type LeadHistoryPayloadByEvent = {
     round: number;
   };
   commercial_scope_corrected: Record<string, never>;
+  lead_closed: {
+    reason: CloseReason;
+    note: string | null;
+    fromStage: LeadStage;
+  };
   lead_reservation_expired: {
     fromStage: LeadStage;
   };

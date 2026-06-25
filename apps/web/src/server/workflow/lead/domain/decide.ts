@@ -4,6 +4,7 @@ import {
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
 import type {
+  CloseReason,
   Currency,
   LeadPriority,
   LeadStatus,
@@ -289,6 +290,46 @@ export function acceptRate(
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "SETUP" },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now, null);
+}
+
+// The executive closes the quotation as lost with a recorded reason. Available
+// throughout PRICING (a client can decline before or after a rate arrives), and
+// is the third outcome alongside accept-rate and request-rate-revision.
+export function closeLead(
+  state: LeadState,
+  input: {
+    actor: Actor;
+    reason: CloseReason;
+    note: string | null;
+    now: number;
+  },
+): TransitionResult {
+  const authz = authorizeLeadAction("close-lead", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_closed",
+      actorUserId: input.actor.userId,
+      payload: {
+        reason: input.reason,
+        note: input.note,
+        fromStage: state.stage,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "CLOSED_LOST" },
       occurredAt: input.now,
     }),
   ];

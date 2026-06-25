@@ -15,7 +15,9 @@ const PIPELINE: LeadStage[] = [
 ];
 
 function isTerminal(stage: LeadStage): boolean {
-  return stage === "DISQUALIFIED" || stage === "EXPIRED";
+  return (
+    stage === "DISQUALIFIED" || stage === "EXPIRED" || stage === "CLOSED_LOST"
+  );
 }
 
 function stepState(

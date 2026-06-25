@@ -11,16 +11,11 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   backOfficeQueueSteps,
   pendingOwnerForStep,
-  supervisorQueueSteps,
 } from "~/server/workflow/lead/fulfillment/steps";
 
-// Back office sees everything pending an internal action; supervisor sees only
-// the transactions-report step they own. Both are scoped to their branch.
+// Back office sees everything pending an internal action, scoped to their branch.
 function queueStepsForRole(role: Role): FulfillmentStep[] | null {
   if (hasPermission(role, "fulfillment:manage")) return backOfficeQueueSteps();
-  if (hasPermission(role, "fulfillment:report:upload")) {
-    return supervisorQueueSteps();
-  }
   return null;
 }
 

@@ -7,6 +7,7 @@ import {
   optionalLeadPriority,
   optionalLeadStatus,
   optionalString,
+  requireCloseReason,
   requireLeadPriority,
   requireLeadStage,
   requireLeadStatus,
@@ -81,6 +82,30 @@ export function toReservationExpiredEntry(
     ...toHistoryEntryBase(row),
     eventType: "lead_reservation_expired",
     payload: { fromStage: fromStage.value },
+  });
+}
+
+export function toLeadClosedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const reason = requireCloseReason(payload, "reason", row);
+  if (!reason.ok) return reason;
+
+  const note = optionalString(payload, "note", row);
+  if (!note.ok) return note;
+
+  const fromStage = requireLeadStage(payload, "fromStage", row);
+  if (!fromStage.ok) return fromStage;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "lead_closed",
+    payload: {
+      reason: reason.value,
+      note: note.value ?? null,
+      fromStage: fromStage.value,
+    },
   });
 }
 

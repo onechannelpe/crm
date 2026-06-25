@@ -52,7 +52,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/records": {},
-  "/fulfillment": { permission: "fulfillment:report:upload" },
+  "/fulfillment": { permission: "fulfillment:manage" },
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
   "/dashboard": { permission: "lead:work", landingPriority: 1 },
   "/audit": { permission: "audit:read", landingPriority: 8 },

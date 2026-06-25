@@ -37,6 +37,7 @@ const REACHABLE_STAGES = new Set<LeadStage>([
   "QUALIFYING",
   "PRICING",
   "SETUP",
+  "FULFILLMENT",
   "LIVE",
 ]);
 

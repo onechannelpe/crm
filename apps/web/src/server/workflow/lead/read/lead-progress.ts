@@ -30,6 +30,8 @@ export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
       return "NO_ACTION";
     case "EXPIRED":
       return "NO_ACTION";
+    case "CLOSED_LOST":
+      return "NO_ACTION";
     default: {
       const exhaustive: never = lead.stage;
       return exhaustive;
@@ -49,6 +51,7 @@ export function resolveLeadBlockingFields(input: {
     case "FULFILLMENT":
     case "LIVE":
     case "EXPIRED":
+    case "CLOSED_LOST":
       return [];
     case "SETUP": {
       const p = input.digitalPolicy;

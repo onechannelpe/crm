@@ -1,11 +1,12 @@
 "use server";
 
 import { MAX_RATE_REVISION_FILES } from "~/contracts/workflow/limits";
-import { CURRENCIES } from "~/contracts/workflow/vocabulary";
+import { CLOSE_REASONS, CURRENCIES } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
+import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-rate-proposal";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
@@ -80,6 +81,28 @@ export async function requestRateAcceptance(input: unknown) {
 
     execute: ({ actor }, payload) =>
       acceptRateCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function requestLeadClosure(input: unknown) {
+  return runAction({
+    name: "workflow.close_lead",
+    access: { kind: "auth" },
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.str("leadId"),
+        reason: r.enum("reason", CLOSE_REASONS),
+        note: r.optStr("note"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      closeLeadCommand(
         { actor: workflowActor(actor), ...payload },
         getServerRuntime().workflow.ports(),
       ),

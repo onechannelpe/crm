@@ -14,6 +14,7 @@ import { addLeadNote } from "~/actions/workflow/commands/interactions";
 import {
   requestRateAcceptance,
   requestRateProposal,
+  requestLeadClosure,
   requestRateProposalEdit,
   requestRateRevision,
 } from "~/actions/workflow/commands/rate";
@@ -36,6 +37,7 @@ import type {
   AddLeadNoteInput,
   AddVenueAccountsInput,
   ChooseFulfillmentProductInput,
+  CloseLeadInput,
   CreateLeadInput,
   CreateVenueInput,
   EditRateProposalInput,
@@ -79,6 +81,11 @@ export const acceptRateMutation = action(
 export const requestRateRevisionMutation = action(
   (input: RequestRateRevisionInput) => requestRateRevision(input),
   "workflow.requestRateRevision",
+);
+
+export const closeLeadMutation = action(
+  (input: CloseLeadInput) => requestLeadClosure(input),
+  "workflow.closeLead",
 );
 
 export const saveDigitalPolicyMutation = action(

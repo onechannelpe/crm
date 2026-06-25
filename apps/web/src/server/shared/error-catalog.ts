@@ -72,6 +72,11 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "El cliente no está en etapa de entrega.",
   },
+  pending_quotation_limit: {
+    kind: "validation",
+    message:
+      "Tienes el máximo de cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas antes de registrar nuevos clientes.",
+  },
   sale_proof_not_found: {
     kind: "not_found",
     message: "No se encontró el comprobante de venta.",

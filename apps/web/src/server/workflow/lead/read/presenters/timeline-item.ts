@@ -1,4 +1,5 @@
 import { summarizeFieldChanges } from "~/contracts/events";
+import { describeCloseReason } from "~/contracts/workflow/close-reason-labels";
 import {
   describeDocKind,
   describeFulfillmentStep,
@@ -145,6 +146,19 @@ export function presentTimelineItem(
         actorDisplayName,
         changes: event.changes,
       };
+    case "lead_closed": {
+      const reasonLabel = describeCloseReason(event.payload.reason);
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "stage-change",
+        title: "Cotización cerrada",
+        description: event.payload.note
+          ? `${reasonLabel}: ${event.payload.note}`
+          : reasonLabel,
+        actorDisplayName,
+      };
+    }
     case "lead_reservation_expired":
       return {
         id: `history:${event.id}`,

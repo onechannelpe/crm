@@ -69,6 +69,13 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
         title: "Reserva vencida",
         message: "La reserva de tarifa expiró.",
       };
+    case "CLOSED_LOST":
+      return {
+        kind: "message",
+        tone: "terminal",
+        title: "Cotización cerrada",
+        message: "La cotización se cerró como perdida.",
+      };
     default: {
       const exhaustive: never = stage;
       return exhaustive satisfies never;

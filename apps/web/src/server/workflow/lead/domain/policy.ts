@@ -28,6 +28,7 @@ export type LeadCapability =
   | "propose-rate"
   | "accept-rate"
   | "request-rate-revision"
+  | "close-lead"
   | "review"
   | "register"
   | "request-sunat-refresh"
@@ -49,6 +50,7 @@ const OWNER_REQUIRED = new Set<LeadCapability>([
   "add-venue-accounts",
   "accept-rate",
   "request-rate-revision",
+  "close-lead",
   "request-sunat-refresh",
 ]);
 
@@ -83,6 +85,7 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("add-venue-accounts");
     caps.add("accept-rate");
     caps.add("request-rate-revision");
+    caps.add("close-lead");
     caps.add("request-sunat-refresh");
   }
   if (hasPermission(role, "lead:sale:create")) {
@@ -110,8 +113,8 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
 }
 
 // Authorizes a fulfillment handoff by the step's pending owner. Back office runs
-// the order; the supervisor (or back office) may upload the transactions report;
-// the executive performs client-facing steps only on their own lead.
+// the order; the executive performs client-facing steps (including the
+// transactions-report upload) only on their own lead.
 export function authorizeFulfillmentStep(
   step: FulfillmentStep,
   actor: { userId: number; role: Role },
@@ -125,16 +128,6 @@ export function authorizeFulfillmentStep(
   if (owner === "executive") {
     if (state.executiveId !== actor.userId) return Err(forbidden());
     if (!hasPermission(actor.role, "fulfillment:client-step")) {
-      return Err(forbidden());
-    }
-    return Ok(undefined);
-  }
-
-  if (owner === "supervisor") {
-    if (
-      !hasPermission(actor.role, "fulfillment:report:upload") &&
-      !hasPermission(actor.role, "fulfillment:manage")
-    ) {
       return Err(forbidden());
     }
     return Ok(undefined);
@@ -174,7 +167,9 @@ export function authorizeLeadAction(
   if (!caps.has(capability)) return Err(forbidden());
 
   if (
-    (capability === "accept-rate" || capability === "request-rate-revision") &&
+    (capability === "accept-rate" ||
+      capability === "request-rate-revision" ||
+      capability === "close-lead") &&
     actor.role !== "executive"
   ) {
     return Err(forbidden());
@@ -234,6 +229,11 @@ export function resolveAvailableActions(
     meta.rateRevisionCount < MAX_RATE_REVISION_ROUNDS
   ) {
     actions.push("request-rate-revision");
+  }
+  // Close is the third outcome and stays available throughout PRICING, even
+  // before a proposal arrives, since a client can decline at any point.
+  if (caps.has("close-lead") && ownsLead && inPricing) {
+    actions.push("close-lead");
   }
   if (caps.has("update-venue") && ownsLead && state.stage === "SETUP") {
     actions.push("update-venue");

@@ -11,6 +11,7 @@ const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   FULFILLMENT: "Entrega",
   LIVE: "Activo",
   EXPIRED: "Vencido",
+  CLOSED_LOST: "Cerrado",
 };
 
 const LEAD_NEXT_STEP_LABELS: Record<LeadNextStep, string> = {

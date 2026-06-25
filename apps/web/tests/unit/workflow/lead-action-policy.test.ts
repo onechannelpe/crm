@@ -6,12 +6,17 @@ import {
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
 import { hydrateRuc } from "~/server/shared/document";
-import { requestRateRevision } from "~/server/workflow/lead/domain/decide";
 import {
+  closeLead,
+  requestRateRevision,
+} from "~/server/workflow/lead/domain/decide";
+import {
+  authorizeFulfillmentStep,
   authorizeLeadAction,
   resolveAvailableActions,
 } from "~/server/workflow/lead/domain/policy";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
+import { rejectRuleForStep } from "~/server/workflow/lead/fulfillment/steps";
 
 function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
   return {
@@ -150,6 +155,95 @@ describe("lead action policy", () => {
         }),
       ).code,
     ).toBe("duplicate_rate_revision_file");
+  });
+
+  it("offers close as a third pricing outcome to the owning executive, even before a proposal", () => {
+    const actions = resolveAvailableActions(
+      { userId: 1, role: "executive" },
+      makeLeadState(),
+      {
+        hasActivePendingProposal: false,
+        rateRevisionCount: 0,
+        fulfillmentStep: null,
+      },
+    );
+    expect(actions).toContain("close-lead");
+
+    // Back office never closes; it only proposes.
+    expect(
+      resolveAvailableActions(
+        { userId: 2, role: "back_office" },
+        makeLeadState(),
+        {
+          hasActivePendingProposal: true,
+          rateRevisionCount: 0,
+          fulfillmentStep: null,
+        },
+      ),
+    ).not.toContain("close-lead");
+  });
+
+  it("closes a pricing lead as lost and transitions to CLOSED_LOST", () => {
+    const result = closeLead(makeLeadState(), {
+      actor: { userId: 1, role: "executive" },
+      reason: "RATE",
+      note: "Cliente no acepta la tasa",
+      now: 200,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.next.stage).toBe("CLOSED_LOST");
+    expect(result.value.events.map((e) => e.eventType)).toContain(
+      "lead_closed",
+    );
+  });
+
+  it("rejects close outside pricing and from non-executives", () => {
+    expect(
+      expectErr(
+        closeLead(makeLeadState({ stage: "SETUP" }), {
+          actor: { userId: 1, role: "executive" },
+          reason: "RATE",
+          note: null,
+          now: 200,
+        }),
+      ).code,
+    ).toBe("invalid_stage");
+
+    expect(
+      closeLead(makeLeadState(), {
+        actor: { userId: 2, role: "back_office" },
+        reason: "RATE",
+        note: null,
+        now: 200,
+      }).ok,
+    ).toBe(false);
+  });
+
+  it("routes the transactions report to the owning executive and lets back office bounce it back", () => {
+    const reportStep = "AWAITING_TRANSACTIONS_REPORT" as const;
+    const state = { executiveId: 1, stage: "FULFILLMENT" } as const;
+
+    expect(
+      authorizeFulfillmentStep(
+        reportStep,
+        { userId: 1, role: "executive" },
+        state,
+      ).ok,
+    ).toBe(true);
+    // A different executive cannot upload another executive's report.
+    expect(
+      authorizeFulfillmentStep(
+        reportStep,
+        { userId: 2, role: "executive" },
+        state,
+      ).ok,
+    ).toBe(false);
+
+    // Back office reviews the report while generating the addendum and can
+    // reject it back to the executive for re-upload.
+    expect(rejectRuleForStep("AWAITING_ADDENDUM")?.to).toBe(reportStep);
   });
 
   it("surfaces pricing actions from proposal state", () => {

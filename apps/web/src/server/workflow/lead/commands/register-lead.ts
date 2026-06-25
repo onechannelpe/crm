@@ -1,4 +1,5 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
+import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
@@ -120,6 +121,18 @@ export async function registerLead(
         return Ok({ leadId: state.id });
       },
     );
+  }
+
+  // Cap concurrent quotations awaiting the executive's decision. Applies only to
+  // the create path; a reassign resolves an existing lead rather than adding a
+  // new client.
+  const pendingDecisions = await repos.leads.countPendingQuotationDecisions(
+    actor.userId,
+    now,
+  );
+
+  if (pendingDecisions >= MAX_PENDING_QUOTATION_DECISIONS) {
+    return Err(fail("pending_quotation_limit"));
   }
 
   const commercialScope: LeadCommercialScope = {
