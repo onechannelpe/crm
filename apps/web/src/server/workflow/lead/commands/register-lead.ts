@@ -3,7 +3,7 @@ import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
-import { type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
