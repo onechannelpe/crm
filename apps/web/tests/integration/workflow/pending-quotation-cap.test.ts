@@ -1,32 +1,32 @@
 import { expectErr } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import { withMerchantDefaults } from "@tests/support/database/workflow-seed";
 import {
   registerLeadPorts,
   workflowCommandPorts,
-} from "@tests/support/workflow/deps";
-import { proposePendingRate } from "@tests/support/workflow/pricing";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { withMerchantDefaults } from "@tests/support/workflow/seed";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 
-async function fillPendingQuotations(
-  runtime: TestRuntime,
-  scenario: ReturnType<typeof createWorkflowScenario>,
-): Promise<string[]> {
-  const backOffice = scenario.actor.by("backOne");
+async function fillPendingQuotations(runtime: TestRuntime): Promise<string[]> {
+  const givenLead = createLeadFixtureWriter(runtime);
   const leadIds: string[] = [];
-  // Each lead reaches PRICING with a pending proposal awaiting the executive's
-  // decision, which is exactly what the cap counts.
   for (let i = 0; i < MAX_PENDING_QUOTATION_DECISIONS; i++) {
-    const lead = await scenario.lead.atStage("PRICING");
-    await proposePendingRate(runtime, { leadId: lead.id, backOffice });
+    const lead = await givenLead({
+      kind: "pricing",
+      key: `pending-${i}`,
+      proposal: "pending",
+    });
     leadIds.push(lead.id);
   }
   return leadIds;
@@ -44,10 +44,9 @@ describe("pending quotation registration cap", () => {
   });
 
   it("blocks a new registration once the executive holds the max pending quotation decisions", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const exec = scenario.actor.by("execOne");
+    const exec = actorBy("execOne");
 
-    await fillPendingQuotations(runtime, scenario);
+    await fillPendingQuotations(runtime);
 
     const blocked = await registerLead(
       {
@@ -67,10 +66,9 @@ describe("pending quotation registration cap", () => {
   });
 
   it("allows registration again after the executive resolves a pending quotation", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const exec = scenario.actor.by("execOne");
+    const exec = actorBy("execOne");
 
-    const leadIds = await fillPendingQuotations(runtime, scenario);
+    const leadIds = await fillPendingQuotations(runtime);
 
     // Closing one quotation as lost moves it out of PRICING, freeing a slot.
     const closed = await closeLeadCommand(

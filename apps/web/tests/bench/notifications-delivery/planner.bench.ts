@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { createLogger } from "~/lib/observability/logger";
 import {
-  planDeliveries,
+  createNotificationPlanner,
   type NotificationOutboxEntry,
 } from "~/server/notifications/delivery-planner";
+import { createNotificationPlanningRepository } from "~/server/notifications/repos/planning";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
@@ -17,6 +19,7 @@ type ScenarioState = {
 
 describe("notifications delivery planner benchmark", () => {
   const db = createBenchDbFixture("bench-notifications-delivery-planner");
+  let plan: ReturnType<typeof createNotificationPlanner> | null = null;
   const scenarios: {
     disjoint: ScenarioState;
     "partial-overlap": ScenarioState;
@@ -29,6 +32,10 @@ describe("notifications delivery planner benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
+    plan = createNotificationPlanner({
+      repository: createNotificationPlanningRepository(ctx.db),
+      logger: createLogger("bench-notification-planner"),
+    });
     const intentIdsByScenario = await seedPlannerFixtures(ctx);
 
     for (const scenario of PLANNER_SCENARIOS) {
@@ -60,7 +67,8 @@ describe("notifications delivery planner benchmark", () => {
           `planner pool exhausted for scenario ${scenario.name}`,
         );
 
-        await planDeliveries(db.ctx().db, entry);
+        if (!plan) throw new Error("planner benchmark used before setup");
+        await plan(entry, Date.now());
       },
       {
         ...fixedIterations(scenario.intentCount),

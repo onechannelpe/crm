@@ -8,7 +8,7 @@ import type {
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import type { TestRuntime } from "../runtime/app";
-import { MERCHANT } from "./fixtures";
+import { MERCHANT } from "./workflow-defaults";
 
 export type OrganizationSeedOptions = {
   key?: string;
@@ -43,6 +43,7 @@ type LeadSeed = {
   updatedBy?: number | null;
   createdAt?: number;
   updatedAt?: number;
+  reservationExpiresAt?: number | null;
   commercial?: LeadCommercialOptions;
 };
 
@@ -115,6 +116,7 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       ticket: commercial.ticket,
       settlement_bank: commercial.settlementBank,
       pos_count: commercial.posCount,
+      reservation_expires_at: input.reservationExpiresAt ?? null,
     })
     .execute();
 }

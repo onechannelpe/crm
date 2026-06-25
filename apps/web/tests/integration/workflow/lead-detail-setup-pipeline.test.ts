@@ -1,13 +1,16 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
 import {
   workflowCommandPorts,
   workflowRepos,
-} from "@tests/support/workflow/deps";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
@@ -28,9 +31,9 @@ describe("lead detail setup pipeline", () => {
   });
 
   it("composes profile from lead commercial scope, organization, and optional digital policy", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("SETUP", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "setup",
       key: "detail-profile",
       organization: {
         key: "detail-profile",
@@ -108,9 +111,9 @@ describe("lead detail setup pipeline", () => {
   });
 
   it("persists per-venue digital configuration and clears setup blockers when venue accounts are complete", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("SETUP", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "setup",
       key: "detail-venue-digital",
       organization: { key: "detail-venue-digital" },
     });
@@ -194,7 +197,7 @@ describe("lead detail setup pipeline", () => {
         leadId: lead.id,
       }),
     );
-    expect(completed.lead.stage).toBe("LIVE");
+    expect(completed.lead.stage).toBe("FULFILLMENT");
     expect(completed.blockingFields).toEqual([]);
     expect(completed.venues[0].solesAccount).toMatchObject({
       currency: "PEN",

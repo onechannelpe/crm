@@ -1,14 +1,17 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import { proposePendingRate } from "@tests/support/integration/pricing";
 import {
   workflowCommandPorts,
   workflowRepos,
-} from "@tests/support/workflow/deps";
-import { proposePendingRate } from "@tests/support/workflow/pricing";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
@@ -36,14 +39,15 @@ describe("lead reservation expiry", () => {
   });
 
   it("retires a lead to EXPIRED once its hold lapses and the sweep runs", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.atStage("PRICING", {
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "expiry-sweep",
       organization: { key: "expiry-sweep" },
     });
     await proposePendingRate(runtime, {
       leadId: lead.id,
-      backOffice: scenario.actor.by("backOne"),
+      backOffice: actorBy("backOne"),
     });
 
     expect(
@@ -61,7 +65,7 @@ describe("lead reservation expiry", () => {
       ),
     ).toBe(1);
 
-    const actor = scenario.actor.by("execOne");
+    const actor = actorBy("execOne");
     const detail = expectOk(
       await getLeadDetail(workflowRepos(runtime), {
         actorUserId: actor.userId,
@@ -74,15 +78,16 @@ describe("lead reservation expiry", () => {
   });
 
   it("rejects accepting a rate after the hold has lapsed", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("PRICING", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "expiry-accept",
       organization: { key: "expiry-accept" },
     });
     const { proposalId } = await proposePendingRate(runtime, {
       leadId: lead.id,
-      backOffice: scenario.actor.by("backOne"),
+      backOffice: actorBy("backOne"),
     });
 
     runtime.now.set(runtime.now.get() + RESERVATION_WINDOW_MS + 1);

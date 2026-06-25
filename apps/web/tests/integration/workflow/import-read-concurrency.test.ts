@@ -1,8 +1,10 @@
+import { createLeadFixtureWriter } from "@tests/support/database/workflow-fixtures";
+import { createWorkflowImporter } from "@tests/support/integration/workflow-import";
+import { createNotificationReader } from "@tests/support/readers/notifications";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("integration import workflow concurrency", () => {
@@ -18,18 +20,23 @@ describe("integration import workflow concurrency", () => {
   });
 
   it("applies import while export reads run concurrently without failures", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.seedDirect.leadAt("execOne", {
+    const givenLead = createLeadFixtureWriter(runtime);
+    const importer = createWorkflowImporter({
+      runtime,
+      nextJobKey: (key) => key ?? "concurrency",
+    }).importer;
+    const leadOne = await givenLead({
+      kind: "qualifying",
       key: "import-concurrency-one",
       organization: { key: "import-concurrency-one" },
-      stage: "QUALIFYING",
       status: "DISPONIBLE",
       priority: "P1",
     });
-    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
+    const leadTwo = await givenLead({
+      kind: "qualifying",
+      executive: "execTwo",
       key: "import-concurrency-two",
       organization: { key: "import-concurrency-two" },
-      stage: "QUALIFYING",
       status: "SIN RESULTADO",
       priority: "P1",
     });
@@ -44,7 +51,7 @@ describe("integration import workflow concurrency", () => {
       }
     })();
 
-    const applyPromise = scenario.importer.run({
+    const applyPromise = importer.run({
       actor: "superuser",
       rows: [
         { type: "priority", lead: leadOne, priority: "SIN RESULTADO" },
@@ -57,7 +64,7 @@ describe("integration import workflow concurrency", () => {
     expect(applied.applied).toBe(2);
     expect(applied.failed).toBe(0);
 
-    const pending = await scenario.outbox.counts("pending");
-    expect(pending.notifications).toBe(2);
+    const outbox = await createNotificationReader(runtime).outbox();
+    expect(outbox.filter(({ status }) => status === "pending")).toHaveLength(2);
   });
 });

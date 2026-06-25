@@ -1,9 +1,13 @@
+import { MERCHANT } from "@tests/support/database/workflow-defaults";
+import {
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import { seedRateProposal } from "@tests/support/database/workflow-seed";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { MERCHANT } from "@tests/support/workflow/fixtures";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("integration record export columns", () => {
@@ -19,12 +23,14 @@ describe("integration record export columns", () => {
   });
 
   it("exports lead commercial snapshot and the latest quotation rates", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const executiveId = scenario.actor.by("execOne").userId;
+    const givenLead = createLeadFixtureWriter(runtime);
+    const executiveId = actorBy("execOne").userId;
 
-    const withData = await scenario.lead.atStage("PRICING", {
+    const withData = await givenLead({
+      kind: "pricing",
       key: "export-with-data",
       organization: { key: "export-with-data" },
+      proposal: "none",
       commercial: {
         currentProvider: "Niubiz",
         currentDebitRate: 3.5,
@@ -34,7 +40,8 @@ describe("integration record export columns", () => {
         posCount: 3,
       },
     });
-    const withoutData = await scenario.lead.atStage("QUALIFYING", {
+    const withoutData = await givenLead({
+      kind: "qualifying",
       key: "export-without-data",
       organization: { key: "export-without-data" },
     });
@@ -42,7 +49,7 @@ describe("integration record export columns", () => {
     // Two versions pinned to specific rounds: the export must surface the
     // highest-version (latest) rates. Proposals are direct-seeded because this is a
     // projection test, not a test of how proposals are created.
-    await scenario.seedDirect.rateProposal({
+    await seedRateProposal(runtime, {
       id: "quote-old",
       leadId: withData.id,
       round: 1,
@@ -56,7 +63,7 @@ describe("integration record export columns", () => {
       proposedAt: 1_000,
       decidedAt: 1_200,
     });
-    await scenario.seedDirect.rateProposal({
+    await seedRateProposal(runtime, {
       id: "quote-latest",
       leadId: withData.id,
       round: 2,

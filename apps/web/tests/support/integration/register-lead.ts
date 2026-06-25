@@ -1,9 +1,9 @@
 import type { SettlementBank } from "~/contracts/workflow/vocabulary";
 import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/commands/register-lead";
 
+import { withMerchantDefaults } from "../database/workflow-seed";
 import type { TestRuntime } from "../runtime/app";
-import { registerLeadPorts } from "./deps";
-import { withMerchantDefaults } from "./seed";
+import { registerLeadPorts } from "./workflow-ports";
 
 export type RegisteredLeadSnapshot = {
   id: string;

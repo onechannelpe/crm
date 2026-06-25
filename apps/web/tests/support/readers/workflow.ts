@@ -1,11 +1,10 @@
 import { expectOk } from "@tests/support/_core/assertions";
+import type { TestActor } from "@tests/support/database/workflow-fixtures";
+import { workflowRepos } from "@tests/support/integration/workflow-ports";
 import type { TestRuntime } from "@tests/support/runtime/app";
 
 import type { LeadStatus } from "~/contracts/workflow/vocabulary";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-
-import { workflowRepos } from "./deps";
-import type { ScenarioActor } from "./leads";
 
 // Lead invariants are asserted through getLeadDetail, the same read model production
 // consumers use, rather than by reading raw workflow_leads columns. Every field these
@@ -15,7 +14,7 @@ import type { ScenarioActor } from "./leads";
 
 async function loadLead(
   runtime: TestRuntime,
-  actor: ScenarioActor,
+  actor: TestActor,
   leadId: string,
 ) {
   const detail = await getLeadDetail(workflowRepos(runtime), {
@@ -29,7 +28,7 @@ async function loadLead(
 export async function expectLeadMetadata(
   runtime: TestRuntime,
   input: {
-    actor: ScenarioActor;
+    actor: TestActor;
     leadId: string;
     updatedBy: number;
     minUpdatedAt?: number;
@@ -55,7 +54,7 @@ export async function expectLeadMetadata(
 export async function expectLeadAssignment(
   runtime: TestRuntime,
   input: {
-    actor: ScenarioActor;
+    actor: TestActor;
     leadId: string;
     executiveId: number;
     updatedBy: number;
@@ -78,7 +77,7 @@ export async function expectLeadAssignment(
 export async function expectLeadStatus(
   runtime: TestRuntime,
   input: {
-    actor: ScenarioActor;
+    actor: TestActor;
     leadId: string;
     updatedBy: number;
     status: LeadStatus;

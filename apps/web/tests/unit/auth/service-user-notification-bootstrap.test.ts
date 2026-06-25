@@ -20,12 +20,8 @@ describe("bootstrapUserNotifications", () => {
 
     const result = await bootstrapUserNotifications(INPUT, {
       userChannelAddresses: {
-        listByUser: vi.fn(),
-        findByUserAndChannel: vi.fn(),
-        findByChannelAndAddress: vi.fn(),
         upsert: upsertAddress,
         claimWhatsAppAddress,
-        markWhatsAppVerified: vi.fn(),
       },
       notificationPreferences: {
         upsert: upsertPreference,
@@ -74,12 +70,8 @@ describe("bootstrapUserNotifications", () => {
 
     const result = await bootstrapUserNotifications(INPUT, {
       userChannelAddresses: {
-        listByUser: vi.fn(),
-        findByUserAndChannel: vi.fn(),
-        findByChannelAndAddress: vi.fn(),
         upsert: upsertAddress,
         claimWhatsAppAddress,
-        markWhatsAppVerified: vi.fn(),
       },
       notificationPreferences: {
         upsert: upsertPreference,
@@ -108,12 +100,8 @@ describe("bootstrapUserNotifications", () => {
     await expect(
       bootstrapUserNotifications(INPUT, {
         userChannelAddresses: {
-          listByUser: vi.fn(),
-          findByUserAndChannel: vi.fn(),
-          findByChannelAndAddress: vi.fn(),
           upsert: upsertAddress,
           claimWhatsAppAddress,
-          markWhatsAppVerified: vi.fn(),
         },
         notificationPreferences: {
           upsert: upsertPreference,

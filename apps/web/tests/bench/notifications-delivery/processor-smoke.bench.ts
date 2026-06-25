@@ -1,6 +1,14 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { createLogger } from "~/lib/observability/logger";
+import { createNotificationDeliveryService } from "~/server/notifications/delivery-executor";
+import { createNotificationPlanner } from "~/server/notifications/delivery-planner";
 import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
+import { createNotificationProcessor } from "~/server/notifications/processor";
+import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
+import { createNotificationDeliveryRepository } from "~/server/notifications/repos/delivery";
+import { createNotificationOutboxProcessingRepository } from "~/server/notifications/repos/outbox-processing";
+import { createNotificationPlanningRepository } from "~/server/notifications/repos/planning";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
@@ -16,7 +24,7 @@ describe("notifications delivery processor smoke benchmark", () => {
   );
   let intentIds: string[] = [];
   const cursor = { value: 0 };
-  let runOnce: ((workerId: string, limit?: number) => Promise<void>) | null =
+  let runOnce: ((workerId: string, limit?: number) => Promise<number>) | null =
     null;
   const originalLogLevel = process.env.LOG_LEVEL;
 
@@ -52,10 +60,24 @@ describe("notifications delivery processor smoke benchmark", () => {
     const ctx = await db.setup();
     intentIds = await seedProcessorSmokeFixtures(ctx);
 
-    const module = await import("~/server/notifications/processor");
-    runOnce = module.createNotificationProcessor(ctx.db, messaging, {
-      publicOrigin: "http://localhost:3000",
+    const logger = createLogger("bench-notification-processor");
+    const processor = createNotificationProcessor({
+      outbox: createNotificationOutboxProcessingRepository(ctx.db),
+      plan: createNotificationPlanner({
+        repository: createNotificationPlanningRepository(ctx.db),
+        logger,
+      }),
+      delivery: createNotificationDeliveryService({
+        appNotifications: createAppNotificationRepo(ctx.db),
+        deliveries: createNotificationDeliveryRepository(ctx.db),
+        messaging,
+        publicOrigin: "http://localhost:3000",
+        logger,
+      }),
+      clock: Date.now,
+      logger,
     });
+    runOnce = processor.runOnce;
   });
 
   afterAll(async () => {

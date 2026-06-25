@@ -1,16 +1,10 @@
-import type { Kysely } from "kysely";
+import type { Logger } from "~/lib/observability/logger-shared";
 
-import type { Database } from "~/lib/db/types";
-import { createLogger } from "~/lib/observability/logger";
-
-import { resolveAudience } from "./audience";
 import {
   parseNotificationAudience,
   parseNotificationChannels,
 } from "./outbox-payload";
-import { filterUsersWithActiveSession } from "./whatsapp-session";
-
-const logger = createLogger("notifications-planner");
+import type { NotificationAudience, NotificationChannel } from "./types";
 
 export type NotificationOutboxEntry = {
   id: string;
@@ -31,79 +25,72 @@ export type PlannedDeliveries = {
   externalDeliveries: PlannedExternalDelivery[];
 };
 
-async function loadVerifiedAddressMap(
-  db: Kysely<Database>,
-  recipients: number[],
-  channel: "email" | "whatsapp",
-): Promise<Map<number, string>> {
-  if (recipients.length === 0) return new Map();
-
-  const rows = await db
-    .selectFrom("user_channel_addresses")
-    .select(["user_id", "address"])
-    .where("channel", "=", channel)
-    .where("is_verified", "=", 1)
-    .where("user_id", "in", recipients)
-    .execute();
-
-  return new Map(rows.map((row) => [row.user_id, row.address]));
+export interface NotificationPlanningRepository {
+  resolveAudience(audience: NotificationAudience): Promise<number[]>;
+  findVerifiedAddresses(
+    userIds: number[],
+    channel: Exclude<NotificationChannel, "in_app">,
+  ): Promise<Map<number, string>>;
+  findActiveWhatsAppUsers(userIds: number[], now: number): Promise<Set<number>>;
 }
 
-export async function planDeliveries(
-  db: Kysely<Database>,
-  entry: NotificationOutboxEntry,
-  now = Date.now(),
-): Promise<PlannedDeliveries> {
-  const audience = parseNotificationAudience(entry.audience_json);
-  const channels = parseNotificationChannels(entry.channels_json);
-  const recipients = await resolveAudience(db, audience);
+export function createNotificationPlanner(deps: {
+  repository: NotificationPlanningRepository;
+  logger: Pick<Logger, "info">;
+}) {
+  return async function planDeliveries(
+    entry: NotificationOutboxEntry,
+    now: number,
+  ): Promise<PlannedDeliveries> {
+    const audience = parseNotificationAudience(entry.audience_json);
+    const channels = parseNotificationChannels(entry.channels_json);
+    const recipients = await deps.repository.resolveAudience(audience);
+    const inAppRecipients = channels.includes("in_app") ? recipients : [];
+    const externalChannels = channels.filter(
+      (channel): channel is "email" | "whatsapp" => channel !== "in_app",
+    );
 
-  const inAppRecipients = channels.includes("in_app") ? recipients : [];
+    const [addressMaps, activeWhatsAppUsers] = await Promise.all([
+      Promise.all(
+        externalChannels.map(async (channel) => ({
+          channel,
+          addresses: await deps.repository.findVerifiedAddresses(
+            recipients,
+            channel,
+          ),
+        })),
+      ),
+      externalChannels.includes("whatsapp")
+        ? deps.repository.findActiveWhatsAppUsers(recipients, now)
+        : Promise.resolve(new Set<number>()),
+    ]);
 
-  const externalChannels = channels.filter(
-    (channel): channel is "email" | "whatsapp" => channel !== "in_app",
-  );
-
-  const [addressMaps, activeWhatsAppUsers] = await Promise.all([
-    Promise.all(
-      externalChannels.map(async (channel) => ({
-        channel,
-        addresses: await loadVerifiedAddressMap(db, recipients, channel),
-      })),
-    ),
-    externalChannels.includes("whatsapp")
-      ? filterUsersWithActiveSession(db, recipients, now)
-      : Promise.resolve(new Set<number>()),
-  ]);
-
-  const externalDeliveries: PlannedExternalDelivery[] = [];
-
-  for (const { channel, addresses } of addressMaps) {
-    for (const userId of recipients) {
-      if (channel === "whatsapp" && !activeWhatsAppUsers.has(userId)) {
-        logger.info("whatsapp_skipped_no_session", {
-          userId,
-          reason: "no_active_session",
-        });
-        continue;
-      }
-      const recipientAddress = addresses.get(userId);
-      if (!recipientAddress) {
-        if (channel === "whatsapp") {
-          logger.info("whatsapp_skipped_no_address", {
+    const externalDeliveries: PlannedExternalDelivery[] = [];
+    for (const { channel, addresses } of addressMaps) {
+      for (const userId of recipients) {
+        if (channel === "whatsapp" && !activeWhatsAppUsers.has(userId)) {
+          deps.logger.info("whatsapp_skipped_no_session", {
             userId,
-            reason: "no_verified_address",
+            reason: "no_active_session",
           });
+          continue;
         }
-        continue;
-      }
-      externalDeliveries.push({ userId, channel, recipientAddress });
-    }
-  }
 
-  return {
-    recipients,
-    inAppRecipients,
-    externalDeliveries,
+        const recipientAddress = addresses.get(userId);
+        if (!recipientAddress) {
+          if (channel === "whatsapp") {
+            deps.logger.info("whatsapp_skipped_no_address", {
+              userId,
+              reason: "no_verified_address",
+            });
+          }
+          continue;
+        }
+
+        externalDeliveries.push({ userId, channel, recipientAddress });
+      }
+    }
+
+    return { recipients, inAppRecipients, externalDeliveries };
   };
 }

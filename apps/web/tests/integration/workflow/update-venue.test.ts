@@ -1,13 +1,16 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
 import {
   workflowCommandPorts,
   workflowRepos,
-} from "@tests/support/workflow/deps";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
@@ -26,9 +29,9 @@ describe("update venue", () => {
   });
 
   it("updates venue fields during setup", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("SETUP", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "setup",
       key: "venue-update",
       organization: { key: "venue-update" },
     });
@@ -91,9 +94,9 @@ describe("update venue", () => {
   });
 
   it("blocks venue updates after setup", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("LIVE", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "live",
       key: "venue-update-live",
       organization: { key: "venue-update-live" },
     });

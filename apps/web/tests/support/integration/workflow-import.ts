@@ -1,13 +1,19 @@
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 
+import type { TestActorKey } from "../database/workflow-fixtures";
+import { actorBy } from "../database/workflow-fixtures";
+import { seedImportJob } from "../database/workflow-seed";
 import type { TestRuntime } from "../runtime/app";
-import type { ScenarioActorKey, ScenarioLeadRef } from "./leads";
-import { seedImportJob } from "./seed";
+
+type ImportLeadRef = {
+  id: string;
+  organization: { ruc: string };
+};
 
 export function createWorkflowImporter(input: {
   runtime: TestRuntime;
-  resolveActorUserId(actor: ScenarioActorKey | number): number;
+  resolveActorUserId?: (actor: TestActorKey | number) => number;
   nextJobKey(key?: string): string;
 }) {
   const { runtime } = input;
@@ -28,23 +34,27 @@ export function createWorkflowImporter(input: {
 
   const importer = {
     async run(payload: {
-      actor: ScenarioActorKey | number;
+      actor: TestActorKey | number;
       rows: Array<
         | {
             type: "status";
-            lead: ScenarioLeadRef;
+            lead: ImportLeadRef;
             status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK";
           }
         | {
             type: "priority";
-            lead: ScenarioLeadRef;
+            lead: ImportLeadRef;
             priority: "P1" | "P2" | "SIN RESULTADO";
           }
       >;
       jobKey?: string;
     }) {
       const seededJob = await jobFactory.importRun(payload.jobKey);
-      const actorUserId = input.resolveActorUserId(payload.actor);
+      const actorUserId = input.resolveActorUserId
+        ? input.resolveActorUserId(payload.actor)
+        : typeof payload.actor === "number"
+          ? payload.actor
+          : actorBy(payload.actor).userId;
       const validRows: ImportRowInput[] = payload.rows.map((row, index) => {
         const rowNo = index + 1;
         if (row.type === "status") {

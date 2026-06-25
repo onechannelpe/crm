@@ -1,11 +1,11 @@
 import {
+  registerLead,
+  registerLeadAndLoadSnapshot,
+} from "@tests/support/integration/register-lead";
+import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import {
-  registerLead,
-  registerLeadAndLoadSnapshot,
-} from "@tests/support/workflow/register";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("register lead", () => {

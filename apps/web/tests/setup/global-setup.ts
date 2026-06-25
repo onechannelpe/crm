@@ -3,7 +3,11 @@ import { join } from "node:path";
 
 import { prepareTestDbTemplate } from "@tests/support/runtime/db";
 
-const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
+const ARTIFACT_DIR = join(
+  process.cwd(),
+  ".vitest-db",
+  process.env.TEST_DB_NAMESPACE ?? "default",
+);
 
 export async function setup() {
   try {

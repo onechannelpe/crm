@@ -1,11 +1,35 @@
 import type { Phone } from "~/lib/phone/pe-mobile";
-import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
-import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-type NotificationBootstrapRepos = {
-  userChannelAddresses: ReturnType<typeof createUserChannelAddressRepo>;
-  notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
+export type NotificationBootstrapPorts = {
+  userChannelAddresses: {
+    upsert(values: {
+      user_id: number;
+      channel: "email";
+      address: string;
+      is_verified: 1;
+      verified_at: number;
+      created_at: number;
+      updated_at: number;
+    }): Promise<unknown>;
+    claimWhatsAppAddress(values: {
+      userId: number;
+      address: Phone;
+      now: number;
+    }): Promise<
+      { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: number }
+    >;
+  };
+  notificationPreferences: {
+    upsert(values: {
+      user_id: number;
+      event_type: "security.privileged_login" | "broadcast.general";
+      channel: "email" | "whatsapp";
+      is_enabled: 1;
+      created_at: number;
+      updated_at: number;
+    }): Promise<unknown>;
+  };
 };
 
 async function registerChannelAddresses(params: {
@@ -13,7 +37,7 @@ async function registerChannelAddresses(params: {
   email: string;
   phone: Phone;
   now: number;
-  repos: Pick<NotificationBootstrapRepos, "userChannelAddresses">;
+  repos: Pick<NotificationBootstrapPorts, "userChannelAddresses">;
 }): Promise<
   Result<void, { code: "address_already_claimed"; ownerUserId: number }>
 > {
@@ -47,7 +71,7 @@ async function registerChannelAddresses(params: {
 function enableDefaultNotificationPreferences(
   userId: number,
   now: number,
-  repos: Pick<NotificationBootstrapRepos, "notificationPreferences">,
+  repos: Pick<NotificationBootstrapPorts, "notificationPreferences">,
 ) {
   return Promise.all([
     repos.notificationPreferences.upsert({
@@ -92,7 +116,7 @@ export async function bootstrapUserNotifications(
     phone: Phone;
     now: number;
   },
-  repos: NotificationBootstrapRepos,
+  repos: NotificationBootstrapPorts,
 ): Promise<
   Result<void, { code: "address_already_claimed"; ownerUserId: number }>
 > {

@@ -79,6 +79,10 @@ bun run migrate
 bun run seed
 bun run build
 bun run test
+bun run test:unit
+bun run test:contract
+bun run test:integration
+bun run test:journey
 bun run test:prepare
 bun run test:server
 bun run worker:maintenance
@@ -97,7 +101,10 @@ Validation commands:
 ```sh
 bun run check:web
 bun run test
-bun run test:prepare
+bun run test:unit
+bun run test:contract
+bun run test:integration
+bun run test:journey
 bun run test:integration:browser
 bun run test:perf
 ```

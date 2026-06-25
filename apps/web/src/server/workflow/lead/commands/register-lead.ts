@@ -3,23 +3,23 @@ import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { type DomainError } from "~/server/shared/domain-error";
+import { Err, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
-import { createHistoryEvent } from "~/server/workflow/lead/domain/history";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
-import { reassignLead } from "../../lead/domain/decide";
 import { requireCapability } from "../../lead/domain/policy";
 import { isReservationLapsed } from "../../lead/domain/reservation";
-import { createLeadDraft } from "../../lead/domain/state";
-import { runLeadTransaction } from "../write/transition";
 import { expireLeadReservation } from "./expire-reservation";
 import {
   ensureActiveExecutive,
   resolveLeadRegistration,
 } from "./register-lead-resolution";
+import {
+  createRegisteredLead,
+  reassignRegisteredLead,
+} from "./register-lead-write";
 
 export async function registerLead(
   input: CreateLeadInput & {
@@ -87,40 +87,11 @@ export async function registerLead(
   }
 
   if (resolution.value.kind === "reassign") {
-    const leadId = resolution.value.lead.id;
-
-    return runLeadTransaction(
-      { executor: ports.executor, now },
-      async (ctx) => {
-        const state = await ctx.repos.leads.findById(leadId);
-
-        if (!state) {
-          return Err(fail("lead_not_found"));
-        }
-
-        const transition = reassignLead(state, {
-          actor,
-          toExecutiveId: actor.userId,
-          now: ctx.now,
-        });
-
-        if (!transition.ok) {
-          return transition;
-        }
-
-        const committed = await ctx.commitTransition(transition.value, {
-          toExecutiveId: actor.userId,
-          assignedBy: actor.userId,
-          at: ctx.now,
-        });
-
-        if (!committed.ok) {
-          return committed;
-        }
-
-        return Ok({ leadId: state.id });
-      },
-    );
+    return reassignRegisteredLead({
+      leadId: resolution.value.lead.id,
+      actor,
+      ports: { executor: ports.executor, now },
+    });
   }
 
   // Cap concurrent quotations awaiting the executive's decision. Applies only to
@@ -147,65 +118,12 @@ export async function registerLead(
 
   const overlay = await ports.identity.enrichByRuc(ruc.value);
 
-  return runLeadTransaction({ executor: ports.executor, now }, async (ctx) => {
-    const organization =
-      (await ctx.repos.party.findOrganizationByRuc(ruc.value)) ??
-      (await ctx.repos.party.createOrganization({
-        ruc: ruc.value,
-        legalName: overlay?.legalName ?? null,
-        giroNegocio: input.giroNegocio,
-        address: overlay?.address ?? null,
-        district: null,
-        department: null,
-      }));
-
-    const draft = createLeadDraft({
-      organizationId: organization.id,
-      ruc: ruc.value,
-      legalName: organization.legalName,
-      address: organization.address,
-      executiveId: actor.userId,
-      createdBy: actor.userId,
-      commercialScope,
-      now: ctx.now,
-    });
-
-    if (!draft.ok) {
-      return draft;
-    }
-
-    const leadId = await ctx.repos.leads.insert(draft.value);
-
-    await ctx.repos.leadAssignments.insert({
-      leadId,
-      executiveId: actor.userId,
-      assignedBy: actor.userId,
-      isActive: true,
-      assignedAt: ctx.now,
-    });
-
-    const appended = await ctx.appendFacts([
-      createHistoryEvent({
-        leadId,
-        eventType: "lead_registered",
-        actorUserId: actor.userId,
-        payload: { ruc: draft.value.ruc, toStage: "QUALIFYING" },
-        occurredAt: ctx.now,
-      }),
-      createHistoryEvent({
-        leadId,
-        eventType: "lead_assigned",
-        actorUserId: actor.userId,
-        subjectUserId: actor.userId,
-        payload: { executiveId: actor.userId },
-        occurredAt: ctx.now,
-      }),
-    ]);
-
-    if (!appended.ok) {
-      return appended;
-    }
-
-    return Ok({ leadId });
+  return createRegisteredLead({
+    command: input,
+    actor,
+    ruc: ruc.value,
+    commercialScope,
+    enrichment: overlay,
+    ports: { executor: ports.executor, now },
   });
 }

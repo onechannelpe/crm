@@ -18,7 +18,11 @@ import {
   type TestRepositories,
 } from "../runtime/repos";
 
-const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
+const ARTIFACT_DIR = join(
+  process.cwd(),
+  ".vitest-db",
+  process.env.TEST_DB_NAMESPACE ?? "default",
+);
 const TEMPLATE_DB_NAME = "__template-seeded.db";
 const TEST_ORG_ID_LIMA = "01974fd5-f261-7a7d-93f5-2f3d0f963001";
 const TEST_ORG_ID_NORTE = "01974fd5-f261-7a7d-93f5-2f3d0f963002";

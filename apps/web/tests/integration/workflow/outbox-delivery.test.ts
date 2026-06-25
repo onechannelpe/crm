@@ -1,8 +1,11 @@
+import { createLeadFixtureWriter } from "@tests/support/database/workflow-fixtures";
+import { createTestNotificationRuntime } from "@tests/support/integration/notification-runtime";
+import { createWorkflowImporter } from "@tests/support/integration/workflow-import";
+import { createNotificationReader } from "@tests/support/readers/notifications";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("outbox delivery", () => {
@@ -18,8 +21,6 @@ describe("outbox delivery", () => {
   });
 
   it("marks rows with malformed channels as failed", async () => {
-    const scenario = createWorkflowScenario(runtime);
-
     await runtime.ctx.db
       .insertInto("notification_outbox")
       .values({
@@ -42,7 +43,9 @@ describe("outbox delivery", () => {
       })
       .execute();
 
-    await scenario.outbox.drainAll();
+    await createTestNotificationRuntime(runtime).processor.runUntilIdle({
+      workerId: "malformed",
+    });
 
     const failed = await runtime.ctx.db
       .selectFrom("notification_outbox")
@@ -55,23 +58,28 @@ describe("outbox delivery", () => {
   });
 
   it("drains pending outbox events and persists notifications", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.seedDirect.leadAt("execOne", {
+    const givenLead = createLeadFixtureWriter(runtime);
+    const importer = createWorkflowImporter({
+      runtime,
+      nextJobKey: (key) => key ?? "delivery",
+    }).importer;
+    const leadOne = await givenLead({
+      kind: "qualifying",
       key: "delivery-one",
       organization: { key: "delivery-one" },
-      stage: "QUALIFYING",
       status: "DISPONIBLE",
       priority: "P1",
     });
-    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
+    const leadTwo = await givenLead({
+      kind: "qualifying",
+      executive: "execTwo",
       key: "delivery-two",
       organization: { key: "delivery-two" },
-      stage: "QUALIFYING",
       status: "SIN RESULTADO",
       priority: "P1",
     });
 
-    await scenario.importer.run({
+    await importer.run({
       actor: "superuser",
       rows: [
         { type: "priority", lead: leadOne, priority: "SIN RESULTADO" },
@@ -79,9 +87,11 @@ describe("outbox delivery", () => {
       ],
     });
 
-    await scenario.outbox.drainAll();
+    const notificationsRuntime = createTestNotificationRuntime(runtime);
+    await notificationsRuntime.processor.runUntilIdle({ workerId: "delivery" });
 
-    const notifications = await scenario.notifications.list();
+    const reader = createNotificationReader(runtime);
+    const notifications = await reader.appNotifications();
     expect(notifications).toEqual([
       {
         user_id: 2,
@@ -95,7 +105,7 @@ describe("outbox delivery", () => {
       },
     ]);
 
-    const completed = await scenario.outbox.counts("done");
-    expect(completed.notifications).toBe(2);
+    const outbox = await reader.outbox();
+    expect(outbox.filter(({ status }) => status === "done")).toHaveLength(2);
   });
 });

@@ -1,50 +1,44 @@
 import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "@tests/support/runtime/db";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { planDeliveries } from "~/server/notifications/delivery-planner";
 import { enqueueNotifications } from "~/server/notifications/outbox";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { openSession } from "~/server/notifications/whatsapp-session";
+import { reactToFulfillmentChanges } from "~/server/workflow/effects/reactors/fulfillment-notify";
+import { reactToStageChanges } from "~/server/workflow/effects/reactors/notify";
+import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
+
+import { createTestNotificationRuntime } from "../../support/integration/notification-runtime";
+import { createNotificationReader } from "../../support/readers/notifications";
 
 const NOW = 1_700_000_000_000;
 
-function makeIntent(input: {
-  id: string;
-  eventType: string;
-  channels: NotificationIntent["channels"];
-  recipientUserId: number;
-}): NotificationIntent {
-  return {
-    id: input.id,
-    eventType: input.eventType,
-    audience: { kind: "user_ids", userIds: [input.recipientUserId] },
-    channels: input.channels,
-    priority: "high",
-    title: `title ${input.id}`,
-    bodyText: `body ${input.id}`,
-    actionUrl: null,
-  };
-}
-
-describe("notification planner: workflow reactor promotion", () => {
-  let ctx: TestDbContext;
+describe("workflow notification pipeline", () => {
+  let runtime: TestRuntime;
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("workflow-reactor-promotion");
+    runtime = await createTestRuntime("workflow-notification-pipeline");
+    runtime.now.set(NOW);
   });
 
   afterEach(async () => {
-    await cleanupTestDb(ctx);
+    await runtime.dispose();
   });
 
-  it("schedules a WhatsApp delivery for lead.ready_for_sale when the executive has a verified address and active session", async () => {
-    // Seed: user 1 (executive) with a verified WhatsApp address and an active session.
-    await ctx.repos.userChannelAddresses.upsert({
-      user_id: 1,
+  it("persists the actual stage reactor intent and plans WhatsApp delivery", async () => {
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "setup",
+      key: "ready-for-sale",
+    });
+    await runtime.ctx.repos.userChannelAddresses.upsert({
+      user_id: actorBy("execOne").userId,
       channel: "whatsapp",
       address: "51911000001",
       is_verified: 1,
@@ -52,296 +46,121 @@ describe("notification planner: workflow reactor promotion", () => {
       created_at: NOW,
       updated_at: NOW,
     });
-    await openSession(ctx.db, 1, NOW);
+    await openSession(runtime.ctx.db, actorBy("execOne").userId, NOW);
 
-    const intent = makeIntent({
-      id: "evt-ready-for-sale",
-      eventType: "lead.ready_for_sale",
-      channels: ["in_app", "whatsapp"],
-      recipientUserId: 1,
-    });
-    await enqueueNotifications(ctx.db, [intent], NOW);
-
-    const entry = await ctx.db
-      .selectFrom("notification_outbox")
-      .selectAll()
-      .where("id", "=", intent.id)
-      .executeTakeFirstOrThrow();
-
-    const planned = await planDeliveries(
-      ctx.db,
+    const committed: CommittedLeadEvent[] = [
       {
-        id: entry.id,
-        event_type: entry.event_type,
-        audience_json: entry.audience_json,
-        channels_json: entry.channels_json,
+        id: "event-ready-for-sale",
+        event: {
+          leadId: lead.id,
+          eventType: "workflow_stage_changed",
+          actorUserId: actorBy("execOne").userId,
+          subjectUserId: null,
+          payload: { from: "PRICING", to: "SETUP" },
+          changes: [],
+          occurredAt: NOW,
+        },
       },
-      NOW,
-    );
+    ];
 
-    expect(planned.inAppRecipients).toEqual([1]);
-    const whatsapp = planned.externalDeliveries.filter(
-      (delivery) => delivery.channel === "whatsapp",
-    );
-    expect(whatsapp).toEqual([
-      { userId: 1, channel: "whatsapp", recipientAddress: "51911000001" },
+    await reactToStageChanges(runtime.ctx.db, committed, NOW);
+
+    const reader = createNotificationReader(runtime);
+    const [entry] = await reader.outbox();
+    if (!entry) throw new Error("expected stage notification outbox entry");
+    expect(entry).toMatchObject({
+      event_type: "lead.ready_for_sale",
+      status: "pending",
+    });
+    expect(JSON.parse(entry.channels_json)).toEqual(["in_app", "whatsapp"]);
+
+    const notifications = createTestNotificationRuntime(runtime);
+    const planned = await notifications.plan(entry, NOW);
+    expect(planned.inAppRecipients).toEqual([actorBy("execOne").userId]);
+    expect(planned.externalDeliveries).toEqual([
+      {
+        userId: actorBy("execOne").userId,
+        channel: "whatsapp",
+        recipientAddress: "51911000001",
+      },
     ]);
   });
 
-  it("schedules a WhatsApp delivery for lead.fulfillment_completed under the same conditions", async () => {
-    await ctx.repos.userChannelAddresses.upsert({
-      user_id: 1,
-      channel: "whatsapp",
-      address: "51911000001",
-      is_verified: 1,
-      verified_at: NOW,
-      created_at: NOW,
-      updated_at: NOW,
+  it("persists payment URLs produced by the fulfillment reactor", async () => {
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "fulfillment",
+      key: "payment-ready",
+      step: "AWAITING_PAYMENT",
     });
-    await openSession(ctx.db, 1, NOW);
+    await runtime.ctx.db
+      .insertInto("lead_fulfillment_units")
+      .values({
+        id: "unit-payment-ready",
+        order_id: lead.fulfillmentOrderId!,
+        venue_id: lead.venueIds[0],
+        label: "POS #1",
+        serial_number: null,
+        payment_url: "https://pay.example.com/abc",
+        payment_proof_artifact_id: null,
+        payment_validated: 0,
+        service_a_ref: null,
+        created_at: NOW,
+      })
+      .execute();
 
-    const intent = makeIntent({
-      id: "evt-fulfillment-completed",
-      eventType: "lead.fulfillment_completed",
-      channels: ["in_app", "whatsapp"],
-      recipientUserId: 1,
-    });
-    await enqueueNotifications(ctx.db, [intent], NOW);
-
-    const entry = await ctx.db
-      .selectFrom("notification_outbox")
-      .selectAll()
-      .where("id", "=", intent.id)
-      .executeTakeFirstOrThrow();
-
-    const planned = await planDeliveries(
-      ctx.db,
-      {
-        id: entry.id,
-        event_type: entry.event_type,
-        audience_json: entry.audience_json,
-        channels_json: entry.channels_json,
-      },
+    await reactToFulfillmentChanges(
+      runtime.ctx.db,
+      [
+        {
+          id: "event-payment-ready",
+          event: {
+            leadId: lead.id,
+            eventType: "fulfillment_step_advanced",
+            actorUserId: actorBy("backOne").userId,
+            subjectUserId: null,
+            payload: {
+              orderId: lead.fulfillmentOrderId!,
+              from: "AWAITING_PAYMENT_LINK",
+              to: "AWAITING_PAYMENT",
+              action: "upload_payment_proof",
+            },
+            changes: [],
+            occurredAt: NOW,
+          },
+        },
+      ],
       NOW,
     );
 
-    expect(planned.inAppRecipients).toEqual([1]);
-    expect(
-      planned.externalDeliveries.filter(
-        (delivery) => delivery.channel === "whatsapp",
-      ),
-    ).toEqual([
-      { userId: 1, channel: "whatsapp", recipientAddress: "51911000001" },
-    ]);
+    const [entry] = await createNotificationReader(runtime).outbox();
+    if (!entry)
+      throw new Error("expected fulfillment notification outbox entry");
+    expect(entry.event_type).toBe("lead.fulfillment_handoff");
+    expect(entry.body_text).toContain("https://pay.example.com/abc");
+    expect(JSON.parse(entry.channels_json)).toEqual(["in_app", "whatsapp"]);
   });
 
-  it("does not schedule a WhatsApp delivery when the address is missing or unverified", async () => {
-    // Same intent as ready_for_sale, but the user has no verified WA address.
-    await openSession(ctx.db, 1, NOW);
-
-    const intent = makeIntent({
-      id: "evt-no-addr",
-      eventType: "lead.ready_for_sale",
-      channels: ["in_app", "whatsapp"],
-      recipientUserId: 1,
-    });
-    await enqueueNotifications(ctx.db, [intent], NOW);
-
-    const entry = await ctx.db
-      .selectFrom("notification_outbox")
-      .selectAll()
-      .where("id", "=", intent.id)
-      .executeTakeFirstOrThrow();
-
-    const planned = await planDeliveries(
-      ctx.db,
-      {
-        id: entry.id,
-        event_type: entry.event_type,
-        audience_json: entry.audience_json,
-        channels_json: entry.channels_json,
-      },
-      NOW,
-    );
-
-    expect(planned.inAppRecipients).toEqual([1]);
-    expect(
-      planned.externalDeliveries.filter(
-        (delivery) => delivery.channel === "whatsapp",
-      ),
-    ).toEqual([]);
-  });
-
-  it("does not schedule a WhatsApp delivery when the Meta session is not active", async () => {
-    // Verified address, but no active session: cold outbound, planner must
-    // drop the WA leg so the provider does not surface a 131047/133018 error.
-    await ctx.repos.userChannelAddresses.upsert({
-      user_id: 1,
-      channel: "whatsapp",
-      address: "51911000001",
-      is_verified: 1,
-      verified_at: NOW,
-      created_at: NOW,
-      updated_at: NOW,
-    });
-    // Intentionally not calling openSession.
-
-    const intent = makeIntent({
-      id: "evt-cold",
-      eventType: "lead.ready_for_sale",
-      channels: ["in_app", "whatsapp"],
-      recipientUserId: 1,
-    });
-    await enqueueNotifications(ctx.db, [intent], NOW);
-
-    const entry = await ctx.db
-      .selectFrom("notification_outbox")
-      .selectAll()
-      .where("id", "=", intent.id)
-      .executeTakeFirstOrThrow();
-
-    const planned = await planDeliveries(
-      ctx.db,
-      {
-        id: entry.id,
-        event_type: entry.event_type,
-        audience_json: entry.audience_json,
-        channels_json: entry.channels_json,
-      },
-      NOW,
-    );
-
-    expect(planned.inAppRecipients).toEqual([1]);
-    expect(
-      planned.externalDeliveries.filter(
-        (delivery) => delivery.channel === "whatsapp",
-      ),
-    ).toEqual([]);
-  });
-
-  it("does not produce WhatsApp deliveries for events whose intent channels are in_app only", async () => {
-    // Confirms the unchanged event (ready_for_quotation) is not accidentally
-    // promoted. The intent here is hand-rolled with in_app only, exactly
-    // what the reactor still emits for PRICING stage transitions.
-    await ctx.repos.userChannelAddresses.upsert({
-      user_id: 1,
-      channel: "whatsapp",
-      address: "51911000001",
-      is_verified: 1,
-      verified_at: NOW,
-      created_at: NOW,
-      updated_at: NOW,
-    });
-    await openSession(ctx.db, 1, NOW);
-
+  it("plans an in-app-only intent without inventing external deliveries", async () => {
     const intent: NotificationIntent = {
-      id: "evt-ready-for-quotation",
+      id: "in-app-only",
       eventType: "lead.ready_for_quotation",
-      audience: {
-        kind: "branch_role",
-        branchId: 1,
-        role: "back_office",
-      },
+      audience: { kind: "branch_role", branchId: 1, role: "back_office" },
       channels: ["in_app"],
       priority: "normal",
       title: "Cliente listo para tarifa",
       bodyText: "El cliente está listo para proponer tarifa",
       actionUrl: null,
     };
-    await enqueueNotifications(ctx.db, [intent], NOW);
+    await enqueueNotifications(runtime.ctx.db, [intent], NOW);
 
-    const entry = await ctx.db
-      .selectFrom("notification_outbox")
-      .selectAll()
-      .where("id", "=", intent.id)
-      .executeTakeFirstOrThrow();
-
-    const planned = await planDeliveries(
-      ctx.db,
-      {
-        id: entry.id,
-        event_type: entry.event_type,
-        audience_json: entry.audience_json,
-        channels_json: entry.channels_json,
-      },
+    const [entry] = await createNotificationReader(runtime).outbox();
+    if (!entry) throw new Error("expected in-app notification outbox entry");
+    const planned = await createTestNotificationRuntime(runtime).plan(
+      entry,
       NOW,
     );
 
-    // The audience (branch_role: back_office) resolves to the seeded back-office
-    // user in branch 1 (user_id 2), not to user 1. We assert on the shape, not
-    // the specific user, so the seed can evolve without breaking this test.
-    expect(planned.inAppRecipients).toContain(2);
-    expect(planned.inAppRecipients).not.toContain(1);
-    expect(
-      planned.externalDeliveries.filter(
-        (delivery) => delivery.channel === "whatsapp",
-      ),
-    ).toEqual([]);
-  });
-
-  it("routes the AWAITING_PAYMENT handoff to WhatsApp with the URL inline", async () => {
-    // This is the contract emitted by the reactor for the "Link de pago listo"
-    // step. The body is what delivery-executor will hand to Kapso.
-    await ctx.repos.userChannelAddresses.upsert({
-      user_id: 1,
-      channel: "whatsapp",
-      address: "51911000001",
-      is_verified: 1,
-      verified_at: NOW,
-      created_at: NOW,
-      updated_at: NOW,
-    });
-    await openSession(ctx.db, 1, NOW);
-
-    const intent: NotificationIntent = {
-      id: "evt-1:AWAITING_PAYMENT",
-      eventType: "lead.fulfillment_handoff",
-      audience: { kind: "user_ids", userIds: [1] },
-      channels: ["in_app", "whatsapp"],
-      priority: "high",
-      title: "Link de pago listo",
-      bodyText: [
-        "Link(s) de pago listos para el cliente RUC 20123456789:",
-        "• POS #1: https://pay.example.com/abc",
-        "Envíalo(s) al cliente y sube el comprobante.",
-      ].join("\n"),
-      actionUrl: "/records/lead-1",
-    };
-    await enqueueNotifications(ctx.db, [intent], NOW);
-
-    const entry = await ctx.db
-      .selectFrom("notification_outbox")
-      .selectAll()
-      .where("id", "=", intent.id)
-      .executeTakeFirstOrThrow();
-
-    const planned = await planDeliveries(
-      ctx.db,
-      {
-        id: entry.id,
-        event_type: entry.event_type,
-        audience_json: entry.audience_json,
-        channels_json: entry.channels_json,
-      },
-      NOW,
-    );
-
-    expect(planned.inAppRecipients).toEqual([1]);
-    const whatsapp = planned.externalDeliveries.filter(
-      (delivery) => delivery.channel === "whatsapp",
-    );
-    expect(whatsapp).toEqual([
-      { userId: 1, channel: "whatsapp", recipientAddress: "51911000001" },
-    ]);
-
-    // The outbox row must preserve the URL in the body so the executor hands
-    // it to Kapso verbatim.
-    const stored = await ctx.db
-      .selectFrom("notification_outbox")
-      .select("body_text")
-      .where("id", "=", intent.id)
-      .executeTakeFirstOrThrow();
-    expect(stored.body_text).toContain("https://pay.example.com/abc");
-    expect(stored.body_text).toContain("RUC 20123456789");
+    expect(planned.inAppRecipients).toEqual([actorBy("backOne").userId]);
+    expect(planned.externalDeliveries).toEqual([]);
   });
 });
