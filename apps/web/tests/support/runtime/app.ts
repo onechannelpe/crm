@@ -109,7 +109,10 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   };
 
   const engine = createFakeEngine();
-  const integrations = createIntegrationRuntime(ctx.db);
+  const integrations = createIntegrationRuntime({
+    executor: ctx.db,
+    now: now.get,
+  });
 
   return {
     ctx,

@@ -16,6 +16,7 @@ interface StoredRows {
 
 export function createRecordImportRunner(deps: {
   executor: DatabaseExecutor;
+  now: () => number;
   readFile: (filePath: string) => Promise<Uint8Array>;
   updateProgress: (input: {
     jobId: string;
@@ -24,7 +25,7 @@ export function createRecordImportRunner(deps: {
     rowsFailed?: number;
   }) => Promise<unknown>;
 }) {
-  const { executor, readFile, updateProgress } = deps;
+  const { executor, now, readFile, updateProgress } = deps;
 
   return {
     async process(
@@ -69,6 +70,7 @@ export function createRecordImportRunner(deps: {
 
       if (signal.aborted) throw new Error("Job aborted");
 
+      const startedAt = now();
       const applied = await applyImportRows(
         {
           jobId: job.id,
@@ -88,7 +90,7 @@ export function createRecordImportRunner(deps: {
             );
           },
         },
-        executor,
+        { executor, now: startedAt },
       );
 
       await updateProgress({

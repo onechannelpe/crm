@@ -37,6 +37,7 @@ export function createRecordsImportQueue(
     deps.runner ??
     createRecordImportRunner({
       executor: deps.runtime.executor,
+      now: deps.runtime.now,
       readFile: deps.readFile,
       updateProgress: (progress) =>
         runtime.jobs.updateProgress(progress.jobId, progress),

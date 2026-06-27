@@ -7,6 +7,11 @@ import { applyLeadMutation } from "./lead-mutation-writer";
 import { stageImportRows } from "./staging-repo";
 import type { ImportRowInput, RowResult } from "./types";
 
+interface ImportApplyPorts {
+  executor: DatabaseExecutor;
+  now: number;
+}
+
 function resultSort(a: RowResult, b: RowResult): number {
   return a.row - b.row;
 }
@@ -41,14 +46,14 @@ export async function applyImportRows(
     }) => void;
     progressEveryRows?: number;
   },
-  executor: DatabaseExecutor,
+  ports: ImportApplyPorts,
 ): Promise<{
   results: RowResult[];
   applied: number;
   failed: number;
 }> {
   const rowsTotal = input.validRows.length + input.invalidRows.length;
-  const now = Date.now();
+  const { executor, now } = ports;
   const results: RowResult[] = input.invalidRows.map((row) => ({
     row: row.row,
     ok: false,
@@ -99,7 +104,7 @@ export async function applyImportRows(
         jobId: input.jobId,
         actor,
         row,
-        now: Date.now(),
+        now,
       });
       results.push(mutationResult.rowResult);
       if (!mutationResult.ok) {
@@ -114,7 +119,7 @@ export async function applyImportRows(
     }
     /* eslint-enable no-await-in-loop */
 
-    await enqueueLeadEffects(trx, committedEvents, Date.now());
+    await enqueueLeadEffects(trx, committedEvents, now);
   });
   emitProgress(true);
 

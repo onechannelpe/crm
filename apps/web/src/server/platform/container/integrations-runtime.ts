@@ -4,6 +4,9 @@ import type { ServerInfra } from "./infra";
 
 export function createIntegrationsRuntime(infra: ServerInfra) {
   return {
-    integration: createIntegrationRuntime(infra.db),
+    integration: createIntegrationRuntime({
+      executor: infra.db,
+      now: infra.now,
+    }),
   };
 }

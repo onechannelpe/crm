@@ -6,11 +6,15 @@ import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import type { IntegrationRuntime } from "../types";
 import { createIntegrationJobRepo } from "./integration-job-repo";
 
-export function createIntegrationRuntime(
-  executor: DatabaseExecutor,
-): IntegrationRuntime {
+export function createIntegrationRuntime(input: {
+  executor: DatabaseExecutor;
+  now: () => number;
+}): IntegrationRuntime {
+  const { executor } = input;
+
   return {
     executor,
+    now: input.now,
     jobs: createIntegrationJobRepo(executor),
     leads: createLeadRepo(executor),
     recordExportQuery: createLeadQueries(executor),

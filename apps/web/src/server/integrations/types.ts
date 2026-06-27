@@ -63,6 +63,7 @@ export interface IntegrationJobsPort {
 
 export interface IntegrationRuntime {
   executor: DatabaseExecutor;
+  now: () => number;
   jobs: IntegrationJobsPort;
   recordExportQuery: LeadQueries;
   leads: {

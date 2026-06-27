@@ -54,5 +54,14 @@ describe("import outbox planning", () => {
 
     const outbox = await createNotificationReader(runtime).outbox();
     expect(outbox.filter(({ status }) => status === "pending")).toHaveLength(2);
+    expect(
+      outbox.map(({ available_at, created_at }) => ({
+        available_at,
+        created_at,
+      })),
+    ).toEqual([
+      { available_at: 2_000, created_at: 2_000 },
+      { available_at: 2_000, created_at: 2_000 },
+    ]);
   });
 });
