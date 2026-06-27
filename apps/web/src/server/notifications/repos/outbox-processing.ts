@@ -88,7 +88,7 @@ export function createNotificationOutboxProcessingRepository(
         .select((eb) => eb.fn.count<number>("id").as("count"))
         .where("status", "in", ["pending", "processing"])
         .executeTakeFirstOrThrow();
-      return Number(row.count);
+      return row.count;
     },
   };
 }
