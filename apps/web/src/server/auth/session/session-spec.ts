@@ -9,6 +9,7 @@ import type {
 } from "~/lib/auth/core/session-contract";
 import type { UserSessionRow } from "~/lib/auth/types";
 import type { UsersTable } from "~/lib/db/types";
+import type { Logger } from "~/lib/observability/logger-shared";
 import type { UserId } from "~/server/shared/ids";
 import type { EventsRepo } from "~/server/shared/repos-events";
 
@@ -87,9 +88,7 @@ export interface SessionServiceDeps {
   users: SessionUsersPort;
   events: SessionEventPort;
   now?: () => number;
-  logger?: {
-    error(message: string, meta?: unknown): void;
-  };
+  logger?: Pick<Logger, "error">;
 }
 
 export type { AuthSession };
