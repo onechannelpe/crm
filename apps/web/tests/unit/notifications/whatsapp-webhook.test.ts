@@ -24,12 +24,20 @@ function kapsoInbound(input: {
 function createPorts(
   claim: { userId: number; address: string; verified: boolean } | undefined,
 ) {
-  const findClaim = vi.fn().mockResolvedValue(claim);
-  const markVerified = vi.fn().mockResolvedValue(true);
-  const open = vi.fn().mockResolvedValue(undefined);
-  const sendVerificationReply = vi.fn().mockResolvedValue(undefined);
-  const info = vi.fn();
-  const error = vi.fn();
+  const findClaim = vi
+    .fn<WhatsAppInboundPorts["addresses"]["findClaim"]>()
+    .mockResolvedValue(claim);
+  const markVerified = vi
+    .fn<WhatsAppInboundPorts["addresses"]["markVerified"]>()
+    .mockResolvedValue(true);
+  const open = vi
+    .fn<WhatsAppInboundPorts["sessions"]["open"]>()
+    .mockResolvedValue(undefined);
+  const sendVerificationReply = vi
+    .fn<WhatsAppInboundPorts["replies"]["sendVerificationReply"]>()
+    .mockResolvedValue(undefined);
+  const info = vi.fn<WhatsAppInboundPorts["logger"]["info"]>();
+  const error = vi.fn<WhatsAppInboundPorts["logger"]["error"]>();
   const ports: WhatsAppInboundPorts = {
     addresses: { findClaim, markVerified },
     sessions: { open },
