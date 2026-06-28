@@ -18,6 +18,10 @@ export async function startQueueDoorbellSubscriber(triggers: {
       key: "NOTIFICATIONS_INTENTS",
       channel: JOB_CHANNELS.NOTIFICATIONS_INTENTS,
     },
+    {
+      key: "NOTIFICATIONS_DELIVERIES",
+      channel: JOB_CHANNELS.NOTIFICATIONS_DELIVERIES,
+    },
   ] as const;
 
   await Promise.all(

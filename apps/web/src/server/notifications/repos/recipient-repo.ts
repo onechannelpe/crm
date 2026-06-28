@@ -3,12 +3,21 @@ import type { Kysely } from "kysely";
 import type { Database } from "~/lib/db/types";
 
 import { resolveAudience } from "../audience";
-import type { NotificationPlanningRepository } from "../delivery-planner";
+import type { NotificationAudience, NotificationChannel } from "../types";
 import { filterUsersWithActiveSession } from "../whatsapp-session";
 
-export function createNotificationPlanningRepository(
+export interface RecipientRepository {
+  resolveAudience(audience: NotificationAudience): Promise<number[]>;
+  findVerifiedAddresses(
+    userIds: number[],
+    channel: Exclude<NotificationChannel, "in_app">,
+  ): Promise<Map<number, string>>;
+  findActiveWhatsAppUsers(userIds: number[], now: number): Promise<Set<number>>;
+}
+
+export function createRecipientRepository(
   db: Kysely<Database>,
-): NotificationPlanningRepository {
+): RecipientRepository {
   return {
     resolveAudience: (audience) => resolveAudience(db, audience),
 

@@ -5,7 +5,7 @@ import type {
   NotificationAudience,
   NotificationChannel,
   NotificationIntent,
-} from "./types";
+} from "../types";
 
 const NOTIFICATION_CHANNELS = [
   "in_app",

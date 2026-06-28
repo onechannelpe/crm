@@ -26,13 +26,14 @@ export function startBackgroundJobs() {
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
   const sunatEnrichmentWritebackQueue =
     getServerRuntime().workflow.createSunatEnrichmentWritebackQueue(WORKER_ID);
-  const notificationsIntentQueue =
-    getServerRuntime().notifications.createIntentQueue(WORKER_ID);
+  const notificationQueues =
+    getServerRuntime().notifications.createQueues(WORKER_ID);
   const queues: QueueRunner[] = [
     recordsImportQueue,
     enrichmentQueue,
     sunatEnrichmentWritebackQueue,
-    notificationsIntentQueue,
+    notificationQueues.expansion,
+    notificationQueues.dispatch,
   ];
   const runAllQueues = () => {
     for (const queue of queues) {
@@ -69,7 +70,10 @@ export function startBackgroundJobs() {
       void sunatEnrichmentWritebackQueue.runOnce();
     },
     NOTIFICATIONS_INTENTS: () => {
-      void notificationsIntentQueue.runOnce();
+      void notificationQueues.expansion.runOnce();
+    },
+    NOTIFICATIONS_DELIVERIES: () => {
+      void notificationQueues.dispatch.runOnce();
     },
   });
 

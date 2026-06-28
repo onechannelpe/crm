@@ -1,4 +1,4 @@
-import { enqueueNotifications } from "~/server/notifications/outbox";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { LeadHistoryEventDraftFor } from "~/server/workflow/lead/domain/history";

@@ -53,21 +53,41 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("notification_deliveries")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("intent_id", "text", (col) => col.notNull())
-    .addColumn("recipient_channel", "varchar(20)", (col) => col.notNull())
+    .addColumn("user_id", "integer", (col) => col.notNull())
+    .addColumn("channel", "varchar(20)", (col) => col.notNull())
     .addColumn("recipient_address", "varchar(255)", (col) => col.notNull())
+    .addColumn("title", "varchar(255)", (col) => col.notNull())
+    .addColumn("body_text", "text", (col) => col.notNull())
+    .addColumn("action_url", "varchar(255)")
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_owner", "varchar(100)")
+    .addColumn("lease_until", "integer")
     .addColumn("provider", "varchar(32)")
     .addColumn("provider_message_id", "varchar(255)")
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("error_code", "varchar(64)")
     .addColumn("error_message", "text")
     .addColumn("latency_ms", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("sent_at", "integer")
     .execute();
 
+  // Idempotency: re-expanding an intent never creates a second delivery for the
+  // same recipient and channel.
   await db.schema
-    .createIndex("idx_notification_deliveries_intent_created")
+    .createIndex("idx_notification_deliveries_recipient")
     .on("notification_deliveries")
-    .columns(["intent_id", "created_at"])
+    .columns(["intent_id", "user_id", "channel"])
+    .unique()
+    .execute();
+
+  // Dispatch poll: pending rows whose lease is free and due.
+  await db.schema
+    .createIndex("idx_notification_deliveries_status")
+    .on("notification_deliveries")
+    .columns(["status", "available_at", "lease_until"])
     .execute();
 
   await db.schema
@@ -112,12 +132,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("priority", "varchar(16)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "integer", (col) => col.notNull())
     .addColumn("lease_owner", "varchar(100)")
     .addColumn("lease_until", "integer")
     .addColumn("error", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("processed_at", "integer")
+    .addColumn("expanded_at", "integer")
     .execute();
 
   await db.schema

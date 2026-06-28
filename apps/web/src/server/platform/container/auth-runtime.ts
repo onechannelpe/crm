@@ -14,7 +14,7 @@ import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
-import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
+import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createEventsRepo } from "~/server/shared/repos-events";
 

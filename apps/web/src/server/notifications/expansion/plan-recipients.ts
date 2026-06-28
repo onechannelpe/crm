@@ -1,17 +1,7 @@
 import type { Logger } from "~/lib/observability/logger-shared";
 
-import {
-  parseNotificationAudience,
-  parseNotificationChannels,
-} from "./outbox-payload";
-import type { NotificationAudience, NotificationChannel } from "./types";
-
-export type NotificationOutboxEntry = {
-  id: string;
-  event_type: string;
-  audience_json: string;
-  channels_json: string;
-};
+import type { RecipientRepository } from "../repos/recipient-repo";
+import type { NotificationAudience, NotificationChannel } from "../types";
 
 export type PlannedExternalDelivery = {
   userId: number;
@@ -19,34 +9,27 @@ export type PlannedExternalDelivery = {
   recipientAddress: string;
 };
 
-export type PlannedDeliveries = {
-  recipients: number[];
+export type RecipientPlan = {
   inAppRecipients: number[];
   externalDeliveries: PlannedExternalDelivery[];
 };
 
-export interface NotificationPlanningRepository {
-  resolveAudience(audience: NotificationAudience): Promise<number[]>;
-  findVerifiedAddresses(
-    userIds: number[],
-    channel: Exclude<NotificationChannel, "in_app">,
-  ): Promise<Map<number, string>>;
-  findActiveWhatsAppUsers(userIds: number[], now: number): Promise<Set<number>>;
-}
+export type RecipientPlannerInput = {
+  audience: NotificationAudience;
+  channels: NotificationChannel[];
+};
 
-export function createNotificationPlanner(deps: {
-  repository: NotificationPlanningRepository;
+export function createRecipientPlanner(deps: {
+  repository: RecipientRepository;
   logger: Pick<Logger, "info">;
 }) {
-  return async function planDeliveries(
-    entry: NotificationOutboxEntry,
+  return async function planRecipients(
+    input: RecipientPlannerInput,
     now: number,
-  ): Promise<PlannedDeliveries> {
-    const audience = parseNotificationAudience(entry.audience_json);
-    const channels = parseNotificationChannels(entry.channels_json);
-    const recipients = await deps.repository.resolveAudience(audience);
-    const inAppRecipients = channels.includes("in_app") ? recipients : [];
-    const externalChannels = channels.filter(
+  ): Promise<RecipientPlan> {
+    const recipients = await deps.repository.resolveAudience(input.audience);
+    const inAppRecipients = input.channels.includes("in_app") ? recipients : [];
+    const externalChannels = input.channels.filter(
       (channel): channel is "email" | "whatsapp" => channel !== "in_app",
     );
 
@@ -91,6 +74,8 @@ export function createNotificationPlanner(deps: {
       }
     }
 
-    return { recipients, inAppRecipients, externalDeliveries };
+    return { inAppRecipients, externalDeliveries };
   };
 }
+
+export type RecipientPlanner = ReturnType<typeof createRecipientPlanner>;

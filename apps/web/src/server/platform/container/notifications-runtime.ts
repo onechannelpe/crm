@@ -12,15 +12,17 @@ import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
-import { createNotificationDeliveryService } from "~/server/notifications/delivery-executor";
-import { createNotificationPlanner } from "~/server/notifications/delivery-planner";
-import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
-import { enqueueNotifications } from "~/server/notifications/outbox";
-import { createNotificationProcessor } from "~/server/notifications/processor";
+import { createMessagingGateway } from "~/server/notifications/channels/messaging-gateway";
+import { createDeliveryDispatchQueue } from "~/server/notifications/dispatch/queue";
+import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
+import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
+import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
+import { createIntentExpansionQueue } from "~/server/notifications/expansion/queue";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
-import { createNotificationDeliveryRepository } from "~/server/notifications/repos/delivery";
-import { createNotificationOutboxProcessingRepository } from "~/server/notifications/repos/outbox-processing";
-import { createNotificationPlanningRepository } from "~/server/notifications/repos/planning";
+import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
+import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
+import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 
 import type { ServerInfra } from "./infra";
@@ -55,45 +57,59 @@ export function createNotificationsRuntime(
   const composer = createEmailComposer();
   const messaging = createMessagingGateway({ channels, composer });
 
-  const logger = createLogger("notifications-processor");
-  const planner = createNotificationPlanner({
-    repository: createNotificationPlanningRepository(infra.db),
+  const logger = createLogger("notifications");
+  const clock = Date.now;
+
+  const intents = createIntentRepository(infra.db);
+  const deliveries = createDeliveryRepository(infra.db);
+  const appNotifications = createAppNotificationRepo(infra.db);
+
+  const expand = createIntentExpander({
+    planRecipients: createRecipientPlanner({
+      repository: createRecipientRepository(infra.db),
+      logger,
+    }),
+    appNotifications,
+    deliveries,
     logger,
   });
-  const delivery = createNotificationDeliveryService({
-    appNotifications: createAppNotificationRepo(infra.db),
-    deliveries: createNotificationDeliveryRepository(infra.db),
+  const send = createDeliverySender({
     messaging,
+    deliveries,
     publicOrigin: app.publicOrigin,
-    logger,
-  });
-  const processor = createNotificationProcessor({
-    outbox: createNotificationOutboxProcessingRepository(infra.db),
-    plan: planner,
-    delivery,
-    clock: Date.now,
     logger,
   });
 
   return {
     messaging,
-    createIntentQueue(workerId: string): QueueRunner {
+    appNotifications,
+    createQueues(workerId: string): {
+      expansion: QueueRunner;
+      dispatch: QueueRunner;
+    } {
       return {
-        name: "notifications-intents",
-        async runOnce(): Promise<void> {
-          await processor.runOnce(workerId, 50);
-        },
+        expansion: createIntentExpansionQueue(workerId, {
+          intents,
+          expand,
+          clock,
+          onExpanded: () =>
+            doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_DELIVERIES, Date.now()),
+        }),
+        dispatch: createDeliveryDispatchQueue(workerId, {
+          deliveries,
+          send,
+          clock,
+        }),
       };
     },
     dispatchPendingJobs(): void {
       doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
     },
     async enqueue(
-      intents: NotificationIntent[],
+      intentsToEnqueue: NotificationIntent[],
       now = Date.now(),
     ): Promise<void> {
-      await enqueueNotifications(infra.db, intents, now);
+      await enqueueNotifications(infra.db, intentsToEnqueue, now);
     },
-    appNotifications: createAppNotificationRepo(infra.db),
   };
 }

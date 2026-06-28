@@ -9,6 +9,7 @@ export const JOB_CHANNELS = {
   ENRICHMENT: "job:enrichment",
   ENRICHMENT_WRITEBACK: "job:enrichment-writeback",
   NOTIFICATIONS_INTENTS: "job:notifications-intents",
+  NOTIFICATIONS_DELIVERIES: "job:notifications-deliveries",
 } as const;
 
 export type JobChannel = (typeof JOB_CHANNELS)[keyof typeof JOB_CHANNELS];

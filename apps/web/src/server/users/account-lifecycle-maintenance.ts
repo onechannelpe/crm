@@ -2,7 +2,7 @@ import { config } from "~/lib/config";
 import { APP_LOCALE } from "~/lib/locale";
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
-import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
+import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { expireUsersAndInvalidateSessions } from "./expire-users";

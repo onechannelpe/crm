@@ -1,5 +1,5 @@
 import type { FulfillmentStep } from "~/contracts/workflow/vocabulary";
-import { enqueueNotifications } from "~/server/notifications/outbox";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type {
   NotificationAudience,
   NotificationIntent,

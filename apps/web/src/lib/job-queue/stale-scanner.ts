@@ -27,7 +27,12 @@ const JOB_TABLES = [
   },
   {
     name: "notification_outbox",
-    staleStatuses: ["processing"],
+    staleStatuses: ["expanding"],
+    resetStatus: "pending",
+  },
+  {
+    name: "notification_deliveries",
+    staleStatuses: ["sending"],
     resetStatus: "pending",
   },
 ] as const;

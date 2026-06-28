@@ -48,9 +48,15 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
         return;
       }
 
+      // Reserve slots at claim time, not inside the per-job callback. Several
+      // runOnce calls can overlap (doorbell wake, periodic drain, the
+      // self-reschedule below); incrementing only once the callback ran let
+      // them all read a stale count and claim past maxConcurrency. Each job
+      // releases its own slot in its finally.
+      runningCount += jobs.length;
+
       await Promise.all(
         jobs.map(async (job) => {
-          runningCount++;
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 

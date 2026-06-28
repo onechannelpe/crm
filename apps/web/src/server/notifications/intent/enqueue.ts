@@ -1,8 +1,13 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { validateNotificationIntent } from "./outbox-payload";
-import type { NotificationIntent } from "./types";
+import type { NotificationIntent } from "../types";
+import { validateNotificationIntent } from "./payload";
 
+const DEFAULT_MAX_ATTEMPTS = 5;
+
+// Stage 0: write intent rows transactionally with the business action. The
+// fan-out to recipients happens later in the expansion stage, so this stays
+// O(1) per intent regardless of audience size.
 export async function enqueueNotifications(
   db: DatabaseExecutor,
   intents: readonly unknown[],
@@ -28,12 +33,13 @@ export async function enqueueNotifications(
         priority: intent.priority,
         status: "pending" as const,
         attempt_count: 0,
+        max_attempts: DEFAULT_MAX_ATTEMPTS,
         available_at: now,
         lease_owner: null,
         lease_until: null,
         error: null,
         created_at: now,
-        processed_at: null,
+        expanded_at: null,
       })),
     )
     .onConflict((oc) => oc.column("id").doNothing())
