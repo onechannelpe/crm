@@ -6,13 +6,19 @@ import {
   createWhatsAppCloudProvider,
   type DeliveryProvider,
 } from "@crm/message-channels";
+import type { Kysely } from "kysely";
 
+import type { Database } from "~/lib/db/types";
 import type { AppConfig, NotificationsConfig } from "~/lib/env";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
-import { createMessagingGateway } from "~/server/notifications/channels/messaging-gateway";
+import type { Logger } from "~/lib/observability/logger-shared";
+import {
+  createMessagingGateway,
+  type MessagingGateway,
+} from "~/server/notifications/channels/messaging-gateway";
 import { createDeliveryDispatchQueue } from "~/server/notifications/dispatch/queue";
 import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
 import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
@@ -27,12 +33,94 @@ import type { NotificationIntent } from "~/server/notifications/types";
 
 import type { ServerInfra } from "./infra";
 
+// Pipeline wiring expressed purely in terms of injected dependencies. This is
+// the single owner of how the expansion/dispatch stages are assembled; the
+// config-facing factory below and the test harness both build through it, so
+// the two cannot drift. Keeping `clock` and `messaging` as inputs (rather than
+// reaching for `Date.now`/env here) is what makes the pipeline testable with a
+// controlled clock and a fake gateway.
+export interface NotificationPipelineDeps {
+  db: Kysely<Database>;
+  messaging: MessagingGateway;
+  clock: () => number;
+  publicOrigin: string;
+  doorbell: QueueDoorbell;
+  logger: Logger;
+}
+
+export interface NotificationPipeline {
+  messaging: MessagingGateway;
+  appNotifications: ReturnType<typeof createAppNotificationRepo>;
+  createQueues(workerId: string): {
+    expansion: QueueRunner;
+    dispatch: QueueRunner;
+  };
+  dispatchPendingJobs(): void;
+  enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
+}
+
+export function assembleNotificationPipeline(
+  deps: NotificationPipelineDeps,
+): NotificationPipeline {
+  const intents = createIntentRepository(deps.db);
+  const deliveries = createDeliveryRepository(deps.db);
+  const appNotifications = createAppNotificationRepo(deps.db);
+
+  const expand = createIntentExpander({
+    planRecipients: createRecipientPlanner({
+      repository: createRecipientRepository(deps.db),
+      logger: deps.logger,
+    }),
+    appNotifications,
+    deliveries,
+    logger: deps.logger,
+  });
+  const send = createDeliverySender({
+    messaging: deps.messaging,
+    deliveries,
+    publicOrigin: deps.publicOrigin,
+    logger: deps.logger,
+  });
+
+  return {
+    messaging: deps.messaging,
+    appNotifications,
+    createQueues(workerId) {
+      return {
+        expansion: createIntentExpansionQueue(workerId, {
+          intents,
+          expand,
+          clock: deps.clock,
+          onExpanded: () =>
+            deps.doorbell.wake(
+              JOB_CHANNELS.NOTIFICATIONS_DELIVERIES,
+              deps.clock(),
+            ),
+        }),
+        dispatch: createDeliveryDispatchQueue(workerId, {
+          deliveries,
+          send,
+          clock: deps.clock,
+        }),
+      };
+    },
+    dispatchPendingJobs() {
+      deps.doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, deps.clock());
+    },
+    enqueue(intentsToEnqueue, now = deps.clock()) {
+      return enqueueNotifications(deps.db, intentsToEnqueue, now);
+    },
+  };
+}
+
+// Config adapter: builds the provider-backed messaging gateway from env config
+// and hands real-clock dependencies to the shared pipeline assembly.
 export function createNotificationsRuntime(
   infra: ServerInfra,
   config: NotificationsConfig,
   app: AppConfig,
   doorbell: QueueDoorbell,
-) {
+): NotificationPipeline {
   const providers: DeliveryProvider[] = [];
   if (config.resend) {
     providers.push(createResendProvider(config.resend));
@@ -50,66 +138,18 @@ export function createNotificationsRuntime(
     providers.push(createWhatsAppCloudProvider(config.whatsappCloud));
   }
 
-  const channels = createMessageChannels({
-    routes: config.routes,
-    providers,
+  const channels = createMessageChannels({ routes: config.routes, providers });
+  const messaging = createMessagingGateway({
+    channels,
+    composer: createEmailComposer(),
   });
-  const composer = createEmailComposer();
-  const messaging = createMessagingGateway({ channels, composer });
 
-  const logger = createLogger("notifications");
-  const clock = Date.now;
-
-  const intents = createIntentRepository(infra.db);
-  const deliveries = createDeliveryRepository(infra.db);
-  const appNotifications = createAppNotificationRepo(infra.db);
-
-  const expand = createIntentExpander({
-    planRecipients: createRecipientPlanner({
-      repository: createRecipientRepository(infra.db),
-      logger,
-    }),
-    appNotifications,
-    deliveries,
-    logger,
-  });
-  const send = createDeliverySender({
+  return assembleNotificationPipeline({
+    db: infra.db,
     messaging,
-    deliveries,
+    clock: Date.now,
     publicOrigin: app.publicOrigin,
-    logger,
+    doorbell,
+    logger: createLogger("notifications"),
   });
-
-  return {
-    messaging,
-    appNotifications,
-    createQueues(workerId: string): {
-      expansion: QueueRunner;
-      dispatch: QueueRunner;
-    } {
-      return {
-        expansion: createIntentExpansionQueue(workerId, {
-          intents,
-          expand,
-          clock,
-          onExpanded: () =>
-            doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_DELIVERIES, Date.now()),
-        }),
-        dispatch: createDeliveryDispatchQueue(workerId, {
-          deliveries,
-          send,
-          clock,
-        }),
-      };
-    },
-    dispatchPendingJobs(): void {
-      doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
-    },
-    async enqueue(
-      intentsToEnqueue: NotificationIntent[],
-      now = Date.now(),
-    ): Promise<void> {
-      await enqueueNotifications(infra.db, intentsToEnqueue, now);
-    },
-  };
 }

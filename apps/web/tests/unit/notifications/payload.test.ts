@@ -4,7 +4,7 @@ import {
   parseNotificationAudience,
   parseNotificationChannels,
   validateNotificationIntent,
-} from "~/server/notifications/outbox-payload";
+} from "~/server/notifications/intent/payload";
 
 describe("notification outbox payload", () => {
   it("parses valid audience variants", () => {

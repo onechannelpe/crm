@@ -1,25 +1,32 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { createLogger } from "~/lib/observability/logger";
+import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
 import {
-  createNotificationPlanner,
-  type NotificationOutboxEntry,
-} from "~/server/notifications/delivery-planner";
-import { createNotificationPlanningRepository } from "~/server/notifications/repos/planning";
+  parseNotificationAudience,
+  parseNotificationChannels,
+} from "~/server/notifications/intent/payload";
+import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { PLANNER_SCENARIOS, seedPlannerFixtures } from "./fixtures";
 
+type PlannerEntry = {
+  audience_json: string;
+  channels_json: string;
+};
+
 type ScenarioState = {
   cursor: { value: number };
-  entries: NotificationOutboxEntry[];
+  entries: PlannerEntry[];
 };
 
 describe("notifications delivery planner benchmark", () => {
   const db = createBenchDbFixture("bench-notifications-delivery-planner");
-  let plan: ReturnType<typeof createNotificationPlanner> | null = null;
+  let planRecipients: ReturnType<typeof createRecipientPlanner> | null = null;
   const scenarios: {
     disjoint: ScenarioState;
     "partial-overlap": ScenarioState;
@@ -32,8 +39,8 @@ describe("notifications delivery planner benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    plan = createNotificationPlanner({
-      repository: createNotificationPlanningRepository(ctx.db),
+    planRecipients = createRecipientPlanner({
+      repository: createRecipientRepository(ctx.db),
       logger: createLogger("bench-notification-planner"),
     });
     const intentIdsByScenario = await seedPlannerFixtures(ctx);
@@ -41,7 +48,7 @@ describe("notifications delivery planner benchmark", () => {
     for (const scenario of PLANNER_SCENARIOS) {
       const entries = await ctx.db
         .selectFrom("notification_outbox")
-        .select(["id", "event_type", "audience_json", "channels_json"])
+        .select(["audience_json", "channels_json"])
         .where("id", "in", intentIdsByScenario[scenario.name])
         .execute();
 
@@ -67,8 +74,16 @@ describe("notifications delivery planner benchmark", () => {
           `planner pool exhausted for scenario ${scenario.name}`,
         );
 
-        if (!plan) throw new Error("planner benchmark used before setup");
-        await plan(entry, Date.now());
+        if (!planRecipients) {
+          throw new Error("planner benchmark used before setup");
+        }
+        await planRecipients(
+          {
+            audience: parseNotificationAudience(entry.audience_json),
+            channels: parseNotificationChannels(entry.channels_json),
+          },
+          BENCH_NOW,
+        );
       },
       {
         ...fixedIterations(scenario.intentCount),

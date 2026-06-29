@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatWhatsAppNotificationBody } from "~/server/notifications/delivery-executor";
+import { formatWhatsAppNotificationBody } from "~/server/notifications/dispatch/format-message";
 
 describe("formatWhatsAppNotificationBody", () => {
   it("appends an absolute action URL to WhatsApp messages", () => {

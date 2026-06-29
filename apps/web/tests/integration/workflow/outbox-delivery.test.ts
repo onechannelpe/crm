@@ -34,27 +34,27 @@ describe("outbox delivery", () => {
         priority: "normal",
         status: "pending",
         attempt_count: 0,
+        max_attempts: 5,
         available_at: 0,
         lease_owner: null,
         lease_until: null,
         error: null,
         created_at: 0,
-        processed_at: null,
+        expanded_at: null,
       })
       .execute();
 
-    await createTestNotificationRuntime(runtime).processor.runUntilIdle({
-      workerId: "malformed",
-    });
+    await createTestNotificationRuntime(runtime).drain();
 
     const failed = await runtime.ctx.db
       .selectFrom("notification_outbox")
-      .select(["status", "error"])
+      .select(["status", "error", "expanded_at"])
       .where("id", "=", "test-malformed-channels")
       .executeTakeFirstOrThrow();
 
     expect(failed.status).toBe("failed");
     expect(failed.error).toContain("Invalid notification channels payload");
+    expect(failed.expanded_at).toBe(runtime.now.get());
   });
 
   it("drains pending outbox events and persists notifications", async () => {
@@ -88,7 +88,7 @@ describe("outbox delivery", () => {
     });
 
     const notificationsRuntime = createTestNotificationRuntime(runtime);
-    await notificationsRuntime.processor.runUntilIdle({ workerId: "delivery" });
+    await notificationsRuntime.drain();
 
     const reader = createNotificationReader(runtime);
     const notifications = await reader.appNotifications();
@@ -106,6 +106,8 @@ describe("outbox delivery", () => {
     ]);
 
     const outbox = await reader.outbox();
-    expect(outbox.filter(({ status }) => status === "done")).toHaveLength(2);
+    expect(outbox.filter(({ status }) => status === "expanded")).toHaveLength(
+      2,
+    );
   });
 });

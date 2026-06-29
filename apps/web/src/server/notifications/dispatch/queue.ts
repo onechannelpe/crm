@@ -25,6 +25,7 @@ export function createDeliveryDispatchQueue(
     leaseMs: LEASE_MS,
     batchSize: BATCH_SIZE,
     maxConcurrency: 8,
+    now: deps.clock,
     poll: (limit) =>
       deps.deliveries.claimPending(workerId, deps.clock(), limit, LEASE_MS),
     handle: (job) => deps.send(job),
@@ -40,7 +41,7 @@ export function createDeliveryDispatchQueue(
       }
       return {
         kind: "retry",
-        availableAt: nextAvailableAt(job.attempt_count),
+        availableAt: nextAvailableAt(job.attempt_count, deps.clock()),
         reason: outcome.reason,
       };
     },

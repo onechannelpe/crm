@@ -24,6 +24,7 @@ export function createIntentExpansionQueue(
     leaseMs: LEASE_MS,
     batchSize: BATCH_SIZE,
     maxConcurrency: 4,
+    now: deps.clock,
     poll: (limit) =>
       deps.intents.claimPending(workerId, deps.clock(), limit, LEASE_MS),
     handle: (job) => deps.expand(job, deps.clock()),

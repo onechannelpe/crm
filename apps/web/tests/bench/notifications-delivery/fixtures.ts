@@ -1,6 +1,11 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
-import { enqueueNotifications } from "~/server/notifications/outbox";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
+import {
+  createDeliveryRepository,
+  type DeliveryJob,
+} from "~/server/notifications/repos/delivery-repo";
+import type { IntentJob } from "~/server/notifications/repos/intent-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 
 import { BENCH_NOW } from "../_shared/constants";
@@ -28,8 +33,9 @@ export const PLANNER_SCENARIOS = [
   },
 ] as const;
 
-export const PROCESSOR_SMOKE_INTENT_COUNT = 8;
-export const PROCESSOR_SMOKE_RECIPIENTS = 12;
+export const EXPAND_INTENT_COUNT = 24;
+export const EXPAND_RECIPIENTS = 12;
+export const DISPATCH_DELIVERY_COUNT = 200;
 
 export type PlannerScenarioName = (typeof PLANNER_SCENARIOS)[number]["name"];
 
@@ -90,6 +96,16 @@ async function seedUsersAndAddresses(
           updated_at: BENCH_NOW,
         },
       ]),
+    )
+    .execute();
+
+  await ctx.db
+    .insertInto("whatsapp_sessions")
+    .values(
+      userIds.map((userId) => ({
+        user_id: userId,
+        expires_at: BENCH_NOW + 24 * 60 * 60 * 1000,
+      })),
     )
     .execute();
 }
@@ -175,28 +191,90 @@ export async function seedPlannerFixtures(
   };
 }
 
-export async function seedProcessorSmokeFixtures(
+// One independent intent per iteration for the expansion-stage benchmark. Each
+// intent fans out to the same recipient set across all three channels; the
+// returned jobs are the content the expander operates on.
+export async function seedExpandFixtures(
   ctx: TestDbContext,
-): Promise<string[]> {
-  const userStart = USER_ID_START + 90_000;
-  const userIds = createUserIds(userStart, PROCESSOR_SMOKE_RECIPIENTS);
-
-  await seedUsersAndAddresses(ctx, userIds, "processor-smoke");
+): Promise<IntentJob[]> {
+  const userIds = createUserIds(USER_ID_START + 90_000, EXPAND_RECIPIENTS);
+  await seedUsersAndAddresses(ctx, userIds, "expand");
 
   const intents: NotificationIntent[] = Array.from(
-    { length: PROCESSOR_SMOKE_INTENT_COUNT },
+    { length: EXPAND_INTENT_COUNT },
     (_, index) => ({
-      id: `bench-processor-smoke-${index}`,
+      id: `bench-expand-${index}`,
       eventType: "bench.notification.delivery",
       audience: { kind: "user_ids", userIds },
       channels: ["in_app", "email", "whatsapp"],
       priority: "normal",
-      title: `Bench processor smoke ${index}`,
-      bodyText: "Bench processor body",
+      title: `Bench expand ${index}`,
+      bodyText: "Bench expand body",
       actionUrl: null,
     }),
   );
-
   await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  return intents.map((intent) => intent.id);
+
+  return ctx.db
+    .selectFrom("notification_outbox")
+    .select([
+      "id",
+      "attempt_count",
+      "max_attempts",
+      "event_type",
+      "audience_json",
+      "channels_json",
+      "priority",
+      "title",
+      "body_text",
+      "action_url",
+    ])
+    .where(
+      "id",
+      "in",
+      intents.map((intent) => intent.id),
+    )
+    .execute();
+}
+
+// One independent pending delivery per iteration for the dispatch-stage
+// benchmark. Distinct intent ids keep the unique (intent,user,channel) key from
+// collapsing the rows.
+export async function seedDispatchFixtures(
+  ctx: TestDbContext,
+): Promise<DeliveryJob[]> {
+  const userIds = createUserIds(USER_ID_START + 110_000, 1);
+  await seedUsersAndAddresses(ctx, userIds, "dispatch");
+  const [userId] = userIds;
+
+  const deliveries = createDeliveryRepository(ctx.db);
+  await deliveries.insertPlanned(
+    Array.from({ length: DISPATCH_DELIVERY_COUNT }, (_, index) => ({
+      intent_id: `bench-dispatch-${index}`,
+      user_id: userId,
+      channel: "email" as const,
+      recipient_address: `bench-dispatch-${index}@test.local`,
+      title: `Bench dispatch ${index}`,
+      body_text: "Bench dispatch body",
+      action_url: null,
+    })),
+    BENCH_NOW,
+  );
+
+  return ctx.db
+    .selectFrom("notification_deliveries")
+    .select([
+      "id",
+      "attempt_count",
+      "max_attempts",
+      "intent_id",
+      "user_id",
+      "channel",
+      "recipient_address",
+      "title",
+      "body_text",
+      "action_url",
+    ])
+    .where("intent_id", "like", "bench-dispatch-%")
+    .execute();
 }

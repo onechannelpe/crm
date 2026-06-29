@@ -8,7 +8,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { enqueueNotifications } from "~/server/notifications/outbox";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { openSession } from "~/server/notifications/whatsapp-session";
 import { reactToFulfillmentChanges } from "~/server/workflow/effects/reactors/fulfillment-notify";
@@ -75,7 +75,7 @@ describe("workflow notification pipeline", () => {
     expect(JSON.parse(entry.channels_json)).toEqual(["in_app", "whatsapp"]);
 
     const notifications = createTestNotificationRuntime(runtime);
-    const planned = await notifications.plan(entry, NOW);
+    const planned = await notifications.planIntentRow(entry, NOW);
     expect(planned.inAppRecipients).toEqual([actorBy("execOne").userId]);
     expect(planned.externalDeliveries).toEqual([
       {
@@ -84,6 +84,20 @@ describe("workflow notification pipeline", () => {
         recipientAddress: "51911000001",
       },
     ]);
+
+    await notifications.drain();
+
+    const [delivery] = await reader.deliveries();
+    expect(delivery).toMatchObject({
+      intent_id: entry.id,
+      user_id: actorBy("execOne").userId,
+      channel: "whatsapp",
+      recipient_address: "51911000001",
+      status: "sent",
+      provider: "whatsapp_cloud",
+      provider_message_id: "test-whatsapp",
+      sent_at: NOW,
+    });
   });
 
   it("persists payment URLs produced by the fulfillment reactor", async () => {
@@ -92,11 +106,14 @@ describe("workflow notification pipeline", () => {
       key: "payment-ready",
       step: "AWAITING_PAYMENT",
     });
+    const orderId = lead.fulfillmentOrderId;
+    if (!orderId) throw new Error("expected fulfillment order id");
+
     await runtime.ctx.db
       .insertInto("lead_fulfillment_units")
       .values({
         id: "unit-payment-ready",
-        order_id: lead.fulfillmentOrderId!,
+        order_id: orderId,
         venue_id: lead.venueIds[0],
         label: "POS #1",
         serial_number: null,
@@ -119,7 +136,7 @@ describe("workflow notification pipeline", () => {
             actorUserId: actorBy("backOne").userId,
             subjectUserId: null,
             payload: {
-              orderId: lead.fulfillmentOrderId!,
+              orderId,
               from: "AWAITING_PAYMENT_LINK",
               to: "AWAITING_PAYMENT",
               action: "upload_payment_proof",
@@ -155,12 +172,22 @@ describe("workflow notification pipeline", () => {
 
     const [entry] = await createNotificationReader(runtime).outbox();
     if (!entry) throw new Error("expected in-app notification outbox entry");
-    const planned = await createTestNotificationRuntime(runtime).plan(
-      entry,
-      NOW,
-    );
+    const notifications = createTestNotificationRuntime(runtime);
+    const planned = await notifications.planIntentRow(entry, NOW);
 
     expect(planned.inAppRecipients).toEqual([actorBy("backOne").userId]);
     expect(planned.externalDeliveries).toEqual([]);
+
+    await notifications.drain();
+
+    const reader = createNotificationReader(runtime);
+    expect(await reader.appNotifications()).toEqual([
+      {
+        user_id: actorBy("backOne").userId,
+        event_type: "lead.ready_for_quotation",
+        source_event_id: "in-app-only",
+      },
+    ]);
+    expect(await reader.deliveries()).toEqual([]);
   });
 });

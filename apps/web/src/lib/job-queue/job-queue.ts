@@ -15,6 +15,7 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
   const maxConcurrency = config.maxConcurrency ?? 1;
   const timeoutMs = config.timeoutMs ?? 120_000;
   const claimBatchSize = config.batchSize ?? maxConcurrency;
+  const now = config.now ?? Date.now;
 
   let runningCount = 0;
   const logger = createLogger(`queue:${name}`);
@@ -95,7 +96,7 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
                 const timeoutReason = "Timeout or lease stolen";
                 await config.onRetry(
                   job.id,
-                  nextAvailableAt(job.attempt_count),
+                  nextAvailableAt(job.attempt_count, now()),
                   timeoutReason,
                 );
               } else {
@@ -106,7 +107,7 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
               if (job.attempt_count < job.max_attempts) {
                 await config.onRetry(
                   job.id,
-                  nextAvailableAt(job.attempt_count),
+                  nextAvailableAt(job.attempt_count, now()),
                   reason,
                 );
               } else {
