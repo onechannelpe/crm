@@ -1,6 +1,7 @@
 import type { AddVenueAccountsInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -11,12 +12,14 @@ import { runLeadTransaction } from "../write/transition";
 import { buildVenueAccounts } from "./domain";
 
 export async function addVenueAccountsCommand(
-  input: AddVenueAccountsInput & {
+  input: Omit<AddVenueAccountsInput, "leadId" | "venueId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
+    venueId: WorkflowVenueId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const parsedAccounts = buildVenueAccounts(input);

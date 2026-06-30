@@ -1,5 +1,6 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -27,9 +28,9 @@ export type PolicyAction =
   | "artifact.audit.read";
 
 export interface PolicyActor {
-  userId: number;
+  userId: UserId;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
 }
 
 const ARTIFACT_DIRECTIONS: Record<

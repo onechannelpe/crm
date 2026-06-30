@@ -3,13 +3,13 @@ export type LeadCommandResult = {
 };
 
 export type LeadSaleProofFileView = {
-  id: number;
+  id: string;
   artifactId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;
   uploadedAt: number;
-  uploadedByUserId: number;
+  uploadedByUserId: string;
   status: "ready" | "processing" | "failed";
 };
 

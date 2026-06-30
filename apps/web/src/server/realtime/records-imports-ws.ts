@@ -14,6 +14,7 @@ import {
   ensureRecordImportsRealtimeBridge,
   getRecordImportsTopicHub,
 } from "~/server/records/imports/realtime";
+import { asIntegrationJobId } from "~/server/shared/ids";
 
 import { readPeerSession, resolvePeerSession } from "./core/ws-auth";
 import type { WsPeer } from "./core/ws-types";
@@ -60,6 +61,7 @@ export default defineWebSocketHandler({
     const jobId = parseRecordImportTopic(parsed.topic);
     if (jobId === null) return;
 
+    const integrationJobId = asIntegrationJobId(jobId);
     const topic = recordImportTopic(jobId);
 
     if (parsed.type === "unsubscribe") {
@@ -70,7 +72,7 @@ export default defineWebSocketHandler({
     try {
       await ensureRecordImportsRealtimeBridge();
       const integration = getServerRuntime().integrations.integration;
-      const job = await integration.jobs.findById(jobId);
+      const job = await integration.jobs.findById(integrationJobId);
 
       if (job?.type !== "import_status" && job?.type !== "import_prioridad") {
         return;

@@ -4,6 +4,7 @@ import {
   publishRecordImportProgress,
 } from "~/server/records/imports/progress-events";
 import { createRecordImportRunner } from "~/server/records/imports/runner";
+import type { IntegrationJobId } from "~/server/shared/ids";
 
 import type {
   ImportJobProcessResult,
@@ -43,7 +44,7 @@ export function createRecordsImportQueue(
     });
 
   async function publishImportProgress(
-    id: string,
+    id: IntegrationJobId,
     status: "COMPLETED" | "PENDING" | "FAILED",
     errorMessage: string | null,
   ): Promise<void> {

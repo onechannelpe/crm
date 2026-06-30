@@ -1,5 +1,6 @@
 import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { WorkflowArtifactId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 
 import type { createArtifactsRepo } from "../repo/artifacts";
@@ -98,23 +99,23 @@ export interface ArtifactServiceApi {
   ) => Promise<Result<WorkflowArtifact, DomainError>>;
   uploadArtifactFile: (
     ctx: AppContext,
-    artifactId: string,
+    artifactId: WorkflowArtifactId,
     file: UploadArtifactInput,
     deps: UploadArtifactDeps,
   ) => Promise<Result<WorkflowArtifact, DomainError>>;
   requestDownloadToken: (
     ctx: AppContext,
-    artifactId: string,
+    artifactId: WorkflowArtifactId,
     deps: DownloadTokenDeps,
   ) => Promise<Result<{ token: string }, DomainError>>;
   executeDownload: (
     tokenRaw: string,
     deps: ExecuteDownloadDeps,
-    now: number,
+    now: Date,
   ) => Promise<Result<DownloadReady, DomainError>>;
   getArtifact: (
     ctx: AppContext,
-    artifactId: string,
+    artifactId: WorkflowArtifactId,
     deps: GetArtifactDeps,
   ) => Promise<Result<ArtifactWithAsset, DomainError>>;
   listArtifacts: (

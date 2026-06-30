@@ -7,6 +7,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asUserId, asWorkflowLeadId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
 import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
@@ -23,7 +24,7 @@ import { workflowActor } from "./actor";
 
 function parseLeadRef(input: unknown) {
   return parseObject(input, validationFail, (r) => ({
-    leadId: r.str("leadId"),
+    leadId: asWorkflowLeadId(r.str("leadId")),
   }));
 }
 
@@ -63,7 +64,7 @@ export async function requestEditCommercialScope(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: r.str("leadId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
         currentProvider: r.str("currentProvider"),
         currentDebitRate: r.num("currentDebitRate"),
         currentCreditRate: r.num("currentCreditRate"),
@@ -91,7 +92,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: r.str("leadId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
         linkScope: r.enum("linkScope", PRODUCT_SCOPES),
         linkUrl: r.optStr("linkUrl") ?? null,
         onlineScope: r.enum("onlineScope", PRODUCT_SCOPES),
@@ -117,7 +118,7 @@ export async function requestRecordRepLegal(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: r.str("leadId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
         nombres: r.str("nombres"),
         apellidoPaterno: r.str("apellidoPaterno"),
         apellidoMaterno: r.str("apellidoMaterno"),
@@ -143,8 +144,8 @@ export async function requestLeadReassignment(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: r.str("leadId"),
-        newExecutiveId: r.posInt("newExecutiveId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
+        newExecutiveId: asUserId(r.str("newExecutiveId")),
       })),
 
     audit: ({ leadId }) => ({ leadId }),

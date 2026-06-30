@@ -1,5 +1,6 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { expireReservation } from "../../lead/domain/decide";
@@ -12,8 +13,8 @@ import { runLeadTransaction } from "../write/transition";
 // so the sweep and the registration guard can both call this safely.
 export async function expireLeadReservation(
   executor: DatabaseExecutor,
-  leadId: string,
-  now: number,
+  leadId: WorkflowLeadId,
+  now: Date,
 ): Promise<Result<void, DomainError>> {
   return runLeadTransaction({ executor, now }, async (ctx) => {
     const state = await ctx.repos.leads.findById(leadId);
@@ -35,7 +36,7 @@ export async function expireLeadReservation(
 // Retires every lead whose hold has lapsed since the last tick.
 export async function expireLapsedReservations(
   deps: { executor: DatabaseExecutor },
-  now: number,
+  now: Date,
 ): Promise<number> {
   const lapsed = await createLeadRepo(deps.executor).findLapsedReservations(
     now,

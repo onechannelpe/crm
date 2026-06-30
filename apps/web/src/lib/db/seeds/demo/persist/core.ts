@@ -26,7 +26,7 @@ export async function persistWorkflowSample(
   const organizations = await persistOrganizations(
     db,
     compiled.organizationKeys,
-    now,
+    new Date(now),
   );
 
   await persistWorkflowLeadsAndAssignments(

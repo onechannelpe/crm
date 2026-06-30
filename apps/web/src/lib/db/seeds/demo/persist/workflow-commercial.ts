@@ -30,7 +30,7 @@ export async function persistWorkflowCommercialData(
         fee: 18.0,
         currency: "PEN",
         proposed_by: BO1,
-        proposed_at: now - 10 * day,
+        proposed_at: new Date(now - 10 * day),
         outcome: "pending",
         decided_at: null,
       },
@@ -45,9 +45,9 @@ export async function persistWorkflowCommercialData(
         fee: 20.0,
         currency: "PEN",
         proposed_by: BO1,
-        proposed_at: now - 18 * day,
+        proposed_at: new Date(now - 18 * day),
         outcome: "accepted",
-        decided_at: now - 16 * day,
+        decided_at: new Date(now - 16 * day),
       },
       {
         id: qidConverted,
@@ -60,9 +60,9 @@ export async function persistWorkflowCommercialData(
         fee: 15.0,
         currency: "PEN",
         proposed_by: BO1,
-        proposed_at: now - 27 * day,
+        proposed_at: new Date(now - 27 * day),
         outcome: "accepted",
-        decided_at: now - 25 * day,
+        decided_at: new Date(now - 25 * day),
       },
     ])
     .onConflict((oc) =>
@@ -99,7 +99,7 @@ export async function persistWorkflowCommercialData(
         district: "MIRAFLORES",
         province: "LIMA",
         department: "LIMA",
-        created_at: now - 22 * day,
+        created_at: new Date(now - 22 * day),
         created_by: EXEC_DANIELA,
       },
     ])
@@ -133,7 +133,7 @@ export async function persistWorkflowCommercialData(
         account_type: "CORRIENTE",
         account_number: "194-12345678-0-21",
         cci: null,
-        is_settlement: 1,
+        is_settlement: true,
       },
       {
         id: "demo-workflow-venue-account-usd",
@@ -143,7 +143,7 @@ export async function persistWorkflowCommercialData(
         account_type: "AHORROS",
         account_number: "0011-0245-9988776655",
         cci: "01124500998877665522",
-        is_settlement: 0,
+        is_settlement: false,
       },
     ])
     .onConflict((oc) =>
@@ -169,7 +169,7 @@ export async function persistWorkflowCommercialData(
         online_scope: "none",
         online_url: null,
         online_collection_mode: null,
-        updated_at: now - 28 * day,
+        updated_at: new Date(now - 28 * day),
         updated_by: EXEC_DANIELA,
       },
     ])
@@ -194,14 +194,14 @@ export async function persistWorkflowCommercialData(
       dni: "42715983",
       full_name: "Daniel Gutierrez Paredes",
       email: "daniel.gutierrez@andes.pe",
-      created_at: now - 29 * day,
-      updated_at: now - 29 * day,
+      created_at: new Date(now - 29 * day),
+      updated_at: new Date(now - 29 * day),
     })
     .onConflict((oc) =>
       oc.column("dni").doUpdateSet({
         full_name: "Daniel Gutierrez Paredes",
         email: "daniel.gutierrez@andes.pe",
-        updated_at: now - 29 * day,
+        updated_at: new Date(now - 29 * day),
       }),
     )
     .execute();
@@ -231,8 +231,8 @@ export async function persistWorkflowCommercialData(
       last_contacted_at: null,
       last_contacted_by_user_id: null,
       cooldown_until: null,
-      created_at: now - 29 * day,
-      updated_at: now - 29 * day,
+      created_at: new Date(now - 29 * day),
+      updated_at: new Date(now - 29 * day),
     })
     .onConflict((oc) =>
       oc.columns(["organization_id", "dni"]).doUpdateSet((eb) => ({
@@ -266,8 +266,8 @@ export async function persistWorkflowCommercialData(
       .values({
         organization_person_id: legalRep.id,
         role: "LEGAL_REPRESENTATIVE",
-        is_primary: 1,
-        effective_from: now - 29 * day,
+        is_primary: true,
+        effective_from: new Date(now - 29 * day),
         effective_to: null,
       })
       .execute();

@@ -1,5 +1,6 @@
 import type { Logger } from "~/lib/observability/logger-shared";
 import type { Phone } from "~/lib/phone/pe-mobile";
+import type { UserId } from "~/server/shared/ids";
 
 import type { WhatsAppInboundMessage } from "./kapso-payload";
 
@@ -9,20 +10,20 @@ export interface WhatsAppInboundPorts {
   addresses: {
     findClaim(address: Phone): Promise<
       | {
-          userId: number;
+          userId: UserId;
           address: string;
           verified: boolean;
         }
       | undefined
     >;
     markVerified(input: {
-      userId: number;
+      userId: UserId;
       address: string;
-      now: number;
+      now: Date;
     }): Promise<boolean>;
   };
   sessions: {
-    open(userId: number, now: number): Promise<void>;
+    open(userId: UserId, now: Date): Promise<void>;
   };
   replies: {
     sendVerificationReply(address: string): Promise<void>;
@@ -36,7 +37,7 @@ function isVerifyCommand(body: string | null): boolean {
 
 export async function handleWhatsAppInboundMessage(
   message: WhatsAppInboundMessage,
-  now: number,
+  now: Date,
   ports: WhatsAppInboundPorts,
 ): Promise<void> {
   const claim = await ports.addresses.findClaim(message.address);

@@ -1,4 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
+import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
@@ -29,46 +30,46 @@ export interface AvatarRecord {
   storageKey: string;
   mimeType: string;
   version: number;
-  updatedAt: number;
+  updatedAt: Date;
   bytes: Uint8Array;
 }
 
 export interface AvatarMetaRow {
-  id: number;
+  id: UserId;
   avatar_storage_key: string | null;
   avatar_mime_type: string | null;
-  avatar_updated_at: number | null;
+  avatar_updated_at: Date | null;
   avatar_version: number;
 }
 
 export interface ProfilePictureService {
   upload(
-    userId: number,
+    userId: UserId,
     file: File,
   ): Promise<Result<{ avatarVersion: number }, AvatarDomainError>>;
   remove(
-    userId: number,
+    userId: UserId,
   ): Promise<Result<{ avatarVersion: number }, AvatarDomainError>>;
-  get(userId: number): Promise<Result<AvatarRecord, AvatarDomainError>>;
+  get(userId: UserId): Promise<Result<AvatarRecord, AvatarDomainError>>;
 }
 
 export interface AvatarUsersRepository {
   findAvatarMetaById: (
-    userId: number,
+    userId: UserId,
   ) => Promise<AvatarMetaRow | null | undefined>;
   updateAvatar: (
-    userId: number,
+    userId: UserId,
     values: {
       storage_key: string;
       mime_type: string;
-      updated_at: number;
+      updated_at: Date;
       version: number;
     },
   ) => Promise<unknown>;
   clearAvatar: (
-    userId: number,
+    userId: UserId,
     values: {
-      updated_at: number;
+      updated_at: Date;
       version: number;
     },
   ) => Promise<unknown>;
@@ -92,7 +93,7 @@ export function createProfilePictureService(
   blobStore: ProfilePictureBlobStore,
 ): ProfilePictureService {
   return {
-    async upload(userId: number, file: File) {
+    async upload(userId: UserId, file: File) {
       const validation = validateFile(file);
       if (!validation.ok) {
         return validation;
@@ -117,7 +118,7 @@ export function createProfilePictureService(
       const storageKey = `${userId}/${crypto.randomUUID()}.${extension}`;
       const content = new Uint8Array(await file.arrayBuffer());
       const nextVersion = currentAvatar.avatar_version + 1;
-      const updatedAt = Date.now();
+      const updatedAt = new Date();
 
       try {
         await blobStore.put(storageKey, content);
@@ -157,7 +158,7 @@ export function createProfilePictureService(
       return Ok({ avatarVersion: nextVersion });
     },
 
-    async remove(userId: number) {
+    async remove(userId: UserId) {
       let currentAvatar: AvatarMetaRow | null | undefined;
       try {
         currentAvatar = await repos.users.findAvatarMetaById(userId);
@@ -173,7 +174,7 @@ export function createProfilePictureService(
 
       try {
         await repos.users.clearAvatar(userId, {
-          updated_at: Date.now(),
+          updated_at: new Date(),
           version: nextVersion,
         });
       } catch {
@@ -196,7 +197,7 @@ export function createProfilePictureService(
       return Ok({ avatarVersion: nextVersion });
     },
 
-    async get(userId: number) {
+    async get(userId: UserId) {
       let avatar: AvatarMetaRow | null | undefined;
       try {
         avatar = await repos.users.findAvatarMetaById(userId);
@@ -223,7 +224,7 @@ export function createProfilePictureService(
         storageKey: avatar.avatar_storage_key,
         mimeType: avatar.avatar_mime_type,
         version: avatar.avatar_version,
-        updatedAt: avatar.avatar_updated_at ?? 0,
+        updatedAt: avatar.avatar_updated_at ?? new Date(0),
         bytes,
       });
     },

@@ -49,7 +49,7 @@ export function createTokensRepo(db: DB) {
       };
     },
 
-    async markUsed(tokenHash: string, usedAt: number) {
+    async markUsed(tokenHash: string, usedAt: Date) {
       const result = await db
         .updateTable("artifact_download_tokens")
         .set({ used_at: usedAt })

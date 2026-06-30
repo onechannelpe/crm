@@ -55,7 +55,7 @@ function createInboundPorts(): WhatsAppInboundPorts {
           ? {
               userId: row.user_id,
               address: row.address,
-              verified: row.is_verified === 1,
+              verified: row.is_verified,
             }
           : undefined;
       },
@@ -108,7 +108,7 @@ export async function POST(event: APIEvent): Promise<Response> {
   try {
     await handleWhatsAppInboundMessage(
       message,
-      Date.now(),
+      new Date(),
       createInboundPorts(),
     );
   } catch (error) {

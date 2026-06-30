@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { FileAssetId } from "~/server/shared/ids";
 
 import { rowToFileAsset } from "./mappers";
 import type { InsertFileAssetInput } from "./types";
@@ -26,11 +27,12 @@ export function createAssetsRepo(db: DB) {
           scan_reference: null,
           created_at: input.now,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return result.id;
     },
 
-    async findById(id: number) {
+    async findById(id: FileAssetId) {
       const row = await db
         .selectFrom("file_assets")
         .selectAll()

@@ -9,11 +9,12 @@ import { verifyTotpStepUp } from "~/server/auth/factors/totp";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
+import type { AuthLoginFlowId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 export async function submitTotpForLoginFlow(
   input: {
-    flowId: string;
+    flowId: AuthLoginFlowId;
     totpCode: string;
   } & SessionRequestMetadata,
   deps: AuthLoginDeps,

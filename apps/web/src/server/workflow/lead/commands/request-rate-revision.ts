@@ -3,6 +3,11 @@ import { randomUUIDv7 } from "bun";
 import type { RequestRateRevisionInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import {
+  asWorkflowRateRevisionId,
+  type WorkflowArtifactId,
+  type WorkflowLeadId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -16,12 +21,14 @@ import type { SubmitReadyRevisionFile } from "../domain/rows";
 import { runLeadTransaction } from "../write/transition";
 
 export async function requestRateRevisionCommand(
-  input: RequestRateRevisionInput & {
+  input: Omit<RequestRateRevisionInput, "leadId" | "artifactIds"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
+    artifactIds: WorkflowArtifactId[];
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
@@ -84,7 +91,7 @@ export async function requestRateRevisionCommand(
       validatedArtifacts.push(file);
     }
 
-    const revisionId = randomUUIDv7();
+    const revisionId = asWorkflowRateRevisionId(randomUUIDv7());
     const round = existingCount + 1;
 
     const transition = requestRateRevision(state, {

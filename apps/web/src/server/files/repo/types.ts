@@ -1,4 +1,14 @@
 import type {
+  BranchId,
+  FileAssetId,
+  TeamId,
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+  WorkflowRateRevisionId,
+} from "~/server/shared/ids";
+
+import type {
   ArtifactDirection,
   ArtifactExecutionMode,
   ArtifactStatus,
@@ -11,13 +21,13 @@ export interface InsertArtifactInput {
   direction: ArtifactDirection;
   executionMode: ArtifactExecutionMode;
   status: ArtifactStatus;
-  requestedByUserId: number;
-  scopeBranchId: number | null;
-  scopeTeamId: number | null;
+  requestedByUserId: UserId;
+  scopeBranchId: BranchId | null;
+  scopeTeamId: TeamId | null;
   policySnapshotJson: string;
   workflowContextJson: string;
-  expiresAt: number | null;
-  now: number;
+  expiresAt: Date | null;
+  now: Date;
 }
 
 export interface InsertFileAssetInput {
@@ -30,38 +40,38 @@ export interface InsertFileAssetInput {
   sha256Hex: string;
   signatureKind: string | null;
   scanStatus: ScanStatus;
-  now: number;
+  now: Date;
 }
 
 export interface InsertEventInput {
-  artifactId: string;
+  artifactId: WorkflowArtifactId;
   eventType: string;
-  actorUserId: number | null;
+  actorUserId: UserId | null;
   actorRole: string | null;
   requestId: string | null;
   traceId: string | null;
   ipHash: string | null;
   userAgent: string | null;
   details: Record<string, unknown>;
-  now: number;
+  now: Date;
 }
 
 export interface InsertDownloadTokenInput {
-  artifactId: string;
-  fileAssetId: number;
+  artifactId: WorkflowArtifactId;
+  fileAssetId: FileAssetId;
   tokenHash: string;
-  requestedByUserId: number;
-  expiresAt: number;
-  now: number;
+  requestedByUserId: UserId;
+  expiresAt: Date;
+  now: Date;
 }
 
 export interface SaleProofFileRecord {
-  id: number;
-  leadId: string;
-  artifactId: string;
-  fileAssetId: number;
-  uploadedByUserId: number;
-  createdAt: number;
+  id: string;
+  leadId: WorkflowLeadId;
+  artifactId: WorkflowArtifactId;
+  fileAssetId: FileAssetId;
+  uploadedByUserId: UserId;
+  createdAt: Date;
   artifactStatus: ArtifactStatus;
   safeDisplayFilename: string;
   detectedMime: string;
@@ -69,13 +79,13 @@ export interface SaleProofFileRecord {
 }
 
 export interface RateRevisionFileRecord {
-  id: number;
-  leadId: string;
-  revisionId: string;
-  artifactId: string;
-  fileAssetId: number;
-  uploadedByUserId: number;
-  createdAt: number;
+  id: WorkflowRateRevisionId;
+  leadId: WorkflowLeadId;
+  revisionId: WorkflowRateRevisionId;
+  artifactId: WorkflowArtifactId;
+  fileAssetId: FileAssetId;
+  uploadedByUserId: UserId;
+  createdAt: Date;
   artifactStatus: ArtifactStatus;
   safeDisplayFilename: string;
   detectedMime: string;

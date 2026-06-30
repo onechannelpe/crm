@@ -2,6 +2,7 @@
 
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asAppNotificationId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
@@ -28,8 +29,8 @@ export async function getHeaderNotifications() {
           title: notification.title,
           bodyText: notification.body_text,
           actionUrl: notification.action_url,
-          createdAt: notification.created_at,
-          readAt: notification.read_at,
+          createdAt: notification.created_at.getTime(),
+          readAt: notification.read_at?.getTime() ?? null,
         })),
       });
     },
@@ -48,7 +49,7 @@ export async function markNotificationRead(
         { notificationId: rawNotificationId },
         validationFail,
         (r) => ({
-          notificationId: r.posInt("notificationId"),
+          notificationId: asAppNotificationId(r.str("notificationId")),
         }),
       ),
 
@@ -61,7 +62,7 @@ export async function markNotificationRead(
       await appNotifications.markRead(
         actor.userId,
         command.notificationId,
-        Date.now(),
+        new Date(),
       );
 
       return Ok(undefined);
@@ -78,7 +79,7 @@ export async function markAllNotificationsRead(): Promise<void> {
       const appNotifications =
         getServerRuntime().notifications.appNotifications;
 
-      await appNotifications.markAllRead(actor.userId, Date.now());
+      await appNotifications.markAllRead(actor.userId, new Date());
 
       return Ok(undefined);
     },

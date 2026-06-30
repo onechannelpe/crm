@@ -1,7 +1,11 @@
 import { randomUUIDv7 } from "bun";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { OrganizationId } from "~/server/shared/ids";
+import {
+  asOrganizationId,
+  asOrganizationPersonId,
+  type OrganizationId,
+} from "~/server/shared/ids";
 
 export type OrganizationProfile = {
   id: OrganizationId;
@@ -101,7 +105,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
       return row ? toOrganizationProfile(row) : undefined;
     },
     async createOrganization(values) {
-      const id: OrganizationId = randomUUIDv7();
+      const id = asOrganizationId(randomUUIDv7());
       await db
         .insertInto("organizations")
         .values({
@@ -112,7 +116,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
           address: values.address,
           district: values.district,
           department: values.department,
-          created_at: Date.now(),
+          created_at: new Date(),
         })
         .executeTakeFirstOrThrow();
       const created = await db
@@ -144,7 +148,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
         .execute();
     },
     async upsertPrimaryLegalRepresentative(values: LegalRepresentative) {
-      const now = Date.now();
+      const now = new Date();
       const fullName = [
         values.nombres,
         values.apellidoPaterno,
@@ -211,25 +215,30 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
         .where("dni", "=", values.dni)
         .executeTakeFirstOrThrow();
 
-      await db
-        .updateTable("organization_person_roles")
-        .set({ effective_to: now, is_primary: 0 })
-        .where("role", "=", "LEGAL_REPRESENTATIVE")
-        .where("is_primary", "=", 1)
-        .where("organization_person_id", "in", (eb) =>
-          eb
-            .selectFrom("organization_people")
-            .select("id")
-            .where("organization_id", "=", values.organizationId),
-        )
-        .execute();
+      const organizationPersonIds = (
+        await db
+          .selectFrom("organization_people")
+          .select("id")
+          .where("organization_id", "=", values.organizationId)
+          .execute()
+      ).map((row) => asOrganizationPersonId(row.id));
+
+      if (organizationPersonIds.length > 0) {
+        await db
+          .updateTable("organization_person_roles")
+          .set({ effective_to: now, is_primary: false })
+          .where("role", "=", "LEGAL_REPRESENTATIVE")
+          .where("is_primary", "=", true)
+          .where("organization_person_id", "in", organizationPersonIds)
+          .execute();
+      }
 
       await db
         .insertInto("organization_person_roles")
         .values({
           organization_person_id: organizationPerson.id,
           role: "LEGAL_REPRESENTATIVE",
-          is_primary: 1,
+          is_primary: true,
           effective_from: now,
         })
         .onConflict((oc) =>
@@ -258,7 +267,7 @@ export function createPartyRepo(db: DatabaseExecutor): PartyRepository {
         ])
         .where("person.organization_id", "=", organizationId)
         .where("role.role", "=", "LEGAL_REPRESENTATIVE")
-        .where("role.is_primary", "=", 1)
+        .where("role.is_primary", "=", true)
         .where("role.effective_to", "is", null)
         .orderBy("role.effective_from", "desc")
         .executeTakeFirst();

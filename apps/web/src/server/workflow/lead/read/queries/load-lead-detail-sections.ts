@@ -1,6 +1,13 @@
 import { createLogger } from "~/lib/observability/logger";
 import type { PartyRepository } from "~/server/identity/organization/repo";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type {
+  FileAssetId,
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+  WorkflowRateRevisionId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { DigitalPolicyRepository } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
@@ -51,13 +58,13 @@ function reportSectionDegradation(section: string, error: DomainError): void {
 }
 
 export type RateRevisionFilesQuery = {
-  listByRevisionId(revisionId: string): Promise<
+  listByRevisionId(revisionId: WorkflowRateRevisionId): Promise<
     Array<{
-      artifactId: string;
-      revisionId: string;
-      fileAssetId: number;
-      uploadedByUserId: number;
-      createdAt: number;
+      artifactId: WorkflowArtifactId;
+      revisionId: WorkflowRateRevisionId;
+      fileAssetId: FileAssetId;
+      uploadedByUserId: UserId;
+      createdAt: Date;
       safeDisplayFilename: string;
       detectedMime: string;
       sizeBytes: number;
@@ -106,7 +113,7 @@ export type LeadDetailLoadedSections = {
 
 export async function loadLeadDetailSections(
   deps: LeadDetailQueryDeps,
-  input: { leadId: string; actorUserId: number },
+  input: { leadId: WorkflowLeadId; actorUserId: UserId },
 ): Promise<Result<LeadDetailLoadedSections, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {

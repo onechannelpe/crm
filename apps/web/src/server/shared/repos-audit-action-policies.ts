@@ -3,13 +3,15 @@ import type { Kysely } from "kysely";
 import type { AuditPolicyRiskLevel } from "~/contracts/audit-reader/policy";
 import type { Database } from "~/lib/db/types";
 
+import type { UserId } from "./ids";
+
 export interface UpsertAuditActionPolicyInput {
   action: string;
   risk_level: AuditPolicyRiskLevel;
-  is_active: number;
-  is_protected: number;
-  updated_by_user_id: number | null;
-  now: number;
+  is_active: boolean;
+  is_protected: boolean;
+  updated_by_user_id: UserId | null;
+  now: Date;
 }
 
 export function createAuditActionPoliciesRepo(db: Kysely<Database>) {

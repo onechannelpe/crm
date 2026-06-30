@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import type { AppContext } from "~/server/platform/action/context";
+import type { WorkflowArtifactId } from "~/server/shared/ids";
 
 import type { PolicyActor } from "../policy";
 import type { ArtifactType } from "../types";
@@ -28,7 +29,7 @@ function hashIp(ip: string): string {
 
 export async function emitEvent(
   repo: ArtifactEventRepo,
-  artifactId: string,
+  artifactId: WorkflowArtifactId,
   eventType: string,
   ctx: AppContext,
   details: Record<string, unknown> = {},
@@ -49,12 +50,12 @@ export async function emitEvent(
 
 export function buildStorageKey(
   artifactType: ArtifactType,
-  artifactId: string,
-  now: number,
+  artifactId: WorkflowArtifactId,
+  now: Date,
   extension: string,
 ): string {
   const uniqueSuffix = randomUUID().replaceAll("-", "").slice(0, 12);
-  return `${artifactType}-${artifactId}-${now}-${uniqueSuffix}.${extension}`;
+  return `${artifactType}-${artifactId}-${now.getTime()}-${uniqueSuffix}.${extension}`;
 }
 
 export const DOWNLOAD_READY_STATUSES = new Set(["ready", "completed"]);

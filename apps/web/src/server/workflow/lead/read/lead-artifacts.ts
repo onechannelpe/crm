@@ -18,6 +18,11 @@ import {
   forbidden,
   type DomainError,
 } from "~/server/shared/domain-error";
+import {
+  asWorkflowArtifactId,
+  type WorkflowArtifactId,
+  type WorkflowLeadId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import type {
@@ -60,7 +65,7 @@ type LeadArtifactDeps = {
 
 async function requireReadableLead(
   deps: LeadArtifactDeps,
-  input: { leadId: string; ctx: AppContext },
+  input: { leadId: WorkflowLeadId; ctx: AppContext },
 ): Promise<
   Result<NonNullable<Awaited<ReturnType<LeadReader["findById"]>>>, DomainError>
 > {
@@ -86,13 +91,13 @@ function toSaleProofStatus(status: string): LeadSaleProofFileView["status"] {
 }
 
 function mapSaleProofFile(record: {
-  id: number;
-  artifactId: string;
+  id: string;
+  artifactId: WorkflowArtifactId;
   safeDisplayFilename: string;
   detectedMime: string;
   sizeBytes: number;
-  createdAt: number;
-  uploadedByUserId: number;
+  createdAt: Date;
+  uploadedByUserId: string;
   artifactStatus: string;
 }): LeadSaleProofFileView {
   return {
@@ -101,7 +106,7 @@ function mapSaleProofFile(record: {
     filename: record.safeDisplayFilename,
     detectedMime: record.detectedMime,
     sizeBytes: record.sizeBytes,
-    uploadedAt: record.createdAt,
+    uploadedAt: record.createdAt.getTime(),
     uploadedByUserId: record.uploadedByUserId,
     status: toSaleProofStatus(record.artifactStatus),
   };
@@ -151,7 +156,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
 
     async listSaleProofFiles(input: {
       ctx: AppContext;
-      leadId: string;
+      leadId: WorkflowLeadId;
     }): Promise<Result<LeadSaleProofFileView[], DomainError>> {
       const lead = await requireReadableLead(deps, input);
       if (!lead.ok) return lead;
@@ -161,7 +166,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
 
     async uploadSaleProofFile(input: {
       ctx: AppContext;
-      leadId: string;
+      leadId: WorkflowLeadId;
       file: {
         name: string;
         sizeBytes: number;
@@ -191,7 +196,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!requested.ok) return requested;
 
-      const artifactId = requested.value.id;
+      const artifactId = asWorkflowArtifactId(requested.value.id);
       const uploaded = await uploadArtifactFile(
         input.ctx,
         artifactId,
@@ -239,8 +244,8 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
 
     async requestSaleProofDownloadToken(input: {
       ctx: AppContext;
-      leadId: string;
-      artifactId: string;
+      leadId: WorkflowLeadId;
+      artifactId: WorkflowArtifactId;
     }): Promise<Result<{ token: string }, DomainError>> {
       const lead = await requireReadableLead(deps, input);
       if (!lead.ok) return lead;
@@ -262,14 +267,14 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
     // this only handles file ingestion + artifact-level authorization.
     async uploadFulfillmentArtifact(input: {
       ctx: AppContext;
-      leadId: string;
+      leadId: WorkflowLeadId;
       docKind: FulfillmentDocKind;
       file: {
         name: string;
         sizeBytes: number;
         stream: ReadableStream<Uint8Array>;
       };
-    }): Promise<Result<{ artifactId: string }, DomainError>> {
+    }): Promise<Result<{ artifactId: WorkflowArtifactId }, DomainError>> {
       const lead = await requireReadableLead(deps, input);
       if (!lead.ok) return lead;
       if (lead.value.stage !== "FULFILLMENT") {
@@ -290,7 +295,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!requested.ok) return requested;
 
-      const artifactId = requested.value.id;
+      const artifactId = asWorkflowArtifactId(requested.value.id);
       const uploaded = await uploadArtifactFile(
         input.ctx,
         artifactId,
@@ -308,8 +313,8 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
 
     async requestFulfillmentDownloadToken(input: {
       ctx: AppContext;
-      leadId: string;
-      artifactId: string;
+      leadId: WorkflowLeadId;
+      artifactId: WorkflowArtifactId;
     }): Promise<Result<{ token: string }, DomainError>> {
       const lead = await requireReadableLead(deps, input);
       if (!lead.ok) return lead;
@@ -321,7 +326,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
 
     async uploadRateRevisionFile(input: {
       ctx: AppContext;
-      leadId: string;
+      leadId: WorkflowLeadId;
       file: {
         name: string;
         sizeBytes: number;
@@ -351,7 +356,7 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       );
       if (!requested.ok) return requested;
 
-      const artifactId = requested.value.id;
+      const artifactId = asWorkflowArtifactId(requested.value.id);
       const uploaded = await uploadArtifactFile(
         input.ctx,
         artifactId,
@@ -384,8 +389,8 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
 
     async requestRateRevisionDownloadToken(input: {
       ctx: AppContext;
-      leadId: string;
-      artifactId: string;
+      leadId: WorkflowLeadId;
+      artifactId: WorkflowArtifactId;
     }): Promise<Result<{ token: string }, DomainError>> {
       const lead = await requireReadableLead(deps, input);
       if (!lead.ok) return lead;

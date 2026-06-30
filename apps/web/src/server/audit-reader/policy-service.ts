@@ -3,6 +3,7 @@ import type {
   AuditPolicyRiskLevel,
   AuditPolicySnapshot,
 } from "~/contracts/audit-reader/policy";
+import type { UserId } from "~/server/shared/ids";
 
 interface AuditPolicyServiceDeps {
   auditActionPolicies: {
@@ -10,32 +11,32 @@ interface AuditPolicyServiceDeps {
       Array<{
         action: string;
         risk_level: AuditPolicyRiskLevel;
-        is_active: number;
-        is_protected: number;
-        updated_by_user_id: number | null;
-        updated_at: number;
-        created_at: number;
+        is_active: boolean;
+        is_protected: boolean;
+        updated_by_user_id: UserId | null;
+        updated_at: Date;
+        created_at: Date;
       }>
     >;
     findByAction: (action: string) => Promise<
       | {
           action: string;
           risk_level: AuditPolicyRiskLevel;
-          is_active: number;
-          is_protected: number;
-          updated_by_user_id: number | null;
-          updated_at: number;
-          created_at: number;
+          is_active: boolean;
+          is_protected: boolean;
+          updated_by_user_id: UserId | null;
+          updated_at: Date;
+          created_at: Date;
         }
       | undefined
     >;
     upsert: (input: {
       action: string;
       risk_level: AuditPolicyRiskLevel;
-      is_active: number;
-      is_protected: number;
-      updated_by_user_id: number | null;
-      now: number;
+      is_active: boolean;
+      is_protected: boolean;
+      updated_by_user_id: UserId | null;
+      now: Date;
     }) => Promise<unknown>;
   };
 }
@@ -44,26 +45,26 @@ export interface UpsertAuditPolicyInput {
   action: string;
   riskLevel: string;
   isActive: boolean;
-  actorUserId: number;
+  actorUserId: UserId;
 }
 
 function mapPolicyRow(row: {
   action: string;
   risk_level: AuditPolicyRiskLevel;
-  is_active: number;
-  is_protected: number;
-  updated_by_user_id: number | null;
-  updated_at: number;
-  created_at: number;
+  is_active: boolean;
+  is_protected: boolean;
+  updated_by_user_id: UserId | null;
+  updated_at: Date;
+  created_at: Date;
 }): AuditActionPolicyItem {
   return {
     action: row.action,
     riskLevel: row.risk_level,
-    isActive: row.is_active === 1,
-    isProtected: row.is_protected === 1,
+    isActive: row.is_active,
+    isProtected: row.is_protected,
     updatedByUserId: row.updated_by_user_id,
-    updatedAt: row.updated_at,
-    createdAt: row.created_at,
+    updatedAt: row.updated_at.getTime(),
+    createdAt: row.created_at.getTime(),
   };
 }
 
@@ -101,7 +102,7 @@ export function createAuditPolicyService(deps: AuditPolicyServiceDeps) {
       }
 
       const existing = await deps.auditActionPolicies.findByAction(action);
-      if (existing?.is_protected === 1) {
+      if (existing?.is_protected) {
         if (!isActive) {
           throw new Error("protected policies cannot be disabled");
         }
@@ -110,12 +111,12 @@ export function createAuditPolicyService(deps: AuditPolicyServiceDeps) {
         }
       }
 
-      const now = Date.now();
+      const now = new Date();
       await deps.auditActionPolicies.upsert({
         action,
         risk_level: riskLevel,
-        is_active: isActive ? 1 : 0,
-        is_protected: existing?.is_protected ?? 0,
+        is_active: isActive,
+        is_protected: existing?.is_protected ?? false,
         updated_by_user_id: input.actorUserId,
         now,
       });

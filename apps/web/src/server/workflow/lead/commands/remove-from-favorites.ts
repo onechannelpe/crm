@@ -1,5 +1,6 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -7,8 +8,8 @@ import { authorizeLeadAction } from "../../lead/domain/policy";
 import { runLeadTransaction } from "../write/transition";
 
 export async function removeFromFavoritesCommand(
-  input: { actor: WorkflowActor; leadId: string },
-  ports: { executor: DatabaseExecutor; now: number },
+  input: { actor: WorkflowActor; leadId: WorkflowLeadId },
+  ports: { executor: DatabaseExecutor; now: Date },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);

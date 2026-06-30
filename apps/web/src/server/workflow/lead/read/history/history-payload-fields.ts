@@ -32,12 +32,9 @@ export function parsePayload(
     return Ok(null);
   }
 
-  try {
-    const value = JSON.parse(row.payload_json) as unknown;
-    if (isPlainRecord(value)) {
-      return Ok(value);
-    }
-  } catch {}
+  if (isPlainRecord(row.payload_json)) {
+    return Ok(row.payload_json);
+  }
 
   return invalidPayload(row);
 }

@@ -53,7 +53,7 @@ function toPipelineOverlay(
   }
 
   return {
-    fetchedAt: overlay.fetchedAt.getTime(),
+    fetchedAt: overlay.fetchedAt,
     district: overlay.district,
     department: overlay.department,
     contributorStatus: overlay.contributorStatus,

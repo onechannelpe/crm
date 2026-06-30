@@ -1,5 +1,6 @@
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { validateRateProposalValidityDays } from "~/server/workflow/lead/domain/pricing";
@@ -13,9 +14,9 @@ export async function updateRateProposalPolicy(
   },
   ports: {
     rateProposalPolicies: RateProposalPolicyRepository;
-    now: number;
+    now: Date;
   },
-): Promise<Result<{ branchId: number; validityDays: number }, DomainError>> {
+): Promise<Result<{ branchId: BranchId; validityDays: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
   }

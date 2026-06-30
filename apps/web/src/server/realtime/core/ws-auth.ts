@@ -1,11 +1,17 @@
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/platform/container";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 import type { WsPeer } from "./ws-types";
 
 export interface AppPeerSession {
-  userId: number;
-  branchId: number;
+  userId: UserId;
+  branchId: BranchId;
   role: Role;
   sessionClass: "app" | "pre_auth";
   onboardingCompleted: boolean;
@@ -47,8 +53,8 @@ export function readPeerSession(peer: WsPeer): AppPeerSession | null {
     contextSession;
 
   if (
-    typeof userId !== "number" ||
-    typeof branchId !== "number" ||
+    typeof userId !== "string" ||
+    typeof branchId !== "string" ||
     typeof role !== "string" ||
     !isRole(role) ||
     (sessionClass !== "app" && sessionClass !== "pre_auth") ||
@@ -58,8 +64,8 @@ export function readPeerSession(peer: WsPeer): AppPeerSession | null {
   }
 
   return {
-    userId,
-    branchId,
+    userId: asUserId(userId),
+    branchId: asBranchId(branchId),
     role,
     sessionClass,
     onboardingCompleted,

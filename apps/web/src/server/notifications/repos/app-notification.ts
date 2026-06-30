@@ -2,12 +2,13 @@ import type { Insertable } from "kysely";
 
 import type { AppNotificationsTable } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { AppNotificationId, UserId } from "~/server/shared/ids";
 
 type NewAppNotificationRow = Insertable<AppNotificationsTable>;
 
 export function createAppNotificationRepo(db: DatabaseExecutor) {
   return {
-    listByUser(userId: number, limit: number) {
+    listByUser(userId: UserId, limit: number) {
       return db
         .selectFrom("app_notifications")
         .selectAll()
@@ -17,7 +18,7 @@ export function createAppNotificationRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async countUnreadByUser(userId: number): Promise<number> {
+    async countUnreadByUser(userId: UserId): Promise<number> {
       const row = await db
         .selectFrom("app_notifications")
         .select((eb) => eb.fn.count<number>("id").as("count"))
@@ -38,7 +39,7 @@ export function createAppNotificationRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    markRead(userId: number, notificationId: number, readAt: number) {
+    markRead(userId: UserId, notificationId: AppNotificationId, readAt: Date) {
       return db
         .updateTable("app_notifications")
         .set({ read_at: readAt })
@@ -48,7 +49,7 @@ export function createAppNotificationRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    markAllRead(userId: number, readAt: number) {
+    markAllRead(userId: UserId, readAt: Date) {
       return db
         .updateTable("app_notifications")
         .set({ read_at: readAt })

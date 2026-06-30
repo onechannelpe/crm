@@ -1,7 +1,11 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type {
+  AuthLoginFlowId,
+  UserId,
+  WebauthnChallengeId,
+} from "~/server/shared/ids";
 
 export function createLoginFlowsRepo(db: Kysely<Database>) {
   return {
@@ -9,10 +13,10 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
       identifier: string;
       primary_auth_method: "password" | "google" | "passkey";
       user_id?: UserId | null;
-      challenge_id?: string | null;
+      challenge_id?: WebauthnChallengeId | null;
       state: "totp" | "passkey";
       expires_at: Date;
-    }): Promise<string> {
+    }): Promise<AuthLoginFlowId> {
       const now = new Date();
       const inserted = await db
         .insertInto("login_flows")
@@ -32,7 +36,7 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
       return inserted.id;
     },
 
-    findById(id: string) {
+    findById(id: AuthLoginFlowId) {
       return db
         .selectFrom("login_flows")
         .selectAll()
@@ -40,7 +44,7 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    async delete(id: string): Promise<void> {
+    async delete(id: AuthLoginFlowId): Promise<void> {
       await db.deleteFrom("login_flows").where("id", "=", id).execute();
     },
 

@@ -4,5 +4,12 @@ import type { SessionInfo } from "../contracts";
 export async function listAllActiveSessions(
   deps: AdminSessionsReadContext,
 ): Promise<SessionInfo[]> {
-  return deps.repos.sessions.listAllActive();
+  const sessions = await deps.repos.sessions.listAllActive();
+
+  return sessions.map((session) => ({
+    ...session,
+    createdAt: session.createdAt.getTime(),
+    lastActivity: session.lastActivity.getTime(),
+    expiresAt: session.expiresAt.getTime(),
+  }));
 }

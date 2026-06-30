@@ -1,3 +1,5 @@
+import type { UserId } from "~/server/shared/ids";
+
 import type { LeadHistoryEventDraft } from "./history";
 import type { LeadState } from "./state";
 
@@ -13,7 +15,7 @@ function applyEvent(state: LeadState, event: LeadHistoryEventDraft): LeadState {
     case "workflow_stage_changed":
       return { ...state, stage: event.payload.to };
     case "lead_reassigned":
-      return { ...state, executiveId: event.payload.toExecutiveId };
+      return { ...state, executiveId: event.payload.toExecutiveId as UserId };
     case "lead_status_updated":
       return { ...state, status: event.payload.toStatus };
     case "lead_priority_updated":
@@ -30,7 +32,7 @@ function applyEvent(state: LeadState, event: LeadHistoryEventDraft): LeadState {
 export function applyEvents(
   state: LeadState,
   events: LeadHistoryEventDraft[],
-  meta: { actorUserId: number | null; now: number },
+  meta: { actorUserId: UserId | null; now: Date },
 ): LeadState {
   const next = events.reduce(applyEvent, state);
   return {

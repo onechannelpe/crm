@@ -1,26 +1,27 @@
 import type { Insertable, Kysely } from "kysely";
 
 import type { ActionObservationsTable, Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 type NewActionObservationRow = Insertable<Database["action_observations"]>;
 
 type ObservationStatus = ActionObservationsTable["status"];
 
 export interface ActionObservationFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   actionName?: string;
   status?: ObservationStatus;
-  actorUserId?: number;
+  actorUserId?: UserId;
   limit: number;
 }
 
 export interface ActionObservationSummaryFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   actionName?: string;
   status?: ObservationStatus;
-  actorUserId?: number;
+  actorUserId?: UserId;
 }
 
 export function createActionObservationsRepo(db: Kysely<Database>) {
@@ -84,10 +85,10 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
       return query.groupBy("action_name").orderBy("count", "desc").execute();
     },
 
-    async deleteCreatedBefore(cutoffMs: number): Promise<number> {
+    async deleteCreatedBefore(cutoff: Date): Promise<number> {
       const result = await db
         .deleteFrom("action_observations")
-        .where("created_at", "<", cutoffMs)
+        .where("created_at", "<", cutoff)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },

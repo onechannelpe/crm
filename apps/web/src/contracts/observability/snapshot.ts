@@ -18,12 +18,12 @@ export interface ObservabilityActionSummary {
 }
 
 export interface ObservabilityActionEvent {
-  id: number;
+  id: string;
   createdAt: number;
   actionName: string;
   status: ObservationStatus;
   durationMs: number;
-  actorUserId: number | null;
+  actorUserId: string | null;
   actorRole: string | null;
   routePath: string | null;
   errorCode: string | null;

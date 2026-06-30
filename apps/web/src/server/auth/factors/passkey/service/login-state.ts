@@ -1,6 +1,7 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { UserId } from "~/server/shared/ids";
 import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
@@ -19,7 +20,7 @@ type PasskeyFlowRecord = Awaited<
 interface PasskeyLoginStateServiceDeps {
   webauthnProvider: {
     getAuthenticationOptionsForChallenge(input: {
-      userId: number;
+      userId: UserId;
       challenge: string;
       userVerification: "preferred" | "required";
     }): Promise<PasskeyLoginFlowState["requestOptions"]>;
@@ -43,7 +44,7 @@ export function createPasskeyLoginStateService(
       return null;
     }
 
-    if (flow.expires_at < Date.now()) {
+    if (flow.expires_at < new Date()) {
       await deleteLoginFlow(flow, repos);
       return null;
     }
@@ -55,7 +56,7 @@ export function createPasskeyLoginStateService(
       !challenge ||
       challenge.type !== "authentication" ||
       challenge.user_id !== flow.user_id ||
-      challenge.expires_at < Date.now()
+      challenge.expires_at < new Date()
     ) {
       await deleteLoginFlow(flow, repos);
       return null;

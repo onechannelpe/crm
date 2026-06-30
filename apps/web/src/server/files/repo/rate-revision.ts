@@ -1,6 +1,13 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type {
+  FileAssetId,
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+  WorkflowRateRevisionId,
+} from "~/server/shared/ids";
 
 import type { RateRevisionFileRecord } from "./types";
 
@@ -9,12 +16,12 @@ type DB = Kysely<Database>;
 export function createRateRevisionFilesRepo(db: DB) {
   return {
     async insert(input: {
-      leadId: string;
-      revisionId: string;
-      artifactId: string;
-      fileAssetId: number;
-      uploadedByUserId: number;
-      now: number;
+      leadId: WorkflowLeadId;
+      revisionId: WorkflowRateRevisionId;
+      artifactId: WorkflowArtifactId;
+      fileAssetId: FileAssetId;
+      uploadedByUserId: UserId;
+      now: Date;
     }) {
       const result = await db
         .insertInto("workflow_rate_revision_files")
@@ -26,13 +33,14 @@ export function createRateRevisionFilesRepo(db: DB) {
           uploaded_by_user_id: input.uploadedByUserId,
           created_at: input.now,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
 
-      return Number(result.insertId);
+      return result.id;
     },
 
     async listByRevisionId(
-      revisionId: string,
+      revisionId: WorkflowRateRevisionId,
     ): Promise<RateRevisionFileRecord[]> {
       const rows = await db
         .selectFrom("workflow_rate_revision_files")
@@ -79,7 +87,7 @@ export function createRateRevisionFilesRepo(db: DB) {
     },
 
     async findByArtifactId(
-      artifactId: string,
+      artifactId: WorkflowArtifactId,
     ): Promise<RateRevisionFileRecord | null> {
       const row = await db
         .selectFrom("workflow_rate_revision_files")

@@ -1,6 +1,7 @@
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import type { LeadHistoryEventDraftFor } from "~/server/workflow/lead/domain/history";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
@@ -20,8 +21,8 @@ export function deriveLeadStageNotifications(input: {
   leadId: string;
   toStage: string;
   ruc: string;
-  executiveId: number;
-  branchId: number | null;
+  executiveId: UserId;
+  branchId: BranchId | null;
 }): NotificationIntent[] {
   // Availability qualification cleared the lead: back office now proposes a rate.
   if (input.toStage === "PRICING") {
@@ -70,7 +71,7 @@ export function deriveLeadStageNotifications(input: {
 export async function reactToStageChanges(
   tx: DatabaseExecutor,
   committed: CommittedLeadEvent[],
-  now: number,
+  now: Date,
 ): Promise<void> {
   const stageChanges = committed.filter(isCommittedStageChange);
   if (stageChanges.length === 0) return;
@@ -94,7 +95,7 @@ export async function reactToStageChanges(
   for (const { event, id } of stageChanges) {
     const lead = leadsById.get(event.leadId);
 
-    if (!lead || lead.executiveId <= 0) continue;
+    if (!lead) continue;
 
     intents.push(
       ...deriveLeadStageNotifications({

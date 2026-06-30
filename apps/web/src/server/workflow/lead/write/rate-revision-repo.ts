@@ -2,6 +2,11 @@ import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
+import type {
   RateRevision,
   RateRevisionFile,
   SubmitReadyRevisionFile,
@@ -9,14 +14,16 @@ import type {
 
 export type RateRevisionRepository = {
   insert(values: RateRevision): Promise<void>;
-  insertFile(values: RateRevisionFile & { leadId: string }): Promise<void>;
+  insertFile(
+    values: RateRevisionFile & { leadId: WorkflowLeadId },
+  ): Promise<void>;
   findSubmitReadyRevisionFile(input: {
-    artifactId: string;
-    leadId: string;
-    uploadedByUserId: number;
+    artifactId: WorkflowArtifactId;
+    leadId: WorkflowLeadId;
+    uploadedByUserId: UserId;
   }): Promise<SubmitReadyRevisionFile | null>;
-  countByLeadId(leadId: string): Promise<number>;
-  listByLeadId(leadId: string): Promise<RateRevision[]>;
+  countByLeadId(leadId: WorkflowLeadId): Promise<number>;
+  listByLeadId(leadId: WorkflowLeadId): Promise<RateRevision[]>;
 };
 
 export function createRateRevisionRepo(
@@ -39,7 +46,7 @@ export function createRateRevisionRepo(
     },
 
     async insertFile(
-      values: RateRevisionFile & { leadId: string },
+      values: RateRevisionFile & { leadId: WorkflowLeadId },
     ): Promise<void> {
       await db
         .insertInto("workflow_rate_revision_files")
@@ -55,9 +62,9 @@ export function createRateRevisionRepo(
     },
 
     async findSubmitReadyRevisionFile(input: {
-      artifactId: string;
-      leadId: string;
-      uploadedByUserId: number;
+      artifactId: WorkflowArtifactId;
+      leadId: WorkflowLeadId;
+      uploadedByUserId: UserId;
     }) {
       const row = await db
         .selectFrom("artifact_file_bindings")
@@ -105,7 +112,7 @@ export function createRateRevisionRepo(
         : null;
     },
 
-    async countByLeadId(leadId: string): Promise<number> {
+    async countByLeadId(leadId: WorkflowLeadId): Promise<number> {
       const row = await db
         .selectFrom("workflow_rate_revisions")
         .select((eb) => eb.fn.countAll<number>().as("count"))
@@ -114,7 +121,7 @@ export function createRateRevisionRepo(
       return row.count;
     },
 
-    async listByLeadId(leadId: string): Promise<RateRevision[]> {
+    async listByLeadId(leadId: WorkflowLeadId): Promise<RateRevision[]> {
       const rows = await db
         .selectFrom("workflow_rate_revisions")
         .selectAll()

@@ -3,6 +3,7 @@ import { randomUUIDv7 } from "bun";
 import type { CreateVenueInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import { asWorkflowVenueId, type WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
@@ -14,12 +15,13 @@ import { runLeadTransaction } from "../write/transition";
 import { createVenue } from "./domain";
 
 export async function createVenueCommand(
-  input: CreateVenueInput & {
+  input: Omit<CreateVenueInput, "leadId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
@@ -45,7 +47,7 @@ export async function createVenueCommand(
       return parsedVenueFields;
     }
 
-    const venueId = randomUUIDv7();
+    const venueId = asWorkflowVenueId(randomUUIDv7());
 
     const venueEvents = createVenue(state, {
       actor: input.actor,

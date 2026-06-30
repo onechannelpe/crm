@@ -2,6 +2,10 @@ import { diffFields } from "~/contracts/events";
 import type { EditRateProposalInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type {
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -19,12 +23,14 @@ const RATE_FIELD_KEYS = [
 ] as const satisfies ReadonlyArray<keyof RateProposalNumbers>;
 
 export async function editRateProposalCommand(
-  input: EditRateProposalInput & {
+  input: Omit<EditRateProposalInput, "leadId" | "proposalId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
+    proposalId: WorkflowRateProposalId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ proposalId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {

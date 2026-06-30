@@ -11,7 +11,15 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type {
+  UserId,
+  WorkflowArtifactId,
+  WorkflowRateProposalId,
+  WorkflowRateRevisionId,
+  WorkflowVenueId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { applyEvents } from "./evolve";
 import { createHistoryEvent, type LeadHistoryEventDraft } from "./history";
@@ -20,7 +28,7 @@ import { isReservationActive } from "./reservation";
 import { resolveReviewTransition } from "./review";
 import type { LeadState } from "./state";
 
-type Actor = { userId: number; role: Role };
+type Actor = Pick<WorkflowActor, "userId" | "role">;
 type TransitionResult = Result<
   { next: LeadState; events: LeadHistoryEventDraft[] },
   DomainError
@@ -30,8 +38,8 @@ function finish(
   state: LeadState,
   events: LeadHistoryEventDraft[],
   actor: Actor,
-  now: number,
-  reservationExpiresAt?: number | null,
+  now: Date,
+  reservationExpiresAt?: Date | null,
 ): TransitionResult {
   const next = applyEvents(state, events, { actorUserId: actor.userId, now });
   return Ok({
@@ -45,7 +53,7 @@ function finish(
 
 export function deleteLead(
   state: LeadState,
-  input: { actor: Actor; now: number },
+  input: { actor: Actor; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("delete", input.actor, state);
   if (!authz.ok) return authz;
@@ -65,7 +73,7 @@ export function deleteLead(
 
 export function reassignLead(
   state: LeadState,
-  input: { actor: Actor; toExecutiveId: number; now: number },
+  input: { actor: Actor; toExecutiveId: UserId; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("reassign", input.actor, state);
   if (!authz.ok) return authz;
@@ -95,11 +103,11 @@ export function proposeRate(
   state: LeadState,
   input: {
     actor: Actor;
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
     currency: Currency;
-    reservationExpiresAt: number;
-    now: number;
+    reservationExpiresAt: Date;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
@@ -133,10 +141,10 @@ export function editRateProposal(
   state: LeadState,
   input: {
     actor: Actor;
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
     changes: FieldChange[];
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
@@ -165,7 +173,7 @@ export function editRateProposal(
 
 export function editCommercialScope(
   state: LeadState,
-  input: { actor: Actor; changes: FieldChange[]; now: number },
+  input: { actor: Actor; changes: FieldChange[]; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction(
     "edit-commercial-scope",
@@ -196,7 +204,7 @@ export function reviewLead(
     status: LeadStatus | null;
     priority: LeadPriority | null;
     reason: string;
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
@@ -271,7 +279,7 @@ export function reviewLead(
 
 export function acceptRate(
   state: LeadState,
-  input: { actor: Actor; proposalId: string; now: number },
+  input: { actor: Actor; proposalId: WorkflowRateProposalId; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("accept-rate", input.actor, state);
   if (!authz.ok) return authz;
@@ -306,7 +314,7 @@ export function closeLead(
     actor: Actor;
     reason: CloseReason;
     note: string | null;
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("close-lead", input.actor, state);
@@ -339,7 +347,7 @@ export function closeLead(
 
 export function expireReservation(
   state: LeadState,
-  input: { now: number },
+  input: { now: Date },
 ): TransitionResult {
   if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
@@ -370,7 +378,7 @@ export function recordRepLegal(
     dni: string;
     telefono: string;
     email: string;
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("record-rep-legal", input.actor, state);
@@ -401,10 +409,10 @@ export function addVenueAccounts(
   state: LeadState,
   input: {
     actor: Actor;
-    venueId: string;
+    venueId: WorkflowVenueId;
     totalVenues: number;
     fundedVenues: number;
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
@@ -445,7 +453,7 @@ export function addVenueAccounts(
 // register-sale handoff alongside the per-unit service references.
 export function completeFulfillment(
   state: LeadState,
-  input: { actor: Actor; orderId: string; now: number },
+  input: { actor: Actor; orderId: string; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-fulfillment", input.actor, state);
   if (!authz.ok) return authz;
@@ -475,12 +483,12 @@ export function requestRateRevision(
   state: LeadState,
   input: {
     actor: Actor;
-    revisionId: string;
+    revisionId: WorkflowRateRevisionId;
     round: number;
     justification: string;
-    artifactIds: string[];
-    reservationExpiresAt: number;
-    now: number;
+    artifactIds: WorkflowArtifactId[];
+    reservationExpiresAt: Date;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction(

@@ -1,25 +1,27 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
 
 export function createWebauthnChallengesRepo(db: Kysely<Database>) {
   return {
     async create(values: {
-      user_id: number | null;
+      user_id: UserId | null;
       type: string;
       challenge: string;
-      expires_at: number;
-    }): Promise<number> {
+      expires_at: Date;
+    }): Promise<WebauthnChallengeId> {
+      const now = new Date();
       const inserted = await db
         .insertInto("webauthn_challenges")
-        .values({ ...values, created_at: Date.now() })
+        .values({ ...values, created_at: now })
         .returning("id")
         .executeTakeFirstOrThrow();
 
       return inserted.id;
     },
 
-    findById(id: number) {
+    findById(id: WebauthnChallengeId) {
       return db
         .selectFrom("webauthn_challenges")
         .selectAll()
@@ -27,11 +29,11 @@ export function createWebauthnChallengesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    async delete(id: number): Promise<void> {
+    async delete(id: WebauthnChallengeId): Promise<void> {
       await db.deleteFrom("webauthn_challenges").where("id", "=", id).execute();
     },
 
-    async deleteExpired(now = Date.now()): Promise<number> {
+    async deleteExpired(now = new Date()): Promise<number> {
       const result = await db
         .deleteFrom("webauthn_challenges")
         .where("expires_at", "<", now)

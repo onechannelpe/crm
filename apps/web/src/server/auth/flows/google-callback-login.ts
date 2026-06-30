@@ -42,8 +42,8 @@ export interface CompleteGoogleOAuthCallbackSuccess {
   redirectPath:
     | "/"
     | "/onboarding"
-    | `/login/verify?flow=${number}`
-    | `/login/passkey?flow=${number}`;
+    | `/login/verify?flow=${string}`
+    | `/login/passkey?flow=${string}`;
   sessionToken: string | null;
 }
 

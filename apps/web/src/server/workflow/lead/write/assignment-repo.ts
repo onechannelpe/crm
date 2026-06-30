@@ -3,13 +3,14 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 
 export type LeadAssignmentDraft = {
-  leadId: string;
-  executiveId: number;
-  assignedBy: number;
+  leadId: WorkflowLeadId;
+  executiveId: UserId;
+  assignedBy: UserId;
   isActive: boolean;
-  assignedAt: number;
+  assignedAt: Date;
 };
 
 export type LeadAssignment = LeadAssignmentDraft & {
@@ -18,8 +19,8 @@ export type LeadAssignment = LeadAssignmentDraft & {
 
 export type LeadAssignmentRepository = {
   insert(values: LeadAssignmentDraft): Promise<string>;
-  deactivateActiveForLead(leadId: string): Promise<unknown>;
-  findActiveByLead(leadId: string): Promise<LeadAssignment | undefined>;
+  deactivateActiveForLead(leadId: WorkflowLeadId): Promise<unknown>;
+  findActiveByLead(leadId: WorkflowLeadId): Promise<LeadAssignment | undefined>;
 };
 
 type AssignmentRow = Selectable<Database["workflow_lead_assignments"]>;
@@ -31,7 +32,7 @@ function toLeadAssignment(row: AssignmentRow): LeadAssignment {
     leadId: row.lead_id,
     executiveId: row.executive_id,
     assignedBy: row.assigned_by,
-    isActive: row.is_active === 1,
+    isActive: row.is_active,
     assignedAt: row.assigned_at,
   };
 }
@@ -47,7 +48,7 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
           lead_id: values.leadId,
           executive_id: values.executiveId,
           assigned_by: values.assignedBy,
-          is_active: values.isActive ? 1 : 0,
+          is_active: values.isActive,
           assigned_at: values.assignedAt,
         } satisfies NewAssignmentRow)
         .executeTakeFirstOrThrow();
@@ -55,21 +56,21 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
       return id;
     },
 
-    deactivateActiveForLead(leadId: string) {
+    deactivateActiveForLead(leadId: WorkflowLeadId) {
       return db
         .updateTable("workflow_lead_assignments")
-        .set({ is_active: 0 })
+        .set({ is_active: false })
         .where("lead_id", "=", leadId)
-        .where("is_active", "=", 1)
+        .where("is_active", "=", true)
         .execute();
     },
 
-    async findActiveByLead(leadId: string) {
+    async findActiveByLead(leadId: WorkflowLeadId) {
       const row = await db
         .selectFrom("workflow_lead_assignments")
         .selectAll()
         .where("lead_id", "=", leadId)
-        .where("is_active", "=", 1)
+        .where("is_active", "=", true)
         .executeTakeFirst();
 
       return row ? toLeadAssignment(row) : undefined;

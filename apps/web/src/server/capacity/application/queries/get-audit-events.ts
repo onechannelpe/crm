@@ -51,7 +51,7 @@ export async function getAuditEvents(
       if (ctx.actor.role === "superuser") return true;
       if (ctx.actor.role !== "admin") return false;
       if (event.entity_type === "branch") {
-        return event.entity_id === String(ctx.actor.branchId);
+        return event.entity_id === ctx.actor.branchId;
       }
       if (event.entity_type === "team") {
         return branchTeamIds.has(event.entity_id);
@@ -68,11 +68,8 @@ export async function getAuditEvents(
       type: event.type,
       entityType: event.entity_type,
       entityId: event.entity_id,
-      changes: parseFieldChanges(
-        typeof event.changes_json === "string" ? event.changes_json : null,
-      ),
-      payload:
-        typeof event.payload_json === "string" ? event.payload_json : null,
+      changes: parseFieldChanges(event.changes_json),
+      payload: event.payload_json,
     }));
 
   return Ok(filtered);

@@ -1,18 +1,19 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 import { resolveAudience } from "../audience";
 import type { NotificationAudience, NotificationChannel } from "../types";
 import { filterUsersWithActiveSession } from "../whatsapp-session";
 
 export interface RecipientRepository {
-  resolveAudience(audience: NotificationAudience): Promise<number[]>;
+  resolveAudience(audience: NotificationAudience): Promise<UserId[]>;
   findVerifiedAddresses(
-    userIds: number[],
+    userIds: UserId[],
     channel: Exclude<NotificationChannel, "in_app">,
-  ): Promise<Map<number, string>>;
-  findActiveWhatsAppUsers(userIds: number[], now: number): Promise<Set<number>>;
+  ): Promise<Map<UserId, string>>;
+  findActiveWhatsAppUsers(userIds: UserId[], now: Date): Promise<Set<UserId>>;
 }
 
 export function createRecipientRepository(
@@ -28,7 +29,7 @@ export function createRecipientRepository(
         .selectFrom("user_channel_addresses")
         .select(["user_id", "address"])
         .where("channel", "=", channel)
-        .where("is_verified", "=", 1)
+        .where("is_verified", "=", true)
         .where("user_id", "in", userIds)
         .execute();
 

@@ -1,13 +1,14 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 import type { NotificationAudience } from "./types";
 
 export async function resolveAudience(
   db: Kysely<Database>,
   audience: NotificationAudience,
-): Promise<number[]> {
+): Promise<UserId[]> {
   if (audience.kind === "user_ids") {
     return audience.userIds;
   }
@@ -17,7 +18,7 @@ export async function resolveAudience(
       .select("id")
       .where("branch_id", "=", audience.branchId)
       .where("role", "=", audience.role)
-      .where("is_active", "=", 1)
+      .where("is_active", "=", true)
       .execute();
     return rows.map((r) => r.id);
   }
@@ -26,7 +27,7 @@ export async function resolveAudience(
       .selectFrom("users")
       .select("id")
       .where("role", "=", audience.role)
-      .where("is_active", "=", 1)
+      .where("is_active", "=", true)
       .execute();
     return rows.map((r) => r.id);
   }
@@ -34,7 +35,7 @@ export async function resolveAudience(
     .selectFrom("users")
     .select("id")
     .where("team_id", "=", audience.teamId)
-    .where("is_active", "=", 1)
+    .where("is_active", "=", true)
     .execute();
   return rows.map((r) => r.id);
 }

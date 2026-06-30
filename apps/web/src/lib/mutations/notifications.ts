@@ -7,7 +7,7 @@ import {
 import { headerNotificationsQuery } from "~/lib/queries/notifications";
 
 export const markNotificationReadMutation = action(
-  async (notificationId: number) => {
+  async (notificationId: string) => {
     await markNotificationRead(notificationId);
     return json({}, { revalidate: headerNotificationsQuery.key });
   },

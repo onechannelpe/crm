@@ -3,12 +3,13 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 
 import type { WorkflowActor } from "../../actor";
 
 export type ListAssignableExecutivesInput = {
   actor: WorkflowActor;
-  leadId: string;
+  leadId: WorkflowLeadId;
   search?: string;
   limit?: number;
 };
@@ -19,7 +20,7 @@ export type ListLeadsInput = {
     stage?: LeadStage;
     status?: LeadStatus;
     priority?: LeadPriority;
-    executiveId?: number;
+    executiveId?: UserId;
     anyFieldSearch?: string;
     updatedSinceMs?: number;
     updatedUntilMs?: number;

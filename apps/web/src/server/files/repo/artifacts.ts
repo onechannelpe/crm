@@ -2,6 +2,12 @@ import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import {
+  asWorkflowArtifactId,
+  type BranchId,
+  type FileAssetId,
+  type WorkflowArtifactId,
+} from "~/server/shared/ids";
 
 import type { ArtifactStatus, ArtifactType, BindingRole } from "../types";
 import { rowToArtifact, rowToFileAsset } from "./mappers";
@@ -12,7 +18,7 @@ type DB = Kysely<Database>;
 export function createArtifactsRepo(db: DB) {
   return {
     async insert(input: InsertArtifactInput) {
-      const id = randomUUIDv7();
+      const id = asWorkflowArtifactId(randomUUIDv7());
       await db
         .insertInto("workflow_artifacts")
         .values({
@@ -37,9 +43,9 @@ export function createArtifactsRepo(db: DB) {
     },
 
     async updateStatus(
-      id: string,
+      id: WorkflowArtifactId,
       status: ArtifactStatus,
-      now: number,
+      now: Date,
       error?: { code: string; message: string },
     ) {
       await db
@@ -54,7 +60,7 @@ export function createArtifactsRepo(db: DB) {
         .execute();
     },
 
-    async findById(id: string) {
+    async findById(id: WorkflowArtifactId) {
       const row = await db
         .selectFrom("workflow_artifacts")
         .selectAll()
@@ -65,7 +71,7 @@ export function createArtifactsRepo(db: DB) {
 
     async list(filters: {
       artifactType?: ArtifactType;
-      scopeBranchId?: number;
+      scopeBranchId?: BranchId;
       limit: number;
       offset?: number;
     }) {
@@ -87,7 +93,10 @@ export function createArtifactsRepo(db: DB) {
       return rows.map(rowToArtifact);
     },
 
-    async findFileAssetForArtifact(artifactId: string, role: BindingRole) {
+    async findFileAssetForArtifact(
+      artifactId: WorkflowArtifactId,
+      role: BindingRole,
+    ) {
       const row = await db
         .selectFrom("artifact_file_bindings")
         .innerJoin(
@@ -118,11 +127,11 @@ export function createArtifactsRepo(db: DB) {
     },
 
     async insertFileBinding(input: {
-      artifactId: string;
-      fileAssetId: number;
+      artifactId: WorkflowArtifactId;
+      fileAssetId: FileAssetId;
       bindingRole: BindingRole;
       versionNo: number;
-      now: number;
+      now: Date;
     }) {
       await db
         .insertInto("artifact_file_bindings")

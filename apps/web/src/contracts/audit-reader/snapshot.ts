@@ -5,19 +5,19 @@ export interface AuditReaderFilterInput {
   limit?: number;
   action?: string;
   entityType?: string;
-  actorUserId?: number;
+  actorUserId?: string;
   onlyHighRisk?: boolean;
 }
 
 export interface AuditReaderEvent {
   id: string;
   occurredAt: number;
-  actorUserId: number | null;
+  actorUserId: string | null;
   type: string;
   entityType: string;
   entityId: string;
   changes: FieldChange[];
-  payload: string | null;
+  payload: unknown;
 }
 
 export interface AuditReaderSnapshot {

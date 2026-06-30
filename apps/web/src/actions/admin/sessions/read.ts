@@ -6,6 +6,7 @@ import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asUserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
@@ -17,7 +18,7 @@ export async function listUserSessions(rawUserId: unknown) {
 
     parse: () =>
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
-        userId: r.posInt("userId"),
+        userId: asUserId(r.str("userId")),
       })),
 
     audit: (query) => ({ userId: query.userId }),

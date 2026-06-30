@@ -4,7 +4,7 @@ import type { Database } from "../../../types";
 
 export async function persistAuditActionPolicies(
   db: Kysely<Database>,
-  now: number,
+  now: Date,
 ): Promise<void> {
   // Audit policies
   await db
@@ -13,8 +13,8 @@ export async function persistAuditActionPolicies(
       {
         action: "all_sessions_revoked",
         risk_level: "high",
-        is_active: 1,
-        is_protected: 1,
+        is_active: true,
+        is_protected: true,
         updated_by_user_id: null,
         created_at: now,
         updated_at: now,
@@ -22,8 +22,8 @@ export async function persistAuditActionPolicies(
       {
         action: "session_revoked_by_admin",
         risk_level: "high",
-        is_active: 1,
-        is_protected: 1,
+        is_active: true,
+        is_protected: true,
         updated_by_user_id: null,
         created_at: now,
         updated_at: now,
@@ -31,8 +31,8 @@ export async function persistAuditActionPolicies(
       {
         action: "search_allowance_granted",
         risk_level: "high",
-        is_active: 1,
-        is_protected: 1,
+        is_active: true,
+        is_protected: true,
         updated_by_user_id: null,
         created_at: now,
         updated_at: now,
@@ -40,8 +40,8 @@ export async function persistAuditActionPolicies(
       {
         action: "lead_refill_granted",
         risk_level: "high",
-        is_active: 1,
-        is_protected: 1,
+        is_active: true,
+        is_protected: true,
         updated_by_user_id: null,
         created_at: now,
         updated_at: now,

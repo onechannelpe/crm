@@ -32,7 +32,7 @@ describe("auth login service benchmark", () => {
       .insertInto("auth_events")
       .values(
         fixtures.map((fixture, index) => ({
-          user_id: 10_000 + index,
+          user_id: fixture.userId,
           method: "password" as const,
           stage: "login" as const,
           outcome: "success" as const,

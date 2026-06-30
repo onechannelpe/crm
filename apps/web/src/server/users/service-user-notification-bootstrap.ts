@@ -1,45 +1,46 @@
 import type { Phone } from "~/lib/phone/pe-mobile";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 export type NotificationBootstrapPorts = {
   userChannelAddresses: {
     upsert(values: {
-      user_id: number;
+      user_id: UserId;
       channel: "email";
       address: string;
-      is_verified: 1;
-      verified_at: number;
-      created_at: number;
-      updated_at: number;
+      is_verified: boolean;
+      verified_at: Date;
+      created_at: Date;
+      updated_at: Date;
     }): Promise<unknown>;
     claimWhatsAppAddress(values: {
-      userId: number;
+      userId: UserId;
       address: Phone;
-      now: number;
+      now: Date;
     }): Promise<
-      { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: number }
+      { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: UserId }
     >;
   };
   notificationPreferences: {
     upsert(values: {
-      user_id: number;
+      user_id: UserId;
       event_type: "security.privileged_login" | "broadcast.general";
       channel: "email" | "whatsapp";
-      is_enabled: 1;
-      created_at: number;
-      updated_at: number;
+      is_enabled: boolean;
+      created_at: Date;
+      updated_at: Date;
     }): Promise<unknown>;
   };
 };
 
 async function registerChannelAddresses(params: {
-  userId: number;
+  userId: UserId;
   email: string;
   phone: Phone;
-  now: number;
+  now: Date;
   repos: Pick<NotificationBootstrapPorts, "userChannelAddresses">;
 }): Promise<
-  Result<void, { code: "address_already_claimed"; ownerUserId: number }>
+  Result<void, { code: "address_already_claimed"; ownerUserId: UserId }>
 > {
   const { userId, email, phone, now, repos } = params;
 
@@ -47,7 +48,7 @@ async function registerChannelAddresses(params: {
     user_id: userId,
     channel: "email",
     address: email,
-    is_verified: 1,
+    is_verified: true,
     verified_at: now,
     created_at: now,
     updated_at: now,
@@ -69,8 +70,8 @@ async function registerChannelAddresses(params: {
 }
 
 function enableDefaultNotificationPreferences(
-  userId: number,
-  now: number,
+  userId: UserId,
+  now: Date,
   repos: Pick<NotificationBootstrapPorts, "notificationPreferences">,
 ) {
   return Promise.all([
@@ -78,7 +79,7 @@ function enableDefaultNotificationPreferences(
       user_id: userId,
       event_type: "security.privileged_login",
       channel: "email",
-      is_enabled: 1,
+      is_enabled: true,
       created_at: now,
       updated_at: now,
     }),
@@ -86,7 +87,7 @@ function enableDefaultNotificationPreferences(
       user_id: userId,
       event_type: "security.privileged_login",
       channel: "whatsapp",
-      is_enabled: 1,
+      is_enabled: true,
       created_at: now,
       updated_at: now,
     }),
@@ -94,7 +95,7 @@ function enableDefaultNotificationPreferences(
       user_id: userId,
       event_type: "broadcast.general",
       channel: "email",
-      is_enabled: 1,
+      is_enabled: true,
       created_at: now,
       updated_at: now,
     }),
@@ -102,7 +103,7 @@ function enableDefaultNotificationPreferences(
       user_id: userId,
       event_type: "broadcast.general",
       channel: "whatsapp",
-      is_enabled: 1,
+      is_enabled: true,
       created_at: now,
       updated_at: now,
     }),
@@ -111,14 +112,14 @@ function enableDefaultNotificationPreferences(
 
 export async function bootstrapUserNotifications(
   params: {
-    userId: number;
+    userId: UserId;
     email: string;
     phone: Phone;
-    now: number;
+    now: Date;
   },
   repos: NotificationBootstrapPorts,
 ): Promise<
-  Result<void, { code: "address_already_claimed"; ownerUserId: number }>
+  Result<void, { code: "address_already_claimed"; ownerUserId: UserId }>
 > {
   const channelsResult = await registerChannelAddresses({
     userId: params.userId,

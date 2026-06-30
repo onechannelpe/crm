@@ -1,6 +1,12 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type {
+  FileAssetId,
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 
 import type { SaleProofFileRecord } from "./types";
 
@@ -9,11 +15,11 @@ type DB = Kysely<Database>;
 export function createSalesRepo(db: DB) {
   return {
     async insert(input: {
-      leadId: string;
-      artifactId: string;
-      fileAssetId: number;
-      uploadedByUserId: number;
-      now: number;
+      leadId: WorkflowLeadId;
+      artifactId: WorkflowArtifactId;
+      fileAssetId: FileAssetId;
+      uploadedByUserId: UserId;
+      now: Date;
     }) {
       const result = await db
         .insertInto("workflow_sale_proof_files")
@@ -24,12 +30,13 @@ export function createSalesRepo(db: DB) {
           uploaded_by_user_id: input.uploadedByUserId,
           created_at: input.now,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
 
-      return Number(result.insertId);
+      return result.id;
     },
 
-    async listByLead(leadId: string): Promise<SaleProofFileRecord[]> {
+    async listByLead(leadId: WorkflowLeadId): Promise<SaleProofFileRecord[]> {
       const rows = await db
         .selectFrom("workflow_sale_proof_files")
         .innerJoin(
@@ -73,7 +80,7 @@ export function createSalesRepo(db: DB) {
     },
 
     async findByArtifactId(
-      artifactId: string,
+      artifactId: WorkflowArtifactId,
     ): Promise<SaleProofFileRecord | null> {
       const row = await db
         .selectFrom("workflow_sale_proof_files")

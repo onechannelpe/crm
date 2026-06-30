@@ -15,7 +15,7 @@ export type ListLeadsFiltersInput = {
   stage?: LeadStage;
   status?: LeadStatus;
   priority?: LeadPriority;
-  executiveId?: number;
+  executiveId?: string;
   anyFieldSearch?: string;
   updatedSinceMs?: number;
   updatedUntilMs?: number;
@@ -48,7 +48,7 @@ export type EditCommercialScopeInput = { leadId: string } & CommercialScope;
 
 export type ReassignLeadInput = {
   leadId: string;
-  newExecutiveId: number;
+  newExecutiveId: string;
 };
 
 export type AddLeadNoteInput = {

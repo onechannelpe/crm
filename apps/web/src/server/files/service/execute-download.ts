@@ -8,7 +8,7 @@ import type { ExecuteDownloadDeps } from "./contracts";
 export async function executeDownload(
   tokenRaw: string,
   deps: ExecuteDownloadDeps,
-  now: number,
+  now: Date,
 ): Promise<Result<DownloadReady, DomainError>> {
   const { repo, storage } = deps;
   const tokenHash = hashToken(tokenRaw);

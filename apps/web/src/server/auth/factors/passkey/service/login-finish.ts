@@ -16,7 +16,7 @@ import type {
   IssuedSession,
   SessionSpec,
 } from "~/server/auth/session/session-spec";
-import type { UserId } from "~/server/shared/ids";
+import type { AuthLoginFlowId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
@@ -36,7 +36,7 @@ interface PasskeyLoginFinishServiceDeps {
 }
 
 interface FinishPasskeyLoginInput {
-  flowId: number;
+  flowId: AuthLoginFlowId;
   response: AuthenticationResponseJSON;
   ipAddress: string;
   userAgent: string | null;
@@ -59,7 +59,7 @@ export function createPasskeyLoginFinishService(
       if (
         !flow ||
         flow.state !== "passkey" ||
-        flow.expires_at < Date.now() ||
+        flow.expires_at < new Date() ||
         !flow.challenge_id
       ) {
         await deleteLoginFlow(flow, repos);
@@ -107,7 +107,7 @@ export function createPasskeyLoginFinishService(
       }
 
       await repos.webauthnChallenges.delete(challenge.id);
-      if (challenge.expires_at < Date.now()) {
+      if (challenge.expires_at < new Date()) {
         await throttleService.recordPasskeyVerifyFailure(
           identifier,
           input.ipAddress,

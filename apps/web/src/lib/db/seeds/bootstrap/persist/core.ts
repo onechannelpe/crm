@@ -14,7 +14,7 @@ export async function persistBaseData(
   db: Kysely<Database>,
   compiled: CompiledBaseDataScenario,
 ): Promise<void> {
-  const now = compiled.generatedAtMs;
+  const now = new Date(compiled.generatedAtMs);
   const realPassword = resolveSeedPassword();
   const realPasswordHash = await hashPassword(realPassword);
 

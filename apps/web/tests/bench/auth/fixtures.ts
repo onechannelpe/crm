@@ -1,14 +1,17 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
 
 import { hashPassword } from "~/lib/auth/password/password";
+import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 
 export const LOGIN_POOL_SIZE = 256;
-const LOGIN_USER_ID_START = 10_000;
 export const LOGIN_PASSWORD = "Secret123!";
+const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
 
 export interface LoginFixture {
+  userId: UserId;
   username: string;
   ipAddress: string;
 }
@@ -19,10 +22,10 @@ export async function seedAuthLoginFixtures(
   const passwordHash = await hashPassword(LOGIN_PASSWORD);
 
   const users = Array.from({ length: LOGIN_POOL_SIZE }, (_, index) => {
-    const id = LOGIN_USER_ID_START + index;
+    const id = asUserId(`bench-auth-user-${index}`);
     return {
       id,
-      branch_id: 1,
+      branch_id: BRANCH_ID,
       team_id: null,
       username: `bench.auth${id}`,
       email: `bench-auth-${id}@test.local`,
@@ -33,7 +36,7 @@ export async function seedAuthLoginFixtures(
       onboarding_completed_at: BENCH_NOW,
       role: "executive" as const,
       executive_category: "elite" as const,
-      is_active: 1,
+      is_active: true,
       created_at: BENCH_NOW,
     };
   });
@@ -41,6 +44,7 @@ export async function seedAuthLoginFixtures(
   await ctx.db.insertInto("users").values(users).execute();
 
   return users.map((user, index) => ({
+    userId: user.id,
     username: user.username,
     ipAddress: `198.51.100.${(index % 200) + 1}`,
   }));

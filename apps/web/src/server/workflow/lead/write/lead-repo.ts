@@ -9,7 +9,11 @@ import type {
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { hydrateRuc } from "~/server/shared/document";
-import type { OrganizationId } from "~/server/shared/ids";
+import type {
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 import type {
   LeadCommercialScope,
   LeadDraft,
@@ -17,35 +21,37 @@ import type {
 } from "~/server/workflow/lead/domain/state";
 
 export type LeadRepository = {
-  insert(values: LeadDraft): Promise<string>;
-  findById(id: string): Promise<LeadState | undefined>;
-  findByIdIncludingDeleted(id: string): Promise<LeadState | undefined>;
-  findCommercialScope(leadId: string): Promise<LeadCommercialScope | undefined>;
+  insert(values: LeadDraft): Promise<WorkflowLeadId>;
+  findById(id: WorkflowLeadId): Promise<LeadState | undefined>;
+  findByIdIncludingDeleted(id: WorkflowLeadId): Promise<LeadState | undefined>;
+  findCommercialScope(
+    leadId: WorkflowLeadId,
+  ): Promise<LeadCommercialScope | undefined>;
   findActiveByRuc(ruc: string): Promise<LeadState | undefined>;
   findByRucMany(rucs: string[]): Promise<LeadState[]>;
   countPendingQuotationDecisions(
-    executiveId: number,
-    now: number,
+    executiveId: UserId,
+    now: Date,
   ): Promise<number>;
   updateCommercialSnapshot(
-    leadId: string,
+    leadId: WorkflowLeadId,
     scope: LeadCommercialScope,
-    updatedAt: number,
-    updatedBy: number,
+    updatedAt: Date,
+    updatedBy: UserId,
   ): Promise<unknown>;
 };
 
 type LeadRow = {
-  id: string;
+  id: WorkflowLeadId;
   organization_id: OrganizationId;
-  executive_id: number;
-  created_by: number;
-  updated_by: number | null;
+  executive_id: UserId;
+  created_by: UserId;
+  updated_by: UserId | null;
   stage: LeadStage;
   status: LeadStatus | null;
   priority: LeadPriority | null;
-  created_at: number;
-  updated_at: number;
+  created_at: Date;
+  updated_at: Date;
 };
 
 type LeadWithOrganizationRow = LeadRow & {
@@ -54,8 +60,8 @@ type LeadWithOrganizationRow = LeadRow & {
   address: string | null;
   district: string | null;
   department: string | null;
-  deleted_at: number | null;
-  reservation_expires_at: number | null;
+  deleted_at: Date | null;
+  reservation_expires_at: Date | null;
   version: number;
 };
 type NewLeadRow = Insertable<Database["workflow_leads"]>;
@@ -137,8 +143,8 @@ export function createLeadRepo(db: DatabaseExecutor) {
     ]);
 
   return {
-    async insert(values: LeadDraft): Promise<string> {
-      const id = randomUUIDv7();
+    async insert(values: LeadDraft): Promise<WorkflowLeadId> {
+      const id = randomUUIDv7() as WorkflowLeadId;
       await db
         .insertInto("workflow_leads")
         .values({ ...toNewLeadRow(values), id })
@@ -147,7 +153,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return id;
     },
 
-    async findById(id: string) {
+    async findById(id: WorkflowLeadId) {
       const row = await selectLeadWithOrganization
         .where("lead.id", "=", id)
         .where("lead.deleted_at", "is", null)
@@ -155,7 +161,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return row ? toLead(row as LeadWithOrganizationRow) : undefined;
     },
 
-    async findByIdIncludingDeleted(id: string) {
+    async findByIdIncludingDeleted(id: WorkflowLeadId) {
       const row = await selectLeadWithOrganization
         .where("lead.id", "=", id)
         .executeTakeFirst();
@@ -163,7 +169,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
     },
 
     async findCommercialScope(
-      leadId: string,
+      leadId: WorkflowLeadId,
     ): Promise<LeadCommercialScope | undefined> {
       const row = await db
         .selectFrom("workflow_leads")
@@ -215,8 +221,8 @@ export function createLeadRepo(db: DatabaseExecutor) {
     // so resolving any one of them frees a slot. At most one proposal per lead
     // is ever pending, so the join yields one row per such lead.
     async countPendingQuotationDecisions(
-      executiveId: number,
-      now: number,
+      executiveId: UserId,
+      now: Date,
     ): Promise<number> {
       const row = await db
         .selectFrom("workflow_leads as lead")
@@ -236,7 +242,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return row?.count ?? 0;
     },
 
-    async findLapsedReservations(now: number): Promise<string[]> {
+    async findLapsedReservations(now: Date): Promise<WorkflowLeadId[]> {
       const rows = await db
         .selectFrom("workflow_leads")
         .select("id")
@@ -249,10 +255,10 @@ export function createLeadRepo(db: DatabaseExecutor) {
     },
 
     updateCommercialSnapshot(
-      leadId: string,
+      leadId: WorkflowLeadId,
       scope: LeadCommercialScope,
-      updatedAt: number,
-      updatedBy: number,
+      updatedAt: Date,
+      updatedBy: UserId,
     ) {
       return db
         .updateTable("workflow_leads")

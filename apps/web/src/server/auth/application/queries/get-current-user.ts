@@ -57,7 +57,7 @@ export async function getCurrentUser(
       ? `/api/me/avatar?v=${user.avatar_version}`
       : null,
     avatarVersion: user.avatar_version,
-    onboardingCompletedAt: user.onboarding_completed_at,
+    onboardingCompletedAt: user.onboarding_completed_at?.getTime() ?? null,
     role,
     strongAuthRequired: requiresStrongAuthRole(user.role),
     strongAuthConfigured: strongAuthStatus.hasVerifiedStrongAuth,

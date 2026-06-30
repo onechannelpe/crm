@@ -1,13 +1,14 @@
 import type { Kysely } from "kysely";
 
 import type { Database, AgentStatusLogsTable } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 type AgentStatus = AgentStatusLogsTable["status"];
 
 export function createAgentStatusRepo(db: Kysely<Database>) {
   return {
     create(values: {
-      user_id: number;
+      user_id: UserId;
       status: AgentStatus;
       latitude: number;
       longitude: number;
@@ -18,12 +19,12 @@ export function createAgentStatusRepo(db: Kysely<Database>) {
         .values({
           ...values,
           comment: values.comment ?? null,
-          started_at: Date.now(),
+          started_at: new Date(),
         })
         .executeTakeFirstOrThrow();
     },
 
-    findCurrentByUser(userId: number) {
+    findCurrentByUser(userId: UserId) {
       return db
         .selectFrom("agent_status_logs")
         .selectAll()
@@ -32,10 +33,10 @@ export function createAgentStatusRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    endCurrent(id: number) {
+    endCurrent(id: string) {
       return db
         .updateTable("agent_status_logs")
-        .set({ ended_at: Date.now() })
+        .set({ ended_at: new Date() })
         .where("id", "=", id)
         .execute();
     },

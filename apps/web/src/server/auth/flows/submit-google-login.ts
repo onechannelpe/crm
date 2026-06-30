@@ -7,13 +7,14 @@ import type {
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import type { AuthProof } from "~/server/auth/policy/types";
+import type { UserId } from "~/server/shared/ids";
 import { Err, type Result } from "~/server/shared/result";
 
 import { completePrimaryAuthProof } from "./primary-login";
 
 export async function submitGoogleLogin(
   input: {
-    userId: number;
+    userId: UserId;
     ipAddress: string;
     userAgent: string | null;
     trustedFederatedMfa?: boolean;

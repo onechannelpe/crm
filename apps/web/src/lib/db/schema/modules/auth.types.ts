@@ -1,12 +1,14 @@
 import type { Generated } from "kysely";
 
 import type {
+  AuthLoginFlowId,
   BranchId,
   GeneratedId,
   IdColumn,
   NullableIdColumn,
   UserId,
   UserInviteId,
+  WebauthnChallengeId,
 } from "~/server/shared/ids";
 
 import type { Role } from "./identity.types";
@@ -41,11 +43,11 @@ export type AuthFunnelOutcomeValue =
   | "passkey_required";
 
 export interface LoginFlowsTable {
-  id: Generated<string>;
+  id: GeneratedId<AuthLoginFlowId>;
   identifier: string;
   primary_auth_method: AuthMethodValue;
   user_id: NullableIdColumn<UserId>;
-  challenge_id: string | null;
+  challenge_id: NullableIdColumn<WebauthnChallengeId>;
   state: "totp" | "passkey";
   expires_at: Date;
   created_at: Date;
@@ -63,7 +65,7 @@ export interface PasskeysTable {
 }
 
 export interface WebauthnChallengesTable {
-  id: Generated<string>;
+  id: GeneratedId<WebauthnChallengeId>;
   user_id: NullableIdColumn<UserId>;
   type: string;
   challenge: string;

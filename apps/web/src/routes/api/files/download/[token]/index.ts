@@ -16,7 +16,7 @@ export async function GET(
     }
 
     const { repo, storage } = getServerRuntime().files;
-    const now = Date.now();
+    const now = new Date();
 
     const result = await executeDownload(token, { repo, storage }, now);
 

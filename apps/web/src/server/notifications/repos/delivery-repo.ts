@@ -2,14 +2,19 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import { createJobStore, type JobStore } from "~/lib/job-queue/job-store";
+import type {
+  NotificationDeliveryId,
+  NotificationIntentId,
+  UserId,
+} from "~/server/shared/ids";
 
 export type DeliveryChannel = "email" | "whatsapp";
 export type DeliveryProviderId = "resend" | "whatsapp_cloud" | "kapso";
 
 // One concrete external send, written by the expansion stage.
 export interface PlannedDeliveryRow {
-  intent_id: string;
-  user_id: string;
+  intent_id: NotificationIntentId;
+  user_id: UserId;
   channel: DeliveryChannel;
   recipient_address: string;
   title: string;
@@ -19,11 +24,11 @@ export interface PlannedDeliveryRow {
 
 // The shape the dispatch stage needs to perform a send.
 export interface DeliveryJob {
-  id: string;
+  id: NotificationDeliveryId;
   attempt_count: number;
   max_attempts: number;
-  intent_id: string;
-  user_id: string;
+  intent_id: NotificationIntentId;
+  user_id: UserId;
   channel: DeliveryChannel;
   recipient_address: string;
   title: string;
@@ -42,9 +47,12 @@ export interface DeliveryAttempt {
 const DEFAULT_MAX_ATTEMPTS = 5;
 
 export interface DeliveryRepository {
-  store: JobStore<string, DeliveryJob>;
+  store: JobStore<NotificationDeliveryId, DeliveryJob>;
   insertPlanned(rows: PlannedDeliveryRow[], now: Date): Promise<void>;
-  recordAttempt(id: string, attempt: DeliveryAttempt): Promise<void>;
+  recordAttempt(
+    id: NotificationDeliveryId,
+    attempt: DeliveryAttempt,
+  ): Promise<void>;
   countOutstanding(): Promise<number>;
 }
 
@@ -53,7 +61,7 @@ export function createDeliveryRepository(
 ): DeliveryRepository {
   // `sent_at` is the finished-at stamp; the provider error is recorded
   // separately via recordAttempt, so the queue lifecycle needs no error column.
-  const store = createJobStore<DeliveryJob, string>(
+  const store = createJobStore<DeliveryJob, NotificationDeliveryId>(
     db,
     "notification_deliveries",
     [

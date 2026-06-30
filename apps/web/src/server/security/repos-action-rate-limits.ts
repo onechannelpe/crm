@@ -4,16 +4,17 @@ import type { Database } from "~/lib/db/types";
 
 interface CounterSnapshot {
   request_count: number;
-  window_started_at: number;
+  window_started_at: Date;
 }
 
 export function createActionRateLimitsRepo(db: Kysely<Database>) {
   return {
     async checkAndIncrement(
       keyHash: string,
-      now: number,
+      now: Date,
       windowMs: number,
     ): Promise<CounterSnapshot> {
+      const windowCutoff = new Date(now.getTime() - windowMs);
       const row = await db
         .insertInto("action_rate_limit_counters")
         .values({
@@ -29,7 +30,7 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
               .when(
                 "action_rate_limit_counters.window_started_at",
                 "<=",
-                now - windowMs,
+                windowCutoff,
               )
               .then(now)
               .else(eb.ref("action_rate_limit_counters.window_started_at"))
@@ -39,7 +40,7 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
               .when(
                 "action_rate_limit_counters.window_started_at",
                 "<=",
-                now - windowMs,
+                windowCutoff,
               )
               .then(1)
               .else(eb("action_rate_limit_counters.request_count", "+", 1))
@@ -53,7 +54,7 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
       return row;
     },
 
-    async deleteUpdatedBefore(timestamp: number): Promise<number> {
+    async deleteUpdatedBefore(timestamp: Date): Promise<number> {
       const result = await db
         .deleteFrom("action_rate_limit_counters")
         .where("updated_at", "<", timestamp)

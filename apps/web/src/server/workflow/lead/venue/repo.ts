@@ -6,11 +6,17 @@ import type { CollectionMode } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
+import {
+  asWorkflowVenueId,
+  type UserId,
+  type WorkflowLeadId,
+  type WorkflowVenueId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 export type LeadVenue = {
-  id: string;
-  leadId: string;
+  id: WorkflowVenueId;
+  leadId: WorkflowLeadId;
   tradeName: string;
   posQuantity: number;
   linkUrl: string | null;
@@ -23,8 +29,8 @@ export type LeadVenue = {
   department: string;
   solesAccount?: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
-  createdAt: number;
-  createdBy: number;
+  createdAt: Date;
+  createdBy: UserId;
 };
 
 export type LeadVenueInsert = Omit<
@@ -43,17 +49,21 @@ export type LeadVenueAccounts = {
 };
 
 export type LeadVenueRepository = {
-  insert(values: LeadVenueInsert): Promise<string>;
-  update(venueId: string, values: LeadVenueUpdate): Promise<void>;
+  insert(values: LeadVenueInsert): Promise<WorkflowVenueId>;
+  update(venueId: WorkflowVenueId, values: LeadVenueUpdate): Promise<void>;
   addAccounts(
-    venueId: string,
+    venueId: WorkflowVenueId,
     accounts: LeadVenueAccounts,
-    now: number,
+    now: Date,
   ): Promise<void>;
-  findById(id: string): Promise<Result<LeadVenue | undefined, DomainError>>;
-  listByLeadId(leadId: string): Promise<Result<LeadVenue[], DomainError>>;
-  countByLeadId(leadId: string): Promise<number>;
-  countWithAccounts(leadId: string): Promise<number>;
+  findById(
+    id: WorkflowVenueId,
+  ): Promise<Result<LeadVenue | undefined, DomainError>>;
+  listByLeadId(
+    leadId: WorkflowLeadId,
+  ): Promise<Result<LeadVenue[], DomainError>>;
+  countByLeadId(leadId: WorkflowLeadId): Promise<number>;
+  countWithAccounts(leadId: WorkflowLeadId): Promise<number>;
 };
 
 type LeadVenueRow = Selectable<Database["workflow_lead_venues"]>;
@@ -94,7 +104,7 @@ function toLeadVenue(
       tipoCuenta: pen.account_type,
       nroCuenta: pen.account_number,
       cci: pen.cci ?? undefined,
-      isSettlement: pen.is_settlement === 1,
+      isSettlement: pen.is_settlement,
     };
   }
 
@@ -105,7 +115,7 @@ function toLeadVenue(
       tipoCuenta: usd.account_type,
       nroCuenta: usd.account_number,
       cci: usd.cci ?? undefined,
-      isSettlement: usd.is_settlement === 1,
+      isSettlement: usd.is_settlement,
     };
   }
 
@@ -114,8 +124,8 @@ function toLeadVenue(
 
 async function listAccountsByVenueIds(
   db: DatabaseExecutor,
-  venueIds: string[],
-): Promise<Map<string, LeadVenueAccountRow[]>> {
+  venueIds: WorkflowVenueId[],
+): Promise<Map<WorkflowVenueId, LeadVenueAccountRow[]>> {
   if (venueIds.length === 0) {
     return new Map();
   }
@@ -126,7 +136,7 @@ async function listAccountsByVenueIds(
     .where("venue_id", "in", venueIds)
     .execute();
 
-  const map = new Map<string, LeadVenueAccountRow[]>();
+  const map = new Map<WorkflowVenueId, LeadVenueAccountRow[]>();
   for (const row of rows) {
     const bucket = map.get(row.venue_id);
     if (bucket) {
@@ -141,8 +151,8 @@ async function listAccountsByVenueIds(
 
 export function createLeadVenueRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: LeadVenueInsert): Promise<string> {
-      const id = randomUUIDv7();
+    async insert(values: LeadVenueInsert): Promise<WorkflowVenueId> {
+      const id = asWorkflowVenueId(randomUUIDv7());
       await db
         .insertInto("workflow_lead_venues")
         .values({
@@ -167,9 +177,9 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
     },
 
     async addAccounts(
-      venueId: string,
+      venueId: WorkflowVenueId,
       accounts: LeadVenueAccounts,
-      _now: number,
+      _now: Date,
     ): Promise<void> {
       const accountRows: NewLeadVenueAccountRow[] = [
         {
@@ -180,7 +190,7 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
           account_type: accounts.solesAccount.tipoCuenta,
           account_number: accounts.solesAccount.nroCuenta,
           cci: accounts.solesAccount.cci ?? null,
-          is_settlement: accounts.solesAccount.isSettlement ? 1 : 0,
+          is_settlement: accounts.solesAccount.isSettlement,
         },
       ];
 
@@ -193,7 +203,7 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
           account_type: accounts.dollarAccount.tipoCuenta,
           account_number: accounts.dollarAccount.nroCuenta,
           cci: accounts.dollarAccount.cci ?? null,
-          is_settlement: accounts.dollarAccount.isSettlement ? 1 : 0,
+          is_settlement: accounts.dollarAccount.isSettlement,
         });
       }
 
@@ -203,7 +213,10 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async update(venueId: string, values: LeadVenueUpdate): Promise<void> {
+    async update(
+      venueId: WorkflowVenueId,
+      values: LeadVenueUpdate,
+    ): Promise<void> {
       await db
         .updateTable("workflow_lead_venues")
         .set({
@@ -223,7 +236,7 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
     },
 
     async findById(
-      id: string,
+      id: WorkflowVenueId,
     ): Promise<Result<LeadVenue | undefined, DomainError>> {
       const row = await db
         .selectFrom("workflow_lead_venues")
@@ -243,7 +256,7 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
     },
 
     async listByLeadId(
-      leadId: string,
+      leadId: WorkflowLeadId,
     ): Promise<Result<LeadVenue[], DomainError>> {
       const rows = await db
         .selectFrom("workflow_lead_venues")
@@ -262,7 +275,7 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
       );
     },
 
-    async countByLeadId(leadId: string): Promise<number> {
+    async countByLeadId(leadId: WorkflowLeadId): Promise<number> {
       const result = await db
         .selectFrom("workflow_lead_venues")
         .select((eb) => eb.fn.count("id").as("count"))
@@ -272,7 +285,7 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
       return Number(result.count);
     },
 
-    async countWithAccounts(leadId: string): Promise<number> {
+    async countWithAccounts(leadId: WorkflowLeadId): Promise<number> {
       const result = await db
         .selectFrom("workflow_lead_venue_accounts as a")
         .innerJoin("workflow_lead_venues as v", "v.id", "a.venue_id")

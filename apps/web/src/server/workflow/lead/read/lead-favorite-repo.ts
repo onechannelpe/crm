@@ -1,16 +1,20 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 
 export type LeadFavoriteRepository = {
   isFavoriteForUser(input: {
-    leadId: string;
-    userId: number;
+    leadId: WorkflowLeadId;
+    userId: UserId;
   }): Promise<boolean>;
   addForUser(input: {
-    leadId: string;
-    userId: number;
-    createdAt: number;
+    leadId: WorkflowLeadId;
+    userId: UserId;
+    createdAt: Date;
   }): Promise<void>;
-  removeForUser(input: { leadId: string; userId: number }): Promise<void>;
+  removeForUser(input: {
+    leadId: WorkflowLeadId;
+    userId: UserId;
+  }): Promise<void>;
 };
 
 export function createLeadFavoriteRepo(

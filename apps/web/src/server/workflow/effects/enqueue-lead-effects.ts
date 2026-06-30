@@ -14,7 +14,7 @@ import { reactToStageChanges } from "./reactors/notify";
 export async function enqueueLeadEffects(
   tx: DatabaseExecutor,
   committed: CommittedLeadEvent[],
-  now: number,
+  now: Date,
 ): Promise<void> {
   if (committed.length === 0) return;
 

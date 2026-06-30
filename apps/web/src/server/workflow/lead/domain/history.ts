@@ -10,6 +10,14 @@ import type {
   FulfillmentAction,
   FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
+import type {
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+  WorkflowRateRevisionId,
+  WorkflowVenueId,
+} from "~/server/shared/ids";
 
 export type LeadHistoryEventType =
   | "lead_registered"
@@ -101,12 +109,12 @@ export type LeadHistoryPayloadByEvent = {
     to: LeadStage;
   };
   lead_assigned: {
-    executiveId: number;
+    executiveId: string;
     reason?: string;
   };
   lead_reassigned: {
-    fromExecutiveId: number;
-    toExecutiveId: number;
+    fromExecutiveId: string;
+    toExecutiveId: string;
     reason?: string;
   };
   rep_legal_recorded: {
@@ -190,13 +198,13 @@ export type LeadHistoryPayloadByEvent = {
 
 export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
   {
-    leadId: string;
+    leadId: WorkflowLeadId;
     eventType: TEventType;
-    actorUserId: number | null;
-    subjectUserId: number | null;
+    actorUserId: UserId | null;
+    subjectUserId: UserId | null;
     payload: LeadHistoryPayloadByEvent[TEventType];
     changes: FieldChange[];
-    occurredAt: number;
+    occurredAt: Date;
   };
 
 export type LeadHistoryEventDraft = {
@@ -215,8 +223,8 @@ export type LeadHistoryEntryFor<
   id: string;
   leadId: string;
   eventType: TEventType;
-  actorUserId: number | null;
-  subjectUserId: number | null;
+  actorUserId: string | null;
+  subjectUserId: string | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
   changes: FieldChange[];
   occurredAt: number;
@@ -231,13 +239,13 @@ export type LeadHistoryEntry = {
 export function createHistoryEvent<
   TEventType extends LeadHistoryEventType,
 >(input: {
-  leadId: string;
+  leadId: WorkflowLeadId;
   eventType: TEventType;
-  actorUserId?: number | null;
-  subjectUserId?: number | null;
+  actorUserId?: UserId | null;
+  subjectUserId?: UserId | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
   changes?: FieldChange[];
-  occurredAt: number;
+  occurredAt: Date;
 }): LeadHistoryEventDraftFor<TEventType> {
   return {
     leadId: input.leadId,

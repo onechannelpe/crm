@@ -1,5 +1,6 @@
 import type { AppContext } from "~/server/platform/action/context";
 import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowArtifactId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { checkArtifactPolicy } from "../policy";
@@ -21,7 +22,7 @@ class UploadValidationError extends Error {
 
 export async function uploadArtifactFile(
   ctx: AppContext,
-  artifactId: string,
+  artifactId: WorkflowArtifactId,
   file: UploadArtifactInput,
   deps: UploadArtifactDeps,
 ): Promise<Result<WorkflowArtifact, DomainError>> {

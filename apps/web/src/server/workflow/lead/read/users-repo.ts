@@ -1,28 +1,29 @@
 import { shortName } from "~/lib/users/display-name";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 export type LeadUser = {
-  id: number;
+  id: UserId;
   isActive: boolean;
 };
 
 export type LeadUserWithName = {
-  id: number;
+  id: UserId;
   fullName: string;
 };
 
 export type AssignableExecutivesScope = {
   actorRole: "superuser" | "admin" | "sales_manager" | "supervisor";
-  actorBranchId: number;
+  actorBranchId: BranchId;
 };
 
 export type WorkflowUserRepository = {
-  findById(id: number): Promise<LeadUser | undefined>;
-  findByIds(ids: number[]): Promise<LeadUserWithName[]>;
+  findById(id: UserId): Promise<LeadUser | undefined>;
+  findByIds(ids: UserId[]): Promise<LeadUserWithName[]>;
   isExecutiveAssignable(
     scope: AssignableExecutivesScope,
-    executiveId: number,
+    executiveId: UserId,
   ): Promise<boolean>;
   listAssignableExecutives(
     input: AssignableExecutivesScope,
@@ -44,7 +45,7 @@ export function createWorkflowUsersRepo(
 
       return {
         id: user.id,
-        isActive: user.is_active === 1,
+        isActive: user.is_active,
       };
     },
     async findByIds(ids): Promise<LeadUserWithName[]> {
@@ -56,7 +57,7 @@ export function createWorkflowUsersRepo(
     },
     async isExecutiveAssignable(
       scope: AssignableExecutivesScope,
-      executiveId: number,
+      executiveId: UserId,
     ): Promise<boolean> {
       const user = await users.findById(executiveId);
       if (!user) {
@@ -66,7 +67,7 @@ export function createWorkflowUsersRepo(
       if (user.role !== "executive") {
         return false;
       }
-      if (user.is_active !== 1 || user.onboarding_completed_at == null) {
+      if (!user.is_active || user.onboarding_completed_at == null) {
         return false;
       }
       if (

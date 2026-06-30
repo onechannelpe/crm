@@ -102,7 +102,7 @@ function toFulfillmentView(
       detectedMime: doc.detectedMime,
       sizeBytes: doc.sizeBytes,
       uploadedByUserId: doc.uploadedByUserId,
-      uploadedAt: doc.createdAt,
+      uploadedAt: doc.createdAt.getTime(),
     })),
   };
 }
@@ -113,7 +113,7 @@ function toLeadSourceStatus(
   return {
     sunat: {
       status: sourceStatus.sunat.status,
-      fetchedAt: sourceStatus.sunat.fetchedAt,
+      fetchedAt: sourceStatus.sunat.fetchedAt?.getTime() ?? null,
       district: sourceStatus.sunat.district,
       department: sourceStatus.sunat.department,
       contributorStatus: sourceStatus.sunat.contributorStatus,
@@ -150,9 +150,9 @@ function toLeadDetailLead(
     status: lead.status,
     priority: lead.priority,
     nextStep: resolveLeadNextStep(lead),
-    createdAt: lead.createdAt,
-    updatedAt: lead.updatedAt,
-    reservationExpiresAt: lead.reservationExpiresAt,
+    createdAt: lead.createdAt.getTime(),
+    updatedAt: lead.updatedAt.getTime(),
+    reservationExpiresAt: lead.reservationExpiresAt?.getTime() ?? null,
   };
 }
 
@@ -208,8 +208,8 @@ function toRateProposalView(
     proposedForeignRate: proposal.proposedForeignRate,
     outcome: proposal.outcome,
     proposedBy: proposal.proposedBy,
-    proposedAt: proposal.proposedAt,
-    decidedAt: proposal.decidedAt,
+    proposedAt: proposal.proposedAt.getTime(),
+    decidedAt: proposal.decidedAt?.getTime() ?? null,
   };
 }
 
@@ -227,7 +227,7 @@ function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
     district: venue.district,
     province: venue.province,
     department: venue.department,
-    createdAt: venue.createdAt,
+    createdAt: venue.createdAt.getTime(),
     createdBy: venue.createdBy,
   };
 
@@ -261,7 +261,7 @@ function toRateRevisionView(
     round: item.revision.round,
     justification: item.revision.justification,
     requestedBy: item.revision.requestedBy,
-    requestedAt: item.revision.requestedAt,
+    requestedAt: item.revision.requestedAt.getTime(),
     files: item.files.map(toRateRevisionFileView),
   };
 }

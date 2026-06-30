@@ -3,10 +3,11 @@ import type {
   IntegrationJobRow,
   IntegrationRuntime,
 } from "~/server/integrations/types";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 interface ActorScope {
-  userId: number;
-  branchId: number;
+  userId: UserId;
+  branchId: BranchId;
   role: Role;
 }
 

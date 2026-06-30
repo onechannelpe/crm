@@ -7,6 +7,7 @@ import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   backOfficeQueueSteps,
@@ -21,7 +22,7 @@ function queueStepsForRole(role: Role): FulfillmentStep[] | null {
 
 export async function listFulfillmentQueue(
   db: DatabaseExecutor,
-  input: { actorRole: Role; actorBranchId: number },
+  input: { actorRole: Role; actorBranchId: BranchId },
 ): Promise<Result<FulfillmentQueueView, DomainError>> {
   const steps = queueStepsForRole(input.actorRole);
   if (steps === null) return Err(forbidden());
@@ -64,7 +65,7 @@ export async function listFulfillmentQueue(
         productKind: row.productKind,
         currentStep: row.currentStep,
         pendingOwner: pendingOwnerForStep(row.currentStep),
-        waitingSince: row.waitingSince,
+        waitingSince: row.waitingSince.getTime(),
       }),
     ),
   });

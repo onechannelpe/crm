@@ -507,7 +507,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: event.subject_user_id,
         payload_json: event.payload_json,
         changes_json: null,
-        occurred_at: event.occurred_at,
+        occurred_at: new Date(event.occurred_at),
       })),
     )
     .execute();

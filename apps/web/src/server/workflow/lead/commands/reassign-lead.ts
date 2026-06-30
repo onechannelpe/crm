@@ -1,6 +1,7 @@
 import type { ReassignLeadInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -9,13 +10,14 @@ import { resolveAssignableExecutivesScope } from "../../lead/domain/policy";
 import { runLeadTransaction } from "../write/transition";
 
 export async function reassignLeadCommand(
-  input: Omit<ReassignLeadInput, "newExecutiveId"> & {
+  input: Omit<ReassignLeadInput, "leadId" | "newExecutiveId"> & {
     actor: WorkflowActor;
-    toExecutiveId: number;
+    leadId: WorkflowLeadId;
+    toExecutiveId: UserId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {

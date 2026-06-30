@@ -2,6 +2,7 @@ import { applyImportRows } from "~/server/integrations/application/import/apply-
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { IntegrationJobId } from "~/server/shared/ids";
 
 import type { RecordImportInvalidRow } from "./intake/row-mapper";
 import {
@@ -16,10 +17,10 @@ interface StoredRows {
 
 export function createRecordImportRunner(deps: {
   executor: DatabaseExecutor;
-  now: () => number;
+  now: () => Date;
   readFile: (filePath: string) => Promise<Uint8Array>;
   updateProgress: (input: {
-    jobId: string;
+    jobId: IntegrationJobId;
     rowsTotal?: number;
     rowsApplied?: number;
     rowsFailed?: number;

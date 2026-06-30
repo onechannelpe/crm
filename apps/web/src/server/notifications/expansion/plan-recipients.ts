@@ -1,16 +1,17 @@
 import type { Logger } from "~/lib/observability/logger-shared";
+import type { UserId } from "~/server/shared/ids";
 
 import type { RecipientRepository } from "../repos/recipient-repo";
 import type { NotificationAudience, NotificationChannel } from "../types";
 
 export type PlannedExternalDelivery = {
-  userId: number;
+  userId: UserId;
   channel: "email" | "whatsapp";
   recipientAddress: string;
 };
 
 export type RecipientPlan = {
-  inAppRecipients: number[];
+  inAppRecipients: UserId[];
   externalDeliveries: PlannedExternalDelivery[];
 };
 
@@ -25,7 +26,7 @@ export function createRecipientPlanner(deps: {
 }) {
   return async function planRecipients(
     input: RecipientPlannerInput,
-    now: number,
+    now: Date,
   ): Promise<RecipientPlan> {
     const recipients = await deps.repository.resolveAudience(input.audience);
     const inAppRecipients = input.channels.includes("in_app") ? recipients : [];
@@ -45,7 +46,7 @@ export function createRecipientPlanner(deps: {
       ),
       externalChannels.includes("whatsapp")
         ? deps.repository.findActiveWhatsAppUsers(recipients, now)
-        : Promise.resolve(new Set<number>()),
+        : Promise.resolve(new Set<UserId>()),
     ]);
 
     const externalDeliveries: PlannedExternalDelivery[] = [];

@@ -2,16 +2,30 @@ import { bench, describe } from "vitest";
 
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
+import {
+  asOrganizationId,
+  asOrganizationPersonId,
+  asUserId,
+} from "~/server/shared/ids";
 
 import { BENCH_NOW, COMPONENT_ITERATIONS } from "../_shared/constants";
 import { fixedIterations } from "../_shared/options";
+
+const USER_ID = asUserId("bench-component-user");
+const CONTACT_ID = asOrganizationPersonId("bench-component-contact");
+const ORGANIZATION_ID = asOrganizationId(
+  "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+);
 
 describe("lead assignment component benchmark", () => {
   bench(
     "component path: build lead assignment payload",
     () => {
-      const assignment = createAssignment(1, 1, 24);
-      if (assignment.user_id !== 1 || assignment.contact_id !== 1) {
+      const assignment = createAssignment(USER_ID, CONTACT_ID, 24);
+      if (
+        assignment.user_id !== USER_ID ||
+        assignment.contact_id !== CONTACT_ID
+      ) {
         throw new Error("unexpected assignment payload");
       }
     },
@@ -22,15 +36,15 @@ describe("lead assignment component benchmark", () => {
     "component path: evaluate contact cooldown rule",
     () => {
       const contact = {
-        id: 1,
-        organization_id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+        id: CONTACT_ID,
+        organization_id: ORGANIZATION_ID,
         dni: "70000001",
         name: "Bench",
         phone_primary: "911111111",
         phone_secondary: null,
         last_contacted_at: null,
         last_contacted_by_user_id: null,
-        cooldown_until: BENCH_NOW - 1,
+        cooldown_until: new Date(BENCH_NOW.getTime() - 1),
         created_at: BENCH_NOW,
       };
       const canContact = canContactNow(contact, BENCH_NOW);

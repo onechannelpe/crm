@@ -14,9 +14,9 @@ export function createOptimisticLeadRow(input: {
   ruc: string;
   legalName: string | null;
   address: string | null;
-  executiveId: number;
+  executiveId: string;
   executiveName: string;
-  createdBy: number;
+  createdBy: string;
   createdByName: string;
   now?: number;
 }): OptimisticLeadRow {

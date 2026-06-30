@@ -15,6 +15,11 @@ import {
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
+import {
+  asWorkflowArtifactId,
+  asWorkflowLeadId,
+  type WorkflowLeadId,
+} from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import {
@@ -32,13 +37,13 @@ import { docKindForAction } from "~/server/workflow/lead/fulfillment/steps";
 import { workflowActor } from "./actor";
 
 type DocUpload = {
-  leadId: string;
+  leadId: WorkflowLeadId;
   action: FulfillmentAction;
   file: { name: string; sizeBytes: number; stream: ReadableStream<Uint8Array> };
 };
 
 type ProofUpload = {
-  leadId: string;
+  leadId: WorkflowLeadId;
   unitId: string;
   file: { name: string; sizeBytes: number; stream: ReadableStream<Uint8Array> };
 };
@@ -55,7 +60,7 @@ function parseDocUpload(formData: unknown): Result<DocUpload, DomainError> {
     },
     validationFail,
     (r) => ({
-      leadId: r.str("leadId"),
+      leadId: asWorkflowLeadId(r.str("leadId")),
       action: r.enum("action", FULFILLMENT_ACTIONS),
     }),
   );
@@ -85,7 +90,7 @@ function parseProofUpload(formData: unknown): Result<ProofUpload, DomainError> {
     },
     validationFail,
     (r) => ({
-      leadId: r.str("leadId"),
+      leadId: asWorkflowLeadId(r.str("leadId")),
       unitId: r.str("unitId"),
     }),
   );
@@ -111,8 +116,12 @@ export async function chooseFulfillmentProduct(input: unknown) {
       parseObject(
         input,
         validationFail,
-        (r): ChooseFulfillmentProductInput => ({
-          leadId: r.str("leadId"),
+        (
+          r,
+        ): Omit<ChooseFulfillmentProductInput, "leadId"> & {
+          leadId: WorkflowLeadId;
+        } => ({
+          leadId: asWorkflowLeadId(r.str("leadId")),
           productKind: r.enum("productKind", PRODUCT_KINDS),
         }),
       ),
@@ -149,7 +158,7 @@ export async function uploadFulfillmentDocument(formData: FormData) {
       return attachFulfillmentDocumentCommand(
         {
           leadId,
-          artifactId: uploaded.value.artifactId,
+          artifactId: asWorkflowArtifactId(uploaded.value.artifactId),
           action,
           actor: workflowActor(ctx.actor),
         },
@@ -167,8 +176,12 @@ export async function recordFulfillmentSerial(input: unknown) {
       parseObject(
         input,
         validationFail,
-        (r): RecordUnitSerialInput => ({
-          leadId: r.str("leadId"),
+        (
+          r,
+        ): Omit<RecordUnitSerialInput, "leadId"> & {
+          leadId: WorkflowLeadId;
+        } => ({
+          leadId: asWorkflowLeadId(r.str("leadId")),
           unitId: r.str("unitId"),
           serial: r.str("serial"),
         }),
@@ -190,8 +203,12 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
       parseObject(
         input,
         validationFail,
-        (r): RegisterUnitPaymentLinkInput => ({
-          leadId: r.str("leadId"),
+        (
+          r,
+        ): Omit<RegisterUnitPaymentLinkInput, "leadId"> & {
+          leadId: WorkflowLeadId;
+        } => ({
+          leadId: asWorkflowLeadId(r.str("leadId")),
           unitId: r.str("unitId"),
           paymentUrl: r.str("paymentUrl"),
         }),
@@ -227,7 +244,7 @@ export async function uploadFulfillmentPaymentProof(formData: FormData) {
         {
           leadId,
           unitId,
-          artifactId: uploaded.value.artifactId,
+          artifactId: asWorkflowArtifactId(uploaded.value.artifactId),
           actor: workflowActor(ctx.actor),
         },
         getServerRuntime().workflow.ports(),
@@ -241,7 +258,9 @@ export async function validateFulfillmentPayment(input: unknown) {
     name: "workflow.validate_fulfillment_payment",
     access: { kind: "auth" },
     parse: () =>
-      parseObject(input, validationFail, (r) => ({ leadId: r.str("leadId") })),
+      parseObject(input, validationFail, (r) => ({
+        leadId: asWorkflowLeadId(r.str("leadId")),
+      })),
     audit: ({ leadId }) => ({ leadId }),
     execute: ({ actor }, { leadId }) =>
       validateFulfillmentPaymentCommand(
@@ -259,8 +278,12 @@ export async function rejectFulfillmentStep(input: unknown) {
       parseObject(
         input,
         validationFail,
-        (r): RejectFulfillmentStepInput => ({
-          leadId: r.str("leadId"),
+        (
+          r,
+        ): Omit<RejectFulfillmentStepInput, "leadId"> & {
+          leadId: WorkflowLeadId;
+        } => ({
+          leadId: asWorkflowLeadId(r.str("leadId")),
           reason: r.str("reason"),
         }),
       ),
@@ -281,8 +304,12 @@ export async function registerFulfillmentSale(input: unknown) {
       parseObject(
         input,
         validationFail,
-        (r): RegisterUnitSaleInput => ({
-          leadId: r.str("leadId"),
+        (
+          r,
+        ): Omit<RegisterUnitSaleInput, "leadId"> & {
+          leadId: WorkflowLeadId;
+        } => ({
+          leadId: asWorkflowLeadId(r.str("leadId")),
           unitId: r.str("unitId"),
           serviceRef: r.str("serviceRef"),
         }),
@@ -305,8 +332,8 @@ export async function requestFulfillmentDownloadToken(input: {
     access: { kind: "auth" },
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: r.str("leadId"),
-        artifactId: r.str("artifactId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
+        artifactId: asWorkflowArtifactId(r.str("artifactId")),
       })),
     audit: ({ leadId, artifactId }) => ({ leadId, artifactId }),
     execute: (ctx, { leadId, artifactId }) =>

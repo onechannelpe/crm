@@ -57,8 +57,8 @@ async function blockWithAudit(params: {
   scope: "user" | "ip";
   limit: number;
   windowMs: number;
-  windowStartedAt: number;
-  now: number;
+  windowStartedAt: Date;
+  now: Date;
   deps: RateLimitDeps;
 }): Promise<never> {
   const {
@@ -71,7 +71,7 @@ async function blockWithAudit(params: {
     now,
     deps,
   } = params;
-  const retryAfterMs = windowMs - (now - windowStartedAt);
+  const retryAfterMs = windowMs - (now.getTime() - windowStartedAt.getTime());
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
 
   // RFC 6585 §4: 429 responses must carry Retry-After when the reset time is known.
@@ -87,7 +87,7 @@ async function blockWithAudit(params: {
     entityId: auditEntityId("user", userId),
     actorUserId: userId,
     payload: { actionName, scope, limit, windowMs, retryAfterMs },
-    occurredAt: new Date(now),
+    occurredAt: now,
   });
 
   throwDomain(
@@ -104,7 +104,7 @@ export async function checkActionRateLimit(
   ip: string = resolveRequestIp(),
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
-  const now = Date.now();
+  const now = new Date();
 
   // Check the per-user counter first. If the user is already over limit, skip
   // the shared IP counter entirely. Incrementing it for a blocked user would

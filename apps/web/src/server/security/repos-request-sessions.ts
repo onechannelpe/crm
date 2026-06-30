@@ -21,7 +21,7 @@ export function createRequestSessionsRepo(db: Kysely<Database>) {
       return session ?? null;
     },
 
-    async updateActivity(id: string, lastActivity: number): Promise<void> {
+    async updateActivity(id: string, lastActivity: Date): Promise<void> {
       await db
         .updateTable("request_sessions")
         .set({ last_activity: lastActivity })
@@ -29,7 +29,7 @@ export function createRequestSessionsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteExpired(now = Date.now()): Promise<number> {
+    async deleteExpired(now = new Date()): Promise<number> {
       const result = await db
         .deleteFrom("request_sessions")
         .where("expires_at", "<", now)

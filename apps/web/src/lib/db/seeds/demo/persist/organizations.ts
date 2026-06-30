@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
-import type { OrganizationId } from "~/server/shared/ids";
+import { asOrganizationId, type OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
 import { ORGANIZATIONS, type OrganizationSeedKey } from "../scenario";
@@ -13,7 +13,7 @@ export type OrganizationLookup = {
 export async function persistOrganizations(
   db: Kysely<Database>,
   organizationKeys: readonly OrganizationSeedKey[],
-  now: number,
+  now: Date,
 ): Promise<OrganizationLookup> {
   const organizationsToInsert: Array<{
     id: OrganizationId;
@@ -22,13 +22,13 @@ export async function persistOrganizations(
     address: string;
     district: string;
     department: string;
-    created_at: number;
+    created_at: Date;
   }> = [];
 
   for (const key of organizationKeys) {
     const { name, ...organization } = ORGANIZATIONS[key];
     organizationsToInsert.push({
-      id: randomUUIDv7(),
+      id: asOrganizationId(randomUUIDv7()),
       ...organization,
       legal_name: name,
       created_at: now,

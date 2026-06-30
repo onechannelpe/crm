@@ -1,4 +1,5 @@
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowUserRepository } from "~/server/workflow/lead/read/users-repo";
 import type { LeadRepository } from "~/server/workflow/lead/write/lead-repo";
@@ -20,7 +21,7 @@ type LookupDeps = {
 
 export async function ensureActiveExecutive(input: {
   deps: { users: WorkflowUserRepository };
-  executiveId: number;
+  executiveId: UserId;
 }): Promise<Result<void, DomainError>> {
   const targetExecutive = await input.deps.users.findById(input.executiveId);
   if (!targetExecutive || !targetExecutive.isActive) {
@@ -33,7 +34,7 @@ export async function ensureActiveExecutive(input: {
 export async function resolveLeadRegistration(input: {
   deps: LookupDeps;
   ruc: string;
-  executiveId: number;
+  executiveId: UserId;
 }): Promise<Result<LeadRegistrationResolution, DomainError>> {
   const existingLead = await input.deps.leads.findActiveByRuc(input.ruc);
   if (!existingLead) {

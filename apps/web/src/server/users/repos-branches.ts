@@ -1,10 +1,11 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { BranchId } from "~/server/shared/ids";
 
 export function createBranchesRepo(db: Kysely<Database>) {
   return {
-    findById(id: number) {
+    findById(id: BranchId) {
       return db
         .selectFrom("branches")
         .selectAll()

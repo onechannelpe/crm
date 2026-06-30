@@ -28,10 +28,13 @@ type AuditLogGridRow = AuditLogEvent & { id: string };
 
 function formatEventDetail(row: AuditLogGridRow): string {
   if (row.changes.length > 0) return summarizeFieldChanges(row.changes);
-  return row.payload ?? "—";
+  if (row.payload == null) return "—";
+  return typeof row.payload === "string"
+    ? row.payload
+    : JSON.stringify(row.payload);
 }
 
-function formatActor(actorUserId: number | null): string {
+function formatActor(actorUserId: string | null): string {
   return actorUserId === null ? "Sistema" : `#${actorUserId}`;
 }
 
@@ -77,12 +80,10 @@ const AUDIT_LOG_COLUMNS = [
   },
 ] satisfies ReadonlyArray<DataGridColumn<AuditLogGridRow>>;
 
-function parseActorUserId(value: string): number | undefined {
+function parseActorUserId(value: string): string | undefined {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
-  const parsed = Number(trimmed);
-  if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
-  return parsed;
+  return trimmed;
 }
 
 export default function AuditLogPage() {

@@ -1,5 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type {
+  IntegrationJobId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 import { reviewLead } from "~/server/workflow/lead/domain/decide";
 import { commitTransition } from "~/server/workflow/lead/write/commit";
 import { createWorkflowRepos } from "~/server/workflow/repos";
@@ -10,11 +15,11 @@ const IMPORT_REASON = "Imported from CSV";
 
 async function markImportRowFailed(input: {
   executor: DatabaseExecutor;
-  jobId: string;
+  jobId: IntegrationJobId;
   rowNumber: number;
   reason: string;
-  leadId: string | null;
-  changedAt: number;
+  leadId: WorkflowLeadId | null;
+  changedAt: Date;
 }) {
   await input.executor
     .updateTable("workflow_integration_import_rows")
@@ -31,10 +36,10 @@ async function markImportRowFailed(input: {
 
 async function markImportRowApplied(input: {
   executor: DatabaseExecutor;
-  jobId: string;
+  jobId: IntegrationJobId;
   rowNumber: number;
-  leadId: string;
-  changedAt: number;
+  leadId: WorkflowLeadId;
+  changedAt: Date;
 }) {
   await input.executor
     .updateTable("workflow_integration_import_rows")
@@ -51,10 +56,10 @@ async function markImportRowApplied(input: {
 
 export async function applyLeadMutation(input: {
   executor: DatabaseExecutor;
-  jobId: string;
-  actor: { userId: number; role: Role };
+  jobId: IntegrationJobId;
+  actor: { userId: UserId; role: Role };
   row: ImportRowInput;
-  now: number;
+  now: Date;
 }): Promise<LeadMutationResult> {
   const repos = createWorkflowRepos(input.executor);
   const lead = await repos.leads.findActiveByRuc(input.row.ruc);

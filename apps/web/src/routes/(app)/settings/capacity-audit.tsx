@@ -69,7 +69,10 @@ function formatActor(actorUserId: string | null): string {
 
 function formatDetail(event: CapacityAuditEvent): string {
   if (event.changes.length > 0) return summarizeFieldChanges(event.changes);
-  return event.payload ?? "-";
+  if (event.payload == null) return "-";
+  return typeof event.payload === "string"
+    ? event.payload
+    : JSON.stringify(event.payload);
 }
 
 export default function CapacityAuditPage() {

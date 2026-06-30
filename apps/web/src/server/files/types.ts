@@ -1,3 +1,11 @@
+import type {
+  BranchId,
+  FileAssetId,
+  TeamId,
+  UserId,
+  WorkflowArtifactId,
+} from "~/server/shared/ids";
+
 const ARTIFACT_TYPES = [
   "records_export",
   "integration_import",
@@ -42,25 +50,25 @@ export type ScanStatus = "pending" | "clean" | "infected" | "error";
 export type BindingRole = "source_upload" | "export_output" | "derived_output";
 
 export interface WorkflowArtifact {
-  id: string;
+  id: WorkflowArtifactId;
   artifactType: ArtifactType;
   direction: ArtifactDirection;
   executionMode: ArtifactExecutionMode;
   status: ArtifactStatus;
-  requestedByUserId: number;
-  scopeBranchId: number | null;
-  scopeTeamId: number | null;
-  policySnapshotJson: string;
-  workflowContextJson: string;
+  requestedByUserId: UserId;
+  scopeBranchId: BranchId | null;
+  scopeTeamId: TeamId | null;
+  policySnapshotJson: unknown;
+  workflowContextJson: unknown;
   errorCode: string | null;
   errorMessage: string | null;
-  expiresAt: number | null;
-  createdAt: number;
-  updatedAt: number;
+  expiresAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface FileAsset {
-  id: number;
+  id: FileAssetId;
   storageKey: string;
   originalFilename: string;
   safeDisplayFilename: string;
@@ -72,7 +80,7 @@ export interface FileAsset {
   scanStatus: ScanStatus;
   scanEngine: string | null;
   scanReference: string | null;
-  createdAt: number;
+  createdAt: Date;
 }
 
 export interface ArtifactWithAsset {

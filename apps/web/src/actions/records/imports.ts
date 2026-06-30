@@ -20,6 +20,12 @@ import {
   type DomainError,
   throwDomain,
 } from "~/server/shared/domain-error";
+import {
+  asIntegrationJobId,
+  type IntegrationJobId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -64,11 +70,11 @@ function parseImportUpload(
 
 async function getAuthorizedRecordImportJob(
   actor: {
-    userId: number;
-    branchId: number;
+    userId: UserId;
+    branchId: BranchId;
     role: Role;
   },
-  jobId: string,
+  jobId: IntegrationJobId,
 ): Promise<IntegrationJobRow> {
   const { integration } = getServerRuntime().integrations;
 
@@ -173,7 +179,7 @@ export async function getRecordImportJob(
 
     parse: () =>
       parseObject({ jobId: rawJobId }, validationFail, (r) => ({
-        jobId: r.str("jobId"),
+        jobId: asIntegrationJobId(r.str("jobId")),
       })),
 
     audit: (query) => ({ jobId: query.jobId }),

@@ -5,6 +5,12 @@ import { type WireError } from "~/lib/wire-error";
 import { runAction, runActionResult } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
+import {
+  asWorkflowArtifactId,
+  asWorkflowLeadId,
+  type WorkflowArtifactId,
+  type WorkflowLeadId,
+} from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -15,13 +21,13 @@ type UploadFile = {
 };
 
 type LeadUpload = {
-  leadId: string;
+  leadId: WorkflowLeadId;
   file: UploadFile;
 };
 
 type LeadArtifactRef = {
-  leadId: string;
-  artifactId: string;
+  leadId: WorkflowLeadId;
+  artifactId: WorkflowArtifactId;
 };
 
 // File uploads must arrive as a single top-level FormData argument so the
@@ -35,7 +41,7 @@ function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
     { leadId: formData.get("leadId") },
     validationFail,
     (r) => ({
-      leadId: r.str("leadId"),
+      leadId: asWorkflowLeadId(r.str("leadId")),
     }),
   );
   if (!parsedFields.ok) {
@@ -62,8 +68,8 @@ function parseLeadArtifactRef(
   input: unknown,
 ): Result<LeadArtifactRef, DomainError> {
   return parseObject(input, validationFail, (r) => ({
-    leadId: r.str("leadId"),
-    artifactId: r.str("artifactId"),
+    leadId: asWorkflowLeadId(r.str("leadId")),
+    artifactId: asWorkflowArtifactId(r.str("artifactId")),
   }));
 }
 
@@ -74,7 +80,7 @@ export async function listLeadSaleProofFiles(rawLeadId: string) {
 
     parse: () =>
       parseObject({ leadId: rawLeadId }, validationFail, (r) => ({
-        leadId: r.str("leadId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
       })),
 
     audit: ({ leadId }) => ({ leadId }),

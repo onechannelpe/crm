@@ -1,5 +1,6 @@
 import type { LeadListView } from "~/contracts/workflow/views";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import {
   requireCapability,
@@ -28,9 +29,9 @@ function normalizeLeadAnyFieldSearch(value: string | undefined) {
 export async function listLeads(
   deps: LeadListQueryDeps,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     actorRole: ListLeadsInput["actor"]["role"];
-    actorBranchId: number;
+    actorBranchId: BranchId;
     filters: ListLeadsInput["filters"];
   },
 ): Promise<Result<LeadListView, DomainError>> {
@@ -61,8 +62,14 @@ export async function listLeads(
     status: input.filters.status,
     priority: input.filters.priority,
     anyFieldSearch: normalizeLeadAnyFieldSearch(input.filters.anyFieldSearch),
-    updatedSinceMs: input.filters.updatedSinceMs,
-    updatedUntilMs: input.filters.updatedUntilMs,
+    updatedSince:
+      input.filters.updatedSinceMs === undefined
+        ? undefined
+        : new Date(input.filters.updatedSinceMs),
+    updatedUntil:
+      input.filters.updatedUntilMs === undefined
+        ? undefined
+        : new Date(input.filters.updatedUntilMs),
     sortBy,
     sortDirection,
     limit: page.value.limit,

@@ -1,6 +1,7 @@
 import type { CloseLeadInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -11,12 +12,13 @@ import { runLeadTransaction } from "../write/transition";
 // moves to CLOSED_LOST (terminal) and every consumer of a pending proposal is
 // gated on PRICING, so the inert proposal is never surfaced again.
 export async function closeLeadCommand(
-  input: CloseLeadInput & {
+  input: Omit<CloseLeadInput, "leadId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {

@@ -20,6 +20,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asUserId, asWorkflowLeadId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
@@ -46,7 +47,10 @@ export async function queryLeadList(
         stage: r.optEnum("stage", LEAD_STAGES),
         status: r.optEnum("status", LEAD_STATUSES),
         priority: r.optEnum("priority", LEAD_PRIORITIES),
-        executiveId: r.optNum("executiveId") ?? undefined,
+        executiveId:
+          r.optStr("executiveId") === undefined
+            ? undefined
+            : asUserId(r.str("executiveId")),
         anyFieldSearch: r.optStr("anyFieldSearch") ?? undefined,
         updatedSinceMs: r.optNum("updatedSinceMs") ?? undefined,
         updatedUntilMs: r.optNum("updatedUntilMs") ?? undefined,
@@ -87,7 +91,7 @@ export async function queryLeadDetail(
 
     parse: () =>
       parseObject({ leadId: rawLeadId }, validationFail, (r) => ({
-        leadId: r.str("leadId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
       })),
 
     audit: ({ leadId }) => ({ leadId }),
@@ -172,7 +176,7 @@ export async function queryAssignableExecutives(
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: r.str("leadId"),
+        leadId: asWorkflowLeadId(r.str("leadId")),
         search: r.optStr("search") ?? undefined,
         limit: r.optNum("limit") ?? undefined,
       })),

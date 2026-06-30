@@ -10,8 +10,8 @@ import type {
 type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
 
 export interface AuthFunnelEventFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   eventName?: AuthFunnelEventName;
   method?: Exclude<AuthFunnelMethod, null>;
   outcome?: AuthFunnelOutcome;
@@ -19,8 +19,8 @@ export interface AuthFunnelEventFilter {
 }
 
 export interface AuthFunnelSummaryFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   eventName?: AuthFunnelEventName;
   method?: Exclude<AuthFunnelMethod, null>;
   outcome?: AuthFunnelOutcome;
@@ -87,10 +87,10 @@ export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteCreatedBefore(cutoffMs: number): Promise<number> {
+    async deleteCreatedBefore(cutoff: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_funnel_events")
-        .where("created_at", "<", cutoffMs)
+        .where("created_at", "<", cutoff)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },

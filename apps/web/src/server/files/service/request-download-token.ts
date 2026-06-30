@@ -1,5 +1,6 @@
 import type { AppContext } from "~/server/platform/action/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowArtifactId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { checkArtifactPolicy } from "../policy";
@@ -13,7 +14,7 @@ import { actorFromCtx, DOWNLOAD_READY_STATUSES, emitEvent } from "./helpers";
 
 export async function requestDownloadToken(
   ctx: AppContext,
-  artifactId: string,
+  artifactId: WorkflowArtifactId,
   deps: DownloadTokenDeps,
 ): Promise<Result<{ token: string }, DomainError>> {
   const actor = actorFromCtx(ctx);
@@ -44,19 +45,20 @@ export async function requestDownloadToken(
 
   const rawToken = generateDownloadToken();
   const tokenHash = hashToken(rawToken);
+  const expiresAt = new Date(now.getTime() + DOWNLOAD_TOKEN_TTL_MS);
 
   await repo.tokens.insert({
     artifactId,
     fileAssetId: fileAsset.id,
     tokenHash,
     requestedByUserId: actor.userId,
-    expiresAt: now + DOWNLOAD_TOKEN_TTL_MS,
+    expiresAt,
     now,
   });
 
   await emitEvent(repo, artifactId, "artifact.download_token_issued", ctx, {
     fileAssetId: fileAsset.id,
-    expiresAt: now + DOWNLOAD_TOKEN_TTL_MS,
+    expiresAt: expiresAt.toISOString(),
   });
 
   return Ok({ token: rawToken });

@@ -2,20 +2,21 @@
 
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asBranchId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { getSourcingPolicy } from "~/server/workflow/policy/read/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/workflow/policy/write/update-sourcing-policy";
 
 import { workflowActor } from "../commands/actor";
 
-export async function querySourcingPolicy(rawBranchId: number) {
+export async function querySourcingPolicy(rawBranchId: string) {
   return runAction({
     name: "workflow.get_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>
       parseObject({ branchId: rawBranchId }, validationFail, (r) => ({
-        branchId: r.posInt("branchId"),
+        branchId: asBranchId(r.str("branchId")),
       })),
 
     audit: ({ branchId }) => ({ branchId }),
@@ -35,7 +36,7 @@ export async function querySourcingPolicy(rawBranchId: number) {
 }
 
 export async function saveSourcingPolicy(input: {
-  branchId: number;
+  branchId: string;
   engineAssignmentEnabled: boolean;
 }) {
   return runAction({
@@ -44,7 +45,7 @@ export async function saveSourcingPolicy(input: {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        branchId: r.posInt("branchId"),
+        branchId: asBranchId(r.str("branchId")),
         engineAssignmentEnabled: r.bool("engineAssignmentEnabled"),
       })),
 

@@ -1,15 +1,21 @@
-export const SUP1 = 2;
-export const SUP2 = 8;
-export const BO1 = 4;
-export const BO2 = 10;
+import { asUserId } from "~/server/shared/ids";
 
-export const EXEC_CAMILA = 3;
-export const EXEC_PATRICIA = 5;
-export const EXEC_ROBERTO = 6;
-export const EXEC_ANDREA = 9;
-export const EXEC_RENATO = 15;
-export const EXEC_DANIELA = 16;
-export const EXEC_GABRIEL = 17;
+function seedUserId(value: number) {
+  return asUserId(`00000000-0000-0000-0000-${String(value).padStart(12, "0")}`);
+}
+
+export const SUP1 = seedUserId(2);
+export const SUP2 = seedUserId(8);
+export const BO1 = seedUserId(4);
+export const BO2 = seedUserId(10);
+
+export const EXEC_CAMILA = seedUserId(3);
+export const EXEC_PATRICIA = seedUserId(5);
+export const EXEC_ROBERTO = seedUserId(6);
+export const EXEC_ANDREA = seedUserId(9);
+export const EXEC_RENATO = seedUserId(15);
+export const EXEC_DANIELA = seedUserId(16);
+export const EXEC_GABRIEL = seedUserId(17);
 
 export const ORGANIZATIONS = {
   pending: {

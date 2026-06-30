@@ -1,10 +1,11 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { TeamId, UserId } from "~/server/shared/ids";
 
 export function createBackOfficeAssignmentsRepo(db: Kysely<Database>) {
   return {
-    async findTeamsByBackOffice(backOfficeUserId: number) {
+    async findTeamsByBackOffice(backOfficeUserId: UserId) {
       const rows = await db
         .selectFrom("back_office_assignments")
         .select(["team_id"])
@@ -14,7 +15,7 @@ export function createBackOfficeAssignmentsRepo(db: Kysely<Database>) {
       return rows.map((r) => r.team_id);
     },
 
-    async assign(backOfficeUserId: number, teamId: number, now: number) {
+    async assign(backOfficeUserId: UserId, teamId: TeamId, now: Date) {
       await db
         .insertInto("back_office_assignments")
         .values({

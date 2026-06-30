@@ -11,6 +11,7 @@ import {
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asWebauthnChallengeId } from "~/server/shared/ids";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
   const { repos } = getServerRuntime().auth.onboarding;
@@ -30,7 +31,7 @@ export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallen
 }
 
 export async function finishPasskeyEnrollment(
-  challengeId: number,
+  challengeId: string,
   response: RegistrationResponseJSON,
 ): Promise<{ message: string }> {
   const { repos } = getServerRuntime().auth.onboarding;
@@ -47,7 +48,7 @@ export async function finishPasskeyEnrollment(
           sessionClass: actor.sessionClass,
           primaryAuthMethod: actor.primaryAuthMethod,
         },
-        challengeId,
+        challengeId: asWebauthnChallengeId(challengeId),
         response,
         ipAddress,
         userAgent,

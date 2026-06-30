@@ -2,26 +2,27 @@ import { randomUUIDv7 } from "bun";
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { IntegrationJobId } from "~/server/shared/ids";
 
 import type { ImportRowInput } from "./types";
 
 export async function stageImportRows(
   trx: Transaction<Database>,
-  jobId: string,
+  jobId: IntegrationJobId,
   validRows: ImportRowInput[],
   invalidRows: Array<{
     row: number;
     reason: string;
     type: "import_status" | "import_prioridad";
   }>,
-  now: number,
+  now: Date,
 ) {
   if (validRows.length > 0) {
     await trx
       .insertInto("workflow_integration_import_rows")
       .values(
         validRows.map((row) => ({
-          id: randomUUIDv7("hex", now),
+          id: randomUUIDv7(),
           integration_job_id: jobId,
           row_number: row.row,
           type: row.type,
@@ -44,7 +45,7 @@ export async function stageImportRows(
       .insertInto("workflow_integration_import_rows")
       .values(
         invalidRows.map((row) => ({
-          id: randomUUIDv7("hex", now),
+          id: randomUUIDv7(),
           integration_job_id: jobId,
           row_number: row.row,
           type: row.type,

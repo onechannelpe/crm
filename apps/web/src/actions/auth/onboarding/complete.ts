@@ -5,6 +5,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { getMe } from "~/actions/auth/session";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import { fail, throwDomain } from "~/server/shared/domain-error";
+import { asWebauthnChallengeId } from "~/server/shared/ids";
 
 import { completeOnboarding, completePasskeyOnboarding } from "./index";
 
@@ -25,12 +26,12 @@ export async function completeOnboardingFromCurrentSession(): Promise<{
 }
 
 export async function completeOnboardingWithPasskey(input: {
-  challengeId: number;
+  challengeId: string;
   response: RegistrationResponseJSON;
 }): Promise<{ redirectTo: string }> {
   return completePasskeyOnboarding(
     await requireCurrentUserPhone(),
-    input.challengeId,
+    asWebauthnChallengeId(input.challengeId),
     input.response,
   );
 }

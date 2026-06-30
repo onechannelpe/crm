@@ -1,9 +1,10 @@
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { AuthLoginFlowId, WebauthnChallengeId } from "~/server/shared/ids";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 type LoginFlowCleanupRecord = {
-  id: number;
-  challenge_id: number | null;
+  id: AuthLoginFlowId;
+  challenge_id: WebauthnChallengeId | null;
 };
 
 type LoginFlowCleanupRepos = {

@@ -26,7 +26,7 @@ export interface CompleteOnboardingInput {
 }
 
 export interface AccountOnboardingDeps {
-  now?: () => number;
+  now?: () => Date;
 }
 
 export async function completeAccountOnboardingWithRepos(
@@ -34,7 +34,7 @@ export async function completeAccountOnboardingWithRepos(
   input: CompleteOnboardingInput,
   deps: Pick<AccountOnboardingDeps, "now"> = {},
 ): Promise<Result<void, DomainError>> {
-  const now = deps.now ?? Date.now;
+  const now = deps.now ?? (() => new Date());
 
   const user = await repos.users.findById(input.userId);
   if (!user) {

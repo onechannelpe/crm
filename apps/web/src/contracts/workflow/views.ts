@@ -30,7 +30,7 @@ export type LeadAvailableAction =
 export type LeadBlockingField = "digitalPolicy" | "venueAccounts";
 
 export type AssignableExecutiveView = {
-  id: number;
+  id: string;
   fullName: string;
 };
 
@@ -45,9 +45,9 @@ export type LeadListRowView = {
   ruc: string;
   legalName: string | null;
   address: string | null;
-  executiveId: number;
+  executiveId: string;
   executiveName: string;
-  createdBy: number;
+  createdBy: string;
   createdByName: string;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -80,11 +80,11 @@ export type LeadDetailLeadView = {
   address: string | null;
   district: string | null;
   department: string | null;
-  executiveId: number;
+  executiveId: string;
   executiveName: string;
-  createdBy: number;
+  createdBy: string;
   createdByName: string;
-  updatedBy: number | null;
+  updatedBy: string | null;
   updatedByName: string | null;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -106,7 +106,7 @@ export type LeadDetailRateProposalView = {
   proposedCreditRate: number;
   proposedForeignRate: number;
   outcome: "pending" | "accepted" | "revision_requested";
-  proposedBy: number;
+  proposedBy: string;
   proposedAt: number;
   decidedAt: number | null;
 };
@@ -127,7 +127,7 @@ export type LeadDetailVenueView = {
   solesAccount?: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
-  createdBy: number;
+  createdBy: string;
 };
 
 export type LeadDetailRateRevisionView = {
@@ -135,7 +135,7 @@ export type LeadDetailRateRevisionView = {
   proposalId: string;
   round: number;
   justification: string;
-  requestedBy: number;
+  requestedBy: string;
   requestedAt: number;
   files: LeadDetailRateRevisionFileView[];
 };
@@ -146,7 +146,7 @@ export type LeadDetailFulfillmentDocView = {
   filename: string;
   detectedMime: string;
   sizeBytes: number;
-  uploadedByUserId: number;
+  uploadedByUserId: string;
   uploadedAt: number;
 };
 

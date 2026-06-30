@@ -11,6 +11,7 @@ import {
 } from "@simplewebauthn/server";
 
 import { auditEntityId } from "~/server/shared/audit-entity";
+import type { UserId } from "~/server/shared/ids";
 import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
@@ -98,7 +99,7 @@ export function createPasskeyProvider(
 
   async function buildAuthenticationOptions(
     input: {
-      userId?: number;
+      userId?: UserId;
       userVerification: "preferred" | "required";
     },
     challenge?: string,
@@ -130,7 +131,7 @@ export function createPasskeyProvider(
   }
 
   return {
-    async getRegistrationOptions(userId: number) {
+    async getRegistrationOptions(userId: UserId) {
       const existingPasskeys = await repos.passkeys.findByUser(userId);
 
       const options = await generateRegistrationOptions({
@@ -152,14 +153,14 @@ export function createPasskeyProvider(
         entityType: "passkey",
         entityId: auditEntityId("passkey", userId),
         actorUserId: userId,
-        occurredAt: Date.now(),
+        occurredAt: new Date(),
       });
 
       return options;
     },
 
     async verifyRegistration(
-      userId: number,
+      userId: UserId,
       response: RegistrationResponseJSON,
       challenge: string,
     ) {
@@ -194,14 +195,14 @@ export function createPasskeyProvider(
     },
 
     async getAuthenticationOptions(input: {
-      userId?: number;
+      userId?: UserId;
       userVerification: "preferred" | "required";
     }) {
       return buildAuthenticationOptions(input);
     },
 
     async getAuthenticationOptionsForChallenge(input: {
-      userId: number;
+      userId: UserId;
       challenge: string;
       userVerification: "preferred" | "required";
     }) {

@@ -2,13 +2,14 @@ import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
 import type { JobStore } from "~/lib/job-queue/job-store";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { IntegrationJobId, UserId } from "~/server/shared/ids";
 import type { LeadQueries } from "~/server/workflow/lead/read/lead-queries";
 
 export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
 export type IntegrationJobStatus = WorkflowIntegrationJobsTable["status"];
 
 export interface IntegrationJobRow extends QueueJobBase {
-  id: string;
+  id: IntegrationJobId;
   type: IntegrationJobType;
   status: IntegrationJobStatus;
   created_at: Date;
@@ -22,13 +23,13 @@ export interface IntegrationJobRow extends QueueJobBase {
   lease_owner: string | null;
   lease_until: Date | null;
   file_path: string | null;
-  requested_by_user_id: string;
+  requested_by_user_id: UserId;
 }
 
 export interface NewIntegrationJob {
   type: IntegrationJobType;
   status: IntegrationJobStatus;
-  requested_by_user_id: string;
+  requested_by_user_id: UserId;
   file_path: string | null;
   max_attempts: number;
   created_at: Date;
@@ -42,15 +43,15 @@ export interface IntegrationJobCompletion {
 }
 
 export interface IntegrationJobsPort {
-  store: JobStore<string, IntegrationJobRow>;
-  insert(values: NewIntegrationJob): Promise<string>;
-  findById(id: string): Promise<IntegrationJobRow | undefined>;
+  store: JobStore<IntegrationJobId, IntegrationJobRow>;
+  insert(values: NewIntegrationJob): Promise<IntegrationJobId>;
+  findById(id: IntegrationJobId): Promise<IntegrationJobRow | undefined>;
   list(limit: number, offset: number): Promise<IntegrationJobRow[]>;
   updateProgress(
-    id: string,
+    id: IntegrationJobId,
     progress: { rowsTotal?: number; rowsApplied?: number; rowsFailed?: number },
   ): Promise<unknown>;
-  setFilePath(id: string, filePath: string): Promise<unknown>;
+  setFilePath(id: IntegrationJobId, filePath: string): Promise<unknown>;
 }
 
 export interface IntegrationRuntime {
@@ -64,7 +65,7 @@ export interface IntegrationRuntime {
     ): Promise<Array<{ id: string; ruc: string; executiveId: string }>>;
   };
   users: {
-    findById(id: string): Promise<{ branch_id: string } | undefined>;
+    findById(id: UserId): Promise<{ branch_id: string } | undefined>;
   };
 }
 

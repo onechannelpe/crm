@@ -4,6 +4,12 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type {
+  FulfillmentOrderId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+  WorkflowVenueId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -23,7 +29,7 @@ import {
   type UnitField,
 } from "./steps";
 
-type Ports = { executor: DatabaseExecutor; now: number };
+type Ports = { executor: DatabaseExecutor; now: Date };
 type LeadResult = Result<{ leadId: string }, DomainError>;
 
 type Loaded = { state: LeadState; details: FulfillmentOrderDetails };
@@ -32,7 +38,11 @@ type Loaded = { state: LeadState; details: FulfillmentOrderDetails };
 // the action is meant for and the actor owns that step.
 async function loadForAction(
   ctx: LeadTransaction,
-  input: { leadId: string; actor: WorkflowActor; action: FulfillmentAction },
+  input: {
+    leadId: WorkflowLeadId;
+    actor: WorkflowActor;
+    action: FulfillmentAction;
+  },
 ): Promise<Result<Loaded, DomainError>> {
   const state = await ctx.repos.leads.findById(input.leadId);
   if (!state) return Err(fail("lead_not_found"));
@@ -135,7 +145,11 @@ function requireProductKind(
 }
 
 export async function chooseFulfillmentProductCommand(
-  input: { leadId: string; productKind: ProductKind; actor: WorkflowActor },
+  input: {
+    leadId: WorkflowLeadId;
+    productKind: ProductKind;
+    actor: WorkflowActor;
+  },
   ports: Ports,
 ): Promise<LeadResult> {
   return runLeadTransaction(ports, async (ctx) => {
@@ -193,13 +207,17 @@ export async function chooseFulfillmentProductCommand(
 
 function buildUnits(
   productKind: ProductKind,
-  venues: Array<{ id: string; tradeName: string; posQuantity: number }>,
-  context: { orderId: string; now: number },
+  venues: Array<{
+    id: WorkflowVenueId;
+    tradeName: string;
+    posQuantity: number;
+  }>,
+  context: { orderId: FulfillmentOrderId; now: Date },
 ): Array<{
-  orderId: string;
-  venueId: string | null;
+  orderId: FulfillmentOrderId;
+  venueId: WorkflowVenueId | null;
   label: string;
-  now: number;
+  now: Date;
 }> {
   if (productKind === "digital_only") {
     return [
@@ -213,10 +231,10 @@ function buildUnits(
   }
 
   const units: Array<{
-    orderId: string;
-    venueId: string | null;
+    orderId: FulfillmentOrderId;
+    venueId: WorkflowVenueId | null;
     label: string;
-    now: number;
+    now: Date;
   }> = [];
   for (const venue of venues) {
     const count = Math.max(1, venue.posQuantity);
@@ -244,8 +262,8 @@ function buildUnits(
 // addendum_signed_pdf: one artifact-backed handoff that advances the order.
 export async function attachFulfillmentDocumentCommand(
   input: {
-    leadId: string;
-    artifactId: string;
+    leadId: WorkflowLeadId;
+    artifactId: WorkflowArtifactId;
     action: FulfillmentAction;
     actor: WorkflowActor;
   },
@@ -303,7 +321,7 @@ export async function attachFulfillmentDocumentCommand(
 // Per-unit data entry. The step advances once every unit carries the value.
 async function recordUnitValueCommand(
   input: {
-    leadId: string;
+    leadId: WorkflowLeadId;
     unitId: string;
     action: FulfillmentAction;
     actor: WorkflowActor;
@@ -347,7 +365,7 @@ async function recordUnitValueCommand(
 
 export async function recordUnitSerialCommand(
   input: {
-    leadId: string;
+    leadId: WorkflowLeadId;
     unitId: string;
     serial: string;
     actor: WorkflowActor;
@@ -374,7 +392,7 @@ export async function recordUnitSerialCommand(
 
 export async function registerUnitPaymentLinkCommand(
   input: {
-    leadId: string;
+    leadId: WorkflowLeadId;
     unitId: string;
     paymentUrl: string;
     actor: WorkflowActor;
@@ -398,9 +416,9 @@ export async function registerUnitPaymentLinkCommand(
 
 export async function uploadUnitPaymentProofCommand(
   input: {
-    leadId: string;
+    leadId: WorkflowLeadId;
     unitId: string;
-    artifactId: string;
+    artifactId: WorkflowArtifactId;
     actor: WorkflowActor;
   },
   ports: Ports,
@@ -434,7 +452,7 @@ export async function uploadUnitPaymentProofCommand(
 
 export async function registerUnitSaleCommand(
   input: {
-    leadId: string;
+    leadId: WorkflowLeadId;
     unitId: string;
     serviceRef: string;
     actor: WorkflowActor;
@@ -460,7 +478,7 @@ export async function registerUnitSaleCommand(
 // the rejected field so the prior actor re-supplies it; the reactor notifies
 // that actor. Only steps in REJECT_RULES are rejectable.
 export async function rejectFulfillmentStepCommand(
-  input: { leadId: string; reason: string; actor: WorkflowActor },
+  input: { leadId: WorkflowLeadId; reason: string; actor: WorkflowActor },
   ports: Ports,
 ): Promise<LeadResult> {
   return runLeadTransaction(ports, async (ctx) => {
@@ -511,7 +529,7 @@ export async function rejectFulfillmentStepCommand(
 }
 
 export async function validateFulfillmentPaymentCommand(
-  input: { leadId: string; actor: WorkflowActor },
+  input: { leadId: WorkflowLeadId; actor: WorkflowActor },
   ports: Ports,
 ): Promise<LeadResult> {
   return runLeadTransaction(ports, async (ctx) => {

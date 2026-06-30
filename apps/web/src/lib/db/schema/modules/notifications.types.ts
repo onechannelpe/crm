@@ -24,7 +24,7 @@ export interface UserChannelAddressesTable {
 
 export interface WhatsAppSessionsTable {
   id: Generated<string>;
-  user_id: string;
+  user_id: IdColumn<UserId>;
   expires_at: Date;
 }
 

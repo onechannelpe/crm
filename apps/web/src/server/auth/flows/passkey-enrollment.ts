@@ -4,7 +4,7 @@ import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { AuthOnboardingRepos } from "../infrastructure/onboarding-context";
@@ -39,7 +39,7 @@ export async function enrollPasskey(
   repos: AuthOnboardingRepos,
   input: {
     userId: UserId;
-    challengeId: string;
+    challengeId: WebauthnChallengeId;
     response: RegistrationResponseJSON;
     ipAddress: string;
     webauthnProvider: WebauthnProvider;
@@ -66,7 +66,7 @@ export async function finishPasskeyEnrollment(
       sessionClass: "pre_auth" | "app";
       primaryAuthMethod: "password" | "google" | "passkey";
     };
-    challengeId: string;
+    challengeId: WebauthnChallengeId;
     response: RegistrationResponseJSON;
     ipAddress: string;
     userAgent: string | null;

@@ -7,7 +7,11 @@ import {
 import type { Ruc } from "~/server/shared/document";
 import { parseRuc } from "~/server/shared/document";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { OrganizationId } from "~/server/shared/ids";
+import type {
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 export type LeadCommercialScope = {
@@ -21,23 +25,23 @@ export type LeadCommercialScope = {
 };
 
 export type LeadState = {
-  id: string;
+  id: WorkflowLeadId;
   organizationId: OrganizationId;
   ruc: Ruc;
   legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
-  executiveId: number;
-  createdBy: number;
-  updatedBy: number | null;
+  executiveId: UserId;
+  createdBy: UserId;
+  updatedBy: UserId | null;
   stage: LeadStage;
   status: LeadStatus | null;
   priority: LeadPriority | null;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-  reservationExpiresAt: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  reservationExpiresAt: Date | null;
   version: number;
 };
 
@@ -53,10 +57,10 @@ export function createLeadDraft(input: {
   ruc: string;
   legalName: string | null;
   address: string | null;
-  executiveId: number;
-  createdBy: number;
+  executiveId: UserId;
+  createdBy: UserId;
   commercialScope: LeadCommercialScope;
-  now: number;
+  now: Date;
 }): Result<LeadDraft, DomainError> {
   const ruc = parseRuc(input.ruc);
   if (!ruc.ok) return ruc;

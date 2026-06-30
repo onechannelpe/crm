@@ -100,7 +100,7 @@ export function LoginRetriesCard() {
                 <For each={data().recentRetries}>
                   {(event) => (
                     <TableRow>
-                      <TableCell>{formatDate(event.created_at)}</TableCell>
+                      <TableCell>{formatDate(event.createdAt)}</TableCell>
                       <TableCell>{labelFor(event.stage)}</TableCell>
                       <TableCell>{event.outcome}</TableCell>
                       <TableCell>{event.reason ?? "-"}</TableCell>

@@ -67,11 +67,11 @@ export function applyLeadListFilters(
   if (filters.priority !== undefined) {
     next = next.where("lead.priority", "=", filters.priority);
   }
-  if (filters.updatedSinceMs !== undefined) {
-    next = next.where("lead.updated_at", ">=", filters.updatedSinceMs);
+  if (filters.updatedSince !== undefined) {
+    next = next.where("lead.updated_at", ">=", filters.updatedSince);
   }
-  if (filters.updatedUntilMs !== undefined) {
-    next = next.where("lead.updated_at", "<", filters.updatedUntilMs);
+  if (filters.updatedUntil !== undefined) {
+    next = next.where("lead.updated_at", "<", filters.updatedUntil);
   }
 
   return applyLeadAnyFieldSearch(next, filters.anyFieldSearch);

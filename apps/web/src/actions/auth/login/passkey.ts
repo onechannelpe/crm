@@ -12,10 +12,11 @@ import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/reque
 import { runPublicAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail, throwDomain } from "~/server/shared/domain-error";
+import { asAuthLoginFlowId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 export async function finishPasskeyLogin(
-  flowId: number,
+  flowId: string,
   response: AuthenticationResponseJSON,
 ): Promise<{ redirectTo: string }> {
   return runPublicAction(async () => {
@@ -29,7 +30,7 @@ export async function finishPasskeyLogin(
         sendPrivilegedLoginAlert: runtime.auth.login.privilegedLoginAlertSender,
       },
       {
-        flowId,
+        flowId: asAuthLoginFlowId(flowId),
         response,
         ipAddress: clientMetadata.ipAddress,
         userAgent: clientMetadata.userAgent,

@@ -2,22 +2,22 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Snapshotting the window keeps existing holds stable when policy changes.
 export function computeReservationExpiry(input: {
-  now: number;
+  now: Date;
   validityDays: number;
-}): number {
-  return input.now + input.validityDays * DAY_MS;
+}): Date {
+  return new Date(input.now.getTime() + input.validityDays * DAY_MS);
 }
 
 export function isReservationActive(
-  lead: { reservationExpiresAt: number | null },
-  now: number,
+  lead: { reservationExpiresAt: Date | null },
+  now: Date,
 ): boolean {
   return lead.reservationExpiresAt !== null && lead.reservationExpiresAt > now;
 }
 
 export function isReservationLapsed(
-  lead: { reservationExpiresAt: number | null },
-  now: number,
+  lead: { reservationExpiresAt: Date | null },
+  now: Date,
 ): boolean {
   return lead.reservationExpiresAt !== null && lead.reservationExpiresAt <= now;
 }

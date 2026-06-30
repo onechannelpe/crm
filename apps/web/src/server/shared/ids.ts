@@ -50,6 +50,8 @@ export type AppNotificationId = BrandedId<"AppNotificationId">;
 export type CompanyRegistryRecordId = BrandedId<"CompanyRegistryRecordId">;
 export type ExtensionHandoffId = BrandedId<"ExtensionHandoffId">;
 export type UserInviteId = BrandedId<"UserInviteId">;
+export type AuthLoginFlowId = BrandedId<"AuthLoginFlowId">;
+export type WebauthnChallengeId = BrandedId<"WebauthnChallengeId">;
 
 function assertNonEmptyStringId<Name extends string>(
   value: string,
@@ -101,6 +103,68 @@ export function asOrganizationId(value: string): OrganizationId {
   return assertNonEmptyStringId(value, "OrganizationId");
 }
 
+export function asPersonId(value: string): PersonId {
+  return assertNonEmptyStringId(value, "PersonId");
+}
+
 export function asEventId(value: string): EventId {
   return assertNonEmptyStringId(value, "EventId");
+}
+
+export function asWorkflowLeadId(value: string): WorkflowLeadId {
+  return assertNonEmptyStringId(value, "WorkflowLeadId");
+}
+
+export function asWorkflowRateProposalId(
+  value: string,
+): WorkflowRateProposalId {
+  return assertNonEmptyStringId(value, "WorkflowRateProposalId");
+}
+
+export function asWorkflowRateRevisionId(
+  value: string,
+): WorkflowRateRevisionId {
+  return assertNonEmptyStringId(value, "WorkflowRateRevisionId");
+}
+
+export function asWorkflowArtifactId(value: string): WorkflowArtifactId {
+  return assertNonEmptyStringId(value, "WorkflowArtifactId");
+}
+
+export function asFileAssetId(value: string): FileAssetId {
+  return assertNonEmptyStringId(value, "FileAssetId");
+}
+
+export function asWorkflowVenueId(value: string): WorkflowVenueId {
+  return assertNonEmptyStringId(value, "WorkflowVenueId");
+}
+
+export function asFulfillmentOrderId(value: string): FulfillmentOrderId {
+  return assertNonEmptyStringId(value, "FulfillmentOrderId");
+}
+
+export function asIntegrationJobId(value: string): IntegrationJobId {
+  return assertNonEmptyStringId(value, "IntegrationJobId");
+}
+
+export function asNotificationIntentId(value: string): NotificationIntentId {
+  return assertNonEmptyStringId(value, "NotificationIntentId");
+}
+
+export function asNotificationDeliveryId(
+  value: string,
+): NotificationDeliveryId {
+  return assertNonEmptyStringId(value, "NotificationDeliveryId");
+}
+
+export function asAppNotificationId(value: string): AppNotificationId {
+  return assertNonEmptyStringId(value, "AppNotificationId");
+}
+
+export function asAuthLoginFlowId(value: string): AuthLoginFlowId {
+  return assertNonEmptyStringId(value, "AuthLoginFlowId");
+}
+
+export function asWebauthnChallengeId(value: string): WebauthnChallengeId {
+  return assertNonEmptyStringId(value, "WebauthnChallengeId");
 }

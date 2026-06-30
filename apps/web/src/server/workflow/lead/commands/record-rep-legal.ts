@@ -1,6 +1,7 @@
 import type { RecordRepLegalInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -8,12 +9,13 @@ import { recordRepLegal } from "../../lead/domain/decide";
 import { runLeadTransaction } from "../write/transition";
 
 export async function recordRepLegalCommand(
-  input: RecordRepLegalInput & {
+  input: Omit<RecordRepLegalInput, "leadId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {

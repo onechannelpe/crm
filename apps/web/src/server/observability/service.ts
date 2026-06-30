@@ -21,6 +21,7 @@ import {
 } from "~/lib/observability/auth-funnel";
 import type { WireKind } from "~/lib/wire-error";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { createActionObservationsRepo } from "./repos-action-observations";
@@ -42,14 +43,14 @@ export interface RecordActionObservationInput {
   routePath: string | null;
   httpMethod: string | null;
   actionName: string;
-  actorUserId: number | null;
+  actorUserId: UserId | null;
   actorRole: Role | null;
   status: ObservationStatus;
   durationMs: number;
   errorCode: WireKind | null;
   errorMessage: string | null;
   input: unknown;
-  createdAt: number;
+  createdAt: Date;
 }
 
 export interface RecordAuthFunnelEventInput {
@@ -62,14 +63,15 @@ export interface RecordAuthFunnelEventInput {
   method: AuthFunnelMethod | null;
   outcome: AuthFunnelOutcome;
   code: string | null;
-  createdAt: number;
+  createdAt: Date;
 }
 
 function summarizeInput(input: unknown): string | null {
   const serialized = serializeEventPayload(input);
   if (!serialized) return null;
-  if (serialized.length <= 400) return serialized;
-  return `${serialized.slice(0, 400)}…`;
+  const text = JSON.stringify(serialized);
+  if (text.length <= 400) return text;
+  return `${text.slice(0, 400)}…`;
 }
 
 type ErrorCategory =
@@ -85,7 +87,7 @@ interface ErrorDetails {
   code: string | null;
   category: ErrorCategory;
   publicError: string | null;
-  isSensitive: number;
+  isSensitive: boolean;
 }
 
 function mapCodeToDetails(code: WireKind): ErrorDetails {
@@ -94,7 +96,7 @@ function mapCodeToDetails(code: WireKind): ErrorDetails {
       code: "authentication_required",
       category: "authorization",
       publicError: "Authentication required",
-      isSensitive: 0,
+      isSensitive: false,
     };
   }
   if (code === "forbidden") {
@@ -102,7 +104,7 @@ function mapCodeToDetails(code: WireKind): ErrorDetails {
       code: "authorization_denied",
       category: "authorization",
       publicError: "Authorization failed",
-      isSensitive: 1,
+      isSensitive: true,
     };
   }
   if (code === "not_found") {
@@ -110,7 +112,7 @@ function mapCodeToDetails(code: WireKind): ErrorDetails {
       code: "resource_not_found",
       category: "not_found",
       publicError: "Requested resource was not found",
-      isSensitive: 0,
+      isSensitive: false,
     };
   }
   if (code === "rate_limit") {
@@ -118,7 +120,7 @@ function mapCodeToDetails(code: WireKind): ErrorDetails {
       code: "rate_limited",
       category: "rate_limit",
       publicError: "Request was rate limited",
-      isSensitive: 0,
+      isSensitive: false,
     };
   }
   if (code === "conflict") {
@@ -126,7 +128,7 @@ function mapCodeToDetails(code: WireKind): ErrorDetails {
       code: "state_conflict",
       category: "conflict",
       publicError: "Operation conflicts with current state",
-      isSensitive: 0,
+      isSensitive: false,
     };
   }
   if (code === "validation") {
@@ -134,14 +136,14 @@ function mapCodeToDetails(code: WireKind): ErrorDetails {
       code: "validation_failed",
       category: "validation",
       publicError: "Validation failed",
-      isSensitive: 0,
+      isSensitive: false,
     };
   }
   return {
     code: "internal_error",
     category: "internal",
     publicError: "Unexpected error",
-    isSensitive: 1,
+    isSensitive: true,
   };
 }
 
@@ -154,7 +156,7 @@ function resolveErrorDetails(
       code: null,
       category: "none",
       publicError: null,
-      isSensitive: 0,
+      isSensitive: false,
     };
   }
   if (errorCode) {
@@ -164,15 +166,15 @@ function resolveErrorDetails(
     code: "internal_error",
     category: "internal",
     publicError: "Unexpected error",
-    isSensitive: 1,
+    isSensitive: true,
   };
 }
 
 interface ActionSnapshotFilter {
   windowMinutes: number;
   limit: number;
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   actionName?: string;
   status?: ObservationStatus;
 }
@@ -180,8 +182,8 @@ interface ActionSnapshotFilter {
 interface AuthFunnelSnapshotFilter {
   windowMinutes: number;
   limit: number;
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   eventName?: AuthFunnelEventName;
   method?: AuthFunnelMethod;
   outcome?: AuthFunnelOutcome;
@@ -290,12 +292,12 @@ function parseActionSnapshotFilter(
   if (isErr(parsedStatus)) return parsedStatus;
 
   const windowMinutes = parsedWindowMinutes.value;
-  const now = Date.now();
+  const now = new Date();
 
   return Ok({
     windowMinutes,
     limit: parsedLimit.value,
-    fromInclusive: now - windowMinutes * 60_000,
+    fromInclusive: new Date(now.getTime() - windowMinutes * 60_000),
     toInclusive: now,
     actionName: trimOrUndefined(input?.actionName),
     status: parsedStatus.value,
@@ -335,12 +337,12 @@ function parseAuthFunnelSnapshotFilter(
   if (isErr(parsedOutcome)) return parsedOutcome;
 
   const windowMinutes = parsedWindowMinutes.value;
-  const now = Date.now();
+  const now = new Date();
 
   return Ok({
     windowMinutes,
     limit: parsedLimit.value,
-    fromInclusive: now - windowMinutes * 60_000,
+    fromInclusive: new Date(now.getTime() - windowMinutes * 60_000),
     toInclusive: now,
     eventName: parsedEventName.value,
     method: parsedMethod.value,
@@ -422,7 +424,7 @@ export function createObservabilityService(repos: ObservabilityRepos) {
         })),
         recent: recent.map((row) => ({
           id: row.id,
-          createdAt: row.created_at,
+          createdAt: row.created_at.getTime(),
           actionName: row.action_name,
           status: row.status,
           durationMs: row.duration_ms,
@@ -432,7 +434,7 @@ export function createObservabilityService(repos: ObservabilityRepos) {
           errorCode: row.error_code,
           errorCategory: row.error_category,
           publicError: row.public_error,
-          isSensitive: row.is_sensitive === 1,
+          isSensitive: row.is_sensitive,
         })),
       });
     },
@@ -474,7 +476,7 @@ export function createObservabilityService(repos: ObservabilityRepos) {
         })),
         recent: recent.map((row) => ({
           id: row.id,
-          createdAt: row.created_at,
+          createdAt: row.created_at.getTime(),
           eventName: row.event_name,
           screen: row.screen,
           method: row.method,
@@ -487,29 +489,29 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     },
 
     async listRecent(params: {
-      fromInclusive: number;
-      toInclusive: number;
+      fromInclusive: Date;
+      toInclusive: Date;
       actionName?: string;
       status?: "ok" | "error";
-      actorUserId?: number;
+      actorUserId?: UserId;
       limit: number;
     }) {
       return repos.actionObservations.findRecent(params);
     },
 
     async summarizeByAction(params: {
-      fromInclusive: number;
-      toInclusive: number;
+      fromInclusive: Date;
+      toInclusive: Date;
       actionName?: string;
       status?: "ok" | "error";
-      actorUserId?: number;
+      actorUserId?: UserId;
     }) {
       return repos.actionObservations.summarizeByAction(params);
     },
 
     async listRecentAuthFunnel(params: {
-      fromInclusive: number;
-      toInclusive: number;
+      fromInclusive: Date;
+      toInclusive: Date;
       eventName?: AuthFunnelEventName;
       method?: AuthFunnelMethod;
       outcome?: AuthFunnelOutcome;
@@ -519,8 +521,8 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     },
 
     async summarizeAuthFunnel(params: {
-      fromInclusive: number;
-      toInclusive: number;
+      fromInclusive: Date;
+      toInclusive: Date;
       eventName?: AuthFunnelEventName;
       method?: AuthFunnelMethod;
       outcome?: AuthFunnelOutcome;

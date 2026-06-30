@@ -6,6 +6,12 @@ import type {
 } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import {
+  asFulfillmentOrderId,
+  type BranchId,
+  type FulfillmentOrderId,
+  type UserId,
+} from "~/server/shared/ids";
+import {
   pendingOwnerForStep,
   type PendingOwner,
 } from "~/server/workflow/lead/fulfillment/steps";
@@ -102,8 +108,8 @@ const STEP_MESSAGE: Record<
 
 function audienceFor(
   owner: PendingOwner,
-  executiveId: number,
-  branchId: number | null,
+  executiveId: UserId,
+  branchId: BranchId | null,
 ): NotificationAudience | null {
   if (owner === "executive") {
     return { kind: "user_ids", userIds: [executiveId] };
@@ -130,8 +136,8 @@ export function deriveFulfillmentNotification(input: {
   event: FulfillmentEvent;
   leadId: string;
   ruc: string;
-  executiveId: number;
-  branchId: number | null;
+  executiveId: UserId;
+  branchId: BranchId | null;
   paymentUnits: readonly { label: string; paymentUrl: string | null }[];
 }): NotificationIntent[] {
   if (input.event.eventType === "fulfillment_completed") {
@@ -218,7 +224,7 @@ export function deriveFulfillmentNotification(input: {
 export async function reactToFulfillmentChanges(
   tx: DatabaseExecutor,
   committed: CommittedLeadEvent[],
-  now: number,
+  now: Date,
 ): Promise<void> {
   const events = committed.filter(isFulfillmentEvent);
   if (events.length === 0) return;
@@ -249,11 +255,11 @@ export async function reactToFulfillmentChanges(
             ev.event.eventType === "fulfillment_step_advanced" &&
             ev.event.payload.to === "AWAITING_PAYMENT",
         )
-        .map((ev) => ev.event.payload.orderId),
+        .map((ev) => asFulfillmentOrderId(ev.event.payload.orderId)),
     ),
   ];
   const paymentUnitsByOrderId = new Map<
-    string,
+    FulfillmentOrderId,
     { label: string; paymentUrl: string | null }[]
   >();
   if (paymentOrderIds.length > 0) {
@@ -273,12 +279,14 @@ export async function reactToFulfillmentChanges(
   const intents: NotificationIntent[] = [];
   for (const { event, id } of events) {
     const lead = leadsById.get(event.leadId);
-    if (!lead || lead.executiveId <= 0) continue;
+    if (!lead) continue;
 
     const paymentUnits =
       event.eventType === "fulfillment_step_advanced" &&
       event.payload.to === "AWAITING_PAYMENT"
-        ? (paymentUnitsByOrderId.get(event.payload.orderId) ?? [])
+        ? (paymentUnitsByOrderId.get(
+            asFulfillmentOrderId(event.payload.orderId),
+          ) ?? [])
         : [];
 
     intents.push(

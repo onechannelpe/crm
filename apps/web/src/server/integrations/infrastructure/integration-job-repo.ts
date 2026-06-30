@@ -9,6 +9,7 @@ import type {
   NewIntegrationJob,
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { asIntegrationJobId, type IntegrationJobId } from "~/server/shared/ids";
 
 const JOB_COLUMNS = [
   "id",
@@ -36,7 +37,7 @@ export function createIntegrationJobRepo(
   // `status` (PENDING|PROCESSING|COMPLETED|FAILED) is the field the import UI
   // polls; it mirrors queue_state 1:1, so the store keeps the two in lockstep
   // through this lifecycle map and stamps completed_at/error_message on settle.
-  const store = createJobStore<IntegrationJobRow, string>(
+  const store = createJobStore<IntegrationJobRow, IntegrationJobRow["id"]>(
     db,
     "workflow_integration_jobs",
     JOB_COLUMNS,
@@ -55,8 +56,8 @@ export function createIntegrationJobRepo(
 
   return {
     store,
-    async insert(values: NewIntegrationJob): Promise<string> {
-      const id = randomUUIDv7();
+    async insert(values: NewIntegrationJob): Promise<IntegrationJobRow["id"]> {
+      const id = asIntegrationJobId(randomUUIDv7());
       await db
         .insertInto("workflow_integration_jobs")
         .values({
@@ -73,7 +74,7 @@ export function createIntegrationJobRepo(
       return id;
     },
 
-    findById(id: string) {
+    findById(id: IntegrationJobId) {
       return db
         .selectFrom("workflow_integration_jobs")
         .selectAll()
@@ -92,7 +93,7 @@ export function createIntegrationJobRepo(
     },
 
     updateProgress(
-      id: string,
+      id: IntegrationJobId,
       progress: {
         rowsTotal?: number;
         rowsApplied?: number;
@@ -125,7 +126,7 @@ export function createIntegrationJobRepo(
         .execute();
     },
 
-    setFilePath(id: string, filePath: string) {
+    setFilePath(id: IntegrationJobId, filePath: string) {
       return db
         .updateTable("workflow_integration_jobs")
         .set({ file_path: filePath })

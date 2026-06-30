@@ -41,7 +41,7 @@ export function HeaderNotificationsPanel() {
     getContainer: () => containerRef,
   });
 
-  const handleMarkRead = async (notificationId: number) => {
+  const handleMarkRead = async (notificationId: string) => {
     try {
       await updateFeed({
         optimistic: (prev) => ({

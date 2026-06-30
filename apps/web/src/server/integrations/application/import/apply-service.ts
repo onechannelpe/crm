@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { IntegrationJobId, UserId } from "~/server/shared/ids";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
@@ -9,7 +10,7 @@ import type { ImportRowInput, RowResult } from "./types";
 
 interface ImportApplyPorts {
   executor: DatabaseExecutor;
-  now: number;
+  now: Date;
 }
 
 function resultSort(a: RowResult, b: RowResult): number {
@@ -18,8 +19,8 @@ function resultSort(a: RowResult, b: RowResult): number {
 
 async function loadImportActor(
   executor: DatabaseExecutor,
-  actorId: number,
-): Promise<{ userId: number; role: Role }> {
+  actorId: UserId,
+): Promise<{ userId: UserId; role: Role }> {
   const user = await executor
     .selectFrom("users")
     .select(["id", "role"])
@@ -31,8 +32,8 @@ async function loadImportActor(
 
 export async function applyImportRows(
   input: {
-    jobId: string;
-    actorId: number;
+    jobId: IntegrationJobId;
+    actorId: UserId;
     validRows: ImportRowInput[];
     invalidRows: Array<{
       row: number;

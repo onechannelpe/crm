@@ -27,7 +27,7 @@ export async function registerLead(
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
     identity: OrganizationEnrichment;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {

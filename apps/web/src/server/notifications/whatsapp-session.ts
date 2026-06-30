@@ -1,33 +1,33 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 
 export function openSession(
   db: Kysely<Database>,
-  userId: number,
-  now: number,
+  userId: UserId,
+  now: Date,
 ): Promise<unknown> {
+  const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS);
   return db
     .insertInto("whatsapp_sessions")
     .values({
       user_id: userId,
-      expires_at: now + SESSION_DURATION_MS,
+      expires_at: expiresAt,
     })
     .onConflict((oc) =>
-      oc
-        .column("user_id")
-        .doUpdateSet({ expires_at: now + SESSION_DURATION_MS }),
+      oc.column("user_id").doUpdateSet({ expires_at: expiresAt }),
     )
     .execute();
 }
 
 export async function filterUsersWithActiveSession(
   db: Kysely<Database>,
-  userIds: number[],
-  now: number,
-): Promise<Set<number>> {
+  userIds: UserId[],
+  now: Date,
+): Promise<Set<UserId>> {
   if (userIds.length === 0) return new Set();
 
   const rows = await db

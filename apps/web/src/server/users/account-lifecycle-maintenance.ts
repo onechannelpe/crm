@@ -4,6 +4,7 @@ import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
 
 import { expireUsersAndInvalidateSessions } from "./expire-users";
 import { createUsersRepo } from "./repos-users";
@@ -14,12 +15,12 @@ const EXPIRY_NOTIFICATION_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
 interface AccountLifecycleDeps {
   executor: DatabaseExecutor;
   messaging: MessagingGateway;
-  invalidateUserSessions: (userId: number) => Promise<void>;
+  invalidateUserSessions: (userId: UserId) => Promise<void>;
 }
 
 async function runAccountExpiryTick(deps: AccountLifecycleDeps) {
   try {
-    const expiredCount = await expireUsersAndInvalidateSessions(Date.now(), {
+    const expiredCount = await expireUsersAndInvalidateSessions(new Date(), {
       executor: deps.executor,
       invalidateUserSessions: deps.invalidateUserSessions,
     });
@@ -37,11 +38,11 @@ async function runExpiryNotificationTick(
   users: ReturnType<typeof createUsersRepo>,
   messaging: MessagingGateway,
 ) {
-  const threshold = Date.now() + EXPIRY_NOTIFICATION_THRESHOLD_MS;
+  const threshold = new Date(Date.now() + EXPIRY_NOTIFICATION_THRESHOLD_MS);
   const expiringUsers = await users.findExpiringBefore(threshold);
   const outcomes = await Promise.all(
     expiringUsers.map(async (user) => {
-      const claimedAt = Date.now();
+      const claimedAt = new Date();
       try {
         const claimed = await users.claimExpiryReminder(
           user.id,
@@ -57,14 +58,11 @@ async function runExpiryNotificationTick(
           params: {
             fullName: shortName(user),
             username: user.username,
-            expiresAt: new Date(user.expires_at).toLocaleDateString(
-              APP_LOCALE,
-              {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              },
-            ),
+            expiresAt: user.expires_at.toLocaleDateString(APP_LOCALE, {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
             platformName: config.branding.platformName,
           },
         });
@@ -72,7 +70,7 @@ async function runExpiryNotificationTick(
           throw new Error(sent.error.message);
         }
 
-        await users.markExpiryNotified(user.id, Date.now());
+        await users.markExpiryNotified(user.id, new Date());
         return true;
       } catch (error: unknown) {
         await users.releaseExpiryReminderClaim(user.id, claimedAt);

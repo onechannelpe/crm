@@ -4,6 +4,7 @@ import type {
 } from "~/contracts/audit-reader/snapshot";
 import { parseFieldChanges } from "~/contracts/events";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
+import { asUserId, type UserId } from "~/server/shared/ids";
 import type { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -74,16 +75,17 @@ function parseLimit(value: number): Result<number, DomainError> {
   return Ok(value);
 }
 
-function parseActorUserId(value: number): Result<number, DomainError> {
-  if (!Number.isInteger(value) || value < 1) {
+function parseActorUserId(value: string): Result<UserId, DomainError> {
+  const trimmed = value.trim();
+  if (!trimmed) {
     return Err(
       invalid({
         code: "invalid_actor_user_id",
-        details: { field: "actor_user_id", rule: "positive_integer" },
+        details: { field: "actor_user_id", rule: "non_empty_string" },
       }),
     );
   }
-  return Ok(value);
+  return Ok(asUserId(trimmed));
 }
 
 export function createAuditReaderService(deps: AuditReaderDeps) {
@@ -101,7 +103,7 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
       );
       if (isErr(parsedLimit)) return parsedLimit;
 
-      let actorUserId: number | undefined;
+      let actorUserId: UserId | undefined;
       if (params?.actorUserId !== undefined) {
         const parsedActorUserId = parseActorUserId(params.actorUserId);
         if (isErr(parsedActorUserId)) return parsedActorUserId;
@@ -110,8 +112,8 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
 
       const windowMinutes = parsedWindowMinutes.value;
       const limit = parsedLimit.value;
-      const now = Date.now();
-      const fromInclusive = now - windowMinutes * 60 * 1000;
+      const now = new Date();
+      const fromInclusive = new Date(now.getTime() - windowMinutes * 60 * 1000);
       const action = trimOrUndefined(params?.action);
       const entityType = trimOrUndefined(params?.entityType);
 
@@ -129,7 +131,7 @@ export function createAuditReaderService(deps: AuditReaderDeps) {
         windowMinutes,
         events: events.map((row) => ({
           id: row.id,
-          occurredAt: row.occurred_at,
+          occurredAt: row.occurred_at.getTime(),
           actorUserId: row.actor_user_id,
           type: row.type,
           entityType: row.entity_type,

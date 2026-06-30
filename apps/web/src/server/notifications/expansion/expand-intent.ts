@@ -24,7 +24,7 @@ export function createIntentExpander(deps: {
 }) {
   return async function expandIntent(
     job: IntentJob,
-    now: number,
+    now: Date,
   ): Promise<ExpansionOutcome> {
     // Parse failures are terminal: retrying a malformed payload only repeats the
     // same rejection. Resolve them here before any write.

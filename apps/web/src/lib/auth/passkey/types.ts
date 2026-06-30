@@ -4,7 +4,7 @@ import type {
 } from "@simplewebauthn/server";
 
 export interface PasskeyEnrollmentChallenge {
-  challengeId: number;
+  challengeId: string;
   options: PublicKeyCredentialCreationOptionsJSON;
 }
 
@@ -12,14 +12,14 @@ export type PasskeyLoginMode = "identified" | "discoverable";
 
 export type PasskeyLoginFlowState =
   | {
-      id: number;
+      id: string;
       identifier: string;
       mode: "identified";
       state: "passkey";
       requestOptions: PublicKeyCredentialRequestOptionsJSON;
     }
   | {
-      id: number;
+      id: string;
       mode: "discoverable";
       state: "passkey";
       requestOptions: PublicKeyCredentialRequestOptionsJSON;

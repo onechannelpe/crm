@@ -8,42 +8,50 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
+  type FileAssetId,
+  type FulfillmentOrderId,
+  type UserId,
+  type WorkflowArtifactId,
+  type WorkflowLeadId,
+  type WorkflowVenueId,
+} from "~/server/shared/ids";
 
 import type { UnitField } from "./steps";
 
 export type FulfillmentUnit = {
   id: string;
-  orderId: string;
-  venueId: string | null;
+  orderId: FulfillmentOrderId;
+  venueId: WorkflowVenueId | null;
   label: string;
   serial: string | null;
   paymentUrl: string | null;
-  paymentProofArtifactId: string | null;
+  paymentProofArtifactId: WorkflowArtifactId | null;
   paymentValidated: boolean;
   serviceRef: string | null;
-  createdAt: number;
+  createdAt: Date;
 };
 
 export type FulfillmentDocument = {
   docKind: FulfillmentDocKind;
-  artifactId: string;
-  fileAssetId: number;
-  uploadedByUserId: number;
-  createdAt: number;
+  artifactId: WorkflowArtifactId;
+  fileAssetId: FileAssetId;
+  uploadedByUserId: UserId;
+  createdAt: Date;
   safeDisplayFilename: string;
   detectedMime: string;
   sizeBytes: number;
 };
 
 export type FulfillmentOrder = {
-  id: string;
-  leadId: string;
+  id: FulfillmentOrderId;
+  leadId: WorkflowLeadId;
   productKind: ProductKind | null;
   currentStep: FulfillmentStep;
   serviceBRef: string | null;
-  createdBy: number;
-  createdAt: number;
-  updatedAt: number;
+  createdBy: UserId;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type FulfillmentOrderDetails = {
@@ -77,7 +85,7 @@ function toUnit(row: UnitRow): FulfillmentUnit {
     serial: row.serial_number,
     paymentUrl: row.payment_url,
     paymentProofArtifactId: row.payment_proof_artifact_id,
-    paymentValidated: row.payment_validated === 1,
+    paymentValidated: row.payment_validated,
     serviceRef: row.service_a_ref,
     createdAt: row.created_at,
   };
@@ -86,12 +94,12 @@ function toUnit(row: UnitRow): FulfillmentUnit {
 export function createFulfillmentRepo(db: DatabaseExecutor) {
   return {
     async createOrder(input: {
-      leadId: string;
-      createdBy: number;
+      leadId: WorkflowLeadId;
+      createdBy: UserId;
       currentStep: FulfillmentStep;
-      now: number;
-    }): Promise<string> {
-      const id = randomUUIDv7();
+      now: Date;
+    }): Promise<FulfillmentOrderId> {
+      const id = randomUUIDv7() as FulfillmentOrderId;
       await db
         .insertInto("lead_fulfillment_orders")
         .values({
@@ -110,10 +118,10 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
 
     async createUnits(
       units: Array<{
-        orderId: string;
-        venueId: string | null;
+        orderId: FulfillmentOrderId;
+        venueId: WorkflowVenueId | null;
         label: string;
-        now: number;
+        now: Date;
       }>,
     ): Promise<void> {
       if (units.length === 0) return;
@@ -126,7 +134,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
           serial_number: null,
           payment_url: null,
           payment_proof_artifact_id: null,
-          payment_validated: 0,
+          payment_validated: false,
           service_a_ref: null,
           created_at: unit.now,
         }),
@@ -135,7 +143,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     },
 
     async findByLeadId(
-      leadId: string,
+      leadId: WorkflowLeadId,
     ): Promise<FulfillmentOrderDetails | null> {
       const orderRow = await db
         .selectFrom("lead_fulfillment_orders")
@@ -186,9 +194,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     },
 
     async setProductKind(
-      orderId: string,
+      orderId: FulfillmentOrderId,
       productKind: ProductKind,
-      now: number,
+      now: Date,
     ): Promise<void> {
       await db
         .updateTable("lead_fulfillment_orders")
@@ -198,9 +206,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     },
 
     async setStep(
-      orderId: string,
+      orderId: FulfillmentOrderId,
       step: FulfillmentStep,
-      now: number,
+      now: Date,
     ): Promise<void> {
       await db
         .updateTable("lead_fulfillment_orders")
@@ -210,9 +218,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     },
 
     async setServiceBRef(
-      orderId: string,
+      orderId: FulfillmentOrderId,
       ref: string,
-      now: number,
+      now: Date,
     ): Promise<void> {
       await db
         .updateTable("lead_fulfillment_orders")
@@ -235,7 +243,10 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
 
     // Clears one field on every unit of the order, used when a review step is
     // rejected so the prior actor re-supplies the value.
-    async clearUnitField(orderId: string, field: UnitField): Promise<void> {
+    async clearUnitField(
+      orderId: FulfillmentOrderId,
+      field: UnitField,
+    ): Promise<void> {
       await db
         .updateTable("lead_fulfillment_units")
         .set({ [field]: null })
@@ -243,21 +254,21 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async markPaymentsValidated(orderId: string): Promise<void> {
+    async markPaymentsValidated(orderId: FulfillmentOrderId): Promise<void> {
       await db
         .updateTable("lead_fulfillment_units")
-        .set({ payment_validated: 1 })
+        .set({ payment_validated: true })
         .where("order_id", "=", orderId)
         .execute();
     },
 
     async addDocument(input: {
-      orderId: string;
+      orderId: FulfillmentOrderId;
       docKind: FulfillmentDocKind;
-      artifactId: string;
-      fileAssetId: number;
-      uploadedByUserId: number;
-      now: number;
+      artifactId: WorkflowArtifactId;
+      fileAssetId: FileAssetId;
+      uploadedByUserId: UserId;
+      now: Date;
     }): Promise<void> {
       await db
         .insertInto("lead_fulfillment_documents")
@@ -275,8 +286,8 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     // Resolves the uploaded file behind an artifact so a fulfillment document can
     // reference the concrete asset. Uses the latest source upload binding.
     async findUploadedAsset(
-      artifactId: string,
-    ): Promise<{ fileAssetId: number } | null> {
+      artifactId: WorkflowArtifactId,
+    ): Promise<{ fileAssetId: FileAssetId } | null> {
       const row = await db
         .selectFrom("artifact_file_bindings")
         .select(["file_asset_id as fileAssetId"])

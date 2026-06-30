@@ -5,7 +5,7 @@ import type { Permission } from "~/lib/auth/access/rbac";
 export type WorkspaceView = {
   readonly id: string;
   readonly label: string;
-  readonly filters: (actorUserId: number) => ListLeadsFiltersInput;
+  readonly filters: (actorUserId: string) => ListLeadsFiltersInput;
   readonly permission?: Permission;
 };
 
@@ -13,7 +13,7 @@ const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   {
     id: "mine",
     label: "Mis clientes",
-    filters: (userId: number): ListLeadsFiltersInput => ({
+    filters: (userId: string): ListLeadsFiltersInput => ({
       executiveId: userId,
     }),
   },

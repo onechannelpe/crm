@@ -13,7 +13,7 @@ async function runReservationSweepTick(deps: LeadReservationMaintenanceDeps) {
   try {
     const expiredCount = await expireLapsedReservations(
       { executor: deps.executor },
-      Date.now(),
+      new Date(),
     );
     if (expiredCount > 0) {
       logger.info("lead_reservations_expired", { count: expiredCount });

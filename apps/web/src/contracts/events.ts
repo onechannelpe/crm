@@ -81,22 +81,20 @@ function isFieldChange(value: unknown): value is FieldChange {
   );
 }
 
-export function serializeFieldChanges(changes: FieldChange[]): string | null {
-  return changes.length === 0 ? null : JSON.stringify(changes);
+export function serializeFieldChanges(
+  changes: FieldChange[],
+): FieldChange[] | null {
+  return changes.length === 0 ? null : changes;
 }
 
-export function parseFieldChanges(raw: string | null): FieldChange[] {
+export function parseFieldChanges(raw: unknown): FieldChange[] {
   if (!raw) return [];
-  try {
-    const value: unknown = JSON.parse(raw);
-    return Array.isArray(value) ? value.filter(isFieldChange) : [];
-  } catch {
-    return [];
-  }
+  if (Array.isArray(raw)) return raw.filter(isFieldChange);
+  return [];
 }
 
 // Event-specific payloads remain opaque because their data is heterogeneous.
-export function serializeEventPayload(payload?: unknown): string | null {
+export function serializeEventPayload(payload?: unknown): unknown | null {
   if (payload === null || payload === undefined) return null;
-  return JSON.stringify(payload);
+  return payload;
 }

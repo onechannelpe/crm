@@ -6,6 +6,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -36,10 +37,10 @@ export type LeadCapability =
   | "list-assignable-executives";
 
 export type AssignableExecutivesScope =
-  | { actorRole: "superuser"; actorBranchId: number }
+  | { actorRole: "superuser"; actorBranchId: BranchId }
   | {
       actorRole: "admin" | "sales_manager" | "supervisor";
-      actorBranchId: number;
+      actorBranchId: BranchId;
     };
 
 const OWNER_REQUIRED = new Set<LeadCapability>([
@@ -117,8 +118,8 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
 // transactions-report upload) only on their own lead.
 export function authorizeFulfillmentStep(
   step: FulfillmentStep,
-  actor: { userId: number; role: Role },
-  state: { executiveId: number; stage: LeadStage },
+  actor: { userId: UserId; role: Role },
+  state: { executiveId: UserId; stage: LeadStage },
 ): Result<void, DomainError> {
   if (state.stage !== "FULFILLMENT") return Err(forbidden());
 
@@ -154,8 +155,8 @@ export function canRevealFullTimeline(role: Role): boolean {
 
 export function authorizeLeadAction(
   capability: LeadCapability,
-  actor: { userId: number; role: Role },
-  state: { executiveId: number; stage: LeadStage },
+  actor: { userId: UserId; role: Role },
+  state: { executiveId: UserId; stage: LeadStage },
 ): Result<void, DomainError> {
   const caps = resolveCapabilities(actor.role);
 
@@ -189,7 +190,7 @@ export function requireCapability(
 }
 
 export function resolveAvailableActions(
-  actor: { userId: number; role: Role },
+  actor: { userId: UserId; role: Role },
   state: LeadState,
   meta: {
     hasActivePendingProposal: boolean;
@@ -259,10 +260,10 @@ export function resolveAvailableActions(
 }
 
 export function resolveLeadListExecutiveScope(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  requestedExecutiveId?: number;
-}): number | undefined {
+  requestedExecutiveId?: UserId;
+}): UserId | undefined {
   return canViewAllLeads(input.actorRole)
     ? input.requestedExecutiveId
     : input.actorUserId;
@@ -270,7 +271,7 @@ export function resolveLeadListExecutiveScope(input: {
 
 export function resolveAssignableExecutivesScope(input: {
   actorRole: Role;
-  actorBranchId: number;
+  actorBranchId: BranchId;
 }): Result<AssignableExecutivesScope, DomainError> {
   if (input.actorRole === "superuser") {
     return Ok({ actorRole: "superuser", actorBranchId: input.actorBranchId });

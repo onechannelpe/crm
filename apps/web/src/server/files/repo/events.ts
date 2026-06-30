@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { WorkflowArtifactId } from "~/server/shared/ids";
 
 import type { InsertEventInput } from "./types";
 
@@ -26,7 +27,7 @@ export function createEventsRepo(db: DB) {
         .execute();
     },
 
-    async list(artifactId: string) {
+    async list(artifactId: WorkflowArtifactId) {
       const rows = await db
         .selectFrom("artifact_events")
         .selectAll()
@@ -40,7 +41,7 @@ export function createEventsRepo(db: DB) {
         actorUserId: row.actor_user_id,
         actorRole: row.actor_role,
         // oxlint-disable-next-line no-unsafe-type-assertion
-        details: JSON.parse(row.details_json) as Record<string, unknown>,
+        details: row.details_json as Record<string, unknown>,
         createdAt: row.created_at,
       }));
     },

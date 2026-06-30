@@ -5,19 +5,20 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, UserId, WorkflowLeadId } from "~/server/shared/ids";
 
 import { applyLeadListFilters, applyLeadVisibility } from "./lead-list-filters";
 
 export type LeadListFilters = {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  actorBranchId: number;
-  executiveId?: number;
+  actorBranchId: BranchId;
+  executiveId?: UserId;
   stage?: LeadStage;
   status?: LeadStatus;
   priority?: LeadPriority;
-  updatedSinceMs?: number;
-  updatedUntilMs?: number;
+  updatedSince?: Date;
+  updatedUntil?: Date;
   anyFieldSearch?: string;
   sortBy: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
   sortDirection: "asc" | "desc";
@@ -26,20 +27,20 @@ export type LeadListFilters = {
 };
 
 export type RecordExportFilters = {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  actorBranchId: number;
-  executiveId?: number;
+  actorBranchId: BranchId;
+  executiveId?: UserId;
 };
 
 export type LeadListRow = {
-  id: string;
+  id: WorkflowLeadId;
   ruc: string;
   legalName: string | null;
   address: string | null;
-  executiveId: number;
+  executiveId: UserId;
   executiveName: string;
-  createdBy: number;
+  createdBy: UserId;
   createdByName: string;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -49,7 +50,7 @@ export type LeadListRow = {
 };
 
 export type RecordExportRow = {
-  id: string;
+  id: WorkflowLeadId;
   ruc: string;
   legalName: string | null;
   address: string | null;
@@ -57,7 +58,7 @@ export type RecordExportRow = {
   status: LeadStatus | null;
   priority: LeadPriority | null;
   createdAt: number;
-  executiveId: number;
+  executiveId: UserId;
   executiveName: string;
   currentProvider: string;
   currentDebitRate: number;
@@ -138,8 +139,8 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         stage: row.stage,
         status: row.status,
         priority: row.priority,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        createdAt: row.created_at.getTime(),
+        updatedAt: row.updated_at.getTime(),
       }));
     },
 
@@ -225,7 +226,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         stage: row.stage,
         status: row.status,
         priority: row.priority,
-        createdAt: row.created_at,
+        createdAt: row.created_at.getTime(),
         currentProvider: row.current_provider,
         currentDebitRate: row.current_debit_rate,
         currentCreditRate: row.current_credit_rate,

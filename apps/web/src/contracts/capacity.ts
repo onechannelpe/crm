@@ -48,7 +48,7 @@ export type CapacityAuditEvent = {
   entityType: string;
   entityId: string;
   changes: FieldChange[];
-  payload: string | null;
+  payload: unknown;
 };
 
 export type PendingCapacityRequestView = {

@@ -20,7 +20,7 @@ export type CommittedLeadEvent = { event: LeadHistoryEventDraft; id: string };
 export type LeadTransaction = {
   tx: DatabaseExecutor;
   repos: WorkflowRepos;
-  now: number;
+  now: Date;
   commitTransition(
     transition: LeadTransition,
     assignment?: LeadAssignment,
@@ -45,7 +45,7 @@ function zip(
 }
 
 export function runLeadTransaction<O>(
-  ports: { executor: DatabaseExecutor; now: number },
+  ports: { executor: DatabaseExecutor; now: Date },
   body: (ctx: LeadTransaction) => Promise<Result<O, DomainError>>,
 ): Promise<Result<O, DomainError>> {
   return ports.executor
