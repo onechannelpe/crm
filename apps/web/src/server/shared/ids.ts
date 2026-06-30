@@ -47,8 +47,7 @@ export type IntegrationJobId = BrandedId<"IntegrationJobId">;
 export type NotificationIntentId = BrandedId<"NotificationIntentId">;
 export type NotificationDeliveryId = BrandedId<"NotificationDeliveryId">;
 export type AppNotificationId = BrandedId<"AppNotificationId">;
-export type SearchEnrichmentJobId = BrandedId<"SearchEnrichmentJobId">;
-export type SearchEnrichmentOverlayId = BrandedId<"SearchEnrichmentOverlayId">;
+export type CompanyRegistryRecordId = BrandedId<"CompanyRegistryRecordId">;
 export type ExtensionHandoffId = BrandedId<"ExtensionHandoffId">;
 export type UserInviteId = BrandedId<"UserInviteId">;
 

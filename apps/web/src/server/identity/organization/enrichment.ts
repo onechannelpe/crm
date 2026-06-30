@@ -15,7 +15,7 @@ export type OrganizationEnrichment = {
 // The scheduling side of enrichment: enqueue a RUC verification for the
 // enrichment worker to process later.
 export type OrganizationEnrichmentQueue = {
-  enqueueRucVerification(ruc: Ruc, requestedByUserId: number): Promise<void>;
+  enqueueRucVerification(ruc: Ruc, requestedByUserId: string): Promise<void>;
 };
 
 export function createOrganizationEnrichment(

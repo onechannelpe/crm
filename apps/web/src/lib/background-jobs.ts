@@ -63,17 +63,13 @@ export function startBackgroundJobs() {
   });
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
-  const sunatEnrichmentWritebackQueue =
-    getServerRuntime().workflow.createSunatEnrichmentWritebackQueue(WORKER_ID);
   const notificationQueues =
     getServerRuntime().notifications.createQueues(WORKER_ID);
 
   // Each job table's NOTIFY channel maps to the queue that drains it.
   const queueByChannel: Record<string, QueueRunner> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: recordsImportQueue,
-    [JOB_TABLE_CHANNELS.search_enrichment_jobs]: enrichmentQueue,
-    [JOB_TABLE_CHANNELS.search_enrichment_completion_outbox]:
-      sunatEnrichmentWritebackQueue,
+    [JOB_TABLE_CHANNELS.company_registry_record]: enrichmentQueue,
     [JOB_TABLE_CHANNELS.notification_outbox]: notificationQueues.expansion,
     [JOB_TABLE_CHANNELS.notification_deliveries]: notificationQueues.dispatch,
   };

@@ -1,14 +1,15 @@
+import type { DomainPatch } from "~/lib/job-queue/job-store";
 import { isPlainRecord } from "~/lib/type-guards";
 
 import type { SunatScraperClient } from "./enrichment/sunat/contracts";
 import { sanitizeField } from "./enrichment/sunat/text";
 import type { Overlay, ProcessResult } from "./model";
-import type { JobRow, OverlayRow } from "./ports";
+import type { RegistryRow } from "./ports";
 
 const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function processEnrichmentJob(
-  job: JobRow,
+  job: RegistryRow,
   scraper: SunatScraperClient,
   signal: AbortSignal,
   now: Date = new Date(),
@@ -20,20 +21,12 @@ export async function processEnrichmentJob(
     if (!result.ok) {
       const shouldRetry =
         result.error.kind === "server_error" || result.error.kind === "timeout";
-      return {
-        ok: false,
-        error: result.error,
-        shouldRetry,
-      };
+      return { ok: false, error: result.error, shouldRetry };
     }
 
     const fullName = buildFullName(result.data.payload);
     if (!fullName) {
-      return {
-        ok: false,
-        error: { kind: "not_found" },
-        shouldRetry: false,
-      };
+      return { ok: false, error: { kind: "not_found" }, shouldRetry: false };
     }
 
     const overlay: Overlay = {
@@ -50,7 +43,7 @@ export async function processEnrichmentJob(
       source: "sunat",
       fetchedAt: now,
       expiresAt,
-      payloadJson: JSON.stringify(result.data.payload),
+      payload: result.data.payload,
     };
     return { ok: true, overlay };
   }
@@ -60,11 +53,7 @@ export async function processEnrichmentJob(
   if (!result.ok) {
     const shouldRetry =
       result.error.kind === "server_error" || result.error.kind === "timeout";
-    return {
-      ok: false,
-      error: result.error,
-      shouldRetry,
-    };
+    return { ok: false, error: result.error, shouldRetry };
   }
 
   const overlay: Overlay = {
@@ -81,15 +70,15 @@ export async function processEnrichmentJob(
     source: "sunat",
     fetchedAt: now,
     expiresAt,
-    payloadJson: JSON.stringify(result.data.payload),
+    payload: result.data.payload,
   };
   return { ok: true, overlay };
 }
 
-export function overlayToRow(overlay: Overlay): OverlayRow {
+// The result columns the queue engine writes as it settles the record `done`.
+// jsonb columns take stringified JSON (top-level arrays must be stringified).
+export function overlayToPatch(overlay: Overlay): DomainPatch {
   return {
-    document_type: overlay.documentType,
-    document_value: overlay.documentValue,
     full_name: overlay.fullName,
     legal_name: overlay.legalName,
     address: overlay.address,
@@ -98,10 +87,10 @@ export function overlayToRow(overlay: Overlay): OverlayRow {
     contributor_status: overlay.contributorStatus,
     contributor_condition: overlay.contributorCondition,
     economic_activities_json: JSON.stringify(overlay.economicActivities),
+    payload_json: JSON.stringify(overlay.payload),
     source: overlay.source,
     fetched_at: overlay.fetchedAt,
     expires_at: overlay.expiresAt,
-    payload_json: overlay.payloadJson,
   };
 }
 

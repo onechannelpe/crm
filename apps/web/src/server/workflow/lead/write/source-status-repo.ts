@@ -1,5 +1,5 @@
-import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
-import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import type { Overlay } from "~/server/client-search/model";
+import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { Ruc } from "~/server/shared/document";
@@ -38,16 +38,8 @@ function toPipelineSunatStatus(input: {
 }
 
 function toPipelineOverlay(
-  overlay: {
-    fetchedAt: number;
-    district: string | null;
-    department: string | null;
-    contributorStatus: string | null;
-    contributorCondition: string | null;
-    economicActivities: SunatEconomicActivity[];
-    payloadJson: string;
-  } | null,
-) {
+  overlay: Overlay | null,
+): Omit<LeadSourceStatus["sunat"], "status"> {
   if (!overlay) {
     return {
       fetchedAt: null,
@@ -61,20 +53,20 @@ function toPipelineOverlay(
   }
 
   return {
-    fetchedAt: overlay.fetchedAt,
+    fetchedAt: overlay.fetchedAt.getTime(),
     district: overlay.district,
     department: overlay.department,
     contributorStatus: overlay.contributorStatus,
     contributorCondition: overlay.contributorCondition,
     economicActivities: overlay.economicActivities,
-    payloadAvailable: overlay.payloadJson.trim().length > 0,
+    payloadAvailable: overlay.payload !== null,
   };
 }
 
 export function createSourceStatusRepo(
   db: DatabaseExecutor,
 ): SourceStatusRepository {
-  const enrichmentRepo = createSearchEnrichmentRepo(db);
+  const enrichmentRepo = createCompanyRegistryRepo(db);
   const enrichmentQuery = createEnrichmentQuery(enrichmentRepo);
 
   return {

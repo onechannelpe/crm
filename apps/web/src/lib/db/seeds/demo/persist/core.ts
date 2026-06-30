@@ -9,7 +9,7 @@ import {
   type WorkflowLeadIds,
 } from "./history-events";
 import { persistOrganizations } from "./organizations";
-import { persistSearchOverlays } from "./search-overlays";
+import { persistCompanyRegistryRecords } from "./company-registry-records";
 import { persistWorkflowCommercialData } from "./workflow-commercial";
 import { persistWorkflowLeadsAndAssignments } from "./workflow-leads";
 
@@ -36,7 +36,7 @@ export async function persistWorkflowSample(
     organizations.getOrganizationId,
     leadIds,
   );
-  await persistSearchOverlays(db, now, day, overlayTtl);
+  await persistCompanyRegistryRecords(db, now, day, overlayTtl);
   await persistWorkflowCommercialData(db, now, day, leadIds, artifacts, (key) =>
     organizations.getOrganizationId(key),
   );

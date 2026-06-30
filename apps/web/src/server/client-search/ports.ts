@@ -1,52 +1,41 @@
 import type { Selectable } from "kysely";
 
-import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
+import type { CompanyRegistryRecordTable } from "~/lib/db/schema/modules/search.types";
 import type { JobStore } from "~/lib/job-queue/job-store";
 import type { DocumentKind } from "~/server/shared/document";
 
-export type OverlayRow = {
-  document_type: DocumentKind;
-  document_value: string;
-  full_name: string | null;
-  legal_name: string | null;
+export type RegistryRow = Selectable<CompanyRegistryRecordTable>;
+
+export type EnrichmentRequest = {
+  documentType: DocumentKind;
+  documentValue: string;
+  requestedByUserId: string | null;
+  requestedAt: Date;
+  maxAttempts: number;
+};
+
+// The slice of the registry result the org projection needs. The enrichment
+// worker hands this to the identity side after a scrape (or engine fallback) so
+// the organization row reflects the latest registry data -- an inline,
+// idempotent local write, not a second queue.
+export type OrganizationProjection = {
+  ruc: string;
+  legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
-  contributor_status: string | null;
-  contributor_condition: string | null;
-  economic_activities_json: unknown | null;
-  source: "sunat";
-  fetched_at: Date;
-  expires_at: Date;
-  payload_json: unknown;
 };
 
-export type JobRow = Selectable<SearchEnrichmentJobsTable>;
-
-export type EnrichmentJobRequest = {
-  document_type: DocumentKind;
-  document_value: string;
-  requested_by_user_id: string;
-  now: Date;
-  max_attempts: number;
-};
-
-export interface EnrichmentRepositoryPort {
-  store: JobStore<string, JobRow>;
-  upsertJob(values: EnrichmentJobRequest): Promise<string>;
-  upsertJobs(values: EnrichmentJobRequest[]): Promise<void>;
-  // Persists the SUNAT result (overlay upsert + writeback-outbox enqueue) in one
-  // idempotent transaction, then wakes the writeback queue from inside that same
-  // transaction. The job row's queue transition is settled separately by the
-  // queue, so this no longer guards on the lease: re-running it after a reaped
-  // lease just re-upserts the overlay and the outbox guard skips the duplicate.
-  recordCompletion(overlay: OverlayRow, now: Date): Promise<void>;
-  getOverlay(
+export interface CompanyRegistryPort {
+  // The job-store over company_registry_record. The worker drives it through the
+  // queue engine; the result columns are written as the engine settles the row.
+  store: JobStore<string, RegistryRow>;
+  // Insert or reset the record for a document to `pending` and wake the queue on
+  // the same executor (so a wrapping transaction buffers the NOTIFY to commit).
+  upsertRequest(values: EnrichmentRequest): Promise<string>;
+  upsertRequests(values: EnrichmentRequest[]): Promise<void>;
+  getRecord(
     documentType: DocumentKind,
     documentValue: string,
-  ): Promise<OverlayRow | null | undefined>;
-  getJobStatus(
-    documentType: DocumentKind,
-    documentValue: string,
-  ): Promise<JobRow | null | undefined>;
+  ): Promise<RegistryRow | null | undefined>;
 }

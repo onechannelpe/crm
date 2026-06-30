@@ -5,8 +5,7 @@
 // entry rather than three parallel lists.
 export const JOB_TABLE_CHANNELS = {
   workflow_integration_jobs: "job:records-import",
-  search_enrichment_jobs: "job:enrichment",
-  search_enrichment_completion_outbox: "job:enrichment-writeback",
+  company_registry_record: "job:enrichment",
   notification_outbox: "job:notifications-intents",
   notification_deliveries: "job:notifications-deliveries",
 } as const;

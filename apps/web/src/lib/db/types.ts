@@ -78,9 +78,7 @@ export interface Database {
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;
   extension_executive_statuses: extensions.ExtensionExecutiveStatusesTable;
   client_search_views: search.ClientSearchViewsTable;
-  search_enrichment_jobs: search.SearchEnrichmentJobsTable;
-  search_enrichment_overlays: search.SearchEnrichmentOverlaysTable;
-  search_enrichment_completion_outbox: search.SearchEnrichmentCompletionOutboxTable;
+  company_registry_record: search.CompanyRegistryRecordTable;
   events: platform.EventsTable;
   audit_action_policies: platform.AuditActionPoliciesTable;
   action_observations: observability.ActionObservationsTable;

@@ -30,61 +30,19 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
+  // One row per document = the cached registry fact + its enrichment work-state.
+  // The scrape queue claims it (queue_state/lease/attempts), fills the result
+  // columns, and stamps source/fetched_at/expires_at. Freshness and the UI
+  // lifecycle are derived from (queue_state, source, expires_at) -- there is no
+  // separate status mirror. `source` is null until the first authoritative or
+  // fallback fill; 'sunat' is authoritative, 'engine' is the degraded fallback
+  // written only when SUNAT was unreachable.
   await db.schema
-    .createTable("search_enrichment_jobs")
+    .createTable("company_registry_record")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("document_type", "text", (col) => col.notNull())
     .addColumn("document_value", "text", (col) => col.notNull())
-    .addColumn("status", "text", (col) => col.notNull())
-    .addColumn("queue_state", "text", (col) =>
-      col.notNull().defaultTo("pending"),
-    )
-    .addColumn("requested_by_user_id", "uuid", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("requested_at", "timestamptz", (col) => col.notNull())
-    .addColumn("completed_at", "timestamptz")
-    .addColumn("lease_owner", "text")
-    .addColumn("lease_until", "timestamptz")
-    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "timestamptz", (col) => col.notNull())
-    .addColumn("last_error", "text")
-    .execute();
-
-  // Claim path: only pending rows that are due.
-  await db.schema
-    .createIndex("idx_search_enrichment_jobs_claim")
-    .on("search_enrichment_jobs")
-    .column("available_at")
-    .where(sql.ref("queue_state"), "=", "pending")
-    .execute();
-
-  // Stale-scan path: leased rows whose lease has expired.
-  await db.schema
-    .createIndex("idx_search_enrichment_jobs_stale")
-    .on("search_enrichment_jobs")
-    .column("lease_until")
-    .where(sql.ref("queue_state"), "=", "processing")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_search_enrichment_jobs_doc_time")
-    .on("search_enrichment_jobs")
-    .columns(["document_type", "document_value", "requested_at"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_search_enrichment_jobs_document_unique")
-    .on("search_enrichment_jobs")
-    .columns(["document_type", "document_value"])
-    .unique()
-    .execute();
-
-  await db.schema
-    .createTable("search_enrichment_overlays")
-    .addColumn("document_type", "text", (col) => col.notNull())
-    .addColumn("document_value", "text", (col) => col.notNull())
+    // Result (the registry fact).
     .addColumn("full_name", "text")
     .addColumn("legal_name", "text")
     .addColumn("address", "text")
@@ -93,64 +51,49 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("contributor_status", "text")
     .addColumn("contributor_condition", "text")
     .addColumn("economic_activities_json", "jsonb")
-    .addColumn("source", "text", (col) => col.notNull().defaultTo("sunat"))
-    .addColumn("fetched_at", "timestamptz", (col) => col.notNull())
-    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
-    .addColumn("payload_json", "jsonb", (col) => col.notNull())
-    .addPrimaryKeyConstraint("pk_search_enrichment_overlays", [
-      "document_type",
-      "document_value",
-    ])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_search_enrichment_overlays_expires")
-    .on("search_enrichment_overlays")
-    .columns(["expires_at"])
-    .execute();
-
-  await db.schema
-    .createTable("search_enrichment_completion_outbox")
-    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("document_type", "text", (col) => col.notNull())
-    .addColumn("document_value", "text", (col) => col.notNull())
-    .addColumn("legal_name", "text")
-    .addColumn("address", "text")
-    .addColumn("district", "text")
-    .addColumn("department", "text")
-    .addColumn("fetched_at", "timestamptz", (col) => col.notNull())
+    .addColumn("payload_json", "jsonb")
+    // Provenance + freshness.
+    .addColumn("source", "text")
+    .addColumn("fetched_at", "timestamptz")
+    .addColumn("expires_at", "timestamptz")
+    // Queue control (owned by the job-store).
     .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "timestamptz", (col) => col.notNull())
-    .addColumn("lease_owner", "text")
-    .addColumn("lease_until", "timestamptz")
-    .addColumn("error_message", "text")
-    .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("processed_at", "timestamptz")
+    .addColumn("last_error", "text")
+    // Audit. Nullable: a system-initiated reaction has no requesting user.
+    .addColumn("requested_by_user_id", "uuid", (col) =>
+      col.references("users.id"),
+    )
+    .addColumn("requested_at", "timestamptz", (col) => col.notNull())
     .execute();
 
+  // One record per document.
   await db.schema
-    .createIndex("idx_search_enrichment_completion_outbox_claim")
-    .on("search_enrichment_completion_outbox")
+    .createIndex("idx_company_registry_record_document")
+    .on("company_registry_record")
+    .columns(["document_type", "document_value"])
+    .unique()
+    .execute();
+
+  // Claim path: only pending rows that are due.
+  await db.schema
+    .createIndex("idx_company_registry_record_claim")
+    .on("company_registry_record")
     .column("available_at")
     .where(sql.ref("queue_state"), "=", "pending")
     .execute();
 
+  // Stale-scan path: leased rows whose lease has expired.
   await db.schema
-    .createIndex("idx_search_enrichment_completion_outbox_stale")
-    .on("search_enrichment_completion_outbox")
+    .createIndex("idx_company_registry_record_stale")
+    .on("company_registry_record")
     .column("lease_until")
     .where(sql.ref("queue_state"), "=", "processing")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_search_enrichment_completion_outbox_active_doc")
-    .unique()
-    .on("search_enrichment_completion_outbox")
-    .columns(["document_type", "document_value"])
-    .where(sql.ref("queue_state"), "in", ["pending", "processing"])
     .execute();
 }

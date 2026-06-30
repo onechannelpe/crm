@@ -43,7 +43,7 @@ function createServerRuntime() {
   const admin = memo(() => createAdminRuntime(infra));
   const auth = memo(() => createAuthRuntime(infra, notifications()));
   const capacity = memo(() => createCapacityRuntime(infra));
-  const clientSearch = memo(() => createClientSearchRuntime(infra));
+  const clientSearch = memo(() => createClientSearchRuntime(infra, engine()));
   const contactAssignments = memo(() =>
     createContactAssignmentsRuntime(infra, engine()),
   );

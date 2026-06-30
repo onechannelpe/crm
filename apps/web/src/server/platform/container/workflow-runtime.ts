@@ -1,6 +1,5 @@
-import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
-import { createSunatEnrichmentWritebackQueue } from "~/server/identity/enrichment/writeback-queue";
 import { createOrganizationEnrichment } from "~/server/identity/organization/enrichment";
 import type { OrganizationEnrichmentQueue } from "~/server/identity/organization/enrichment";
 import type { EngineClient } from "~/server/shared/engine/client";
@@ -21,7 +20,7 @@ export function createWorkflowRuntime(
   const leadRepo = createLeadRepo(infra.db);
 
   const enrichmentCommand = createEnrichmentCommand(
-    createSearchEnrichmentRepo(infra.db),
+    createCompanyRegistryRepo(infra.db),
   );
 
   const enrichmentQueue: OrganizationEnrichmentQueue = {
@@ -49,9 +48,5 @@ export function createWorkflowRuntime(
       filesRepo: files.repo,
       filesStorage: files.storage,
     }),
-    createSunatEnrichmentWritebackQueue: (workerId: string) =>
-      createSunatEnrichmentWritebackQueue(workerId, {
-        executor: infra.db,
-      }),
   };
 }
