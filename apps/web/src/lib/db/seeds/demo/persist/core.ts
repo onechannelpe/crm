@@ -3,13 +3,13 @@ import type { Kysely } from "kysely";
 import type { Database } from "../../../types";
 import type { CompiledWorkflowScenario } from "../compiler";
 import type { LeadSeedKey } from "../scenario";
+import { persistCompanyRegistryRecords } from "./company-registry-records";
 import {
   persistWorkflowHistoryEvents,
   type WorkflowArtifactIds,
   type WorkflowLeadIds,
 } from "./history-events";
 import { persistOrganizations } from "./organizations";
-import { persistCompanyRegistryRecords } from "./company-registry-records";
 import { persistWorkflowCommercialData } from "./workflow-commercial";
 import { persistWorkflowLeadsAndAssignments } from "./workflow-leads";
 

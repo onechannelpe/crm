@@ -3,7 +3,11 @@ import { createJobStore } from "~/lib/job-queue/job-store";
 import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { CompanyRegistryPort, EnrichmentRequest, RegistryRow } from "./ports";
+import type {
+  CompanyRegistryPort,
+  EnrichmentRequest,
+  RegistryRow,
+} from "./ports";
 
 const RECORD_COLUMNS = [
   "id",

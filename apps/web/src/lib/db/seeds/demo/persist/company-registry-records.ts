@@ -31,7 +31,10 @@ const RECORDS: SeedRecord[] = [
     address: "AV. INDUSTRIAL NRO. 620 URB. PERU",
     district: "LIMA",
     department: "LIMA",
-    activity: { code: "4612", label: "AGENTES MAYORISTAS DE COMBUSTIBLES MINERALES" },
+    activity: {
+      code: "4612",
+      label: "AGENTES MAYORISTAS DE COMBUSTIBLES MINERALES",
+    },
     ageDays: 4,
   },
   {
@@ -49,7 +52,10 @@ const RECORDS: SeedRecord[] = [
     address: "AV. EL SOL NRO. 123 PISO 3",
     district: "CUSCO",
     department: "CUSCO",
-    activity: { code: "4641", label: "VENTA AL POR MAYOR DE PRODUCTOS TEXTILES" },
+    activity: {
+      code: "4641",
+      label: "VENTA AL POR MAYOR DE PRODUCTOS TEXTILES",
+    },
     ageDays: 14,
   },
   {
