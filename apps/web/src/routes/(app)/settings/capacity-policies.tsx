@@ -1,10 +1,10 @@
 import { createAsync, useAction } from "@solidjs/router";
 import { For, Show, createEffect, createSignal } from "solid-js";
 
-import type { CapacityPolicyTeamDefaultsView } from "~/actions/capacity/contracts";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import type { CapacityPolicyTeamDefaultsView } from "~/contracts/capacity";
 import {
   updateLeadScopeDefaultMutation,
   updateSearchScopeDefaultMutation,
@@ -18,12 +18,12 @@ interface TeamPolicyRowProps {
   branchDailyRefillLimit: number | null;
   onUpdateSearchDefault: (input: {
     scopeType: "team";
-    scopeId: number;
+    scopeId: string;
     monthlySearchLimit: number;
   }) => Promise<unknown>;
   onUpdateLeadDefault: (input: {
     scopeType: "team";
-    scopeId: number;
+    scopeId: string;
     activeBufferTarget: number;
     dailyRefillLimit: number;
   }) => Promise<unknown>;

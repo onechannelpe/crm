@@ -92,7 +92,7 @@ async function runExecuteEmpty<TOut, E extends DomainError>(
 export function createActionRunner(ports: RuntimePorts) {
   async function runAuthenticated<TOut>(
     def: ActionCommon,
-    startedAt: number,
+    startedAt: Date,
     audit: AuditFields,
     execute: (ctx: AppContext) => Promise<Result<TOut, WireError>>,
   ): Promise<Result<TOut, WireError>> {

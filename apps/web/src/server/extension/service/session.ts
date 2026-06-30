@@ -5,6 +5,7 @@ import {
   type DomainError,
 } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { Clock } from "~/server/shared/time";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";
 import { hashExtensionSecretToken } from "../crypto";
@@ -22,7 +23,7 @@ import {
 
 interface SessionMethodContext {
   repos: ExtensionRepos;
-  now: () => number;
+  now: Clock;
 }
 
 export async function refreshInstallationSession(

@@ -1,10 +1,11 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 export function createBranchSupervisorsRepo(db: Kysely<Database>) {
   return {
-    async findByBranch(branchId: number) {
+    async findByBranch(branchId: BranchId) {
       return db
         .selectFrom("branch_supervisors")
         .innerJoin("users", "users.id", "branch_supervisors.user_id")
@@ -18,7 +19,7 @@ export function createBranchSupervisorsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async findByUserId(userId: number) {
+    async findByUserId(userId: UserId) {
       return db
         .selectFrom("branch_supervisors")
         .select(["branch_id"])
@@ -26,7 +27,7 @@ export function createBranchSupervisorsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async assign(branchId: number, userId: number, now: number) {
+    async assign(branchId: BranchId, userId: UserId, now: Date) {
       await db
         .insertInto("branch_supervisors")
         .values({
@@ -38,7 +39,7 @@ export function createBranchSupervisorsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async isSupervisor(branchId: number, userId: number): Promise<boolean> {
+    async isSupervisor(branchId: BranchId, userId: UserId): Promise<boolean> {
       const row = await db
         .selectFrom("branch_supervisors")
         .select(["id"])
@@ -50,3 +51,7 @@ export function createBranchSupervisorsRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type BranchSupervisorsRepo = ReturnType<
+  typeof createBranchSupervisorsRepo
+>;

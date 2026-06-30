@@ -20,7 +20,7 @@ export async function requestPasswordReset(input: {
     return Err(fail("email_required"));
   }
 
-  const now = Date.now();
+  const now = new Date();
   const user = await input.deps.repos.users.findByEmail(email);
   if (!user || !user.is_active) {
     return Ok({ ok: true });
@@ -29,7 +29,7 @@ export async function requestPasswordReset(input: {
   const recentCount =
     await input.deps.repos.passwordResetTokens.countRecentForUser(
       user.id,
-      now - TOKEN_TTL_MS,
+      new Date(now.getTime() - TOKEN_TTL_MS),
     );
   if (recentCount >= MAX_REQUESTS_PER_HOUR) {
     return Err(fail("rate_limited"));
@@ -39,7 +39,7 @@ export async function requestPasswordReset(input: {
   await input.deps.repos.passwordResetTokens.create({
     user_id: user.id,
     token_hash: hashPasswordResetToken(token),
-    expires_at: now + TOKEN_TTL_MS,
+    expires_at: new Date(now.getTime() + TOKEN_TTL_MS),
     created_at: now,
   });
 

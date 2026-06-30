@@ -1,4 +1,13 @@
-import type { ColumnType, Generated } from "kysely";
+import type { ColumnType } from "kysely";
+
+import type {
+  BranchId,
+  GeneratedId,
+  IdColumn,
+  NullableIdColumn,
+  TeamId,
+  UserId,
+} from "~/server/shared/ids";
 
 export type ExecutiveCategoryValue = "elite" | "corporativa";
 
@@ -19,24 +28,24 @@ export function isExecutiveCategoryValue(
 }
 
 export interface UsersTable {
-  id: Generated<number>;
-  branch_id: number;
-  team_id: number | null;
+  id: GeneratedId<UserId>;
+  branch_id: IdColumn<BranchId>;
+  team_id: NullableIdColumn<TeamId>;
   username: string;
   email: string;
   password_hash: string;
   names: string;
   first_surname: string;
   second_surname: string;
-  expires_at: number | null;
-  expiry_notified_at: number | null;
+  expires_at: Date | null;
+  expiry_notified_at: Date | null;
   avatar_storage_key: string | null;
   avatar_mime_type: string | null;
-  avatar_updated_at: number | null;
+  avatar_updated_at: Date | null;
   avatar_version: ColumnType<number, number | undefined, number>;
-  onboarding_completed_at: number | null;
+  onboarding_completed_at: Date | null;
   role: Role;
   executive_category: ExecutiveCategoryValue | null;
-  is_active: number;
-  created_at: number;
+  is_active: boolean;
+  created_at: Date;
 }

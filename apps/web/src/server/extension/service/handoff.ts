@@ -6,7 +6,18 @@ import {
   invalid,
   type DomainError,
 } from "~/server/shared/domain-error";
+import type {
+  BranchId,
+  ContactAssignmentId,
+  UserId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import {
+  addMilliseconds,
+  epochMilliseconds,
+  epochSeconds,
+  type Clock,
+} from "~/server/shared/time";
 
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
@@ -36,27 +47,27 @@ const EXTENSION_HANDOFF_TTL_MS = 120_000;
 
 interface HandoffMethodContext {
   repos: ExtensionRepos;
-  now: () => number;
+  now: Clock;
   uow: AppUow<ExtensionRepos>;
 }
 
 export async function createHandoffToken(
   context: HandoffMethodContext,
   input: {
-    userId: number;
+    userId: UserId;
     authSessionId: string;
-    branchId: number;
-    assignmentId: number;
+    branchId: BranchId;
+    assignmentId: ContactAssignmentId;
     origin: string;
   },
 ): Promise<Result<CreateExtensionHandoffTokenResponse, DomainError>> {
   const { repos, now } = context;
 
-  if (!Number.isInteger(input.assignmentId) || input.assignmentId < 1) {
+  if (input.assignmentId.trim() === "") {
     return Err(
       invalid({
-        code: "assignment_id_positive_integer",
-        details: { field: "assignment_id", rule: "positive_integer" },
+        code: "assignment_id_required",
+        details: { field: "assignment_id", rule: "required" },
       }),
     );
   }
@@ -97,7 +108,10 @@ export async function createHandoffToken(
       contact.organization_id,
     );
     const issuedAt = now();
-    const handoffExpiresAt = issuedAt + EXTENSION_HANDOFF_TTL_MS;
+    const handoffExpiresAt = addMilliseconds(
+      issuedAt,
+      EXTENSION_HANDOFF_TTL_MS,
+    );
     const handoffJti = crypto.randomUUID();
 
     const handoffToken = await signExtensionToken({
@@ -114,8 +128,8 @@ export async function createHandoffToken(
       action: "start_call",
       origin: input.origin,
       jti: handoffJti,
-      iat: issuedAt,
-      exp: Math.floor(handoffExpiresAt / 1000),
+      iat: epochSeconds(issuedAt),
+      exp: epochSeconds(handoffExpiresAt),
     });
 
     await repos.extensionRuntime.createHandoff({
@@ -131,7 +145,7 @@ export async function createHandoffToken(
 
     return Ok({
       handoffToken,
-      expiresAt: handoffExpiresAt,
+      expiresAt: epochMilliseconds(handoffExpiresAt),
     });
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {

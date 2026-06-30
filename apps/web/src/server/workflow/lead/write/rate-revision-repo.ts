@@ -1,3 +1,5 @@
+import { sql } from "kysely";
+
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   RateRevision,
@@ -78,11 +80,7 @@ export function createRateRevisionRepo(
           input.uploadedByUserId,
         )
         .where(
-          (eb) =>
-            eb.fn("json_extract", [
-              eb.ref("workflow_artifacts.workflow_context_json"),
-              eb.val("$.leadId"),
-            ]),
+          sql<string>`${sql.ref("workflow_artifacts.workflow_context_json")} ->> 'leadId'`,
           "=",
           input.leadId,
         )

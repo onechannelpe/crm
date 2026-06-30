@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -8,18 +8,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("round", "integer", (col) => col.notNull())
-    .addColumn("proposed_debit_rate", "real", (col) => col.notNull())
-    .addColumn("proposed_credit_rate", "real", (col) => col.notNull())
-    .addColumn("proposed_foreign_rate", "real", (col) => col.notNull())
-    .addColumn("fee", "real", (col) => col.notNull())
-    .addColumn("payback_pricing", "real", (col) => col.notNull())
-    .addColumn("currency", "varchar(3)", (col) => col.notNull())
-    .addColumn("proposed_by", "integer", (col) =>
+    .addColumn("proposed_debit_rate", "numeric", (col) => col.notNull())
+    .addColumn("proposed_credit_rate", "numeric", (col) => col.notNull())
+    .addColumn("proposed_foreign_rate", "numeric", (col) => col.notNull())
+    .addColumn("fee", "numeric", (col) => col.notNull())
+    .addColumn("payback_pricing", "numeric", (col) => col.notNull())
+    .addColumn("currency", "text", (col) => col.notNull())
+    .addColumn("proposed_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("proposed_at", "integer", (col) => col.notNull())
-    .addColumn("outcome", "varchar(20)", (col) => col.notNull())
-    .addColumn("decided_at", "integer")
+    .addColumn("proposed_at", "timestamptz", (col) => col.notNull())
+    .addColumn("outcome", "text", (col) => col.notNull())
+    .addColumn("decided_at", "timestamptz")
     .execute();
 
   await db.schema
@@ -31,12 +31,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_rate_proposal_policies")
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "uuid", (col) =>
       col.primaryKey().references("branches.id").onDelete("cascade"),
     )
     .addColumn("validity_days", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("updated_by_user_id", "integer", (col) =>
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
     .execute();
@@ -55,10 +55,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("round", "integer", (col) => col.notNull())
     .addColumn("justification", "text", (col) => col.notNull())
-    .addColumn("requested_by", "integer", (col) =>
+    .addColumn("requested_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("requested_at", "integer", (col) => col.notNull())
+    .addColumn("requested_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -70,7 +70,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_rate_revision_files")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
@@ -87,13 +87,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
         .references("workflow_artifacts.id")
         .onDelete("cascade"),
     )
-    .addColumn("file_asset_id", "integer", (col) =>
+    .addColumn("file_asset_id", "uuid", (col) =>
       col.notNull().references("file_assets.id"),
     )
-    .addColumn("uploaded_by_user_id", "integer", (col) =>
+    .addColumn("uploaded_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema

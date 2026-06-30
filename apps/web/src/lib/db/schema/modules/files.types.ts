@@ -1,7 +1,21 @@
 import type { Generated } from "kysely";
 
+import type {
+  ArtifactDownloadTokenId,
+  BranchId,
+  EventId,
+  FileAssetId,
+  GeneratedId,
+  IdColumn,
+  NullableIdColumn,
+  TeamId,
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
+
 export interface WorkflowArtifactsTable {
-  id: string;
+  id: IdColumn<WorkflowArtifactId>;
   artifact_type:
     | "records_export"
     | "integration_import"
@@ -25,20 +39,20 @@ export interface WorkflowArtifactsTable {
     | "failed"
     | "expired"
     | "revoked";
-  requested_by_user_id: number;
-  scope_branch_id: number | null;
-  scope_team_id: number | null;
-  policy_snapshot_json: string;
-  workflow_context_json: string;
+  requested_by_user_id: IdColumn<UserId>;
+  scope_branch_id: NullableIdColumn<BranchId>;
+  scope_team_id: NullableIdColumn<TeamId>;
+  policy_snapshot_json: unknown;
+  workflow_context_json: unknown;
   error_code: string | null;
   error_message: string | null;
-  expires_at: number | null;
-  created_at: number;
-  updated_at: number;
+  expires_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface FileAssetsTable {
-  id: Generated<number>;
+  id: GeneratedId<FileAssetId>;
   storage_key: string;
   original_filename: string;
   safe_display_filename: string;
@@ -50,48 +64,48 @@ export interface FileAssetsTable {
   scan_status: "pending" | "clean" | "infected" | "error";
   scan_engine: string | null;
   scan_reference: string | null;
-  created_at: number;
+  created_at: Date;
 }
 
 export interface ArtifactFileBindingsTable {
-  id: Generated<number>;
-  artifact_id: string;
-  file_asset_id: number;
+  id: Generated<string>;
+  artifact_id: IdColumn<WorkflowArtifactId>;
+  file_asset_id: IdColumn<FileAssetId>;
   binding_role: "source_upload" | "export_output" | "derived_output";
   version_no: number;
-  created_at: number;
+  created_at: Date;
 }
 
 export interface ArtifactEventsTable {
-  id: Generated<number>;
-  artifact_id: string;
+  id: GeneratedId<EventId>;
+  artifact_id: IdColumn<WorkflowArtifactId>;
   event_type: string;
-  actor_user_id: number | null;
+  actor_user_id: NullableIdColumn<UserId>;
   actor_role: string | null;
   request_id: string | null;
   trace_id: string | null;
   ip_hash: string | null;
   user_agent: string | null;
-  details_json: string;
-  created_at: number;
+  details_json: unknown;
+  created_at: Date;
 }
 
 export interface ArtifactDownloadTokensTable {
-  id: Generated<number>;
-  artifact_id: string;
-  file_asset_id: number;
+  id: GeneratedId<ArtifactDownloadTokenId>;
+  artifact_id: IdColumn<WorkflowArtifactId>;
+  file_asset_id: IdColumn<FileAssetId>;
   token_hash: string;
-  requested_by_user_id: number;
-  expires_at: number;
-  used_at: number | null;
-  created_at: number;
+  requested_by_user_id: IdColumn<UserId>;
+  expires_at: Date;
+  used_at: Date | null;
+  created_at: Date;
 }
 
 export interface WorkflowSaleProofFilesTable {
-  id: Generated<number>;
-  lead_id: string;
-  artifact_id: string;
-  file_asset_id: number;
-  uploaded_by_user_id: number;
-  created_at: number;
+  id: Generated<string>;
+  lead_id: IdColumn<WorkflowLeadId>;
+  artifact_id: IdColumn<WorkflowArtifactId>;
+  file_asset_id: IdColumn<FileAssetId>;
+  uploaded_by_user_id: IdColumn<UserId>;
+  created_at: Date;
 }

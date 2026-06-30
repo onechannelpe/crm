@@ -18,8 +18,8 @@ export interface Overlay {
   contributorCondition: string | null;
   economicActivities: SunatEconomicActivity[];
   source: "sunat";
-  fetchedAt: number;
-  expiresAt: number;
+  fetchedAt: Date;
+  expiresAt: Date;
   payloadJson: string;
 }
 
@@ -30,7 +30,7 @@ export interface EnrichmentStatus {
   freshness: Freshness;
   overlay: Overlay | null;
   lastError: string | null;
-  requestedAt: number | null;
+  requestedAt: Date | null;
 }
 
 export type EnrichmentError =

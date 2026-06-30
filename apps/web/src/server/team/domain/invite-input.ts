@@ -4,6 +4,7 @@ import {
   type ExecutiveCategoryValue,
 } from "~/lib/db/types";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { TeamId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CreateTeamInviteCommand } from "../application/contracts";
@@ -19,7 +20,7 @@ export type TeamInviteShape = {
   email: string;
   role: Role;
   executiveCategory: string | null;
-  teamId: number | null;
+  teamId: TeamId | null;
   expiresAt: number | null;
 };
 
@@ -42,10 +43,7 @@ export function validateTeamInviteInput(
     return category;
   }
 
-  if (
-    input.teamId !== null &&
-    (!Number.isInteger(input.teamId) || input.teamId < 1)
-  ) {
+  if (input.teamId !== null && input.teamId.trim().length === 0) {
     return Err(fail("invalid_team_id"));
   }
 
@@ -86,7 +84,7 @@ function resolveExecutiveCategory(
 
 function validateExpiry(
   expiresAt: number | null,
-): Result<number | null, DomainError> {
+): Result<Date | null, DomainError> {
   if (expiresAt === null) {
     return Ok(null);
   }
@@ -99,5 +97,5 @@ function validateExpiry(
     return Err(fail("expires_at_too_soon"));
   }
 
-  return Ok(expiresAt);
+  return Ok(new Date(expiresAt));
 }

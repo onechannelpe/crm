@@ -1,16 +1,16 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Search capacity policy
   await db.schema
     .createTable("search_policy_defaults")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("scope_type", "varchar(20)", (col) => col.notNull())
-    .addColumn("scope_id", "integer", (col) => col.notNull())
-    .addColumn("period_type", "varchar(20)", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("scope_type", "text", (col) => col.notNull())
+    .addColumn("scope_id", "uuid", (col) => col.notNull())
+    .addColumn("period_type", "text", (col) => col.notNull())
     .addColumn("search_limit", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -21,17 +21,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_policy_overrides")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("search_limit", "integer", (col) => col.notNull())
-    .addColumn("effective_from", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer")
-    .addColumn("set_by_user_id", "integer", (col) =>
+    .addColumn("effective_from", "timestamptz", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz")
+    .addColumn("set_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -43,13 +41,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Lead capacity policy
   await db.schema
     .createTable("lead_policy_defaults")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("scope_type", "varchar(20)", (col) => col.notNull())
-    .addColumn("scope_id", "integer", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("scope_type", "text", (col) => col.notNull())
+    .addColumn("scope_id", "uuid", (col) => col.notNull())
     .addColumn("active_buffer_target", "integer", (col) => col.notNull())
     .addColumn("daily_refill_limit", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -60,18 +58,16 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_policy_overrides")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("active_buffer_target", "integer", (col) => col.notNull())
     .addColumn("daily_refill_limit", "integer", (col) => col.notNull())
-    .addColumn("effective_from", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer")
-    .addColumn("set_by_user_id", "integer", (col) =>
+    .addColumn("effective_from", "timestamptz", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz")
+    .addColumn("set_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -83,16 +79,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Search capacity ledger
   await db.schema
     .createTable("search_capacity_grants")
-    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
-    .addColumn("reason", "varchar(100)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) =>
+    .addColumn("reason", "text", (col) => col.notNull())
+    .addColumn("actor_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -103,15 +97,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_usage_reservations")
-    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("reason", "varchar(100)", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("status", "text", (col) => col.notNull())
+    .addColumn("reason", "text", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -122,27 +114,25 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_usage_commits")
-    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("reservation_id", "varchar(36)", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("reservation_id", "uuid", (col) =>
       col.notNull().references("search_usage_reservations.id"),
     )
     .addColumn("amount", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   // Lead capacity ledger
   await db.schema
     .createTable("lead_capacity_grants")
-    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
-    .addColumn("reason", "varchar(100)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) =>
+    .addColumn("reason", "text", (col) => col.notNull())
+    .addColumn("actor_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -153,15 +143,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_usage_reservations")
-    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("reason", "varchar(100)", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("status", "text", (col) => col.notNull())
+    .addColumn("reason", "text", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -172,32 +160,28 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_usage_commits")
-    .addColumn("id", "varchar(36)", (col) => col.primaryKey())
-    .addColumn("reservation_id", "varchar(36)", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("reservation_id", "uuid", (col) =>
       col.notNull().references("lead_usage_reservations.id"),
     )
     .addColumn("amount", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   // Capacity requests (user-initiated requests for additional capacity)
   await db.schema
     .createTable("capacity_requests")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("kind", "varchar(40)", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
+    .addColumn("kind", "text", (col) => col.notNull())
+    .addColumn("status", "text", (col) => col.notNull())
     .addColumn("requested_amount", "integer", (col) => col.notNull())
     .addColumn("reason", "text", (col) => col.notNull())
     .addColumn("decision_note", "text")
-    .addColumn("reviewer_user_id", "integer", (col) =>
-      col.references("users.id"),
-    )
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("decided_at", "integer")
+    .addColumn("reviewer_user_id", "uuid", (col) => col.references("users.id"))
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("decided_at", "timestamptz")
     .execute();
 
   await db.schema

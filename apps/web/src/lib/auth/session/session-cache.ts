@@ -15,8 +15,8 @@ interface CachedSession {
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
-  expiresAt: number;
+  strongAuthAt: Date | null;
+  expiresAt: Date;
   cachedUntil: number;
 }
 
@@ -40,7 +40,7 @@ class SessionCache {
       return null;
     }
 
-    if (cached.expiresAt < now) {
+    if (cached.expiresAt.getTime() < now) {
       this.cache.delete(sessionId);
       return null;
     }
@@ -74,7 +74,7 @@ class SessionCache {
   cleanup(): void {
     const now = Date.now();
     for (const [key, value] of this.cache.entries()) {
-      if (value.cachedUntil < now || value.expiresAt < now) {
+      if (value.cachedUntil < now || value.expiresAt.getTime() < now) {
         this.cache.delete(key);
       }
     }
@@ -90,7 +90,7 @@ class SessionCache {
     let valid = 0;
 
     for (const value of this.cache.values()) {
-      if (value.cachedUntil < now || value.expiresAt < now) {
+      if (value.cachedUntil < now || value.expiresAt.getTime() < now) {
         expired++;
       } else {
         valid++;

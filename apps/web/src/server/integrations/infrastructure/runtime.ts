@@ -8,14 +8,14 @@ import { createIntegrationJobRepo } from "./integration-job-repo";
 
 export function createIntegrationRuntime(input: {
   executor: DatabaseExecutor;
-  now: () => number;
+  now: () => Date;
 }): IntegrationRuntime {
   const { executor } = input;
 
   return {
     executor,
     now: input.now,
-    jobs: createIntegrationJobRepo(executor, input.now),
+    jobs: createIntegrationJobRepo(executor),
     leads: createLeadRepo(executor),
     recordExportQuery: createLeadQueries(executor),
     users: createUsersRepo(executor),

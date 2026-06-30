@@ -36,7 +36,7 @@ export async function verifyTotpStepUp(params: {
   Result<
     {
       strongAuthMethod: "totp";
-      strongAuthAt: number;
+      strongAuthAt: Date;
     },
     TotpStepUpError
   >
@@ -49,7 +49,7 @@ export async function verifyTotpStepUp(params: {
   const safeCode = totpCode?.trim();
   const factor = await deps.userTotpFactors.findByUserId(user.id);
 
-  if (!safeCode || !factor || factor.is_enabled !== 1) {
+  if (!safeCode || !factor || !factor.is_enabled) {
     await recordAuthEvent(deps, {
       userId: user.id,
       identifier,
@@ -90,7 +90,7 @@ export async function verifyTotpStepUp(params: {
       stage: "verify",
       outcome: "success",
     });
-    return Ok({ strongAuthMethod: "totp", strongAuthAt: Date.now() });
+    return Ok({ strongAuthMethod: "totp", strongAuthAt: new Date() });
   }
 
   const recoveryCodes = await deps.userTotpRecoveryCodes.listUnusedByUser(
@@ -115,7 +115,7 @@ export async function verifyTotpStepUp(params: {
       stage: "recovery",
       outcome: "success",
     });
-    return Ok({ strongAuthMethod: "totp", strongAuthAt: Date.now() });
+    return Ok({ strongAuthMethod: "totp", strongAuthAt: new Date() });
   }
 
   await throttleService.recordTotpVerifyFailure(identifier, ipAddress);

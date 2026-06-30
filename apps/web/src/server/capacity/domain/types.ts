@@ -1,3 +1,10 @@
+import type {
+  BranchId,
+  CapacityRequestId,
+  TeamId,
+  UserId,
+} from "~/server/shared/ids";
+
 export type CapacityRequestKind = "search_extra" | "lead_refill";
 export type CapacityRequestStatus =
   | "pending"
@@ -6,12 +13,12 @@ export type CapacityRequestStatus =
   | "canceled";
 
 export type ScopeRef =
-  | { kind: "branch"; scopeId: number }
-  | { kind: "team"; scopeId: number };
+  | { kind: "branch"; scopeId: BranchId }
+  | { kind: "team"; scopeId: TeamId };
 
 export interface CapacityRequest {
-  id: number;
-  userId: number;
+  id: CapacityRequestId;
+  userId: UserId;
   kind: CapacityRequestKind;
   status: CapacityRequestStatus;
   requestedAmount: number;

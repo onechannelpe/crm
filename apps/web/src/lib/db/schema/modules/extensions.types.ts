@@ -1,38 +1,48 @@
+import type {
+  BranchId,
+  ContactAssignmentId,
+  EventId,
+  IdColumn,
+  NullableIdColumn,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
+
 export interface ExtensionHandoffsTable {
   jti: string;
-  user_id: number;
-  branch_id: number;
+  user_id: IdColumn<UserId>;
+  branch_id: IdColumn<BranchId>;
   auth_session_id: string;
-  assignment_id: number;
+  assignment_id: IdColumn<ContactAssignmentId>;
   origin: string;
   installation_id: string | null;
   installation_session_jti: string | null;
-  issued_at: number;
-  expires_at: number;
-  consumed_at: number | null;
+  issued_at: Date;
+  expires_at: Date;
+  consumed_at: Date | null;
 }
 
 export interface ExtensionInstallationSessionsTable {
   jti: string;
-  user_id: number;
-  branch_id: number;
+  user_id: IdColumn<UserId>;
+  branch_id: IdColumn<BranchId>;
   auth_session_id: string;
   installation_id: string;
   refresh_token_hash: string;
-  issued_at: number;
-  expires_at: number;
-  revoked_at: number | null;
-  last_seen_at: number | null;
-  refreshed_at: number | null;
+  issued_at: Date;
+  expires_at: Date;
+  revoked_at: Date | null;
+  last_seen_at: Date | null;
+  refreshed_at: Date | null;
 }
 
 export interface ExtensionRuntimeEventsTable {
   id: string;
   sequence: number;
-  user_id: number;
-  branch_id: number;
-  assignment_id: number | null;
-  contact_id: number | null;
+  user_id: IdColumn<UserId>;
+  branch_id: IdColumn<BranchId>;
+  assignment_id: NullableIdColumn<ContactAssignmentId>;
+  contact_id: NullableIdColumn<OrganizationPersonId>;
   call_session_id: string | null;
   type:
     | "executive.presence"
@@ -41,16 +51,16 @@ export interface ExtensionRuntimeEventsTable {
     | "call.metric"
     | "recording.completed"
     | "recording.chunk";
-  payload_json: string;
-  created_at: number;
-  received_at: number;
+  payload_json: unknown;
+  created_at: Date;
+  received_at: Date;
 }
 
 export interface ExtensionExecutiveStatusesTable {
-  user_id: number;
-  branch_id: number;
-  assignment_id: number | null;
-  contact_id: number | null;
+  user_id: IdColumn<UserId>;
+  branch_id: IdColumn<BranchId>;
+  assignment_id: NullableIdColumn<ContactAssignmentId>;
+  contact_id: NullableIdColumn<OrganizationPersonId>;
   call_session_id: string | null;
   presence_status:
     | "idle"
@@ -60,9 +70,9 @@ export interface ExtensionExecutiveStatusesTable {
     | "wrap_up"
     | "offline"
     | null;
-  presence_updated_at: number | null;
+  presence_updated_at: Date | null;
   sync_health: "ok" | "stale" | "reauth_required";
-  sync_updated_at: number | null;
-  source_event_id: string | null;
+  sync_updated_at: Date | null;
+  source_event_id: NullableIdColumn<EventId>;
   source_event_sequence: number | null;
 }

@@ -1,6 +1,7 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 type UserTotpFactorRow = Selectable<Database["user_totp_factors"]>;
 type NewUserTotpFactorRow = Insertable<Database["user_totp_factors"]>;
@@ -11,7 +12,7 @@ type NewUserTotpRecoveryCodeRow = Insertable<
 
 export function createUserTotpFactorsRepo(db: Kysely<Database>) {
   return {
-    findByUserId(userId: number): Promise<UserTotpFactorRow | undefined> {
+    findByUserId(userId: UserId): Promise<UserTotpFactorRow | undefined> {
       return db
         .selectFrom("user_totp_factors")
         .selectAll()
@@ -20,16 +21,16 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
     },
 
     async createOrRotate(
-      userId: number,
+      userId: UserId,
       secretEncrypted: string,
     ): Promise<UserTotpFactorRow> {
-      const now = Date.now();
+      const now = new Date();
       await db
         .insertInto("user_totp_factors")
         .values({
           user_id: userId,
           secret_encrypted: secretEncrypted,
-          is_enabled: 0,
+          is_enabled: false,
           created_at: now,
           updated_at: now,
           enabled_at: null,
@@ -37,7 +38,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .onConflict((oc) =>
           oc.column("user_id").doUpdateSet({
             secret_encrypted: secretEncrypted,
-            is_enabled: 0,
+            is_enabled: false,
             updated_at: now,
             enabled_at: null,
           }),
@@ -51,12 +52,12 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    async markEnabled(userId: number): Promise<void> {
-      const now = Date.now();
+    async markEnabled(userId: UserId): Promise<void> {
+      const now = new Date();
       await db
         .updateTable("user_totp_factors")
         .set({
-          is_enabled: 1,
+          is_enabled: true,
           enabled_at: now,
           updated_at: now,
         })
@@ -64,12 +65,12 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async disable(userId: number): Promise<void> {
-      const now = Date.now();
+    async disable(userId: UserId): Promise<void> {
+      const now = new Date();
       await db
         .updateTable("user_totp_factors")
         .set({
-          is_enabled: 0,
+          is_enabled: false,
           enabled_at: null,
           updated_at: now,
         })
@@ -82,14 +83,14 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
 export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
   return {
     async replaceForUser(
-      userId: number,
+      userId: UserId,
       codeHashes: string[],
     ): Promise<UserTotpRecoveryCodeRow[]> {
       await db
         .deleteFrom("user_totp_recovery_codes")
         .where("user_id", "=", userId)
         .execute();
-      const now = Date.now();
+      const now = new Date();
       await db
         .insertInto("user_totp_recovery_codes")
         .values(
@@ -111,7 +112,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    listUnusedByUser(userId: number): Promise<UserTotpRecoveryCodeRow[]> {
+    listUnusedByUser(userId: UserId): Promise<UserTotpRecoveryCodeRow[]> {
       return db
         .selectFrom("user_totp_recovery_codes")
         .selectAll()
@@ -120,17 +121,17 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    markUsed(id: number): Promise<void> {
+    markUsed(id: string): Promise<void> {
       return db
         .updateTable("user_totp_recovery_codes")
-        .set({ used_at: Date.now() })
+        .set({ used_at: new Date() })
         .where("id", "=", id)
         .where("used_at", "is", null)
         .execute()
         .then(() => undefined);
     },
 
-    deleteAllByUser(userId: number): Promise<void> {
+    deleteAllByUser(userId: UserId): Promise<void> {
       return db
         .deleteFrom("user_totp_recovery_codes")
         .where("user_id", "=", userId)

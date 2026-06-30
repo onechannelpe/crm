@@ -11,7 +11,7 @@ export interface LoginPolicyInput {
   context: {
     user: {
       role: Role;
-      onboarding_completed_at: number | null;
+      onboarding_completed_at: Date | null;
     };
     strongAuthStatus: {
       hasTotp: boolean;
@@ -19,11 +19,11 @@ export interface LoginPolicyInput {
       hasVerifiedStrongAuth: boolean;
     };
   };
-  now?: () => number;
+  now?: () => Date;
 }
 
 export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
-  const now = input.now ?? Date.now;
+  const now = input.now ?? (() => new Date());
   const { proof, context } = input;
   const onboardingCompleted = context.user.onboarding_completed_at !== null;
 

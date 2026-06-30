@@ -1,5 +1,7 @@
+import { dbUrl } from "~/lib/db/db";
+import { createPgListener } from "~/lib/db/notify";
 import { uploadsConfig } from "~/lib/env";
-import { startQueueDoorbellSubscriber } from "~/lib/job-queue/doorbell-subscriber";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
@@ -11,6 +13,43 @@ import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/l
 
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
+
+// A ~1s poll floor backstops the LISTEN/NOTIFY doorbell: even if a wake is lost
+// (listener reconnecting, NOTIFY dropped), every queue still drains within a
+// second. NOTIFY makes the common path immediate; the floor makes it reliable.
+const POLL_FLOOR_MS = 1_000;
+
+// Coalesces a queue's wakeups (NOTIFY bursts plus the poll floor) into at most
+// one in-flight `runOnce` with at most one queued behind it. A storm of
+// notifications for the same queue collapses into a single fetch, matching
+// River's FetchCooldown.
+function makeWaker(run: () => Promise<void>): () => void {
+  let running = false;
+  let pending = false;
+
+  const tick = async () => {
+    if (running) {
+      pending = true;
+      return;
+    }
+    running = true;
+    try {
+      await run();
+    } catch (error: unknown) {
+      logger.error("queue_run_failed", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      running = false;
+      if (pending) {
+        pending = false;
+        void tick();
+      }
+    }
+  };
+
+  return () => void tick();
+}
 
 export function startBackgroundJobs() {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
@@ -28,16 +67,28 @@ export function startBackgroundJobs() {
     getServerRuntime().workflow.createSunatEnrichmentWritebackQueue(WORKER_ID);
   const notificationQueues =
     getServerRuntime().notifications.createQueues(WORKER_ID);
-  const queues: QueueRunner[] = [
-    recordsImportQueue,
-    enrichmentQueue,
-    sunatEnrichmentWritebackQueue,
-    notificationQueues.expansion,
-    notificationQueues.dispatch,
-  ];
-  const runAllQueues = () => {
-    for (const queue of queues) {
-      void queue.runOnce();
+
+  // Each job table's NOTIFY channel maps to the queue that drains it.
+  const queueByChannel: Record<string, QueueRunner> = {
+    [JOB_TABLE_CHANNELS.workflow_integration_jobs]: recordsImportQueue,
+    [JOB_TABLE_CHANNELS.search_enrichment_jobs]: enrichmentQueue,
+    [JOB_TABLE_CHANNELS.search_enrichment_completion_outbox]:
+      sunatEnrichmentWritebackQueue,
+    [JOB_TABLE_CHANNELS.notification_outbox]: notificationQueues.expansion,
+    [JOB_TABLE_CHANNELS.notification_deliveries]: notificationQueues.dispatch,
+  };
+
+  const wakers = new Map<string, () => void>();
+  for (const [channel, queue] of Object.entries(queueByChannel)) {
+    wakers.set(
+      channel,
+      makeWaker(() => queue.runOnce()),
+    );
+  }
+
+  const wakeAll = () => {
+    for (const wake of wakers.values()) {
+      wake();
     }
   };
 
@@ -54,28 +105,22 @@ export function startBackgroundJobs() {
 
   startStaleScanner(30_000);
 
-  // Periodic draining recovers wakeups missed while Redis is unavailable.
-  setInterval(() => {
-    runAllQueues();
-  }, 30_000);
+  // Poll floor: a light, reliable backstop for any missed NOTIFY.
+  setInterval(wakeAll, POLL_FLOOR_MS);
 
-  void startQueueDoorbellSubscriber({
-    RECORDS_IMPORT: () => {
-      void recordsImportQueue.runOnce();
-    },
-    ENRICHMENT: () => {
-      void enrichmentQueue.runOnce();
-    },
-    ENRICHMENT_WRITEBACK: () => {
-      void sunatEnrichmentWritebackQueue.runOnce();
-    },
-    NOTIFICATIONS_INTENTS: () => {
-      void notificationQueues.expansion.runOnce();
-    },
-    NOTIFICATIONS_DELIVERIES: () => {
-      void notificationQueues.dispatch.runOnce();
-    },
+  // Doorbell: wake the matching queue the instant its table receives a NOTIFY.
+  const listener = createPgListener(dbUrl);
+  for (const channel of Object.keys(queueByChannel)) {
+    const wake = wakers.get(channel);
+    if (wake) {
+      listener.on(channel, wake);
+    }
+  }
+  void listener.start().catch((error: unknown) => {
+    logger.error("listener_start_failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   });
 
-  runAllQueues();
+  wakeAll();
 }

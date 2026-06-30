@@ -11,8 +11,9 @@ export async function processEnrichmentJob(
   job: JobRow,
   scraper: SunatScraperClient,
   signal: AbortSignal,
-  now: number = Date.now(),
+  now: Date = new Date(),
 ): Promise<ProcessResult> {
+  const expiresAt = new Date(now.getTime() + OVERLAY_TTL_MS);
   if (job.document_type === "dni") {
     const result = await scraper.fetchDni(job.document_value, signal);
 
@@ -48,7 +49,7 @@ export async function processEnrichmentJob(
       economicActivities: [],
       source: "sunat",
       fetchedAt: now,
-      expiresAt: now + OVERLAY_TTL_MS,
+      expiresAt,
       payloadJson: JSON.stringify(result.data.payload),
     };
     return { ok: true, overlay };
@@ -79,7 +80,7 @@ export async function processEnrichmentJob(
     economicActivities: result.data.economicActivities,
     source: "sunat",
     fetchedAt: now,
-    expiresAt: now + OVERLAY_TTL_MS,
+    expiresAt,
     payloadJson: JSON.stringify(result.data.payload),
   };
   return { ok: true, overlay };

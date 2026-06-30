@@ -24,7 +24,7 @@ export function createAuthRuntime(
   infra: ServerInfra,
   notifications: {
     messaging: MessagingGateway;
-    enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
+    enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
     dispatchPendingJobs(): void;
   },
 ) {

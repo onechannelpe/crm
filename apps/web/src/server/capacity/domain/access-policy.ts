@@ -4,6 +4,7 @@ import {
   forbidden,
   type DomainError,
 } from "~/server/shared/domain-error";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
@@ -16,13 +17,13 @@ interface ScopeRepos<
   T extends ManageableCapacityUser = ManageableCapacityUser,
 > {
   users: {
-    findById(id: number): Promise<T | undefined>;
+    findById(id: UserId): Promise<T | undefined>;
   };
   teams: {
-    findById(id: number): Promise<CapacityTeam | undefined>;
+    findById(id: TeamId): Promise<CapacityTeam | undefined>;
   };
   branchSupervisors: {
-    isSupervisor(branchId: number, userId: number): Promise<boolean>;
+    isSupervisor(branchId: BranchId, userId: UserId): Promise<boolean>;
   };
 }
 
@@ -30,7 +31,7 @@ interface ExecutiveRepos<
   T extends ManageableCapacityUser = ManageableCapacityUser,
 > {
   users: {
-    findById(id: number): Promise<T | undefined>;
+    findById(id: UserId): Promise<T | undefined>;
   };
 }
 
@@ -48,7 +49,7 @@ function canManageExecutiveRecord(
 
 export async function canManageExecutive<T extends ManageableCapacityUser>(
   actor: AuthSession,
-  targetUserId: number,
+  targetUserId: UserId,
   repos: ExecutiveRepos<T>,
 ): Promise<{ ok: boolean; target: T | null }> {
   const target = await repos.users.findById(targetUserId);

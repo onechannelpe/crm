@@ -1,4 +1,3 @@
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createSunatEnrichmentWritebackQueue } from "~/server/identity/enrichment/writeback-queue";
@@ -16,7 +15,6 @@ export function createWorkflowRuntime(
   infra: ServerInfra,
   engine: EngineClient,
   files: Pick<FilesRuntime, "repo" | "storage">,
-  doorbell: QueueDoorbell,
 ) {
   const organizationEnrichment = createOrganizationEnrichment(engine);
   const repos = createWorkflowRepos(infra.db);
@@ -24,7 +22,6 @@ export function createWorkflowRuntime(
 
   const enrichmentCommand = createEnrichmentCommand(
     createSearchEnrichmentRepo(infra.db),
-    doorbell,
   );
 
   const enrichmentQueue: OrganizationEnrichmentQueue = {

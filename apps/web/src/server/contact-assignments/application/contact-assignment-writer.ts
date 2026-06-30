@@ -1,9 +1,16 @@
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
+import type { ContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { ContactsRepo } from "~/server/contacts/repos-contacts";
+import type { OrganizationsRepo } from "~/server/contacts/repos-organizations";
 import type { AppUow } from "~/server/shared/application/uow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { RecordCandidate } from "~/server/shared/engine/record-contract";
-import type { OrganizationId, UserId } from "~/server/shared/ids";
+import type {
+  OrganizationId,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 export type OrganizationRecord = {
@@ -11,28 +18,15 @@ export type OrganizationRecord = {
 };
 
 export type ContactRecord = {
-  id: number;
-  cooldown_until: number | null;
+  id: OrganizationPersonId;
+  cooldown_until: Date | null;
 };
 
-export interface AssignContactsTransactionRepos {
-  organizations: {
-    findOrCreate(ruc: string, name: string): Promise<OrganizationRecord>;
-  };
-  contacts: {
-    findOrCreate(
-      organizationId: OrganizationId,
-      dni: string,
-      name: string,
-      phone: string,
-    ): Promise<ContactRecord>;
-  };
-  contactAssignments: {
-    createMany(
-      assignments: ReturnType<typeof createAssignment>[],
-    ): Promise<void>;
-  };
-}
+export type AssignContactsTransactionRepos = {
+  organizations: Pick<OrganizationsRepo, "findOrCreate">;
+  contacts: Pick<ContactsRepo, "findOrCreate">;
+  contactAssignments: Pick<ContactAssignmentsRepo, "createMany">;
+};
 
 export type AssignContactsUow = AppUow<AssignContactsTransactionRepos>;
 

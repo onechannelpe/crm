@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -11,14 +11,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
         .references("workflow_leads.id")
         .onDelete("cascade"),
     )
-    .addColumn("product_kind", "varchar(30)")
-    .addColumn("current_step", "varchar(40)", (col) => col.notNull())
+    .addColumn("product_kind", "text")
+    .addColumn("current_step", "text", (col) => col.notNull())
     .addColumn("service_b_ref", "text")
-    .addColumn("created_by", "integer", (col) =>
+    .addColumn("created_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   // The work-queue and detail reads filter live orders by their pending step.
@@ -40,15 +40,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("venue_id", "text", (col) =>
       col.references("workflow_lead_venues.id"),
     )
-    .addColumn("label", "varchar(120)", (col) => col.notNull())
+    .addColumn("label", "text", (col) => col.notNull())
     .addColumn("serial_number", "text")
     .addColumn("payment_url", "text")
     .addColumn("payment_proof_artifact_id", "text")
-    .addColumn("payment_validated", "integer", (col) =>
-      col.notNull().defaultTo(0),
+    .addColumn("payment_validated", "boolean", (col) =>
+      col.notNull().defaultTo(false),
     )
     .addColumn("service_a_ref", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -59,24 +59,24 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_fulfillment_documents")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("order_id", "text", (col) =>
       col
         .notNull()
         .references("lead_fulfillment_orders.id")
         .onDelete("cascade"),
     )
-    .addColumn("doc_kind", "varchar(40)", (col) => col.notNull())
+    .addColumn("doc_kind", "text", (col) => col.notNull())
     .addColumn("artifact_id", "text", (col) =>
       col.notNull().references("workflow_artifacts.id"),
     )
-    .addColumn("file_asset_id", "integer", (col) =>
+    .addColumn("file_asset_id", "uuid", (col) =>
       col.notNull().references("file_assets.id"),
     )
-    .addColumn("uploaded_by_user_id", "integer", (col) =>
+    .addColumn("uploaded_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema

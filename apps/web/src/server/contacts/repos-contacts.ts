@@ -1,10 +1,14 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { OrganizationId } from "~/server/shared/ids";
+import type {
+  OrganizationId,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
 
 export function createContactsRepo(db: Kysely<Database>) {
-  const findById = (id: number) =>
+  const findById = (id: OrganizationPersonId) =>
     db
       .selectFrom("organization_people")
       .innerJoin("people", "people.id", "organization_people.person_id")
@@ -45,7 +49,7 @@ export function createContactsRepo(db: Kysely<Database>) {
     name: string,
     phonePrimary: string | null,
   ) => {
-    const now = Date.now();
+    const now = new Date();
     await db
       .insertInto("people")
       .values({
@@ -104,17 +108,23 @@ export function createContactsRepo(db: Kysely<Database>) {
     return member;
   };
 
-  const updateCooldown = (id: number, userId: number, cooldownUntil: number) =>
-    db
+  const updateCooldown = (
+    id: OrganizationPersonId,
+    userId: UserId,
+    cooldownUntil: Date,
+  ) => {
+    const now = new Date();
+    return db
       .updateTable("organization_people")
       .set({
-        last_contacted_at: Date.now(),
+        last_contacted_at: now,
         last_contacted_by_user_id: userId,
         cooldown_until: cooldownUntil,
-        updated_at: Date.now(),
+        updated_at: now,
       })
       .where("id", "=", id)
       .execute();
+  };
 
   return {
     findById,

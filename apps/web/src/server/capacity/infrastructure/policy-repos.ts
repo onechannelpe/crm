@@ -1,11 +1,13 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 type DefaultScopeType = "branch" | "team";
+type DefaultScopeId = BranchId | TeamId;
 
 export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
-  const findForScope = (scopeType: DefaultScopeType, scopeId: number) =>
+  const findForScope = (scopeType: DefaultScopeType, scopeId: DefaultScopeId) =>
     db
       .selectFrom("search_policy_defaults")
       .selectAll()
@@ -13,7 +15,10 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
       .where("scope_id", "=", scopeId)
       .executeTakeFirst();
 
-  const listForScope = (scopeType: DefaultScopeType, scopeIds: number[]) => {
+  const listForScope = (
+    scopeType: DefaultScopeType,
+    scopeIds: DefaultScopeId[],
+  ) => {
     if (scopeIds.length === 0) return Promise.resolve([]);
     return db
       .selectFrom("search_policy_defaults")
@@ -25,12 +30,12 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
 
   const upsert = async (values: {
     scope_type: DefaultScopeType;
-    scope_id: number;
+    scope_id: DefaultScopeId;
     period_type: "month";
     search_limit: number;
   }): Promise<void> => {
     const existing = await findForScope(values.scope_type, values.scope_id);
-    const now = Date.now();
+    const now = new Date();
     if (existing) {
       await db
         .updateTable("search_policy_defaults")
@@ -49,7 +54,7 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
 }
 
 export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
-  const findActiveForUser = (userId: number, now: number) =>
+  const findActiveForUser = (userId: UserId, now: Date) =>
     db
       .selectFrom("search_policy_overrides")
       .selectAll()
@@ -61,7 +66,7 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
       .orderBy("created_at", "desc")
       .executeTakeFirst();
 
-  const listActiveForUsers = (userIds: number[], now: number) => {
+  const listActiveForUsers = (userIds: UserId[], now: Date) => {
     if (userIds.length === 0) return Promise.resolve([]);
     return db
       .selectFrom("search_policy_overrides")
@@ -77,11 +82,11 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
   };
 
   const replaceForUser = async (values: {
-    user_id: number;
+    user_id: UserId;
     search_limit: number;
-    effective_from: number;
-    expires_at: number | null;
-    set_by_user_id: number;
+    effective_from: Date;
+    expires_at: Date | null;
+    set_by_user_id: UserId;
   }): Promise<void> => {
     await db
       .deleteFrom("search_policy_overrides")
@@ -89,7 +94,7 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
       .execute();
     await db
       .insertInto("search_policy_overrides")
-      .values({ ...values, created_at: Date.now() })
+      .values({ ...values, created_at: new Date() })
       .executeTakeFirstOrThrow();
   };
 
@@ -97,7 +102,7 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
 }
 
 export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
-  const findForScope = (scopeType: DefaultScopeType, scopeId: number) =>
+  const findForScope = (scopeType: DefaultScopeType, scopeId: DefaultScopeId) =>
     db
       .selectFrom("lead_policy_defaults")
       .selectAll()
@@ -105,7 +110,10 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
       .where("scope_id", "=", scopeId)
       .executeTakeFirst();
 
-  const listForScope = (scopeType: DefaultScopeType, scopeIds: number[]) => {
+  const listForScope = (
+    scopeType: DefaultScopeType,
+    scopeIds: DefaultScopeId[],
+  ) => {
     if (scopeIds.length === 0) return Promise.resolve([]);
     return db
       .selectFrom("lead_policy_defaults")
@@ -117,12 +125,12 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
 
   const upsert = async (values: {
     scope_type: DefaultScopeType;
-    scope_id: number;
+    scope_id: DefaultScopeId;
     active_buffer_target: number;
     daily_refill_limit: number;
   }): Promise<void> => {
     const existing = await findForScope(values.scope_type, values.scope_id);
-    const now = Date.now();
+    const now = new Date();
     if (existing) {
       await db
         .updateTable("lead_policy_defaults")
@@ -141,7 +149,7 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
 }
 
 export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
-  const findActiveForUser = (userId: number, now: number) =>
+  const findActiveForUser = (userId: UserId, now: Date) =>
     db
       .selectFrom("lead_policy_overrides")
       .selectAll()
@@ -153,7 +161,7 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
       .orderBy("created_at", "desc")
       .executeTakeFirst();
 
-  const listActiveForUsers = (userIds: number[], now: number) => {
+  const listActiveForUsers = (userIds: UserId[], now: Date) => {
     if (userIds.length === 0) return Promise.resolve([]);
     return db
       .selectFrom("lead_policy_overrides")
@@ -169,12 +177,12 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
   };
 
   const replaceForUser = async (values: {
-    user_id: number;
+    user_id: UserId;
     active_buffer_target: number;
     daily_refill_limit: number;
-    effective_from: number;
-    expires_at: number | null;
-    set_by_user_id: number;
+    effective_from: Date;
+    expires_at: Date | null;
+    set_by_user_id: UserId;
   }): Promise<void> => {
     await db
       .deleteFrom("lead_policy_overrides")
@@ -182,7 +190,7 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
       .execute();
     await db
       .insertInto("lead_policy_overrides")
-      .values({ ...values, created_at: Date.now() })
+      .values({ ...values, created_at: new Date() })
       .executeTakeFirstOrThrow();
   };
 

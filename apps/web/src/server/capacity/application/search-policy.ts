@@ -13,7 +13,7 @@ export interface SetSearchUserOverrideCommand {
   actorUserId: UserId;
   targetUserId: UserId;
   monthlyLimit: number;
-  expiresAt: number | null;
+  expiresAt: Date | null;
 }
 
 interface PolicyRepos {
@@ -23,13 +23,13 @@ interface PolicyRepos {
   searchPolicyDefaults: {
     findForScope(
       scopeType: "branch" | "team",
-      scopeId: number,
+      scopeId: BranchId | TeamId,
     ): Promise<{ search_limit: number } | undefined | null>;
   };
   searchPolicyOverrides: {
     findActiveForUser(
       userId: UserId,
-      now: number,
+      now: Date,
     ): Promise<{ search_limit: number } | undefined | null>;
   };
 }
@@ -38,7 +38,7 @@ interface SearchPolicyDefaultsWriter {
   searchPolicyDefaults: {
     upsert(values: {
       scope_type: "branch" | "team";
-      scope_id: number;
+      scope_id: BranchId | TeamId;
       period_type: "month";
       search_limit: number;
     }): Promise<unknown>;
@@ -50,8 +50,8 @@ interface SearchPolicyOverridesWriter {
     replaceForUser(values: {
       user_id: UserId;
       search_limit: number;
-      effective_from: number;
-      expires_at: number | null;
+      effective_from: Date;
+      expires_at: Date | null;
       set_by_user_id: UserId;
     }): Promise<unknown>;
   };
@@ -66,7 +66,7 @@ export async function getEffectiveSearchPolicy(
     return Err(fail("user_not_found"));
   }
 
-  const now = Date.now();
+  const now = new Date();
   const userOverride = await repos.searchPolicyOverrides.findActiveForUser(
     userId,
     now,
@@ -102,7 +102,7 @@ export async function setSearchUserOverride(
   await repos.searchPolicyOverrides.replaceForUser({
     user_id: command.targetUserId,
     search_limit: command.monthlyLimit,
-    effective_from: Date.now(),
+    effective_from: new Date(),
     expires_at: command.expiresAt,
     set_by_user_id: command.actorUserId,
   });

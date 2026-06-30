@@ -2,15 +2,15 @@ import {
   recordImportTopic,
   parseRecordImportProgressMessage,
 } from "~/features/records-imports/contracts";
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { createRedisTopicBridge } from "~/server/realtime/core/bridge";
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
+import { createPgTopicBridge } from "~/server/realtime/core/bridge";
 import { TopicHub } from "~/server/realtime/core/topic-hub";
 
 const recordImportsTopicHub = new TopicHub();
 
-const recordImportsBridge = createRedisTopicBridge({
+const recordImportsBridge = createPgTopicBridge({
   name: "records-imports",
-  channel: JOB_CHANNELS.RECORDS_IMPORT_PROGRESS,
+  channel: RECORDS_IMPORT_PROGRESS_CHANNEL,
   hub: recordImportsTopicHub,
   parseEvent: parseRecordImportProgressMessage,
   topicForEvent: (event) => recordImportTopic(event.jobId),

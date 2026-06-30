@@ -27,11 +27,17 @@ export async function updateSearchPolicyDefault(
     }
 
     const result = await setSearchScopeDefault(
-      {
-        scopeType: input.scope.kind,
-        scopeId: input.scope.scopeId,
-        monthlyLimit: monthlyLimit.value,
-      },
+      input.scope.kind === "branch"
+        ? {
+            scopeType: "branch",
+            scopeId: input.scope.scopeId,
+            monthlyLimit: monthlyLimit.value,
+          }
+        : {
+            scopeType: "team",
+            scopeId: input.scope.scopeId,
+            monthlyLimit: monthlyLimit.value,
+          },
       tx,
     );
 

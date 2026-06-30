@@ -62,17 +62,17 @@ export async function commitSearchUsage(
   repos: Pick<UsageRepos, "searchUsageReservations" | "searchUsageCommits">,
 ): Promise<Result<void, DomainError>> {
   const reservation = await repos.searchUsageReservations.findById(
-    command.reservationId.value,
+    command.reservationId,
   );
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
   await repos.searchUsageCommits.insert({
-    reservation_id: command.reservationId.value,
+    reservation_id: command.reservationId,
     amount: command.amount,
   });
   await repos.searchUsageReservations.updateStatus(
-    command.reservationId.value,
+    command.reservationId,
     "committed",
   );
   return Ok(undefined);
@@ -83,13 +83,13 @@ export async function cancelSearchUsage(
   repos: Pick<UsageRepos, "searchUsageReservations">,
 ): Promise<Result<void, DomainError>> {
   const reservation = await repos.searchUsageReservations.findById(
-    command.reservationId.value,
+    command.reservationId,
   );
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
   await repos.searchUsageReservations.updateStatus(
-    command.reservationId.value,
+    command.reservationId,
     "cancelled",
   );
   return Ok(undefined);

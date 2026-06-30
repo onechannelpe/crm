@@ -1,8 +1,5 @@
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
-import type { ProcessResult } from "~/server/client-search/model";
 import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
 import {
   processEnrichmentJob,
@@ -12,7 +9,7 @@ import {
 type EnrichmentWorkerDeps = {
   enrichmentRepo: EnrichmentRepositoryPort;
   scraper: SunatScraperClient;
-  doorbell: QueueDoorbell;
+  now?: () => Date;
 };
 
 export function createEnrichmentQueue(
@@ -20,54 +17,32 @@ export function createEnrichmentQueue(
   deps: EnrichmentWorkerDeps,
 ) {
   const leaseMs = 30_000;
-  const batchSize = 20;
-  const maxConcurrency = 3;
-  const { doorbell, enrichmentRepo, scraper } = deps;
+  const { enrichmentRepo, scraper } = deps;
+  const now = deps.now ?? (() => new Date());
 
   return createJobQueue({
     name: "enrichment",
     leaseMs,
-    batchSize,
-    maxConcurrency,
-    now: Date.now,
-    poll: (limit: number) => enrichmentRepo.leaseJobs(limit, leaseMs, workerId),
+    maxConcurrency: 3,
+    now,
+    workerId,
+    store: enrichmentRepo.store,
     handle: async (job, signal) => {
-      return processEnrichmentJob(job, scraper, signal);
-    },
-    onResult: async (job, result: ProcessResult) => {
+      const result = await processEnrichmentJob(job, scraper, signal, now());
       if (result.ok) {
-        await enrichmentRepo.completeJob(
-          job.id,
-          workerId,
+        // Overlay + writeback-outbox land in one idempotent transaction that also
+        // wakes the writeback queue; the job row's done transition is settled by
+        // the engine, stamping `completed_at` and clearing `last_error`.
+        await enrichmentRepo.recordCompletion(
           overlayToRow(result.overlay),
-          Date.now(),
+          now(),
         );
-        doorbell.wake(JOB_CHANNELS.ENRICHMENT_WRITEBACK, job.id);
-        return { kind: "complete" };
+        return { kind: "done" };
       }
-
       if (result.shouldRetry) {
-        return {
-          kind: "retry",
-          availableAt: Date.now() + 60_000,
-        };
+        return { kind: "retry", reason: `enrichment:${result.error.kind}` };
       }
-
-      return {
-        kind: "fail",
-        reason: `enrichment:${result.error.kind}`,
-      };
-    },
-    extendLease: (id: number) =>
-      enrichmentRepo.extendLease(id, workerId, leaseMs),
-    onComplete: async (_id: number) => {
-      // Job completion is persisted in onResult.
-    },
-    onRetry: async (id: number, availableAt: number) => {
-      await enrichmentRepo.retryJob(id, workerId, "Retrying", availableAt);
-    },
-    onFail: async (id: number, reason: string) => {
-      await enrichmentRepo.failJob(id, workerId, reason, Date.now());
+      return { kind: "fail", reason: `enrichment:${result.error.kind}` };
     },
   });
 }

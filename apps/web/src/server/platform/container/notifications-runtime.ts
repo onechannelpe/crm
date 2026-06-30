@@ -8,10 +8,10 @@ import {
 } from "@crm/message-channels";
 import type { Kysely } from "kysely";
 
+import { notify } from "~/lib/db/notify";
 import type { Database } from "~/lib/db/types";
 import type { AppConfig, NotificationsConfig } from "~/lib/env";
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import type { Logger } from "~/lib/observability/logger-shared";
@@ -42,9 +42,8 @@ import type { ServerInfra } from "./infra";
 export interface NotificationPipelineDeps {
   db: Kysely<Database>;
   messaging: MessagingGateway;
-  clock: () => number;
+  clock: () => Date;
   publicOrigin: string;
-  doorbell: QueueDoorbell;
   logger: Logger;
 }
 
@@ -56,7 +55,7 @@ export interface NotificationPipeline {
     dispatch: QueueRunner;
   };
   dispatchPendingJobs(): void;
-  enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
+  enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
 }
 
 export function assembleNotificationPipeline(
@@ -92,10 +91,7 @@ export function assembleNotificationPipeline(
           expand,
           clock: deps.clock,
           onExpanded: () =>
-            deps.doorbell.wake(
-              JOB_CHANNELS.NOTIFICATIONS_DELIVERIES,
-              deps.clock(),
-            ),
+            notify(deps.db, JOB_TABLE_CHANNELS.notification_deliveries),
         }),
         dispatch: createDeliveryDispatchQueue(workerId, {
           deliveries,
@@ -105,7 +101,7 @@ export function assembleNotificationPipeline(
       };
     },
     dispatchPendingJobs() {
-      deps.doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, deps.clock());
+      notify(deps.db, JOB_TABLE_CHANNELS.notification_outbox);
     },
     enqueue(intentsToEnqueue, now = deps.clock()) {
       return enqueueNotifications(deps.db, intentsToEnqueue, now);
@@ -119,7 +115,6 @@ export function createNotificationsRuntime(
   infra: ServerInfra,
   config: NotificationsConfig,
   app: AppConfig,
-  doorbell: QueueDoorbell,
 ): NotificationPipeline {
   const providers: DeliveryProvider[] = [];
   if (config.resend) {
@@ -147,9 +142,8 @@ export function createNotificationsRuntime(
   return assembleNotificationPipeline({
     db: infra.db,
     messaging,
-    clock: Date.now,
+    clock: () => new Date(),
     publicOrigin: app.publicOrigin,
-    doorbell,
     logger: createLogger("notifications"),
   });
 }

@@ -14,7 +14,7 @@ import { executiveCapacityDetailQuery } from "~/lib/queries/capacity";
 
 export default function TeamMemberCapacityPage() {
   const params = useParams();
-  const userId = () => Number(params.userId);
+  const userId = () => params.userId ?? "";
   const detail = createAsync(() => executiveCapacityDetailQuery(userId()), {
     initialValue: null,
   });

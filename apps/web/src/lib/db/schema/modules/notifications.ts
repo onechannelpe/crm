@@ -1,18 +1,20 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("user_channel_addresses")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("channel", "varchar(20)", (col) => col.notNull())
-    .addColumn("address", "varchar(255)", (col) => col.notNull())
-    .addColumn("is_verified", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("verified_at", "integer")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("channel", "text", (col) => col.notNull())
+    .addColumn("address", "text", (col) => col.notNull())
+    .addColumn("is_verified", "boolean", (col) =>
+      col.notNull().defaultTo(false),
+    )
+    .addColumn("verified_at", "timestamptz")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -31,15 +33,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("notification_preferences")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("channel", "varchar(20)", (col) => col.notNull())
-    .addColumn("is_enabled", "integer", (col) => col.notNull().defaultTo(1))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("event_type", "text", (col) => col.notNull())
+    .addColumn("channel", "text", (col) => col.notNull())
+    .addColumn("is_enabled", "boolean", (col) => col.notNull().defaultTo(true))
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -51,29 +53,29 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("notification_deliveries")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("intent_id", "text", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) => col.notNull())
-    .addColumn("channel", "varchar(20)", (col) => col.notNull())
-    .addColumn("recipient_address", "varchar(255)", (col) => col.notNull())
-    .addColumn("title", "varchar(255)", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("intent_id", "uuid", (col) => col.notNull())
+    .addColumn("user_id", "uuid", (col) => col.notNull())
+    .addColumn("channel", "text", (col) => col.notNull())
+    .addColumn("recipient_address", "text", (col) => col.notNull())
+    .addColumn("title", "text", (col) => col.notNull())
     .addColumn("body_text", "text", (col) => col.notNull())
-    .addColumn("action_url", "varchar(255)")
-    .addColumn("queue_state", "varchar(20)", (col) =>
+    .addColumn("action_url", "text")
+    .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer", (col) => col.notNull())
-    .addColumn("lease_owner", "varchar(100)")
-    .addColumn("lease_until", "integer")
-    .addColumn("provider", "varchar(32)")
-    .addColumn("provider_message_id", "varchar(255)")
-    .addColumn("error_code", "varchar(64)")
+    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
+    .addColumn("provider", "text")
+    .addColumn("provider_message_id", "text")
+    .addColumn("error_code", "text")
     .addColumn("error_message", "text")
     .addColumn("latency_ms", "integer")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("sent_at", "integer")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("sent_at", "timestamptz")
     .execute();
 
   // Idempotency: re-expanding an intent never creates a second delivery for the
@@ -85,28 +87,38 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // Dispatch poll: pending rows whose lease is free and due.
+  // Claim path: only pending rows that are due. Partial index keeps it to the
+  // live working set.
   await db.schema
-    .createIndex("idx_notification_deliveries_queue_state")
+    .createIndex("idx_notification_deliveries_claim")
     .on("notification_deliveries")
-    .columns(["queue_state", "available_at", "lease_until"])
+    .column("available_at")
+    .where(sql.ref("queue_state"), "=", "pending")
+    .execute();
+
+  // Stale-scan path: leased rows whose lease has expired.
+  await db.schema
+    .createIndex("idx_notification_deliveries_stale")
+    .on("notification_deliveries")
+    .column("lease_until")
+    .where(sql.ref("queue_state"), "=", "processing")
     .execute();
 
   await db.schema
     .createTable("app_notifications")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("source_event_id", "text", (col) => col.notNull())
-    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("priority", "varchar(16)", (col) => col.notNull())
-    .addColumn("title", "varchar(255)", (col) => col.notNull())
+    .addColumn("source_event_id", "uuid", (col) => col.notNull())
+    .addColumn("event_type", "text", (col) => col.notNull())
+    .addColumn("priority", "text", (col) => col.notNull())
+    .addColumn("title", "text", (col) => col.notNull())
     .addColumn("body_text", "text", (col) => col.notNull())
-    .addColumn("action_url", "varchar(255)")
-    .addColumn("metadata_json", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("read_at", "integer")
+    .addColumn("action_url", "text")
+    .addColumn("metadata_json", "jsonb")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("read_at", "timestamptz")
     .execute();
 
   await db.schema
@@ -124,39 +136,47 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("notification_outbox")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
-    .addColumn("audience_json", "text", (col) => col.notNull())
-    .addColumn("channels_json", "text", (col) => col.notNull())
-    .addColumn("title", "varchar(255)", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("event_type", "text", (col) => col.notNull())
+    .addColumn("audience_json", "jsonb", (col) => col.notNull())
+    .addColumn("channels_json", "jsonb", (col) => col.notNull())
+    .addColumn("title", "text", (col) => col.notNull())
     .addColumn("body_text", "text", (col) => col.notNull())
-    .addColumn("action_url", "varchar(255)")
-    .addColumn("priority", "varchar(16)", (col) => col.notNull())
-    .addColumn("queue_state", "varchar(20)", (col) =>
+    .addColumn("action_url", "text")
+    .addColumn("priority", "text", (col) => col.notNull())
+    .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer", (col) => col.notNull())
-    .addColumn("lease_owner", "varchar(100)")
-    .addColumn("lease_until", "integer")
+    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
     .addColumn("error", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("expanded_at", "integer")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("expanded_at", "timestamptz")
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_outbox_queue_state")
+    .createIndex("idx_notification_outbox_claim")
     .on("notification_outbox")
-    .columns(["queue_state", "available_at", "lease_until"])
+    .column("available_at")
+    .where(sql.ref("queue_state"), "=", "pending")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_notification_outbox_stale")
+    .on("notification_outbox")
+    .column("lease_until")
+    .where(sql.ref("queue_state"), "=", "processing")
     .execute();
 
   await db.schema
     .createTable("whatsapp_sessions")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().unique().references("users.id").onDelete("cascade"),
     )
-    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
     .execute();
 }

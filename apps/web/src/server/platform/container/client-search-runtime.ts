@@ -1,4 +1,3 @@
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
@@ -7,13 +6,10 @@ import { createEnrichmentQueue } from "~/server/client-search/worker";
 
 import type { ServerInfra } from "./infra";
 
-export function createClientSearchRuntime(
-  infra: ServerInfra,
-  doorbell: QueueDoorbell,
-) {
+export function createClientSearchRuntime(infra: ServerInfra) {
   const enrichmentRepo = createSearchEnrichmentRepo(infra.db);
   const scraper = createSunatScraperClient();
-  const enrichmentCommand = createEnrichmentCommand(enrichmentRepo, doorbell);
+  const enrichmentCommand = createEnrichmentCommand(enrichmentRepo);
   const enrichmentQuery = createEnrichmentQuery(enrichmentRepo);
 
   return {
@@ -21,7 +17,6 @@ export function createClientSearchRuntime(
     enrichmentQuery,
     createEnrichmentQueue: (workerId: string) =>
       createEnrichmentQueue(workerId, {
-        doorbell,
         enrichmentRepo,
         scraper,
       }),

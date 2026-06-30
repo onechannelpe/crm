@@ -1,5 +1,6 @@
 import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
 import { auditEntityId } from "~/server/shared/audit-entity";
+import { addMilliseconds, epochMilliseconds } from "~/server/shared/time";
 
 import type {
   InviteDeps,
@@ -14,7 +15,8 @@ export async function issueInvite(
   input: IssueInviteInput,
 ): Promise<InviteIssueResult> {
   const issuedAt = runtime.now();
-  const expiresAt = input.expiresAt ?? issuedAt + runtime.inviteTtlMs;
+  const expiresAt =
+    input.expiresAt ?? addMilliseconds(issuedAt, runtime.inviteTtlMs);
 
   await repos.userInvites.revokePendingByUser(input.userId, issuedAt);
 
@@ -39,7 +41,12 @@ export async function issueInvite(
     entityType: "user",
     entityId: auditEntityId("user", input.userId),
     actorUserId: input.actorUserId,
-    payload: { inviteId, email: input.email, role: input.role, expiresAt },
+    payload: {
+      inviteId,
+      email: input.email,
+      role: input.role,
+      expiresAt: epochMilliseconds(expiresAt),
+    },
     occurredAt: issuedAt,
   });
 

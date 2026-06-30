@@ -2,58 +2,109 @@ import type { Kysely } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import type { JobTableName } from "./registry";
+
 // The four queue-lifecycle states every job table shares. This column is owned
 // solely by the job-store. Any user-facing `status` a feature surfaces is a
-// separate domain column the store never reads or writes except through an
-// explicit caller patch.
+// separate domain column the store maintains in lockstep via LifecycleColumns,
+// never something a caller hand-syncs.
 export type QueueState = "pending" | "processing" | "done" | "failed";
 
-// Tables that carry the canonical control columns and are driven by a queue.
-export type JobTableName =
-  | "notification_outbox"
-  | "notification_deliveries"
-  | "search_enrichment_jobs"
-  | "search_enrichment_completion_outbox"
-  | "workflow_integration_jobs"
-  | "report_export_jobs";
+export type { JobTableName };
 
-// Domain columns a caller wants written in the same statement as a queue
-// transition (a user-facing `status`, a `completed_at`, an error message). Kept
-// loose on purpose: this is the one boundary where the generic store cannot know
-// a specific table's domain shape, so each queue passes its own typed object and
-// the store merges it verbatim.
-export type DomainPatch = Record<string, string | number | null>;
+// Extra domain columns a handler wants written in the same statement as a queue
+// transition (rows_applied, results_json, ...). Kept loose on purpose: this is
+// the one boundary where the generic store cannot know a specific table's domain
+// shape. The canonical lifecycle columns (queue_state, lease, attempts) and the
+// mapped mirror columns below are NOT passed here -- the store owns them.
+export type DomainPatch = Record<
+  string,
+  string | number | boolean | Date | null
+>;
+
+// Restricts a claim to rows whose `column` is one of `values`. Used when a single
+// table holds several job kinds and a queue should only claim its own (e.g. the
+// integration table carries both imports and exports).
+export interface ClaimFilter {
+  column: string;
+  values: readonly (string | number)[];
+}
+
+// Maps the canonical lifecycle onto a table's domain mirror columns so the store
+// keeps them in lockstep with `queue_state` without each queue re-coding the sync
+// in its settle path. All optional: a table with no user-facing status (the
+// outbox) configures none of these.
+export interface LifecycleColumns {
+  // Stamped with the settle clock on done and fail (e.g. `completed_at`,
+  // `sent_at`, `processed_at`, `expanded_at`).
+  finishedAt?: string;
+  // Carries the failure/retry reason; cleared on done (e.g. `error_message`,
+  // `last_error`).
+  error?: string;
+  // A user-facing status column that mirrors `queue_state` 1:1. The store writes
+  // the matching value on every transition so the UI can keep polling it.
+  status?: {
+    column: string;
+    pending: string;
+    processing: string;
+    done: string;
+    failed: string;
+  };
+}
 
 export interface JobStore<TId extends string | number, TRow> {
-  claimPending(
+  claim(
     workerId: string,
-    now: number,
+    now: Date,
     limit: number,
     leaseMs: number,
-    claimPatch?: DomainPatch,
+    filter?: ClaimFilter,
   ): Promise<TRow[]>;
   extendLease(
     id: TId,
     workerId: string,
     leaseMs: number,
-    now: number,
+    now: Date,
   ): Promise<boolean>;
-  scheduleRetry(id: TId, availableAt: number, patch?: DomainPatch): Promise<void>;
-  markDone(id: TId, patch?: DomainPatch): Promise<void>;
-  markFailed(id: TId, patch?: DomainPatch): Promise<void>;
+  markDone(
+    id: TId,
+    workerId: string,
+    now: Date,
+    patch?: DomainPatch,
+  ): Promise<boolean>;
+  scheduleRetry(
+    id: TId,
+    workerId: string,
+    availableAt: Date,
+    reason: string | null,
+    patch?: DomainPatch,
+  ): Promise<boolean>;
+  markFailed(
+    id: TId,
+    workerId: string,
+    now: Date,
+    reason: string,
+    patch?: DomainPatch,
+  ): Promise<boolean>;
 }
 
 /**
  * The single owner of the claim/lease/retry/settle state machine, generic over
- * any job table. Each queue supplies its table, the projection its handler needs
- * (`selectColumns`, the keys of `TRow`), and optional domain patches for the
- * columns the store does not own. There is exactly one place this logic lives,
- * so adding a stage is a config call rather than a re-implementation.
+ * any job table. A queue supplies its table, the projection its handler needs
+ * (`selectColumns`), and an optional `lifecycle` map naming the table's domain
+ * mirror columns. The engine drives this store directly, so a queue never writes
+ * its own claim or settle SQL.
  *
- * Kysely resolves column names from the static table type, but `table` is chosen
- * per queue at runtime, so the builder is typed loosely inside this module. The
- * cast is sound because every `JobTableName` carries the control columns by
- * schema; this function is the single owner of that invariant.
+ * Claim is a single `FOR UPDATE SKIP LOCKED` statement: a CTE locks and selects
+ * the due pending rows, and the outer UPDATE transitions them to `processing`
+ * and returns them. Concurrent workers skip each other's locked rows, so no two
+ * workers can claim the same job and no recheck pass is needed. Expired leases
+ * are returned to `pending` by the stale-scanner, so the claim predicate does
+ * not inspect `lease_until`.
+ *
+ * Settle methods are lease-guarded: they only act while the row is still
+ * `processing` under the caller's `lease_owner`. A worker whose lease was reaped
+ * and reclaimed by another worker cannot settle a job it no longer owns.
  */
 export function createJobStore<
   TRow,
@@ -62,111 +113,126 @@ export function createJobStore<
   executor: DatabaseExecutor,
   table: JobTableName,
   selectColumns: readonly string[],
+  lifecycle: LifecycleColumns = {},
 ): JobStore<TId, TRow> {
-  const db = executor as unknown as Kysely<Record<string, never>>;
-  const from = table as never;
-  const cols = selectColumns as never;
+  // Kysely resolves columns from a static table type, but `table` is chosen per
+  // queue at runtime, so this builder is untyped. Every JobTableName carries the
+  // canonical control columns by schema; this handle is the single place that
+  // assumption is asserted, and the public API stays fully typed.
+  // oxlint-disable-next-line no-unsafe-type-assertion
+  const db = executor as unknown as Kysely<any>;
+
+  // Mirror-column writes for a single lifecycle transition, merged into the SET.
+  function mirror(
+    state: QueueState,
+    opts: { finishedAt?: Date; error?: string | null },
+  ): DomainPatch {
+    const patch: DomainPatch = {};
+    if (lifecycle.finishedAt && opts.finishedAt !== undefined) {
+      patch[lifecycle.finishedAt] = opts.finishedAt;
+    }
+    if (lifecycle.error && opts.error !== undefined) {
+      patch[lifecycle.error] = opts.error;
+    }
+    if (lifecycle.status) {
+      patch[lifecycle.status.column] = lifecycle.status[state];
+    }
+    return patch;
+  }
+
+  async function settle(
+    id: TId,
+    workerId: string,
+    patch: DomainPatch,
+  ): Promise<boolean> {
+    const result = await db
+      .updateTable(table)
+      .set(patch)
+      .where("id", "=", id)
+      .where("lease_owner", "=", workerId)
+      .where("queue_state", "=", "processing")
+      .executeTakeFirst();
+    return Number(result.numUpdatedRows ?? 0) > 0;
+  }
 
   return {
-    async claimPending(workerId, now, limit, leaseMs, claimPatch) {
-      const candidates = await db
-        .selectFrom(from)
-        .select("id" as never)
-        .where("queue_state" as never, "=", "pending" as never)
-        .where("available_at" as never, "<=", now as never)
-        .where((eb) =>
-          eb.or([
-            eb("lease_until" as never, "is", null),
-            eb("lease_until" as never, "<", now as never),
-          ]),
-        )
-        .orderBy("available_at" as never, "asc")
-        .limit(limit)
-        .execute();
-      if (candidates.length === 0) return [];
+    async claim(workerId, now, limit, leaseMs, filter) {
+      const leaseUntil = new Date(now.getTime() + leaseMs);
 
-      const ids = candidates.map((row) => (row as { id: TId }).id);
-      await db
-        .updateTable(from)
+      const rows = await db
+        .with("claimed", (qb) => {
+          let candidate = qb
+            .selectFrom(table)
+            .select("id")
+            .where("queue_state", "=", "pending")
+            .where("available_at", "<=", now);
+          if (filter) {
+            candidate = candidate.where(filter.column, "in", filter.values);
+          }
+          return candidate
+            .orderBy("available_at", "asc")
+            .limit(limit)
+            .forUpdate()
+            .skipLocked();
+        })
+        .updateTable(table)
+        .from("claimed")
         .set((eb) => ({
           queue_state: "processing",
           lease_owner: workerId,
-          lease_until: now + leaseMs,
-          attempt_count: eb("attempt_count" as never, "+", 1),
-          ...claimPatch,
-        }) as never)
-        // Re-check the claim predicate in the UPDATE so two workers that read the
-        // same candidate row cannot both lease it.
-        .where("id" as never, "in", ids as never)
-        .where("queue_state" as never, "=", "pending" as never)
-        .where("available_at" as never, "<=", now as never)
-        .where((eb) =>
-          eb.or([
-            eb("lease_until" as never, "is", null),
-            eb("lease_until" as never, "<", now as never),
-          ]),
-        )
+          lease_until: leaseUntil,
+          attempt_count: eb("attempt_count", "+", 1),
+          // A fresh attempt starts with a clean error mirror.
+          ...mirror("processing", { error: null }),
+        }))
+        .whereRef(`${table}.id`, "=", "claimed.id")
+        .returning(selectColumns.slice())
         .execute();
 
-      const rows = await db
-        .selectFrom(from)
-        .select(cols)
-        .where("id" as never, "in", ids as never)
-        .where("lease_owner" as never, "=", workerId as never)
-        .where("queue_state" as never, "=", "processing" as never)
-        .execute();
+      // oxlint-disable-next-line no-unsafe-type-assertion
       return rows as TRow[];
     },
 
     async extendLease(id, workerId, leaseMs, now) {
       const result = await db
-        .updateTable(from)
-        .set({ lease_until: now + leaseMs } as never)
-        .where("id" as never, "=", id as never)
-        .where("lease_owner" as never, "=", workerId as never)
-        .where("queue_state" as never, "=", "processing" as never)
+        .updateTable(table)
+        .set({ lease_until: new Date(now.getTime() + leaseMs) })
+        .where("id", "=", id)
+        .where("lease_owner", "=", workerId)
+        .where("queue_state", "=", "processing")
         .executeTakeFirst();
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    async scheduleRetry(id, availableAt, patch) {
-      await db
-        .updateTable(from)
-        .set({
-          queue_state: "pending",
-          available_at: availableAt,
-          lease_owner: null,
-          lease_until: null,
-          ...patch,
-        } as never)
-        .where("id" as never, "=", id as never)
-        .execute();
+    markDone(id, workerId, now, patch) {
+      return settle(id, workerId, {
+        queue_state: "done",
+        lease_owner: null,
+        lease_until: null,
+        ...mirror("done", { finishedAt: now, error: null }),
+        ...patch,
+      });
     },
 
-    async markDone(id, patch) {
-      await db
-        .updateTable(from)
-        .set({
-          queue_state: "done",
-          lease_owner: null,
-          lease_until: null,
-          ...patch,
-        } as never)
-        .where("id" as never, "=", id as never)
-        .execute();
+    scheduleRetry(id, workerId, availableAt, reason, patch) {
+      return settle(id, workerId, {
+        queue_state: "pending",
+        available_at: availableAt,
+        lease_owner: null,
+        lease_until: null,
+        ...mirror("pending", { error: reason }),
+        ...patch,
+      });
     },
 
-    async markFailed(id, patch) {
-      await db
-        .updateTable(from)
-        .set({
-          queue_state: "failed",
-          lease_owner: null,
-          lease_until: null,
-          ...patch,
-        } as never)
-        .where("id" as never, "=", id as never)
-        .execute();
+    markFailed(id, workerId, now, reason, patch) {
+      return settle(id, workerId, {
+        queue_state: "failed",
+        lease_owner: null,
+        lease_until: null,
+        ...mirror("failed", { finishedAt: now, error: reason }),
+        ...patch,
+      });
     },
   };
 }

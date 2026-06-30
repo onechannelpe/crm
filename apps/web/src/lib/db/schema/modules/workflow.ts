@@ -4,33 +4,33 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_leads")
     .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("organization_id", "text", (col) =>
+    .addColumn("organization_id", "uuid", (col) =>
       col.notNull().references("organizations.id"),
     )
-    .addColumn("executive_id", "integer", (col) =>
+    .addColumn("executive_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("stage", "varchar(30)", (col) => col.notNull())
-    .addColumn("status", "varchar(30)")
-    .addColumn("priority", "varchar(20)")
-    .addColumn("created_by", "integer", (col) =>
+    .addColumn("stage", "text", (col) => col.notNull())
+    .addColumn("status", "text")
+    .addColumn("priority", "text")
+    .addColumn("created_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("updated_by", "integer", (col) => col.references("users.id"))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("deleted_at", "integer")
+    .addColumn("updated_by", "uuid", (col) => col.references("users.id"))
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("deleted_at", "timestamptz")
     // When set, the lead holds its RUC until this timestamp.
     // Null for stages that are not time-boxed (pre-quotation QUALIFYING,
     // won SETUP/LIVE, and terminal stages).
-    .addColumn("reservation_expires_at", "integer")
+    .addColumn("reservation_expires_at", "timestamptz")
     .addColumn("version", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("current_provider", "varchar(255)", (col) => col.notNull())
-    .addColumn("current_debit_rate", "real", (col) => col.notNull())
-    .addColumn("current_credit_rate", "real", (col) => col.notNull())
-    .addColumn("gpv", "real", (col) => col.notNull())
-    .addColumn("ticket", "real", (col) => col.notNull())
-    .addColumn("settlement_bank", "varchar(50)", (col) =>
+    .addColumn("current_provider", "text", (col) => col.notNull())
+    .addColumn("current_debit_rate", "numeric", (col) => col.notNull())
+    .addColumn("current_credit_rate", "numeric", (col) => col.notNull())
+    .addColumn("gpv", "numeric", (col) => col.notNull())
+    .addColumn("ticket", "numeric", (col) => col.notNull())
+    .addColumn("settlement_bank", "text", (col) =>
       col.notNull().references("workflow_settlement_banks.value"),
     )
     .addColumn("pos_count", "integer", (col) => col.notNull())
@@ -84,13 +84,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_idempotency_keys")
     .addColumn("key", "text", (col) => col.primaryKey())
-    .addColumn("result_json", "text", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("result_json", "jsonb", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
     .createTable("workflow_collection_mode_kinds")
-    .addColumn("value", "varchar(20)", (col) => col.primaryKey())
+    .addColumn("value", "text", (col) => col.primaryKey())
     .execute();
 
   await db.schema
@@ -102,11 +102,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("link_url", "text")
     .addColumn("online_scope", "text", (col) => col.notNull().defaultTo("none"))
     .addColumn("online_url", "text")
-    .addColumn("online_collection_mode", "varchar(20)", (col) =>
+    .addColumn("online_collection_mode", "text", (col) =>
       col.references("workflow_collection_mode_kinds.value"),
     )
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("updated_by", "integer", (col) =>
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
     .execute();
@@ -117,14 +117,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id"),
     )
-    .addColumn("executive_id", "integer", (col) =>
+    .addColumn("executive_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("assigned_by", "integer", (col) =>
+    .addColumn("assigned_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
-    .addColumn("assigned_at", "integer", (col) => col.notNull())
+    .addColumn("is_active", "boolean", (col) => col.notNull().defaultTo(true))
+    .addColumn("assigned_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -138,7 +138,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("workflow_lead_assignments")
     .columns(["lead_id", "is_active"])
     .unique()
-    .where("is_active", "=", 1)
+    .where("is_active", "=", true)
     .execute();
 
   await db.schema
@@ -146,10 +146,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .addPrimaryKeyConstraint("pk_workflow_lead_favorites", [
       "lead_id",
       "user_id",
@@ -164,14 +164,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_sourcing_policies")
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "uuid", (col) =>
       col.primaryKey().references("branches.id").onDelete("cascade"),
     )
-    .addColumn("engine_assignment_enabled", "integer", (col) =>
-      col.notNull().defaultTo(0),
+    .addColumn("engine_assignment_enabled", "boolean", (col) =>
+      col.notNull().defaultTo(false),
     )
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("updated_by_user_id", "integer", (col) =>
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
     .execute();
@@ -179,12 +179,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_integration_jobs")
     .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("type", "varchar(30)", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("queue_state", "varchar(20)", (col) =>
+    .addColumn("type", "text", (col) => col.notNull())
+    .addColumn("status", "text", (col) => col.notNull())
+    .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
-    .addColumn("requested_by_user_id", "integer", (col) =>
+    .addColumn("requested_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("file_path", "text")
@@ -192,19 +192,27 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("rows_total", "integer")
     .addColumn("rows_applied", "integer")
     .addColumn("rows_failed", "integer")
-    .addColumn("results_json", "text")
-    .addColumn("lease_owner", "varchar(100)")
-    .addColumn("lease_until", "integer")
+    .addColumn("results_json", "jsonb")
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(3))
-    .addColumn("available_at", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("completed_at", "integer")
+    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("completed_at", "timestamptz")
     .execute();
 
   await db.schema
-    .createIndex("idx_workflow_integration_jobs_queue_state")
+    .createIndex("idx_workflow_integration_jobs_claim")
     .on("workflow_integration_jobs")
-    .columns(["queue_state", "available_at", "lease_until"])
+    .column("available_at")
+    .where(sql.ref("queue_state"), "=", "pending")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_integration_jobs_stale")
+    .on("workflow_integration_jobs")
+    .column("lease_until")
+    .where(sql.ref("queue_state"), "=", "processing")
     .execute();
 }

@@ -19,7 +19,7 @@ import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-chal
 export function createAuthLoginContext(
   executor: DatabaseExecutor,
   notifications: {
-    enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
+    enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
     dispatchPendingJobs(): void;
   },
 ) {

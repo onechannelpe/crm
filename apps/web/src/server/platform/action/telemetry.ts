@@ -16,7 +16,7 @@ export type TelemetryRow = RecordActionObservationInput;
 export type TelemetryContext = {
   actionName: string;
   ctx: AppContext;
-  startedAt: number;
+  startedAt: Date;
   audit: AuditFields;
 };
 
@@ -32,7 +32,7 @@ function baseRow(
     actionName: t.actionName,
     actorUserId: t.ctx.actor.userId,
     actorRole: t.ctx.actor.role,
-    durationMs: at - t.startedAt,
+    durationMs: at.getTime() - t.startedAt.getTime(),
     input: t.audit,
     createdAt: at,
   };

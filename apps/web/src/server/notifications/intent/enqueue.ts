@@ -1,3 +1,5 @@
+import { notify } from "~/lib/db/notify";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { NotificationIntent } from "../types";
@@ -11,7 +13,7 @@ const DEFAULT_MAX_ATTEMPTS = 5;
 export async function enqueueNotifications(
   db: DatabaseExecutor,
   intents: readonly unknown[],
-  now: number,
+  now: Date,
 ): Promise<void> {
   if (intents.length === 0) return;
   // `intents` is typed as `unknown` so the validation step is visible at this
@@ -44,4 +46,8 @@ export async function enqueueNotifications(
     )
     .onConflict((oc) => oc.column("id").doNothing())
     .execute();
+
+  // Wake the expansion stage on the same executor the intents were written on, so
+  // a wrapping business transaction buffers the NOTIFY until commit.
+  notify(db, JOB_TABLE_CHANNELS.notification_outbox);
 }

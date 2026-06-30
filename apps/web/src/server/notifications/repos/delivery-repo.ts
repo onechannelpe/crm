@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { createJobStore } from "~/lib/job-queue/job-store";
+import { createJobStore, type JobStore } from "~/lib/job-queue/job-store";
 
 export type DeliveryChannel = "email" | "whatsapp";
 export type DeliveryProviderId = "resend" | "whatsapp_cloud" | "kapso";
@@ -9,7 +9,7 @@ export type DeliveryProviderId = "resend" | "whatsapp_cloud" | "kapso";
 // One concrete external send, written by the expansion stage.
 export interface PlannedDeliveryRow {
   intent_id: string;
-  user_id: number;
+  user_id: string;
   channel: DeliveryChannel;
   recipient_address: string;
   title: string;
@@ -19,11 +19,11 @@ export interface PlannedDeliveryRow {
 
 // The shape the dispatch stage needs to perform a send.
 export interface DeliveryJob {
-  id: number;
+  id: string;
   attempt_count: number;
   max_attempts: number;
   intent_id: string;
-  user_id: number;
+  user_id: string;
   channel: DeliveryChannel;
   recipient_address: string;
   title: string;
@@ -42,30 +42,18 @@ export interface DeliveryAttempt {
 const DEFAULT_MAX_ATTEMPTS = 5;
 
 export interface DeliveryRepository {
-  insertPlanned(rows: PlannedDeliveryRow[], now: number): Promise<void>;
-  claimPending(
-    workerId: string,
-    now: number,
-    limit: number,
-    leaseMs: number,
-  ): Promise<DeliveryJob[]>;
-  extendLease(
-    id: number,
-    workerId: string,
-    leaseMs: number,
-    now: number,
-  ): Promise<boolean>;
-  recordAttempt(id: number, attempt: DeliveryAttempt): Promise<void>;
-  markSent(id: number, now: number): Promise<void>;
-  scheduleRetry(id: number, availableAt: number): Promise<void>;
-  markFailed(id: number): Promise<void>;
+  store: JobStore<string, DeliveryJob>;
+  insertPlanned(rows: PlannedDeliveryRow[], now: Date): Promise<void>;
+  recordAttempt(id: string, attempt: DeliveryAttempt): Promise<void>;
   countOutstanding(): Promise<number>;
 }
 
 export function createDeliveryRepository(
   db: Kysely<Database>,
 ): DeliveryRepository {
-  const store = createJobStore<DeliveryJob, number>(
+  // `sent_at` is the finished-at stamp; the provider error is recorded
+  // separately via recordAttempt, so the queue lifecycle needs no error column.
+  const store = createJobStore<DeliveryJob, string>(
     db,
     "notification_deliveries",
     [
@@ -80,9 +68,11 @@ export function createDeliveryRepository(
       "body_text",
       "action_url",
     ],
+    { finishedAt: "sent_at" },
   );
 
   return {
+    store,
     async insertPlanned(rows, now) {
       if (rows.length === 0) return;
       await db
@@ -117,12 +107,6 @@ export function createDeliveryRepository(
         .execute();
     },
 
-    claimPending: (workerId, now, limit, leaseMs) =>
-      store.claimPending(workerId, now, limit, leaseMs),
-    extendLease: (id, workerId, leaseMs, now) =>
-      store.extendLease(id, workerId, leaseMs, now),
-    scheduleRetry: (id, availableAt) => store.scheduleRetry(id, availableAt),
-
     // The send outcome (provider id, message id, error) is the dispatch stage's
     // to record; the queue lifecycle is the store's. Splitting the writes keeps
     // each owner's columns clear.
@@ -139,9 +123,6 @@ export function createDeliveryRepository(
         .where("id", "=", id)
         .execute();
     },
-
-    markSent: (id, now) => store.markDone(id, { sent_at: now }),
-    markFailed: (id) => store.markFailed(id),
 
     async countOutstanding() {
       const row = await db

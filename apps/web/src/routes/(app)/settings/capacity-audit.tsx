@@ -1,12 +1,12 @@
 import { createAsync } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
-import type { CapacityAuditEvent } from "~/actions/capacity/contracts";
 import Activity from "~/components/icons/activity";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
+import type { CapacityAuditEvent } from "~/contracts/capacity";
 import { summarizeFieldChanges } from "~/contracts/events";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -63,7 +63,7 @@ function formatTime(value: number): string {
   return new Date(value).toLocaleString();
 }
 
-function formatActor(actorUserId: number | null): string {
+function formatActor(actorUserId: string | null): string {
   return actorUserId === null ? "System" : String(actorUserId);
 }
 

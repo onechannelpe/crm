@@ -1,17 +1,28 @@
-import type { Selectable } from "kysely";
-
-import type { SearchEnrichmentCompletionOutboxTable } from "~/lib/db/types";
-import { createJobStore } from "~/lib/job-queue/job-store";
+import { createJobStore, type JobStore } from "~/lib/job-queue/job-store";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-type CompletionOutboxRow = Selectable<SearchEnrichmentCompletionOutboxTable>;
+// The slice of an outbox row the writeback handler reads to apply the SUNAT
+// result. Queue control columns the store owns are not surfaced here.
+export interface SunatEnrichmentWritebackJob {
+  id: string;
+  document_type: "dni" | "ruc";
+  document_value: string;
+  legal_name: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  fetched_at: Date;
+  attempt_count: number;
+  max_attempts: number;
+}
 
-// The completion outbox carries no user-facing status, so queue_state is its only
-// lifecycle column and every transition routes straight through the store.
+// The completion outbox carries no user-facing status, so the only mirror
+// columns are the finished-at stamp (`processed_at`) and the failure reason
+// (`error_message`); the store owns them through the lifecycle map.
 export function createSunatEnrichmentWritebackOutboxRepo(
   executor: DatabaseExecutor,
-) {
-  const store = createJobStore<CompletionOutboxRow, number>(
+): JobStore<string, SunatEnrichmentWritebackJob> {
+  return createJobStore<SunatEnrichmentWritebackJob, string>(
     executor,
     "search_enrichment_completion_outbox",
     [
@@ -33,26 +44,11 @@ export function createSunatEnrichmentWritebackOutboxRepo(
       "created_at",
       "processed_at",
     ],
+    { finishedAt: "processed_at", error: "error_message" },
   );
-
-  return {
-    claimQueued: (workerId: string, limit: number, leaseMs: number) =>
-      store.claimPending(workerId, Date.now(), limit, leaseMs),
-
-    extendLease: (id: number, workerId: string, leaseMs: number) =>
-      store.extendLease(id, workerId, leaseMs, Date.now()),
-
-    markCompleted: (id: number) =>
-      store.markDone(id, { processed_at: Date.now(), error_message: null }),
-
-    scheduleRetry: (id: number, availableAt: number) =>
-      store.scheduleRetry(id, availableAt),
-
-    markFailed: (id: number, reason: string) =>
-      store.markFailed(id, { processed_at: Date.now(), error_message: reason }),
-  };
 }
 
-export type SunatEnrichmentWritebackOutboxRepo = ReturnType<
-  typeof createSunatEnrichmentWritebackOutboxRepo
+export type SunatEnrichmentWritebackOutboxRepo = JobStore<
+  string,
+  SunatEnrichmentWritebackJob
 >;

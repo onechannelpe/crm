@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { OrganizationId } from "~/server/shared/ids";
+import type { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 
 export function createOrganizationsRepo(db: Kysely<Database>) {
   const findById = (id: OrganizationId) =>
@@ -23,7 +23,7 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
     const id = randomUUIDv7();
     await db
       .insertInto("organizations")
-      .values({ id, ruc, legal_name: name, created_at: Date.now() })
+      .values({ id, ruc, legal_name: name, created_at: new Date() })
       .onConflict((oc) => oc.column("ruc").doNothing())
       .executeTakeFirstOrThrow();
 
@@ -36,21 +36,21 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
 
   const lockToBranch = (
     orgId: OrganizationId,
-    branchId: number,
-    userId: number,
+    branchId: BranchId,
+    userId: UserId,
   ) =>
     db
       .insertInto("organization_branch_locks")
       .values({
         organization_id: orgId,
         branch_id: branchId,
-        locked_at: Date.now(),
+        locked_at: new Date(),
         locked_by_user_id: userId,
       })
       .onConflict((oc) =>
         oc.column("organization_id").doUpdateSet({
           branch_id: branchId,
-          locked_at: Date.now(),
+          locked_at: new Date(),
           locked_by_user_id: userId,
         }),
       )
@@ -73,7 +73,7 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
       .limit(limit)
       .execute();
 
-  const findUnlockedOrLockedToBranch = (branchId: number, limit: number) =>
+  const findUnlockedOrLockedToBranch = (branchId: BranchId, limit: number) =>
     db
       .selectFrom("organizations")
       .selectAll()

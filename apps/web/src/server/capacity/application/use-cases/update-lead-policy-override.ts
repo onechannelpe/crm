@@ -1,5 +1,6 @@
 import type { AppContext } from "~/server/platform/action/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
@@ -14,7 +15,7 @@ export async function updateLeadPolicyOverride(
   ctx: AppContext,
   deps: CapacityPolicyDeps,
   input: {
-    userId: number;
+    userId: UserId;
     bufferTarget: number;
     dailyLimit: number;
     expiresAt: number | null;

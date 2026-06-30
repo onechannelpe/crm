@@ -3,16 +3,22 @@
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import type { DomainError } from "~/server/shared/domain-error";
+import {
+  asCapacityRequestId,
+  asUserId,
+  type CapacityRequestId,
+  type UserId,
+} from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import type { Result } from "~/server/shared/result";
 
 type CapacityDecision = {
-  requestId: number;
+  requestId: CapacityRequestId;
   note: string | null;
 };
 
 type CapacityGrant = {
-  targetUserId: number;
+  targetUserId: UserId;
   amount: number;
   reason: string;
 };
@@ -25,7 +31,7 @@ function parseCapacityDecision(
     { requestId: rawRequestId, note: rawNote },
     validationFail,
     (r) => ({
-      requestId: r.posInt("requestId"),
+      requestId: asCapacityRequestId(r.str("requestId")),
       note: r.optStr("note"),
     }),
   );
@@ -40,7 +46,7 @@ function parseCapacityGrant(
     { userId: rawUserId, amount: rawAmount, reason: rawReason },
     validationFail,
     (r) => ({
-      targetUserId: r.posInt("userId"),
+      targetUserId: asUserId(r.str("userId")),
       amount: r.posInt("amount"),
       reason: r.str("reason"),
     }),

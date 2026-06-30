@@ -1,46 +1,58 @@
 import type { Generated } from "kysely";
 
+import type {
+  ContactAssignmentId,
+  GeneratedId,
+  IdColumn,
+  InteractionLogId,
+  NullableIdColumn,
+  OrganizationId,
+  OrganizationPersonId,
+  PersonId,
+  UserId,
+} from "~/server/shared/ids";
+
 export interface OrganizationPeopleTable {
-  id: Generated<number>;
-  person_id: number;
-  organization_id: string;
+  id: GeneratedId<OrganizationPersonId>;
+  person_id: IdColumn<PersonId>;
+  organization_id: IdColumn<OrganizationId>;
   dni: string;
   nombres: string;
   apellido_paterno: string;
   apellido_materno: string;
   telefono: string | null;
   email: string | null;
-  last_contacted_at: number | null;
-  last_contacted_by_user_id: number | null;
-  cooldown_until: number | null;
-  created_at: number;
-  updated_at: number;
+  last_contacted_at: Date | null;
+  last_contacted_by_user_id: NullableIdColumn<UserId>;
+  cooldown_until: Date | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface OrganizationPersonRolesTable {
-  id: Generated<number>;
-  organization_person_id: number;
+  id: Generated<string>;
+  organization_person_id: IdColumn<OrganizationPersonId>;
   role: string;
-  is_primary: 0 | 1;
-  effective_from: number;
-  effective_to: number | null;
+  is_primary: boolean;
+  effective_from: Date;
+  effective_to: Date | null;
 }
 
 export interface LeadAssignmentsTable {
-  id: Generated<number>;
-  user_id: number;
-  contact_id: number;
-  assigned_at: number;
-  expires_at: number;
+  id: GeneratedId<ContactAssignmentId>;
+  user_id: IdColumn<UserId>;
+  contact_id: IdColumn<OrganizationPersonId>;
+  assigned_at: Date;
+  expires_at: Date;
   status: "active" | "completed" | "expired";
 }
 
 export interface InteractionLogsTable {
-  id: Generated<number>;
-  contact_id: number;
-  user_id: number;
+  id: GeneratedId<InteractionLogId>;
+  contact_id: IdColumn<OrganizationPersonId>;
+  user_id: IdColumn<UserId>;
   outcome: string;
   notes: string | null;
   duration_seconds: number | null;
-  created_at: number;
+  created_at: Date;
 }

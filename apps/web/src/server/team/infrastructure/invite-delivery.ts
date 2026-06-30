@@ -23,7 +23,7 @@ export async function sendInviteEmail(params: {
   fullName: string;
   role: Role;
   inviteUrl: string;
-  expiresAt: number;
+  expiresAt: Date;
 }): Promise<void> {
   const sent = await getServerRuntime().notifications.messaging.sendInviteEmail(
     {
@@ -32,7 +32,7 @@ export async function sendInviteEmail(params: {
         fullName: params.fullName,
         role: params.role,
         inviteUrl: params.inviteUrl,
-        expiresAt: new Date(params.expiresAt).toLocaleDateString(APP_LOCALE, {
+        expiresAt: params.expiresAt.toLocaleDateString(APP_LOCALE, {
           year: "numeric",
           month: "long",
           day: "numeric",

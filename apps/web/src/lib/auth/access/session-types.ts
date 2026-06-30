@@ -16,5 +16,5 @@ export interface AuthSession {
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
+  strongAuthAt: Date | null;
 }

@@ -36,7 +36,7 @@ export async function completeOnboarding(
 
 export async function completePasskeyOnboarding(
   phone: Phone,
-  challengeId: number,
+  challengeId: string,
   response: RegistrationResponseJSON,
 ): Promise<{ redirectTo: string }> {
   const onboarding = getServerRuntime().auth.onboarding;

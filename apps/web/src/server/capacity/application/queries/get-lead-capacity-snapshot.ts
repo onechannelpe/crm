@@ -28,7 +28,7 @@ interface SnapshotRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: number): Promise<number> };
+  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
 }
 
 export async function getLeadCapacitySnapshot(

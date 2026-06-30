@@ -1,6 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
-
-import type { ExtensionRuntimeEventEnvelope } from "./contracts";
 import {
   ingestRuntimeEvent,
   listTeamExecutiveStatuses,
@@ -14,21 +11,27 @@ import type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
 
 export type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
 
+type CreateHandoffTokenInput = Parameters<typeof createHandoffToken>[1];
+type ClaimInstallationSessionInput = Parameters<
+  typeof claimInstallationSession
+>[1];
+type RefreshInstallationSessionInput = Parameters<
+  typeof refreshInstallationSession
+>[1];
+type IngestRuntimeEventInput = Parameters<typeof ingestRuntimeEvent>[1];
+type ListTeamExecutiveStatusesInput = Parameters<
+  typeof listTeamExecutiveStatuses
+>[1];
+
 export function createExtensionService(
   repos: ExtensionRepos,
   deps: ExtensionServiceDeps,
 ) {
-  const now = deps.now ?? (() => Date.now());
+  const now = deps.now ?? (() => new Date());
   const uow = deps.uow;
 
   return {
-    createHandoffToken: (input: {
-      userId: number;
-      authSessionId: string;
-      branchId: number;
-      assignmentId: number;
-      origin: string;
-    }) =>
+    createHandoffToken: (input: CreateHandoffTokenInput) =>
       createHandoffToken(
         {
           repos,
@@ -38,10 +41,7 @@ export function createExtensionService(
         input,
       ),
 
-    claimInstallationSession: (input: {
-      handoffToken: string;
-      installationId: string;
-    }) =>
+    claimInstallationSession: (input: ClaimInstallationSessionInput) =>
       claimInstallationSession(
         {
           repos,
@@ -51,10 +51,7 @@ export function createExtensionService(
         input,
       ),
 
-    refreshInstallationSession: (input: {
-      refreshToken: string;
-      installationId: string;
-    }) =>
+    refreshInstallationSession: (input: RefreshInstallationSessionInput) =>
       refreshInstallationSession(
         {
           repos,
@@ -63,10 +60,7 @@ export function createExtensionService(
         input,
       ),
 
-    ingestRuntimeEvent: (input: {
-      sessionToken: string;
-      event: ExtensionRuntimeEventEnvelope;
-    }) =>
+    ingestRuntimeEvent: (input: IngestRuntimeEventInput) =>
       ingestRuntimeEvent(
         {
           repos,
@@ -76,11 +70,7 @@ export function createExtensionService(
         input,
       ),
 
-    listTeamExecutiveStatuses: (input: {
-      role: Role;
-      userId: number;
-      branchId: number;
-    }) =>
+    listTeamExecutiveStatuses: (input: ListTeamExecutiveStatusesInput) =>
       listTeamExecutiveStatuses(
         {
           repos,

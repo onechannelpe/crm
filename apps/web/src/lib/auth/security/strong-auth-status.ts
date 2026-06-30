@@ -7,7 +7,7 @@ export interface StrongAuthPasskeysPort {
 export interface StrongAuthTotpFactorsPort {
   findByUserId(
     userId: UserId,
-  ): Promise<{ is_enabled: number } | null | undefined>;
+  ): Promise<{ is_enabled: boolean } | null | undefined>;
 }
 
 export interface StrongAuthRepos {
@@ -31,7 +31,7 @@ export async function getStrongAuthStatus(
     repos.passkeys.findByUser(userId),
   ]);
 
-  const hasTotp = totpFactor?.is_enabled === 1;
+  const hasTotp = totpFactor?.is_enabled === true;
   const passkeyCount = passkeys.length;
   const hasPasskey = passkeyCount > 0;
 

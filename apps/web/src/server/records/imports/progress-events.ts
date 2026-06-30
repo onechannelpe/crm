@@ -2,8 +2,9 @@ import {
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/features/records-imports/contracts";
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishMessage } from "~/lib/redis/publisher";
+import { db } from "~/lib/db/db";
+import { notify } from "~/lib/db/notify";
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import type {
   IntegrationJobRow,
   IntegrationJobStatus,
@@ -49,5 +50,7 @@ export function buildRecordImportProgressEvent(input: {
 export function publishRecordImportProgress(
   event: RecordImportProgressEvent,
 ): void {
-  publishMessage(JOB_CHANNELS.RECORDS_IMPORT_PROGRESS, event);
+  // Progress is ephemeral and not part of any business transaction, so it fires
+  // on the pooled db handle (not a request txn) and delivers immediately.
+  notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));
 }

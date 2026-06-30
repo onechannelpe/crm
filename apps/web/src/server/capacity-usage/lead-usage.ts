@@ -70,17 +70,17 @@ async function commitLeadUsage(
   repos: Pick<UsageRepos, "leadUsageReservations" | "leadUsageCommits">,
 ): Promise<Result<void, DomainError>> {
   const reservation = await repos.leadUsageReservations.findById(
-    command.reservationId.value,
+    command.reservationId,
   );
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
   await repos.leadUsageCommits.insert({
-    reservation_id: command.reservationId.value,
+    reservation_id: command.reservationId,
     amount: command.amount,
   });
   await repos.leadUsageReservations.updateAmountAndStatus(
-    command.reservationId.value,
+    command.reservationId,
     command.amount,
     "committed",
   );
@@ -92,13 +92,13 @@ async function cancelLeadUsage(
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<void, DomainError>> {
   const reservation = await repos.leadUsageReservations.findById(
-    command.reservationId.value,
+    command.reservationId,
   );
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
   await repos.leadUsageReservations.updateStatus(
-    command.reservationId.value,
+    command.reservationId,
     "cancelled",
   );
   return Ok(undefined);

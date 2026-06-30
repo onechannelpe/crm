@@ -6,20 +6,29 @@ import type {
   CollectionMode,
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
+import type {
+  BranchId,
+  GeneratedId,
+  IdColumn,
+  NullableIdColumn,
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 
 export interface WorkflowLeadsTable {
-  id: Generated<string>;
-  organization_id: string;
-  executive_id: number;
+  id: GeneratedId<WorkflowLeadId>;
+  organization_id: IdColumn<OrganizationId>;
+  executive_id: IdColumn<UserId>;
   stage: LeadStage;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   priority: "P1" | "P2" | "SIN RESULTADO" | null;
-  created_by: number;
-  updated_by: number | null;
-  created_at: number;
-  updated_at: number;
-  deleted_at: number | null;
-  reservation_expires_at: number | null;
+  created_by: IdColumn<UserId>;
+  updated_by: NullableIdColumn<UserId>;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
+  reservation_expires_at: Date | null;
   version: Generated<number>;
   current_provider: string;
   current_debit_rate: number;
@@ -32,19 +41,19 @@ export interface WorkflowLeadsTable {
 
 export interface WorkflowIdempotencyKeysTable {
   key: string;
-  result_json: string;
-  created_at: number;
+  result_json: unknown;
+  created_at: Date;
 }
 
 export interface WorkflowLeadDigitalPolicyTable {
-  lead_id: string;
+  lead_id: IdColumn<WorkflowLeadId>;
   link_scope: ProductScope;
   link_url: string | null;
   online_scope: ProductScope;
   online_url: string | null;
   online_collection_mode: CollectionMode | null;
-  updated_at: number;
-  updated_by: number;
+  updated_at: Date;
+  updated_by: IdColumn<UserId>;
 }
 
 export interface WorkflowCollectionModeKindsTable {
@@ -53,22 +62,22 @@ export interface WorkflowCollectionModeKindsTable {
 
 export interface WorkflowLeadAssignmentsTable {
   id: Generated<string>;
-  lead_id: string;
-  executive_id: number;
-  assigned_by: number;
-  is_active: number;
-  assigned_at: number;
+  lead_id: IdColumn<WorkflowLeadId>;
+  executive_id: IdColumn<UserId>;
+  assigned_by: IdColumn<UserId>;
+  is_active: boolean;
+  assigned_at: Date;
 }
 
 export interface WorkflowLeadFavoritesTable {
-  lead_id: string;
-  user_id: number;
-  created_at: number;
+  lead_id: IdColumn<WorkflowLeadId>;
+  user_id: IdColumn<UserId>;
+  created_at: Date;
 }
 
 export interface LeadSourcingPoliciesTable {
-  branch_id: number;
-  engine_assignment_enabled: number;
-  updated_at: number;
-  updated_by_user_id: number;
+  branch_id: IdColumn<BranchId>;
+  engine_assignment_enabled: boolean;
+  updated_at: Date;
+  updated_by_user_id: IdColumn<UserId>;
 }

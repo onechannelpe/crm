@@ -1,20 +1,21 @@
+import type { ManagedExecutiveView } from "~/contracts/capacity";
 import { longName } from "~/lib/users/display-name";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
 import type { CapacityUser } from "../actor-scope";
-import type { ManagedExecutiveView } from "../contracts";
 
 interface ManagedExecutivesDeps {
   repos: Omit<Parameters<typeof getSearchCapacitySnapshot>[1], "users"> &
     Omit<Parameters<typeof getLeadCapacitySnapshot>[1], "users"> & {
       users: {
-        findById(id: number): Promise<CapacityUser | undefined>;
-        findByBranch(branchId: number): Promise<CapacityUser[]>;
+        findById(id: UserId): Promise<CapacityUser | undefined>;
+        findByBranch(branchId: BranchId): Promise<CapacityUser[]>;
         findAllActive(): Promise<CapacityUser[]>;
       };
     };
@@ -52,9 +53,6 @@ export async function listManagedExecutives(
     }),
   );
 
-  return Ok(
-    summaries
-      .filter((value): value is ManagedExecutiveView => value !== null)
-      .toSorted((a, b) => a.fullName.localeCompare(b.fullName)),
-  );
+  const visible = summaries.filter((value) => value !== null);
+  return Ok(visible.toSorted((a, b) => a.fullName.localeCompare(b.fullName)));
 }

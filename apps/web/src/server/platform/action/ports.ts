@@ -6,13 +6,13 @@ import type { TelemetryRow } from "./telemetry";
 
 // Injection isolates side effects and gives tests a deterministic clock.
 export type RuntimePorts = {
-  now: () => number;
+  now: () => Date;
   report: (error: unknown) => void;
   record: (row: TelemetryRow) => void;
 };
 
 export const defaultPorts: RuntimePorts = {
-  now: Date.now,
+  now: () => new Date(),
   report: (error) => {
     captureException(error);
   },

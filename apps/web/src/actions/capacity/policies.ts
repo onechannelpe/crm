@@ -2,6 +2,7 @@
 
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
@@ -13,7 +14,7 @@ export async function updateSearchPolicyOverride(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: r.posInt("userId"),
+        userId: asUserId(r.str("userId")),
         monthlyLimit: r.posInt("monthlySearchLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
@@ -35,7 +36,7 @@ export async function updateLeadPolicyOverride(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: r.posInt("userId"),
+        userId: asUserId(r.str("userId")),
         bufferTarget: r.posInt("activeBufferTarget"),
         dailyLimit: r.posInt("dailyRefillLimit"),
         expiresAt: r.optNum("expiresAt"),
@@ -58,10 +59,13 @@ export async function updateSearchPolicyDefault(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        scope: {
-          kind: r.enum("scopeType", SCOPE_TYPES),
-          scopeId: r.posInt("scopeId"),
-        },
+        scope: (() => {
+          const kind = r.enum("scopeType", SCOPE_TYPES);
+          const scopeId = r.str("scopeId");
+          return kind === "branch"
+            ? { kind, scopeId: asBranchId(scopeId) }
+            : { kind, scopeId: asTeamId(scopeId) };
+        })(),
         monthlyLimit: r.posInt("monthlySearchLimit"),
       })),
 
@@ -85,10 +89,13 @@ export async function updateLeadPolicyDefault(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        scope: {
-          kind: r.enum("scopeType", SCOPE_TYPES),
-          scopeId: r.posInt("scopeId"),
-        },
+        scope: (() => {
+          const kind = r.enum("scopeType", SCOPE_TYPES);
+          const scopeId = r.str("scopeId");
+          return kind === "branch"
+            ? { kind, scopeId: asBranchId(scopeId) }
+            : { kind, scopeId: asTeamId(scopeId) };
+        })(),
         bufferTarget: r.posInt("activeBufferTarget"),
         dailyLimit: r.posInt("dailyRefillLimit"),
       })),

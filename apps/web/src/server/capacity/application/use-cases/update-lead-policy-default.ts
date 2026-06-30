@@ -28,12 +28,19 @@ export async function updateLeadPolicyDefault(
     }
 
     const result = await setLeadScopeDefault(
-      {
-        scopeType: input.scope.kind,
-        scopeId: input.scope.scopeId,
-        bufferTarget: values.value.bufferTarget,
-        dailyLimit: values.value.dailyLimit,
-      },
+      input.scope.kind === "branch"
+        ? {
+            scopeType: "branch",
+            scopeId: input.scope.scopeId,
+            bufferTarget: values.value.bufferTarget,
+            dailyLimit: values.value.dailyLimit,
+          }
+        : {
+            scopeType: "team",
+            scopeId: input.scope.scopeId,
+            bufferTarget: values.value.bufferTarget,
+            dailyLimit: values.value.dailyLimit,
+          },
       tx,
     );
 

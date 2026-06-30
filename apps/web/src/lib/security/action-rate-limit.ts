@@ -5,6 +5,7 @@ import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { rateLimited, throwDomain } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import type { EventsRepo } from "~/server/shared/repos-events";
 
 interface ActionRateLimitPolicy {
@@ -42,7 +43,7 @@ function resolveRequestIp(): string {
   return getClientIp(event.request.headers);
 }
 
-function buildUserKey(actionName: string, userId: number): string {
+function buildUserKey(actionName: string, userId: UserId): string {
   return hashAuthKey(`action:${actionName}:user:${userId}`);
 }
 
@@ -52,7 +53,7 @@ function buildIpKey(actionName: string, ip: string): string {
 
 async function blockWithAudit(params: {
   actionName: RateLimitedAction;
-  userId: number;
+  userId: UserId;
   scope: "user" | "ip";
   limit: number;
   windowMs: number;
@@ -86,7 +87,7 @@ async function blockWithAudit(params: {
     entityId: auditEntityId("user", userId),
     actorUserId: userId,
     payload: { actionName, scope, limit, windowMs, retryAfterMs },
-    occurredAt: now,
+    occurredAt: new Date(now),
   });
 
   throwDomain(
@@ -98,7 +99,7 @@ async function blockWithAudit(params: {
 
 export async function checkActionRateLimit(
   actionName: RateLimitedAction,
-  userId: number,
+  userId: UserId,
   deps: RateLimitDeps,
   ip: string = resolveRequestIp(),
 ): Promise<void> {

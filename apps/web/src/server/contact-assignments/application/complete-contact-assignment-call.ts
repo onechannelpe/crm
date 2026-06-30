@@ -1,6 +1,7 @@
-import type { ContactAssignmentCallOutcome } from "~/contracts/contact-assignments/vocabulary";
+import type { ContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import type { AppUow } from "~/server/shared/application/uow";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { InteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type {
@@ -9,23 +10,11 @@ import type {
 } from "./contracts";
 
 type CompleteContactAssignmentCallTxRepos = {
-  contactAssignments: {
-    findActiveByIdForUser(
-      assignmentId: number,
-      userId: number,
-    ): Promise<{ contact_id: number } | undefined>;
-    markCompleted(assignmentId: number, userId: number): Promise<unknown>;
-  };
-  interactionLogs: {
-    create(input: {
-      contact_id: number;
-      user_id: number;
-      outcome: ContactAssignmentCallOutcome;
-      notes: string | null;
-      duration_seconds: number | null;
-      created_at: number;
-    }): Promise<unknown>;
-  };
+  contactAssignments: Pick<
+    ContactAssignmentsRepo,
+    "findActiveByIdForUser" | "markCompleted"
+  >;
+  interactionLogs: Pick<InteractionLogsRepo, "create">;
 };
 
 async function completeAssignmentInteraction(
@@ -50,7 +39,7 @@ async function completeAssignmentInteraction(
     outcome: input.outcome,
     notes: input.notes,
     duration_seconds: null,
-    created_at: Date.now(),
+    created_at: new Date(),
   });
 
   return Ok({ success: true });

@@ -28,7 +28,7 @@ export async function acceptInvite(
     if (!invite) {
       return Err(fail("invite_invalid_or_expired"));
     }
-    if (invite.user_is_active === 1) {
+    if (invite.user_is_active) {
       return Err(fail("invite_target_active"));
     }
 
@@ -40,7 +40,7 @@ export async function acceptInvite(
       first_surname: invite.user_first_surname,
       second_surname: invite.user_second_surname,
       role: invite.user_role,
-      is_active: 1,
+      is_active: true,
     });
     await transactionRepos.users.updatePassword(invite.user_id, passwordHash);
     await transactionRepos.userInvites.markAccepted(

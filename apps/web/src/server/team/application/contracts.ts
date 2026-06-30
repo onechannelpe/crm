@@ -1,35 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { RoleOption } from "~/lib/auth/access/role-display";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
-
-export interface BulkImportSetup {
-  assignableRoles: RoleOption[];
-}
-
-export interface TeamInvite {
-  inviteId: number;
-  userId: number;
-  names: string;
-  firstSurname: string;
-  secondSurname: string;
-  email: string;
-  role: Role;
-  teamId: number | null;
-  expiresAt: number;
-  createdAt: number;
-  sentAt: number | null;
-}
-
-export interface TeamOption {
-  id: number;
-  name: string;
-}
-
-export interface InviteManagement {
-  pendingInvites: TeamInvite[];
-  teams: TeamOption[];
-  assignableRoles: RoleOption[];
-}
+import type { TeamId } from "~/server/shared/ids";
 
 export interface InviteInfo {
   fullName: string;
@@ -44,6 +15,6 @@ export interface CreateTeamInviteCommand {
   email: string;
   role: Role;
   executiveCategory: ExecutiveCategoryValue | null;
-  teamId: number | null;
-  expiresAt: number | null;
+  teamId: TeamId | null;
+  expiresAt: Date | null;
 }

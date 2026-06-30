@@ -6,9 +6,10 @@ import type {
   ExecutiveCapacityDetailView,
   ManagedExecutiveView,
   PendingCapacityRequestView,
-} from "~/actions/capacity/contracts";
+} from "~/contracts/capacity";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { asUserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getManagedExecutivesList(): Promise<
@@ -24,7 +25,7 @@ export async function getManagedExecutivesList(): Promise<
 }
 
 export async function getExecutiveDetail(
-  userId: number,
+  userId: string,
 ): Promise<ExecutiveCapacityDetailView> {
   return runAction({
     name: "capacity.executive_detail.read",
@@ -32,7 +33,7 @@ export async function getExecutiveDetail(
 
     parse: () =>
       parseObject({ userId }, validationFail, (r) => {
-        const parsedUserId = r.posInt("userId");
+        const parsedUserId = asUserId(r.str("userId"));
         return { userId: parsedUserId };
       }),
 

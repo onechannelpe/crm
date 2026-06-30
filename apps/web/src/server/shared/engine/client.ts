@@ -7,13 +7,14 @@ import type {
   RecordCandidate,
   SearchResult,
 } from "~/server/shared/engine/types";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 
 export interface RecordCandidatesRequest {
-  branchId: number;
-  userId: number;
+  branchId: BranchId;
+  userId: UserId;
   amount: number;
-  teamId?: number;
+  teamId?: TeamId;
   productId?: number;
   strategy?: string;
 }

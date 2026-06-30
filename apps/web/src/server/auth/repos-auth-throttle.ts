@@ -48,7 +48,7 @@ export function createAuthThrottleRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteExpiredBlocks(now = Date.now()): Promise<number> {
+    async deleteExpiredBlocks(now = new Date()): Promise<number> {
       const result = await db
         .deleteFrom("auth_throttle_counters")
         .where("blocked_until", "is not", null)
@@ -58,7 +58,7 @@ export function createAuthThrottleRepo(db: Kysely<Database>) {
       return Number(result.numDeletedRows ?? 0);
     },
 
-    async deleteUpdatedBefore(timestamp: number): Promise<number> {
+    async deleteUpdatedBefore(timestamp: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_throttle_counters")
         .where("updated_at", "<", timestamp)

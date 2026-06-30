@@ -1,9 +1,11 @@
 import { randomUUIDv7 } from "bun";
 
+import { notify } from "~/lib/db/notify";
 import { createJobStore } from "~/lib/job-queue/job-store";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import type {
   IntegrationJobRow,
-  IntegrationJobType,
+  IntegrationJobsPort,
   NewIntegrationJob,
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -30,18 +32,29 @@ const JOB_COLUMNS = [
 
 export function createIntegrationJobRepo(
   db: DatabaseExecutor,
-  now: () => number,
-) {
-  // `status` (PENDING|PROCESSING|COMPLETED|FAILED) stays the user-facing field
-  // the import UI polls; the store owns queue_state. Both move together through
-  // the domain patches below.
+): IntegrationJobsPort {
+  // `status` (PENDING|PROCESSING|COMPLETED|FAILED) is the field the import UI
+  // polls; it mirrors queue_state 1:1, so the store keeps the two in lockstep
+  // through this lifecycle map and stamps completed_at/error_message on settle.
   const store = createJobStore<IntegrationJobRow, string>(
     db,
     "workflow_integration_jobs",
     JOB_COLUMNS,
+    {
+      finishedAt: "completed_at",
+      error: "error_message",
+      status: {
+        column: "status",
+        pending: "PENDING",
+        processing: "PROCESSING",
+        done: "COMPLETED",
+        failed: "FAILED",
+      },
+    },
   );
 
   return {
+    store,
     async insert(values: NewIntegrationJob): Promise<string> {
       const id = randomUUIDv7();
       await db
@@ -53,6 +66,10 @@ export function createIntegrationJobRepo(
           available_at: values.created_at,
         })
         .executeTakeFirstOrThrow();
+
+      // Wake the records-import queue on the same executor the job was written
+      // on, so a wrapping transaction buffers the NOTIFY until commit.
+      notify(db, JOB_TABLE_CHANNELS.workflow_integration_jobs);
       return id;
     },
 
@@ -72,43 +89,6 @@ export function createIntegrationJobRepo(
         .limit(limit)
         .offset(offset)
         .execute();
-    },
-
-    claimPending(
-      leaseMs: number,
-      workerId: string,
-      batchSize: number,
-      types?: IntegrationJobType[],
-    ): Promise<IntegrationJobRow[]> {
-      return store.claimPending(
-        workerId,
-        now(),
-        batchSize,
-        leaseMs,
-        { status: "PROCESSING" },
-        types && types.length > 0
-          ? { column: "type", values: types }
-          : undefined,
-      );
-    },
-
-    markCompleted(
-      id: string,
-      result: {
-        rowsTotal: number;
-        rowsApplied: number;
-        rowsFailed: number;
-        resultsJson: string | null;
-      },
-    ) {
-      return store.markDone(id, {
-        status: "COMPLETED",
-        rows_total: result.rowsTotal,
-        rows_applied: result.rowsApplied,
-        rows_failed: result.rowsFailed,
-        results_json: result.resultsJson,
-        completed_at: now(),
-      });
     },
 
     updateProgress(
@@ -143,26 +123,6 @@ export function createIntegrationJobRepo(
         .set(values)
         .where("id", "=", id)
         .execute();
-    },
-
-    extendLease(
-      id: string,
-      workerId: string,
-      leaseMs: number,
-    ): Promise<boolean> {
-      return store.extendLease(id, workerId, leaseMs, now());
-    },
-
-    scheduleRetry(id: string, availableAt: number) {
-      return store.scheduleRetry(id, availableAt, { status: "PENDING" });
-    },
-
-    markFailed(id: string, errorMessage: string) {
-      return store.markFailed(id, {
-        status: "FAILED",
-        error_message: errorMessage,
-        completed_at: now(),
-      });
     },
 
     setFilePath(id: string, filePath: string) {

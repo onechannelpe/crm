@@ -14,11 +14,11 @@ type CheckResult = { allowed: true } | { allowed: false; retryAfterMs: number };
 
 export interface AuthThrottleServiceDeps {
   authThrottle: AuthThrottleRepo;
-  now?: () => number;
+  now?: () => Date;
 }
 
 export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
-  const now = deps.now ?? Date.now;
+  const now = deps.now ?? (() => new Date());
 
   async function checkThrottle(
     endpoint: AuthThrottleEndpoint,
@@ -43,7 +43,10 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
         continue;
       }
       if (row.blocked_until && row.blocked_until > nowTs) {
-        return { allowed: false, retryAfterMs: row.blocked_until - nowTs };
+        return {
+          allowed: false,
+          retryAfterMs: row.blocked_until.getTime() - nowTs.getTime(),
+        };
       }
     }
 
@@ -78,7 +81,9 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
         const block =
           failures > AUTH_THROTTLE_POLICY[endpoint][scope].threshold;
         const blockedUntil = block
-          ? nowTs + calculateBlockMs(endpoint, scope, failures)
+          ? new Date(
+              nowTs.getTime() + calculateBlockMs(endpoint, scope, failures),
+            )
           : null;
         return deps.authThrottle.upsert({
           scope,

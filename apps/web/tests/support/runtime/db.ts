@@ -1,7 +1,8 @@
-import { copyFile, mkdir, rename, rm, stat } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import { join } from "node:path";
 
-import { sql, type Kysely } from "kysely";
+import type { Kysely } from "kysely";
+import { Client } from "pg";
 
 import {
   SETTLEMENT_BANKS,
@@ -18,32 +19,104 @@ import {
   type TestRepositories,
 } from "../runtime/repos";
 
-const ARTIFACT_DIR = join(
-  process.cwd(),
-  ".vitest-db",
-  process.env.TEST_DB_NAMESPACE ?? "default",
+// Postgres test isolation: build one seeded template database, then
+// `CREATE DATABASE <clone> TEMPLATE <template>` per test (~150ms vs a full
+// migrate+seed). Cloning requires the template to have no live connections, so
+// the template pool is destroyed after seeding and tests never connect to it.
+const NAMESPACE = (process.env.TEST_DB_NAMESPACE ?? "default").replace(
+  /[^a-z0-9_]/gi,
+  "_",
 );
-const TEMPLATE_DB_NAME = "__template-seeded.db";
+const TEMPLATE_DB_NAME = `crm_test_template_${NAMESPACE}`.toLowerCase();
+
+// Maintenance/base connection. Per-test databases are derived by swapping the
+// database segment of this URL. Points at the `postgres` admin database so we
+// can CREATE/DROP other databases.
+const BASE_URL =
+  process.env.TEST_WEB_DB_URL ??
+  process.env.WEB_DB_URL ??
+  "postgres://postgres@localhost:5432/postgres";
+
+// Stable advisory-lock key so concurrent vitest workers serialize template
+// creation across processes.
+const TEMPLATE_LOCK_KEY = 0x6372_6d74; // "crmt"
+
 const TEST_ORG_ID_LIMA = "01974fd5-f261-7a7d-93f5-2f3d0f963001";
 const TEST_ORG_ID_NORTE = "01974fd5-f261-7a7d-93f5-2f3d0f963002";
 
+const BRANCH_LIMA_ID = "01974fd5-f261-7a7d-93f5-2f3d0f960001";
+const BRANCH_NORTE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f960002";
+
+const USER_EXEC_ONE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961001";
+const USER_BACK_ONE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961002";
+const USER_EXEC_TWO_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961003";
+const USER_BACK_TWO_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961004";
+const USER_SUPER_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961005";
+
+const PERSON_LIMA_ID = "01974fd5-f261-7a7d-93f5-2f3d0f962001";
+const PERSON_NORTE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f962002";
+
+const ORG_PERSON_LIMA_ID = "01974fd5-f261-7a7d-93f5-2f3d0f964001";
+const ORG_PERSON_NORTE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f964002";
+
 export const TEST_FIXTURES = {
+  branches: {
+    lima: { id: BRANCH_LIMA_ID },
+    norte: { id: BRANCH_NORTE_ID },
+  },
+  users: {
+    execOne: { id: USER_EXEC_ONE_ID, branchId: BRANCH_LIMA_ID },
+    backOne: { id: USER_BACK_ONE_ID, branchId: BRANCH_LIMA_ID },
+    execTwo: { id: USER_EXEC_TWO_ID, branchId: BRANCH_NORTE_ID },
+    backTwo: { id: USER_BACK_TWO_ID, branchId: BRANCH_NORTE_ID },
+    superUser: { id: USER_SUPER_ID, branchId: BRANCH_NORTE_ID },
+  },
   organizations: {
     lima: { id: TEST_ORG_ID_LIMA, ruc: "20100000001" },
     norte: { id: TEST_ORG_ID_NORTE, ruc: "20100000002" },
   },
+  people: {
+    lima: { id: PERSON_LIMA_ID, dni: "70000001" },
+    norte: { id: PERSON_NORTE_ID, dni: "70000002" },
+  },
+  organizationPeople: {
+    lima: { id: ORG_PERSON_LIMA_ID },
+    norte: { id: ORG_PERSON_NORTE_ID },
+  },
 } as const;
 
-let templateDbPathPromise: Promise<string> | null = null;
+function databaseUrl(name: string): string {
+  const url = new URL(BASE_URL);
+  url.pathname = `/${name}`;
+  return url.toString();
+}
+
+function assertSafeDbName(name: string): void {
+  if (!/^[a-z0-9_]+$/.test(name)) {
+    throw new Error(`unsafe database name: ${name}`);
+  }
+}
+
+async function withMaintenanceClient<T>(
+  fn: (client: Client) => Promise<T>,
+): Promise<T> {
+  const client = new Client({ connectionString: databaseUrl("postgres") });
+  await client.connect();
+  try {
+    return await fn(client);
+  } finally {
+    await client.end();
+  }
+}
 
 async function seedTemplate(db: Kysely<Database>) {
-  const now = Date.now();
+  const now = new Date();
 
   await db
     .insertInto("branches")
     .values([
-      { id: 1, name: "Lima", created_at: now },
-      { id: 2, name: "Norte", created_at: now },
+      { id: BRANCH_LIMA_ID, name: "Lima", created_at: now },
+      { id: BRANCH_NORTE_ID, name: "Norte", created_at: now },
     ])
     .execute();
 
@@ -51,8 +124,8 @@ async function seedTemplate(db: Kysely<Database>) {
     .insertInto("users")
     .values([
       {
-        id: 1,
-        branch_id: 1,
+        id: USER_EXEC_ONE_ID,
+        branch_id: BRANCH_LIMA_ID,
         team_id: null,
         username: "exec.one",
         email: "exec1@test.local",
@@ -62,12 +135,12 @@ async function seedTemplate(db: Kysely<Database>) {
         second_surname: "Alpha",
         onboarding_completed_at: now,
         role: "executive",
-        is_active: 1,
+        is_active: true,
         created_at: now,
       },
       {
-        id: 2,
-        branch_id: 1,
+        id: USER_BACK_ONE_ID,
+        branch_id: BRANCH_LIMA_ID,
         team_id: null,
         username: "back.one",
         email: "back1@test.local",
@@ -77,12 +150,12 @@ async function seedTemplate(db: Kysely<Database>) {
         second_surname: "Alpha",
         onboarding_completed_at: now,
         role: "back_office",
-        is_active: 1,
+        is_active: true,
         created_at: now,
       },
       {
-        id: 3,
-        branch_id: 2,
+        id: USER_EXEC_TWO_ID,
+        branch_id: BRANCH_NORTE_ID,
         team_id: null,
         username: "exec.two",
         email: "exec2@test.local",
@@ -92,12 +165,12 @@ async function seedTemplate(db: Kysely<Database>) {
         second_surname: "Beta",
         onboarding_completed_at: now,
         role: "executive",
-        is_active: 1,
+        is_active: true,
         created_at: now,
       },
       {
-        id: 4,
-        branch_id: 2,
+        id: USER_BACK_TWO_ID,
+        branch_id: BRANCH_NORTE_ID,
         team_id: null,
         username: "back.two",
         email: "back2@test.local",
@@ -107,12 +180,12 @@ async function seedTemplate(db: Kysely<Database>) {
         second_surname: "Beta",
         onboarding_completed_at: now,
         role: "back_office",
-        is_active: 1,
+        is_active: true,
         created_at: now,
       },
       {
-        id: 5,
-        branch_id: 2,
+        id: USER_SUPER_ID,
+        branch_id: BRANCH_NORTE_ID,
         team_id: null,
         username: "super.user",
         email: "super@test.local",
@@ -122,7 +195,7 @@ async function seedTemplate(db: Kysely<Database>) {
         second_surname: "Gamma",
         onboarding_completed_at: now,
         role: "superuser",
-        is_active: 1,
+        is_active: true,
         created_at: now,
       },
     ])
@@ -164,7 +237,7 @@ async function seedTemplate(db: Kysely<Database>) {
     .insertInto("people")
     .values([
       {
-        id: 1,
+        id: PERSON_LIMA_ID,
         dni: "70000001",
         full_name: "Contacto Lima",
         email: null,
@@ -172,7 +245,7 @@ async function seedTemplate(db: Kysely<Database>) {
         updated_at: now,
       },
       {
-        id: 2,
+        id: PERSON_NORTE_ID,
         dni: "70000002",
         full_name: "Contacto Norte",
         email: null,
@@ -186,8 +259,8 @@ async function seedTemplate(db: Kysely<Database>) {
     .insertInto("organization_people")
     .values([
       {
-        id: 1,
-        person_id: 1,
+        id: ORG_PERSON_LIMA_ID,
+        person_id: PERSON_LIMA_ID,
         organization_id: TEST_ORG_ID_LIMA,
         dni: "70000001",
         nombres: "Contacto",
@@ -202,8 +275,8 @@ async function seedTemplate(db: Kysely<Database>) {
         updated_at: now,
       },
       {
-        id: 2,
-        person_id: 2,
+        id: ORG_PERSON_NORTE_ID,
+        person_id: PERSON_NORTE_ID,
         organization_id: TEST_ORG_ID_NORTE,
         dni: "70000002",
         nombres: "Contacto",
@@ -242,76 +315,90 @@ async function seedTemplate(db: Kysely<Database>) {
 }
 
 export interface TestDbContext {
-  dbPath: string;
+  dbName: string;
   storageRoot: string;
   db: Kysely<Database>;
   repos: TestRepositories;
   fixtures: typeof TEST_FIXTURES;
 }
 
-async function buildSeededTemplateDb(templateDbPath: string): Promise<void> {
-  const db = createDb(templateDbPath);
+let templatePromise: Promise<void> | null = null;
 
-  try {
-    await sql`PRAGMA journal_mode=DELETE`.execute(db);
-
-    await migrateToLatest(db);
-
-    await seedTemplate(db);
-    await sql`PRAGMA wal_checkpoint(TRUNCATE)`.execute(db);
-  } finally {
-    await db.destroy();
-  }
+async function templateExists(client: Client): Promise<boolean> {
+  const result = await client.query(
+    "SELECT 1 FROM pg_database WHERE datname = $1",
+    [TEMPLATE_DB_NAME],
+  );
+  return result.rowCount === 1;
 }
 
-async function ensureSeededTemplateDb(): Promise<string> {
-  if (templateDbPathPromise) {
-    return templateDbPathPromise;
-  }
+async function buildTemplate(): Promise<void> {
+  assertSafeDbName(TEMPLATE_DB_NAME);
 
-  templateDbPathPromise = (async () => {
-    await mkdir(ARTIFACT_DIR, { recursive: true });
-    const templateDbPath = join(ARTIFACT_DIR, TEMPLATE_DB_NAME);
-
+  await withMaintenanceClient(async (client) => {
+    // Serialize across vitest worker processes: only one builds the template.
+    await client.query("SELECT pg_advisory_lock($1)", [TEMPLATE_LOCK_KEY]);
     try {
-      await stat(templateDbPath);
-      return templateDbPath;
-    } catch {
-      const tempTemplateDbPath = join(
-        ARTIFACT_DIR,
-        `${TEMPLATE_DB_NAME}.tmp-${process.pid}-${Date.now()}`,
-      );
-      await buildSeededTemplateDb(tempTemplateDbPath);
-      await rename(tempTemplateDbPath, templateDbPath);
-      return templateDbPath;
-    }
-  })();
+      if (await templateExists(client)) {
+        return;
+      }
+      await client.query(`CREATE DATABASE "${TEMPLATE_DB_NAME}"`);
 
-  try {
-    return await templateDbPathPromise;
-  } catch (error) {
-    templateDbPathPromise = null;
-    throw error;
+      const db = createDb(databaseUrl(TEMPLATE_DB_NAME));
+      try {
+        await migrateToLatest(db);
+        await seedTemplate(db);
+      } finally {
+        // Drop the seeding connection so the database can serve as a template.
+        await db.destroy();
+      }
+    } finally {
+      await client.query("SELECT pg_advisory_unlock($1)", [TEMPLATE_LOCK_KEY]);
+    }
+  });
+}
+
+async function ensureTemplate(): Promise<void> {
+  if (!templatePromise) {
+    templatePromise = buildTemplate().catch((error) => {
+      templatePromise = null;
+      throw error;
+    });
   }
+  return templatePromise;
 }
 
 export async function prepareTestDbTemplate(): Promise<void> {
-  await ensureSeededTemplateDb();
+  await ensureTemplate();
 }
 
 export async function createIsolatedTestDb(
   prefix: string,
 ): Promise<TestDbContext> {
-  const templateDbPath = await ensureSeededTemplateDb();
-  const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  const dbPath = join(ARTIFACT_DIR, `${prefix}-${runId}.db`);
-  const storageRoot = join(ARTIFACT_DIR, `${prefix}-${runId}-files`);
-  await copyFile(templateDbPath, dbPath);
-  const db = createDb(dbPath);
+  await ensureTemplate();
+
+  const runId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  const dbName = `crm_test_${prefix}_${runId}`
+    .replace(/[^a-z0-9_]/gi, "_")
+    .toLowerCase();
+  assertSafeDbName(dbName);
+
+  await withMaintenanceClient(async (client) => {
+    await client.query(
+      `CREATE DATABASE "${dbName}" TEMPLATE "${TEMPLATE_DB_NAME}"`,
+    );
+  });
+
+  const storageRoot = join(
+    process.cwd(),
+    ".vitest-files",
+    `${prefix}-${runId}`,
+  );
+  const db = createDb(databaseUrl(dbName));
   const repos = createTestRepositories(db);
 
   return {
-    dbPath,
+    dbName,
     storageRoot,
     db,
     repos,
@@ -327,17 +414,11 @@ export async function cleanupTestDb(
   }
 
   await ctx.db.destroy();
+  assertSafeDbName(ctx.dbName);
 
-  try {
-    await rm(ctx.dbPath, { force: true });
-    await rm(ctx.storageRoot, { force: true, recursive: true });
-  } catch (error) {
-    if (
-      !(error instanceof Error) ||
-      !("code" in error) ||
-      error.code !== "EBUSY"
-    ) {
-      throw error;
-    }
-  }
+  await withMaintenanceClient(async (client) => {
+    await client.query(`DROP DATABASE IF EXISTS "${ctx.dbName}" WITH (FORCE)`);
+  });
+
+  await rm(ctx.storageRoot, { force: true, recursive: true });
 }

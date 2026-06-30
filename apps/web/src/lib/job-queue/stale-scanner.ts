@@ -2,23 +2,19 @@ import { createLogger } from "~/lib/observability/logger";
 import { getServerRuntime } from "~/server/platform/container";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import { JOB_TABLES } from "./registry";
+
 const logger = createLogger("stale-scanner");
 
 // Every job table shares the canonical queue_state lifecycle, so reclaiming a
 // crashed worker's lease is one uniform reset: a row stuck in `processing` past
 // its lease deadline goes back to `pending`. No per-table status vocabulary.
-const JOB_TABLES = [
-  "workflow_integration_jobs",
-  "search_enrichment_jobs",
-  "search_enrichment_completion_outbox",
-  "notification_outbox",
-  "notification_deliveries",
-] as const;
+// The table list comes from the single queue registry.
 
 async function resetStalledJobs(
   executor: DatabaseExecutor = getServerRuntime().infra.db,
 ) {
-  const now = Date.now();
+  const now = new Date();
   await Promise.all(
     JOB_TABLES.map(async (table) => {
       try {

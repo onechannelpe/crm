@@ -24,7 +24,7 @@ export interface SetLeadUserOverrideCommand {
   targetUserId: UserId;
   bufferTarget: number;
   dailyLimit: number;
-  expiresAt: number | null;
+  expiresAt: Date | null;
 }
 
 interface PolicyRepos {
@@ -34,7 +34,7 @@ interface PolicyRepos {
   leadPolicyDefaults: {
     findForScope(
       scopeType: "branch" | "team",
-      scopeId: number,
+      scopeId: BranchId | TeamId,
     ): Promise<
       | {
           active_buffer_target: number;
@@ -47,7 +47,7 @@ interface PolicyRepos {
   leadPolicyOverrides: {
     findActiveForUser(
       userId: UserId,
-      now: number,
+      now: Date,
     ): Promise<
       | {
           active_buffer_target: number;
@@ -63,7 +63,7 @@ interface LeadPolicyDefaultsWriter {
   leadPolicyDefaults: {
     upsert(values: {
       scope_type: "branch" | "team";
-      scope_id: number;
+      scope_id: BranchId | TeamId;
       active_buffer_target: number;
       daily_refill_limit: number;
     }): Promise<unknown>;
@@ -76,8 +76,8 @@ interface LeadPolicyOverridesWriter {
       user_id: UserId;
       active_buffer_target: number;
       daily_refill_limit: number;
-      effective_from: number;
-      expires_at: number | null;
+      effective_from: Date;
+      expires_at: Date | null;
       set_by_user_id: UserId;
     }): Promise<unknown>;
   };
@@ -92,7 +92,7 @@ export async function getEffectiveLeadPolicy(
     return Err(fail("user_not_found"));
   }
 
-  const now = Date.now();
+  const now = new Date();
   const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
     userId,
     now,
@@ -129,7 +129,7 @@ export async function setLeadUserOverride(
     user_id: command.targetUserId,
     active_buffer_target: command.bufferTarget,
     daily_refill_limit: command.dailyLimit,
-    effective_from: Date.now(),
+    effective_from: new Date(),
     expires_at: command.expiresAt,
     set_by_user_id: command.actorUserId,
   });

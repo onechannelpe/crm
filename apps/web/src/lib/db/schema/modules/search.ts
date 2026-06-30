@@ -4,17 +4,17 @@ import type { Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("client_search_views")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("name", "varchar(120)", (col) => col.notNull())
-    .addColumn("search_type", "varchar(40)", (col) => col.notNull())
-    .addColumn("query_value", "varchar(255)", (col) => col.notNull())
+    .addColumn("name", "text", (col) => col.notNull())
+    .addColumn("search_type", "text", (col) => col.notNull())
+    .addColumn("query_value", "text", (col) => col.notNull())
     .addColumn("limit_value", "integer", (col) => col.notNull().defaultTo(20))
-    .addColumn("is_default", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("is_default", "boolean", (col) => col.notNull().defaultTo(false))
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -32,30 +32,40 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_enrichment_jobs")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("document_type", "varchar(8)", (col) => col.notNull())
-    .addColumn("document_value", "varchar(32)", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("queue_state", "varchar(20)", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("document_type", "text", (col) => col.notNull())
+    .addColumn("document_value", "text", (col) => col.notNull())
+    .addColumn("status", "text", (col) => col.notNull())
+    .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
-    .addColumn("requested_by_user_id", "integer", (col) =>
+    .addColumn("requested_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("requested_at", "integer", (col) => col.notNull())
-    .addColumn("completed_at", "integer")
-    .addColumn("lease_owner", "varchar(64)")
-    .addColumn("lease_until", "integer")
+    .addColumn("requested_at", "timestamptz", (col) => col.notNull())
+    .addColumn("completed_at", "timestamptz")
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("available_at", "timestamptz", (col) => col.notNull())
     .addColumn("last_error", "text")
     .execute();
 
+  // Claim path: only pending rows that are due.
   await db.schema
-    .createIndex("idx_search_enrichment_jobs_queue_state_time")
+    .createIndex("idx_search_enrichment_jobs_claim")
     .on("search_enrichment_jobs")
-    .columns(["queue_state", "available_at", "lease_until"])
+    .column("available_at")
+    .where(sql.ref("queue_state"), "=", "pending")
+    .execute();
+
+  // Stale-scan path: leased rows whose lease has expired.
+  await db.schema
+    .createIndex("idx_search_enrichment_jobs_stale")
+    .on("search_enrichment_jobs")
+    .column("lease_until")
+    .where(sql.ref("queue_state"), "=", "processing")
     .execute();
 
   await db.schema
@@ -73,22 +83,20 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_enrichment_overlays")
-    .addColumn("document_type", "varchar(8)", (col) => col.notNull())
-    .addColumn("document_value", "varchar(32)", (col) => col.notNull())
-    .addColumn("full_name", "varchar(255)")
-    .addColumn("legal_name", "varchar(255)")
+    .addColumn("document_type", "text", (col) => col.notNull())
+    .addColumn("document_value", "text", (col) => col.notNull())
+    .addColumn("full_name", "text")
+    .addColumn("legal_name", "text")
     .addColumn("address", "text")
-    .addColumn("district", "varchar(128)")
-    .addColumn("department", "varchar(128)")
-    .addColumn("contributor_status", "varchar(64)")
-    .addColumn("contributor_condition", "varchar(64)")
-    .addColumn("economic_activities_json", "text")
-    .addColumn("source", "varchar(32)", (col) =>
-      col.notNull().defaultTo("sunat"),
-    )
-    .addColumn("fetched_at", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("payload_json", "text", (col) => col.notNull())
+    .addColumn("district", "text")
+    .addColumn("department", "text")
+    .addColumn("contributor_status", "text")
+    .addColumn("contributor_condition", "text")
+    .addColumn("economic_activities_json", "jsonb")
+    .addColumn("source", "text", (col) => col.notNull().defaultTo("sunat"))
+    .addColumn("fetched_at", "timestamptz", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
+    .addColumn("payload_json", "jsonb", (col) => col.notNull())
     .addPrimaryKeyConstraint("pk_search_enrichment_overlays", [
       "document_type",
       "document_value",
@@ -103,31 +111,39 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_enrichment_completion_outbox")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("document_type", "varchar(8)", (col) => col.notNull())
-    .addColumn("document_value", "varchar(32)", (col) => col.notNull())
-    .addColumn("legal_name", "varchar(255)")
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("document_type", "text", (col) => col.notNull())
+    .addColumn("document_value", "text", (col) => col.notNull())
+    .addColumn("legal_name", "text")
     .addColumn("address", "text")
-    .addColumn("district", "varchar(128)")
-    .addColumn("department", "varchar(128)")
-    .addColumn("fetched_at", "integer", (col) => col.notNull())
-    .addColumn("queue_state", "varchar(20)", (col) =>
+    .addColumn("district", "text")
+    .addColumn("department", "text")
+    .addColumn("fetched_at", "timestamptz", (col) => col.notNull())
+    .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer", (col) => col.notNull())
-    .addColumn("lease_owner", "varchar(64)")
-    .addColumn("lease_until", "integer")
+    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
     .addColumn("error_message", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("processed_at", "integer")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("processed_at", "timestamptz")
     .execute();
 
   await db.schema
-    .createIndex("idx_search_enrichment_completion_outbox_queue_state")
+    .createIndex("idx_search_enrichment_completion_outbox_claim")
     .on("search_enrichment_completion_outbox")
-    .columns(["queue_state", "available_at", "lease_until"])
+    .column("available_at")
+    .where(sql.ref("queue_state"), "=", "pending")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_search_enrichment_completion_outbox_stale")
+    .on("search_enrichment_completion_outbox")
+    .column("lease_until")
+    .where(sql.ref("queue_state"), "=", "processing")
     .execute();
 
   await db.schema

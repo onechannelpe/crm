@@ -2,44 +2,32 @@ import { createJobQueue } from "~/lib/job-queue/job-queue";
 import { applySunatEnrichment } from "~/server/identity/enrichment/writeback";
 import {
   createSunatEnrichmentWritebackOutboxRepo,
+  type SunatEnrichmentWritebackJob,
   type SunatEnrichmentWritebackOutboxRepo,
 } from "~/server/identity/enrichment/writeback-outbox-repo";
 import { createPartyRepo } from "~/server/identity/organization/repo";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-type SunatEnrichmentWritebackJob = {
-  id: number;
-  document_type: "dni" | "ruc";
-  document_value: string;
-  legal_name: string | null;
-  address: string | null;
-  district: string | null;
-  department: string | null;
-  fetched_at: number;
-  attempt_count: number;
-  max_attempts: number;
-};
-
 export function createSunatEnrichmentWritebackQueue(
   workerId: string,
   deps: {
     executor: DatabaseExecutor;
-    repo?: SunatEnrichmentWritebackOutboxRepo;
+    store?: SunatEnrichmentWritebackOutboxRepo;
+    now?: () => Date;
   },
 ) {
-  const leaseMs = 30_000;
-  const batchSize = 50;
-  const repo =
-    deps.repo ?? createSunatEnrichmentWritebackOutboxRepo(deps.executor);
+  const now = deps.now ?? (() => new Date());
+  const store =
+    deps.store ?? createSunatEnrichmentWritebackOutboxRepo(deps.executor);
   const party = createPartyRepo(deps.executor);
 
-  return createJobQueue<SunatEnrichmentWritebackJob, void>({
+  return createJobQueue<SunatEnrichmentWritebackJob>({
     name: "sunat-enrichment-writeback",
-    leaseMs,
-    batchSize,
-    now: Date.now,
-    poll: (limit: number) => repo.claimQueued(workerId, limit, leaseMs),
-    handle: async (job, _signal) => {
+    leaseMs: 30_000,
+    now,
+    workerId,
+    store,
+    handle: async (job) => {
       await applySunatEnrichment({
         party,
         overlay: {
@@ -51,11 +39,7 @@ export function createSunatEnrichmentWritebackQueue(
           department: job.department,
         },
       });
+      return { kind: "done" };
     },
-    extendLease: (id: number) => repo.extendLease(id, workerId, leaseMs),
-    onComplete: (id: number) => repo.markCompleted(id),
-    onRetry: (id: number, availableAt: number) =>
-      repo.scheduleRetry(id, availableAt),
-    onFail: (id: number, reason: string) => repo.markFailed(id, reason),
   });
 }

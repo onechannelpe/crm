@@ -7,6 +7,7 @@ import {
   forbidden,
   type DomainError,
 } from "~/server/shared/domain-error";
+import type { CapacityRequestId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../../domain/access-policy";
@@ -16,7 +17,7 @@ import type { CapacityApprovalDeps } from "./shared";
 export async function approveCapacityRequest(
   ctx: AppContext,
   deps: CapacityApprovalDeps,
-  input: { requestId: number; note: string | null },
+  input: { requestId: CapacityRequestId; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   await checkActionRateLimit(
     "capacity.approve",

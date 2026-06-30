@@ -1,10 +1,9 @@
-import type { Kysely } from "kysely";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, TeamId } from "~/server/shared/ids";
 
-import type { Database } from "~/lib/db/types";
-
-export function createTeamsRepo(db: Kysely<Database>) {
+export function createTeamsRepo(db: DatabaseExecutor) {
   return {
-    findByBranch(branchId: number) {
+    findByBranch(branchId: BranchId) {
       return db
         .selectFrom("teams")
         .selectAll()
@@ -13,7 +12,7 @@ export function createTeamsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findById(id: number) {
+    findById(id: TeamId) {
       return db
         .selectFrom("teams")
         .selectAll()
@@ -22,3 +21,5 @@ export function createTeamsRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type TeamsRepo = ReturnType<typeof createTeamsRepo>;

@@ -11,15 +11,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
         .onDelete("cascade"),
     )
     .addColumn("row_number", "integer", (col) => col.notNull())
-    .addColumn("type", "varchar(30)", (col) => col.notNull())
-    .addColumn("ruc", "varchar(20)", (col) => col.notNull())
-    .addColumn("status_value", "varchar(40)")
-    .addColumn("prioridad_value", "varchar(40)")
-    .addColumn("state", "varchar(20)", (col) => col.notNull())
+    .addColumn("type", "text", (col) => col.notNull())
+    .addColumn("ruc", "text", (col) => col.notNull())
+    .addColumn("status_value", "text")
+    .addColumn("prioridad_value", "text")
+    .addColumn("state", "text", (col) => col.notNull())
     .addColumn("lead_id", "text", (col) => col.references("workflow_leads.id"))
     .addColumn("failure_reason", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("applied_at", "integer")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("applied_at", "timestamptz")
     .execute();
 
   await db.schema

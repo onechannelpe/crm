@@ -5,7 +5,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export interface ServerInfra {
   db: DatabaseExecutor;
-  now: () => number;
+  now: () => Date;
   logger: Pick<Logger, "info" | "error">;
 }
 
@@ -14,7 +14,7 @@ export function createServerInfra(
 ): ServerInfra {
   return {
     db: executor,
-    now: Date.now,
+    now: () => new Date(),
     logger: createLogger("server-runtime"),
   };
 }

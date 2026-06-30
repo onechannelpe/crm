@@ -1,13 +1,13 @@
 import { useAction, useSubmission } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
-import type { InviteManagement } from "~/actions/team/contracts";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { DatePicker } from "~/components/ui/date-picker/date-picker-field";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
+import type { InviteManagement } from "~/contracts/team";
 import { createTeamInviteMutation } from "~/lib/mutations/team";
 import { parseWireError } from "~/lib/wire-error";
 import { codeIs } from "~/lib/wire-error-codes";
@@ -85,7 +85,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
         email: email(),
         role: role(),
         executiveCategory: executiveCategory() || null,
-        teamId: teamId() ? Number(teamId()) : null,
+        teamId: teamId() || null,
         expiresAt: parsedExpiresAt.value,
       });
 

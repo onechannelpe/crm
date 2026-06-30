@@ -1,12 +1,12 @@
 import { createAsync, useAction } from "@solidjs/router";
 
-import type { PendingCapacityRequestView } from "~/actions/capacity/contracts";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
 import MessageSquare from "~/components/icons/message-square";
 import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
+import type { PendingCapacityRequestView } from "~/contracts/capacity";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -18,7 +18,7 @@ import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
 
 type PendingCapacityRequestGridRow = Omit<PendingCapacityRequestView, "id"> & {
   id: string;
-  requestId: number;
+  requestId: string;
 };
 
 export default function TeamRequestsPage() {

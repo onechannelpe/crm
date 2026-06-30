@@ -1,6 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { generateInviteToken } from "~/lib/auth/invite/tokens";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { BranchId, TeamId } from "~/server/shared/ids";
 
 // Pending invite users do not authenticate until acceptance flips is_active to 1
 // and sets a real password hash. This placeholder avoids expensive hashing on create.
@@ -11,8 +12,8 @@ export function normalizeInviteEmail(email: string): string {
 }
 
 export function buildPendingIdentity(input: {
-  branchId: number;
-  teamId: number | null;
+  branchId: BranchId;
+  teamId: TeamId | null;
   username: string;
   email: string;
   role: Role;
@@ -33,6 +34,6 @@ export function buildPendingIdentity(input: {
     expires_at: null,
     role: input.role,
     executive_category: input.executiveCategory ?? null,
-    is_active: 0 as const,
+    is_active: false,
   };
 }

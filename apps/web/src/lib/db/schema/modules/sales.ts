@@ -7,20 +7,20 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
-    .addColumn("trade_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("trade_name", "text", (col) => col.notNull())
     .addColumn("pos_quantity", "integer", (col) => col.notNull())
     .addColumn("link_url", "text")
     .addColumn("online_url", "text")
-    .addColumn("online_collection_mode", "varchar(20)", (col) =>
+    .addColumn("online_collection_mode", "text", (col) =>
       col.references("workflow_collection_mode_kinds.value"),
     )
     .addColumn("address", "text", (col) => col.notNull())
     .addColumn("address_reference", "text", (col) => col.notNull())
-    .addColumn("district", "varchar(100)", (col) => col.notNull())
-    .addColumn("province", "varchar(100)", (col) => col.notNull())
-    .addColumn("department", "varchar(100)", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("created_by", "integer", (col) =>
+    .addColumn("district", "text", (col) => col.notNull())
+    .addColumn("province", "text", (col) => col.notNull())
+    .addColumn("department", "text", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("created_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
     .execute();
@@ -33,17 +33,17 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_currency_kinds")
-    .addColumn("value", "varchar(3)", (col) => col.primaryKey())
+    .addColumn("value", "text", (col) => col.primaryKey())
     .execute();
 
   await db.schema
     .createTable("workflow_account_type_kinds")
-    .addColumn("value", "varchar(20)", (col) => col.primaryKey())
+    .addColumn("value", "text", (col) => col.primaryKey())
     .execute();
 
   await db.schema
     .createTable("workflow_settlement_banks")
-    .addColumn("value", "varchar(50)", (col) => col.primaryKey())
+    .addColumn("value", "text", (col) => col.primaryKey())
     .execute();
 
   await db.schema
@@ -52,18 +52,20 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("venue_id", "text", (col) =>
       col.notNull().references("workflow_lead_venues.id").onDelete("cascade"),
     )
-    .addColumn("currency", "varchar(3)", (col) =>
+    .addColumn("currency", "text", (col) =>
       col.notNull().references("workflow_currency_kinds.value"),
     )
-    .addColumn("bank", "varchar(50)", (col) =>
+    .addColumn("bank", "text", (col) =>
       col.notNull().references("workflow_settlement_banks.value"),
     )
-    .addColumn("account_type", "varchar(20)", (col) =>
+    .addColumn("account_type", "text", (col) =>
       col.notNull().references("workflow_account_type_kinds.value"),
     )
-    .addColumn("account_number", "varchar(50)", (col) => col.notNull())
-    .addColumn("cci", "varchar(50)")
-    .addColumn("is_settlement", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("account_number", "text", (col) => col.notNull())
+    .addColumn("cci", "text")
+    .addColumn("is_settlement", "boolean", (col) =>
+      col.notNull().defaultTo(false),
+    )
     .execute();
 
   await db.schema
@@ -82,6 +84,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("workflow_lead_venue_accounts")
     .columns(["venue_id", "is_settlement"])
     .unique()
-    .where("is_settlement", "=", 1)
+    .where("is_settlement", "=", true)
     .execute();
 }

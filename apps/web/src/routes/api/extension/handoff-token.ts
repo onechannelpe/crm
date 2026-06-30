@@ -4,6 +4,7 @@ import { authorizeRoutePermission } from "~/lib/auth/access/route-access";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
 import { getServerRuntime } from "~/server/platform/container";
 import { toWire } from "~/server/shared/domain-error";
+import { asContactAssignmentId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "./json-body";
@@ -31,7 +32,7 @@ export async function POST(event: APIEvent): Promise<Response> {
       userId: session.userId,
       authSessionId: session.id,
       branchId: session.branchId,
-      assignmentId: body.assignmentId,
+      assignmentId: asContactAssignmentId(body.assignmentId),
       origin,
     });
 

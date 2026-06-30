@@ -34,7 +34,7 @@ export async function loadActiveAuthContext(
   userId: UserId,
   deps: AuthContextDeps,
 ): Promise<AuthContext | null> {
-  const now = Date.now();
+  const now = new Date();
   const user = await deps.users.findById(userId);
   if (!user || !user.is_active) {
     return null;

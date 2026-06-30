@@ -1,6 +1,13 @@
 import type { Kysely, SelectQueryBuilder } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type {
+  BranchId,
+  ContactAssignmentId,
+  EventId,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
 
 function withExecutiveStatusJoinsAndSelect(
   qb: SelectQueryBuilder<Database, "extension_executive_statuses", object>,
@@ -22,7 +29,7 @@ function withExecutiveStatusJoinsAndSelect(
       "extension_executive_statuses.presence_updated_at as presenceUpdatedAt",
       "extension_executive_statuses.sync_updated_at as syncUpdatedAt",
     ])
-    .where("users.is_active", "=", 1)
+    .where("users.is_active", "=", true)
     .where("users.role", "=", "executive");
 }
 import type {
@@ -34,13 +41,13 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
   return {
     createHandoff(values: {
       jti: string;
-      user_id: number;
-      branch_id: number;
+      user_id: UserId;
+      branch_id: BranchId;
       auth_session_id: string;
-      assignment_id: number;
+      assignment_id: ContactAssignmentId;
       origin: string;
-      issued_at: number;
-      expires_at: number;
+      issued_at: Date;
+      expires_at: Date;
     }) {
       return db
         .insertInto("extension_handoffs")
@@ -60,7 +67,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       jti: string;
       installation_id: string;
       installation_session_jti: string;
-      consumed_at: number;
+      consumed_at: Date;
     }) {
       return db
         .updateTable("extension_handoffs")
@@ -76,13 +83,13 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
 
     createInstallationSession(values: {
       jti: string;
-      user_id: number;
-      branch_id: number;
+      user_id: UserId;
+      branch_id: BranchId;
       auth_session_id: string;
       installation_id: string;
       refresh_token_hash: string;
-      issued_at: number;
-      expires_at: number;
+      issued_at: Date;
+      expires_at: Date;
     }) {
       return db
         .insertInto("extension_installation_sessions")
@@ -98,7 +105,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     findActiveInstallationSession(
       auth_session_id: string,
       installation_id: string,
-      now: number,
+      now: Date,
     ) {
       return db
         .selectFrom("extension_installation_sessions")
@@ -110,7 +117,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findValidInstallationSession(jti: string, now: number) {
+    findValidInstallationSession(jti: string, now: Date) {
       return db
         .selectFrom("extension_installation_sessions")
         .selectAll()
@@ -123,7 +130,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     findRefreshableInstallationSession(
       refresh_token_hash: string,
       installation_id: string,
-      now: number,
+      now: Date,
     ) {
       return db
         .selectFrom("extension_installation_sessions")
@@ -135,7 +142,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    touchInstallationSession(jti: string, last_seen_at: number) {
+    touchInstallationSession(jti: string, last_seen_at: Date) {
       return db
         .updateTable("extension_installation_sessions")
         .set({ last_seen_at })
@@ -146,8 +153,8 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     rotateInstallationSessionRefreshToken(values: {
       jti: string;
       refresh_token_hash: string;
-      refreshed_at: number;
-      expires_at: number;
+      refreshed_at: Date;
+      expires_at: Date;
     }) {
       return db
         .updateTable("extension_installation_sessions")
@@ -160,7 +167,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    revokeInstallationSession(jti: string, revoked_at: number) {
+    revokeInstallationSession(jti: string, revoked_at: Date) {
       return db
         .updateTable("extension_installation_sessions")
         .set({ revoked_at })
@@ -170,7 +177,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
 
     revokeInstallationSessionsByAuthSession(
       auth_session_id: string,
-      revoked_at: number,
+      revoked_at: Date,
     ) {
       return db
         .updateTable("extension_installation_sessions")
@@ -180,7 +187,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    revokeInstallationSessionsByUser(user_id: number, revoked_at: number) {
+    revokeInstallationSessionsByUser(user_id: UserId, revoked_at: Date) {
       return db
         .updateTable("extension_installation_sessions")
         .set({ revoked_at })
@@ -190,9 +197,9 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     revokeOtherInstallationSessionsByUser(
-      user_id: number,
+      user_id: UserId,
       keep_jti: string,
-      revoked_at: number,
+      revoked_at: Date,
     ) {
       return db
         .updateTable("extension_installation_sessions")
@@ -206,15 +213,15 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     async insertRuntimeEventIfAbsent(values: {
       id: string;
       sequence: number;
-      user_id: number;
-      branch_id: number;
-      assignment_id: number | null;
-      contact_id: number | null;
+      user_id: UserId;
+      branch_id: BranchId;
+      assignment_id: ContactAssignmentId | null;
+      contact_id: OrganizationPersonId | null;
       call_session_id: string | null;
       type: Database["extension_runtime_events"]["type"];
-      payload_json: string;
-      created_at: number;
-      received_at: number;
+      payload_json: unknown;
+      created_at: Date;
+      received_at: Date;
     }) {
       const result = await db
         .insertInto("extension_runtime_events")
@@ -225,14 +232,14 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     upsertExecutivePresence(values: {
-      user_id: number;
-      branch_id: number;
-      assignment_id: number | null;
-      contact_id: number | null;
+      user_id: UserId;
+      branch_id: BranchId;
+      assignment_id: ContactAssignmentId | null;
+      contact_id: OrganizationPersonId | null;
       call_session_id: string | null;
       presence_status: ExtensionExecutivePresenceStatus;
-      presence_updated_at: number;
-      source_event_id: string | null;
+      presence_updated_at: Date;
+      source_event_id: EventId | null;
       source_event_sequence: number;
     }) {
       return db
@@ -301,10 +308,10 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     upsertExecutiveSyncHealth(values: {
-      user_id: number;
-      branch_id: number;
+      user_id: UserId;
+      branch_id: BranchId;
       sync_health: ExtensionSyncHealth;
-      sync_updated_at: number;
+      sync_updated_at: Date;
     }) {
       return db
         .insertInto("extension_executive_statuses")
@@ -331,9 +338,9 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     },
 
     updateExecutiveSyncHealthByUser(values: {
-      user_id: number;
+      user_id: UserId;
       sync_health: ExtensionSyncHealth;
-      sync_updated_at: number;
+      sync_updated_at: Date;
     }) {
       return db
         .updateTable("extension_executive_statuses")
@@ -345,7 +352,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findCurrentStatusByUser(userId: number) {
+    findCurrentStatusByUser(userId: UserId) {
       return db
         .selectFrom("extension_executive_statuses")
         .selectAll()
@@ -353,7 +360,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listTeamStatusesBySupervisor(supervisorUserId: number) {
+    listTeamStatusesBySupervisor(supervisorUserId: UserId) {
       return db
         .selectFrom("extension_executive_statuses")
         .$call(withExecutiveStatusJoinsAndSelect)
@@ -367,7 +374,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    listBranchStatuses(branchId: number) {
+    listBranchStatuses(branchId: BranchId) {
       return db
         .selectFrom("extension_executive_statuses")
         .$call(withExecutiveStatusJoinsAndSelect)

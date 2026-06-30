@@ -1,26 +1,26 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Authentication & sessions
   await db.schema
     .createTable("user_sessions")
     .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "uuid", (col) =>
       col.notNull().references("branches.id"),
     )
     .addColumn("role", "text", (col) => col.notNull())
-    .addColumn("session_class", "varchar(32)", (col) => col.notNull())
-    .addColumn("primary_auth_method", "varchar(32)", (col) => col.notNull())
-    .addColumn("strong_auth_method", "varchar(32)")
-    .addColumn("strong_auth_at", "integer")
+    .addColumn("session_class", "text", (col) => col.notNull())
+    .addColumn("primary_auth_method", "text", (col) => col.notNull())
+    .addColumn("strong_auth_method", "text")
+    .addColumn("strong_auth_at", "timestamptz")
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("last_activity", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("last_activity", "timestamptz", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -39,9 +39,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("request_sessions")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("csrf_token", "text", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("last_activity", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("last_activity", "timestamptz", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -52,13 +52,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("auth_throttle_counters")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("scope", "varchar(20)", (col) => col.notNull())
-    .addColumn("key_hash", "varchar(64)", (col) => col.notNull())
-    .addColumn("window_started_at", "integer", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("scope", "text", (col) => col.notNull())
+    .addColumn("key_hash", "text", (col) => col.notNull())
+    .addColumn("window_started_at", "timestamptz", (col) => col.notNull())
     .addColumn("failure_count", "integer", (col) => col.notNull())
-    .addColumn("blocked_until", "integer")
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("blocked_until", "timestamptz")
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -82,17 +82,17 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("auth_events")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.references("users.id").onDelete("set null"),
     )
-    .addColumn("method", "varchar(20)", (col) => col.notNull())
-    .addColumn("stage", "varchar(20)", (col) => col.notNull())
-    .addColumn("outcome", "varchar(20)", (col) => col.notNull())
-    .addColumn("reason", "varchar(64)")
-    .addColumn("identifier_hash", "varchar(64)", (col) => col.notNull())
-    .addColumn("ip_hash", "varchar(64)", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("method", "text", (col) => col.notNull())
+    .addColumn("stage", "text", (col) => col.notNull())
+    .addColumn("outcome", "text", (col) => col.notNull())
+    .addColumn("reason", "text")
+    .addColumn("identifier_hash", "text", (col) => col.notNull())
+    .addColumn("ip_hash", "text", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -116,39 +116,37 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // WebAuthn passkeys
   await db.schema
     .createTable("passkeys")
-    .addColumn("id", "varchar(512)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("public_key", "text", (col) => col.notNull())
     .addColumn("counter", "integer", (col) => col.notNull())
     .addColumn("transports", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("last_used_at", "integer")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("last_used_at", "timestamptz")
     .execute();
 
   await db.schema
     .createTable("webauthn_challenges")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) => col.references("users.id"))
-    .addColumn("type", "varchar(32)", (col) => col.notNull())
-    .addColumn("challenge", "varchar(512)", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) => col.references("users.id"))
+    .addColumn("type", "text", (col) => col.notNull())
+    .addColumn("challenge", "text", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   // TOTP multi-factor
   await db.schema
     .createTable("user_totp_factors")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
     .addColumn("secret_encrypted", "text", (col) => col.notNull())
-    .addColumn("is_enabled", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .addColumn("enabled_at", "integer")
+    .addColumn("is_enabled", "boolean", (col) => col.notNull().defaultTo(false))
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("enabled_at", "timestamptz")
     .execute();
 
   await db.schema
@@ -160,13 +158,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("user_totp_recovery_codes")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("code_hash", "varchar(255)", (col) => col.notNull())
-    .addColumn("used_at", "integer")
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("code_hash", "text", (col) => col.notNull())
+    .addColumn("used_at", "timestamptz")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -178,14 +176,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // OAuth
   await db.schema
     .createTable("user_oauth_accounts")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("provider", "varchar(32)", (col) => col.notNull())
-    .addColumn("provider_user_id", "varchar(255)", (col) => col.notNull())
-    .addColumn("email", "varchar(255)", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("provider", "text", (col) => col.notNull())
+    .addColumn("provider_user_id", "text", (col) => col.notNull())
+    .addColumn("email", "text", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -198,19 +196,19 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Login flows
   await db.schema
     .createTable("login_flows")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("identifier", "varchar(255)", (col) => col.notNull())
-    .addColumn("primary_auth_method", "varchar(32)", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("identifier", "text", (col) => col.notNull())
+    .addColumn("primary_auth_method", "text", (col) => col.notNull())
+    .addColumn("user_id", "uuid", (col) =>
       col.references("users.id").onDelete("cascade"),
     )
-    .addColumn("challenge_id", "integer", (col) =>
+    .addColumn("challenge_id", "uuid", (col) =>
       col.references("webauthn_challenges.id").onDelete("cascade"),
     )
-    .addColumn("state", "varchar(32)", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("state", "text", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -222,14 +220,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Password reset tokens
   await db.schema
     .createTable("password_reset_tokens")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("token_hash", "varchar(64)", (col) => col.notNull().unique())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("used_at", "integer")
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("token_hash", "text", (col) => col.notNull().unique())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
+    .addColumn("used_at", "timestamptz")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema

@@ -1,7 +1,6 @@
 import { A, createAsync, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
-import type { ManagedExecutiveView } from "~/actions/capacity/contracts";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
 import Mail from "~/components/icons/mail";
@@ -9,6 +8,7 @@ import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Input } from "~/components/ui/input/input";
+import type { ManagedExecutiveView } from "~/contracts/capacity";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -16,7 +16,7 @@ import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
 type ManagedExecutiveGridRow = ManagedExecutiveView & {
   id: string;
-  executiveId: number;
+  executiveId: string;
 };
 
 const TEAM_COLUMNS = [

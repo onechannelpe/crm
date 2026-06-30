@@ -1,5 +1,6 @@
 import { createDb } from "./client";
 
-const dbUrl = process.env.WEB_DB_URL ?? "http://127.0.0.1:8080";
+export const dbUrl =
+  process.env.WEB_DB_URL ?? "postgres://postgres@localhost:5432/crm";
 
 export const db = createDb(dbUrl);

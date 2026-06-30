@@ -8,7 +8,7 @@ import type {
 } from "./privileged-login-alert";
 
 interface AlertNotifications {
-  enqueue(intents: NotificationIntent[], now: number): Promise<void>;
+  enqueue(intents: NotificationIntent[], now: Date): Promise<void>;
   dispatchPendingJobs(): void;
 }
 
@@ -28,7 +28,7 @@ export function createPrivilegedLoginAlertSender(
       await notifications.enqueue(
         [
           {
-            id: `security:login:${params.userId}:${params.occurredAt}`,
+            id: `security:login:${params.userId}:${params.occurredAt.toISOString()}`,
             eventType: "security.privileged_login",
             audience: { kind: "user_ids", userIds: [params.userId] },
             channels: ["in_app", "email", "whatsapp"],
@@ -40,7 +40,7 @@ export function createPrivilegedLoginAlertSender(
               `Role: ${params.role}`,
               `Method: ${params.method}`,
               `IP: ${params.ipAddress}`,
-              `Time: ${new Date(params.occurredAt).toISOString()}`,
+              `Time: ${params.occurredAt.toISOString()}`,
             ].join("\n"),
             actionUrl: null,
           },

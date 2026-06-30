@@ -2,24 +2,33 @@ import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type {
+  LeadReservationId,
+  SearchReservationId,
+  UserId,
+} from "~/server/shared/ids";
+
+function dayEnd(date: string): Date {
+  return new Date(`${date}T23:59:59.999Z`);
+}
 
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
       return db
         .insertInto("search_capacity_grants")
-        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
 
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       periodStart: string,
       periodEnd: string,
     ) {
@@ -27,12 +36,8 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
         .selectFrom("search_capacity_grants")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(periodStart).getTime())
-        .where(
-          "created_at",
-          "<=",
-          new Date(periodEnd + "T23:59:59.999Z").getTime(),
-        )
+        .where("created_at", ">=", new Date(periodStart))
+        .where("created_at", "<=", dayEnd(periodEnd))
         .execute();
     },
   };
@@ -40,9 +45,9 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
 
 export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string }) {
+    insert(values: { user_id: UserId; amount: number; reason: string }) {
       const id = randomUUIDv7();
-      const now = Date.now();
+      const now = new Date();
       return db
         .insertInto("search_usage_reservations")
         .values({
@@ -56,7 +61,7 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    findById(id: string) {
+    findById(id: SearchReservationId) {
       return db
         .selectFrom("search_usage_reservations")
         .selectAll()
@@ -65,19 +70,19 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
     },
 
     updateStatus(
-      id: string,
+      id: SearchReservationId,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
       return db
         .updateTable("search_usage_reservations")
-        .set({ status, updated_at: Date.now() })
+        .set({ status, updated_at: new Date() })
         .where("id", "=", id)
         .executeTakeFirst()
         .then(() => undefined);
     },
 
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       periodStart: string,
       periodEnd: string,
     ) {
@@ -85,12 +90,8 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .selectFrom("search_usage_reservations")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(periodStart).getTime())
-        .where(
-          "created_at",
-          "<=",
-          new Date(periodEnd + "T23:59:59.999Z").getTime(),
-        )
+        .where("created_at", ">=", new Date(periodStart))
+        .where("created_at", "<=", dayEnd(periodEnd))
         .execute();
     },
   };
@@ -98,15 +99,18 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
 
 export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { reservation_id: string; amount: number }): Promise<void> {
+    insert(values: {
+      reservation_id: SearchReservationId;
+      amount: number;
+    }): Promise<void> {
       return db
         .insertInto("search_usage_commits")
-        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
 
-    findByReservation(reservationId: string) {
+    findByReservation(reservationId: SearchReservationId) {
       return db
         .selectFrom("search_usage_commits")
         .selectAll()
@@ -115,7 +119,7 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
     },
 
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       periodStart: string,
       periodEnd: string,
     ) {
@@ -124,12 +128,8 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
         .innerJoin("search_usage_reservations as r", "r.id", "c.reservation_id")
         .select(["c.id", "c.reservation_id", "c.amount", "c.created_at"])
         .where("r.user_id", "=", userId)
-        .where("c.created_at", ">=", new Date(periodStart).getTime())
-        .where(
-          "c.created_at",
-          "<=",
-          new Date(periodEnd + "T23:59:59.999Z").getTime(),
-        )
+        .where("c.created_at", ">=", new Date(periodStart))
+        .where("c.created_at", "<=", dayEnd(periodEnd))
         .execute();
     },
   };
@@ -138,25 +138,25 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
 export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
   return {
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
       return db
         .insertInto("lead_capacity_grants")
-        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
 
-    findByUserAndDate(userId: number, date: string) {
+    findByUserAndDate(userId: UserId, date: string) {
       return db
         .selectFrom("lead_capacity_grants")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(date).getTime())
-        .where("created_at", "<=", new Date(date + "T23:59:59.999Z").getTime())
+        .where("created_at", ">=", new Date(date))
+        .where("created_at", "<=", dayEnd(date))
         .execute();
     },
   };
@@ -164,9 +164,9 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
 
 export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string }) {
+    insert(values: { user_id: UserId; amount: number; reason: string }) {
       const id = randomUUIDv7();
-      const now = Date.now();
+      const now = new Date();
       return db
         .insertInto("lead_usage_reservations")
         .values({
@@ -180,7 +180,7 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    findById(id: string) {
+    findById(id: LeadReservationId) {
       return db
         .selectFrom("lead_usage_reservations")
         .selectAll()
@@ -189,37 +189,37 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
     },
 
     updateStatus(
-      id: string,
+      id: LeadReservationId,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
       return db
         .updateTable("lead_usage_reservations")
-        .set({ status, updated_at: Date.now() })
+        .set({ status, updated_at: new Date() })
         .where("id", "=", id)
         .executeTakeFirst()
         .then(() => undefined);
     },
 
     updateAmountAndStatus(
-      id: string,
+      id: LeadReservationId,
       amount: number,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
       return db
         .updateTable("lead_usage_reservations")
-        .set({ amount, status, updated_at: Date.now() })
+        .set({ amount, status, updated_at: new Date() })
         .where("id", "=", id)
         .executeTakeFirst()
         .then(() => undefined);
     },
 
-    findByUserAndDate(userId: number, date: string) {
+    findByUserAndDate(userId: UserId, date: string) {
       return db
         .selectFrom("lead_usage_reservations")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(date).getTime())
-        .where("created_at", "<=", new Date(date + "T23:59:59.999Z").getTime())
+        .where("created_at", ">=", new Date(date))
+        .where("created_at", "<=", dayEnd(date))
         .execute();
     },
   };
@@ -227,15 +227,18 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
 
 export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { reservation_id: string; amount: number }): Promise<void> {
+    insert(values: {
+      reservation_id: LeadReservationId;
+      amount: number;
+    }): Promise<void> {
       return db
         .insertInto("lead_usage_commits")
-        .values({ id: randomUUIDv7(), ...values, created_at: Date.now() })
+        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
 
-    findByReservation(reservationId: string) {
+    findByReservation(reservationId: LeadReservationId) {
       return db
         .selectFrom("lead_usage_commits")
         .selectAll()
@@ -243,18 +246,14 @@ export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findByUserAndDate(userId: number, date: string) {
+    findByUserAndDate(userId: UserId, date: string) {
       return db
         .selectFrom("lead_usage_commits as c")
         .innerJoin("lead_usage_reservations as r", "r.id", "c.reservation_id")
         .select(["c.id", "c.reservation_id", "c.amount", "c.created_at"])
         .where("r.user_id", "=", userId)
-        .where("c.created_at", ">=", new Date(date).getTime())
-        .where(
-          "c.created_at",
-          "<=",
-          new Date(date + "T23:59:59.999Z").getTime(),
-        )
+        .where("c.created_at", ">=", new Date(date))
+        .where("c.created_at", "<=", dayEnd(date))
         .execute();
     },
   };

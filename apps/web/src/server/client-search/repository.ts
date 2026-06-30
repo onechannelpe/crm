@@ -1,4 +1,6 @@
+import { notify } from "~/lib/db/notify";
 import { createJobStore } from "~/lib/job-queue/job-store";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { EnrichmentRepositoryPort, JobRow } from "./ports";
@@ -6,10 +8,10 @@ import type { EnrichmentRepositoryPort, JobRow } from "./ports";
 export function createSearchEnrichmentRepo(
   db: DatabaseExecutor,
 ): EnrichmentRepositoryPort {
-  // `status` (queued|running|succeeded|failed) stays the user-facing domain
-  // field read by the status presenter; the store owns the parallel queue_state
-  // lifecycle. The two move together via the domain patches below.
-  const jobStore = createJobStore<JobRow, number>(
+  // The user-facing `status` (queued|running|succeeded|failed) mirrors the
+  // canonical queue_state 1:1; the store keeps them in lockstep through this
+  // lifecycle map, and stamps `completed_at`/`last_error` on settle.
+  const store = createJobStore<JobRow, string>(
     db,
     "search_enrichment_jobs",
     [
@@ -28,9 +30,21 @@ export function createSearchEnrichmentRepo(
       "available_at",
       "last_error",
     ],
+    {
+      finishedAt: "completed_at",
+      error: "last_error",
+      status: {
+        column: "status",
+        pending: "queued",
+        processing: "running",
+        done: "succeeded",
+        failed: "failed",
+      },
+    },
   );
 
   return {
+    store,
     async upsertJob(values) {
       const result = await db
         .insertInto("search_enrichment_jobs")
@@ -67,6 +81,9 @@ export function createSearchEnrichmentRepo(
         .returning("id")
         .executeTakeFirstOrThrow();
 
+      // Wake the enrichment queue on the same executor the job was written on, so
+      // a registration transaction buffers the NOTIFY until commit.
+      notify(db, JOB_TABLE_CHANNELS.search_enrichment_jobs);
       return result.id;
     },
 
@@ -108,43 +125,17 @@ export function createSearchEnrichmentRepo(
           })),
         )
         .execute();
+
+      notify(db, JOB_TABLE_CHANNELS.search_enrichment_jobs);
     },
 
-    leaseJobs: (limit, leaseMs, leaseOwner) =>
-      jobStore.claimPending(leaseOwner, Date.now(), limit, leaseMs, {
-        status: "running",
-        last_error: null,
-      }),
-
-    extendLease: (id, workerId, leaseMs) =>
-      jobStore.extendLease(id, workerId, leaseMs, Date.now()),
-
-    // Completion spans three tables (job lifecycle, overlay upsert, writeback
-    // outbox enqueue) under one transaction and only fires the overlay/outbox
-    // writes if this worker still holds the lease, so it stays explicit rather
-    // than routing through the store. It sets queue_state alongside the domain
-    // status to keep the two in step.
-    async completeJob(id, leaseOwner, overlay, now) {
+    // The overlay upsert and writeback-outbox enqueue run in one transaction so
+    // a worker that wrote the overlay always leaves a wake-up for the writeback
+    // queue. Both writes are idempotent (overlay onConflict upsert, outbox
+    // active-row guard), so re-running after a reaped lease is safe; the job
+    // row's queue transition is settled separately by the queue.
+    async recordCompletion(overlay, now) {
       await db.transaction().execute(async (trx) => {
-        const updated = await trx
-          .updateTable("search_enrichment_jobs")
-          .set({
-            status: "succeeded",
-            queue_state: "done",
-            completed_at: now,
-            lease_owner: null,
-            lease_until: null,
-            last_error: null,
-          })
-          .where("id", "=", id)
-          .where("queue_state", "=", "processing")
-          .where("lease_owner", "=", leaseOwner)
-          .executeTakeFirst();
-
-        if (Number(updated.numUpdatedRows ?? 0) === 0) {
-          return;
-        }
-
         await trx
           .insertInto("search_enrichment_overlays")
           .values(overlay)
@@ -200,21 +191,13 @@ export function createSearchEnrichmentRepo(
             processed_at: null,
           })
           .execute();
+
+        // Wake the writeback queue from inside the same transaction: the NOTIFY
+        // is buffered until commit, so the consumer never wakes for an outbox row
+        // that has not landed.
+        notify(trx, JOB_TABLE_CHANNELS.search_enrichment_completion_outbox);
       });
     },
-
-    failJob: (id, _leaseOwner, errorMessage, now) =>
-      jobStore.markFailed(id, {
-        status: "failed",
-        completed_at: now,
-        last_error: errorMessage,
-      }),
-
-    retryJob: (id, _leaseOwner, errorMessage, nextAttemptAt) =>
-      jobStore.scheduleRetry(id, nextAttemptAt, {
-        status: "queued",
-        last_error: errorMessage,
-      }),
 
     async getOverlay(documentType, documentValue) {
       return db

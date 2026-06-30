@@ -1,7 +1,14 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { AppUow } from "~/server/shared/application/uow";
 import { external, fail, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
+import {
+  asContactAssignmentId,
+  asEventId,
+  asOrganizationPersonId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import { dateFromEpochMilliseconds, type Clock } from "~/server/shared/time";
 
 import {
   type ExtensionRuntimeEventEnvelope,
@@ -24,12 +31,24 @@ import {
 
 interface EventsWriteContext {
   repos: ExtensionRepos;
-  now: () => number;
+  now: Clock;
   uow: AppUow<ExtensionRepos>;
 }
 interface EventsReadContext {
   repos: ExtensionRepos;
-  now: () => number;
+  now: Clock;
+}
+
+function readAssignmentId(payload: ExtensionRuntimeEventEnvelope["payload"]) {
+  return "assignmentId" in payload && typeof payload.assignmentId === "string"
+    ? asContactAssignmentId(payload.assignmentId)
+    : null;
+}
+
+function readContactId(payload: ExtensionRuntimeEventEnvelope["payload"]) {
+  return "contactId" in payload && typeof payload.contactId === "string"
+    ? asOrganizationPersonId(payload.contactId)
+    : null;
 }
 
 export async function ingestRuntimeEvent(
@@ -52,21 +71,14 @@ export async function ingestRuntimeEvent(
     }
 
     const payloadText = JSON.stringify(input.event.payload);
-    const eventAssignmentId =
-      "assignmentId" in input.event.payload &&
-      typeof input.event.payload.assignmentId === "number"
-        ? input.event.payload.assignmentId
-        : null;
-    const eventContactId =
-      "contactId" in input.event.payload &&
-      typeof input.event.payload.contactId === "number"
-        ? input.event.payload.contactId
-        : null;
+    const eventAssignmentId = readAssignmentId(input.event.payload);
+    const eventContactId = readContactId(input.event.payload);
     const eventSessionId =
       "sessionId" in input.event.payload &&
       typeof input.event.payload.sessionId === "string"
         ? input.event.payload.sessionId
         : null;
+    const eventCreatedAt = dateFromEpochMilliseconds(input.event.createdAt);
 
     return await uow.run(async (txRepos) => {
       const subjectUserId = parseSubjectUserId(sessionClaims.sub);
@@ -120,7 +132,7 @@ export async function ingestRuntimeEvent(
           call_session_id: eventSessionId,
           type: input.event.type,
           payload_json: payloadText,
-          created_at: input.event.createdAt,
+          created_at: eventCreatedAt,
           received_at: currentTime,
         });
 
@@ -139,12 +151,18 @@ export async function ingestRuntimeEvent(
         await txRepos.extensionRuntime.upsertExecutivePresence({
           user_id: session.user_id,
           branch_id: session.branch_id,
-          assignment_id: input.event.payload.assignmentId,
-          contact_id: input.event.payload.contactId,
+          assignment_id: input.event.payload.assignmentId
+            ? asContactAssignmentId(input.event.payload.assignmentId)
+            : null,
+          contact_id: input.event.payload.contactId
+            ? asOrganizationPersonId(input.event.payload.contactId)
+            : null,
           call_session_id: input.event.payload.callSessionId,
           presence_status: input.event.payload.presenceStatus,
-          presence_updated_at: input.event.payload.updatedAt,
-          source_event_id: input.event.id,
+          presence_updated_at: dateFromEpochMilliseconds(
+            input.event.payload.updatedAt,
+          ),
+          source_event_id: asEventId(input.event.id),
           source_event_sequence: input.event.sequence,
         });
         return Ok(undefined);
@@ -158,8 +176,10 @@ export async function ingestRuntimeEvent(
           contact_id: eventContactId,
           call_session_id: eventSessionId,
           presence_status: mapLifecycleStatus(input.event),
-          presence_updated_at: input.event.payload.at,
-          source_event_id: input.event.id,
+          presence_updated_at: dateFromEpochMilliseconds(
+            input.event.payload.at,
+          ),
+          source_event_id: asEventId(input.event.id),
           source_event_sequence: input.event.sequence,
         });
       }
@@ -193,8 +213,8 @@ export async function listTeamExecutiveStatuses(
   context: EventsReadContext,
   input: {
     role: Role;
-    userId: number;
-    branchId: number;
+    userId: UserId;
+    branchId: BranchId;
   },
 ): Promise<Result<TeamExecutiveStatusView[], DomainError>> {
   const { repos, now } = context;

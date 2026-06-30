@@ -1,4 +1,5 @@
 import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
+import type { JobStore } from "~/lib/job-queue/job-store";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { LeadQueries } from "~/server/workflow/lead/read/lead-queries";
@@ -10,27 +11,27 @@ export interface IntegrationJobRow extends QueueJobBase {
   id: string;
   type: IntegrationJobType;
   status: IntegrationJobStatus;
-  created_at: number;
-  completed_at: number | null;
+  created_at: Date;
+  completed_at: Date | null;
   error_message: string | null;
   rows_total: number | null;
   rows_applied: number | null;
   rows_failed: number | null;
-  results_json: string | null;
-  available_at: number;
+  results_json: unknown | null;
+  available_at: Date;
   lease_owner: string | null;
-  lease_until: number | null;
+  lease_until: Date | null;
   file_path: string | null;
-  requested_by_user_id: number;
+  requested_by_user_id: string;
 }
 
 export interface NewIntegrationJob {
   type: IntegrationJobType;
   status: IntegrationJobStatus;
-  requested_by_user_id: number;
+  requested_by_user_id: string;
   file_path: string | null;
   max_attempts: number;
-  created_at: number;
+  created_at: Date;
 }
 
 export interface IntegrationJobCompletion {
@@ -41,38 +42,29 @@ export interface IntegrationJobCompletion {
 }
 
 export interface IntegrationJobsPort {
+  store: JobStore<string, IntegrationJobRow>;
   insert(values: NewIntegrationJob): Promise<string>;
   findById(id: string): Promise<IntegrationJobRow | undefined>;
   list(limit: number, offset: number): Promise<IntegrationJobRow[]>;
-  claimPending(
-    leaseMs: number,
-    workerId: string,
-    batchSize: number,
-    types?: IntegrationJobType[],
-  ): Promise<IntegrationJobRow[]>;
-  markCompleted(id: string, result: IntegrationJobCompletion): Promise<unknown>;
   updateProgress(
     id: string,
     progress: { rowsTotal?: number; rowsApplied?: number; rowsFailed?: number },
   ): Promise<unknown>;
-  extendLease(id: string, workerId: string, leaseMs: number): Promise<boolean>;
-  scheduleRetry(id: string, availableAt: number): Promise<unknown>;
-  markFailed(id: string, errorMessage: string): Promise<unknown>;
   setFilePath(id: string, filePath: string): Promise<unknown>;
 }
 
 export interface IntegrationRuntime {
   executor: DatabaseExecutor;
-  now: () => number;
+  now: () => Date;
   jobs: IntegrationJobsPort;
   recordExportQuery: LeadQueries;
   leads: {
     findByRucMany(
       rucs: string[],
-    ): Promise<Array<{ id: string; ruc: string; executiveId: number }>>;
+    ): Promise<Array<{ id: string; ruc: string; executiveId: string }>>;
   };
   users: {
-    findById(id: number): Promise<{ branch_id: number } | undefined>;
+    findById(id: string): Promise<{ branch_id: string } | undefined>;
   };
 }
 

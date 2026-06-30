@@ -1,14 +1,49 @@
-import type { FieldChange } from "~/contracts/events";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { FieldChange } from "./events";
 
-import type { CapacityRequestStatus } from "../domain/types";
-import type { LeadCapacitySnapshot } from "./queries/get-lead-capacity-snapshot";
-import type { SearchCapacitySnapshot } from "./queries/get-search-capacity-snapshot";
+export type ExecutiveCategoryValue = "elite" | "corporativa";
+
+export type PolicySource = "system" | "branch" | "team" | "user";
+
+export type SearchPolicyView = {
+  source: PolicySource;
+  monthlyLimit: number;
+};
+
+export type LeadPolicyView = {
+  source: PolicySource;
+  bufferTarget: number;
+  dailyLimit: number;
+};
+
+export type SearchCapacitySnapshot = {
+  policy: SearchPolicyView;
+  granted: number;
+  committed: number;
+  pending: number;
+  remaining: number;
+  periodStart: string;
+  periodEnd: string;
+};
+
+export type LeadCapacitySnapshot = {
+  policy: LeadPolicyView;
+  granted: number;
+  committed: number;
+  pending: number;
+  remaining: number;
+  activeAssignments: number;
+};
+
+export type CapacityRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "canceled";
 
 export type CapacityAuditEvent = {
   id: string;
   createdAt: number;
-  actorUserId: number | null;
+  actorUserId: string | null;
   type: string;
   entityType: string;
   entityId: string;
@@ -17,26 +52,26 @@ export type CapacityAuditEvent = {
 };
 
 export type PendingCapacityRequestView = {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   kind: "search_extra" | "lead_refill";
   status: CapacityRequestStatus;
   requestedAmount: number;
   reason: string;
   decisionNote: string | null;
-  reviewerUserId: number | null;
+  reviewerUserId: string | null;
   createdAt: number;
   updatedAt: number;
   decidedAt: number | null;
   names: string;
   firstSurname: string;
   secondSurname: string;
-  teamId: number | null;
-  branchId: number;
+  teamId: string | null;
+  branchId: string;
 };
 
 export type CapacityPolicyTeamDefaultsView = {
-  teamId: number;
+  teamId: string;
   teamName: string;
   searchLimit: number | null;
   activeBufferTarget: number | null;
@@ -44,7 +79,7 @@ export type CapacityPolicyTeamDefaultsView = {
 };
 
 export type CapacityPolicyDefaultsView = {
-  branchId: number;
+  branchId: string;
   branchSearchLimit: number | null;
   branchActiveBufferTarget: number | null;
   branchDailyRefillLimit: number | null;
@@ -52,10 +87,10 @@ export type CapacityPolicyDefaultsView = {
 };
 
 export type ManagedExecutiveView = {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
-  teamId: number | null;
+  teamId: string | null;
   executiveCategory: ExecutiveCategoryValue | null;
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
@@ -63,23 +98,23 @@ export type ManagedExecutiveView = {
 
 export type ExecutiveCapacityDetailView = {
   executive: {
-    id: number;
+    id: string;
     fullName: string;
     email: string;
-    teamId: number | null;
+    teamId: string | null;
     executiveCategory: ExecutiveCategoryValue | null;
   };
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
   requests: {
-    id: number;
-    userId: number;
+    id: string;
+    userId: string;
     kind: "search_extra" | "lead_refill";
     status: CapacityRequestStatus;
     requestedAmount: number;
     reason: string;
     decisionNote: string | null;
-    reviewerUserId: number | null;
+    reviewerUserId: string | null;
     createdAt: number;
     updatedAt: number;
     decidedAt: number | null;

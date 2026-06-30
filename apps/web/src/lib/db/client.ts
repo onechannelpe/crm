@@ -1,38 +1,29 @@
-import { createClient } from "@libsql/client";
-import { Kysely } from "kysely";
+import { Kysely, PostgresDialect } from "kysely";
+import { Pool, types } from "pg";
 
 import { createLogger } from "~/lib/observability/logger";
 
-import { LibSQLDialect } from "./libsql-dialect";
 import type { Database as DatabaseSchema } from "./types";
 
 const logger = createLogger("db-client");
 
-function normalizeDbUrl(input: string): string {
-  if (input === ":memory:") {
-    return input;
-  }
-  if (
-    input.startsWith("http://") ||
-    input.startsWith("https://") ||
-    input.startsWith("libsql://") ||
-    input.startsWith("file:")
-  ) {
-    return input;
-  }
-  return `file:${input}`;
-}
+// numeric (OID 1700) defaults to a string in node-pg to preserve arbitrary
+// precision. Our numeric columns are rate/fee money values that were `real`
+// (float) before the Postgres move and are read into number arithmetic, so we
+// parse them back to JS numbers globally. bigint/int8 is never used (counters
+// are int4), so no parser is needed there.
+types.setTypeParser(types.builtins.NUMERIC, Number.parseFloat);
 
-export function createDb(dbUrl: string): Kysely<DatabaseSchema> {
-  const normalizedUrl = normalizeDbUrl(dbUrl);
-  logger.info("db_initialization_started", { url: normalizedUrl });
+// One Kysely instance per connection string. The pool is owned by the returned
+// instance; callers that build throwaway databases (the test harness) must
+// `destroy()` to release the pool. `timestamptz` comes back as a JS `Date`,
+// `uuid` as a string, `numeric`/`int4` as a number — see the schema conventions.
+export function createDb(connectionString: string): Kysely<DatabaseSchema> {
+  logger.info("db_initialization_started", { url: connectionString });
 
-  const client = createClient({
-    url: normalizedUrl,
-    intMode: "number",
-  });
+  const pool = new Pool({ connectionString });
 
   return new Kysely<DatabaseSchema>({
-    dialect: new LibSQLDialect(client),
+    dialect: new PostgresDialect({ pool }),
   });
 }

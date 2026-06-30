@@ -2,11 +2,12 @@ import type { Insertable, Kysely } from "kysely";
 
 import type { Database, UserChannelAddressesTable } from "~/lib/db/types";
 import type { Phone } from "~/lib/phone/pe-mobile";
+import type { UserId } from "~/server/shared/ids";
 
 type ChannelType = UserChannelAddressesTable["channel"];
 
 export function createUserChannelAddressRepo(db: Kysely<Database>) {
-  const listByUser = (userId: number) =>
+  const listByUser = (userId: UserId) =>
     db
       .selectFrom("user_channel_addresses")
       .selectAll()
@@ -14,7 +15,7 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
       .orderBy("created_at", "asc")
       .execute();
 
-  const findByUserAndChannel = (userId: number, channel: ChannelType) =>
+  const findByUserAndChannel = (userId: UserId, channel: ChannelType) =>
     db
       .selectFrom("user_channel_addresses")
       .selectAll()
@@ -45,17 +46,17 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
       .execute();
 
   const claimWhatsAppAddress = async (values: {
-    userId: number;
+    userId: UserId;
     address: Phone;
-    now: number;
+    now: Date;
   }): Promise<
-    { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: number }
+    { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: UserId }
   > => {
     const updateResult = await db
       .updateTable("user_channel_addresses")
       .set({
         address: values.address,
-        is_verified: 0,
+        is_verified: false,
         verified_at: null,
         updated_at: values.now,
       })
@@ -86,7 +87,7 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
         user_id: values.userId,
         channel: "whatsapp",
         address: values.address,
-        is_verified: 0,
+        is_verified: false,
         verified_at: null,
         created_at: values.now,
         updated_at: values.now,
@@ -119,21 +120,21 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
   // supplied address matches what's stored, so a stale command from a
   // different number can't accidentally verify a fresh one.
   const markWhatsAppVerified = async (values: {
-    userId: number;
+    userId: UserId;
     address: string;
-    now: number;
+    now: Date;
   }): Promise<boolean> => {
     const result = await db
       .updateTable("user_channel_addresses")
       .set({
-        is_verified: 1,
+        is_verified: true,
         verified_at: values.now,
         updated_at: values.now,
       })
       .where("user_id", "=", values.userId)
       .where("channel", "=", "whatsapp")
       .where("address", "=", values.address)
-      .where("is_verified", "!=", 1)
+      .where("is_verified", "!=", true)
       .executeTakeFirst();
     return Number(result.numUpdatedRows ?? 0) > 0;
   };
