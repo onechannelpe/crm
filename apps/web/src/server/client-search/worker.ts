@@ -29,6 +29,7 @@ export function createEnrichmentQueue(
     leaseMs,
     batchSize,
     maxConcurrency,
+    now: Date.now,
     poll: (limit: number) => enrichmentRepo.leaseJobs(limit, leaseMs, workerId),
     handle: async (job, signal) => {
       return processEnrichmentJob(job, scraper, signal);

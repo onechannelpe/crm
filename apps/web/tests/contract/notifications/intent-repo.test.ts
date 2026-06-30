@@ -39,11 +39,11 @@ describe("intent repository", () => {
     ]);
     const row = await ctx.db
       .selectFrom("notification_outbox")
-      .select(["status", "lease_owner", "lease_until"])
+      .select(["queue_state", "lease_owner", "lease_until"])
       .where("id", "=", "intent-1")
       .executeTakeFirstOrThrow();
     expect(row).toEqual({
-      status: "expanding",
+      queue_state: "processing",
       lease_owner: "worker-1",
       lease_until: NOW + 30_000,
     });
@@ -68,11 +68,17 @@ describe("intent repository", () => {
 
     const row = await ctx.db
       .selectFrom("notification_outbox")
-      .select(["status", "expanded_at", "lease_owner", "lease_until", "error"])
+      .select([
+        "queue_state",
+        "expanded_at",
+        "lease_owner",
+        "lease_until",
+        "error",
+      ])
       .where("id", "=", "intent-1")
       .executeTakeFirstOrThrow();
     expect(row).toEqual({
-      status: "expanded",
+      queue_state: "done",
       expanded_at: NOW,
       lease_owner: null,
       lease_until: null,
@@ -91,20 +97,20 @@ describe("intent repository", () => {
 
     const rows = await ctx.db
       .selectFrom("notification_outbox")
-      .select(["id", "status", "available_at", "error", "lease_owner"])
+      .select(["id", "queue_state", "available_at", "error", "lease_owner"])
       .orderBy("id", "asc")
       .execute();
     expect(rows).toEqual([
       {
         id: "intent-fail",
-        status: "failed",
+        queue_state: "failed",
         available_at: NOW,
         error: "boom",
         lease_owner: null,
       },
       {
         id: "intent-retry",
-        status: "pending",
+        queue_state: "pending",
         available_at: NOW + 5_000,
         error: null,
         lease_owner: null,

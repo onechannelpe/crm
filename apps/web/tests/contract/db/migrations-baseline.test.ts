@@ -43,7 +43,7 @@ describe("schema baseline", () => {
       expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
       expect(tableNames.has("action_observations")).toBe(true);
-      expect(tableNames.has("report_export_jobs")).toBe(true);
+      expect(tableNames.has("notification_outbox")).toBe(true);
       expect(tableNames.has("login_flows")).toBe(true);
 
       const indexes = await sql<{ name: string }>`
@@ -58,7 +58,7 @@ describe("schema baseline", () => {
       expect(indexNames.has("idx_events_actor_occurred")).toBe(true);
       expect(indexNames.has("idx_events_entity_occurred")).toBe(true);
       expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
-      expect(indexNames.has("idx_report_export_jobs_branch_time")).toBe(true);
+      expect(indexNames.has("idx_notification_outbox_queue_state")).toBe(true);
     } finally {
       await db.destroy();
     }

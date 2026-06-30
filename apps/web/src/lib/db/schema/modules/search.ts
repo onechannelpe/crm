@@ -36,6 +36,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("document_type", "varchar(8)", (col) => col.notNull())
     .addColumn("document_value", "varchar(32)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("queue_state", "varchar(20)", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
     .addColumn("requested_by_user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
@@ -45,14 +48,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lease_until", "integer")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("next_attempt_at", "integer", (col) => col.notNull())
+    .addColumn("available_at", "integer", (col) => col.notNull())
     .addColumn("last_error", "text")
     .execute();
 
   await db.schema
-    .createIndex("idx_search_enrichment_jobs_status_lease_time")
+    .createIndex("idx_search_enrichment_jobs_queue_state_time")
     .on("search_enrichment_jobs")
-    .columns(["status", "next_attempt_at", "lease_until", "requested_at"])
+    .columns(["queue_state", "available_at", "lease_until"])
     .execute();
 
   await db.schema
@@ -108,7 +111,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("district", "varchar(128)")
     .addColumn("department", "varchar(128)")
     .addColumn("fetched_at", "integer", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("queue_state", "varchar(20)", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "integer", (col) => col.notNull())
@@ -120,9 +125,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_search_enrichment_completion_outbox_status")
+    .createIndex("idx_search_enrichment_completion_outbox_queue_state")
     .on("search_enrichment_completion_outbox")
-    .columns(["status", "available_at", "lease_until", "created_at"])
+    .columns(["queue_state", "available_at", "lease_until"])
     .execute();
 
   await db.schema
@@ -130,6 +135,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .on("search_enrichment_completion_outbox")
     .columns(["document_type", "document_value"])
-    .where(sql.ref("status"), "in", ["queued", "running"])
+    .where(sql.ref("queue_state"), "in", ["pending", "processing"])
     .execute();
 }

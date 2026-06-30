@@ -1,5 +1,6 @@
 import { randomUUIDv7 } from "bun";
 
+import { createJobStore } from "~/lib/job-queue/job-store";
 import type {
   IntegrationJobRow,
   IntegrationJobType,
@@ -7,13 +8,50 @@ import type {
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export function createIntegrationJobRepo(db: DatabaseExecutor) {
+const JOB_COLUMNS = [
+  "id",
+  "type",
+  "status",
+  "created_at",
+  "completed_at",
+  "error_message",
+  "rows_total",
+  "rows_applied",
+  "rows_failed",
+  "results_json",
+  "available_at",
+  "lease_owner",
+  "lease_until",
+  "file_path",
+  "requested_by_user_id",
+  "attempt_count",
+  "max_attempts",
+] as const;
+
+export function createIntegrationJobRepo(
+  db: DatabaseExecutor,
+  now: () => number,
+) {
+  // `status` (PENDING|PROCESSING|COMPLETED|FAILED) stays the user-facing field
+  // the import UI polls; the store owns queue_state. Both move together through
+  // the domain patches below.
+  const store = createJobStore<IntegrationJobRow, string>(
+    db,
+    "workflow_integration_jobs",
+    JOB_COLUMNS,
+  );
+
   return {
     async insert(values: NewIntegrationJob): Promise<string> {
       const id = randomUUIDv7();
       await db
         .insertInto("workflow_integration_jobs")
-        .values({ ...values, id })
+        .values({
+          ...values,
+          id,
+          queue_state: "pending",
+          available_at: values.created_at,
+        })
         .executeTakeFirstOrThrow();
       return id;
     },
@@ -36,75 +74,22 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async claimPending(
+    claimPending(
       leaseMs: number,
       workerId: string,
       batchSize: number,
       types?: IntegrationJobType[],
     ): Promise<IntegrationJobRow[]> {
-      const now = Date.now();
-      const leaseUntil = now + leaseMs;
-
-      let query = db
-        .selectFrom("workflow_integration_jobs")
-        .select(["id", "status", "lease_until"])
-        .where((eb) =>
-          eb.and([
-            eb("status", "=", "PENDING"),
-            eb.or([
-              eb("available_at", "is", null),
-              eb("available_at", "<=", now),
-            ]),
-            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-          ]),
-        );
-
-      if (types && types.length > 0) {
-        query = query.where("type", "in", types);
-      }
-
-      const candidates = await query
-        .orderBy("created_at", "asc")
-        .limit(batchSize)
-        .execute();
-
-      if (candidates.length === 0) return [];
-
-      const ids = candidates.map((row) => row.id);
-      let updateQuery = db
-        .updateTable("workflow_integration_jobs")
-        .set((eb) => ({
-          status: "PROCESSING",
-          lease_owner: workerId,
-          lease_until: leaseUntil,
-          attempt_count: eb("attempt_count", "+", 1),
-        }))
-        .where("id", "in", ids)
-        .where((eb) =>
-          eb.and([
-            eb("status", "=", "PENDING"),
-            eb.or([
-              eb("available_at", "is", null),
-              eb("available_at", "<=", now),
-            ]),
-            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-          ]),
-        );
-
-      if (types && types.length > 0) {
-        updateQuery = updateQuery.where("type", "in", types);
-      }
-
-      await updateQuery.execute();
-
-      return db
-
-        .selectFrom("workflow_integration_jobs")
-        .selectAll()
-        .where("id", "in", ids)
-        .where("status", "=", "PROCESSING")
-        .where("lease_owner", "=", workerId)
-        .execute();
+      return store.claimPending(
+        workerId,
+        now(),
+        batchSize,
+        leaseMs,
+        { status: "PROCESSING" },
+        types && types.length > 0
+          ? { column: "type", values: types }
+          : undefined,
+      );
     },
 
     markCompleted(
@@ -116,20 +101,14 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         resultsJson: string | null;
       },
     ) {
-      return db
-        .updateTable("workflow_integration_jobs")
-        .set({
-          status: "COMPLETED",
-          rows_total: result.rowsTotal,
-          rows_applied: result.rowsApplied,
-          rows_failed: result.rowsFailed,
-          results_json: result.resultsJson,
-          completed_at: Date.now(),
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
+      return store.markDone(id, {
+        status: "COMPLETED",
+        rows_total: result.rowsTotal,
+        rows_applied: result.rowsApplied,
+        rows_failed: result.rowsFailed,
+        results_json: result.resultsJson,
+        completed_at: now(),
+      });
     },
 
     updateProgress(
@@ -166,48 +145,24 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async extendLease(
+    extendLease(
       id: string,
       workerId: string,
       leaseMs: number,
     ): Promise<boolean> {
-      const now = Date.now();
-      const result = await db
-        .updateTable("workflow_integration_jobs")
-        .set({ lease_until: now + leaseMs })
-        .where("id", "=", id)
-        .where("lease_owner", "=", workerId)
-        .where("status", "=", "PROCESSING")
-        .executeTakeFirst();
-
-      return Number(result.numUpdatedRows ?? 0) > 0;
+      return store.extendLease(id, workerId, leaseMs, now());
     },
 
     scheduleRetry(id: string, availableAt: number) {
-      return db
-        .updateTable("workflow_integration_jobs")
-        .set({
-          status: "PENDING",
-          available_at: availableAt,
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
+      return store.scheduleRetry(id, availableAt, { status: "PENDING" });
     },
 
     markFailed(id: string, errorMessage: string) {
-      return db
-        .updateTable("workflow_integration_jobs")
-        .set({
-          status: "FAILED",
-          error_message: errorMessage,
-          completed_at: Date.now(),
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
+      return store.markFailed(id, {
+        status: "FAILED",
+        error_message: errorMessage,
+        completed_at: now(),
+      });
     },
 
     setFilePath(id: string, filePath: string) {

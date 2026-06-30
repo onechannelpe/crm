@@ -31,7 +31,7 @@ export async function enqueueNotifications(
         body_text: intent.bodyText,
         action_url: intent.actionUrl,
         priority: intent.priority,
-        status: "pending" as const,
+        queue_state: "pending" as const,
         attempt_count: 0,
         max_attempts: DEFAULT_MAX_ATTEMPTS,
         available_at: now,

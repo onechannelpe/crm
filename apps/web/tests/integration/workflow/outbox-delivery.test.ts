@@ -32,7 +32,7 @@ describe("outbox delivery", () => {
         body_text: "unsupported channel",
         action_url: null,
         priority: "normal",
-        status: "pending",
+        queue_state: "pending",
         attempt_count: 0,
         max_attempts: 5,
         available_at: 0,
@@ -48,11 +48,11 @@ describe("outbox delivery", () => {
 
     const failed = await runtime.ctx.db
       .selectFrom("notification_outbox")
-      .select(["status", "error", "expanded_at"])
+      .select(["queue_state", "error", "expanded_at"])
       .where("id", "=", "test-malformed-channels")
       .executeTakeFirstOrThrow();
 
-    expect(failed.status).toBe("failed");
+    expect(failed.queue_state).toBe("failed");
     expect(failed.error).toContain("Invalid notification channels payload");
     expect(failed.expanded_at).toBe(runtime.now.get());
   });
@@ -106,8 +106,8 @@ describe("outbox delivery", () => {
     ]);
 
     const outbox = await reader.outbox();
-    expect(outbox.filter(({ status }) => status === "expanded")).toHaveLength(
-      2,
-    );
+    expect(
+      outbox.filter(({ queue_state }) => queue_state === "done"),
+    ).toHaveLength(2);
   });
 });

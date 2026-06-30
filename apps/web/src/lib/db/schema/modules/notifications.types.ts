@@ -40,7 +40,7 @@ export interface NotificationDeliveriesTable {
   title: string;
   body_text: string;
   action_url: string | null;
-  status: "pending" | "sending" | "sent" | "failed";
+  queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: number;
   max_attempts: number;
   available_at: number;
@@ -81,7 +81,7 @@ export interface NotificationOutboxTable {
   body_text: string;
   action_url: string | null;
   priority: "high" | "normal" | "low";
-  status: "pending" | "expanding" | "expanded" | "failed";
+  queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: number;
   max_attempts: number;
   available_at: number;

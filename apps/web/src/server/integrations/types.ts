@@ -17,7 +17,7 @@ export interface IntegrationJobRow extends QueueJobBase {
   rows_applied: number | null;
   rows_failed: number | null;
   results_json: string | null;
-  available_at: number | null;
+  available_at: number;
   lease_owner: string | null;
   lease_until: number | null;
   file_path: string | null;

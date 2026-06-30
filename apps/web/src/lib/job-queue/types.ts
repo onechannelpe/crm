@@ -10,10 +10,11 @@ export interface JobQueueConfig<TJob extends QueueJobBase, TResult> {
   maxConcurrency?: number;
   timeoutMs?: number;
   batchSize?: number;
-  // Clock for backoff scheduling on the crash/timeout retry path. Defaults to
-  // `Date.now`; queues with an injected clock pass it so retries stay
-  // deterministic under a test clock.
-  now?: () => number;
+  // Clock for backoff scheduling on the crash/timeout retry path. Required: a
+  // queue is a time-driven component, so its clock is a core dependency rather
+  // than an ambient default. Production passes `Date.now`; tests pass a
+  // controlled clock so scheduled `available_at` stays reachable.
+  now: () => number;
   poll(limit: number): Promise<TJob[]>;
   handle(job: TJob, signal: AbortSignal): Promise<TResult>;
   onResult?: (

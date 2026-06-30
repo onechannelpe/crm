@@ -93,7 +93,7 @@ export function createTestRepositories(db: Kysely<Database>) {
     passwordResetTokens: createPasswordResetTokensRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
-    integrationJobs: createIntegrationJobRepo(db),
+    integrationJobs: createIntegrationJobRepo(db, () => Date.now()),
   };
 }
 

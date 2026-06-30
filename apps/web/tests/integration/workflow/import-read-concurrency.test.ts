@@ -65,6 +65,8 @@ describe("integration import workflow concurrency", () => {
     expect(applied.failed).toBe(0);
 
     const outbox = await createNotificationReader(runtime).outbox();
-    expect(outbox.filter(({ status }) => status === "pending")).toHaveLength(2);
+    expect(
+      outbox.filter(({ queue_state }) => queue_state === "pending"),
+    ).toHaveLength(2);
   });
 });

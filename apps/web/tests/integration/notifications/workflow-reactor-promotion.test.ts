@@ -70,7 +70,7 @@ describe("workflow notification pipeline", () => {
     if (!entry) throw new Error("expected stage notification outbox entry");
     expect(entry).toMatchObject({
       event_type: "lead.ready_for_sale",
-      status: "pending",
+      queue_state: "pending",
     });
     expect(JSON.parse(entry.channels_json)).toEqual(["in_app", "whatsapp"]);
 
@@ -93,7 +93,7 @@ describe("workflow notification pipeline", () => {
       user_id: actorBy("execOne").userId,
       channel: "whatsapp",
       recipient_address: "51911000001",
-      status: "sent",
+      queue_state: "done",
       provider: "whatsapp_cloud",
       provider_message_id: "test-whatsapp",
       sent_at: NOW,

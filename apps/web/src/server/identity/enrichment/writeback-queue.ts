@@ -37,6 +37,7 @@ export function createSunatEnrichmentWritebackQueue(
     name: "sunat-enrichment-writeback",
     leaseMs,
     batchSize,
+    now: Date.now,
     poll: (limit: number) => repo.claimQueued(workerId, limit, leaseMs),
     handle: async (job, _signal) => {
       await applySunatEnrichment({
@@ -52,10 +53,9 @@ export function createSunatEnrichmentWritebackQueue(
       });
     },
     extendLease: (id: number) => repo.extendLease(id, workerId, leaseMs),
-    onComplete: (id: number) => repo.markCompleted(id, workerId),
+    onComplete: (id: number) => repo.markCompleted(id),
     onRetry: (id: number, availableAt: number) =>
-      repo.scheduleRetry(id, availableAt, workerId),
-    onFail: (id: number, reason: string) =>
-      repo.markFailed(id, reason, workerId),
+      repo.scheduleRetry(id, availableAt),
+    onFail: (id: number, reason: string) => repo.markFailed(id, reason),
   });
 }

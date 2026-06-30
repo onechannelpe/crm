@@ -47,6 +47,7 @@ export function createRecordsImportQueue(
     name: "records-import",
     leaseMs,
     batchSize,
+    now: runtime.now,
     poll: (limit: number) =>
       runtime.jobs.claimPending(leaseMs, workerId, limit, [
         ...RECORD_IMPORT_TYPES,

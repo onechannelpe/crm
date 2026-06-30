@@ -15,7 +15,7 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
   const maxConcurrency = config.maxConcurrency ?? 1;
   const timeoutMs = config.timeoutMs ?? 120_000;
   const claimBatchSize = config.batchSize ?? maxConcurrency;
-  const now = config.now ?? Date.now;
+  const now = config.now;
 
   let runningCount = 0;
   const logger = createLogger(`queue:${name}`);

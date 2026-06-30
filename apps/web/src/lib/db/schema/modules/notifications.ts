@@ -59,7 +59,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("title", "varchar(255)", (col) => col.notNull())
     .addColumn("body_text", "text", (col) => col.notNull())
     .addColumn("action_url", "varchar(255)")
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("queue_state", "varchar(20)", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "integer", (col) => col.notNull())
@@ -85,9 +87,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   // Dispatch poll: pending rows whose lease is free and due.
   await db.schema
-    .createIndex("idx_notification_deliveries_status")
+    .createIndex("idx_notification_deliveries_queue_state")
     .on("notification_deliveries")
-    .columns(["status", "available_at", "lease_until"])
+    .columns(["queue_state", "available_at", "lease_until"])
     .execute();
 
   await db.schema
@@ -130,7 +132,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("body_text", "text", (col) => col.notNull())
     .addColumn("action_url", "varchar(255)")
     .addColumn("priority", "varchar(16)", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("queue_state", "varchar(20)", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "integer", (col) => col.notNull())
@@ -142,9 +146,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_outbox_status")
+    .createIndex("idx_notification_outbox_queue_state")
     .on("notification_outbox")
-    .columns(["status", "available_at", "lease_until"])
+    .columns(["queue_state", "available_at", "lease_until"])
     .execute();
 
   await db.schema

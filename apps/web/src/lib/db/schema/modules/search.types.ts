@@ -17,6 +17,7 @@ export interface SearchEnrichmentJobsTable {
   document_type: "dni" | "ruc";
   document_value: string;
   status: "queued" | "running" | "succeeded" | "failed";
+  queue_state: "pending" | "processing" | "done" | "failed";
   requested_by_user_id: number;
   requested_at: number;
   completed_at: number | null;
@@ -24,7 +25,7 @@ export interface SearchEnrichmentJobsTable {
   lease_until: number | null;
   attempt_count: number;
   max_attempts: number;
-  next_attempt_at: number;
+  available_at: number;
   last_error: string | null;
 }
 
@@ -54,7 +55,7 @@ export interface SearchEnrichmentCompletionOutboxTable {
   district: string | null;
   department: string | null;
   fetched_at: number;
-  status: "queued" | "running" | "completed" | "failed";
+  queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: ColumnType<number, number | undefined, number>;
   available_at: number;

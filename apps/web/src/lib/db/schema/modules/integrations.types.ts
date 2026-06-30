@@ -4,6 +4,7 @@ export interface WorkflowIntegrationJobsTable {
   id: Generated<string>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+  queue_state: "pending" | "processing" | "done" | "failed";
   requested_by_user_id: number;
   file_path: string | null;
   error_message: string | null;
@@ -15,7 +16,7 @@ export interface WorkflowIntegrationJobsTable {
   lease_until: number | null;
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: number;
-  available_at: number | null;
+  available_at: number;
   created_at: number;
   completed_at: number | null;
 }

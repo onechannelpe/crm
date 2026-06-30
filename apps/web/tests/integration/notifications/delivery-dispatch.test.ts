@@ -83,7 +83,7 @@ describe("notification delivery dispatch", () => {
 
     const deliveries = await reader.deliveries();
     expect(deliveries).toHaveLength(4);
-    expect(deliveries.every((d) => d.status === "sent")).toBe(true);
+    expect(deliveries.every((d) => d.queue_state === "done")).toBe(true);
     expect(deliveries.map((d) => `${d.user_id}:${d.channel}`).sort()).toEqual([
       "1:email",
       "1:whatsapp",
@@ -127,7 +127,7 @@ describe("notification delivery dispatch", () => {
     const reader = createNotificationReader(runtime);
     const [afterRetry] = await reader.deliveries();
     expect(afterRetry).toMatchObject({
-      status: "pending",
+      queue_state: "pending",
       attempt_count: 1,
       error_code: "rate_limited",
     });
@@ -138,7 +138,7 @@ describe("notification delivery dispatch", () => {
 
     const [afterRecovery] = await reader.deliveries();
     expect(afterRecovery).toMatchObject({
-      status: "sent",
+      queue_state: "done",
       attempt_count: 2,
       provider_message_id: "wamid.ok",
     });
@@ -157,7 +157,7 @@ describe("notification delivery dispatch", () => {
     const reader = createNotificationReader(runtime);
     const [delivery] = await reader.deliveries();
     expect(delivery).toMatchObject({
-      status: "failed",
+      queue_state: "failed",
       attempt_count: 1,
       error_code: "bad_request",
     });
@@ -189,7 +189,7 @@ describe("notification delivery dispatch", () => {
 
     const reader = createNotificationReader(runtime);
     const [delivery] = await reader.deliveries();
-    expect(delivery).toMatchObject({ status: "failed", attempt_count: 5 });
+    expect(delivery).toMatchObject({ queue_state: "failed", attempt_count: 5 });
   });
 
   it("is idempotent when expansion runs again after a lost lease", async () => {
@@ -215,7 +215,7 @@ describe("notification delivery dispatch", () => {
     await runtime.ctx.db
       .updateTable("notification_outbox")
       .set({
-        status: "pending",
+        queue_state: "pending",
         lease_owner: null,
         lease_until: null,
         available_at: runtime.now.get(),

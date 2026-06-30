@@ -181,6 +181,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("type", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("queue_state", "varchar(20)", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
     .addColumn("requested_by_user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
@@ -194,14 +197,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lease_until", "integer")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(3))
-    .addColumn("available_at", "integer")
+    .addColumn("available_at", "integer", (col) => col.notNull())
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("completed_at", "integer")
     .execute();
 
   await db.schema
-    .createIndex("idx_workflow_integration_jobs_status")
+    .createIndex("idx_workflow_integration_jobs_queue_state")
     .on("workflow_integration_jobs")
-    .columns(["status", "available_at", "lease_until"])
+    .columns(["queue_state", "available_at", "lease_until"])
     .execute();
 }

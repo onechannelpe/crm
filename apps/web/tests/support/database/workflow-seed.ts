@@ -243,6 +243,7 @@ export async function seedImportJob(
       id: input.id,
       type: "import_status",
       status: "PROCESSING",
+      queue_state: "processing",
       requested_by_user_id: 5,
       file_path: "inline",
       error_message: null,
@@ -254,7 +255,7 @@ export async function seedImportJob(
       lease_until: now + 30_000,
       attempt_count: 1,
       max_attempts: 3,
-      available_at: null,
+      available_at: now,
       created_at: now,
       completed_at: null,
     })

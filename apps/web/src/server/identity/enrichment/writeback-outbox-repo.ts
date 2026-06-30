@@ -1,114 +1,55 @@
+import type { Selectable } from "kysely";
+
+import type { SearchEnrichmentCompletionOutboxTable } from "~/lib/db/types";
+import { createJobStore } from "~/lib/job-queue/job-store";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+type CompletionOutboxRow = Selectable<SearchEnrichmentCompletionOutboxTable>;
+
+// The completion outbox carries no user-facing status, so queue_state is its only
+// lifecycle column and every transition routes straight through the store.
 export function createSunatEnrichmentWritebackOutboxRepo(
   executor: DatabaseExecutor,
 ) {
+  const store = createJobStore<CompletionOutboxRow, number>(
+    executor,
+    "search_enrichment_completion_outbox",
+    [
+      "id",
+      "document_type",
+      "document_value",
+      "legal_name",
+      "address",
+      "district",
+      "department",
+      "fetched_at",
+      "queue_state",
+      "attempt_count",
+      "max_attempts",
+      "available_at",
+      "lease_owner",
+      "lease_until",
+      "error_message",
+      "created_at",
+      "processed_at",
+    ],
+  );
+
   return {
-    async claimQueued(workerId: string, limit: number, leaseMs: number) {
-      const now = Date.now();
-      const leaseUntil = now + leaseMs;
+    claimQueued: (workerId: string, limit: number, leaseMs: number) =>
+      store.claimPending(workerId, Date.now(), limit, leaseMs),
 
-      const candidates = await executor
-        .selectFrom("search_enrichment_completion_outbox")
-        .select("id")
-        .where("status", "=", "queued")
-        .where("available_at", "<=", now)
-        .where((eb) =>
-          eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-        )
-        .orderBy("created_at", "asc")
-        .limit(limit)
-        .execute();
+    extendLease: (id: number, workerId: string, leaseMs: number) =>
+      store.extendLease(id, workerId, leaseMs, Date.now()),
 
-      if (candidates.length < 1) {
-        return [];
-      }
+    markCompleted: (id: number) =>
+      store.markDone(id, { processed_at: Date.now(), error_message: null }),
 
-      const ids = candidates.map((row) => row.id);
-      await executor
-        .updateTable("search_enrichment_completion_outbox")
-        .set((eb) => ({
-          status: "running",
-          lease_owner: workerId,
-          lease_until: leaseUntil,
-          attempt_count: eb("attempt_count", "+", 1),
-        }))
-        .where("id", "in", ids)
-        .where("status", "=", "queued")
-        .where("available_at", "<=", now)
-        .where((eb) =>
-          eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-        )
-        .execute();
+    scheduleRetry: (id: number, availableAt: number) =>
+      store.scheduleRetry(id, availableAt),
 
-      return executor
-        .selectFrom("search_enrichment_completion_outbox")
-        .selectAll()
-        .where("id", "in", ids)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", workerId)
-        .execute();
-    },
-
-    async extendLease(id: number, workerId: string, leaseMs: number) {
-      const now = Date.now();
-      const result = await executor
-        .updateTable("search_enrichment_completion_outbox")
-        .set({ lease_until: now + leaseMs })
-        .where("id", "=", id)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", workerId)
-        .executeTakeFirst();
-
-      return Number(result.numUpdatedRows ?? 0) > 0;
-    },
-
-    async markCompleted(id: number, workerId: string) {
-      await executor
-        .updateTable("search_enrichment_completion_outbox")
-        .set({
-          status: "completed",
-          processed_at: Date.now(),
-          lease_owner: null,
-          lease_until: null,
-          error_message: null,
-        })
-        .where("id", "=", id)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", workerId)
-        .execute();
-    },
-
-    async scheduleRetry(id: number, availableAt: number, workerId: string) {
-      await executor
-        .updateTable("search_enrichment_completion_outbox")
-        .set({
-          status: "queued",
-          available_at: availableAt,
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", workerId)
-        .execute();
-    },
-
-    async markFailed(id: number, reason: string, workerId: string) {
-      await executor
-        .updateTable("search_enrichment_completion_outbox")
-        .set({
-          status: "failed",
-          processed_at: Date.now(),
-          error_message: reason,
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", workerId)
-        .execute();
-    },
+    markFailed: (id: number, reason: string) =>
+      store.markFailed(id, { processed_at: Date.now(), error_message: reason }),
   };
 }
 

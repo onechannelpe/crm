@@ -46,14 +46,14 @@ describe("delivery repository", () => {
 
     const rows = await ctx.db
       .selectFrom("notification_deliveries")
-      .select(["intent_id", "user_id", "channel", "status"])
+      .select(["intent_id", "user_id", "channel", "queue_state"])
       .execute();
     expect(rows).toEqual([
       {
         intent_id: "intent-1",
         user_id: 1,
         channel: "whatsapp",
-        status: "pending",
+        queue_state: "pending",
       },
     ]);
   });
@@ -93,7 +93,7 @@ describe("delivery repository", () => {
     const row = await ctx.db
       .selectFrom("notification_deliveries")
       .select([
-        "status",
+        "queue_state",
         "provider",
         "provider_message_id",
         "sent_at",
@@ -103,7 +103,7 @@ describe("delivery repository", () => {
       .where("id", "=", job.id)
       .executeTakeFirstOrThrow();
     expect(row).toEqual({
-      status: "sent",
+      queue_state: "done",
       provider: "kapso",
       provider_message_id: "wamid.test",
       sent_at: NOW,
@@ -129,11 +129,11 @@ describe("delivery repository", () => {
 
     const retryRow = await ctx.db
       .selectFrom("notification_deliveries")
-      .select(["status", "available_at", "lease_owner"])
+      .select(["queue_state", "available_at", "lease_owner"])
       .where("id", "=", first.id)
       .executeTakeFirstOrThrow();
     expect(retryRow).toEqual({
-      status: "pending",
+      queue_state: "pending",
       available_at: NOW + 5_000,
       lease_owner: null,
     });
@@ -165,11 +165,11 @@ describe("delivery repository", () => {
 
     const row = await ctx.db
       .selectFrom("notification_deliveries")
-      .select(["status", "error_code", "error_message", "lease_owner"])
+      .select(["queue_state", "error_code", "error_message", "lease_owner"])
       .where("id", "=", job.id)
       .executeTakeFirstOrThrow();
     expect(row).toEqual({
-      status: "failed",
+      queue_state: "failed",
       error_code: "bad_request",
       error_message: "rejected",
       lease_owner: null,

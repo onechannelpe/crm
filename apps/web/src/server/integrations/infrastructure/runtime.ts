@@ -15,7 +15,7 @@ export function createIntegrationRuntime(input: {
   return {
     executor,
     now: input.now,
-    jobs: createIntegrationJobRepo(executor),
+    jobs: createIntegrationJobRepo(executor, input.now),
     leads: createLeadRepo(executor),
     recordExportQuery: createLeadQueries(executor),
     users: createUsersRepo(executor),

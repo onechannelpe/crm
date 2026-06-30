@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import { createJobStore } from "~/lib/job-queue/job-store";
 
 export type DeliveryChannel = "email" | "whatsapp";
 export type DeliveryProviderId = "resend" | "whatsapp_cloud" | "kapso";
@@ -64,6 +65,23 @@ export interface DeliveryRepository {
 export function createDeliveryRepository(
   db: Kysely<Database>,
 ): DeliveryRepository {
+  const store = createJobStore<DeliveryJob, number>(
+    db,
+    "notification_deliveries",
+    [
+      "id",
+      "attempt_count",
+      "max_attempts",
+      "intent_id",
+      "user_id",
+      "channel",
+      "recipient_address",
+      "title",
+      "body_text",
+      "action_url",
+    ],
+  );
+
   return {
     async insertPlanned(rows, now) {
       if (rows.length === 0) return;
@@ -78,7 +96,7 @@ export function createDeliveryRepository(
             title: row.title,
             body_text: row.body_text,
             action_url: row.action_url,
-            status: "pending" as const,
+            queue_state: "pending" as const,
             attempt_count: 0,
             max_attempts: DEFAULT_MAX_ATTEMPTS,
             available_at: now,
@@ -99,66 +117,15 @@ export function createDeliveryRepository(
         .execute();
     },
 
-    async claimPending(workerId, now, limit, leaseMs) {
-      const candidates = await db
-        .selectFrom("notification_deliveries")
-        .select("id")
-        .where("status", "=", "pending")
-        .where("available_at", "<=", now)
-        .where((eb) =>
-          eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-        )
-        .orderBy("created_at", "asc")
-        .limit(limit)
-        .execute();
-      if (candidates.length === 0) return [];
-
-      const ids = candidates.map(({ id }) => id);
-      await db
-        .updateTable("notification_deliveries")
-        .set((eb) => ({
-          status: "sending",
-          lease_owner: workerId,
-          lease_until: now + leaseMs,
-          attempt_count: eb("attempt_count", "+", 1),
-        }))
-        .where("id", "in", ids)
-        .where("status", "=", "pending")
-        .execute();
-
-      return db
-        .selectFrom("notification_deliveries")
-        .select([
-          "id",
-          "attempt_count",
-          "max_attempts",
-          "intent_id",
-          "user_id",
-          "channel",
-          "recipient_address",
-          "title",
-          "body_text",
-          "action_url",
-        ])
-        .where("id", "in", ids)
-        .where("lease_owner", "=", workerId)
-        .execute();
-    },
-
-    async extendLease(id, workerId, leaseMs, now) {
-      const result = await db
-        .updateTable("notification_deliveries")
-        .set({ lease_until: now + leaseMs })
-        .where("id", "=", id)
-        .where("lease_owner", "=", workerId)
-        .where("status", "=", "sending")
-        .executeTakeFirst();
-      return Number(result.numUpdatedRows ?? 0) > 0;
-    },
+    claimPending: (workerId, now, limit, leaseMs) =>
+      store.claimPending(workerId, now, limit, leaseMs),
+    extendLease: (id, workerId, leaseMs, now) =>
+      store.extendLease(id, workerId, leaseMs, now),
+    scheduleRetry: (id, availableAt) => store.scheduleRetry(id, availableAt),
 
     // The send outcome (provider id, message id, error) is the dispatch stage's
-    // to record; the lifecycle status below is the queue's. Splitting the writes
-    // keeps each owner's columns clear.
+    // to record; the queue lifecycle is the store's. Splitting the writes keeps
+    // each owner's columns clear.
     async recordAttempt(id, attempt) {
       await db
         .updateTable("notification_deliveries")
@@ -173,49 +140,14 @@ export function createDeliveryRepository(
         .execute();
     },
 
-    async markSent(id, now) {
-      await db
-        .updateTable("notification_deliveries")
-        .set({
-          status: "sent",
-          sent_at: now,
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
-    },
-
-    async scheduleRetry(id, availableAt) {
-      await db
-        .updateTable("notification_deliveries")
-        .set({
-          status: "pending",
-          available_at: availableAt,
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
-    },
-
-    async markFailed(id) {
-      await db
-        .updateTable("notification_deliveries")
-        .set({
-          status: "failed",
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
-    },
+    markSent: (id, now) => store.markDone(id, { sent_at: now }),
+    markFailed: (id) => store.markFailed(id),
 
     async countOutstanding() {
       const row = await db
         .selectFrom("notification_deliveries")
         .select((eb) => eb.fn.count<number>("id").as("count"))
-        .where("status", "in", ["pending", "sending"])
+        .where("queue_state", "in", ["pending", "processing"])
         .executeTakeFirstOrThrow();
       return row.count;
     },
