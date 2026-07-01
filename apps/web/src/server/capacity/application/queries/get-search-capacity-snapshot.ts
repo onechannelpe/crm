@@ -1,12 +1,12 @@
+import {
+  buildSearchCapacitySnapshot,
+  type SearchCapacitySnapshot,
+} from "~/server/capacity/domain/snapshot";
 import type {
   SearchCapacityGrantsRepo,
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import {
-  buildSearchCapacitySnapshot,
-  type SearchCapacitySnapshot,
-} from "~/server/capacity/domain/snapshot";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";

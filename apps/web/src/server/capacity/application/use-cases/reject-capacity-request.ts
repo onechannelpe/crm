@@ -8,8 +8,8 @@ import {
 import type { CapacityRequestId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../authorize-capacity-actor";
 import { normalizeDecisionNote } from "../../domain/request-policy";
+import { canManageExecutive } from "../authorize-capacity-actor";
 import type { CapacityApprovalDeps } from "./shared";
 
 export async function rejectCapacityRequest(

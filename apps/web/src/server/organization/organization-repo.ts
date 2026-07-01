@@ -58,9 +58,7 @@ export type Membership = {
 
 export type OrganizationRepository = {
   findOrganizationByRuc(ruc: string): Promise<OrganizationProfile | null>;
-  findOrganizationById(
-    id: OrganizationId,
-  ): Promise<OrganizationProfile | null>;
+  findOrganizationById(id: OrganizationId): Promise<OrganizationProfile | null>;
   upsertOrganization(input: {
     ruc: string;
     legalName?: string | null;

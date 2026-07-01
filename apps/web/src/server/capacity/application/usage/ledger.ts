@@ -1,5 +1,8 @@
 import { fail, type DomainError } from "~/server/shared/domain-error";
-import { asLeadReservationId, asSearchReservationId } from "~/server/shared/ids";
+import {
+  asLeadReservationId,
+  asSearchReservationId,
+} from "~/server/shared/ids";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 

@@ -2,8 +2,8 @@ import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
-import { Ok } from "~/server/shared/result";
 import { asUserId, type UserId } from "~/server/shared/ids";
+import { Ok } from "~/server/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
@@ -60,7 +60,9 @@ describe("search capacity consume service benchmark", () => {
         async () => Ok({ value: undefined, consumed: 1 }),
       );
       if (!result.ok) {
-        throw new Error(`expected reserve+commit success, got ${result.error.code}`);
+        throw new Error(
+          `expected reserve+commit success, got ${result.error.code}`,
+        );
       }
     },
     fixedIterations(USER_POOL_SIZE),

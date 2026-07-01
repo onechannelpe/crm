@@ -1,8 +1,4 @@
 import type { RateLimitDeps } from "~/lib/security/action-rate-limit";
-import type {
-  LeadCapacityGrantsRepo,
-  SearchCapacityGrantsRepo,
-} from "~/server/capacity/infrastructure/usage-repo";
 import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import type { CapacityTeamsRepo } from "~/server/capacity/infrastructure/capacity-teams-repo";
 import type { CapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
@@ -12,6 +8,10 @@ import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
+import type {
+  LeadCapacityGrantsRepo,
+  SearchCapacityGrantsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
 import type { AppUow } from "~/server/shared/application/uow";
 import type { BranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 

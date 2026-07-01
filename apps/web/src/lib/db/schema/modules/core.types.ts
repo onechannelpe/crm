@@ -34,4 +34,3 @@ export interface BackOfficeAssignmentsTable {
   team_id: IdColumn<TeamId>;
   assigned_at: Date;
 }
-

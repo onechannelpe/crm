@@ -1,12 +1,12 @@
+import {
+  buildLeadCapacitySnapshot,
+  type LeadCapacitySnapshot,
+} from "~/server/capacity/domain/snapshot";
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import {
-  buildLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "~/server/capacity/domain/snapshot";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";

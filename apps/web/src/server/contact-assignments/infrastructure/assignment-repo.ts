@@ -1,7 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
-import { personDisplayName } from "~/lib/users/display-name";
 import type { Database } from "~/lib/db/types";
+import { personDisplayName } from "~/lib/users/display-name";
 import type { ContactAssignmentDraft } from "~/server/contact-assignments/domain/assignment";
 import type {
   ContactAssignmentId,

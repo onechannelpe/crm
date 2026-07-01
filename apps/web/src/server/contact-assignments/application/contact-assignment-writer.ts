@@ -6,7 +6,11 @@ import type { OrganizationRepository } from "~/server/organization/organization-
 import type { AppUow } from "~/server/shared/application/uow";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { RecordCandidate } from "~/server/shared/engine/record-contract";
-import type { OrganizationId, OrganizationPersonId, UserId } from "~/server/shared/ids";
+import type {
+  OrganizationId,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 export type AssignContactsTransactionRepos = {
@@ -98,7 +102,9 @@ export async function createContactAssignmentsFromCandidates(input: {
     const cadenceById = await repos.cadence.findMany(membershipIds);
     const assignments = membershipIds
       .filter((id) =>
-        canContactNow({ cooldown_until: cadenceById.get(id)?.cooldownUntil ?? null }),
+        canContactNow({
+          cooldown_until: cadenceById.get(id)?.cooldownUntil ?? null,
+        }),
       )
       .map((id) => createAssignment(input.actorUserId, id));
 

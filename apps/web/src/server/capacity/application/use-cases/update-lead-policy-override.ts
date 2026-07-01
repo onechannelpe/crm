@@ -3,11 +3,11 @@ import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../authorize-capacity-actor";
 import {
   validateLeadPolicyValues,
   validateOverrideExpiry,
 } from "../../domain/limits";
+import { canManageExecutive } from "../authorize-capacity-actor";
 import { setLeadUserOverride } from "../lead-policy";
 import type { CapacityPolicyDeps } from "./shared";
 

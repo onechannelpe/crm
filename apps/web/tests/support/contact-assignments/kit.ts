@@ -1,6 +1,11 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
-import { asContactAssignmentId, type ContactAssignmentId, type OrganizationPersonId, type UserId } from "~/server/shared/ids";
+import {
+  asContactAssignmentId,
+  type ContactAssignmentId,
+  type OrganizationPersonId,
+  type UserId,
+} from "~/server/shared/ids";
 
 export type { ContactAssignmentId };
 

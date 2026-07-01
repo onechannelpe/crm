@@ -2,9 +2,9 @@ import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageScope } from "../authorize-capacity-actor";
 import { validateSearchLimit } from "../../domain/limits";
 import type { ScopeRef } from "../../domain/types";
+import { canManageScope } from "../authorize-capacity-actor";
 import { setSearchScopeDefault } from "../search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 

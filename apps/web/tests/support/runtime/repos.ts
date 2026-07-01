@@ -33,9 +33,9 @@ import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/i
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
-import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";

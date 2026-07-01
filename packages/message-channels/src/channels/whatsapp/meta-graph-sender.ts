@@ -1,5 +1,8 @@
 import type { DeliveryProviderId } from "../../types";
-import type { ProviderSendFailure, ProviderSendResult } from "../provider-types";
+import type {
+  ProviderSendFailure,
+  ProviderSendResult,
+} from "../provider-types";
 
 // Kapso is a proxy over the same Meta Graph WhatsApp API shape that
 // whatsapp_cloud (meta-cloud.ts) talks to directly — this is the one shared

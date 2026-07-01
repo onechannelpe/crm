@@ -13,9 +13,9 @@ import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import { epochMilliseconds } from "~/server/shared/time";
 
-import { canManageExecutive } from "../authorize-capacity-actor";
 import { fromDbCapacityRequestKind } from "../../domain/request-policy";
 import type { CapacityUser } from "../actor-scope";
+import { canManageExecutive } from "../authorize-capacity-actor";
 
 interface ExecutiveDetailDeps {
   repos: {
