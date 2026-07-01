@@ -54,16 +54,12 @@ export function createRegisteredLead(input: {
   ports: RegistrationPorts;
 }): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   return runLeadTransaction(input.ports, async (ctx) => {
-    const organization =
-      (await ctx.repos.party.findOrganizationByRuc(input.ruc)) ??
-      (await ctx.repos.party.createOrganization({
-        ruc: input.ruc,
-        legalName: input.enrichment?.legalName ?? null,
-        giroNegocio: input.command.giroNegocio,
-        address: input.enrichment?.address ?? null,
-        district: null,
-        department: null,
-      }));
+    const organization = await ctx.repos.organization.upsertOrganization({
+      ruc: input.ruc,
+      legalName: input.enrichment?.legalName ?? null,
+      lineOfBusiness: input.command.lineOfBusiness,
+      address: input.enrichment?.address ?? null,
+    });
 
     const draft = createLeadDraft({
       organizationId: organization.id,

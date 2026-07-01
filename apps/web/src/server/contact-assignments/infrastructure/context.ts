@@ -8,9 +8,9 @@ import {
   createLeadPolicyDefaultsRepo,
   createLeadPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import { createContactsRepo } from "~/server/contacts/repos-contacts";
-import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
+import { createContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { EngineClient } from "~/server/shared/engine/client";
@@ -24,8 +24,8 @@ export type ContactAssignmentRepos = {
   leadUsageReservations: ReturnType<typeof createLeadUsageReservationsRepo>;
   leadUsageCommits: ReturnType<typeof createLeadUsageCommitsRepo>;
   contactAssignments: ReturnType<typeof createContactAssignmentsRepo>;
-  organizations: ReturnType<typeof createOrganizationsRepo>;
-  contacts: ReturnType<typeof createContactsRepo>;
+  organization: ReturnType<typeof createOrganizationRepo>;
+  cadence: ReturnType<typeof createContactCadenceRepo>;
 };
 
 interface ContactAssignmentsContextDeps {
@@ -33,11 +33,8 @@ interface ContactAssignmentsContextDeps {
   engine: Pick<EngineClient, "requestCandidates">;
 }
 
-export function createContactAssignmentsContext(
-  deps: ContactAssignmentsContextDeps,
-) {
-  const { executor, engine } = deps;
-  const repos: ContactAssignmentRepos = {
+function buildRepos(executor: DatabaseExecutor): ContactAssignmentRepos {
+  return {
     users: createCapacityUsersRepo(executor),
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(executor),
     leadPolicyOverrides: createLeadPolicyOverridesRepo(executor),
@@ -45,31 +42,24 @@ export function createContactAssignmentsContext(
     leadUsageReservations: createLeadUsageReservationsRepo(executor),
     leadUsageCommits: createLeadUsageCommitsRepo(executor),
     contactAssignments: createContactAssignmentsRepo(executor),
-    organizations: createOrganizationsRepo(executor),
-    contacts: createContactsRepo(executor),
+    organization: createOrganizationRepo(executor),
+    cadence: createContactCadenceRepo(executor),
   };
+}
+
+export function createContactAssignmentsContext(
+  deps: ContactAssignmentsContextDeps,
+) {
+  const { executor, engine } = deps;
 
   return {
-    repos,
+    repos: buildRepos(executor),
     engine,
     interactionUow: createExecutorUow(executor, (txDb) => ({
       contactAssignments: createContactAssignmentsRepo(txDb),
       interactionLogs: createInteractionLogsRepo(txDb),
     })),
-    uow: createExecutorUow(
-      executor,
-      (txDb): ContactAssignmentRepos => ({
-        users: createCapacityUsersRepo(txDb),
-        leadPolicyDefaults: createLeadPolicyDefaultsRepo(txDb),
-        leadPolicyOverrides: createLeadPolicyOverridesRepo(txDb),
-        leadCapacityGrants: createLeadCapacityGrantsRepo(txDb),
-        leadUsageReservations: createLeadUsageReservationsRepo(txDb),
-        leadUsageCommits: createLeadUsageCommitsRepo(txDb),
-        contactAssignments: createContactAssignmentsRepo(txDb),
-        organizations: createOrganizationsRepo(txDb),
-        contacts: createContactsRepo(txDb),
-      }),
-    ),
+    uow: createExecutorUow(executor, buildRepos),
   };
 }
 

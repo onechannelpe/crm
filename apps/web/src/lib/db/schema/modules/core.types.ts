@@ -4,8 +4,6 @@ import type {
   BranchId,
   GeneratedId,
   IdColumn,
-  OrganizationId,
-  PersonId,
   TeamId,
   UserId,
 } from "~/server/shared/ids";
@@ -37,32 +35,3 @@ export interface BackOfficeAssignmentsTable {
   assigned_at: Date;
 }
 
-export interface PeopleTable {
-  id: GeneratedId<PersonId>;
-  dni: string;
-  full_name: string;
-  email: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface OrganizationsTable {
-  id: IdColumn<OrganizationId>;
-  ruc: string;
-  legal_name: string | null;
-  giro_negocio: string | null;
-  address: string | null;
-  district: string | null;
-  province: string | null;
-  department: string | null;
-  phone: string | null;
-  email: string | null;
-  created_at: Date;
-}
-
-export interface OrganizationBranchLocksTable {
-  organization_id: IdColumn<OrganizationId>;
-  branch_id: IdColumn<BranchId>;
-  locked_at: Date;
-  locked_by_user_id: IdColumn<UserId>;
-}

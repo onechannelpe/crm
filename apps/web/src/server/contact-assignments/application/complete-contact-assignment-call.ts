@@ -1,4 +1,4 @@
-import type { ContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import type { AppUow } from "~/server/shared/application/uow";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { InteractionLogsRepo } from "~/server/shared/repos-interaction-logs";

@@ -29,7 +29,7 @@ import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";

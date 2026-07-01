@@ -37,7 +37,7 @@ export type CommercialScope = {
   currentCreditRate: number;
   gpv: number;
   ticket: number;
-  giroNegocio: string;
+  lineOfBusiness: string;
   settlementBank: SettlementBank;
   posCount: number;
 };

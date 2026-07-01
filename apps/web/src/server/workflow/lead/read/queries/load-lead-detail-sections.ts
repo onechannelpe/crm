@@ -1,5 +1,5 @@
 import { createLogger } from "~/lib/observability/logger";
-import type { PartyRepository } from "~/server/identity/organization/repo";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type {
   FileAssetId,
@@ -83,7 +83,7 @@ export type LeadDetailQueryDeps = {
   rateRevisionFiles: RateRevisionFilesQuery;
   sourceStatuses: SourceStatusReader;
   users: WorkflowUserRepository;
-  party: PartyRepository;
+  organization: OrganizationRepository;
   fulfillment: FulfillmentRepository;
 };
 
@@ -99,10 +99,10 @@ export type LeadDetailLoadedSections = {
   sourceStatus: Awaited<ReturnType<SourceStatusReader["findByRuc"]>>;
   userRows: LeadUserWithName[];
   organization: NonNullable<
-    Awaited<ReturnType<PartyRepository["findOrganizationById"]>>
+    Awaited<ReturnType<OrganizationRepository["findOrganizationById"]>>
   >;
   legalRepresentative: Awaited<
-    ReturnType<PartyRepository["findPrimaryLegalRepresentative"]>
+    ReturnType<OrganizationRepository["findPrimaryRepresentative"]>
   >;
   rateRevisions: Array<{
     revision: RateRevision;
@@ -153,8 +153,8 @@ export async function loadLeadDetailSections(
       lead.createdBy,
       ...(lead.updatedBy ? [lead.updatedBy] : []),
     ]),
-    deps.party.findOrganizationById(lead.organizationId),
-    deps.party.findPrimaryLegalRepresentative(lead.organizationId),
+    deps.organization.findOrganizationById(lead.organizationId),
+    deps.organization.findPrimaryRepresentative(lead.organizationId),
     deps.fulfillment.findByLeadId(input.leadId),
   ]);
 

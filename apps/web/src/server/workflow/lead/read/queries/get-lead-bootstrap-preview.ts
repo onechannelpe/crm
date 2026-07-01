@@ -1,15 +1,15 @@
 import type { LeadBootstrapPreviewView } from "~/contracts/workflow/views";
-import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
-import type { PartyRepository } from "~/server/identity/organization/repo";
+import type { OrganizationEnrichment } from "~/server/organization/enrichment";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 export async function getLeadBootstrapPreview(
-  deps: { party: PartyRepository },
+  deps: { organization: OrganizationRepository },
   enrichment: OrganizationEnrichment,
   input: { ruc: string },
 ): Promise<Result<LeadBootstrapPreviewView, DomainError>> {
-  const existingOrganization = await deps.party.findOrganizationByRuc(
+  const existingOrganization = await deps.organization.findOrganizationByRuc(
     input.ruc,
   );
   if (existingOrganization) {

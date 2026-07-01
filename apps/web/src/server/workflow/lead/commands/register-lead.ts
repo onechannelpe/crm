@@ -1,6 +1,6 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
 import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
-import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
+import type { OrganizationEnrichment } from "~/server/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
 import { fail, type DomainError } from "~/server/shared/domain-error";

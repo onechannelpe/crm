@@ -3,9 +3,9 @@ import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import { createEnrichmentQueue } from "~/server/client-search/worker";
-import { createOrganizationEnrichmentProjection } from "~/server/identity/organization/apply-enrichment";
-import { createOrganizationEnrichment } from "~/server/identity/organization/enrichment";
-import { createPartyRepo } from "~/server/identity/organization/repo";
+import { createOrganizationEnrichmentProjection } from "~/server/organization/apply-enrichment";
+import { createOrganizationEnrichment } from "~/server/organization/enrichment";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import type { EngineClient } from "~/server/shared/engine/client";
 
 import type { ServerInfra } from "./infra";
@@ -22,7 +22,7 @@ export function createClientSearchRuntime(
   // SUNAT-unreachable fallback + the inline projection onto the organization.
   const engineFallback = createOrganizationEnrichment(engine);
   const projectOrganization = createOrganizationEnrichmentProjection(
-    createPartyRepo(infra.db),
+    createOrganizationRepo(infra.db),
   );
 
   return {

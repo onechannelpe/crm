@@ -6,7 +6,6 @@ import type {
 } from "~/server/capacity-usage/repos";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { OrganizationId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -16,8 +15,6 @@ import {
 import {
   createContactAssignmentsFromCandidates,
   type AssignContactsUow,
-  type ContactRecord,
-  type OrganizationRecord,
 } from "./contact-assignment-writer";
 import type { AssignContactsCommand, AssignContactsResult } from "./contracts";
 
@@ -25,17 +22,6 @@ type AssignContactsRepos = AssignmentPlanRepos & {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  organizations: {
-    findOrCreate(ruc: string, name: string): Promise<OrganizationRecord>;
-  };
-  contacts: {
-    findOrCreate(
-      organizationId: OrganizationId,
-      dni: string,
-      name: string,
-      phone: string,
-    ): Promise<ContactRecord>;
-  };
 };
 
 interface AssignContactsDeps {

@@ -192,14 +192,18 @@ export async function persistWorkflowCommercialData(
     .insertInto("people")
     .values({
       dni: "42715983",
-      full_name: "Daniel Gutierrez Paredes",
+      names: "Daniel",
+      first_surname: "Gutierrez",
+      second_surname: "Paredes",
       email: "daniel.gutierrez@andes.pe",
       created_at: new Date(now - 29 * day),
       updated_at: new Date(now - 29 * day),
     })
     .onConflict((oc) =>
       oc.column("dni").doUpdateSet({
-        full_name: "Daniel Gutierrez Paredes",
+        names: "Daniel",
+        first_surname: "Gutierrez",
+        second_surname: "Paredes",
         email: "daniel.gutierrez@andes.pe",
         updated_at: new Date(now - 29 * day),
       }),
@@ -213,7 +217,7 @@ export async function persistWorkflowCommercialData(
 
   await db
     .updateTable("organizations")
-    .set({ giro_negocio: "Construccion de edificios residenciales" })
+    .set({ line_of_business: "Construccion de edificios residenciales" })
     .where("id", "=", convertedOrgId)
     .execute();
 
@@ -222,24 +226,14 @@ export async function persistWorkflowCommercialData(
     .values({
       person_id: legalRepPerson.id,
       organization_id: convertedOrgId,
-      dni: "42715983",
-      nombres: "Daniel",
-      apellido_paterno: "Gutierrez",
-      apellido_materno: "Paredes",
-      telefono: "987654321",
+      phone: "987654321",
       email: "daniel.gutierrez@andes.pe",
-      last_contacted_at: null,
-      last_contacted_by_user_id: null,
-      cooldown_until: null,
       created_at: new Date(now - 29 * day),
       updated_at: new Date(now - 29 * day),
     })
     .onConflict((oc) =>
-      oc.columns(["organization_id", "dni"]).doUpdateSet((eb) => ({
-        nombres: eb.ref("excluded.nombres"),
-        apellido_paterno: eb.ref("excluded.apellido_paterno"),
-        apellido_materno: eb.ref("excluded.apellido_materno"),
-        telefono: eb.ref("excluded.telefono"),
+      oc.columns(["organization_id", "person_id"]).doUpdateSet((eb) => ({
+        phone: eb.ref("excluded.phone"),
         email: eb.ref("excluded.email"),
         updated_at: eb.ref("excluded.updated_at"),
       })),

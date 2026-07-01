@@ -1,5 +1,5 @@
 import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
-import { createPartyRepo } from "~/server/identity/organization/repo";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
@@ -36,7 +36,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     sourceStatuses: createSourceStatusRepo(executor),
     sourcingPolicies: createSourcingPolicyRepo(executor),
     users: createWorkflowUsersRepo(executor),
-    party: createPartyRepo(executor),
+    organization: createOrganizationRepo(executor),
   };
 }
 

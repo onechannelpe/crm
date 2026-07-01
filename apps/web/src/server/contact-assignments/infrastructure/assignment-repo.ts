@@ -1,5 +1,6 @@
 import type { Insertable, Kysely } from "kysely";
 
+import { personDisplayName } from "~/lib/users/display-name";
 import type { Database } from "~/lib/db/types";
 import type { ContactAssignmentDraft } from "~/server/contact-assignments/domain/assignment";
 import type {
@@ -8,53 +9,75 @@ import type {
   UserId,
 } from "~/server/shared/ids";
 
-type NewLeadAssignmentRow = Insertable<Database["lead_assignments"]>;
+type NewContactAssignmentRow = Insertable<Database["contact_assignments"]>;
 
 export function createContactAssignmentsRepo(db: Kysely<Database>) {
-  const create = (values: NewLeadAssignmentRow) =>
-    db.insertInto("lead_assignments").values(values).executeTakeFirstOrThrow();
+  const create = (values: NewContactAssignmentRow) =>
+    db
+      .insertInto("contact_assignments")
+      .values(values)
+      .executeTakeFirstOrThrow();
 
   const createMany = async (
     assignments: ContactAssignmentDraft[],
   ): Promise<void> => {
     if (assignments.length === 0) return;
-    await db.insertInto("lead_assignments").values(assignments).execute();
+    await db.insertInto("contact_assignments").values(assignments).execute();
   };
 
   const findActiveByUser = (userId: UserId) =>
     db
-      .selectFrom("lead_assignments")
+      .selectFrom("contact_assignments")
       .selectAll()
       .where("user_id", "=", userId)
       .where("status", "=", "active")
       .where("expires_at", ">", new Date())
       .execute();
 
-  const findActiveByUserWithContacts = (userId: UserId) =>
-    db
-      .selectFrom("lead_assignments")
+  const findActiveByUserWithContacts = async (userId: UserId) => {
+    const rows = await db
+      .selectFrom("contact_assignments")
       .innerJoin(
         "organization_people",
         "organization_people.id",
-        "lead_assignments.contact_id",
+        "contact_assignments.contact_id",
       )
       .innerJoin("people", "people.id", "organization_people.person_id")
       .select([
-        "lead_assignments.id as assignmentId",
-        "lead_assignments.assigned_at as assignedAt",
-        "lead_assignments.expires_at as expiresAt",
-        "lead_assignments.status",
+        "contact_assignments.id as assignmentId",
+        "contact_assignments.assigned_at as assignedAt",
+        "contact_assignments.expires_at as expiresAt",
+        "contact_assignments.status as status",
         "organization_people.id as contactId",
-        "people.full_name as name",
-        "organization_people.dni",
-        "organization_people.telefono as phonePrimary",
+        "people.names as names",
+        "people.first_surname as firstSurname",
+        "people.second_surname as secondSurname",
+        "people.dni as dni",
+        "organization_people.phone as phonePrimary",
         "organization_people.organization_id as organizationId",
       ])
-      .where("lead_assignments.user_id", "=", userId)
-      .where("lead_assignments.status", "=", "active")
-      .where("lead_assignments.expires_at", ">", new Date())
-      .orderBy("lead_assignments.assigned_at", "desc")
+      .where("contact_assignments.user_id", "=", userId)
+      .where("contact_assignments.status", "=", "active")
+      .where("contact_assignments.expires_at", ">", new Date())
+      .orderBy("contact_assignments.assigned_at", "desc")
       .execute();
+
+    return rows.map((row) => ({
+      assignmentId: row.assignmentId,
+      assignedAt: row.assignedAt,
+      expiresAt: row.expiresAt,
+      status: row.status,
+      contactId: row.contactId,
+      name: personDisplayName({
+        names: row.names,
+        first_surname: row.firstSurname,
+        second_surname: row.secondSurname,
+      }),
+      dni: row.dni,
+      phonePrimary: row.phonePrimary,
+      organizationId: row.organizationId,
+    }));
+  };
 
   const countActiveByUser = async (userId: UserId) => {
     const rows = await findActiveByUser(userId);
@@ -67,7 +90,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
     }
 
     const rows = await db
-      .selectFrom("lead_assignments")
+      .selectFrom("contact_assignments")
       .select((eb) => [
         "user_id as userId",
         eb.fn.count<number>("id").as("activeCount"),
@@ -89,7 +112,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
     contactId: OrganizationPersonId,
   ) =>
     db
-      .selectFrom("lead_assignments")
+      .selectFrom("contact_assignments")
       .selectAll()
       .where("user_id", "=", userId)
       .where("contact_id", "=", contactId)
@@ -107,7 +130,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
 
   const findActiveByIdForUser = (id: ContactAssignmentId, userId: UserId) =>
     db
-      .selectFrom("lead_assignments")
+      .selectFrom("contact_assignments")
       .selectAll()
       .where("id", "=", id)
       .where("user_id", "=", userId)
@@ -117,7 +140,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
 
   const markCompleted = (id: ContactAssignmentId, userId: UserId) =>
     db
-      .updateTable("lead_assignments")
+      .updateTable("contact_assignments")
       .set({ status: "completed" })
       .where("id", "=", id)
       .where("user_id", "=", userId)

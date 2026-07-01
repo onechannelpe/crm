@@ -94,18 +94,20 @@ export async function createHandoffToken(
       return Err(fail("assignment_not_found"));
     }
 
-    const contact = await repos.contacts.findById(assignment.contact_id);
+    const contact = await repos.organization.findMembershipById(
+      assignment.contact_id,
+    );
 
     if (!contact) {
       return Err(fail("assignment_inactive"));
     }
 
-    if (!contact.phone_primary || contact.phone_primary.trim() === "") {
+    if (!contact.phone || contact.phone.trim() === "") {
       return Err(fail("assignment_inactive"));
     }
 
-    const organization = await repos.organizations.findById(
-      contact.organization_id,
+    const organization = await repos.organization.findOrganizationById(
+      contact.organizationId,
     );
     const issuedAt = now();
     const handoffExpiresAt = addMilliseconds(
@@ -122,8 +124,8 @@ export async function createHandoffToken(
       branchId: input.branchId,
       assignmentId,
       contactId: contact.id,
-      phone: contact.phone_primary,
-      clientName: contact.name,
+      phone: contact.phone,
+      clientName: contact.person.displayName,
       organizationLabel: organization ? `Org #${organization.id}` : null,
       action: "start_call",
       origin: input.origin,

@@ -159,7 +159,7 @@ export async function queryLeadBootstrapPreview(
       const workflow = getServerRuntime().workflow;
 
       return getLeadBootstrapPreview(
-        { party: workflow.repos.party },
+        { organization: workflow.repos.organization },
         workflow.organizationEnrichment,
         { ruc: query.ruc },
       );

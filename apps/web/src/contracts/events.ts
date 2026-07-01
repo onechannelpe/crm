@@ -24,7 +24,7 @@ const FIELD_LABELS: Record<string, string> = {
   ticket: "Ticket",
   settlementBank: "Banco de abono",
   posCount: "POS total",
-  giroNegocio: "Giro de negocio",
+  lineOfBusiness: "Giro de negocio",
   status: "Estado",
   priority: "Prioridad",
   stage: "Etapa",

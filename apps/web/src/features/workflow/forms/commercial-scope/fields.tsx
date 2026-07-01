@@ -88,8 +88,8 @@ export function CommercialScopeFields(props: {
         <FieldInputValue>
           <TextInput
             sizeVariant="sm"
-            value={props.values.giroNegocio}
-            onChange={(value) => props.onChange("giroNegocio", value)}
+            value={props.values.lineOfBusiness}
+            onChange={(value) => props.onChange("lineOfBusiness", value)}
             required
           />
         </FieldInputValue>

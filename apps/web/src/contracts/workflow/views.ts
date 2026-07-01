@@ -219,7 +219,7 @@ type LeadDetailProfileView = {
   currentCreditRate: number;
   gpv: number;
   ticket: number;
-  giroNegocio: string | null;
+  lineOfBusiness: string | null;
   settlementBank: SettlementBank;
   posCount: number;
   linkScope: ProductScope;

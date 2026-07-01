@@ -1,5 +1,5 @@
 import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
-import type { ContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import type { UserId } from "~/server/shared/ids";
 import { epochMilliseconds } from "~/server/shared/time";
 

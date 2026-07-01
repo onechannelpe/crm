@@ -1,4 +1,5 @@
 import type { RecordRepLegalInput } from "~/contracts/workflow/inputs";
+import { LEGAL_REPRESENTATIVE_ROLE } from "~/server/organization/organization-repo";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { WorkflowLeadId } from "~/server/shared/ids";
@@ -40,14 +41,22 @@ export async function recordRepLegalCommand(
       return transition;
     }
 
-    await ctx.repos.party.upsertPrimaryLegalRepresentative({
+    const membership = await ctx.repos.organization.upsertMembership({
       organizationId: state.organizationId,
-      nombres: input.nombres,
-      apellidoPaterno: input.apellidoPaterno,
-      apellidoMaterno: input.apellidoMaterno,
-      dni: input.dni,
-      telefono: input.telefono,
+      person: {
+        dni: input.dni,
+        names: input.nombres,
+        firstSurname: input.apellidoPaterno,
+        secondSurname: input.apellidoMaterno,
+        email: input.email,
+      },
+      phone: input.telefono,
       email: input.email,
+    });
+    await ctx.repos.organization.setPrimaryRole({
+      organizationId: state.organizationId,
+      organizationPersonId: membership.id,
+      role: LEGAL_REPRESENTATIVE_ROLE,
     });
 
     const committed = await ctx.commitTransition(transition.value);

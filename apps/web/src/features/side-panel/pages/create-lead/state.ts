@@ -43,7 +43,7 @@ export function useCreateLeadPageState() {
       currentCreditRate: draft.currentCreditRate,
       gpv: draft.gpv,
       ticket: draft.ticket,
-      giroNegocio: draft.giroNegocio,
+      lineOfBusiness: draft.lineOfBusiness,
       settlementBank: draft.settlementBank,
       posCount: draft.posCount,
     };

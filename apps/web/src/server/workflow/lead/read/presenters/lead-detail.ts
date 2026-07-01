@@ -8,9 +8,9 @@ import type {
   LeadDetailView,
 } from "~/contracts/workflow/views";
 import type {
-  LegalRepresentative,
+  Membership,
   OrganizationProfile,
-} from "~/server/identity/organization/repo";
+} from "~/server/organization/organization-repo";
 import type { DigitalPolicy } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
@@ -69,7 +69,7 @@ export type LeadDetailSource = {
   availableActions: LeadAvailableAction[];
   sourceStatus: LeadSourceStatus;
   organization: OrganizationProfile;
-  legalRepresentative: LegalRepresentative | undefined;
+  legalRepresentative: Membership | null;
   fulfillment: FulfillmentOrderDetails | null;
 };
 
@@ -169,7 +169,7 @@ function toLeadDetailProfile(
     currentCreditRate: commercial.currentCreditRate,
     gpv: commercial.gpv,
     ticket: commercial.ticket,
-    giroNegocio: organization.giroNegocio,
+    lineOfBusiness: organization.lineOfBusiness,
     settlementBank: commercial.settlementBank,
     posCount: commercial.posCount,
     linkScope: digitalPolicy?.linkScope ?? "none",
@@ -180,16 +180,14 @@ function toLeadDetailProfile(
   };
 }
 
-function toLeadDetailRepLegal(
-  legalRepresentative: LegalRepresentative,
-): LeadDetailRepLegalView {
+function toLeadDetailRepLegal(rep: Membership): LeadDetailRepLegalView {
   return {
-    nombres: legalRepresentative.nombres,
-    apellidoPaterno: legalRepresentative.apellidoPaterno,
-    apellidoMaterno: legalRepresentative.apellidoMaterno,
-    dni: legalRepresentative.dni,
-    telefono: legalRepresentative.telefono ?? null,
-    email: legalRepresentative.email ?? null,
+    nombres: rep.person.names,
+    apellidoPaterno: rep.person.firstSurname ?? "",
+    apellidoMaterno: rep.person.secondSurname ?? "",
+    dni: rep.person.dni,
+    telefono: rep.phone,
+    email: rep.email,
   };
 }
 
